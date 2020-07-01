@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"strings"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/assignments"
-	"github.com/autograde/aguis/ci"
-	"github.com/autograde/aguis/database"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/assignments"
+	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/database"
 	"github.com/google/go-github/v30/github"
 	"go.uber.org/zap"
 )

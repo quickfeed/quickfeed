@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"testing"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/ci"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/ci"
 )
 
 func TestParseWithInvalidDir(t *testing.T) {

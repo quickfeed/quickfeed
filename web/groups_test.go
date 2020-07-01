@@ -8,10 +8,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/ci"
-	"github.com/autograde/aguis/scm"
-	"github.com/autograde/aguis/web"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/scm"
+	"github.com/autograde/quickfeed/web"
 	_ "github.com/mattn/go-sqlite3"
 )
 

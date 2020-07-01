@@ -10,15 +10,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/autograde/aguis/ci"
-	"github.com/autograde/aguis/envoy"
-	"github.com/autograde/aguis/web"
-	"github.com/autograde/aguis/web/auth"
+	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/envoy"
+	"github.com/autograde/quickfeed/web"
+	"github.com/autograde/quickfeed/web/auth"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/database"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/database"
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"google.golang.org/grpc"

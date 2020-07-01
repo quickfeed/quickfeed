@@ -3,9 +3,9 @@ package web
 import (
 	"context"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/assignments"
-	"github.com/autograde/aguis/scm"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/assignments"
+	"github.com/autograde/quickfeed/scm"
 )
 
 // getAssignments lists the assignments for the provided course.

@@ -1,7 +1,7 @@
 package database
 
 import (
-	pb "github.com/autograde/aguis/ag"
+	pb "github.com/autograde/quickfeed/ag"
 )
 
 // Database contains methods for manipulating the database.

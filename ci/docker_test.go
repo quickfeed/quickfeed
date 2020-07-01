@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/autograde/aguis/ci"
+	"github.com/autograde/quickfeed/ci"
 	"github.com/docker/docker/client"
 )
 

@@ -32,7 +32,7 @@ Then generate a new SSl/TLS certificate with Certbot to protect the new endpoint
 gRPC client must be started with your endpoint URL (use `make remote` Makefile task to ensure recompiling with the right configuration).
 
 Example command to start the test server on test.itest.run:
-`aguis -service.url test.itest.run -database.file ./test.db -http.addr :3006 -http.public ./public &`
+`quickfeed -service.url test.itest.run -database.file ./test.db -http.addr :3006 -http.public ./public &`
 
 
 
@@ -40,12 +40,12 @@ Example command to start the test server on test.itest.run:
 
 ## Maintaining the server
 
-To stop the server it is sufficient to run `killall aguis` command.
+To stop the server it is sufficient to run `killall quickfeed` command.
 
 To update the server, run `git fetch`, then `git status` to make sure there are no local changes and the branch can be fast-forwarded.
 If not, resolve local changes, preferably as new commits or pull requests to the main database. Then run `git pull`, and recompile the server (`make install`) and the client (`make ui`).
 
-To start the server, there is a script with needed environmental variables and startup command with all necessary options provided. Run `source startag.sh` from the `aguis` folder to start the server.
+To start the server, there is a script with needed environmental variables and startup command with all necessary options provided. Run `source startag.sh` from the `quickfeed` folder to start the server.
 
  ## Accessing the server
 
@@ -53,11 +53,11 @@ To start the server, there is a script with needed environmental variables and s
 
  ## Server logs
 
- We use `logrotate` to maintain server logs. Configuration file is `/etc/logrotate.d/aguis`.
+ We use `logrotate` to maintain server logs. Configuration file is `/etc/logrotate.d/quickfeed`.
  Example configuration is:
 
  ```
- /home/autograder/aguis/ag.log {
+ /home/autograder/quickfeed/ag.log {
         size 5M
         copytruncate
         dateext

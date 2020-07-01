@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/scm"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/scm"
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/urfave/cli"

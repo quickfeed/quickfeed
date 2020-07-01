@@ -6,10 +6,10 @@ import (
 	"log"
 	"os"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/ci"
-	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/scm"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/scm"
 	"go.uber.org/zap"
 )
 

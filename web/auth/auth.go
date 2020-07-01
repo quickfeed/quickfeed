@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/database"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/database"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"

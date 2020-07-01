@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	pb "github.com/autograde/aguis/ag"
+	pb "github.com/autograde/quickfeed/ag"
 	"github.com/google/go-cmp/cmp"
 	"github.com/markbates/goth"
 	"go.uber.org/zap"
@@ -14,10 +14,10 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/autograde/aguis/ci"
-	"github.com/autograde/aguis/scm"
-	"github.com/autograde/aguis/web"
-	"github.com/autograde/aguis/web/auth"
+	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/scm"
+	"github.com/autograde/quickfeed/web"
+	"github.com/autograde/quickfeed/web/auth"
 	_ "github.com/mattn/go-sqlite3"
 )
 

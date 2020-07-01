@@ -8,8 +8,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/jinzhu/gorm"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/database"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/database"
 )
 
 var createGroupTests = []struct {

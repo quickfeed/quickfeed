@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/autograde/aguis/kit/score"
+	"github.com/autograde/quickfeed/kit/score"
 	"go.uber.org/zap"
 )
 

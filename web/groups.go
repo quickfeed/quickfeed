@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/scm"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/scm"
 	"github.com/gosimple/slug"
 	"github.com/jinzhu/gorm"
 	"google.golang.org/grpc/codes"

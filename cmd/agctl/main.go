@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/database"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/database"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/urfave/cli"
 )

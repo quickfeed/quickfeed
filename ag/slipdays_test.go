@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/autograde/aguis/ag"
+	pb "github.com/autograde/quickfeed/ag"
 )
 
 const (

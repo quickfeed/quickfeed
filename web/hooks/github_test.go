@@ -7,9 +7,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/autograde/aguis/ci"
-	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/scm"
+	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/scm"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

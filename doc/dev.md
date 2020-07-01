@@ -25,7 +25,7 @@
 ## Starting up the server
 
 The command to start up the server:
-`aguis -service.url <url> -database.file <path to database> -http.addr <HTTP listener address> -http.public <path to static files>`
+`quickfeed -service.url <url> -database.file <path to database> -http.addr <HTTP listener address> -http.public <path to static files>`
 
 ### Flags
 
@@ -97,7 +97,7 @@ Use `make test` to run all the tests in `web` and `database` packages.
 
 `make local` and `make remote` will switch where and how the gRPC client is being run, then will recompile the frontend. Use `make local` when running server on localhost with port forwarding, otherwise use `make remote`.
 
-**Warning:** never push code with local gRPC client settings to the `aguis` repository, it will cause the server to stop responding to client requests. If this happens, just run `make remote` on the server location.
+**Warning:** never push code with local gRPC client settings to the `quickfeed` repository, it will cause the server to stop responding to client requests. If this happens, just run `make remote` on the server location.
 
 
 ## Server architecture
@@ -113,7 +113,7 @@ Envoy proxy allows making gRPC calls from a browser application.
 
 ### Basic configuration
 [Default configuration from grpc-web repository](https://github.com/grpc/grpc-web/blob/master/net/grpc/gateway/examples/echo/envoy.yaml)
-The main difference in [our configuration](https://github.com/autograde/aguis/blob/grpc-web-merge/envoy/envoy.yaml) is `http_protocol_options: { accept_http_10: true }` line inside HTTP filters list, and an additional header name.
+The main difference in [our configuration](https://github.com/autograde/quickfeed/blob/grpc-web-merge/envoy/envoy.yaml) is `http_protocol_options: { accept_http_10: true }` line inside HTTP filters list, and an additional header name.
 
 ## NGINX
 
@@ -131,7 +131,7 @@ server {
 
         server_name <your callback url>;
 
-        # takes care of general traffic, redirects everything to port 3333 (http.add port provided in aguis command)
+        # takes care of general traffic, redirects everything to port 3333 (http.add port provided in quickfeed command)
         location / {
                 proxy_pass http://127.0.0.1:3333;
                 proxy_redirect off;

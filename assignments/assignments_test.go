@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/scm"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/scm"
 	"go.uber.org/zap"
 )
 

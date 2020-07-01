@@ -3,8 +3,8 @@ package web
 import (
 	"net/http"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/database"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/database"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 )

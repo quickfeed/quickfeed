@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/autograde/aguis/scm"
+	"github.com/autograde/quickfeed/scm"
 	"go.uber.org/zap"
 )
 
