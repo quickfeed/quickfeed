@@ -10,29 +10,17 @@ import (
 )
 
 var docker bool
-var host, version string
 
 func init() {
-	host = envString("DOCKER_HOST", "http://localhost:4243")
-	version = envString("DOCKER_VERSION", "1.30")
-
 	if os.Getenv("DOCKER_TESTS") != "" {
 		docker = true
 	}
-
-	cli, err := client.NewClient(host, version, nil, nil)
+	cli, err := client.NewEnvClient()
 	if err != nil {
 		docker = false
 	}
 	if _, err := cli.Ping(context.Background()); err != nil {
 		docker = false
-	}
-}
-
-func newDockerCI() *ci.Docker {
-	return &ci.Docker{
-		Endpoint: host,
-		Version:  version,
 	}
 }
 
@@ -46,9 +34,9 @@ func TestDocker(t *testing.T) {
 		wantOut = "hello world"
 	)
 
-	docker := newDockerCI()
+	docker := &ci.Docker{}
 	out, err := docker.Run(context.Background(), &ci.Job{
-		Image:    "golang:1.12.8",
+		Image:    "golang:latest",
 		Commands: []string{script},
 	}, "", 0)
 	if err != nil {
@@ -56,14 +44,6 @@ func TestDocker(t *testing.T) {
 	}
 
 	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
 	}
-}
-
-func envString(env, fallback string) string {
-	e := os.Getenv(env)
-	if e == "" {
-		return fallback
-	}
-	return e
 }
