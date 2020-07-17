@@ -5,11 +5,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestParseWithInvalidDir(t *testing.T) {
@@ -31,6 +31,16 @@ autoapprove: false
 name: "Nested loops"
 language: "Java"
 deadline: "27-08-2018 12:00"
+autoapprove: false
+`
+
+	yUnknownFields = `assignmentid: 1
+subject: "Go Programming for Fun and Profit"
+name: "For loops"
+language: "Go"
+deadline: "27-08-2017 12:00"
+grading: "Pass/Fail"
+expected_effort: "10 hours"
 autoapprove: false
 `
 )
@@ -87,16 +97,60 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if len(assignments) != 2 {
+		t.Errorf("len(assignments) = %d, want %d", len(assignments), 2)
+	}
+	if diff := cmp.Diff(assignments[0], wantAssignment1); diff != "" {
+		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(assignments[1], wantAssignment2); diff != "" {
+		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
+	}
+}
 
-	if len(assignments) < 1 {
-		t.Error("have 0 assignments, want 2")
+func TestParseUnknownFields(t *testing.T) {
+	testsDir, err := ioutil.TempDir("", pb.TestsRepo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(testsDir)
+
+	job := &ci.Job{
+		Commands: []string{
+			"cd " + testsDir,
+			"mkdir lab1",
+		},
+	}
+	runner := ci.Local{}
+	_, err = runner.Run(context.Background(), job, "", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = ioutil.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(yUnknownFields), 0644)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(assignments[0], wantAssignment1) {
-		t.Errorf("\nhave %+v \nwant %+v", assignments[0], wantAssignment1)
+	// We expect assignment names to be set based on
+	// assignment folder names.
+	wantAssignment1 := &pb.Assignment{
+		Name:        "lab1",
+		Language:    "go",
+		Deadline:    "2017-08-27T12:00:00",
+		AutoApprove: false,
+		Order:       1,
+		ScoreLimit:  80,
 	}
-	if !reflect.DeepEqual(assignments[1], wantAssignment2) {
-		t.Errorf("\nhave %+v \nwant %+v", assignments[1], wantAssignment2)
+
+	assignments, err := parseAssignments(testsDir, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assignments) != 1 {
+		t.Errorf("len(assignments) = %d, want %d", len(assignments), 1)
+	}
+	if diff := cmp.Diff(assignments[0], wantAssignment1); diff != "" {
+		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -186,7 +240,7 @@ func TestFixDeadline(t *testing.T) {
 	for _, c := range deadlineTests {
 		got := FixDeadline(c.in)
 		if got != c.want {
-			t.Errorf("fixDeadline(%q) == %q, want %q", c.in, got, c.want)
+			t.Errorf("FixDeadline(%q) == %q, want %q", c.in, got, c.want)
 		}
 	}
 }
