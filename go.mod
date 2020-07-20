@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/xgb v0.0.0-20200324125942-20f126ea2843 // indirect
 	github.com/BurntSushi/xgbutil v0.0.0-20190907113008-ad855c713046 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
-	github.com/autograde/quickfeed/kit v0.0.0-20200424153704-be31622bfc7a
+	github.com/autograde/quickfeed/kit v0.0.0-20200720112558-9912494836c5
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20200428022330-06a60b6afbbc // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
@@ -18,7 +18,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.2
-	github.com/google/go-cmp v0.4.0
+	github.com/google/go-cmp v0.5.0
 	github.com/google/go-github/v30 v30.1.0
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/gorilla/sessions v1.2.0
