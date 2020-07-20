@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/autograde/aguis/web/auth"
+	"github.com/autograde/quickfeed/web/auth"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/github"
 )

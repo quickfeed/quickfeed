@@ -3,7 +3,7 @@ package database
 import (
 	"fmt"
 
-	pb "github.com/autograde/aguis/ag"
+	pb "github.com/autograde/quickfeed/ag"
 	"github.com/jinzhu/gorm"
 )
 

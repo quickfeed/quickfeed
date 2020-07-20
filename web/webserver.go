@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/autograde/aguis/web/auth"
-	"github.com/autograde/aguis/web/hooks"
+	"github.com/autograde/quickfeed/web/auth"
+	"github.com/autograde/quickfeed/web/hooks"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"

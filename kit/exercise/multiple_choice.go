@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/autograde/aguis/kit/score"
+	"github.com/autograde/quickfeed/kit/score"
 )
 
 // Choices are the set of correct choices for the questions.

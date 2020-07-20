@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strconv"
 
-	pb "github.com/autograde/aguis/ag"
+	pb "github.com/autograde/quickfeed/ag"
 )
 
 // FakeSCM implements the SCM interface.

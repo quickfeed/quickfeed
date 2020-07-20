@@ -3,7 +3,7 @@ package database
 import (
 	"errors"
 
-	pb "github.com/autograde/aguis/ag"
+	pb "github.com/autograde/quickfeed/ag"
 	"github.com/jinzhu/gorm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

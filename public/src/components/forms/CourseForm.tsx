@@ -54,56 +54,56 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         return (
             <div className="container">
                 <div className="row">
-                 <div className="form-header col-sm-12"><h1>{getTitleText}</h1></div>
-                 </div>
+                    <div className="form-header col-sm-12"><h1>{getTitleText}</h1></div>
+                </div>
                 <div className="row">{this.state.errorFlash}</div>
-                    <form className={this.props.className ? this.props.className : ""}
-                        onSubmit={(e) => this.handleFormSubmit(e)}>
-                        <div className="form-group" id="organisation-container">
-                            <div className="col-sm-10">
-                                {this.renderInfo()}
-                            </div>
+                <form className={this.props.className ? this.props.className : ""}
+                    onSubmit={(e) => this.handleFormSubmit(e)}>
+                    <div className="form-group" id="organisation-container">
+                        <div className="col-sm-10">
+                            {this.renderInfo()}
                         </div>
-                    <div className="row spacefix">
-                    {this.props.courseData ? null : this.courseByName()}
                     </div>
                     <div className="row spacefix">
-                    {this.renderFormController("Name:",
-                        "Enter course name",
-                        "name",
-                        this.state.name,
-                        (e) => this.handleInputChange(e))}
-                    {this.renderFormController("Code:",
-                        "Enter course code",
-                        "code",
-                        this.state.code,
-                        (e) => this.handleInputChange(e))}
+                        {this.props.courseData ? null : this.courseByName()}
                     </div>
                     <div className="row spacefix">
-                    {this.renderFormController("Year:",
-                        "Enter year",
-                        "year",
-                        this.state.year,
-                        (e) => this.handleInputChange(e))}
-                    {this.renderFormController("Tag:",
-                        "Enter semester",
-                        "tag",
-                        this.state.tag,
-                        (e) => this.handleInputChange(e))}
+                        {this.renderFormController("Name:",
+                            "Enter course name",
+                            "name",
+                            this.state.name,
+                            (e) => this.handleInputChange(e))}
+                        {this.renderFormController("Code:",
+                            "Enter course code",
+                            "code",
+                            this.state.code,
+                            (e) => this.handleInputChange(e))}
                     </div>
                     <div className="row spacefix">
-                    {this.renderFormController("Slip days:",
-                        "Slip days",
-                        "slipdays",
-                        this.state.slipdays,
-                        (e) => this.handleInputChange(e))}
+                        {this.renderFormController("Year:",
+                            "Enter year",
+                            "year",
+                            this.state.year,
+                            (e) => this.handleInputChange(e))}
+                        {this.renderFormController("Tag:",
+                            "Enter semester",
+                            "tag",
+                            this.state.tag,
+                            (e) => this.handleInputChange(e))}
+                    </div>
+                    <div className="row spacefix">
+                        {this.renderFormController("Slip days:",
+                            "Slip days",
+                            "slipdays",
+                            this.state.slipdays,
+                            (e) => this.handleInputChange(e))}
                     </div>
                     <div className="row spacefix">
                         <div className="form-button col-sm-12">
                             <BootstrapButton classType="primary" type="submit">
                                 {this.setButtonString()}
                             </BootstrapButton>
-                    </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -117,7 +117,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             This is to keep the student roster for the different runs of the course separate.</p>
 
                 <p><a href="https://github.com/account/organizations/new"
-                 target="_blank">Create an organization for your course</a>.
+                    target="_blank">Create an organization for your course</a>.
                   The course organization must allow private repositories. </p>
 
                 <p>Autograder will create a following repository structure for you:</p>
@@ -132,8 +132,8 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                 </div>
 
                 <p>Please read <a
-                 href="https://github.com/autograde/aguis/blob/master/doc/teacher.md"
-                  target="_blank">the documentation</a> for further
+                    href="https://github.com/autograde/quickfeed/blob/master/doc/teacher.md"
+                    target="_blank">the documentation</a> for further
                    instructions on how to work with the various repositories.</p>
             </div>;
         return gitMsg;
@@ -148,13 +148,13 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
     ) {
         return <div className="col-sm-6"><div className="input-group">
             <label className="input-group-addon addon-mini" htmlFor="name">{title}</label>
-                <input type="text" className="form-control"
-                    id={name}
-                    placeholder={placeholder}
-                    name={name}
-                    value={value}
-                    onChange={onChange}
-                />
+            <input type="text" className="form-control"
+                id={name}
+                placeholder={placeholder}
+                name={name}
+                value={value}
+                onChange={onChange}
+            />
         </div></div>;
     }
 
@@ -238,10 +238,10 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             });
             // if error message has code 9, it is supposed to be shown to user
             if (result.getCode() === 9) {
-                this.setState({userMessage: <span>{result.getError()}</span> });
+                this.setState({ userMessage: <span>{result.getError()}</span> });
             } else {
                 this.setState({
-                userMessage: <span>course organization must remove restrictions for {accessLink}</span>
+                    userMessage: <span>course organization must remove restrictions for {accessLink}</span>
                 })
             }
 
@@ -257,7 +257,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
     private courseByName() {
         return <div className="col-sm-12">
             <div className="input-group orgform">
-            <label className="input-group-addon">Organization:</label>
+                <label className="input-group-addon">Organization:</label>
                 <input type="text"
                     className="form-control"
                     id="orgname"
@@ -267,7 +267,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                     onChange={(e) => this.handleInputChange(e)}
                 /> <span className="input-group-btn"><button className="btn btn-primary" type="button"
                     onClick={(e) => this.getOrgByName(this.state.orgname)}
-                 >Find</button></span></div>
+                >Find</button></span></div>
             <label className="control-label col-sm-1" htmlFor="name"></label>
             <div id="message" className="col-sm-11" >
                 <span className={this.setMessageIcon()}>
@@ -327,13 +327,13 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
 
     private setMessageIcon(): string {
         switch (this.state.success) {
-            case 1 : {
+            case 1: {
                 return "glyphicon glyphicon-ok";
             }
-            case 2 : {
+            case 2: {
                 return "glyphicon glyphicon-remove";
             }
-            default : {
+            default: {
                 return "";
             }
         }

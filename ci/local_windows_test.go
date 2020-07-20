@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/autograde/aguis/ci"
+	"github.com/autograde/quickfeed/ci"
 )
 
 func TestLocalWindows(t *testing.T) {

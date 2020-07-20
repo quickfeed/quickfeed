@@ -1,7 +1,7 @@
 #!/bin/bash
 
 AG_BIN="/home/autograder/go/bin"
-AG_ROOT="/home/autograder/aguis"
+AG_ROOT="/home/autograder/quickfeed"
 
 # if a branch name provided, switch to the branch
 if [ "$1" != "" ]; then
@@ -30,7 +30,7 @@ fi
 
 # remove old exec backup, then backup the actual one
 echo "Backing up executables"
-cp $AG_BIN/aguis $AG_BIN/aguis.bak
+cp $AG_BIN/quickfeed $AG_BIN/quickfeed.bak
 
 # recompile: go and ts
 echo "Compiling changes"
@@ -47,7 +47,7 @@ fi
 
 # stop the server
 echo "Bringing the server down"
-if ! killall aguis; then
+if ! killall quickfeed; then
 	echo "Failed to stop the server"
 	exit 1
 fi
@@ -59,7 +59,7 @@ cp ag.db ./backups/ag.db.$(date +"%m-%d-%y").bak
 # start the server
 echo "Starting the server"
 source ag-env.sh
-aguis -service.url ag.itest.run -database.file ./ag.db -http.addr :$AG_PORT &> ag.log &
+quickfeed -service.url ag.itest.run -database.file ./ag.db -http.addr :$AG_PORT &> ag.log &
 
 # done
 echo "All done. Server restarted and running"

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/ci"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/ci"
 	"github.com/gosimple/slug"
 )
 

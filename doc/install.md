@@ -65,19 +65,19 @@ sudo service docker restart
     export GOPATH=$HOME/go/
     ```
     ``` 
-    go get github.com/autograde/aguis
-    cd $GOPATH/src/autograde/aguis/public
+    go get github.com/autograde/quickfeed
+    cd $GOPATH/src/autograde/quickfeed/public
     npm install
     ```
 7. Build Autograde
     ```
-     cd $GOPATH/src/autograde/aguis
+     cd $GOPATH/src/autograde/quickfeed
      go install
     ```
 
 8. Starting Autograder with specific Database and web path.
     ```
-    ./aguis -database.file ./ag.db -http.public $GOPATH/src/github.com/autograde/aguis/public -service.url <url> -script.path <buildscript path>
+    ./quickfeed -database.file ./ag.db -http.public $GOPATH/src/github.com/autograde/quickfeed/public -service.url <url> -script.path <buildscript path>
     ```
 
 9. If this setup is used for production, go into public/index.html and exchange the react-development library with production library

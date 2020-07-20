@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/database"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/database"
 	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
 )

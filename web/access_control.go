@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/scm"
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/scm"
 	"google.golang.org/grpc/metadata"
 )
 

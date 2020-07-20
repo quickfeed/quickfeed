@@ -14,8 +14,17 @@
         "Debugf",
         "Gorm",
         "Repos",
-        "aguis",
+        "quickfeed",
+        "autograde",
+        "covermode",
+        "coverprofile",
+        "gopath",
+        "goveralls",
+        "grpc",
         "jinzhu",
-        "opsys"
+        "opsys",
+        "repotoken",
+        "scms",
+        "sqlite"
     ]
 }

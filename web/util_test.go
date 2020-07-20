@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/autograde/aguis/database"
+	"github.com/autograde/quickfeed/database"
 )
 
 func setup(t *testing.T) (*database.GormDB, func()) {
