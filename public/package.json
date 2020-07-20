@@ -18,7 +18,7 @@
     "fs": "0.0.1-security",
     "google-protobuf": "^3.12.2",
     "grpc-web": "^1.1.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "minimist": "^1.2.5",
     "nan": "^2.14.1",
     "react": "^16.13.1",
