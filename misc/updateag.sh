@@ -59,7 +59,7 @@ cp ag.db ./backups/ag.db.$(date +"%m-%d-%y").bak
 # start the server
 echo "Starting the server"
 source ag-env.sh
-quickfeed -service.url ag.itest.run -database.file ./ag.db -http.addr :$AG_PORT &> ag.log &
+quickfeed -service.url uis.itest.run -database.file ./ag.db -http.addr :$AG_PORT &> ag.log &
 
 # done
 echo "All done. Server restarted and running"
