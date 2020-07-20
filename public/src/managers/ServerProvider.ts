@@ -531,7 +531,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                     const a = s.getAssignment();
                     const sb = s.getSubmission();
                     if (a) {
-                        const name = a.getIsgrouplab() ? enr.getUser()?.getName() : enr.getGroup()?.getName();
+                        const name = a.getIsgrouplab() ? enr.getGroup()?.getName() : enr.getUser()?.getName();
                         allLabs.push({
                             assignment: a,
                             submission: sb ? this.toISubmission(sb) : undefined,
