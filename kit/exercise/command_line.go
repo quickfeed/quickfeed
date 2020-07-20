@@ -41,8 +41,14 @@ func CommandLine(t *testing.T, sc *score.Score, answers Commands) {
 		err := cmd.Run()
 		if err != nil {
 			t.Errorf("%v\n%v: %v.\n", sc.TestName, err, serr.String())
-			sc.Dec()
-			continue
+
+			// If length of stdout > 0, then the application probably puts its error output in stdout
+			// instead of stderr. In that case we want to check the contents of stdout in the switch
+			// statement below to determine whether to decrement the score.
+			if sout.Len() == 0 {
+				sc.Dec()
+				continue
+			}
 		}
 
 		outStr := sout.String()
