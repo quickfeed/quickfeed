@@ -132,3 +132,6 @@ remote:
 
 prometheus:
 	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --storage.tsdb.retention.size=1024MB --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &
+
+docker:
+	docker build -f ci/scripts/go/Dockerfile -t go-quickfeed .
