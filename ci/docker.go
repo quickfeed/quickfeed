@@ -31,38 +31,46 @@ func (d *Docker) Run(ctx context.Context, job *Job, user string, timeout time.Du
 		return "", err
 	}
 
-	if err := pullImage(ctx, cli, job.Image); err != nil {
-		return "", err
+	create := func() (container.ContainerCreateCreatedBody, error) {
+		return cli.ContainerCreate(ctx, &container.Config{
+			Image: job.Image,
+			Cmd:   []string{"/bin/bash", "-c", strings.Join(job.Commands, "\n")},
+		}, nil, nil, user)
 	}
 
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: job.Image,
-		Cmd:   []string{"/bin/sh", "-c", strings.Join(job.Commands, "\n")},
-	}, nil, nil, user)
+	resp, err := create()
 	if err != nil {
-		return "", err
+		// if image not found locally, try to pull it
+		if err := pullImage(ctx, cli, job.Image); err != nil {
+			return "", err
+		}
+		resp, err = create()
+		if err != nil {
+			return "", err
+		}
 	}
 
-	if csErr := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); csErr != nil {
-		return "", csErr
+	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return "", err
 	}
 
 	// will wait until the container stops
-	waitc, errc := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	waitCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 
 	if timeout < 1 {
 		timeout = containerTimeout
 	}
 
 	select {
-	case wErr := <-errc:
-		fmt.Println("wErr: ", wErr.Error())
-		return "", wErr
-		// if the container still running after predefined time interval, force kill it
+	case err := <-errCh:
+		// container failed with error; return
+		return "", err
 	case <-time.After(timeout):
-		cli.ContainerKill(ctx, resp.ID, "SIGTERM")
-		return fmt.Sprintf("Container timed out after %v", timeout), nil
-	case <-waitc:
+		// force kill container after predefined time interval
+		err = cli.ContainerKill(ctx, resp.ID, "SIGTERM")
+		return "", fmt.Errorf("container timed out after %v: %w", timeout, err)
+	case <-waitCh:
+		// container finished gracefully; fallthrough
 	}
 
 	r, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
@@ -79,6 +87,8 @@ func (d *Docker) Run(ctx context.Context, job *Job, user string, timeout time.Du
 	return stdout.String(), nil
 }
 
+// pullImage pulls an image from docker hub; this can be slow and should be
+// avoided if possible.
 func pullImage(ctx context.Context, cli *client.Client, image string) error {
 	progress, err := cli.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
