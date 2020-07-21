@@ -83,7 +83,7 @@ func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	out, err := runner.Run(ctx, job, jobName, 0)
+	out, err := runner.Run(ctx, job, jobName)
 	if err != nil && out == "" {
 		return nil, fmt.Errorf("test execution failed: %w", err)
 	}

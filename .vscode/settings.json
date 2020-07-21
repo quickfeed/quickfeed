@@ -18,6 +18,7 @@
         "assignmentid",
         "autograde",
         "buildid",
+        "cmds",
         "covermode",
         "coverprofile",
         "gopath",
