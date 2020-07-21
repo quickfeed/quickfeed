@@ -32,8 +32,7 @@ rm -rf *_test.go
 rm -f setup.sh
 
 # Run gosecret for all tests
-cd $TESTDIR
-bin/gosecret -secret {{ .RandomSecret }}
+cd $TESTDIR && /quickfeed/bin/gosecret -secret {{ .RandomSecret }}
 
 # Copy tests into student assignments folder for running tests
 cp -r $TESTDIR/* $ASSIGNMENTS/
