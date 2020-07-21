@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/autograde/quickfeed/ci"
 	"github.com/docker/docker/client"
@@ -45,5 +46,29 @@ func TestDocker(t *testing.T) {
 
 	if out != wantOut {
 		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
+	}
+}
+
+func TestDockerTimeout(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	const (
+		script  = `echo -n "hello," && sleep 10`
+		wantOut = `Container timed out after 100ms.
+Please check for infinite loops or other slowness.`
+	)
+
+	docker := &ci.Docker{}
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Image:    "golang:latest",
+		Commands: []string{script},
+	}, "", 100*time.Millisecond)
+	if out == "" {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
+	}
+	if err == nil {
+		t.Errorf("docker.Run(%#v) unexpectedly returned without error", script)
 	}
 }

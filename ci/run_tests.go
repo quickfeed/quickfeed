@@ -45,7 +45,10 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 	ed, err := runTests(scriptPath, runner, info, rData)
 	if err != nil {
 		logger.Errorf("Failed to run tests: %w", err)
-		return
+		if ed == nil {
+			return
+		}
+		// we only get here if err was a timeout, so that we can log 'out' to the user
 	}
 	result, err := ExtractResult(logger, ed.out, info.RandomSecret, ed.execTime)
 	if err != nil {
@@ -60,6 +63,9 @@ type execData struct {
 	execTime time.Duration
 }
 
+// runTests returns execData struct.
+// An error is returned if the execution fails, or times out.
+// If a timeout is the cause of the error, we also return an output string to the user.
 func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) (*execData, error) {
 	job, err := parseScriptTemplate(path, info)
 	if err != nil {
@@ -69,10 +75,11 @@ func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) 
 	jobName := rData.String(info.RandomSecret[:6])
 	start := time.Now()
 	out, err := runner.Run(context.Background(), job, jobName, time.Duration(rData.Assignment.ContainerTimeout)*time.Minute)
-	if err != nil {
+	if err != nil && out == "" {
 		return nil, fmt.Errorf("test execution failed: %w", err)
 	}
-	return &execData{out: out, execTime: time.Since(start)}, nil
+	// this may return a timeout error as well
+	return &execData{out: out, execTime: time.Since(start)}, err
 }
 
 // createAssignmentInfo creates a struct with data to be supplied to
