@@ -22,12 +22,8 @@ import (
 )
 
 func init() {
-  score.GlobalSecret = secret()
+  score.GlobalSecret = "{{ .RandomSecret }}"
   log.SetOutput(ioutil.Discard)
-}
-
-func secret() string {
-  return "{{ .RandomSecret }}"
 }
 `
 
