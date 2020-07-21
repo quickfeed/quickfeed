@@ -3,7 +3,7 @@ package ci
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -54,27 +54,24 @@ func (d *Docker) Run(ctx context.Context, job *Job, user string, timeout time.Du
 		return "", err
 	}
 
-	// will wait until the container stops
-	waitCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-
-	if timeout < 1 {
-		timeout = containerTimeout
-	}
-
-	select {
-	case err := <-errCh:
-		// container failed with error; return
+	// wait until the container stops or context times out.
+	_, err = cli.ContainerWait(ctx, resp.ID)
+	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			timeout := time.Duration(1 * time.Second)
+			// ContainerStop seems to work better than ContainerKill in my tests.
+			stopErr := cli.ContainerStop(context.Background(), resp.ID, &timeout)
+			if stopErr != nil {
+				// if we failed to stop, report it up the chain
+				err = stopErr
+			}
+			userMsg := "Container timeout. Please check for infinite loops or other slowness."
+			return userMsg, err
+		}
 		return "", err
-	case <-time.After(timeout):
-		// force kill container after predefined time interval
-		err = cli.ContainerKill(ctx, resp.ID, "SIGTERM")
-		userErr := fmt.Sprintf("Container timed out after %v.\nPlease check for infinite loops or other slowness.", timeout)
-		return userErr, fmt.Errorf("container timed out after %v: %w", timeout, err)
-	case <-waitCh:
-		// container finished gracefully; fallthrough
 	}
 
-	r, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
+	logReader, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
 		ShowStdout: true,
 	})
 	if err != nil {
@@ -82,7 +79,7 @@ func (d *Docker) Run(ctx context.Context, job *Job, user string, timeout time.Du
 	}
 
 	var stdout bytes.Buffer
-	if _, err := stdcopy.StdCopy(&stdout, ioutil.Discard, r); err != nil {
+	if _, err := stdcopy.StdCopy(&stdout, ioutil.Discard, logReader); err != nil {
 		return "", err
 	}
 	return stdout.String(), nil

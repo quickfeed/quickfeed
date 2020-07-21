@@ -54,5 +54,5 @@ func TestRunTests(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("\n%s\nexecTime: %v\n", ed.out, ed.execTime)
+	t.Logf("\n%s\nExecTime: %v\nSecret: %v\n", ed.out, ed.execTime, info.RandomSecret)
 }

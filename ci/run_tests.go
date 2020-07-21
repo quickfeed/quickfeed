@@ -74,7 +74,16 @@ func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) 
 
 	jobName := rData.String(info.RandomSecret[:6])
 	start := time.Now()
-	out, err := runner.Run(context.Background(), job, jobName, time.Duration(rData.Assignment.ContainerTimeout)*time.Minute)
+
+	timeout := containerTimeout
+	t := rData.Assignment.GetContainerTimeout()
+	if t > 0 {
+		timeout = time.Duration(t) * time.Minute
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	out, err := runner.Run(ctx, job, jobName, 0)
 	if err != nil && out == "" {
 		return nil, fmt.Errorf("test execution failed: %w", err)
 	}
