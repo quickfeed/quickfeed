@@ -16,7 +16,7 @@ func TestLocal(t *testing.T) {
 	local := ci.Local{}
 	out, err := local.Run(context.Background(), &ci.Job{
 		Commands: []string{script},
-	}, "")
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

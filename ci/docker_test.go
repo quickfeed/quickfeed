@@ -40,7 +40,7 @@ func TestDocker(t *testing.T) {
 	out, err := docker.Run(context.Background(), &ci.Job{
 		Image:    "golang:latest",
 		Commands: []string{script},
-	}, "")
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func TestDockerTimeout(t *testing.T) {
 	out, err := docker.Run(ctx, &ci.Job{
 		Image:    "golang:latest",
 		Commands: []string{script},
-	}, "")
+	})
 	if out != wantOut {
 		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
 	}

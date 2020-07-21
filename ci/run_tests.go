@@ -72,7 +72,7 @@ func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) 
 		return nil, fmt.Errorf("failed to parse script template: %w", err)
 	}
 
-	jobName := rData.String(info.RandomSecret[:6])
+	job.Name = rData.String(info.RandomSecret[:6])
 	start := time.Now()
 
 	timeout := containerTimeout
@@ -83,7 +83,7 @@ func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	out, err := runner.Run(ctx, job, jobName)
+	out, err := runner.Run(ctx, job)
 	if err != nil && out == "" {
 		return nil, fmt.Errorf("test execution failed: %w", err)
 	}

@@ -27,6 +27,7 @@
         "goveralls",
         "grpc",
         "jinzhu",
+        "mattn",
         "opsys",
         "quickfeed",
         "repotoken",
