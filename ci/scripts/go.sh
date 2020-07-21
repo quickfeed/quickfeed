@@ -1,4 +1,4 @@
-#image/go-quickfeed:latest
+#image/quickfeed:go
 
 start=$SECONDS
 echo "*** Preparing for Test Execution ***\n"
