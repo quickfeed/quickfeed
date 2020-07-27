@@ -60,7 +60,7 @@ func TestParse(t *testing.T) {
 		},
 	}
 	runner := ci.Local{}
-	_, err = runner.Run(context.Background(), job, "", 0)
+	_, err = runner.Run(context.Background(), job)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +122,7 @@ func TestParseUnknownFields(t *testing.T) {
 		},
 	}
 	runner := ci.Local{}
-	_, err = runner.Run(context.Background(), job, "", 0)
+	_, err = runner.Run(context.Background(), job)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -88,7 +88,7 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 	log.Printf("git clone %v\n", cloneURL)
 
 	runner := ci.Local{}
-	_, err = runner.Run(ctx, job, "", 0)
+	_, err = runner.Run(ctx, job)
 	if err != nil {
 		return nil, err
 	}

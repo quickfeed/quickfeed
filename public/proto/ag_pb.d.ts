@@ -1380,9 +1380,6 @@ export namespace SubmissionsForCourseRequest {
 }
 
 export class RebuildRequest extends jspb.Message {
-  getCourseid(): number;
-  setCourseid(value: number): void;
-
   getSubmissionid(): number;
   setSubmissionid(value: number): void;
 
@@ -1399,7 +1396,6 @@ export class RebuildRequest extends jspb.Message {
 
 export namespace RebuildRequest {
   export type AsObject = {
-    courseid: number,
     submissionid: number,
     assignmentid: number,
   }

@@ -12,7 +12,7 @@ import (
 // and the test repository for an assignment.
 type AssignmentInfo struct {
 	AssignmentName     string
-	Language           string
+	Script             string
 	CreatorAccessToken string
 	GetURL             string
 	TestURL            string
@@ -25,7 +25,7 @@ type AssignmentInfo struct {
 // the commands of the job. The job is extracted from a script template file
 // provided as input along with assignment metadata for the template.
 func parseScriptTemplate(scriptPath string, info *AssignmentInfo) (*Job, error) {
-	tmplFile := filepath.Join(scriptPath, info.Language+".tmpl")
+	tmplFile := filepath.Join(scriptPath, info.Script)
 	t, err := template.ParseFiles(tmplFile)
 	if err != nil {
 		return nil, err

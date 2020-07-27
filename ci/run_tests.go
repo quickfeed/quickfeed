@@ -41,28 +41,54 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 		logger.Errorf("Failed to construct assignment info: %w", err)
 		return
 	}
-	job, err := parseScriptTemplate(scriptPath, info)
+	logger.Debugf("Running tests for %s", rData.JobOwner)
+	ed, err := runTests(scriptPath, runner, info, rData)
 	if err != nil {
-		logger.Errorf("Failed to parse script template: %w", err)
-		return
+		logger.Errorf("Failed to run tests: %w", err)
+		if ed == nil {
+			return
+		}
+		// we only get here if err was a timeout, so that we can log 'out' to the user
 	}
-
-	jobName := rData.String(info.RandomSecret[:6])
-	logger.Debugf("Running tests for %s", jobName)
-	start := time.Now()
-	out, err := runner.Run(context.Background(), job, jobName, time.Duration(rData.Assignment.ContainerTimeout)*time.Minute)
-	if err != nil {
-		logger.Errorf("Test execution failed: %w", err)
-		return
-	}
-	execTime := time.Since(start)
-
-	result, err := ExtractResult(logger, out, info.RandomSecret, execTime)
+	result, err := ExtractResult(logger, ed.out, info.RandomSecret, ed.execTime)
 	if err != nil {
 		logger.Errorf("Failed to extract results from log: %w", err)
 		return
 	}
 	recordResults(logger, db, rData, result)
+}
+
+type execData struct {
+	out      string
+	execTime time.Duration
+}
+
+// runTests returns execData struct.
+// An error is returned if the execution fails, or times out.
+// If a timeout is the cause of the error, we also return an output string to the user.
+func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) (*execData, error) {
+	job, err := parseScriptTemplate(path, info)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse script template: %w", err)
+	}
+
+	job.Name = rData.String(info.RandomSecret[:6])
+	start := time.Now()
+
+	timeout := containerTimeout
+	t := rData.Assignment.GetContainerTimeout()
+	if t > 0 {
+		timeout = time.Duration(t) * time.Minute
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	out, err := runner.Run(ctx, job)
+	if err != nil && out == "" {
+		return nil, fmt.Errorf("test execution failed: %w", err)
+	}
+	// this may return a timeout error as well
+	return &execData{out: out, execTime: time.Since(start)}, err
 }
 
 // createAssignmentInfo creates a struct with data to be supplied to
@@ -77,10 +103,15 @@ func createAssignmentInfo(db database.Database, course *pb.Course, assignment *p
 		return nil, fmt.Errorf("failed to find a test repository for %s: %w", course.GetName(), err)
 	}
 	getURLTest := testRepos[0].GetHTMLURL()
+	//TODO(meling) Rename Language to Script; also impacts DB, yml files and assignments packages.
+	script := assignment.GetLanguage()
+	if strings.Count(script, ".") < 1 {
+		script = script + ".sh"
+	}
 
 	return &AssignmentInfo{
 		AssignmentName:     assignment.GetName(),
-		Language:           assignment.GetLanguage(),
+		Script:             script,
 		CreatorAccessToken: course.GetAccessToken(),
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,

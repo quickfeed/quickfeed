@@ -16,11 +16,9 @@ func TestParseScript(t *testing.T) {
 		t.Fatal(err)
 	}
 	randomString := fmt.Sprintf("%x", sha1.Sum(randomness))
-	getURL := "https://github.com/dat320-2019/meling-stud-labs.git"
-	testURL := "https://github.com/dat320-2019/tests.git"
 	info := &AssignmentInfo{
 		AssignmentName:     "lab2",
-		Language:           "go",
+		Script:             "go.sh",
 		CreatorAccessToken: "secret",
 		GetURL:             getURL,
 		TestURL:            testURL,
@@ -38,13 +36,13 @@ func TestParseScript(t *testing.T) {
 		}
 	}
 
-	info.Language = "python361"
+	info.Script = "python361.sh"
 	_, err = parseScriptTemplate("scripts", info)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	info.Language = "java8"
+	info.Script = "java8.sh"
 	_, err = parseScriptTemplate("scripts", info)
 	if err != nil {
 		t.Fatal(err)
