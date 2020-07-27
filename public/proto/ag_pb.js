@@ -11292,9 +11292,8 @@ proto.RebuildRequest.prototype.toObject = function(opt_includeInstance) {
  */
 proto.RebuildRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    courseid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    submissionid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    assignmentid: jspb.Message.getFieldWithDefault(msg, 3, 0)
+    submissionid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    assignmentid: jspb.Message.getFieldWithDefault(msg, 2, 0)
   };
 
   if (includeInstance) {
@@ -11333,13 +11332,9 @@ proto.RebuildRequest.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setCourseid(value);
-      break;
-    case 2:
-      var value = /** @type {number} */ (reader.readUint64());
       msg.setSubmissionid(value);
       break;
-    case 3:
+    case 2:
       var value = /** @type {number} */ (reader.readUint64());
       msg.setAssignmentid(value);
       break;
@@ -11372,24 +11367,17 @@ proto.RebuildRequest.prototype.serializeBinary = function() {
  */
 proto.RebuildRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getCourseid();
+  f = message.getSubmissionid();
   if (f !== 0) {
     writer.writeUint64(
       1,
       f
     );
   }
-  f = message.getSubmissionid();
-  if (f !== 0) {
-    writer.writeUint64(
-      2,
-      f
-    );
-  }
   f = message.getAssignmentid();
   if (f !== 0) {
     writer.writeUint64(
-      3,
+      2,
       f
     );
   }
@@ -11397,10 +11385,10 @@ proto.RebuildRequest.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional uint64 courseID = 1;
+ * optional uint64 submissionID = 1;
  * @return {number}
  */
-proto.RebuildRequest.prototype.getCourseid = function() {
+proto.RebuildRequest.prototype.getSubmissionid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -11409,16 +11397,16 @@ proto.RebuildRequest.prototype.getCourseid = function() {
  * @param {number} value
  * @return {!proto.RebuildRequest} returns this
  */
-proto.RebuildRequest.prototype.setCourseid = function(value) {
+proto.RebuildRequest.prototype.setSubmissionid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional uint64 submissionID = 2;
+ * optional uint64 assignmentID = 2;
  * @return {number}
  */
-proto.RebuildRequest.prototype.getSubmissionid = function() {
+proto.RebuildRequest.prototype.getAssignmentid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -11427,26 +11415,8 @@ proto.RebuildRequest.prototype.getSubmissionid = function() {
  * @param {number} value
  * @return {!proto.RebuildRequest} returns this
  */
-proto.RebuildRequest.prototype.setSubmissionid = function(value) {
-  return jspb.Message.setProto3IntField(this, 2, value);
-};
-
-
-/**
- * optional uint64 assignmentID = 3;
- * @return {number}
- */
-proto.RebuildRequest.prototype.getAssignmentid = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.RebuildRequest} returns this
- */
 proto.RebuildRequest.prototype.setAssignmentid = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
