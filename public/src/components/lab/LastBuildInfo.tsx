@@ -56,7 +56,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
             classString = "past-deadline";
         }
         const afterDeadline = getDaysAfterDeadline(deadline, delivered);
-        return <div className={classString}>{formatDate(delivered) + (afterDeadline > 0 ? afterDeadline + "  (" + afterDeadline + " days after deadline)" : "")}</div>;
+        return <div className={classString}>{formatDate(delivered) + (afterDeadline > 0 ? "  (" + afterDeadline + " days after deadline)" : "")}</div>;
     }
 
     private formatTime(executionTime: number): number {
