@@ -236,48 +236,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     }
 
-    /*
-    public async getLabsForCourse(courseID: number, groupLabs: boolean): Promise<IAllSubmissionsForEnrollment[]> {
-        const result = await this.grpcHelper.getSubmissionsByCourse(courseID, groupLabs);
-        if (!this.responseCodeSuccess(result) || !result.data) {
-            return [];
-        }
-
-        const results = result.data.getLabsList();
-        const labCourse = new Course();
-        labCourse.setId(courseID);
-        const labs: IAllSubmissionsForEnrollment[] = [];
-        for (const studentLabs of results) {
-            const subs: ISubmissionLink[] = [];
-            const allSubs = studentLabs.getSubmissionsList();
-            if (allSubs) {
-                for (const lab of allSubs) {
-                    // populate student submissions
-                    const labAssignment = new Assignment();
-                    labAssignment.setId(lab.getAssignmentid());
-                    const ILab: ISubmissionLink = {
-                        assignment:  labAssignment,
-                        submission: this.toISubmission(lab),
-                        authorName: studentLabs.getAuthorname(),
-                    };
-                    subs.push(ILab);
-                }
-            }
-            // populate assignment links
-            let enrol = studentLabs.getEnrollment();
-            if (!enrol) {
-                enrol = new Enrollment();
-            }
-            const labLink: IAllSubmissionsForEnrollment = {
-                course: labCourse,
-                enrollment: enrol,
-                labs: subs,
-            };
-            labs.push(labLink);
-        }
-        return labs;
-    }*/
-
     public async tryLogin(username: string, password: string): Promise<User | null> {
         throw new Error("tryLogin This could be removed since there is no normal login.");
     }
