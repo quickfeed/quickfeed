@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -50,10 +51,16 @@ func MultipleChoiceWithDesc(t *testing.T, mdFile string, correct map[string]stri
 		sc.Score = 0
 		t.Fatal(err)
 	}
+	// sort map keys: question numbers
+	qNumbers := make([]string, 0, len(correct))
+	for k := range correct {
+		qNumbers = append(qNumbers, k)
+	}
+	sort.Strings(qNumbers)
 
-	for qNum, correctAnswer := range correct {
+	for _, qNum := range qNumbers {
 		ans, found := qaMap[qNum]
-		if !found || !cmp.Equal(correctAnswer, ans) {
+		if !found || !cmp.Equal(correct[qNum], ans) {
 			t.Errorf("%v: Question %s: Answer not found or incorrect.\n", sc.TestName, qNum)
 			sc.Dec()
 			continue
