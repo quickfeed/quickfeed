@@ -40,7 +40,7 @@ func parseMCAnswers(mdFile string) (map[string]string, error) {
 	return qaMap, nil
 }
 
-func MultipleChoiceWithDesc(t *testing.T, mdFile string, correct map[string]string) {
+func MultipleChoiceWithDesc(t *testing.T, mdFile string, correct map[int]string) {
 	t.Helper()
 	sc := score.NewScoreMax(len(correct), 1)
 	defer sc.WriteString(os.Stdout)
@@ -52,16 +52,16 @@ func MultipleChoiceWithDesc(t *testing.T, mdFile string, correct map[string]stri
 		t.Fatal(err)
 	}
 	// sort map keys: question numbers
-	qNumbers := make([]string, 0, len(correct))
+	qNumbers := make([]int, 0, len(correct))
 	for k := range correct {
 		qNumbers = append(qNumbers, k)
 	}
-	sort.Strings(qNumbers)
+	sort.Ints(qNumbers)
 
 	for _, qNum := range qNumbers {
-		ans, found := qaMap[qNum]
+		ans, found := qaMap[strconv.Itoa(qNum)]
 		if !found || !cmp.Equal(correct[qNum], ans) {
-			t.Errorf("%v: Question %s: Answer not found or incorrect.\n", sc.TestName, qNum)
+			t.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.TestName, qNum)
 			sc.Dec()
 			continue
 		}

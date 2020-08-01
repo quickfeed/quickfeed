@@ -39,27 +39,27 @@ func TestMultipleChoiceWithDesc(t *testing.T) {
 	tests := []struct {
 		name  string
 		file  string
-		qaMap map[string]string
+		qaMap map[int]string
 	}{
 		{
 			name:  "BlankAnswers",
 			file:  "c-prog-questions-blank-answers.md",
-			qaMap: map[string]string{},
+			qaMap: map[int]string{},
 		},
 		{
 			name:  "PartialAnswers",
 			file:  "c-prog-questions-partial-answers.md",
-			qaMap: map[string]string{"1": "c", "4": "c", "6": "a"},
+			qaMap: map[int]string{1: "c", 4: "c", 6: "a"},
 		},
 		{
 			name:  "AllAnswersSomeVCheckMark",
 			file:  "c-prog-questions-all-answers-v-mark.md",
-			qaMap: map[string]string{"1": "a", "3": "c", "5": "b", "6": "b", "7": "d"},
+			qaMap: map[int]string{1: "a", 3: "c", 5: "b", 6: "b", 7: "d"},
 		},
 		{
 			name:  "AllAnswers",
 			file:  "c-prog-questions-all-answers.md",
-			qaMap: map[string]string{"1": "a", "2": "b", "3": "c", "4": "a", "5": "b", "6": "b", "7": "d"},
+			qaMap: map[int]string{1: "a", 2: "b", 3: "c", 4: "a", 5: "b", 6: "b", 7: "d"},
 		},
 	}
 
