@@ -9,7 +9,57 @@ import (
 	"testing"
 
 	"github.com/autograde/quickfeed/kit/score"
+	"github.com/google/go-cmp/cmp"
 )
+
+// compile regular expressions only once
+var (
+	qNumRegExp      = regexp.MustCompile(`^(\d+)\.\s.*$`)
+	selectionRegExp = regexp.MustCompile(`^\s+\-\s\[(x|X)\]\s+([a-f])\)\s.*$`)
+)
+
+func parseMCAnswers(mdFile string) (map[string]string, error) {
+	md, err := ioutil.ReadFile(mdFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var curQ string
+	// map: question# -> answer label
+	qaMap := make(map[string]string)
+	for _, line := range strings.Split(string(md), "\n") {
+		if qNumRegExp.MatchString(line) {
+			curQ = qNumRegExp.ReplaceAllString(line, "$1")
+		}
+		_, found := qaMap[curQ]
+		if !found && curQ != "" && selectionRegExp.MatchString(line) {
+			qaMap[curQ] = selectionRegExp.ReplaceAllString(line, "$2")
+		}
+	}
+	return qaMap, nil
+}
+
+func MultipleChoiceWithDesc(t *testing.T, mdFile string, correct map[string]string) {
+	t.Helper()
+	sc := score.NewScoreMax(len(correct), 1)
+	defer sc.WriteString(os.Stdout)
+	defer sc.WriteJSON(os.Stdout)
+
+	qaMap, err := parseMCAnswers(mdFile)
+	if err != nil {
+		sc.Score = 0
+		t.Fatal(err)
+	}
+
+	for qNum, correctAnswer := range correct {
+		ans, found := qaMap[qNum]
+		if !found || !cmp.Equal(correctAnswer, ans) {
+			t.Errorf("%v: Question %s: Answer not found or incorrect.\n", sc.TestName, qNum)
+			sc.Dec()
+			continue
+		}
+	}
+}
 
 // Choices are the set of correct choices for the questions.
 type Choices []struct {

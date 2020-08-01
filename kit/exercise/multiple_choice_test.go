@@ -1,8 +1,7 @@
 package exercise_test
 
 import (
-	"io/ioutil"
-	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/autograde/quickfeed/kit/exercise"
@@ -20,22 +19,6 @@ var answers = exercise.Choices{
 	{8, 'D'},
 }
 
-var markDownLines = `
-## The Coolest Answers (don't remove this line)
-
-1. C
-2.   b
-3. ACABD
-4. AbC
-5. B
-6. 
-7. D dd (maybe this should fail but currently doesn't)
-8. C   
-9. ABCD
-10. 
-11.
-`
-
 var expectToFail = []int{
 	3, 4, 6, 8,
 }
@@ -46,20 +29,43 @@ func TestMultipleChoice(t *testing.T) {
 	// TODO(meling) In the future we may decouple it better so that we can
 	// check if specific tests are expected to fail, and reorganizing it
 	// as a table-driven test.
-	answerFile, err := ioutil.TempFile("", "example")
-	if err != nil {
-		t.Fatal(err)
-	}
-	// clean up
-	defer os.Remove(answerFile.Name())
 
-	if _, err := answerFile.Write([]byte(markDownLines)); err != nil {
-		t.Fatal(err)
-	}
-	if err := answerFile.Close(); err != nil {
-		t.Fatal(err)
-	}
-
+	oldStyleMC := filepath.Join("..", "testdata", "old-style-answers.md")
 	sc := score.NewScoreMax(len(answers), 1)
-	exercise.MultipleChoice(t, sc, answerFile.Name(), answers)
+	exercise.MultipleChoice(t, sc, oldStyleMC, answers)
+}
+
+func TestMultipleChoiceWithDesc(t *testing.T) {
+	tests := []struct {
+		name  string
+		file  string
+		qaMap map[string]string
+	}{
+		{
+			name:  "BlankAnswers",
+			file:  "c-prog-questions-blank-answers.md",
+			qaMap: map[string]string{},
+		},
+		{
+			name:  "PartialAnswers",
+			file:  "c-prog-questions-partial-answers.md",
+			qaMap: map[string]string{"1": "c", "4": "c", "6": "a"},
+		},
+		{
+			name:  "AllAnswersSomeVCheckMark",
+			file:  "c-prog-questions-all-answers-v-mark.md",
+			qaMap: map[string]string{"1": "a", "3": "c", "5": "b", "6": "b", "7": "d"},
+		},
+		{
+			name:  "AllAnswers",
+			file:  "c-prog-questions-all-answers.md",
+			qaMap: map[string]string{"1": "a", "2": "b", "3": "c", "4": "a", "5": "b", "6": "b", "7": "d"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			exercise.MultipleChoiceWithDesc(t, filepath.Join("..", "testdata", test.file), test.qaMap)
+		})
+	}
 }
