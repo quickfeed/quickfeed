@@ -16,5 +16,6 @@ docs
 ag.logs
 ag.log*
 startag.sh
-backup
+backups
+misc/ag-env.sh
 
