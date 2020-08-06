@@ -46,7 +46,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
             alert: "",
             submissionsForAssignment: mapAllSubmissions(props.students, false, a) as Map<User, ISubmissionLink>,
             submissionsForGroupAssignment: mapAllSubmissions(props.groups, true, a) as Map<Group, ISubmissionLink>,
-            scoreLimit: a.getScorelimit(),
+            scoreLimit: a ? a.getScorelimit() : 0,
         }
     }
 
