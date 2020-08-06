@@ -172,25 +172,25 @@ export class TeacherPage extends ViewPage {
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
                 return <FeedbackView
-                course={course}
-                courseURL={await this.getCourseURL(course.getId())}
-                assignments={assignments}
-                students={students}
-                groups={groups}
-                curUser={curUser}
-                addReview={(r: Review) => {
-                    return this.courseMan.addReview(r, course.getId());
-                }}
-                updateReview={async (r: Review) => {
-                    return this.courseMan.editReview(r, course.getId());
-                }}
-            />;
+                    course={course}
+                    courseURL={await this.getCourseURL(course.getId())}
+                    assignments={assignments}
+                    students={students}
+                    groups={groups}
+                    curUser={curUser}
+                    addReview={(r: Review) => {
+                        return this.courseMan.addReview(r, course.getId());
+                    }}
+                    updateReview={async (r: Review) => {
+                        return this.courseMan.editReview(r, course.getId());
+                    }}
+                />;
             }
             return <div>Please log in.</div>;
         })
     }
 
-    public async releaseReview(info: INavInfo<{ course: string}>): View {
+    public async releaseReview(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const assignments = await this.courseMan.getAssignments(course.getId());
             const students = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
@@ -343,16 +343,15 @@ export class TeacherPage extends ViewPage {
             children: [
                 { name: "Results", uri: link.uri + "/results" },
                 { name: "Group Results", uri: link.uri + "/groupresults" },
-                { name: "Review", uri: link.uri + "/review"},
-                { name: "Release", uri: link.uri + "/release"},
+                { name: "Review", uri: link.uri + "/review" },
+                { name: "Release", uri: link.uri + "/release" },
                 { name: "Groups", uri: link.uri + "/groups" },
                 { name: "Members", uri: link.uri + "/members" },
-                { name: "New Group", uri: link.uri + "/new_group"},
+                { name: "New Group", uri: link.uri + "/new_group" },
                 { name: "Repositories" },
                 { name: "Course Info", uri: repoMap?.get(Repository.Type.COURSEINFO) ?? "", absolute: true },
                 { name: "Assignments", uri: repoMap?.get(Repository.Type.ASSIGNMENTS) ?? "", absolute: true },
                 { name: "Tests", uri: repoMap?.get(Repository.Type.TESTS) ?? "", absolute: true },
-                { name: "Solutions", uri: repoMap?.get(Repository.Type.SOLUTIONS) ?? "", absolute: true },
             ],
         };
     }
@@ -433,10 +432,9 @@ export class TeacherPage extends ViewPage {
 
     private async fetchCourseRepos(courseID: number): Promise<Map<Repository.Type, string>> {
         return this.courseMan.getRepositories(courseID,
-                [Repository.Type.COURSEINFO,
-                Repository.Type.ASSIGNMENTS,
-                Repository.Type.TESTS,
-                Repository.Type.SOLUTIONS]);
+            [Repository.Type.COURSEINFO,
+            Repository.Type.ASSIGNMENTS,
+            Repository.Type.TESTS]);
     }
 
     private setupRepos(): Map<number, Map<Repository.Type, string>> {
@@ -474,6 +472,6 @@ export class TeacherPage extends ViewPage {
                     return this.courseMan.deleteCriterion(c)
                 }}
             ></AssignmentView>)
-            }</div>
+        }</div>
     }
 }

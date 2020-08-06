@@ -126,7 +126,6 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                     <ul>
                         <li>course-info</li>
                         <li>assignments</li>
-                        <li>solutions</li>
                         <li>tests</li>
                     </ul>
                 </div>
