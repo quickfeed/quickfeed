@@ -5,7 +5,6 @@ const (
 	InfoRepo          = "course-info"
 	AssignmentRepo    = "assignments"
 	TestsRepo         = "tests"
-	SolutionsRepo     = "solutions"
 	StudentRepoSuffix = "-labs"
 )
 
@@ -48,8 +47,6 @@ func RepoType(path string) (repoType Repository_Type) {
 		repoType = Repository_ASSIGNMENTS
 	case TestsRepo:
 		repoType = Repository_TESTS
-	case SolutionsRepo:
-		repoType = Repository_SOLUTIONS
 	}
 	return
 }

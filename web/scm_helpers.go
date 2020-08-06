@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	repoNames = fmt.Sprintf("(%s, %s, %s, %s)",
-		pb.InfoRepo, pb.AssignmentRepo, pb.TestsRepo, pb.SolutionsRepo)
+	repoNames = fmt.Sprintf("(%s, %s, %s)",
+		pb.InfoRepo, pb.AssignmentRepo, pb.TestsRepo)
 
 	// ErrAlreadyExists indicates that one or more Autograder repositories
 	// already exists for the directory (or GitHub organization).

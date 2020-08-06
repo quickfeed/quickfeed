@@ -21,7 +21,6 @@ var RepoPaths = map[string]bool{
 	pb.InfoRepo:       public,
 	pb.AssignmentRepo: private,
 	pb.TestsRepo:      private,
-	pb.SolutionsRepo:  private,
 }
 
 // createCourse creates a new course for the directory specified in the request

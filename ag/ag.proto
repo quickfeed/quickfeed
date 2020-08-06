@@ -89,9 +89,8 @@ message Repository {
         COURSEINFO = 1;
         ASSIGNMENTS = 2;
         TESTS = 3;
-        SOLUTIONS = 4;
-        USER = 5;
-        GROUP = 6;
+        USER = 4;
+        GROUP = 5;
     }
     uint64 ID = 1;
     uint64 organizationID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:uid_gid_org_type\""];
