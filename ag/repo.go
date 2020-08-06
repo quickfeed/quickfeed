@@ -15,7 +15,7 @@ func StudentRepoName(userName string) string {
 
 // IsCourseRepo returns true if the repository is one of the course repo types.
 func (t Repository_Type) IsCourseRepo() bool {
-	return t == Repository_COURSEINFO || t == Repository_TESTS || t == Repository_SOLUTIONS || t == Repository_ASSIGNMENTS
+	return t == Repository_COURSEINFO || t == Repository_TESTS || t == Repository_ASSIGNMENTS
 }
 
 // IsTestsRepo returns true if the repository is a 'tests' type.

@@ -1422,18 +1422,6 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Creating solution
-	repoSolution := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   101,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_SOLUTIONS,
-		HTMLURL:        "http://repoSolution.com/",
-	}
-	if err := db.CreateRepository(&repoSolution); err != nil {
-		t.Fatal(err)
-	}
-
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
 		OrganizationID: 120,
@@ -1446,7 +1434,7 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := []*pb.Repository{&repoCourseInfo, &repoAssignment, &repoSolution}
+	want := []*pb.Repository{&repoCourseInfo, &repoAssignment}
 
 	gotRepo, err := db.GetRepositories(&pb.Repository{OrganizationID: 120})
 	if err != nil {
@@ -1561,18 +1549,6 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Creating solution
-	repoSolution := pb.Repository{
-		OrganizationID: 1234,
-		RepositoryID:   101,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_SOLUTIONS,
-		HTMLURL:        "http://repoSolution.com/",
-	}
-	if err := db.CreateRepository(&repoSolution); err != nil {
-		t.Fatal(err)
-	}
-
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
 		OrganizationID: 1234,
@@ -1632,18 +1608,6 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 		HTMLURL:        "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating solution
-	repoSolution := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   101,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_SOLUTIONS,
-		HTMLURL:        "http://repoSolution.com/",
-	}
-	if err := db.CreateRepository(&repoSolution); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1730,18 +1694,6 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 		HTMLURL:        "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating solution
-	repoSolution := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   101,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_SOLUTIONS,
-		HTMLURL:        "http://repoSolution.com/",
-	}
-	if err := db.CreateRepository(&repoSolution); err != nil {
 		t.Fatal(err)
 	}
 

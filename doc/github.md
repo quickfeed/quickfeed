@@ -12,7 +12,7 @@
     2. In the top right corner, press the + menu and click on New organization.
     3. Name your organization, select billing plan.
 
-       **Note!** If you select the free plan, only teams can be secret, and thus the `tests` and `solutions` repositories will be visible to everyone. This should be fine for development and testing, but if you are planning to use Autograder in your course, you will probably want to upgrade your organization to a plan with private repositories. Academic institutions will most probably get free access through GitHub's academic program.
+       **Note!** If you select the free plan, only teams can be secret, and thus the `tests` repository will be visible to everyone. This should be fine for development and testing, but if you are planning to use Autograder in your course, you will probably want to upgrade your organization to a plan with private repositories. Academic institutions will most probably get free access through GitHub's academic program.
 
     4. Skip Invite members; Autograder handles this.
     5. Skip Organization details.

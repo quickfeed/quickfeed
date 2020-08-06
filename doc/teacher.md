@@ -39,7 +39,7 @@ The following concepts are important to understand.
 
 For teachers, GitHub is happy to upgrade your organization to serve private repositories
 
- - There should not be any course repositories in your organization before the course creation, as Autograder will create repositories with GitHub webhook events automatically. Course repositories are repositories with names `assignments`, `tests`, `solutions` or `course-info`. If you already have such repositories in your organization, you will have to remove (or temporarily rename) them in order to be able to create a new course.
+ - There should not be any course repositories in your organization before the course creation, as Autograder will create repositories with GitHub webhook events automatically. Course repositories are repositories with names `assignments`, `tests` or `course-info`. If you already have such repositories in your organization, you will have to remove (or temporarily rename) them in order to be able to create a new course.
 
 ## Course
 
@@ -53,7 +53,7 @@ Autograder uses the following repository structure. These will be created automa
 | assignments	  | Contains a separate folder for each assignment.  |Students, Teachers,<br>Autograder |
 | username-labs   |	Created for each student username in autograder	 |Student, Teachers,<br> Autograder |
 | tests	          | Contains a separate folder for each assignment<br> with tests for that assignment. |Teachers, Autograder|
-| solutions	      | Typically contains assignments, tests, and<br> solutions that pass the tests. |	Teachers |
+| FIXME(meling) solutions	      | Typically contains assignments, tests, and<br> solutions that pass the tests. |	Teachers |
 
 *In Autograder, Teacher means any teaching staff, including teaching assistants and professors alike.*
 
