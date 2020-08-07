@@ -28,9 +28,18 @@ type Commands []struct {
 // that students provided. The function requires the list of commands
 // and their expected answers, and a Score object. The function
 // will produce both string output and JSON output.
-func CommandLine(t *testing.T, sc *score.Score, answers Commands) {
+//
+// In addition to displaying error output through the t argument, the
+// output written to stdout and stderr, along with the error message
+// of each command, are returned in the respective stdout, stderr and
+// errors slices, where indices match those of the commands.
+func CommandLine(t *testing.T, sc *score.Score, answers Commands) (stdout []string, stderr []string, errors []error) {
 	defer sc.WriteString(os.Stdout)
 	defer sc.WriteJSON(os.Stdout)
+
+	stdout = make([]string, len(answers))
+	stderr = make([]string, len(answers))
+	errors = make([]error, len(answers))
 
 	for i := range answers {
 		cmdArgs := strings.Split(answers[i].Command, " ")
@@ -39,6 +48,10 @@ func CommandLine(t *testing.T, sc *score.Score, answers Commands) {
 		var sout, serr bytes.Buffer
 		cmd.Stdout, cmd.Stderr = &sout, &serr
 		err := cmd.Run()
+		// Store the outputs and error to be returned
+		stdout[i] = sout.String()
+		stderr[i] = serr.String()
+		errors[i] = err
 		if err != nil {
 			t.Errorf("%v\n%v: %v.\n", sc.TestName, err, serr.String())
 
@@ -74,4 +87,6 @@ func CommandLine(t *testing.T, sc *score.Score, answers Commands) {
 			}
 		}
 	}
+
+	return
 }
