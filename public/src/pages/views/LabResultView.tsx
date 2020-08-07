@@ -9,7 +9,7 @@ interface ILabInfoProps {
     courseURL: string;
     slipdays: number;
     teacherPageView: boolean;
-    onSubmissionStatusUpdate: (status: Submission.Status) => Promise<boolean>;
+    onSubmissionStatusUpdate: (status: Submission.Status) => void;
     onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
