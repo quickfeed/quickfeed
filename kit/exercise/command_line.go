@@ -40,7 +40,10 @@ func (e CommandLineError) StdErr() string {
 	return e.stdErr
 }
 
-func (e CommandLineError) Error() string {
+func (e *CommandLineError) Error() string {
+	if e == nil || e.err == nil {
+		return ""
+	}
 	return e.err.Error()
 }
 
