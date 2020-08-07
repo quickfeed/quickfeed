@@ -12,8 +12,8 @@ interface IResultsProps {
     allCourseSubmissions: IAllSubmissionsForEnrollment[];
     assignments: Assignment[];
     courseCreatorView: boolean;
-    onApproveClick: (submission: ISubmission) => Promise<boolean>;
-    onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
+    onSubmissionStatusUpdate: (submission: ISubmission) => Promise<boolean>;
+    onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
 
 interface IResultsState {
@@ -46,8 +46,6 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
     public render() {
         let studentLab: JSX.Element | null = null;
         const currentStudents = this.props.allCourseSubmissions.length > 0 ? this.props.allCourseSubmissions : null;
-        const currentLab = this.state.selectedSubmission;
-        const currentSubmission = this.state.selectedSubmission?.submission;
         if (currentStudents
             && this.state.selectedSubmission && this.state.selectedStudent
             && !this.state.selectedSubmission.assignment.getIsgrouplab()
@@ -58,10 +56,10 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                 student={this.state.selectedStudent.enrollment.getUser() ?? new User()}
                 teacherPageView={true}
                 slipdays={this.state.selectedSubmission.submission ? getSlipDays(this.props.allCourseSubmissions, this.state.selectedSubmission.submission, false) : 0}
-                onRebuildClick={
+                onSubmissionRebuild={
                     async () => {
                         if (this.state.selectedSubmission && this.state.selectedSubmission.submission) {
-                            const ans = await this.props.onRebuildClick(this.state.selectedSubmission.assignment.getId(), this.state.selectedSubmission.submission.id);
+                            const ans = await this.props.onSubmissionRebuild(this.state.selectedSubmission.assignment.getId(), this.state.selectedSubmission.submission.id);
                             if (ans) {
                                 this.state.selectedSubmission.submission = ans;
                                 return true;
@@ -70,12 +68,12 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                         return false;
                     }
                 }
-                onApproveClick={ async (status: Submission.Status, approve: boolean) => {
+                onSubmissionStatusUpdate={ async (status: Submission.Status) => {
                     const current = this.state.selectedSubmission;
                     const selected = current?.submission;
                     if (selected) {
                         selected.status = status;
-                        const ans = await this.props.onApproveClick(selected);
+                        const ans = await this.props.onSubmissionStatusUpdate(selected);
                         if (ans) {
                             this.setState({
                                 selectedSubmission: current,

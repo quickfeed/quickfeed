@@ -13,7 +13,6 @@ import { EnrollmentView } from "./views/EnrollmentView";
 import { showLoader } from "../loader";
 import { CourseListView } from "./views/CourseListView";
 import { sortEnrollmentsByVisibility } from "../componentHelper";
-import { TeacherPage } from './TeacherPage';
 
 export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -137,12 +136,12 @@ export class StudentPage extends ViewPage {
                     slipdays={this.selectedUserCourse.enrollment.getSlipdaysremaining()}
                     student={curUser}
                     courseURL={""}
-                    onRebuildClick={async (assignmentID: number, submissionID: number) => {
+                    onSubmissionRebuild={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onApproveClick={async () => {
+                    onSubmissionStatusUpdate={async () => {
                         return false;
                     }}
                     >
@@ -168,12 +167,12 @@ export class StudentPage extends ViewPage {
                     slipdays={this.selectedUserGroupCourse.enrollment.getSlipdaysremaining()}
                     courseURL={""}
                     student={curUser}
-                    onRebuildClick={async (assignmentID: number, submissionID: number) => {
+                    onSubmissionRebuild={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onApproveClick={async () => {
+                    onSubmissionStatusUpdate={async () => {
                         return false;
                     }}
                   >

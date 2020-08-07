@@ -4,15 +4,15 @@ import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from '../../models';
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { getSlipDays, groupRepoLink, searchForLabs } from "../../componentHelper";
+import { groupRepoLink, searchForLabs } from "../../componentHelper";
 
 interface IResultsProps {
     course: Course;
     courseURL: string;
     groups: IAllSubmissionsForEnrollment[];
     labs: Assignment[];
-    onApproveClick: (submission: ISubmission) => Promise<boolean>;
-    onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
+    onSubmissionStatusUpdate: (submission: ISubmission) => Promise<boolean>;
+    onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
 
 interface IResultsState {
@@ -53,10 +53,10 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 courseURL={this.props.courseURL}
                 teacherPageView={true}
                 slipdays={this.props.course.getSlipdays()}
-                onRebuildClick={
+                onSubmissionRebuild={
                     async () => {
                         if (this.state.submissionLink && this.state.submissionLink.submission) {
-                            const ans = await this.props.onRebuildClick(this.state.submissionLink.assignment.getId(), this.state.submissionLink.submission.id);
+                            const ans = await this.props.onSubmissionRebuild(this.state.submissionLink.assignment.getId(), this.state.submissionLink.submission.id);
                             if (ans) {
                                 this.state.submissionLink.submission = ans;
                                 return true;
@@ -65,12 +65,12 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                         return false;
                     }
                 }
-                onApproveClick={async (status: Submission.Status, approve: boolean) => {
+                onSubmissionStatusUpdate={async (status: Submission.Status) => {
                     const selected = this.state.submissionLink;
                     const latest = selected?.submission;
                     if (latest) {
                         latest.status = Submission.Status.APPROVED;
-                        const ans = await this.props.onApproveClick(latest);
+                        const ans = await this.props.onSubmissionStatusUpdate(latest);
                         if (ans) {
                             this.setState({
                                 submissionLink: selected,
