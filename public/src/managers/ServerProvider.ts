@@ -13,6 +13,7 @@ import {
     Submission,
     SubmissionsForCourseRequest,
     User,
+    DiscordResponse,
 } from "../../proto/ag_pb";
 import {
     IAllSubmissionsForEnrollment,
@@ -411,6 +412,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
         const result = await this.grpcHelper.updatesubmissions(assignmentID, courseID, score, release, approve);
         return this.responseCodeSuccess(result);
+    }
+
+    public async getStudentForDiscord(courseCode: string, courseYear: number, userLogin: string): Promise<DiscordResponse | Status> {
+        const result = await this.grpcHelper.getStudentForDiscord(courseCode, courseYear, userLogin);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return result.status;
+        }
+        return result.data;
     }
 
     private toISubmission(sbm: Submission): ISubmission {

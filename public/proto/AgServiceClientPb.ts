@@ -17,6 +17,8 @@ import {
   CourseRequest,
   CourseSubmissions,
   Courses,
+  DiscordRequest,
+  DiscordResponse,
   Enrollment,
   EnrollmentRequest,
   EnrollmentStatusRequest,
@@ -966,6 +968,28 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoIsEmptyRepo,
+      callback);
+  }
+
+  methodInfoGetStudentForDiscord = new grpcWeb.AbstractClientBase.MethodInfo(
+    DiscordResponse,
+    (request: DiscordRequest) => {
+      return request.serializeBinary();
+    },
+    DiscordResponse.deserializeBinary
+  );
+
+  getStudentForDiscord(
+    request: DiscordRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: DiscordResponse) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetStudentForDiscord',
+      request,
+      metadata || {},
+      this.methodInfoGetStudentForDiscord,
       callback);
   }
 

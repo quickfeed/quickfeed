@@ -322,9 +322,8 @@ export namespace Repository {
     COURSEINFO = 1,
     ASSIGNMENTS = 2,
     TESTS = 3,
-    SOLUTIONS = 4,
-    USER = 5,
-    GROUP = 6,
+    USER = 4,
+    GROUP = 5,
   }
 }
 
@@ -1398,6 +1397,54 @@ export namespace RebuildRequest {
   export type AsObject = {
     submissionid: number,
     assignmentid: number,
+  }
+}
+
+export class DiscordRequest extends jspb.Message {
+  getCoursecode(): string;
+  setCoursecode(value: string): void;
+
+  getCourseyear(): number;
+  setCourseyear(value: number): void;
+
+  getUserlogin(): string;
+  setUserlogin(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DiscordRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: DiscordRequest): DiscordRequest.AsObject;
+  static serializeBinaryToWriter(message: DiscordRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DiscordRequest;
+  static deserializeBinaryFromReader(message: DiscordRequest, reader: jspb.BinaryReader): DiscordRequest;
+}
+
+export namespace DiscordRequest {
+  export type AsObject = {
+    coursecode: string,
+    courseyear: number,
+    userlogin: string,
+  }
+}
+
+export class DiscordResponse extends jspb.Message {
+  getStudentname(): string;
+  setStudentname(value: string): void;
+
+  getStudentid(): string;
+  setStudentid(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DiscordResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: DiscordResponse): DiscordResponse.AsObject;
+  static serializeBinaryToWriter(message: DiscordResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DiscordResponse;
+  static deserializeBinaryFromReader(message: DiscordResponse, reader: jspb.BinaryReader): DiscordResponse;
+}
+
+export namespace DiscordResponse {
+  export type AsObject = {
+    studentname: string,
+    studentid: string,
   }
 }
 

@@ -1,7 +1,7 @@
 import { IEventData, newEvent } from "../event";
 import { ILogger } from "./LogManager";
 
-import { Enrollment, User } from "../../proto/ag_pb";
+import { Enrollment, User, DiscordResponse, Status } from '../../proto/ag_pb';
 
 export interface IUserProvider {
     tryLogin(username: string, password: string): Promise<User | null>;
@@ -13,6 +13,7 @@ export interface IUserProvider {
     getLoggedInUser(): Promise<User | null>;
     updateUser(user: User): Promise<boolean>;
     isAuthorizedTeacher(): Promise<boolean>;
+    getStudentForDiscord(courseCode: string, courseYear: number, userLogin: string): Promise<DiscordResponse | Status>;
 }
 
 interface IUserLoginEvent extends IEventData {
@@ -132,6 +133,10 @@ export class UserManager {
             });
         }
         return valid;
+    }
+
+    public async getStudentForDiscord(courseCode: string, courseYear: number, userLogin: string): Promise<DiscordResponse | Status> {
+        return this.userProvider.getStudentForDiscord(courseCode, courseYear, userLogin);
     }
 
     /**
