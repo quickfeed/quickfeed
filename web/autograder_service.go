@@ -855,6 +855,22 @@ func (s *AutograderService) IsEmptyRepo(ctx context.Context, in *pb.RepositoryRe
 		}
 		return nil, status.Errorf(codes.FailedPrecondition, "group repository does not exist or not empty")
 	}
-
 	return &pb.Void{}, nil
+}
+
+// GetStudentForDiscord fetches student name and ID by the course name and student's GitHub login
+// Access policy: Course teachers
+func (s *AutograderService) GetStudentForDiscord(ctx context.Context, in *pb.DiscordRequest) (*pb.DiscordResponse, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("GetStudentForDiscord failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
+
+	userInfo, err := s.getStudentForDiscord(in, usr)
+	if err != nil {
+		s.logger.Errorf("GetStudentForDiscord failed: %+v", err)
+		return nil, status.Errorf(codes.FailedPrecondition, "failed to get student information")
+	}
+	return userInfo, nil
 }

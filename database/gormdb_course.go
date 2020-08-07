@@ -84,6 +84,15 @@ func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 	return &course, nil
 }
 
+// GetCourseBycodeAndYear returns course with given code and year
+func (db *GormDB) GetCourseByCodeAndYear(courseCode string, courseYear uint32) (*pb.Course, error) {
+	var course pb.Course
+	if err := db.conn.Where(&pb.Course{Code: courseCode, Year: courseYear}).First(&course).Error; err != nil {
+		return nil, err
+	}
+	return &course, nil
+}
+
 // GetCourses returns a list of courses. If one or more course ids are provided,
 // the corresponding courses are returned. Otherwise, all courses are returned.
 func (db *GormDB) GetCourses(courseIDs ...uint64) ([]*pb.Course, error) {

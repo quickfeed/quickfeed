@@ -42,6 +42,15 @@ func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, 
 	return &user, nil
 }
 
+// GetUserByLogin returns user by provider login.
+func (db *GormDB) GetUserByLogin(login string) (*pb.User, error) {
+	var user pb.User
+	if err := db.conn.Preload("Enrollments").Where(&pb.User{Login: login}).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 // GetUserWithEnrollments returns user with the given ID with all enrollments.
 func (db *GormDB) GetUserWithEnrollments(userID uint64) (*pb.User, error) {
 	var user pb.User

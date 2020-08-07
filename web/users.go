@@ -49,6 +49,16 @@ func (s *AutograderService) getUsers() (*pb.Users, error) {
 	return &pb.Users{Users: users}, nil
 }
 
+//
+func (s *AutograderService) getStudentForDiscord(request *pb.DiscordRequest, currentUser *pb.User) (*pb.DiscordResponse, error) {
+	// get course by name
+	// get user by login
+	// check that the current user is course teacher
+	// check that the requested user is enrolled into the course
+	// return info
+	return nil, nil
+}
+
 // updateUser updates the user profile according to the user data in
 // the request object. If curUser is admin, and the request may also
 // promote the user to admin.

@@ -19,6 +19,8 @@ type Database interface {
 
 	// GetUser returns the given user, including remote identities.
 	GetUser(uint64) (*pb.User, error)
+	// GetUserByGitHubLogin returns the owner of the given login.
+	GetUserByLogin(string) (*pb.User, error)
 	// GetUserWithEnrollments returns the user by ID with preloaded user enrollments.
 	GetUserWithEnrollments(uint64) (*pb.User, error)
 	// GetUsers returns the users for the given set of user IDs.
@@ -33,6 +35,8 @@ type Database interface {
 	GetCourse(uint64, bool) (*pb.Course, error)
 	// GetCourseByOrganizationID fetches course by organization ID.
 	GetCourseByOrganizationID(organizationID uint64) (*pb.Course, error)
+	// GetCourseByCodeAndYear returns a course with the given code and year.
+	GetCourseByCodeAndYear(string, uint32) (*pb.Course, error)
 	// GetCourses returns a list of courses. If one or more course IDs are provided,
 	// the corresponding courses are returned. Otherwise, all courses are returned.
 	GetCourses(...uint64) ([]*pb.Course, error)
