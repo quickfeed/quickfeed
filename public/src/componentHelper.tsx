@@ -204,7 +204,7 @@ export function userRepoLink(login: string, name: string, courseURL?: string): J
 }
 
 export function userSubmissionLink(login: string, assignmentName: string, courseURL: string, style?: string): JSX.Element {
-    return <a className={style} href={labRepoLink(courseURL, login) + "/" + assignmentName} target="_blank">Open repository</a>
+    return <a className={style} href={labRepoLink(courseURL, login) + "/tree/master/" + assignmentName} target="_blank">Open repository</a>
 }
 
 // Returns a URL-friendly version of the given string.
