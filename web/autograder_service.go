@@ -45,11 +45,11 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.Void) (*pb.User,
 		s.logger.Errorf("GetUser failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	dbUsr, err := s.db.GetUserWithEnrollments(usr.GetID())
+	userInfo, err := s.db.GetUserWithEnrollments(usr.GetID())
 	if err != nil {
 		s.logger.Errorf("GetUser failed to get user with enrollments: %w ", err)
 	}
-	return dbUsr, nil
+	return userInfo, nil
 
 }
 
@@ -66,26 +66,26 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 		s.logger.Error("GetUsers failed: user is not admin")
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access other users")
 	}
-	usrs, err := s.getUsers()
+	users, err := s.getUsers()
 	if err != nil {
 		s.logger.Errorf("GetUsers failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "failed to get users")
 	}
-	return usrs, nil
+	return users, nil
 }
 
-// GetStudentForDiscord fetches student name and ID by the course name and student's GitHub login
+// GetUserByCourse returns the user matching the given course name and GitHub login
+// specified in CourseUserRequest.
 // Access policy: Course teachers
 func (s *AutograderService) GetUserByCourse(ctx context.Context, in *pb.CourseUserRequest) (*pb.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetStudentForDiscord failed: authentication error: %w", err)
+		s.logger.Errorf("GetUserByCourse failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-
-	userInfo, err := s.getStudentByCourse(in, usr)
+	userInfo, err := s.getUserByCourse(in, usr)
 	if err != nil {
-		s.logger.Errorf("GetStudentForDiscord failed: %+v", err)
+		s.logger.Errorf("GetUserByCourse failed: %+v", err)
 		return nil, status.Errorf(codes.FailedPrecondition, "failed to get student information")
 	}
 	return userInfo, nil
@@ -115,7 +115,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Vo
 // IsAuthorizedTeacher checks whether current user has teacher scopes.
 // Access policy: Any User.
 func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void) (*pb.AuthorizationResponse, error) {
-	// Currently harcoded for github only
+	// Currently hardcoded for github only
 	_, scm, err := s.getUserAndSCM(ctx, "github")
 	if err != nil {
 		s.logger.Errorf("IsAuthorizedTeacher failed: scm authentication error: %w", err)
@@ -564,7 +564,7 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.ID, in.GetCourseID()) {
-		s.logger.Error("ApproveSubmision failed: user is not teacher")
+		s.logger.Error("ApproveSubmission failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can approve submissions")
 	}
 	err = s.updateSubmission(in.GetSubmissionID(), in.GetStatus(), in.GetReleased(), in.GetScore())
