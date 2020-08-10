@@ -74,6 +74,23 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 	return usrs, nil
 }
 
+// GetStudentForDiscord fetches student name and ID by the course name and student's GitHub login
+// Access policy: Course teachers
+func (s *AutograderService) GetUserByCourse(ctx context.Context, in *pb.CourseUserRequest) (*pb.User, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("GetStudentForDiscord failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
+
+	userInfo, err := s.getStudentForDiscord(in, usr)
+	if err != nil {
+		s.logger.Errorf("GetStudentForDiscord failed: %+v", err)
+		return nil, status.Errorf(codes.FailedPrecondition, "failed to get student information")
+	}
+	return userInfo, nil
+}
+
 // UpdateUser updates the current users's information and returns the updated user.
 // This function can also promote a user to admin or demote a user.
 // Access policy: Admin can update other users's information and promote to Admin;
@@ -650,7 +667,7 @@ func (s *AutograderService) CreateReview(ctx context.Context, in *pb.ReviewReque
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can add reviews")
 	}
 	if !usr.IsOwner(in.Review.GetReviewerID()) {
-		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.Review.ReviewerID)
+		s.logger.Errorf("CreateReview failed: current user's ID: %d, when the reviewer's ID is %d ", usr.ID, in.Review.ReviewerID)
 		return nil, status.Errorf(codes.PermissionDenied, "failed to create review: reviewers' IDs don't match")
 	}
 	if err := in.Review.MakeReviewString(); err != nil {
@@ -856,21 +873,4 @@ func (s *AutograderService) IsEmptyRepo(ctx context.Context, in *pb.RepositoryRe
 		return nil, status.Errorf(codes.FailedPrecondition, "group repository does not exist or not empty")
 	}
 	return &pb.Void{}, nil
-}
-
-// GetStudentForDiscord fetches student name and ID by the course name and student's GitHub login
-// Access policy: Course teachers
-func (s *AutograderService) GetStudentForDiscord(ctx context.Context, in *pb.DiscordRequest) (*pb.DiscordResponse, error) {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Errorf("GetStudentForDiscord failed: authentication error: %w", err)
-		return nil, ErrInvalidUserInfo
-	}
-
-	userInfo, err := s.getStudentForDiscord(in, usr)
-	if err != nil {
-		s.logger.Errorf("GetStudentForDiscord failed: %+v", err)
-		return nil, status.Errorf(codes.FailedPrecondition, "failed to get student information")
-	}
-	return userInfo, nil
 }

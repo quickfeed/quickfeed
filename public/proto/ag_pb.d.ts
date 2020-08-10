@@ -1400,7 +1400,7 @@ export namespace RebuildRequest {
   }
 }
 
-export class DiscordRequest extends jspb.Message {
+export class CourseUserRequest extends jspb.Message {
   getCoursecode(): string;
   setCoursecode(value: string): void;
 
@@ -1411,40 +1411,18 @@ export class DiscordRequest extends jspb.Message {
   setUserlogin(value: string): void;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): DiscordRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: DiscordRequest): DiscordRequest.AsObject;
-  static serializeBinaryToWriter(message: DiscordRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): DiscordRequest;
-  static deserializeBinaryFromReader(message: DiscordRequest, reader: jspb.BinaryReader): DiscordRequest;
+  toObject(includeInstance?: boolean): CourseUserRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: CourseUserRequest): CourseUserRequest.AsObject;
+  static serializeBinaryToWriter(message: CourseUserRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CourseUserRequest;
+  static deserializeBinaryFromReader(message: CourseUserRequest, reader: jspb.BinaryReader): CourseUserRequest;
 }
 
-export namespace DiscordRequest {
+export namespace CourseUserRequest {
   export type AsObject = {
     coursecode: string,
     courseyear: number,
     userlogin: string,
-  }
-}
-
-export class DiscordResponse extends jspb.Message {
-  getStudentname(): string;
-  setStudentname(value: string): void;
-
-  getStudentid(): string;
-  setStudentid(value: string): void;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): DiscordResponse.AsObject;
-  static toObject(includeInstance: boolean, msg: DiscordResponse): DiscordResponse.AsObject;
-  static serializeBinaryToWriter(message: DiscordResponse, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): DiscordResponse;
-  static deserializeBinaryFromReader(message: DiscordResponse, reader: jspb.BinaryReader): DiscordResponse;
-}
-
-export namespace DiscordResponse {
-  export type AsObject = {
-    studentname: string,
-    studentid: string,
   }
 }
 

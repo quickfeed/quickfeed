@@ -233,6 +233,6 @@ func (c GradingCriterion) IsValid() bool {
 }
 
 // IsValid ensures that course code, year, and student login are set
-func (r DiscordRequest) IsValid() bool {
-	return r.CourseCode != "" && r.UserLogin != "" && r.CourseYear > 0
+func (r CourseUserRequest) IsValid() bool {
+	return r.CourseCode != "" && r.UserLogin != "" && r.CourseYear > 2019
 }

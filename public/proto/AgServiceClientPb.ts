@@ -16,9 +16,8 @@ import {
   Course,
   CourseRequest,
   CourseSubmissions,
+  CourseUserRequest,
   Courses,
-  DiscordRequest,
-  DiscordResponse,
   Enrollment,
   EnrollmentRequest,
   EnrollmentStatusRequest,
@@ -110,6 +109,28 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoGetUsers,
+      callback);
+  }
+
+  methodInfoGetUserByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
+    User,
+    (request: CourseUserRequest) => {
+      return request.serializeBinary();
+    },
+    User.deserializeBinary
+  );
+
+  getUserByCourse(
+    request: CourseUserRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: User) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetUserByCourse',
+      request,
+      metadata || {},
+      this.methodInfoGetUserByCourse,
       callback);
   }
 
@@ -968,28 +989,6 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoIsEmptyRepo,
-      callback);
-  }
-
-  methodInfoGetStudentForDiscord = new grpcWeb.AbstractClientBase.MethodInfo(
-    DiscordResponse,
-    (request: DiscordRequest) => {
-      return request.serializeBinary();
-    },
-    DiscordResponse.deserializeBinary
-  );
-
-  getStudentForDiscord(
-    request: DiscordRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: DiscordResponse) => void) {
-    return this.client_.rpcCall(
-      this.hostname_ +
-        '/AutograderService/GetStudentForDiscord',
-      request,
-      metadata || {},
-      this.methodInfoGetStudentForDiscord,
       callback);
   }
 

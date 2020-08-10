@@ -371,16 +371,11 @@ message RebuildRequest {
     uint64 assignmentID = 2;
 }
 
-message DiscordRequest {
+message CourseUserRequest {
     string courseCode = 1;
     uint32 courseYear = 2;
     string userLogin = 3;
 }
-
-message DiscordResponse {
-    string studentName = 1;
-    string studentID = 2;
-} 
 
 // Void contains no fields. A server response with a Void still contains a gRPC status code,
 // which can be checked for success or failure. Status code 0 indicates that the requested action was successful,
@@ -393,6 +388,7 @@ service AutograderService {
 
     rpc GetUser(Void) returns (User) {}
     rpc GetUsers(Void) returns (Users) {}
+    rpc GetUserByCourse(CourseUserRequest) returns (User) {}
     rpc UpdateUser(User) returns (Void) {}
     rpc IsAuthorizedTeacher(Void) returns (AuthorizationResponse) {}  
 
@@ -456,5 +452,4 @@ service AutograderService {
     rpc GetOrganization(OrgRequest) returns (Organization) {}
     rpc GetRepositories(URLRequest) returns (Repositories) {}
     rpc IsEmptyRepo(RepositoryRequest) returns (Void) {}
-    rpc GetStudentForDiscord(DiscordRequest) returns (DiscordResponse) {}
 }

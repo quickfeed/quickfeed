@@ -84,7 +84,7 @@ func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 	return &course, nil
 }
 
-// GetCourseBycodeAndYear returns course with given code and year
+// GetCourseByCodeAndYear returns course with given code and year
 func (db *GormDB) GetCourseByCodeAndYear(courseCode string, courseYear uint32) (*pb.Course, error) {
 	var course pb.Course
 	if err := db.conn.Where(&pb.Course{Code: courseCode, Year: courseYear}).First(&course).Error; err != nil {

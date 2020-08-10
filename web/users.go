@@ -50,7 +50,7 @@ func (s *AutograderService) getUsers() (*pb.Users, error) {
 }
 
 //
-func (s *AutograderService) getStudentForDiscord(request *pb.DiscordRequest, currentUser *pb.User) (*pb.DiscordResponse, error) {
+func (s *AutograderService) getStudentForDiscord(request *pb.CourseUserRequest, currentUser *pb.User) (*pb.User, error) {
 	// get course by name
 	// get user by login
 	// check that the current user is course teacher
