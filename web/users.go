@@ -49,14 +49,20 @@ func (s *AutograderService) getUsers() (*pb.Users, error) {
 	return &pb.Users{Users: users}, nil
 }
 
-//
-func (s *AutograderService) getStudentForDiscord(request *pb.CourseUserRequest, currentUser *pb.User) (*pb.User, error) {
+// getStudentByCourse returns the owner of the given GitHub login if
+// the user is enrolled in the given course.
+func (s *AutograderService) getStudentByCourse(request *pb.CourseUserRequest, currentUser *pb.User) (*pb.User, error) {
 	// get course by name
 	// get user by login
-	// check that the current user is course teacher
-	// check that the requested user is enrolled into the course
-	// return info
-	return nil, nil
+	courseQuery := &pb.Course{Code: request.CourseCode, Year: request.CourseYear}
+	user, course, err := s.db.GetUserByCourse(courseQuery, request.UserLogin)
+	if err != nil {
+		return nil, err
+	}
+	if !(currentUser.IsAdmin || s.isTeacher(currentUser.ID, course.ID)) {
+		return nil, ErrInvalidUserInfo
+	}
+	return user, nil
 }
 
 // updateUser updates the user profile according to the user data in

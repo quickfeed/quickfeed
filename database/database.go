@@ -21,7 +21,7 @@ type Database interface {
 	GetUser(uint64) (*pb.User, error)
 	// GetUserByCourse returns the owner of the given login
 	// with preloaded course matching the given query.
-	GetUserByCourse(*pb.Course, string) (*pb.User, error)
+	GetUserByCourse(*pb.Course, string) (*pb.User, *pb.Course, error)
 	// GetUserWithEnrollments returns the user by ID with preloaded user enrollments.
 	GetUserWithEnrollments(uint64) (*pb.User, error)
 	// GetUsers returns the users for the given set of user IDs.
