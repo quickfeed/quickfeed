@@ -114,7 +114,6 @@ func jsonString(event interface{}) string {
 func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *pb.Course) []*pb.Assignment {
 	modifiedAssignments := make(map[string]bool)
 	for _, commit := range payload.Commits {
-		wh.logger.Debugf("Examining commit (%s) for modifications/additions/removals", commit.GetID())
 		extractChanges(commit.Modified, modifiedAssignments)
 		extractChanges(commit.Added, modifiedAssignments)
 		extractChanges(commit.Removed, modifiedAssignments)
