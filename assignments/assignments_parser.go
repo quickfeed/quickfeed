@@ -25,7 +25,7 @@ const (
 // public to allow parsing.
 type assignmentData struct {
 	AssignmentID     uint   `yaml:"assignmentid"`
-	Language         string `yaml:"language"`
+	ScriptFile       string `yaml:"scriptfile"`
 	Deadline         string `yaml:"deadline"`
 	AutoApprove      bool   `yaml:"autoapprove"`
 	ScoreLimit       uint   `yaml:"scorelimit"`
@@ -60,6 +60,9 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				if newAssignment.ScoreLimit < 1 {
 					newAssignment.ScoreLimit = defaultAutoApproveScoreLimit
 				}
+				if newAssignment.ScriptFile == "" {
+					return fmt.Errorf("error unmarshalling assignment: missing field 'scriptfile'")
+				}
 
 				// ID field from the parsed yaml is used to set Order, not assignment ID,
 				// or it will cause a database constraint violation (IDs must be unique)
@@ -67,7 +70,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				assignment := &pb.Assignment{
 					CourseID:         courseID,
 					Deadline:         FixDeadline(newAssignment.Deadline),
-					Language:         strings.ToLower(newAssignment.Language),
+					Language:         strings.ToLower(newAssignment.ScriptFile),
 					Name:             filepath.Base(filepath.Dir(path)),
 					Order:            uint32(newAssignment.AssignmentID),
 					AutoApprove:      newAssignment.AutoApprove,

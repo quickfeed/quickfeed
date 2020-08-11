@@ -23,13 +23,13 @@ func TestParseWithInvalidDir(t *testing.T) {
 const (
 	y1 = `assignmentid: 1
 name: "For loops"
-language: "Go"
+scriptfile: "go.sh"
 deadline: "27-08-2017 12:00"
 autoapprove: false
 `
 	y2 = `assignmentid: 2
 name: "Nested loops"
-language: "Java"
+scriptfile: "java.sh"
 deadline: "27-08-2018 12:00"
 autoapprove: false
 `
@@ -37,7 +37,7 @@ autoapprove: false
 	yUnknownFields = `assignmentid: 1
 subject: "Go Programming for Fun and Profit"
 name: "For loops"
-language: "Go"
+scriptfile: "go.sh"
 deadline: "27-08-2017 12:00"
 grading: "Pass/Fail"
 expected_effort: "10 hours"
@@ -77,7 +77,7 @@ func TestParse(t *testing.T) {
 	// assignment folder names.
 	wantAssignment1 := &pb.Assignment{
 		Name:        "lab1",
-		Language:    "go",
+		Language:    "go.sh",
 		Deadline:    "2017-08-27T12:00:00",
 		AutoApprove: false,
 		Order:       1,
@@ -86,7 +86,7 @@ func TestParse(t *testing.T) {
 
 	wantAssignment2 := &pb.Assignment{
 		Name:        "lab2",
-		Language:    "java",
+		Language:    "java.sh",
 		Deadline:    "2018-08-27T12:00:00",
 		AutoApprove: false,
 		Order:       2,
@@ -135,7 +135,7 @@ func TestParseUnknownFields(t *testing.T) {
 	// assignment folder names.
 	wantAssignment1 := &pb.Assignment{
 		Name:        "lab1",
-		Language:    "go",
+		Language:    "go.sh",
 		Deadline:    "2017-08-27T12:00:00",
 		AutoApprove: false,
 		Order:       1,
