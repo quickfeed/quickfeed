@@ -76,7 +76,7 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 
 // GetUserByCourse returns the user matching the given course name and GitHub login
 // specified in CourseUserRequest.
-// Access policy: Course teachers
+// Access policy: Admins or course teachers
 func (s *AutograderService) GetUserByCourse(ctx context.Context, in *pb.CourseUserRequest) (*pb.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {

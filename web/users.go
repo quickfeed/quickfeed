@@ -51,12 +51,7 @@ func (s *AutograderService) getUsers() (*pb.Users, error) {
 
 // getUserByCourse returns the user matching the given GitHub login if
 // the user is enrolled in the given course.
-<<<<<<< HEAD
 func (s *AutograderService) getStudentByCourse(request *pb.CourseUserRequest, currentUser *pb.User) (*pb.User, error) {
-=======
-func (s *AutograderService) getUserByCourse(request *pb.CourseUserRequest, currentUser *pb.User) (*pb.User, error) {
-	// get course by name and year, and get user by login name
->>>>>>> 6173605a3075fdd1c7b1b98b0b4e2f198d8a7d4c
 	courseQuery := &pb.Course{Code: request.CourseCode, Year: request.CourseYear}
 	user, course, err := s.db.GetUserByCourse(courseQuery, request.UserLogin)
 	if err != nil {

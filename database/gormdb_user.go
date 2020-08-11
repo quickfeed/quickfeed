@@ -60,8 +60,9 @@ func (db *GormDB) GetUserByCourse(query *pb.Course, login string) (*pb.User, *pb
 		return nil, nil, err
 	}
 	for _, e := range user.Enrollments {
+
 		if e.CourseID == course.ID {
-			e.Course = &course
+			user.Enrollments = make([]*pb.Enrollment, 0)
 			return &user, &course, nil
 		}
 	}
