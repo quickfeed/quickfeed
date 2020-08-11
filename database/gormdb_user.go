@@ -42,8 +42,8 @@ func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, 
 	return &user, nil
 }
 
-// GetUserByCourseAndLogin returns user by provider login, preloads the course
-// matching the query.
+// GetUserByCourse returns user and course matching the provided course query
+// and the provided user login name.
 func (db *GormDB) GetUserByCourse(query *pb.Course, login string) (*pb.User, *pb.Course, error) {
 	var user pb.User
 	var course pb.Course

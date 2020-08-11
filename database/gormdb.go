@@ -24,13 +24,13 @@ var (
 	// the database for a DirectoryId that already exists in the database.
 	ErrCourseExists = errors.New("course already exists on git provider")
 	// ErrInsufficientAccess is returned when trying to update database
-	// with insufficient access priviledges.
+	// with insufficient access privileges.
 	ErrInsufficientAccess = errors.New("user must be admin to perform this operation")
 	// ErrCreateRepo is returned when trying to create repository with wrong argument.
 	ErrCreateRepo = errors.New("failed to create repository; invalid arguments")
 	// ErrNotEnrolled is returned when the requested user or group do not have
 	// the expected association with the given course
-	ErrNotEnrolled = errors.New("user og group not enrolled in the course")
+	ErrNotEnrolled = errors.New("user or group not enrolled in the course")
 )
 
 // GormDB implements the Database interface.
