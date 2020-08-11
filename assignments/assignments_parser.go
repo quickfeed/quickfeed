@@ -70,7 +70,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				assignment := &pb.Assignment{
 					CourseID:         courseID,
 					Deadline:         FixDeadline(newAssignment.Deadline),
-					Language:         strings.ToLower(newAssignment.ScriptFile),
+					ScriptFile:       strings.ToLower(newAssignment.ScriptFile),
 					Name:             filepath.Base(filepath.Dir(path)),
 					Order:            uint32(newAssignment.AssignmentID),
 					AutoApprove:      newAssignment.AutoApprove,

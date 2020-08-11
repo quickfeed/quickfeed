@@ -77,7 +77,7 @@ func TestParse(t *testing.T) {
 	// assignment folder names.
 	wantAssignment1 := &pb.Assignment{
 		Name:        "lab1",
-		Language:    "go.sh",
+		ScriptFile:  "go.sh",
 		Deadline:    "2017-08-27T12:00:00",
 		AutoApprove: false,
 		Order:       1,
@@ -86,7 +86,7 @@ func TestParse(t *testing.T) {
 
 	wantAssignment2 := &pb.Assignment{
 		Name:        "lab2",
-		Language:    "java.sh",
+		ScriptFile:  "java.sh",
 		Deadline:    "2018-08-27T12:00:00",
 		AutoApprove: false,
 		Order:       2,
@@ -135,7 +135,7 @@ func TestParseUnknownFields(t *testing.T) {
 	// assignment folder names.
 	wantAssignment1 := &pb.Assignment{
 		Name:        "lab1",
-		Language:    "go.sh",
+		ScriptFile:  "go.sh",
 		Deadline:    "2017-08-27T12:00:00",
 		AutoApprove: false,
 		Order:       1,

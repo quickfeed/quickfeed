@@ -81,7 +81,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	if err = db.CreateAssignment(&pb.Assignment{
 		CourseID:    course.ID,
 		Name:        "lab1",
-		Language:    "go",
+		ScriptFile:  "go.sh",
 		Deadline:    "11.11.2022",
 		AutoApprove: false,
 		Order:       1,
@@ -93,7 +93,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	if err = db.CreateAssignment(&pb.Assignment{
 		CourseID:    course.ID,
 		Name:        "lab2",
-		Language:    "go",
+		ScriptFile:  "go.sh",
 		Deadline:    "11.11.2022",
 		AutoApprove: false,
 		Order:       2,
@@ -273,10 +273,10 @@ func TestApproveSubmission(t *testing.T) {
 	}
 
 	lab := &pb.Assignment{
-		CourseID: course.ID,
-		Name:     "test lab",
-		Language: "go",
-		Order:    1,
+		CourseID:   course.ID,
+		Name:       "test lab",
+		ScriptFile: "go.sh",
+		Order:      1,
 	}
 	if err = db.CreateAssignment(lab); err != nil {
 		t.Fatal(err)
@@ -371,7 +371,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab1c1 := &pb.Assignment{
 		CourseID:          course1.ID,
 		Name:              "lab 1",
-		Language:          "go",
+		ScriptFile:        "go.sh",
 		Deadline:          "2020-02-23T18:00:00",
 		Order:             1,
 		GradingBenchmarks: []*pb.GradingBenchmark{},
@@ -380,7 +380,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab2c1 := &pb.Assignment{
 		CourseID:          course1.ID,
 		Name:              "lab 2",
-		Language:          "go",
+		ScriptFile:        "go.sh",
 		Deadline:          "2020-03-23T18:00:00",
 		Order:             2,
 		GradingBenchmarks: []*pb.GradingBenchmark{},
@@ -388,7 +388,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab1c2 := &pb.Assignment{
 		CourseID:          course2.ID,
 		Name:              "lab 1",
-		Language:          "go",
+		ScriptFile:        "go.sh",
 		Deadline:          "2020-04-23T18:00:00",
 		Order:             1,
 		GradingBenchmarks: []*pb.GradingBenchmark{},
@@ -396,7 +396,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab2c2 := &pb.Assignment{
 		CourseID:          course2.ID,
 		Name:              "lab 2",
-		Language:          "go",
+		ScriptFile:        "go.sh",
 		Deadline:          "2020-05-23T18:00:00",
 		Order:             2,
 		GradingBenchmarks: []*pb.GradingBenchmark{},

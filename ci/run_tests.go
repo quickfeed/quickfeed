@@ -103,8 +103,7 @@ func createAssignmentInfo(db database.Database, course *pb.Course, assignment *p
 		return nil, fmt.Errorf("failed to find a test repository for %s: %w", course.GetName(), err)
 	}
 	getURLTest := testRepos[0].GetHTMLURL()
-	//TODO(meling) Rename Language to Script; also impacts DB, yml files and assignments packages.
-	script := assignment.GetLanguage()
+	script := assignment.GetScriptFile()
 	if strings.Count(script, ".") < 1 {
 		script = script + ".sh"
 	}
