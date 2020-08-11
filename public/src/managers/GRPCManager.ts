@@ -6,8 +6,6 @@ import {
     CourseRequest,
     CourseSubmissions,
     Courses,
-    DiscordRequest,
-    DiscordResponse,
     EnrollmentStatusRequest,
     Enrollment,
     EnrollmentRequest,
@@ -340,14 +338,6 @@ export class GrpcManager {
         request.setGroupid(groupID);
         request.setCourseid(courseID);
         return this.grpcSend<Void>(this.agService.isEmptyRepo, request);
-    }
-
-    public getStudentForDiscord(courseCode: string, courseYear: number, userLogin: string) {
-        const request = new DiscordRequest();
-        request.setCoursecode(courseCode);
-        request.setCourseyear(courseYear);
-        request.setUserlogin(userLogin);
-        return this.grpcSend<DiscordResponse>(this.agService.getStudentForDiscord, request);
     }
 
     // /* UTILITY */ //
