@@ -47,8 +47,8 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
         if (!this.props.userMan.isValidUser(curUser)) {
             message = <div style={{ color: "red" }}>
                 <p>To sign up, please complete the form below.</p>
-                <p>Please sign up with your real name, it is used to approve your lab submissions.</p>
-                <p>To be accepted into a course, the name you provide here must match your name in the course roster on Canvas.</p>
+                <p>Use your <i>real name</i> as it appears on Canvas.</p>
+                <p>If your name does not match any names on Canvas, you will not be granted access.</p>
                 </div>;
         }
 
