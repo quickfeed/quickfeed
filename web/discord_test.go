@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"google.golang.org/grpc"
@@ -19,9 +20,11 @@ import (
 // The user has to have an active record in the database and either be an admin
 // or a teacher of the requested course.
 func TestDiscordClient(t *testing.T) {
-	conn, err := grpc.Dial(":9090", grpc.WithInsecure(), grpc.WithBlock())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	conn, err := grpc.DialContext(ctx, ":9090", grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("Connection failed, make sure the server is running on :9090")
 	}
 	defer conn.Close()
 
