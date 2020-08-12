@@ -20,6 +20,7 @@ import {
   Course,
   CourseRequest,
   CourseSubmissions,
+  CourseUserRequest,
   Courses,
   Enrollment,
   EnrollmentRequest,
@@ -149,6 +150,46 @@ export class AutograderServiceClient {
     request,
     metadata || {},
     this.methodInfoGetUsers);
+  }
+
+  methodInfoGetUserByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
+    User,
+    (request: CourseUserRequest) => {
+      return request.serializeBinary();
+    },
+    User.deserializeBinary
+  );
+
+  getUserByCourse(
+    request: CourseUserRequest,
+    metadata: grpcWeb.Metadata | null): Promise<User>;
+
+  getUserByCourse(
+    request: CourseUserRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: User) => void): grpcWeb.ClientReadableStream<User>;
+
+  getUserByCourse(
+    request: CourseUserRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: User) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/AutograderService/GetUserByCourse',
+        request,
+        metadata || {},
+        this.methodInfoGetUserByCourse,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/AutograderService/GetUserByCourse',
+    request,
+    metadata || {},
+    this.methodInfoGetUserByCourse);
   }
 
   methodInfoUpdateUser = new grpcWeb.AbstractClientBase.MethodInfo(

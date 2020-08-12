@@ -1400,6 +1400,32 @@ export namespace RebuildRequest {
   }
 }
 
+export class CourseUserRequest extends jspb.Message {
+  getCoursecode(): string;
+  setCoursecode(value: string): CourseUserRequest;
+
+  getCourseyear(): number;
+  setCourseyear(value: number): CourseUserRequest;
+
+  getUserlogin(): string;
+  setUserlogin(value: string): CourseUserRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): CourseUserRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: CourseUserRequest): CourseUserRequest.AsObject;
+  static serializeBinaryToWriter(message: CourseUserRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CourseUserRequest;
+  static deserializeBinaryFromReader(message: CourseUserRequest, reader: jspb.BinaryReader): CourseUserRequest;
+}
+
+export namespace CourseUserRequest {
+  export type AsObject = {
+    coursecode: string,
+    courseyear: number,
+    userlogin: string,
+  }
+}
+
 export class Void extends jspb.Message {
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Void.AsObject;

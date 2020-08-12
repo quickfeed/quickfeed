@@ -42,6 +42,33 @@ func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, 
 	return &user, nil
 }
 
+// GetUserByCourse returns user and course matching the provided course query
+// and the provided user login name.
+func (db *GormDB) GetUserByCourse(query *pb.Course, login string) (*pb.User, *pb.Course, error) {
+	var user pb.User
+	var course pb.Course
+	enrollmentStatuses := []pb.Enrollment_UserStatus{
+		pb.Enrollment_STUDENT,
+		pb.Enrollment_TEACHER,
+	}
+
+	if err := db.conn.First(&course, query).Error; err != nil {
+		return nil, nil, err
+	}
+
+	if err := db.conn.Preload("Enrollments", "status in (?)", enrollmentStatuses).First(&user, &pb.User{Login: login}).Error; err != nil {
+		return nil, nil, err
+	}
+	for _, e := range user.Enrollments {
+
+		if e.CourseID == course.ID {
+			user.Enrollments = make([]*pb.Enrollment, 0)
+			return &user, &course, nil
+		}
+	}
+	return nil, nil, ErrNotEnrolled
+}
+
 // GetUserWithEnrollments returns user with the given ID with all enrollments.
 func (db *GormDB) GetUserWithEnrollments(userID uint64) (*pb.User, error) {
 	var user pb.User
