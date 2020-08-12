@@ -83,7 +83,7 @@ func (s *AutograderService) GetUserByCourse(ctx context.Context, in *pb.CourseUs
 		s.logger.Errorf("GetUserByCourse failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	userInfo, err := s.getStudentByCourse(in, usr)
+	userInfo, err := s.getUserByCourse(in, usr)
 	if err != nil {
 		s.logger.Errorf("GetUserByCourse failed: %+v", err)
 		return nil, status.Errorf(codes.FailedPrecondition, "failed to get student information")
