@@ -231,3 +231,8 @@ func (bm GradingBenchmark) IsValid() bool {
 func (c GradingCriterion) IsValid() bool {
 	return c.BenchmarkID > 0 && c.Description != ""
 }
+
+// IsValid ensures that course code, year, and student login are set
+func (r CourseUserRequest) IsValid() bool {
+	return r.CourseCode != "" && r.UserLogin != "" && r.CourseYear > 2019
+}

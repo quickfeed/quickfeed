@@ -322,9 +322,8 @@ export namespace Repository {
     COURSEINFO = 1,
     ASSIGNMENTS = 2,
     TESTS = 3,
-    SOLUTIONS = 4,
-    USER = 5,
-    GROUP = 6,
+    USER = 4,
+    GROUP = 5,
   }
 }
 
@@ -1398,6 +1397,32 @@ export namespace RebuildRequest {
   export type AsObject = {
     submissionid: number,
     assignmentid: number,
+  }
+}
+
+export class CourseUserRequest extends jspb.Message {
+  getCoursecode(): string;
+  setCoursecode(value: string): void;
+
+  getCourseyear(): number;
+  setCourseyear(value: number): void;
+
+  getUserlogin(): string;
+  setUserlogin(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): CourseUserRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: CourseUserRequest): CourseUserRequest.AsObject;
+  static serializeBinaryToWriter(message: CourseUserRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CourseUserRequest;
+  static deserializeBinaryFromReader(message: CourseUserRequest, reader: jspb.BinaryReader): CourseUserRequest;
+}
+
+export namespace CourseUserRequest {
+  export type AsObject = {
+    coursecode: string,
+    courseyear: number,
+    userlogin: string,
   }
 }
 
