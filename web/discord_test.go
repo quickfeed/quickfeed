@@ -29,7 +29,7 @@ func TestDiscordClient(t *testing.T) {
 
 	currentUserID := os.Getenv("DISCORD_USER")
 	if currentUserID == "" {
-		t.Fatal("User ID is not set")
+		t.Skip("This test requires a 'DISCORD_USER' environmental variable with a valid ID of a registered user")
 	}
 	convertedID := strings.TrimSpace(currentUserID)
 	requestMetadata := metadata.New(map[string]string{"user": convertedID})
