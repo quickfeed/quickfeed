@@ -162,7 +162,7 @@ message Assignment {
     uint64 ID = 1;
     uint64 courseID = 2;
     string name = 3;
-    string language = 4;
+    string scriptFile = 4;
     string deadline = 5; 
     bool autoApprove = 6;
     uint32 order = 7;
