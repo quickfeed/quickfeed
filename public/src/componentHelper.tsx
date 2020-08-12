@@ -338,3 +338,8 @@ export function getDaysAfterDeadline(deadline: Date, delivered: Date): number {
     const after =  Math.floor((delivered.valueOf() - deadline.valueOf()) / msInADay);
     return after > 0 ? after : 0;
 }
+
+export function isValidUserName(username: string): boolean {
+    const onlyCharsAndSpaces = /^[a-zA-Z\s]*$/;
+    return onlyCharsAndSpaces.test(username);
+}
