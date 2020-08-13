@@ -466,6 +466,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             reviews: sbm.getReviewsList(),
             released: sbm.getReleased(),
             status: sbm.getStatus(),
+            comment: sbm.getComment(),
         };
         return isbm;
     }

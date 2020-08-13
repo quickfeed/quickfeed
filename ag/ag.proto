@@ -194,9 +194,10 @@ message Submission {
     string scoreObjects = 6;
     string buildInfo = 7;
     string commitHash = 8;
-    bool released = 9; // defines whether the feedback is visible for the student or group members
-    Status status = 10;
-    repeated Review reviews = 11;
+    string comment = 9;
+    bool released = 10; // defines whether the feedback is visible for the student or group members
+    Status status = 11;
+    repeated Review reviews = 12;
 }
 
 message Submissions {
@@ -311,7 +312,8 @@ message UpdateSubmissionRequest {
     uint64 courseID = 2;
     uint32 score = 3;
     bool released = 4;
-    Submission.Status status = 5;
+    string comment = 5;
+    Submission.Status status = 6;
 }
 
 message UpdateSubmissionsRequest {

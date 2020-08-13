@@ -112,6 +112,7 @@ func (db *GormDB) UpdateSubmission(query *pb.Submission) error {
 		Where(&pb.Submission{ID: query.ID}).
 		Update("status", query.Status).
 		Update("released", query.Released).
+		Update("comment", query.Comment).
 		Update("score", query.Score).Error
 }
 

@@ -5811,7 +5811,7 @@ proto.Assignments.prototype.clearAssignmentsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.Submission.repeatedFields_ = [11];
+proto.Submission.repeatedFields_ = [12];
 
 
 
@@ -5852,8 +5852,9 @@ proto.Submission.toObject = function(includeInstance, msg) {
     scoreobjects: jspb.Message.getFieldWithDefault(msg, 6, ""),
     buildinfo: jspb.Message.getFieldWithDefault(msg, 7, ""),
     commithash: jspb.Message.getFieldWithDefault(msg, 8, ""),
-    released: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
-    status: jspb.Message.getFieldWithDefault(msg, 10, 0),
+    comment: jspb.Message.getFieldWithDefault(msg, 9, ""),
+    released: jspb.Message.getBooleanFieldWithDefault(msg, 10, false),
+    status: jspb.Message.getFieldWithDefault(msg, 11, 0),
     reviewsList: jspb.Message.toObjectList(msg.getReviewsList(),
     proto.Review.toObject, includeInstance)
   };
@@ -5925,14 +5926,18 @@ proto.Submission.deserializeBinaryFromReader = function(msg, reader) {
       msg.setCommithash(value);
       break;
     case 9:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setComment(value);
+      break;
+    case 10:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setReleased(value);
       break;
-    case 10:
+    case 11:
       var value = /** @type {!proto.Submission.Status} */ (reader.readEnum());
       msg.setStatus(value);
       break;
-    case 11:
+    case 12:
       var value = new proto.Review;
       reader.readMessage(value,proto.Review.deserializeBinaryFromReader);
       msg.addReviews(value);
@@ -6022,24 +6027,31 @@ proto.Submission.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getComment();
+  if (f.length > 0) {
+    writer.writeString(
+      9,
+      f
+    );
+  }
   f = message.getReleased();
   if (f) {
     writer.writeBool(
-      9,
+      10,
       f
     );
   }
   f = message.getStatus();
   if (f !== 0.0) {
     writer.writeEnum(
-      10,
+      11,
       f
     );
   }
   f = message.getReviewsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      11,
+      12,
       f,
       proto.Review.serializeBinaryToWriter
     );
@@ -6202,11 +6214,29 @@ proto.Submission.prototype.setCommithash = function(value) {
 
 
 /**
- * optional bool released = 9;
+ * optional string comment = 9;
+ * @return {string}
+ */
+proto.Submission.prototype.getComment = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.Submission} returns this
+ */
+proto.Submission.prototype.setComment = function(value) {
+  return jspb.Message.setProto3StringField(this, 9, value);
+};
+
+
+/**
+ * optional bool released = 10;
  * @return {boolean}
  */
 proto.Submission.prototype.getReleased = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 9, false));
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 10, false));
 };
 
 
@@ -6215,16 +6245,16 @@ proto.Submission.prototype.getReleased = function() {
  * @return {!proto.Submission} returns this
  */
 proto.Submission.prototype.setReleased = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 9, value);
+  return jspb.Message.setProto3BooleanField(this, 10, value);
 };
 
 
 /**
- * optional Status status = 10;
+ * optional Status status = 11;
  * @return {!proto.Submission.Status}
  */
 proto.Submission.prototype.getStatus = function() {
-  return /** @type {!proto.Submission.Status} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
+  return /** @type {!proto.Submission.Status} */ (jspb.Message.getFieldWithDefault(this, 11, 0));
 };
 
 
@@ -6233,17 +6263,17 @@ proto.Submission.prototype.getStatus = function() {
  * @return {!proto.Submission} returns this
  */
 proto.Submission.prototype.setStatus = function(value) {
-  return jspb.Message.setProto3EnumField(this, 10, value);
+  return jspb.Message.setProto3EnumField(this, 11, value);
 };
 
 
 /**
- * repeated Review reviews = 11;
+ * repeated Review reviews = 12;
  * @return {!Array<!proto.Review>}
  */
 proto.Submission.prototype.getReviewsList = function() {
   return /** @type{!Array<!proto.Review>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.Review, 11));
+    jspb.Message.getRepeatedWrapperField(this, proto.Review, 12));
 };
 
 
@@ -6252,7 +6282,7 @@ proto.Submission.prototype.getReviewsList = function() {
  * @return {!proto.Submission} returns this
 */
 proto.Submission.prototype.setReviewsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 11, value);
+  return jspb.Message.setRepeatedWrapperField(this, 12, value);
 };
 
 
@@ -6262,7 +6292,7 @@ proto.Submission.prototype.setReviewsList = function(value) {
  * @return {!proto.Review}
  */
 proto.Submission.prototype.addReviews = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 11, opt_value, proto.Review, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 12, opt_value, proto.Review, opt_index);
 };
 
 
@@ -9533,7 +9563,8 @@ proto.UpdateSubmissionRequest.toObject = function(includeInstance, msg) {
     courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     score: jspb.Message.getFieldWithDefault(msg, 3, 0),
     released: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
-    status: jspb.Message.getFieldWithDefault(msg, 5, 0)
+    comment: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    status: jspb.Message.getFieldWithDefault(msg, 6, 0)
   };
 
   if (includeInstance) {
@@ -9587,6 +9618,10 @@ proto.UpdateSubmissionRequest.deserializeBinaryFromReader = function(msg, reader
       msg.setReleased(value);
       break;
     case 5:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setComment(value);
+      break;
+    case 6:
       var value = /** @type {!proto.Submission.Status} */ (reader.readEnum());
       msg.setStatus(value);
       break;
@@ -9647,10 +9682,17 @@ proto.UpdateSubmissionRequest.serializeBinaryToWriter = function(message, writer
       f
     );
   }
+  f = message.getComment();
+  if (f.length > 0) {
+    writer.writeString(
+      5,
+      f
+    );
+  }
   f = message.getStatus();
   if (f !== 0.0) {
     writer.writeEnum(
-      5,
+      6,
       f
     );
   }
@@ -9730,11 +9772,29 @@ proto.UpdateSubmissionRequest.prototype.setReleased = function(value) {
 
 
 /**
- * optional Submission.Status status = 5;
+ * optional string comment = 5;
+ * @return {string}
+ */
+proto.UpdateSubmissionRequest.prototype.getComment = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.UpdateSubmissionRequest} returns this
+ */
+proto.UpdateSubmissionRequest.prototype.setComment = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
+};
+
+
+/**
+ * optional Submission.Status status = 6;
  * @return {!proto.Submission.Status}
  */
 proto.UpdateSubmissionRequest.prototype.getStatus = function() {
-  return /** @type {!proto.Submission.Status} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+  return /** @type {!proto.Submission.Status} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
 
@@ -9743,7 +9803,7 @@ proto.UpdateSubmissionRequest.prototype.getStatus = function() {
  * @return {!proto.UpdateSubmissionRequest} returns this
  */
 proto.UpdateSubmissionRequest.prototype.setStatus = function(value) {
-  return jspb.Message.setProto3EnumField(this, 5, value);
+  return jspb.Message.setProto3EnumField(this, 6, value);
 };
 
 

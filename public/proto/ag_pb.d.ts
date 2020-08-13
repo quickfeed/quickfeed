@@ -658,6 +658,9 @@ export class Submission extends jspb.Message {
   getCommithash(): string;
   setCommithash(value: string): void;
 
+  getComment(): string;
+  setComment(value: string): void;
+
   getReleased(): boolean;
   setReleased(value: boolean): void;
 
@@ -687,6 +690,7 @@ export namespace Submission {
     scoreobjects: string,
     buildinfo: string,
     commithash: string,
+    comment: string,
     released: boolean,
     status: Submission.Status,
     reviewsList: Array<Review.AsObject>,
@@ -1145,6 +1149,9 @@ export class UpdateSubmissionRequest extends jspb.Message {
   getReleased(): boolean;
   setReleased(value: boolean): void;
 
+  getComment(): string;
+  setComment(value: string): void;
+
   getStatus(): Submission.Status;
   setStatus(value: Submission.Status): void;
 
@@ -1162,6 +1169,7 @@ export namespace UpdateSubmissionRequest {
     courseid: number,
     score: number,
     released: boolean,
+    comment: string,
     status: Submission.Status,
   }
 }
