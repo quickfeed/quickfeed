@@ -4,7 +4,20 @@ import {
     ISubmission,
 } from "../models";
 
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Review, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest } from "../../proto/ag_pb";
+import {
+    Assignment,
+    Course,
+    Enrollment,
+    Group,
+    Organization,
+    Repository,
+    Status,
+    User,
+    Review,
+    GradingBenchmark,
+    GradingCriterion,
+    SubmissionsForCourseRequest
+} from "../../proto/ag_pb";
 import { ILogger } from "./LogManager";
 import { sortAssignmentsByOrder } from "../componentHelper";
 

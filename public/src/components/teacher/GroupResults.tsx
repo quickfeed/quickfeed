@@ -1,7 +1,7 @@
 import * as React from "react";
-import { Assignment, Course, Submission, User } from '../../../proto/ag_pb';
+import { Assignment, Course, Submission, User } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
-import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from '../../models';
+import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
 import { groupRepoLink, searchForLabs } from "../../componentHelper";

@@ -1,10 +1,10 @@
 import * as React from "react";
-import { Assignment, Course, User, Submission, Status, Review } from '../../../proto/ag_pb';
+import { Assignment, Course, User, Submission } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
-import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from '../../models';
+import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { searchForLabs, userRepoLink, getSlipDays, legalIndex } from '../../componentHelper';
+import { searchForLabs, userRepoLink, getSlipDays, legalIndex } from "../../componentHelper";
 
 interface IResultsProps {
     course: Course;
@@ -215,7 +215,6 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
             }
         }
     }
-
 
     private selectNextSubmission(moveLeft: boolean) {
         const currentStudent = this.state.selectedStudent;

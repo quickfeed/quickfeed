@@ -2,7 +2,7 @@ import * as React from "react";
 import { ProgressBar, Row } from "../../components";
 import { Submission } from "../../../proto/ag_pb";
 
-interface ILabResult {
+interface ILabResultProps {
     assignment_id: number;
     submission_id: number;
     progress: number;
@@ -18,9 +18,9 @@ interface ILabResultState {
     rebuilding: boolean;
 }
 
-export class LabResult extends React.Component<ILabResult, ILabResultState> {
+export class LabResult extends React.Component<ILabResultProps, ILabResultState> {
 
-    constructor(props: ILabResult) {
+    constructor(props: ILabResultProps) {
         super(props);
         this.state = {
             rebuilding: false,

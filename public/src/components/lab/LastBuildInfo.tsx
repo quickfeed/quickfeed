@@ -3,7 +3,7 @@ import { Assignment, Submission } from "../../../proto/ag_pb";
 import { Row } from "../../components";
 import { formatDate } from "../../helper";
 import { ISubmission } from "../../models";
-import { submissionStatusToString, getDaysAfterDeadline } from '../../componentHelper';
+import { submissionStatusToString, getDaysAfterDeadline } from "../../componentHelper";
 
 interface ILastBuildInfoProps {
     submission: ISubmission;
