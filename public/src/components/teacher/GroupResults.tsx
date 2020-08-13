@@ -11,7 +11,7 @@ interface IResultsProps {
     courseURL: string;
     groups: IAllSubmissionsForEnrollment[];
     labs: Assignment[];
-    onSubmissionStatusUpdate: (submission: ISubmission) => Promise<boolean>;
+    onSubmissionUpdate: (submission: ISubmission) => Promise<boolean>;
     onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
 
@@ -54,7 +54,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 teacherPageView={true}
                 slipdays={this.props.course.getSlipdays()}
                 onSubmissionRebuild={ () => this.rebuildSubmission()}
-                onSubmissionStatusUpdate={(status: Submission.Status) => this.updateSubmissionStatus(status)}
+                onSubmissionUpdate={(status: Submission.Status) => this.updateSubmissionStatus(status)}
             />;
         }
 
@@ -135,7 +135,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         if (selected) {
             const previousStatus = selected.status;
             selected.status = status;
-            const ans = await this.props.onSubmissionStatusUpdate(selected);
+            const ans = await this.props.onSubmissionUpdate(selected);
             if (!ans) {
                 selected.status = previousStatus;
             }

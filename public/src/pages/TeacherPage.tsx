@@ -134,7 +134,7 @@ export class TeacherPage extends ViewPage {
                     this.navMan.refresh();
                     return ans;
                 }}
-                onSubmissionStatusUpdate={async (submission: ISubmission): Promise<boolean> => {
+                onSubmissionUpdate={async (submission: ISubmission): Promise<boolean> => {
                     return this.approveFunc(submission, course.getId());
                 }}>
             </Results>;
@@ -157,7 +157,7 @@ export class TeacherPage extends ViewPage {
                     this.navMan.refresh();
                     return ans;
                 }}
-                onSubmissionStatusUpdate={async (submission: ISubmission): Promise<boolean> => {
+                onSubmissionUpdate={async (submission: ISubmission): Promise<boolean> => {
                     return this.approveFunc(submission, course.getId());
                 }}>
             </GroupResults>;

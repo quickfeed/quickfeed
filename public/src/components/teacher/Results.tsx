@@ -12,7 +12,7 @@ interface IResultsProps {
     allCourseSubmissions: IAllSubmissionsForEnrollment[];
     assignments: Assignment[];
     courseCreatorView: boolean;
-    onSubmissionStatusUpdate: (submission: ISubmission) => Promise<boolean>;
+    onSubmissionUpdate: (submission: ISubmission) => Promise<boolean>;
     onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
 
@@ -57,10 +57,9 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                 teacherPageView={true}
                 slipdays={this.state.selectedSubmission.submission ? getSlipDays(this.props.allCourseSubmissions, this.state.selectedSubmission.submission, false) : 0}
                 onSubmissionRebuild={() => this.rebuildSubmission()}
-                onSubmissionStatusUpdate={(status: Submission.Status) => this.updateSubmissionStatus(status)}
+                onSubmissionUpdate={(status: Submission.Status) => this.updateSubmissionStatus(status)}
             />;
         }
-
 
         return (
             <div
@@ -128,7 +127,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         if (selected) {
             const previousStatus = selected.status;
             selected.status = status;
-            const ans = await this.props.onSubmissionStatusUpdate(selected);
+            const ans = await this.props.onSubmissionUpdate(selected);
             if (!ans) {
                 selected.status = previousStatus;
             }

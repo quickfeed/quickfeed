@@ -8,14 +8,17 @@ interface ILabResultProps {
     progress: number;
     status: Submission.Status;
     lab: string;
+    comment: string;
     authorName?: string;
     teacherView: boolean;
-    onSubmissionStatusUpdate: (status: Submission.Status) => void;
+    onSubmissionUpdate: (status: Submission.Status, comment: string) => void;
     onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
 interface ILabResultState {
     rebuilding: boolean;
+    commenting: boolean;
+    comment: string;
 }
 
 export class LabResult extends React.Component<ILabResultProps, ILabResultState> {
@@ -24,13 +27,17 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
         super(props);
         this.state = {
             rebuilding: false,
+            commenting: false,
+            comment: props.comment,
         };
     }
 
     public render() {
         let buttonDiv = <div></div>;
+        let commentDiv = <div></div>;
         if (this.props.teacherView) {
             buttonDiv = this.actionButtons();
+            commentDiv = this.commentDiv();
         }
 
         let labHeading: JSX.Element;
@@ -49,6 +56,7 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
                     {labHeading}
                     <ProgressBar progress={this.props.progress}></ProgressBar></Row>
                     <Row>{buttonDiv}</Row>
+                    <Row>{commentDiv}</Row>
             </div>
         );
     }
@@ -64,20 +72,36 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
         });
     }
 
+    public commentDiv(): JSX.Element {
+        const editComment = <div className="lab-comment"></div>
+        const showComment = <div className="lab-comment"
+            onClick={() => this.toggleCommenting()}
+            onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                    this.props.onSubmissionUpdate(this.props.status, this.state.comment);
+                    this.setState({
+                        commenting: false,
+                    });
+                }
+            }}
+        >{this.props.comment}</div>;
+        return this.state.commenting ? editComment : showComment;
+    }
+
     public actionButtons(): JSX.Element {
         const approveButton = <button type="button" className={this.setButtonClassColor("approve")}
             onClick={
-                () => {this.props.onSubmissionStatusUpdate(Submission.Status.APPROVED); }
+                () => {this.props.onSubmissionUpdate(Submission.Status.APPROVED, this.props.comment); }
             }
         >{this.setButtonString("approve")}</button>;
         const revisionButton = <button type="button" className={this.setButtonClassColor("revision")}
             onClick={
-                () => {this.props.onSubmissionStatusUpdate(Submission.Status.REVISION); }
+                () => {this.props.onSubmissionUpdate(Submission.Status.REVISION, this.props.comment); }
             }
         >{this.setButtonString("revision")}</button>;
         const rejectButton = <button type="button" className={this.setButtonClassColor("reject")}
             onClick={
-                () => {this.props.onSubmissionStatusUpdate(Submission.Status.REJECTED); }
+                () => {this.props.onSubmissionUpdate(Submission.Status.REJECTED, this.props.comment); }
             }
         >{this.setButtonString("reject")}</button>;
         const rebuildButton = <button type="button" className={this.setButtonClassColor("rebuild")}
@@ -129,4 +153,9 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
         }
     }
 
+    private toggleCommenting() {
+        this.setState((prevState: ILabResultState) => ({
+            commenting: !prevState.commenting,
+        }));
+    }
 }

@@ -141,7 +141,7 @@ export class StudentPage extends ViewPage {
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onSubmissionStatusUpdate={async () => {
+                    onSubmissionUpdate={async () => {
                         return false;
                     }}
                     >
@@ -172,7 +172,7 @@ export class StudentPage extends ViewPage {
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onSubmissionStatusUpdate={async () => {
+                    onSubmissionUpdate={async () => {
                         return false;
                     }}
                   >
