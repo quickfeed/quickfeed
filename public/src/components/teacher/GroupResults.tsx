@@ -16,7 +16,7 @@ interface IResultsProps {
 }
 
 interface IResultsState {
-    submissionLink?: ISubmissionLink;
+    selectedSubmission?: ISubmissionLink;
     groups: IAllSubmissionsForEnrollment[];
 }
 
@@ -30,12 +30,12 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         if (currentGroup && allAssignments && allAssignments.length > 0) {
             this.state = {
                 // Only using the first group to fetch assignments.
-                submissionLink: currentGroup.labs[0],
+                selectedSubmission: currentGroup.labs[0],
                 groups: sortByScore(this.props.groups, this.props.labs, true),
             };
         } else {
             this.state = {
-                submissionLink: undefined,
+                selectedSubmission: undefined,
                 groups: sortByScore(this.props.groups, this.props.labs, true),
             };
         }
@@ -45,46 +45,42 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         let groupLab: JSX.Element | null = null;
         const currentGroups = this.props.groups.length > 0 ? this.props.groups : null;
         if (currentGroups
-            && this.state.submissionLink
-            && this.state.submissionLink.assignment.getIsgrouplab()) {
+            && this.state.selectedSubmission
+            && this.state.selectedSubmission.assignment.getIsgrouplab()) {
             groupLab = <StudentLab
-                studentSubmission={this.state.submissionLink}
+                studentSubmission={this.state.selectedSubmission}
                 student={new User()}
                 courseURL={this.props.courseURL}
                 teacherPageView={true}
                 slipdays={this.props.course.getSlipdays()}
-                onSubmissionRebuild={
-                    async () => {
-                        if (this.state.submissionLink && this.state.submissionLink.submission) {
-                            const ans = await this.props.onSubmissionRebuild(this.state.submissionLink.assignment.getId(), this.state.submissionLink.submission.id);
-                            if (ans) {
-                                this.state.submissionLink.submission = ans;
-                                return true;
-                            }
-                        }
-                        return false;
-                    }
-                }
-                onSubmissionStatusUpdate={async (status: Submission.Status) => {
-                    const selected = this.state.submissionLink;
-                    const latest = selected?.submission;
-                    if (latest) {
-                        latest.status = Submission.Status.APPROVED;
-                        const ans = await this.props.onSubmissionStatusUpdate(latest);
-                        if (ans) {
-                            this.setState({
-                                submissionLink: selected,
-                            });
-                        }
-                        return ans;
-                    }
-                    return false;
-                }}
+                onSubmissionRebuild={ () => this.rebuildSubmission()}
+                onSubmissionStatusUpdate={(status: Submission.Status) => this.updateSubmissionStatus(status)}
             />;
         }
 
         return (
-            <div>
+            <div
+            onKeyDown={(e) => {
+                switch (e.key) {
+                    case "a": {
+                        this.updateSubmissionStatus(Submission.Status.APPROVED);
+                        break;
+                    }
+                    case "r": {
+                        this.updateSubmissionStatus(Submission.Status.REVISION);
+                        break;
+                    }
+                    case "f": {
+                        this.updateSubmissionStatus(Submission.Status.REJECTED)
+                        break;
+                    }
+                    case "b": {
+                        this.rebuildSubmission();
+                        break;
+                    }
+                }
+            }}
+            >
                 <h1>Result: {this.props.course.getName()}</h1>
                 <Row>
                     <div key="resulthead" className="col-lg6 col-md-6 col-sm-12">
@@ -133,9 +129,40 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         return selector;
     }
 
+    private async updateSubmissionStatus(status: Submission.Status) {
+        const current = this.state.selectedSubmission;
+        const selected = current?.submission;
+        if (selected) {
+            const previousStatus = selected.status;
+            selected.status = status;
+            const ans = await this.props.onSubmissionStatusUpdate(selected);
+            if (!ans) {
+                selected.status = previousStatus;
+            }
+            this.setState({
+                selectedSubmission: current,
+            });
+        }
+    }
+
+    private async rebuildSubmission(): Promise<boolean> {
+        const currentSubmission = this.state.selectedSubmission;
+        if (currentSubmission && currentSubmission.submission) {
+            const ans = await this.props.onSubmissionRebuild(currentSubmission.assignment.getId(), currentSubmission.submission.id);
+            if (ans) {
+                currentSubmission.submission = ans;
+                this.setState({
+                    selectedSubmission: currentSubmission,
+                });
+                return true;
+            }
+        }
+        return false;
+    }
+
     private async handleOnclick(item: ISubmissionLink) {
         this.setState({
-            submissionLink: item,
+            selectedSubmission: item,
         });
     }
 

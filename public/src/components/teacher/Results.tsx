@@ -56,8 +56,8 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                 student={this.state.selectedStudent.enrollment.getUser() ?? new User()}
                 teacherPageView={true}
                 slipdays={this.state.selectedSubmission.submission ? getSlipDays(this.props.allCourseSubmissions, this.state.selectedSubmission.submission, false) : 0}
-                onSubmissionRebuild={ () => this.rebuildSubmission()}
-                onSubmissionStatusUpdate={ (status: Submission.Status) => this.updateSubmissionStatus(status)}
+                onSubmissionRebuild={() => this.rebuildSubmission()}
+                onSubmissionStatusUpdate={(status: Submission.Status) => this.updateSubmissionStatus(status)}
             />;
         }
 
@@ -151,7 +151,6 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
             }
         }
         return false;
-
     }
 
     private getResultHeader(): string[] {
