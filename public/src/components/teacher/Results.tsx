@@ -4,7 +4,7 @@ import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from '../../models';
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { searchForLabs, userRepoLink, getSlipDays, submissionStatusSelector } from '../../componentHelper';
+import { searchForLabs, userRepoLink, getSlipDays, legalIndex } from '../../componentHelper';
 
 interface IResultsProps {
     course: Course;
@@ -68,11 +68,19 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
             onKeyDown={(e) => {
                 switch (e.key) {
                     case "ArrowDown": {
-                        this.selectNextStudent();
+                        this.selectNextStudent(false);
+                        break;
+                    }
+                    case "ArrowUp": {
+                        this.selectNextStudent(true);
                         break;
                     }
                     case "ArrowRight": {
-                        this.selectNextSubmission();
+                        this.selectNextSubmission(false);
+                        break;
+                    }
+                    case "ArrowLeft": {
+                        this.selectNextSubmission(true);
                         break;
                     }
                     case "a": {
@@ -83,7 +91,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                         this.updateSubmissionStatus(Submission.Status.REVISION);
                         break;
                     }
-                    case "k": {
+                    case "f": {
                         this.updateSubmissionStatus(Submission.Status.REJECTED)
                         break;
                     }
@@ -187,13 +195,17 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         });
     }
 
-    private selectNextStudent() {
+    private selectNextStudent(moveUp: boolean) {
         const currentStudent = this.state.selectedStudent;
         if (currentStudent) {
             const indexOfSelectedStudent = this.props.allCourseSubmissions.findIndex((item) => item.enrollment.getId() === currentStudent.enrollment.getId());
-            const currentAssignmentID = this.state.selectedSubmission?.submission?.assignmentid ?? 0;
+            const currentAssignmentID = this.state.selectedSubmission?.assignment.getId() ?? 0;
             if (indexOfSelectedStudent >= 0 && currentAssignmentID > 0) {
-                const nextStudent = this.props.allCourseSubmissions[indexOfSelectedStudent + 1];
+                const nextStudentIndex = moveUp ? indexOfSelectedStudent - 1 : indexOfSelectedStudent + 1;
+                if (!legalIndex(nextStudentIndex, this.props.allCourseSubmissions.length)) {
+                    return;
+                }
+                const nextStudent = this.props.allCourseSubmissions[nextStudentIndex];
                 if (nextStudent) {
                     const nextStudentSubmission = nextStudent.labs.find((item) => item.assignment.getId() === currentAssignmentID);
                     if (nextStudentSubmission) {
@@ -204,13 +216,18 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         }
     }
 
-    private selectNextSubmission() {
+
+    private selectNextSubmission(moveLeft: boolean) {
         const currentStudent = this.state.selectedStudent;
         const currentSubmission = this.state.selectedSubmission;
         if (currentStudent && currentSubmission) {
             const currentAssignmentIndex = this.props.assignments.findIndex(item => item.getId() === currentSubmission.assignment.getId());
             if (currentAssignmentIndex >= 0) {
-                const nextAssignment = this.props.assignments[currentAssignmentIndex + 1];
+                const nextAssignmentIndex = moveLeft ? currentAssignmentIndex - 1 : currentAssignmentIndex + 1;
+                if (!legalIndex(nextAssignmentIndex, this.props.assignments.length)) {
+                    return;
+                }
+                const nextAssignment = this.props.assignments[nextAssignmentIndex];
                 if (nextAssignment) {
                     const submissionForNextAssignment = currentStudent.labs.find(item => item.assignment.getId() === nextAssignment.getId());
                     if (submissionForNextAssignment) {
