@@ -343,3 +343,7 @@ export function isValidUserName(username: string): boolean {
     const onlyCharsAndSpaces = /^[a-zA-Z\s]*$/;
     return onlyCharsAndSpaces.test(username);
 }
+
+export function legalIndex(i: number, len: number): boolean {
+    return i >= 0 && i <= len - 1;
+}
