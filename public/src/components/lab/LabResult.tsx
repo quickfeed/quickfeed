@@ -33,13 +33,6 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
     }
 
     public render() {
-        let buttonDiv = <div></div>;
-        let commentDiv = <div></div>;
-        if (this.props.teacherView) {
-            buttonDiv = this.actionButtons();
-            commentDiv = this.commentDiv();
-        }
-
         let labHeading: JSX.Element;
         if (this.props.authorName) {
             labHeading = <h3>{this.props.authorName + ": "} {this.props.lab}</h3>;
@@ -55,8 +48,8 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
                     <Row>
                     {labHeading}
                     <ProgressBar progress={this.props.progress}></ProgressBar></Row>
-                    <Row>{buttonDiv}</Row>
-                    <Row>{commentDiv}</Row>
+                    {this.props.teacherView ? this.actionButtons() : null}
+                    {this.props.teacherView ? this.commentDiv() : null}
             </div>
         );
     }
@@ -73,17 +66,28 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
     }
 
     public commentDiv(): JSX.Element {
-        const editComment = <div className="lab-comment"></div>
-        const showComment = <div className="lab-comment"
+        const editComment = <div className="row lab-comment input-group">
+            <input
+                className="form-control lab-input"
+                autoFocus={true}
+                type="text"
+                defaultValue={this.props.comment}
+                onChange={(e) => this.setNewComment(e.target.value)}
+                onBlur={() => this.toggleCommenting()}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        this.props.onSubmissionUpdate(this.props.status, this.state.comment);
+                        this.setState({
+                            commenting: false,
+                        });
+                    } else if (e.key === 'Escape') {
+                        this.toggleCommenting();
+                    }
+                }}
+            />
+            {this.state.comment}</div>
+        const showComment = <div className="row lab-comment"
             onClick={() => this.toggleCommenting()}
-            onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                    this.props.onSubmissionUpdate(this.props.status, this.state.comment);
-                    this.setState({
-                        commenting: false,
-                    });
-                }
-            }}
         >{this.props.comment}</div>;
         return this.state.commenting ? editComment : showComment;
     }
@@ -157,5 +161,11 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
         this.setState((prevState: ILabResultState) => ({
             commenting: !prevState.commenting,
         }));
+    }
+
+    private setNewComment(input: string) {
+        this.setState({
+            comment: input,
+        });
     }
 }
