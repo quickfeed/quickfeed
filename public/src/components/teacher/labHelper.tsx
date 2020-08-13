@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Assignment, Submission } from "../../../proto/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmissionLink } from "../../models";
 

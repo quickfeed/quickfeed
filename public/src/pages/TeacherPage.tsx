@@ -10,7 +10,7 @@ import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu"
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from "../loader";
-import { sortCoursesByVisibility, sortAssignmentsByOrder, submissionStatusToString } from '../componentHelper';
+import { sortCoursesByVisibility, sortAssignmentsByOrder, submissionStatusToString } from "../componentHelper";
 import { AssignmentView } from "./views/AssignmentView";
 import { ISubmission } from "../models";
 import { FeedbackView } from "./views/FeedbackView";
@@ -129,12 +129,12 @@ export class TeacherPage extends ViewPage {
                 assignments={sortAssignmentsByOrder(labs)}
                 allCourseSubmissions={labResults}
                 courseCreatorView={course.getCoursecreatorid() === curUser?.getId()}
-                onRebuildClick={async (assignmentID: number, submissionID: number) => {
+                onSubmissionRebuild={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                     this.navMan.refresh();
                     return ans;
                 }}
-                onApproveClick={async (submission: ISubmission): Promise<boolean> => {
+                onSubmissionStatusUpdate={async (submission: ISubmission): Promise<boolean> => {
                     return this.approveFunc(submission, course.getId());
                 }}>
             </Results>;
@@ -152,12 +152,12 @@ export class TeacherPage extends ViewPage {
                 courseURL={await this.getCourseURL(course.getId())}
                 labs={sortAssignmentsByOrder(labs)}
                 groups={labResults}
-                onRebuildClick={async (assignmentID: number, submissionID: number) => {
+                onSubmissionRebuild={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                     this.navMan.refresh();
                     return ans;
                 }}
-                onApproveClick={async (submission: ISubmission): Promise<boolean> => {
+                onSubmissionStatusUpdate={async (submission: ISubmission): Promise<boolean> => {
                     return this.approveFunc(submission, course.getId());
                 }}>
             </GroupResults>;

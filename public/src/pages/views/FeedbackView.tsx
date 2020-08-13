@@ -3,7 +3,7 @@ import { Assignment, Course, Group, Review, User } from "../../../proto/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmissionLink } from "../../models";
 import { ReviewPage } from "../../components/manual-grading/Review";
 import { Search } from "../../components";
-import { selectFromSubmissionLinks, mapAllSubmissions, searchForUsers, searchForGroups, sortAssignmentsByOrder } from '../../componentHelper';
+import { selectFromSubmissionLinks, mapAllSubmissions, searchForUsers, searchForGroups, sortAssignmentsByOrder } from "../../componentHelper";
 
 interface FeedbackViewProps {
     course: Course;

@@ -1,4 +1,17 @@
-import { Assignment, Course, Enrollment, GradingBenchmark, GradingCriterion, Group, Organization, Repository, Status, User, Review, SubmissionsForCourseRequest } from '../../proto/ag_pb';
+import {
+    Assignment,
+    Course,
+    Enrollment,
+    GradingBenchmark,
+    GradingCriterion,
+    Group,
+    Organization,
+    Repository,
+    Status,
+    User,
+    Review,
+    SubmissionsForCourseRequest
+} from '../../proto/ag_pb';
 import { IAllSubmissionsForEnrollment, ISubmission } from '../models';
 
 import { ICourseProvider } from "./CourseManager";

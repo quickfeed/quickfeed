@@ -3,14 +3,14 @@ import { DynamicTable, Row } from "../../components";
 import { ITestCases } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 
-interface ILastBuild {
+interface ILastBuildProps {
     test_cases: ITestCases[];
     score: number;
     weight: number;
     scoreLimit: number;
 }
 
-export class LastBuild extends React.Component<ILastBuild> {
+export class LastBuild extends React.Component<ILastBuildProps> {
 
     public render() {
         return (

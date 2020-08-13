@@ -264,6 +264,13 @@ body {
 .lab-btn {
     display: inline-block;
     flex: 1;
+    margin: 3%;
+}
+
+.lab-btns {
+    display: flex;
+    justify-content: space-between;
+
 }
 
 .approve-btn {

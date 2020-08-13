@@ -1,9 +1,8 @@
 import * as React from "react";
 import { ProgressBar, Row } from "../../components";
 import { Submission } from "../../../proto/ag_pb";
-import { submissionStatusSelector } from "../../componentHelper";
 
-interface ILabResult {
+interface ILabResultProps {
     assignment_id: number;
     submission_id: number;
     progress: number;
@@ -11,39 +10,27 @@ interface ILabResult {
     lab: string;
     authorName?: string;
     teacherView: boolean;
-    isApproved: boolean;
-    onApproveClick: (status: Submission.Status, approve: boolean) => Promise<boolean>;
-    onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
+    onSubmissionStatusUpdate: (status: Submission.Status) => void;
+    onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
 interface ILabResultState {
     rebuilding: boolean;
-    status: Submission.Status;
 }
 
-export class LabResult extends React.Component<ILabResult, ILabResultState> {
+export class LabResult extends React.Component<ILabResultProps, ILabResultState> {
 
-    constructor(props: ILabResult) {
+    constructor(props: ILabResultProps) {
         super(props);
         this.state = {
             rebuilding: false,
-            status: this.props.status,
         };
     }
 
     public render() {
-        let approveButton = <div></div>;
-        let rebuildButton = <div></div>;
+        let buttonDiv = <div></div>;
         if (this.props.teacherView) {
-            approveButton = submissionStatusSelector(this.props.status, (action: string) => this.approve(action), "approve-btn")
-            rebuildButton = <div className="btn lab-btn rebuild-btn">
-            <button type="button" id="rebuild" className={this.setButtonColor("rebuild")}
-                onClick={
-                    this.state.rebuilding ? () => {console.log("Rebuilding..."); }
-                     : () => {this.rebuildSubmission(); }
-                }>{this.setButtonString("rebuild")}
-                </button>
-        </div>;
+            buttonDiv = this.actionButtons();
         }
 
         let labHeading: JSX.Element;
@@ -61,7 +48,7 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
                     <Row>
                     {labHeading}
                     <ProgressBar progress={this.props.progress}></ProgressBar></Row>
-                    <Row>{approveButton} {rebuildButton}</Row>
+                    <Row>{buttonDiv}</Row>
             </div>
         );
     }
@@ -70,46 +57,51 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
         this.setState({
             rebuilding: true,
         });
-        await this.props.onRebuildClick(this.props.assignment_id, this.props.submission_id).then(() => {
+        await this.props.onSubmissionRebuild(this.props.assignment_id, this.props.submission_id).then(() => {
             this.setState({
                 rebuilding: false,
             });
         });
     }
 
-    private async approve(action: string) {
-        let newStatus: Submission.Status = Submission.Status.NONE;
-        let newBool = false;
-        switch (action) {
-            case "1":
-                newStatus = Submission.Status.APPROVED;
-                newBool = true;
-                break;
-            case "2":
-                newStatus = Submission.Status.REJECTED;
-                break;
-            case "3":
-                newStatus = Submission.Status.REVISION;
-                break;
-            default:
-                newStatus = Submission.Status.NONE;
-                break;
-        }
-        const ans = await this.props.onApproveClick(newStatus, newBool);
-        if (ans) {
-            this.setState({
-                status: newStatus,
-            });
-        }
+    public actionButtons(): JSX.Element {
+        const approveButton = <button type="button" className={this.setButtonClassColor("approve")}
+            onClick={
+                () => {this.props.onSubmissionStatusUpdate(Submission.Status.APPROVED); }
+            }
+        >{this.setButtonString("approve")}</button>;
+        const revisionButton = <button type="button" className={this.setButtonClassColor("revision")}
+            onClick={
+                () => {this.props.onSubmissionStatusUpdate(Submission.Status.REVISION); }
+            }
+        >{this.setButtonString("revision")}</button>;
+        const rejectButton = <button type="button" className={this.setButtonClassColor("reject")}
+            onClick={
+                () => {this.props.onSubmissionStatusUpdate(Submission.Status.REJECTED); }
+            }
+        >{this.setButtonString("reject")}</button>;
+        const rebuildButton = <button type="button" className={this.setButtonClassColor("rebuild")}
+            onClick={
+                this.state.rebuilding ? () => {console.log("Rebuilding..."); } : () => {this.rebuildSubmission(); }
+            }
+        >{this.setButtonString("rebuild")}</button>;
+
+        return <div className="row lab-btns">{approveButton}{revisionButton}{rejectButton}{rebuildButton}</div>;
     }
 
-    private setButtonColor(id: string): string {
+    private setButtonClassColor(id: string): string {
         switch (id) {
             case "rebuild" : {
-                return this.state.rebuilding ? "btn btn-secondary" : "btn btn-primary";
+                return this.state.rebuilding ? "btn lab-btn btn-secondary" : "btn lab-btn btn-primary";
             }
             case "approve" : {
-                return this.props.isApproved ? "btn btn-success" : "btn btn-primary";
+                return this.props.status === Submission.Status.APPROVED ? "btn lab-btn btn-success" : "btn lab-btn btn-default";
+            }
+            case "reject" : {
+                return this.props.status === Submission.Status.REJECTED ? "btn lab-btn btn-danger" : "btn lab-btn btn-default";
+            }
+            case "revision" : {
+                return this.props.status === Submission.Status.REVISION ? "btn lab-btn btn-warning" : "btn lab-btn btn-default"
             }
             default: {
                 return "";
@@ -123,7 +115,13 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
                 return this.state.rebuilding ? "Rebuilding" : "Rebuild";
             }
             case "approve" : {
-                return this.props.isApproved ? "Approved" : "Approve";
+                return this.props.status === Submission.Status.APPROVED ? "Approved" : "Approve";
+            }
+            case "reject" : {
+                return this.props.status === Submission.Status.REJECTED ? "Failed" : "Fail";
+            }
+            case "revision" : {
+                return this.props.status === Submission.Status.REVISION ? "Revising" : "Revision";
             }
             default : {
                 return "";
@@ -131,7 +129,4 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
         }
     }
 
-    private setTooltip(): string {
-        return this.props.isApproved ? "Undo approval" : "Approve";
-    }
 }
