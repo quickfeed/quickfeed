@@ -86,22 +86,22 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
             }
         >{this.setButtonString("rebuild")}</button>;
 
-        return <div>{approveButton}{revisionButton}{rejectButton}{rebuildButton}</div>;
+        return <div className="row lab-btns">{approveButton}{revisionButton}{rejectButton}{rebuildButton}</div>;
     }
 
     private setButtonClassColor(id: string): string {
         switch (id) {
             case "rebuild" : {
-                return this.state.rebuilding ? "btn btn-secondary" : "btn btn-primary";
+                return this.state.rebuilding ? "btn lab-btn btn-secondary" : "btn lab-btn btn-primary";
             }
             case "approve" : {
-                return this.props.status === Submission.Status.APPROVED ? "btn btn-success" : "btn btn-default";
+                return this.props.status === Submission.Status.APPROVED ? "btn lab-btn btn-success" : "btn lab-btn btn-default";
             }
             case "reject" : {
-                return this.props.status === Submission.Status.REJECTED ? "btn btn-danger" : "btn btn-defaul";
+                return this.props.status === Submission.Status.REJECTED ? "btn lab-btn btn-danger" : "btn lab-btn btn-default";
             }
             case "revision" : {
-                return this.props.status === Submission.Status.REVISION ? "btn btn-warning" : "btn btn-default"
+                return this.props.status === Submission.Status.REVISION ? "btn lab-btn btn-warning" : "btn lab-btn btn-default"
             }
             default: {
                 return "";
@@ -118,7 +118,7 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
                 return this.props.status === Submission.Status.APPROVED ? "Approved" : "Approve";
             }
             case "reject" : {
-                return this.props.status === Submission.Status.REJECTED ? "Rejected" : "Reject";
+                return this.props.status === Submission.Status.REJECTED ? "Failed" : "Fail";
             }
             case "revision" : {
                 return this.props.status === Submission.Status.REVISION ? "Revising" : "Revision";
