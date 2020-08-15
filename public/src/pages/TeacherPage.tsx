@@ -134,9 +134,9 @@ export class TeacherPage extends ViewPage {
                     this.navMan.refresh();
                     return ans;
                 }}
-                onSubmissionUpdate={async (submission: ISubmission): Promise<boolean> => {
-                    return this.approveFunc(submission, course.getId());
-                }}>
+                updateSubmissionStatus={async (submission: ISubmission) => this.setStatus(submission, course.getId())}
+                setSubmissionComment={async (submission: ISubmission) => this.setComment(submission, course.getId())}
+                >
             </Results>;
         });
     }
@@ -157,9 +157,9 @@ export class TeacherPage extends ViewPage {
                     this.navMan.refresh();
                     return ans;
                 }}
-                onSubmissionUpdate={async (submission: ISubmission): Promise<boolean> => {
-                    return this.approveFunc(submission, course.getId());
-                }}>
+                updateSubmissionStatus={async (submission: ISubmission) => this.setStatus(submission, course.getId())}
+                setSubmissionComment={async (submission: ISubmission) => this.setComment(submission, course.getId())}
+                >
             </GroupResults>;
         });
     }
@@ -356,7 +356,7 @@ export class TeacherPage extends ViewPage {
         };
     }
 
-    public async approveFunc(submission: ISubmission, courseID: number): Promise<boolean> {
+    public async setStatus(submission: ISubmission, courseID: number): Promise<boolean> {
         if (confirm(
             `Do you want to set ${submissionStatusToString(submission.status)} status for this lab?`,
         )) {
@@ -365,6 +365,12 @@ export class TeacherPage extends ViewPage {
             return ans;
         }
         return false;
+    }
+
+    public async setComment(submission: ISubmission, courseID: number): Promise<boolean> {
+        const ans = await this.courseMan.updateSubmission(courseID, submission);
+        this.navMan.refresh();
+        return ans;
     }
 
     public async renderMenu(menu: number): Promise<JSX.Element[]> {

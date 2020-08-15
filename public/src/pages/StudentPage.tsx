@@ -136,14 +136,19 @@ export class StudentPage extends ViewPage {
                     slipdays={this.selectedUserCourse.enrollment.getSlipdaysremaining()}
                     student={curUser}
                     courseURL={""}
+                    commenting={false}
                     onSubmissionRebuild={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onSubmissionUpdate={async () => {
+                    updateSubmissionStatus={async () => {
                         return false;
                     }}
+                    setSubmissionComment={async () => {
+                        return false;
+                    }}
+                    toggleCommenting={() => {}}
                     >
                 </StudentLab>;
             }
@@ -167,14 +172,19 @@ export class StudentPage extends ViewPage {
                     slipdays={this.selectedUserGroupCourse.enrollment.getSlipdaysremaining()}
                     courseURL={""}
                     student={curUser}
+                    commenting={false}
                     onSubmissionRebuild={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onSubmissionUpdate={async () => {
+                    updateSubmissionStatus={async () => {
                         return false;
                     }}
+                    setSubmissionComment={async () => {
+                        return false;
+                    }}
+                    toggleCommenting={() => {}}
                   >
                 </StudentLab>;
             }

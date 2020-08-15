@@ -11,11 +11,13 @@ interface IResultsProps {
     courseURL: string;
     groups: IAllSubmissionsForEnrollment[];
     labs: Assignment[];
-    onSubmissionUpdate: (submission: ISubmission) => Promise<boolean>;
+    updateSubmissionStatus: (submission: ISubmission) => Promise<boolean>;
+    setSubmissionComment: (submission: ISubmission) => Promise<boolean>;
     onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
 
 interface IResultsState {
+    commenting: boolean;
     selectedSubmission?: ISubmissionLink;
     groups: IAllSubmissionsForEnrollment[];
 }
@@ -29,12 +31,14 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         const allAssignments = currentGroup ? currentGroup.course.getAssignmentsList() : null;
         if (currentGroup && allAssignments && allAssignments.length > 0) {
             this.state = {
+                commenting: false,
                 // Only using the first group to fetch assignments.
                 selectedSubmission: currentGroup.labs[0],
                 groups: sortByScore(this.props.groups, this.props.labs, true),
             };
         } else {
             this.state = {
+                commenting: false,
                 selectedSubmission: undefined,
                 groups: sortByScore(this.props.groups, this.props.labs, true),
             };
@@ -53,8 +57,11 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 courseURL={this.props.courseURL}
                 teacherPageView={true}
                 slipdays={this.props.course.getSlipdays()}
+                commenting={this.state.commenting}
                 onSubmissionRebuild={ () => this.rebuildSubmission()}
-                onSubmissionUpdate={(status: Submission.Status) => this.updateSubmissionStatus(status)}
+                updateSubmissionStatus={(status: Submission.Status) => this.updateSubmissionStatus(status)}
+                setSubmissionComment={(comment: string) => this.setSubmissionComment(comment)}
+                toggleCommenting={(on: boolean) => this.toggleCommenting(on)}
             />;
         }
 
@@ -135,9 +142,25 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         if (selected) {
             const previousStatus = selected.status;
             selected.status = status;
-            const ans = await this.props.onSubmissionUpdate(selected);
+            const ans = await this.props.updateSubmissionStatus(selected);
             if (!ans) {
                 selected.status = previousStatus;
+            }
+            this.setState({
+                selectedSubmission: current,
+            });
+        }
+    }
+
+    private async setSubmissionComment(comment: string) {
+        const current = this.state.selectedSubmission;
+        const selected = current?.submission;
+        if (selected) {
+            const oldComment = selected.comment;
+            selected.comment = comment;
+            const ans = await this.props.setSubmissionComment(selected);
+            if (!ans) {
+                selected.comment = oldComment;
             }
             this.setState({
                 selectedSubmission: current,
@@ -170,5 +193,11 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         this.setState({
             groups: searchForLabs(this.props.groups, query),
         });
+    }
+
+    private toggleCommenting(toggleOn: boolean) {
+        this.setState({
+            commenting: toggleOn,
+        })
     }
 }

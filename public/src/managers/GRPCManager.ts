@@ -251,6 +251,7 @@ export class GrpcManager {
         request.setStatus(s.status);
         request.setReleased(s.released);
         request.setScore(s.score);
+        request.setComment(s.comment);
         return this.grpcSend<Void>(this.agService.updateSubmission, request);
     }
 

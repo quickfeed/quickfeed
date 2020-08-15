@@ -11,13 +11,15 @@ interface ILabResultProps {
     comment: string;
     authorName?: string;
     teacherView: boolean;
-    onSubmissionUpdate: (status: Submission.Status, comment: string) => void;
-    onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<boolean>;
+    commenting: boolean;
+    updateSubmissionStatus: (status: Submission.Status) => void;
+    setSubmissionComment: (comment: string) => void;
+    rebuildSubmission: (assignmentID: number, submissionID: number) => Promise<boolean>;
+    toggleCommenting: (toggleOn: boolean) => void;
 }
 
 interface ILabResultState {
     rebuilding: boolean;
-    commenting: boolean;
     comment: string;
 }
 
@@ -27,7 +29,6 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
         super(props);
         this.state = {
             rebuilding: false,
-            commenting: false,
             comment: props.comment,
         };
     }
@@ -58,7 +59,7 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
         this.setState({
             rebuilding: true,
         });
-        await this.props.onSubmissionRebuild(this.props.assignment_id, this.props.submission_id).then(() => {
+        await this.props.rebuildSubmission(this.props.assignment_id, this.props.submission_id).then(() => {
             this.setState({
                 rebuilding: false,
             });
@@ -76,10 +77,8 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
                 onBlur={() => this.toggleCommenting()}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                        this.props.onSubmissionUpdate(this.props.status, this.state.comment);
-                        this.setState({
-                            commenting: false,
-                        });
+                        this.props.setSubmissionComment(this.state.comment);
+                        this.props.toggleCommenting(false);
                     } else if (e.key === 'Escape') {
                         this.toggleCommenting();
                     }
@@ -88,24 +87,24 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
             {this.state.comment}</div>
         const showComment = <div className="row lab-comment"
             onClick={() => this.toggleCommenting()}
-        >{this.props.comment}</div>;
-        return this.state.commenting ? editComment : showComment;
+        ><h3>Comment:</h3>{this.props.comment}</div>;
+        return this.props.commenting ? editComment : showComment;
     }
 
     public actionButtons(): JSX.Element {
         const approveButton = <button type="button" className={this.setButtonClassColor("approve")}
             onClick={
-                () => {this.props.onSubmissionUpdate(Submission.Status.APPROVED, this.props.comment); }
+                () => {this.props.updateSubmissionStatus(Submission.Status.APPROVED); }
             }
         >{this.setButtonString("approve")}</button>;
         const revisionButton = <button type="button" className={this.setButtonClassColor("revision")}
             onClick={
-                () => {this.props.onSubmissionUpdate(Submission.Status.REVISION, this.props.comment); }
+                () => {this.props.updateSubmissionStatus(Submission.Status.REVISION); }
             }
         >{this.setButtonString("revision")}</button>;
         const rejectButton = <button type="button" className={this.setButtonClassColor("reject")}
             onClick={
-                () => {this.props.onSubmissionUpdate(Submission.Status.REJECTED, this.props.comment); }
+                () => {this.props.updateSubmissionStatus(Submission.Status.REJECTED); }
             }
         >{this.setButtonString("reject")}</button>;
         const rebuildButton = <button type="button" className={this.setButtonClassColor("rebuild")}
@@ -158,9 +157,7 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
     }
 
     private toggleCommenting() {
-        this.setState((prevState: ILabResultState) => ({
-            commenting: !prevState.commenting,
-        }));
+        this.props.toggleCommenting(!this.props.commenting);
     }
 
     private setNewComment(input: string) {

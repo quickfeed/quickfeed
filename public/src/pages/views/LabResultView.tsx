@@ -9,8 +9,11 @@ interface ILabInfoProps {
     courseURL: string;
     slipdays: number;
     teacherPageView: boolean;
-    onSubmissionUpdate: (status: Submission.Status, comment: string) => void;
-    onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<boolean>;
+    commenting: boolean;
+    updateSubmissionStatus: (status: Submission.Status) => void;
+    setSubmissionComment: (comment: string) => void;
+    rebuildSubmission: (assignmentID: number, submissionID: number) => Promise<boolean>;
+    toggleCommenting: (toggleOn: boolean) => void;
 }
 
 export class LabResultView extends React.Component<ILabInfoProps> {
@@ -30,10 +33,13 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 lab={this.props.submissionLink.assignment.getName()}
                                 progress={latest.score}
                                 status={latest.status}
+                                commenting={this.props.commenting}
                                 comment={this.props.submissionLink.submission?.comment ?? ""}
                                 authorName={this.props.submissionLink.authorName}
-                                onSubmissionUpdate={this.props.onSubmissionUpdate}
-                                onSubmissionRebuild={this.props.onSubmissionRebuild}
+                                updateSubmissionStatus={this.props.updateSubmissionStatus}
+                                setSubmissionComment={this.props.setSubmissionComment}
+                                rebuildSubmission={this.props.rebuildSubmission}
+                                toggleCommenting={this.props.toggleCommenting}
                             />
                             <LastBuildInfo
                                 submission={latest}
