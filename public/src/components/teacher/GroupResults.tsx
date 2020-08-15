@@ -68,22 +68,24 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         return (
             <div
             onKeyDown={(e) => {
-                switch (e.key) {
-                    case "a": {
-                        this.updateSubmissionStatus(Submission.Status.APPROVED);
-                        break;
-                    }
-                    case "r": {
-                        this.updateSubmissionStatus(Submission.Status.REVISION);
-                        break;
-                    }
-                    case "f": {
-                        this.updateSubmissionStatus(Submission.Status.REJECTED)
-                        break;
-                    }
-                    case "b": {
-                        this.rebuildSubmission();
-                        break;
+                if (!this.state.commenting) {
+                    switch (e.key) {
+                        case "a": {
+                            this.updateSubmissionStatus(Submission.Status.APPROVED);
+                            break;
+                        }
+                        case "r": {
+                            this.updateSubmissionStatus(Submission.Status.REVISION);
+                            break;
+                        }
+                        case "f": {
+                            this.updateSubmissionStatus(Submission.Status.REJECTED)
+                            break;
+                        }
+                        case "b": {
+                            this.rebuildSubmission();
+                            break;
+                        }
                     }
                 }
             }}

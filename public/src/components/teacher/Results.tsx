@@ -72,38 +72,40 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
             <div
 
             onKeyDown={(e) => {
-                switch (e.key) {
-                    case "ArrowDown": {
-                        this.selectNextStudent(false);
-                        break;
-                    }
-                    case "ArrowUp": {
-                        this.selectNextStudent(true);
-                        break;
-                    }
-                    case "ArrowRight": {
-                        this.selectNextSubmission(false);
-                        break;
-                    }
-                    case "ArrowLeft": {
-                        this.selectNextSubmission(true);
-                        break;
-                    }
-                    case "a": {
-                        this.updateSubmissionStatus(Submission.Status.APPROVED);
-                        break;
-                    }
-                    case "r": {
-                        this.updateSubmissionStatus(Submission.Status.REVISION);
-                        break;
-                    }
-                    case "f": {
-                        this.updateSubmissionStatus(Submission.Status.REJECTED)
-                        break;
-                    }
-                    case "b": {
-                        this.rebuildSubmission();
-                        break;
+                if (!this.state.commenting) {
+                    switch (e.key) {
+                        case "ArrowDown": {
+                            this.selectNextStudent(false);
+                            break;
+                        }
+                        case "ArrowUp": {
+                            this.selectNextStudent(true);
+                            break;
+                        }
+                        case "ArrowRight": {
+                            this.selectNextSubmission(false);
+                            break;
+                        }
+                        case "ArrowLeft": {
+                            this.selectNextSubmission(true);
+                            break;
+                        }
+                        case "a": {
+                            this.updateSubmissionStatus(Submission.Status.APPROVED);
+                            break;
+                        }
+                        case "r": {
+                            this.updateSubmissionStatus(Submission.Status.REVISION);
+                            break;
+                        }
+                        case "f": {
+                            this.updateSubmissionStatus(Submission.Status.REJECTED)
+                            break;
+                        }
+                        case "b": {
+                            this.rebuildSubmission();
+                            break;
+                        }
                     }
                 }
             }}

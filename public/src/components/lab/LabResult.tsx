@@ -67,7 +67,10 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
     }
 
     public commentDiv(): JSX.Element {
-        const editComment = <div className="row lab-comment input-group">
+        
+
+
+        const editComment = <div className="lab-comment input-group col-md-12">
             <input
                 className="form-control lab-input"
                 autoFocus={true}
@@ -83,11 +86,10 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
                         this.toggleCommenting();
                     }
                 }}
-            />
-            {this.state.comment}</div>
-        const showComment = <div className="row lab-comment"
+            /></div>
+        const showComment = <div className="col-md-12 lab-comment"
             onClick={() => this.toggleCommenting()}
-        ><h3>Comment:</h3>{this.props.comment}</div>;
+        ><h3>Leave a comment:</h3>{this.props.comment}</div>;
         return this.props.commenting ? editComment : showComment;
     }
 
