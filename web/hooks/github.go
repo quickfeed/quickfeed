@@ -1,8 +1,6 @@
 package hooks
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -10,6 +8,7 @@ import (
 	"github.com/autograde/quickfeed/assignments"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/log"
 	"github.com/google/go-github/v30/github"
 	"go.uber.org/zap"
 )
@@ -45,7 +44,7 @@ func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 	switch e := event.(type) {
 	case *github.PushEvent:
-		wh.logger.Debug(jsonString(e))
+		wh.logger.Debug(log.IndentJson(e))
 		wh.handlePush(e)
 	default:
 		wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
@@ -96,16 +95,6 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	default:
 		wh.logger.Debug("Nothing to do for this push event")
 	}
-}
-
-// jsonString returns a JSON formatted string
-// with structured indents and line breaks.
-func jsonString(event interface{}) string {
-	prettyJSON, err := json.MarshalIndent(event, "", "  ")
-	if err != nil {
-		return fmt.Sprintf("JSON error: %v", err)
-	}
-	return string(prettyJSON)
 }
 
 // extractAssignments extracts information from the push payload from github
