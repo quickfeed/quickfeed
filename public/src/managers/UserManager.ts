@@ -2,7 +2,6 @@ import { IEventData, newEvent } from "../event";
 import { ILogger } from "./LogManager";
 
 import { Enrollment, User } from "../../proto/ag_pb";
-import { isValidUserName } from '../componentHelper';
 
 export interface IUserProvider {
     tryLogin(username: string, password: string): Promise<User | null>;
@@ -51,7 +50,7 @@ export class UserManager {
 
     public isValidUser(user: User): boolean {
         return user.getEmail().length > 0
-            && (user.getName().length > 0 && isValidUserName(user.getName()))
+            && user.getName().length > 0
             && user.getStudentid().length > 0;
     }
 
