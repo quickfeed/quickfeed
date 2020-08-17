@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/autograde/quickfeed/kit/score"
+	"github.com/autograde/quickfeed/log"
 	"go.uber.org/zap"
 )
 
@@ -49,8 +50,8 @@ func ExtractResult(logger *zap.SugaredLogger, out, secret string, execTime time.
 		}
 	}
 	logger.Debug("ci.ExtractResults",
-		zap.Any("scores", scores),
-		zap.Any("filteredLog", filteredLog),
+		zap.Any("scores", log.IndentJson(scores)),
+		zap.Any("filteredLog", log.IndentJson(filteredLog)),
 	)
 	return &Result{
 		Scores: scores,
