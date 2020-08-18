@@ -6,6 +6,7 @@ import (
 	"io"
 	"runtime"
 	"strings"
+	"testing"
 )
 
 // GlobalSecret represents the unique course identifier that will be used in
@@ -25,7 +26,7 @@ var GlobalSecret = "NOT SET"
 // objects from the output stream. All other output is ignored when computing
 // the score.
 //
-// The Autograder computes the score accoring to the formula below, providing
+// The Autograder computes the score according to the formula below, providing
 // a percentage score for a test or a group of tests. The Weight parameter can
 // be used to give more/less value to some Score objects (representing
 // different test sets). For example, a Weight of 2 on test A and a Weight of 1
@@ -70,6 +71,20 @@ func NewScoreMax(max, weight int) *Score {
 	return &Score{
 		Secret:   GlobalSecret,
 		TestName: testName(),
+		Score:    max,
+		MaxScore: max,
+		Weight:   weight,
+	}
+}
+
+// NewScoreMax returns a new Score object with the given max and weight.
+// The Score.Score field is max initially, and so Score.Dec() and DecBy() can
+// be called on the returned Score object.
+// The TestName is initialized as the name of the provided t.Name().
+func NewScoreMaxWithTesting(t *testing.T, max, weight int) *Score {
+	return &Score{
+		Secret:   GlobalSecret,
+		TestName: t.Name(),
 		Score:    max,
 		MaxScore: max,
 		Weight:   weight,
