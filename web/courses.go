@@ -18,7 +18,7 @@ func (s *AutograderService) getCourses() (*pb.Courses, error) {
 	return &pb.Courses{Courses: courses}, nil
 }
 
-// getCoursesWithEnrollment returns all courses that match the provided enrollment status.
+// getCoursesByUser returns all courses that match the provided enrollment status.
 func (s *AutograderService) getCoursesByUser(request *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
 	courses, err := s.db.GetCoursesByUser(request.GetUserID(), request.Statuses...)
 	if err != nil {
@@ -97,6 +97,7 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, cu
 	return fmt.Errorf("unknown enrollment")
 }
 
+// updateEnrollments enrolls all students with pending enrollments into course
 func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, cid uint64) error {
 	enrolls, err := s.db.GetEnrollmentsByCourse(cid, pb.Enrollment_PENDING)
 	if err != nil {
@@ -111,7 +112,7 @@ func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, c
 	return nil
 }
 
-// GetCourse returns a course object for the given course id.
+// getCourse returns a course object for the given course id.
 func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
 	return s.db.GetCourse(courseID, false)
 }
@@ -174,9 +175,11 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrollme
 		newLink := &pb.EnrollmentLink{Enrollment: enrol}
 		allSubmissions := make([]*pb.SubmissionLink, 0)
 		for _, a := range assignments {
+			copyWithoutSubmissions := a.CloneWithoutSubmissions()
 			subLink := &pb.SubmissionLink{
-				Assignment: a,
+				Assignment: copyWithoutSubmissions,
 			}
+
 			for _, sb := range a.Submissions {
 				if sb.UserID > 0 && sb.UserID == enrol.UserID {
 					subLink.Submission = sb
@@ -185,11 +188,9 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrollme
 			allSubmissions = append(allSubmissions, subLink)
 		}
 
-		sortSubmissionsByAssignmentOrder(allSubmissions)
 		newLink.Submissions = allSubmissions
 		enrolLinks = append(enrolLinks, newLink)
 	}
-
 	return enrolLinks
 }
 
@@ -211,8 +212,9 @@ func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*p
 
 		allSubmissions := make([]*pb.SubmissionLink, 0)
 		for _, a := range assignments {
+			copyWithoutSubmissions := a.CloneWithoutSubmissions()
 			subLink := &pb.SubmissionLink{
-				Assignment: a,
+				Assignment: copyWithoutSubmissions,
 			}
 			for _, sb := range a.Submissions {
 				if sb.GroupID > 0 && sb.GroupID == grp.ID {
@@ -456,7 +458,6 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 }
 
 func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.SubmissionLink {
-
 	sort.Slice(unsorted, func(i, j int) bool {
 		return unsorted[i].Assignment.Order < unsorted[j].Assignment.Order
 	})
