@@ -35,7 +35,7 @@ func (m Assignment) IsApproved(latest *Submission, score uint32) bool {
 }
 
 // CloneWithoutSubmissions returns a deep copy of the given assignment
-// with empty submissions
+// without submissions
 func (a Assignment) CloneWithoutSubmissions() *Assignment {
 	return &Assignment{
 		ID:                a.ID,
