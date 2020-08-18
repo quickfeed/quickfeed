@@ -34,9 +34,9 @@ func (m Assignment) IsApproved(latest *Submission, score uint32) bool {
 	return approved
 }
 
-// DeepCopy returns a deep copy of the given assignment
+// CloneWithoutSubmissions returns a deep copy of the given assignment
 // with empty submissions
-func (a Assignment) DeepCopy() *Assignment {
+func (a Assignment) CloneWithoutSubmissions() *Assignment {
 	return &Assignment{
 		ID:                a.ID,
 		CourseID:          a.CourseID,

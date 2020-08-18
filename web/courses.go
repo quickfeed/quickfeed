@@ -175,9 +175,9 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrollme
 		newLink := &pb.EnrollmentLink{Enrollment: enrol}
 		allSubmissions := make([]*pb.SubmissionLink, 0)
 		for _, a := range assignments {
-			deepcopyNoSubmissions := a.DeepCopy()
+			copyWithoutSubmissions := a.CloneWithoutSubmissions()
 			subLink := &pb.SubmissionLink{
-				Assignment: deepcopyNoSubmissions,
+				Assignment: copyWithoutSubmissions,
 			}
 
 			for _, sb := range a.Submissions {
@@ -212,7 +212,7 @@ func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*p
 
 		allSubmissions := make([]*pb.SubmissionLink, 0)
 		for _, a := range assignments {
-			copyWithoutSubmissions := a.DeepCopy()
+			copyWithoutSubmissions := a.CloneWithoutSubmissions()
 			subLink := &pb.SubmissionLink{
 				Assignment: copyWithoutSubmissions,
 			}
