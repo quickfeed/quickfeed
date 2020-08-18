@@ -18,7 +18,7 @@ func (s *AutograderService) getCourses() (*pb.Courses, error) {
 	return &pb.Courses{Courses: courses}, nil
 }
 
-// getCoursesWithEnrollment returns all courses that match the provided enrollment status.
+// getCoursesByUser returns all courses that match the provided enrollment status.
 func (s *AutograderService) getCoursesByUser(request *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
 	courses, err := s.db.GetCoursesByUser(request.GetUserID(), request.Statuses...)
 	if err != nil {
@@ -174,9 +174,24 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrollme
 		newLink := &pb.EnrollmentLink{Enrollment: enrol}
 		allSubmissions := make([]*pb.SubmissionLink, 0)
 		for _, a := range assignments {
-			subLink := &pb.SubmissionLink{
-				Assignment: a,
+			deepcopyNoSubmissions := &pb.Assignment{
+				ID:                a.ID,
+				CourseID:          a.CourseID,
+				Name:              a.Name,
+				ScriptFile:        a.ScriptFile,
+				Deadline:          a.Deadline,
+				AutoApprove:       a.AutoApprove,
+				Order:             a.Order,
+				IsGroupLab:        a.IsGroupLab,
+				ScoreLimit:        a.ScoreLimit,
+				Reviewers:         a.Reviewers,
+				RunTests:          a.RunTests,
+				GradingBenchmarks: a.GradingBenchmarks,
 			}
+			subLink := &pb.SubmissionLink{
+				Assignment: deepcopyNoSubmissions,
+			}
+
 			for _, sb := range a.Submissions {
 				if sb.UserID > 0 && sb.UserID == enrol.UserID {
 					subLink.Submission = sb
@@ -185,11 +200,9 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrollme
 			allSubmissions = append(allSubmissions, subLink)
 		}
 
-		sortSubmissionsByAssignmentOrder(allSubmissions)
 		newLink.Submissions = allSubmissions
 		enrolLinks = append(enrolLinks, newLink)
 	}
-
 	return enrolLinks
 }
 
