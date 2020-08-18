@@ -33,3 +33,22 @@ func (m Assignment) IsApproved(latest *Submission, score uint32) bool {
 	}
 	return approved
 }
+
+// DeepCopy returns a deep copy of the given assignment
+// with empty submissions
+func (a Assignment) DeepCopy() *Assignment {
+	return &Assignment{
+		ID:                a.ID,
+		CourseID:          a.CourseID,
+		Name:              a.Name,
+		ScriptFile:        a.ScriptFile,
+		Deadline:          a.Deadline,
+		AutoApprove:       a.AutoApprove,
+		Order:             a.Order,
+		IsGroupLab:        a.IsGroupLab,
+		ScoreLimit:        a.ScoreLimit,
+		Reviewers:         a.Reviewers,
+		RunTests:          a.RunTests,
+		GradingBenchmarks: a.GradingBenchmarks,
+	}
+}

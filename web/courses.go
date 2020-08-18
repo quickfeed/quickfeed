@@ -97,6 +97,7 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, cu
 	return fmt.Errorf("unknown enrollment")
 }
 
+// updateEnrollments enrolls all students with pending enrollments into course
 func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, cid uint64) error {
 	enrolls, err := s.db.GetEnrollmentsByCourse(cid, pb.Enrollment_PENDING)
 	if err != nil {
@@ -111,7 +112,7 @@ func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, c
 	return nil
 }
 
-// GetCourse returns a course object for the given course id.
+// getCourse returns a course object for the given course id.
 func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
 	return s.db.GetCourse(courseID, false)
 }
@@ -174,20 +175,7 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrollme
 		newLink := &pb.EnrollmentLink{Enrollment: enrol}
 		allSubmissions := make([]*pb.SubmissionLink, 0)
 		for _, a := range assignments {
-			deepcopyNoSubmissions := &pb.Assignment{
-				ID:                a.ID,
-				CourseID:          a.CourseID,
-				Name:              a.Name,
-				ScriptFile:        a.ScriptFile,
-				Deadline:          a.Deadline,
-				AutoApprove:       a.AutoApprove,
-				Order:             a.Order,
-				IsGroupLab:        a.IsGroupLab,
-				ScoreLimit:        a.ScoreLimit,
-				Reviewers:         a.Reviewers,
-				RunTests:          a.RunTests,
-				GradingBenchmarks: a.GradingBenchmarks,
-			}
+			deepcopyNoSubmissions := a.DeepCopy()
 			subLink := &pb.SubmissionLink{
 				Assignment: deepcopyNoSubmissions,
 			}
@@ -224,8 +212,9 @@ func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*p
 
 		allSubmissions := make([]*pb.SubmissionLink, 0)
 		for _, a := range assignments {
+			copyWithoutSubmissions := a.DeepCopy()
 			subLink := &pb.SubmissionLink{
-				Assignment: a,
+				Assignment: copyWithoutSubmissions,
 			}
 			for _, sb := range a.Submissions {
 				if sb.GroupID > 0 && sb.GroupID == grp.ID {
@@ -469,7 +458,6 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 }
 
 func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.SubmissionLink {
-
 	sort.Slice(unsorted, func(i, j int) bool {
 		return unsorted[i].Assignment.Order < unsorted[j].Assignment.Order
 	})
