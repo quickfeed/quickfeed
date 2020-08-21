@@ -748,8 +748,8 @@ export class Comment extends jspb.Message {
   getMessage(): string;
   setMessage(value: string): void;
 
-  getAdded(): string;
-  setAdded(value: string): void;
+  getPosted(): string;
+  setPosted(value: string): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Comment.AsObject;
@@ -766,7 +766,7 @@ export namespace Comment {
     submissionid: number,
     courseid: number,
     message: string,
-    added: string,
+    posted: string,
   }
 }
 
@@ -1495,6 +1495,32 @@ export namespace DeleteCommentRequest {
   export type AsObject = {
     commentid: number,
     courseid: number,
+  }
+}
+
+export class CommentWithUser extends jspb.Message {
+  getComment(): Comment | undefined;
+  setComment(value?: Comment): void;
+  hasComment(): boolean;
+  clearComment(): void;
+
+  getUser(): User | undefined;
+  setUser(value?: User): void;
+  hasUser(): boolean;
+  clearUser(): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): CommentWithUser.AsObject;
+  static toObject(includeInstance: boolean, msg: CommentWithUser): CommentWithUser.AsObject;
+  static serializeBinaryToWriter(message: CommentWithUser, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CommentWithUser;
+  static deserializeBinaryFromReader(message: CommentWithUser, reader: jspb.BinaryReader): CommentWithUser;
+}
+
+export namespace CommentWithUser {
+  export type AsObject = {
+    comment?: Comment.AsObject,
+    user?: User.AsObject,
   }
 }
 

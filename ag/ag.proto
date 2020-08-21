@@ -211,7 +211,7 @@ message Comment {
     uint64 submissionID = 3;
     uint64 courseID = 4;
     string message = 5;
-    string added = 6;
+    string posted = 6;
 }
 
 //   MANUAL GRADING   //
@@ -391,6 +391,11 @@ message CourseUserRequest {
 message DeleteCommentRequest {
     uint64 commentID = 1;
     uint64 courseID = 2;
+}
+
+message CommentWithUser {
+    Comment comment = 1;
+    User user = 2;
 }
 
 // Void contains no fields. A server response with a Void still contains a gRPC status code,

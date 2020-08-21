@@ -96,7 +96,7 @@ func (db *GormDB) UpdateAssignments(assignments []*pb.Assignment) error {
 func (db *GormDB) GetCourseAssignmentsWithSubmissions(courseID uint64, submissionType pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error) {
 	var assignments []*pb.Assignment
 
-	if err := db.conn.Preload("Submissions").Preload("Submissions.Reviews").Where(&pb.Assignment{CourseID: courseID}).Find(&assignments).Error; err != nil {
+	if err := db.conn.Preload("Submissions").Preload("Submissions.Reviews").Preload("Submissions.Comments").Where(&pb.Assignment{CourseID: courseID}).Find(&assignments).Error; err != nil {
 		fmt.Println(err.Error())
 		return nil, err
 	}
