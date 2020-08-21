@@ -1,8 +1,8 @@
-FROM golang:alpine
+FROM golang:1.15-alpine
 
-# Install bash and git
+# Install bash and git (and build-base to get gcc)
 # (this is required when building FROM: golang:alpine)
-RUN apk update && apk add --no-cache git bash
+RUN apk update && apk add --no-cache git bash build-base
 
 WORKDIR /quickfeed
 
