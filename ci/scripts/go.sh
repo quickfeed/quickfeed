@@ -28,7 +28,7 @@ if grep -r -e common.Secret -e GlobalSecret * ; then
 fi
 
 # Remove student written tests to avoid interference
-rm -rf *_test.go
+find . -name '*_test.go' -exec rm -rf {} \;
 rm -f setup.sh
 
 # Run gosecret for all tests
