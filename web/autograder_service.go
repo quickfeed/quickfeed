@@ -543,7 +543,7 @@ func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.S
 	}
 	s.logger.Debugf("GetCourseLabSubmissions: %v", in)
 
-	courseLinks, err := s.getAllLabs(in)
+	courseLinks, err := s.getAllCourseSubmissions(in)
 	if err != nil {
 		s.logger.Errorf("GetCourseLabSubmissions failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "no submissions found")
@@ -765,7 +765,7 @@ func (s *AutograderService) GetReviewers(ctx context.Context, in *pb.SubmissionR
 		s.logger.Error("GetReviewers failed: user is not course creator")
 		return nil, status.Errorf(codes.PermissionDenied, "only course creator teacher can request information about reviewers")
 	}
-	reviewers, err := s.getReviewers(in.SubmissionID)
+	reviewers, err := s.getReviewersBySubmission(in.SubmissionID)
 	if err != nil {
 		s.logger.Errorf("GetReviewers failed: error fetching from database: %s", err.Error)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to get reviewers")

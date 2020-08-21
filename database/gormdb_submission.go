@@ -128,6 +128,16 @@ func (db *GormDB) UpdateSubmissions(courseID uint64, query *pb.Submission) error
 		}).Error
 }
 
+// UpdateComment saves a new comment, or updates an existing one.
+func (db *GormDB) UpdateComment(query *pb.Comment) error {
+	return db.conn.Save(query).Error
+}
+
+// DeleteComment removes a comment with the given ID.
+func (db *GormDB) DeleteComment(commentID uint64) error {
+	return db.conn.Delete(&pb.Comment{ID: commentID}).Error
+}
+
 // CreateReview creates a new submission review
 func (db *GormDB) CreateReview(query *pb.Review) error {
 	return db.conn.Create(query).Error

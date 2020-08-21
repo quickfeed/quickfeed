@@ -504,7 +504,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 
 	// check that method fails for non-teacher user
 	ctx = withUserContext(ctx, student)
-	if _, err = ags.GetSubmissionsByCourse(context.Background(), &pb.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
+	if _, err = ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
 		t.Error("Expected 'only teachers can get all lab submissions'")
 	}
 

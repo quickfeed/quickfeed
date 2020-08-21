@@ -115,6 +115,11 @@ type Database interface {
 	// UpdateReview updates the given review.
 	UpdateReview(*pb.Review) error
 
+	// UpdateComment adds or updates a comment.
+	UpdateComment(*pb.Comment) error
+	// DeleteComment removes a comment by ID.
+	DeleteComment(uint64) error
+
 	// CreateRepository creates a new repository.
 	CreateRepository(repo *pb.Repository) error
 	// GetRepository returns the repository for the SCM provider's repository ID.
