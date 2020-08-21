@@ -12,12 +12,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// ErrGroupNameDuplicate indicates that another group with the same name already exists on this course
-var (
-	ErrGroupNameDuplicate = status.Errorf(codes.AlreadyExists, "group with this name already exists. Please choose another name")
-	ErrUserNotInGroup     = status.Errorf(codes.NotFound, "user is not in group")
-)
-
 // getGroup returns the group for the given group ID.
 func (s *AutograderService) getGroup(request *pb.GetGroupRequest) (*pb.Group, error) {
 	group, err := s.db.GetGroup(request.GetGroupID())
