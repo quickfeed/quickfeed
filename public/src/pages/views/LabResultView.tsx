@@ -3,6 +3,8 @@ import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { ISubmissionLink, ISubmission } from "../../models";
 import { User, Submission } from "../../../proto/ag_pb";
 import { Release } from "../../components/manual-grading/Release";
+import { CommentList } from '../../components/teacher/CommentList';
+
 interface ILabInfoProps {
     submissionLink: ISubmissionLink;
     student: User;
@@ -41,6 +43,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 rebuildSubmission={this.props.rebuildSubmission}
                                 toggleCommenting={this.props.toggleCommenting}
                             />
+                            <CommentList />
                             <LastBuildInfo
                                 submission={latest}
                                 slipdays={this.props.slipdays}
