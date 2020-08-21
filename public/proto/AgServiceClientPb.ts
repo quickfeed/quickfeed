@@ -13,11 +13,13 @@ import * as grpcWeb from 'grpc-web';
 import {
   Assignments,
   AuthorizationResponse,
+  Comment,
   Course,
   CourseRequest,
   CourseSubmissions,
   CourseUserRequest,
   Courses,
+  DeleteCommentRequest,
   Enrollment,
   EnrollmentRequest,
   EnrollmentStatusRequest,
@@ -703,6 +705,50 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoRebuildSubmission,
+      callback);
+  }
+
+  methodInfoUpdateComment = new grpcWeb.AbstractClientBase.MethodInfo(
+    Void,
+    (request: Comment) => {
+      return request.serializeBinary();
+    },
+    Void.deserializeBinary
+  );
+
+  updateComment(
+    request: Comment,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Void) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateComment',
+      request,
+      metadata || {},
+      this.methodInfoUpdateComment,
+      callback);
+  }
+
+  methodInfoDeleteComment = new grpcWeb.AbstractClientBase.MethodInfo(
+    Void,
+    (request: DeleteCommentRequest) => {
+      return request.serializeBinary();
+    },
+    Void.deserializeBinary
+  );
+
+  deleteComment(
+    request: DeleteCommentRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Void) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/DeleteComment',
+      request,
+      metadata || {},
+      this.methodInfoDeleteComment,
       callback);
   }
 

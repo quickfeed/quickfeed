@@ -70,12 +70,13 @@ func (v Void) IsValid() bool {
 	return true
 }
 
-// IsValid checks required fields of a group request
+// IsValid ensures that group name and course ID are set.
 func (grp Group) IsValid() bool {
 	return grp.GetName() != "" && grp.GetCourseID() > 0
 }
 
-// IsValid checks required fields of a course request
+// IsValid ensures that fields with course information
+// are not empty, and the course provider is valid.
 func (c Course) IsValid() bool {
 	return c.GetName() != "" &&
 		c.GetCode() != "" &&
@@ -85,38 +86,39 @@ func (c Course) IsValid() bool {
 		c.GetTag() != ""
 }
 
-// IsValid checks required fields of a user request
+// IsValid checks that user ID is set and the name is not empty.
 func (u User) IsValid() bool {
-	return u.GetID() > 0
+	return u.GetID() > 0 && u.GetName() != ""
 }
 
-// IsValid ensures that user ID is set
+// IsValid ensures that user ID is set.
 func (u UserRequest) IsValid() bool {
 	return u.GetUserID() > 0
 }
 
-// IsValid checks required fields of an enrollment request.
+// IsValid ensures that user ID and course ID are set
+// and the enrollment has a valid status.
 func (req Enrollment) IsValid() bool {
 	return req.GetStatus() <= Enrollment_TEACHER &&
 		req.GetUserID() > 0 && req.GetCourseID() > 0
 }
 
-// IsValid ensures that course ID is set
+// IsValid ensures that course ID is set.
 func (req CourseRequest) IsValid() bool {
 	return req.GetCourseID() > 0
 }
 
-// IsValid ensures that user ID is set
+// IsValid ensures that user ID is set.
 func (req EnrollmentStatusRequest) IsValid() bool {
 	return req.GetUserID() > 0
 }
 
-// IsValid checks whether OrgRequest fields are valid
+// IsValid ensures that the organization's name is not empty.
 func (req OrgRequest) IsValid() bool {
 	return req.GetOrgName() != ""
 }
 
-// IsValid checks that all requested repo types are valid types and course ID field is set
+// IsValid checks that all requested repo types are valid types and course ID field is set.
 func (req URLRequest) IsValid() bool {
 	if req.GetCourseID() < 1 {
 		return false
@@ -130,7 +132,7 @@ func (req URLRequest) IsValid() bool {
 }
 
 // IsValid checks that the request has positive course ID
-// and either user ID or group ID is set
+// and either user ID or group ID is set.
 func (req RepositoryRequest) IsValid() bool {
 	uid, gid := req.GetUserID(), req.GetGroupID()
 	return req.GetCourseID() > 0 &&
@@ -148,17 +150,17 @@ func (req SubmissionRequest) IsValid() bool {
 		(uid > 0 && gid == 0)
 }
 
-// IsValid ensures that both submission and course IDs are set
+// IsValid ensures that both submission and course IDs are set.
 func (req UpdateSubmissionRequest) IsValid() bool {
 	return req.GetCourseID() > 0 && req.GetSubmissionID() > 0
 }
 
-// IsValid ensures that group ID is provided
+// IsValid ensures that group ID is provided.
 func (req GetGroupRequest) IsValid() bool {
 	return req.GetGroupID() > 0
 }
 
-// IsValid ensures that course ID and group or user IDs are set
+// IsValid ensures that course ID and group or user IDs are set.
 func (req GroupRequest) IsValid() bool {
 	uid, gid := req.GetUserID(), req.GetGroupID()
 	return (uid > 0 || gid > 0) && req.GetCourseID() > 0
@@ -169,7 +171,7 @@ func (req EnrollmentRequest) IsValid() bool {
 	return req.GetCourseID() > 0
 }
 
-// IsValid ensures that provider string is one of implemented providers
+// IsValid ensures that provider string is one of implemented providers.
 func (req Provider) IsValid() bool {
 	provider := req.GetProvider()
 	return provider == "github" ||
@@ -177,24 +179,24 @@ func (req Provider) IsValid() bool {
 		provider == "fake"
 }
 
-// IsValid ensures that course ID is provided
+// IsValid ensures that course ID is provided.
 func (req SubmissionsForCourseRequest) IsValid() bool {
 	return req.GetCourseID() != 0
 }
 
-// IsValid ensures that both course and submission IDs are set
+// IsValid ensures that both course and submission IDs are set.
 func (req RebuildRequest) IsValid() bool {
 	aid, sid := req.GetAssignmentID(), req.GetSubmissionID()
 	return aid > 0 && sid > 0
 }
 
-// IsValid checks that either ID or path field is set
+// IsValid checks that either ID or path field is set.
 func (org Organization) IsValid() bool {
 	id, path := org.GetID(), org.GetPath()
 	return id > 0 || path != ""
 }
 
-// IsValidProvider validates provider string coming from front end
+// IsValidProvider validates provider string coming from front end.
 func (l Providers) IsValidProvider(provider string) bool {
 	isValid := false
 	for _, p := range l.GetProviders() {
@@ -203,6 +205,16 @@ func (l Providers) IsValidProvider(provider string) bool {
 		}
 	}
 	return isValid
+}
+
+// IsValid ensures that course ID, submission ID and user ID are set.
+func (c Comment) IsValid() bool {
+	return c.UserID > 0 && c.SubmissionID > 0 && c.CourseID > 0
+}
+
+// IsValid ensures that course ID and comment ID are set.
+func (req DeleteCommentRequest) IsValid() bool {
+	return req.CommentID > 0 && req.CourseID > 0
 }
 
 // IsValid ensures that course ID and submission ID are present.
@@ -220,8 +232,8 @@ func (r ReviewRequest) IsValid() bool {
 	return r.CourseID > 0 && r.Review.IsValid()
 }
 
-// IsValid ensures that a grading benchmark always belongs to an assignment
-// and is not empty.
+// IsValid ensures that assignment ID is set and
+// the heading and is not empty.
 func (bm GradingBenchmark) IsValid() bool {
 	return bm.AssignmentID > 0 && bm.Heading != ""
 }
@@ -232,7 +244,7 @@ func (c GradingCriterion) IsValid() bool {
 	return c.BenchmarkID > 0 && c.Description != ""
 }
 
-// IsValid ensures that course code, year, and student login are set
+// IsValid ensures that course code, year, and student login are set.
 func (r CourseUserRequest) IsValid() bool {
 	return r.CourseCode != "" && r.UserLogin != "" && r.CourseYear > 2019
 }

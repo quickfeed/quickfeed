@@ -238,7 +238,6 @@ func (s *AutograderService) updateSubmission(request *pb.UpdateSubmissionRequest
 	}
 	submission.Status = request.Status
 	submission.Released = request.Released
-	submission.Comment = request.Comment
 	if request.Score > 0 {
 		submission.Score = request.Score
 	}

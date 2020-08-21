@@ -98,6 +98,12 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submission, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submission.deserializeBinary);
+        this.methodInfoUpdateComment = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.Void.deserializeBinary);
+        this.methodInfoDeleteComment = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoCreateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.GradingBenchmark, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.GradingBenchmark.deserializeBinary);
@@ -262,6 +268,14 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.rebuildSubmission = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/RebuildSubmission', request, metadata || {}, this.methodInfoRebuildSubmission, callback);
+    };
+    AutograderServiceClient.prototype.updateComment = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateComment', request, metadata || {}, this.methodInfoUpdateComment, callback);
+    };
+    AutograderServiceClient.prototype.deleteComment = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/DeleteComment', request, metadata || {}, this.methodInfoDeleteComment, callback);
     };
     AutograderServiceClient.prototype.createBenchmark = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +

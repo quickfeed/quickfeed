@@ -26,6 +26,7 @@ message User {
 
     repeated RemoteIdentity remoteIdentities = 8;
     repeated Enrollment enrollments = 9;
+    repeated Comment comments = 10;
 }
 
 message Users {
@@ -194,14 +195,23 @@ message Submission {
     string scoreObjects = 6;
     string buildInfo = 7;
     string commitHash = 8;
-    string comment = 9;
-    bool released = 10; // defines whether the feedback is visible for the student or group members
-    Status status = 11;
-    repeated Review reviews = 12;
+    bool released = 9; // defines whether the feedback is visible for the student or group members
+    Status status = 10;
+    repeated Review reviews = 11;
+    repeated Comment comments = 12;
 }
 
 message Submissions {
     repeated Submission submissions = 1;
+}
+
+message Comment {
+    uint64 ID = 1;
+    uint64 userID = 2;
+    uint64 submissionID = 3;
+    uint64 courseID = 4;
+    string message = 5;
+    string added = 6;
 }
 
 //   MANUAL GRADING   //
@@ -312,7 +322,6 @@ message UpdateSubmissionRequest {
     uint64 courseID = 2;
     uint32 score = 3;
     bool released = 4;
-    string comment = 5;
     Submission.Status status = 6;
 }
 
@@ -379,6 +388,11 @@ message CourseUserRequest {
     string userLogin = 3;
 }
 
+message DeleteCommentRequest {
+    uint64 commentID = 1;
+    uint64 courseID = 2;
+}
+
 // Void contains no fields. A server response with a Void still contains a gRPC status code,
 // which can be checked for success or failure. Status code 0 indicates that the requested action was successful,
 // whereas any other status code indicates some failure. As such, the status code can be used as a boolean result from the server.
@@ -434,6 +448,9 @@ service AutograderService {
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
     rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
     rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
+
+    rpc UpdateComment(Comment) returns (Void) {}
+    rpc DeleteComment(DeleteCommentRequest) returns (Void) {}
 
     // manual grading //
     rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}

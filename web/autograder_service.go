@@ -575,7 +575,8 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 	return &pb.Void{}, err
 }
 
-// RebuildSubmission rebuilds the submission with the given ID
+// RebuildSubmission rebuilds the submission with the given ID.
+// Access policy: all users.
 func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.RebuildRequest) (*pb.Submission, error) {
 	if !s.isValidSubmission(in.GetSubmissionID()) {
 		s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
@@ -586,6 +587,31 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 		return nil, err
 	}
 	return submission, nil
+}
+
+// UpdateComment sets or edits a comment.
+// Access policy: author of the comment enrolled as course teacher.
+func (s *AutograderService) UpdateComment(ctx context.Context, in *pb.Comment) (*pb.Void, error) {
+	// check current user == comment author + course teacher
+
+	// update
+
+	// make a descriptive error
+
+	return nil, nil
+}
+
+// DeleteComment removes a comment.
+// Access policy: course teacher or author.
+func (s *AutograderService) DeleteComment(ctx context.Context, in *pb.DeleteCommentRequest) (*pb.Void, error) {
+
+	// check that current user is course teacher or author
+
+	// delete
+
+	// make a descriptive error
+
+	return nil, nil
 }
 
 // CreateBenchmark adds a new grading benchmark for an assignment
