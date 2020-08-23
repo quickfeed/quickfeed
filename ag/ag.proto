@@ -454,7 +454,7 @@ service AutograderService {
     rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
     rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
 
-    rpc UpdateComment(Comment) returns (Void) {}
+    rpc UpdateComment(Comment) returns (Comment) {}
     rpc DeleteComment(DeleteCommentRequest) returns (Void) {}
 
     // manual grading //

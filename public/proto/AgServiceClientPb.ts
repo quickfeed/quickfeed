@@ -709,18 +709,18 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateComment = new grpcWeb.AbstractClientBase.MethodInfo(
-    Void,
+    Comment,
     (request: Comment) => {
       return request.serializeBinary();
     },
-    Void.deserializeBinary
+    Comment.deserializeBinary
   );
 
   updateComment(
     request: Comment,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void) {
+               response: Comment) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/UpdateComment',

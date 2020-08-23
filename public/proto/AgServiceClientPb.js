@@ -98,9 +98,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submission, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submission.deserializeBinary);
-        this.methodInfoUpdateComment = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+        this.methodInfoUpdateComment = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Comment, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.Void.deserializeBinary);
+        }, ag_pb_1.Comment.deserializeBinary);
         this.methodInfoDeleteComment = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
