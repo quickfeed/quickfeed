@@ -8,7 +8,6 @@ interface ILabResultProps {
     progress: number;
     status: Submission.Status;
     lab: string;
-    comment: string;
     authorName?: string;
     teacherView: boolean;
     commenting: boolean;
@@ -29,7 +28,7 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
         super(props);
         this.state = {
             rebuilding: false,
-            comment: props.comment,
+            comment: "",
         };
     }
 
@@ -50,7 +49,6 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
                     {labHeading}
                     <ProgressBar progress={this.props.progress}></ProgressBar></Row>
                     {this.props.teacherView ? this.actionButtons() : null}
-                    {this.props.teacherView ? this.commentDiv() : null}
             </div>
         );
     }
@@ -64,33 +62,6 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
                 rebuilding: false,
             });
         });
-    }
-
-    public commentDiv(): JSX.Element {
-        
-
-
-        const editComment = <div className="lab-comment input-group col-md-12">
-            <input
-                className="form-control lab-input"
-                autoFocus={true}
-                type="text"
-                defaultValue={this.props.comment}
-                onChange={(e) => this.setNewComment(e.target.value)}
-                onBlur={() => this.toggleCommenting()}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                        this.props.setSubmissionComment(this.state.comment);
-                        this.props.toggleCommenting(false);
-                    } else if (e.key === 'Escape') {
-                        this.toggleCommenting();
-                    }
-                }}
-            /></div>
-        const showComment = <div className="col-md-12 lab-comment"
-            onClick={() => this.toggleCommenting()}
-        ><h3>Leave a comment:</h3>{this.props.comment}</div>;
-        return this.props.commenting ? editComment : showComment;
     }
 
     public actionButtons(): JSX.Element {

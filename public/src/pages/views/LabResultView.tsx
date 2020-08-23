@@ -23,6 +23,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
     public render() {
         if (this.props.submissionLink.submission) {
             const latest = this.props.submissionLink.submission;
+            const commentDiv = <CommentList comments={this.props.submissionLink.comments} />
             const buildLog = latest.buildLog.split("\n").map((x, i) => <span key={i} >{x}<br /></span>);
             return (
                 <div key="labhead" className="col-md-9 col-sm-9 col-xs-12">
@@ -36,14 +37,13 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 progress={latest.score}
                                 status={latest.status}
                                 commenting={this.props.commenting}
-                                comment={this.props.submissionLink.submission?.comment ?? ""}
                                 authorName={this.props.submissionLink.authorName}
                                 updateSubmissionStatus={this.props.updateSubmissionStatus}
                                 setSubmissionComment={this.props.setSubmissionComment}
                                 rebuildSubmission={this.props.rebuildSubmission}
                                 toggleCommenting={this.props.toggleCommenting}
                             />
-                            <CommentList />
+                            {this.props.teacherPageView ? commentDiv : null}
                             <LastBuildInfo
                                 submission={latest}
                                 slipdays={this.props.slipdays}
