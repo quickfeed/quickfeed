@@ -129,8 +129,11 @@ func (db *GormDB) UpdateSubmissions(courseID uint64, query *pb.Submission) error
 }
 
 // UpdateComment saves a new comment, or updates an existing one.
-func (db *GormDB) UpdateComment(query *pb.Comment) error {
-	return db.conn.Save(query).Error
+func (db *GormDB) UpdateComment(query *pb.Comment) (*pb.Comment, error) {
+	if err := db.conn.Save(query).Error; err != nil {
+		return nil, err
+	}
+	return query, nil
 }
 
 // DeleteComment removes a comment with the given ID.

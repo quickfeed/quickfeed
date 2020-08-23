@@ -159,7 +159,7 @@ func (s *AutograderService) updateSubmissions(request *pb.UpdateSubmissionsReque
 }
 
 // updateComment creates or updates a comment.
-func (s *AutograderService) updateComment(request *pb.Comment) error {
+func (s *AutograderService) updateComment(request *pb.Comment) (*pb.Comment, error) {
 	return s.db.UpdateComment(request)
 }
 

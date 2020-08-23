@@ -592,7 +592,7 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 
 // UpdateComment sets or edits a comment.
 // Access policy: author of the comment enrolled as course teacher.
-func (s *AutograderService) UpdateComment(ctx context.Context, in *pb.Comment) (*pb.Void, error) {
+func (s *AutograderService) UpdateComment(ctx context.Context, in *pb.Comment) (*pb.Comment, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateComment failed: authentication error: %v", err)
@@ -609,11 +609,15 @@ func (s *AutograderService) UpdateComment(ctx context.Context, in *pb.Comment) (
 		return nil, ErrNotCommentAuthor
 	}
 
-	if err := s.updateComment(in); err != nil {
+	comment, err := s.updateComment(in)
+	if err != nil {
 		s.logger.Errorf("UpdateComment failed: %v", err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to add or update comment")
 	}
-	return &pb.Void{}, nil
+	if comment.ID == 0 {
+		s.logger.Warnf("UpdateComment: ID of a new comment by %s is still 0", usr.GetLogin())
+	}
+	return comment, nil
 }
 
 // DeleteComment removes a comment.

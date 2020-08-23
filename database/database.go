@@ -116,7 +116,7 @@ type Database interface {
 	UpdateReview(*pb.Review) error
 
 	// UpdateComment adds or updates a comment.
-	UpdateComment(*pb.Comment) error
+	UpdateComment(*pb.Comment) (*pb.Comment, error)
 	// DeleteComment removes a comment by ID.
 	DeleteComment(uint64) error
 
