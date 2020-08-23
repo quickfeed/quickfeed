@@ -1,5 +1,6 @@
 import {
     Assignment,
+    Comment,
     Course,
     CourseSubmissions,
     Enrollment,
@@ -31,6 +32,7 @@ import {
     IUserProvider,
 } from "../managers";
 import { ILogger } from "./LogManager";
+import { Results } from '../components/teacher/Results';
 interface IEndpoints {
     user: string;
     auth: string;
@@ -409,7 +411,20 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
-        const result = await this.grpcHelper.updatesubmissions(assignmentID, courseID, score, release, approve);
+        const result = await this.grpcHelper.updateSubmissions(assignmentID, courseID, score, release, approve);
+        return this.responseCodeSuccess(result);
+    }
+
+    public async updateComment(comment: Comment): Promise<Comment | null> {
+        const result = await this.grpcHelper.updateComment(comment);
+        if (!(this.responseCodeSuccess(result) && result.data)) {
+            return null;
+        }
+        return result.data;
+    }
+
+    public async deleteComment(courseID: number, commentID: number): Promise<boolean> {
+        const result = await this.grpcHelper.deleteComment(courseID, commentID);
         return this.responseCodeSuccess(result);
     }
 
@@ -466,7 +481,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             reviews: sbm.getReviewsList(),
             released: sbm.getReleased(),
             status: sbm.getStatus(),
-            comment: sbm.getComment(),
+            comments: sbm.getCommentsList(),
         };
         return isbm;
     }
@@ -495,6 +510,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                             assignment: a,
                             submission: sb ? this.toISubmission(sb) : undefined,
                             authorName: name ?? "Name not found",
+                            comments: [],
                         });
                     }
                 });

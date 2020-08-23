@@ -2,10 +2,12 @@ import * as grpcWeb from "grpc-web";
 import {
     Assignments,
     AuthorizationResponse,
+    Comment,
     Course,
     CourseRequest,
     CourseSubmissions,
     Courses,
+    DeleteCommentRequest,
     EnrollmentStatusRequest,
     Enrollment,
     EnrollmentRequest,
@@ -251,11 +253,10 @@ export class GrpcManager {
         request.setStatus(s.status);
         request.setReleased(s.released);
         request.setScore(s.score);
-        request.setComment(s.comment);
         return this.grpcSend<Void>(this.agService.updateSubmission, request);
     }
 
-    public updatesubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean) {
+    public updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<IGrpcResponse<Void>> {
         const request = new UpdateSubmissionsRequest();
         request.setAssignmentid(assignmentID);
         request.setCourseid(courseID);
@@ -263,6 +264,17 @@ export class GrpcManager {
         request.setRelease(release);
         request.setApprove(approve);
         return this.grpcSend<Void>(this.agService.updateSubmissions, request);
+    }
+
+    public updateComment(request: Comment): Promise<IGrpcResponse<Comment>> {
+        return this.grpcSend<Comment>(this.agService.updateComment, request);
+    }
+
+    public deleteComment(courseID: number, commentID: number): Promise<IGrpcResponse<Void>> {
+        const request = new DeleteCommentRequest();
+        request.setCourseid(courseID);
+        request.setCommentid(commentID);
+        return this.grpcSend<Void>(this.agService.deleteComment, request)
     }
 
     // /* MANUAL GRADING */ //

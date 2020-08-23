@@ -10,7 +10,7 @@ import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu"
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from "../loader";
-import { sortCoursesByVisibility, sortAssignmentsByOrder, submissionStatusToString } from "../componentHelper";
+import { sortCoursesByVisibility, sortAssignmentsByOrder, submissionStatusToString, fillComments } from '../componentHelper';
 import { AssignmentView } from "./views/AssignmentView";
 import { ISubmission } from "../models";
 import { FeedbackView } from "./views/FeedbackView";
@@ -120,7 +120,7 @@ export class TeacherPage extends ViewPage {
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
-            const results = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
+            const results = fillComments(await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL));
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
             const curUser = this.userMan.getCurrentUser();
             return <Results
@@ -143,7 +143,7 @@ export class TeacherPage extends ViewPage {
 
     public async groupresults(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const results = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
+            const results = fillComments(await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP));
             const labs = await this.courseMan.getAssignments(course.getId());
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
             const curUser = this.userMan.getCurrentUser();
