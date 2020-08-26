@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course, User, Submission } from "../../../proto/ag_pb";
+import { Assignment, Comment, Course, User, Submission } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
@@ -7,18 +7,20 @@ import { generateCellClass, sortByScore } from "./labHelper";
 import { searchForLabs, userRepoLink, getSlipDays, legalIndex } from "../../componentHelper";
 
 interface IResultsProps {
+    currentUser: number;
     course: Course;
     courseURL: string;
     allCourseSubmissions: IAllSubmissionsForEnrollment[];
     assignments: Assignment[];
     courseCreatorView: boolean;
     updateSubmissionStatus: (submission: ISubmission) => Promise<boolean>;
-    setSubmissionComment: (submission: ISubmission) => Promise<boolean>;
+    updateComment: (comment: Comment) => Promise<boolean>;
+    deleteComment: (commentID: number) => void;
     onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
 
 interface IResultsState {
-    commenting: boolean;
+    ignoreShortcuts: boolean;
     selectedSubmission?: ISubmissionLink;
     selectedStudent?: IAllSubmissionsForEnrollment;
     allSubmissions: IAllSubmissionsForEnrollment[];
@@ -33,14 +35,14 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         const courseAssignments = currentStudent ? currentStudent.course.getAssignmentsList() : null;
         if (currentStudent && courseAssignments && courseAssignments.length > 0) {
             this.state = {
-                commenting: false,
+                ignoreShortcuts: false,
                 // Only using the first student to fetch assignments.
                 selectedSubmission: currentStudent.labs[0],
                 allSubmissions: sortByScore(this.props.allCourseSubmissions, this.props.assignments, false),
             };
         } else {
             this.state = {
-                commenting: false,
+                ignoreShortcuts: false,
                 selectedSubmission: undefined,
                 allSubmissions: sortByScore(this.props.allCourseSubmissions, this.props.assignments, false),
             };
@@ -59,11 +61,12 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                 courseURL={this.props.courseURL}
                 student={this.state.selectedStudent.enrollment.getUser() ?? new User()}
                 teacherPageView={true}
-                commenting={this.state.commenting}
+                commenting={this.state.ignoreShortcuts}
                 slipdays={this.state.selectedSubmission.submission ? getSlipDays(this.props.allCourseSubmissions, this.state.selectedSubmission.submission, false) : 0}
                 onSubmissionRebuild={() => this.rebuildSubmission()}
                 updateSubmissionStatus={(status: Submission.Status) => this.updateSubmissionStatus(status)}
-                setSubmissionComment={(comment: string) => this.setSubmissionComment(comment)}
+                updateComment={(comment: Comment) => this.setSubmissionComment(comment)}
+                deleteComment={(commentID: number) => this.props.deleteComment(commentID)}
                 toggleCommenting={(on: boolean) => this.toggleCommenting(on)}
             />;
         }
@@ -72,7 +75,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
             <div
 
             onKeyDown={(e) => {
-                if (!this.state.commenting) {
+                if (!this.state.ignoreShortcuts) {
                     switch (e.key) {
                         case "ArrowDown": {
                             this.selectNextStudent(false);
@@ -146,19 +149,16 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         }
     }
 
-    private async setSubmissionComment(comment: string) {
-        const current = this.state.selectedSubmission;
-        const selected = current?.submission;
+    private async setSubmissionComment(comment: Comment) {
+        const selected = this.state.selectedSubmission?.submission;
         if (selected) {
-            const oldComment = selected.comment;
-            selected.comment = comment;
-            const ans = await this.props.setSubmissionComment(selected);
-            if (!ans) {
-                selected.comment = oldComment;
+            const current = this.state.selectedSubmission;
+            const ans = await this.props.updateComment(comment);
+            if (ans) {
+                this.setState({
+                    selectedSubmission: current,
+                });
             }
-            this.setState({
-                selectedSubmission: current,
-            });
         }
     }
 
@@ -262,7 +262,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
 
     private toggleCommenting(toggleOn: boolean) {
         this.setState({
-            commenting: toggleOn,
+            ignoreShortcuts: toggleOn,
         })
     }
 }

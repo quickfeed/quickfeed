@@ -5,6 +5,7 @@ import { Comment, User } from "../../../proto/ag_pb";
 interface ICommentProps {
     comment?: Comment,
     author?: User,
+    onSelect: () => void;
 }
 
 interface ICommentState {
@@ -25,7 +26,9 @@ export class IComment extends React.Component<ICommentProps, ICommentState>  {
         if (!(this.props.comment && this.props.author)) {
             return <div></div>;
         }
-        return <div className="row col-md-12 comment-body">
+        return <div className="row col-md-12 comment-body"
+            onClick={() => this.props.onSelect()}
+        >
             <div className="comment-pic col-md-3"><img src={this.props.author.getAvatarurl()} className="comment-img" /></div>
 
             <div className="row col-md-11 comment-header">

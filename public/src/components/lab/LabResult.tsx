@@ -10,16 +10,12 @@ interface ILabResultProps {
     lab: string;
     authorName?: string;
     teacherView: boolean;
-    commenting: boolean;
     updateSubmissionStatus: (status: Submission.Status) => void;
-    setSubmissionComment: (comment: string) => void;
     rebuildSubmission: (assignmentID: number, submissionID: number) => Promise<boolean>;
-    toggleCommenting: (toggleOn: boolean) => void;
 }
 
 interface ILabResultState {
     rebuilding: boolean;
-    comment: string;
 }
 
 export class LabResult extends React.Component<ILabResultProps, ILabResultState> {
@@ -28,7 +24,6 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
         super(props);
         this.state = {
             rebuilding: false,
-            comment: "",
         };
     }
 
@@ -127,15 +122,5 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
                 return "";
             }
         }
-    }
-
-    private toggleCommenting() {
-        this.props.toggleCommenting(!this.props.commenting);
-    }
-
-    private setNewComment(input: string) {
-        this.setState({
-            comment: input,
-        });
     }
 }

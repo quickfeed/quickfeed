@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course, Submission, User } from "../../../proto/ag_pb";
+import { Assignment, Course, Submission, User, Comment } from '../../../proto/ag_pb';
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
@@ -12,7 +12,8 @@ interface IResultsProps {
     groups: IAllSubmissionsForEnrollment[];
     labs: Assignment[];
     updateSubmissionStatus: (submission: ISubmission) => Promise<boolean>;
-    setSubmissionComment: (submission: ISubmission) => Promise<boolean>;
+    updateComment: (comment: Comment) => Promise<boolean>;
+    deleteComment: (commentID: number) => void;
     onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
 
@@ -60,7 +61,8 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 commenting={this.state.commenting}
                 onSubmissionRebuild={ () => this.rebuildSubmission()}
                 updateSubmissionStatus={(status: Submission.Status) => this.updateSubmissionStatus(status)}
-                setSubmissionComment={(comment: string) => this.setSubmissionComment(comment)}
+                updateComment={(comment: Comment) => this.setSubmissionComment(comment)}
+                deleteComment={(commentID: number) => this.props.deleteComment(commentID)}
                 toggleCommenting={(on: boolean) => this.toggleCommenting(on)}
             />;
         }
@@ -154,19 +156,16 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         }
     }
 
-    private async setSubmissionComment(comment: string) {
-        const current = this.state.selectedSubmission;
-        const selected = current?.submission;
+    private async setSubmissionComment(comment: Comment) {
+        const selected = this.state.selectedSubmission?.submission;
         if (selected) {
-            const oldComment = selected.comment;
-            selected.comment = comment;
-            const ans = await this.props.setSubmissionComment(selected);
-            if (!ans) {
-                selected.comment = oldComment;
+            const current = this.state.selectedSubmission;
+            const ans = await this.props.updateComment(comment);
+            if (ans) {
+                this.setState({
+                    selectedSubmission: current,
+                });
             }
-            this.setState({
-                selectedSubmission: current,
-            });
         }
     }
 

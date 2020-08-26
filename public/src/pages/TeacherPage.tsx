@@ -5,7 +5,7 @@ import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager }
 import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
-import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest, Review } from "../../proto/ag_pb";
+import { Assignment, Comment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest, Review } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
@@ -135,7 +135,7 @@ export class TeacherPage extends ViewPage {
                     return ans;
                 }}
                 updateSubmissionStatus={async (submission: ISubmission) => this.setStatus(submission, course.getId())}
-                setSubmissionComment={async (submission: ISubmission) => this.setComment(submission, course.getId())}
+                updateComment={async (submission: ISubmission) => this.setComment(submission, course.getId())}
                 >
             </Results>;
         });
@@ -158,7 +158,7 @@ export class TeacherPage extends ViewPage {
                     return ans;
                 }}
                 updateSubmissionStatus={async (submission: ISubmission) => this.setStatus(submission, course.getId())}
-                setSubmissionComment={async (submission: ISubmission) => this.setComment(submission, course.getId())}
+                updateComment={async (comment: Comment) => this.courseMan.updateComment(comment)}
                 >
             </GroupResults>;
         });
@@ -365,12 +365,6 @@ export class TeacherPage extends ViewPage {
             return ans;
         }
         return false;
-    }
-
-    public async setComment(submission: ISubmission, courseID: number): Promise<boolean> {
-        const ans = await this.courseMan.updateSubmission(courseID, submission);
-        this.navMan.refresh();
-        return ans;
     }
 
     public async renderMenu(menu: number): Promise<JSX.Element[]> {

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ISubmissionLink } from "../../models";
 import { LabResultView } from "../../pages/views/LabResultView";
-import { User, Submission } from "../../../proto/ag_pb";
+import { Comment, User, Submission } from '../../../proto/ag_pb';
 
 interface IStudentLabProps {
     studentSubmission: ISubmissionLink;
@@ -11,7 +11,8 @@ interface IStudentLabProps {
     teacherPageView: boolean;
     commenting: boolean;
     updateSubmissionStatus: (status: Submission.Status) => void;
-    setSubmissionComment: (comment: string) => void;
+    updateComment: (comment: Comment) => void;
+    deleteComment: (commentID: number) => void;
     onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<boolean>;
     toggleCommenting: (toggleOn: boolean) => void;
 }
@@ -25,7 +26,8 @@ export class StudentLab extends React.Component<IStudentLabProps> {
             courseURL={this.props.courseURL}
             commenting={this.props.commenting}
             updateSubmissionStatus={this.props.updateSubmissionStatus}
-            setSubmissionComment={this.props.setSubmissionComment}
+            updateComment={this.props.updateComment}
+            deleteComment={this.props.deleteComment}
             rebuildSubmission={this.props.onSubmissionRebuild}
             toggleCommenting={this.props.toggleCommenting}
             teacherPageView={this.props.teacherPageView}
