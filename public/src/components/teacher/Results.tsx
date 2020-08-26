@@ -17,6 +17,7 @@ interface IResultsProps {
 }
 
 interface IResultsState {
+    ignoreShortcuts: boolean;
     selectedSubmission?: ISubmissionLink;
     selectedStudent?: IAllSubmissionsForEnrollment;
     allSubmissions: IAllSubmissionsForEnrollment[];
@@ -34,11 +35,13 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                 // Only using the first student to fetch assignments.
                 selectedSubmission: currentStudent.labs[0],
                 allSubmissions: sortByScore(this.props.allCourseSubmissions, this.props.assignments, false),
+                ignoreShortcuts: false,
             };
         } else {
             this.state = {
                 selectedSubmission: undefined,
                 allSubmissions: sortByScore(this.props.allCourseSubmissions, this.props.assignments, false),
+                ignoreShortcuts: false,
             };
         }
     }
@@ -66,38 +69,40 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
             <div
 
             onKeyDown={(e) => {
-                switch (e.key) {
-                    case "ArrowDown": {
-                        this.selectNextStudent(false);
-                        break;
-                    }
-                    case "ArrowUp": {
-                        this.selectNextStudent(true);
-                        break;
-                    }
-                    case "ArrowRight": {
-                        this.selectNextSubmission(false);
-                        break;
-                    }
-                    case "ArrowLeft": {
-                        this.selectNextSubmission(true);
-                        break;
-                    }
-                    case "a": {
-                        this.updateSubmissionStatus(Submission.Status.APPROVED);
-                        break;
-                    }
-                    case "r": {
-                        this.updateSubmissionStatus(Submission.Status.REVISION);
-                        break;
-                    }
-                    case "f": {
-                        this.updateSubmissionStatus(Submission.Status.REJECTED)
-                        break;
-                    }
-                    case "b": {
-                        this.rebuildSubmission();
-                        break;
+                if (!this.state.ignoreShortcuts) {
+                    switch (e.key) {
+                        case "ArrowDown": {
+                            this.selectNextStudent(false);
+                            break;
+                        }
+                        case "ArrowUp": {
+                            this.selectNextStudent(true);
+                            break;
+                        }
+                        case "ArrowRight": {
+                            this.selectNextSubmission(false);
+                            break;
+                        }
+                        case "ArrowLeft": {
+                            this.selectNextSubmission(true);
+                            break;
+                        }
+                        case "a": {
+                            this.updateSubmissionStatus(Submission.Status.APPROVED);
+                            break;
+                        }
+                        case "r": {
+                            this.updateSubmissionStatus(Submission.Status.REVISION);
+                            break;
+                        }
+                        case "f": {
+                            this.updateSubmissionStatus(Submission.Status.REJECTED)
+                            break;
+                        }
+                        case "b": {
+                            this.rebuildSubmission();
+                            break;
+                        }
                     }
                 }
             }}
@@ -108,6 +113,12 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                         <Search className="input-group"
                             placeholder="Search for students"
                             onChange={(query) => this.handleSearch(query)}
+                            onFocus={() => this.setState({
+                                ignoreShortcuts: true,
+                            })}
+                            onBlur={() => this.setState({
+                                ignoreShortcuts: false,
+                            })}
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.allSubmissions}
@@ -185,6 +196,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         this.setState({
             selectedSubmission: item,
             selectedStudent: student,
+            ignoreShortcuts: false,
         });
     }
 
