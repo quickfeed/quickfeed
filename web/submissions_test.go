@@ -419,12 +419,14 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		AssignmentID: lab1c1.ID,
 		Score:        44,
 		Reviews:      []*pb.Review{},
+		Comments:     []*pb.Comment{},
 	}
 	sub2 := &pb.Submission{
 		UserID:       student.ID,
 		AssignmentID: lab2c2.ID,
 		Score:        66,
 		Reviews:      []*pb.Review{},
+		Comments:     []*pb.Comment{},
 	}
 	if err := db.CreateSubmission(sub1); err != nil {
 		t.Fatal(err)
