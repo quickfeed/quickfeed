@@ -146,7 +146,6 @@ export class TeacherPage extends ViewPage {
             const results = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
             const labs = await this.courseMan.getAssignments(course.getId());
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
-            const curUser = this.userMan.getCurrentUser();
             return <GroupResults
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}

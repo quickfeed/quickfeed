@@ -352,6 +352,7 @@ export class CourseManager {
         if (!assignments) {
             assignments = await this.getAssignments(course.getId());
         }
+        assignments = sortAssignmentsByOrder(assignments);
         for (const studentLabs of labLinks) {
             studentLabs.course = course;
 
