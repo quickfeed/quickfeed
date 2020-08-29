@@ -49,6 +49,7 @@ func ExtractResult(logger *zap.SugaredLogger, out, secret string, execTime time.
 			filteredLog = append(filteredLog, line)
 		}
 	}
+	scores = filter(scores)
 	logger.Debug("ci.ExtractResults",
 		zap.Any("scores", log.IndentJson(scores)),
 		zap.Any("filteredLog", log.IndentJson(filteredLog)),
@@ -62,6 +63,41 @@ func ExtractResult(logger *zap.SugaredLogger, out, secret string, execTime time.
 			ExecTime:  execTime.Milliseconds(),
 		},
 	}, nil
+}
+
+// filter returns a slice of scores, exactly one per TestName.
+// The input score slice may contain one or two entries per TestName.
+// If more than two entries are found for a given TestName, we return a 0 score for that test.
+//
+// If there is only one entry for a test it is likely that the test panicked,
+// in which case we want to report a 0 score for that test.
+func filter(scores []*score.Score) []*score.Score {
+	// map: test name -> scores for that test (one or more)
+	tests := make(map[string][]*score.Score, len(scores))
+	// map: test name -> test number (to keep same test order as in the input)
+	testOrder := make(map[string]int, len(scores))
+	numTests := 0
+	for _, score := range scores {
+		tests[score.TestName] = append(tests[score.TestName], score)
+		if _, found := testOrder[score.TestName]; !found {
+			testOrder[score.TestName] = numTests
+			numTests++
+		}
+	}
+
+	newScores := make([]*score.Score, len(testOrder))
+	for name, pos := range testOrder {
+		scoresForTest := tests[name]
+		// get the score for the test
+		// (the last element should hold the actual score)
+		newScores[pos] = scoresForTest[len(scoresForTest)-1]
+		if len(scoresForTest) > 2 {
+			// if more than two scores were found, always return 0 score
+			// This is probably be a bug in the teacher's test code.
+			newScores[pos].Score = 0
+		}
+	}
+	return newScores
 }
 
 // Marshal returns marshalled information from the result struct.

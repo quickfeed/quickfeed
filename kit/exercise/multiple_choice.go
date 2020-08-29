@@ -42,7 +42,7 @@ func parseMCAnswers(mdFile string) (map[string]string, error) {
 
 func MultipleChoiceWithDesc(t *testing.T, mdFile string, correct map[int]string) {
 	t.Helper()
-	sc := score.NewScoreMaxWithTesting(t, len(correct), 1)
+	sc := score.NewScoreMax(t, len(correct), 1)
 	defer sc.WriteString(os.Stdout)
 	defer sc.WriteJSON(os.Stdout)
 
