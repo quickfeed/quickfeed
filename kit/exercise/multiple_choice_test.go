@@ -31,7 +31,7 @@ func TestMultipleChoice(t *testing.T) {
 	// as a table-driven test.
 
 	oldStyleMC := filepath.Join("..", "testdata", "old-style-answers.md")
-	sc := score.NewScoreMax(len(answers), 1)
+	sc := score.NewScoreMax(t, len(answers), 1)
 	exercise.MultipleChoice(t, sc, oldStyleMC, answers)
 }
 

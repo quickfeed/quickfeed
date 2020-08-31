@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"runtime"
-	"strings"
+	"os"
 	"testing"
 )
 
@@ -53,42 +52,26 @@ type Score struct {
 // NewScore returns a new Score object with the given max and weight.
 // The Score.Score field is 0 initially, and so Score.Inc() and IncBy() can
 // be called on the returned Score object.
-// Note that the TestName is initialized to the name of the calling method.
-func NewScore(max, weight int) *Score {
-	return &Score{
+// The TestName is initialized as the name of the provided t.Name().
+func NewScore(t *testing.T, max, weight int) *Score {
+	sc := &Score{
 		Secret:   GlobalSecret,
-		TestName: testName(),
+		TestName: t.Name(),
 		MaxScore: max,
 		Weight:   weight,
 	}
-}
-
-// NewScoreMax returns a new Score object with the given max and weight.
-// The Score.Score field is max initially, and so Score.Dec() and DecBy() can
-// be called on the returned Score object.
-// Note that the TestName is initialized to the name of the calling method.
-func NewScoreMax(max, weight int) *Score {
-	return &Score{
-		Secret:   GlobalSecret,
-		TestName: testName(),
-		Score:    max,
-		MaxScore: max,
-		Weight:   weight,
-	}
+	sc.WriteJSON(os.Stdout)
+	return sc
 }
 
 // NewScoreMax returns a new Score object with the given max and weight.
 // The Score.Score field is max initially, and so Score.Dec() and DecBy() can
 // be called on the returned Score object.
 // The TestName is initialized as the name of the provided t.Name().
-func NewScoreMaxWithTesting(t *testing.T, max, weight int) *Score {
-	return &Score{
-		Secret:   GlobalSecret,
-		TestName: t.Name(),
-		Score:    max,
-		MaxScore: max,
-		Weight:   weight,
-	}
+func NewScoreMax(t *testing.T, max, weight int) *Score {
+	sc := NewScore(t, max, weight)
+	sc.Score = max
+	return sc
 }
 
 // IncBy increments score n times or until score equals MaxScore.
@@ -131,9 +114,9 @@ func (s *Score) String() string {
 
 // WriteString writes the string representation of s to w.
 func (s *Score) WriteString(w io.Writer) {
-	// check if calling func paniced before calling this
+	// check if calling func panicked before calling this
 	if r := recover(); r != nil {
-		// reset score for paniced functions
+		// reset score for panicked functions
 		s.Score = 0
 	}
 	fmt.Fprintf(w, "%v\n", s)
@@ -141,9 +124,9 @@ func (s *Score) WriteString(w io.Writer) {
 
 // WriteJSON writes the JSON representation of s to w.
 func (s *Score) WriteJSON(w io.Writer) {
-	// check if calling func paniced before calling this
+	// check if calling func panicked before calling this
 	if r := recover(); r != nil {
-		// reset score for paniced functions
+		// reset score for panicked functions
 		s.Score = 0
 	}
 	b, err := json.Marshal(s)
@@ -151,21 +134,4 @@ func (s *Score) WriteJSON(w io.Writer) {
 		fmt.Fprintf(w, "json.Marshal error: \n%v\n", err)
 	}
 	fmt.Fprintf(w, "\n%s\n", b)
-}
-
-// testName returns the name of a test when used by the Score-constructors.
-//
-// NOTE: This function is specifically constructed to be called from the
-// Score-constructors. It is not safe for other usage due to the hard-coded
-// skip constant used when calling runtime.Callers.
-func testName() string {
-	const skip = 2
-	pc, _, _, _ := runtime.Caller(skip)
-	funcName := runtime.FuncForPC(pc).Name()
-	lastSlash := strings.LastIndexByte(funcName, '/')
-	if lastSlash < 0 {
-		lastSlash = 0
-	}
-	firstDot := strings.IndexByte(funcName[lastSlash:], '.') + lastSlash
-	return funcName[firstDot+1:]
 }
