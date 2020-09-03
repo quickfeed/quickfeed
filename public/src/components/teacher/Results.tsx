@@ -202,7 +202,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
 
     private handleSearch(query: string): void {
         this.setState({
-            allSubmissions: searchForLabs(this.props.allCourseSubmissions, query),
+            allSubmissions: sortByScore(searchForLabs(this.props.allCourseSubmissions, query), this.props.assignments, false),
         });
     }
 

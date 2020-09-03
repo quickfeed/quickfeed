@@ -149,8 +149,8 @@ export class TeacherPage extends ViewPage {
             return <GroupResults
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}
-                labs={sortAssignmentsByOrder(labs)}
-                groups={labResults}
+                assignments={sortAssignmentsByOrder(labs)}
+                allGroupSubmissions={labResults}
                 onSubmissionRebuild={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                     this.navMan.refresh();
