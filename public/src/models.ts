@@ -62,4 +62,5 @@ export interface ISubmission {
     reviews: Review[];
     released: boolean;
     status: Submission.Status;
+    approvedDate: string;
 }
