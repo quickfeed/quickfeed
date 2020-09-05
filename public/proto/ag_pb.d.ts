@@ -664,6 +664,9 @@ export class Submission extends jspb.Message {
   getStatus(): Submission.Status;
   setStatus(value: Submission.Status): void;
 
+  getApproveddate(): string;
+  setApproveddate(value: string): void;
+
   getReviewsList(): Array<Review>;
   setReviewsList(value: Array<Review>): void;
   clearReviewsList(): void;
@@ -689,6 +692,7 @@ export namespace Submission {
     commithash: string,
     released: boolean,
     status: Submission.Status,
+    approveddate: string,
     reviewsList: Array<Review.AsObject>,
   }
 
