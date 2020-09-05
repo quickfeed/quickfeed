@@ -53,7 +53,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
         const deadline = new Date(this.props.assignment.getDeadline());
         const delivered = this.props.submission.buildDate;
         let classString = "";
-        if (delivered >= deadline) {
+        if (delivered >= deadline && this.props.teacherView) {
             classString = "past-deadline";
         }
         const afterDeadline = getDaysAfterDeadline(deadline, delivered);
