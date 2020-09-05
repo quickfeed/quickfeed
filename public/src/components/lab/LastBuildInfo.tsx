@@ -37,6 +37,8 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
                             <tbody key="tbody">
                                 <tr><td key="status">Status</td><td key="desc_0">{this.setStatusString()}</td></tr>
                                 <tr><td key="1">Delivered</td><td key="desc1">{this.getDeliveredTime()}</td></tr>
+                                <tr><td key="5">Approved</td><td key="desc5">{this.props.submission.approvedDate !== "" ?
+                                     formatDate(this.props.submission.approvedDate) : ""}</td></tr>
                                 <tr><td key="2">Deadline</td><td key="desc2">{formatDate(this.props.assignment.getDeadline())}</td></tr>
                                 <tr><td key="3">Tests passed</td><td key="desc3"><div className={passedAllTests}>{this.props.submission.passedTests} / {alltests}</div></td></tr>
                                 <tr><td key="4">Execution time</td><td key="desc4">{this.formatTime(this.props.submission.executionTime)} seconds </td></tr>
@@ -53,11 +55,11 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
         const deadline = new Date(this.props.assignment.getDeadline());
         const delivered = this.props.submission.buildDate;
         let classString = "";
-        if (delivered >= deadline && this.props.teacherView) {
+        if (delivered >= deadline && this.props.teacherView && this.props.submission.status !== Submission.Status.APPROVED) {
             classString = "past-deadline";
         }
         const afterDeadline = getDaysAfterDeadline(deadline, delivered);
-        return <div className={classString}>{this.formatDeliveredString(formatDate(delivered), afterDeadline, this.props.teacherView)}</div>;
+        return <div className={classString}>{this.formatDeliveredString(formatDate(delivered), afterDeadline, this.props.teacherView && this.props.submission.status !== Submission.Status.APPROVED)}</div>;
     }
 
     private formatDeliveredString(dateString: string, daysAfter: number, showAfterDeadline: boolean): string {

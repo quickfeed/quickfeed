@@ -241,10 +241,7 @@ func (s *AutograderService) updateSubmission(submissionID uint64, status pb.Subm
 	}
 	// if approving previously unapproved submission
 	if status == pb.Submission_APPROVED && submission.Status != pb.Submission_APPROVED {
-		fmt.Println("Approving submission, setting current date: ", time.Now().Format(layout))
 		submission.ApprovedDate = time.Now().Format(layout)
-	} else {
-		fmt.Println("Not approving")
 	}
 
 	submission.Status = status
