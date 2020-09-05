@@ -38,6 +38,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 submission={latest}
                                 slipdays={this.props.slipdays}
                                 assignment={this.props.submissionLink.assignment}
+                                teacherView={this.props.teacherPageView}
                             />
                             <LastBuild
                                 test_cases={latest.testCases}

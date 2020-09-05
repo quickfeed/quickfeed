@@ -8,6 +8,7 @@ import { submissionStatusToString, getDaysAfterDeadline } from "../../componentH
 interface ILastBuildInfoProps {
     submission: ISubmission;
     assignment: Assignment;
+    teacherView: boolean;
     slipdays: number;
 }
 
@@ -56,7 +57,12 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
             classString = "past-deadline";
         }
         const afterDeadline = getDaysAfterDeadline(deadline, delivered);
-        return <div className={classString}>{formatDate(delivered) + (afterDeadline > 0 ? "  (" + afterDeadline + " days after deadline)" : "")}</div>;
+        return <div className={classString}>{this.formatDeliveredString(formatDate(delivered), afterDeadline, this.props.teacherView)}</div>;
+    }
+
+    private formatDeliveredString(dateString: string, daysAfter: number, showAfterDeadline: boolean): string {
+        const daysAfterString = daysAfter > 0 ? " (" + daysAfter + " days after deadline)" : "";
+        return dateString = dateString + (showAfterDeadline ? daysAfterString : "");
     }
 
     private formatTime(executionTime: number): number {
