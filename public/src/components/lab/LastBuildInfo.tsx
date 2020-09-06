@@ -28,6 +28,8 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
         const alltests = this.props.submission.testCases ? this.props.submission.testCases.length : 0;
         const passedAllTests = this.props.submission.passedTests === alltests ? "passing" : "";
         const slipDaysRow = <tr><td key="5">Slip days</td><td key="desc5">{this.props.slipdays}</td></tr>;
+        const approvedLine = <tr><td key="6">Approved</td><td key="desc6">{formatDate(this.props.submission.approvedDate)}</td></tr>
+
         return (
             <div>
                 <Row>
@@ -37,8 +39,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
                             <tbody key="tbody">
                                 <tr><td key="status">Status</td><td key="desc_0">{this.setStatusString()}</td></tr>
                                 <tr><td key="1">Delivered</td><td key="desc1">{this.getDeliveredTime()}</td></tr>
-                                <tr><td key="5">Approved</td><td key="desc5">{this.props.submission.approvedDate !== "" ?
-                                     formatDate(this.props.submission.approvedDate) : ""}</td></tr>
+                                {this.showApprovedLine() ? approvedLine : null}
                                 <tr><td key="2">Deadline</td><td key="desc2">{formatDate(this.props.assignment.getDeadline())}</td></tr>
                                 <tr><td key="3">Tests passed</td><td key="desc3"><div className={passedAllTests}>{this.props.submission.passedTests} / {alltests}</div></td></tr>
                                 <tr><td key="4">Execution time</td><td key="desc4">{this.formatTime(this.props.submission.executionTime)} seconds </td></tr>
@@ -49,6 +50,10 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
                 </Row>
             </div>
         );
+    }
+
+    private showApprovedLine(): boolean {
+        return this.props.submission.status === Submission.Status.APPROVED && this.props.submission.approvedDate !== "";
     }
 
     private getDeliveredTime(): JSX.Element {
