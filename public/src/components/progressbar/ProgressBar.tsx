@@ -25,11 +25,11 @@ export class ProgressBar extends React.Component<IProgressBarProps> {
         }
 
         const secondaryBar = <div className="progress-bar progressbar-secondary bg-secondary" role="progressbar" style={secondaryBarStyle}>
-            {secondaryBarWidth}% to go</div>
+            {secondaryBarWidth} % to go</div>
 
         return (
             <div className="progress">
-                <div className={barClass} role="progressbar" style={progressBarStyle}>{this.props.progress}% done
+                <div className={barClass} role="progressbar" style={progressBarStyle}>{this.props.progress} % completed
                 </div>
                 {secondaryBarWidth > 0 ? secondaryBar : null }
             </div>

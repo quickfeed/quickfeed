@@ -250,7 +250,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private showScore(): string {
-        return this.setScore().toPrecision() + "%";
+        return this.setScore().toPrecision() + " %";
     }
 
     private setScore(): number {

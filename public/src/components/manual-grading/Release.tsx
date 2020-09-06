@@ -157,7 +157,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         return <div className="row">
             <table className="table table-condensed table-bordered">
             <thead><tr key="rthead"><th key="th0">Reviews:</th>{reviewersList.map((u, i) => <th key={"th" + (i + 1)} className="release-cell">
-                {(allReviewers.get(u)?.getScore() ?? 0) + "%"}
+                {(allReviewers.get(u)?.getScore() ?? 0) + " %"}
             </th>)}</tr></thead>
             <tbody>
                 {this.renderTableRows()}

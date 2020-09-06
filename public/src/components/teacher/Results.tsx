@@ -184,7 +184,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                     value: <a className={cellCss + " lab-cell-link"}
                         onClick={() => this.handleOnclick(e, student)}
                         href="#">
-                        {e.submission ? (e.submission.score + "%") : "N/A"}</a>,
+                        {e.submission ? (e.submission.score + " %") : "N/A"}</a>,
                     className: cellCss,
                 };
                 return iCell;
