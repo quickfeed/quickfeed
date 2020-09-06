@@ -3,8 +3,9 @@ import { ProgressBar, Row } from "../../components";
 import { Submission } from "../../../proto/ag_pb";
 
 interface ILabResultProps {
-    assignment_id: number;
-    submission_id: number;
+    assignmentID: number;
+    submissionID: number;
+    scoreLimit: number;
     progress: number;
     status: Submission.Status;
     lab: string;
@@ -47,7 +48,10 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
                 <div className="col-lg-12">
                     <Row>
                     {labHeading}
-                    <ProgressBar progress={this.props.progress}></ProgressBar></Row>
+                    <ProgressBar
+                        progress={this.props.progress}
+                        scoreToPass={this.props.scoreLimit}
+                    ></ProgressBar></Row>
                     <Row>{buttonDiv}</Row>
             </div>
         );
@@ -57,7 +61,7 @@ export class LabResult extends React.Component<ILabResultProps, ILabResultState>
         this.setState({
             rebuilding: true,
         });
-        await this.props.onSubmissionRebuild(this.props.assignment_id, this.props.submission_id).then(() => {
+        await this.props.onSubmissionRebuild(this.props.assignmentID, this.props.submissionID).then(() => {
             this.setState({
                 rebuilding: false,
             });
