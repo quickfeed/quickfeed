@@ -27,6 +27,11 @@ export class ProgressBar extends React.Component<IProgressBarProps> {
         const secondaryBar = <div className="progress-bar progressbar-secondary bg-secondary" role="progressbar" style={secondaryBarStyle}>
             {this.generateSecondaryBarText(secondaryBarWidth)}</div>
 
+        console.log("Progress is: " + this.props.progress);
+        console.log("Delta is: " + secondaryBarWidth);
+        console.log("Main bar text: " + this.generateMainBarText(secondaryBarWidth));
+        console.log("Secondary bar text: " + this.generateSecondaryBarText(secondaryBarWidth));
+
         return (
             <div className="progress">
                 <div className={barClass} role="progressbar" style={progressBarStyle}>{this.generateMainBarText(secondaryBarWidth)}
@@ -38,8 +43,8 @@ export class ProgressBar extends React.Component<IProgressBarProps> {
 
     private generateMainBarText(delta: number): string {
         let mainText = this.props.progress + " % completed";
-        if (delta < 10) {
-            mainText += delta + " % to go"
+        if (delta < 12 && delta > 0) {
+            mainText += " / " + delta + " % to go"
         }
         return this.props.progress >= 10 ? mainText : "";
     }
@@ -47,8 +52,9 @@ export class ProgressBar extends React.Component<IProgressBarProps> {
     generateSecondaryBarText(delta: number): string {
         let secondaryText = delta + " % to go";
         if (this.props.progress < 10) {
-            secondaryText = this.generateMainBarText(delta) + " / " + secondaryText;
+            const mainPart = this.props.progress > 0 ? this.props.progress + " % completed" + " / " : "";
+            secondaryText = mainPart + secondaryText;
         }
-        return delta >= 10 ? secondaryText : "";
+        return delta >= 12 ? secondaryText : "";
     }
 }
