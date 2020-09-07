@@ -25,12 +25,7 @@ export class ProgressBar extends React.Component<IProgressBarProps> {
         }
 
         const secondaryBar = <div className="progress-bar progressbar-secondary bg-secondary" role="progressbar" style={secondaryBarStyle}>
-            {this.generateSecondaryBarText(secondaryBarWidth)}</div>
-
-        console.log("Progress is: " + this.props.progress);
-        console.log("Delta is: " + secondaryBarWidth);
-        console.log("Main bar text: " + this.generateMainBarText(secondaryBarWidth));
-        console.log("Secondary bar text: " + this.generateSecondaryBarText(secondaryBarWidth));
+            {this.generateSecondaryBarText(secondaryBarWidth)}</div>;
 
         return (
             <div className="progress">
