@@ -5,6 +5,7 @@ import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../.
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
 import { searchForLabs, userRepoLink, getSlipDays, legalIndex } from "../../componentHelper";
+import { formatDate } from '../../helper';
 
 interface IResultsProps {
     course: Course;
@@ -140,7 +141,9 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
             const previousStatus = selected.status;
             selected.status = status;
             const ans = await this.props.onSubmissionStatusUpdate(selected);
-            if (!ans) {
+            if (ans) {
+                selected.approvedDate = new Date().toLocaleString();
+            } else {
                 selected.status = previousStatus;
             }
             this.setState({
