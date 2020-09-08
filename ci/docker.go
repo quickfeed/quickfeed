@@ -23,7 +23,7 @@ type Docker struct {
 
 var (
 	containerTimeout = time.Duration(10 * time.Minute)
-	maxLogSize       = 10_000 // bytes
+	maxLogSize       = 30_000 // bytes
 	lastSegmentSize  = 1_000  // bytes
 )
 
