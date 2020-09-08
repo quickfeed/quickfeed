@@ -119,6 +119,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 }
                 const iCell: ICellElement = {
                     value: <a className={cellCss + " lab-cell-link"}
+                        style={{ whiteSpace: 'nowrap' }}
                         onClick={() => this.handleOnclick(e)}
                         href="#">
                         {e.submission ? (e.submission.score + " %") : "N/A"}</a>,

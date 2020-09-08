@@ -22,7 +22,7 @@ export class LastBuild extends React.Component<ILastBuildProps> {
                         selector={(item: ITestCases) => [item.TestName ? item.TestName : "-",
                          (item.Score ? item.Score.toString() : "0")
                           + "/" + (item.MaxScore ? item.MaxScore.toString() : "0") + " pts",
-                          item.Weight ? item.Weight.toString() : "0" + " pts"]}
+                          item.Weight ? item.Weight.toString() : "0"]}
                         footer={this.makeDynamicFooter()}
                     />
                 </div>
