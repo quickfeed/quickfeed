@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
 )
+
+var layout = "2006-01-02T15:04:05"
 
 // getCourses returns all courses.
 func (s *AutograderService) getCourses() (*pb.Courses, error) {
@@ -230,12 +233,17 @@ func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*p
 	return enrolLinks
 }
 
-// updateSubmission approves the given submission or undoes a previous approval.
+// updateSubmission updates submission status or sets a submission score based on a manual review.
 func (s *AutograderService) updateSubmission(submissionID uint64, status pb.Submission_Status, released bool, score uint32) error {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
 	if err != nil {
 		return err
 	}
+	// if approving previously unapproved submission
+	if status == pb.Submission_APPROVED && submission.Status != pb.Submission_APPROVED {
+		submission.ApprovedDate = time.Now().Format(layout)
+	}
+
 	submission.Status = status
 	submission.Released = released
 	if score > 0 {

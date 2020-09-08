@@ -284,6 +284,11 @@ body {
     float: right;
 }
 
+.bg-secondary {
+    background: rgb(221, 223, 226) !important;
+    color: slategrey;
+}
+
 .past-deadline {
     color: #601203;
     font-weight: 300;

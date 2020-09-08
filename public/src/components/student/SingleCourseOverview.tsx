@@ -29,7 +29,7 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
             if (submissionLink.submission) {
                 submissionInfo = <div className="row">
                     <div className="col-md-6 col-lg-6">
-                        <ProgressBar progress={submissionLink.submission.score} />
+                        <ProgressBar progress={submissionLink.submission.score} scoreToPass={submissionLink.assignment.getScorelimit()}/>
                     </div>
                     <div className="col-md-2 col-lg-2" >
                         <span className="text-success"> Passed: {submissionLink.submission.passedTests} </span>

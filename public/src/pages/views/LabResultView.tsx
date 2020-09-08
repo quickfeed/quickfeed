@@ -24,8 +24,9 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                     <div key="labview" className="result-content" id="resultview">
                         <section id="result">
                             <LabResult
-                                assignment_id={this.props.submissionLink.assignment.getId()}
-                                submission_id={latest.id}
+                                assignmentID={this.props.submissionLink.assignment.getId()}
+                                submissionID={latest.id}
+                                scoreLimit={this.props.submissionLink.assignment.getScorelimit()}
                                 teacherView={this.props.teacherPageView}
                                 lab={this.props.submissionLink.assignment.getName()}
                                 progress={latest.score}
@@ -38,6 +39,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 submission={latest}
                                 slipdays={this.props.slipdays}
                                 assignment={this.props.submissionLink.assignment}
+                                teacherView={this.props.teacherPageView}
                             />
                             <LastBuild
                                 test_cases={latest.testCases}

@@ -5811,7 +5811,7 @@ proto.Assignments.prototype.clearAssignmentsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.Submission.repeatedFields_ = [11];
+proto.Submission.repeatedFields_ = [12];
 
 
 
@@ -5854,6 +5854,7 @@ proto.Submission.toObject = function(includeInstance, msg) {
     commithash: jspb.Message.getFieldWithDefault(msg, 8, ""),
     released: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
     status: jspb.Message.getFieldWithDefault(msg, 10, 0),
+    approveddate: jspb.Message.getFieldWithDefault(msg, 11, ""),
     reviewsList: jspb.Message.toObjectList(msg.getReviewsList(),
     proto.Review.toObject, includeInstance)
   };
@@ -5933,6 +5934,10 @@ proto.Submission.deserializeBinaryFromReader = function(msg, reader) {
       msg.setStatus(value);
       break;
     case 11:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setApproveddate(value);
+      break;
+    case 12:
       var value = new proto.Review;
       reader.readMessage(value,proto.Review.deserializeBinaryFromReader);
       msg.addReviews(value);
@@ -6036,10 +6041,17 @@ proto.Submission.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getApproveddate();
+  if (f.length > 0) {
+    writer.writeString(
+      11,
+      f
+    );
+  }
   f = message.getReviewsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      11,
+      12,
       f,
       proto.Review.serializeBinaryToWriter
     );
@@ -6238,12 +6250,30 @@ proto.Submission.prototype.setStatus = function(value) {
 
 
 /**
- * repeated Review reviews = 11;
+ * optional string approvedDate = 11;
+ * @return {string}
+ */
+proto.Submission.prototype.getApproveddate = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 11, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.Submission} returns this
+ */
+proto.Submission.prototype.setApproveddate = function(value) {
+  return jspb.Message.setProto3StringField(this, 11, value);
+};
+
+
+/**
+ * repeated Review reviews = 12;
  * @return {!Array<!proto.Review>}
  */
 proto.Submission.prototype.getReviewsList = function() {
   return /** @type{!Array<!proto.Review>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.Review, 11));
+    jspb.Message.getRepeatedWrapperField(this, proto.Review, 12));
 };
 
 
@@ -6252,7 +6282,7 @@ proto.Submission.prototype.getReviewsList = function() {
  * @return {!proto.Submission} returns this
 */
 proto.Submission.prototype.setReviewsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 11, value);
+  return jspb.Message.setRepeatedWrapperField(this, 12, value);
 };
 
 
@@ -6262,7 +6292,7 @@ proto.Submission.prototype.setReviewsList = function(value) {
  * @return {!proto.Review}
  */
 proto.Submission.prototype.addReviews = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 11, opt_value, proto.Review, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 12, opt_value, proto.Review, opt_index);
 };
 
 

@@ -107,12 +107,7 @@ func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.S
 
 // UpdateSubmission updates submission with the given approved status.
 func (db *GormDB) UpdateSubmission(query *pb.Submission) error {
-	return db.conn.
-		Model(query).
-		Where(&pb.Submission{ID: query.ID}).
-		Update("status", query.Status).
-		Update("released", query.Released).
-		Update("score", query.Score).Error
+	return db.conn.Save(query).Error
 }
 
 // UpdateSubmissions approves and/or releases all submissions that have score

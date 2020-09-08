@@ -5,6 +5,7 @@ import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../.
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
 import { searchForLabs, userRepoLink, getSlipDays, legalIndex } from "../../componentHelper";
+import { formatDate } from '../../helper';
 
 interface IResultsProps {
     course: Course;
@@ -140,7 +141,9 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
             const previousStatus = selected.status;
             selected.status = status;
             const ans = await this.props.onSubmissionStatusUpdate(selected);
-            if (!ans) {
+            if (ans) {
+                selected.approvedDate = new Date().toLocaleString();
+            } else {
                 selected.status = previousStatus;
             }
             this.setState({
@@ -184,7 +187,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                     value: <a className={cellCss + " lab-cell-link"}
                         onClick={() => this.handleOnclick(e, student)}
                         href="#">
-                        {e.submission ? (e.submission.score + "%") : "N/A"}</a>,
+                        {e.submission ? (e.submission.score + " %") : "N/A"}</a>,
                     className: cellCss,
                 };
                 return iCell;
@@ -202,7 +205,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
 
     private handleSearch(query: string): void {
         this.setState({
-            allSubmissions: searchForLabs(this.props.allCourseSubmissions, query),
+            allSubmissions: sortByScore(searchForLabs(this.props.allCourseSubmissions, query), this.props.assignments, false),
         });
     }
 

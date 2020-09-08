@@ -196,7 +196,8 @@ message Submission {
     string commitHash = 8;
     bool released = 9; // defines whether the feedback is visible for the student or group members
     Status status = 10;
-    repeated Review reviews = 11;
+    string approvedDate = 11;
+    repeated Review reviews = 12;
 }
 
 message Submissions {
