@@ -1,9 +1,12 @@
 package ci_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -80,4 +83,23 @@ func TestDockerTimeout(t *testing.T) {
 	if err == nil {
 		t.Errorf("docker.Run(%#v) unexpectedly returned without error", script)
 	}
+}
+
+func TestDockerLogLimit(t *testing.T) {
+	// This is just for testing
+	t.SkipNow()
+	const maxLogSize = 4
+	const lastSegmentSize = 5
+	logReader := strings.NewReader("want only that some small last thing")
+	var stdout bytes.Buffer
+	n, err := io.Copy(&stdout, logReader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("x(%d=%d): %s", n, stdout.Len(), stdout.String())
+	if stdout.Len() > maxLogSize {
+		all := stdout.String()
+		t.Logf("%s ONLY %s", all[0:maxLogSize], all[len(all)-lastSegmentSize:])
+	}
+	t.Logf("x(%d=%d): %s", n, stdout.Len(), stdout.String())
 }

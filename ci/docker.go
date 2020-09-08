@@ -21,7 +21,11 @@ type Docker struct {
 	Version  string
 }
 
-var containerTimeout = time.Duration(10 * time.Minute)
+var (
+	containerTimeout = time.Duration(10 * time.Minute)
+	maxLogSize       = 10_000 // bytes
+	lastSegmentSize  = 1_000  // bytes
+)
 
 // Run implements the CI interface. This method blocks until the job has been
 // completed or an error occurs, e.g., the context times out.
@@ -81,6 +85,21 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	var stdout bytes.Buffer
 	if _, err := stdcopy.StdCopy(&stdout, ioutil.Discard, logReader); err != nil {
 		return "", err
+	}
+	if stdout.Len() > maxLogSize+lastSegmentSize {
+		// converting to string here;
+		// could be done more efficiently using stdout.Truncate(maxLogSize)
+		// but then we wouldn't get the last part
+		all := stdout.String()
+		first := all[0:maxLogSize]
+		last := all[len(all)-lastSegmentSize:]
+		return first + `
+
+		...
+		truncated output
+		...
+
+		` + last, nil
 	}
 	return stdout.String(), nil
 }
