@@ -1,7 +1,7 @@
 #image/quickfeed:go
 
 start=$SECONDS
-echo "*** Preparing for Test Execution ***\n"
+printf "*** Preparing for Test Execution ***\n"
 
 git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 
@@ -14,7 +14,7 @@ git clone {{ .GetURL }} $ASSIGNMENTS
 git clone {{ .TestURL }} $TESTDIR
 
 if [ ! -d "$ASSIGNDIR" ]; then
-  echo "No code to test for {{ .GetURL }}/{{ .AssignmentName }}"
+  printf "No code to test for {{ .GetURL }}/{{ .AssignmentName }}"
   exit
 fi
 
@@ -23,7 +23,7 @@ cd $ASSIGNDIR
 
 # Fail student code that attempts to access secret
 if grep -r -e common.Secret -e GlobalSecret * ; then
-  echo "\n=== Misbehavior Detected: Failed ===\n"
+  printf "\n=== Misbehavior Detected: Failed ===\n"
   exit
 fi
 
@@ -49,9 +49,9 @@ if [ -f "setup.sh" ]; then
     bash setup.sh
 fi
 
-echo "\n*** Finished Test Setup in $(( SECONDS - start )) seconds ***\n"
+printf "\n*** Finished Test Setup in $(( SECONDS - start )) seconds ***\n"
 
 start=$SECONDS
-echo "\n*** Running Tests ***\n"
+printf "\n*** Running Tests ***\n"
 go test -v -timeout 30s ./... 2>&1
-echo "\n*** Finished Running Tests in $(( SECONDS - start )) seconds ***\n"
+printf "\n*** Finished Running Tests in $(( SECONDS - start )) seconds ***\n"
