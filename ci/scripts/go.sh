@@ -52,6 +52,6 @@ fi
 printf "\n*** Finished Test Setup in $(( SECONDS - start )) seconds ***\n"
 
 start=$SECONDS
-printf "\n*** Running Tests ***\n"
+printf "\n*** Running Tests ***\n\n"
 go test -v -timeout 30s ./... 2>&1
 printf "\n*** Finished Running Tests in $(( SECONDS - start )) seconds ***\n"
