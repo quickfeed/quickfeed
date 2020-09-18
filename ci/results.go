@@ -44,7 +44,7 @@ func ExtractResult(logger *zap.SugaredLogger, out, secret string, execTime time.
 				continue
 			}
 			scores = append(scores, sc)
-		} else if line != "" {
+		} else if line != "" { // include only non-empty lines
 			// the filtered log without JSON score strings
 			filteredLog = append(filteredLog, line)
 		}
