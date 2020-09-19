@@ -2,7 +2,6 @@ package exercise
 
 import (
 	"io/ioutil"
-	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -40,11 +39,14 @@ func parseMCAnswers(mdFile string) (map[string]string, error) {
 	return qaMap, nil
 }
 
+// MultipleChoiceWithDesc computes the score of a multiple choice exercise
+// with student providing answers in the mdFile, where the correct map is
+// expected to contain the correct answers. The function emits a JSON Score
+// object and a corresponding message for x/y test cases passed.
 func MultipleChoiceWithDesc(t *testing.T, mdFile string, correct map[int]string) {
 	t.Helper()
 	sc := score.NewScoreMax(t, len(correct), 1)
-	defer sc.WriteString(os.Stdout)
-	defer sc.WriteJSON(os.Stdout)
+	defer sc.Print(t)
 
 	qaMap, err := parseMCAnswers(mdFile)
 	if err != nil {
@@ -78,10 +80,10 @@ type Choices []struct {
 // with student answers provided in fileName, and the answers provided
 // in the answerKey object. The function requires a Score object, and
 // will produce both string output and JSON output.
+// Deprecated: Do not use this function; it will be removed.
 func MultipleChoice(t *testing.T, sc *score.Score, fileName string, answers Choices) {
 	t.Helper()
-	defer sc.WriteString(os.Stdout)
-	defer sc.WriteJSON(os.Stdout)
+	defer sc.Print(t)
 
 	// Read the whole file
 	bytes, err := ioutil.ReadFile(fileName)

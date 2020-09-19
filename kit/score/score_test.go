@@ -1,7 +1,6 @@
 package score
 
 import (
-	"os"
 	"testing"
 )
 
@@ -42,7 +41,7 @@ var fibonacciTests = []struct {
 
 func TestFibonacci(t *testing.T) {
 	sc := NewScoreMax(t, len(fibonacciTests)*2, 20)
-	defer sc.WriteJSON(os.Stdout)
+	defer sc.Print(t)
 
 	for _, ft := range fibonacciTests {
 		out := fibonacci(ft.in)
