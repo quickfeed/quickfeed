@@ -2,7 +2,6 @@ package exercise
 
 import (
 	"bytes"
-	"os"
 	"os/exec"
 	"strings"
 	"testing"
@@ -57,8 +56,7 @@ func (e *CommandLineError) Error() string {
 // of each command, are returned in the CommandLineError slice,
 // where indices match those of the commands.
 func CommandLine(t *testing.T, sc *score.Score, answers Commands) []CommandLineError {
-	defer sc.WriteString(os.Stdout)
-	defer sc.WriteJSON(os.Stdout)
+	defer sc.Print(t)
 
 	cmdLineErrors := make([]CommandLineError, len(answers))
 	for i := range answers {
