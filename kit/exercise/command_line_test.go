@@ -7,7 +7,10 @@ import (
 )
 
 func TestCmdLine(t *testing.T) {
-	t.Skip("This is expected to fail, so we skip it when running normally (see comment).")
+	// This test aims to emulate what students may write, which should result in test failure.
+	// Hence, we do not run this as part of the CI tests.
+	// Comment t.Skip to test that TestCmdLine fails, which is expected.
+	t.Skip("Skipping because it is expected to fail (see comment).")
 
 	// TODO(meling) the following works, but doesn't exercise the test failure
 	// cmds := Commands{
