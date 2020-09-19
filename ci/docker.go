@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/autograde/quickfeed/kit/score"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -23,8 +24,9 @@ type Docker struct {
 
 var (
 	containerTimeout = time.Duration(10 * time.Minute)
-	maxLogSize       = 30_000 // bytes
-	lastSegmentSize  = 1_000  // bytes
+	maxToScan        = 1_000_000 // bytes
+	maxLogSize       = 30_000    // bytes
+	lastSegmentSize  = 1_000     // bytes
 )
 
 // Run implements the CI interface. This method blocks until the job has been
@@ -92,8 +94,15 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		// but then we wouldn't get the last part
 		all := stdout.String()
 		first := all[0:maxLogSize]
-		last := all[len(all)-lastSegmentSize:]
-		return first + `
+		startLastSegment := len(all) - lastSegmentSize
+		middleSegment := all[maxLogSize:startLastSegment]
+		scoreLines := ""
+		if len(middleSegment) > maxToScan {
+			// find score lines in the middle segment that otherwise gets truncated
+			scoreLines = findScoreLines(middleSegment)
+		}
+		last := all[startLastSegment:]
+		return first + scoreLines + `
 
 		...
 		truncated output
@@ -102,6 +111,17 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		` + last, nil
 	}
 	return stdout.String(), nil
+}
+
+func findScoreLines(lines string) string {
+	scoreLines := make([]string, 0)
+	for _, line := range strings.Split(lines, "\n") {
+		// check if line has expected JSON score string
+		if score.HasPrefix(line) {
+			scoreLines = append(scoreLines, line)
+		}
+	}
+	return strings.Join(scoreLines, "\n")
 }
 
 // pullImage pulls an image from docker hub; this can be slow and should be
