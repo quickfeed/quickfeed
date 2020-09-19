@@ -93,11 +93,11 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		// could be done more efficiently using stdout.Truncate(maxLogSize)
 		// but then we wouldn't get the last part
 		all := stdout.String()
-		// find the last full line to keep
+		// find the last full line to keep before the truncate point
 		startMiddleSegment := strings.LastIndex(all[0:maxLogSize], "\n") + 1
-		first := all[0:startMiddleSegment]
-		// find the last full line to truncate (and scan for score lines)
-		startLastSegment := strings.LastIndex(all[startMiddleSegment:len(all)-lastSegmentSize], "\n") + 1
+		// find the last full line to truncate and scan for score lines, before the last segment to output
+		startLastSegment := strings.LastIndex(all[0:len(all)-lastSegmentSize], "\n") + 1
+
 		middleSegment := all[startMiddleSegment:startLastSegment]
 		scoreLines := ""
 		// only scan if middle segment is less than maxToScan
@@ -105,14 +105,13 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 			// find score lines in the middle segment that otherwise gets truncated
 			scoreLines = findScoreLines(middleSegment)
 		}
-		last := all[startLastSegment:]
-		return first + scoreLines + `
+		return all[0:startMiddleSegment] + scoreLines + `
 
 		...
 		truncated output
 		...
 
-		` + last, nil
+		` + all[startLastSegment:], nil
 	}
 	return stdout.String(), nil
 }
