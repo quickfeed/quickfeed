@@ -63,23 +63,37 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	// wait until the container stops or context times out.
 	_, err = cli.ContainerWait(ctx, resp.ID)
 	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			timeout := time.Duration(1 * time.Second)
-			// ContainerStop seems to work better than ContainerKill in my tests.
-			stopErr := cli.ContainerStop(context.Background(), resp.ID, &timeout)
-			if stopErr != nil {
-				// if we failed to stop, report it up the chain
-				err = stopErr
-			}
-			userMsg := "Container timeout. Please check for infinite loops or other slowness."
-			return userMsg, err
+		if !errors.Is(err, context.DeadlineExceeded) {
+			return "", err
 		}
-		return "", err
+
+		// stop runaway container whose deadline was exceeded
+		timeout := time.Duration(1 * time.Second)
+		stopErr := cli.ContainerStop(context.Background(), resp.ID, &timeout)
+		if stopErr != nil {
+			return "", stopErr
+		}
+
+		// remove the docker container (when stopped due to timeout) to prevent too many open files
+		rmErr := cli.ContainerRemove(context.Background(), resp.ID, types.ContainerRemoveOptions{})
+		if rmErr != nil {
+			return "", rmErr
+		}
+
+		// return message to user to be shown in the results log
+		return "Container timeout. Please check for infinite loops or other slowness.", err
 	}
 
+	// extract the logs before removing the container below
 	logReader, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
 		ShowStdout: true,
 	})
+	if err != nil {
+		return "", err
+	}
+
+	// remove the container when finished to prevent too many open files
+	err = cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -99,7 +113,8 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		startLastSegment := strings.LastIndex(all[0:len(all)-lastSegmentSize], "\n") + 1
 
 		middleSegment := all[startMiddleSegment:startLastSegment]
-		scoreLines := ""
+		// score lines will normally replace this string, unless too much output
+		scoreLines := "too much output data to scan (skipping; fix your code)"
 		// only scan if middle segment is less than maxToScan
 		if len(middleSegment) < maxToScan {
 			// find score lines in the middle segment that otherwise gets truncated
