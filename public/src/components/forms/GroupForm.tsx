@@ -7,7 +7,7 @@ import { NavigationManager } from "../../managers/NavigationManager";
 import { UserManager } from "../../managers/UserManager";
 import { searchForStudents } from "../../componentHelper";
 
-interface IGroupProps {
+interface GroupFormProps {
     className: string;
     students: Enrollment[];
     freeStudents: Enrollment[];
@@ -19,7 +19,7 @@ interface IGroupProps {
     course: Course;
     groupData?: Group;
 }
-interface IGroupState {
+interface GroupFormState {
     name: string;
     students: Enrollment[];
     selectedStudents: Enrollment[];
@@ -28,7 +28,7 @@ interface IGroupState {
     actionReady: boolean;
 }
 
-export class GroupForm extends React.Component<IGroupProps, IGroupState> {
+export class GroupForm extends React.Component<GroupFormProps, GroupFormState> {
     constructor(props: any) {
         super(props);
         const currentUser = this.props.students.find((v) => v.getUserid() === this.props.curUser.getId());
