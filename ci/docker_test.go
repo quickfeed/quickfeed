@@ -3,7 +3,10 @@ package ci_test
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/sha1"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -41,6 +44,7 @@ func TestDocker(t *testing.T) {
 
 	docker := &ci.Docker{}
 	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:     "TestDocker-" + randomString(t),
 		Image:    "golang:latest",
 		Commands: []string{script},
 	})
@@ -71,6 +75,7 @@ func TestDockerTimeout(t *testing.T) {
 
 	docker := &ci.Docker{}
 	out, err := docker.Run(ctx, &ci.Job{
+		Name:     "TestDockerTimeout-" + randomString(t),
 		Image:    "golang:latest",
 		Commands: []string{script},
 	})
@@ -83,6 +88,16 @@ func TestDockerTimeout(t *testing.T) {
 	if err == nil {
 		t.Errorf("docker.Run(%#v) unexpectedly returned without error", script)
 	}
+}
+
+func randomString(t *testing.T) string {
+	t.Helper()
+	randomness := make([]byte, 10)
+	_, err := rand.Read(randomness)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return fmt.Sprintf("%x", sha1.Sum(randomness))[:6]
 }
 
 func TestDockerLogLimit(t *testing.T) {
