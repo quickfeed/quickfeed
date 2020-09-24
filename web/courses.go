@@ -171,7 +171,7 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 
 // makeResults generates enrollment-assignment-submissions links
 // for all course students and all individual and group assignments.
-func makeResults(course *pb.Course, assignments []*pb.Assignment, withGroups bool) []*pb.EnrollmentLink {
+func makeResults(course *pb.Course, assignments []*pb.Assignment, addGroups bool) []*pb.EnrollmentLink {
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
 
 	for _, enrol := range course.Enrollments {
@@ -184,16 +184,19 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment, withGroups boo
 			}
 
 			for _, sb := range a.Submissions {
-				if sb.UserID > 0 && sb.UserID == enrol.UserID {
+
+				if !a.IsGroupLab && sb.GroupID == 0 && sb.UserID == enrol.UserID {
 					subLink.Submission = sb
-				} else if withGroups && sb.GroupID > 0 && sb.GroupID == enrol.GroupID {
+				} else if addGroups && a.IsGroupLab && sb.GroupID > 0 && sb.GroupID == enrol.GroupID {
 					subLink.Submission = sb
 				}
+
 			}
 			allSubmissions = append(allSubmissions, subLink)
 		}
 
 		newLink.Submissions = allSubmissions
+
 		enrolLinks = append(enrolLinks, newLink)
 	}
 	return enrolLinks
