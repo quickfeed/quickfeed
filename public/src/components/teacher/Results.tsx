@@ -143,6 +143,23 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
             const ans = await this.props.onSubmissionStatusUpdate(selected);
             if (ans) {
                 selected.approvedDate = new Date().toLocaleString();
+
+                if (current && selected.groupid > 0) {
+                    this.state.allSubmissions.forEach((e) => {
+                        if (e.enrollment.getGroup()?.getId() === selected.groupid) {
+                            e.labs.forEach((l) => {
+                                if (l.assignment.getId() === current.assignment.getId()) {
+                                    const double = l.submission;
+                                    if (double) {
+                                        double.approvedDate = selected.approvedDate;
+                                        double.status = selected.status;
+                                    }
+                                }
+                            })
+                        }
+                    })
+                }
+
             } else {
                 selected.status = previousStatus;
             }
