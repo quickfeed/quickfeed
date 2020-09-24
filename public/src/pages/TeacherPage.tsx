@@ -341,7 +341,7 @@ export class TeacherPage extends ViewPage {
             item: link,
             children: [
                 { name: "Results", uri: link.uri + "/results" },
-                { name: "Group Results", uri: link.uri + "/groupresults" },
+                { name: "Group Results", uri: link.uri + "/groupresults", extra: "disabled" },
                 { name: "Review", uri: link.uri + "/review" },
                 { name: "Release", uri: link.uri + "/release" },
                 { name: "Groups", uri: link.uri + "/groups" },
