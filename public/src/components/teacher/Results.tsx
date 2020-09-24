@@ -166,9 +166,13 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         return false;
     }
 
-    private getResultHeader(): string[] {
-        let headers: string[] = ["Name", "Group"];
-        headers = headers.concat(this.props.assignments.map((e) => e.getName()));
+    private getResultHeader(): (string | JSX.Element)[] {
+        let headers: (string | JSX.Element)[] = ["Name", "Group"];
+        headers = headers.concat(this.props.assignments.map((e) => {
+            if (e.getIsgrouplab()) {
+                return <span style={{ whiteSpace: 'nowrap' }}>{e.getName() + " (g)"}</span>;
+            } else return e.getName()
+        }));
         return headers;
     }
 
