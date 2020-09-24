@@ -122,6 +122,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.allSubmissions}
+                            classType={"result-table"}
                             selector={(item: IAllSubmissionsForEnrollment) => this.getResultSelector(item)}
                         />
                     </div>
