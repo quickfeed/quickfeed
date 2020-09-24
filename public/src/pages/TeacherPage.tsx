@@ -120,7 +120,7 @@ export class TeacherPage extends ViewPage {
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const assignments: Assignment[] = await this.courseMan.getAssignments(course.getId());
-            const results = await this.courseMan.getSubmisssionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.ALL);
+            const results = await this.courseMan.getSubmissionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.ALL);
             const labResults = await this.courseMan.fillLabLinks(course, results, assignments);
             const curUser = this.userMan.getCurrentUser();
             return <Results
@@ -143,7 +143,7 @@ export class TeacherPage extends ViewPage {
 
     public async groupresults(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const results = await this.courseMan.getSubmisssionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
+            const results = await this.courseMan.getSubmissionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
             const labs = await this.courseMan.getAssignments(course.getId());
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
             return <GroupResults
@@ -166,8 +166,8 @@ export class TeacherPage extends ViewPage {
     public async manualReview(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const assignments = await this.courseMan.getAssignments(course.getId());
-            const students = await this.courseMan.getSubmisssionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
-            const groups = await this.courseMan.getSubmisssionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
+            const students = await this.courseMan.getSubmissionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
+            const groups = await this.courseMan.getSubmissionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
                 return <FeedbackView
@@ -192,8 +192,8 @@ export class TeacherPage extends ViewPage {
     public async releaseReview(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const assignments = await this.courseMan.getAssignments(course.getId());
-            const students = await this.courseMan.getSubmisssionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
-            const groups = await this.courseMan.getSubmisssionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
+            const students = await this.courseMan.getSubmissionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
+            const groups = await this.courseMan.getSubmissionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
                 return <ReleaseView
