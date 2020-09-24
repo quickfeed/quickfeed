@@ -4,7 +4,7 @@ import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { searchForLabs, userRepoLink, getSlipDays, legalIndex } from "../../componentHelper";
+import { searchForLabs, userRepoLink, getSlipDays, legalIndex, groupRepoLink } from '../../componentHelper';
 import { formatDate } from '../../helper';
 
 interface IResultsProps {
@@ -167,15 +167,17 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
     }
 
     private getResultHeader(): string[] {
-        let headers: string[] = ["Name"];
+        let headers: string[] = ["Name", "Group"];
         headers = headers.concat(this.props.assignments.map((e) => e.getName()));
         return headers;
     }
 
     private getResultSelector(student: IAllSubmissionsForEnrollment): (string | JSX.Element | ICellElement)[] {
         const user = student.enrollment.getUser();
+        const group = student.enrollment.getGroup();
         const displayName = user ? userRepoLink(user.getLogin(), user.getName(), this.props.courseURL) : "";
-        let selector: (string | JSX.Element | ICellElement)[] = [displayName];
+        const groupName = group ? groupRepoLink(group.getName(), this.props.courseURL) : "";
+        let selector: (string | JSX.Element | ICellElement)[] = [displayName, groupName];
         selector = selector.concat(student.labs.map(
             (e) => {
                 let cellCss: string = "";
