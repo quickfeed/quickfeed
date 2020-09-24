@@ -52,7 +52,6 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         const currentStudents = this.props.allCourseSubmissions.length > 0 ? this.props.allCourseSubmissions : null;
         if (currentStudents
             && this.state.selectedSubmission && this.state.selectedStudent
-            && !this.state.selectedSubmission.assignment.getIsgrouplab()
         ) {
             studentLab = <StudentLab
                 studentSubmission={this.state.selectedSubmission}
@@ -169,7 +168,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
 
     private getResultHeader(): string[] {
         let headers: string[] = ["Name"];
-        headers = headers.concat(this.props.assignments.filter((e) => !e.getIsgrouplab()).map((e) => e.getName()));
+        headers = headers.concat(this.props.assignments.map((e) => e.getName()));
         return headers;
     }
 
@@ -177,7 +176,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         const user = student.enrollment.getUser();
         const displayName = user ? userRepoLink(user.getLogin(), user.getName(), this.props.courseURL) : "";
         let selector: (string | JSX.Element | ICellElement)[] = [displayName];
-        selector = selector.concat(student.labs.filter((e, i) => !e.assignment.getIsgrouplab()).map(
+        selector = selector.concat(student.labs.map(
             (e) => {
                 let cellCss: string = "";
                 if (e.submission) {

@@ -245,17 +245,20 @@ func revokeTeacherStatus(ctx context.Context, sc scm.SCM, org, userName string) 
 		Username:     userName,
 	}
 
-	err := sc.RemoveTeamMember(ctx, teamOpts)
+	if err := sc.RemoveTeamMember(ctx, teamOpts); err != nil {
+		return err
+	}
 
 	teamOpts.TeamName = scm.StudentsTeam
-	err = sc.AddTeamMember(ctx, teamOpts)
+	if err := sc.AddTeamMember(ctx, teamOpts); err != nil {
+		return err
+	}
 
-	err = sc.UpdateOrgMembership(ctx, &scm.OrgMembershipOptions{
+	return sc.UpdateOrgMembership(ctx, &scm.OrgMembershipOptions{
 		Organization: org,
 		Username:     userName,
 		Role:         scm.OrgMember,
 	})
-	return err
 }
 
 // isEmpty ensured that all of the provided repositories are empty
