@@ -111,7 +111,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                 <Row>
                     <div key="resultshead" className="col-lg6 col-md-6 col-sm-12">
                         <Search className="input-group"
-                            placeholder="Search for students"
+                            placeholder="Search for students and groups by name, email or GitHub login"
                             onChange={(query) => this.handleSearch(query)}
                             onFocus={() => this.setState({
                                 ignoreShortcuts: true,

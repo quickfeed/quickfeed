@@ -184,13 +184,11 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment, addGroups bool
 			}
 
 			for _, sb := range a.Submissions {
-
 				if !a.IsGroupLab && sb.GroupID == 0 && sb.UserID == enrol.UserID {
 					subLink.Submission = sb
 				} else if addGroups && a.IsGroupLab && sb.GroupID > 0 && sb.GroupID == enrol.GroupID {
 					subLink.Submission = sb
 				}
-
 			}
 			allSubmissions = append(allSubmissions, subLink)
 		}
