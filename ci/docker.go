@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -16,12 +17,6 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 )
 
-// Docker is an implementation of the CI interface using Docker.
-type Docker struct {
-	Endpoint string
-	Version  string
-}
-
 var (
 	containerTimeout = time.Duration(10 * time.Minute)
 	maxToScan        = 1_000_000 // bytes
@@ -29,16 +24,34 @@ var (
 	lastSegmentSize  = 1_000     // bytes
 )
 
+// Docker is an implementation of the CI interface using Docker.
+type Docker struct {
+	client *client.Client
+}
+
+// NewDockerCI returns a runner to run CI tests.
+func NewDockerCI() (*Docker, error) {
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		return nil, err
+	}
+	return &Docker{cli}, nil
+}
+
+// Close ensures that the docker client is closed.
+func (d *Docker) Close() error {
+	return d.client.Close()
+}
+
 // Run implements the CI interface. This method blocks until the job has been
 // completed or an error occurs, e.g., the context times out.
 func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
-	cli, err := client.NewEnvClient()
-	if err != nil {
-		return "", err
+	if d.client == nil {
+		return "", fmt.Errorf("cannot run job: %s; docker client not initialized", job.Name)
 	}
 
 	create := func() (container.ContainerCreateCreatedBody, error) {
-		return cli.ContainerCreate(ctx, &container.Config{
+		return d.client.ContainerCreate(ctx, &container.Config{
 			Image: job.Image,
 			Cmd:   []string{"/bin/bash", "-c", strings.Join(job.Commands, "\n")},
 		}, nil, nil, job.Name)
@@ -47,7 +60,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	resp, err := create()
 	if err != nil {
 		// if image not found locally, try to pull it
-		if err := pullImage(ctx, cli, job.Image); err != nil {
+		if err := pullImage(ctx, d.client, job.Image); err != nil {
 			return "", err
 		}
 		resp, err = create()
@@ -56,12 +69,12 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		}
 	}
 
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err := d.client.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return "", err
 	}
 
 	// wait until the container stops or context times out.
-	_, err = cli.ContainerWait(ctx, resp.ID)
+	_, err = d.client.ContainerWait(ctx, resp.ID)
 	if err != nil {
 		if !errors.Is(err, context.DeadlineExceeded) {
 			return "", err
@@ -69,13 +82,13 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 
 		// stop runaway container whose deadline was exceeded
 		timeout := time.Duration(1 * time.Second)
-		stopErr := cli.ContainerStop(context.Background(), resp.ID, &timeout)
+		stopErr := d.client.ContainerStop(context.Background(), resp.ID, &timeout)
 		if stopErr != nil {
 			return "", stopErr
 		}
 
 		// remove the docker container (when stopped due to timeout) to prevent too many open files
-		rmErr := cli.ContainerRemove(context.Background(), resp.ID, types.ContainerRemoveOptions{})
+		rmErr := d.client.ContainerRemove(context.Background(), resp.ID, types.ContainerRemoveOptions{})
 		if rmErr != nil {
 			return "", rmErr
 		}
@@ -85,7 +98,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	}
 
 	// extract the logs before removing the container below
-	logReader, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
+	logReader, err := d.client.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
 		ShowStdout: true,
 	})
 	if err != nil {
@@ -93,7 +106,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	}
 
 	// remove the container when finished to prevent too many open files
-	err = cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
+	err = d.client.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
 	if err != nil {
 		return "", err
 	}
