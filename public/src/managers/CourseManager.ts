@@ -45,9 +45,9 @@ export interface ICourseProvider {
     getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null>;
     updateGroup(group: Group): Promise<Status>;
 
-    getLabsForStudent(courseID: number, userID: number): Promise<ISubmission[]>;
-    getLabsForGroup(courseID: number, groupID: number): Promise<ISubmission[]>;
-    getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]>;
+    getSubmissionsByUser(courseID: number, userID: number): Promise<ISubmission[]>;
+    getSubmissionsByGroup(courseID: number, groupID: number): Promise<ISubmission[]>;
+    getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]>;
     getEnrollmentsForUser(userID: number, statuses?: Enrollment.UserStatus[]): Promise<Enrollment[]>;
     getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
@@ -162,8 +162,8 @@ export class CourseManager {
      * Retrives all course enrollments with the latest
      * lab submissions for all individual course assignments
      */
-    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
-        return this.courseProvider.getLabsForCourse(courseID, type);
+    public async getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
+        return this.courseProvider.getSubmissionsByCourse(courseID, type);
     }
 
     /**
@@ -406,11 +406,11 @@ export class CourseManager {
         let wantGroupLinks = false;
         if (student) {
             submissions =
-                await this.courseProvider.getLabsForStudent(courseLabLink.course.getId(), student.getId());
+                await this.courseProvider.getSubmissionsByUser(courseLabLink.course.getId(), student.getId());
             labAuthorName = student.getName();
         } else if (group) {
             submissions =
-                await this.courseProvider.getLabsForGroup(courseLabLink.course.getId(), group.getId());
+                await this.courseProvider.getSubmissionsByGroup(courseLabLink.course.getId(), group.getId());
             labAuthorName = group.getName();
             wantGroupLinks = true;
         } else {

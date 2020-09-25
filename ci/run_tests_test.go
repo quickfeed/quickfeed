@@ -50,7 +50,12 @@ func TestRunTests(t *testing.T) {
 		JobOwner: "muggles",
 	}
 
-	ed, err := runTests("scripts", &Docker{}, info, runData)
+	runner, err := NewDockerCI()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer runner.Close()
+	ed, err := runTests("scripts", runner, info, runData)
 	if err != nil {
 		t.Fatal(err)
 	}

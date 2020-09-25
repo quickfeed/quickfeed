@@ -137,8 +137,8 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 	return &pb.Submissions{Submissions: submissions}, nil
 }
 
-// getAllLabs returns all individual lab submissions by students enrolled in the specified course.
-func (s *AutograderService) getAllLabs(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
+// getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
+func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
 	assignments, err := s.db.GetCourseAssignmentsWithSubmissions(request.GetCourseID(), request.Type)
 	if err != nil {
 		return nil, err
@@ -162,16 +162,16 @@ func (s *AutograderService) getAllLabs(request *pb.SubmissionsForCourseRequest) 
 	case pb.SubmissionsForCourseRequest_GROUP:
 		enrolLinks = append(enrolLinks, s.makeGroupResults(course, assignments)...)
 	case pb.SubmissionsForCourseRequest_INDIVIDUAL:
-		enrolLinks = append(enrolLinks, makeResults(course, assignments)...)
+		enrolLinks = append(enrolLinks, makeResults(course, assignments, false)...)
 	default:
-		enrolLinks = append(makeResults(course, assignments), s.makeGroupResults(course, assignments)...)
+		enrolLinks = append(enrolLinks, makeResults(course, assignments, true)...)
 	}
 	return &pb.CourseSubmissions{Course: course, Links: enrolLinks}, nil
 }
 
-// makeResults generates enrollment to assignment to submissions links
-// for all course students and all individual assignments
-func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
+// makeResults generates enrollment-assignment-submissions links
+// for all course students and all individual and group assignments.
+func makeResults(course *pb.Course, assignments []*pb.Assignment, addGroups bool) []*pb.EnrollmentLink {
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
 
 	for _, enrol := range course.Enrollments {
@@ -184,13 +184,14 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrollme
 			}
 
 			for _, sb := range a.Submissions {
-				if sb.UserID > 0 && sb.UserID == enrol.UserID {
+				if !a.IsGroupLab && sb.GroupID == 0 && sb.UserID == enrol.UserID {
+					subLink.Submission = sb
+				} else if addGroups && a.IsGroupLab && sb.GroupID > 0 && sb.GroupID == enrol.GroupID {
 					subLink.Submission = sb
 				}
 			}
 			allSubmissions = append(allSubmissions, subLink)
 		}
-
 		newLink.Submissions = allSubmissions
 		enrolLinks = append(enrolLinks, newLink)
 	}

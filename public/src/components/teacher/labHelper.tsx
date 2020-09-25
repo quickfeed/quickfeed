@@ -1,29 +1,27 @@
 import { Assignment, Submission } from "../../../proto/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmissionLink } from "../../models";
 
-export function sortByScore(students: IAllSubmissionsForEnrollment[], labs: Assignment[], isGroupLab: boolean): IAllSubmissionsForEnrollment[] {
+export function sortByScore(students: IAllSubmissionsForEnrollment[], assignments: Assignment[], isGroupLab: boolean): IAllSubmissionsForEnrollment[] {
     // if no assignments yet, disregard
-    if (labs.length < 1) {
+    if (assignments.length < 1) {
         return students;
     }
-    const allLabs = labs.slice().reverse();
-    // find the latest individual assignment and its index
+    const allAssignments = assignments.slice().reverse();
+    // find the latest relevant assignment and its index
     let assignmentID = 0;
     let assignmentIndex = 0;
     let latestLab = null;
     if (isGroupLab) {
-        latestLab = allLabs.find((lab) => {
+        latestLab = allAssignments.find((lab) => {
             return lab.getIsgrouplab();
         });
     } else {
-        latestLab = allLabs.find((lab) => {
-            return !lab.getIsgrouplab();
-        });
+        latestLab = allAssignments[0];
     }
 
     if (latestLab) {
         assignmentID = latestLab.getId();
-        assignmentIndex = labs.indexOf(latestLab);
+        assignmentIndex = assignments.indexOf(latestLab);
     }
     const withSubmission: IAllSubmissionsForEnrollment[] = [];
     const withoutSubmission: IAllSubmissionsForEnrollment[] = [];

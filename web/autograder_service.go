@@ -543,7 +543,7 @@ func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.S
 	}
 	s.logger.Debugf("GetCourseLabSubmissions: %v", in)
 
-	courseLinks, err := s.getAllLabs(in)
+	courseLinks, err := s.getAllCourseSubmissions(in)
 	if err != nil {
 		s.logger.Errorf("GetCourseLabSubmissions failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "no submissions found")
