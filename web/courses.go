@@ -192,9 +192,7 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment, addGroups bool
 			}
 			allSubmissions = append(allSubmissions, subLink)
 		}
-
 		newLink.Submissions = allSubmissions
-
 		enrolLinks = append(enrolLinks, newLink)
 	}
 	return enrolLinks

@@ -135,24 +135,27 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
     }
 
     private async updateSubmissionStatus(status: Submission.Status) {
-        const current = this.state.selectedSubmission;
-        const selected = current?.submission;
-        if (selected) {
-            const previousStatus = selected.status;
-            selected.status = status;
-            const ans = await this.props.onSubmissionStatusUpdate(selected);
+        const currentSubmissionLink = this.state.selectedSubmission;
+        const selectedSubmission = currentSubmissionLink?.submission;
+        if (currentSubmissionLink && selectedSubmission) {
+            const previousStatus = selectedSubmission.status;
+            selectedSubmission.status = status;
+            const ans = await this.props.onSubmissionStatusUpdate(selectedSubmission);
             if (ans) {
-                selected.approvedDate = new Date().toLocaleString();
+                selectedSubmission.approvedDate = new Date().toLocaleString();
+                // If the submission is for group assignment, every group member will have a copy
+                // in their Submission link structures. When the submission has been
+                // approved for one student, update all its copies for every group member.
 
-                if (current && selected.groupid > 0) {
+                if (selectedSubmission.groupid > 0) {
                     this.state.allSubmissions.forEach((e) => {
-                        if (e.enrollment.getGroup()?.getId() === selected.groupid) {
+                        if (e.enrollment.getGroup()?.getId() === selectedSubmission.groupid) {
                             e.labs.forEach((l) => {
-                                if (l.assignment.getId() === current.assignment.getId()) {
-                                    const double = l.submission;
-                                    if (double) {
-                                        double.approvedDate = selected.approvedDate;
-                                        double.status = selected.status;
+                                if (l.assignment.getId() === currentSubmissionLink.assignment.getId()) {
+                                    const currentSubmissionCopy = l.submission;
+                                    if (currentSubmissionCopy) {
+                                        currentSubmissionCopy.approvedDate = selectedSubmission.approvedDate;
+                                        currentSubmissionCopy.status = selectedSubmission.status;
                                     }
                                 }
                             })
@@ -161,10 +164,10 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                 }
 
             } else {
-                selected.status = previousStatus;
+                selectedSubmission.status = previousStatus;
             }
             this.setState({
-                selectedSubmission: current,
+                selectedSubmission: currentSubmissionLink,
             });
         }
     }
@@ -189,7 +192,9 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         headers = headers.concat(this.props.assignments.map((e) => {
             if (e.getIsgrouplab()) {
                 return <span style={{ whiteSpace: 'nowrap' }}>{e.getName() + " (g)"}</span>;
-            } else return e.getName()
+            } else {
+                return e.getName();
+            }
         }));
         return headers;
     }
