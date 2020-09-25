@@ -52,7 +52,7 @@ func TestRunTests(t *testing.T) {
 
 	runner, err := NewDockerCI()
 	if err != nil {
-		t.Fatalf("failed to set up docker client: %v", err)
+		t.Fatal(err)
 	}
 	defer runner.Close()
 	ed, err := runTests("scripts", runner, info, runData)
