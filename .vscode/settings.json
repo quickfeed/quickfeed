@@ -36,6 +36,8 @@
         "repotoken",
         "scms",
         "sqlite",
+        "structs",
+        "testdb",
         "unmarshalling"
     ]
 }
