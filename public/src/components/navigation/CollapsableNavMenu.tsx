@@ -92,7 +92,8 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, {}> {
     }
 
     private renderChilds(index: number, link: ILink): JSX.Element {
-        const isActive = link.active ? "active" : "";
+        let isActive = link.active ? "active" : "";
+        if (link.extra) isActive += link.extra;
 
         if (link.uri) {
             if (link.absolute) {
