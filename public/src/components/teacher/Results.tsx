@@ -107,9 +107,9 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                 }
             }}
                 >
-                <h1>Result: {this.props.course.getName()}</h1>
+                <h1>Results: {this.props.course.getName()}</h1>
                 <Row>
-                    <div key="resultshead" className="col-lg6 col-md-6 col-sm-12">
+                    <div key="resultshead" className="col-lg-8 col-md-8 col-sm-12 col-xs-12">
                         <Search className="input-group"
                             placeholder="Search for students and groups by name, email or GitHub login"
                             onChange={(query) => this.handleSearch(query)}
@@ -126,7 +126,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                             selector={(item: IAllSubmissionsForEnrollment) => this.getResultSelector(item)}
                         />
                     </div>
-                    <div key="resultsbody" className="col-lg-6 col-md-6 col-sm-12">
+                    <div key="resultsbody" className="col-lg-4 col-md-4 col-sm-12 col-xs-12">
                         {studentLab}
                     </div>
                 </Row>
