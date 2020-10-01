@@ -300,8 +300,18 @@ The project uses `Webpack` to compile and bundle all TypeScript files. Currently
 
 `npm install` (or `npm i`) no longer installs all dependencies with versions stated in `package-lock.json`, but will also attempt to load latest versions for all root packages. If you just want to install the package dependencies without altering your `package-lock.json`, run `npm ci` instead.
 
+## Repairing database from backups
 
+Given a current database `ag.db` and a backup `bak.db`, and we want to replace records in a table `users` of the `ag.db` with entries from the same table in `bak.db`.
+The database you open first will be under the alias `main`.
 
+```
+sqlite3 ag.db
+delete from users;
+attach database '/full/path/bak.db' as backup;
+insert into main.users select * from backup.users;
+detach database backup;
+```
 
 
 
