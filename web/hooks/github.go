@@ -81,13 +81,19 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
-			wh.checkAssignmentAndRunTests(assignment, repo, course, payload)
+			if !assignment.IsGroupLab {
+				// only run non-group assignments
+				wh.runAssignmentTests(assignment, repo, course, payload)
+			}
 		}
 	case repo.IsGroupRepo():
 		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
-			wh.checkAssignmentAndRunTests(assignment, repo, course, payload)
+			if assignment.IsGroupLab {
+				// only run group assignments
+				wh.runAssignmentTests(assignment, repo, course, payload)
+			}
 		}
 	default:
 		wh.logger.Debug("Nothing to do for this push event")
@@ -135,16 +141,15 @@ func extractChanges(changes []string, modifiedAssignments map[string]bool) {
 	}
 }
 
-func (wh GitHubWebHook) checkAssignmentAndRunTests(assignment *pb.Assignment, repo *pb.Repository, course *pb.Course, payload *github.PushEvent) {
-	if repo.IsOfMatchingType(assignment.IsGroupLab) {
-		runData := &ci.RunData{
-			Course:     course,
-			Assignment: assignment,
-			Repo:       repo,
-			CloneURL:   payload.GetRepo().GetCloneURL(),
-			CommitID:   payload.GetHeadCommit().GetID(),
-			JobOwner:   payload.GetSender().GetLogin(),
-		}
-		ci.RunTests(wh.logger, wh.db, wh.runner, runData)
+// runAssignmentTests runs the tests for the given assignment pushed to repo.
+func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.Repository, course *pb.Course, payload *github.PushEvent) {
+	runData := &ci.RunData{
+		Course:     course,
+		Assignment: assignment,
+		Repo:       repo,
+		CloneURL:   payload.GetRepo().GetCloneURL(),
+		CommitID:   payload.GetHeadCommit().GetID(),
+		JobOwner:   payload.GetSender().GetLogin(),
 	}
+	ci.RunTests(wh.logger, wh.db, wh.runner, runData)
 }

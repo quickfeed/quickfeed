@@ -43,12 +43,6 @@ func (t Repository) IsUserRepo() bool {
 	return t.RepoType == Repository_USER
 }
 
-// IsOfMatchingType returns true for group repository in case of group assignment,
-// and for user repository in case of individual assignment
-func (t Repository) IsOfMatchingType(isGroupAssignment bool) bool {
-	return (t.IsGroupRepo() && isGroupAssignment) || (t.IsUserRepo() && !isGroupAssignment)
-}
-
 // RepoType returns the repository type for the given path name.
 func RepoType(path string) (repoType Repository_Type) {
 	switch path {

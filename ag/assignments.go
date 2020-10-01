@@ -52,11 +52,3 @@ func (a Assignment) CloneWithoutSubmissions() *Assignment {
 		GradingBenchmarks: a.GradingBenchmarks,
 	}
 }
-
-// TypeString returns a string with the assignment type.
-func (a Assignment) TypeString() string {
-	if a.IsGroupLab {
-		return "a group"
-	}
-	return "an individual"
-}
