@@ -77,21 +77,24 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		// should update the course data (assignments) in the database
 		assignments.UpdateFromTestsRepo(wh.logger, wh.db, repo, course)
 
-	case repo.IsStudentRepo():
-		wh.logger.Debugf("Processing push event for %s", payload.GetRepo().GetName())
+	case repo.IsUserRepo():
+		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
-			runData := &ci.RunData{
-				Course:     course,
-				Assignment: assignment,
-				Repo:       repo,
-				CloneURL:   payload.GetRepo().GetCloneURL(),
-				CommitID:   payload.GetHeadCommit().GetID(),
-				JobOwner:   payload.GetSender().GetLogin(),
+			if !assignment.IsGroupLab {
+				// only run non-group assignments
+				wh.runAssignmentTests(assignment, repo, course, payload)
 			}
-			ci.RunTests(wh.logger, wh.db, wh.runner, runData)
 		}
-
+	case repo.IsGroupRepo():
+		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
+		assignments := wh.extractAssignments(payload, course)
+		for _, assignment := range assignments {
+			if assignment.IsGroupLab {
+				// only run group assignments
+				wh.runAssignmentTests(assignment, repo, course, payload)
+			}
+		}
 	default:
 		wh.logger.Debug("Nothing to do for this push event")
 	}
@@ -136,4 +139,17 @@ func extractChanges(changes []string, modifiedAssignments map[string]bool) {
 		}
 		modifiedAssignments[name] = true
 	}
+}
+
+// runAssignmentTests runs the tests for the given assignment pushed to repo.
+func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.Repository, course *pb.Course, payload *github.PushEvent) {
+	runData := &ci.RunData{
+		Course:     course,
+		Assignment: assignment,
+		Repo:       repo,
+		CloneURL:   payload.GetRepo().GetCloneURL(),
+		CommitID:   payload.GetHeadCommit().GetID(),
+		JobOwner:   payload.GetSender().GetLogin(),
+	}
+	ci.RunTests(wh.logger, wh.db, wh.runner, runData)
 }
