@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -22,8 +21,8 @@ func TestParseScript(t *testing.T) {
 		CreatorAccessToken: "secret",
 		GetURL:             getURL,
 		TestURL:            testURL,
-		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(getURL, ".git"), "https://"),
-		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(testURL, ".git"), "https://"),
+		RawGetURL:          rawURL(getURL),
+		RawTestURL:         rawURL(testURL),
 		RandomSecret:       randomString,
 	}
 	j, err := parseScriptTemplate("scripts", info)

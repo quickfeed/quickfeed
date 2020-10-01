@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
-	"strings"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -102,22 +101,8 @@ func createAssignmentInfo(db database.Database, course *pb.Course, assignment *p
 	if err != nil || len(testRepos) < 1 {
 		return nil, fmt.Errorf("failed to find a test repository for %s: %w", course.GetName(), err)
 	}
-	getURLTest := testRepos[0].GetHTMLURL()
-	script := assignment.GetScriptFile()
-	if strings.Count(script, ".") < 1 {
-		script = script + ".sh"
-	}
-
-	return &AssignmentInfo{
-		AssignmentName:     assignment.GetName(),
-		Script:             script,
-		CreatorAccessToken: course.GetAccessToken(),
-		GetURL:             cloneURL,
-		TestURL:            getURLTest,
-		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
-		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
-		RandomSecret:       randomSecret(),
-	}, nil
+	testURL := testRepos[0].GetHTMLURL()
+	return newAssignmentInfo(course, assignment, cloneURL, testURL), nil
 }
 
 // recordResults for the assignment given by the run data structure.
