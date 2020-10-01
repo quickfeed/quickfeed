@@ -77,25 +77,18 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		// should update the course data (assignments) in the database
 		assignments.UpdateFromTestsRepo(wh.logger, wh.db, repo, course)
 
-	case repo.IsStudentRepo():
-		wh.logger.Debugf("Processing push event for %s", payload.GetRepo().GetName())
+	case repo.IsUserRepo():
+		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
-			if repo.IsOfMatchingType(assignment.IsGroupLab) {
-				runData := &ci.RunData{
-					Course:     course,
-					Assignment: assignment,
-					Repo:       repo,
-					CloneURL:   payload.GetRepo().GetCloneURL(),
-					CommitID:   payload.GetHeadCommit().GetID(),
-					JobOwner:   payload.GetSender().GetLogin(),
-				}
-				ci.RunTests(wh.logger, wh.db, wh.runner, runData)
-			} else {
-				wh.logger.Debugf("Push was for repository type %s, while %s is %s assignment ", repo.RepoType, assignment.Name, assignment.TypeString())
-			}
+			wh.checkAssignmentAndRunTests(assignment, repo, course, payload)
 		}
-
+	case repo.IsGroupRepo():
+		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
+		assignments := wh.extractAssignments(payload, course)
+		for _, assignment := range assignments {
+			wh.checkAssignmentAndRunTests(assignment, repo, course, payload)
+		}
 	default:
 		wh.logger.Debug("Nothing to do for this push event")
 	}
@@ -139,5 +132,19 @@ func extractChanges(changes []string, modifiedAssignments map[string]bool) {
 			continue
 		}
 		modifiedAssignments[name] = true
+	}
+}
+
+func (wh GitHubWebHook) checkAssignmentAndRunTests(assignment *pb.Assignment, repo *pb.Repository, course *pb.Course, payload *github.PushEvent) {
+	if repo.IsOfMatchingType(assignment.IsGroupLab) {
+		runData := &ci.RunData{
+			Course:     course,
+			Assignment: assignment,
+			Repo:       repo,
+			CloneURL:   payload.GetRepo().GetCloneURL(),
+			CommitID:   payload.GetHeadCommit().GetID(),
+			JobOwner:   payload.GetSender().GetLogin(),
+		}
+		ci.RunTests(wh.logger, wh.db, wh.runner, runData)
 	}
 }
