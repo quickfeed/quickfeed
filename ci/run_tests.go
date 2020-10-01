@@ -146,8 +146,7 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		logger.Errorf("Failed to add submission to database: %w", err)
 		return
 	}
-
-	logger.Debugf("Created submission for assignment %d in database with status=%t", rData.Assignment.GetID(), approvedStatus)
+	logger.Debugf("Created submission for assignment '%s' with status %s", rData.Assignment.GetName(), approvedStatus)
 	updateSlipDays(logger, db, rData.Repo, rData.Assignment, newSubmission, result.BuildInfo.BuildDate)
 }
 
