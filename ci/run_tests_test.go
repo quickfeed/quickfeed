@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -36,8 +35,8 @@ func TestRunTests(t *testing.T) {
 		CreatorAccessToken: accessToken,
 		GetURL:             getURL,
 		TestURL:            testURL,
-		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(getURL, ".git"), "https://"),
-		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(testURL, ".git"), "https://"),
+		RawGetURL:          rawURL(getURL),
+		RawTestURL:         rawURL(testURL),
 		RandomSecret:       randomString,
 	}
 	runData := &RunData{
