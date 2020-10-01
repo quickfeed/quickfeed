@@ -81,15 +81,19 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		wh.logger.Debugf("Processing push event for %s", payload.GetRepo().GetName())
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
-			runData := &ci.RunData{
-				Course:     course,
-				Assignment: assignment,
-				Repo:       repo,
-				CloneURL:   payload.GetRepo().GetCloneURL(),
-				CommitID:   payload.GetHeadCommit().GetID(),
-				JobOwner:   payload.GetSender().GetLogin(),
+			if repo.IsOfMatchingType(assignment.IsGroupLab) {
+				runData := &ci.RunData{
+					Course:     course,
+					Assignment: assignment,
+					Repo:       repo,
+					CloneURL:   payload.GetRepo().GetCloneURL(),
+					CommitID:   payload.GetHeadCommit().GetID(),
+					JobOwner:   payload.GetSender().GetLogin(),
+				}
+				ci.RunTests(wh.logger, wh.db, wh.runner, runData)
+			} else {
+				wh.logger.Debugf("Push was for repository type %s, while %s is %s assignment ", repo.RepoType, assignment.Name, assignment.TypeString())
 			}
-			ci.RunTests(wh.logger, wh.db, wh.runner, runData)
 		}
 
 	default:

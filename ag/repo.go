@@ -33,9 +33,20 @@ func (t Repository_Type) IsStudentRepo() bool {
 	return t == Repository_USER || t == Repository_GROUP
 }
 
-// IsGroupRepo returns true if the repository is a group repo type
+// IsGroupRepo returns true if the repository is a group repo type.
 func (t Repository) IsGroupRepo() bool {
 	return t.RepoType == Repository_GROUP
+}
+
+// IsUserRepo returns true if the repository is a user repo type.
+func (t Repository) IsUserRepo() bool {
+	return t.RepoType == Repository_USER
+}
+
+// IsOfMatchingType returns true for group repository in case of group assignment,
+// and for user repository in case of individual assignment
+func (t Repository) IsOfMatchingType(isGroupAssignment bool) bool {
+	return (t.IsGroupRepo() && isGroupAssignment) || (t.IsUserRepo() && !isGroupAssignment)
 }
 
 // RepoType returns the repository type for the given path name.
