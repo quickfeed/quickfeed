@@ -147,7 +147,6 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 		Course:     course,
 		Assignment: assignment,
 		Repo:       repo,
-		CloneURL:   payload.GetRepo().GetCloneURL(),
 		CommitID:   payload.GetHeadCommit().GetID(),
 		JobOwner:   payload.GetSender().GetLogin(),
 	}
