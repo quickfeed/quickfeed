@@ -147,7 +147,7 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		return
 	}
 	logger.Debugf("Created submission for assignment '%s' with status %s", rData.Assignment.GetName(), approvedStatus)
-	updateSlipDays(logger, db, rData.Repo, rData.Assignment, newSubmission, result.BuildInfo.BuildDate)
+	updateSlipDays(logger, db, rData.Assignment, newSubmission, result.BuildInfo.BuildDate)
 }
 
 func randomSecret() string {
@@ -159,24 +159,24 @@ func randomSecret() string {
 	return fmt.Sprintf("%x", sha1.Sum(randomness))
 }
 
-func updateSlipDays(logger *zap.SugaredLogger, db database.Database, repo *pb.Repository, assignment *pb.Assignment, submission *pb.Submission, buildDate string) {
+func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission, buildDate string) {
 	buildTime, err := time.Parse(layout, buildDate)
 	if err != nil {
 		logger.Errorf("Failed to parse time from string (%s)", buildDate)
 	}
 
 	enrollments := make([]*pb.Enrollment, 0)
-	if repo.GroupID > 0 {
-		group, err := db.GetGroup(repo.GroupID)
+	if submission.GroupID > 0 {
+		group, err := db.GetGroup(submission.GroupID)
 		if err != nil {
-			logger.Errorf("Failed to get group %d: %w", repo.GroupID, err)
+			logger.Errorf("Failed to get group %d: %w", submission.GroupID, err)
 			return
 		}
 		enrollments = append(enrollments, group.Enrollments...)
 	} else {
-		enrol, err := db.GetEnrollmentByCourseAndUser(assignment.CourseID, repo.UserID)
+		enrol, err := db.GetEnrollmentByCourseAndUser(assignment.CourseID, submission.UserID)
 		if err != nil {
-			logger.Errorf("Failed to get enrollment for user %d: %w", repo.UserID, err)
+			logger.Errorf("Failed to get enrollment for user %d: %w", submission.UserID, err)
 			return
 		}
 		enrollments = append(enrollments, enrol)
