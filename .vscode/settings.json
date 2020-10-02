@@ -41,6 +41,7 @@
         "sqlite",
         "structs",
         "testdb",
+        "tmpl",
         "unmarshalling"
     ]
 }
