@@ -21,8 +21,6 @@ func TestParseScript(t *testing.T) {
 		CreatorAccessToken: "secret",
 		GetURL:             getURL,
 		TestURL:            testURL,
-		RawGetURL:          rawURL(getURL),
-		RawTestURL:         rawURL(testURL),
 		RandomSecret:       randomString,
 	}
 	j, err := parseScriptTemplate("scripts", info)

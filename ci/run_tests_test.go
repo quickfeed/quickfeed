@@ -35,8 +35,6 @@ func TestRunTests(t *testing.T) {
 		CreatorAccessToken: accessToken,
 		GetURL:             getURL,
 		TestURL:            testURL,
-		RawGetURL:          rawURL(getURL),
-		RawTestURL:         rawURL(testURL),
 		RandomSecret:       randomString,
 	}
 	runData := &RunData{
