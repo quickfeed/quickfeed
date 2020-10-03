@@ -43,9 +43,12 @@ func TestNewGroup(t *testing.T) {
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
-	fakeProvider.CreateOrganization(ctx,
+	_, err := fakeProvider.CreateOrganization(ctx,
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
 	)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	users := make([]*pb.User, 0)
 	users = append(users, &pb.User{ID: user.ID})
@@ -95,9 +98,12 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
-	fakeProvider.CreateOrganization(ctx,
+	_, err := fakeProvider.CreateOrganization(ctx,
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
 	)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	users := make([]*pb.User, 0)
 	users = append(users, &pb.User{ID: user.ID})
@@ -107,7 +113,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 
 	// current user (in context) must be in group being created
 	ctx = withUserContext(context.Background(), user)
-	_, err := ags.CreateGroup(ctx, group_wo_course_id)
+	_, err = ags.CreateGroup(ctx, group_wo_course_id)
 	if err == nil {
 		t.Fatal("expected CreateGroup to fail without a course ID")
 	}
@@ -161,9 +167,12 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
-	fakeProvider.CreateOrganization(context.Background(),
+	_, err := fakeProvider.CreateOrganization(context.Background(),
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
 	)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	users := make([]*pb.User, 0)
 	users = append(users, &pb.User{ID: user.ID})
@@ -242,16 +251,19 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	ctx := withUserContext(context.Background(), user)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
-	fakeProvider.CreateOrganization(ctx,
+	_, err := fakeProvider.CreateOrganization(ctx,
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
 	)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	users := make([]*pb.User, 0)
 	users = append(users, &pb.User{ID: user.ID})
 	users = append(users, &pb.User{ID: teacher.ID})
 	group_req := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
 
-	_, err := ags.CreateGroup(ctx, group_req)
+	_, err = ags.CreateGroup(ctx, group_req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -265,9 +277,12 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	fakeProvider.CreateOrganization(context.Background(),
+	_, err := fakeProvider.CreateOrganization(context.Background(),
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
 	)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	admin := createFakeUser(t, db, 1)
 	course := pb.Course{Provider: "fake", OrganizationID: 1}
@@ -865,7 +880,7 @@ func TestGetGroups(t *testing.T) {
 	_, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	// admin will be enrolled as teacher because of course creation below
-	ctx := withUserContext(context.Background(), admin)
+	withUserContext(context.Background(), admin)
 
 	course := allCourses[1]
 	err := db.CreateCourse(admin.ID, course)
@@ -889,7 +904,7 @@ func TestGetGroups(t *testing.T) {
 	}
 	// place some students in groups
 	// current user (in context) must be in group being created
-	ctx = withUserContext(context.Background(), users[2])
+	ctx := withUserContext(context.Background(), users[2])
 	group1, err := ags.CreateGroup(ctx, &pb.Group{Name: "Group 1", CourseID: course.ID, Users: []*pb.User{users[1], users[2]}})
 	if err != nil {
 		t.Fatal(err)
