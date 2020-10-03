@@ -125,12 +125,15 @@ func TestNewCourse(t *testing.T) {
 	fakeGothProvider()
 	admin := createFakeUser(t, db, 10)
 	ctx := withUserContext(context.Background(), admin)
-	fakeScmProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	for _, testCourse := range allCourses {
 		// each course needs a separate directory
-		fakeScmProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
+		_, err := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		respCourse, err := ags.CreateCourse(ctx, testCourse)
 		if err != nil {
@@ -164,7 +167,10 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
 	for path, private := range web.RepoPaths {
 		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: directory, Private: private}
-		fakeProvider.CreateRepository(ctx, repoOptions)
+		_, err := fakeProvider.CreateRepository(ctx, repoOptions)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	course, err := ags.CreateCourse(ctx, allCourses[0])
@@ -184,7 +190,10 @@ func TestEnrollmentProcess(t *testing.T) {
 	ctx := withUserContext(context.Background(), admin)
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
+	_, err := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	course, err := ags.CreateCourse(ctx, allCourses[0])
 	if err != nil {
@@ -509,7 +518,10 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	// teacher promotes students to teachers, must succeed
 	ctx = withUserContext(context.Background(), teacher)
-	fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
+	_, err = fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
 		UserID:   student1.ID,
