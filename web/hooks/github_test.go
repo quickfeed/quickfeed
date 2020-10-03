@@ -16,9 +16,8 @@ import (
 )
 
 const (
-	gitHubTestOrg   = "autograder-test"
-	gitHubTestOrgID = 30462712
-	secret          = "the-secret-autograder-test"
+	gitHubTestOrg = "autograder-test"
+	secret        = "the-secret-autograder-test"
 )
 
 // To enable this test, please see instructions in the developer guide (dev.md).
@@ -46,7 +45,7 @@ func TestGitHubWebHook(t *testing.T) {
 	}
 
 	logger := getLogger(true)
-	defer logger.Sync()
+	defer func() { _ = logger.Sync() }()
 
 	var s scm.SCM
 	s, err := scm.NewSCMClient(logger, "github", accessToken)
