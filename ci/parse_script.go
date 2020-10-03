@@ -18,8 +18,6 @@ type AssignmentInfo struct {
 	CreatorAccessToken string
 	GetURL             string
 	TestURL            string
-	RawGetURL          string
-	RawTestURL         string
 	RandomSecret       string
 }
 
@@ -35,8 +33,6 @@ func newAssignmentInfo(course *pb.Course, assignment *pb.Assignment, cloneURL, t
 		CreatorAccessToken: course.GetAccessToken(),
 		GetURL:             cloneURL,
 		TestURL:            testURL,
-		RawGetURL:          rawURL(cloneURL),
-		RawTestURL:         rawURL(testURL),
 		RandomSecret:       randomSecret(),
 	}
 }
@@ -63,8 +59,4 @@ func parseScriptTemplate(scriptPath string, info *AssignmentInfo) (*Job, error) 
 		return nil, fmt.Errorf("no docker image specified in script template %s", tmplFile)
 	}
 	return &Job{Image: parts[1], Commands: s[1:]}, nil
-}
-
-func rawURL(url string) string {
-	return strings.TrimPrefix(strings.TrimSuffix(url, ".git"), "https://")
 }
