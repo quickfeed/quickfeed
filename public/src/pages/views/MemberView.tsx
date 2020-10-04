@@ -62,6 +62,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             return this.renderUsers(
                 header,
                 this.state.acceptedUsers,
+                true,
                 [],
                 ActionType.InRow,
                 (user: Enrollment) => {
@@ -76,6 +77,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             return this.renderUsers(
                 header,
                 this.state.pendingUsers,
+                false,
                 [],
                 ActionType.InRow,
                 (enrollment: Enrollment) => {
@@ -87,6 +89,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     public renderUsers(
         title: string | JSX.Element,
         enrollments: Enrollment[],
+        withActivity: boolean,
         actions?: ILink[],
         linkType?: ActionType,
         optionalActions?: ((enrollment: Enrollment) => ILink[])) {
@@ -95,6 +98,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             <UserView
                 users={enrollments}
                 actions={actions}
+                withActivity={withActivity}
                 isCourseList={true}
                 courseURL={this.props.courseURL}
                 optionalActions={optionalActions}

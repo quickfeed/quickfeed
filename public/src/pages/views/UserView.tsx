@@ -9,6 +9,7 @@ import { searchForStudents, userRepoLink } from "../../componentHelper";
 interface IUserViewerProps {
     users: Enrollment[];
     isCourseList: boolean;
+    withActivity: boolean;
     userMan?: UserManager;
     navMan?: NavigationManager;
     courseURL: string;
@@ -68,6 +69,9 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     private getTableHeading(): string[] {
         const heading: string[] = ["Name", "Email", "Student ID"];
+        if (this.props.withActivity) {
+            heading.concat(heading, ["Activity", "Approved"]);
+        }
         if (this.props.userMan || this.props.actions) {
             heading.push("Role");
         }
