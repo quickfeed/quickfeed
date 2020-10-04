@@ -286,13 +286,20 @@ message Organizations {
     repeated Organization organizations = 1;
 }
 
+message EnrollmentWithActivity {
+    Enrollment enrollment = 1;
+    string lastActivityDate = 2;
+    string lastApprovedLab = 3;
+}
+
 // EnrollmentRequest is a request for enrolled users of a given course,
 // whose enrollment status match those provided in the request. To ignore group members 
 // that otherwise match the enrollment request, set ignoreGroupMembers to true.
 message EnrollmentRequest {
     uint64 courseID = 1;
     bool ignoreGroupMembers = 2;
-    repeated Enrollment.UserStatus statuses = 3;
+    bool withActivity = 3;
+    repeated Enrollment.UserStatus statuses = 4;
 }
 
 // EnrollmentStatusRequest is a request for a given user, with a specific enrollment status.

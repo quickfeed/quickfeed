@@ -1058,12 +1058,43 @@ export namespace Organizations {
   }
 }
 
+export class EnrollmentWithActivity extends jspb.Message {
+  getEnrollment(): Enrollment | undefined;
+  setEnrollment(value?: Enrollment): void;
+  hasEnrollment(): boolean;
+  clearEnrollment(): void;
+
+  getLastactivitydate(): string;
+  setLastactivitydate(value: string): void;
+
+  getLastapprovedlab(): string;
+  setLastapprovedlab(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): EnrollmentWithActivity.AsObject;
+  static toObject(includeInstance: boolean, msg: EnrollmentWithActivity): EnrollmentWithActivity.AsObject;
+  static serializeBinaryToWriter(message: EnrollmentWithActivity, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): EnrollmentWithActivity;
+  static deserializeBinaryFromReader(message: EnrollmentWithActivity, reader: jspb.BinaryReader): EnrollmentWithActivity;
+}
+
+export namespace EnrollmentWithActivity {
+  export type AsObject = {
+    enrollment?: Enrollment.AsObject,
+    lastactivitydate: string,
+    lastapprovedlab: string,
+  }
+}
+
 export class EnrollmentRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;
 
   getIgnoregroupmembers(): boolean;
   setIgnoregroupmembers(value: boolean): void;
+
+  getWithactivity(): boolean;
+  setWithactivity(value: boolean): void;
 
   getStatusesList(): Array<Enrollment.UserStatus>;
   setStatusesList(value: Array<Enrollment.UserStatus>): void;
@@ -1082,6 +1113,7 @@ export namespace EnrollmentRequest {
   export type AsObject = {
     courseid: number,
     ignoregroupmembers: boolean,
+    withactivity: boolean,
     statusesList: Array<Enrollment.UserStatus>,
   }
 }
