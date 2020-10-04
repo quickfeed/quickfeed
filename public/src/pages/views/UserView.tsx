@@ -95,6 +95,10 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
             <a href={"mailto:" + enr.getUser()?.getEmail()}>{user?.getEmail()}</a>,
             enr.getUser()?.getStudentid() ?? "",
         );
+        if (this.props.withActivity) {
+            selector.push(enr.getLastactivitydate() ? enr.getLastactivitydate() : "Inactive");
+            selector.push(enr.getLastapprovedassignmentname() ? enr.getLastapprovedassignmentname() : "None");
+        }
         const temp = this.renderActions(enr);
         if (Array.isArray(temp) && temp.length > 0) {
             selector.push(<div className="btn-group action-btn">{temp}</div>);
