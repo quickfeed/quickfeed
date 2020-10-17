@@ -163,7 +163,7 @@ func (wh GitHubWebHook) updateLastActivityDate(userID, courseID uint64) {
 	query := &pb.Enrollment{
 		UserID:           userID,
 		CourseID:         courseID,
-		LastActivityDate: today.Format("02 January 2006"),
+		LastActivityDate: today.Format("02 Jan"),
 	}
 
 	if err := wh.db.UpdateEnrollment(query); err != nil {
