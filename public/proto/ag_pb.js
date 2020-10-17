@@ -3546,7 +3546,7 @@ proto.Enrollment.toObject = function(includeInstance, msg) {
     state: jspb.Message.getFieldWithDefault(msg, 10, 0),
     slipdaysremaining: jspb.Message.getFieldWithDefault(msg, 11, 0),
     lastactivitydate: jspb.Message.getFieldWithDefault(msg, 12, ""),
-    lastapprovedassignmentname: jspb.Message.getFieldWithDefault(msg, 13, ""),
+    lastapprovedassignment: jspb.Message.getFieldWithDefault(msg, 13, 0),
     usedslipdaysList: jspb.Message.toObjectList(msg.getUsedslipdaysList(),
     proto.UsedSlipDays.toObject, includeInstance)
   };
@@ -3637,8 +3637,8 @@ proto.Enrollment.deserializeBinaryFromReader = function(msg, reader) {
       msg.setLastactivitydate(value);
       break;
     case 13:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setLastapprovedassignmentname(value);
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setLastapprovedassignment(value);
       break;
     case 14:
       var value = new proto.UsedSlipDays;
@@ -3761,9 +3761,9 @@ proto.Enrollment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getLastapprovedassignmentname();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getLastapprovedassignment();
+  if (f !== 0) {
+    writer.writeUint64(
       13,
       f
     );
@@ -4073,20 +4073,20 @@ proto.Enrollment.prototype.setLastactivitydate = function(value) {
 
 
 /**
- * optional string lastApprovedAssignmentName = 13;
- * @return {string}
+ * optional uint64 lastApprovedAssignment = 13;
+ * @return {number}
  */
-proto.Enrollment.prototype.getLastapprovedassignmentname = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 13, ""));
+proto.Enrollment.prototype.getLastapprovedassignment = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 13, 0));
 };
 
 
 /**
- * @param {string} value
+ * @param {number} value
  * @return {!proto.Enrollment} returns this
  */
-proto.Enrollment.prototype.setLastapprovedassignmentname = function(value) {
-  return jspb.Message.setProto3StringField(this, 13, value);
+proto.Enrollment.prototype.setLastapprovedassignment = function(value) {
+  return jspb.Message.setProto3IntField(this, 13, value);
 };
 
 
