@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment, Status } from "../../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Status } from "../../../proto/ag_pb";
 import { Search } from "../../components";
 import { searchForStudents } from '../../componentHelper';
 import { CourseManager, ILink, NavigationManager } from "../../managers";
@@ -11,6 +11,7 @@ interface IUserViewerProps {
     acceptedUsers: Enrollment[];
     pendingUsers: Enrollment[];
     course: Course;
+    assignments: Assignment[];
     courseURL: string;
 }
 
@@ -97,6 +98,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             <h3>{title}</h3>
             <UserView
                 users={enrollments}
+                assignments={this.props.assignments}
                 actions={actions}
                 withActivity={withActivity}
                 isCourseList={true}

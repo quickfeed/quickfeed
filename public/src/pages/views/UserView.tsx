@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Enrollment } from "../../../proto/ag_pb";
+import { Assignment, Enrollment } from "../../../proto/ag_pb";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink, NavigationManager, UserManager } from "../../managers";
 
@@ -8,6 +8,7 @@ import { searchForStudents, userRepoLink } from "../../componentHelper";
 
 interface IUserViewerProps {
     users: Enrollment[];
+    assignments: Assignment[];
     isCourseList: boolean;
     withActivity: boolean;
     userMan?: UserManager;
@@ -97,7 +98,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         );
         if (this.props.withActivity) {
             selector.push(enr.getLastactivitydate() ? enr.getLastactivitydate() : "Inactive");
-            selector.push(enr.getLastapprovedassignment() ? enr.getLastapprovedassignment() : "None");
+            selector.push(this.getAssignmentNameByID(enr.getLastapprovedassignment()));
         }
         const temp = this.renderActions(enr);
         if (Array.isArray(temp) && temp.length > 0) {
@@ -168,5 +169,10 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         this.setState({
             enrollments: searchForStudents(this.props.users, query),
         });
+    }
+
+    private getAssignmentNameByID(assignmentID: number): string {
+        const assignment = this.props.assignments.find((item) => item.getId() === assignmentID);
+        return assignment ? assignment.getName() : "None";
     }
 }

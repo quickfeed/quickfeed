@@ -305,6 +305,7 @@ export class TeacherPage extends ViewPage {
     public async courseUsers(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const all = await this.courseMan.getUsersForCourse(course);
+            const assignments = await this.courseMan.getAssignments(course.getId())
             const acceptedUsers: Enrollment[] = [];
             const pendingUsers: Enrollment[] = [];
             // TODO: Maybe move this to the Members view
@@ -325,6 +326,7 @@ export class TeacherPage extends ViewPage {
 
             return <MemberView
                 course={course}
+                assignments={assignments}
                 courseURL={await this.getCourseURL(course.getId())}
                 navMan={this.navMan}
                 pendingUsers={pendingUsers}
