@@ -97,7 +97,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
             enr.getUser()?.getStudentid() ?? "",
         );
         if (this.props.withActivity) {
-            selector.push(enr.getLastactivitydate() ? enr.getLastactivitydate() : "Inactive");
+            selector.push(enr.getLastactivitydate() !== "" ? enr.getLastactivitydate() : "Inactive");
             selector.push(this.getAssignmentNameByID(enr.getLastapprovedassignment()));
         }
         const temp = this.renderActions(enr);

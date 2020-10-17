@@ -235,14 +235,25 @@ func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*p
 }
 
 // updateSubmission updates submission status or sets a submission score based on a manual review.
-func (s *AutograderService) updateSubmission(submissionID uint64, status pb.Submission_Status, released bool, score uint32) error {
+func (s *AutograderService) updateSubmission(courseID, submissionID uint64, status pb.Submission_Status, released bool, score uint32) error {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
 	if err != nil {
 		return err
 	}
+
 	// if approving previously unapproved submission
 	if status == pb.Submission_APPROVED && submission.Status != pb.Submission_APPROVED {
 		submission.ApprovedDate = time.Now().Format(layout)
+
+		// update last approved assignment info for the student
+		query := &pb.Enrollment{
+			UserID:                 submission.UserID,
+			CourseID:               courseID,
+			LastApprovedAssignment: submission.AssignmentID,
+		}
+		if err := s.db.UpdateEnrollment(query); err != nil {
+			return err
+		}
 	}
 
 	submission.Status = status
