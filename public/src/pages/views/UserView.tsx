@@ -8,9 +8,9 @@ import { searchForStudents, userRepoLink } from "../../componentHelper";
 
 interface IUserViewerProps {
     users: Enrollment[];
-    assignments: Assignment[];
     isCourseList: boolean;
     withActivity: boolean;
+    assignments?: Assignment[];
     userMan?: UserManager;
     navMan?: NavigationManager;
     courseURL: string;
@@ -172,7 +172,11 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     }
 
     private getAssignmentNameByID(assignmentID: number): string {
-        const assignment = this.props.assignments.find((item) => item.getId() === assignmentID);
-        return assignment ? assignment.getName() : "None";
+        let assignmentName = "";
+        if (this.props.assignments && this.props.assignments.length > 0) {
+            const assignment = this.props.assignments.find((item) => item.getId() === assignmentID);
+            assignmentName = assignment ? assignment.getName() : "None";
+        }
+        return assignmentName;
     }
 }
