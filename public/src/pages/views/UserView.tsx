@@ -4,7 +4,7 @@ import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../com
 import { ILink, NavigationManager, UserManager } from "../../managers";
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
-import { searchForStudents, userRepoLink } from "../../componentHelper";
+import { searchForStudents, userRepoLink, sortEnrollmentsByActivity } from '../../componentHelper';
 
 interface IUserViewerProps {
     users: Enrollment[];
@@ -36,13 +36,13 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     public constructor(props: IUserViewerProps) {
         super(props);
         this.state = {
-            enrollments: props.users,
+            enrollments: sortEnrollmentsByActivity(props.users),
         };
     }
 
     public componentWillReceiveProps(nextProps: Readonly<IUserViewerProps>, nextContext: any): void {
         this.setState({
-            enrollments: nextProps.users,
+            enrollments: sortEnrollmentsByActivity(nextProps.users),
         });
     }
 
@@ -168,7 +168,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     private handleSearch(query: string): void {
         this.setState({
-            enrollments: searchForStudents(this.props.users, query),
+            enrollments: sortEnrollmentsByActivity(searchForStudents(this.props.users, query)),
         });
     }
 
