@@ -90,6 +90,11 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		}
 	case repo.IsGroupRepo():
 		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
+		jobOwner, _, err := wh.db.GetUserByCourse(course, payload.GetSender().GetLogin())
+		if err != nil {
+			wh.logger.Debugf("Failed to find user %s in the course %s", payload.GetSender().GetLogin(), course.GetName())
+		}
+		wh.updateLastActivityDate(jobOwner.ID, course.ID)
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
 			if assignment.IsGroupLab {
