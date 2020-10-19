@@ -71,7 +71,8 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     private getTableHeading(): string[] {
         const heading: string[] = ["Name", "Email", "Student ID"];
         if (this.props.withActivity) {
-            heading.concat(heading, ["Activity", "Approved"]);
+            heading.push("Activity");
+            heading.push("Approved");
         }
         if (this.props.userMan || this.props.actions) {
             heading.push("Role");
@@ -172,11 +173,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     }
 
     private getAssignmentNameByID(assignmentID: number): string {
-        let assignmentName = "";
-        if (this.props.assignments && this.props.assignments.length > 0) {
-            const assignment = this.props.assignments.find((item) => item.getId() === assignmentID);
-            assignmentName = assignment ? assignment.getName() : "None";
-        }
-        return assignmentName;
+            const assignment = this.props.assignments?.find((item) => item.getId() === assignmentID);
+            return assignment?.getName() ?? "None";
     }
 }
