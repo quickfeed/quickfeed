@@ -244,18 +244,10 @@ func (s *AutograderService) updateSubmission(courseID, submissionID uint64, stat
 	// if approving previously unapproved submission
 	if status == pb.Submission_APPROVED && submission.Status != pb.Submission_APPROVED {
 		submission.ApprovedDate = time.Now().Format(layout)
-
-		// update last approved assignment info for the student
-		query := &pb.Enrollment{
-			UserID:                 submission.UserID,
-			CourseID:               courseID,
-			LastApprovedAssignment: submission.AssignmentID,
-		}
-		if err := s.db.UpdateEnrollment(query); err != nil {
+		if err := s.setLastApprovedAssignment(submission, courseID); err != nil {
 			return err
 		}
 	}
-
 	submission.Status = status
 	submission.Released = released
 	if score > 0 {
@@ -475,6 +467,34 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 		CourseID: course.ID,
 		Status:   pb.Enrollment_TEACHER,
 	})
+}
+
+func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission, courseID uint64) error {
+
+	query := &pb.Enrollment{
+		CourseID:               courseID,
+		LastApprovedAssignment: submission.AssignmentID,
+	}
+
+	if submission.GroupID > 0 {
+		group, err := s.db.GetGroup(submission.GroupID)
+		if err != nil {
+			return err
+		}
+		groupMembers, err := s.getGroupUsers(group)
+		if err != nil {
+			return err
+		}
+		for _, member := range groupMembers {
+			query.UserID = member.ID
+			if err := s.db.UpdateEnrollment(query); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	query.UserID = submission.UserID
+	return s.db.UpdateEnrollment(query)
 }
 
 func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.SubmissionLink {
