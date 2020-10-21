@@ -3,6 +3,7 @@ package hooks
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/assignments"
@@ -80,6 +81,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 
 	case repo.IsUserRepo():
 		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
+		wh.updateLastActivityDate(repo.UserID, course.ID)
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
 			if !assignment.IsGroupLab {
@@ -89,6 +91,12 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		}
 	case repo.IsGroupRepo():
 		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
+		jobOwner, _, err := wh.db.GetUserByCourse(course, payload.GetSender().GetLogin())
+		if err != nil {
+			wh.logger.Errorf("Failed to find user %s in the course %s: %s", payload.GetSender().GetLogin(), course.GetName(), err)
+			return
+		}
+		wh.updateLastActivityDate(jobOwner.ID, course.ID)
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
 			if assignment.IsGroupLab {
@@ -152,4 +160,18 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 		JobOwner:   payload.GetSender().GetLogin(),
 	}
 	ci.RunTests(wh.logger, wh.db, wh.runner, runData)
+}
+
+// updateLastActivityDate sets a current date as a last activity date of the student
+// on each new push to the student repository.
+func (wh GitHubWebHook) updateLastActivityDate(userID, courseID uint64) {
+	query := &pb.Enrollment{
+		UserID:           userID,
+		CourseID:         courseID,
+		LastActivityDate: time.Now().Format("02 Jan"),
+	}
+
+	if err := wh.db.UpdateEnrollment(query); err != nil {
+		wh.logger.Errorf("Failed to update the last activity date for user %d: %s", userID, err)
+	}
 }

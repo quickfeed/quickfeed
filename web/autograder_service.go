@@ -555,21 +555,21 @@ func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.S
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateSubmissionRequest) (*pb.Void, error) {
 	if !s.isValidSubmission(in.SubmissionID) {
-		s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
-		return nil, status.Errorf(codes.PermissionDenied, "submitter has no course access")
+		s.logger.Errorf("UpdateSubmission failed: submission author has no access to the course")
+		return nil, status.Errorf(codes.PermissionDenied, "submission author has no course access")
 	}
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("ApproveSubmission failed: authentication error: %w", err)
+		s.logger.Errorf("UpdateSubmission failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.ID, in.GetCourseID()) {
-		s.logger.Error("ApproveSubmission failed: user is not teacher")
+		s.logger.Error("UpdateSubmission failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can approve submissions")
 	}
-	err = s.updateSubmission(in.GetSubmissionID(), in.GetStatus(), in.GetReleased(), in.GetScore())
+	err = s.updateSubmission(in.GetCourseID(), in.GetSubmissionID(), in.GetStatus(), in.GetReleased(), in.GetScore())
 	if err != nil {
-		s.logger.Errorf("ApproveSubmission failed: %w", err)
+		s.logger.Errorf("UpdateSubmission failed: %w", err)
 		err = status.Errorf(codes.InvalidArgument, "failed to approve submission")
 	}
 	return &pb.Void{}, err

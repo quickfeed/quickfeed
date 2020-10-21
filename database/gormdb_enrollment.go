@@ -40,7 +40,7 @@ func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 func (db *GormDB) UpdateEnrollment(enrol *pb.Enrollment) error {
 	return db.conn.Model(&pb.Enrollment{}).
 		Where(&pb.Enrollment{CourseID: enrol.CourseID, UserID: enrol.UserID}).
-		Update(&pb.Enrollment{State: enrol.State, Status: enrol.Status}).Error
+		Update(&pb.Enrollment{State: enrol.State, Status: enrol.Status, LastActivityDate: enrol.LastActivityDate, LastApprovedAssignment: enrol.LastApprovedAssignment}).Error
 }
 
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.

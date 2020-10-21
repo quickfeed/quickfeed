@@ -3501,7 +3501,7 @@ proto.Repository.prototype.setRepotype = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.Enrollment.repeatedFields_ = [12];
+proto.Enrollment.repeatedFields_ = [14];
 
 
 
@@ -3545,6 +3545,8 @@ proto.Enrollment.toObject = function(includeInstance, msg) {
     status: jspb.Message.getFieldWithDefault(msg, 9, 0),
     state: jspb.Message.getFieldWithDefault(msg, 10, 0),
     slipdaysremaining: jspb.Message.getFieldWithDefault(msg, 11, 0),
+    lastactivitydate: jspb.Message.getFieldWithDefault(msg, 12, ""),
+    lastapprovedassignment: jspb.Message.getFieldWithDefault(msg, 13, 0),
     usedslipdaysList: jspb.Message.toObjectList(msg.getUsedslipdaysList(),
     proto.UsedSlipDays.toObject, includeInstance)
   };
@@ -3631,6 +3633,14 @@ proto.Enrollment.deserializeBinaryFromReader = function(msg, reader) {
       msg.setSlipdaysremaining(value);
       break;
     case 12:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setLastactivitydate(value);
+      break;
+    case 13:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setLastapprovedassignment(value);
+      break;
+    case 14:
       var value = new proto.UsedSlipDays;
       reader.readMessage(value,proto.UsedSlipDays.deserializeBinaryFromReader);
       msg.addUsedslipdays(value);
@@ -3744,10 +3754,24 @@ proto.Enrollment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getLastactivitydate();
+  if (f.length > 0) {
+    writer.writeString(
+      12,
+      f
+    );
+  }
+  f = message.getLastapprovedassignment();
+  if (f !== 0) {
+    writer.writeUint64(
+      13,
+      f
+    );
+  }
   f = message.getUsedslipdaysList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      12,
+      14,
       f,
       proto.UsedSlipDays.serializeBinaryToWriter
     );
@@ -4031,12 +4055,48 @@ proto.Enrollment.prototype.setSlipdaysremaining = function(value) {
 
 
 /**
- * repeated UsedSlipDays usedSlipDays = 12;
+ * optional string lastActivityDate = 12;
+ * @return {string}
+ */
+proto.Enrollment.prototype.getLastactivitydate = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 12, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.Enrollment} returns this
+ */
+proto.Enrollment.prototype.setLastactivitydate = function(value) {
+  return jspb.Message.setProto3StringField(this, 12, value);
+};
+
+
+/**
+ * optional uint64 lastApprovedAssignment = 13;
+ * @return {number}
+ */
+proto.Enrollment.prototype.getLastapprovedassignment = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 13, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.Enrollment} returns this
+ */
+proto.Enrollment.prototype.setLastapprovedassignment = function(value) {
+  return jspb.Message.setProto3IntField(this, 13, value);
+};
+
+
+/**
+ * repeated UsedSlipDays usedSlipDays = 14;
  * @return {!Array<!proto.UsedSlipDays>}
  */
 proto.Enrollment.prototype.getUsedslipdaysList = function() {
   return /** @type{!Array<!proto.UsedSlipDays>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.UsedSlipDays, 12));
+    jspb.Message.getRepeatedWrapperField(this, proto.UsedSlipDays, 14));
 };
 
 
@@ -4045,7 +4105,7 @@ proto.Enrollment.prototype.getUsedslipdaysList = function() {
  * @return {!proto.Enrollment} returns this
 */
 proto.Enrollment.prototype.setUsedslipdaysList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 12, value);
+  return jspb.Message.setRepeatedWrapperField(this, 14, value);
 };
 
 
@@ -4055,7 +4115,7 @@ proto.Enrollment.prototype.setUsedslipdaysList = function(value) {
  * @return {!proto.UsedSlipDays}
  */
 proto.Enrollment.prototype.addUsedslipdays = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 12, opt_value, proto.UsedSlipDays, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 14, opt_value, proto.UsedSlipDays, opt_index);
 };
 
 

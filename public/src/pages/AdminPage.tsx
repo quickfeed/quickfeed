@@ -52,6 +52,7 @@ export class AdminPage extends ViewPage {
             <UserView
                 users={allUsers}
                 isCourseList={false}
+                withActivity={false}
                 optionalActions={(enrol: Enrollment) => {
                     if (enrol.getUser()?.getIsadmin()) {
                         return [{ uri: "demote", name: "Demote", extra: "danger" }];

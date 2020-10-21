@@ -367,6 +367,12 @@ export class Enrollment extends jspb.Message {
   getSlipdaysremaining(): number;
   setSlipdaysremaining(value: number): void;
 
+  getLastactivitydate(): string;
+  setLastactivitydate(value: string): void;
+
+  getLastapprovedassignment(): number;
+  setLastapprovedassignment(value: number): void;
+
   getUsedslipdaysList(): Array<UsedSlipDays>;
   setUsedslipdaysList(value: Array<UsedSlipDays>): void;
   clearUsedslipdaysList(): void;
@@ -393,6 +399,8 @@ export namespace Enrollment {
     status: Enrollment.UserStatus,
     state: Enrollment.DisplayState,
     slipdaysremaining: number,
+    lastactivitydate: string,
+    lastapprovedassignment: number,
     usedslipdaysList: Array<UsedSlipDays.AsObject>,
   }
 

@@ -125,7 +125,9 @@ message Enrollment {
     UserStatus status = 9;
     DisplayState state = 10;
     uint32 slipDaysRemaining = 11 [(gogoproto.moretags) = "sql:\"-\""];
-    repeated UsedSlipDays usedSlipDays = 12;
+    string lastActivityDate = 12;
+    uint64 lastApprovedAssignment = 13;
+    repeated UsedSlipDays usedSlipDays = 14;
 }
 
 message UsedSlipDays {
