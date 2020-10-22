@@ -520,5 +520,208 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	if _, err = ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
 		t.Error("Expected 'only teachers can get all lab submissions'")
 	}
+}
 
+func TestCreateApproveList(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	admin := createFakeUser(t, db, 1)
+
+	course := allCourses[2]
+	if err := db.CreateCourse(admin.ID, course); err != nil {
+		t.Fatal(err)
+	}
+	student1 := createNamedUser(t, db, 2, "Leslie Lamport")
+	student2 := createNamedUser(t, db, 3, "Hein Meling")
+	student3 := createNamedUser(t, db, 4, "John Doe")
+	enrollStudent(t, db, student1, course)
+	enrollStudent(t, db, student2, course)
+	enrollStudent(t, db, student3, course)
+
+	assignments := []*pb.Assignment{
+		{
+			CourseID:   course.ID,
+			Name:       "lab 1",
+			ScriptFile: "go.sh",
+			Deadline:   "2020-02-23T18:00:00",
+			Order:      1,
+		},
+		{
+			CourseID:   course.ID,
+			Name:       "lab 2",
+			ScriptFile: "go.sh",
+			Deadline:   "2020-03-23T18:00:00",
+			Order:      2,
+		},
+		{
+			CourseID:   course.ID,
+			Name:       "lab 3",
+			ScriptFile: "go.sh",
+			Deadline:   "2020-04-23T18:00:00",
+			Order:      3,
+		},
+		{
+			CourseID:   course.ID,
+			Name:       "lab 4",
+			ScriptFile: "go.sh",
+			Deadline:   "2020-05-23T18:00:00",
+			Order:      4,
+		},
+	}
+	for _, a := range assignments {
+		if err := db.CreateAssignment(a); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	submissions := []*pb.Submission{
+		{
+			UserID:       student1.ID,
+			AssignmentID: assignments[0].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student1.ID,
+			AssignmentID: assignments[1].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student1.ID,
+			AssignmentID: assignments[2].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student1.ID,
+			AssignmentID: assignments[3].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student2.ID,
+			AssignmentID: assignments[0].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student2.ID,
+			AssignmentID: assignments[2].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student2.ID,
+			AssignmentID: assignments[3].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student3.ID,
+			AssignmentID: assignments[0].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student3.ID,
+			AssignmentID: assignments[1].ID,
+			Status:       pb.Submission_REJECTED,
+		},
+		{
+			UserID:       student3.ID,
+			AssignmentID: assignments[2].ID,
+			Status:       pb.Submission_REVISION,
+		},
+	}
+	for _, s := range submissions {
+		if err := db.CreateSubmission(s); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	fakeProvider, scms := fakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ctx := withUserContext(context.Background(), admin)
+	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.CreateOrgOptions{Path: "path", Name: "name"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testCases := []struct {
+		student          *pb.User
+		minNumApproved   int
+		expectedApproved bool
+	}{
+		{
+			student:          student1,
+			minNumApproved:   4,
+			expectedApproved: true,
+		},
+		{
+			student:          student1,
+			minNumApproved:   3,
+			expectedApproved: true,
+		},
+		{
+			student:          student2,
+			minNumApproved:   4,
+			expectedApproved: false,
+		},
+		{
+			student:          student2,
+			minNumApproved:   3,
+			expectedApproved: true,
+		},
+		{
+			student:          student2,
+			minNumApproved:   2,
+			expectedApproved: true,
+		},
+		{
+			student:          student3,
+			minNumApproved:   4,
+			expectedApproved: false,
+		},
+		{
+			student:          student3,
+			minNumApproved:   3,
+			expectedApproved: false,
+		},
+		{
+			student:          student3,
+			minNumApproved:   2,
+			expectedApproved: false,
+		},
+		{
+			student:          student3,
+			minNumApproved:   1,
+			expectedApproved: true,
+		},
+	}
+
+	gotSubmissions, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course.ID, Type: pb.SubmissionsForCourseRequest_ALL})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, el := range gotSubmissions.GetLinks() {
+		if el.Enrollment.User.IsAdmin || el.Enrollment.GetHasTeacherScopes() {
+			continue
+		}
+		approved := make([]bool, len(el.Submissions))
+		for i, s := range el.Submissions {
+			approved[i] = s.GetSubmission().IsApproved()
+		}
+		for _, test := range testCases {
+			if test.student.ID == el.Enrollment.UserID {
+				got := isApproved(test.minNumApproved, approved)
+				if got != test.expectedApproved {
+					t.Errorf("isApproved(%d, %v) = %t, expected %t", test.minNumApproved, approved, got, test.expectedApproved)
+				}
+			}
+		}
+		t.Logf("%s\t%t", el.Enrollment.User.Name, isApproved(4, approved))
+	}
+}
+
+func isApproved(requirements int, approved []bool) bool {
+	for _, a := range approved {
+		if a {
+			requirements--
+		}
+	}
+	return requirements <= 0
 }
