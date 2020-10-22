@@ -84,6 +84,22 @@ func (s *FakeSCM) GetRepositories(ctx context.Context, org *pb.Organization) ([]
 	return repos, nil
 }
 
+func (s *FakeSCM) ListWatched(ctx context.Context) ([]*Repository, error) {
+	// TODO no implementation provided yet
+	return nil, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "ListWatched",
+	}
+}
+
+func (s *FakeSCM) DeleteRepositorySubscription(ctx context.Context, opt *RepositoryOptions) error {
+	// TODO no implementation provided yet
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "DeleteRepositorySubscription",
+	}
+}
+
 // DeleteRepository implements the SCM interface.
 func (s *FakeSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions) error {
 	if _, ok := s.Repositories[opt.ID]; !ok {

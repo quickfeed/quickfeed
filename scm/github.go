@@ -71,7 +71,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*p
 	if err != nil || gitOrg == nil {
 		return nil, ErrFailedSCM{
 			Method:   "GetOrganization",
-			Message:  fmt.Sprintf("could not find github organization. Make sure it allows third party access."), // this message is logged, never sent to user
+			Message:  fmt.Sprintf("could not find github organization %+v. Make sure it allows third party access.", opt.Name),
 			GitError: err,
 		}
 	}
@@ -192,6 +192,68 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *pb.Organization) (
 	return repositories, nil
 }
 
+// List all repositories watched by the authenticated user.
+func (s *GithubSCM) ListWatched(ctx context.Context) ([]*Repository, error) {
+	f := func(opt *github.ListOptions) ([]*github.Repository, bool) {
+		repos, _, _ := s.client.Activity.ListWatched(ctx, "", opt)
+		return repos, len(repos) == 0
+	}
+	opt := &github.ListOptions{Page: 1, PerPage: 100}
+	var repositories []*Repository
+	repos, done := f(opt)
+	for !done {
+		for _, repo := range repos {
+			repositories = append(repositories, toRepository(repo))
+		}
+		opt.Page++
+		repos, done = f(opt)
+	}
+
+	return repositories, nil
+}
+
+func (s *GithubSCM) DeleteRepositorySubscription(ctx context.Context, opt *RepositoryOptions) error {
+	if !opt.valid() {
+		s.logger.Errorf("DeleteRepositorySubscription got invalid RepositoryOptions: %+v", opt)
+	}
+
+	// if ID provided, get path and owner from github
+	if opt.ID > 0 {
+		var err error
+		opt, err = s.idToRepoOptions(ctx, opt.ID)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err := s.client.Activity.DeleteRepositorySubscription(ctx, opt.Owner, opt.Path); err != nil {
+		return ErrFailedSCM{
+			GitError: err,
+			Method:   "DeleteRepositorySubscription",
+			Message:  fmt.Sprintf("failed to delete repository subscription for %s", opt.Path),
+		}
+	}
+	return nil
+}
+
+// idToRepoOptions derives the owner and repo name based on the given id.
+func (s *GithubSCM) idToRepoOptions(ctx context.Context, id uint64) (*RepositoryOptions, error) {
+	// if ID provided, get path and owner from github
+	repo, _, err := s.client.Repositories.GetByID(ctx, int64(id))
+	if err != nil {
+		return nil, ErrFailedSCM{
+			GitError: err,
+			Method:   "idToRepoOptions",
+			Message:  fmt.Sprintf("repository %+v not found", id),
+		}
+	}
+	return &RepositoryOptions{
+		ID:    id,
+		Path:  repo.GetName(),
+		Owner: repo.Owner.GetLogin(),
+	}, nil
+}
+
 // DeleteRepository implements the SCM interface.
 func (s *GithubSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions) error {
 	if !opt.valid() {
@@ -200,16 +262,11 @@ func (s *GithubSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions
 
 	// if ID provided, get path and owner from github
 	if opt.ID > 0 {
-		repo, _, err := s.client.Repositories.GetByID(ctx, int64(opt.ID))
+		var err error
+		opt, err = s.idToRepoOptions(ctx, opt.ID)
 		if err != nil {
-			return ErrFailedSCM{
-				GitError: err,
-				Method:   "DeleteRepository",
-				Message:  fmt.Sprintf("repository not found, make sure it exists in the course organization"),
-			}
+			return err
 		}
-		opt.Path = repo.GetName()
-		opt.Owner = repo.Owner.GetLogin()
 	}
 
 	if _, err := s.client.Repositories.Delete(ctx, opt.Owner, opt.Path); err != nil {

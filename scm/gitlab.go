@@ -124,6 +124,22 @@ func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *pb.Organizat
 	return repositories, nil
 }
 
+func (s *GitlabSCM) ListWatched(ctx context.Context) ([]*Repository, error) {
+	// TODO no implementation provided yet
+	return nil, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "ListWatched",
+	}
+}
+
+func (s *GitlabSCM) DeleteRepositorySubscription(ctx context.Context, opt *RepositoryOptions) error {
+	// TODO no implementation provided yet
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "DeleteRepositorySubscription",
+	}
+}
+
 // DeleteRepository implements the SCM interface.
 func (s *GitlabSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions) (err error) {
 	_, err = s.client.Projects.DeleteProject(strconv.FormatUint(opt.ID, 10), gitlab.WithContext(ctx))

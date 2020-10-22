@@ -62,6 +62,10 @@ type SCM interface {
 	RemoveMember(context.Context, *OrgMembershipOptions) error
 	// Lists all authorizations for authenticated user
 	GetUserScopes(context.Context) *Authorization
+	// ListWatched lists all repositories watched by the authenticated user.
+	ListWatched(context.Context) ([]*Repository, error)
+	// DeleteRepositorySubscription deletes subscriptions for the given repository for the authenticated user.
+	DeleteRepositorySubscription(context.Context, *RepositoryOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
