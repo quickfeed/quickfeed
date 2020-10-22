@@ -321,7 +321,7 @@ func getHooks(client *scm.SCM) cli.ActionFunc {
 	ctx := context.Background()
 	return func(c *cli.Context) error {
 		var hooks []*scm.Hook
-		// if organization name is set, list all hook asociated with that organization
+		// if organization name is set, list all hook associated with that organization
 		if c.IsSet("org") {
 			gitHooks, err := (*client).ListHooks(ctx, nil, c.String("org"))
 			if err != nil {

@@ -14,6 +14,7 @@
         "Autograder",
         "Debugf",
         "Gorm",
+        "Hein",
         "Hein's",
         "LOGDB",
         "Repos",
@@ -34,6 +35,7 @@
         "mattn",
         "ngrok",
         "opsys",
+        "orgs",
         "paxos",
         "quickfeed",
         "repotoken",
@@ -42,6 +44,8 @@
         "structs",
         "testdb",
         "tmpl",
-        "unmarshalling"
+        "unmarshalling",
+        "urfave",
+        "xanzy"
     ]
 }
