@@ -9001,7 +9001,7 @@ proto.Organizations.prototype.clearOrganizationsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.EnrollmentRequest.repeatedFields_ = [3];
+proto.EnrollmentRequest.repeatedFields_ = [4];
 
 
 
@@ -9036,7 +9036,8 @@ proto.EnrollmentRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     courseid: jspb.Message.getFieldWithDefault(msg, 1, 0),
     ignoregroupmembers: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
-    statusesList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f
+    withactivity: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
+    statusesList: (f = jspb.Message.getRepeatedField(msg, 4)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -9082,6 +9083,10 @@ proto.EnrollmentRequest.deserializeBinaryFromReader = function(msg, reader) {
       msg.setIgnoregroupmembers(value);
       break;
     case 3:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setWithactivity(value);
+      break;
+    case 4:
       var value = /** @type {!Array<!proto.Enrollment.UserStatus>} */ (reader.readPackedEnum());
       msg.setStatusesList(value);
       break;
@@ -9128,10 +9133,17 @@ proto.EnrollmentRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getWithactivity();
+  if (f) {
+    writer.writeBool(
+      3,
+      f
+    );
+  }
   f = message.getStatusesList();
   if (f.length > 0) {
     writer.writePackedEnum(
-      3,
+      4,
       f
     );
   }
@@ -9175,11 +9187,29 @@ proto.EnrollmentRequest.prototype.setIgnoregroupmembers = function(value) {
 
 
 /**
- * repeated Enrollment.UserStatus statuses = 3;
+ * optional bool withActivity = 3;
+ * @return {boolean}
+ */
+proto.EnrollmentRequest.prototype.getWithactivity = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.EnrollmentRequest} returns this
+ */
+proto.EnrollmentRequest.prototype.setWithactivity = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 3, value);
+};
+
+
+/**
+ * repeated Enrollment.UserStatus statuses = 4;
  * @return {!Array<!proto.Enrollment.UserStatus>}
  */
 proto.EnrollmentRequest.prototype.getStatusesList = function() {
-  return /** @type {!Array<!proto.Enrollment.UserStatus>} */ (jspb.Message.getRepeatedField(this, 3));
+  return /** @type {!Array<!proto.Enrollment.UserStatus>} */ (jspb.Message.getRepeatedField(this, 4));
 };
 
 
@@ -9188,7 +9218,7 @@ proto.EnrollmentRequest.prototype.getStatusesList = function() {
  * @return {!proto.EnrollmentRequest} returns this
  */
 proto.EnrollmentRequest.prototype.setStatusesList = function(value) {
-  return jspb.Message.setField(this, 3, value || []);
+  return jspb.Message.setField(this, 4, value || []);
 };
 
 
@@ -9198,7 +9228,7 @@ proto.EnrollmentRequest.prototype.setStatusesList = function(value) {
  * @return {!proto.EnrollmentRequest} returns this
  */
 proto.EnrollmentRequest.prototype.addStatuses = function(value, opt_index) {
-  return jspb.Message.addToRepeatedField(this, 3, value, opt_index);
+  return jspb.Message.addToRepeatedField(this, 4, value, opt_index);
 };
 
 
