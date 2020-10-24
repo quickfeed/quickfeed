@@ -80,10 +80,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getUsersForCourse(
-        course: Course, noGroupMembers?: boolean,
+        course: Course,
+        withoutGroupMembers?: boolean,
+        withActivity?: boolean,
         status?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
 
-        const result = await this.grpcHelper.getEnrollmentsByCourse(course.getId(), noGroupMembers, status);
+        const result = await this.grpcHelper.getEnrollmentsByCourse(course.getId(), withoutGroupMembers, withActivity, status);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }

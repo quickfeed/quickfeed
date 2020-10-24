@@ -173,7 +173,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return returnUsers;
     }
 
-    public async getUsersForCourse(course: Course, noGroupMembers?: boolean, status?: Enrollment.UserStatus[])
+    public async getUsersForCourse(course: Course, noGroupMembers?: boolean, withActivity?: boolean, status?: Enrollment.UserStatus[])
         : Promise<Enrollment[]> {
         const courseStds: Enrollment[] =
             await this.getUserLinksForCourse(course, status);

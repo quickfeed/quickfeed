@@ -193,9 +193,9 @@ export class StudentPage extends ViewPage {
             if (grp) {
                 return <GroupInfo group={grp} course={course} />;
             } else {
-                const students = await this.courseMan.getUsersForCourse(course, false,
+                const students = await this.courseMan.getUsersForCourse(course, false, false,
                     [Enrollment.UserStatus.STUDENT]);
-                const freeStudents = await this.courseMan.getUsersForCourse(course, true,
+                const freeStudents = await this.courseMan.getUsersForCourse(course, true, false,
                     [Enrollment.UserStatus.STUDENT]);
                 return <GroupForm className="form-horizontal"
                     students={students}

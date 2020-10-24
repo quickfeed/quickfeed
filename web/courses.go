@@ -490,7 +490,7 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 		enrol := enrolLink.Enrollment
 		var totalApproved uint64
 		for _, submissionLink := range enrolLink.Submissions {
-			if submissionLink.Submission.Status == pb.Submission_APPROVED {
+			if submissionLink.Submission != nil && submissionLink.Submission.Status == pb.Submission_APPROVED {
 				totalApproved++
 			}
 		}
@@ -498,7 +498,7 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 
 		if enrol.LastActivityDate == "" {
 			for i := range enrolLink.Submissions {
-				submissionlink := enrolLink.Submissions[len(enrolLink.Submissions)-i]
+				submissionlink := enrolLink.Submissions[i]
 				if submissionlink.Submission != nil {
 					buildInfoString := submissionlink.Submission.BuildInfo
 					var buildInfo ci.BuildInfo
@@ -506,8 +506,13 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 						// don't fail the method on a parsing error, just log
 						s.logger.Errorf("Failed to unmarshall build info %s for user %d: %s", buildInfoString, enrol.UserID, err)
 					}
-					enrol.LastActivityDate = buildInfo.BuildDate
-					continue
+					lastActivity, err := time.Parse(layout, buildInfo.BuildDate)
+					if err != nil {
+						s.logger.Errorf("Failed parsing build time: %s", err)
+					} else {
+						enrol.LastActivityDate = lastActivity.Format("02 Jan")
+						continue
+					}
 				}
 			}
 		}
