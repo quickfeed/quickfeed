@@ -3546,7 +3546,7 @@ proto.Enrollment.toObject = function(includeInstance, msg) {
     state: jspb.Message.getFieldWithDefault(msg, 10, 0),
     slipdaysremaining: jspb.Message.getFieldWithDefault(msg, 11, 0),
     lastactivitydate: jspb.Message.getFieldWithDefault(msg, 12, ""),
-    lastapprovedassignment: jspb.Message.getFieldWithDefault(msg, 13, 0),
+    totalapproved: jspb.Message.getFieldWithDefault(msg, 13, 0),
     usedslipdaysList: jspb.Message.toObjectList(msg.getUsedslipdaysList(),
     proto.UsedSlipDays.toObject, includeInstance)
   };
@@ -3638,7 +3638,7 @@ proto.Enrollment.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 13:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setLastapprovedassignment(value);
+      msg.setTotalapproved(value);
       break;
     case 14:
       var value = new proto.UsedSlipDays;
@@ -3761,7 +3761,7 @@ proto.Enrollment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getLastapprovedassignment();
+  f = message.getTotalapproved();
   if (f !== 0) {
     writer.writeUint64(
       13,
@@ -4073,10 +4073,10 @@ proto.Enrollment.prototype.setLastactivitydate = function(value) {
 
 
 /**
- * optional uint64 lastApprovedAssignment = 13;
+ * optional uint64 totalApproved = 13;
  * @return {number}
  */
-proto.Enrollment.prototype.getLastapprovedassignment = function() {
+proto.Enrollment.prototype.getTotalapproved = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 13, 0));
 };
 
@@ -4085,7 +4085,7 @@ proto.Enrollment.prototype.getLastapprovedassignment = function() {
  * @param {number} value
  * @return {!proto.Enrollment} returns this
  */
-proto.Enrollment.prototype.setLastapprovedassignment = function(value) {
+proto.Enrollment.prototype.setTotalapproved = function(value) {
   return jspb.Message.setProto3IntField(this, 13, value);
 };
 
