@@ -53,8 +53,9 @@ func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
-	wh.logger.Debugf("Received push event for branch: %s (responding to %s)", payload.GetRef(), payload.GetRepo().GetDefaultBranch())
-	if payload.GetRef() != payload.GetRepo().GetDefaultBranch() {
+	wh.logger.Debugf("Received push event for branch reference: %s (user's default branch: %s)",
+		payload.GetRef(), payload.GetRepo().GetDefaultBranch())
+	if !strings.HasSuffix(payload.GetRef(), payload.GetRepo().GetDefaultBranch()) {
 		wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
 		return
 	}
@@ -64,7 +65,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		wh.logger.Errorf("Failed to get repository from database: %w", err)
 		return
 	}
-	wh.logger.Debugf("Received Push Event for repository %v", repo)
+	wh.logger.Debugf("Received push event for repository %v", repo)
 
 	course, err := wh.db.GetCourseByOrganizationID(repo.OrganizationID)
 	if err != nil {
@@ -87,8 +88,11 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 			if !assignment.IsGroupLab {
 				// only run non-group assignments
 				wh.runAssignmentTests(assignment, repo, course, payload)
+			} else {
+				wh.logger.Debugf("Ignoring assignment: %s, pushed to user repo: %s", assignment.GetName(), payload.GetRepo().GetName())
 			}
 		}
+
 	case repo.IsGroupRepo():
 		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
 		jobOwner, _, err := wh.db.GetUserByCourse(course, payload.GetSender().GetLogin())
@@ -102,8 +106,11 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 			if assignment.IsGroupLab {
 				// only run group assignments
 				wh.runAssignmentTests(assignment, repo, course, payload)
+			} else {
+				wh.logger.Debugf("Ignoring assignment: %s, pushed to group repo: %s", assignment.GetName(), payload.GetRepo().GetName())
 			}
 		}
+
 	default:
 		wh.logger.Debug("Nothing to do for this push event")
 	}
