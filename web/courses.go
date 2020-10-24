@@ -2,11 +2,13 @@ package web
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/scm"
 )
 
@@ -199,6 +201,7 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment, addGroups bool
 			}
 			allSubmissions = append(allSubmissions, subLink)
 		}
+		sortSubmissionsByAssignmentOrder(allSubmissions)
 		newLink.Submissions = allSubmissions
 		enrolLinks = append(enrolLinks, newLink)
 	}
@@ -493,7 +496,21 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 		}
 		enrol.TotalApproved = totalApproved
 
-		// check if active, parse and add date of the last submission if not
+		if enrol.LastActivityDate == "" {
+			for i := range enrolLink.Submissions {
+				submissionlink := enrolLink.Submissions[len(enrolLink.Submissions)-i]
+				if submissionlink.Submission != nil {
+					buildInfoString := submissionlink.Submission.BuildInfo
+					var buildInfo ci.BuildInfo
+					if err := json.Unmarshal([]byte(buildInfoString), &buildInfo); err != nil {
+						// don't fail the method on a parsing error, just log
+						s.logger.Errorf("Failed to unmarshall build info %s for user %d: %s", buildInfoString, enrol.UserID, err)
+					}
+					enrol.LastActivityDate = buildInfo.BuildDate
+					continue
+				}
+			}
+		}
 
 		enrollmentsWithActivity = append(enrollmentsWithActivity, enrol)
 	}
