@@ -49,6 +49,12 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest
 	if err != nil {
 		return nil, err
 	}
+	if request.WithActivity {
+		enrollments, err = s.getEnrollmentsWithActivity(request.CourseID)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// to populate response only with users who are not member of any group, we must filter the result
 	if request.IgnoreGroupMembers {
@@ -60,6 +66,7 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest
 		}
 		enrollments = enrollmentsWithoutGroups
 	}
+
 	for _, enrollment := range enrollments {
 		enrollment.SetSlipDays(enrollment.Course)
 	}
@@ -469,11 +476,34 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 	})
 }
 
+// returns all enrollments for the course ID with last activity date and number of approved assignments
+func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.Enrollment, error) {
+	allEnrollmentsWithSubmissions, err := s.getAllCourseSubmissions(&pb.SubmissionsForCourseRequest{CourseID: courseID, Type: pb.SubmissionsForCourseRequest_ALL})
+	if err != nil {
+		return nil, err
+	}
+	var enrollmentsWithActivity []*pb.Enrollment
+	for _, enrolLink := range allEnrollmentsWithSubmissions.Links {
+		enrol := enrolLink.Enrollment
+		var totalApproved uint64
+		for _, submissionLink := range enrolLink.Submissions {
+			if submissionLink.Submission.Status == pb.Submission_APPROVED {
+				totalApproved++
+			}
+		}
+		enrol.TotalApproved = totalApproved
+
+		// check if active, parse and add date of the last submission if not
+
+		enrollmentsWithActivity = append(enrollmentsWithActivity, enrol)
+	}
+	return enrollmentsWithActivity, nil
+}
+
 func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission, courseID uint64) error {
 
 	query := &pb.Enrollment{
-		CourseID:               courseID,
-		LastApprovedAssignment: submission.AssignmentID,
+		CourseID: courseID,
 	}
 
 	if submission.GroupID > 0 {
