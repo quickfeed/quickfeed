@@ -489,34 +489,26 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 	for _, enrolLink := range allEnrollmentsWithSubmissions.Links {
 		enrol := enrolLink.Enrollment
 		var totalApproved uint64
+		var submissionDate time.Time
 		for _, submissionLink := range enrolLink.Submissions {
-			if submissionLink.Submission != nil && submissionLink.Submission.Status == pb.Submission_APPROVED {
-				totalApproved++
-			}
-		}
-		enrol.TotalApproved = totalApproved
-
-		if enrol.LastActivityDate == "" {
-			for i := range enrolLink.Submissions {
-				submissionlink := enrolLink.Submissions[i]
-				if submissionlink.Submission != nil {
-					buildInfoString := submissionlink.Submission.BuildInfo
-					var buildInfo ci.BuildInfo
-					if err := json.Unmarshal([]byte(buildInfoString), &buildInfo); err != nil {
-						// don't fail the method on a parsing error, just log
-						s.logger.Errorf("Failed to unmarshall build info %s for user %d: %s", buildInfoString, enrol.UserID, err)
-					}
-					lastActivity, err := time.Parse(layout, buildInfo.BuildDate)
+			if submissionLink.Submission != nil {
+				if submissionLink.Submission.Status == pb.Submission_APPROVED {
+					totalApproved++
+				}
+				if enrol.LastActivityDate == "" {
+					currentSubmissionDate, err := s.extractSubmissionDate(submissionLink.Submission)
 					if err != nil {
-						s.logger.Errorf("Failed parsing build time: %s", err)
-					} else {
-						enrol.LastActivityDate = lastActivity.Format("02 Jan")
-						continue
+						s.logger.Errorf("Failed extracting submission date for user %d and assignment %d: %s", enrol.UserID, submissionLink.Assignment.Name, err)
+					} else if currentSubmissionDate.After(submissionDate) {
+						submissionDate = currentSubmissionDate
 					}
 				}
 			}
 		}
-
+		enrol.TotalApproved = totalApproved
+		if enrol.LastActivityDate == "" && !submissionDate.IsZero() {
+			enrol.LastActivityDate = submissionDate.Format("02 Jan")
+		}
 		enrollmentsWithActivity = append(enrollmentsWithActivity, enrol)
 	}
 	return enrollmentsWithActivity, nil
@@ -554,4 +546,14 @@ func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.Submi
 		return unsorted[i].Assignment.Order < unsorted[j].Assignment.Order
 	})
 	return unsorted
+}
+
+func (s *AutograderService) extractSubmissionDate(submission *pb.Submission) (time.Time, error) {
+	buildInfoString := submission.BuildInfo
+	var buildInfo ci.BuildInfo
+	if err := json.Unmarshal([]byte(buildInfoString), &buildInfo); err != nil {
+		// don't fail the method on a parsing error, just log
+		s.logger.Errorf("Failed to unmarshall build info %s: %s", buildInfoString, err)
+	}
+	return time.Parse(layout, buildInfo.BuildDate)
 }
