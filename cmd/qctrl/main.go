@@ -163,17 +163,9 @@ func saveApproveSheet(srcFile, dstFile, sheetName string, approveMap map[string]
 	if err != nil {
 		log.Fatal(err)
 	}
-	// approveMap := map[string]string{
-	// 	"B2":  pass,
-	// 	"B3":  pass,
-	// 	"B4":  fail,
-	// 	"B10": fail,
-	// 	"B20": fail,
-	// }
 	for cell, approved := range approveMap {
 		f.SetCellValue(sheetName, cell, approved)
 	}
-
 	if err := f.SaveAs(dstFile); err != nil {
 		log.Fatal(err)
 	}
