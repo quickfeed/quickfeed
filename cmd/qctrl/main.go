@@ -78,47 +78,61 @@ func main() {
 	approvedMap := make(map[string]string)
 	for _, el := range gotSubmissions.GetLinks() {
 		if el.Enrollment.User.IsAdmin || el.Enrollment.IsTeacher() {
-//			log.Printf("%s: admin: %t, teacher: %t\n", el.Enrollment.GetUser().GetName(), el.Enrollment.User.IsAdmin, el.Enrollment.IsTeacher())
+			//			log.Printf("%s: admin: %t, teacher: %t\n", el.Enrollment.GetUser().GetName(), el.Enrollment.User.IsAdmin, el.Enrollment.IsTeacher())
 			continue
 		}
 		approved := make([]bool, len(el.Submissions))
 		for i, s := range el.Submissions {
 			approved[i] = s.GetSubmission().IsApproved()
 		}
-		if rowNum, ok := studentMap[el.Enrollment.User.Name]; ok {
-			approvedValue := fail
-			if isApproved(6, approved) {
-				approvedValue = pass
-			}
-			cell := fmt.Sprintf("B%d", rowNum)
-			approvedMap[cell] = approvedValue
-//			fmt.Printf("Found: %s\t%t (cell %s --> %s)\n", el.Enrollment.User.Name, isApproved(6, approved), cell, approvedValue)
-		} else {
-//			fmt.Printf("Not found: %s\t%t\n", el.Enrollment.User.Name, isApproved(6, approved))
-//			fmt.Printf("Not found: %s\n", el.Enrollment.User.Name)
-			nameParts := strings.Split(el.Enrollment.User.Name, " ")
-			foundMatch := false
-			for expectedName := range studentMap {
-				expectedNameParts := strings.Split(expectedName, " ")
-				matchCount := 0
-				for _, n := range nameParts {
-					for _, m := range expectedNameParts {
-						if n == m {
-							matchCount++
-						}
-					}
-				}
-				if matchCount > 1 {
-					foundMatch = true
-					fmt.Printf("Probable match found: %s = %s\n", el.Enrollment.User.Name, expectedName)
-				}
-			}
-			if !foundMatch {
-				fmt.Printf("Not found: %s\n", el.Enrollment.User.Name)
-			}
+		rowNum, err := lookup(el.Enrollment.User.Name, studentMap)
+		if err != nil {
+			log.Print(err)
+			continue
 		}
+		approvedValue := fail
+		if isApproved(6, approved) {
+			approvedValue = pass
+		}
+		cell := fmt.Sprintf("B%d", rowNum)
+		approvedMap[cell] = approvedValue
 	}
 	saveApproveSheet(srcFile, approvedFile, sheetName, approvedMap)
+}
+
+func lookup(name string, studentMap map[string]int) (int, error) {
+	if rowNum, ok := studentMap[name]; ok {
+		return rowNum, nil
+	} else {
+		return partialMatch(name, studentMap)
+	}
+}
+
+func partialMatch(name string, studentMap map[string]int) (int, error) {
+	nameParts := strings.Split(name, " ")
+	possibleNames := make(map[string][]string)
+	for expectedName := range studentMap {
+		expectedNameParts := strings.Split(expectedName, " ")
+		matchCount := 0
+		for _, n := range nameParts {
+			for _, m := range expectedNameParts {
+				if n == m {
+					matchCount++
+				}
+			}
+		}
+		if matchCount > 1 {
+			possibleNames[name] = append(possibleNames[name], expectedName)
+			fmt.Printf("Probable match found: %s = %s\n", name, expectedName)
+		}
+	}
+	switch {
+	case len(possibleNames[name]) == 0:
+		return 0, fmt.Errorf("Not found: %s\n", name)
+	case len(possibleNames[name]) > 1:
+		return 0, fmt.Errorf("Multiple possibilities found for: %s --> %v\n", name, possibleNames[name])
+	}
+	return studentMap[possibleNames[name][0]], nil
 }
 
 func isApproved(requirements int, approved []bool) bool {
@@ -138,7 +152,7 @@ func loadApproveSheet(file, sheetName string) map[string]int {
 	approveMap := make(map[string]int)
 	for i, row := range f.GetRows(sheetName) {
 		if row[0] != "" {
-			approveMap[row[0]] = i+1
+			approveMap[row[0]] = i + 1
 		}
 	}
 	return approveMap
