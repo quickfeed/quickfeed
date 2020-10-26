@@ -99,7 +99,7 @@ func main() {
 		cell := fmt.Sprintf("B%d", rowNum)
 		approvedMap[cell] = approvedValue
 	}
-	fmt.Printf("Total: %d, passed: %d, fail: %d", len(approvedMap), numPass, len(approvedMap)-numPass)
+	fmt.Printf("Total: %d, passed: %d, fail: %d\n", len(approvedMap), numPass, len(approvedMap)-numPass)
 	saveApproveSheet(srcFile, approvedFile, sheetName, approvedMap)
 }
 
