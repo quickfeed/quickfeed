@@ -8,30 +8,46 @@ import (
 	"strings"
 	"time"
 
+	"github.com/360EntSecGroup-Skylar/excelize"
 	pb "github.com/autograde/quickfeed/ag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
+const (
+	srcFile      = "dat320-original.xlsx"
+	approvedFile = "dat320-approve-list.xlsx"
+	sheetName    = "DAT320 Operativsystemer og syst"
+	pass         = "Godkjent"
+	fail         = "Ikke godkjent"
+)
+
 func main() {
+	studentMap := loadApproveSheet(srcFile, sheetName)
 	currentUserID := os.Getenv("QUICKFEED_USER")
 	if currentUserID == "" {
 		log.Fatal("Requires a 'QUICKFEED_USER' environmental variable with a valid ID of a registered user")
 	}
+	convertedID := strings.TrimSpace(currentUserID)
+	requestMetadata := metadata.New(map[string]string{"user": convertedID})
+	reqCtx := metadata.NewOutgoingContext(context.Background(), requestMetadata)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(ctx, ":9090", grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.DialContext(ctx, ":9090",
+		grpc.WithInsecure(),
+		grpc.WithBlock(),
+		grpc.WithDefaultCallOptions(
+			grpc.MaxCallRecvMsgSize(1024*1024*20),
+			grpc.MaxCallSendMsgSize(1024*1024*20),
+		),
+	)
 	if err != nil {
 		log.Fatalf("Connection failed, make sure server is running on :9090: %v", err)
 	}
 	defer conn.Close()
 
 	client := pb.NewAutograderServiceClient(conn)
-
-	convertedID := strings.TrimSpace(currentUserID)
-	requestMetadata := metadata.New(map[string]string{"user": convertedID})
-	reqCtx := metadata.NewOutgoingContext(context.Background(), requestMetadata)
 
 	request := &pb.CourseUserRequest{
 		CourseCode: "DAT320",
@@ -52,20 +68,35 @@ func main() {
 		courseID = c.GetID()
 	}
 
-	gotSubmissions, err := client.GetSubmissionsByCourse(reqCtx, &pb.SubmissionsForCourseRequest{CourseID: courseID, Type: pb.SubmissionsForCourseRequest_ALL})
+	gotSubmissions, err := client.GetSubmissionsByCourse(
+		reqCtx,
+		&pb.SubmissionsForCourseRequest{CourseID: courseID, Type: pb.SubmissionsForCourseRequest_ALL},
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
+	approvedMap := make(map[string]string)
 	for _, el := range gotSubmissions.GetLinks() {
-		if el.Enrollment.User.IsAdmin || el.Enrollment.GetHasTeacherScopes() {
+		if el.Enrollment.User.IsAdmin || el.Enrollment.IsTeacher() {
+			log.Printf("%s: admin: %t, teacher: %t\n", el.Enrollment.GetUser().GetName(), el.Enrollment.User.IsAdmin, el.Enrollment.IsTeacher())
 			continue
 		}
 		approved := make([]bool, len(el.Submissions))
 		for i, s := range el.Submissions {
 			approved[i] = s.GetSubmission().IsApproved()
 		}
-		fmt.Printf("%s\t%t\n", el.Enrollment.User.Name, isApproved(8, approved))
+		if rowNum, ok := studentMap[el.Enrollment.User.Name]; ok {
+			approvedValue := fail
+			if isApproved(6, approved) {
+				approvedValue = pass
+			}
+			cell := fmt.Sprintf("B%d", rowNum)
+			approvedMap[cell] = approvedValue
+		} else {
+			fmt.Printf("Not found: %s\t%t\n", el.Enrollment.User.Name, isApproved(6, approved))
+		}
 	}
+	saveApproveSheet(srcFile, approvedFile, sheetName, approvedMap)
 }
 
 func isApproved(requirements int, approved []bool) bool {
@@ -75,4 +106,39 @@ func isApproved(requirements int, approved []bool) bool {
 		}
 	}
 	return requirements <= 0
+}
+
+func loadApproveSheet(file, sheetName string) map[string]int {
+	f, err := excelize.OpenFile(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	approveMap := make(map[string]int)
+	for i, row := range f.GetRows(sheetName) {
+		if row[0] != "" {
+			approveMap[row[0]] = i
+		}
+	}
+	return approveMap
+}
+
+func saveApproveSheet(srcFile, dstFile, sheetName string, approveMap map[string]string) {
+	f, err := excelize.OpenFile(srcFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// approveMap := map[string]string{
+	// 	"B2":  pass,
+	// 	"B3":  pass,
+	// 	"B4":  fail,
+	// 	"B10": fail,
+	// 	"B20": fail,
+	// }
+	for cell, approved := range approveMap {
+		f.SetCellValue(sheetName, cell, approved)
+	}
+
+	if err := f.SaveAs(dstFile); err != nil {
+		log.Fatal(err)
+	}
 }

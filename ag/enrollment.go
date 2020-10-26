@@ -68,3 +68,11 @@ func (m *Enrollment) SetSlipDays(c *Course) {
 		m.SlipDaysRemaining = uint32(m.RemainingSlipDays(c))
 	}
 }
+
+func (m Enrollment) IsTeacher() bool {
+	return m.GetStatus() == Enrollment_TEACHER
+}
+
+func (m Enrollment) IsStudent() bool {
+	return m.GetStatus() == Enrollment_STUDENT
+}
