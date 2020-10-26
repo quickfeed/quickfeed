@@ -101,11 +101,15 @@ func main() {
 		cell := fmt.Sprintf("B%d", rowNum)
 		approvedMap[cell] = approvedValue
 	}
-	for student, row := range studentMap {
+	for student, rowNum := range studentMap {
 		_, err := lookup(student, agStudents)
 		if err != nil {
-			fmt.Printf("%v in QuickFeed database; is signed up at row %d\n", err, row)
+			fmt.Printf("%v in QuickFeed database; is signed up at row %d\n", err, rowNum)
+			continue
 		}
+		approvedValue := fail
+		cell := fmt.Sprintf("B%d", rowNum)
+		approvedMap[cell] = approvedValue
 	}
 	fmt.Printf("Total: %d, passed: %d, fail: %d\n", len(approvedMap), numPass, len(approvedMap)-numPass)
 	saveApproveSheet(srcFile, approvedFile, sheetName, approvedMap)
