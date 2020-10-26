@@ -76,7 +76,7 @@ func main() {
 		log.Fatal(err)
 	}
 	approvedMap := make(map[string]string)
-	agStudents := make(map[string]bool)
+	agStudents := make(map[string]int)
 	numPass := 0
 	for _, el := range gotSubmissions.GetLinks() {
 		if el.Enrollment.User.IsAdmin || el.Enrollment.IsTeacher() {
@@ -87,7 +87,7 @@ func main() {
 		for i, s := range el.Submissions {
 			approved[i] = s.GetSubmission().IsApproved()
 		}
-		agStudents[el.Enrollment.User.Name] = true
+		agStudents[el.Enrollment.User.Name] = 1
 		rowNum, err := lookup(el.Enrollment.User.Name, studentMap)
 		if err != nil {
 			log.Print(err)
@@ -102,8 +102,9 @@ func main() {
 		approvedMap[cell] = approvedValue
 	}
 	for student, row := range studentMap {
-		if !agStudents[student] {
-			fmt.Printf("%s not found in QuickFeed database; is signed up at row %d\n", student, row)
+		_, err := lookup(student, agStudents)
+		if err != nil {
+			fmt.Printf("%v (%s) not found in QuickFeed database; is signed up at row %d\n", err, student, row)
 		}
 	}
 	fmt.Printf("Total: %d, passed: %d, fail: %d\n", len(approvedMap), numPass, len(approvedMap)-numPass)
