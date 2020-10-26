@@ -104,7 +104,7 @@ func main() {
 	for student, row := range studentMap {
 		_, err := lookup(student, agStudents)
 		if err != nil {
-			fmt.Printf("%v (%s) not found in QuickFeed database; is signed up at row %d\n", err, student, row)
+			fmt.Printf("%v in QuickFeed database; is signed up at row %d\n", err, row)
 		}
 	}
 	fmt.Printf("Total: %d, passed: %d, fail: %d\n", len(approvedMap), numPass, len(approvedMap)-numPass)
@@ -140,9 +140,9 @@ func partialMatch(name string, studentMap map[string]int) (int, error) {
 	}
 	switch {
 	case len(possibleNames[name]) == 0:
-		return 0, fmt.Errorf("Not found: %s\n", name)
+		return 0, fmt.Errorf("Not found: %s", name)
 	case len(possibleNames[name]) > 1:
-		return 0, fmt.Errorf("Multiple possibilities found for: %s --> %v\n", name, possibleNames[name])
+		return 0, fmt.Errorf("Multiple possibilities found for: %s --> %v", name, possibleNames[name])
 	}
 	return studentMap[possibleNames[name][0]], nil
 }
