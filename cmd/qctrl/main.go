@@ -76,6 +76,7 @@ func main() {
 		log.Fatal(err)
 	}
 	approvedMap := make(map[string]string)
+	agStudents := make(map[string]bool)
 	numPass := 0
 	for _, el := range gotSubmissions.GetLinks() {
 		if el.Enrollment.User.IsAdmin || el.Enrollment.IsTeacher() {
@@ -86,6 +87,7 @@ func main() {
 		for i, s := range el.Submissions {
 			approved[i] = s.GetSubmission().IsApproved()
 		}
+		agStudents[el.Enrollment.User.Name] = true
 		rowNum, err := lookup(el.Enrollment.User.Name, studentMap)
 		if err != nil {
 			log.Print(err)
@@ -98,6 +100,11 @@ func main() {
 		}
 		cell := fmt.Sprintf("B%d", rowNum)
 		approvedMap[cell] = approvedValue
+	}
+	for student, row := range studentMap {
+		if !agStudents[student] {
+			fmt.Printf("%s not found in QuickFeed database; is signed up at row %d\n", student, row)
+		}
 	}
 	fmt.Printf("Total: %d, passed: %d, fail: %d\n", len(approvedMap), numPass, len(approvedMap)-numPass)
 	saveApproveSheet(srcFile, approvedFile, sheetName, approvedMap)
@@ -125,8 +132,9 @@ func partialMatch(name string, studentMap map[string]int) (int, error) {
 			}
 		}
 		if matchCount > 1 {
+			// if at least two parts of the names match
 			possibleNames[name] = append(possibleNames[name], expectedName)
-			fmt.Printf("Probable match found: %s = %s\n", name, expectedName)
+			// fmt.Printf("Probable match found: %s = %s\n", name, expectedName)
 		}
 	}
 	switch {
