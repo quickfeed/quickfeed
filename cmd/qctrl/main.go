@@ -76,6 +76,7 @@ func main() {
 		log.Fatal(err)
 	}
 	approvedMap := make(map[string]string)
+	numPass := 0
 	for _, el := range gotSubmissions.GetLinks() {
 		if el.Enrollment.User.IsAdmin || el.Enrollment.IsTeacher() {
 			//			log.Printf("%s: admin: %t, teacher: %t\n", el.Enrollment.GetUser().GetName(), el.Enrollment.User.IsAdmin, el.Enrollment.IsTeacher())
@@ -93,10 +94,12 @@ func main() {
 		approvedValue := fail
 		if isApproved(6, approved) {
 			approvedValue = pass
+			numPass++
 		}
 		cell := fmt.Sprintf("B%d", rowNum)
 		approvedMap[cell] = approvedValue
 	}
+	fmt.Printf("Total: %d, passed: %d, fail: %d", len(approvedMap), numPass, len(approvedMap)-numPass)
 	saveApproveSheet(srcFile, approvedFile, sheetName, approvedMap)
 }
 
@@ -109,10 +112,10 @@ func lookup(name string, studentMap map[string]int) (int, error) {
 }
 
 func partialMatch(name string, studentMap map[string]int) (int, error) {
-	nameParts := strings.Split(name, " ")
+	nameParts := strings.Split(strings.ToLower(name), " ")
 	possibleNames := make(map[string][]string)
 	for expectedName := range studentMap {
-		expectedNameParts := strings.Split(expectedName, " ")
+		expectedNameParts := strings.Split(strings.ToLower(expectedName), " ")
 		matchCount := 0
 		for _, n := range nameParts {
 			for _, m := range expectedNameParts {
