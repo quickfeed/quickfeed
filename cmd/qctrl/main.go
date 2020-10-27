@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -22,7 +23,21 @@ const (
 	fail         = "Ikke godkjent"
 )
 
+var ignoredStudents = map[string]bool{
+	"Hein Meling Student":      true,
+	"Eivind Stavnes (student)": true,
+	"John Ingve Olsen Test":    true,
+	"Hein Meling Stud5":        true,
+	"Hans Erik Frøyland":       true,
+}
+
 func main() {
+	var (
+		passLimit  = flag.Int("limit", 5, "number of assignments required to pass")
+		ignorePass = flag.Bool("ignore", false, "ignore assignments that pass; only insert failed")
+	)
+	flag.Parse()
+
 	studentMap := loadApproveSheet(srcFile, sheetName)
 	currentUserID := os.Getenv("QUICKFEED_USER")
 	if currentUserID == "" {
@@ -80,7 +95,10 @@ func main() {
 	numPass := 0
 	for _, el := range gotSubmissions.GetLinks() {
 		if el.Enrollment.User.IsAdmin || el.Enrollment.IsTeacher() {
-			//			log.Printf("%s: admin: %t, teacher: %t\n", el.Enrollment.GetUser().GetName(), el.Enrollment.User.IsAdmin, el.Enrollment.IsTeacher())
+			// log.Printf("%s: admin: %t, teacher: %t\n", el.Enrollment.GetUser().GetName(), el.Enrollment.User.IsAdmin, el.Enrollment.IsTeacher())
+			continue
+		}
+		if ignoredStudents[el.Enrollment.User.Name] {
 			continue
 		}
 		approved := make([]bool, len(el.Submissions))
@@ -88,19 +106,25 @@ func main() {
 			approved[i] = s.GetSubmission().IsApproved()
 		}
 		agStudents[el.Enrollment.User.Name] = 1
+
 		rowNum, err := lookup(el.Enrollment.User.Name, studentMap)
 		if err != nil {
-			log.Print(err)
+			fmt.Printf("%v in FS database; but has QuickFeed account\n", err)
 			continue
 		}
 		approvedValue := fail
-		if isApproved(6, approved) {
+		if isApproved(*passLimit, approved) {
 			approvedValue = pass
 			numPass++
+			if *ignorePass {
+				continue
+			}
 		}
 		cell := fmt.Sprintf("B%d", rowNum)
 		approvedMap[cell] = approvedValue
 	}
+
+	// find students signed up to course, but not found in QuickFeed
 	for student, rowNum := range studentMap {
 		_, err := lookup(student, agStudents)
 		if err != nil {
@@ -165,7 +189,7 @@ func loadApproveSheet(file, sheetName string) map[string]int {
 	}
 	approveMap := make(map[string]int)
 	for i, row := range f.GetRows(sheetName) {
-		if row[0] != "" {
+		if i > 0 && row[0] != "" {
 			approveMap[row[0]] = i + 1
 		}
 	}
