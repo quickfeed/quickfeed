@@ -92,7 +92,7 @@ func main() {
 	}
 	approvedMap := make(map[string]string)
 	agStudents := make(map[string]int)
-	numPass := 0
+	totalApprove, numPass := 0, 0
 	for _, el := range gotSubmissions.GetLinks() {
 		if el.Enrollment.User.IsAdmin || el.Enrollment.IsTeacher() {
 			// log.Printf("%s: admin: %t, teacher: %t\n", el.Enrollment.GetUser().GetName(), el.Enrollment.User.IsAdmin, el.Enrollment.IsTeacher())
@@ -116,6 +116,7 @@ func main() {
 		if isApproved(*passLimit, approved) {
 			approvedValue = pass
 			numPass++
+			totalApprove++
 			if *ignorePass {
 				continue
 			}
@@ -133,7 +134,7 @@ func main() {
 			approvedMap[cell] = fail
 		}
 	}
-	fmt.Printf("Total: %d, passed: %d, fail: %d\n", len(approvedMap), numPass, len(approvedMap)-numPass)
+	fmt.Printf("Total: %d, passed: %d, fail: %d\n", totalApprove, numPass, totalApprove-numPass)
 	saveApproveSheet(srcFile, approvedFile, sheetName, approvedMap)
 }
 
