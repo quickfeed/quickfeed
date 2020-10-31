@@ -370,8 +370,8 @@ export class Enrollment extends jspb.Message {
   getLastactivitydate(): string;
   setLastactivitydate(value: string): void;
 
-  getLastapprovedassignment(): number;
-  setLastapprovedassignment(value: number): void;
+  getTotalapproved(): number;
+  setTotalapproved(value: number): void;
 
   getUsedslipdaysList(): Array<UsedSlipDays>;
   setUsedslipdaysList(value: Array<UsedSlipDays>): void;
@@ -400,7 +400,7 @@ export namespace Enrollment {
     state: Enrollment.DisplayState,
     slipdaysremaining: number,
     lastactivitydate: string,
-    lastapprovedassignment: number,
+    totalapproved: number,
     usedslipdaysList: Array<UsedSlipDays.AsObject>,
   }
 
@@ -1073,6 +1073,9 @@ export class EnrollmentRequest extends jspb.Message {
   getIgnoregroupmembers(): boolean;
   setIgnoregroupmembers(value: boolean): void;
 
+  getWithactivity(): boolean;
+  setWithactivity(value: boolean): void;
+
   getStatusesList(): Array<Enrollment.UserStatus>;
   setStatusesList(value: Array<Enrollment.UserStatus>): void;
   clearStatusesList(): void;
@@ -1090,6 +1093,7 @@ export namespace EnrollmentRequest {
   export type AsObject = {
     courseid: number,
     ignoregroupmembers: boolean,
+    withactivity: boolean,
     statusesList: Array<Enrollment.UserStatus>,
   }
 }

@@ -25,7 +25,7 @@ export interface ICourseProvider {
     getCourses(): Promise<Course[]>;
     getAssignments(courseID: number): Promise<Assignment[]>;
     getCoursesForUser(user: User, status: Enrollment.UserStatus[]): Promise<Course[]>;
-    getUsersForCourse(course: Course, noGroupMemebers?: boolean, status?: Enrollment.UserStatus[]):
+    getUsersForCourse(course: Course, withoutGroupMemebers?: boolean, withActivity?: boolean, status?: Enrollment.UserStatus[]):
         Promise<Enrollment[]>;
 
     addUserToCourse(course: Course, user: User): Promise<boolean>;
@@ -201,9 +201,10 @@ export class CourseManager {
      */
     public async getUsersForCourse(
         course: Course,
-        noGroupMemebers?: boolean,
+        withoutGroupMemebers?: boolean,
+        withActivity?: boolean,
         status?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
-        return this.courseProvider.getUsersForCourse(course, noGroupMemebers, status);
+        return this.courseProvider.getUsersForCourse(course, withoutGroupMemebers, withActivity, status);
     }
 
     public async createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status> {
