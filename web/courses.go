@@ -481,7 +481,11 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 
 // returns all enrollments for the course ID with last activity date and number of approved assignments
 func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.Enrollment, error) {
-	allEnrollmentsWithSubmissions, err := s.getAllCourseSubmissions(&pb.SubmissionsForCourseRequest{CourseID: courseID, Type: pb.SubmissionsForCourseRequest_ALL})
+	allEnrollmentsWithSubmissions, err := s.getAllCourseSubmissions(
+		&pb.SubmissionsForCourseRequest{
+			CourseID: courseID,
+			Type:     pb.SubmissionsForCourseRequest_ALL,
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -510,11 +514,9 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 }
 
 func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission, courseID uint64) error {
-
 	query := &pb.Enrollment{
 		CourseID: courseID,
 	}
-
 	if submission.GroupID > 0 {
 		group, err := s.db.GetGroup(submission.GroupID)
 		if err != nil {
@@ -548,7 +550,7 @@ func (s *AutograderService) extractSubmissionDate(submission *pb.Submission, sub
 	var buildInfo ci.BuildInfo
 	if err := json.Unmarshal([]byte(buildInfoString), &buildInfo); err != nil {
 		// don't fail the method on a parsing error, just log
-		s.logger.Errorf("Failed to unmarshall build info %s: %s", buildInfoString, err)
+		s.logger.Errorf("Failed to unmarshal build info %s: %s", buildInfoString, err)
 	}
 
 	currentSubmissionDate, err := time.Parse(layout, buildInfo.BuildDate)
