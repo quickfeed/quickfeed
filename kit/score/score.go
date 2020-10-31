@@ -4,16 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"runtime/debug"
 	"strings"
 	"testing"
 )
 
-// GlobalSecret is a unique identifier for each scoring session, and
-// would typically be set to a random secret string in the init() function
-// of each package to be tested. The gosecret command can be used to
-// generate such init() functions for each package to be tested.
-var GlobalSecret = "NOT SET"
+const (
+	secretEnvName = "QUICKFEED_SESSION_SECRET"
+)
+
+var sessionSecret string
+
+func init() {
+	sessionSecret = os.Getenv(secretEnvName)
+	// remove variable as soon as it has been read
+	_ = os.Setenv(secretEnvName, "")
+}
 
 // Score encodes the score of a test or a group of tests.
 type Score struct {
@@ -32,7 +39,7 @@ type Score struct {
 // to ensure that the test is recorded by Quickfeed.
 func NewScore(t *testing.T, max, weight int) *Score {
 	sc := &Score{
-		Secret:   GlobalSecret,
+		Secret:   sessionSecret,
 		TestName: t.Name(),
 		MaxScore: max,
 		Weight:   weight,

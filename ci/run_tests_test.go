@@ -12,8 +12,13 @@ import (
 
 const (
 	//TODO(meling) these repos should be replaced with a test course's repos, preferably public repos; so we don't need a token.
-	getURL  = "https://github.com/dat320-2020/meling-stud-labs.git"
-	testURL = "https://github.com/dat320-2020/tests.git"
+	// getURL = "https://github.com/dat320-2020/meling-stud-labs.git"
+	// testURL = "https://github.com/dat320-2020/tests.git"
+	//TODO(meling) create new course qf101 for experimenting with go.sh
+	// qf101 is a test course for experimenting with go.sh behavior.
+	// The test below will run locally on the test machine, not on the QuickFeed machine.
+	getURL  = "https://github.com/autograde/qf101/meling-labs.git"
+	testURL = "https://github.com/quickfeed/qf101/tests.git"
 )
 
 func TestRunTests(t *testing.T) {
