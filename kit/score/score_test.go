@@ -1,13 +1,18 @@
 package score
 
 import (
+	"log"
+	"os"
 	"testing"
 )
 
 var theSecret = "my secret code"
 
 func init() {
-	GlobalSecret = theSecret
+	err := os.Setenv(secretEnvName, theSecret)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func fibonacci(n uint) uint {
@@ -66,7 +71,7 @@ var nonJSONLog = []string{
 
 func TestParseNonJSONStrings(t *testing.T) {
 	for _, s := range nonJSONLog {
-		sc, err := Parse(s, GlobalSecret)
+		sc, err := Parse(s, theSecret)
 		if err == nil {
 			t.Errorf("Expected '%v', got '<nil>'", ErrScoreNotFound.Error())
 		}
@@ -102,7 +107,7 @@ func (sc *Score) Equal(other *Score) bool {
 
 func TestParseJSONStrings(t *testing.T) {
 	for _, s := range jsonLog {
-		sc, err := Parse(s.in, GlobalSecret)
+		sc, err := Parse(s.in, theSecret)
 		var expectedScore *Score
 		if s.max > 0 {
 			expectedScore = NewScore(t, s.max, s.weight)
@@ -112,7 +117,7 @@ func TestParseJSONStrings(t *testing.T) {
 				t.Errorf("Failed to parse:\n%v\nGot: '%v', '%v'\nExp: '%v', '%v'",
 					s.in, sc, err, expectedScore, s.err)
 			}
-			if sc != nil && sc.Secret == GlobalSecret {
+			if sc != nil && sc.Secret == theSecret {
 				t.Errorf("Parse function failed to hide global secret: %v", sc.Secret)
 			}
 		}

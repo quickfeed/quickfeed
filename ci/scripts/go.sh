@@ -22,7 +22,7 @@ fi
 cd $ASSIGNDIR
 
 # Fail student code that attempts to access secret
-if grep -r -e common.Secret -e GlobalSecret * ; then
+if grep -r -e QUICKFEED_SESSION_SECRET * ; then
   printf "\n=== Misbehavior Detected: Failed ===\n"
   exit
 fi
@@ -30,9 +30,6 @@ fi
 # Remove student written tests to avoid interference
 find . -name '*_test.go' -exec rm -rf {} \;
 rm -f setup.sh
-
-# Run gosecret for all tests
-cd $TESTDIR && /quickfeed/bin/gosecret -secret {{ .RandomSecret }}
 
 # Copy tests into student assignments folder for running tests
 cp -r $TESTDIR/* $ASSIGNMENTS/
@@ -53,5 +50,5 @@ printf "\n*** Finished Test Setup in $(( SECONDS - start )) seconds ***\n"
 
 start=$SECONDS
 printf "\n*** Running Tests ***\n\n"
-go test -v -timeout 30s ./... 2>&1
+QUICKFEED_SESSION_SECRET={{ .RandomSecret }} go test -v -timeout 30s ./... 2>&1
 printf "\n*** Finished Running Tests in $(( SECONDS - start )) seconds ***\n"
