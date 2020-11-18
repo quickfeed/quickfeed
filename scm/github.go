@@ -47,7 +47,14 @@ func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOpt
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	_, _, err := s.client.Organizations.Edit(ctx, opt.Path, &github.Organization{DefaultRepoPermission: &opt.DefaultPermission, MembersCanCreateRepos: &opt.RepoPermissions})
+	_, _, err := s.client.Organizations.Edit(ctx, opt.Path, &github.Organization{
+		DefaultRepoPermission:         &opt.DefaultPermission,
+		MembersCanCreateRepos:         &opt.RepoPermissions,
+		DefaultRepoSettings:           &opt.DefaultPermission,
+		MembersCanCreateInternalRepos: &opt.RepoPermissions,
+		MembersCanCreatePrivateRepos:  &opt.RepoPermissions,
+		MembersCanCreatePublicRepos:   &opt.RepoPermissions,
+	})
 	return err
 }
 
