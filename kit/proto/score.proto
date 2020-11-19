@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "github.com/autograde/quickfeed/kit/proto";
+
+message Score {
+    string Secret = 1;   // the unique identifier for a scoring session
+    string TestName = 2; // name of the test
+    int32 Score = 3;     // the score obtained
+    int32 MaxScore = 4;  // max score possible to get on this specific test
+    int32 Weight = 5;    // the weight of this test; used to compute final grade
+    string Message = 6;  // error message; could be displayed in frontend also
+}
+
+message Void {}
+
+service ScoreService {
+    rpc Notify(Score) returns (Void);
+    rpc PanickedTest(Score) returns (Void);
+}
