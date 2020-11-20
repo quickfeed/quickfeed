@@ -17,7 +17,6 @@ import { IAllSubmissionsForEnrollment, ISubmission } from '../models';
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
 
-import { isNull } from "util";
 import { IMap, MapHelper, mapify } from "../map";
 
 interface IGrpcDummyUser {
@@ -108,7 +107,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return new Promise<User | null>((resolve, reject) => {
             // Simulate async callback
             setTimeout(() => {
-                if (isNull(user)) {
+                if (!(user)) {
                     this.currentLoggedIn = user;
                     resolve(user);
                 } else {
