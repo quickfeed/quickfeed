@@ -12,9 +12,9 @@ import (
 // i.e., GitHub and GitLab.
 type SCM interface {
 	// Creates a new organization.
-	CreateOrganization(context.Context, *CreateOrgOptions) (*pb.Organization, error)
+	CreateOrganization(context.Context, *OrganizationOptions) (*pb.Organization, error)
 	// Updates an organization
-	UpdateOrganization(context.Context, *CreateOrgOptions) error
+	UpdateOrganization(context.Context, *OrganizationOptions) error
 	// Gets an organization.
 	GetOrganization(context.Context, *GetOrgOptions) (*pb.Organization, error)
 	// Create a new repository.
@@ -77,12 +77,15 @@ func NewSCMClient(logger *zap.SugaredLogger, provider, token string) (SCM, error
 	return nil, errors.New("invalid provider: " + provider)
 }
 
-// CreateOrgOptions contains information on how an organization should be
+// OrganizationOptions contains information on how an organization should be
 // created.
-type CreateOrgOptions struct {
+type OrganizationOptions struct {
 	Path              string
 	Name              string
 	DefaultPermission string
+	// prohibit students from creating new repos
+	// on the course organization
+	RepoPermissions bool
 }
 
 // GetOrgOptions contains information on the organization to fetch

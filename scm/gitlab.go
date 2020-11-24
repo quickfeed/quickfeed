@@ -22,7 +22,7 @@ func NewGitlabSCMClient(token string) *GitlabSCM {
 }
 
 // CreateOrganization implements the SCM interface.
-func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions) (*pb.Organization, error) {
+func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*pb.Organization, error) {
 	group, _, err := s.client.Groups.CreateGroup(&gitlab.CreateGroupOptions{
 		Name:       &opt.Name,
 		Path:       &opt.Path,
@@ -40,7 +40,7 @@ func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOption
 }
 
 // UpdateOrganization implements the SCM interface.
-func (s *GitlabSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions) error {
+func (s *GitlabSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOptions) error {
 	// TODO no implementation provided yet
 	return ErrNotSupported{
 		SCM:    "gitlab",

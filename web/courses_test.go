@@ -130,7 +130,7 @@ func TestNewCourse(t *testing.T) {
 
 	for _, testCourse := range allCourses {
 		// each course needs a separate directory
-		_, err := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
+		_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -164,7 +164,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
-	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
+	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
 	for path, private := range web.RepoPaths {
 		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: directory, Private: private}
 		_, err := fakeProvider.CreateRepository(ctx, repoOptions)
@@ -190,7 +190,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	ctx := withUserContext(context.Background(), admin)
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	_, err := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
+	_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -518,7 +518,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	// teacher promotes students to teachers, must succeed
 	ctx = withUserContext(context.Background(), teacher)
-	_, err = fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
+	_, err = fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)
 	}

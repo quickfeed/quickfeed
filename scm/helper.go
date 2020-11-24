@@ -55,7 +55,7 @@ var (
 
 // Validators //
 
-func (opt CreateOrgOptions) valid() bool {
+func (opt OrganizationOptions) valid() bool {
 	return opt.Path != "" && opt.DefaultPermission != ""
 }
 

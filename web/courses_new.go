@@ -43,9 +43,10 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 	}
 	// set default repository access level for all students to "none"
 	// will not affect organization owners (teachers)
-	orgOptions := &scm.CreateOrgOptions{
+	orgOptions := &scm.OrganizationOptions{
 		Path:              org.GetPath(),
 		DefaultPermission: scm.OrgNone,
+		RepoPermissions:   false,
 	}
 	if err = sc.UpdateOrganization(ctx, orgOptions); err != nil {
 		s.logger.Debugf("createCourse: failed to update permissions for GitHub organization %s: %s", orgOptions.Path, err)
