@@ -510,6 +510,12 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 		}
 		enrollmentsWithActivity = append(enrollmentsWithActivity, enrol)
 	}
+	pending, err := s.db.GetEnrollmentsByCourse(courseID, pb.Enrollment_PENDING)
+	if err != nil {
+		return nil, err
+	}
+	// append pending users
+	enrollmentsWithActivity = append(enrollmentsWithActivity, pending...)
 	return enrollmentsWithActivity, nil
 }
 
