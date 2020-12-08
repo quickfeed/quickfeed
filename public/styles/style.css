@@ -605,6 +605,20 @@ table thead tr:first-child {
     cursor: pointer;
 }
 
+.user-comment {
+    width: fit-content;
+}
+
+.comment-pic {
+    display: block;
+    float: left;
+}
+
+.comment-body {
+    display: block;
+    float: right;
+}
+
 /* loader shown while waiting for data being fetched from the server */
 
 .lds-ripple {
