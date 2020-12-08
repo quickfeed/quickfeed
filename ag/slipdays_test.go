@@ -24,8 +24,9 @@ var (
 
 	a = func(daysFromNow int32) *pb.Assignment {
 		return &pb.Assignment{
-			CourseID: course.ID,
-			Deadline: testNow.Add(time.Duration(daysFromNow) * days).Format(layout),
+			CourseID:   course.ID,
+			ScoreLimit: 60,
+			Deadline:   testNow.Add(time.Duration(daysFromNow) * days).Format(layout),
 		}
 	}
 )
@@ -95,6 +96,7 @@ func TestSlipDays(t *testing.T) {
 					submission := &pb.Submission{
 						AssignmentID: sd.labs[i].ID,
 						Status:       pb.Submission_NONE,
+						Score:        50,
 					}
 					// emulate advancing time for this submission
 					testNow = testNow.Add(time.Duration(sd.submissions[i][j]) * days)
@@ -112,6 +114,85 @@ func TestSlipDays(t *testing.T) {
 			})
 		}
 	}
+}
+
+func TestScoreLimitSlipDays(t *testing.T) {
+	testNow = time.Now()
+	neg2, a2 := a(-2), a(2)
+
+	scoreLimitSlipDayTests := []struct {
+		name       string
+		assignment *pb.Assignment
+		submission *pb.Submission
+		remaining  uint32
+	}{
+		{
+			name:       "DeadlineNotPassed,NotApproved,NoScoreLimit",
+			assignment: a2,
+			submission: &pb.Submission{AssignmentID: a2.ID, Status: pb.Submission_NONE, Score: 50},
+			remaining:  course.SlipDays,
+		},
+		{
+			name:       "DeadlineNotPassed,NotApproved,ScoreLimit",
+			assignment: a2,
+			submission: &pb.Submission{AssignmentID: a2.ID, Status: pb.Submission_NONE, Score: 60},
+			remaining:  course.SlipDays,
+		},
+		{
+			name:       "DeadlineNotPassed,Approved,NoScoreLimit",
+			assignment: a2,
+			submission: &pb.Submission{AssignmentID: a2.ID, Status: pb.Submission_APPROVED, Score: 50},
+			remaining:  course.SlipDays,
+		},
+		{
+			name:       "DeadlineNotPassed,Approved,ScoreLimit",
+			assignment: a2,
+			submission: &pb.Submission{AssignmentID: a2.ID, Status: pb.Submission_APPROVED, Score: 60},
+			remaining:  course.SlipDays,
+		},
+		{
+			name:       "DeadlinePassed,NotApproved,NoScoreLimit",
+			assignment: neg2,
+			submission: &pb.Submission{AssignmentID: neg2.ID, Status: pb.Submission_NONE, Score: 50},
+			remaining:  course.SlipDays - 2,
+		},
+		{
+			name:       "DeadlinePassed,Approved,NoScoreLimit",
+			assignment: neg2,
+			submission: &pb.Submission{AssignmentID: neg2.ID, Status: pb.Submission_APPROVED, Score: 50},
+			remaining:  course.SlipDays,
+		},
+		{
+			name:       "DeadlinePassed,NotApproved,ScoreLimit",
+			assignment: neg2,
+			submission: &pb.Submission{AssignmentID: neg2.ID, Status: pb.Submission_NONE, Score: 60},
+			remaining:  course.SlipDays,
+		},
+		{
+			name:       "DeadlinePassed,Approved,ScoreLimit",
+			assignment: neg2,
+			submission: &pb.Submission{AssignmentID: neg2.ID, Status: pb.Submission_APPROVED, Score: 60},
+			remaining:  course.SlipDays,
+		},
+	}
+	for _, test := range scoreLimitSlipDayTests {
+		enrol := &pb.Enrollment{
+			Course:       course,
+			CourseID:     course.ID,
+			UsedSlipDays: make([]*pb.UsedSlipDays, 0),
+		}
+		t.Run(test.name, func(t *testing.T) {
+			err := enrol.UpdateSlipDays(testNow, test.assignment, test.submission)
+			if err != nil {
+				t.Fatal(err)
+			}
+			remaining := enrol.RemainingSlipDays(course)
+			if uint32(remaining) != test.remaining {
+				t.Errorf("UpdateSlipdays(%q, %q, %q, %q) == %d, want %d", testNow.Format(layout), test.assignment, test.submission, enrol, remaining, test.remaining)
+			}
+		})
+	}
+
 }
 
 func TestBadDeadlineFormat(t *testing.T) {

@@ -3,8 +3,8 @@
         "path": "/usr/local/bin/protoc",
         "options": [
             "--proto_path=${workspaceRoot}/ag",
-            "--proto_path=${env.HOME}/go/pkg/mod/github.com/gogo/protobuf@v1.3.1",
-        ],
+            "--proto_path=${env.HOME}/go/pkg/mod/github.com/gogo/protobuf@v1.3.1"
+        ]
     },
     "go.lintTool": "golangci-lint",
     "go.lintFlags": [
@@ -13,8 +13,18 @@
     "cSpell.words": [
         "Autograder",
         "Debugf",
+        "Eivind",
+        "Frøyland",
+        "Godkjent",
         "Gorm",
+        "Hein",
+        "Hein's",
+        "Ikke",
+        "Ingve",
+        "LOGDB",
+        "Operativsystemer",
         "Repos",
+        "Stavnes",
         "agpath",
         "assignmentid",
         "autograde",
@@ -22,18 +32,29 @@
         "cmds",
         "covermode",
         "coverprofile",
+        "excelize",
         "gopath",
         "gosecret",
         "gosimple",
         "goveralls",
         "grpc",
         "jinzhu",
+        "lsof",
         "mattn",
+        "ngrok",
         "opsys",
+        "orgs",
+        "paxos",
         "quickfeed",
         "repotoken",
         "scms",
         "sqlite",
-        "unmarshalling"
+        "structs",
+        "testdb",
+        "tmpl",
+        "unmarshalling",
+        "urfave",
+        "xanzy",
+        "xlsx"
     ]
 }

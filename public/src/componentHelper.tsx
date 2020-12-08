@@ -28,6 +28,19 @@ export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: bo
     return sorted;
 }
 
+export function sortEnrollmentsByActivity(enrols: Enrollment[]): Enrollment[] {
+    const active: Enrollment[] = [];
+    const inactive: Enrollment[] = [];
+    enrols.forEach((enrol) => {
+        if (enrol.getLastactivitydate() === "") {
+            inactive.push(enrol);
+        } else {
+            active.push(enrol);
+        }
+    });
+    return active.concat(inactive);
+}
+
 export function sortStudentsForRelease<T>(fullList: T[], allSubmissions: Map<T, ISubmissionLink>, reviewers: number): T[] {
     const withReviews: T[] = [];
     const withSubmission: T[] = [];
@@ -212,14 +225,14 @@ export function slugify(str: string): string {
     str = str.replace(/^\s+|\s+$/g, "").toLowerCase();
 
     // Remove accents, swap ñ for n, etc
-    const from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆa·/_,:;";
-    const to = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaaacccdeeeeeeeeiiiinnooooooorrstuuuuuyyzbBDdBAa------";
+    const from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆaæ·/,:;&";
+    const to = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaa-cccdeeeeeeeeiiiinnooooo-orrstuuuuuyyzbBDdBAa-------";
     for (let i = 0; i < from.length; i++) {
         str = str.replace(new RegExp(from.charAt(i), "g"), to.charAt(i));
     }
 
     // Remove invalid chars, replace whitespace by dashes, collapse dashes
-    return str.replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
+    return str.replace(/[^a-z0-9 -_]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
 }
 
 export function totalScore(reviews: Review[]): number {

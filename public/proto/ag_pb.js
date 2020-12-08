@@ -3620,7 +3620,7 @@ proto.Repository.prototype.setRepotype = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.Enrollment.repeatedFields_ = [12];
+proto.Enrollment.repeatedFields_ = [14];
 
 
 
@@ -3664,6 +3664,8 @@ proto.Enrollment.toObject = function(includeInstance, msg) {
     status: jspb.Message.getFieldWithDefault(msg, 9, 0),
     state: jspb.Message.getFieldWithDefault(msg, 10, 0),
     slipdaysremaining: jspb.Message.getFieldWithDefault(msg, 11, 0),
+    lastactivitydate: jspb.Message.getFieldWithDefault(msg, 12, ""),
+    totalapproved: jspb.Message.getFieldWithDefault(msg, 13, 0),
     usedslipdaysList: jspb.Message.toObjectList(msg.getUsedslipdaysList(),
     proto.UsedSlipDays.toObject, includeInstance)
   };
@@ -3750,6 +3752,14 @@ proto.Enrollment.deserializeBinaryFromReader = function(msg, reader) {
       msg.setSlipdaysremaining(value);
       break;
     case 12:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setLastactivitydate(value);
+      break;
+    case 13:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setTotalapproved(value);
+      break;
+    case 14:
       var value = new proto.UsedSlipDays;
       reader.readMessage(value,proto.UsedSlipDays.deserializeBinaryFromReader);
       msg.addUsedslipdays(value);
@@ -3863,10 +3873,24 @@ proto.Enrollment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getLastactivitydate();
+  if (f.length > 0) {
+    writer.writeString(
+      12,
+      f
+    );
+  }
+  f = message.getTotalapproved();
+  if (f !== 0) {
+    writer.writeUint64(
+      13,
+      f
+    );
+  }
   f = message.getUsedslipdaysList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      12,
+      14,
       f,
       proto.UsedSlipDays.serializeBinaryToWriter
     );
@@ -4150,12 +4174,48 @@ proto.Enrollment.prototype.setSlipdaysremaining = function(value) {
 
 
 /**
- * repeated UsedSlipDays usedSlipDays = 12;
+ * optional string lastActivityDate = 12;
+ * @return {string}
+ */
+proto.Enrollment.prototype.getLastactivitydate = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 12, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.Enrollment} returns this
+ */
+proto.Enrollment.prototype.setLastactivitydate = function(value) {
+  return jspb.Message.setProto3StringField(this, 12, value);
+};
+
+
+/**
+ * optional uint64 totalApproved = 13;
+ * @return {number}
+ */
+proto.Enrollment.prototype.getTotalapproved = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 13, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.Enrollment} returns this
+ */
+proto.Enrollment.prototype.setTotalapproved = function(value) {
+  return jspb.Message.setProto3IntField(this, 13, value);
+};
+
+
+/**
+ * repeated UsedSlipDays usedSlipDays = 14;
  * @return {!Array<!proto.UsedSlipDays>}
  */
 proto.Enrollment.prototype.getUsedslipdaysList = function() {
   return /** @type{!Array<!proto.UsedSlipDays>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.UsedSlipDays, 12));
+    jspb.Message.getRepeatedWrapperField(this, proto.UsedSlipDays, 14));
 };
 
 
@@ -4164,7 +4224,7 @@ proto.Enrollment.prototype.getUsedslipdaysList = function() {
  * @return {!proto.Enrollment} returns this
 */
 proto.Enrollment.prototype.setUsedslipdaysList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 12, value);
+  return jspb.Message.setRepeatedWrapperField(this, 14, value);
 };
 
 
@@ -4174,7 +4234,7 @@ proto.Enrollment.prototype.setUsedslipdaysList = function(value) {
  * @return {!proto.UsedSlipDays}
  */
 proto.Enrollment.prototype.addUsedslipdays = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 12, opt_value, proto.UsedSlipDays, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 14, opt_value, proto.UsedSlipDays, opt_index);
 };
 
 
@@ -5930,7 +5990,7 @@ proto.Assignments.prototype.clearAssignmentsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.Submission.repeatedFields_ = [11,12];
+proto.Submission.repeatedFields_ = [12,13];
 
 
 
@@ -5973,10 +6033,11 @@ proto.Submission.toObject = function(includeInstance, msg) {
     commithash: jspb.Message.getFieldWithDefault(msg, 8, ""),
     released: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
     status: jspb.Message.getFieldWithDefault(msg, 10, 0),
-    reviewsList: jspb.Message.toObjectList(msg.getReviewsList(),
-    proto.Review.toObject, includeInstance),
+    approveddate: jspb.Message.getFieldWithDefault(msg, 11, ""),
     commentsList: jspb.Message.toObjectList(msg.getCommentsList(),
-    proto.Comment.toObject, includeInstance)
+    proto.Comment.toObject, includeInstance),
+    reviewsList: jspb.Message.toObjectList(msg.getReviewsList(),
+    proto.Review.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -6054,14 +6115,18 @@ proto.Submission.deserializeBinaryFromReader = function(msg, reader) {
       msg.setStatus(value);
       break;
     case 11:
-      var value = new proto.Review;
-      reader.readMessage(value,proto.Review.deserializeBinaryFromReader);
-      msg.addReviews(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setApproveddate(value);
       break;
     case 12:
       var value = new proto.Comment;
       reader.readMessage(value,proto.Comment.deserializeBinaryFromReader);
       msg.addComments(value);
+      break;
+    case 13:
+      var value = new proto.Review;
+      reader.readMessage(value,proto.Review.deserializeBinaryFromReader);
+      msg.addReviews(value);
       break;
     default:
       reader.skipField();
@@ -6162,12 +6227,11 @@ proto.Submission.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getReviewsList();
+  f = message.getApproveddate();
   if (f.length > 0) {
-    writer.writeRepeatedMessage(
+    writer.writeString(
       11,
-      f,
-      proto.Review.serializeBinaryToWriter
+      f
     );
   }
   f = message.getCommentsList();
@@ -6176,6 +6240,14 @@ proto.Submission.serializeBinaryToWriter = function(message, writer) {
       12,
       f,
       proto.Comment.serializeBinaryToWriter
+    );
+  }
+  f = message.getReviewsList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      13,
+      f,
+      proto.Review.serializeBinaryToWriter
     );
   }
 };
@@ -6372,40 +6444,20 @@ proto.Submission.prototype.setStatus = function(value) {
 
 
 /**
- * repeated Review reviews = 11;
- * @return {!Array<!proto.Review>}
+ * optional string approvedDate = 11;
+ * @return {string}
  */
-proto.Submission.prototype.getReviewsList = function() {
-  return /** @type{!Array<!proto.Review>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.Review, 11));
+proto.Submission.prototype.getApproveddate = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 11, ""));
 };
 
 
 /**
- * @param {!Array<!proto.Review>} value
- * @return {!proto.Submission} returns this
-*/
-proto.Submission.prototype.setReviewsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 11, value);
-};
-
-
-/**
- * @param {!proto.Review=} opt_value
- * @param {number=} opt_index
- * @return {!proto.Review}
- */
-proto.Submission.prototype.addReviews = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 11, opt_value, proto.Review, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * @param {string} value
  * @return {!proto.Submission} returns this
  */
-proto.Submission.prototype.clearReviewsList = function() {
-  return this.setReviewsList([]);
+proto.Submission.prototype.setApproveddate = function(value) {
+  return jspb.Message.setProto3StringField(this, 11, value);
 };
 
 
@@ -6444,6 +6496,44 @@ proto.Submission.prototype.addComments = function(opt_value, opt_index) {
  */
 proto.Submission.prototype.clearCommentsList = function() {
   return this.setCommentsList([]);
+};
+
+
+/**
+ * repeated Review reviews = 13;
+ * @return {!Array<!proto.Review>}
+ */
+proto.Submission.prototype.getReviewsList = function() {
+  return /** @type{!Array<!proto.Review>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.Review, 13));
+};
+
+
+/**
+ * @param {!Array<!proto.Review>} value
+ * @return {!proto.Submission} returns this
+*/
+proto.Submission.prototype.setReviewsList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 13, value);
+};
+
+
+/**
+ * @param {!proto.Review=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.Review}
+ */
+proto.Submission.prototype.addReviews = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 13, opt_value, proto.Review, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.Submission} returns this
+ */
+proto.Submission.prototype.clearReviewsList = function() {
+  return this.setReviewsList([]);
 };
 
 
@@ -9363,7 +9453,7 @@ proto.Organizations.prototype.clearOrganizationsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.EnrollmentRequest.repeatedFields_ = [3];
+proto.EnrollmentRequest.repeatedFields_ = [4];
 
 
 
@@ -9398,7 +9488,8 @@ proto.EnrollmentRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     courseid: jspb.Message.getFieldWithDefault(msg, 1, 0),
     ignoregroupmembers: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
-    statusesList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f
+    withactivity: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
+    statusesList: (f = jspb.Message.getRepeatedField(msg, 4)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -9444,6 +9535,10 @@ proto.EnrollmentRequest.deserializeBinaryFromReader = function(msg, reader) {
       msg.setIgnoregroupmembers(value);
       break;
     case 3:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setWithactivity(value);
+      break;
+    case 4:
       var value = /** @type {!Array<!proto.Enrollment.UserStatus>} */ (reader.readPackedEnum());
       msg.setStatusesList(value);
       break;
@@ -9490,10 +9585,17 @@ proto.EnrollmentRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getWithactivity();
+  if (f) {
+    writer.writeBool(
+      3,
+      f
+    );
+  }
   f = message.getStatusesList();
   if (f.length > 0) {
     writer.writePackedEnum(
-      3,
+      4,
       f
     );
   }
@@ -9537,11 +9639,29 @@ proto.EnrollmentRequest.prototype.setIgnoregroupmembers = function(value) {
 
 
 /**
- * repeated Enrollment.UserStatus statuses = 3;
+ * optional bool withActivity = 3;
+ * @return {boolean}
+ */
+proto.EnrollmentRequest.prototype.getWithactivity = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.EnrollmentRequest} returns this
+ */
+proto.EnrollmentRequest.prototype.setWithactivity = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 3, value);
+};
+
+
+/**
+ * repeated Enrollment.UserStatus statuses = 4;
  * @return {!Array<!proto.Enrollment.UserStatus>}
  */
 proto.EnrollmentRequest.prototype.getStatusesList = function() {
-  return /** @type {!Array<!proto.Enrollment.UserStatus>} */ (jspb.Message.getRepeatedField(this, 3));
+  return /** @type {!Array<!proto.Enrollment.UserStatus>} */ (jspb.Message.getRepeatedField(this, 4));
 };
 
 
@@ -9550,7 +9670,7 @@ proto.EnrollmentRequest.prototype.getStatusesList = function() {
  * @return {!proto.EnrollmentRequest} returns this
  */
 proto.EnrollmentRequest.prototype.setStatusesList = function(value) {
-  return jspb.Message.setField(this, 3, value || []);
+  return jspb.Message.setField(this, 4, value || []);
 };
 
 
@@ -9560,7 +9680,7 @@ proto.EnrollmentRequest.prototype.setStatusesList = function(value) {
  * @return {!proto.EnrollmentRequest} returns this
  */
 proto.EnrollmentRequest.prototype.addStatuses = function(value, opt_index) {
-  return jspb.Message.addToRepeatedField(this, 3, value, opt_index);
+  return jspb.Message.addToRepeatedField(this, 4, value, opt_index);
 };
 
 

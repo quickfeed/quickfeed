@@ -107,7 +107,7 @@ purge: scm
 # will start ag client and server, serve static files at 'endpoint' and webserver at 'agport'
 # change agport variable to the number of bound local port when using tunnel script
 run:
-	@quickfeed -service.url $(endpoint) -http.addr :$(agport) -http.public ./public
+	@quickfeed -service.url $(endpoint) -http.addr :$(agport) -http.public ./public -database.file ./tmp.db
 
 runlocal:
 	@quickfeed -service.url 127.0.0.1 -http.addr :9091 -http.public ./public

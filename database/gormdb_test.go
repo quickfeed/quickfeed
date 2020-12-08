@@ -867,11 +867,11 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
-	assigment := pb.Assignment{
+	assignment := pb.Assignment{
 		CourseID: course.ID,
 		Order:    1,
 	}
-	if err := db.CreateAssignment(&assigment); err != nil {
+	if err := db.CreateAssignment(&assignment); err != nil {
 		t.Fatal(err)
 	}
 
@@ -894,7 +894,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 
 	// create another submission for the assignment; now it should succeed
 	if err := db.CreateSubmission(&pb.Submission{
-		AssignmentID: assigment.ID,
+		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 	}); err != nil {
 		t.Fatal(err)
@@ -910,7 +910,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	}
 	want := &pb.Submission{
 		ID:           submissions[0].ID,
-		AssignmentID: assigment.ID,
+		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Status:       pb.Submission_NONE,
 		Reviews:      []*pb.Review{},
@@ -949,7 +949,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	}
 }
 
-func TestGormDBGetNonExsistingSubmissions(t *testing.T) {
+func TestGormDBGetNonExistingSubmissions(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 	if _, err := db.GetSubmissions(10, &pb.Submission{UserID: 10}); err != gorm.ErrRecordNotFound {
@@ -974,17 +974,17 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
-	assigment := pb.Assignment{
+	assignment := pb.Assignment{
 		CourseID: course.ID,
 		Order:    1,
 	}
-	if err := db.CreateAssignment(&assigment); err != nil {
+	if err := db.CreateAssignment(&assignment); err != nil {
 		t.Fatal(err)
 	}
 
 	// create a submission for the assignment; should fail
 	if err := db.CreateSubmission(&pb.Submission{
-		AssignmentID: assigment.ID,
+		AssignmentID: assignment.ID,
 		UserID:       2,
 	}); err != gorm.ErrRecordNotFound {
 		t.Fatal(err)
@@ -1009,7 +1009,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 
 	// create another submission for the assignment; now it should succeed
 	if err := db.CreateSubmission(&pb.Submission{
-		AssignmentID: assigment.ID,
+		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 	}); err != nil {
 		t.Fatal(err)
@@ -1025,7 +1025,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	}
 	want := &pb.Submission{
 		ID:           submissions[0].ID,
-		AssignmentID: assigment.ID,
+		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Reviews:      []*pb.Review{},
 	}
@@ -1092,8 +1092,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	}
 
 	// Create some submissions. We need IDs set here to be able
-	// to compare local submission structs with database
-	// structs
+	// to compare local submission structs with database structs.
 	submission1 := pb.Submission{
 		UserID:       user.ID,
 		AssignmentID: assignment1.ID,
@@ -1577,7 +1576,7 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 	}
 }
 
-func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
+func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 

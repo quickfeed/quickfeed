@@ -4,7 +4,8 @@ import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { searchForLabs, userRepoLink, getSlipDays, legalIndex } from "../../componentHelper";
+import { searchForLabs, userRepoLink, getSlipDays, legalIndex, groupRepoLink } from '../../componentHelper';
+import { formatDate } from '../../helper';
 
 interface IResultsProps {
     currentUser: number;
@@ -54,7 +55,6 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         const currentStudents = this.props.allCourseSubmissions.length > 0 ? this.props.allCourseSubmissions : null;
         if (currentStudents
             && this.state.selectedSubmission && this.state.selectedStudent
-            && !this.state.selectedSubmission.assignment.getIsgrouplab()
         ) {
             studentLab = <StudentLab
                 studentSubmission={this.state.selectedSubmission}
@@ -113,19 +113,26 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                 }
             }}
                 >
-                <h1>Result: {this.props.course.getName()}</h1>
+                <h1>Results: {this.props.course.getName()}</h1>
                 <Row>
-                    <div key="resultshead" className="col-lg6 col-md-6 col-sm-12">
+                    <div key="resultshead" className="col-lg-8 col-md-8 col-sm-12 col-xs-12">
                         <Search className="input-group"
-                            placeholder="Search for students"
+                            placeholder="Search for students and groups by name, email or GitHub login"
                             onChange={(query) => this.handleSearch(query)}
+                            onFocus={() => this.setState({
+                                ignoreShortcuts: true,
+                            })}
+                            onBlur={() => this.setState({
+                                ignoreShortcuts: false,
+                            })}
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.allSubmissions}
+                            classType={"result-table"}
                             selector={(item: IAllSubmissionsForEnrollment) => this.getResultSelector(item)}
                         />
                     </div>
-                    <div key="resultsbody" className="col-lg-6 col-md-6 col-sm-12">
+                    <div key="resultsbody" className="col-lg-4 col-md-4 col-sm-12 col-xs-12">
                         {studentLab}
                     </div>
                 </Row>
@@ -134,17 +141,39 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
     }
 
     private async updateSubmissionStatus(status: Submission.Status) {
-        const current = this.state.selectedSubmission;
-        const selected = current?.submission;
-        if (selected) {
-            const previousStatus = selected.status;
-            selected.status = status;
-            const ans = await this.props.updateSubmissionStatus(selected);
-            if (!ans) {
-                selected.status = previousStatus;
+        const currentSubmissionLink = this.state.selectedSubmission;
+        const selectedSubmission = currentSubmissionLink?.submission;
+        if (currentSubmissionLink && selectedSubmission) {
+            const previousStatus = selectedSubmission.status;
+            selectedSubmission.status = status;
+            const ans = await this.props.updateSubmissionStatus(selectedSubmission);
+            if (ans) {
+                selectedSubmission.approvedDate = new Date().toLocaleString();
+                // If the submission is for group assignment, every group member will have a copy
+                // in their Submission link structures. When the submission has been
+                // approved for one student, update all its copies for every group member.
+
+                if (selectedSubmission.groupid > 0) {
+                    this.state.allSubmissions.forEach((e) => {
+                        if (e.enrollment.getGroup()?.getId() === selectedSubmission.groupid) {
+                            e.labs.forEach((l) => {
+                                if (l.assignment.getId() === currentSubmissionLink.assignment.getId()) {
+                                    const currentSubmissionCopy = l.submission;
+                                    if (currentSubmissionCopy) {
+                                        currentSubmissionCopy.approvedDate = selectedSubmission.approvedDate;
+                                        currentSubmissionCopy.status = selectedSubmission.status;
+                                    }
+                                }
+                            })
+                        }
+                    })
+                }
+
+            } else {
+                selectedSubmission.status = previousStatus;
             }
             this.setState({
-                selectedSubmission: current,
+                selectedSubmission: currentSubmissionLink,
             });
         }
     }
@@ -177,17 +206,25 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         return false;
     }
 
-    private getResultHeader(): string[] {
-        let headers: string[] = ["Name"];
-        headers = headers.concat(this.props.assignments.filter((e) => !e.getIsgrouplab()).map((e) => e.getName()));
+    private getResultHeader(): (string | JSX.Element)[] {
+        let headers: (string | JSX.Element)[] = ["Name", "Group"];
+        headers = headers.concat(this.props.assignments.map((e) => {
+            if (e.getIsgrouplab()) {
+                return <span style={{ whiteSpace: 'nowrap' }}>{e.getName() + " (g)"}</span>;
+            } else {
+                return e.getName();
+            }
+        }));
         return headers;
     }
 
     private getResultSelector(student: IAllSubmissionsForEnrollment): (string | JSX.Element | ICellElement)[] {
         const user = student.enrollment.getUser();
+        const group = student.enrollment.getGroup();
         const displayName = user ? userRepoLink(user.getLogin(), user.getName(), this.props.courseURL) : "";
-        let selector: (string | JSX.Element | ICellElement)[] = [displayName];
-        selector = selector.concat(student.labs.filter((e, i) => !e.assignment.getIsgrouplab()).map(
+        const groupName = group ? groupRepoLink(group.getName(), this.props.courseURL) : "";
+        let selector: (string | JSX.Element | ICellElement)[] = [displayName, groupName];
+        selector = selector.concat(student.labs.map(
             (e) => {
                 let cellCss: string = "";
                 if (e.submission) {
@@ -195,9 +232,10 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                 }
                 const iCell: ICellElement = {
                     value: <a className={cellCss + " lab-cell-link"}
+                        style={{ whiteSpace: 'nowrap' }}
                         onClick={() => this.handleOnclick(e, student)}
                         href="#">
-                        {e.submission ? (e.submission.score + "%") : "N/A"}</a>,
+                        {e.submission ? (e.submission.score + " %") : "N/A"}</a>,
                     className: cellCss,
                 };
                 return iCell;
@@ -209,12 +247,13 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         this.setState({
             selectedSubmission: item,
             selectedStudent: student,
+            ignoreShortcuts: false,
         });
     }
 
     private handleSearch(query: string): void {
         this.setState({
-            allSubmissions: searchForLabs(this.props.allCourseSubmissions, query),
+            allSubmissions: sortByScore(searchForLabs(this.props.allCourseSubmissions, query), this.props.assignments, false),
         });
     }
 

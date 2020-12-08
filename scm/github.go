@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/google/go-github/v30/github"
+	"github.com/google/go-github/v32/github"
 	"github.com/gosimple/slug"
 	"golang.org/x/oauth2"
 )
@@ -32,7 +32,7 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 }
 
 // CreateOrganization implements the SCM interface.
-func (s *GithubSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions) (*pb.Organization, error) {
+func (s *GithubSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*pb.Organization, error) {
 	return nil, ErrNotSupported{
 		SCM:    "github",
 		Method: "CreateOrganization",
@@ -40,14 +40,18 @@ func (s *GithubSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOption
 }
 
 // UpdateOrganization implements the SCM interface.
-func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions) error {
+func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOptions) error {
 	if !opt.valid() {
 		return ErrMissingFields{
 			Method:  "UpdateOrganization",
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	_, _, err := s.client.Organizations.Edit(ctx, opt.Path, &github.Organization{DefaultRepoPermission: &opt.DefaultPermission})
+
+	_, _, err := s.client.Organizations.Edit(ctx, opt.Path, &github.Organization{
+		DefaultRepoPermission: &opt.DefaultPermission,
+		MembersCanCreateRepos: &opt.RepoPermissions,
+	})
 	return err
 }
 

@@ -21,7 +21,11 @@ func TestSubmissionsAccess(t *testing.T) {
 	admin := createFakeUser(t, db, 1)
 
 	teacher := createFakeUser(t, db, 2)
-	db.UpdateUser(&pb.User{ID: teacher.ID, IsAdmin: true})
+	err := db.UpdateUser(&pb.User{ID: teacher.ID, IsAdmin: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	var course pb.Course
 	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2
@@ -63,20 +67,21 @@ func TestSubmissionsAccess(t *testing.T) {
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), teacher)
 
-	fakeProvider.CreateOrganization(context.Background(),
-		&scm.CreateOrgOptions{Path: "path", Name: "name"},
-	)
+	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	users := []*pb.User{student1, student2}
 	group_req := &pb.Group{Name: "Test group", CourseID: course.ID, Users: users}
 
-	_, err := ags.CreateGroup(ctx, group_req)
+	_, err = ags.CreateGroup(ctx, group_req)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// at this stage we have a course teacher, two students enrolled in the course in the same group,
-	// and one student and admin not affilated with the course
+	// and one student and admin not affiliated with the course
 
 	if err = db.CreateAssignment(&pb.Assignment{
 		CourseID:    course.ID,
@@ -170,7 +175,7 @@ func TestSubmissionsAccess(t *testing.T) {
 		t.Error("Expected error: user ")
 	}
 	if len(haveSubmissions.GetSubmissions()) > 0 {
-		t.Errorf("Not enrolled admin should not see any submissions, got submisions: %v+ ", haveSubmissions.GetSubmissions())
+		t.Errorf("Not enrolled admin should not see any submissions, got submissions: %v+ ", haveSubmissions.GetSubmissions())
 	}
 
 	// enroll admin as course student
@@ -221,7 +226,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	// the second student should not be able to access the submission by student1
 	ctx = withUserContext(context.Background(), student2)
 	personalSubmission, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID, UserID: student1.ID})
-	if err == nil {
+	if err == nil || personalSubmission != nil {
 		t.Error("Expected error: only owner and teachers can get submissions")
 	}
 
@@ -236,14 +241,14 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	groupSubmission, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID, GroupID: 1})
-	if err == nil {
+	if err == nil || groupSubmission != nil {
 		t.Error("Expected error: only owner and teachers can get submissions")
 	}
 
 	// the third student (not enrolled in the course) should not be able to access submission even if it belongs to that student
 	ctx = withUserContext(context.Background(), student3)
 	personalSubmission, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID, UserID: student3.ID})
-	if err == nil {
+	if err == nil || personalSubmission != nil {
 		t.Error("Expected error: only owner and teachers can get submissions")
 	}
 }
@@ -295,9 +300,10 @@ func TestApproveSubmission(t *testing.T) {
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
-	fakeProvider.CreateOrganization(context.Background(),
-		&scm.CreateOrgOptions{Path: "path", Name: "name"},
-	)
+	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if _, err = ags.UpdateSubmission(ctx, &pb.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.ID,
@@ -308,6 +314,9 @@ func TestApproveSubmission(t *testing.T) {
 	}
 
 	updatedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
 	wantSubmission.Status = pb.Submission_APPROVED
 
 	if !reflect.DeepEqual(wantSubmission.GetStatus(), updatedSubmission.GetStatus()) {
@@ -323,6 +332,9 @@ func TestApproveSubmission(t *testing.T) {
 	}
 
 	updatedSubmission, err = db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
 	wantSubmission.Status = pb.Submission_REJECTED
 
 	if !reflect.DeepEqual(wantSubmission.GetStatus(), updatedSubmission.GetStatus()) {
@@ -439,9 +451,10 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
-	fakeProvider.CreateOrganization(context.Background(),
-		&scm.CreateOrgOptions{Path: "path", Name: "name"},
-	)
+	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// check that all assignments were saved for the correct courses
 	wantAssignments1 := []*pb.Assignment{lab1c1, lab2c1}
@@ -452,14 +465,14 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(wantAssignments1, haveAssignments1.GetAssignments()) {
-		t.Errorf("Expected assigments for course 1: %+v, got %+v", wantAssignments1, haveAssignments1.GetAssignments())
+		t.Errorf("Expected assignments for course 1: %+v, got %+v", wantAssignments1, haveAssignments1.GetAssignments())
 	}
 	haveAssignments2, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course2.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(wantAssignments2, haveAssignments2.GetAssignments()) {
-		t.Errorf("Expected assigments for course 2: %+v, got %+v", wantAssignments1, haveAssignments1.GetAssignments())
+		t.Errorf("Expected assignments for course 2: %+v, got %+v", wantAssignments1, haveAssignments1.GetAssignments())
 	}
 
 	// check that all submissions were saved for the correct labs
@@ -509,5 +522,208 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	if _, err = ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
 		t.Error("Expected 'only teachers can get all lab submissions'")
 	}
+}
 
+func TestCreateApproveList(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	admin := createFakeUser(t, db, 1)
+
+	course := allCourses[2]
+	if err := db.CreateCourse(admin.ID, course); err != nil {
+		t.Fatal(err)
+	}
+	student1 := createNamedUser(t, db, 2, "Leslie Lamport")
+	student2 := createNamedUser(t, db, 3, "Hein Meling")
+	student3 := createNamedUser(t, db, 4, "John Doe")
+	enrollStudent(t, db, student1, course)
+	enrollStudent(t, db, student2, course)
+	enrollStudent(t, db, student3, course)
+
+	assignments := []*pb.Assignment{
+		{
+			CourseID:   course.ID,
+			Name:       "lab 1",
+			ScriptFile: "go.sh",
+			Deadline:   "2020-02-23T18:00:00",
+			Order:      1,
+		},
+		{
+			CourseID:   course.ID,
+			Name:       "lab 2",
+			ScriptFile: "go.sh",
+			Deadline:   "2020-03-23T18:00:00",
+			Order:      2,
+		},
+		{
+			CourseID:   course.ID,
+			Name:       "lab 3",
+			ScriptFile: "go.sh",
+			Deadline:   "2020-04-23T18:00:00",
+			Order:      3,
+		},
+		{
+			CourseID:   course.ID,
+			Name:       "lab 4",
+			ScriptFile: "go.sh",
+			Deadline:   "2020-05-23T18:00:00",
+			Order:      4,
+		},
+	}
+	for _, a := range assignments {
+		if err := db.CreateAssignment(a); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	submissions := []*pb.Submission{
+		{
+			UserID:       student1.ID,
+			AssignmentID: assignments[0].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student1.ID,
+			AssignmentID: assignments[1].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student1.ID,
+			AssignmentID: assignments[2].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student1.ID,
+			AssignmentID: assignments[3].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student2.ID,
+			AssignmentID: assignments[0].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student2.ID,
+			AssignmentID: assignments[2].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student2.ID,
+			AssignmentID: assignments[3].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student3.ID,
+			AssignmentID: assignments[0].ID,
+			Status:       pb.Submission_APPROVED,
+		},
+		{
+			UserID:       student3.ID,
+			AssignmentID: assignments[1].ID,
+			Status:       pb.Submission_REJECTED,
+		},
+		{
+			UserID:       student3.ID,
+			AssignmentID: assignments[2].ID,
+			Status:       pb.Submission_REVISION,
+		},
+	}
+	for _, s := range submissions {
+		if err := db.CreateSubmission(s); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	fakeProvider, scms := fakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ctx := withUserContext(context.Background(), admin)
+	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testCases := []struct {
+		student          *pb.User
+		minNumApproved   int
+		expectedApproved bool
+	}{
+		{
+			student:          student1,
+			minNumApproved:   4,
+			expectedApproved: true,
+		},
+		{
+			student:          student1,
+			minNumApproved:   3,
+			expectedApproved: true,
+		},
+		{
+			student:          student2,
+			minNumApproved:   4,
+			expectedApproved: false,
+		},
+		{
+			student:          student2,
+			minNumApproved:   3,
+			expectedApproved: true,
+		},
+		{
+			student:          student2,
+			minNumApproved:   2,
+			expectedApproved: true,
+		},
+		{
+			student:          student3,
+			minNumApproved:   4,
+			expectedApproved: false,
+		},
+		{
+			student:          student3,
+			minNumApproved:   3,
+			expectedApproved: false,
+		},
+		{
+			student:          student3,
+			minNumApproved:   2,
+			expectedApproved: false,
+		},
+		{
+			student:          student3,
+			minNumApproved:   1,
+			expectedApproved: true,
+		},
+	}
+
+	gotSubmissions, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course.ID, Type: pb.SubmissionsForCourseRequest_ALL})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, el := range gotSubmissions.GetLinks() {
+		if el.Enrollment.User.IsAdmin || el.Enrollment.GetHasTeacherScopes() {
+			continue
+		}
+		approved := make([]bool, len(el.Submissions))
+		for i, s := range el.Submissions {
+			approved[i] = s.GetSubmission().IsApproved()
+		}
+		for _, test := range testCases {
+			if test.student.ID == el.Enrollment.UserID {
+				got := isApproved(test.minNumApproved, approved)
+				if got != test.expectedApproved {
+					t.Errorf("isApproved(%d, %v) = %t, expected %t", test.minNumApproved, approved, got, test.expectedApproved)
+				}
+			}
+		}
+		t.Logf("%s\t%t", el.Enrollment.User.Name, isApproved(4, approved))
+	}
+}
+
+func isApproved(requirements int, approved []bool) bool {
+	for _, a := range approved {
+		if a {
+			requirements--
+		}
+	}
+	return requirements <= 0
 }

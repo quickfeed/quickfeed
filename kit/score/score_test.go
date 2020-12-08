@@ -1,7 +1,6 @@
 package score
 
 import (
-	"os"
 	"testing"
 )
 
@@ -41,8 +40,8 @@ var fibonacciTests = []struct {
 }
 
 func TestFibonacci(t *testing.T) {
-	sc := NewScoreMax(len(fibonacciTests)*2, 20)
-	defer sc.WriteJSON(os.Stdout)
+	sc := NewScoreMax(t, len(fibonacciTests)*2, 20)
+	defer sc.Print(t)
 
 	for _, ft := range fibonacciTests {
 		out := fibonacci(ft.in)
@@ -59,7 +58,7 @@ func TestFibonacci(t *testing.T) {
 }
 
 var nonJSONLog = []string{
-	"heere is some output",
+	"here is some output",
 	"some other output",
 	"line contains " + theSecret,
 	theSecret + " should not be revealed",
@@ -78,16 +77,16 @@ func TestParseNonJSONStrings(t *testing.T) {
 }
 
 var jsonLog = []struct {
-	in  string
-	out *Score
-	err error
+	in          string
+	max, weight int
+	err         error
 }{
-	{`{"Secret":"` + theSecret + `","TestName":"init","Score":0,"MaxScore":10,"Weight":10}`,
-		NewScore(10, 10),
+	{`{"Secret":"` + theSecret + `","TestName":"TestParseJSONStrings","Score":0,"MaxScore":10,"Weight":10}`,
+		10, 10,
 		nil,
 	},
-	{`{"Secret":"the wrong secret","TestName":"init","Score":0,"MaxScore":10,"Weight":10}`,
-		nil,
+	{`{"Secret":"the wrong secret","TestName":"TestParseJSONStrings","Score":0,"MaxScore":10,"Weight":10}`,
+		-1, -1,
 		ErrScoreNotFound,
 	},
 }
@@ -104,10 +103,14 @@ func (sc *Score) Equal(other *Score) bool {
 func TestParseJSONStrings(t *testing.T) {
 	for _, s := range jsonLog {
 		sc, err := Parse(s.in, GlobalSecret)
-		if sc != s.out || err != s.err {
-			if !s.out.Equal(sc) || err != s.err {
+		var expectedScore *Score
+		if s.max > 0 {
+			expectedScore = NewScore(t, s.max, s.weight)
+		}
+		if sc != expectedScore || err != s.err {
+			if !expectedScore.Equal(sc) || err != s.err {
 				t.Errorf("Failed to parse:\n%v\nGot: '%v', '%v'\nExp: '%v', '%v'",
-					s.in, sc, err, s.out, s.err)
+					s.in, sc, err, expectedScore, s.err)
 			}
 			if sc != nil && sc.Secret == GlobalSecret {
 				t.Errorf("Parse function failed to hide global secret: %v", sc.Secret)

@@ -21,7 +21,7 @@ const (
 
 	// OrgPull allows only pull access to organization repositories
 	OrgPull = "read"
-	// OrgPush allows pull and push acces to organization repositories
+	// OrgPush allows pull and push access to organization repositories
 	OrgPush = "write"
 	// OrgFull allows to pull/push, create, remove and update organization repositories
 	OrgFull = "admin"
@@ -55,7 +55,7 @@ var (
 
 // Validators //
 
-func (opt CreateOrgOptions) valid() bool {
+func (opt OrganizationOptions) valid() bool {
 	return opt.Path != "" && opt.DefaultPermission != ""
 }
 
@@ -105,13 +105,11 @@ func (opt TeamMembershipOptions) valid() bool {
 }
 
 func (opt OrgMembershipOptions) valid() bool {
-	return opt.Organization != "" &&
-		opt.Username != ""
+	return opt.Organization != "" && opt.Username != ""
 }
 
 func (opt RepositoryOptions) valid() bool {
-	return opt.ID > 0 ||
-		(opt.Path != "" && opt.Owner != "")
+	return opt.ID > 0 || (opt.Path != "" && opt.Owner != "")
 }
 
 // Errors //

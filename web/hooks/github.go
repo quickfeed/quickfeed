@@ -3,6 +3,7 @@ package hooks
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/assignments"
@@ -52,8 +53,10 @@ func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
-	if payload.GetRef() != "refs/heads/master" {
-		wh.logger.Debugf("Ignoring push event for non-master branch: %s", payload.GetRef())
+	wh.logger.Debugf("Received push event for branch reference: %s (user's default branch: %s)",
+		payload.GetRef(), payload.GetRepo().GetDefaultBranch())
+	if !strings.HasSuffix(payload.GetRef(), payload.GetRepo().GetDefaultBranch()) {
+		wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
 		return
 	}
 
@@ -62,7 +65,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		wh.logger.Errorf("Failed to get repository from database: %w", err)
 		return
 	}
-	wh.logger.Debugf("Received Push Event for repository %v", repo)
+	wh.logger.Debugf("Received push event for repository %v", repo)
 
 	course, err := wh.db.GetCourseByOrganizationID(repo.OrganizationID)
 	if err != nil {
@@ -77,19 +80,35 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		// should update the course data (assignments) in the database
 		assignments.UpdateFromTestsRepo(wh.logger, wh.db, repo, course)
 
-	case repo.IsStudentRepo():
-		wh.logger.Debugf("Processing push event for %s", payload.GetRepo().GetName())
+	case repo.IsUserRepo():
+		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
+		wh.updateLastActivityDate(repo.UserID, course.ID)
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
-			runData := &ci.RunData{
-				Course:     course,
-				Assignment: assignment,
-				Repo:       repo,
-				CloneURL:   payload.GetRepo().GetCloneURL(),
-				CommitID:   payload.GetHeadCommit().GetID(),
-				JobOwner:   payload.GetSender().GetLogin(),
+			if !assignment.IsGroupLab {
+				// only run non-group assignments
+				wh.runAssignmentTests(assignment, repo, course, payload)
+			} else {
+				wh.logger.Debugf("Ignoring assignment: %s, pushed to user repo: %s", assignment.GetName(), payload.GetRepo().GetName())
 			}
-			ci.RunTests(wh.logger, wh.db, wh.runner, runData)
+		}
+
+	case repo.IsGroupRepo():
+		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
+		jobOwner, _, err := wh.db.GetUserByCourse(course, payload.GetSender().GetLogin())
+		if err != nil {
+			wh.logger.Errorf("Failed to find user %s in the course %s: %s", payload.GetSender().GetLogin(), course.GetName(), err)
+			return
+		}
+		wh.updateLastActivityDate(jobOwner.ID, course.ID)
+		assignments := wh.extractAssignments(payload, course)
+		for _, assignment := range assignments {
+			if assignment.IsGroupLab {
+				// only run group assignments
+				wh.runAssignmentTests(assignment, repo, course, payload)
+			} else {
+				wh.logger.Debugf("Ignoring assignment: %s, pushed to group repo: %s", assignment.GetName(), payload.GetRepo().GetName())
+			}
 		}
 
 	default:
@@ -135,5 +154,31 @@ func extractChanges(changes []string, modifiedAssignments map[string]bool) {
 			continue
 		}
 		modifiedAssignments[name] = true
+	}
+}
+
+// runAssignmentTests runs the tests for the given assignment pushed to repo.
+func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.Repository, course *pb.Course, payload *github.PushEvent) {
+	runData := &ci.RunData{
+		Course:     course,
+		Assignment: assignment,
+		Repo:       repo,
+		CommitID:   payload.GetHeadCommit().GetID(),
+		JobOwner:   payload.GetSender().GetLogin(),
+	}
+	ci.RunTests(wh.logger, wh.db, wh.runner, runData)
+}
+
+// updateLastActivityDate sets a current date as a last activity date of the student
+// on each new push to the student repository.
+func (wh GitHubWebHook) updateLastActivityDate(userID, courseID uint64) {
+	query := &pb.Enrollment{
+		UserID:           userID,
+		CourseID:         courseID,
+		LastActivityDate: time.Now().Format("02 Jan"),
+	}
+
+	if err := wh.db.UpdateEnrollment(query); err != nil {
+		wh.logger.Errorf("Failed to update the last activity date for user %d: %s", userID, err)
 	}
 }

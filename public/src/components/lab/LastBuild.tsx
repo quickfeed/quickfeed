@@ -22,7 +22,7 @@ export class LastBuild extends React.Component<ILastBuildProps> {
                         selector={(item: ITestCases) => [item.TestName ? item.TestName : "-",
                          (item.Score ? item.Score.toString() : "0")
                           + "/" + (item.MaxScore ? item.MaxScore.toString() : "0") + " pts",
-                          item.Weight ? item.Weight.toString() : "0" + " pts"]}
+                          item.Weight ? item.Weight.toString() : "0"]}
                         footer={this.makeDynamicFooter()}
                     />
                 </div>
@@ -34,12 +34,12 @@ export class LastBuild extends React.Component<ILastBuildProps> {
         return [
             {value: "Total score"},
             this.makeScoreCell(this.props.score, this.props.scoreLimit),
-            {value: this.props.weight ? this.props.weight.toString() + "%" : "-"},
+            {value: this.props.weight ? this.props.weight.toString() + " %" : "-"},
         ];
     }
 
     private makeScoreCell(score: number, scoreLimit: number): ICellElement {
         const cellClass = ((scoreLimit > 0) && (score >= scoreLimit)) ? "passing" : "test";
-        return {value: score.toString() + "%", className: cellClass};
+        return {value: score.toString() + " %", className: cellClass};
     }
 }

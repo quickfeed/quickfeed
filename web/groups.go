@@ -80,7 +80,7 @@ func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
 		s.logger.Errorf("CreateGroup: failed to retrieve users for group %s: %s", request.GetName(), err)
 		return nil, err
 	}
-	// create new group and update groupid in enrollment table
+	// create new group and update groupID in enrollment table
 	if err := s.db.CreateGroup(request); err != nil {
 		return nil, err
 	}

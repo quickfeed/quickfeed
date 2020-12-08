@@ -19,19 +19,18 @@ var answers = exercise.Choices{
 	{8, 'D'},
 }
 
-var expectToFail = []int{
-	3, 4, 6, 8,
-}
+// var expectToFail = []int{
+// 	3, 4, 6, 8,
+// }
 
 func TestMultipleChoice(t *testing.T) {
-	t.Skip("This is expected to fail, so we skip it when running normally (see comment).")
-	// This currently fails, since it tests what students might write.
-	// TODO(meling) In the future we may decouple it better so that we can
-	// check if specific tests are expected to fail, and reorganizing it
-	// as a table-driven test.
+	// This test aims to emulate what students may write, which should result in test failure.
+	// Hence, we do not run this as part of the CI tests.
+	// Comment t.Skip to test that TestMultipleChoice fails, which is expected.
+	t.Skip("Skipping because it is expected to fail (see comment).")
 
 	oldStyleMC := filepath.Join("..", "testdata", "old-style-answers.md")
-	sc := score.NewScoreMax(len(answers), 1)
+	sc := score.NewScoreMax(t, len(answers), 1)
 	exercise.MultipleChoice(t, sc, oldStyleMC, answers)
 }
 

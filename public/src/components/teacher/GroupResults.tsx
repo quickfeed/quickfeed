@@ -9,12 +9,12 @@ import { groupRepoLink, searchForLabs } from "../../componentHelper";
 interface IResultsProps {
     course: Course;
     courseURL: string;
-    groups: IAllSubmissionsForEnrollment[];
-    labs: Assignment[];
+    allGroupSubmissions: IAllSubmissionsForEnrollment[];
+    assignments: Assignment[];
     updateSubmissionStatus: (submission: ISubmission) => Promise<boolean>;
     updateComment: (comment: Comment) => Promise<boolean>;
     deleteComment: (commentID: number) => void;
-    onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
+    rebuildSubmission: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
 
 interface IResultsState {
@@ -28,27 +28,27 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
     constructor(props: IResultsProps) {
         super(props);
 
-        const currentGroup = this.props.groups.length > 0 ? this.props.groups[0] : null;
+        const currentGroup = this.props.allGroupSubmissions.length > 0 ? this.props.allGroupSubmissions[0] : null;
         const allAssignments = currentGroup ? currentGroup.course.getAssignmentsList() : null;
         if (currentGroup && allAssignments && allAssignments.length > 0) {
             this.state = {
                 commenting: false,
                 // Only using the first group to fetch assignments.
                 selectedSubmission: currentGroup.labs[0],
-                groups: sortByScore(this.props.groups, this.props.labs, true),
+                groups: sortByScore(this.props.allGroupSubmissions, this.props.assignments, true),
             };
         } else {
             this.state = {
                 commenting: false,
                 selectedSubmission: undefined,
-                groups: sortByScore(this.props.groups, this.props.labs, true),
+                groups: sortByScore(this.props.allGroupSubmissions, this.props.assignments, true),
             };
         }
     }
 
     public render() {
         let groupLab: JSX.Element | null = null;
-        const currentGroups = this.props.groups.length > 0 ? this.props.groups : null;
+        const currentGroups = this.props.allGroupSubmissions.length > 0 ? this.props.allGroupSubmissions : null;
         if (currentGroups
             && this.state.selectedSubmission
             && this.state.selectedSubmission.assignment.getIsgrouplab()) {
@@ -114,7 +114,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
 
     private getResultHeader(): string[] {
         let headers: string[] = ["Name"];
-        headers = headers.concat(this.props.labs.filter((e) => e.getIsgrouplab()).map((e) => e.getName()));
+        headers = headers.concat(this.props.assignments.filter((e) => e.getIsgrouplab()).map((e) => e.getName()));
         return headers;
     }
 
@@ -130,9 +130,10 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 }
                 const iCell: ICellElement = {
                     value: <a className={cellCss + " lab-cell-link"}
+                        style={{ whiteSpace: 'nowrap' }}
                         onClick={() => this.handleOnclick(e)}
                         href="#">
-                        {e.submission ? (e.submission.score + "%") : "N/A"}</a>,
+                        {e.submission ? (e.submission.score + " %") : "N/A"}</a>,
                     className: cellCss,
                 };
                 return iCell;
@@ -172,7 +173,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
     private async rebuildSubmission(): Promise<boolean> {
         const currentSubmission = this.state.selectedSubmission;
         if (currentSubmission && currentSubmission.submission) {
-            const ans = await this.props.onSubmissionRebuild(currentSubmission.assignment.getId(), currentSubmission.submission.id);
+            const ans = await this.props.rebuildSubmission(currentSubmission.assignment.getId(), currentSubmission.submission.id);
             if (ans) {
                 currentSubmission.submission = ans;
                 this.setState({
@@ -192,7 +193,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
 
     private handleSearch(query: string): void {
         this.setState({
-            groups: searchForLabs(this.props.groups, query),
+            groups: sortByScore(searchForLabs(this.props.allGroupSubmissions, query), this.props.assignments, true),
         });
     }
 

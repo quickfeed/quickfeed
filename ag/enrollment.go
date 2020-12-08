@@ -17,7 +17,8 @@ func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, sub
 	if err != nil {
 		return err
 	}
-	if !(submission.Status == Submission_APPROVED) && sinceDeadline > 0 {
+	// if score is less than limit and it's not yet approved, update slip days if deadline has passed
+	if submission.Score < assignment.ScoreLimit && submission.Status != Submission_APPROVED && sinceDeadline > 0 {
 		// deadline exceeded; calculate used slipdays for this assignment
 		m.updateSlipDays(assignment.GetID(), uint32(sinceDeadline/days))
 	}
@@ -66,4 +67,12 @@ func (m *Enrollment) SetSlipDays(c *Course) {
 	} else {
 		m.SlipDaysRemaining = uint32(m.RemainingSlipDays(c))
 	}
+}
+
+func (m Enrollment) IsTeacher() bool {
+	return m.GetStatus() == Enrollment_TEACHER
+}
+
+func (m Enrollment) IsStudent() bool {
+	return m.GetStatus() == Enrollment_STUDENT
 }

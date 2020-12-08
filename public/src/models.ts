@@ -64,4 +64,5 @@ export interface ISubmission {
     comments: Comment[];
     released: boolean;
     status: Submission.Status;
+    approvedDate: string;
 }

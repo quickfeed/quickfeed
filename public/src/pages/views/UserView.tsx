@@ -1,14 +1,16 @@
 import * as React from "react";
-import { Enrollment } from "../../../proto/ag_pb";
+import { Assignment, Enrollment } from "../../../proto/ag_pb";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink, NavigationManager, UserManager } from "../../managers";
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
-import { searchForStudents, userRepoLink } from "../../componentHelper";
+import { searchForStudents, userRepoLink, sortEnrollmentsByActivity } from '../../componentHelper';
 
 interface IUserViewerProps {
     users: Enrollment[];
     isCourseList: boolean;
+    withActivity: boolean;
+    assignments?: Assignment[];
     userMan?: UserManager;
     navMan?: NavigationManager;
     courseURL: string;
@@ -34,13 +36,13 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     public constructor(props: IUserViewerProps) {
         super(props);
         this.state = {
-            enrollments: props.users,
+            enrollments: sortEnrollmentsByActivity(props.users),
         };
     }
 
     public componentWillReceiveProps(nextProps: Readonly<IUserViewerProps>, nextContext: any): void {
         this.setState({
-            enrollments: nextProps.users,
+            enrollments: sortEnrollmentsByActivity(nextProps.users),
         });
     }
 
@@ -68,6 +70,10 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     private getTableHeading(): string[] {
         const heading: string[] = ["Name", "Email", "Student ID"];
+        if (this.props.withActivity) {
+            heading.push("Activity");
+            heading.push("Approved");
+        }
         if (this.props.userMan || this.props.actions) {
             heading.push("Role");
         }
@@ -91,6 +97,10 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
             <a href={"mailto:" + enr.getUser()?.getEmail()}>{user?.getEmail()}</a>,
             enr.getUser()?.getStudentid() ?? "",
         );
+        if (this.props.withActivity) {
+            selector.push(enr.getLastactivitydate() !== "" ? enr.getLastactivitydate() : "Inactive");
+            selector.push(enr.getTotalapproved().toString());
+        }
         const temp = this.renderActions(enr);
         if (Array.isArray(temp) && temp.length > 0) {
             selector.push(<div className="btn-group action-btn">{temp}</div>);
@@ -158,7 +168,12 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     private handleSearch(query: string): void {
         this.setState({
-            enrollments: searchForStudents(this.props.users, query),
+            enrollments: sortEnrollmentsByActivity(searchForStudents(this.props.users, query)),
         });
+    }
+
+    private getAssignmentNameByID(assignmentID: number): string {
+            const assignment = this.props.assignments?.find((item) => item.getId() === assignmentID);
+            return assignment?.getName() ?? "None";
     }
 }

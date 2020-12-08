@@ -126,7 +126,9 @@ message Enrollment {
     UserStatus status = 9;
     DisplayState state = 10;
     uint32 slipDaysRemaining = 11 [(gogoproto.moretags) = "sql:\"-\""];
-    repeated UsedSlipDays usedSlipDays = 12;
+    string lastActivityDate = 12;
+    uint64 totalApproved = 13;
+    repeated UsedSlipDays usedSlipDays = 14;
 }
 
 message UsedSlipDays {
@@ -197,8 +199,9 @@ message Submission {
     string commitHash = 8;
     bool released = 9; // defines whether the feedback is visible for the student or group members
     Status status = 10;
-    repeated Review reviews = 11;
+    string approvedDate = 11;
     repeated Comment comments = 12;
+    repeated Review reviews = 13;
 }
 
 message Submissions {
@@ -302,7 +305,8 @@ message Organizations {
 message EnrollmentRequest {
     uint64 courseID = 1;
     bool ignoreGroupMembers = 2;
-    repeated Enrollment.UserStatus statuses = 3;
+    bool withActivity = 3;
+    repeated Enrollment.UserStatus statuses = 4;
 }
 
 // EnrollmentStatusRequest is a request for a given user, with a specific enrollment status.

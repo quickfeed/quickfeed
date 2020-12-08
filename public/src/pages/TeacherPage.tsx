@@ -15,6 +15,7 @@ import { AssignmentView } from "./views/AssignmentView";
 import { ISubmission } from "../models";
 import { FeedbackView } from "./views/FeedbackView";
 import { ReleaseView } from "./views/ReleaseView";
+import { isNull } from 'util';
 
 export class TeacherPage extends ViewPage {
 
@@ -119,14 +120,15 @@ export class TeacherPage extends ViewPage {
 
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
-            const results = fillComments(await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL));
-            const labResults = await this.courseMan.fillLabLinks(course, results, labs);
+            const assignments: Assignment[] = await this.courseMan.getAssignments(course.getId());
+            const results = await this.courseMan.getSubmissionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.ALL);
+            const labResults = await this.courseMan.fillLabLinks(course, results, assignments);
             const curUser = this.userMan.getCurrentUser();
             return <Results
                 course={course}
+                currentUser={curUser?.getId() ?? 0}
                 courseURL={await this.getCourseURL(course.getId())}
-                assignments={sortAssignmentsByOrder(labs)}
+                assignments={sortAssignmentsByOrder(assignments)}
                 allCourseSubmissions={labResults}
                 courseCreatorView={course.getCoursecreatorid() === curUser?.getId()}
                 onSubmissionRebuild={async (assignmentID: number, submissionID: number) => {
@@ -135,30 +137,40 @@ export class TeacherPage extends ViewPage {
                     return ans;
                 }}
                 updateSubmissionStatus={async (submission: ISubmission) => this.setStatus(submission, course.getId())}
-                updateComment={async (submission: ISubmission) => this.setComment(submission, course.getId())}
-                >
+                updateComment={async (comment: Comment) => {
+                    const ans = await this.courseMan.updateComment(comment);
+                    return ans != null;
+                }}
+                deleteComment={(commentID: number) => {
+                    return this.courseMan.deleteComment(course.getId(), commentID);
+                }}>
             </Results>;
         });
     }
 
     public async groupresults(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const results = fillComments(await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP));
+            const results = fillComments(await this.courseMan.getSubmissionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP));
             const labs = await this.courseMan.getAssignments(course.getId());
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
-            const curUser = this.userMan.getCurrentUser();
             return <GroupResults
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}
-                labs={sortAssignmentsByOrder(labs)}
-                groups={labResults}
-                onSubmissionRebuild={async (assignmentID: number, submissionID: number) => {
+                assignments={sortAssignmentsByOrder(labs)}
+                allGroupSubmissions={labResults}
+                rebuildSubmission={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                     this.navMan.refresh();
                     return ans;
                 }}
                 updateSubmissionStatus={async (submission: ISubmission) => this.setStatus(submission, course.getId())}
-                updateComment={async (comment: Comment) => this.courseMan.updateComment(comment)}
+                updateComment={async (comment: Comment) => {
+                    const ans = await this.courseMan.updateComment(comment);
+                    return ans != null;
+                }}
+                deleteComment={(commentID: number) => {
+                    return this.courseMan.deleteComment(course.getId(), commentID);
+                }}
                 >
             </GroupResults>;
         });
@@ -167,8 +179,8 @@ export class TeacherPage extends ViewPage {
     public async manualReview(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const assignments = await this.courseMan.getAssignments(course.getId());
-            const students = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
-            const groups = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
+            const students = await this.courseMan.getSubmissionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
+            const groups = await this.courseMan.getSubmissionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
                 return <FeedbackView
@@ -193,8 +205,8 @@ export class TeacherPage extends ViewPage {
     public async releaseReview(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const assignments = await this.courseMan.getAssignments(course.getId());
-            const students = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
-            const groups = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
+            const students = await this.courseMan.getSubmissionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
+            const groups = await this.courseMan.getSubmissionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
                 return <ReleaseView
@@ -254,10 +266,10 @@ export class TeacherPage extends ViewPage {
         if (course && curUser) {
             // get full list of students and teachers
             const students = await this.courseMan.getUsersForCourse(
-                course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                course, false, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             // get list of users who are not in group
             const freeStudents = await this.courseMan.getUsersForCourse(
-                course, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                course, true, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             return <GroupForm
                 className="form-horizontal"
                 students={students}
@@ -283,10 +295,10 @@ export class TeacherPage extends ViewPage {
         if (course && curUser && group) {
             // get full list of students and teachers
             const students = await this.courseMan.getUsersForCourse(
-                course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                course, false, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             // get list of users who are not in group
             const freeStudents = await this.courseMan.getUsersForCourse(
-                course, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                course, true, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             return <GroupForm
                 className="form-horizontal"
                 students={students}
@@ -305,7 +317,8 @@ export class TeacherPage extends ViewPage {
 
     public async courseUsers(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const all = await this.courseMan.getUsersForCourse(course);
+            const all = await this.courseMan.getUsersForCourse(course, false, true);
+            const assignments = await this.courseMan.getAssignments(course.getId())
             const acceptedUsers: Enrollment[] = [];
             const pendingUsers: Enrollment[] = [];
             // TODO: Maybe move this to the Members view
@@ -326,6 +339,7 @@ export class TeacherPage extends ViewPage {
 
             return <MemberView
                 course={course}
+                assignments={assignments}
                 courseURL={await this.getCourseURL(course.getId())}
                 navMan={this.navMan}
                 pendingUsers={pendingUsers}
@@ -342,7 +356,7 @@ export class TeacherPage extends ViewPage {
             item: link,
             children: [
                 { name: "Results", uri: link.uri + "/results" },
-                { name: "Group Results", uri: link.uri + "/groupresults" },
+                { name: "Group Results", uri: link.uri + "/groupresults", extra: "disabled" },
                 { name: "Review", uri: link.uri + "/review" },
                 { name: "Release", uri: link.uri + "/release" },
                 { name: "Groups", uri: link.uri + "/groups" },

@@ -4,46 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"runtime"
+	"runtime/debug"
 	"strings"
 	"testing"
 )
 
-// GlobalSecret represents the unique course identifier that will be used in
-// the Score constructors. Users of this package must set this variable
-// appropriately (for example in func init) before using any exported
-// function in this package. The value of the global secret is available from
-// the teachers panel after a course has been created.
+// GlobalSecret is a unique identifier for each scoring session, and
+// would typically be set to a random secret string in the init() function
+// of each package to be tested. The gosecret command can be used to
+// generate such init() functions for each package to be tested.
 var GlobalSecret = "NOT SET"
 
-// Score encodes the score of a test or a group of tests. When a test passes in
-// Autograder, a JSON object representing this struct is emitted to the output
-// stream.
-//
-// The JSON object emitted on the output stream contains a Secret hash value
-// which is a unique course identifier that can be obtained from the teachers
-// panel in Autograder. This Secret is used by Autograder to extract Score
-// objects from the output stream. All other output is ignored when computing
-// the score.
-//
-// The Autograder computes the score according to the formula below, providing
-// a percentage score for a test or a group of tests. The Weight parameter can
-// be used to give more/less value to some Score objects (representing
-// different test sets). For example, a Weight of 2 on test A and a Weight of 1
-// on all other tests will give twice the score for test A compare to the
-// other tests.
-//
-// If you want to only give a score for completing a test, then you can simply
-// use NewScoreMax(1, 1), without using any API methods to decrement the score,
-// giving a result of Score = MaxScore = 1 (and Weight = 1).
-//
-// The Autograder computes the final score as follows:
-// TotalWeight     = sum(Weight)
-// TaskScore[i]    = Score[i] / MaxScore[i], gives {0 < TaskScore < 1}
-// TaskWeight[i]   = Weight[i] / TotalWeight
-// Score           = sum(TaskScore[i]*TaskWeight[i]), gives {0 < Score < 1}
+// Score encodes the score of a test or a group of tests.
 type Score struct {
-	Secret   string // the unique identifier for the course
+	Secret   string // the unique identifier for a scoring session
 	TestName string // name of the test
 	Score    int    // the score obtained
 	MaxScore int    // max score possible to get on this specific test
@@ -51,43 +25,41 @@ type Score struct {
 }
 
 // NewScore returns a new Score object with the given max and weight.
-// The Score.Score field is 0 initially, and so Score.Inc() and IncBy() can
-// be called on the returned Score object.
-// Note that the TestName is initialized to the name of the calling method.
-func NewScore(max, weight int) *Score {
-	return &Score{
-		Secret:   GlobalSecret,
-		TestName: testName(),
-		MaxScore: max,
-		Weight:   weight,
-	}
-}
-
-// NewScoreMax returns a new Score object with the given max and weight.
-// The Score.Score field is max initially, and so Score.Dec() and DecBy() can
-// be called on the returned Score object.
-// Note that the TestName is initialized to the name of the calling method.
-func NewScoreMax(max, weight int) *Score {
-	return &Score{
-		Secret:   GlobalSecret,
-		TestName: testName(),
-		Score:    max,
-		MaxScore: max,
-		Weight:   weight,
-	}
-}
-
-// NewScoreMax returns a new Score object with the given max and weight.
-// The Score.Score field is max initially, and so Score.Dec() and DecBy() can
-// be called on the returned Score object.
-// The TestName is initialized as the name of the provided t.Name().
-func NewScoreMaxWithTesting(t *testing.T, max, weight int) *Score {
-	return &Score{
+// The Score is initially 0, and Inc() and IncBy() can be called
+// on the returned Score object, for each test that passes.
+// The TestName is initialized to the name of the provided t.Name().
+// This function also prints a JSON representation of the Score object
+// to ensure that the test is recorded by Quickfeed.
+func NewScore(t *testing.T, max, weight int) *Score {
+	sc := &Score{
 		Secret:   GlobalSecret,
 		TestName: t.Name(),
-		Score:    max,
 		MaxScore: max,
 		Weight:   weight,
+	}
+	// prints JSON score object with zero score, e.g.:
+	// {"Secret":"my secret code","TestName":"TestPanicHandler","Score":0,"MaxScore":8,"Weight":5}
+	// This registers the test, in case a panic occurs that prevents printing the score object.
+	fmt.Println(sc.json())
+	return sc
+}
+
+// NewScoreMax returns a new Score object with the given max and weight.
+// The Score is initially set to max, and Dec() and DecBy() can be called
+// on the returned Score object, for each test that fails.
+// The TestName is initialized as the name of the provided t.Name().
+// This function also prints a JSON representation of the Score object
+// to ensure that the test is recorded by Quickfeed.
+func NewScoreMax(t *testing.T, max, weight int) *Score {
+	sc := NewScore(t, max, weight)
+	sc.Score = max
+	return sc
+}
+
+// Inc increments score if score is less than MaxScore.
+func (s *Score) Inc() {
+	if s.Score < s.MaxScore {
+		s.Score++
 	}
 }
 
@@ -97,13 +69,6 @@ func (s *Score) IncBy(n int) {
 		s.Score += n
 	} else {
 		s.Score = s.MaxScore
-	}
-}
-
-// Inc increments score if score is less than MaxScore.
-func (s *Score) Inc() {
-	if s.Score < s.MaxScore {
-		s.Score++
 	}
 }
 
@@ -123,49 +88,90 @@ func (s *Score) DecBy(n int) {
 	}
 }
 
-// String returns a string representation of score s.
-// Format: "TestName: 2/10 cases passed".
-func (s *Score) String() string {
-	return fmt.Sprintf("%s: %d/%d cases passed", s.TestName, s.Score, s.MaxScore)
+// String returns a string representation of the score.
+// Format: "TestName: 2/10 test cases passed".
+func (s Score) String() string {
+	return fmt.Sprintf("%s: %d/%d test cases passed", s.TestName, s.Score, s.MaxScore)
 }
 
 // WriteString writes the string representation of s to w.
+// Deprecated: Do not use this function; it will be removed in the future.
+// Use Print() instead to replace both WriteString() and WriteJSON().
 func (s *Score) WriteString(w io.Writer) {
-	// check if calling func paniced before calling this
 	if r := recover(); r != nil {
-		// reset score for paniced functions
 		s.Score = 0
+		fmt.Fprintf(w, "******************\n%s panicked:\n%s\n******************\n", s.TestName, r)
 	}
 	fmt.Fprintf(w, "%v\n", s)
 }
 
 // WriteJSON writes the JSON representation of s to w.
+// Deprecated: Do not use this function; it will be removed in the future.
+// Use Print() instead to replace both WriteString() and WriteJSON().
 func (s *Score) WriteJSON(w io.Writer) {
-	// check if calling func paniced before calling this
 	if r := recover(); r != nil {
-		// reset score for paniced functions
 		s.Score = 0
+		fmt.Fprintf(w, "******************\n%s panicked:\n%s\n******************\n", s.TestName, r)
 	}
-	b, err := json.Marshal(s)
-	if err != nil {
-		fmt.Fprintf(w, "json.Marshal error: \n%v\n", err)
-	}
-	fmt.Fprintf(w, "\n%s\n", b)
+	fmt.Fprintf(w, "\n%s\n", s.json())
 }
 
-// testName returns the name of a test when used by the Score-constructors.
-//
-// NOTE: This function is specifically constructed to be called from the
-// Score-constructors. It is not safe for other usage due to the hard-coded
-// skip constant used when calling runtime.Callers.
-func testName() string {
-	const skip = 2
-	pc, _, _, _ := runtime.Caller(skip)
-	funcName := runtime.FuncForPC(pc).Name()
-	lastSlash := strings.LastIndexByte(funcName, '/')
-	if lastSlash < 0 {
-		lastSlash = 0
+// Print prints both the JSON secret string and emits the number of test cases passed.
+// If a test panics, the score will be set to zero, and a panic message will be emitted.
+// Note that, if subtests are used, each subtest must defer call the PanicHandler method
+// to ensure that panics are caught and handled appropriately.
+func (s *Score) Print(t *testing.T) {
+	if r := recover(); r != nil {
+		s.fail(t)
+		printPanicMessage(s.TestName, r)
 	}
-	firstDot := strings.IndexByte(funcName[lastSlash:], '.') + lastSlash
-	return funcName[firstDot+1:]
+	// print JSON score object: {"Secret":"my secret code","TestName": ...}
+	fmt.Println(s.json())
+	// print: TestName: x/y test cases passed
+	fmt.Println(s)
+}
+
+// PanicHandler recovers from a panicking test, resets the score to zero and
+// emits an error message. This is only needed when using a single score object
+// for multiple subtests each of which may panic, which would prevent the deferred
+// Print() call from executing its recovery handler.
+//
+// This must be called as a deferred function from within a subtest, that is
+// within a t.Run() function:
+//   defer s.PanicHandler(t)
+//
+func (s *Score) PanicHandler(t *testing.T) {
+	if r := recover(); r != nil {
+		s.fail(t)
+		printPanicMessage(s.TestName, r)
+	}
+}
+
+// fail resets the score to zero and fails the provided test.
+func (s *Score) fail(t *testing.T) {
+	// reset score for panicked test functions
+	s.Score = 0
+	// fail the test
+	t.Fail()
+}
+
+// json returns a JSON string for the score object.
+func (s Score) json() string {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return fmt.Sprintf("json.Marshal error: %v\n", err)
+	}
+	return string(b)
+}
+
+func printPanicMessage(testName string, recoverVal interface{}) {
+	var s strings.Builder
+	s.WriteString("******************\n")
+	s.WriteString(testName)
+	s.WriteString(" panicked: ")
+	s.WriteString(fmt.Sprintf("%v", recoverVal))
+	s.WriteString("\n\nStack trace from panic:\n")
+	s.WriteString(string(debug.Stack()))
+	s.WriteString("******************\n")
+	fmt.Println(s.String())
 }

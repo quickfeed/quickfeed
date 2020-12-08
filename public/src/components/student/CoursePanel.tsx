@@ -27,7 +27,7 @@ export class CoursePanel extends React.Component<IPanelProps> {
                             header={["Labs", "Score", "Deadline"]}
                             data={this.props.labs}
                             selector={(item: ISubmissionLink) => {
-                                const score = item.submission ? (item.submission.score.toString() + "%") : "N/A";
+                                const score = item.submission ? (item.submission.score.toString() + " %") : "N/A";
                                 return [
                                     item.assignment.getName(),
                                     score,

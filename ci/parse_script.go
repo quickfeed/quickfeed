@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	pb "github.com/autograde/quickfeed/ag"
 )
 
 // AssignmentInfo holds metadata needed to fetch student code
@@ -16,9 +18,23 @@ type AssignmentInfo struct {
 	CreatorAccessToken string
 	GetURL             string
 	TestURL            string
-	RawGetURL          string
-	RawTestURL         string
 	RandomSecret       string
+}
+
+func newAssignmentInfo(course *pb.Course, assignment *pb.Assignment, cloneURL, testURL string) *AssignmentInfo {
+	script := assignment.GetScriptFile()
+	if strings.Count(script, ".") < 1 {
+		script = script + ".sh"
+	}
+
+	return &AssignmentInfo{
+		AssignmentName:     assignment.GetName(),
+		Script:             script,
+		CreatorAccessToken: course.GetAccessToken(),
+		GetURL:             cloneURL,
+		TestURL:            testURL,
+		RandomSecret:       randomSecret(),
+	}
 }
 
 // parseScriptTemplate returns a job describing the docker image to use and

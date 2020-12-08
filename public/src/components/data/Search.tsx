@@ -4,6 +4,8 @@ interface ISearchProps {
     className?: string;
     placeholder?: string;
     onChange?: (val: string) => void;
+    onFocus?: () => void;
+    onBlur?: () => void;
 }
 interface ISearchState {
     query: string;
@@ -29,6 +31,8 @@ export class Search extends React.Component<ISearchProps, ISearchState> {
                     type="text"
                     placeholder={this.props.placeholder ? this.props.placeholder : ""}
                     onChange={(e) => this.onChange(e)}
+                    onFocus={() => this.onFocus()}
+                    onBlur={() => this.onBlur()}
                     value={this.state.query}
                 />
             </div>
@@ -41,6 +45,18 @@ export class Search extends React.Component<ISearchProps, ISearchState> {
         });
         if (this.props.onChange) {
             this.props.onChange(e.target.value);
+        }
+    }
+
+    private onFocus() {
+        if (this.props.onFocus) {
+            this.props.onFocus();
+        }
+    }
+
+    private onBlur() {
+        if (this.props.onBlur) {
+            this.props.onBlur();
         }
     }
 }

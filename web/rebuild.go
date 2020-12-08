@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"fmt"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
@@ -25,28 +24,24 @@ func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.R
 	}
 	name := s.lookupName(submission)
 
-	repoQuery := &pb.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		UserID:         submission.GetUserID(),
-		RepoType:       pb.Repository_USER,
-	}
+	var repo *pb.Repository
 	if assignment.IsGroupLab {
-		repoQuery.GroupID = submission.GetGroupID()
-		repoQuery.RepoType = pb.Repository_GROUP
+		s.logger.Debugf("Rebuilding submission %d for group(%d): %s, assignment: %+v, repo: %s",
+			submission.GetID(), submission.GetGroupID(), name, assignment, repo.GetHTMLURL())
+		repo, err = s.getGroupRepo(course, submission.GetGroupID())
+	} else {
+		s.logger.Debugf("Rebuilding submission %d for user(%d): %s, assignment: %+v, repo: %s",
+			submission.GetID(), submission.GetUserID(), name, assignment, repo.GetHTMLURL())
+		repo, err = s.getUserRepo(course, submission.GetUserID())
 	}
-	repos, err := s.db.GetRepositories(repoQuery)
-	if err != nil || len(repos) < 1 {
-		return nil, fmt.Errorf("could not find repository for user/group: %s, course: %s: %w", name, course.GetCode(), err)
+	if err != nil {
+		return nil, err
 	}
-	repo := repos[0]
 
-	s.logger.Debugf("Rebuilding submission %d for user(%d)/group(%d): %s, assignment: %+v, repo: %s",
-		submission.GetID(), submission.GetUserID(), submission.GetGroupID(), name, assignment, repo.GetHTMLURL())
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
 		Repo:       repo,
-		CloneURL:   repo.GetHTMLURL(),
 		CommitID:   submission.GetCommitHash(),
 		JobOwner:   slug.Make(name),
 	}

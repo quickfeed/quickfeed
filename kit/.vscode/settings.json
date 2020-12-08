@@ -1,6 +1,8 @@
 {
     "cSpell.words": [
         "atoi",
+        "cmds",
+        "gosecret",
         "malloc",
         "printf",
         "struct"

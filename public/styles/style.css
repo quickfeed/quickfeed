@@ -22,6 +22,14 @@ body {
     width: 100%;
 }
 
+.result-table {
+    table-layout: auto;
+}
+
+table thead tr:first-child {
+    background: #f2f2f2;
+ }
+
 .table-grp>th {
     width: 33%;
 }
@@ -295,6 +303,11 @@ body {
 .rebuild-btn {
     display: block;
     float: right;
+}
+
+.bg-secondary {
+    background: rgb(221, 223, 226) !important;
+    color: slategrey;
 }
 
 .past-deadline {

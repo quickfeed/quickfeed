@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
-	"strings"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -24,7 +23,6 @@ type RunData struct {
 	Course     *pb.Course
 	Assignment *pb.Assignment
 	Repo       *pb.Repository
-	CloneURL   string
 	CommitID   string
 	JobOwner   string
 }
@@ -36,11 +34,7 @@ func (r RunData) String(secret string) string {
 
 // RunTests runs the assignment specified in the provided RunData structure.
 func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rData *RunData) {
-	info, err := createAssignmentInfo(db, rData.Course, rData.Assignment, rData.CloneURL)
-	if err != nil {
-		logger.Errorf("Failed to construct assignment info: %w", err)
-		return
-	}
+	info := newAssignmentInfo(rData.Course, rData.Assignment, rData.Repo.GetHTMLURL(), rData.Repo.GetTestURL())
 	logger.Debugf("Running tests for %s", rData.JobOwner)
 	ed, err := runTests(scriptPath, runner, info, rData)
 	if err != nil {
@@ -91,35 +85,6 @@ func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) 
 	return &execData{out: out, execTime: time.Since(start)}, err
 }
 
-// createAssignmentInfo creates a struct with data to be supplied to
-// the template script files.
-func createAssignmentInfo(db database.Database, course *pb.Course, assignment *pb.Assignment, cloneURL string) (*AssignmentInfo, error) {
-	repoQuery := &pb.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		RepoType:       pb.Repository_TESTS,
-	}
-	testRepos, err := db.GetRepositories(repoQuery)
-	if err != nil || len(testRepos) < 1 {
-		return nil, fmt.Errorf("failed to find a test repository for %s: %w", course.GetName(), err)
-	}
-	getURLTest := testRepos[0].GetHTMLURL()
-	script := assignment.GetScriptFile()
-	if strings.Count(script, ".") < 1 {
-		script = script + ".sh"
-	}
-
-	return &AssignmentInfo{
-		AssignmentName:     assignment.GetName(),
-		Script:             script,
-		CreatorAccessToken: course.GetAccessToken(),
-		GetURL:             cloneURL,
-		TestURL:            getURLTest,
-		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
-		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
-		RandomSecret:       randomSecret(),
-	}, nil
-}
-
 // recordResults for the assignment given by the run data structure.
 func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunData, result *Result) {
 	buildInfo, scores, err := result.Marshal()
@@ -152,8 +117,8 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		CommitHash:   rData.CommitID,
 		Score:        score,
 		ScoreObjects: scores,
-		UserID:       rData.Repo.UserID,
-		GroupID:      rData.Repo.GroupID,
+		UserID:       rData.Repo.GetUserID(),
+		GroupID:      rData.Repo.GetGroupID(),
 		Status:       approvedStatus,
 	}
 	err = db.CreateSubmission(newSubmission)
@@ -161,9 +126,8 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		logger.Errorf("Failed to add submission to database: %w", err)
 		return
 	}
-
-	logger.Debugf("Created submission for assignment %d in database with status=%t", rData.Assignment.GetID(), approvedStatus)
-	updateSlipDays(logger, db, rData.Repo, rData.Assignment, newSubmission, result.BuildInfo.BuildDate)
+	logger.Debugf("Created submission for assignment '%s' with status %s", rData.Assignment.GetName(), approvedStatus)
+	updateSlipDays(logger, db, rData.Assignment, newSubmission, result.BuildInfo.BuildDate)
 }
 
 func randomSecret() string {
@@ -175,24 +139,24 @@ func randomSecret() string {
 	return fmt.Sprintf("%x", sha1.Sum(randomness))
 }
 
-func updateSlipDays(logger *zap.SugaredLogger, db database.Database, repo *pb.Repository, assignment *pb.Assignment, submission *pb.Submission, buildDate string) {
+func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission, buildDate string) {
 	buildTime, err := time.Parse(layout, buildDate)
 	if err != nil {
 		logger.Errorf("Failed to parse time from string (%s)", buildDate)
 	}
 
 	enrollments := make([]*pb.Enrollment, 0)
-	if repo.GroupID > 0 {
-		group, err := db.GetGroup(repo.GroupID)
+	if submission.GroupID > 0 {
+		group, err := db.GetGroup(submission.GroupID)
 		if err != nil {
-			logger.Errorf("Failed to get group %d: %w", repo.GroupID, err)
+			logger.Errorf("Failed to get group %d: %w", submission.GroupID, err)
 			return
 		}
 		enrollments = append(enrollments, group.Enrollments...)
 	} else {
-		enrol, err := db.GetEnrollmentByCourseAndUser(assignment.CourseID, repo.UserID)
+		enrol, err := db.GetEnrollmentByCourseAndUser(assignment.CourseID, submission.UserID)
 		if err != nil {
-			logger.Errorf("Failed to get enrollment for user %d: %w", repo.UserID, err)
+			logger.Errorf("Failed to get enrollment for user %d: %w", submission.UserID, err)
 			return
 		}
 		enrollments = append(enrollments, enrol)

@@ -17,7 +17,6 @@ import { IAllSubmissionsForEnrollment, ISubmission } from '../models';
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
 
-import { isNull } from "util";
 import { IMap, MapHelper, mapify } from "../map";
 
 interface IGrpcDummyUser {
@@ -108,7 +107,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return new Promise<User | null>((resolve, reject) => {
             // Simulate async callback
             setTimeout(() => {
-                if (isNull(user)) {
+                if (!(user)) {
                     this.currentLoggedIn = user;
                     resolve(user);
                 } else {
@@ -173,7 +172,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return returnUsers;
     }
 
-    public async getUsersForCourse(course: Course, noGroupMembers?: boolean, status?: Enrollment.UserStatus[])
+    public async getUsersForCourse(course: Course, noGroupMembers?: boolean, withActivity?: boolean, status?: Enrollment.UserStatus[])
         : Promise<Enrollment[]> {
         const courseStds: Enrollment[] =
             await this.getUserLinksForCourse(course, status);
@@ -220,7 +219,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async getLabsForStudent(courseID: number): Promise<ISubmission[]> {
+    public async getSubmissionsByUser(courseID: number): Promise<ISubmission[]> {
         const temp: ISubmission[] = [];
         const assignments = await this.getAssignments(courseID);
         MapHelper.forEach(this.localLabInfo, (ele) => {
@@ -239,7 +238,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return [];
     }
 
-    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
+    public async getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
         return [];
     }
 
@@ -291,7 +290,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async updateGroup(group: Group): Promise<Status> {
         throw new Error("Method not implemented");
     }
-    public async getLabsForGroup(courseID: number, groupID: number): Promise<ISubmission[]> {
+    public async getSubmissionsByGroup(courseID: number, groupID: number): Promise<ISubmission[]> {
         throw new Error("Method not implemented.");
     }
 

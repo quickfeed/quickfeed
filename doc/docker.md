@@ -16,6 +16,15 @@ To stop all containers: docker stop $(docker ps -a -q)
 To delete all containers: docker rm $(docker ps -a -q)
 ```
 
+### Helpful Tools for dealing with docker containers and too many open file descriptors
+
+```console
+pgrep quickfeed | ls /proc/$(xargs)/fd | wc -l
+docker ps -a
+docker stats
+docker rm $(docker ps -q -f status=exited)
+```
+
 ### Missing docker group
 
 If it does not exist, add it manualy with the command 

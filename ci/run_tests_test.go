@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -36,8 +35,6 @@ func TestRunTests(t *testing.T) {
 		CreatorAccessToken: accessToken,
 		GetURL:             getURL,
 		TestURL:            testURL,
-		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(getURL, ".git"), "https://"),
-		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(testURL, ".git"), "https://"),
 		RandomSecret:       randomString,
 	}
 	runData := &RunData{
@@ -50,7 +47,12 @@ func TestRunTests(t *testing.T) {
 		JobOwner: "muggles",
 	}
 
-	ed, err := runTests("scripts", &Docker{}, info, runData)
+	runner, err := NewDockerCI()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer runner.Close()
+	ed, err := runTests("scripts", runner, info, runData)
 	if err != nil {
 		t.Fatal(err)
 	}

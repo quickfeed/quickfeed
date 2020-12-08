@@ -1,5 +1,7 @@
 package ag
 
+import "strings"
+
 // Default repository names.
 const (
 	InfoRepo          = "course-info"
@@ -33,9 +35,23 @@ func (t Repository_Type) IsStudentRepo() bool {
 	return t == Repository_USER || t == Repository_GROUP
 }
 
-// IsGroupRepo returns true if the repository is a group repo type
+// IsGroupRepo returns true if the repository is a group repo type.
 func (t Repository) IsGroupRepo() bool {
 	return t.RepoType == Repository_GROUP
+}
+
+// IsUserRepo returns true if the repository is a user repo type.
+func (t Repository) IsUserRepo() bool {
+	return t.RepoType == Repository_USER
+}
+
+// GetTestURL returns the tests repository string for this repository.
+// This repository can be any repository belonging to a course,
+// e.g. a user or group repository.
+// Using this method we can avoid a database lookup.
+func (t Repository) GetTestURL() string {
+	repoURL := t.GetHTMLURL()
+	return repoURL[:strings.LastIndex(repoURL, "/")+1] + TestsRepo
 }
 
 // RepoType returns the repository type for the given path name.

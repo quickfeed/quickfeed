@@ -115,7 +115,13 @@ func main() {
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
-	agService := web.NewAutograderService(logger, db, scms, bh, &ci.Docker{})
+	runner, err := ci.NewDockerCI()
+	if err != nil {
+		log.Fatalf("failed to set up docker client: %v\n", err)
+	}
+	defer runner.Close()
+
+	agService := web.NewAutograderService(logger, db, scms, bh, runner)
 	go web.New(agService, *public, *httpAddr, *scriptPath, *fake)
 
 	lis, err := net.Listen("tcp", *grpcAddr)
