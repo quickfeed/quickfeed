@@ -4,11 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-<<<<<<< HEAD
-=======
-	"sort"
 	"time"
->>>>>>> master
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
@@ -130,168 +126,6 @@ func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, c
 // getCourse returns a course object for the given course id.
 func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
 	return s.db.GetCourse(courseID, false)
-}
-
-// getSubmissions returns all the latests submissions for a user of the given course.
-func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.Submissions, error) {
-	// only one of user ID and group ID will be set; enforced by IsValid on pb.SubmissionRequest
-	query := &pb.Submission{
-		UserID:  request.GetUserID(),
-		GroupID: request.GetGroupID(),
-	}
-	submissions, err := s.db.GetSubmissions(request.GetCourseID(), query)
-	if err != nil {
-		return nil, err
-	}
-	for _, sbm := range submissions {
-		sbm.MakeSubmissionReviews()
-	}
-	return &pb.Submissions{Submissions: submissions}, nil
-}
-
-// getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
-func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
-	assignments, err := s.db.GetCourseAssignmentsWithSubmissions(request.GetCourseID(), request.Type)
-	if err != nil {
-		return nil, err
-	}
-	// fetch course record with all assignments and active enrollments
-	course, err := s.db.GetCourse(request.GetCourseID(), true)
-	if err != nil {
-		return nil, err
-	}
-	course.SetSlipDays()
-
-	for _, a := range assignments {
-		for _, sbm := range a.Submissions {
-			sbm.MakeSubmissionReviews()
-		}
-	}
-
-	enrolLinks := make([]*pb.EnrollmentLink, 0)
-
-	switch request.Type {
-	case pb.SubmissionsForCourseRequest_GROUP:
-		enrolLinks = append(enrolLinks, s.makeGroupResults(course, assignments)...)
-	case pb.SubmissionsForCourseRequest_INDIVIDUAL:
-		enrolLinks = append(enrolLinks, makeResults(course, assignments, false)...)
-	default:
-		enrolLinks = append(enrolLinks, makeResults(course, assignments, true)...)
-	}
-	return &pb.CourseSubmissions{Course: course, Links: enrolLinks}, nil
-}
-
-// makeResults generates enrollment-assignment-submissions links
-// for all course students and all individual and group assignments.
-func makeResults(course *pb.Course, assignments []*pb.Assignment, addGroups bool) []*pb.EnrollmentLink {
-	enrolLinks := make([]*pb.EnrollmentLink, 0)
-
-	for _, enrol := range course.Enrollments {
-		newLink := &pb.EnrollmentLink{Enrollment: enrol}
-		allSubmissions := make([]*pb.SubmissionLink, 0)
-		for _, a := range assignments {
-			copyWithoutSubmissions := a.CloneWithoutSubmissions()
-			subLink := &pb.SubmissionLink{
-				Assignment: copyWithoutSubmissions,
-			}
-
-			for _, sb := range a.Submissions {
-				if !a.IsGroupLab && sb.GroupID == 0 && sb.UserID == enrol.UserID {
-					subLink.Submission = sb
-				} else if addGroups && a.IsGroupLab && sb.GroupID > 0 && sb.GroupID == enrol.GroupID {
-					subLink.Submission = sb
-				}
-			}
-			allSubmissions = append(allSubmissions, subLink)
-		}
-		sortSubmissionsByAssignmentOrder(allSubmissions)
-		newLink.Submissions = allSubmissions
-		enrolLinks = append(enrolLinks, newLink)
-	}
-	return enrolLinks
-}
-
-// makeGroupResults generates enrollment to assignment to submissions links
-// for all course groups and all group assignments
-func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
-	enrolLinks := make([]*pb.EnrollmentLink, 0)
-	for _, grp := range course.Groups {
-
-		newLink := &pb.EnrollmentLink{}
-		for _, enrol := range course.Enrollments {
-			if enrol.GroupID > 0 && enrol.GroupID == grp.ID {
-				newLink.Enrollment = enrol
-			}
-		}
-		if newLink.Enrollment == nil {
-			s.logger.Debugf("Got empty enrollment for group %+v", grp)
-		}
-
-		allSubmissions := make([]*pb.SubmissionLink, 0)
-		for _, a := range assignments {
-			copyWithoutSubmissions := a.CloneWithoutSubmissions()
-			subLink := &pb.SubmissionLink{
-				Assignment: copyWithoutSubmissions,
-			}
-			for _, sb := range a.Submissions {
-				if sb.GroupID > 0 && sb.GroupID == grp.ID {
-					subLink.Submission = sb
-				}
-			}
-			allSubmissions = append(allSubmissions, subLink)
-		}
-		sortSubmissionsByAssignmentOrder(allSubmissions)
-		newLink.Submissions = allSubmissions
-		enrolLinks = append(enrolLinks, newLink)
-	}
-	return enrolLinks
-}
-
-// updateSubmission updates submission status or sets a submission score based on a manual review.
-func (s *AutograderService) updateSubmission(courseID, submissionID uint64, status pb.Submission_Status, released bool, score uint32) error {
-	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
-	if err != nil {
-		return err
-	}
-
-	// if approving previously unapproved submission
-	if status == pb.Submission_APPROVED && submission.Status != pb.Submission_APPROVED {
-		submission.ApprovedDate = time.Now().Format(layout)
-		if err := s.setLastApprovedAssignment(submission, courseID); err != nil {
-			return err
-		}
-	}
-	submission.Status = status
-	submission.Released = released
-	if score > 0 {
-		submission.Score = score
-	}
-	return s.db.UpdateSubmission(submission)
-}
-
-// updateSubmissions updates status and release state of multiple submissions for the
-// given course and assignment ID for all submissions with score equal or above the provided score
-func (s *AutograderService) updateSubmissions(request *pb.UpdateSubmissionsRequest) error {
-	if _, err := s.db.GetCourse(request.CourseID, false); err != nil {
-		return err
-	}
-	if _, err := s.db.GetAssignment(&pb.Assignment{
-		CourseID: request.CourseID,
-		ID:       request.AssignmentID,
-	}); err != nil {
-		return err
-	}
-
-	query := &pb.Submission{
-		AssignmentID: request.AssignmentID,
-		Score:        request.ScoreLimit,
-		Released:     request.Release,
-	}
-	if request.Approve {
-		query.Status = pb.Submission_APPROVED
-	}
-
-	return s.db.UpdateSubmissions(request.CourseID, query)
 }
 
 func (s *AutograderService) getReviewers(submissionID uint64) ([]*pb.User, error) {
@@ -539,13 +373,6 @@ func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission,
 	}
 	query.UserID = submission.UserID
 	return s.db.UpdateEnrollment(query)
-}
-
-func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.SubmissionLink {
-	sort.Slice(unsorted, func(i, j int) bool {
-		return unsorted[i].Assignment.Order < unsorted[j].Assignment.Order
-	})
-	return unsorted
 }
 
 func (s *AutograderService) extractSubmissionDate(submission *pb.Submission, submissionDate time.Time) time.Time {

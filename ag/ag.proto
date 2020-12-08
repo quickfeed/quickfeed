@@ -26,7 +26,6 @@ message User {
 
     repeated RemoteIdentity remoteIdentities = 8;
     repeated Enrollment enrollments = 9;
-    repeated Comment comments = 10;
 }
 
 message Users {
@@ -211,10 +210,11 @@ message Submissions {
 message Comment {
     uint64 ID = 1;
     uint64 userID = 2;
-    uint64 submissionID = 3;
-    uint64 courseID = 4;
-    string message = 5;
-    string posted = 6;
+    string name = 3;
+    uint64 submissionID = 4;
+    uint64 courseID = 5;
+    string message = 6;
+    string posted = 7;
 }
 
 //   MANUAL GRADING   //
@@ -397,10 +397,6 @@ message DeleteCommentRequest {
     uint64 courseID = 2;
 }
 
-message CommentWithUser {
-    Comment comment = 1;
-    User user = 2;
-}
 
 // Void contains no fields. A server response with a Void still contains a gRPC status code,
 // which can be checked for success or failure. Status code 0 indicates that the requested action was successful,

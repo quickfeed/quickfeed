@@ -33,11 +33,6 @@ export class User extends jspb.Message {
   clearEnrollmentsList(): User;
   addEnrollments(value?: Enrollment, index?: number): Enrollment;
 
-  getCommentsList(): Array<Comment>;
-  setCommentsList(value: Array<Comment>): User;
-  clearCommentsList(): User;
-  addComments(value?: Comment, index?: number): Comment;
-
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): User.AsObject;
   static toObject(includeInstance: boolean, msg: User): User.AsObject;
@@ -57,7 +52,6 @@ export namespace User {
     login: string,
     remoteidentitiesList: Array<RemoteIdentity.AsObject>,
     enrollmentsList: Array<Enrollment.AsObject>,
-    commentsList: Array<Comment.AsObject>,
   }
 }
 
@@ -751,6 +745,9 @@ export class Comment extends jspb.Message {
   getUserid(): number;
   setUserid(value: number): Comment;
 
+  getName(): string;
+  setName(value: string): Comment;
+
   getSubmissionid(): number;
   setSubmissionid(value: number): Comment;
 
@@ -775,6 +772,7 @@ export namespace Comment {
   export type AsObject = {
     id: number,
     userid: number,
+    name: string,
     submissionid: number,
     courseid: number,
     message: string,
@@ -1511,32 +1509,6 @@ export namespace DeleteCommentRequest {
   export type AsObject = {
     commentid: number,
     courseid: number,
-  }
-}
-
-export class CommentWithUser extends jspb.Message {
-  getComment(): Comment | undefined;
-  setComment(value?: Comment): CommentWithUser;
-  hasComment(): boolean;
-  clearComment(): CommentWithUser;
-
-  getUser(): User | undefined;
-  setUser(value?: User): CommentWithUser;
-  hasUser(): boolean;
-  clearUser(): CommentWithUser;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): CommentWithUser.AsObject;
-  static toObject(includeInstance: boolean, msg: CommentWithUser): CommentWithUser.AsObject;
-  static serializeBinaryToWriter(message: CommentWithUser, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): CommentWithUser;
-  static deserializeBinaryFromReader(message: CommentWithUser, reader: jspb.BinaryReader): CommentWithUser;
-}
-
-export namespace CommentWithUser {
-  export type AsObject = {
-    comment?: Comment.AsObject,
-    user?: User.AsObject,
   }
 }
 
