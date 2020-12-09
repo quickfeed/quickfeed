@@ -85,7 +85,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		wh.updateLastActivityDate(repo.UserID, course.ID)
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
-			if !assignment.IsGroupLab {
+			if !assignment.IsGroupLab && !assignment.SkipTests {
 				// only run non-group assignments
 				wh.runAssignmentTests(assignment, repo, course, payload)
 			} else {
@@ -103,7 +103,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		wh.updateLastActivityDate(jobOwner.ID, course.ID)
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
-			if assignment.IsGroupLab {
+			if assignment.IsGroupLab && !assignment.SkipTests {
 				// only run group assignments
 				wh.runAssignmentTests(assignment, repo, course, payload)
 			} else {
