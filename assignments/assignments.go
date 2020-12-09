@@ -42,6 +42,30 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *
 		return
 	}
 
+	for _, assignment := range assignments {
+		logger.Debugf("Found assignment in '%s' repository: %v", pb.TestsRepo, assignment)
+		if len(assignment.GradingBenchmarks) > 1 {
+			logger.Debugf("Updating benchmarks for assignment ID %d", assignment.ID)
+			// TODO(vera): this needs a separate method that either uses gorm.Save method,
+			// or checks existing criteria and updates/removes them in the database.
+			// Or even better only parse/update criteria from yaml only assignment doen not have
+			// any criteria from before
+			for _, b := range assignment.GradingBenchmarks {
+				b.AssignmentID = assignment.ID
+				if err := db.CreateBenchmark(b); err != nil {
+					logger.Errorf("Failed to create grading benchmark: %+v: %s", b, err)
+				}
+
+				for _, c := range b.Criteria {
+					c.BenchmarkID = b.ID
+					if err := db.CreateCriterion(c); err != nil {
+						logger.Errorf("Failed to create grading criteria for benchmark ID %d: %s", b.ID, err)
+					}
+				}
+			}
+		}
+	}
+
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
 }
 
