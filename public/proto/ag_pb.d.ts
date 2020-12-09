@@ -748,6 +748,9 @@ export class Comment extends jspb.Message {
   getName(): string;
   setName(value: string): Comment;
 
+  getAvatarurl(): string;
+  setAvatarurl(value: string): Comment;
+
   getSubmissionid(): number;
   setSubmissionid(value: number): Comment;
 
@@ -773,6 +776,7 @@ export namespace Comment {
     id: number,
     userid: number,
     name: string,
+    avatarurl: string,
     submissionid: number,
     courseid: number,
     message: string,

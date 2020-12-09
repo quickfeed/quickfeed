@@ -211,10 +211,11 @@ message Comment {
     uint64 ID = 1;
     uint64 userID = 2;
     string name = 3;
-    uint64 submissionID = 4;
-    uint64 courseID = 5;
-    string message = 6;
-    string posted = 7;
+    string avatarURL = 4;
+    uint64 submissionID = 5;
+    uint64 courseID = 6;
+    string message = 7;
+    string posted = 8;
 }
 
 //   MANUAL GRADING   //

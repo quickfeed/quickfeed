@@ -6657,10 +6657,11 @@ proto.Comment.toObject = function(includeInstance, msg) {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     userid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     name: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    submissionid: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    courseid: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    message: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    posted: jspb.Message.getFieldWithDefault(msg, 7, "")
+    avatarurl: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    submissionid: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    courseid: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    message: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    posted: jspb.Message.getFieldWithDefault(msg, 8, "")
   };
 
   if (includeInstance) {
@@ -6710,18 +6711,22 @@ proto.Comment.deserializeBinaryFromReader = function(msg, reader) {
       msg.setName(value);
       break;
     case 4:
-      var value = /** @type {number} */ (reader.readUint64());
-      msg.setSubmissionid(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setAvatarurl(value);
       break;
     case 5:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setCourseid(value);
+      msg.setSubmissionid(value);
       break;
     case 6:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setCourseid(value);
+      break;
+    case 7:
       var value = /** @type {string} */ (reader.readString());
       msg.setMessage(value);
       break;
-    case 7:
+    case 8:
       var value = /** @type {string} */ (reader.readString());
       msg.setPosted(value);
       break;
@@ -6775,31 +6780,38 @@ proto.Comment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getSubmissionid();
-  if (f !== 0) {
-    writer.writeUint64(
+  f = message.getAvatarurl();
+  if (f.length > 0) {
+    writer.writeString(
       4,
       f
     );
   }
-  f = message.getCourseid();
+  f = message.getSubmissionid();
   if (f !== 0) {
     writer.writeUint64(
       5,
       f
     );
   }
+  f = message.getCourseid();
+  if (f !== 0) {
+    writer.writeUint64(
+      6,
+      f
+    );
+  }
   f = message.getMessage();
   if (f.length > 0) {
     writer.writeString(
-      6,
+      7,
       f
     );
   }
   f = message.getPosted();
   if (f.length > 0) {
     writer.writeString(
-      7,
+      8,
       f
     );
   }
@@ -6861,28 +6873,28 @@ proto.Comment.prototype.setName = function(value) {
 
 
 /**
- * optional uint64 submissionID = 4;
+ * optional string avatarURL = 4;
+ * @return {string}
+ */
+proto.Comment.prototype.getAvatarurl = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.Comment} returns this
+ */
+proto.Comment.prototype.setAvatarurl = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
+};
+
+
+/**
+ * optional uint64 submissionID = 5;
  * @return {number}
  */
 proto.Comment.prototype.getSubmissionid = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.Comment} returns this
- */
-proto.Comment.prototype.setSubmissionid = function(value) {
-  return jspb.Message.setProto3IntField(this, 4, value);
-};
-
-
-/**
- * optional uint64 courseID = 5;
- * @return {number}
- */
-proto.Comment.prototype.getCourseid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
@@ -6891,34 +6903,34 @@ proto.Comment.prototype.getCourseid = function() {
  * @param {number} value
  * @return {!proto.Comment} returns this
  */
-proto.Comment.prototype.setCourseid = function(value) {
+proto.Comment.prototype.setSubmissionid = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional string message = 6;
+ * optional uint64 courseID = 6;
+ * @return {number}
+ */
+proto.Comment.prototype.getCourseid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.Comment} returns this
+ */
+proto.Comment.prototype.setCourseid = function(value) {
+  return jspb.Message.setProto3IntField(this, 6, value);
+};
+
+
+/**
+ * optional string message = 7;
  * @return {string}
  */
 proto.Comment.prototype.getMessage = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.Comment} returns this
- */
-proto.Comment.prototype.setMessage = function(value) {
-  return jspb.Message.setProto3StringField(this, 6, value);
-};
-
-
-/**
- * optional string posted = 7;
- * @return {string}
- */
-proto.Comment.prototype.getPosted = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
 };
 
@@ -6927,8 +6939,26 @@ proto.Comment.prototype.getPosted = function() {
  * @param {string} value
  * @return {!proto.Comment} returns this
  */
-proto.Comment.prototype.setPosted = function(value) {
+proto.Comment.prototype.setMessage = function(value) {
   return jspb.Message.setProto3StringField(this, 7, value);
+};
+
+
+/**
+ * optional string posted = 8;
+ * @return {string}
+ */
+proto.Comment.prototype.getPosted = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.Comment} returns this
+ */
+proto.Comment.prototype.setPosted = function(value) {
+  return jspb.Message.setProto3StringField(this, 8, value);
 };
 
 

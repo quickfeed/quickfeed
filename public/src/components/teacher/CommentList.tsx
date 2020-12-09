@@ -1,9 +1,9 @@
 import * as React from "react";
-import { Comment, User, CommentWithUser } from '../../../proto/ag_pb';
+import { Comment } from '../../../proto/ag_pb';
 import { IComment } from "./Comment";
 
 interface CommentListProps {
-    comments: CommentWithUser[];
+    comments: Comment[];
     commenting: boolean;
     updateComment: (comment: Comment) => void;
     deleteComment: (commentID: number) => void;
@@ -11,7 +11,7 @@ interface CommentListProps {
 }
 
 interface CommentListState {
-    selectedComment?: CommentWithUser,
+    selectedComment?: Comment,
 }
 
 export class CommentList extends React.Component<CommentListProps> {
@@ -21,8 +21,7 @@ export class CommentList extends React.Component<CommentListProps> {
             {
                 this.props.comments.map((c, i) => <IComment
                     key={"cm" + i}
-                    author={c.getUser()}
-                    comment={c.getComment()}
+                    comment={c}
                     onSelect={() => this.setState({
                         selectedComment: c,
                     })}
@@ -37,5 +36,6 @@ export class CommentList extends React.Component<CommentListProps> {
     // Text: add a new comment (button+icon)
     // - input for a new comment
     // switching adding/add
-    // - edit a comment
+    // - edit a comment (author only)
+    // - delete a comment (check if author/course creator)
 }

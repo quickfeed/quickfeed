@@ -387,8 +387,7 @@ export class CourseManager {
                 if (!exists) {
                     const voidSubmission: ISubmissionLink = {
                         assignment: asm,
-                        authorName: studentName,
-                        comments: [],
+                        authorName: studentName
                     };
                     studentLabs.labs.push(voidSubmission);
                 }
@@ -433,7 +432,7 @@ export class CourseManager {
         for (const a of assignments) {
             if (a.getIsgrouplab() === wantGroupLinks) {
                 const lab = submissions.find((sub) => sub.assignmentid === a.getId());
-                courseLabLink.labs.push({ assignment: a, submission: lab, authorName: labAuthorName, comments: []});
+                courseLabLink.labs.push({ assignment: a, submission: lab, authorName: labAuthorName});
             }
         }
     }
