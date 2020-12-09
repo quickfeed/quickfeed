@@ -266,6 +266,8 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateSubmissions, request);
     }
 
+    // /* COMMENTS */ //
+
     public updateComment(request: Comment): Promise<IGrpcResponse<Comment>> {
         return this.grpcSend<Comment>(this.agService.updateComment, request);
     }

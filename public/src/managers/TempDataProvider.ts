@@ -1,5 +1,6 @@
 import {
     Assignment,
+    Comment,
     Course,
     Enrollment,
     GradingBenchmark,
@@ -296,6 +297,13 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
         throw new Error("Method not implemented.");
+    }
+
+    public async updateComment(comment: Comment): Promise<Comment | null> {
+        return null;
+    }
+    public async deleteComment(courseID: number, commentID: number): Promise<boolean> {
+        return false;
     }
 
     public async addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null> {

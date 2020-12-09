@@ -57,13 +57,13 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
             && this.state.selectedSubmission && this.state.selectedStudent
         ) {
             studentLab = <StudentLab
-                studentSubmission={this.state.selectedSubmission}
+                submissionLink={this.state.selectedSubmission}
                 courseURL={this.props.courseURL}
                 student={this.state.selectedStudent.enrollment.getUser() ?? new User()}
                 teacherPageView={true}
                 commenting={this.state.ignoreShortcuts}
                 slipdays={this.state.selectedSubmission.submission ? getSlipDays(this.props.allCourseSubmissions, this.state.selectedSubmission.submission, false) : 0}
-                onSubmissionRebuild={() => this.rebuildSubmission()}
+                rebuildSubmission={() => this.rebuildSubmission()}
                 updateSubmissionStatus={(status: Submission.Status) => this.updateSubmissionStatus(status)}
                 updateComment={(comment: Comment) => this.setSubmissionComment(comment)}
                 deleteComment={(commentID: number) => this.props.deleteComment(commentID)}

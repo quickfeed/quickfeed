@@ -25,7 +25,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
         if (this.props.submissionLink.submission) {
             const latest = this.props.submissionLink.submission;
             const commentDiv = <CommentList
-                    comments={this.props.submissionLink.comments}
+                    comments={this.props.submissionLink.submission.comments}
                     commenting={this.props.commenting}
                     updateComment={this.props.updateComment}
                     deleteComment={this.props.deleteComment}

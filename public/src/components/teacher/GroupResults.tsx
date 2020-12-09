@@ -53,13 +53,13 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
             && this.state.selectedSubmission
             && this.state.selectedSubmission.assignment.getIsgrouplab()) {
             groupLab = <StudentLab
-                studentSubmission={this.state.selectedSubmission}
+                submissionLink={this.state.selectedSubmission}
                 student={new User()}
                 courseURL={this.props.courseURL}
                 teacherPageView={true}
                 slipdays={this.props.course.getSlipdays()}
                 commenting={this.state.commenting}
-                onSubmissionRebuild={ () => this.rebuildSubmission()}
+                rebuildSubmission={ () => this.rebuildSubmission()}
                 updateSubmissionStatus={(status: Submission.Status) => this.updateSubmissionStatus(status)}
                 updateComment={(comment: Comment) => this.setSubmissionComment(comment)}
                 deleteComment={(commentID: number) => this.props.deleteComment(commentID)}

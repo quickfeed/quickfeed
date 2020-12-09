@@ -1,4 +1,4 @@
-import { Assignment, Comment, Course, Enrollment, Review, Submission, CommentWithUser } from '../proto/ag_pb';
+import { Assignment, Comment, Course, Enrollment, Review, Submission } from '../proto/ag_pb';
 
 export interface IUser {
     id: number;
@@ -25,7 +25,6 @@ export interface ISubmissionLink {
     assignment: Assignment;
     submission?: ISubmission;
     authorName: string;
-    comments: CommentWithUser[];
 }
 
 // Browser only objects END

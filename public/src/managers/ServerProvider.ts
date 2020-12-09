@@ -513,7 +513,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                             assignment: a,
                             submission: sb ? this.toISubmission(sb) : undefined,
                             authorName: name ?? "Name not found",
-                            comments: [],
                         });
                     }
                 });

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course, Enrollment, Group, Review, User, Submission, GradingBenchmark, GradingCriterion, CommentWithUser } from '../proto/ag_pb';
+import { Assignment, Course, Enrollment, Group, Review, User, Submission, GradingBenchmark, GradingCriterion } from '../proto/ag_pb';
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from './models';
 
 export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {
@@ -323,7 +323,7 @@ export function mapAllSubmissions(submissions: IAllSubmissionsForEnrollment[], f
                 }
             });
             if (!hasSubmission) {
-                groupMap.set(group, {assignment: a, authorName: group.getName(), comments: []});
+                groupMap.set(group, {assignment: a, authorName: group.getName()});
             }
         });
         return groupMap;
@@ -339,7 +339,7 @@ export function mapAllSubmissions(submissions: IAllSubmissionsForEnrollment[], f
                 hasSubmission = true;
             }
             if (!hasSubmission) {
-                studentMap.set(user, {assignment: a, authorName: user.getName(), comments: []});
+                studentMap.set(user, {assignment: a, authorName: user.getName()});
             }
         });
     });
@@ -375,26 +375,4 @@ export function makeEmptyGroup(): Group {
     const group = new Group();
     group.setName("Group not found");
     return group;
-}
-
-export function fillComments(allCourseUsersWithSubmissions: IAllSubmissionsForEnrollment[]): IAllSubmissionsForEnrollment[] {
-    allCourseUsersWithSubmissions.forEach(enrollment => {
-        enrollment.labs.forEach(lab => {
-            const submission = lab.submission;
-            if (submission) {
-                const commentsWithUsers: CommentWithUser[] = [];
-                submission.comments.forEach(comment => {
-                    const newComment = new CommentWithUser();
-                    newComment.setComment(comment);
-                    const commentAuthor = allCourseUsersWithSubmissions.filter(item => {
-                        return item.enrollment.getUser() !== undefined;
-                    }).find(item => item.enrollment.getUser()?.getId() === comment.getUserid());
-                    newComment.setUser(commentAuthor?.enrollment.getUser() ?? makeEmptyUser());
-                    commentsWithUsers.push(newComment);
-                });
-                lab.comments = commentsWithUsers;
-            }
-        });
-    });
-    return allCourseUsersWithSubmissions;
 }
