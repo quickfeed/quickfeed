@@ -28,6 +28,9 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *
 	}
 	for _, assignment := range assignments {
 		logger.Debugf("Found assignment in '%s' repository: %v", pb.TestsRepo, assignment)
+		if assignment.SkipTests {
+
+		}
 	}
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
