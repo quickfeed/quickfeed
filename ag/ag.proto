@@ -223,10 +223,11 @@ message GradingCriterion {
         PASSED = 2;
     }
     uint64 ID = 1;
-    uint64 benchmarkID = 2;
-    string description = 3;
-    Grade grade = 4;
-    string comment = 5;
+    uint64 score = 2;
+    uint64 benchmarkID = 3;
+    string description = 4;
+    Grade grade = 5;
+    string comment = 6;
 }
 
 message Review {
