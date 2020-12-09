@@ -61,7 +61,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				if newAssignment.ScoreLimit < 1 {
 					newAssignment.ScoreLimit = defaultAutoApproveScoreLimit
 				}
-				if newAssignment.ScriptFile == "" {
+				if newAssignment.ScriptFile == "" && !newAssignment.SkipTests {
 					return fmt.Errorf("error unmarshalling assignment: missing field 'scriptfile'")
 				}
 
