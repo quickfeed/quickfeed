@@ -5181,7 +5181,7 @@ proto.Assignment.toObject = function(includeInstance, msg) {
     isgrouplab: jspb.Message.getBooleanFieldWithDefault(msg, 8, false),
     scorelimit: jspb.Message.getFieldWithDefault(msg, 9, 0),
     reviewers: jspb.Message.getFieldWithDefault(msg, 10, 0),
-    runtests: jspb.Message.getBooleanFieldWithDefault(msg, 11, false),
+    skiptests: jspb.Message.getBooleanFieldWithDefault(msg, 11, false),
     submissionsList: jspb.Message.toObjectList(msg.getSubmissionsList(),
     proto.Submission.toObject, includeInstance),
     gradingbenchmarksList: jspb.Message.toObjectList(msg.getGradingbenchmarksList(),
@@ -5265,7 +5265,7 @@ proto.Assignment.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 11:
       var value = /** @type {boolean} */ (reader.readBool());
-      msg.setRuntests(value);
+      msg.setSkiptests(value);
       break;
     case 12:
       var value = new proto.Submission;
@@ -5380,7 +5380,7 @@ proto.Assignment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getRuntests();
+  f = message.getSkiptests();
   if (f) {
     writer.writeBool(
       11,
@@ -5594,10 +5594,10 @@ proto.Assignment.prototype.setReviewers = function(value) {
 
 
 /**
- * optional bool runTests = 11;
+ * optional bool skipTests = 11;
  * @return {boolean}
  */
-proto.Assignment.prototype.getRuntests = function() {
+proto.Assignment.prototype.getSkiptests = function() {
   return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 11, false));
 };
 
@@ -5606,7 +5606,7 @@ proto.Assignment.prototype.getRuntests = function() {
  * @param {boolean} value
  * @return {!proto.Assignment} returns this
  */
-proto.Assignment.prototype.setRuntests = function(value) {
+proto.Assignment.prototype.setSkiptests = function(value) {
   return jspb.Message.setProto3BooleanField(this, 11, value);
 };
 

@@ -578,8 +578,8 @@ export class Assignment extends jspb.Message {
   getReviewers(): number;
   setReviewers(value: number): Assignment;
 
-  getRuntests(): boolean;
-  setRuntests(value: boolean): Assignment;
+  getSkiptests(): boolean;
+  setSkiptests(value: boolean): Assignment;
 
   getSubmissionsList(): Array<Submission>;
   setSubmissionsList(value: Array<Submission>): Assignment;
@@ -614,7 +614,7 @@ export namespace Assignment {
     isgrouplab: boolean,
     scorelimit: number,
     reviewers: number,
-    runtests: boolean,
+    skiptests: boolean,
     submissionsList: Array<Submission.AsObject>,
     gradingbenchmarksList: Array<GradingBenchmark.AsObject>,
     containertimeout: number,

@@ -32,6 +32,7 @@ type assignmentData struct {
 	IsGroupLab       bool   `yaml:"isgrouplab"`
 	Reviewers        uint   `yaml:"reviewers"`
 	ContainerTimeout uint   `yaml:"containertimeout"`
+	SkipTests        bool   `yaml:"skiptests"`
 }
 
 // ParseAssignments recursively walks the given directory and parses
@@ -64,7 +65,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					return fmt.Errorf("error unmarshalling assignment: missing field 'scriptfile'")
 				}
 
-				// ID field from the parsed yaml is used to set Order, not assignment ID,
+				// AssignmentID field from the parsed yaml is used to set Order, not assignment ID,
 				// or it will cause a database constraint violation (IDs must be unique)
 				// The Name field below is the folder name of the assignment.
 				assignment := &pb.Assignment{
@@ -78,6 +79,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					IsGroupLab:       newAssignment.IsGroupLab,
 					Reviewers:        uint32(newAssignment.Reviewers),
 					ContainerTimeout: uint32(newAssignment.ContainerTimeout),
+					SkipTests:        newAssignment.SkipTests,
 				}
 				assignments = append(assignments, assignment)
 			}

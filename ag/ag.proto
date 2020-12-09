@@ -171,7 +171,7 @@ message Assignment {
     bool isGroupLab = 8;
     uint32 scoreLimit = 9;  // defines minimal score limit for auto approval
     uint32 reviewers = 10; // number of TA's to review submissions for this assignment 
-    bool runTests = 11;
+    bool skipTests = 11;
     repeated Submission submissions = 12; 
     repeated GradingBenchmark gradingBenchmarks = 13;    
     uint32 containerTimeout = 14;
