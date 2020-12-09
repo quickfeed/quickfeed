@@ -6838,10 +6838,11 @@ proto.GradingCriterion.prototype.toObject = function(opt_includeInstance) {
 proto.GradingCriterion.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    benchmarkid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    description: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    grade: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    comment: jspb.Message.getFieldWithDefault(msg, 5, "")
+    score: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    benchmarkid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    description: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    grade: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    comment: jspb.Message.getFieldWithDefault(msg, 6, "")
   };
 
   if (includeInstance) {
@@ -6884,17 +6885,21 @@ proto.GradingCriterion.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setBenchmarkid(value);
+      msg.setScore(value);
       break;
     case 3:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setBenchmarkid(value);
+      break;
+    case 4:
       var value = /** @type {string} */ (reader.readString());
       msg.setDescription(value);
       break;
-    case 4:
+    case 5:
       var value = /** @type {!proto.GradingCriterion.Grade} */ (reader.readEnum());
       msg.setGrade(value);
       break;
-    case 5:
+    case 6:
       var value = /** @type {string} */ (reader.readString());
       msg.setComment(value);
       break;
@@ -6934,31 +6939,38 @@ proto.GradingCriterion.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getBenchmarkid();
+  f = message.getScore();
   if (f !== 0) {
     writer.writeUint64(
       2,
       f
     );
   }
+  f = message.getBenchmarkid();
+  if (f !== 0) {
+    writer.writeUint64(
+      3,
+      f
+    );
+  }
   f = message.getDescription();
   if (f.length > 0) {
     writer.writeString(
-      3,
+      4,
       f
     );
   }
   f = message.getGrade();
   if (f !== 0.0) {
     writer.writeEnum(
-      4,
+      5,
       f
     );
   }
   f = message.getComment();
   if (f.length > 0) {
     writer.writeString(
-      5,
+      6,
       f
     );
   }
@@ -6993,10 +7005,10 @@ proto.GradingCriterion.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 benchmarkID = 2;
+ * optional uint64 score = 2;
  * @return {number}
  */
-proto.GradingCriterion.prototype.getBenchmarkid = function() {
+proto.GradingCriterion.prototype.getScore = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -7005,17 +7017,35 @@ proto.GradingCriterion.prototype.getBenchmarkid = function() {
  * @param {number} value
  * @return {!proto.GradingCriterion} returns this
  */
-proto.GradingCriterion.prototype.setBenchmarkid = function(value) {
+proto.GradingCriterion.prototype.setScore = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional string description = 3;
+ * optional uint64 benchmarkID = 3;
+ * @return {number}
+ */
+proto.GradingCriterion.prototype.getBenchmarkid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.GradingCriterion} returns this
+ */
+proto.GradingCriterion.prototype.setBenchmarkid = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional string description = 4;
  * @return {string}
  */
 proto.GradingCriterion.prototype.getDescription = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
 
@@ -7024,16 +7054,16 @@ proto.GradingCriterion.prototype.getDescription = function() {
  * @return {!proto.GradingCriterion} returns this
  */
 proto.GradingCriterion.prototype.setDescription = function(value) {
-  return jspb.Message.setProto3StringField(this, 3, value);
+  return jspb.Message.setProto3StringField(this, 4, value);
 };
 
 
 /**
- * optional Grade grade = 4;
+ * optional Grade grade = 5;
  * @return {!proto.GradingCriterion.Grade}
  */
 proto.GradingCriterion.prototype.getGrade = function() {
-  return /** @type {!proto.GradingCriterion.Grade} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+  return /** @type {!proto.GradingCriterion.Grade} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
 
@@ -7042,16 +7072,16 @@ proto.GradingCriterion.prototype.getGrade = function() {
  * @return {!proto.GradingCriterion} returns this
  */
 proto.GradingCriterion.prototype.setGrade = function(value) {
-  return jspb.Message.setProto3EnumField(this, 4, value);
+  return jspb.Message.setProto3EnumField(this, 5, value);
 };
 
 
 /**
- * optional string comment = 5;
+ * optional string comment = 6;
  * @return {string}
  */
 proto.GradingCriterion.prototype.getComment = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
 };
 
 
@@ -7060,7 +7090,7 @@ proto.GradingCriterion.prototype.getComment = function() {
  * @return {!proto.GradingCriterion} returns this
  */
 proto.GradingCriterion.prototype.setComment = function(value) {
-  return jspb.Message.setProto3StringField(this, 5, value);
+  return jspb.Message.setProto3StringField(this, 6, value);
 };
 
 
