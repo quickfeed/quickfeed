@@ -321,9 +321,6 @@ export class TeacherPage extends ViewPage {
                 }
             });
 
-            // sorting accepted user so that teachers show first
-            acceptedUsers.sort((x, y) => (x.getStatus() < y.getStatus()) ? 1 : -1);
-
             return <MemberView
                 course={course}
                 assignments={assignments}

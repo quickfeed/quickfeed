@@ -29,16 +29,19 @@ export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: bo
 }
 
 export function sortEnrollmentsByActivity(enrols: Enrollment[]): Enrollment[] {
+    const teachers: Enrollment[] = [];
     const active: Enrollment[] = [];
     const inactive: Enrollment[] = [];
     enrols.forEach((enrol) => {
-        if (enrol.getLastactivitydate() === "") {
+        if (enrol.getStatus() === Enrollment.UserStatus.TEACHER) {
+            teachers.push(enrol);
+        } else if (enrol.getLastactivitydate() === "") {
             inactive.push(enrol);
         } else {
             active.push(enrol);
         }
     });
-    return active.concat(inactive);
+    return teachers.concat(active, inactive);
 }
 
 export function sortStudentsForRelease<T>(fullList: T[], allSubmissions: Map<T, ISubmissionLink>, reviewers: number): T[] {
