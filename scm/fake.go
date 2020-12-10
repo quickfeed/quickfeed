@@ -217,3 +217,9 @@ func (s *FakeSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// TODO no implementation provided yet
 	return nil
 }
+
+// GetFileContent implements the SCM interface
+func (s *FakeSCM) GetFileContent(context.Context, *FileOptions) (string, error) {
+	// TODO no implementation provided yet
+	return "", nil
+}

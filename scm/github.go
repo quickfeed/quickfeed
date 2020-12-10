@@ -692,3 +692,31 @@ func toRepository(repo *github.Repository) *Repository {
 		Size:    uint64(repo.GetSize()),
 	}
 }
+
+// GetFileContent implements the SCM interface
+func (s *GithubSCM) GetFileContent(ctx context.Context, opt *FileOptions) (string, error) {
+	if !opt.valid() {
+		return "", ErrMissingFields{
+			Method:  "GetFileContent",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
+
+	fileContent, _, _, err := s.client.Repositories.GetContents(ctx, opt.Owner, opt.Repository, opt.Path, nil)
+	if err != nil || fileContent == nil {
+		return "", ErrFailedSCM{
+			Method:   "GetFileContent",
+			GitError: fmt.Errorf("failed to get contents of a file %s in repo %s of organization %s: %w", opt.Path, opt.Repository, opt.Owner, err),
+			Message:  fmt.Sprintf("failed to get contents of the file at %s", opt.Path),
+		}
+	}
+	contentString, err := fileContent.GetContent()
+	if err != nil {
+		return "", ErrFailedSCM{
+			Method:   "GetFileContent",
+			GitError: fmt.Errorf("failed to read contents of a file %s in repo %s of organization %s: %w", opt.Path, opt.Repository, opt.Owner, err),
+			Message:  fmt.Sprintf("failed to read contents of the file at %s", opt.Path),
+		}
+	}
+	return contentString, nil
+}
