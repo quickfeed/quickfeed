@@ -469,6 +469,9 @@ export class TeacherPage extends ViewPage {
                 removeCriterion={(c: GradingCriterion) => {
                     return this.courseMan.deleteCriterion(c)
                 }}
+                loadBenchmarks={() => {
+                    return this.courseMan.loadCriteria(a.getId(), course.getId())
+                }}
             ></AssignmentView>)
         }</div>
     }
