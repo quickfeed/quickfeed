@@ -216,6 +216,10 @@ message GradingBenchmark {
     repeated GradingCriterion criteria = 5;
 }
 
+message Benchmarks {
+    repeated GradingBenchmark benchmarks = 1;
+}
+
 message GradingCriterion {
     enum Grade {
         NONE = 0;
@@ -382,6 +386,11 @@ message CourseUserRequest {
     string userLogin = 3;
 }
 
+message LoadCriteriaRequest {
+    uint64 courseID = 1;
+    uint64 assignmentID = 2;
+}
+
 // Void contains no fields. A server response with a Void still contains a gRPC status code,
 // which can be checked for success or failure. Status code 0 indicates that the requested action was successful,
 // whereas any other status code indicates some failure. As such, the status code can be used as a boolean result from the server.
@@ -450,6 +459,8 @@ service AutograderService {
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Void) {}
     rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers) {}
+
+    rpc LoadCriteria(LoadCriteriaRequest) returns (Benchmarks) {}
 
     // misc //
     

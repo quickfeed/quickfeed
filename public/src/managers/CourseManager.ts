@@ -6,6 +6,7 @@ import {
 
 import {
     Assignment,
+    Benchmarks,
     Course,
     Enrollment,
     Group,
@@ -63,6 +64,7 @@ export interface ICourseProvider {
     updateCriterion(c: GradingCriterion): Promise<boolean>;
     deleteBenchmark(bm: GradingBenchmark): Promise<boolean>;
     deleteCriterion(c: GradingCriterion): Promise<boolean>;
+    loadCriteria(assignmentID: number, courseID: number): Promise<GradingBenchmark[]>;
     addReview(r: Review, courseID: number): Promise<Review | null>;
     editReview(r: Review, courseID: number): Promise<boolean>;
     getReviewers(submissionID: number, courseID: number): Promise<User[]>
@@ -320,6 +322,10 @@ export class CourseManager {
     }
     public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
         return this.courseProvider.deleteCriterion(c);
+    }
+
+    public async loadCriteria(assignmentID: number, courseID: number): Promise<GradingBenchmark[]> {
+        return this.courseProvider.loadCriteria(assignmentID, courseID);
     }
 
     public async addReview(r: Review, courseID: number): Promise<Review | null> {

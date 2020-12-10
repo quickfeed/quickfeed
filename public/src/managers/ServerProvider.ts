@@ -1,5 +1,6 @@
 import {
     Assignment,
+    Benchmarks,
     Course,
     CourseSubmissions,
     Enrollment,
@@ -387,6 +388,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
         const result = await this.grpcHelper.deleteCriterion(c);
         return this.responseCodeSuccess(result);
+    }
+
+    public async loadCriteria(assignmentID: number, courseID: number): Promise<GradingBenchmark[]> {
+        const result = await this.grpcHelper.loadCriteria(assignmentID, courseID);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return [];
+        }
+        return result.data.getBenchmarksList();
     }
 
     public async addReview(ir: Review, courseID: number): Promise<Review | null> {

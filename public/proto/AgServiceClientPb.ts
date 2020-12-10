@@ -17,6 +17,7 @@ import * as grpcWeb from 'grpc-web';
 import {
   Assignments,
   AuthorizationResponse,
+  Benchmarks,
   Course,
   CourseRequest,
   CourseSubmissions,
@@ -32,6 +33,7 @@ import {
   Group,
   GroupRequest,
   Groups,
+  LoadCriteriaRequest,
   OrgRequest,
   Organization,
   Providers,
@@ -1552,6 +1554,45 @@ export class AutograderServiceClient {
     request,
     metadata || {},
     this.methodInfoGetReviewers);
+  }
+
+  methodInfoLoadCriteria = new grpcWeb.AbstractClientBase.MethodInfo(
+    Benchmarks,
+    (request: LoadCriteriaRequest) => {
+      return request.serializeBinary();
+    },
+    Benchmarks.deserializeBinary
+  );
+
+  loadCriteria(
+    request: LoadCriteriaRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Benchmarks>;
+
+  loadCriteria(
+    request: LoadCriteriaRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Benchmarks) => void): grpcWeb.ClientReadableStream<Benchmarks>;
+
+  loadCriteria(
+    request: LoadCriteriaRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: Benchmarks) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        new URL('/AutograderService/LoadCriteria', this.hostname_).toString(),
+        request,
+        metadata || {},
+        this.methodInfoLoadCriteria,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/AutograderService/LoadCriteria',
+    request,
+    metadata || {},
+    this.methodInfoLoadCriteria);
   }
 
   methodInfoGetProviders = new grpcWeb.AbstractClientBase.MethodInfo(

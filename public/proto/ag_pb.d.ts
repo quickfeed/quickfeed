@@ -768,6 +768,26 @@ export namespace GradingBenchmark {
   }
 }
 
+export class Benchmarks extends jspb.Message {
+  getBenchmarksList(): Array<GradingBenchmark>;
+  setBenchmarksList(value: Array<GradingBenchmark>): Benchmarks;
+  clearBenchmarksList(): Benchmarks;
+  addBenchmarks(value?: GradingBenchmark, index?: number): GradingBenchmark;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Benchmarks.AsObject;
+  static toObject(includeInstance: boolean, msg: Benchmarks): Benchmarks.AsObject;
+  static serializeBinaryToWriter(message: Benchmarks, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Benchmarks;
+  static deserializeBinaryFromReader(message: Benchmarks, reader: jspb.BinaryReader): Benchmarks;
+}
+
+export namespace Benchmarks {
+  export type AsObject = {
+    benchmarksList: Array<GradingBenchmark.AsObject>,
+  }
+}
+
 export class GradingCriterion extends jspb.Message {
   getId(): number;
   setId(value: number): GradingCriterion;
@@ -1443,6 +1463,28 @@ export namespace CourseUserRequest {
     coursecode: string,
     courseyear: number,
     userlogin: string,
+  }
+}
+
+export class LoadCriteriaRequest extends jspb.Message {
+  getCourseid(): number;
+  setCourseid(value: number): LoadCriteriaRequest;
+
+  getAssignmentid(): number;
+  setAssignmentid(value: number): LoadCriteriaRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): LoadCriteriaRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: LoadCriteriaRequest): LoadCriteriaRequest.AsObject;
+  static serializeBinaryToWriter(message: LoadCriteriaRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): LoadCriteriaRequest;
+  static deserializeBinaryFromReader(message: LoadCriteriaRequest, reader: jspb.BinaryReader): LoadCriteriaRequest;
+}
+
+export namespace LoadCriteriaRequest {
+  export type AsObject = {
+    courseid: number,
+    assignmentid: number,
   }
 }
 

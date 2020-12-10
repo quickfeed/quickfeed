@@ -74,6 +74,11 @@ func (s *AutograderService) deleteCriterion(query *pb.GradingCriterion) error {
 	return s.db.DeleteCriterion(query)
 }
 
+func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, request *pb.LoadCriteriaRequest) ([]*pb.GradingBenchmark, error) {
+
+	return nil, nil
+}
+
 func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
 	if _, err := s.db.GetSubmission(&pb.Submission{ID: query.SubmissionID}); err != nil {
 		return nil, err
