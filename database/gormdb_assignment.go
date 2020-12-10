@@ -47,8 +47,15 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 // GetAssignment returns assignment with the given ID.
 func (db *GormDB) GetAssignment(query *pb.Assignment) (*pb.Assignment, error) {
 	var assignment pb.Assignment
-	if err := db.conn.Where(query).Preload("GradingBenchmarks").Preload("GradingBenchmarks.GradingCriteria").First(&assignment).Error; err != nil {
+	if err := db.conn.Where(query).Preload("GradingBenchmarks").First(&assignment).Error; err != nil {
 		return nil, err
+	}
+	for _, b := range assignment.GradingBenchmarks {
+		var criteria []*pb.GradingCriterion
+		if err := db.conn.Where("benchmark_id = ?", b.ID).Find(&criteria).Error; err != nil {
+			return nil, err
+		}
+		b.Criteria = criteria
 	}
 	return &assignment, nil
 }
