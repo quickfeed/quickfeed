@@ -476,6 +476,9 @@ export class TeacherPage extends ViewPage {
                     }
                     return ans;
                 }}
+                loadBenchmarks={() => {
+                    return this.courseMan.loadCriteria(a.getId(), course.getId())
+                }}
             ></AssignmentView>)
         }</div>
     }
