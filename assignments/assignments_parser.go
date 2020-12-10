@@ -1,7 +1,6 @@
 package assignments
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -17,7 +16,6 @@ import (
 const (
 	target                       = "assignment.yml"
 	targetYaml                   = "assignment.yaml"
-	gradingCriteria              = "criteria.json"
 	defaultAutoApproveScoreLimit = 80
 )
 
@@ -67,24 +65,21 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					return fmt.Errorf("error unmarshalling assignment: missing field 'scriptfile'")
 				}
 
-				gradingCriteria := parseCriteria(filepath.Dir(path) + gradingCriteria)
-
 				// AssignmentID field from the parsed yaml is used to set Order, not assignment ID,
 				// or it will cause a database constraint violation (IDs must be unique)
 				// The Name field below is the folder name of the assignment.
 				assignment := &pb.Assignment{
-					CourseID:          courseID,
-					Deadline:          FixDeadline(newAssignment.Deadline),
-					ScriptFile:        strings.ToLower(newAssignment.ScriptFile),
-					Name:              filepath.Base(filepath.Dir(path)),
-					Order:             uint32(newAssignment.AssignmentID),
-					AutoApprove:       newAssignment.AutoApprove,
-					ScoreLimit:        uint32(newAssignment.ScoreLimit),
-					IsGroupLab:        newAssignment.IsGroupLab,
-					Reviewers:         uint32(newAssignment.Reviewers),
-					ContainerTimeout:  uint32(newAssignment.ContainerTimeout),
-					SkipTests:         newAssignment.SkipTests,
-					GradingBenchmarks: gradingCriteria,
+					CourseID:         courseID,
+					Deadline:         FixDeadline(newAssignment.Deadline),
+					ScriptFile:       strings.ToLower(newAssignment.ScriptFile),
+					Name:             filepath.Base(filepath.Dir(path)),
+					Order:            uint32(newAssignment.AssignmentID),
+					AutoApprove:      newAssignment.AutoApprove,
+					ScoreLimit:       uint32(newAssignment.ScoreLimit),
+					IsGroupLab:       newAssignment.IsGroupLab,
+					Reviewers:        uint32(newAssignment.Reviewers),
+					ContainerTimeout: uint32(newAssignment.ContainerTimeout),
+					SkipTests:        newAssignment.SkipTests,
 				}
 
 				assignments = append(assignments, assignment)
@@ -96,21 +91,6 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 		return nil, err
 	}
 	return assignments, nil
-}
-
-func parseCriteria(path string) []*pb.GradingBenchmark {
-	criteriaFile, err := ioutil.ReadFile(path)
-	var benchmarks []*pb.GradingBenchmark
-	if err != nil {
-		fmt.Printf("Failed to read criteria file %s: %s\n", path, err)
-	}
-	if err := json.Unmarshal(criteriaFile, &benchmarks); err != nil {
-		fmt.Println("Failed to parse criteria json: ", err.Error())
-	}
-	for _, c := range benchmarks {
-		fmt.Printf("Parsed benchmark %+v, has %d criteria", c, len(c.Criteria))
-	}
-	return benchmarks
 }
 
 func FixDeadline(in string) string {
