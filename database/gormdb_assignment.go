@@ -47,7 +47,7 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 // GetAssignment returns assignment with the given ID.
 func (db *GormDB) GetAssignment(query *pb.Assignment) (*pb.Assignment, error) {
 	var assignment pb.Assignment
-	if err := db.conn.Where(query).First(&assignment).Error; err != nil {
+	if err := db.conn.Where(query).Preload("GradingBenchmarks").Preload("GradingBenchmarks.GradingCriteria").First(&assignment).Error; err != nil {
 		return nil, err
 	}
 	return &assignment, nil
@@ -142,7 +142,7 @@ func (db *GormDB) CreateCriterion(query *pb.GradingCriterion) error {
 func (db *GormDB) UpdateCriterion(query *pb.GradingCriterion) error {
 	return db.conn.Model(query).
 		Where(&pb.GradingCriterion{ID: query.ID, BenchmarkID: query.BenchmarkID}).
-		Update(&pb.GradingCriterion{Description: query.Description, Comment: query.Comment, Grade: query.Grade}).Error
+		Update(&pb.GradingCriterion{Description: query.Description, Comment: query.Comment, Grade: query.Grade, Score: query.Score}).Error
 }
 
 // DeleteCriterion removes the given criterion

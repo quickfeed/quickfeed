@@ -2,11 +2,16 @@ package web
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"path/filepath"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/assignments"
 	"github.com/autograde/quickfeed/scm"
 )
+
+var criteriaFile = "criteria.json"
 
 // getAssignments lists the assignments for the provided course.
 func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, error) {
@@ -76,7 +81,65 @@ func (s *AutograderService) deleteCriterion(query *pb.GradingCriterion) error {
 
 func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, request *pb.LoadCriteriaRequest) ([]*pb.GradingBenchmark, error) {
 
-	return nil, nil
+	// get assignment, check that exists
+	assignment, err := s.db.GetAssignment(&pb.Assignment{ID: request.AssignmentID, CourseID: request.CourseID})
+	if err != nil {
+		return nil, err
+	}
+
+	course, err := s.db.GetCourse(request.CourseID, false)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := &scm.FileOptions{
+		Path:       filepath.Join(assignment.GetName(), criteriaFile),
+		Owner:      course.OrganizationPath,
+		Repository: pb.TestsRepo,
+	}
+
+	criteriaString, err := sc.GetFileContent(ctx, opts)
+	if err != nil || criteriaString == "" {
+		return nil, err
+	}
+	fmt.Printf("Read file content for options: %+v/n", opts)
+	fmt.Println("File content is: ", criteriaString)
+
+	// unmarshall, log success
+	var benchmarks []*pb.GradingBenchmark
+	if err := json.Unmarshal([]byte(criteriaString), &benchmarks); err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("Unmarshalled %d benchmarks from file\n", len(benchmarks))
+
+	if len(assignment.GradingBenchmarks) > 0 {
+		for _, bm := range assignment.GradingBenchmarks {
+			for _, c := range bm.Criteria {
+				if err := s.db.DeleteCriterion(c); err != nil {
+					fmt.Printf("Failed to delete criteria %v: %s\n", c, err)
+				}
+			}
+			if err := s.db.DeleteBenchmark(bm); err != nil {
+				fmt.Printf("Failed to delete benchmark %v: %s\n", bm, err)
+			}
+		}
+	}
+
+	for _, bm := range benchmarks {
+		bm.AssignmentID = assignment.ID
+		if err := s.db.CreateBenchmark(bm); err != nil {
+			return nil, err
+		}
+		for _, c := range bm.Criteria {
+			c.BenchmarkID = bm.ID
+			if err := s.db.CreateCriterion(c); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return benchmarks, nil
 }
 
 func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
