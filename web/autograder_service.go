@@ -654,7 +654,7 @@ func (s *AutograderService) DeleteCriterion(ctx context.Context, in *pb.GradingC
 	return &pb.Void{}, err
 }
 
-// LoadCriteria
+// LoadCriteria loads grading criteria for an assignment from a json file
 // Access policy: Teacher of CourseID
 func (s *AutograderService) LoadCriteria(ctx context.Context, in *pb.LoadCriteriaRequest) (*pb.Benchmarks, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())

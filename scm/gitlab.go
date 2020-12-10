@@ -280,3 +280,12 @@ func (s *GitlabSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// TODO no implementation provided yet
 	return nil
 }
+
+// GetFileContent implements the SCM interface
+func (s *GitlabSCM) GetFileContent(context.Context, *FileOptions) (string, error) {
+	// TODO no implementation provided yet
+	return "", ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "GetFileContent",
+	}
+}

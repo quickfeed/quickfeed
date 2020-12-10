@@ -38,17 +38,17 @@ type SCM interface {
 	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)
 	// Delete team.
 	DeleteTeam(context.Context, *TeamOptions) error
-	// Get a single team by ID or name
+	// Get a single team by ID or name.
 	GetTeam(context.Context, *TeamOptions) (*Team, error)
-	// Fetch all teams for organization
+	// Fetch all teams for organization.
 	GetTeams(context.Context, *pb.Organization) ([]*Team, error)
 	// Add repo to team.
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// AddTeamMember adds a member to a team.
 	AddTeamMember(context.Context, *TeamMembershipOptions) error
-	// RemoveTeamMember removes team member
+	// RemoveTeamMember removes team member.
 	RemoveTeamMember(context.Context, *TeamMembershipOptions) error
-	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions
+	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions.
 	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
 	// GetUserName returns the currently logged in user's login name.
 	GetUserName(context.Context) (string, error)
@@ -56,12 +56,14 @@ type SCM interface {
 	GetUserNameByID(context.Context, uint64) (string, error)
 	// Returns a provider specific clone path.
 	CreateCloneURL(*CreateClonePathOptions) string
-	// Promotes or demotes organization member, based on Role field in OrgMembership
+	// Promotes or demotes organization member, based on Role field in OrgMembership.
 	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
-	// RevokeOrgMembership removes user from the organization
+	// RevokeOrgMembership removes user from the organization.
 	RemoveMember(context.Context, *OrgMembershipOptions) error
-	// Lists all authorizations for authenticated user
+	// Lists all authorizations for authenticated user.
 	GetUserScopes(context.Context) *Authorization
+	// GetFileContent returns the content of a single file in the given repository.
+	GetFileContent(context.Context, *FileOptions) (string, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -115,6 +117,13 @@ type RepositoryOptions struct {
 	ID    uint64
 	Path  string
 	Owner string
+}
+
+// FileOptions used to fetch a file content from a repository.
+type FileOptions struct {
+	Path       string
+	Owner      string
+	Repository string
 }
 
 // Hook contains information about a webhook for a repository.
