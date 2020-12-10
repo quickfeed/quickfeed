@@ -81,10 +81,6 @@ func (s *AutograderService) deleteCriterion(query *pb.GradingCriterion) error {
 
 func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, request *pb.LoadCriteriaRequest) ([]*pb.GradingBenchmark, error) {
 
-<<<<<<< HEAD
-=======
-	// get assignment, check that exists
->>>>>>> Update all existing grading criteria for the given assignment when fetching criteria from a file
 	assignment, err := s.db.GetAssignment(&pb.Assignment{ID: request.AssignmentID, CourseID: request.CourseID})
 	if err != nil {
 		return nil, err
