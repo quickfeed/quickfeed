@@ -10,6 +10,7 @@ interface AssignmentViewProps {
     updateCriterion: (c: GradingCriterion) => Promise<boolean>;
     addCriterion: (c: GradingCriterion) => Promise<GradingCriterion | null>;
     removeCriterion: (c: GradingCriterion) => Promise<boolean>;
+    loadBenchmarks: () => Promise<GradingBenchmark[]>;
 }
 
 interface AssignmentViewState {
@@ -34,7 +35,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
     public render() {
         const headerDiv = <div className="row"><h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3></div>;
         const noReviewersDiv = <div className="alert alert-info">This assignment is not for manual grading</div>;
-        const reviewersDiv = <div className="row"><p>Reviewers: {this.props.assignment.getReviewers()}</p></div>;
+        const topDiv = <div className="row"><p>Reviewers: {this.props.assignment.getReviewers()}</p> {this.loadButton()} </div>;
         if (this.props.assignment.getReviewers() < 1) {
             return <div className="a-element">
                 {headerDiv}
@@ -43,7 +44,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
         }
         return <div className="a-element">
             {headerDiv}
-            {this.state.open ? reviewersDiv : null}
+            {this.state.open ? topDiv : null}
             {this.state.open ? (<div className="row">{this.renderBenchmarks()}</div>) : null}
             {this.state.open ? this.renderAddNew() : null}
         </div>
@@ -143,5 +144,24 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
         })
     }
 
+    private loadButton(): JSX.Element {
+        return <button type="button"
+                id="load"
+                className="btn btn-dark load-button"
+                onClick={() => this.loadCriteriaFromFile()}
+        >Load from file</button>;
+    }
 
+    private async loadCriteriaFromFile() {
+        if (confirm(
+            `Warning! This action will remove existing criteria and replace them with criteria from the file. Proceed?`,
+        )) {
+            const newBenchmarks = await this.props.loadBenchmarks();
+            if (newBenchmarks.length > 0) {
+                this.setState({
+                    benchmarks: newBenchmarks,
+                });
+            }
+        }
+    }
 }

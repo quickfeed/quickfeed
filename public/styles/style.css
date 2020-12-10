@@ -592,6 +592,12 @@ table thead tr:first-child {
     cursor: pointer;
 }
 
+.load-button {
+    display: block;
+    float: right;
+    margin-right: 5%;
+}
+
 /* loader shown while waiting for data being fetched from the server */
 
 .lds-ripple {

@@ -321,6 +321,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
+    public async loadCriteria(assignmentID: number, courseID: number): Promise<GradingBenchmark[]> {
+        return [];
+    }
     public async addReview(r: Review): Promise<Review | null> {
         return r;
     }
