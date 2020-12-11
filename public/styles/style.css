@@ -602,12 +602,31 @@ table thead tr:first-child {
     display: block;
     float: left;
     margin-left: 1%;
+    margin-top: 1%;
 }
 
 .score-p {
     display:block;
     float:left;
     margin-inline-start: 5%;
+    margin-top: 1%;
+}
+
+.remove-c {
+    display:block;
+    float: right;
+    margin-right: 2%;
+}
+
+.score-c {
+    display:block;
+    float:left;
+    margin-left: 80%;
+}
+.description-c {
+    display: block;
+    float: left;
+    margin-left: 1%;
 }
 
 /* loader shown while waiting for data being fetched from the server */

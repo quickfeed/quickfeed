@@ -3,6 +3,7 @@ import { GradingCriterion } from "../../../proto/ag_pb";
 
 interface EditCriterionProps {
     criterion: GradingCriterion;
+    customScore: boolean;
     onUpdate: (newDescription: string) => void;
     onDelete: () => void;
 }
@@ -30,7 +31,7 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
 
     private renderDeleteButton(): JSX.Element {
         return <button
-            className="btn btn-danger btn-xs bm-btn"
+            className="btn btn-danger btn-xs bm-btn remove-c"
             onClick={() => {
                 this.setState({
                     editing: false,
@@ -53,8 +54,9 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
 
     private renderTextView(): JSX.Element {
         return <div
+            className="row"
             onClick={() => this.toggleEditState()}
-    >{this.props.criterion.getDescription()}{this.renderDeleteButton()}</div>
+    ><div className="description-c">{this.props.criterion.getDescription()}</div>{this.showScore()}{this.renderDeleteButton()}</div>
     }
 
     private renderEditView(): JSX.Element {
@@ -80,6 +82,13 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
         this.setState({
             description: inputText,
         })
+    }
+
+    private showScore(): JSX.Element | null {
+        if (this.props.customScore && this.props.criterion.getScore() > 0) {
+            return <div className="score-c">Score: {this.props.criterion.getScore()}</div>;
+        }
+        return null;
     }
 
     private undo() {
