@@ -290,6 +290,7 @@ export function deepCopy(bms: GradingBenchmark[]): GradingBenchmark[] {
             newCriterion.setComment(c.getComment());
             newCriterion.setDescription(c.getDescription());
             newCriterion.setGrade(c.getGrade());
+            newCriterion.setScore(c.getScore());
             newCriteria[j] = newCriterion;
         });
         newBm.setCriteriaList(newCriteria);
