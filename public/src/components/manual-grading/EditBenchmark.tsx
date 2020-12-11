@@ -3,6 +3,7 @@ import { GradingBenchmark, GradingCriterion } from "../../../proto/ag_pb";
 import { EditCriterion } from "./EditCriterion";
 
 interface EditBenchmarkProps {
+    customScore: boolean;
     benchmark: GradingBenchmark,
     onAdd: (c: GradingCriterion) => Promise<GradingCriterion | null>;
     onUpdate: (newHeading: string) => void;
@@ -110,6 +111,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
             {this.state.criteria.map((c, i) => <EditCriterion
                 key={i}
                 criterion={c}
+                customScore={this.props.customScore}
                 onUpdate={async (newDescription: string) => {
                     const originalDesc = c.getDescription();
                     const ans = await this.editCriterion(c, newDescription);
