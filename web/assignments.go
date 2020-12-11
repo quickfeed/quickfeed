@@ -81,7 +81,6 @@ func (s *AutograderService) deleteCriterion(query *pb.GradingCriterion) error {
 
 func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, request *pb.LoadCriteriaRequest) ([]*pb.GradingBenchmark, error) {
 
-	// get assignment, check that exists
 	assignment, err := s.db.GetAssignment(&pb.Assignment{ID: request.AssignmentID, CourseID: request.CourseID})
 	if err != nil {
 		return nil, err
@@ -102,16 +101,10 @@ func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, reques
 	if err != nil || criteriaString == "" {
 		return nil, err
 	}
-	fmt.Printf("Read file content for options: %+v/n", opts)
-	fmt.Println("File content is: ", criteriaString)
-
-	// unmarshall, log success
 	var benchmarks []*pb.GradingBenchmark
 	if err := json.Unmarshal([]byte(criteriaString), &benchmarks); err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("Unmarshalled %d benchmarks from file\n", len(benchmarks))
 
 	if len(assignment.GradingBenchmarks) > 0 {
 		for _, bm := range assignment.GradingBenchmarks {

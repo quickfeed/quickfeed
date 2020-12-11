@@ -44,7 +44,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             alert: "",
             graded: 0,
             review: undefined,
-            scoreFromCriteria: maxAssignmentScore(props.assignment),
+            scoreFromCriteria: maxAssignmentScore(props.assignment.getGradingbenchmarksList()),
         }
     }
 
