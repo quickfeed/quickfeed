@@ -134,8 +134,11 @@ scorelimit: 80
 isgrouplab: false
 reviewers: 2
 containertimeout: 10
+skiptests: false
 ```
 
+`scriptfile` is the name of the script used to run assignment tests. If there are no tests, set `skiptests` field to `true`. If `skiptests` field is not set to `true`,
+`scriptfile` field is required.
 `autoapprove` indicates whether or not Autograder will automatically approve the assignment when a sufficient score has been reached.
 `reviewers` indicate the number of reviews to be created for a student submission to this assignment.
 `scorelimit` defines the minimal percentage score on a student submission for the corresponding lab to be auto approved.
@@ -155,3 +158,44 @@ Comments can be left to every criterion checkpoint or to the whole group of grad
 **Release** page gives access to the overview of the results of manual reviews for all course students and assignments. There the user can see submission score for each review, the mean score for all ready reviews, set a final grade/status for a student submission (**Approved/Rejected/Revision**), look at all available reviews for each submission, and *release* the results to reveal them to students or student groups.
 
 It is also possible to mass approve submissions or mass release reviews for an assignment by choosing a minimal score and then pressing `Approve all` or `Release all` correspondingly. Every submission with a score equal or above the set minimal score will be approved or reviews to such submissions will be released.
+
+Grading criteria can be loaded from a file `criteria.json` in a corresponding assignment folder inside the `Tests` repository. 
+
+JSON format: 
+
+```
+[
+    {
+        "heading": "First criteria group",
+        "criteria": [
+            {
+                "description": "Has headers",
+                "score": 5
+            },
+            {
+                "description": "Has footers",
+                "score": 10
+            }
+        ]
+    },
+    {
+        "heading": "Second criteria group",
+        "criteria": [
+            {
+                "description": "Has forms",
+                "score": 5
+            },
+            {
+                "description": "Has inputs",
+                "score": 5
+            },
+            {
+                "description": "Looks nice",
+                "score": 10
+            }
+        ]
+    }
+]
+```
+
+`score` field is optional. If set, the max score for the assignment will be equal to the sum of all scores for each criteria. Otherwise, the max total score will be 100%.
