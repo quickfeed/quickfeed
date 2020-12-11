@@ -467,10 +467,14 @@ export class TeacherPage extends ViewPage {
                     return this.courseMan.addNewCriterion(c);
                 }}
                 removeCriterion={(c: GradingCriterion) => {
-                    return this.courseMan.deleteCriterion(c)
+                    return this.courseMan.deleteCriterion(c);
                 }}
-                loadBenchmarks={() => {
-                    return this.courseMan.loadCriteria(a.getId(), course.getId())
+                loadBenchmarks={async () => {
+                    const ans = await this.courseMan.loadCriteria(a.getId(), course.getId());
+                    if (ans.length > 0) {
+                        a.setGradingbenchmarksList(ans);
+                    }
+                    return ans;
                 }}
             ></AssignmentView>)
         }</div>

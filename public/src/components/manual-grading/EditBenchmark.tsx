@@ -129,6 +129,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
             newList.splice(this.state.criteria.indexOf(c), 1);
             this.setState({
                 criteria: newList,
+                editing: false,
             })
         }
     }
