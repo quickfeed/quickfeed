@@ -205,6 +205,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                     review: newRw,
                     benchmarks: newRw?.getBenchmarksList() ?? this.state.benchmarks,
                     graded: this.gradedTotal(newRw),
+
                 });
             }
         }
@@ -275,7 +276,9 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         let scoreNow = 0;
         this.state.benchmarks.forEach((bm) => {
             bm.getCriteriaList().forEach((c) => {
-                if (c.getGrade() === GradingCriterion.Grade.PASSED) scoreNow += c.getScore();
+                if (c.getGrade() === GradingCriterion.Grade.PASSED) {
+                    scoreNow += c.getScore();
+                }
             });
         });
         return scoreNow;
@@ -293,7 +296,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         if (this.state.open) {
             this.setState({
                 review: undefined,
-                score: 0,
+                score: this.setScore(),
                 benchmarks: [],
                 feedback: "",
                 open: false,

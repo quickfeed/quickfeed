@@ -438,7 +438,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             buildInfo = JSON.parse(buildInfoAsString);
         } catch (e) {
             buildInfo = JSON.parse(
-                "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
+                "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"No tests for this assignment\", \"execTime\": 1}",
             );
         }
         try {
