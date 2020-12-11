@@ -258,7 +258,7 @@ export function maxAssignmentScore(assignment: Assignment): number {
             score += c.getScore();
         });
     });
-    return score > 0 ? score : 100;
+    return score;
 }
 
 export function submissionStatusToString(status?: Submission.Status): string {

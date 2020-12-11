@@ -604,6 +604,12 @@ table thead tr:first-child {
     margin-left: 1%;
 }
 
+.score-p {
+    display:block;
+    float:left;
+    margin-inline-start: 5%;
+}
+
 /* loader shown while waiting for data being fetched from the server */
 
 .lds-ripple {

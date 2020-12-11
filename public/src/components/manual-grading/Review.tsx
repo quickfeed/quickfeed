@@ -2,7 +2,7 @@ import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review } from "../../../proto/ag_pb";
 import { ISubmission } from "../../models";
 import { GradeBenchmark } from "./GradeBenchmark";
-import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider } from "../../componentHelper";
+import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider, maxAssignmentScore } from '../../componentHelper';
 
 interface ReviewPageProps {
     assignment: Assignment;
@@ -27,6 +27,7 @@ interface ReviewPageState {
     score: number;
     alert: string;
     graded: number;
+    scoreFromCriteria: number;
 }
 
 export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState> {
@@ -43,6 +44,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             alert: "",
             graded: 0,
             review: undefined,
+            scoreFromCriteria: maxAssignmentScore(props.assignment),
         }
     }
 
@@ -138,7 +140,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         return <div className="row">
             <div className="col-md-10">
                 <ul className="list-group">
-                    <li key="li1" className="list-group-item r-li"><span className="r-table">Score: </span>{this.showScore()}</li>
+                    <li key="li1" className="list-group-item r-li"><span className="r-table">Score: </span>{this.scoreString()}</li>
                     <li key="li2" className="list-group-item r-li"><span className="r-table">Submission status: </span>{submissionStatusToString(this.props.submission?.status)}</li>
                     <li key="li3" className="list-group-item r-li"><span className="r-table">Review status: </span>{this.state.ready ? "Ready" : "In progress"}</li>
                     <li key="li4" className="list-group-item r-li"><span className="r-table">Graded: </span>{this.gradedTotal()}/{this.criteriaTotal()}</li>
@@ -249,11 +251,15 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         return counter;
     }
 
-    private showScore(): string {
+    private scoreString(): string {
         return this.setScore().toPrecision() + " %";
     }
 
     private setScore(): number {
+        return this.state.scoreFromCriteria > 0 ? this.setCustomScore() : this.setFullScore();
+    }
+
+    private setFullScore(): number {
         let passed = 0;
         this.state.benchmarks.forEach((bm) => {
             bm.getCriteriaList().forEach((c) => {
@@ -263,6 +269,16 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         const total = this.criteriaTotal() > 0 ? this.criteriaTotal() : 1;
         const scoreNow = passed * 100 / total;
         return Math.floor(scoreNow);
+    }
+
+    private setCustomScore(): number {
+        let scoreNow = 0;
+        this.state.benchmarks.forEach((bm) => {
+            bm.getCriteriaList().forEach((c) => {
+                if (c.getGrade() === GradingCriterion.Grade.PASSED) scoreNow += c.getScore();
+            });
+        });
+        return scoreNow;
     }
 
     private toggleEdit() {
@@ -377,4 +393,5 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         }
         return rw;
     }
+
 }
