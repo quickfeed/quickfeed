@@ -139,3 +139,8 @@ func (db *GormDB) UpdateReview(query *pb.Review) error {
 		Score:    query.Score,
 	}).Error
 }
+
+// DeleteReview removes all reviews matching the query
+func (db *GormDB) DeleteReview(query *pb.Review) error {
+	return db.conn.Delete(&pb.Review{}, &query).Error
+}
