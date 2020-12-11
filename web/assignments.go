@@ -107,15 +107,8 @@ func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, reques
 	}
 
 	if len(assignment.GradingBenchmarks) > 0 {
-		for _, bm := range assignment.GradingBenchmarks {
-			for _, c := range bm.Criteria {
-				if err := s.db.DeleteCriterion(c); err != nil {
-					fmt.Printf("Failed to delete criteria %v: %s\n", c, err)
-				}
-			}
-			if err := s.db.DeleteBenchmark(bm); err != nil {
-				fmt.Printf("Failed to delete benchmark %v: %s\n", bm, err)
-			}
+		if err := s.removeOldCriteriaAndReviews(assignment); err != nil {
+			return nil, err
 		}
 	}
 
@@ -147,4 +140,27 @@ func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
 
 func (s *AutograderService) updateReview(query *pb.Review) error {
 	return s.db.UpdateReview(query)
+}
+
+func (s *AutograderService) removeOldCriteriaAndReviews(assignment *pb.Assignment) error {
+	for _, bm := range assignment.GradingBenchmarks {
+		for _, c := range bm.Criteria {
+			if err := s.db.DeleteCriterion(c); err != nil {
+				fmt.Printf("Failed to delete criteria %v: %s\n", c, err)
+			}
+		}
+		if err := s.db.DeleteBenchmark(bm); err != nil {
+			fmt.Printf("Failed to delete benchmark %v: %s\n", bm, err)
+		}
+	}
+	submissions, err := s.db.GetSubmissions(&pb.Submission{AssignmentID: assignment.GetID()})
+	if err != nil {
+		return err
+	}
+	for _, submission := range submissions {
+		if err := s.db.DeleteReview(&pb.Review{SubmissionID: submission.ID}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
