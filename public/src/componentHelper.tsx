@@ -249,6 +249,18 @@ export function totalScore(reviews: Review[]): number {
     return Math.floor(sum / reviews.length);
 }
 
+// Some manually graded assignments can have custom max score (not necessary 100%), it will be
+// calculated as sum of all scores given for each grading criteria.
+export function maxAssignmentScore(assignment: Assignment): number {
+    let score = 0;
+    assignment.getGradingbenchmarksList().forEach(bm => {
+        bm.getCriteriaList().forEach(c => {
+            score += c.getScore();
+        });
+    });
+    return score > 0 ? score : 100;
+}
+
 export function submissionStatusToString(status?: Submission.Status): string {
     switch (status) {
         case Submission.Status.APPROVED:
