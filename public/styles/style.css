@@ -598,6 +598,12 @@ table thead tr:first-child {
     margin-right: 5%;
 }
 
+.assignment-p {
+    display: block;
+    float: left;
+    margin-left: 1%;
+}
+
 /* loader shown while waiting for data being fetched from the server */
 
 .lds-ripple {

@@ -35,7 +35,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
     public render() {
         const headerDiv = <div className="row"><h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3></div>;
         const noReviewersDiv = <div className="alert alert-info">This assignment is not for manual grading</div>;
-        const topDiv = <div className="row"><p>Reviewers: {this.props.assignment.getReviewers()}</p> {this.loadButton()} </div>;
+        const topDiv = <div className="row"><p className="assignment-p">Reviewers: {this.props.assignment.getReviewers()}</p> {this.loadButton()} </div>;
         if (this.props.assignment.getReviewers() < 1) {
             return <div className="a-element">
                 {headerDiv}
@@ -147,7 +147,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
     private loadButton(): JSX.Element {
         return <button type="button"
                 id="load"
-                className="btn btn-dark load-button"
+                className="btn btn-default load-button"
                 onClick={() => this.loadCriteriaFromFile()}
         >Load from file</button>;
     }
