@@ -714,9 +714,9 @@ func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewReque
 		s.logger.Error("UpdateReview failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update reviews")
 	}
-	if !usr.IsOwner(in.Review.GetReviewerID()) {
+	if !(usr.IsOwner(in.Review.GetReviewerID()) || s.isCourseCreator(in.CourseID, usr.ID)) {
 		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.Review.ReviewerID)
-		return nil, status.Errorf(codes.PermissionDenied, "reviews can only be updated by original authors")
+		return nil, status.Errorf(codes.PermissionDenied, "reviews can only be updated by original authors or course creator")
 	}
 	if err := in.Review.MakeReviewString(); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to create review: parsing error")
@@ -728,16 +728,17 @@ func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewReque
 	return &pb.Void{}, err
 }
 
-// UpdateSubmissions approves and/or releases manual reviews for student submission for the given assignment
-// Access policy: Teacher of CourseID
+// UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
+// with the given score.
+// Access policy: Creator of CourseID
 func (s *AutograderService) UpdateSubmissions(ctx context.Context, in *pb.UpdateSubmissionsRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("ReleaseAll failed: authentication error: %w", err)
+		s.logger.Errorf("UpdateSubmissions failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	if !s.isTeacher(usr.ID, in.GetCourseID()) {
-		s.logger.Error("ReleaseAll failed: user is not teacher")
+	if !s.isCourseCreator(in.CourseID, usr.ID) {
+		s.logger.Error("UpdateSubmissions failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update reviews")
 	}
 
