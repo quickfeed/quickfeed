@@ -78,6 +78,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
         return <Release
             submission={submission}
             assignment={this.props.submissionLink.assignment}
+            userIsCourseCreator={false}
             authorName={this.props.student.getName()}
             authorLogin={this.props.student.getLogin()}
             studentNumber={0}

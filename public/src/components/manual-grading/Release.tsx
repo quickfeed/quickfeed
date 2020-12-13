@@ -6,6 +6,8 @@ import { formatDate } from "../../helper";
 import ReactTooltip from "react-tooltip";
 
 interface ReleaseProps {
+
+    userIsCourseCreator: boolean;
     submission: ISubmission | undefined;
     assignment: Assignment;
     authorName: string;
@@ -122,7 +124,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         return <div
             className={this.releaseButtonClass()}
             onClick={() => {
-                if (this.props.submission && this.props.assignment.getReviewers() > 0) {
+                if (this.props.submission && this.props.assignment.getReviewers() > 0 && this.props.userIsCourseCreator) {
                     this.props.release(!this.props.submission.released);
                 }
             }}>{this.releaseButtonString()}</div>;
@@ -337,4 +339,5 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             this.setState({open: !this.state.open});
         }
     }
+
 }
