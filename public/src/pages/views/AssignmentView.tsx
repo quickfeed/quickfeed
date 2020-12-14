@@ -19,7 +19,7 @@ interface AssignmentViewState {
     open: boolean;
     newBenchmark: string;
     benchmarks: GradingBenchmark[];
-   // maxScore: number;
+    maxScore: number;
 }
 
 export class AssignmentView extends React.Component<AssignmentViewProps, AssignmentViewState> {
@@ -31,7 +31,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
             open: false,
             newBenchmark: "",
             benchmarks: this.props.assignment.getGradingbenchmarksList(),
-            //maxScore: this.renderTotalScore(),
+            maxScore: this.renderTotalScore(this.props.assignment.getGradingbenchmarksList()),
         }
     }
 
@@ -39,7 +39,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
         const headerDiv = <div className="row"><h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3></div>;
         const noReviewersDiv = <div className="alert alert-info">This assignment is not for manual grading</div>;
         const topDiv = <div className="row top-div"><div className="assignment-p">Reviewers: {this.props.assignment.getReviewers()}</div>
-                <div className="score-p">Max score: {this.renderTotalScore()}</div> {this.loadButton()} </div>;
+                <div className="score-p">Max score: {this.state.maxScore}</div> {this.loadButton()} </div>;
         if (this.props.assignment.getReviewers() < 1) {
             return <div className="a-element">
                 {headerDiv}
@@ -75,27 +75,39 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
                     return this.props.updateCriterion(c);
                 }}
                 deleteCriterion={async (c: GradingCriterion) => {
-                    return this.props.removeCriterion(c);
+                    const newScore = this.state.maxScore - c.getScore();
+                    const ans = await this.props.removeCriterion(c);
+                    if (ans) {
+                        this.setState({
+                            maxScore: newScore,
+                        })
+                    }
+                    return ans;
                 }}
             />)}
         </div>
     }
 
-    private renderTotalScore(): number {
+    private renderTotalScore(benchmarks?: GradingBenchmark[]): number {
         if (this.props.assignment.getGradingbenchmarksList().length < 1) {
             return 0;
         }
-        return maxAssignmentScore(this.props.assignment.getGradingbenchmarksList() ?? 100);
+        const scoreFromCriteria = maxAssignmentScore(benchmarks ?? this.state.benchmarks);
+        return scoreFromCriteria > 0 ? scoreFromCriteria : 100;
     }
 
     private async removeBenchmark(bm: GradingBenchmark) {
+        let totalBenchmarkScore = 0;
+        bm.getCriteriaList().forEach(c => totalBenchmarkScore += c.getScore());
+        const newScore = this.state.maxScore - totalBenchmarkScore;
         const ans = await this.props.removeBenchmark(bm);
         if (ans) {
             const newList = this.state.benchmarks;
             newList.splice(this.state.benchmarks.indexOf(bm), 1)
             this.setState({
                 benchmarks: newList,
-            })
+                maxScore: newScore,
+            });
         }
     }
 
@@ -175,6 +187,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
             if (newBenchmarks.length > 0) {
                 this.setState({
                     benchmarks: newBenchmarks,
+                    maxScore: this.renderTotalScore(newBenchmarks),
                     open: false,
                 });
             }
