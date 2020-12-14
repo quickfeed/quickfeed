@@ -53,10 +53,9 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
     }
 
     private renderTextView(): JSX.Element {
-        return <div
-            className="row"
-            onClick={() => this.toggleEditState()}
-    ><div className="description-c">{this.props.criterion.getDescription()}</div>{this.showScore()}{this.renderDeleteButton()}</div>
+        return <div className="row">
+            <div className="description-c" onClick={() => this.toggleEditState()}>{this.props.criterion.getDescription()}</div>{this.showScore()}{this.renderDeleteButton()}
+        </div>
     }
 
     private renderEditView(): JSX.Element {
