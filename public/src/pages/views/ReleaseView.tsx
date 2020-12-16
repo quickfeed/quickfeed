@@ -2,7 +2,7 @@ import * as React from "react";
 import { Assignment, Course, Group, User, Submission } from "../../../proto/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from "../../models";
 import { Search } from "../../components";
-import { mapAllSubmissions, sortStudentsForRelease, totalScore, selectFromSubmissionLinks, searchForUsers, searchForGroups, sortAssignmentsByOrder } from "../../componentHelper";
+import { mapAllSubmissions, sortStudentsForRelease, scoreFromReviews, selectFromSubmissionLinks, searchForUsers, searchForGroups, sortAssignmentsByOrder } from "../../componentHelper";
 import { Release } from "../../components/manual-grading/Release";
 
 interface ReleaseViewProps {
@@ -168,7 +168,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForGroupAssignment.get(grp);
                                 if (current && current.submission) {
                                     current.submission.status = status;
-                                    current.submission.score = totalScore(current.submission.reviews);
+                                    current.submission.score = scoreFromReviews(current.submission.reviews);
                                     return this.props.onUpdate(current.submission);
                                 }
                                 return false;
@@ -177,7 +177,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForGroupAssignment.get(grp)?.submission;
                                 if (current) {
                                     current.released = release;
-                                    current.score = totalScore(current.reviews);
+                                    current.score = scoreFromReviews(current.reviews);
                                     const ans = this.props.onUpdate(current);
                                     if (ans) return true;
                                     current.released = !release;
@@ -210,7 +210,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForAssignment.get(s);
                                 if (current && current.submission) {
                                     current.submission.status = status;
-                                    current.submission.score = totalScore(current.submission.reviews);
+                                    current.submission.score = scoreFromReviews(current.submission.reviews);
                                     return this.props.onUpdate(current.submission);
                                 }
                                 return false;
@@ -219,7 +219,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForAssignment.get(s)?.submission;
                                 if (current) {
                                     current.released = release;
-                                    current.score = totalScore(current.reviews);
+                                    current.score = scoreFromReviews(current.reviews);
                                     const ans = this.props.onUpdate(current);
                                     if (ans) return true;
                                     current.released = !release;
