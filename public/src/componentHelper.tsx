@@ -238,7 +238,7 @@ export function slugify(str: string): string {
     return str.replace(/[^a-z0-9 -_]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
 }
 
-export function totalScore(reviews: Review[]): number {
+export function scoreFromReviews(reviews: Review[]): number {
     if (reviews.length < 1) return 0;
     let sum = 0;
     reviews.forEach(rv => {

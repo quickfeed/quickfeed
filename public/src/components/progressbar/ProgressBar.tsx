@@ -9,9 +9,6 @@ export class ProgressBar extends React.Component<IProgressBarProps> {
 
     public render() {
         const secondaryBarWidth = this.props.scoreToPass - this.props.progress;
-
-        console.log("Secondary bar length is " + secondaryBarWidth);
-
         const progressBarStyle = {
             width: this.props.progress + "%",
         };

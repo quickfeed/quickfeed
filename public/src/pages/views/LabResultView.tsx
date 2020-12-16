@@ -3,6 +3,7 @@ import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { ISubmissionLink, ISubmission } from "../../models";
 import { User, Submission } from "../../../proto/ag_pb";
 import { Release } from "../../components/manual-grading/Release";
+import { scoreFromReviews } from '../../componentHelper';
 interface ILabInfoProps {
     submissionLink: ISubmissionLink;
     student: User;
@@ -19,6 +20,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
         if (this.props.submissionLink.submission) {
             const latest = this.props.submissionLink.submission;
             const buildLog = latest.buildLog.split("\n").map((x, i) => <span key={i} >{x}<br /></span>);
+            const score = this.props.submissionLink.assignment.getSkiptests() ? scoreFromReviews(latest.reviews) : latest.score;
             return (
                 <div key="labhead" className="col-md-9 col-sm-9 col-xs-12">
                     <div key="labview" className="result-content" id="resultview">
@@ -29,7 +31,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 scoreLimit={this.props.submissionLink.assignment.getScorelimit()}
                                 teacherView={this.props.teacherPageView}
                                 lab={this.props.submissionLink.assignment.getName()}
-                                progress={latest.score}
+                                progress={score}
                                 status={latest.status}
                                 authorName={this.props.submissionLink.authorName}
                                 onSubmissionStatusUpdate={this.props.onSubmissionStatusUpdate}
@@ -43,7 +45,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                             />
                             <LastBuild
                                 test_cases={latest.testCases}
-                                score={latest.score}
+                                score={score}
                                 scoreLimit={this.props.submissionLink.assignment.getScorelimit()}
                                 weight={100}
                             />
