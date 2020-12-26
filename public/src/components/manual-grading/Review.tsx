@@ -396,5 +396,4 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         }
         return rw;
     }
-
 }

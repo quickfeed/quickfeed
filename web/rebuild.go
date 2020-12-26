@@ -14,11 +14,7 @@ func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.R
 	if err != nil {
 		return nil, err
 	}
-	assignment, err := s.db.GetAssignment(&pb.Assignment{ID: request.GetAssignmentID()})
-	if err != nil {
-		return nil, err
-	}
-	course, err := s.db.GetCourse(assignment.GetCourseID(), false)
+	assignment, course, err := s.getAssignmentWithCourse(&pb.Assignment{ID: request.AssignmentID}, false)
 	if err != nil {
 		return nil, err
 	}

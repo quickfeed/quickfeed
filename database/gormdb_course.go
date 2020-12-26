@@ -44,11 +44,11 @@ func (db *GormDB) CreateCourse(userID uint64, course *pb.Course) error {
 
 // GetCourse fetches course by ID. If withInfo is true, preloads course
 // assignments, active enrollments and groups.
-func (db *GormDB) GetCourse(courseID uint64, withInfo bool) (*pb.Course, error) {
+func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*pb.Course, error) {
 	m := db.conn
 	var course pb.Course
 
-	if withInfo {
+	if withEnrollments {
 		// we only want submission from users enrolled in the course
 		userStates := []pb.Enrollment_UserStatus{
 			pb.Enrollment_STUDENT,
