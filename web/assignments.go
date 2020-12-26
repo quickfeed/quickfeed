@@ -81,12 +81,8 @@ func (s *AutograderService) deleteCriterion(query *pb.GradingCriterion) error {
 
 func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, request *pb.LoadCriteriaRequest) ([]*pb.GradingBenchmark, error) {
 
-	assignment, err := s.db.GetAssignment(&pb.Assignment{ID: request.AssignmentID, CourseID: request.CourseID})
-	if err != nil {
-		return nil, err
-	}
-
-	course, err := s.db.GetCourse(request.CourseID, false)
+	query := &pb.Assignment{ID: request.AssignmentID, CourseID: request.CourseID}
+	assignment, course, err := s.getAssignmentWithCourse(query, false)
 	if err != nil {
 		return nil, err
 	}
@@ -98,9 +94,10 @@ func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, reques
 	}
 
 	criteriaString, err := sc.GetFileContent(ctx, opts)
-	if err != nil || criteriaString == "" {
+	if err != nil {
 		return nil, err
 	}
+
 	var benchmarks []*pb.GradingBenchmark
 	if err := json.Unmarshal([]byte(criteriaString), &benchmarks); err != nil {
 		return nil, err
@@ -163,4 +160,17 @@ func (s *AutograderService) removeOldCriteriaAndReviews(assignment *pb.Assignmen
 		}
 	}
 	return nil
+}
+
+func (s *AutograderService) getAssignmentWithCourse(query *pb.Assignment, withCourseInfo bool) (*pb.Assignment, *pb.Course, error) {
+	assignment, err := s.db.GetAssignment(query)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	course, err := s.db.GetCourse(assignment.CourseID, false)
+	if err != nil {
+		return nil, nil, err
+	}
+	return assignment, course, nil
 }

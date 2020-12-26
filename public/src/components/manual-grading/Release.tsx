@@ -339,5 +339,4 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             this.setState({open: !this.state.open});
         }
     }
-
 }

@@ -26,7 +26,6 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %w", pb.TestsRepo, err)
 		return
 	}
-
 	for _, assignment := range assignments {
 		logger.Debugf("Found assignment in '%s' repository: %v", pb.TestsRepo, assignment)
 	}

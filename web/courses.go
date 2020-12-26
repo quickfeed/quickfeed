@@ -269,13 +269,10 @@ func (s *AutograderService) updateSubmission(courseID, submissionID uint64, stat
 // updateSubmissions updates status and release state of multiple submissions for the
 // given course and assignment ID for all submissions with score equal or above the provided score
 func (s *AutograderService) updateSubmissions(request *pb.UpdateSubmissionsRequest) error {
-	if _, err := s.db.GetCourse(request.CourseID, false); err != nil {
-		return err
-	}
-	if _, err := s.db.GetAssignment(&pb.Assignment{
+	if _, _, err := s.getAssignmentWithCourse(&pb.Assignment{
 		CourseID: request.CourseID,
 		ID:       request.AssignmentID,
-	}); err != nil {
+	}, false); err != nil {
 		return err
 	}
 

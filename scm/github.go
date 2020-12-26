@@ -718,5 +718,12 @@ func (s *GithubSCM) GetFileContent(ctx context.Context, opt *FileOptions) (strin
 			Message:  fmt.Sprintf("failed to read contents of the file at %s", opt.Path),
 		}
 	}
+	if contentString == "" {
+		return "", ErrFailedSCM{
+			Method:   "GetFileContent",
+			GitError: fmt.Errorf("file %s in repo %s of organization %s has no content", opt.Path, opt.Repository, opt.Owner),
+			Message:  fmt.Sprintf("%s has no content", opt.Path),
+		}
+	}
 	return contentString, nil
 }
