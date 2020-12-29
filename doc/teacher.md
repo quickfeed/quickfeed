@@ -198,4 +198,4 @@ JSON format:
 ]
 ```
 
-`score` field is optional. If set, the max score for the assignment will be equal to the sum of all scores for each criteria. Otherwise, the max total score will be 100%.
+`score` field is optional. If set, the max score for the assignment will be equal to the sum of all scores for each criteria. Otherwise, each criterion counts equally towards the total score of 100%.
