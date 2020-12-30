@@ -39,7 +39,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
         const headerDiv = <div className="row"><h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3></div>;
         const noReviewersDiv = <div className="alert alert-info">This assignment is not for manual grading</div>;
         const topDiv = <div className="row top-div"><div className="assignment-p">Reviewers: {this.props.assignment.getReviewers()}</div>
-                <div className="score-p">Max score: {this.state.maxScore}</div> {this.loadButton()} </div>;
+                <div className="score-p">Max points: {this.state.maxScore}</div> {this.loadButton()} </div>;
         if (this.props.assignment.getReviewers() < 1) {
             return <div className="a-element">
                 {headerDiv}
@@ -75,7 +75,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
                     return this.props.updateCriterion(c);
                 }}
                 deleteCriterion={async (c: GradingCriterion) => {
-                    const newScore = this.state.maxScore - c.getScore();
+                    const newScore = this.state.maxScore - c.getPoints();
                     const ans = await this.props.removeCriterion(c);
                     if (ans) {
                         this.setState({
@@ -98,7 +98,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
 
     private async removeBenchmark(bm: GradingBenchmark) {
         let totalBenchmarkScore = 0;
-        bm.getCriteriaList().forEach(c => totalBenchmarkScore += c.getScore());
+        bm.getCriteriaList().forEach(c => totalBenchmarkScore += c.getPoints());
         const newScore = this.state.maxScore - totalBenchmarkScore;
         const ans = await this.props.removeBenchmark(bm);
         if (ans) {

@@ -277,7 +277,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         this.state.benchmarks.forEach((bm) => {
             bm.getCriteriaList().forEach((c) => {
                 if (c.getGrade() === GradingCriterion.Grade.PASSED) {
-                    scoreNow += c.getScore();
+                    scoreNow += c.getPoints();
                 }
             });
         });

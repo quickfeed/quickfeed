@@ -7042,7 +7042,7 @@ proto.GradingCriterion.prototype.toObject = function(opt_includeInstance) {
 proto.GradingCriterion.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    score: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    points: jspb.Message.getFieldWithDefault(msg, 2, 0),
     benchmarkid: jspb.Message.getFieldWithDefault(msg, 3, 0),
     description: jspb.Message.getFieldWithDefault(msg, 4, ""),
     grade: jspb.Message.getFieldWithDefault(msg, 5, 0),
@@ -7089,7 +7089,7 @@ proto.GradingCriterion.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setScore(value);
+      msg.setPoints(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
@@ -7143,7 +7143,7 @@ proto.GradingCriterion.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getScore();
+  f = message.getPoints();
   if (f !== 0) {
     writer.writeUint64(
       2,
@@ -7209,10 +7209,10 @@ proto.GradingCriterion.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 score = 2;
+ * optional uint64 points = 2;
  * @return {number}
  */
-proto.GradingCriterion.prototype.getScore = function() {
+proto.GradingCriterion.prototype.getPoints = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -7221,7 +7221,7 @@ proto.GradingCriterion.prototype.getScore = function() {
  * @param {number} value
  * @return {!proto.GradingCriterion} returns this
  */
-proto.GradingCriterion.prototype.setScore = function(value) {
+proto.GradingCriterion.prototype.setPoints = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
 };
 
