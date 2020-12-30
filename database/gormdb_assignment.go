@@ -149,7 +149,7 @@ func (db *GormDB) CreateCriterion(query *pb.GradingCriterion) error {
 func (db *GormDB) UpdateCriterion(query *pb.GradingCriterion) error {
 	return db.conn.Model(query).
 		Where(&pb.GradingCriterion{ID: query.ID, BenchmarkID: query.BenchmarkID}).
-		Update(&pb.GradingCriterion{Description: query.Description, Comment: query.Comment, Grade: query.Grade, Score: query.Score}).Error
+		Update(&pb.GradingCriterion{Description: query.Description, Comment: query.Comment, Grade: query.Grade, Points: query.Points}).Error
 }
 
 // DeleteCriterion removes the given criterion

@@ -255,7 +255,7 @@ export function maxAssignmentScore(benchmarks: GradingBenchmark[]): number {
     let score = 0;
     benchmarks.forEach(bm => {
         bm.getCriteriaList().forEach(c => {
-            score += c.getScore();
+            score += c.getPoints();
         });
     });
     return score;
@@ -290,7 +290,7 @@ export function deepCopy(bms: GradingBenchmark[]): GradingBenchmark[] {
             newCriterion.setComment(c.getComment());
             newCriterion.setDescription(c.getDescription());
             newCriterion.setGrade(c.getGrade());
-            newCriterion.setScore(c.getScore());
+            newCriterion.setPoints(c.getPoints());
             newCriteria[j] = newCriterion;
         });
         newBm.setCriteriaList(newCriteria);

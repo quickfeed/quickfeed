@@ -792,8 +792,8 @@ export class GradingCriterion extends jspb.Message {
   getId(): number;
   setId(value: number): GradingCriterion;
 
-  getScore(): number;
-  setScore(value: number): GradingCriterion;
+  getPoints(): number;
+  setPoints(value: number): GradingCriterion;
 
   getBenchmarkid(): number;
   setBenchmarkid(value: number): GradingCriterion;
@@ -818,7 +818,7 @@ export class GradingCriterion extends jspb.Message {
 export namespace GradingCriterion {
   export type AsObject = {
     id: number,
-    score: number,
+    points: number,
     benchmarkid: number,
     description: string,
     grade: GradingCriterion.Grade,

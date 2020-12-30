@@ -84,8 +84,8 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
     }
 
     private showScore(): JSX.Element | null {
-        if (this.props.customScore && this.props.criterion.getScore() > 0) {
-            return <div className="score-c">Score: {this.props.criterion.getScore()}</div>;
+        if (this.props.customScore && this.props.criterion.getPoints() > 0) {
+            return <div className="score-c">Points: {this.props.criterion.getPoints()}</div>;
         }
         return null;
     }

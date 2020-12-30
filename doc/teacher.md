@@ -170,11 +170,11 @@ JSON format:
         "criteria": [
             {
                 "description": "Has headers",
-                "score": 5
+                "points": 5
             },
             {
                 "description": "Has footers",
-                "score": 10
+                "points": 10
             }
         ]
     },
@@ -183,19 +183,19 @@ JSON format:
         "criteria": [
             {
                 "description": "Has forms",
-                "score": 5
+                "points": 5
             },
             {
                 "description": "Has inputs",
-                "score": 5
+                "points": 5
             },
             {
                 "description": "Looks nice",
-                "score": 10
+                "points": 10
             }
         ]
     }
 ]
 ```
 
-`score` field is optional. If set, the max score for the assignment will be equal to the sum of all scores for each criteria. Otherwise, each criterion counts equally towards the total score of 100%.
+`points` field is optional. If set, the total score for the assignment will be equal to the sum of all points for all criteria. Otherwise, each criterion counts equally towards the total score of 100%.
