@@ -101,10 +101,10 @@ type Database interface {
 	CreateSubmission(*pb.Submission) error
 	// GetSubmission returns a single submission matching the given query.
 	GetSubmission(query *pb.Submission) (*pb.Submission, error)
-	// GetSubmissions returns a list of submission entries for the given course, matching the given query.
-	GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error)
+	// GetLastSubmissions returns a list of submission entries for the given course, matching the given query.
+	GetLastSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error)
 	// GetSubmissions returns all submissions matching the query.
-	GetSubmissionsByAssignment(*pb.Submission) ([]*pb.Submission, error)
+	GetSubmissions(*pb.Submission) ([]*pb.Submission, error)
 	// GetCourseAssignment returns a list of all the latest submissions
 	// for every active course assignment for the given course ID
 	GetCourseAssignmentsWithSubmissions(uint64, pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error)
