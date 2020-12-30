@@ -150,7 +150,7 @@ func (s *AutograderService) removeOldCriteriaAndReviews(assignment *pb.Assignmen
 			fmt.Printf("Failed to delete benchmark %v: %s\n", bm, err)
 		}
 	}
-	submissions, err := s.db.GetSubmissionsByAssignment(&pb.Submission{AssignmentID: assignment.GetID()})
+	submissions, err := s.db.GetSubmissions(&pb.Submission{AssignmentID: assignment.GetID()})
 	if err != nil {
 		return err
 	}

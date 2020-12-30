@@ -80,9 +80,9 @@ func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	return &submission, nil
 }
 
-// GetSubmissions returns all submissions for the active assignment for the given course.
+// GetLastSubmissions returns all submissions for the active assignment for the given course.
 // The query may specify both UserID and GroupID to fetch both user and group submissions.
-func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error) {
+func (db *GormDB) GetLastSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error) {
 	var course pb.Course
 	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
 		return nil, err
@@ -103,8 +103,8 @@ func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.S
 	return latestSubs, nil
 }
 
-// GetSubmissionsByAssignment returns all submissions matching the query.
-func (db *GormDB) GetSubmissionsByAssignment(query *pb.Submission) ([]*pb.Submission, error) {
+// GetSubmissions returns all submissions matching the query.
+func (db *GormDB) GetSubmissions(query *pb.Submission) ([]*pb.Submission, error) {
 	var submissions []*pb.Submission
 	if err := db.conn.Find(&submissions, &query).Error; err != nil {
 		return nil, err

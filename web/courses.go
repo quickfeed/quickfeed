@@ -136,7 +136,7 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 		UserID:  request.GetUserID(),
 		GroupID: request.GetGroupID(),
 	}
-	submissions, err := s.db.GetSubmissions(request.GetCourseID(), query)
+	submissions, err := s.db.GetLastSubmissions(request.GetCourseID(), query)
 	if err != nil {
 		return nil, err
 	}
