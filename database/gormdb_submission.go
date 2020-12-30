@@ -103,6 +103,15 @@ func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.S
 	return latestSubs, nil
 }
 
+// GetSubmissionsByAssignment returns all submissions matching the query.
+func (db *GormDB) GetSubmissionsByAssignment(query *pb.Submission) ([]*pb.Submission, error) {
+	var submissions []*pb.Submission
+	if err := db.conn.Find(&submissions, &query).Error; err != nil {
+		return nil, err
+	}
+	return submissions, nil
+}
+
 // UpdateSubmission updates submission with the given approved status.
 func (db *GormDB) UpdateSubmission(query *pb.Submission) error {
 	return db.conn.Save(query).Error
