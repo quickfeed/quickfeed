@@ -70,7 +70,6 @@ Autograder uses the following repository structure. These will be created automa
 | assignments   | Contains a separate folder for each assignment.  |Students, Teachers,<br>Autograder |
 | username-labs   | Created for each student username in Autograder |Student, Teachers,<br> Autograder |
 | tests           | Contains a separate folder for each assignment<br> with tests for that assignment. |Teachers, Autograder|
-| FIXME(meling) solutions      | Typically contains assignments, tests, and<br> solutions that pass the tests. | Teachers |
 
 *In Autograder, Teacher means any teaching staff, including teaching assistants and professors alike.*
 
@@ -84,9 +83,11 @@ Each `assignment` folder in the tests repository contains one or more test file 
 The format of this file will describe various aspects of an assignment, such as submission deadline, approve: manual or automatic, which script file to run to test the assignment, etc.
 See below for an example.
 
-The `solutions` folder should never be shared with anyone except teachers. This folder is not used by Autograder, but is created as a placeholder for the teaching staff to prepare and test the assignments locally. This folder will typically be used as the source for creating the `assignments` folder and `tests` folder.
+We recommend that course-info and source templates for assignments, tests and solution code are kept in a separate organization and repository that can be maintained over multiple years.
+Then a member of the teaching staff can copy course-info, the code template for assignments and tests to the corresponding repositories in the present-year's organization, either manually or with scripts.
 
-Currently, teaching staff needs to populate these repositories manually for the course. This is important so as to prevent revealing commit history from old instances. That is, these repositories should not be cloned or forked from an old version of the course.
+That is, these repositories should not be cloned or forked from an old version of the course.
+This approach prevents accidentally revealing commit history from old course instances.
 
 ## Teaching assistants
 
