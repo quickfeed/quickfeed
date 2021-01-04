@@ -47,6 +47,17 @@ For teachers, GitHub is happy to upgrade your organization to serve private repo
   Course repositories are repositories with names `assignments`, `tests` or `course-info`.
   If you already have such repositories in your organization, you will have to remove (or temporarily rename) them in order to be able to create a new course.
 
+### Notifications
+
+Teachers may receive lots of email notifications when students use GitHub.
+To turn off such notifications for all your organizations, you can follow these steps:
+
+1. Click [Notifications](https://github.com/settings/notifications) (make sure you are logged in first)
+2. Uncheck Automatically watch repositories
+
+You can find more details about alternative ways to turn off notifications [here](https://stackoverflow.com/questions/25108169/how-do-i-turn-off-automatic-notification-subscription-for-new-repositories-in-a).
+However, it appears there is no per-organization approach to turn of notifications, in case you do want to receive notification for some of your other organizations.
+
 ## Course
 
 ### Course repositories structure
