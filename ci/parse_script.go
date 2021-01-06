@@ -54,7 +54,7 @@ func parseScriptTemplate(scriptPath string, info *AssignmentInfo) (*Job, error) 
 	if len(s) < 2 {
 		return nil, fmt.Errorf("no script template in %s", tmplFile)
 	}
-	parts := strings.Split(s[0], "/")
+	parts := strings.SplitN(s[0], "/", 1)
 	if len(parts) < 2 {
 		return nil, fmt.Errorf("no docker image specified in script template %s", tmplFile)
 	}
