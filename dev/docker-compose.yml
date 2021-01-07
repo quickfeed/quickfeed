@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  proxy:
+    image: nginx-frontend
+    build: 
+      context: ./proxy
+      args:
+        - REACT_APP_SERVICES_HOST=/services/m
+    ports:
+      - "80:80"
+    networks: 
+      - external
+      - internal
+  
+  quickfeed:
+    image: quickfeed
+    build:
+      context: ./quickfeed
+    networks: 
+      - internal
+
+networks: 
+  external:
+  internal:
