@@ -14,7 +14,7 @@ git clone {{ .GetURL }} $ASSIGNMENTS
 git clone {{ .TestURL }} $TESTDIR
 
 if [ ! -d "$ASSIGNDIR" ]; then
-  printf "No code to test for {{ .GetURL }}/{{ .AssignmentName }}"
+  printf "Folder $ASSIGNDIR not found in {{ .GetURL }}"
   exit
 fi
 
