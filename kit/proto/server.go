@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc"
 )
 
 func serve(srv ScoreServiceServer) {

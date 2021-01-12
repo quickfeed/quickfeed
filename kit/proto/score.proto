@@ -3,6 +3,7 @@ syntax = "proto3";
 package proto;
 option go_package = "github.com/autograde/quickfeed/kit/proto";
 
+// Score give the score for a single test named TestName.
 message Score {
     string Secret = 1;   // the unique identifier for a scoring session
     string TestName = 2; // name of the test
@@ -12,9 +13,18 @@ message Score {
     string Message = 6;  // error message; could be displayed in frontend also
 }
 
+// Tests contain all tests to be expected for one test run.
+// Only Score fields: TestName, MaxScore and Weight should be used.
+// Other Score fields should be empty.
+message Tests {
+    repeated Score scores = 1;
+}
+
 message Void {}
 
 service ScoreService {
-    rpc Notify(Score) returns (Void);
-    rpc PanickedTest(Score) returns (Void);
+    // Register the tests to be expected for this test run.
+    rpc Register(Tests) returns (Void);
+    // Notify sends one score for each test.
+    rpc Notify(stream Score) returns (Void);
 }
