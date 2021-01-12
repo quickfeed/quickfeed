@@ -27,7 +27,7 @@ func NewFakeSCMClient() *FakeSCM {
 }
 
 // CreateOrganization implements the SCM interface.
-func (s *FakeSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions) (*pb.Organization, error) {
+func (s *FakeSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*pb.Organization, error) {
 	id := len(s.Organizations) + 1
 	org := &pb.Organization{
 		ID:     uint64(id),
@@ -39,7 +39,7 @@ func (s *FakeSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions)
 }
 
 // UpdateOrganization implements the SCM interface.
-func (s *FakeSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions) error {
+func (s *FakeSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }
@@ -216,4 +216,10 @@ func (s *FakeSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) e
 func (s *FakeSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// TODO no implementation provided yet
 	return nil
+}
+
+// GetFileContent implements the SCM interface
+func (s *FakeSCM) GetFileContent(context.Context, *FileOptions) (string, error) {
+	// TODO no implementation provided yet
+	return "", nil
 }

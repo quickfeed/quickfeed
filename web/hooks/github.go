@@ -166,7 +166,27 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 		CommitID:   payload.GetHeadCommit().GetID(),
 		JobOwner:   payload.GetSender().GetLogin(),
 	}
+	if assignment.SkipTests {
+		wh.recordSubmissionWithoutTests(runData)
+		return
+	}
 	ci.RunTests(wh.logger, wh.db, wh.runner, runData)
+}
+
+// recordSubmissionWithoutTests saves a new submission without running any tests
+// for a manually graded assignment.
+func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
+	newSubmission := &pb.Submission{
+		AssignmentID: data.Assignment.ID,
+		CommitHash:   data.CommitID,
+		UserID:       data.Repo.UserID,
+		GroupID:      data.Repo.GroupID,
+	}
+	if err := wh.db.CreateSubmission(newSubmission); err != nil {
+		wh.logger.Errorf("Failed to save submission for user ID %s for assignment ID %d: %s", data.JobOwner, data.Assignment.ID, err)
+	} else {
+		wh.logger.Debugf("Skipping tests. Saved submission for user ID %s for assignment ID %d", data.JobOwner, data.Assignment.ID)
+	}
 }
 
 // updateLastActivityDate sets a current date as a last activity date of the student

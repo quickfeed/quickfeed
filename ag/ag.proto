@@ -126,7 +126,7 @@ message Enrollment {
     DisplayState state = 10;
     uint32 slipDaysRemaining = 11 [(gogoproto.moretags) = "sql:\"-\""];
     string lastActivityDate = 12;
-    uint64 lastApprovedAssignment = 13;
+    uint64 totalApproved = 13;
     repeated UsedSlipDays usedSlipDays = 14;
 }
 
@@ -171,7 +171,7 @@ message Assignment {
     bool isGroupLab = 8;
     uint32 scoreLimit = 9;  // defines minimal score limit for auto approval
     uint32 reviewers = 10; // number of TA's to review submissions for this assignment 
-    bool runTests = 11;
+    bool skipTests = 11;
     repeated Submission submissions = 12; 
     repeated GradingBenchmark gradingBenchmarks = 13;    
     uint32 containerTimeout = 14;
@@ -216,6 +216,10 @@ message GradingBenchmark {
     repeated GradingCriterion criteria = 5;
 }
 
+message Benchmarks {
+    repeated GradingBenchmark benchmarks = 1;
+}
+
 message GradingCriterion {
     enum Grade {
         NONE = 0;
@@ -223,10 +227,11 @@ message GradingCriterion {
         PASSED = 2;
     }
     uint64 ID = 1;
-    uint64 benchmarkID = 2;
-    string description = 3;
-    Grade grade = 4;
-    string comment = 5;
+    uint64 points = 2;
+    uint64 benchmarkID = 3;
+    string description = 4;
+    Grade grade = 5;
+    string comment = 6;
 }
 
 message Review {
@@ -294,7 +299,8 @@ message Organizations {
 message EnrollmentRequest {
     uint64 courseID = 1;
     bool ignoreGroupMembers = 2;
-    repeated Enrollment.UserStatus statuses = 3;
+    bool withActivity = 3;
+    repeated Enrollment.UserStatus statuses = 4;
 }
 
 // EnrollmentStatusRequest is a request for a given user, with a specific enrollment status.
@@ -380,6 +386,11 @@ message CourseUserRequest {
     string userLogin = 3;
 }
 
+message LoadCriteriaRequest {
+    uint64 courseID = 1;
+    uint64 assignmentID = 2;
+}
+
 // Void contains no fields. A server response with a Void still contains a gRPC status code,
 // which can be checked for success or failure. Status code 0 indicates that the requested action was successful,
 // whereas any other status code indicates some failure. As such, the status code can be used as a boolean result from the server.
@@ -448,6 +459,8 @@ service AutograderService {
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Void) {}
     rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers) {}
+
+    rpc LoadCriteria(LoadCriteriaRequest) returns (Benchmarks) {}
 
     // misc //
     

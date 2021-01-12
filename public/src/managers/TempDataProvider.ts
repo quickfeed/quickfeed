@@ -17,7 +17,6 @@ import { IAllSubmissionsForEnrollment, ISubmission } from '../models';
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
 
-import { isNull } from "util";
 import { IMap, MapHelper, mapify } from "../map";
 
 interface IGrpcDummyUser {
@@ -108,7 +107,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return new Promise<User | null>((resolve, reject) => {
             // Simulate async callback
             setTimeout(() => {
-                if (isNull(user)) {
+                if (!(user)) {
                     this.currentLoggedIn = user;
                     resolve(user);
                 } else {
@@ -173,7 +172,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return returnUsers;
     }
 
-    public async getUsersForCourse(course: Course, noGroupMembers?: boolean, status?: Enrollment.UserStatus[])
+    public async getUsersForCourse(course: Course, noGroupMembers?: boolean, withActivity?: boolean, status?: Enrollment.UserStatus[])
         : Promise<Enrollment[]> {
         const courseStds: Enrollment[] =
             await this.getUserLinksForCourse(course, status);
@@ -322,6 +321,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
+    public async loadCriteria(assignmentID: number, courseID: number): Promise<GradingBenchmark[]> {
+        return [];
+    }
     public async addReview(r: Review): Promise<Review | null> {
         return r;
     }

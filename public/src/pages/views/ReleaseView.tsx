@@ -2,7 +2,7 @@ import * as React from "react";
 import { Assignment, Course, Group, User, Submission } from "../../../proto/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from "../../models";
 import { Search } from "../../components";
-import { mapAllSubmissions, sortStudentsForRelease, totalScore, selectFromSubmissionLinks, searchForUsers, searchForGroups, sortAssignmentsByOrder } from "../../componentHelper";
+import { mapAllSubmissions, sortStudentsForRelease, scoreFromReviews, selectFromSubmissionLinks, searchForUsers, searchForGroups, sortAssignmentsByOrder } from "../../componentHelper";
 import { Release } from "../../components/manual-grading/Release";
 
 interface ReleaseViewProps {
@@ -95,7 +95,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                     type="number"
                     min="0"
                     max="100"
-                    value={this.state.scoreLimit}
+                    value={this.state.scoreLimit > 0 ? this.state.scoreLimit : ""}
                     onChange={(e) => {
                         this.setState({
                             scoreLimit: e.target.value !== "" ? parseInt(e.target.value, 10) : 0,
@@ -107,9 +107,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                         onClick={() => {
                             if (this.state.selectedAssignment) {
                                 if (confirm(
-                                    `Warning! Are you sure you
-                                    want to release reviews for all
-                                    submissions with score above ${this.state.scoreLimit}?`,
+                                    `Warning! Are you sure you want to approve all submissions with score above ${this.state.scoreLimit}?`,
                                     )) {
                                         this.props.updateAll(this.state.selectedAssignment.getId(), this.state.scoreLimit, false, true);
                                 }
@@ -125,9 +123,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                         onClick={() => {
                             if (this.state.selectedAssignment) {
                                 if (confirm(
-                                    `Warning! Are you sure you
-                                    want to approve all
-                                    submissions with score above ${this.state.scoreLimit}?`,
+                                    `Warning! Are you sure you want to release reviews for allsubmissions with score above ${this.state.scoreLimit}?`,
                                     )) {
                                         this.props.updateAll(this.state.selectedAssignment.getId(), this.state.scoreLimit, true, false);
                                 }
@@ -161,6 +157,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                         <li key={i} onClick={() => this.setState({selectedGroup: grp})} className="list-group-item li-review"><Release
                             key={"fg" + i}
                             teacherView={true}
+                            userIsCourseCreator={this.props.course.getCoursecreatorid() === this.props.curUser.getId()}
                             assignment={a}
                             submission={this.state.submissionsForGroupAssignment.get(grp)?.submission}
                             authorName={grp.getName()}
@@ -171,7 +168,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForGroupAssignment.get(grp);
                                 if (current && current.submission) {
                                     current.submission.status = status;
-                                    current.submission.score = totalScore(current.submission.reviews);
+                                    current.submission.score = scoreFromReviews(current.submission.reviews);
                                     return this.props.onUpdate(current.submission);
                                 }
                                 return false;
@@ -180,7 +177,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForGroupAssignment.get(grp)?.submission;
                                 if (current) {
                                     current.released = release;
-                                    current.score = totalScore(current.reviews);
+                                    current.score = scoreFromReviews(current.reviews);
                                     const ans = this.props.onUpdate(current);
                                     if (ans) return true;
                                     current.released = !release;
@@ -201,6 +198,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                     sortedCourseStudents.map((s, i) =>
                         <li key={i} onClick={() => this.setState({selectedStudent: s})} className="list-group-item li-review"><Release
                             key={"fs" + i}
+                            userIsCourseCreator={this.props.course.getCoursecreatorid() === this.props.curUser.getId()}
                             teacherView={true}
                             assignment={a}
                             submission={this.state.submissionsForAssignment.get(s)?.submission}
@@ -212,7 +210,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForAssignment.get(s);
                                 if (current && current.submission) {
                                     current.submission.status = status;
-                                    current.submission.score = totalScore(current.submission.reviews);
+                                    current.submission.score = scoreFromReviews(current.submission.reviews);
                                     return this.props.onUpdate(current.submission);
                                 }
                                 return false;
@@ -221,7 +219,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForAssignment.get(s)?.submission;
                                 if (current) {
                                     current.released = release;
-                                    current.score = totalScore(current.reviews);
+                                    current.score = scoreFromReviews(current.reviews);
                                     const ans = this.props.onUpdate(current);
                                     if (ans) return true;
                                     current.released = !release;

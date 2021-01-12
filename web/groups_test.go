@@ -44,7 +44,7 @@ func TestNewGroup(t *testing.T) {
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	_, err := fakeProvider.CreateOrganization(ctx,
-		&scm.CreateOrgOptions{Path: "path", Name: "name"},
+		&scm.OrganizationOptions{Path: "path", Name: "name"},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -99,7 +99,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	_, err := fakeProvider.CreateOrganization(ctx,
-		&scm.CreateOrgOptions{Path: "path", Name: "name"},
+		&scm.OrganizationOptions{Path: "path", Name: "name"},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -168,7 +168,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	_, err := fakeProvider.CreateOrganization(context.Background(),
-		&scm.CreateOrgOptions{Path: "path", Name: "name"},
+		&scm.OrganizationOptions{Path: "path", Name: "name"},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -252,7 +252,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	_, err := fakeProvider.CreateOrganization(ctx,
-		&scm.CreateOrgOptions{Path: "path", Name: "name"},
+		&scm.OrganizationOptions{Path: "path", Name: "name"},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -278,7 +278,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	_, err := fakeProvider.CreateOrganization(context.Background(),
-		&scm.CreateOrgOptions{Path: "path", Name: "name"},
+		&scm.OrganizationOptions{Path: "path", Name: "name"},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -608,7 +608,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), teacher)
 
-	if _, err := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{
+	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{
 		Name: course.Code,
 		Path: course.Code,
 	}); err != nil {
@@ -766,7 +766,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
-	if _, err := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{
+	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{
 		Name: course.Code,
 		Path: course.Code,
 	}); err != nil {

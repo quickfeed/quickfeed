@@ -2,6 +2,7 @@ import * as grpcWeb from "grpc-web";
 import {
     Assignments,
     AuthorizationResponse,
+    Benchmarks,
     Course,
     CourseRequest,
     CourseSubmissions,
@@ -42,6 +43,7 @@ import {
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
 import { ISubmission } from "../models";
+import { LoadCriteriaRequest } from '../../proto/ag_pb';
 
 export interface IGrpcResponse<T> {
     status: Status;
@@ -134,12 +136,12 @@ export class GrpcManager {
         return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByUser, request);
     }
 
-    public getEnrollmentsByCourse(courseID: number, noGroupMembers?: boolean, statuses?: Enrollment.UserStatus[]):
+    public getEnrollmentsByCourse(courseID: number, withoutGroupMembers?: boolean, withActivity?: boolean, statuses?: Enrollment.UserStatus[]):
         Promise<IGrpcResponse<Enrollments>> {
-
         const request = new EnrollmentRequest();
         request.setCourseid(courseID);
-        request.setIgnoregroupmembers(noGroupMembers ?? false);
+        request.setIgnoregroupmembers(withoutGroupMembers ?? false);
+        request.setWithactivity(withActivity ?? false);
         request.setStatusesList(statuses ?? []);
         return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByCourse, request);
     }
@@ -309,6 +311,13 @@ export class GrpcManager {
         request.setSubmissionid(submissionID);
         request.setCourseid(courseID);
         return this.grpcSend<Reviewers>(this.agService.getReviewers, request);
+    }
+
+    public loadCriteria(assignmentID: number, courseID: number): Promise<IGrpcResponse<Benchmarks>> {
+        const request = new LoadCriteriaRequest();
+        request.setAssignmentid(assignmentID);
+        request.setCourseid(courseID);
+        return this.grpcSend<Benchmarks>(this.agService.loadCriteria, request);
     }
 
     // /* REPOSITORY */ //

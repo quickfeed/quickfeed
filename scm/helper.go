@@ -55,7 +55,7 @@ var (
 
 // Validators //
 
-func (opt CreateOrgOptions) valid() bool {
+func (opt OrganizationOptions) valid() bool {
 	return opt.Path != "" && opt.DefaultPermission != ""
 }
 
@@ -110,6 +110,11 @@ func (opt OrgMembershipOptions) valid() bool {
 
 func (opt RepositoryOptions) valid() bool {
 	return opt.ID > 0 || (opt.Path != "" && opt.Owner != "")
+}
+
+func (opt FileOptions) valid() bool {
+	return opt.Owner != "" &&
+		opt.Path != "" && opt.Repository != ""
 }
 
 // Errors //

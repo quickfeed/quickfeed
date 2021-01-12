@@ -29,16 +29,19 @@ export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: bo
 }
 
 export function sortEnrollmentsByActivity(enrols: Enrollment[]): Enrollment[] {
+    const teachers: Enrollment[] = [];
     const active: Enrollment[] = [];
     const inactive: Enrollment[] = [];
     enrols.forEach((enrol) => {
-        if (enrol.getLastactivitydate() === "") {
+        if (enrol.getStatus() === Enrollment.UserStatus.TEACHER) {
+            teachers.push(enrol);
+        } else if (enrol.getLastactivitydate() === "") {
             inactive.push(enrol);
         } else {
             active.push(enrol);
         }
     });
-    return active.concat(inactive);
+    return teachers.concat(active, inactive);
 }
 
 export function sortStudentsForRelease<T>(fullList: T[], allSubmissions: Map<T, ISubmissionLink>, reviewers: number): T[] {
@@ -235,7 +238,7 @@ export function slugify(str: string): string {
     return str.replace(/[^a-z0-9 -_]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
 }
 
-export function totalScore(reviews: Review[]): number {
+export function scoreFromReviews(reviews: Review[]): number {
     if (reviews.length < 1) return 0;
     let sum = 0;
     reviews.forEach(rv => {
@@ -244,6 +247,18 @@ export function totalScore(reviews: Review[]): number {
         }
     });
     return Math.floor(sum / reviews.length);
+}
+
+// Some manually graded assignments can have custom max score (not necessary 100%), it will be
+// calculated as sum of all scores given for each grading criteria.
+export function maxAssignmentScore(benchmarks: GradingBenchmark[]): number {
+    let score = 0;
+    benchmarks.forEach(bm => {
+        bm.getCriteriaList().forEach(c => {
+            score += c.getPoints();
+        });
+    });
+    return score;
 }
 
 export function submissionStatusToString(status?: Submission.Status): string {
@@ -275,6 +290,7 @@ export function deepCopy(bms: GradingBenchmark[]): GradingBenchmark[] {
             newCriterion.setComment(c.getComment());
             newCriterion.setDescription(c.getDescription());
             newCriterion.setGrade(c.getGrade());
+            newCriterion.setPoints(c.getPoints());
             newCriteria[j] = newCriterion;
         });
         newBm.setCriteriaList(newCriteria);

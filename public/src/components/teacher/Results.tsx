@@ -4,8 +4,7 @@ import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { searchForLabs, userRepoLink, getSlipDays, legalIndex, groupRepoLink } from '../../componentHelper';
-import { formatDate } from '../../helper';
+import { searchForLabs, userRepoLink, getSlipDays, legalIndex, groupRepoLink, scoreFromReviews } from '../../componentHelper';
 
 interface IResultsProps {
     course: Course;
@@ -207,6 +206,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         let selector: (string | JSX.Element | ICellElement)[] = [displayName, groupName];
         selector = selector.concat(student.labs.map(
             (e) => {
+                const setScore = e.assignment.getSkiptests() ? scoreFromReviews(e.submission?.reviews ?? []) : e.submission?.score ?? 0;
                 let cellCss: string = "";
                 if (e.submission) {
                     cellCss = generateCellClass(e);
@@ -216,7 +216,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                         style={{ whiteSpace: 'nowrap' }}
                         onClick={() => this.handleOnclick(e, student)}
                         href="#">
-                        {e.submission ? (e.submission.score + " %") : "N/A"}</a>,
+                        {e.submission ? (setScore + " %") : "N/A"}</a>,
                     className: cellCss,
                 };
                 return iCell;

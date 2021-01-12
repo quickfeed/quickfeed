@@ -253,10 +253,10 @@ export class TeacherPage extends ViewPage {
         if (course && curUser) {
             // get full list of students and teachers
             const students = await this.courseMan.getUsersForCourse(
-                course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                course, false, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             // get list of users who are not in group
             const freeStudents = await this.courseMan.getUsersForCourse(
-                course, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                course, true, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             return <GroupForm
                 className="form-horizontal"
                 students={students}
@@ -282,10 +282,10 @@ export class TeacherPage extends ViewPage {
         if (course && curUser && group) {
             // get full list of students and teachers
             const students = await this.courseMan.getUsersForCourse(
-                course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                course, false, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             // get list of users who are not in group
             const freeStudents = await this.courseMan.getUsersForCourse(
-                course, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                course, true, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             return <GroupForm
                 className="form-horizontal"
                 students={students}
@@ -304,7 +304,7 @@ export class TeacherPage extends ViewPage {
 
     public async courseUsers(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const all = await this.courseMan.getUsersForCourse(course);
+            const all = await this.courseMan.getUsersForCourse(course, false, true);
             const assignments = await this.courseMan.getAssignments(course.getId())
             const acceptedUsers: Enrollment[] = [];
             const pendingUsers: Enrollment[] = [];
@@ -320,9 +320,6 @@ export class TeacherPage extends ViewPage {
                         break;
                 }
             });
-
-            // sorting accepted user so that teachers show first
-            acceptedUsers.sort((x, y) => (x.getStatus() < y.getStatus()) ? 1 : -1);
 
             return <MemberView
                 course={course}
@@ -470,7 +467,14 @@ export class TeacherPage extends ViewPage {
                     return this.courseMan.addNewCriterion(c);
                 }}
                 removeCriterion={(c: GradingCriterion) => {
-                    return this.courseMan.deleteCriterion(c)
+                    return this.courseMan.deleteCriterion(c);
+                }}
+                loadBenchmarks={async () => {
+                    const ans = await this.courseMan.loadCriteria(a.getId(), course.getId());
+                    if (ans.length > 0) {
+                        a.setGradingbenchmarksList(ans);
+                    }
+                    return ans;
                 }}
             ></AssignmentView>)
         }</div>

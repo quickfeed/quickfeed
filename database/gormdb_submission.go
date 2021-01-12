@@ -80,20 +80,18 @@ func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	return &submission, nil
 }
 
-// GetSubmissions returns all submissions for the active assignment for the given course.
-func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error) {
+// GetLastSubmissions returns all submissions for the active assignment for the given course.
+// The query may specify both UserID and GroupID to fetch both user and group submissions.
+func (db *GormDB) GetLastSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error) {
 	var course pb.Course
 	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
 		return nil, err
 	}
 
-	// note that, this creates a query with possibly both user and group;
-	// it will only limit the number of submissions returned if both are supplied.
-	q := &pb.Submission{UserID: query.GetUserID(), GroupID: query.GetGroupID()}
 	var latestSubs []*pb.Submission
 	for _, a := range course.Assignments {
-		q.AssignmentID = a.GetID()
-		temp, err := db.GetSubmission(q)
+		query.AssignmentID = a.GetID()
+		temp, err := db.GetSubmission(query)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				continue
@@ -103,6 +101,15 @@ func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.S
 		latestSubs = append(latestSubs, temp)
 	}
 	return latestSubs, nil
+}
+
+// GetSubmissions returns all submissions matching the query.
+func (db *GormDB) GetSubmissions(query *pb.Submission) ([]*pb.Submission, error) {
+	var submissions []*pb.Submission
+	if err := db.conn.Find(&submissions, &query).Error; err != nil {
+		return nil, err
+	}
+	return submissions, nil
 }
 
 // UpdateSubmission updates submission with the given approved status.
@@ -140,4 +147,9 @@ func (db *GormDB) UpdateReview(query *pb.Review) error {
 		Ready:    query.Ready,
 		Score:    query.Score,
 	}).Error
+}
+
+// DeleteReview removes all reviews matching the query
+func (db *GormDB) DeleteReview(query *pb.Review) error {
+	return db.conn.Delete(&pb.Review{}, &query).Error
 }

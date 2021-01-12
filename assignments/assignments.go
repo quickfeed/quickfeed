@@ -29,6 +29,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *
 	for _, assignment := range assignments {
 		logger.Debugf("Found assignment in '%s' repository: %v", pb.TestsRepo, assignment)
 	}
+
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)
@@ -36,6 +37,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *
 		logger.Errorf("Failed to update assignments in database: %w", err)
 		return
 	}
+
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
 }
 

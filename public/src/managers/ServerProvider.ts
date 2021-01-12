@@ -1,5 +1,6 @@
 import {
     Assignment,
+    Benchmarks,
     Course,
     CourseSubmissions,
     Enrollment,
@@ -80,10 +81,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getUsersForCourse(
-        course: Course, noGroupMembers?: boolean,
+        course: Course,
+        withoutGroupMembers?: boolean,
+        withActivity?: boolean,
         status?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
 
-        const result = await this.grpcHelper.getEnrollmentsByCourse(course.getId(), noGroupMembers, status);
+        const result = await this.grpcHelper.getEnrollmentsByCourse(course.getId(), withoutGroupMembers, withActivity, status);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
@@ -387,6 +390,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.responseCodeSuccess(result);
     }
 
+    public async loadCriteria(assignmentID: number, courseID: number): Promise<GradingBenchmark[]> {
+        const result = await this.grpcHelper.loadCriteria(assignmentID, courseID);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return [];
+        }
+        return result.data.getBenchmarksList();
+    }
+
     public async addReview(ir: Review, courseID: number): Promise<Review | null> {
         const result = await this.grpcHelper.createReview(ir, courseID);
         if (!this.responseCodeSuccess(result) || !result.data) {
@@ -427,7 +438,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             buildInfo = JSON.parse(buildInfoAsString);
         } catch (e) {
             buildInfo = JSON.parse(
-                "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
+                "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"No tests for this assignment\", \"execTime\": 1}",
             );
         }
         try {

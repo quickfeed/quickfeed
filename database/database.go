@@ -101,9 +101,11 @@ type Database interface {
 	CreateSubmission(*pb.Submission) error
 	// GetSubmission returns a single submission matching the given query.
 	GetSubmission(query *pb.Submission) (*pb.Submission, error)
-	// GetSubmissions returns a list of submission entries for the given course, matching the given query.
-	GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error)
-	// GetCourseSubmissions returns a list of all the latest submissions
+	// GetLastSubmissions returns a list of submission entries for the given course, matching the given query.
+	GetLastSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error)
+	// GetSubmissions returns all submissions matching the query.
+	GetSubmissions(*pb.Submission) ([]*pb.Submission, error)
+	// GetCourseAssignment returns a list of all the latest submissions
 	// for every active course assignment for the given course ID
 	GetCourseAssignmentsWithSubmissions(uint64, pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
@@ -114,6 +116,8 @@ type Database interface {
 	CreateReview(*pb.Review) error
 	// UpdateReview updates the given review.
 	UpdateReview(*pb.Review) error
+	// DeleteReview removes all review records matching the query.
+	DeleteReview(*pb.Review) error
 
 	// CreateRepository creates a new repository.
 	CreateRepository(repo *pb.Repository) error

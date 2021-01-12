@@ -47,6 +47,17 @@ For teachers, GitHub is happy to upgrade your organization to serve private repo
   Course repositories are repositories with names `assignments`, `tests` or `course-info`.
   If you already have such repositories in your organization, you will have to remove (or temporarily rename) them in order to be able to create a new course.
 
+### Notifications
+
+Teachers may receive lots of email notifications when students use GitHub.
+To turn off such notifications for all your organizations, you can follow these steps:
+
+1. Click [Notifications](https://github.com/settings/notifications) (make sure you are logged in first)
+2. Uncheck Automatically watch repositories
+
+You can find more details about alternative ways to turn off notifications [here](https://stackoverflow.com/questions/25108169/how-do-i-turn-off-automatic-notification-subscription-for-new-repositories-in-a).
+However, it appears there is no per-organization approach to turn of notifications, in case you do want to receive notification for some of your other organizations.
+
 ## Course
 
 ### Course repositories structure
@@ -59,7 +70,6 @@ Autograder uses the following repository structure. These will be created automa
 | assignments   | Contains a separate folder for each assignment.  |Students, Teachers,<br>Autograder |
 | username-labs   | Created for each student username in Autograder |Student, Teachers,<br> Autograder |
 | tests           | Contains a separate folder for each assignment<br> with tests for that assignment. |Teachers, Autograder|
-| FIXME(meling) solutions      | Typically contains assignments, tests, and<br> solutions that pass the tests. | Teachers |
 
 *In Autograder, Teacher means any teaching staff, including teaching assistants and professors alike.*
 
@@ -73,9 +83,11 @@ Each `assignment` folder in the tests repository contains one or more test file 
 The format of this file will describe various aspects of an assignment, such as submission deadline, approve: manual or automatic, which script file to run to test the assignment, etc.
 See below for an example.
 
-The `solutions` folder should never be shared with anyone except teachers. This folder is not used by Autograder, but is created as a placeholder for the teaching staff to prepare and test the assignments locally. This folder will typically be used as the source for creating the `assignments` folder and `tests` folder.
+We recommend that course-info and source templates for assignments, tests and solution code are kept in a separate organization and repository that can be maintained over multiple years.
+Then a member of the teaching staff can copy course-info, the code template for assignments and tests to the corresponding repositories in the present-year's organization, either manually or with scripts.
 
-Currently, teaching staff needs to populate these repositories manually for the course. This is important so as to prevent revealing commit history from old instances. That is, these repositories should not be cloned or forked from an old version of the course.
+That is, these repositories should not be cloned or forked from an old version of the course.
+This approach prevents accidentally revealing commit history from old course instances.
 
 ## Teaching assistants
 
@@ -134,8 +146,11 @@ scorelimit: 80
 isgrouplab: false
 reviewers: 2
 containertimeout: 10
+skiptests: false
 ```
 
+`scriptfile` is the name of the script used to run assignment tests. If there are no tests, set `skiptests` field to `true`. If `skiptests` field is not set to `true`,
+`scriptfile` field is required.
 `autoapprove` indicates whether or not Autograder will automatically approve the assignment when a sufficient score has been reached.
 `reviewers` indicate the number of reviews to be created for a student submission to this assignment.
 `scorelimit` defines the minimal percentage score on a student submission for the corresponding lab to be auto approved.
@@ -155,3 +170,44 @@ Comments can be left to every criterion checkpoint or to the whole group of grad
 **Release** page gives access to the overview of the results of manual reviews for all course students and assignments. There the user can see submission score for each review, the mean score for all ready reviews, set a final grade/status for a student submission (**Approved/Rejected/Revision**), look at all available reviews for each submission, and *release* the results to reveal them to students or student groups.
 
 It is also possible to mass approve submissions or mass release reviews for an assignment by choosing a minimal score and then pressing `Approve all` or `Release all` correspondingly. Every submission with a score equal or above the set minimal score will be approved or reviews to such submissions will be released.
+
+Grading criteria can be loaded from a file `criteria.json` in a corresponding assignment folder inside the `Tests` repository. 
+
+JSON format: 
+
+```
+[
+    {
+        "heading": "First criteria group",
+        "criteria": [
+            {
+                "description": "Has headers",
+                "points": 5
+            },
+            {
+                "description": "Has footers",
+                "points": 10
+            }
+        ]
+    },
+    {
+        "heading": "Second criteria group",
+        "criteria": [
+            {
+                "description": "Has forms",
+                "points": 5
+            },
+            {
+                "description": "Has inputs",
+                "points": 5
+            },
+            {
+                "description": "Looks nice",
+                "points": 10
+            }
+        ]
+    }
+]
+```
+
+`points` field is optional. If set, the total score for the assignment will be equal to the sum of all points for all criteria. Otherwise, each criterion counts equally towards the total score of 100%.

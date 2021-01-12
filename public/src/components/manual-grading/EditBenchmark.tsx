@@ -3,6 +3,7 @@ import { GradingBenchmark, GradingCriterion } from "../../../proto/ag_pb";
 import { EditCriterion } from "./EditCriterion";
 
 interface EditBenchmarkProps {
+    customScore: boolean;
     benchmark: GradingBenchmark,
     onAdd: (c: GradingCriterion) => Promise<GradingCriterion | null>;
     onUpdate: (newHeading: string) => void;
@@ -35,7 +36,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
 
     public render() {
         return <div className="b-element">
-            <h3 className="b-header" onClick={() => this.toggleEdit()}>
+            <h3 className="b-header">
                 {this.state.editing ? this.renderEditView() : this.renderTextView()}
             </h3>
 
@@ -45,15 +46,13 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
         </div>
     }
 
-
-
     private removeButton(): JSX.Element {
-        return <button className="btn btn-danger btn-xs bm-btn" onClick={
-            () => {
-                this.setState({
-                    editing: false,
-                })
-                this.props.onDelete();
+        return <button className="btn btn-danger btn-xs bm-btn remove-c"
+        onClick={() => {
+            this.setState({
+                editing: false,
+            });
+            this.props.onDelete();
             }
         }>X</button>
     }
@@ -110,6 +109,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
             {this.state.criteria.map((c, i) => <EditCriterion
                 key={i}
                 criterion={c}
+                customScore={this.props.customScore}
                 onUpdate={async (newDescription: string) => {
                     const originalDesc = c.getDescription();
                     const ans = await this.editCriterion(c, newDescription);
@@ -129,6 +129,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
             newList.splice(this.state.criteria.indexOf(c), 1);
             this.setState({
                 criteria: newList,
+                editing: false,
             })
         }
     }
@@ -146,9 +147,9 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
     }
 
     private renderTextView(): JSX.Element {
-        return <div
-            onClick={() => this.toggleEdit()}
-    >{this.props.benchmark.getHeading()}{this.removeButton()}</div>
+        return <div className="row"><div
+            className="description-c"
+            onClick={() => this.toggleEdit()}>{this.props.benchmark.getHeading()}</div>{this.removeButton()}</div>
     }
 
     private renderEditView(): JSX.Element {

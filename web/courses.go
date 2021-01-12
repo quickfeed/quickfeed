@@ -2,11 +2,13 @@ package web
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/scm"
 )
 
@@ -49,6 +51,12 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest
 	if err != nil {
 		return nil, err
 	}
+	if request.WithActivity {
+		enrollments, err = s.getEnrollmentsWithActivity(request.CourseID)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// to populate response only with users who are not member of any group, we must filter the result
 	if request.IgnoreGroupMembers {
@@ -60,6 +68,7 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest
 		}
 		enrollments = enrollmentsWithoutGroups
 	}
+
 	for _, enrollment := range enrollments {
 		enrollment.SetSlipDays(enrollment.Course)
 	}
@@ -127,7 +136,7 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 		UserID:  request.GetUserID(),
 		GroupID: request.GetGroupID(),
 	}
-	submissions, err := s.db.GetSubmissions(request.GetCourseID(), query)
+	submissions, err := s.db.GetLastSubmissions(request.GetCourseID(), query)
 	if err != nil {
 		return nil, err
 	}
@@ -192,6 +201,7 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment, addGroups bool
 			}
 			allSubmissions = append(allSubmissions, subLink)
 		}
+		sortSubmissionsByAssignmentOrder(allSubmissions)
 		newLink.Submissions = allSubmissions
 		enrolLinks = append(enrolLinks, newLink)
 	}
@@ -259,13 +269,10 @@ func (s *AutograderService) updateSubmission(courseID, submissionID uint64, stat
 // updateSubmissions updates status and release state of multiple submissions for the
 // given course and assignment ID for all submissions with score equal or above the provided score
 func (s *AutograderService) updateSubmissions(request *pb.UpdateSubmissionsRequest) error {
-	if _, err := s.db.GetCourse(request.CourseID, false); err != nil {
-		return err
-	}
-	if _, err := s.db.GetAssignment(&pb.Assignment{
+	if _, _, err := s.getAssignmentWithCourse(&pb.Assignment{
 		CourseID: request.CourseID,
 		ID:       request.AssignmentID,
-	}); err != nil {
+	}, false); err != nil {
 		return err
 	}
 
@@ -469,13 +476,50 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 	})
 }
 
-func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission, courseID uint64) error {
-
-	query := &pb.Enrollment{
-		CourseID:               courseID,
-		LastApprovedAssignment: submission.AssignmentID,
+// returns all enrollments for the course ID with last activity date and number of approved assignments
+func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.Enrollment, error) {
+	allEnrollmentsWithSubmissions, err := s.getAllCourseSubmissions(
+		&pb.SubmissionsForCourseRequest{
+			CourseID: courseID,
+			Type:     pb.SubmissionsForCourseRequest_ALL,
+		})
+	if err != nil {
+		return nil, err
 	}
+	var enrollmentsWithActivity []*pb.Enrollment
+	for _, enrolLink := range allEnrollmentsWithSubmissions.Links {
+		enrol := enrolLink.Enrollment
+		var totalApproved uint64
+		var submissionDate time.Time
+		for _, submissionLink := range enrolLink.Submissions {
+			if submissionLink.Submission != nil {
+				if submissionLink.Submission.Status == pb.Submission_APPROVED {
+					totalApproved++
+				}
+				if enrol.LastActivityDate == "" {
+					submissionDate = s.extractSubmissionDate(submissionLink.Submission, submissionDate)
+				}
+			}
+		}
+		enrol.TotalApproved = totalApproved
+		if enrol.LastActivityDate == "" && !submissionDate.IsZero() {
+			enrol.LastActivityDate = submissionDate.Format("02 Jan")
+		}
+		enrollmentsWithActivity = append(enrollmentsWithActivity, enrol)
+	}
+	pending, err := s.db.GetEnrollmentsByCourse(courseID, pb.Enrollment_PENDING)
+	if err != nil {
+		return nil, err
+	}
+	// append pending users
+	enrollmentsWithActivity = append(enrollmentsWithActivity, pending...)
+	return enrollmentsWithActivity, nil
+}
 
+func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission, courseID uint64) error {
+	query := &pb.Enrollment{
+		CourseID: courseID,
+	}
 	if submission.GroupID > 0 {
 		group, err := s.db.GetGroup(submission.GroupID)
 		if err != nil {
@@ -502,4 +546,21 @@ func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.Submi
 		return unsorted[i].Assignment.Order < unsorted[j].Assignment.Order
 	})
 	return unsorted
+}
+
+func (s *AutograderService) extractSubmissionDate(submission *pb.Submission, submissionDate time.Time) time.Time {
+	buildInfoString := submission.BuildInfo
+	var buildInfo ci.BuildInfo
+	if err := json.Unmarshal([]byte(buildInfoString), &buildInfo); err != nil {
+		// don't fail the method on a parsing error, just log
+		s.logger.Errorf("Failed to unmarshal build info %s: %s", buildInfoString, err)
+	}
+
+	currentSubmissionDate, err := time.Parse(layout, buildInfo.BuildDate)
+	if err != nil {
+		s.logger.Errorf("Failed extracting submission date: %s", err)
+	} else if currentSubmissionDate.After(submissionDate) {
+		submissionDate = currentSubmissionDate
+	}
+	return submissionDate
 }
