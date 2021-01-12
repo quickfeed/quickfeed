@@ -18,6 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ScoreServiceClient interface {
 	Notify(ctx context.Context, in *Score, opts ...grpc.CallOption) (*Void, error)
+	PanickedTest(ctx context.Context, in *Score, opts ...grpc.CallOption) (*Void, error)
 }
 
 type scoreServiceClient struct {
@@ -37,11 +38,21 @@ func (c *scoreServiceClient) Notify(ctx context.Context, in *Score, opts ...grpc
 	return out, nil
 }
 
+func (c *scoreServiceClient) PanickedTest(ctx context.Context, in *Score, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/proto.ScoreService/PanickedTest", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ScoreServiceServer is the server API for ScoreService service.
 // All implementations must embed UnimplementedScoreServiceServer
 // for forward compatibility
 type ScoreServiceServer interface {
 	Notify(context.Context, *Score) (*Void, error)
+	PanickedTest(context.Context, *Score) (*Void, error)
 	mustEmbedUnimplementedScoreServiceServer()
 }
 
@@ -51,6 +62,9 @@ type UnimplementedScoreServiceServer struct {
 
 func (UnimplementedScoreServiceServer) Notify(context.Context, *Score) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Notify not implemented")
+}
+func (UnimplementedScoreServiceServer) PanickedTest(context.Context, *Score) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PanickedTest not implemented")
 }
 func (UnimplementedScoreServiceServer) mustEmbedUnimplementedScoreServiceServer() {}
 
@@ -83,6 +97,24 @@ func _ScoreService_Notify_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ScoreService_PanickedTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Score)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ScoreServiceServer).PanickedTest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.ScoreService/PanickedTest",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ScoreServiceServer).PanickedTest(ctx, req.(*Score))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ScoreService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "proto.ScoreService",
 	HandlerType: (*ScoreServiceServer)(nil),
@@ -90,6 +122,10 @@ var _ScoreService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Notify",
 			Handler:    _ScoreService_Notify_Handler,
+		},
+		{
+			MethodName: "PanickedTest",
+			Handler:    _ScoreService_PanickedTest_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
