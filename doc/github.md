@@ -29,6 +29,8 @@ The first step is to create a new API key for your QuickFeed application.
    quickfeed -service.url uis.itest.run -database.file ./qf.db -http.addr :3005 &> qf.log &
    ```
 
+   Note that the `-service.url` should not be specified with the `https://` prefix.
+
 ## Creating a Course
 
 To create a course on QuickFeed, you must first create a GitHub organization for your course.

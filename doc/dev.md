@@ -1,4 +1,4 @@
-# QuickFeed developer manual
+# QuickFeed Developer Manual
 
 ## Technology stack
 
@@ -12,27 +12,39 @@
 
 ## Download and Install
 
-[Installation guide](./Installation.md)  
+- [Installation Guide](./install.md)  
 
-[Working with go modules](https://blog.golang.org/using-go-modules)
+## GitHub Integration
 
-## GitHub integration
+- [GitHub Application Setup](./github.md)
+- [Setting up Course Organization](./teacher.md)
 
-[GitHub OAuth2 application setup instructions](./GithubSetup.MD)
+## QuickFeed Server
 
-[Setting up course organization](./Teacher.MD)
+The command line arguments for the QuickFeed server looks roughly like this:
 
-## Starting up the server
+```sh
+quickfeed -service.url <DNS name of deployed service> -database.file <path to database> -http.addr <HTTP listener address>
+```
 
-The command to start up the server:
-`quickfeed -service.url <url> -database.file <path to database> -http.addr <HTTP listener address> -http.public <path to static files>`
+To view the full usage details:
+
+```sh
+quickfeed -help
+```
+
+Before running the QuickFeed server, you need to configure [GitHub](./github.md).
 
 ### Flags
 
-- `service.url` - URL you have set up as callback URL for your QuickFeed GitHub OAuth2 application. Defaul value: `localhost`
-- `database.file` - path to application's database. Default: `/tmp/ag.db` - will be temporary, i.e., removed after reboot
-- `http.addr` - port number for HTTP listener. Default value: `:8081`
-- `http.public` - path to the static files to serve. Default value: `./public`
+| **Flag**        | **Description**                        | **Example**     |
+|-----------------|----------------------------------------|-----------------|
+| `service.url`   | Base DNS name for QuickFeed deployment | `uis.itest.run` |
+| `database.file` | Path to QuickFeed database             | `qf.db`         |
+| `grpc.addr`     | Listener address for gRPC service      | `:9090`         |
+| `http.addr`     | Listener address for HTTP service      | `:3005`         |
+| `http.public`   | Path to service content                | `public`        |
+| `script.path`   | Path to continuous integration scripts | `ci/scripts`    |
 
 ## Tools
 
