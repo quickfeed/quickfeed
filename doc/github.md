@@ -25,7 +25,7 @@ The first step is to create a new API key for your QuickFeed application.
 
    ```sh
    source quickfeed-env.sh
-   quickfeed -service.url uis.itest.run -database.file ./ag.db -http.addr :3005 &> qf.log &
+   quickfeed -service.url uis.itest.run -database.file ./qf.db -http.addr :3005 &> qf.log &
    ```
 
 ## Creating a Course
@@ -33,14 +33,21 @@ The first step is to create a new API key for your QuickFeed application.
 To create a course on QuickFeed, you must first create a GitHub organization for your course.
 
 At the University of Stavanger, you can create new organizations under our [enterprise account](https://github.com/enterprises/university-of-stavanger).
-If you are employee of University of Stavanger, contact Hein Meling for more information.
+If you are employee or teaching assistant at the University of Stavanger, contact Hein Meling for more information.
+
+1. Log into a GitHub account with access to the enterprise account.
+2. Navigate to the [enterprise account](https://github.com/enterprises/university-of-stavanger).
+3. Click New organization.
+4. Name your organization, e.g. `qf101-2020`.
+5. Skip Invite members; QuickFeed handles this.
+
+Others may follow the instructions below.
 
 1. Log into the teacher's GitHub account.
 2. In the top right corner, press the + menu and click on New organization.
 3. Select billing plan.
 
-   **Note!** If you select the free plan, the `tests` repository may be visible to everyone.
-   This should be fine for development, but if you are deploying QuickFeed for use in a course, you will want to upgrade your organization to a plan with private repositories.
+   Note that QuickFeed requires a billing plan to allows private repositories.
    Academic institutions can get free access through GitHub's [Academic Campus Program](https://education.github.com/schools).
 
 4. Name your organization, e.g. `qf101-2020`.
