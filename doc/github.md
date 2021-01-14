@@ -26,7 +26,7 @@ The first step is to create a new API key for your QuickFeed application.
 
    ```sh
    source quickfeed-env.sh
-   quickfeed -service.url uis.itest.run -database.file ./qf.db -http.addr :3005 &> qf.log &
+   quickfeed -service.url uis.itest.run -database.file ./qf.db -http.addr :3005 &> quickfeed.log &
    ```
 
    Note that the `-service.url` should not be specified with the `https://` prefix.

@@ -16,6 +16,8 @@ pbpath				:= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
 # necessary when target is not tied to a file
 .PHONY: download install-tools install ui proto devtools grpcweb envoy-build envoy-run scm
 
+devtools: install-tools grpcweb npmtools
+
 download:
 	@echo Download go.mod dependencies
 	@go mod download
@@ -44,8 +46,6 @@ proto:
 	--grpc-web_out=import_style=typescript,mode=grpcweb:../$(proto-path)/ ag.proto
 	$(sedi) '/gogo/d' $(proto-path)/ag_pb.js $(proto-path)/AgServiceClientPb.ts $(proto-path)/ag_pb.d.ts
 	@tsc $(proto-path)/AgServiceClientPb.ts
-
-devtools: grpcweb npmtools
 
 grpcweb:
 	@echo "Fetch and install grpcweb protoc plugin (requires sudo access)"
@@ -133,5 +133,5 @@ remote:
 prometheus:
 	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --storage.tsdb.retention.size=1024MB --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &
 
-docker:
+quickfeed-go:
 	docker build -f ci/scripts/go/Dockerfile -t quickfeed:go .

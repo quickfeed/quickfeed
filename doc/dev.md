@@ -1,4 +1,6 @@
-# QuickFeed Developer Manual
+# QuickFeed Developer Guide
+
+This developer guide assumes that you have [installed and configured QuickFeed](./install.md) and its dependent components.
 
 ## Technology stack
 
@@ -10,41 +12,10 @@
 - [Envoy](https://www.envoyproxy.io/)
 - [NGINX](https://www.nginx.com/resources/wiki/)
 
-## Download and Install
-
-- [Installation Guide](./install.md)  
-
 ## GitHub Integration
 
 - [GitHub Application Setup](./github.md)
 - [Setting up Course Organization](./teacher.md)
-
-## QuickFeed Server
-
-The command line arguments for the QuickFeed server looks roughly like this:
-
-```sh
-quickfeed -service.url <DNS name of deployed service> -database.file <path to database> -http.addr <HTTP listener address>
-```
-
-To view the full usage details:
-
-```sh
-quickfeed -help
-```
-
-Before running the QuickFeed server, you need to configure [GitHub](./github.md).
-
-### Flags
-
-| **Flag**        | **Description**                        | **Example**     |
-|-----------------|----------------------------------------|-----------------|
-| `service.url`   | Base DNS name for QuickFeed deployment | `uis.itest.run` |
-| `database.file` | Path to QuickFeed database             | `qf.db`         |
-| `grpc.addr`     | Listener address for gRPC service      | `:9090`         |
-| `http.addr`     | Listener address for HTTP service      | `:3005`         |
-| `http.public`   | Path to service content                | `public`        |
-| `script.path`   | Path to continuous integration scripts | `ci/scripts`    |
 
 ## Tools
 
@@ -53,21 +24,56 @@ See [cmd/scm/README.md](cmd/scm/README.md) for documentation of the SCM tool.
 
 ## Makefile
 
-Makefile allows to simplify running different tasks, such as compiling, updating and starting up the server.
+The Makefile provides various targets that aims to simplify running various tasks, such as compiling, updating and starting the server.
+The Makefile defines variables, that can be altered depending on your environment, such as port numbers, organization name, and URIs.
 
-The list at the top of `Makefile` compises variables, that can be altered according to situation (especially port numbers, organization name, and URIs).
+### Compiling Targets
 
-### Compiling tasks
+Following changes to `ag/ag.proto`, you need to recompile both the frontend and backend code by running:
 
-Use `make proto` if you want to introduce any changes to ag.proto file. It will recompile all the frontend and backend code and make all the necessary changes to compiled files.
-'make install' will recompile Go code for the QuickFeed server, and 'make ui' will start build `bundle.js` file for QuickFeed browser-based client.
+```sh
+make proto
+```
+
+To recompile and install the QuickFeed server, run:
+
+```sh
+make install
+```
+
+To recompile a new `bundle.js` for the QuickFeed browser-based client, run:
+
+```sh
+make ui
+```
 
 ### Proxy
 
-Use `make envoy-build` to rebuild the Envoy docker container, and `make envoy-run` to start it manually.
-Use `make envoy-purge` to clean up all envoy containers and images before rebuilding.
+Currently, QuickFeed depends on two different proxies.
+Envoy is used as a reverse proxy to facilitate gRPC invocations on the server-side.
+NGINX acts as a web server endpoint and
 
-Use `make nginx` to reload nginx. It will not reload if configuration file has invalid syntax.
+<!-- TODO: Do we always want to purge before build? If so, merge the two targets in Makefile. -->
+To rebuild the Envoy docker container:
+
+```sh
+make envoy-purge
+make envoy-build
+```
+
+<!-- TODO: Do we need this target, since QuickFeed starts its own instance? -->
+The following should not be needed, since the QuickFeed server starts its own Envoy instance.
+However, you can also run the Envoy proxy manually:
+
+```sh
+make envoy-run
+```
+
+To reload NGINX after updating its configuration:
+
+```sh
+make nginx
+```
 
 ### Testing
 
@@ -83,9 +89,10 @@ Use `make test` to run all the tests in `web` and `database` packages.
 
 ### Default setup
 
-By default, the gRPC server will be started at port **:9090**. A docker container with Envoy proxy will listen on port **:8080** and redirect gRPC traffic to the gRPC server.
+By default, the gRPC server will be started at port **:9090**.
+A docker container with Envoy proxy will listen on port **:8080** and redirect gRPC traffic to the gRPC server.
 Webserver is running on one of internal ports, and NGINX, serving the static content, is set up to redirect HTTP traffic to that port, and all gRPC traffic to the port **:8080** (same port Envoy proxy is listening on).
-NGINX and Envoy take care of all the relevant heades for gRPC traffic.
+NGINX and Envoy take care of all the relevant headers for gRPC traffic.
 
 ## Envoy
 
@@ -96,83 +103,6 @@ Envoy proxy allows making gRPC calls from a browser application.
 [Default configuration from grpc-web repository](https://github.com/grpc/grpc-web/blob/master/net/grpc/gateway/examples/echo/envoy.yaml)
 The main difference in [our configuration](https://github.com/autograde/quickfeed/blob/grpc-web-merge/envoy/envoy.yaml) is `http_protocol_options: { accept_http_10: true }` line inside HTTP filters list, and an additional header name.
 
-## NGINX
-
-[NGINX tutoial](https://www.netguru.com/codestories/nginx-tutorial-basics-concepts)
-
-### Example setup for HTTP and gRPC traffic with Envoy
-
-```
-server {
-        listen 443 ssl http2;
-        listen [::]:443 ssl http2;
-
-        # files you want to include, like ssl config
-        include snippets/<example_file>;
-
-        server_name <your callback url>;
-
-        # takes care of general traffic, redirects everything to port 3333 (http.add port provided in quickfeed command)
-        location / {
-                proxy_pass http://127.0.0.1:3333;
-                proxy_redirect off;
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Ssl on;
-        }
-
-        # takes care of gRPC traffic, redirects it to port 8080 (the port Envoy proxy listens to)
-        location /AutograderService/ {
-                grpc_pass 127.0.0.1:8080;
-                proxy_redirect off;
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Ssl on;
-
-                if ($request_method = 'OPTIONS') {
-                  add_header 'Access-Control-Allow-Origin' '*';
-                  add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-                  add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Transfer-Encoding,Custom-Header-1,X-Accept-Content-Transfer-Encoding,X-Accept-Response-Streaming,X-User-Agent,X-Grpc-Web';
-                  add_header 'Access-Control-Max-Age' 1728000;
-                  add_header 'Content-Type' 'text/plain charset=UTF-8';
-                  add_header 'Content-Length' 0;
-                  return 204;
-                }
-                if ($request_method = 'POST') {
-                  add_header 'Access-Control-Allow-Origin' '*';
-                  add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-                  add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Transfer-Encoding,Custom-Header-1,X-Accept-Content-Transfer-Encoding,X-Accept-Response-Streaming,X-User-Agent,X-Grpc-Web';
-                  add_header 'Access-Control-Expose-Headers' 'Content-Transfer-Encoding';
-                }
-        }
-
-    # ssl certificates can be obtained for free with the help of Certbot (or any other) client for Letsencrypt
-    # these lines can be added automatically by Certbot, or manually (replace <certificate folder> with the relevant folder's name)
-    ssl_certificate /etc/letsencrypt/live/<cerificate folder>/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/<certificate folder>/privkey.pem; # managed by Certbot
-}
-```
-
-### SSL/TLS certificates with Letsencrypt/Certbot
-
-Obtaining SSL certificates is free and easy with [Letsencrypt](https://letsencrypt.org/).
-First you must install any Letsencrypt client, for example [Certbot](https://certbot.eff.org/about/).
-Then run `sudo certbot-auto --nginx -d <URL you wish to protect>`. When working with QuickFeed, this should be the same URL you provide to GitHub OAuth2 application as callback URL.
-
-### Adding a new nginx endpoint
-
-1. Add a new server entry.
-2. Check that the new configuration is correct by running `nginx -t`.
-3. Restart nginx: `service nginx restart`.
-4. A new endpoint will require an ssl certificate.
-
-- `certbot certificates` command will list all the active certificates
-- to add the new endpoint to an existing certificate, run the following command:
-  `certbot-auto --nginx --cert-name <name of the existing certificate> -d <new endpoint url>`.
-  This will also add all the necessary ssl-related lines to the nginx configuration file.
-  
 ## Errors and logging
 
 Application errors can be classified into several groups and handled in different ways.
@@ -258,16 +188,17 @@ Now to get around the problem, we have to use the built in navigation manager, n
 
 ## Docker
 
-QuickFeed application will build code submitted by students, and run tests provided by teachers inside docker containers. An often encountered problem is Docker being unable to resolve DNS due to disabled public DNS.
+QuickFeed application will build code submitted by students, and run tests provided by teachers inside docker containers.
+An often encountered problem is Docker being unable to resolve DNS due to disabled public DNS.
 If you get a build error like that:
 
-```
+```log
 Docker execution failed{error 25 0  Error response from daemon: Get https://registry-1.docker.io/v2/: dial tcp: lookup registry-1.docker.io on [::1]:53: read udp [::1]:50111->[::1]:53: read: connection refused}
 ```
 
 then it must be a DNS problem.
 
-One of the solutions is to uncomment or change `DOCKER_OPTS` line in `/etc/default/docker` file, then restart Docker deamon with `service docker restart`.
+One of the solutions is to uncomment or change `DOCKER_OPTS` line in `/etc/default/docker` file, then restart Docker daemon with `service docker restart`.
 
 [Problem description and possible solutions](https://development.robinwinslow.uk/2016/06/23/fix-docker-networking-dns/)
 
@@ -284,7 +215,7 @@ The project uses `Webpack` to compile and bundle all TypeScript files. Currently
 Given a current database `ag.db` and a backup `bak.db`, and we want to replace records in a table `users` of the `ag.db` with entries from the same table in `bak.db`.
 The database you open first will be under the alias `main`.
 
-```
+```sql
 sqlite3 ag.db
 delete from users;
 attach database '/full/path/bak.db' as backup;
