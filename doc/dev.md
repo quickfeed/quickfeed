@@ -1,4 +1,4 @@
-# Autograder developer manual
+# QuickFeed developer manual
 
 ## Technology stack
 
@@ -29,47 +29,15 @@ The command to start up the server:
 
 ### Flags
 
-- `service.url` - URL you have set up as callback URL for your Autograder GitHub OAuth2 application. Defaul value: `localhost`
+- `service.url` - URL you have set up as callback URL for your QuickFeed GitHub OAuth2 application. Defaul value: `localhost`
 - `database.file` - path to application's database. Default: `/tmp/ag.db` - will be temporary, i.e., removed after reboot
 - `http.addr` - port number for HTTP listener. Default value: `:8081`
 - `http.public` - path to the static files to serve. Default value: `./public`
 
-## SCM tool
+## Tools
 
-SCM tool can be used for working with github organization from command line. This way you can list or remove all repositories and teams for your test organization withiout going to GitHub page and doing everything them manually.
-
-### Prerequisites
-
-SCM tool must be compiled before it can be used. To compile, run `make scm` command or go to `cmd/csm` folder and run `go install`.
-After that `scm` command will become active.
-
-To use SCM tool, you have to create a personal github access token. This is done on GitHub's web page:
-
-1. Navigate to Settings (in the personal menu accessible from your avatar picture)
-2. Select _Developer settings_ from the menu on the left.
-3. Select _Personal access tokens_ and on the next page,
-4. Select _Generate new token_. Name the token, e.g. `Autograder Test Token`.
-5. Select _Scopes_ as needed; currently I have enabled `admin:org, admin:org_hook, admin:repo_hook, delete_repo, repo, user`, but you may be able to get away with fewer access scopes. It depends on your needs.
-6. Copy the generated token string to the `GITHUB_ACCESS_TOKEN` environment variable. You may wish to add this token to your local `ag-setup.sh` script file.
-
-```sh
-  export GITHUB_ACCESS_TOKEN=<your token>
-```
-You must also be an owner of the GitHub organization to be able to access its repositories and teams with SCM tool.
-
-### Example usage:
-
-```
-scm --provider github get repo -all -namespace autograder-test
-```
-  will print out information about all repositories existing for the **autograder-test** organization.
-
-```
-scm delete team -all -namespace autograder-test
-```
-  will remove all teams existing for the **autograder-test** organization
-
-Other examples and instructions are provided in comments in the `cmd/ci/main.go` file.
+QuickFeed provides a few command line tools.
+See [cmd/scm/README.md](cmd/scm/README.md) for documentation of the SCM tool.
 
 ## Makefile
 
@@ -80,7 +48,7 @@ The list at the top of `Makefile` compises variables, that can be altered accord
 ### Compiling tasks
 
 Use `make proto` if you want to introduce any changes to ag.proto file. It will recompile all the frontend and backend code and make all the necessary changes to compiled files.
-'make install' will recompile Go code for the Autograder server, and 'make ui' will start build `bundle.js` file for Autograder browser-based client.
+'make install' will recompile Go code for the QuickFeed server, and 'make ui' will start build `bundle.js` file for QuickFeed browser-based client.
 
 ### Proxy
 
@@ -99,19 +67,20 @@ Use `make test` to run all the tests in `web` and `database` packages.
 
 **Warning:** never push code with local gRPC client settings to the `quickfeed` repository, it will cause the server to stop responding to client requests. If this happens, just run `make remote` on the server location.
 
-
 ## Server architecture
 
 ### Default setup
 
-By default, the gRPC server will be started at port **:9090**. A docker container with Envoy proxy will listen on port **:8080** and redirect gRPC traffic to the gRPC server. 
+By default, the gRPC server will be started at port **:9090**. A docker container with Envoy proxy will listen on port **:8080** and redirect gRPC traffic to the gRPC server.
 Webserver is running on one of internal ports, and NGINX, serving the static content, is set up to redirect HTTP traffic to that port, and all gRPC traffic to the port **:8080** (same port Envoy proxy is listening on).
-NGINX and Envoy take care of all the relevant heades for gRPC traffic. 
+NGINX and Envoy take care of all the relevant heades for gRPC traffic.
 
-##  Envoy 
+## Envoy
+
 Envoy proxy allows making gRPC calls from a browser application.
 
 ### Basic configuration
+
 [Default configuration from grpc-web repository](https://github.com/grpc/grpc-web/blob/master/net/grpc/gateway/examples/echo/envoy.yaml)
 The main difference in [our configuration](https://github.com/autograde/quickfeed/blob/grpc-web-merge/envoy/envoy.yaml) is `http_protocol_options: { accept_http_10: true }` line inside HTTP filters list, and an additional header name.
 
@@ -176,22 +145,22 @@ server {
 
 ### SSL/TLS certificates with Letsencrypt/Certbot
 
-Obtaining SSL certificates is free and easy with [Letsencrypt](https://letsencrypt.org/). 
+Obtaining SSL certificates is free and easy with [Letsencrypt](https://letsencrypt.org/).
 First you must install any Letsencrypt client, for example [Certbot](https://certbot.eff.org/about/).
-Then run `sudo certbot-auto --nginx -d <URL you wish to protect>`. When working with Autograder, this should be the same URL you provide to GitHub OAuth2 application as callback URL.
+Then run `sudo certbot-auto --nginx -d <URL you wish to protect>`. When working with QuickFeed, this should be the same URL you provide to GitHub OAuth2 application as callback URL.
 
 ### Adding a new nginx endpoint
 
 1. Add a new server entry.
 2. Check that the new configuration is correct by running `nginx -t`.
 3. Restart nginx: `service nginx restart`.
-4. A new endpoint will require an ssl certificate. 
-  - `certbot certificates` command will list all the active certificates
-  - to add the new endpoint to an existing certificate, run the following command:
+4. A new endpoint will require an ssl certificate.
+
+- `certbot certificates` command will list all the active certificates
+- to add the new endpoint to an existing certificate, run the following command:
   `certbot-auto --nginx --cert-name <name of the existing certificate> -d <new endpoint url>`.
   This will also add all the necessary ssl-related lines to the nginx configuration file.
   
-
 ## Errors and logging
 
 Application errors can be classified into several groups and handled in different ways.
@@ -200,7 +169,7 @@ Application errors can be classified into several groups and handled in differen
 Return generic "not found/failed" error message to user, log the original error.
 
 2. SCM errors
-Some of these can only be fixed by the user who is calling the method by interacting with UI elements (usually course teacher). 
+Some of these can only be fixed by the user who is calling the method by interacting with UI elements (usually course teacher).
 Example: if a github organization cannot be found, one of the possible issues causing this behavior is disabled third party access. As a result, the requested organization cannot be seen by the application. If a GitHub repo or team cannot be found, they could have been manually deleted from GitHub. Only the current user can remedy the situation, and it is most useful to inform them about the issue in detail and offer a solution.
 Another example: sometimes GitHub interactions take too long and the request context can be canceled by GitHub. This is not an application failure, and neither developer team, nor user can actively do anything to correct it. But it is still useful to inform the user that the action must be repeated at later time to succeed.
 Return a custom error with method name and original error for logging, and a custom message string to be displayed to user.
@@ -217,14 +186,13 @@ Return a custom error with detailed information for logging and generic "action 
 6. GitHub Cancelled Context errors
 A sporadic error happening on the GitHub side, known to disappear on its own. The only solution is to wait and repeat the action later. Check for this type of errors and inform the user.
 
-
 [GRPC status codes](https://github.com/grpc/grpc/blob/master/doc/statuscodes.md) are used to allow the client to check whether the error message should be displayed for user, or just logged for developers.
 
 When the client is supposed to show error message to the user, error from the server will have status 9 (gRPC status "failed precondition")
 
 ### Backend
 
-Errors are being logged at `Autograder Service` level. All other methods called from there (including database and scm methods) will just wrap and return all error messages directly. Introduce logging on layers deeper than `Autograder Service` only if necessary. 
+Errors are being logged at `Autograder Service` level. All other methods called from there (including database and scm methods) will just wrap and return all error messages directly. Introduce logging on layers deeper than `Autograder Service` only if necessary.
 
 Errors returned to user interface must be few and informative, yet should not provide too many information about server routines. User must only be informed about details he or she can do something about.
 
@@ -236,15 +204,15 @@ When receiving response from the server, response status code is checked on the 
 
 ## GitHub API
 
-For GitHub integration we are using [Go implementation](https://github.com/google/go-github/tree/master/github) of [GitHub API](https://developer.github.com/v3/) 
+For GitHub integration we are using [Go implementation](https://github.com/google/go-github/tree/master/github) of [GitHub API](https://developer.github.com/v3/)
 
 ### Webhooks
 
 - GitHub [Webhooks API](https://developer.github.com/webhooks/) is used for building and testing of code submitted by students.
-- webhook is created automatically on course creation. It will react to every push event to any of course organization's repositories. 
-- depending on the repository the push event is coming from, assignment information will be updated in the Autograder's database, or a docker container with a student solution code will be built
+- webhook is created automatically on course creation. It will react to every push event to any of course organization's repositories.
+- depending on the repository the push event is coming from, assignment information will be updated in the QuickFeed's database, or a docker container with a student solution code will be built
 - `name` field for any GitHub webhook is always "web"
-- webhook will be using the same callback URL you have provided to the Autograder OAuth2 application and in the server startup command
+- webhook will be using the same callback URL you have provided to the QuickFeed OAuth2 application and in the server startup command
 
 ### User roles/access levels for organization / team / repository
 
@@ -254,7 +222,7 @@ For GitHub integration we are using [Go implementation](https://github.com/googl
 
 ### Slugs
 
-When retrieving team, organization or repository by name, GitHub expects a slugified string instead of a full name as displayed on the organization page. 
+When retrieving team, organization or repository by name, GitHub expects a slugified string instead of a full name as displayed on the organization page.
 For example, organization with a name like `Autograder Test Org` will have slugified name `autograder-test-org`.
 
 [URL slugs explained](http://patterns.dataincubator.org/book/url-slug.html)
@@ -269,8 +237,7 @@ For example, organization with a name like `Autograder Test Org` will have slugi
 ### Teams
 
 Student groups will have GitHub teams with the same name created in the course organization.
-Group records in the Autograder's database will have references to the corresponding GitHub team ID's.
-
+Group records in the QuickFeed's database will have references to the corresponding GitHub team ID's.
 
 ## Simple testing of UI with dummy data
 
@@ -279,7 +246,7 @@ Now to get around the problem, we have to use the built in navigation manager, n
 
 ## Docker
 
-Autograder application will build code submitted by students, and run tests provided by teachers inside docker containers. An often encountered problem is Docker being unable to resolve DNS due to disabled public DNS.
+QuickFeed application will build code submitted by students, and run tests provided by teachers inside docker containers. An often encountered problem is Docker being unable to resolve DNS due to disabled public DNS.
 If you get a build error like that:
 
 ```
@@ -312,8 +279,3 @@ attach database '/full/path/bak.db' as backup;
 insert into main.users select * from backup.users;
 detach database backup;
 ```
-
-
-
-
-
