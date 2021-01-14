@@ -1,19 +1,48 @@
-# Github Setup
-1. The first step is to create a new API key for your Autograde application.
-    1. Log in to your GitHub account, click on your profile picture and select Settings.
-    3. In Settings, click Developer Settings and create a New OAuth App.
-        1. Name your application, i.e. Autograder-development.
-        2. Homepage URL should be your base-url, e.g. `http://ag2.ux.uis.no/`.
-        3. Authorization callback URL must be unique for each instance of Autograder, e.g. `https://ag2.ux.uis.no/auth/github/callback`.
-    4. When you click Register application, you will be able to retrieve your Client ID and Client Secret, which are necessary for Autograder to access GitHub, and for GitHub to communicate back to the Autograder server. See the <a href="Installation.md"> Installation manual </a> for details on how to configure the Client ID and Client Secret environment variables.
+# GitHub Setup
 
-2. Second step is to create an organization.
-    1. Log in to your GitHub account.
-    2. In the top right corner, press the + menu and click on New organization.
-    3. Name your organization, select billing plan.
+## Generating API Keys for Connecting to GitHub
 
-       **Note!** If you select the free plan, only teams can be secret, and thus the `tests` repository will be visible to everyone. This should be fine for development and testing, but if you are planning to use Autograder in your course, you will probably want to upgrade your organization to a plan with private repositories. Academic institutions will most probably get free access through GitHub's academic program.
+The first step is to create a new API key for your QuickFeed application.
 
-    4. Skip Invite members; Autograder handles this.
-    5. Skip Organization details.
-    6. There is no need to set up a webhook for organizations anymore, it will be added automatically on course creation.
+1. Decide which GitHub account to use for connecting your QuickFeed server to GitHub.
+   - For development, using a private GitHub account is fine.
+   - For deployment, we recommend creating a separate GitHub account.
+2. Log in to your chosen GitHub account, click on your profile picture and select Settings.
+3. In Settings, click Developer Settings and create a New OAuth App.
+    1. Name your application, e.g. `QuickFeed Development`.
+    2. Homepage URL should be your public landing page for QuickFeed, e.g. `https://uis.itest.run/`.
+    3. Authorization callback URL must be unique for each instance of QuickFeed, e.g. `https://uis.itest.run/auth/github/callback`.
+4. When you click Register application, you will be able to retrieve your Client ID and Client Secret.
+   These are necessary for QuickFeed to access GitHub, and for GitHub to communicate back to the QuickFeed server.
+   Create a shell script `quickfeed-env.sh` and copy the Client ID and Client Secret values as shown below:
+
+   ```sh
+   export GITHUB_KEY="Client ID"
+   export GITHUB_SECRET="Client Secret"
+   ```
+
+   Then, to start the QuickFeed server:
+
+   ```sh
+   source quickfeed-env.sh
+   quickfeed -service.url uis.itest.run -database.file ./ag.db -http.addr :3005 &> qf.log &
+   ```
+
+## Creating a Course
+
+To create a course on QuickFeed, you must first create a GitHub organization for your course.
+
+At the University of Stavanger, you can create new organizations under our [enterprise account](https://github.com/enterprises/university-of-stavanger).
+If you are employee of University of Stavanger, contact Hein Meling for more information.
+
+1. Log into the teacher's GitHub account.
+2. In the top right corner, press the + menu and click on New organization.
+3. Select billing plan.
+
+   **Note!** If you select the free plan, the `tests` repository may be visible to everyone.
+   This should be fine for development, but if you are deploying QuickFeed for use in a course, you will want to upgrade your organization to a plan with private repositories.
+   Academic institutions can get free access through GitHub's [Academic Campus Program](https://education.github.com/schools).
+
+4. Name your organization, e.g. `qf101-2020`.
+5. Skip Invite members; QuickFeed handles this.
+6. Skip Organization details.

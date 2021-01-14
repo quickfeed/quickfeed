@@ -38,6 +38,7 @@
         "gosimple",
         "goveralls",
         "grpc",
+        "itest",
         "jinzhu",
         "lsof",
         "mattn",
