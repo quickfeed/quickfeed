@@ -46,10 +46,8 @@ Others may follow the instructions below.
 1. Log into the teacher's GitHub account.
 2. In the top right corner, press the + menu and click on New organization.
 3. Select billing plan.
-
    Note that QuickFeed requires a billing plan to allows private repositories.
    Academic institutions can get free access through GitHub's [Academic Campus Program](https://education.github.com/schools).
-
 4. Name your organization, e.g. `qf101-2020`.
 5. Skip Invite members; QuickFeed handles this.
 6. Skip Organization details.
