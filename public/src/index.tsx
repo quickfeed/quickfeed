@@ -34,7 +34,6 @@ interface IAutoGraderState {
     activePage?: ViewPage;
     currentContent: JSX.Element;
     topLinks: ILink[];
-    curUser: User | null;
     curMessage?: ILogEntry;
 }
 
@@ -51,6 +50,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     private subPage: string;
     private currentBodyContent?: JSX.Element;
     private currentMenuContent: JSX.Element[][] = [];
+    private curUser: User | null;
 
     constructor(props: IAutoGraderProps) {
         super(props);
@@ -63,30 +63,29 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             this.setState({ currentContent: await this.refreshActivePage() });
         });
 
-        const curUser = this.userMan.getCurrentUser();
+        this.curUser = this.userMan.getCurrentUser();
         this.state = {
             activePage: undefined,
             topLinks: [],
-            curUser,
             currentContent: <div>No Content Available</div>,
         };
 
         (async () => {
-            this.setState({ topLinks: await this.generateTopLinksFor(curUser) });
+            this.setState({ topLinks: await this.generateTopLinksFor(this.curUser) });
         })();
 
         this.navMan.onNavigate.addEventListener((e: INavEvent) => this.handleNavigation(e));
 
         this.userMan.onLogin.addEventListener(async (e) => {
+            const user = e.user;
+            this.curUser = user;
             this.setState({
-                curUser: e.user,
-                topLinks: await this.generateTopLinksFor(e.user),
+                topLinks: await this.generateTopLinksFor(user),
             });
         });
 
         this.userMan.onLogout.addEventListener(async (e) => {
             this.setState({
-                curUser: null,
                 topLinks: [],
             });
         });
@@ -97,7 +96,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             this.navMan.navigateTo("app/user");
             return;
         }
-        const topLinks = await this.generateTopLinksFor(this.state.curUser);
+        const topLinks = await this.generateTopLinksFor(this.curUser);
         this.checkLinks(topLinks);
         this.setState({ topLinks });
 
@@ -208,11 +207,11 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             { name: "Join Course", uri: "app/student/enroll" },
             { name: "Course List", uri: "app/student/courses/list"},
         ];
-        if (this.state.curUser && this.state.curUser.getIsadmin()) {
+        if (this.curUser && this.curUser.getIsadmin()) {
             dropDownMenuLinks.push({ name: "New Course", uri: "app/admin/courses/new" });
         }
         const userLinks: ILink[] = [
-            { name: "Signed in as: " + (this.state.curUser ? this.state.curUser.getName() : "") },
+            { name: "Signed in as: " + (this.curUser ? this.curUser.getName() : "") },
             { name: "#separator" },
             { name: "Your profile", uri: "/app/user" },
             { name: "Help", uri: "/app/help" },
@@ -220,7 +219,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             { name: "Sign out", uri: "app/login/logout" },
         ];
         const adminLinks: ILink[] = [
-            { name: "Signed in as: " + (this.state.curUser ? this.state.curUser.getName() : "") },
+            { name: "Signed in as: " + (this.curUser ? this.curUser.getName() : "") },
             { name: "#separator" },
             { name: "Your profile", uri: "/app/user" },
             { name: "Help", uri: "/app/help" },
@@ -254,7 +253,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                 break;
         }
         let currentLinks = userLinks;
-        if (this.state.curUser && this.state.curUser.getIsadmin()) {
+        if (this.curUser && this.curUser.getIsadmin()) {
             currentLinks = adminLinks;
         }
         return (
@@ -268,13 +267,13 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                         onClick={(link) => this.handleClick(link)}>
                     </NavBarMenu>
                     <NavBarLogin
-                        user={this.state.curUser}
+                        user={this.curUser}
                         loginLinks={loginLink}
                         userLinks={currentLinks}
                         onClick={(link) => this.handleClick(link)}>
                     </NavBarLogin>
                     <AddMenu
-                        user={this.state.curUser}
+                        user={this.curUser}
                         links={dropDownMenuLinks}
                         onClick={(link) => this.handleClick(link)}>
                     </AddMenu>
