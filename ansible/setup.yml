@@ -1,0 +1,4 @@
+---
+- hosts: quickfeeders
+  roles:
+    - { role: quickfeed, when: quickfeed_setup | bool}

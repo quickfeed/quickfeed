@@ -1,0 +1,7 @@
+FROM {{ builder.image.base }}
+
+RUN apk update && apk add --no-cache \
+        bash \
+        build-base \
+        python3 \
+        ansible

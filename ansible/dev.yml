@@ -1,0 +1,4 @@
+---
+- hosts: development
+  roles:
+    - { role: build_image, when: docker_build | bool}

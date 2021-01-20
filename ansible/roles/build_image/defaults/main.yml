@@ -1,0 +1,13 @@
+---
+builder:
+  image:
+    base: golang:1.15-alpine
+    name: quickfeed_builder
+    tag: v1
+  container:
+    build_dir: /tmp
+
+quickfeed:
+  image:
+    name: quickfeed
+    tag: v1
