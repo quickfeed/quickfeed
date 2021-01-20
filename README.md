@@ -2,7 +2,8 @@
 
 [![Go Test](https://github.com/autograde/quickfeed/workflows/Go%20Test/badge.svg)](https://github.com/autograde/quickfeed/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/autograde/quickfeed)](https://goreportcard.com/report/github.com/autograde/quickfeed)
-[![Coverage Status](https://coveralls.io/repos/github/autograde/quickfeed/badge.svg?branch=master)](https://coveralls.io/github/autograde/quickfeed?branch=master)
+[![Coverall Status](https://coveralls.io/repos/github/autograde/quickfeed/badge.svg?branch=master)](https://coveralls.io/github/autograde/quickfeed?branch=master)
+[![Codecov](https://codecov.io/gh/autograde/quickfeed/branch/master/graph/badge.svg)](https://codecov.io/gh/autograde/quickfeed)
 
 ## Roles and Concepts
 

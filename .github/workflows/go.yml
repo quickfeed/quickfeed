@@ -33,28 +33,5 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Generate coverage report
-      run: go test -v -coverprofile=profile.cov -covermode=atomic `go list ./... | grep -v public`
-
-    - name: Upload coverage report
-      uses: codecov/codecov-action@v1.0.2
-      with:
-        file: ./profile.cov
-        flags: unittests
-        # name: codecov-umbrella
-
-    - name: Send coverage profile
-      uses: shogo82148/actions-goveralls@v1
-      with:
-        path-to-profile: profile.cov
-        flag-name: Go-${{ matrix.go }}
-        parallel: true
-
-  # notifies that all test jobs are finished.
-  finish:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: shogo82148/actions-goveralls@v1
-        with:
-          parallel-finished: true
+    - name: Run Go tests
+      run: go test -v `go list ./... | grep -v public`
