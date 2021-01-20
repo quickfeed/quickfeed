@@ -1,4 +1,8 @@
-# agserver [![Build Status](https://travis-ci.org/autograde/quickfeed.svg?branch=master)](https://travis-ci.org/autograde/quickfeed) [![Go Report Card](https://goreportcard.com/badge/github.com/autograde/quickfeed)](https://goreportcard.com/report/github.com/autograde/quickfeed) [![Coverage Status](https://coveralls.io/repos/github/autograde/quickfeed/badge.svg?branch=master)](https://coveralls.io/github/autograde/quickfeed?branch=master)
+# QuickFeed: Instant Feedback on Programming Assignments
+
+[![Go Test](https://github.com/autograde/quickfeed/workflows/Go%20Test/badge.svg)](https://github.com/autograde/quickfeed/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/autograde/quickfeed)](https://goreportcard.com/report/github.com/autograde/quickfeed)
+[![Coverage Status](https://coveralls.io/repos/github/autograde/quickfeed/badge.svg?branch=master)](https://coveralls.io/github/autograde/quickfeed?branch=master)
 
 ## Roles and Concepts
 
