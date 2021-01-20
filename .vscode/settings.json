@@ -48,6 +48,8 @@
         "goveralls",
         "grpc",
         "grpcweb",
+        "hoursmax",
+        "hoursmin",
         "isgrouplab",
         "itest",
         "jinzhu",

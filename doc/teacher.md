@@ -25,27 +25,18 @@ The system has three **user** roles.
 
 The following concepts are important to understand.
 
-- **Assignments** are organized into folders in a git repository.
+- **Assignments** are organized into folders in a git repository, as shown in [The Assignments Repository](#The-Assignments-Repository) section below.
   An assignment may be solved individually or by a group of students.
   For individual assignments, each student is given a separate git repository.
   For group assignments, the group of students is given a separate git repository for the group assignments.
 
-  ```text
-  ├── lab1
-  ├── lab2
-  ├── lab3
-  ├── lab4
-  ├── lab5
-  └── lab6
-  ```
-
 - **Submissions** are made by a student submitting code to a supported git service provider.
+  Currently, only GitHub is supported.
 
 ## GitHub
 
 To use QuickFeed, both teachers and students must have a [GitHub](https://github.com/) account.
-
-Each course in QuickFeed is based on a GitHub organization.
+Each course in QuickFeed is based on a separate GitHub organization.
 
 ### A course organization has several requirements
 
@@ -87,9 +78,9 @@ These will be created automatically when a course is created.
 | Repository name | Description                                                                    | Access                         |
 |-----------------|--------------------------------------------------------------------------------|--------------------------------|
 | course-info     | Holds information about the course.                                            | Public                         |
-| assignments     | Contains a separate folder for each assignment.                                | Students, Teachers, QuickFeed |
-| username-labs   | Created for each student username in QuickFeed                                | Student, Teachers, QuickFeed  |
-| tests           | Contains a separate folder for each assignment with tests for that assignment. | Teachers, QuickFeed           |
+| assignments     | Contains a separate folder for each assignment.                                | Students, Teachers, QuickFeed  |
+| username-labs   | Created for each student username in QuickFeed                                 | Student, Teachers, QuickFeed   |
+| tests           | Contains a separate folder for each assignment with tests for that assignment. | Teachers, QuickFeed            |
 
 *In QuickFeed, Teacher means any teaching staff, including teaching assistants and professors alike.*
 
@@ -143,39 +134,86 @@ When approved, the group will have a corresponding GitHub team created on your c
 
 Group names cannot be reused: as long as a group team/repository with a certain name exists on your course organization, a new group with that name cannot be created.
 
-## Assignments and tests
+## Assignments and Tests
 
-### `assignments` repository
+### The Assignments Repository
 
-Course repository `assignments` is used to provide course assignments for students. A single assignment is represented as a folder containing all assignment files. Students will pull the provided code from that repository and then push their solution attempt to their own student repositories.
+A course's `assignments` repository is used to provide course assignments to students.
+The `assignments` repository would typically be organized as shown below.
+The `assignments` repository is the basis for each student's individual assignment repository and each group's shared repository.
+Whether or not a specific assignment is an individual assignment or a group assignment is specified in an [assignment information file](#assignment-information).
 
-### `tests` repository
+A single assignment is represented as a folder containing all assignment files, e.g. `lab1` below.
+Students will pull the provided code from the `assignments` repository, and push their solution attempts to their own repositories.
 
-To allow the automated build and testing of student solutions, you have to provide tests and an `assignment.yaml` template with assignment information in the `tests` repository. File structure must reflect the structure in the `assignments` repository. That is, if you have `lab1`, `lab2` folders in `assignments` repository, place the test files and the `assignment.yaml` file for lab1 in the `lab1` folder in the `tests` repository and so on for lab2.
+```text
+assignments┐
+           ├── lab1
+           ├── lab2
+           ├── lab3
+           ├── lab4
+           ├── lab5
+           └── lab6
+```
 
-### Example `assignment.yaml` file
+### The Tests Repository
 
-The `tests` repository must contain one `assignment.yaml` file for each lab assignment, stored in the corresponding assignment's folder, e.g. for `lab1/assignment.yaml` we may have something like this:
+To facilitate automated testing and scoring of student submitted solutions, a teacher must provide tests and assignment information.
+This is the purpose of the `tests` repository.
+
+The file system layout of the `tests` repository must match that of the `assignments` repository, as shown below.
+The `assignment.yml` files contains the [assignment information](#assignment-information).
+In addition, each folder should also contain test code for the corresponding assignment.
+
+```text
+tests┐
+     ├── lab1
+     │   └── assignment.yml
+     ├── lab2
+     │   └── assignment.yml
+     ├── lab3
+     │   └── assignment.yml
+     ├── lab4
+     │   └── assignment.yml
+     ├── lab5
+     │   └── assignment.yml
+     └── lab6
+         └── assignment.yml
+```
+
+### Assignment Information
+
+As mentioned above, the `tests` repository must contain one `assignment.yml` file for each assignment.
+This file provide assignment information used by QuickFeed.
+An example is shown below for `lab1`.
 
 ```yml
 assignmentid: 1
+name: "lab1"
+title: "Introduction to Unix"
 scriptfile: "go.sh"
-deadline: "2019-10-25T23:00:00"
-autoapprove: false
-scorelimit: 80
+deadline: "2020-08-30T23:59:00"
+autoapprove: true
+scorelimit: 90
 isgrouplab: false
+hoursmin: 6
+hoursmax: 7
 reviewers: 2
 containertimeout: 10
 skiptests: false
 ```
 
-`scriptfile` is the name of the script used to run assignment tests. If there are no tests, set `skiptests` field to `true`. If `skiptests` field is not set to `true`,
-`scriptfile` field is required.
-`autoapprove` indicates whether or not QuickFeed will automatically approve the assignment when a sufficient score has been reached.
-`reviewers` indicate the number of reviews to be created for a student submission to this assignment.
-`scorelimit` defines the minimal percentage score on a student submission for the corresponding lab to be auto approved.
-If `scorelimit` is not set, only submissions with 80% or higher will be approved automatically.
-`containertimeout` sets a timeout (in minutes) for CI containers building and testing the code submitted by students. After the timeout for a container has been reached, the container will be stopped and removed, and a message about the timeout reached returned to user. This field is optional, the default timeout is 10 minutes.
+| Field              | Description                                                                                           |
+|--------------------|-------------------------------------------------------------------------------------------------------|
+| `assignmentid`     | TBD                                                                                                   |
+| `name`             | Name of assignment folder                                                                             |
+| `scriptfile`       | Script to use for running tests. Ignored if `skiptests` is set to `true`.                             |
+| `deadline`         | Submission deadline for the assignment.                                                               |
+| `autoapprove`      | Automatically approve the assignment when `scorelimit` is achieved.                                   |
+| `scorelimit`       | Minimal score needed for approval. Default is 80 %.                                                   |
+| `isgrouplab`       | Assignment is considered a group assignment if true; otherwise it is an individual assignment.        |
+| `reviewers`        | Number of teachers that must review a student submission for approval.                                |
+| `containertimeout` | Timeout for CI container to finish building and testing student submitted code. Default is 10 minutes.|
 
 ## Reviewing student submissions
 
