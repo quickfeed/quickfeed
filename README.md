@@ -5,13 +5,11 @@
 [![Coverall Status](https://coveralls.io/repos/github/autograde/quickfeed/badge.svg?branch=master)](https://coveralls.io/github/autograde/quickfeed?branch=master)
 [![Codecov](https://codecov.io/gh/autograde/quickfeed/branch/master/graph/badge.svg)](https://codecov.io/gh/autograde/quickfeed)
 
-## User Manual for Teachers
+## Documentation
 
-Teachers that wants to use QuickFeed may wish to review the [User Manual](doc/teacher.md).
-
-## Installation
-
-For detailed instructions on installation of QuickFeed for a production environment, please see our [Server Installation and Configuration](doc/install.md).
+- Teachers that wants to use QuickFeed may wish to review the [User Manual](doc/teacher.md).
+- Teachers may also want to copy the [sign up instructions](doc/templates/signup.md) and [lab submission instructions](doc/templates/lab-submission.md), and make the necessary adjustments for your course.
+- For detailed instructions on installation of QuickFeed for a production environment, please see our [Server Installation and Configuration](doc/install.md).
 
 ## Development
 
