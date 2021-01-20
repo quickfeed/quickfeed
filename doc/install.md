@@ -170,6 +170,8 @@ Here is an example with all default values:
 quickfeed -service.url uis.itest.run &> quickfeed.log &
 ```
 
+*As a bootstrap mechanism, the first user to sign in, automatically becomes administrator for the system.*
+
 ### Flags
 
 | **Flag**        | **Description**                        | **Example**     |
