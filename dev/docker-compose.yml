@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  proxy:
+    image: nginx-proxy
+    build: 
+      context: ./proxy
+    ports:
+      - "80:80"
+    networks: 
+      - external
+      - internal
+
+  quickfeed:
+    image: quickfeed
+    build:
+      context: ./quickfeed
+    networks: 
+      - internal
+
+networks: 
+  external:
+  internal:
