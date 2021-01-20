@@ -31,7 +31,6 @@ import { GrpcManager } from "./managers/GRPCManager";
 import { showLoader } from "./loader";
 
 interface IAutoGraderState {
-    activePage?: ViewPage;
     currentContent: JSX.Element;
     topLinks: ILink[];
     curMessage?: ILogEntry;
@@ -44,6 +43,7 @@ interface IAutoGraderProps {
 }
 
 class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
+    private activePage?: ViewPage;
     private userMan: UserManager;
     private navMan: NavigationManager;
     private logMan: LogManager;
@@ -65,7 +65,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
 
         this.curUser = this.userMan.getCurrentUser();
         this.state = {
-            activePage: undefined,
             topLinks: [],
             currentContent: <div>No Content Available</div>,
         };
@@ -107,7 +106,8 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
 
         const newContent = await this.renderTemplate(e.page, e.page.template);
 
-        this.setState({ activePage: e.page, currentContent: newContent });
+        this.activePage = e.page
+        this.setState({currentContent: newContent });
     }
 
     public async generateTopLinksFor(user: User | null): Promise<ILink[]> {
@@ -146,7 +146,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     }
 
     public render() {
-        if (this.state.activePage) {
+        if (this.activePage) {
             return this.state.currentContent;
         } else {
             return showLoader();
@@ -154,8 +154,8 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     }
 
     private async refreshActivePage(): Promise<JSX.Element> {
-        if (this.state.activePage) {
-            return this.renderTemplate(this.state.activePage, this.state.activePage.template);
+        if (this.activePage) {
+            return this.renderTemplate(this.activePage, this.activePage.template);
         }
         return showLoader();
     }
