@@ -40,6 +40,7 @@
         "containertimeout",
         "covermode",
         "coverprofile",
+        "errcheck",
         "excelize",
         "fullchain",
         "golangci",
