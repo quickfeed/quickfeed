@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/envoy"
@@ -29,10 +28,8 @@ import (
 )
 
 func init() {
-	var (
-		// Create some standard server metrics.
-		grpcMetrics = grpc_prometheus.NewServerMetrics()
-	)
+	// Create some standard server metrics.
+	grpcMetrics := grpc_prometheus.NewServerMetrics()
 
 	mustAddExtensionType := func(ext, typ string) {
 		if err := mime.AddExtensionType(ext, typ); err != nil {
@@ -58,28 +55,18 @@ func init() {
 	)
 }
 
-func envString(env, fallback string) string {
-	e := os.Getenv(env)
-	if e == "" {
-		return fallback
-	}
-	return e
-}
-
-var (
-	// Create a metrics registry.
-	reg = prometheus.NewRegistry()
-)
+// Create a metrics registry.
+var reg = prometheus.NewRegistry()
 
 func main() {
 	var (
+		baseURL    = flag.String("service.url", "", "base service DNS name")
+		dbFile     = flag.String("database.file", "qf.db", "database file")
+		public     = flag.String("http.public", "public", "path to content to serve")
 		httpAddr   = flag.String("http.addr", ":8081", "HTTP listen address")
-		public     = flag.String("http.public", "public", "path to static files to serve")
-		scriptPath = flag.String("script.path", "ci/scripts", "path to continuous integration scripts")
-		dbFile     = flag.String("database.file", tempFile("ag.db"), "database file")
-		baseURL    = flag.String("service.url", "localhost", "service base url")
-		fake       = flag.Bool("provider.fake", false, "enable fake provider")
 		grpcAddr   = flag.String("grpc.addr", ":9090", "gRPC listen address")
+		scriptPath = flag.String("script.path", "ci/scripts", "path to continuous integration scripts")
+		fake       = flag.Bool("provider.fake", false, "enable fake provider")
 	)
 	flag.Parse()
 
@@ -146,8 +133,4 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}
-}
-
-func tempFile(name string) string {
-	return filepath.Join(os.TempDir(), name)
 }

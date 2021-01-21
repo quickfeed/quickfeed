@@ -1,0 +1,54 @@
+name: Test Coverage
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: [1.15]
+
+    steps:
+    - name: Cache
+      uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Generate coverage report
+      run: go test -v -coverprofile=profile.cov -covermode=atomic `go list ./... | grep -v public`
+
+    - name: Send coverage report to Coveralls.io
+      uses: shogo82148/actions-goveralls@v1
+      with:
+        path-to-profile: profile.cov
+        flag-name: Go-${{ matrix.go-version }}
+        parallel: true
+
+    - name: Upload coverage report to codecov.io
+      uses: codecov/codecov-action@v1.0.2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./profile.cov
+        flags: unittests
+        name: codecov-umbrella
+
+  # notifies that all test jobs are finished.
+  finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: shogo82148/actions-goveralls@v1
+      with:
+        parallel-finished: true
