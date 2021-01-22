@@ -1,6 +1,10 @@
-package score
+package score_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/autograde/quickfeed/kit/score"
+)
 
 type scoreData struct {
 	points, max, weight int
@@ -24,13 +28,13 @@ func setScore(points, max, w int) *scoreData {
 
 func TestTotal(t *testing.T) {
 	for _, s := range scores {
-		allScores := make([]*Score, 0)
+		allScores := make([]*score.Score, 0)
 		for _, sd := range s.in {
-			sc := NewScore(t, sd.max, sd.weight)
+			sc := score.NewScore(t, sd.max, sd.weight)
 			sc.IncBy(sd.points)
 			allScores = append(allScores, sc)
 		}
-		tot := Total(allScores)
+		tot := score.Total(allScores)
 		if tot != s.out {
 			t.Errorf("Got: %d, Want: %d", tot, s.out)
 		}

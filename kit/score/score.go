@@ -4,32 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"runtime/debug"
 	"strings"
 	"testing"
 )
-
-const (
-	secretEnvName = "QUICKFEED_SESSION_SECRET"
-)
-
-var sessionSecret string
-
-func init() {
-	sessionSecret = os.Getenv(secretEnvName)
-	// remove variable as soon as it has been read
-	_ = os.Setenv(secretEnvName, "")
-}
-
-// Score encodes the score of a test or a group of tests.
-type Score struct {
-	Secret   string // the unique identifier for a scoring session
-	TestName string // name of the test
-	Score    int    // the score obtained
-	MaxScore int    // max score possible to get on this specific test
-	Weight   int    // the weight of this test; used to compute final grade
-}
 
 // NewScore returns a new Score object with the given max and weight.
 // The Score is initially 0, and Inc() and IncBy() can be called
@@ -41,8 +19,8 @@ func NewScore(t *testing.T, max, weight int) *Score {
 	sc := &Score{
 		Secret:   sessionSecret,
 		TestName: t.Name(),
-		MaxScore: max,
-		Weight:   weight,
+		MaxScore: int32(max),
+		Weight:   int32(weight),
 	}
 	// prints JSON score object with zero score, e.g.:
 	// {"Secret":"my secret code","TestName":"TestPanicHandler","Score":0,"MaxScore":8,"Weight":5}
@@ -59,7 +37,7 @@ func NewScore(t *testing.T, max, weight int) *Score {
 // to ensure that the test is recorded by Quickfeed.
 func NewScoreMax(t *testing.T, max, weight int) *Score {
 	sc := NewScore(t, max, weight)
-	sc.Score = max
+	sc.Score = int32(max)
 	return sc
 }
 
@@ -72,8 +50,9 @@ func (s *Score) Inc() {
 
 // IncBy increments score n times or until score equals MaxScore.
 func (s *Score) IncBy(n int) {
-	if s.Score+n < s.MaxScore {
-		s.Score += n
+	m := int32(n)
+	if s.Score+m < s.MaxScore {
+		s.Score += m
 	} else {
 		s.Score = s.MaxScore
 	}
@@ -88,16 +67,26 @@ func (s *Score) Dec() {
 
 // DecBy decrements score n times or until Score equals zero.
 func (s *Score) DecBy(n int) {
-	if s.Score-n > 0 {
-		s.Score -= n
+	m := int32(n)
+	if s.Score-m > 0 {
+		s.Score -= m
 	} else {
 		s.Score = 0
 	}
 }
 
+// Equal returns true if sc equals other. Ignores the Secret field.
+func (sc *Score) Equal(other *Score) bool {
+	return other != nil &&
+		sc.TestName == other.TestName &&
+		sc.Score == other.Score &&
+		sc.MaxScore == other.MaxScore &&
+		sc.Weight == other.Weight
+}
+
 // String returns a string representation of the score.
 // Format: "TestName: 2/10 test cases passed".
-func (s Score) String() string {
+func (s *Score) StringOld() string {
 	return fmt.Sprintf("%s: %d/%d test cases passed", s.TestName, s.Score, s.MaxScore)
 }
 
@@ -163,7 +152,7 @@ func (s *Score) fail(t *testing.T) {
 }
 
 // json returns a JSON string for the score object.
-func (s Score) json() string {
+func (s *Score) json() string {
 	b, err := json.Marshal(s)
 	if err != nil {
 		return fmt.Sprintf("json.Marshal error: %v\n", err)
