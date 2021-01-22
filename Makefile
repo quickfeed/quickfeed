@@ -32,7 +32,7 @@ install:
 
 ui:
 	@echo Running webpack
-	@cd public; npm install; webpack
+	@cd public; npm install; npm run build
 
 proto:
 	@echo Compiling Autograders proto definitions
