@@ -1,4 +1,10 @@
 ---
 - hosts: quickfeeders
+  become: yes
   roles:
+    - { role: base, when: base_setup | bool}
+    # TODO:
+    # - { role: docker, when: docker | bool}
+    # - { role: nginx, when: nginx | bool}
+    # - { role: envoy, when: envoy | bool}
     - { role: quickfeed, when: quickfeed_setup | bool}

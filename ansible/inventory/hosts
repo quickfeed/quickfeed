@@ -8,10 +8,12 @@ localhost
 
 [development:vars]
 ansible_connection=local
+deploy_role="dev"
 
 [production]
 
 [production:vars]
+deploy_role="prod"
 
 [quickfeeders:children]
 development

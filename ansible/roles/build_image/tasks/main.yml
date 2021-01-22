@@ -23,33 +23,27 @@
   # The tasks below setup the quickfeed image using the playbooks,
   # i.e. run the playbooks in the builder.image.
   - name: Define a temporally builder container name
-    set_fact:
+    ansible.builtin.set_fact:
       temp_container_name: dev_builder_{{lookup('pipe', 'date "+%Y%m%d%H%M%S"')}}
 
-  - debug:
-      msg: "{{temp_container_name}}"
-
-  - debug:
-      msg: "{{playbook_dir}}/.."
-
   - name: Install quickfeed in the builder container
-    command: "docker run
+    ansible.builtin.command: "docker run
       -v {{ playbook_dir }}:{{ builder.container.build_dir }}
       -w {{ builder.container.build_dir }}
       --name={{ temp_container_name }}
       {{ builder.image.name }}:{{ builder.image.tag }}
-      ansible-playbook -i inventory/hosts -l development -c local setup.yml"
+      ansible-playbook -i inventory/hosts -l development -c local setup.yml -e base_setup=true"
 
   - name: Create quickfeed image based on the builder container
-    command: "docker commit
+    ansible.builtin.command: "docker commit
       {{ temp_container_name }}
       {{ quickfeed.image.name }}:{{ quickfeed.image.tag }}"
 
   - name: Delete builder container
-    command: docker rm -f -v {{ temp_container_name }}
+    ansible.builtin.command: docker rm -f -v {{ temp_container_name }}
 
   - name: Delete builder image
-    command: docker rmi -f -v {{ builder.image.name }}
+    ansible.builtin.command: docker rmi -f {{ builder.image.name }}
 
   - name: Clean build directory
     ansible.builtin.file:
