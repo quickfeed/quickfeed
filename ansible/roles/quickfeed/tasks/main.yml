@@ -21,17 +21,12 @@
     become_user: "{{ autograder_user }}"
     ansible.builtin.copy:
       content: |
-        export GOPATH=$GOPATH:{{ autograder_home }}/go
-        export PATH=$PATH:{{ autograder_home }}/go/bin
+        export GOPATH={{ autograder_home }}/go
+        export GOBIN=$GOPATH/bin
+        export PATH=$PATH:$GOBIN
         export GO111MODULE=on
       dest: "{{ autograder_home }}/.bashrc"
       mode: 0644
-
-  - name: Source GOPATH for {{ autograder_user }}
-    become_user: "{{ autograder_user }}"
-    ansible.builtin.shell: source "{{ autograder_home }}/.bashrc"
-    args:
-      executable: /bin/bash
 
   - name: Define GOPATH variable
     ansible.builtin.set_fact:
@@ -46,8 +41,7 @@
     when: GO111MODULE is not defined
 
   # go deps
-  - name: Install Go dependencies packages
-    become: yes
+  - name: Get Go dependencies packages
     become_user: "{{ autograder_user }}"
     ansible.builtin.command: go get -u {{ item }}
     environment:
@@ -67,25 +61,7 @@
     ansible.builtin.get_url:
       url: "{{ protoc_grpcweb_url }}"
       dest: "{{ grpcweb_bin }}"
-      mode: '0440'
-
-  - name: Ensure executable permission to grpcweb
-    ansible.builtin.file:
-      path: "{{ grpcweb_bin }}"
-      state: touch
-      mode: u+x,g+x
-
-  # npm deps
-  - name: Install webpack and typescript compiler
-    community.general.npm:
-      global: yes
-      name: "{{ item }}"
-    with_items:
-      - typescript
-      - webpack
-      - webpack-cli
-      - tslint
-      - serve
+      mode: '0755'
 
   # quickfeed
   - name: Clone quickfeed source
@@ -104,6 +80,14 @@
       group: "{{ autograder_group }}"
       recurse: yes
 
+  - name: Build quickfeed ui
+    become_user: "{{ autograder_user }}"
+    ansible.builtin.shell: "cd {{ quickfeed_ui_root }} && npm install && npm run build"
+
+  - name: Compile quickfeed proto files
+    become_user: "{{ autograder_user }}"
+    ansible.builtin.shell: "cd {{ quickfeed_root }} && go list && make proto"
+
   - name: Build quickfeed source
     become_user: "{{ autograder_user }}"
-    ansible.builtin.shell: "cd {{ quickfeed_root }} && make"
+    ansible.builtin.shell: "cd {{ quickfeed_root }} && make install"

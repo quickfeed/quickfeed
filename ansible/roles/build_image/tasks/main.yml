@@ -30,6 +30,7 @@
     ansible.builtin.command: "docker run
       -v {{ playbook_dir }}:{{ builder.container.build_dir }}
       -w {{ builder.container.build_dir }}
+      -h {{ hostname }}
       --name={{ temp_container_name }}
       {{ builder.image.name }}:{{ builder.image.tag }}
       ansible-playbook -i inventory/hosts -l development -c local setup.yml -e base_setup=true"

@@ -19,4 +19,4 @@ startag.sh
 backups
 misc/ag-env.sh
 tmp.db
-
+ansible/ansible.log
