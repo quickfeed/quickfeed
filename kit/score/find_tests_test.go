@@ -2,12 +2,12 @@ package score_test
 
 import (
 	"testing"
+
+	"github.com/autograde/quickfeed/kit/score"
 )
 
 func TestFindTests(t *testing.T) {
-	// singlechecker.Main(score.Analyzer)
-
-	// tests := score.FindTests()
+	score.FindTests()
 	// for _, s := range tests {
 	// 	t.Log("ss", s)
 	// }
