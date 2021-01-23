@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"testing"
 )
 
 const (
@@ -24,11 +25,25 @@ func init() {
 	_ = os.Setenv(secretEnvName, "")
 }
 
-// TODO(meling) prefer to keep this private
-// TODO(meling) should also check that 'name' is a proper Test function (ref the deleted checkTest func in earlier commit)
-func TestName(x interface{}) string {
-	name := runtime.FuncForPC(reflect.ValueOf(x).Pointer()).Name()
-	return lastElem(name)
+func TestName(testFn interface{}) string {
+	typ := reflect.TypeOf(testFn)
+	if typ.Kind() != reflect.Func {
+		panic(errMsg(reflect.ValueOf(testFn), "not a function"))
+	}
+	name := runtime.FuncForPC(reflect.ValueOf(testFn).Pointer()).Name()
+	name = lastElem(name)
+	if typ.NumIn() != 1 || typ.NumOut() > 0 || !strings.HasPrefix(name, "Test") {
+		panic(errMsg(name, "not a test function"))
+	}
+	if !typ.In(0).AssignableTo(reflect.TypeOf(&testing.T{})) {
+		panic(errMsg(name, "test function missing *testing.T argument"))
+	}
+	return name
+}
+
+func errMsg(testFn interface{}, msg string) error {
+	frame := callFrame()
+	return fmt.Errorf("%s:%d: %s: %v", filepath.Base(frame.File), frame.Line, msg, testFn)
 }
 
 func lastElem(name string) string {
@@ -37,25 +52,17 @@ func lastElem(name string) string {
 
 // Add test with given max score and weight to the registry.
 func Add(test interface{}, max, weight int) {
-	testName := TestName(test)
-	if _, found := scores[testName]; found {
-		frame := getFrame(3)
-		panic(fmt.Errorf("%s:%d: duplicate score test: %s", filepath.Base(frame.File), frame.Line, testName))
-	}
-	sc := &Score{
-		Secret:   sessionSecret,
-		TestName: testName,
-		MaxScore: int32(max),
-		Weight:   int32(weight),
-	}
-	scores[testName] = sc
+	add(TestName(test), max, weight)
 }
 
-// Add dynamically test: can be lost
-func A(testName string, max, weight int) {
+// AddSubtest with given max score and weight to the registry.
+func AddSubtest(testName string, max, weight int) {
+	add(testName, max, weight)
+}
+
+func add(testName string, max, weight int) {
 	if _, found := scores[testName]; found {
-		frame := getFrame(3)
-		panic(fmt.Errorf("%s:%d: duplicate score test: %s", filepath.Base(frame.File), frame.Line, testName))
+		panic(errMsg(testName, "duplicate score test"))
 	}
 	sc := &Score{
 		Secret:   sessionSecret,
@@ -71,8 +78,7 @@ func GMax(testName string) *Score {
 		sc.Score = sc.GetMaxScore()
 		return sc
 	}
-	frame := getFrame(3)
-	panic(fmt.Errorf("%s:%d: unknown score test: %s", filepath.Base(frame.File), frame.Line, testName))
+	panic(errMsg(testName, "unknown score test"))
 }
 
 // GetMax returns a score object initialized with Score equal to MaxScore.
@@ -90,7 +96,7 @@ func Get() *Score {
 }
 
 func get() *Score {
-	frame := getFrame(4)
+	frame := callFrame()
 	testName := lastElem(frame.Function)
 	if sc, ok := scores[testName]; ok {
 		return sc
@@ -98,10 +104,4 @@ func get() *Score {
 	panic(fmt.Errorf("%s:%d: unknown score test: %s", filepath.Base(frame.File), frame.Line, testName))
 }
 
-func getFrame(skip int) runtime.Frame {
-	pc := make([]uintptr, 15)
-	n := runtime.Callers(skip, pc)
-	frames := runtime.CallersFrames(pc[:n])
-	frame, _ := frames.Next()
-	return frame
-}
+// TODO(meling) rename test_registry.go to registry.go

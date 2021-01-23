@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 	score.Add(TestFibonacci, len(fibonacciTests)*2, 20)
 	score.Add(TestFibonacci2, len(fibonacciTests), 20)
 	for _, ft := range fibonacciTests {
-		score.A(score.TestName(TestFibonacciWithRun)+"/"+subTestName(ft.in), 1, 1)
+		score.AddSubtest(score.TestName(TestFibonacciWithRun)+"/"+subTestName(ft.in), 1, 1)
 	}
 	os.Exit(m.Run())
 }
