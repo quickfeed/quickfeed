@@ -24,7 +24,9 @@ func init() {
 	_ = os.Setenv(secretEnvName, "")
 }
 
-func testName(x interface{}) string {
+// TODO(meling) prefer to keep this private
+// TODO(meling) should also check that 'name' is a proper Test function (ref the deleted checkTest func in earlier commit)
+func TestName(x interface{}) string {
 	name := runtime.FuncForPC(reflect.ValueOf(x).Pointer()).Name()
 	return lastElem(name)
 }
@@ -35,7 +37,7 @@ func lastElem(name string) string {
 
 // Add test with given max score and weight to the registry.
 func Add(test interface{}, max, weight int) {
-	testName := testName(test)
+	testName := TestName(test)
 	if _, found := scores[testName]; found {
 		frame := getFrame(3)
 		panic(fmt.Errorf("%s:%d: duplicate score test: %s", filepath.Base(frame.File), frame.Line, testName))
