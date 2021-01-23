@@ -82,12 +82,20 @@
 
   - name: Build quickfeed ui
     become_user: "{{ autograder_user }}"
-    ansible.builtin.shell: "cd {{ quickfeed_ui_root }} && npm install && npm run build"
+    ansible.builtin.shell: "cd {{ quickfeed_root }} && make ui"
 
   - name: Compile quickfeed proto files
     become_user: "{{ autograder_user }}"
     ansible.builtin.shell: "cd {{ quickfeed_root }} && go list && make proto"
+    environment:
+      GOROOT: "{{ GOROOT }}"
+      GOPATH: "{{ GOPATH }}"
+      GO111MODULE: "{{ GO111MODULE }}"
 
   - name: Build quickfeed source
     become_user: "{{ autograder_user }}"
     ansible.builtin.shell: "cd {{ quickfeed_root }} && make install"
+    environment:
+      GOROOT: "{{ GOROOT }}"
+      GOPATH: "{{ GOPATH }}"
+      GO111MODULE: "{{ GO111MODULE }}"
