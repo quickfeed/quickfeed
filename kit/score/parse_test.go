@@ -6,6 +6,8 @@ import (
 	"github.com/autograde/quickfeed/kit/score"
 )
 
+var theSecret = "my secret code"
+
 var nonJSONLog = []string{
 	"here is some output",
 	"some other output",
