@@ -6,13 +6,6 @@ import (
 	"github.com/autograde/quickfeed/kit/score"
 )
 
-// func init() {
-// 	err := os.Setenv(secretEnvName, theSecret)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// }
-
 var nonJSONLog = []string{
 	"here is some output",
 	"some other output",
