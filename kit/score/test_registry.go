@@ -25,7 +25,7 @@ func init() {
 	_ = os.Setenv(secretEnvName, "")
 }
 
-func TestName(testFn interface{}) string {
+func testName(testFn interface{}) string {
 	typ := reflect.TypeOf(testFn)
 	if typ.Kind() != reflect.Func {
 		panic(errMsg(reflect.ValueOf(testFn), "not a function"))
@@ -52,13 +52,13 @@ func lastElem(name string) string {
 
 // Add test with given max score and weight to the registry.
 func Add(test interface{}, max, weight int) {
-	add(TestName(test), max, weight)
+	add(testName(test), max, weight)
 }
 
 // AddSubtest with given max score and weight to the registry.
 func AddSubtest(test interface{}, subTestName string, max, weight int) {
-	testName := fmt.Sprintf("%s/%s", TestName(test), subTestName)
-	add(testName, max, weight)
+	tstName := fmt.Sprintf("%s/%s", testName(test), subTestName)
+	add(tstName, max, weight)
 }
 
 func add(testName string, max, weight int) {

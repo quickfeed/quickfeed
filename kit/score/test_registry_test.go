@@ -1,4 +1,4 @@
-package score_test
+package score
 
 import (
 	"fmt"
@@ -6,12 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/kit/score/testdata/a"
-)
-
-const (
-	secretEnvName = "QUICKFEED_SESSION_SECRET"
 )
 
 // To run this test, use this command:
@@ -55,17 +50,17 @@ func TestTestNamePanic(t *testing.T) {
 					out := strings.TrimSpace(fmt.Sprintln(r))
 					// ignore the file name and line number in the prefix of out
 					if !strings.HasSuffix(out, test.want) {
-						t.Errorf("score.TestName('%s')='%s', expected '%s'", test.inName, out, test.want)
+						t.Errorf("testName('%s')='%s', expected '%s'", test.inName, out, test.want)
 					}
 					if len(test.want) == 0 {
-						t.Errorf("score.TestName('%s')='%s', not expected to fail", test.inName, out)
+						t.Errorf("testName('%s')='%s', not expected to fail", test.inName, out)
 					}
 					t.Logf("recovered %v", r)
 				}
 			}()
-			tName := score.TestName(test.in)
+			tName := testName(test.in)
 			if len(test.want) > 0 {
-				t.Errorf("score.TestName('%s')='%s', expected to fail", test.inName, tName)
+				t.Errorf("testName('%s')='%s', expected to fail", test.inName, tName)
 			}
 		})
 	}
