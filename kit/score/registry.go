@@ -112,5 +112,3 @@ func get() *Score {
 	}
 	panic(errMsg(testName, "unknown score test"))
 }
-
-// TODO(meling) rename test_registry.go to registry.go
