@@ -56,7 +56,8 @@ func Add(test interface{}, max, weight int) {
 }
 
 // AddSubtest with given max score and weight to the registry.
-func AddSubtest(testName string, max, weight int) {
+func AddSubtest(test interface{}, subTestName string, max, weight int) {
+	testName := fmt.Sprintf("%s/%s", TestName(test), subTestName)
 	add(testName, max, weight)
 }
 
@@ -73,7 +74,15 @@ func add(testName string, max, weight int) {
 	scores[testName] = sc
 }
 
+func stripPkg(name string) string {
+	start := strings.LastIndex(name, "/") + 1
+	dot := strings.Index(name[start:], ".") + 1
+	return name[start+dot:]
+}
+
 func GMax(testName string) *Score {
+	frame := callFrame()
+	fmt.Printf("%s:%d: %s: %v\n", filepath.Base(frame.File), frame.Line, stripPkg(frame.Function), frame.Function)
 	if sc, ok := scores[testName]; ok {
 		sc.Score = sc.GetMaxScore()
 		return sc
@@ -81,7 +90,7 @@ func GMax(testName string) *Score {
 	panic(errMsg(testName, "unknown score test"))
 }
 
-// GetMax returns a score object initialized with Score equal to MaxScore.
+// GetMax returns a score object with Score equal to MaxScore.
 // The returned score object should be used with score.Dec() and score.DecBy().
 func GetMax() *Score {
 	sc := get()
@@ -101,7 +110,7 @@ func get() *Score {
 	if sc, ok := scores[testName]; ok {
 		return sc
 	}
-	panic(fmt.Errorf("%s:%d: unknown score test: %s", filepath.Base(frame.File), frame.Line, testName))
+	panic(errMsg(testName, "unknown score test"))
 }
 
 // TODO(meling) rename test_registry.go to registry.go

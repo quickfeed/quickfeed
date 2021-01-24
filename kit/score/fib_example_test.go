@@ -19,13 +19,17 @@ func fibonacci(n uint) uint {
 }
 
 func TestMain(m *testing.M) {
-	score.Add(TestFibonacci, len(fibonacciTests)*2, 20)
-	score.Add(TestFibonacci2, len(fibonacciTests), 20)
+	score.Add(TestFibonacci, len(fibonacciTests), 20)
+	score.Add(TestFibonacci2, len(fibonacciTests)*2, 20)
 	for _, ft := range fibonacciTests {
-		score.AddSubtest(score.TestName(TestFibonacciWithRun)+"/"+subTestName(ft.in), 1, 1)
+		score.AddSubtest(TestFibonacciSubTest, subTestName(ft.in), 1, 1)
 	}
 	os.Exit(m.Run())
 }
+
+const (
+	numCorrect = 10
+)
 
 var fibonacciTests = []struct {
 	in, want uint
@@ -48,6 +52,22 @@ var fibonacciTests = []struct {
 
 func TestFibonacci(t *testing.T) {
 	sc := score.GetMax()
+	for _, ft := range fibonacciTests {
+		out := fibonacci(ft.in)
+		if out != ft.want {
+			sc.Dec()
+		}
+	}
+	if sc.Score != numCorrect {
+		t.Errorf("Score=%d, expected %d tests to pass", sc.Score, numCorrect)
+	}
+	if sc.TestName != t.Name() {
+		t.Errorf("TestName=%s, expected %s", sc.TestName, t.Name())
+	}
+}
+
+func TestFibonacci2(t *testing.T) {
+	sc := score.GetMax()
 	defer sc.Print(t)
 
 	for _, ft := range fibonacciTests {
@@ -56,32 +76,17 @@ func TestFibonacci(t *testing.T) {
 			sc.Dec()
 		}
 	}
-	if sc.Score != 24 {
-		t.Errorf("expected 24 tests to pass, but got %v", sc.Score)
+	// len(tests)*2 - (len(tests)-numCorrect) = len(tests)+numCorrect = 24
+	expectedScore := int32(len(fibonacciTests) + numCorrect)
+	if sc.Score != expectedScore {
+		t.Errorf("Score=%d, expected %d tests to pass", sc.Score, expectedScore)
 	}
-	if sc.TestName != "TestFibonacci" {
-		t.Errorf("expected TestName=TestFibonacci, but got %v", sc.TestName)
-	}
-	t.Log(sc.Secret)
-}
-
-func TestFibonacci2(t *testing.T) {
-	sc := score.GetMax()
-	for _, ft := range fibonacciTests {
-		out := fibonacci(ft.in)
-		if out != ft.want {
-			sc.Dec()
-		}
-	}
-	if sc.Score != 10 {
-		t.Errorf("expected 10 tests to pass, but got %v", sc.Score)
-	}
-	if sc.TestName != "TestFibonacci2" {
-		t.Errorf("expected TestName=TestFibonacci2, but got %v", sc.TestName)
+	if sc.TestName != t.Name() {
+		t.Errorf("TestName=%s, expected %s", sc.TestName, t.Name())
 	}
 }
 
-func TestFibonacciWithRun(t *testing.T) {
+func TestFibonacciSubTest(t *testing.T) {
 	for _, ft := range fibonacciTests {
 		t.Run(subTestName(ft.in), func(t *testing.T) {
 			sc := score.GMax(t.Name())
@@ -89,12 +94,12 @@ func TestFibonacciWithRun(t *testing.T) {
 			if out != ft.want {
 				sc.Dec()
 			}
-			fmt.Println(sc)
+			if sc.TestName != t.Name() {
+				t.Errorf("TestName=%s, expected %s", sc.TestName, t.Name())
+			}
 		})
 	}
 }
-
-// TODO(meling) find good design for interacting with subtests
 
 func subTestName(i uint) string {
 	return fmt.Sprintf("Fib/%d", i)
