@@ -41,6 +41,11 @@ func NewScoreMax(t *testing.T, max, weight int) *Score {
 	return sc
 }
 
+// Fail sets Score to zero.
+func (s *Score) Fail() {
+	s.Score = 0
+}
+
 // Inc increments score if score is less than MaxScore.
 func (s *Score) Inc() {
 	if s.Score < s.MaxScore {
