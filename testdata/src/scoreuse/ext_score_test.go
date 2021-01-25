@@ -6,6 +6,6 @@ import (
 	"github.com/autograde/quickfeed/kit/score"
 )
 
-func TestGetMax(t *testing.T) {
-	score.GetMax()
+func TestMax(t *testing.T) {
+	score.Max()
 }

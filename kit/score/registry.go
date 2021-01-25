@@ -25,6 +25,51 @@ func init() {
 	_ = os.Setenv(secretEnvName, "")
 }
 
+// Add test with given max score and weight to the registry.
+func Add(test interface{}, max, weight int) {
+	add(testName(test), max, weight)
+}
+
+// AddSub test with given max score and weight to the registry.
+// This function should be used to register subtests, and should be used in
+// conjunction with MaxByName and MinByName called from within a subtest.
+func AddSub(test interface{}, subTestName string, max, weight int) {
+	tstName := fmt.Sprintf("%s/%s", testName(test), subTestName)
+	add(tstName, max, weight)
+}
+
+// Max returns a score object with Score equal to MaxScore.
+// The returned score object should be used with score.Dec() and score.DecBy().
+func Max() *Score {
+	testName := callerTestName()
+	sc := get(testName)
+	sc.Score = sc.GetMaxScore()
+	return sc
+}
+
+// Min returns a score object with Score equal to zero.
+// The returned score object should be used with score.Inc() and score.IncBy().
+func Min() *Score {
+	testName := callerTestName()
+	return get(testName)
+}
+
+// MaxByName returns score object for the given test name with Score equal to MaxScore.
+// This function is meant to be used from within subtests, and in conjunction with AddSub.
+// The returned score object should be used with score.Dec() and score.DecBy().
+func MaxByName(testName string) *Score {
+	sc := get(testName)
+	sc.Score = sc.GetMaxScore()
+	return sc
+}
+
+// MinByName returns a score object for the given test name with Score equal to zero.
+// This function is meant to be used from within subtests, and in conjunction with AddSub.
+// The returned score object should be used with score.Inc() and score.IncBy().
+func MinByName(testName string) *Score {
+	return get(testName)
+}
+
 func testName(testFn interface{}) string {
 	typ := reflect.TypeOf(testFn)
 	if typ.Kind() != reflect.Func {
@@ -41,6 +86,11 @@ func testName(testFn interface{}) string {
 	return name
 }
 
+func callerTestName() string {
+	frame := callFrame()
+	return lastElem(frame.Function)
+}
+
 func errMsg(testFn interface{}, msg string) error {
 	frame := callFrame()
 	return fmt.Errorf("%s:%d: %s: %v", filepath.Base(frame.File), frame.Line, msg, testFn)
@@ -48,17 +98,6 @@ func errMsg(testFn interface{}, msg string) error {
 
 func lastElem(name string) string {
 	return name[strings.LastIndex(name, ".")+1:]
-}
-
-// Add test with given max score and weight to the registry.
-func Add(test interface{}, max, weight int) {
-	add(testName(test), max, weight)
-}
-
-// AddSubtest with given max score and weight to the registry.
-func AddSubtest(test interface{}, subTestName string, max, weight int) {
-	tstName := fmt.Sprintf("%s/%s", testName(test), subTestName)
-	add(tstName, max, weight)
 }
 
 func add(testName string, max, weight int) {
@@ -74,39 +113,7 @@ func add(testName string, max, weight int) {
 	scores[testName] = sc
 }
 
-func stripPkg(name string) string {
-	start := strings.LastIndex(name, "/") + 1
-	dot := strings.Index(name[start:], ".") + 1
-	return name[start+dot:]
-}
-
-func GMax(testName string) *Score {
-	frame := callFrame()
-	fmt.Printf("%s:%d: %s: %v\n", filepath.Base(frame.File), frame.Line, stripPkg(frame.Function), frame.Function)
-	if sc, ok := scores[testName]; ok {
-		sc.Score = sc.GetMaxScore()
-		return sc
-	}
-	panic(errMsg(testName, "unknown score test"))
-}
-
-// GetMax returns a score object with Score equal to MaxScore.
-// The returned score object should be used with score.Dec() and score.DecBy().
-func GetMax() *Score {
-	sc := get()
-	sc.Score = sc.GetMaxScore()
-	return sc
-}
-
-// Get returns a score object with Score equal to zero.
-// The returned score object should be used with score.Inc() and score.IncBy().
-func Get() *Score {
-	return get()
-}
-
-func get() *Score {
-	frame := callFrame()
-	testName := lastElem(frame.Function)
+func get(testName string) *Score {
 	if sc, ok := scores[testName]; ok {
 		return sc
 	}
