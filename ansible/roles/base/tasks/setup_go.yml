@@ -1,0 +1,13 @@
+---
+  - name: Define GOROOT variable
+    ansible.builtin.set_fact:
+      GOROOT: "{{ go_root }}"
+    when: GOROOT is not defined
+
+  - name: Save GOROOT configuration
+    ansible.builtin.copy:
+      content: |
+        export PATH=$PATH:{{ go_root }}/bin
+        export GO111MODULE=on
+      dest: /etc/profile.d/go.sh
+      mode: 0644

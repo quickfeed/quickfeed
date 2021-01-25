@@ -1,0 +1,28 @@
+---
+  - name: Download last version of golang
+    ansible.builtin.get_url:
+      url: "https://dl.google.com/go/$(curl https://golang.org/VERSION?m=text).linux-amd64.tar.gz"
+      dest: /tmp/go.tar.gz
+      mode: '0440'
+
+  # TODO: check checksum
+  - name: Extract go binaries
+    ansible.builtin.unarchive:
+      src: /tmp/go.tar.gz
+      dest: /usr/local
+
+  - name: Define GOARCH
+    ansible.builtin.set_fact:
+      GOARCH: "amd64"
+    when: GOARCH is not defined
+
+  - name: Define GOOS
+    ansible.builtin.set_fact:
+      GOOS: "linux"
+    when: GOOS is not defined
+
+  - name: Building Bootstrapper
+    ansible.builtin.shell: "cd {{ GOROOT }}/src && ./make.bash"
+    environment:
+      GOARCH: "{{ GOARCH }}"
+      GOOS: "{{ GOOS }}"

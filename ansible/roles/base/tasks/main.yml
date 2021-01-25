@@ -1,0 +1,56 @@
+---
+  - name: Set hostname
+    hostname:
+      name: "{{ hostname }}"
+    when: deploy_role == "prod"
+
+  - name: Install dependencies
+    ansible.builtin.package:
+      name:
+      - make
+      - sudo
+      - git
+      - vim
+      - curl
+      - protobuf
+      - protobuf-dev
+      - ca-certificates
+      - bash
+      - bash-completion
+      - jq
+      - net-tools
+      - build-base
+      - npm
+      state: present
+
+  - name: Setup Bash
+    ansible.builtin.copy:
+      content: |
+        if [ -s ~/.bashrc ]; then
+          source ~/.bashrc;
+        fi
+      dest: /etc/profile.d/bash.sh
+      mode: 0644
+
+  - name: Setup Go environment variables
+    include_tasks: setup_go.yml
+
+  - name: Check if Go is already installed
+    ansible.builtin.stat:
+      path: "{{ GOROOT }}/bin/go"
+    register: go_binary
+    failed_when: false
+
+  - name: Get current Go version
+    ansible.builtin.command: "{{ GOROOT }}/bin/go version"
+    environment:
+      GOROOT: "{{ GOROOT }}"
+    register: current_go_version
+    changed_when: false
+    failed_when: false
+    when: 
+      - go_binary.stat.exists is defined
+
+  - name: Install Go
+    include_tasks: install_go.yml
+    when: (deploy_role == "prod") and ((go_binary.stat.exists is not defined) or (current_go_version is not defined))
