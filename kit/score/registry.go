@@ -40,6 +40,8 @@ func AddSub(test interface{}, subTestName string, max, weight int) {
 
 // Max returns a score object with Score equal to MaxScore.
 // The returned score object should be used with score.Dec() and score.DecBy().
+//
+// May panic with unknown score test, if the test hasn't been added.
 func Max() *Score {
 	testName := callerTestName()
 	sc := get(testName)
@@ -49,6 +51,8 @@ func Max() *Score {
 
 // Min returns a score object with Score equal to zero.
 // The returned score object should be used with score.Inc() and score.IncBy().
+//
+// May panic with unknown score test, if the test hasn't been added.
 func Min() *Score {
 	testName := callerTestName()
 	return get(testName)
@@ -57,6 +61,8 @@ func Min() *Score {
 // MaxByName returns score object for the given test name with Score equal to MaxScore.
 // This function is meant to be used from within subtests, and in conjunction with AddSub.
 // The returned score object should be used with score.Dec() and score.DecBy().
+//
+// May panic with unknown score test, if the test hasn't been added.
 func MaxByName(testName string) *Score {
 	sc := get(testName)
 	sc.Score = sc.GetMaxScore()
@@ -66,6 +72,8 @@ func MaxByName(testName string) *Score {
 // MinByName returns a score object for the given test name with Score equal to zero.
 // This function is meant to be used from within subtests, and in conjunction with AddSub.
 // The returned score object should be used with score.Inc() and score.IncBy().
+//
+// May panic with unknown score test, if the test hasn't been added.
 func MinByName(testName string) *Score {
 	return get(testName)
 }
