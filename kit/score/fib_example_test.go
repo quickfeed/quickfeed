@@ -127,13 +127,3 @@ func TestFibonacciSubTest(t *testing.T) {
 func subTestName(prefix string, i uint) string {
 	return fmt.Sprintf("%s/%d", prefix, i)
 }
-
-// func TestFibonacciWithPanic(t *testing.T) {
-// 	// TODO(meling) make this continue
-// 	panic("hei")
-// }
-
-func TestFibonacciWithAfterPanic(t *testing.T) {
-	// TODO(meling) make this continue
-	t.Log("hallo")
-}
