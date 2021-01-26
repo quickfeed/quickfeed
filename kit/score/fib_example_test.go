@@ -2,7 +2,6 @@ package score_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/autograde/quickfeed/kit/score"
@@ -18,7 +17,7 @@ func fibonacci(n uint) uint {
 	return fibonacci(n-1) + fibonacci(n-2)
 }
 
-func TestMain(m *testing.M) {
+func init() {
 	score.Add(TestFibonacciMax, len(fibonacciTests), 20)
 	score.Add(TestFibonacciMin, len(fibonacciTests), 20)
 	for _, ft := range fibonacciTests {
@@ -27,7 +26,6 @@ func TestMain(m *testing.M) {
 	for _, ft := range fibonacciTests {
 		score.AddSub(TestFibonacciSubTest, subTestName("Min", ft.in), 1, 1)
 	}
-	os.Exit(m.Run())
 }
 
 const (

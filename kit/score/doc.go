@@ -15,10 +15,11 @@
 //   TaskWeight[i]   = Weight[i] / TotalWeight
 //   TotalScore      = sum(TaskScore[i]*TaskWeight[i]), gives {0 < TotalScore < 1}
 //
-// QuickFeed expects that tests are initialized in TestMain before test execution.
+// QuickFeed expects that tests are initialized in the init() method before test execution.
 // This is done via the score.Add() method or the score.AddSub() method as shown below.
+// Add() is used for regular tests, and AddSub() is used for subtests with individual scores.
 //
-// func TestMain(m *testing.M) {
+// func init() {
 //     score.Add(TestFibonacciMax, len(fibonacciTests), 20)
 //     score.Add(TestFibonacciMin, len(fibonacciTests), 20)
 //     for _, ft := range fibonacciTests {
@@ -27,12 +28,10 @@
 //     for _, ft := range fibonacciTests {
 //         score.AddSub(TestFibonacciSubTest, subTestName("Min", ft.in), 1, 1)
 //     }
-//     os.Exit(m.Run())
 // }
 //
-// To implement tests with scoring functions is done as follows, where score.Max()
-// returns a score object with Score equals to MaxScore, which may be decremented
-// for each test failure.
+// To implement a test with scoring, you may use score.Max() to obtain a score object
+// with Score equals to MaxScore, which may be decremented for each test failure.
 //
 // func TestFibonacciMax(t *testing.T) {
 //     sc := score.Max()

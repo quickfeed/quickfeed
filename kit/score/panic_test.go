@@ -21,8 +21,15 @@ var triangularTests = []struct {
 	{7, 28},
 }
 
-func TestPanicTriangular(t *testing.T) {
-	sc := score.NewScoreMax(t, len(triangularTests), 5)
+func init() {
+	score.Add(TestPanicTriangularBefore, len(triangularTests), 5)
+	score.Add(TestPanicTriangularPanic, len(triangularTests), 5)
+	score.Add(TestPanicTriangularAfter, len(triangularTests), 5)
+	score.Add(TestPanicHandler, len(triangularTests), 5)
+}
+
+func TestPanicTriangularBefore(t *testing.T) {
+	sc := score.Max()
 	defer sc.Print(t)
 
 	for _, test := range triangularTests {
@@ -33,12 +40,12 @@ func TestPanicTriangular(t *testing.T) {
 	}
 }
 
-func TestPanicTriangular2(t *testing.T) {
-	// This test aims to emulate what students may write, which could result in a panic.
+func TestPanicTriangularPanic(t *testing.T) {
+	// This test aims to emulate that student code submitted code may result in a panic.
 	// Hence, we do not run this as part of the CI tests.
-	// Comment t.Skip to test that TestPanicTriangular2 fails with a panic stack trace, which is expected.
+	// Comment t.Skip to test that TestPanicTriangularPanic fails with a panic stack trace, which is expected.
 	t.Skip("Skipping because it is expected to fail (see comment).")
-	sc := score.NewScoreMax(t, len(triangularTests), 5)
+	sc := score.Max()
 	defer sc.Print(t)
 
 	for _, test := range triangularTests {
@@ -49,8 +56,8 @@ func TestPanicTriangular2(t *testing.T) {
 	}
 }
 
-func TestPanicTriangular3(t *testing.T) {
-	sc := score.NewScoreMax(t, len(triangularTests), 5)
+func TestPanicTriangularAfter(t *testing.T) {
+	sc := score.Max()
 	defer sc.Print(t)
 
 	for _, test := range triangularTests {
@@ -62,11 +69,11 @@ func TestPanicTriangular3(t *testing.T) {
 }
 
 func TestPanicHandler(t *testing.T) {
-	// This test aims to emulate what students may write, which could result in a panic.
+	// This test aims to emulate that student code submitted code may result in a panic.
 	// Hence, we do not run this as part of the CI tests.
 	// Comment t.Skip to test that TestPanicHandler fails with a panic stack trace, which is expected.
 	t.Skip("Skipping because it is expected to fail (see comment).")
-	sc := score.NewScoreMax(t, len(triangularTests), 5)
+	sc := score.Max()
 	defer sc.Print(t)
 
 	for _, test := range triangularTests {
