@@ -3,6 +3,7 @@ package score
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"runtime/debug"
 	"strings"
 	"testing"
@@ -45,6 +46,14 @@ func (s *Score) DecBy(n int) {
 	} else {
 		s.Score = 0
 	}
+}
+
+// Normalize the score to the given maxScore.
+func (s *Score) Normalize(maxScore int) {
+	f := float64(maxScore) / float64(s.MaxScore)
+	normScore := float64(s.Score) * f
+	s.Score = int32(math.Round(normScore))
+	s.MaxScore = int32(maxScore)
 }
 
 // Equal returns true if sc equals other. Ignores the Secret field.
