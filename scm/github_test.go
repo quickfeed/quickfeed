@@ -12,7 +12,7 @@ import (
 const (
 	serverURL       = "https://53c51fa9.ngrok.io"
 	gitHubTestOrg   = "autograder-test"
-	gitHubTestOrgID = 30462712
+	// gitHubTestOrgID = 30462712
 	secret          = "the-secret-autograder-test"
 )
 

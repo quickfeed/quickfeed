@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	gitHubTestOrg   = "autograder-test"
+	// gitHubTestOrg   = "autograder-test"
 	gitHubTestOrgID = 30462712
 )
 
