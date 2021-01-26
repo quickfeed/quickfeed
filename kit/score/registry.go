@@ -2,7 +2,6 @@ package score
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -10,20 +9,7 @@ import (
 	"testing"
 )
 
-const (
-	secretEnvName = "QUICKFEED_SESSION_SECRET"
-)
-
-var (
-	sessionSecret string
-	scores        = make(map[string]*Score)
-)
-
-func init() {
-	sessionSecret = os.Getenv(secretEnvName)
-	// remove variable as soon as it has been read
-	_ = os.Setenv(secretEnvName, "")
-}
+var scores = make(map[string]*Score)
 
 // Add test with given max score and weight to the registry.
 func Add(test interface{}, max, weight int) {
