@@ -12,6 +12,7 @@
     ],
     "cSpell.words": [
         "Autograder",
+        "CSRF",
         "Certbot",
         "Chacon",
         "Debugf",
@@ -75,6 +76,7 @@
         "scms",
         "scorelimit",
         "scriptfile",
+        "sess",
         "shogo",
         "signup",
         "skiptests",
@@ -84,6 +86,7 @@
         "tmpl",
         "unittests",
         "unmarshalling",
+        "unmarshalls",
         "urfave",
         "xanzy",
         "xlsx"
