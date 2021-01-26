@@ -56,13 +56,13 @@ func (s *Score) Equal(other *Score) bool {
 		s.Weight == other.Weight
 }
 
-// PassedTests returns a string with the following format:
-// "TestName: 2/10 test cases passed".
-func (s *Score) PassedTests() string {
-	return fmt.Sprintf("%s: %d/%d test cases passed", s.TestName, s.Score, s.MaxScore)
+// RelativeScore returns a string with the following format:
+// "TestName: score = x/y = s".
+func (s *Score) RelativeScore() string {
+	return fmt.Sprintf("%s: score = %d/%d = %.1f", s.TestName, s.Score, s.MaxScore, float32(s.Score)/float32(s.MaxScore))
 }
 
-// Print prints both the JSON secret string and emits the number of test cases passed.
+// Print prints both the JSON secret string and emits the relative score for this test.
 // If a test panics, the score will be set to zero, and a panic message will be emitted.
 // Note that, if subtests are used, each subtest must defer call the PanicHandler method
 // to ensure that panics are caught and handled appropriately.
@@ -73,8 +73,7 @@ func (s *Score) Print(t *testing.T) {
 	}
 	// print JSON score object: {"Secret":"my secret code","TestName": ...}
 	fmt.Println(s.json())
-	// print: TestName: x/y test cases passed
-	fmt.Println(s)
+	fmt.Println(s.RelativeScore())
 }
 
 // PanicHandler recovers from a panicking test, resets the score to zero and
