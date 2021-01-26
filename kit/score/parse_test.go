@@ -49,7 +49,11 @@ func TestParseJSONStrings(t *testing.T) {
 		sc, err := score.Parse(s.in, theSecret)
 		var expectedScore *score.Score
 		if s.max > 0 {
-			expectedScore = score.NewScore(t, s.max, s.weight)
+			expectedScore = &score.Score{
+				TestName: t.Name(),
+				MaxScore: int32(s.max),
+				Weight:   int32(s.weight),
+			}
 		}
 		if sc != expectedScore || err != s.err {
 			if !expectedScore.Equal(sc) || err != s.err {
