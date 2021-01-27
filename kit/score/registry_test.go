@@ -44,7 +44,6 @@ func TestTestNamePanic(t *testing.T) {
 					if len(test.want) == 0 {
 						t.Errorf("testName('%s')='%s', not expected to fail", test.inName, out)
 					}
-					t.Logf("recovered %v", r)
 				}
 			}()
 			tName := testName(test.in)
