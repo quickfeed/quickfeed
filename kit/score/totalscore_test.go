@@ -80,7 +80,7 @@ func TestSumGrade(t *testing.T) {
 }
 
 var (
-	// copied from string constants in score package
+	// Copied from string constants in score package
 	errScoreInterval = errors.New("Score must be in the interval [0, MaxScore]")
 	errMaxScore      = errors.New("MaxScore must be greater than 0")
 	errWeight        = errors.New("Weight must be greater than 0")

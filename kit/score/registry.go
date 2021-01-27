@@ -19,6 +19,8 @@ func Clear() {
 }
 
 // PrintTestInfo prints JSON representation of all registered tests.
+// This should be called after test registration has been completed,
+// but before test execution. This can be done in TestMain.
 func PrintTestInfo() {
 	for _, s := range scores {
 		fmt.Println(s.json())

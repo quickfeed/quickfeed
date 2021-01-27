@@ -1,4 +1,5 @@
 // Package score provides support for scoring tests.
+//
 // It is intended to be used in concert with the QuickFeed web service,
 // which automates execution and scoring of student implemented assignments
 // aimed to pass a given set of tests.
@@ -30,11 +31,20 @@
 //     }
 // }
 //
+// In addition, TestMain() should call score.PrintTestInfo() before running the tests
+// to ensure that all tests are registered and will be picked up by QuickFeed.
+//
+// func TestMain(m *testing.M) {
+//     score.PrintTestInfo()
+//     os.Exit(m.Run())
+// }
+//
 // To implement a test with scoring, you may use score.Max() to obtain a score object
 // with Score equals to MaxScore, which may be decremented for each test failure.
 //
 // func TestFibonacciMax(t *testing.T) {
 //     sc := score.Max()
+//     defer sc.Print(t)
 //     for _, ft := range fibonacciTests {
 //         out := fibonacci(ft.in)
 //         if out != ft.want {
@@ -48,6 +58,7 @@
 //
 // func TestFibonacciMin(t *testing.T) {
 //     sc := score.Min()
+//     defer sc.Print(t)
 //     for _, ft := range fibonacciTests {
 //         out := fibonacci(ft.in)
 //         if out == ft.want {
@@ -55,5 +66,7 @@
 //         }
 //     }
 // }
+//
+// Please see package score/testdata/sequence for other usage examples.
 //
 package score

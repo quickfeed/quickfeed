@@ -56,7 +56,7 @@ func (s *Score) Normalize(maxScore int) {
 	s.MaxScore = int32(maxScore)
 }
 
-// Equal returns true if sc equals other. Ignores the Secret field.
+// Equal returns true if s equals other. Ignores the Secret field.
 func (s *Score) Equal(other *Score) bool {
 	return other != nil &&
 		s.TestName == other.TestName &&
