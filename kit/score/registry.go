@@ -18,6 +18,13 @@ func Clear() {
 	scores = make(map[string]*Score)
 }
 
+// PrintTestInfo prints JSON representation of all registered tests.
+func PrintTestInfo() {
+	for _, s := range scores {
+		fmt.Println(s.json())
+	}
+}
+
 // Add test with given max score and weight to the registry.
 func Add(test interface{}, max, weight int) {
 	add(testName(test), max, weight)

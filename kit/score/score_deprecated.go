@@ -62,6 +62,7 @@ func (s *Score) WriteString(w io.Writer) {
 }
 
 // WriteJSON writes the JSON representation of s to w.
+//
 // Deprecated: Do not use this function; it will be removed in the future.
 // Use Print() instead to replace both WriteString() and WriteJSON().
 //
