@@ -71,7 +71,7 @@ func (s *Score) RelativeScore() string {
 	return fmt.Sprintf("%s: score = %d/%d = %.1f", s.TestName, s.Score, s.MaxScore, float32(s.Score)/float32(s.MaxScore))
 }
 
-// Print prints both the JSON secret string and emits the relative score for this test.
+// Print prints a JSON representation of the score that can be picked up by QuickFeed.
 // To ensure that panic message and stack trace is printed, this method must be called via defer.
 // If a test panics, the score will be set to zero, and a panic message will be emitted.
 // Note that, if subtests are used, each subtest must defer call the PanicHandler method
@@ -83,7 +83,6 @@ func (s *Score) Print(t *testing.T) {
 	}
 	// print JSON score object: {"Secret":"my secret code","TestName": ...}
 	fmt.Println(s.json())
-	fmt.Println(s.RelativeScore())
 }
 
 // PanicHandler recovers from a panicking test, resets the score to zero and
