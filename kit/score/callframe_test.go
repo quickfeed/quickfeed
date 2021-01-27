@@ -1,48 +1,85 @@
 package score
 
 import (
+	"path/filepath"
 	"testing"
+)
+
+const (
+	pkg = "github.com/autograde/quickfeed/kit/score"
 )
 
 func TestCallFrame(t *testing.T) {
 	frame := callFrame()
-	t.Logf("- %s:%d %s\n", frame.File, frame.Line, frame.Function)
+	expectedFunc := pkg + "." + t.Name()
+	if frame.Function != expectedFunc {
+		t.Errorf("callFrame().Function = %s, expected %s", frame.Function, expectedFunc)
+	}
+	if filepath.Base(frame.File) != "callframe_test.go" {
+		t.Errorf("callFrame().File = %s, expected %s", filepath.Base(frame.File), "callframe_test.go")
+	}
+	expectedLine := 13
+	if frame.Line != expectedLine {
+		t.Errorf("callFrame().Line = %d, expected %d", frame.Line, expectedLine)
+	}
 }
 
 func TestFrame(t *testing.T) {
 	frames := unwindCallFrames()
-	for _, frame := range frames {
-		t.Logf("- %s:%d %s\n", frame.File, frame.Line, frame.Function)
+	if len(frames) != 1 {
+		t.Errorf("len(frames)=%d, expected 1", len(frames))
+	}
+	expectedFunc := pkg + "." + t.Name()
+	if frames[0].Function != expectedFunc {
+		t.Errorf("unwindCallFrames().Function = %s, expected %s", frames[0].Function, expectedFunc)
 	}
 }
 
 func TestFrame2(t *testing.T) {
-	t.Run("SubTest2", func(t *testing.T) {
+	mainTest := t.Name()
+	t.Run("SubTest", func(t *testing.T) {
 		frames := unwindCallFrames()
-		for _, frame := range frames {
-			t.Logf("- %s:%d %s\n", frame.File, frame.Line, frame.Function)
+		if len(frames) != 1 {
+			t.Errorf("len(frames)=%d, expected 1", len(frames))
+		}
+		expectedFunc := pkg + "." + mainTest + ".func1"
+		if frames[0].Function != expectedFunc {
+			t.Errorf("unwindCallFrames().Function = %s, expected %s", frames[0].Function, expectedFunc)
 		}
 	})
 }
 
 func TestFrame3(t *testing.T) {
-	t.Run("SubTest3", func(t *testing.T) {
+	mainTest := t.Name()
+	t.Run("SubTest", func(t *testing.T) {
 		t.Run("SubSubTest1", func(t *testing.T) {
 			frames := unwindCallFrames()
-			for _, frame := range frames {
-				t.Logf("- %s:%d %s\n", frame.File, frame.Line, frame.Function)
+			if len(frames) != 1 {
+				t.Errorf("len(frames)=%d, expected 1", len(frames))
+			}
+			expectedFunc := pkg + "." + mainTest + ".func1.1"
+			if frames[0].Function != expectedFunc {
+				t.Errorf("unwindCallFrames().Function = %s, expected %s", frames[0].Function, expectedFunc)
 			}
 		})
 		t.Run("SubSubTest2", func(t *testing.T) {
 			frames := unwindCallFrames()
-			for _, frame := range frames {
-				t.Logf("- %s:%d %s\n", frame.File, frame.Line, frame.Function)
+			if len(frames) != 1 {
+				t.Errorf("len(frames)=%d, expected 1", len(frames))
+			}
+			expectedFunc := pkg + "." + mainTest + ".func1.2"
+			if frames[0].Function != expectedFunc {
+				t.Errorf("unwindCallFrames().Function = %s, expected %s", frames[0].Function, expectedFunc)
 			}
 		})
 		t.Run("SubSubTest3", func(t *testing.T) {
 			frames := unwindCallFrames()
-			for _, frame := range frames {
-				t.Logf("- %s:%d %s\n", frame.File, frame.Line, frame.Function)
+			if len(frames) != 1 {
+				t.Errorf("len(frames)=%d, expected 1", len(frames))
+			}
+			expectedFunc := pkg + "." + mainTest + ".func1.3"
+			if frames[0].Function != expectedFunc {
+				t.Errorf("unwindCallFrames().Function = %s, expected %s", frames[0].Function, expectedFunc)
 			}
 		})
 	})
