@@ -1,14 +1,23 @@
 package score
 
+const (
+	errScoreInterval = "Score must be in the interval [0, MaxScore]"
+	errMaxScore      = "MaxScore must be greater than 0"
+	errWeight        = "Weight must be greater than 0"
+)
+
 // Validate returns an error if one of the recorded score objects are invalid.
 // Otherwise, nil is returned.
 func Validate() error {
 	for testName, ts := range scores {
-		if ts.MaxScore <= 0 || ts.Weight <= 0 {
-			return errMsg(testName, "Both MaxScore and Weight must be greater than 0")
+		if ts.MaxScore <= 0 {
+			return errMsg(testName, errMaxScore)
 		}
-		if ts.Score <= 0 || ts.Score > ts.MaxScore {
-			return errMsg(testName, "Score must be in the interval [0, MaxScore]")
+		if ts.Weight <= 0 {
+			return errMsg(testName, errWeight)
+		}
+		if ts.Score < 0 || ts.Score > ts.MaxScore {
+			return errMsg(testName, errScoreInterval)
 		}
 	}
 	return nil
@@ -26,7 +35,6 @@ func Sum() uint32 {
 		score = append(score, float32(ts.Score))
 		max = append(max, float32(ts.MaxScore))
 	}
-
 	total := float32(0)
 	for i := 0; i < len(score); i++ {
 		if score[i] > max[i] {
