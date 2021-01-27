@@ -1,15 +1,26 @@
 package score
 
-// Total returns the total score computed over the set of scores provided.
+// Validate returns an error if one of the recorded score objects are invalid.
+// Otherwise, nil is returned.
+func Validate() error {
+	for testName, ts := range scores {
+		if ts.MaxScore <= 0 || ts.Weight <= 0 {
+			return errMsg(testName, "Both MaxScore and Weight must be greater than 0")
+		}
+		if ts.Score <= 0 || ts.Score > ts.MaxScore {
+			return errMsg(testName, "Score must be in the interval [0, MaxScore]")
+		}
+	}
+	return nil
+}
+
+// Sum returns the total score computed over the set of recorded scores.
 // The total is a grade in the range 0-100.
-func Total(scores []*Score) uint32 {
+// This method must only be called after Validate has returned nil.
+func Sum() uint32 {
 	totalWeight := float32(0)
 	var max, score, weight []float32
 	for _, ts := range scores {
-		if ts.MaxScore <= 0 {
-			// ignore assignments with 0 max score
-			continue
-		}
 		totalWeight += float32(ts.Weight)
 		weight = append(weight, float32(ts.Weight))
 		score = append(score, float32(ts.Score))
@@ -23,6 +34,5 @@ func Total(scores []*Score) uint32 {
 		}
 		total += ((score[i] / max[i]) * (weight[i] / totalWeight))
 	}
-
 	return uint32(total * 100)
 }

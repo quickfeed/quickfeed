@@ -49,8 +49,10 @@ func NewScoreMax(t *testing.T, max, weight int) *Score {
 }
 
 // WriteString writes the string representation of s to w.
+//
 // Deprecated: Do not use this function; it will be removed in the future.
 // Use Print() instead to replace both WriteString() and WriteJSON().
+//
 func (s *Score) WriteString(w io.Writer) {
 	if r := recover(); r != nil {
 		s.Score = 0
@@ -62,10 +64,42 @@ func (s *Score) WriteString(w io.Writer) {
 // WriteJSON writes the JSON representation of s to w.
 // Deprecated: Do not use this function; it will be removed in the future.
 // Use Print() instead to replace both WriteString() and WriteJSON().
+//
 func (s *Score) WriteJSON(w io.Writer) {
 	if r := recover(); r != nil {
 		s.Score = 0
 		fmt.Fprintf(w, "******************\n%s panicked:\n%s\n******************\n", s.TestName, r)
 	}
 	fmt.Fprintf(w, "\n%s\n", s.json())
+}
+
+// Total returns the total score computed over the set of scores provided.
+// The total is a grade in the range 0-100.
+//
+// Deprecated: Do not use this function; it will be removed in the future.
+// Use Sum() instead.
+//
+func Total(scores []*Score) uint32 {
+	totalWeight := float32(0)
+	var max, score, weight []float32
+	for _, ts := range scores {
+		if ts.MaxScore <= 0 {
+			// ignore assignments with 0 max score
+			continue
+		}
+		totalWeight += float32(ts.Weight)
+		weight = append(weight, float32(ts.Weight))
+		score = append(score, float32(ts.Score))
+		max = append(max, float32(ts.MaxScore))
+	}
+
+	total := float32(0)
+	for i := 0; i < len(score); i++ {
+		if score[i] > max[i] {
+			score[i] = max[i]
+		}
+		total += ((score[i] / max[i]) * (weight[i] / totalWeight))
+	}
+
+	return uint32(total * 100)
 }

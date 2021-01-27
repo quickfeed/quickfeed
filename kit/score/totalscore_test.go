@@ -1,6 +1,7 @@
 package score_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/autograde/quickfeed/kit/score"
@@ -26,15 +27,26 @@ func setScore(points, max, w int) *scoreData {
 	return &scoreData{points: points, max: max, weight: w}
 }
 
-func TestTotal(t *testing.T) {
-	for _, s := range scores {
-		allScores := make([]*score.Score, 0)
-		for _, sd := range s.in {
-			sc := score.NewScore(t, sd.max, sd.weight)
-			sc.IncBy(sd.points)
-			allScores = append(allScores, sc)
+func subName(max, weight, i, j int) string {
+	return fmt.Sprintf("Max%d/W%d/%d/%d", max, weight, i, j)
+}
+
+func TestSum(t *testing.T) {
+	// This loop should normally be invoked in init()
+	for i, s := range scores {
+		for j, sd := range s.in {
+			score.AddSub(TestSum, subName(sd.max, sd.weight, i, j), sd.max, sd.weight)
 		}
-		tot := score.Total(allScores)
+	}
+
+	for i, s := range scores {
+		for j, sd := range s.in {
+			t.Run(subName(sd.max, sd.weight, i, j), func(t *testing.T) {
+				sc := score.MinByName(t.Name())
+				sc.IncBy(sd.points)
+			})
+		}
+		tot := score.Sum()
 		if tot != s.out {
 			t.Errorf("Got: %d, Want: %d", tot, s.out)
 		}
