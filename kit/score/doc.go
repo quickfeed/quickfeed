@@ -21,8 +21,9 @@
 // Add() is used for regular tests, and AddSub() is used for subtests with individual scores.
 //
 // func init() {
-//     score.Add(TestFibonacciMax, len(fibonacciTests), 20)
-//     score.Add(TestFibonacciMin, len(fibonacciTests), 20)
+//     max, weight := len(fibonacciTests), 20
+//     score.Add(TestFibonacciMax, max, weight)
+//     score.Add(TestFibonacciMin, max, weight)
 //     for _, ft := range fibonacciTests {
 //         score.AddSub(TestFibonacciSubTest, subTestName("Max", ft.in), 1, 1)
 //     }
@@ -41,6 +42,8 @@
 //
 // To implement a test with scoring, you may use score.Max() to obtain a score object
 // with Score equals to MaxScore, which may be decremented for each test failure.
+// Note that sc.Print(t) should be called with a defer to ensure that it gets executed
+// even if the test panics.
 //
 // func TestFibonacciMax(t *testing.T) {
 //     sc := score.Max()
