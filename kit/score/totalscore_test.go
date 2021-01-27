@@ -14,15 +14,16 @@ type scoreData struct {
 }
 
 var scores = []struct {
-	in  []*scoreData
-	out uint32
+	in    []*scoreData
+	out   uint32
+	grade string
 }{
-	{[]*scoreData{setScore(10, 10, 1), setScore(5, 5, 1), setScore(15, 15, 1)}, 100},
-	{[]*scoreData{setScore(5, 10, 1), setScore(5, 5, 1), setScore(20, 40, 1)}, 66},
-	{[]*scoreData{setScore(5, 10, 1), setScore(5, 10, 1), setScore(20, 40, 1)}, 50},
-	{[]*scoreData{setScore(10, 10, 2), setScore(5, 10, 1), setScore(20, 40, 1)}, 75},
-	{[]*scoreData{setScore(0, 10, 2), setScore(0, 10, 1), setScore(0, 40, 1)}, 0},
-	{[]*scoreData{}, 0},
+	{[]*scoreData{setScore(10, 10, 1), setScore(5, 5, 1), setScore(15, 15, 1)}, 100, "A"},
+	{[]*scoreData{setScore(5, 10, 1), setScore(5, 5, 1), setScore(20, 40, 1)}, 66, "C"},
+	{[]*scoreData{setScore(5, 10, 1), setScore(5, 10, 1), setScore(20, 40, 1)}, 50, "D"},
+	{[]*scoreData{setScore(10, 10, 2), setScore(5, 10, 1), setScore(20, 40, 1)}, 75, "C"},
+	{[]*scoreData{setScore(0, 10, 2), setScore(0, 10, 1), setScore(0, 40, 1)}, 0, "F"},
+	{[]*scoreData{}, 0, "F"},
 }
 
 func setScore(points, max, w int) *scoreData {
@@ -47,7 +48,33 @@ func TestSum(t *testing.T) {
 		}
 		tot := score.Sum()
 		if tot != s.out {
-			t.Errorf("Got: %d, Want: %d", tot, s.out)
+			t.Errorf("Sum() = %d, expected %d", tot, s.out)
+		}
+	}
+}
+
+func TestSumGrade(t *testing.T) {
+	g := score.GradingScheme{
+		Name:        "C Bias (UiS Scheme)",
+		GradePoints: []uint32{90, 80, 60, 50, 40, 0},
+		GradeNames:  []string{"A", "B", "C", "D", "E", "F"},
+	}
+
+	for i, s := range scores {
+		// Clear other scores before using Sum() again.
+		score.Clear()
+		for j, sd := range s.in {
+			// AddSub is normally called from init(), but here we are testing Sum() and Grade().
+			score.AddSub(TestSumGrade, subName(sd.points, sd.max, sd.weight, i, j), sd.max, sd.weight)
+			t.Run(subName(sd.points, sd.max, sd.weight, i, j), func(t *testing.T) {
+				sc := score.MinByName(t.Name())
+				sc.IncBy(sd.points)
+			})
+		}
+		tot := score.Sum()
+		grade := g.Grade(tot)
+		if grade != s.grade {
+			t.Errorf("Grade(%d) = %s, expected %s", tot, grade, s.grade)
 		}
 	}
 }
