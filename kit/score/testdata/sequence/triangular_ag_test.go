@@ -9,12 +9,13 @@ import (
 
 func init() {
 	// Reduce max score by 1 since the first test-case ({0, 0}) always passes, which gave free points.
-	score.Add(TestTriangularAG, len(triangularTestsAG)-1, 5)
-	score.Add(TestTriangularRecurrenceAG, len(triangularTestsAG)-1, 5)
-	score.Add(TestTriangularFormulaAG, len(triangularTestsAG)-1, 5)
+	max, weight := len(triangularTestsAG)-1, 5
+	score.Add(TestTriangularAG, max, weight)
+	score.Add(TestTriangularRecurrenceAG, max, weight)
+	score.Add(TestTriangularFormulaAG, max, weight)
 	// Here is alternative strategy using subtests
 	for name := range funcs {
-		score.AddSub(TestTriangularSubTestAG, name, len(triangularTestsAG)-1, 5)
+		score.AddSub(TestTriangularSubTestAG, name, max, weight)
 	}
 }
 
