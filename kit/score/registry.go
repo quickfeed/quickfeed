@@ -98,6 +98,12 @@ func add(testName string, max, weight int) {
 	if _, found := scores[testName]; found {
 		panic(errMsg(testName, "duplicate score test"))
 	}
+	if max < 1 {
+		panic(errMsg(testName, "max must be greater than 0"))
+	}
+	if weight < 1 {
+		panic(errMsg(testName, "weight must be greater than 0"))
+	}
 	sc := &Score{
 		Secret:   sessionSecret,
 		TestName: testName,
