@@ -72,6 +72,7 @@ func (s *Score) RelativeScore() string {
 }
 
 // Print prints both the JSON secret string and emits the relative score for this test.
+// To ensure that panic message and stack trace is printed, this method must be called via defer.
 // If a test panics, the score will be set to zero, and a panic message will be emitted.
 // Note that, if subtests are used, each subtest must defer call the PanicHandler method
 // to ensure that panics are caught and handled appropriately.
