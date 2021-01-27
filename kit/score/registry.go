@@ -11,6 +11,13 @@ import (
 
 var scores = make(map[string]*Score)
 
+// Clear makes a new map for recording scores.
+// This method is only provided for testing purposes and should not be used.
+// It may be removed in the future.
+func Clear() {
+	scores = make(map[string]*Score)
+}
+
 // Add test with given max score and weight to the registry.
 func Add(test interface{}, max, weight int) {
 	add(testName(test), max, weight)

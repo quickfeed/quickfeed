@@ -32,15 +32,12 @@ func subName(max, weight, i, j int) string {
 }
 
 func TestSum(t *testing.T) {
-	// This loop should normally be invoked in init()
 	for i, s := range scores {
+		// Clear the other scores before using Sum() again.
+		score.Clear()
 		for j, sd := range s.in {
+			// AddSub is normally called from init(), but for testing Sum() this was difficult.
 			score.AddSub(TestSum, subName(sd.max, sd.weight, i, j), sd.max, sd.weight)
-		}
-	}
-
-	for i, s := range scores {
-		for j, sd := range s.in {
 			t.Run(subName(sd.max, sd.weight, i, j), func(t *testing.T) {
 				sc := score.MinByName(t.Name())
 				sc.IncBy(sd.points)
