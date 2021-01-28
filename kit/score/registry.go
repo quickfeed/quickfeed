@@ -110,8 +110,23 @@ func errMsg(testFn interface{}, msg string) error {
 	return fmt.Errorf("%s:%d: %s: %v", filepath.Base(frame.File), frame.Line, msg, testFn)
 }
 
+func stripPkg(name string) string {
+	start := strings.LastIndex(name, "/") + 1
+	dot := strings.Index(name[start:], ".") + 1
+	return name[start+dot:]
+}
+
 func lastElem(name string) string {
 	return name[strings.LastIndex(name, ".")+1:]
+}
+
+func firstElem(name string) string {
+	end := strings.Index(name, ".")
+	if end < 0 {
+		// No dots found in function name
+		return name
+	}
+	return name[:end]
 }
 
 func add(testName string, max, weight int) {
@@ -134,6 +149,13 @@ func add(testName string, max, weight int) {
 }
 
 func get(testName string) *Score {
+	callingTestName := callFrame()
+	testFnName := stripPkg(callingTestName.Function)
+	rootTestName := firstElem(testFnName)
+	if !strings.HasPrefix(testName, rootTestName) {
+		// Only the registered Test function can call the lookup functions
+		panic(errMsg(testName, "unauthorized lookup"))
+	}
 	if sc, ok := scores[testName]; ok {
 		return sc
 	}

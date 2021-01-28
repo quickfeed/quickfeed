@@ -2,6 +2,8 @@ package score_test
 
 import (
 	"fmt"
+	"log"
+	"strings"
 	"testing"
 
 	"github.com/autograde/quickfeed/kit/score"
@@ -124,4 +126,39 @@ func TestFibonacciSubTest(t *testing.T) {
 
 func subTestName(prefix string, i uint) string {
 	return fmt.Sprintf("%s/%d", prefix, i)
+}
+
+func TestStudentAttackCode(t *testing.T) {
+	tests := []struct {
+		id, name, test string
+		fn             func(string) *score.Score
+		want           string
+	}{
+		{id: "1", name: "MaxByName", test: "TestFibonacciMax", fn: score.MaxByName, want: "unauthorized lookup: TestFibonacciMax"},
+		{id: "2", name: "MaxByName", test: "TestFibonacciMin", fn: score.MaxByName, want: "unauthorized lookup: TestFibonacciMin"},
+		{id: "3", name: "MaxByName", test: "TestFibonacciSubTest", fn: score.MaxByName, want: "unauthorized lookup: TestFibonacciSubTest"},
+		{id: "4", name: "MaxByName", test: "TestStudentAttackCode", fn: score.MaxByName, want: "unknown score test: TestStudentAttackCode"},
+		{id: "1", name: "MinByName", test: "TestFibonacciMax", fn: score.MinByName, want: "unauthorized lookup: TestFibonacciMax"},
+		{id: "2", name: "MinByName", test: "TestFibonacciMin", fn: score.MinByName, want: "unauthorized lookup: TestFibonacciMin"},
+		{id: "3", name: "MinByName", test: "TestFibonacciSubTest", fn: score.MinByName, want: "unauthorized lookup: TestFibonacciSubTest"},
+		{id: "4", name: "MinByName", test: "TestStudentAttackCode", fn: score.MinByName, want: "unknown score test: TestStudentAttackCode"},
+	}
+	for _, test := range tests {
+		t.Run(test.name+"/"+test.id, func(t *testing.T) {
+			defer func() {
+				if r := recover(); r != nil {
+					out := strings.TrimSpace(fmt.Sprintln(r))
+					// ignore the file name and line number in the prefix of out
+					if !strings.HasSuffix(out, test.want) {
+						t.Errorf("%s('%s')='%s', expected '%s'", test.name, test.test, out, test.want)
+					}
+					if len(test.want) == 0 {
+						t.Errorf("%s('%s')='%s', not expected to fail", test.name, test.test, out)
+					}
+				}
+			}()
+			sc := test.fn(test.test)
+			log.Fatalf("Should never be reached: %v", sc)
+		})
+	}
 }
