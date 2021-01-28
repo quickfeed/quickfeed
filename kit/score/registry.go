@@ -28,6 +28,8 @@ func PrintTestInfo() {
 }
 
 // Add test with given max score and weight to the registry.
+//
+// Will panic if the test has already been registered or if max or weight is non-positive.
 func Add(test interface{}, max, weight int) {
 	add(testName(test), max, weight)
 }
@@ -35,6 +37,8 @@ func Add(test interface{}, max, weight int) {
 // AddSub test with given max score and weight to the registry.
 // This function should be used to register subtests, and should be used in
 // conjunction with MaxByName and MinByName called from within a subtest.
+//
+// Will panic if the test has already been registered or if max or weight is non-positive.
 func AddSub(test interface{}, subTestName string, max, weight int) {
 	tstName := fmt.Sprintf("%s/%s", testName(test), subTestName)
 	add(tstName, max, weight)
@@ -43,7 +47,7 @@ func AddSub(test interface{}, subTestName string, max, weight int) {
 // Max returns a score object with Score equal to MaxScore.
 // The returned score object should be used with score.Dec() and score.DecBy().
 //
-// May panic with unknown score test, if the test hasn't been added.
+// Will panic with unknown score test, if the test hasn't been added.
 func Max() *Score {
 	testName := callerTestName()
 	sc := get(testName)
@@ -54,7 +58,7 @@ func Max() *Score {
 // Min returns a score object with Score equal to zero.
 // The returned score object should be used with score.Inc() and score.IncBy().
 //
-// May panic with unknown score test, if the test hasn't been added.
+// Will panic with unknown score test, if the test hasn't been added.
 func Min() *Score {
 	testName := callerTestName()
 	return get(testName)
@@ -64,7 +68,7 @@ func Min() *Score {
 // This function is meant to be used from within subtests, and in conjunction with AddSub.
 // The returned score object should be used with score.Dec() and score.DecBy().
 //
-// May panic with unknown score test, if the test hasn't been added.
+// Will panic with unknown score test, if the test hasn't been added.
 func MaxByName(testName string) *Score {
 	sc := get(testName)
 	sc.Score = sc.GetMaxScore()
@@ -75,7 +79,7 @@ func MaxByName(testName string) *Score {
 // This function is meant to be used from within subtests, and in conjunction with AddSub.
 // The returned score object should be used with score.Inc() and score.IncBy().
 //
-// May panic with unknown score test, if the test hasn't been added.
+// Will panic with unknown score test, if the test hasn't been added.
 func MinByName(testName string) *Score {
 	return get(testName)
 }
