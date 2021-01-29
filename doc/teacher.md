@@ -66,7 +66,7 @@ To turn off such notifications for all your organizations, you can follow these 
 2. Uncheck Automatically watch repositories
 
 You can find more details about alternative ways to turn off notifications [here](https://stackoverflow.com/questions/25108169/how-do-i-turn-off-automatic-notification-subscription-for-new-repositories-in-a).
-However, it appears there is no per-organization approach to turn of notifications, in case you do want to receive notification for some of your other organizations.
+However, it appears there is no per-organization approach to turn off notifications, in case you do want to receive notification for some of your other organizations.
 
 ## Course
 
