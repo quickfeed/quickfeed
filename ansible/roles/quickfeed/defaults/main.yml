@@ -6,8 +6,7 @@ autograder_home: /home/autograder
 quickfeed_root: /home/autograder/quickfeed
 quickfeed_ui_root: /home/autograder/quickfeed/public
 quickfeed_bin: /home/autograder/go/bin
-# quickfeed_repo: https://github.com/autograde/quickfeed.git
-quickfeed_repo: https://github.com/r0qs/quickfeed.git
+quickfeed_repo: https://github.com/autograde/quickfeed.git
 quickfeed_branch: dev-tooling
 
 github_key: <ghkey>
