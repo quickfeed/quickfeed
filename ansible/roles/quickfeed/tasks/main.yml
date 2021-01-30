@@ -96,3 +96,11 @@
       PATH: "{{ PATH }}"
       GOPATH: "{{ GOPATH }}"
       GO111MODULE: "{{ GO111MODULE }}"
+
+  - name: Build gosecret command
+    become_user: "{{ autograder_user }}"
+    ansible.builtin.shell: "cd {{ quickfeed_root }} && go build -o {{ GOPATH }}/bin/gosecret ./cmd/gosecret"
+    environment:
+      PATH: "{{ PATH }}"
+      GOPATH: "{{ GOPATH }}"
+      GO111MODULE: "{{ GO111MODULE }}"
