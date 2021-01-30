@@ -12,6 +12,6 @@ quickfeed_bin: /home/autograder/go/bin
 quickfeed_repo: https://github.com/r0qs/quickfeed.git
 quickfeed_branch: dev-tooling
 
-# Define the real values in the production config that should never be commited.
+# Define the real values in the production config that should never be committed.
 quickfeed_github_key: <ghkey>
 quickfeed_github_secret: <ghsecret>

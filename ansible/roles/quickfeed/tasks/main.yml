@@ -39,7 +39,7 @@
       GO111MODULE: "on"
     when: GO111MODULE is not defined
 
-  # go deps
+  # go dependencies
   - name: Get Go dependencies packages
     become_user: "{{ autograder_user }}"
     ansible.builtin.command: go get -u {{ item }}
