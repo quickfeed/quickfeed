@@ -6,9 +6,9 @@ quickfeed_user: autograder
 quickfeed_group: autograder
 quickfeed_home: /home/autograder
 
-quickfeed_root: /home/autograder/quickfeed
-quickfeed_ui_root: /home/autograder/quickfeed/public
-quickfeed_bin: /home/autograder/go/bin
+quickfeed_root: {{ quickfeed_home }}/quickfeed
+quickfeed_ui_root: {{ quickfeed_root }}/public
+quickfeed_bin: {{ quickfeed_home }}/go/bin
 quickfeed_repo: https://github.com/r0qs/quickfeed.git
 quickfeed_branch: dev-tooling
 
