@@ -1,0 +1,16 @@
+[Unit]
+Description=Quickfeed daemon
+After=network.target
+
+[Service]
+Environment="QUICKFEED_HOME={{ quickfeed_root }}"
+ExecStart= {{ quickfeed_bin }}/quickfeed -service.url {{ quickfeed_endpoint }} -database.file {{ quickfeed_root }}/ag.db -http.addr :3005 -http.public {{ quickfeed_root }}/public
+PIDFile=/var/lib/quickfeed/quickfeed.pid
+User={{ autograder_user }}
+Group={{ autograder_group }}
+Restart=always
+RestartSec=5s
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
