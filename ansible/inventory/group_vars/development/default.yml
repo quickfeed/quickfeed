@@ -1,2 +1,4 @@
 ---
 docker_build: true
+endpoint: dev.itest.run
+ag_port: 8090

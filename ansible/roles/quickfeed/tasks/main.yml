@@ -11,31 +11,30 @@
       group: "{{ autograder_group }}"
       shell: /bin/bash
 
-  - name: Source Go binaries
-    become_user: "{{ autograder_user }}"
-    ansible.builtin.shell: source /etc/profile.d/go.sh
-    args:
-      executable: /bin/bash
-
   - name: Setup GOPATH for {{ autograder_user }}
     become_user: "{{ autograder_user }}"
     ansible.builtin.copy:
       content: |
         export GOPATH={{ autograder_home }}/go
-        export GOBIN=$GOPATH/bin
-        export PATH=$PATH:$GOBIN
+        export PATH=$PATH:$GOPATH/bin
         export GO111MODULE=on
       dest: "{{ autograder_home }}/.bashrc"
       mode: 0644
 
-  - name: Define GOPATH variable
+  - name: Define GOPATH facts
+    become_user: "{{ autograder_user }}"
     ansible.builtin.set_fact:
       GOPATH: "{{ autograder_home }}/go"
-    when:
-      - GOROOT is defined
-      - GOPATH is not defined
+    when: GOPATH is not defined
   
-  - name: Define GO111MODULE variable
+  - name: Define PATH facts
+    become_user: "{{ autograder_user }}"
+    ansible.builtin.set_fact:
+      PATH: "{{ ansible_env.PATH }}:{{ GOPATH }}/bin"
+    when: GOPATH is defined
+
+  - name: Define GO111MODULE facts
+    become_user: "{{ autograder_user }}"
     ansible.builtin.set_fact:
       GO111MODULE: "on"
     when: GO111MODULE is not defined
@@ -45,11 +44,10 @@
     become_user: "{{ autograder_user }}"
     ansible.builtin.command: go get -u {{ item }}
     environment:
-      GOROOT: "{{ GOROOT }}"
+      PATH: "{{ PATH }}"
       GOPATH: "{{ GOPATH }}"
       GO111MODULE: "{{ GO111MODULE }}"
     with_items: "{{ go_dependencies }}"
-    changed_when: false
 
   # grpcweb
   - name: Set facts for grpcweb package
@@ -65,7 +63,6 @@
 
   # quickfeed
   - name: Clone quickfeed source
-    become: yes
     become_user: "{{ autograder_user }}"
     ansible.builtin.git:
       repo: "{{ quickfeed_repo }}"
@@ -88,7 +85,7 @@
     become_user: "{{ autograder_user }}"
     ansible.builtin.shell: "cd {{ quickfeed_root }} && go list && make proto"
     environment:
-      GOROOT: "{{ GOROOT }}"
+      PATH: "{{ PATH }}"
       GOPATH: "{{ GOPATH }}"
       GO111MODULE: "{{ GO111MODULE }}"
 
@@ -96,6 +93,6 @@
     become_user: "{{ autograder_user }}"
     ansible.builtin.shell: "cd {{ quickfeed_root }} && make install"
     environment:
-      GOROOT: "{{ GOROOT }}"
+      PATH: "{{ PATH }}"
       GOPATH: "{{ GOPATH }}"
       GO111MODULE: "{{ GO111MODULE }}"

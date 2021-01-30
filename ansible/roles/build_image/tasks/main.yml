@@ -22,7 +22,7 @@
 
   # The tasks below setup the quickfeed image using the playbooks,
   # i.e. run the playbooks in the builder.image.
-  - name: Define a temporally builder container name
+  - name: Define a temporary builder container name
     ansible.builtin.set_fact:
       temp_container_name: dev_builder_{{lookup('pipe', 'date "+%Y%m%d%H%M%S"')}}
 
