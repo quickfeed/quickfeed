@@ -1,3 +1,17 @@
 ---
 hostname: ag
 docker_build: false
+
+autograder_user: autograder
+autograder_group: autograder
+autograder_home: /home/autograder
+
+quickfeed_root: /home/autograder/quickfeed
+quickfeed_ui_root: /home/autograder/quickfeed/public
+quickfeed_bin: /home/autograder/go/bin
+quickfeed_repo: https://github.com/r0qs/quickfeed.git
+quickfeed_branch: dev-tooling
+
+# Define the real values in the production config that should never be commited.
+quickfeed_github_key: <ghkey>
+quickfeed_github_secret: <ghsecret>
