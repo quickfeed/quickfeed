@@ -2,9 +2,9 @@
 hostname: ag
 docker_build: false
 
-autograder_user: autograder
-autograder_group: autograder
-autograder_home: /home/autograder
+quickfeed_user: autograder
+quickfeed_group: autograder
+quickfeed_home: /home/autograder
 
 quickfeed_root: /home/autograder/quickfeed
 quickfeed_ui_root: /home/autograder/quickfeed/public
