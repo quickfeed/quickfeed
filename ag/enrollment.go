@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+const (
+	//graceP is the grace-Period for deliveries after the deadline. It can only be <int> hours.
+	//Currently there is a 2 hour grace period. It should be between [0,1,..,23]
+	graceP = time.Duration(2 * time.Hour)
+)
+
 // UpdateSlipDays updates the number of slipdays for the given assignment/submission.
 func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, submission *Submission) error {
 	if m.GetCourseID() != assignment.GetCourseID() {
@@ -20,7 +26,16 @@ func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, sub
 	// if score is less than limit and it's not yet approved, update slip days if deadline has passed
 	if submission.Score < assignment.ScoreLimit && submission.Status != Submission_APPROVED && sinceDeadline > 0 {
 		// deadline exceeded; calculate used slipdays for this assignment
-		m.updateSlipDays(assignment.GetID(), uint32(sinceDeadline/days))
+		slpDays, slpHours := sinceDeadline/days, sinceDeadline%days
+		if graceP > 0 {
+			if slpHours/graceP > 0 {
+				slpDays++
+			}
+		} else {
+			slpDays++
+		}
+		//updating the slipdays
+		m.updateSlipDays(assignment.GetID(), uint32(slpDays))
 	}
 	return nil
 }
