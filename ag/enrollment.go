@@ -5,11 +5,11 @@ import (
 	"time"
 )
 
-const (
-	//graceP is the grace-Period for deliveries after the deadline. It can only be <int> hours.
-	//Currently there is a 2 hour grace period. It should be between [0,1,..,23]
-	graceP = time.Duration(2 * time.Hour)
-)
+//gracePeriod is the grace-Period for deliveries after the deadline. It can only be <int> hours.
+//Currently there is a 2 hour grace period. It should be between [0,1,..,23]
+const gracePeriod time.Duration = time.Duration(2 * time.Hour)
+
+//Keep in mind this will be the same across all enrollments (courses) on the AG service.
 
 // UpdateSlipDays updates the number of slipdays for the given assignment/submission.
 func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, submission *Submission) error {
@@ -26,16 +26,13 @@ func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, sub
 	// if score is less than limit and it's not yet approved, update slip days if deadline has passed
 	if submission.Score < assignment.ScoreLimit && submission.Status != Submission_APPROVED && sinceDeadline > 0 {
 		// deadline exceeded; calculate used slipdays for this assignment
-		slpDays, slpHours := sinceDeadline/days, sinceDeadline%days
-		if graceP > 0 {
-			if slpHours/graceP > 0 {
-				slpDays++
-			}
-		} else {
+		slpDays, slpHours := uint32(sinceDeadline/days), sinceDeadline%days
+		//slpHours is time after deadline. This is also correct on subsequent slipdays after deadline has passed
+		if slpHours > gracePeriod {
 			slpDays++
 		}
 		//updating the slipdays
-		m.updateSlipDays(assignment.GetID(), uint32(slpDays))
+		m.updateSlipDays(assignment.GetID(), slpDays)
 	}
 	return nil
 }
