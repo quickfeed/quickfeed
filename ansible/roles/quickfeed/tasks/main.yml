@@ -17,7 +17,6 @@
       content: |
         export GOPATH={{ autograder_home }}/go
         export PATH=$PATH:$GOPATH/bin
-        export GO111MODULE=on
       dest: "{{ autograder_home }}/.bashrc"
       mode: 0644
 
@@ -33,12 +32,6 @@
       PATH: "{{ ansible_env.PATH }}:{{ GOPATH }}/bin"
     when: GOPATH is defined
 
-  - name: Define GO111MODULE facts
-    become_user: "{{ autograder_user }}"
-    ansible.builtin.set_fact:
-      GO111MODULE: "on"
-    when: GO111MODULE is not defined
-
   # go deps
   - name: Get Go dependencies packages
     become_user: "{{ autograder_user }}"
@@ -46,7 +39,6 @@
     environment:
       PATH: "{{ PATH }}"
       GOPATH: "{{ GOPATH }}"
-      GO111MODULE: "{{ GO111MODULE }}"
     with_items: "{{ go_dependencies }}"
 
   # grpcweb
@@ -87,7 +79,6 @@
     environment:
       PATH: "{{ PATH }}"
       GOPATH: "{{ GOPATH }}"
-      GO111MODULE: "{{ GO111MODULE }}"
 
   - name: Build quickfeed source
     become_user: "{{ autograder_user }}"
@@ -95,7 +86,6 @@
     environment:
       PATH: "{{ PATH }}"
       GOPATH: "{{ GOPATH }}"
-      GO111MODULE: "{{ GO111MODULE }}"
 
   - name: Build gosecret command
     become_user: "{{ autograder_user }}"
@@ -103,4 +93,3 @@
     environment:
       PATH: "{{ PATH }}"
       GOPATH: "{{ GOPATH }}"
-      GO111MODULE: "{{ GO111MODULE }}"

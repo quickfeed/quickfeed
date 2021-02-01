@@ -8,9 +8,8 @@ autograder_home: /home/autograder
 
 quickfeed_root: /home/autograder/quickfeed
 quickfeed_ui_root: /home/autograder/quickfeed/public
-quickfeed_bin: /home/autograder/go/bin
-quickfeed_repo: https://github.com/r0qs/quickfeed.git
-quickfeed_branch: dev-tooling
+quickfeed_repo: https://github.com/autograde/quickfeed.git
+quickfeed_branch: master
 
 # Define the real values in the production config that should never be commited.
 quickfeed_github_key: <ghkey>

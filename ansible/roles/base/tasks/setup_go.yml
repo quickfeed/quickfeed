@@ -8,6 +8,5 @@
     ansible.builtin.copy:
       content: |
         export PATH=$PATH:{{ go_root }}/bin
-        export GO111MODULE=on
       dest: /etc/profile.d/go.sh
       mode: 0644
