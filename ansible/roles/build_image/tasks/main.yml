@@ -33,7 +33,7 @@
       -h {{ hostname }}
       --name={{ temp_container_name }}
       {{ builder.image.name }}:{{ builder.image.tag }}
-      ansible-playbook -i inventory/hosts -l development -c local setup.yml -e base_setup=true"
+      ansible-playbook -i inventory/hosts -l development -c local install.yml -e base_setup=true"
 
   - name: Create quickfeed image based on the builder container
     ansible.builtin.command: "docker commit
