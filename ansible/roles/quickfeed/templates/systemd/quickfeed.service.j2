@@ -4,10 +4,10 @@ After=network.target
 
 [Service]
 Environment="QUICKFEED_HOME={{ quickfeed_root }}"
-ExecStart=quickfeed -service.url {{ quickfeed_endpoint }} -database.file {{ quickfeed_root }}/ag.db -http.addr :3005 -http.public {{ quickfeed_root }}/public
+ExecStart=quickfeed -service.url {{ quickfeed_endpoint }} -database.file {{ quickfeed_root }}/ag.db -grpc.addr {{ grpc_addr }} -http.addr {{ http_addr }} -http.public {{ quickfeed_ui_root }}
 PIDFile=/var/lib/quickfeed/quickfeed.pid
-User={{ autograder_user }}
-Group={{ autograder_group }}
+User={{ quickfeed_user }}
+Group={{ quickfeed_group }}
 Restart=always
 RestartSec=5s
 ProtectSystem=full

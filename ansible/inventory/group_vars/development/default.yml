@@ -1,4 +1,5 @@
 ---
 docker_build: true
 quickfeed_endpoint: dev.itest.run
-ag_port: 8090
+http_addr: 8081
+grpc_addr: 9090

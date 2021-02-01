@@ -1,5 +1,5 @@
 ---
-  - name: Download last version of golang
+  - name: Download latest version of Go
     ansible.builtin.get_url:
       url: "https://dl.google.com/go/$(curl https://golang.org/VERSION?m=text).linux-amd64.tar.gz"
       dest: /tmp/go.tar.gz

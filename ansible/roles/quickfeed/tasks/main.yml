@@ -1,40 +1,40 @@
 ---
-  - name: Ensure group {{ autograder_group }} exists
+  - name: Ensure group {{ quickfeed_group }} exists
     ansible.builtin.group:
-      name: "{{ autograder_group }}"
+      name: "{{ quickfeed_group }}"
       state: present
 
-  - name: Create {{ autograder_user }} runner user
+  - name: Create {{ quickfeed_user }} runner user
     ansible.builtin.user:
       create_home: true
-      name: "{{ autograder_user }}"
-      group: "{{ autograder_group }}"
+      name: "{{ quickfeed_user }}"
+      group: "{{ quickfeed_group }}"
       shell: /bin/bash
 
-  - name: Setup GOPATH for {{ autograder_user }}
-    become_user: "{{ autograder_user }}"
+  - name: Setup GOPATH for {{ quickfeed_user }}
+    become_user: "{{ quickfeed_user }}"
     ansible.builtin.copy:
       content: |
-        export GOPATH={{ autograder_home }}/go
+        export GOPATH={{ quickfeed_home }}/go
         export PATH=$PATH:$GOPATH/bin
-      dest: "{{ autograder_home }}/.bashrc"
+      dest: "{{ quickfeed_home }}/.bashrc"
       mode: 0644
 
   - name: Define GOPATH facts
-    become_user: "{{ autograder_user }}"
+    become_user: "{{ quickfeed_user }}"
     ansible.builtin.set_fact:
-      GOPATH: "{{ autograder_home }}/go"
+      GOPATH: "{{ quickfeed_home }}/go"
     when: GOPATH is not defined
   
   - name: Define PATH facts
-    become_user: "{{ autograder_user }}"
+    become_user: "{{ quickfeed_user }}"
     ansible.builtin.set_fact:
       PATH: "{{ ansible_env.PATH }}:{{ GOPATH }}/bin"
     when: GOPATH is defined
 
-  # go deps
+  # go dependencies
   - name: Get Go dependencies packages
-    become_user: "{{ autograder_user }}"
+    become_user: "{{ quickfeed_user }}"
     ansible.builtin.command: go get -u {{ item }}
     environment:
       PATH: "{{ PATH }}"
@@ -55,7 +55,7 @@
 
   # quickfeed
   - name: Clone quickfeed source
-    become_user: "{{ autograder_user }}"
+    become_user: "{{ quickfeed_user }}"
     ansible.builtin.git:
       repo: "{{ quickfeed_repo }}"
       dest: "{{ quickfeed_root }}"
@@ -64,31 +64,31 @@
 
   - name: Ensure permissions
     ansible.builtin.file:
-      path: "{{ autograder_home }}"
-      owner: "{{ autograder_user }}"
-      group: "{{ autograder_group }}"
+      path: "{{ quickfeed_home }}"
+      owner: "{{ quickfeed_user }}"
+      group: "{{ quickfeed_group }}"
       recurse: yes
 
   - name: Build quickfeed ui
-    become_user: "{{ autograder_user }}"
+    become_user: "{{ quickfeed_user }}"
     ansible.builtin.shell: "cd {{ quickfeed_root }} && make ui"
 
   - name: Compile quickfeed proto files
-    become_user: "{{ autograder_user }}"
+    become_user: "{{ quickfeed_user }}"
     ansible.builtin.shell: "cd {{ quickfeed_root }} && go list && make proto"
     environment:
       PATH: "{{ PATH }}"
       GOPATH: "{{ GOPATH }}"
 
   - name: Build quickfeed source
-    become_user: "{{ autograder_user }}"
+    become_user: "{{ quickfeed_user }}"
     ansible.builtin.shell: "cd {{ quickfeed_root }} && make install"
     environment:
       PATH: "{{ PATH }}"
       GOPATH: "{{ GOPATH }}"
 
   - name: Build gosecret command
-    become_user: "{{ autograder_user }}"
+    become_user: "{{ quickfeed_user }}"
     ansible.builtin.shell: "cd {{ quickfeed_root }} && go build -o {{ GOPATH }}/bin/gosecret ./cmd/gosecret"
     environment:
       PATH: "{{ PATH }}"
