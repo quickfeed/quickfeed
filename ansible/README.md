@@ -6,6 +6,8 @@ This document explains how to build and deploy QuickFeed for both development an
 
 ### Installing in a docker container
 
+* This method requires that you have docker installed in your machine.
+
 ```ansible
 % ansible-playbook -i inventory/hosts -l development dev-docker.yml
 ```
@@ -22,3 +24,11 @@ Here is using homebrew python3 installation:
 ```ansible
 % ansible-playbook -i inventory/hosts -l development install.yml
 ```
+
+In case you already have protobuf, go and npm installed in your system, you may skip the base setup. For that you can explicitly set to false the `base_setup` flag:
+
+```ansible
+% ansible-playbook -i inventory/hosts -l development install.yml -e base_setup=false
+```
+
+Take a look at the [base](./roles/base/tasks/main.yml) role to see what will be installed in your system.

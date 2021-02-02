@@ -1,4 +1,18 @@
 ---
+  - name: Install dependencies
+    ansible.builtin.package:
+      name:
+      - sudo
+      - vim
+      - curl
+      - ca-certificates
+      - bash
+      - bash-completion
+      - jq
+      - net-tools
+      - build-base
+      state: present
+
   - name: Create temp build directory
     ansible.builtin.file:
       dest: /tmp/build

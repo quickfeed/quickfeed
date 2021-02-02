@@ -8,18 +8,9 @@
     ansible.builtin.package:
       name:
       - make
-      - sudo
       - git
-      - vim
-      - curl
       - protobuf
       - protobuf-dev
-      - ca-certificates
-      - bash
-      - bash-completion
-      - jq
-      - net-tools
-      - build-base
       - npm
       state: present
 
