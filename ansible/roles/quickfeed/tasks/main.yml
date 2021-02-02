@@ -86,10 +86,3 @@
     environment:
       PATH: "{{ PATH }}"
       GOPATH: "{{ GOPATH }}"
-
-  - name: Build gosecret command
-    become_user: "{{ quickfeed_user }}"
-    ansible.builtin.shell: "cd {{ quickfeed_root }} && go build -o {{ GOPATH }}/bin/gosecret ./cmd/gosecret"
-    environment:
-      PATH: "{{ PATH }}"
-      GOPATH: "{{ GOPATH }}"

@@ -19,4 +19,5 @@ deploy_role="prod"
 development
 
 [quickfeeders:vars]
+base_setup=true
 quickfeed_setup=true

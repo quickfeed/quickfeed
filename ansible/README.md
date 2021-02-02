@@ -12,5 +12,5 @@ This document explains how to build and deploy QuickFeed for both development an
 
 ### Installing in the local machine
 ```ansible
-% ansible-playbook -i inventory/hosts -l development dev-local.yml
+% ansible-playbook -i inventory/hosts -l development install.yml
 ```

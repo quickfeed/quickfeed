@@ -1,6 +1,5 @@
 ---
 hostname: ag
-docker_build: false
 
 quickfeed_user: autograder
 quickfeed_group: autograder
