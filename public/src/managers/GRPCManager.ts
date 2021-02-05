@@ -17,6 +17,7 @@ import {
     Group,
     GroupRequest,
     Groups,
+    LoadCriteriaRequest,
     Organization,
     OrgRequest,
     Providers,
@@ -43,7 +44,6 @@ import {
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
 import { ISubmission } from "../models";
-import { LoadCriteriaRequest } from '../../proto/ag_pb';
 
 export interface IGrpcResponse<T> {
     status: Status;
