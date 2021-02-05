@@ -126,8 +126,17 @@ func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, reques
 }
 
 func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
-	if _, err := s.db.GetSubmission(&pb.Submission{ID: query.SubmissionID}); err != nil {
+	submission, err := s.db.GetSubmission(&pb.Submission{ID: query.SubmissionID})
+	if err != nil {
 		return nil, err
+	}
+	assignment, err := s.db.GetAssignment(&pb.Assignment{ID: submission.AssignmentID})
+	if err != nil {
+		return nil, err
+	}
+	if len(submission.Reviews) >= int(assignment.Reviewers) {
+		return nil, fmt.Errorf("Failed to create a new review for submission %d to assignment %s: all %d reviews already created",
+			submission.ID, assignment.Name, assignment.Reviewers)
 	}
 	if err := s.db.CreateReview(query); err != nil {
 		return nil, err
