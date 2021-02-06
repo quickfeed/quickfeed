@@ -168,7 +168,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 		JobOwner:   payload.GetSender().GetLogin(),
 	}
 	if assignment.SkipTests {
-		wh.logger.Debugf("Assignment %s for course %s has no automated test, skipping tests", assignment.Name, course.Name)
+		wh.logger.Debugf("Assignment %s for course %s is manually reviewed", assignment.Name, course.Name)
 		wh.recordSubmissionWithoutTests(runData)
 		return
 	}
@@ -185,7 +185,8 @@ func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
 		ExecTime:  1,
 	})
 	if err != nil {
-		wh.logger.Errorf("Error marshalling build info for %s of course %s for student %s", data.Course.Name, data.Assignment.Name, data.JobOwner)
+		wh.logger.Errorf("Error marshalling build info for %s of course %s for student %s: %s", data.Course.Name, data.Assignment.Name, data.JobOwner, err)
+		return
 	}
 	newSubmission := &pb.Submission{
 		AssignmentID: data.Assignment.ID,
@@ -196,9 +197,10 @@ func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
 	}
 	if err := wh.db.CreateSubmission(newSubmission); err != nil {
 		wh.logger.Errorf("Failed to save submission for user ID %s for assignment ID %d: %s", data.JobOwner, data.Assignment.ID, err)
-	} else {
-		wh.logger.Debugf("Skipping tests. Saved submission for user ID %s for assignment ID %d", data.JobOwner, data.Assignment.ID)
+		return
 	}
+	wh.logger.Debugf("Saved manual review submission for user %s for assignment %d", data.JobOwner, data.Assignment.ID)
+
 }
 
 // updateLastActivityDate sets a current date as a last activity date of the student
