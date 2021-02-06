@@ -1,6 +1,7 @@
 package hooks
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -167,6 +168,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 		JobOwner:   payload.GetSender().GetLogin(),
 	}
 	if assignment.SkipTests {
+		wh.logger.Debugf("Assignment %s for course %s has no automated test, skipping tests", assignment.Name, course.Name)
 		wh.recordSubmissionWithoutTests(runData)
 		return
 	}
@@ -176,8 +178,18 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 // recordSubmissionWithoutTests saves a new submission without running any tests
 // for a manually graded assignment.
 func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
+	noTestBuildInfo, err := json.Marshal(&ci.BuildInfo{
+		BuildID:   0,
+		BuildDate: time.Now().Format("2006-01-02T15:04:05"),
+		BuildLog:  "No automated tests for this assignment",
+		ExecTime:  1,
+	})
+	if err != nil {
+		wh.logger.Errorf("Error marshalling build info for %s of course %s for student %s", data.Course.Name, data.Assignment.Name, data.JobOwner)
+	}
 	newSubmission := &pb.Submission{
 		AssignmentID: data.Assignment.ID,
+		BuildInfo:    string(noTestBuildInfo),
 		CommitHash:   data.CommitID,
 		UserID:       data.Repo.UserID,
 		GroupID:      data.Repo.GroupID,

@@ -41,6 +41,7 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 			"is_group_lab":      assignment.IsGroupLab,
 			"reviewers":         assignment.Reviewers,
 			"container_timeout": assignment.ContainerTimeout,
+			"skip_tests":        assignment.SkipTests,
 		}).FirstOrCreate(assignment).Error
 }
 
