@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Assignment, Course, Enrollment, Group, Review, User, Submission, GradingBenchmark, GradingCriterion } from '../proto/ag_pb';
-import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from './models';
+import { Assignment, Course, Enrollment, Group, Review, User, Submission, GradingBenchmark, GradingCriterion } from "../proto/ag_pb";
+import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "./models";
 
 export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {
     let sorted: Enrollment[] = [];
@@ -240,6 +240,7 @@ export function slugify(str: string): string {
 
 export function scoreFromReviews(reviews: Review[]): number {
     if (reviews.length < 1) return 0;
+    if (reviews.length === 1) return reviews[0].getScore();
     let sum = 0;
     reviews.forEach(rv => {
         if (rv.getReady()) {

@@ -2,7 +2,7 @@ import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review } from '../../../proto/ag_pb';
 import { ISubmission } from "../../models";
 import { GradeBenchmark } from "./GradeBenchmark";
-import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider, maxAssignmentScore } from '../../componentHelper';
+import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider, maxAssignmentScore } from "../../componentHelper";
 
 interface ReviewPageProps {
     assignment: Assignment;
@@ -321,6 +321,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 open: false,
                 graded: 0,
                 ready: false,
+                scoreFromCriteria: maxAssignmentScore(this.props.assignment.getGradingbenchmarksList()),
             });
             return;
         }
@@ -334,7 +335,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 open: this.props.isSelected ? !this.state.open : true,
                 graded: this.gradedTotal(rw),
                 ready: rw.getReady(),
-
+                scoreFromCriteria: maxAssignmentScore(this.props.assignment.getGradingbenchmarksList()),
             });
         } else {
             this.setState({
@@ -343,6 +344,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 open: this.props.isSelected ? !this.state.open : true,
                 graded: this.gradedTotal(),
                 score: 0,
+                scoreFromCriteria: maxAssignmentScore(this.props.assignment.getGradingbenchmarksList()),
             });
         }
     }
@@ -385,6 +387,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                         oldCriteriaList.splice(oldCriteriaList.indexOf(c), 1);
                     } else {
                         c.setDescription(assignmentCriterium.getDescription());
+                        c.setPoints(assignmentCriterium.getPoints());
                     }
                 });
                 // add new criteria
