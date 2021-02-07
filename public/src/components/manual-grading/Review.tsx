@@ -133,7 +133,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private renderFeedback(): JSX.Element {
-    const feedbackDiv = <div className="row f-row" onClick={() => this.toggleEdit()}>{"Add a summary feedback"}</div>;
+    const feedbackDiv = <div className="row f-row" onClick={() => this.toggleEdit()}>{(this.state.review && this.state.review.getFeedback() !== "") ? this.state.review?.getFeedback() : "Add a summary feedback"}</div>;
     const editFeedbackDiv = <div className="f-row input-group col-md-12">
     <input
         className="form-control m-input"
