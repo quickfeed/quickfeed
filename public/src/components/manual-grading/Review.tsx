@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, Review } from "../../../proto/ag_pb";
+import { Assignment, GradingBenchmark, GradingCriterion, Review } from '../../../proto/ag_pb';
 import { ISubmission } from "../../models";
 import { GradeBenchmark } from "./GradeBenchmark";
 import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider, maxAssignmentScore } from '../../componentHelper';
@@ -57,7 +57,9 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         </div>;
 
         const noSubmissionDiv = <div className="alert alert-info">No submissions for {this.props.assignment.getName()}</div>;
-        const noReviewsDiv = <div className="alert alert-info">{this.props.assignment.getName()} is not for manual grading</div>
+        const noReviewsDiv = <div className="alert alert-info">{this.props.assignment.getName()} is not for manual grading</div>;
+        const maxReviewsReached = <div className="alert alert-info">This submission already has {this.props.assignment.getReviewers()}
+            {this.props.assignment.getReviewers() === 1 ? " review" : " reviews"}.</div>
 
         if (this.props.assignment.getReviewers() < 1) {
             return <div className="review">
@@ -66,11 +68,17 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             </div>
         }
 
-
         if (!this.props.submission) {
             return <div className="review">
                 {headerDiv}
                 {open ? noSubmissionDiv : null}
+            </div>
+        }
+
+        if ((this.props.submission.reviews.length >= this.props.assignment.getReviewers()) && !this.isReviewAuthor()) {
+            return <div className="review">
+                {headerDiv}
+                {open ? maxReviewsReached : null}
             </div>
         }
 
@@ -91,6 +99,17 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         </div>
     }
 
+    private isReviewAuthor(): boolean {
+        let isAuthor = false;
+        if (this.props.submission) {
+            this.props.submission.reviews.forEach(rw => {
+                if (rw.getReviewerid() === this.props.reviewerID) {
+                    isAuthor = true;
+                }
+            });
+        }
+        return isAuthor;
+    }
     private makeHeaderRow(): JSX.Element {
         return <h3>{this.props.submission ? "Submission for " + this.props.assignment.getName() : "No submissions yet for " + this.props.assignment.getName()}</h3>
     }
