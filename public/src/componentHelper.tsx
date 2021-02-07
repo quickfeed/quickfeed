@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Assignment, Course, Enrollment, Group, Review, User, Submission, GradingBenchmark, GradingCriterion } from '../proto/ag_pb';
-import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from './models';
+import { Assignment, Course, Enrollment, Group, Review, User, Submission, GradingBenchmark, GradingCriterion } from "../proto/ag_pb";
+import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "./models";
 
 export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {
     let sorted: Enrollment[] = [];
@@ -202,7 +202,7 @@ function foundCourse(course: Course, query: string): boolean {
 }
 
 export function groupRepoLink(groupName: string, courseURL: string): JSX.Element {
-    return <a href={courseURL + slugify(groupName)} target="_blank">{groupName}</a>;
+    return <a href={courseURL.replace('-master', '') + slugify(groupName)} target="_blank">{groupName}</a>;
 }
 
 function gitUserLink(user: string): string {
@@ -210,7 +210,7 @@ function gitUserLink(user: string): string {
 }
 
 function labRepoLink(course: string, login: string): string {
-    return course + login + "-labs";
+    return course.replace('-master', '') + login + "-labs";
 }
 
 // If the courseURL parameter is given, returns a link to the student lab repository,
@@ -240,9 +240,12 @@ export function slugify(str: string): string {
 
 export function scoreFromReviews(reviews: Review[]): number {
     if (reviews.length < 1) return 0;
+    if (reviews.length === 1) return reviews[0].getScore();
     let sum = 0;
+    let ready = 0;
     reviews.forEach(rv => {
         if (rv.getReady()) {
+            ready += 1;
             sum += rv.getScore();
         }
     });

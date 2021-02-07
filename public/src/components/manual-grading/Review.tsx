@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, Review } from "../../../proto/ag_pb";
+import { Assignment, GradingBenchmark, GradingCriterion, Review } from '../../../proto/ag_pb';
 import { ISubmission } from "../../models";
 import { GradeBenchmark } from "./GradeBenchmark";
-import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider, maxAssignmentScore } from '../../componentHelper';
+import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider, maxAssignmentScore } from "../../componentHelper";
 
 interface ReviewPageProps {
     assignment: Assignment;
@@ -57,7 +57,9 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         </div>;
 
         const noSubmissionDiv = <div className="alert alert-info">No submissions for {this.props.assignment.getName()}</div>;
-        const noReviewsDiv = <div className="alert alert-info">{this.props.assignment.getName()} is not for manual grading</div>
+        const noReviewsDiv = <div className="alert alert-info">{this.props.assignment.getName()} is not for manual grading</div>;
+        const maxReviewsReached = <div className="alert alert-info">This submission already has {this.props.assignment.getReviewers()}
+            {this.props.assignment.getReviewers() === 1 ? " review" : " reviews"}.</div>
 
         if (this.props.assignment.getReviewers() < 1) {
             return <div className="review">
@@ -66,11 +68,17 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             </div>
         }
 
-
         if (!this.props.submission) {
             return <div className="review">
                 {headerDiv}
                 {open ? noSubmissionDiv : null}
+            </div>
+        }
+
+        if ((this.props.submission.reviews.length >= this.props.assignment.getReviewers()) && !this.isReviewAuthor()) {
+            return <div className="review">
+                {headerDiv}
+                {open ? maxReviewsReached : null}
             </div>
         }
 
@@ -91,6 +99,17 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         </div>
     }
 
+    private isReviewAuthor(): boolean {
+        let isAuthor = false;
+        if (this.props.submission) {
+            this.props.submission.reviews.forEach(rw => {
+                if (rw.getReviewerid() === this.props.reviewerID) {
+                    isAuthor = true;
+                }
+            });
+        }
+        return isAuthor;
+    }
     private makeHeaderRow(): JSX.Element {
         return <h3>{this.props.submission ? "Submission for " + this.props.assignment.getName() : "No submissions yet for " + this.props.assignment.getName()}</h3>
     }
@@ -114,7 +133,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private renderFeedback(): JSX.Element {
-    const feedbackDiv = <div className="row f-row" onClick={() => this.toggleEdit()}>{"Add a summary feedback"}</div>;
+    const feedbackDiv = <div className="row f-row" onClick={() => this.toggleEdit()}>{(this.state.review && this.state.review.getFeedback() !== "") ? this.state.review?.getFeedback() : "Add a summary feedback"}</div>;
     const editFeedbackDiv = <div className="f-row input-group col-md-12">
     <input
         className="form-control m-input"
@@ -302,6 +321,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 open: false,
                 graded: 0,
                 ready: false,
+                scoreFromCriteria: maxAssignmentScore(this.props.assignment.getGradingbenchmarksList()),
             });
             return;
         }
@@ -315,7 +335,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 open: this.props.isSelected ? !this.state.open : true,
                 graded: this.gradedTotal(rw),
                 ready: rw.getReady(),
-
+                scoreFromCriteria: maxAssignmentScore(this.props.assignment.getGradingbenchmarksList()),
             });
         } else {
             this.setState({
@@ -324,6 +344,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 open: this.props.isSelected ? !this.state.open : true,
                 graded: this.gradedTotal(),
                 score: 0,
+                scoreFromCriteria: maxAssignmentScore(this.props.assignment.getGradingbenchmarksList()),
             });
         }
     }
@@ -366,6 +387,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                         oldCriteriaList.splice(oldCriteriaList.indexOf(c), 1);
                     } else {
                         c.setDescription(assignmentCriterium.getDescription());
+                        c.setPoints(assignmentCriterium.getPoints());
                     }
                 });
                 // add new criteria
