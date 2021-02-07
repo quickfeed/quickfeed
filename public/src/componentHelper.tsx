@@ -242,8 +242,10 @@ export function scoreFromReviews(reviews: Review[]): number {
     if (reviews.length < 1) return 0;
     if (reviews.length === 1) return reviews[0].getScore();
     let sum = 0;
+    let ready = 0;
     reviews.forEach(rv => {
         if (rv.getReady()) {
+            ready += 1;
             sum += rv.getScore();
         }
     });
