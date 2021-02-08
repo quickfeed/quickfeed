@@ -35,11 +35,10 @@
   # go dependencies
   - name: Get Go dependencies packages
     become_user: "{{ quickfeed_user }}"
-    ansible.builtin.command: go get -u {{ item }}
+    ansible.builtin.shell: "cd {{ quickfeed_root }} && go list -f \"{{range .Imports}}{{.}} {{end}}\" tools.go"
     environment:
       PATH: "{{ PATH }}"
       GOPATH: "{{ GOPATH }}"
-    with_items: "{{ go_dependencies }}"
 
   # grpcweb
   - name: Set facts for grpcweb package

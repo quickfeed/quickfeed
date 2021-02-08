@@ -5,13 +5,3 @@ grpcweb_version: 1.0.4 # TODO: update to last version:1.2.1
 protoc_grpcweb: protoc-gen-grpc-web
 grpcweb_path: /usr/local/bin
 grpcweb_repo: https://github.com/grpc/grpc-web/releases/download
-
-go_dependencies:
-  - "github.com/golang/protobuf/protoc-gen-go"
-  - "github.com/gogo/protobuf/gogoproto"
-  - "github.com/gogo/protobuf/protoc-gen-gofast"
-  - "github.com/gogo/protobuf/protoc-gen-gogofast"
-  - "github.com/gogo/protobuf/protoc-gen-gogofaster"
-
-go_dev_dependencies:
-  - "github.com/golangci/golangci-lint/cmd/golangci-lint"
