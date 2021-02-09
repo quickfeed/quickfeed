@@ -50,7 +50,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const noReadyReviewsDiv = <div className="alert alert-info">No ready reviews for {this.props.assignment.getName()}</div>
 
         const headerDiv = <div className="row review-header" onClick={() => {if (this.props.teacherView) this.toggleOpen()}}>
-        <h3><span className="r-number">{this.props.studentNumber}. </span><span className="r-header">{this.props.authorName}</span><span className="r-score">Score: {scoreFromReviews(this.props.submission?.reviews ?? [])} </span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
+        <h3><span className="r-number">{this.props.studentNumber}. </span><span className="r-header">{this.props.authorName}</span><span className="r-score">Score: {scoreFromReviews(this.selectReadyReviews())} </span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
         </div>;
 
         if (this.props.assignment.getReviewers() < 1) {
@@ -187,7 +187,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         rows.push(<tr key="rtf"><td key="fbrow">Feedbacks:</td>
             {reviewersList.map((u, i) => <td key={"fbrow" + i}>{this.commentSpan(allReviewers.get(u)?.getFeedback() ?? "No feedback", "fb" + i)}</td>)}
         </tr>);
-        rows.push(<tr key="tscore"><td key="scrow">Score: {this.props.submission?.score ?? 0}</td>
+        rows.push(<tr key="tscore"><td key="scrow">Score: {scoreFromReviews(this.selectReadyReviews())}</td>
             {reviewersList.map(u => <td key={"scrow" + u.getId()}>{allReviewers.get(u)?.getScore() ?? 0}</td>)}
         </tr>);
         return rows;
@@ -320,7 +320,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         if (this.state.open) {
             this.setState({
                 reviews: [],
-                // reviewers: new Map<User, Review>(),
                 open: false,
             });
             return;
