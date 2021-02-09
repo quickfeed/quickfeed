@@ -42,6 +42,7 @@
         "gosimple",
         "goveralls",
         "grpc",
+        "ipam",
         "itest",
         "jinzhu",
         "letsencrypt",
