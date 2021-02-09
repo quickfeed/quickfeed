@@ -2,6 +2,8 @@
 
 package main
 
+// TODO(meling) The first entry is not a tool; we can probably remove it??
+
 import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	_ "github.com/gogo/protobuf/protoc-gen-gofast"

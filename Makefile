@@ -2,7 +2,7 @@ OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
 tmpdir				:= tmp
 proto-path			:= public/proto
-grpcweb-ver			:= 1.0.4
+grpcweb-ver			:= 1.2.1
 protoc-grpcweb		:= protoc-gen-grpc-web
 protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
 grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ver)/$(protoc-grpcweb-long)
@@ -14,15 +14,25 @@ agport				:= 8081
 pbpath				:= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
 
 # necessary when target is not tied to a file
-.PHONY: download install-tools install ui proto devtools grpcweb envoy-build envoy-run scm
+.PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm
+
+devtools: grpcweb go-tools
 
 download:
-	@echo Download go.mod dependencies
+	@echo "Download go.mod dependencies"
 	@go mod download
 
-install-tools: download
-	@echo Installing tools from tools.go
-	@cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
+go-tools:
+	@echo "Installing tools from tools.go"
+	@go install `go list -f "{{range .Imports}}{{.}} {{end}}" tools.go`
+
+grpcweb:
+	@echo "Fetch and install grpcweb protoc plugin (requires sudo access)"
+	@mkdir -p $(tmpdir)
+	@cd $(tmpdir); curl -LOs $(grpcweb-url)
+	@mv $(tmpdir)/$(protoc-grpcweb-long) $(grpcweb-path)
+	@chmod +x $(grpcweb-path)
+	@rm -rf $(tmpdir)
 
 install:
 	@echo go install
@@ -44,24 +54,6 @@ proto:
 	--grpc-web_out=import_style=typescript,mode=grpcweb:../$(proto-path)/ ag.proto
 	$(sedi) '/gogo/d' $(proto-path)/ag_pb.js $(proto-path)/AgServiceClientPb.ts $(proto-path)/ag_pb.d.ts
 	@tsc $(proto-path)/AgServiceClientPb.ts
-
-devtools: grpcweb npmtools
-
-grpcweb:
-	@echo "Fetch and install grpcweb protoc plugin (requires sudo access)"
-	@mkdir -p $(tmpdir)
-	@cd $(tmpdir); curl -LOs $(grpcweb-url)
-	@sudo mv $(tmpdir)/$(protoc-grpcweb-long) $(grpcweb-path)
-	@chmod +x $(grpcweb-path)
-	@rm -rf $(tmpdir)
-
-npmtools:
-	@echo "Install webpack and typescript compiler (requires sudo access)"
-	@npm install -g --save typescript
-	@npm install -g --force webpack
-	@npm install -g --force webpack-cli
-	@npm install -g tslint
-	@npm install -g serve
 
 # TODO(meling) this is just for macOS; we should guard against non-macOS.
 brew:

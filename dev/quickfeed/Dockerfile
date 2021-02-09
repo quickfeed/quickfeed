@@ -16,13 +16,7 @@ RUN apk update && apk add --no-cache \
 ADD . /quickfeed
 WORKDIR /quickfeed
 
-RUN go list -f "{{range .Imports}}{{.}} {{end}}" tools.go
-RUN make devtools && make ui && go list && make proto && make install
+RUN make devtools && make ui && make proto && make install
 
 EXPOSE 8080
 ENTRYPOINT ["quickfeed"]
-
-# COPY cmd/gosecret cmd/gosecret
-# RUN go build -o bin/gosecret ./cmd/gosecret
-# RUN GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0
-
