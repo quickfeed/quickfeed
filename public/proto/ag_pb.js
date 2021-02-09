@@ -7,6 +7,8 @@
  * @public
  */
 // GENERATED CODE -- DO NOT EDIT!
+/* eslint-disable */
+// @ts-nocheck
 
 var jspb = require('google-protobuf');
 var goog = jspb;
@@ -9321,8 +9323,10 @@ proto.EnrollmentRequest.deserializeBinaryFromReader = function(msg, reader) {
       msg.setWithactivity(value);
       break;
     case 4:
-      var value = /** @type {!Array<!proto.Enrollment.UserStatus>} */ (reader.readPackedEnum());
-      msg.setStatusesList(value);
+      var values = /** @type {!Array<!proto.Enrollment.UserStatus>} */ (reader.isDelimited() ? reader.readPackedEnum() : [reader.readEnum()]);
+      for (var i = 0; i < values.length; i++) {
+        msg.addStatuses(values[i]);
+      }
       break;
     default:
       reader.skipField();
@@ -9557,8 +9561,10 @@ proto.EnrollmentStatusRequest.deserializeBinaryFromReader = function(msg, reader
       msg.setUserid(value);
       break;
     case 2:
-      var value = /** @type {!Array<!proto.Enrollment.UserStatus>} */ (reader.readPackedEnum());
-      msg.setStatusesList(value);
+      var values = /** @type {!Array<!proto.Enrollment.UserStatus>} */ (reader.isDelimited() ? reader.readPackedEnum() : [reader.readEnum()]);
+      for (var i = 0; i < values.length; i++) {
+        msg.addStatuses(values[i]);
+      }
       break;
     default:
       reader.skipField();
@@ -10749,8 +10755,10 @@ proto.URLRequest.deserializeBinaryFromReader = function(msg, reader) {
       msg.setCourseid(value);
       break;
     case 2:
-      var value = /** @type {!Array<!proto.Repository.Type>} */ (reader.readPackedEnum());
-      msg.setRepotypesList(value);
+      var values = /** @type {!Array<!proto.Repository.Type>} */ (reader.isDelimited() ? reader.readPackedEnum() : [reader.readEnum()]);
+      for (var i = 0; i < values.length; i++) {
+        msg.addRepotypes(values[i]);
+      }
       break;
     default:
       reader.skipField();
