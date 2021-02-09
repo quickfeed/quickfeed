@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	//TODO(meling) these repos should be replaced with a test course's repos, preferably public repos; so we don't need a token.
-	getURL  = "https://github.com/dat320-2020/meling-stud-labs.git"
-	testURL = "https://github.com/dat320-2020/tests.git"
+	// qf101 is a test course for experimenting with go.sh behavior.
+	// The test below will run locally on the test machine, not on the QuickFeed machine.
+	getURL  = "https://github.com/qf101/meling-labs.git"
+	testURL = "https://github.com/qf101/tests.git"
 )
 
 func TestRunTests(t *testing.T) {
@@ -30,7 +31,7 @@ func TestRunTests(t *testing.T) {
 	}
 	randomString := fmt.Sprintf("%x", sha1.Sum(randomness))
 	info := &AssignmentInfo{
-		AssignmentName:     "lab4",
+		AssignmentName:     "lab1",
 		Script:             "go.sh",
 		CreatorAccessToken: accessToken,
 		GetURL:             getURL,

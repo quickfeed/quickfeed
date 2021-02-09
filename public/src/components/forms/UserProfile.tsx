@@ -9,31 +9,31 @@ interface IUserProfileProps {
 }
 
 interface IUserProfileState {
-    curUser?: User;
     editMode: boolean;
+    toggle: boolean;
 }
 
 export class UserProfile extends React.Component<IUserProfileProps, IUserProfileState> {
+    private curUser: User | null;
     constructor(props: IUserProfileProps, context: any) {
         super(props, context);
-        const curUser = props.userMan.getCurrentUser();
-        if (curUser) {
+        this.curUser = props.userMan.getCurrentUser();
+        if (this.curUser) {
             this.state = {
-                curUser,
-                editMode: !props.userMan.isValidUser(curUser),
+                editMode: !props.userMan.isValidUser(this.curUser),
+                toggle: false,
             };
         }
     }
 
     public render() {
-        if (!this.state.curUser) {
+        if (!this.curUser) {
             return <h1>User not logged in</h1>;
         }
-        const curUser = this.state.curUser;
         return <div>
             <div className="row container center-block">
                 <div className="col-md-3">
-                    {this.renderUserInfoBox(curUser)}
+                    {this.renderUserInfoBox(this.curUser)}
                 </div>
                 <div className="col-md-9">
                     <h3>There is currently nothing important to note</h3>
@@ -88,16 +88,14 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
     }
 
     public async stopEditing() {
-
-        if (this.state.curUser && this.props.userMan.isValidUser(this.state.curUser)) {
-            await this.props.userMan.updateUser(this.state.curUser);
+        if (this.curUser && this.props.userMan.isValidUser(this.curUser)) {
+            await this.props.userMan.updateUser(this.curUser);
             await this.props.userMan.checkUserLoggedIn();
             const curUser = this.props.userMan.getCurrentUser();
             if (curUser) {
-                this.setState({ editMode: false, curUser });
-            } else {
-                this.setState({ editMode: false });
+                this.curUser = curUser;
             }
+            this.setState({ editMode: false});
             this.props.onEditStop();
         }
     }
@@ -137,7 +135,7 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
 
     private handleChange(event: React.ChangeEvent<HTMLInputElement>) {
         const name = event.target.name;
-        const curUser = this.state.curUser;
+        const curUser = this.curUser;
         if (curUser) {
             const newUser: User = new User();
             newUser.setId(curUser.getId());
@@ -166,9 +164,8 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
                 }
             }
 
-            this.setState({
-                curUser: newUser,
-            });
+            this.curUser = newUser;
+            this.setState({toggle: !this.state.editMode});
         }
     }
 }

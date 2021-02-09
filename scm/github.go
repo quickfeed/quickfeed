@@ -3,6 +3,7 @@ package scm
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"go.uber.org/zap"
@@ -63,19 +64,22 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*p
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
+	var orgNameOrID string
 	var gitOrg *github.Organization
 	var err error
 	// priority is getting the organization by ID
 	if opt.ID > 0 {
+		orgNameOrID = strconv.Itoa(int(opt.ID))
 		gitOrg, _, err = s.client.Organizations.GetByID(ctx, int64(opt.ID))
-		// if no ID provided, get by name
 	} else {
+		// if ID not provided, get by name
+		orgNameOrID = slug.Make(opt.Name)
 		gitOrg, _, err = s.client.Organizations.Get(ctx, slug.Make(opt.Name))
 	}
 	if err != nil || gitOrg == nil {
 		return nil, ErrFailedSCM{
 			Method:   "GetOrganization",
-			Message:  fmt.Sprintf("could not find github organization. Make sure it allows third party access."), // this message is logged, never sent to user
+			Message:  fmt.Sprintf("could not find github organization %s. Make sure it allows third party access.", orgNameOrID), // this message is logged, never sent to user
 			GitError: err,
 		}
 	}
@@ -152,7 +156,7 @@ func (s *GithubSCM) GetRepository(ctx context.Context, opt *RepositoryOptions) (
 		repo, _, err = s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("GetRepository failed to fetch a repo with ID %d and path % s: %w", opt.ID, opt.Path, err)
+		return nil, fmt.Errorf("GetRepository failed to fetch repository %d, and path %s: %w", opt.ID, opt.Path, err)
 	}
 
 	return toRepository(repo), nil
@@ -209,7 +213,7 @@ func (s *GithubSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions
 			return ErrFailedSCM{
 				GitError: err,
 				Method:   "DeleteRepository",
-				Message:  fmt.Sprintf("repository not found, make sure it exists in the course organization"),
+				Message:  fmt.Sprintf("failed to fetch repository %d: may not exists in the course organization", opt.ID),
 			}
 		}
 		opt.Path = repo.GetName()
@@ -249,7 +253,6 @@ func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user
 
 // RepositoryIsEmpty implements the SCM interface
 func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
-
 	repo, err := s.GetRepository(ctx, opt)
 	if err != nil {
 		return false
@@ -324,7 +327,6 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) erro
 		}
 	} else {
 		_, _, err = s.client.Repositories.CreateHook(ctx, opt.Repository.Owner, opt.Repository.Path, hook)
-
 	}
 	if err != nil {
 		return ErrFailedSCM{
@@ -396,7 +398,6 @@ func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
 	var err error
 	if opt.TeamID > 0 {
 		_, err = s.client.Teams.DeleteTeamByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID))
-
 	} else {
 		_, err = s.client.Teams.DeleteTeamBySlug(ctx, slug.Make(opt.Organization), slug.Make(opt.TeamName))
 	}

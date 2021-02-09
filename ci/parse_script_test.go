@@ -32,6 +32,9 @@ func TestParseScript(t *testing.T) {
 			fmt.Println(cmd)
 		}
 	}
+	if os.Getenv("TEST_IMAGE") != "" {
+		fmt.Println(j.Image)
+	}
 
 	info.Script = "python361.sh"
 	_, err = parseScriptTemplate("scripts", info)
@@ -43,5 +46,19 @@ func TestParseScript(t *testing.T) {
 	_, err = parseScriptTemplate("scripts", info)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	info.Script = "python-dat550.sh"
+	j, err = parseScriptTemplate("scripts", info)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if os.Getenv("TEST_TMPL") != "" {
+		for _, cmd := range j.Commands {
+			fmt.Println(cmd)
+		}
+	}
+	if os.Getenv("TEST_IMAGE") != "" {
+		fmt.Println(j.Image)
 	}
 }

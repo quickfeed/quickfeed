@@ -61,7 +61,7 @@ export class TeacherPage extends ViewPage {
     }
 
     public async init(): Promise<void> {
-        this.courses = await this.getCourses([]);
+        this.courses = await this.getCourses([Enrollment.UserStatus.TEACHER]);
         this.repositories = this.setupRepos();
         this.navHelper.defaultPage = "courses/";
     }
@@ -367,11 +367,10 @@ export class TeacherPage extends ViewPage {
 
     public async renderMenu(menu: number): Promise<JSX.Element[]> {
         const curUser = this.userMan.getCurrentUser();
-        const confirmedTeacher = await this.userMan.isTeacher();
         if (curUser) {
             if (menu === 0) {
                 const status = [Enrollment.UserStatus.TEACHER];
-                if (curUser.getIsadmin() || confirmedTeacher) {
+                if (curUser.getIsadmin()) {
                     status.push(Enrollment.UserStatus.PENDING);
                     status.push(Enrollment.UserStatus.STUDENT);
                 }

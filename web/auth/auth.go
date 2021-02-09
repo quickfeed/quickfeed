@@ -73,13 +73,17 @@ func OAuth2Logout(logger *zap.Logger) echo.HandlerFunc {
 				}
 				sess.Options.MaxAge = -1
 				sess.Values = make(map[interface{}]interface{})
-				sess.Save(r, w)
+				if err := sess.Save(r, w); err != nil {
+					logger.Error(err.Error())
+				}
 			}
 		}
 		// Invalidate our user session.
 		sess.Options.MaxAge = -1
 		sess.Values = make(map[interface{}]interface{})
-		sess.Save(r, w)
+		if err := sess.Save(r, w); err != nil {
+			logger.Error(err.Error())
+		}
 
 		return c.Redirect(http.StatusFound, extractRedirectURL(r, Redirect))
 	}
@@ -223,6 +227,10 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 		case err == nil:
 			// found user in database; update access token
 			err = db.UpdateAccessToken(remote)
+			if err != nil {
+				logger.Error("failed to update access token for user", zap.Error(err), zap.String("user", user.String()))
+				return err
+			}
 		case err == gorm.ErrRecordNotFound:
 			// user not in database; create new user
 			user = &pb.User{
@@ -232,6 +240,10 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 				Login:     externalUser.NickName,
 			}
 			err = db.CreateUserFromRemoteIdentity(user, remote)
+			if err != nil {
+				logger.Error("failed to create remote identify for user", zap.Error(err), zap.String("user", user.String()))
+				return err
+			}
 		default:
 			logger.Error("failed to fetch user for remote identity", zap.Error(err))
 		}
@@ -267,7 +279,10 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 				logger.Error(err.Error())
 				// Save fixes the session if it has been modified
 				// or it is no longer valid due to newUserSess change of keys.
-				sess.Save(c.Request(), c.Response())
+				if err := sess.Save(c.Request(), c.Response()); err != nil {
+					logger.Error(err.Error())
+					return err
+				}
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 			}
 
