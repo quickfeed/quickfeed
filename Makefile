@@ -27,7 +27,7 @@ go-tools:
 	@go install `go list -f "{{range .Imports}}{{.}} {{end}}" tools.go`
 
 grpcweb:
-	@echo "Fetch and install grpcweb protoc plugin (requires sudo access)"
+	@echo "Fetch and install grpcweb protoc plugin"
 	@mkdir -p $(tmpdir)
 	@cd $(tmpdir); curl -LOs $(grpcweb-url)
 	@mv $(tmpdir)/$(protoc-grpcweb-long) $(grpcweb-path)
@@ -43,7 +43,7 @@ ui:
 	@cd public; npm install; npm run webpack
 
 proto:
-	@echo Compiling Autograders proto definitions
+	@echo "Compiling Autograders proto definitions"
 	@cd ag; protoc -I=. -I=$(pbpath) --gogofast_out=plugins=grpc,\
 	Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types,\

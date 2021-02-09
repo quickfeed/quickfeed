@@ -16,7 +16,10 @@ RUN apk update && apk add --no-cache \
 ADD . /quickfeed
 WORKDIR /quickfeed
 
-RUN make devtools && make ui && make proto && make install
+RUN make devtools
+# RUN make proto
+RUN make install
+RUN make ui
 
 EXPOSE 8080
 ENTRYPOINT ["quickfeed"]
