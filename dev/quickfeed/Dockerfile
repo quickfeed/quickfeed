@@ -17,7 +17,7 @@ ADD . /quickfeed
 WORKDIR /quickfeed
 
 RUN make devtools
-# RUN make proto
+RUN make proto
 RUN make install
 RUN make ui
 
