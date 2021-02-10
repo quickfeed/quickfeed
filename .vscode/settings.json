@@ -78,6 +78,7 @@
         "privkey",
         "quickfeed",
         "repotoken",
+        "run",
         "scms",
         "scorelimit",
         "scriptfile",
