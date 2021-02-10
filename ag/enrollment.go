@@ -5,8 +5,9 @@ import (
 	"time"
 )
 
-// gracePeriod is the grace period for submissions after the deadline. It should be <int> hours, in the range 0-23.
-// Note grace period applies to all enrollments (courses)
+// gracePeriod is the grace period for submissions after the deadline.
+// The grace period should be hours in the range 0-23.
+// Note grace period applies to all enrollments (courses).
 const gracePeriod time.Duration = time.Duration(2 * time.Hour)
 
 // UpdateSlipDays updates the number of slipdays for the given assignment/submission.
@@ -25,7 +26,7 @@ func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, sub
 	if submission.Score < assignment.ScoreLimit && submission.Status != Submission_APPROVED && sinceDeadline > 0 {
 		// deadline exceeded; calculate used slipdays for this assignment
 		slpDays, slpHours := uint32(sinceDeadline/days), sinceDeadline%days
-		//slpHours is time after deadline. This is also correct on subsequent slipdays after deadline has passed
+		// slpHours is hours after deadline, excluding subsequent full-day slipdays after deadline
 		if slpHours > gracePeriod {
 			slpDays++
 		}
