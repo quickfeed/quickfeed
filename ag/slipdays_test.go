@@ -272,3 +272,71 @@ func ExampleEnrollment_GetUsedSlipDays() {
 	// []
 	// [assignmentID:1 usedSlipDays:2 ]
 }
+
+func TestSlipDaysWGracePeriod(t *testing.T) {
+	lab := a(0)
+	lab.ID = 1
+	timeOfDeadline, err := time.Parse(layout, lab.Deadline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab.ID}
+	submissiontimes := []struct {
+		delivered        time.Time
+		comment          string
+		expectedslipdays int
+	}{
+		{
+			delivered:        timeOfDeadline.Add(time.Duration(15) * time.Minute),
+			comment:          "Delivered 15 minutes after the deadline",
+			expectedslipdays: 0,
+		},
+		{
+			delivered:        timeOfDeadline.Add(time.Duration(119) * time.Minute),
+			comment:          "Delivered 1 hour and 59 minutes after the deadline",
+			expectedslipdays: 0,
+		},
+		{
+			delivered:        timeOfDeadline.Add(time.Duration(2) * time.Hour),
+			comment:          "Delivered exactly 2 hours after the deadline",
+			expectedslipdays: 0,
+		},
+		{
+			delivered:        timeOfDeadline.Add(time.Duration(2)*time.Hour + time.Second),
+			comment:          "Delivered 2 hours and 1 second after the deadline",
+			expectedslipdays: 1,
+		},
+		{
+			delivered:        timeOfDeadline.Add(days + time.Hour),
+			comment:          "Delivered 1 day and 1 hour after the deadline",
+			expectedslipdays: 1,
+		},
+		{
+			delivered:        timeOfDeadline.Add(days + 3*time.Hour),
+			comment:          "Delivered 1 day and 3 hours after the deadline",
+			expectedslipdays: 2,
+		},
+		{
+			delivered:        timeOfDeadline.Add(3*days + 6*time.Hour),
+			comment:          "Delivered 3 days and 6 hours after the deadline",
+			expectedslipdays: 4,
+		},
+	}
+
+	for _, test := range submissiontimes {
+		enrol := &pb.Enrollment{
+			Course:       course,
+			CourseID:     course.ID,
+			UsedSlipDays: make([]*pb.UsedSlipDays, 0),
+		}
+		t.Run(fmt.Sprintf("%s||Expected Usedslipdays:%d", test.comment, test.expectedslipdays), func(t *testing.T) {
+			err := enrol.UpdateSlipDays(test.delivered, lab, submission)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if int(enrol.GetUsedSlipDays()[0].UsedSlipDays) != test.expectedslipdays {
+				t.Errorf("Got wrong amount of Slipdays, got:%d , want:%d", int(enrol.GetUsedSlipDays()[0].UsedSlipDays), test.expectedslipdays)
+			}
+		})
+	}
+}

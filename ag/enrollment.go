@@ -5,11 +5,9 @@ import (
 	"time"
 )
 
-//gracePeriod is the grace-Period for deliveries after the deadline. It can only be <int> hours.
-//Currently there is a 2 hour grace period. It should be between [0,1,..,23]
+// gracePeriod is the grace period for submissions after the deadline. It should be <int> hours, in the range 0-23.
+// Note grace period applies to all enrollments (courses)
 const gracePeriod time.Duration = time.Duration(2 * time.Hour)
-
-//Keep in mind this will be the same across all enrollments (courses) on the AG service.
 
 // UpdateSlipDays updates the number of slipdays for the given assignment/submission.
 func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, submission *Submission) error {
@@ -31,7 +29,6 @@ func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, sub
 		if slpHours > gracePeriod {
 			slpDays++
 		}
-		//updating the slipdays
 		m.updateSlipDays(assignment.GetID(), slpDays)
 	}
 	return nil
