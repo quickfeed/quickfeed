@@ -5,7 +5,10 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/autograde/quickfeed/ag"
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/database"
+	"github.com/google/go-cmp/cmp"
 	"github.com/jinzhu/gorm"
 )
 
@@ -18,25 +21,18 @@ func TestGormDBGetSubmissionForUser(t *testing.T) {
 	}
 }
 
-func TestGormDBUpdateSubmission(t *testing.T) {
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	// when we create a new submission for the same course lab and user, it will update the old one,
-	// instead of creating an extra record
-	// check that it is still approved after using create method
-
+func setupCourseAssignment(t *testing.T, db database.Database) (*pb.User, *pb.Course, *pb.Assignment) {
 	teacher := createFakeUser(t, db, 10)
 	// create a course and an assignment
-	var course pb.Course
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
+	course := &pb.Course{}
+	if err := db.CreateCourse(teacher.ID, course); err != nil {
 		t.Fatal(err)
 	}
-	assignment := pb.Assignment{
+	assignment := &pb.Assignment{
 		CourseID: course.ID,
 		Order:    1,
 	}
-	if err := db.CreateAssignment(&assignment); err != nil {
+	if err := db.CreateAssignment(assignment); err != nil {
 		t.Fatal(err)
 	}
 
@@ -56,6 +52,75 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
+	return user, course, assignment
+}
+
+func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+	user, course, assignment := setupCourseAssignment(t, db)
+
+	if err := db.CreateSubmission(&pb.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Score:        80,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	submissions, err := db.GetLastSubmissions(course.ID, &pb.Submission{UserID: user.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(submissions) != 1 {
+		t.Errorf("have %d submissions want %d", len(submissions), 1)
+	}
+	want := &pb.Submission{
+		ID:           submissions[0].ID,
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Score:        80,
+		Status:       pb.Submission_NONE,
+		Reviews:      []*ag.Review{},
+	}
+	if diff := cmp.Diff(submissions[0], want); diff != "" {
+		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
+	}
+
+	// Set score to zero after having recorded a score of 80
+	if err := db.CreateSubmission(&pb.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Score:        0,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	submissions, err = db.GetLastSubmissions(course.ID, &pb.Submission{UserID: user.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want = &pb.Submission{
+		ID:           submissions[0].ID,
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Score:        0,
+		Status:       pb.Submission_NONE,
+		Reviews:      []*ag.Review{},
+	}
+	if diff := cmp.Diff(submissions[0], want); diff != "" {
+		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
+	}
+}
+
+func TestGormDBUpdateSubmission(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+	user, course, assignment := setupCourseAssignment(t, db)
+
+	// when we create a new submission for the same course lab and user, it will update the old one,
+	// instead of creating an extra record
+	// check that it is still approved after using create method
 
 	// create another submission for the assignment; now it should succeed
 	if err := db.CreateSubmission(&pb.Submission{
