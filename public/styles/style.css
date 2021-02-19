@@ -620,8 +620,8 @@ table thead tr:first-child {
 
 .score-c {
     display:block;
-    float:left;
-    margin-left: 80%;
+    float:right;
+    margin-right: 1%;
 }
 .description-c {
     display: block;

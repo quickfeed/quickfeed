@@ -1,6 +1,7 @@
 package hooks
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -167,6 +168,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 		JobOwner:   payload.GetSender().GetLogin(),
 	}
 	if assignment.SkipTests {
+		wh.logger.Debugf("Assignment %s for course %s is manually reviewed", assignment.Name, course.Name)
 		wh.recordSubmissionWithoutTests(runData)
 		return
 	}
@@ -176,17 +178,29 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 // recordSubmissionWithoutTests saves a new submission without running any tests
 // for a manually graded assignment.
 func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
+	noTestBuildInfo, err := json.Marshal(&ci.BuildInfo{
+		BuildID:   0,
+		BuildDate: time.Now().Format("2006-01-02T15:04:05"),
+		BuildLog:  "No automated tests for this assignment",
+		ExecTime:  1,
+	})
+	if err != nil {
+		wh.logger.Errorf("Error marshalling build info for %s of course %s for student %s: %s", data.Course.Name, data.Assignment.Name, data.JobOwner, err)
+		return
+	}
 	newSubmission := &pb.Submission{
 		AssignmentID: data.Assignment.ID,
+		BuildInfo:    string(noTestBuildInfo),
 		CommitHash:   data.CommitID,
 		UserID:       data.Repo.UserID,
 		GroupID:      data.Repo.GroupID,
 	}
 	if err := wh.db.CreateSubmission(newSubmission); err != nil {
 		wh.logger.Errorf("Failed to save submission for user ID %s for assignment ID %d: %s", data.JobOwner, data.Assignment.ID, err)
-	} else {
-		wh.logger.Debugf("Skipping tests. Saved submission for user ID %s for assignment ID %d", data.JobOwner, data.Assignment.ID)
+		return
 	}
+	wh.logger.Debugf("Saved manual review submission for user %s for assignment %d", data.JobOwner, data.Assignment.ID)
+
 }
 
 // updateLastActivityDate sets a current date as a last activity date of the student
