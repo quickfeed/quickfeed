@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Autograder</title>
+    <!-- Disable React Dev Tools in production -->
+    <script>
+        if (window.location.hostname === "uis.itest.run" && typeof window.__REACT_DEVTOOLS_GLOBAL_HOOK__ === 'object') {
+            __REACT_DEVTOOLS_GLOBAL_HOOK__.inject = function() {};
+        }
+    </script>
+
     <!--React Javascript files Start-->
     <script src="https://unpkg.com/react@16.4.1/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@16.4.1/umd/react-dom.development.js"></script>
