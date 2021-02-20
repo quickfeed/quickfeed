@@ -1,5 +1,4 @@
 syntax = "proto3";
-
 package score;
 option go_package = "github.com/autograde/quickfeed/kit/score";
 
@@ -10,4 +9,9 @@ message Score {
     int32 Score = 3;     // the score obtained
     int32 MaxScore = 4;  // max score possible to get on this specific test
     int32 Weight = 5;    // the weight of this test; used to compute final grade
+}
+
+message Scores {
+    repeated string TestNames = 1;   // defines the iteration order of the tests
+    map<string, Score> ScoreMap = 2; // map from TestName to Score
 }
