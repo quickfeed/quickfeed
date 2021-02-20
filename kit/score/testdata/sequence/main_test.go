@@ -1,6 +1,7 @@
 package sequence
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -9,5 +10,9 @@ import (
 
 func TestMain(m *testing.M) {
 	score.PrintTestInfo()
-	os.Exit(m.Run())
+	exitCode := m.Run()
+	if err := score.Validate(); err != nil {
+		fmt.Println(err)
+	}
+	os.Exit(exitCode)
 }

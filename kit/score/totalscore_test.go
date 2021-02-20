@@ -36,17 +36,25 @@ func subName(points, max, weight, i, j int) string {
 
 func TestSum(t *testing.T) {
 	for i, s := range scores {
-		// Clear other scores before using Sum() again.
+		// Clear other scores before reusing the underlying map of Score objects again.
 		score.Clear()
+		scoreTable := score.NewScores()
 		for j, sd := range s.in {
 			// AddSub is normally called from init(), but here we are testing Sum().
 			score.AddSub(TestSum, subName(sd.points, sd.max, sd.weight, i, j), sd.max, sd.weight)
 			t.Run(subName(sd.points, sd.max, sd.weight, i, j), func(t *testing.T) {
 				sc := score.MinByName(t.Name())
 				sc.IncBy(sd.points)
+				if err := sc.IsValid(""); err != nil {
+					t.Error(err)
+				}
+				scoreTable.AddScore(sc)
 			})
 		}
-		tot := score.Sum()
+		if err := scoreTable.Validate(); err != nil {
+			t.Error(err)
+		}
+		tot := scoreTable.Sum()
 		if tot != s.out {
 			t.Errorf("Sum() = %d, expected %d", tot, s.out)
 		}
@@ -61,17 +69,25 @@ func TestSumGrade(t *testing.T) {
 	}
 
 	for i, s := range scores {
-		// Clear other scores before using Sum() again.
+		// Clear other scores before reusing the underlying map of Score objects again.
 		score.Clear()
+		scoreTable := score.NewScores()
 		for j, sd := range s.in {
 			// AddSub is normally called from init(), but here we are testing Sum() and Grade().
 			score.AddSub(TestSumGrade, subName(sd.points, sd.max, sd.weight, i, j), sd.max, sd.weight)
 			t.Run(subName(sd.points, sd.max, sd.weight, i, j), func(t *testing.T) {
 				sc := score.MinByName(t.Name())
 				sc.IncBy(sd.points)
+				if err := sc.IsValid(""); err != nil {
+					t.Error(err)
+				}
+				scoreTable.AddScore(sc)
 			})
 		}
-		tot := score.Sum()
+		if err := scoreTable.Validate(); err != nil {
+			t.Error(err)
+		}
+		tot := scoreTable.Sum()
 		grade := g.Grade(tot)
 		if grade != s.grade {
 			t.Errorf("Grade(%d) = %s, expected %s", tot, grade, s.grade)
