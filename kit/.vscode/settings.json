@@ -1,10 +1,14 @@
 {
     "cSpell.words": [
+        "Idxs",
+        "Unexported",
         "atoi",
         "cmds",
+        "extendee",
         "gosecret",
         "malloc",
         "printf",
+        "protoimpl",
         "struct"
     ]
 }
