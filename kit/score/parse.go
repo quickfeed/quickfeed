@@ -28,8 +28,7 @@ func Parse(s, secret string) (*Score, error) {
 		var sc Score
 		err := json.Unmarshal([]byte(s), &sc)
 		if err == nil {
-			err = sc.IsValid(secret)
-			if err != nil {
+			if err = sc.IsValid(secret); err != nil {
 				return nil, err
 			}
 			return &sc, nil
