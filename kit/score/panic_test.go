@@ -30,15 +30,17 @@ var triangularTests = []struct {
 	{7, 28},
 }
 
+var scores = score.NewRegistry()
+
 func init() {
-	score.Add(TestPanicTriangularBefore, len(triangularTests), 5)
-	score.Add(TestPanicTriangularPanic, len(triangularTests), 5)
-	score.Add(TestPanicTriangularAfter, len(triangularTests), 5)
-	score.Add(TestPanicHandler, len(triangularTests), 5)
+	scores.Add(TestPanicTriangularBefore, len(triangularTests), 5)
+	scores.Add(TestPanicTriangularPanic, len(triangularTests), 5)
+	scores.Add(TestPanicTriangularAfter, len(triangularTests), 5)
+	scores.Add(TestPanicHandler, len(triangularTests), 5)
 }
 
 func TestPanicTriangularBefore(t *testing.T) {
-	sc := score.Max()
+	sc := scores.Max()
 	defer sc.Print(t)
 	for _, test := range triangularTests {
 		if diff := cmp.Diff(test.want, triangular(test.in)); diff != "" {
@@ -57,7 +59,7 @@ func TestPanicTriangularPanic(t *testing.T) {
 		t.Skipf("Skipping; expected to fail. Run with: %s=1 go test -v -run %s", panicTestEnvName, t.Name())
 	}
 
-	sc := score.Max()
+	sc := scores.Max()
 	defer sc.Print(t)
 	for _, test := range triangularTests {
 		if diff := cmp.Diff(test.want, triangularPanic(test.in)); diff != "" {
@@ -68,7 +70,7 @@ func TestPanicTriangularPanic(t *testing.T) {
 }
 
 func TestPanicTriangularAfter(t *testing.T) {
-	sc := score.Max()
+	sc := scores.Max()
 	defer sc.Print(t)
 	for _, test := range triangularTests {
 		if diff := cmp.Diff(test.want, triangular(test.in)); diff != "" {
@@ -87,7 +89,7 @@ func TestPanicHandler(t *testing.T) {
 		t.Skipf("Skipping; expected to fail. Run with: %s=1 go test -v -run %s", panicTestEnvName, t.Name())
 	}
 
-	sc := score.Max()
+	sc := scores.Max()
 	defer sc.Print(t)
 	for _, test := range triangularTests {
 		t.Run(fmt.Sprintf("triangular(%d)=%d", test.in, test.want), func(t *testing.T) {

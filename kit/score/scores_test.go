@@ -230,7 +230,7 @@ func TestScoresSum(t *testing.T) {
 			s.AddScore(sc)
 		}
 	}
-	err := s.Validate()
+	err := s.Validate(hiddenSecret)
 	if err != nil {
 		t.Errorf("Validate() = %v, expected <nil>", err)
 	}

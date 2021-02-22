@@ -71,7 +71,7 @@ func TestParseJSONStrings(t *testing.T) {
 var scoreValidTests = []struct {
 	name string
 	in   []*score.Score
-	want string
+	want error
 }{
 	{
 		name: "EmptyTestName",
@@ -128,7 +128,7 @@ var scoreValidTests = []struct {
 			{TestName: "GoodScoreS", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 50},
 			{TestName: "GoodScoreS", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 100},
 		},
-		want: "nil",
+		want: nil,
 	},
 }
 
@@ -138,10 +138,10 @@ func TestScoreIsValid(t *testing.T) {
 			for _, sc := range test.in {
 				err := sc.IsValid(theSecret)
 				if err != nil {
-					if !strings.Contains(err.Error(), test.want) {
+					if !strings.Contains(err.Error(), test.want.Error()) {
 						t.Errorf("IsValid(%q) = %v, expected = %v", sc, err, test.want)
 					}
-				} else if test.want != "nil" {
+				} else if test.want != nil {
 					t.Errorf("IsValid(%q) = %v, expected = %v", sc, err, test.want)
 				}
 			}

@@ -9,20 +9,36 @@ import (
 	"testing"
 )
 
-var scores = make(map[string]*Score)
+type registry struct {
+	scores map[string]*Score
+}
 
-// Clear makes a new map for recording scores.
-// This method is only provided for testing purposes and should not be used.
-// It may be removed in the future.
-func Clear() {
-	scores = make(map[string]*Score)
+func NewRegistry() *registry {
+	return &registry{
+		scores: make(map[string]*Score),
+	}
+}
+
+// Validate returns an error if one of the recorded score objects are invalid.
+// Otherwise, nil is returned.
+func (s *registry) Validate() error {
+	callFrame()
+	for _, sc := range s.scores {
+		if err := sc.IsValid(sessionSecret); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // PrintTestInfo prints JSON representation of all registered tests.
 // This should be called after test registration has been completed,
 // but before test execution. This can be done in TestMain.
-func PrintTestInfo() {
-	for _, s := range scores {
+//
+// Will panic if called from a non-test function.
+func (s *registry) PrintTestInfo() {
+	callFrame()
+	for _, s := range s.scores {
 		fmt.Println(s.json())
 	}
 }
@@ -30,8 +46,8 @@ func PrintTestInfo() {
 // Add test with given max score and weight to the registry.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
-func Add(test interface{}, max, weight int) {
-	add(testName(test), max, weight)
+func (s *registry) Add(test interface{}, max, weight int) {
+	s.add(testName(test), max, weight)
 }
 
 // AddSub test with given max score and weight to the registry.
@@ -39,18 +55,18 @@ func Add(test interface{}, max, weight int) {
 // conjunction with MaxByName and MinByName called from within a subtest.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
-func AddSub(test interface{}, subTestName string, max, weight int) {
+func (s *registry) AddSub(test interface{}, subTestName string, max, weight int) {
 	tstName := fmt.Sprintf("%s/%s", testName(test), subTestName)
-	add(tstName, max, weight)
+	s.add(tstName, max, weight)
 }
 
 // Max returns a score object with Score equal to MaxScore.
 // The returned score object should be used with score.Dec() and score.DecBy().
 //
 // Will panic with unknown score test, if the test hasn't been added.
-func Max() *Score {
+func (s *registry) Max() *Score {
 	testName := callerTestName()
-	sc := get(testName)
+	sc := s.get(testName)
 	sc.Score = sc.GetMaxScore()
 	return sc
 }
@@ -59,9 +75,9 @@ func Max() *Score {
 // The returned score object should be used with score.Inc() and score.IncBy().
 //
 // Will panic with unknown score test, if the test hasn't been added.
-func Min() *Score {
+func (s *registry) Min() *Score {
 	testName := callerTestName()
-	return get(testName)
+	return s.get(testName)
 }
 
 // MaxByName returns score object for the given test name with Score equal to MaxScore.
@@ -69,8 +85,8 @@ func Min() *Score {
 // The returned score object should be used with score.Dec() and score.DecBy().
 //
 // Will panic with unknown score test, if the test hasn't been added.
-func MaxByName(testName string) *Score {
-	sc := get(testName)
+func (s *registry) MaxByName(testName string) *Score {
+	sc := s.get(testName)
 	sc.Score = sc.GetMaxScore()
 	return sc
 }
@@ -80,8 +96,8 @@ func MaxByName(testName string) *Score {
 // The returned score object should be used with score.Inc() and score.IncBy().
 //
 // Will panic with unknown score test, if the test hasn't been added.
-func MinByName(testName string) *Score {
-	return get(testName)
+func (s *registry) MinByName(testName string) *Score {
+	return s.get(testName)
 }
 
 func testName(testFn interface{}) string {
@@ -129,15 +145,15 @@ func firstElem(name string) string {
 	return name[:end]
 }
 
-func add(testName string, max, weight int) {
-	if _, found := scores[testName]; found {
-		panic(errMsg(testName, "duplicate score test"))
+func (s *registry) add(testName string, max, weight int) {
+	if _, found := s.scores[testName]; found {
+		panic(errMsg(testName, "Duplicate score test"))
 	}
 	if max < 1 {
-		panic(errMsg(testName, "max must be greater than 0"))
+		panic(errMsg(testName, ErrMaxScore.Error()))
 	}
 	if weight < 1 {
-		panic(errMsg(testName, "weight must be greater than 0"))
+		panic(errMsg(testName, ErrWeight.Error()))
 	}
 	sc := &Score{
 		Secret:   sessionSecret,
@@ -145,10 +161,10 @@ func add(testName string, max, weight int) {
 		MaxScore: int32(max),
 		Weight:   int32(weight),
 	}
-	scores[testName] = sc
+	s.scores[testName] = sc
 }
 
-func get(testName string) *Score {
+func (s *registry) get(testName string) *Score {
 	callingTestName := callFrame()
 	testFnName := stripPkg(callingTestName.Function)
 	rootTestName := firstElem(testFnName)
@@ -156,7 +172,7 @@ func get(testName string) *Score {
 		// Only the registered Test function can call the lookup functions
 		panic(errMsg(testName, "unauthorized lookup"))
 	}
-	if sc, ok := scores[testName]; ok {
+	if sc, ok := s.scores[testName]; ok {
 		return sc
 	}
 	panic(errMsg(testName, "unknown score test"))

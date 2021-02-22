@@ -3,19 +3,18 @@ package sequence
 import (
 	"testing"
 
-	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
 )
 
 func init() {
 	// Reduce max score by 1 since the first test-case ({0, 0}) always passes, which gave free points.
 	max, weight := len(triangularTestsAG)-1, 5
-	score.Add(TestTriangularAG, max, weight)
-	score.Add(TestTriangularRecurrenceAG, max, weight)
-	score.Add(TestTriangularFormulaAG, max, weight)
+	scores.Add(TestTriangularAG, max, weight)
+	scores.Add(TestTriangularRecurrenceAG, max, weight)
+	scores.Add(TestTriangularFormulaAG, max, weight)
 	// Here is alternative strategy using subtests
 	for name := range funcs {
-		score.AddSub(TestTriangularSubTestAG, name, max, weight)
+		scores.AddSub(TestTriangularSubTestAG, name, max, weight)
 	}
 }
 
@@ -48,7 +47,7 @@ var triangularTestsAG = []struct {
 }
 
 func TestTriangularAG(t *testing.T) {
-	sc := score.Max()
+	sc := scores.Max()
 	defer sc.Print(t)
 
 	for _, test := range triangularTestsAG {
@@ -60,7 +59,7 @@ func TestTriangularAG(t *testing.T) {
 }
 
 func TestTriangularRecurrenceAG(t *testing.T) {
-	sc := score.Max()
+	sc := scores.Max()
 	defer sc.Print(t)
 
 	for _, test := range triangularTestsAG {
@@ -72,7 +71,7 @@ func TestTriangularRecurrenceAG(t *testing.T) {
 }
 
 func TestTriangularFormulaAG(t *testing.T) {
-	sc := score.Max()
+	sc := scores.Max()
 	defer sc.Print(t)
 
 	for _, test := range triangularTestsAG {
@@ -86,7 +85,7 @@ func TestTriangularFormulaAG(t *testing.T) {
 func TestTriangularSubTestAG(t *testing.T) {
 	for name, fn := range funcs {
 		t.Run(name, func(t *testing.T) {
-			sc := score.MaxByName(t.Name())
+			sc := scores.MaxByName(t.Name())
 			defer sc.Print(t)
 			for _, test := range triangularTestsAG {
 				if diff := cmp.Diff(test.want, fn(test.in)); diff != "" {

@@ -6,16 +6,15 @@ import (
 	"strings"
 )
 
-// ErrScoreNotFound is returned if the parse string did not contain a
-// JSON score string.
-var ErrScoreNotFound = errors.New("score not found in string")
-
-const (
-	ErrScoreInterval = "Score must be in the interval [0, MaxScore]"
-	ErrMaxScore      = "MaxScore must be greater than 0"
-	ErrWeight        = "Weight must be greater than 0"
-	ErrEmptyTestName = "TestName must be specified"
-	ErrSecret        = "Secret field must match expected secret"
+var (
+	// ErrScoreNotFound is returned if the parsed string did not contain a JSON score string.
+	ErrScoreNotFound    = errors.New("Score not found in string")
+	ErrScoreInterval    = errors.New("Score must be in the interval [0, MaxScore]")
+	ErrMaxScore         = errors.New("MaxScore must be greater than 0")
+	ErrWeight           = errors.New("Weight must be greater than 0")
+	ErrEmptyTestName    = errors.New("TestName must be specified")
+	ErrSecret           = errors.New("Secret field must match expected secret")
+	ErrSuppressedSecret = errors.New("Error suppressed to avoid revealing secret")
 )
 
 // hiddenSecret is used to replace the global secret when parsing.
@@ -35,7 +34,7 @@ func Parse(s, secret string) (*Score, error) {
 		}
 		if strings.Contains(err.Error(), secret) {
 			// this is probably not necessary, but to be safe
-			return nil, errors.New("error suppressed to avoid revealing secret")
+			return nil, ErrSuppressedSecret
 		}
 		return nil, err
 	}
@@ -49,19 +48,19 @@ func Parse(s, secret string) (*Score, error) {
 func (sc *Score) IsValid(secret string) error {
 	tName := sc.GetTestName()
 	if tName == "" {
-		return errMsg("", ErrEmptyTestName)
+		return errMsg("", ErrEmptyTestName.Error())
 	}
 	if sc.MaxScore <= 0 {
-		return errMsg(tName, ErrMaxScore)
+		return errMsg(tName, ErrMaxScore.Error())
 	}
 	if sc.Weight <= 0 {
-		return errMsg(tName, ErrWeight)
+		return errMsg(tName, ErrWeight.Error())
 	}
 	if sc.Score < 0 || sc.Score > sc.MaxScore {
-		return errMsg(tName, ErrScoreInterval)
+		return errMsg(tName, ErrScoreInterval.Error())
 	}
 	if sc.Secret != secret {
-		return errMsg(tName, ErrSecret)
+		return errMsg(tName, ErrSecret.Error())
 	}
 	sc.Secret = hiddenSecret // overwrite secret
 	return nil

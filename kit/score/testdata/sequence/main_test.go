@@ -8,10 +8,12 @@ import (
 	"github.com/autograde/quickfeed/kit/score"
 )
 
+var scores = score.NewRegistry()
+
 func TestMain(m *testing.M) {
-	score.PrintTestInfo()
+	scores.PrintTestInfo()
 	exitCode := m.Run()
-	if err := score.Validate(); err != nil {
+	if err := scores.Validate(); err != nil {
 		fmt.Println(err)
 	}
 	os.Exit(exitCode)

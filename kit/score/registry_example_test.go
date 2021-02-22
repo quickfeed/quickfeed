@@ -19,14 +19,16 @@ func fibonacci(n uint) uint {
 	return fibonacci(n-1) + fibonacci(n-2)
 }
 
+var scoreRegistry = score.NewRegistry()
+
 func init() {
-	score.Add(TestFibonacciMax, len(fibonacciTests), 20)
-	score.Add(TestFibonacciMin, len(fibonacciTests), 20)
+	scoreRegistry.Add(TestFibonacciMax, len(fibonacciTests), 20)
+	scoreRegistry.Add(TestFibonacciMin, len(fibonacciTests), 20)
 	for _, ft := range fibonacciTests {
-		score.AddSub(TestFibonacciSubTest, subTestName("Max", ft.in), 1, 1)
+		scoreRegistry.AddSub(TestFibonacciSubTest, subTestName("Max", ft.in), 1, 1)
 	}
 	for _, ft := range fibonacciTests {
-		score.AddSub(TestFibonacciSubTest, subTestName("Min", ft.in), 1, 1)
+		scoreRegistry.AddSub(TestFibonacciSubTest, subTestName("Min", ft.in), 1, 1)
 	}
 }
 
@@ -54,7 +56,7 @@ var fibonacciTests = []struct {
 }
 
 func TestFibonacciMax(t *testing.T) {
-	sc := score.Max()
+	sc := scoreRegistry.Max()
 	for _, ft := range fibonacciTests {
 		out := fibonacci(ft.in)
 		if out != ft.want {
@@ -70,7 +72,7 @@ func TestFibonacciMax(t *testing.T) {
 }
 
 func TestFibonacciMin(t *testing.T) {
-	sc := score.Min()
+	sc := scoreRegistry.Min()
 	for _, ft := range fibonacciTests {
 		out := fibonacci(ft.in)
 		if out == ft.want {
@@ -88,7 +90,7 @@ func TestFibonacciMin(t *testing.T) {
 func TestFibonacciSubTest(t *testing.T) {
 	for _, ft := range fibonacciTests {
 		t.Run(subTestName("Max", ft.in), func(t *testing.T) {
-			sc := score.MaxByName(t.Name())
+			sc := scoreRegistry.MaxByName(t.Name())
 			out := fibonacci(ft.in)
 			if out != ft.want {
 				sc.Dec()
@@ -105,7 +107,7 @@ func TestFibonacciSubTest(t *testing.T) {
 			}
 		})
 		t.Run(subTestName("Min", ft.in), func(t *testing.T) {
-			sc := score.MinByName(t.Name())
+			sc := scoreRegistry.MinByName(t.Name())
 			out := fibonacci(ft.in)
 			if out == ft.want {
 				sc.Inc()
@@ -134,14 +136,14 @@ func TestStudentAttackCode(t *testing.T) {
 		fn             func(string) *score.Score
 		want           string
 	}{
-		{id: "1", name: "MaxByName", test: "TestFibonacciMax", fn: score.MaxByName, want: "unauthorized lookup: TestFibonacciMax"},
-		{id: "2", name: "MaxByName", test: "TestFibonacciMin", fn: score.MaxByName, want: "unauthorized lookup: TestFibonacciMin"},
-		{id: "3", name: "MaxByName", test: "TestFibonacciSubTest", fn: score.MaxByName, want: "unauthorized lookup: TestFibonacciSubTest"},
-		{id: "4", name: "MaxByName", test: "TestStudentAttackCode", fn: score.MaxByName, want: "unknown score test: TestStudentAttackCode"},
-		{id: "1", name: "MinByName", test: "TestFibonacciMax", fn: score.MinByName, want: "unauthorized lookup: TestFibonacciMax"},
-		{id: "2", name: "MinByName", test: "TestFibonacciMin", fn: score.MinByName, want: "unauthorized lookup: TestFibonacciMin"},
-		{id: "3", name: "MinByName", test: "TestFibonacciSubTest", fn: score.MinByName, want: "unauthorized lookup: TestFibonacciSubTest"},
-		{id: "4", name: "MinByName", test: "TestStudentAttackCode", fn: score.MinByName, want: "unknown score test: TestStudentAttackCode"},
+		{id: "1", name: "MaxByName", test: "TestFibonacciMax", fn: scoreRegistry.MaxByName, want: "unauthorized lookup: TestFibonacciMax"},
+		{id: "2", name: "MaxByName", test: "TestFibonacciMin", fn: scoreRegistry.MaxByName, want: "unauthorized lookup: TestFibonacciMin"},
+		{id: "3", name: "MaxByName", test: "TestFibonacciSubTest", fn: scoreRegistry.MaxByName, want: "unauthorized lookup: TestFibonacciSubTest"},
+		{id: "4", name: "MaxByName", test: "TestStudentAttackCode", fn: scoreRegistry.MaxByName, want: "unknown score test: TestStudentAttackCode"},
+		{id: "1", name: "MinByName", test: "TestFibonacciMax", fn: scoreRegistry.MinByName, want: "unauthorized lookup: TestFibonacciMax"},
+		{id: "2", name: "MinByName", test: "TestFibonacciMin", fn: scoreRegistry.MinByName, want: "unauthorized lookup: TestFibonacciMin"},
+		{id: "3", name: "MinByName", test: "TestFibonacciSubTest", fn: scoreRegistry.MinByName, want: "unauthorized lookup: TestFibonacciSubTest"},
+		{id: "4", name: "MinByName", test: "TestStudentAttackCode", fn: scoreRegistry.MinByName, want: "unknown score test: TestStudentAttackCode"},
 	}
 	for _, test := range tests {
 		t.Run(test.name+"/"+test.id, func(t *testing.T) {

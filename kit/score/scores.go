@@ -30,9 +30,9 @@ func (s *Scores) AddScore(sc *Score) {
 
 // Validate returns an error if one of the recorded score objects are invalid.
 // Otherwise, nil is returned.
-func (s *Scores) Validate() error {
+func (s *Scores) Validate(secret string) error {
 	for _, sc := range s.GetScoreMap() {
-		if err := sc.IsValid(hiddenSecret); err != nil {
+		if err := sc.IsValid(secret); err != nil {
 			return err
 		}
 	}
