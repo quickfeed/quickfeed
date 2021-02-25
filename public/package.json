@@ -1,50 +1,53 @@
 {
-  "name": "reactcomponents",
+  "name": "untitled3",
   "version": "0.1.0",
-  "description": "React Components for the Autograder Project",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
+  "private": true,
   "dependencies": {
-    "@types/google-protobuf": "^3.7.4",
-    "@types/node": "^14.14.8",
-    "@types/protobufjs": "^6.0.0",
-    "@types/react": "^16.9.56",
-    "@types/react-dom": "^16.9.9",
-    "async": "^3.2.0",
-    "fs": "0.0.1-security",
-    "google-protobuf": "^3.14.0",
-    "grpc-web": "^1.2.0",
-    "lodash": "^4.17.20",
-    "minimist": "^1.2.5",
-    "nan": "^2.14.2",
+    "@testing-library/jest-dom": "^5.11.8",
+    "@testing-library/react": "^11.2.3",
+    "@testing-library/user-event": "^12.6.0",
+    "@types/jest": "^26.0.20",
+    "@types/node": "^12.19.12",
+    "@types/react": "^16.14.2",
+    "@types/react-dom": "^16.9.10",
+    "axios": "^0.21.1",
+    "google-protobuf": "^3.15.0-rc.1",
+    "grpc-web": "^1.2.1",
+    "overmind": "^26.0.0",
+    "overmind-react": "^27.0.0",
     "react": "^17.0.1",
-    "react-components": "^0.5.1",
     "react-dom": "^17.0.1",
-    "react-tooltip": "^4.2.10",
-    "serialize-javascript": "^5.0.1",
-    "terser-webpack-plugin": "^5.0.3",
-    "webpack": "^5.5.1"
+    "react-router": "^5.2.0",
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "4.0.1",
+    "typescript": "^4.1.3",
+    "web-vitals": "^0.2.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   },
   "devDependencies": {
-    "awesome-typescript-loader": "^5.2.1",
-    "base": "^3.0.0",
-    "braces": "^3.0.2",
-    "cache-base": "^4.0.0",
-    "chokidar": "^3.4.3",
-    "mixin-deep": "^2.0.1",
-    "snapdragon": "^0.12.0",
-    "source-map-loader": "^1.1.2",
-    "ts-loader": "^8.0.11",
-    "typescript": "^4.0.5",
-    "union-value": "^2.0.1",
-    "webpack-cli": "^4.2.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/autograde/quickfeed.git"
+    "@types/react-router-dom": "^5.1.7"
   }
 }
