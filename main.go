@@ -10,7 +10,7 @@ import (
 	"os"
 
 	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/envoy"
+	//"github.com/autograde/quickfeed/envoy"
 	"github.com/autograde/quickfeed/web"
 	"github.com/autograde/quickfeed/web/auth"
 	"go.uber.org/zap"
@@ -93,7 +93,7 @@ func main() {
 	}()
 
 	// start envoy in a docker container; fetch envoy docker image if necessary
-	go envoy.StartEnvoy(logger)
+	//go envoy.StartEnvoy(logger)
 
 	// holds references for activated providers for current user token
 	scms := auth.NewScms()

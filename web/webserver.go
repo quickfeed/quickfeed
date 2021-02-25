@@ -157,8 +157,8 @@ func registerFrontend(e *echo.Echo, entryPoint, public string) {
 	index := func(c echo.Context) error {
 		return c.File(entryPoint)
 	}
-	e.GET("/app", index)
-	e.GET("/app/*", index)
+	e.GET("/", index)
+	e.GET("/*", index)
 
 	// TODO: Whitelisted files only.
 	e.Static("/", public)
