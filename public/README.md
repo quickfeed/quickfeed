@@ -1,6 +1,8 @@
 
 ### `npm install`
 
-### `npm start`
+### `npm run-script build`
+
+### `quickfeed -http.public "public/build"` to serve 
 
 
