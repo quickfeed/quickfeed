@@ -2,12 +2,12 @@ import React, {useCallback, useState, useEffect} from "react";
 import { useOvermind } from "../overmind";
 
 import NavBar from './NavBar'
-import TodoCounter from "./TodoCounter";
+import Info from "./Info";
 
 
 
 
-const Todos = () => {
+const Home = () => {
     const { state, actions } = useOvermind()
 
     const listUsers = state.users.map(user => {
@@ -21,7 +21,7 @@ const Todos = () => {
     }, [])
 
     if (state.user.id == -1) {
-        return <TodoCounter />
+        return <Info />
     }
 
     return (
@@ -35,11 +35,11 @@ const Todos = () => {
             <img className="avatar" src={state.user.avatarurl}></img>
             </div>
             }
-            {state.user.id == -1 && <TodoCounter />}
+            {state.user.id == -1 && <Info />}
             
         </div>
 
     )
 }
 
-export default Todos;
+export default Home;

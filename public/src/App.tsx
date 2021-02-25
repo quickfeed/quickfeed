@@ -1,8 +1,8 @@
 import React, { Component, useEffect, useState } from "react";
 import { useOvermind } from "./overmind";
-import Todos from './components/Todos'
+import Home from './components/Home'
 import './App.css'
-import TodoCounter from "./components/TodoCounter";
+import Info from "./components/Info";
 
 const App = () => {
 
@@ -23,9 +23,9 @@ const App = () => {
     // General
     const { state, actions, effects, reaction } = useOvermind()
     if (loggedIn == true) {
-        return <Todos />
+        return <Home />
     }
-    return <TodoCounter />
+    return <Info />
 }
 
 

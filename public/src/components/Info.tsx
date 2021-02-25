@@ -3,15 +3,15 @@ import { useOvermind } from "../overmind";
 import NavBar from './NavBar';
 
 
-const TodoCounter = () => {
+const Info = () => {
     const { state } = useOvermind()
 
     return (
         <div>
         <NavBar></NavBar>
-        <h4>{state.num}</h4>
+        <h4>Test</h4>
         </div>
     )
 }
 
-export default TodoCounter
+export default Info
