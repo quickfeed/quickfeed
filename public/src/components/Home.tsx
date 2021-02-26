@@ -3,6 +3,7 @@ import { useOvermind } from "../overmind";
 
 import NavBar from './NavBar'
 import Info from "./Info";
+import { Enrollment } from "../proto/ag_pb";
 
 
 
@@ -16,30 +17,44 @@ const Home = () => {
         )
     });
 
+    const listCourses = state.courses.map(course => {
+        return (
+            <h5>{course.getName()}</h5>
+        )
+    })
+
+    const handleClick = {
+
+    }
+
     useEffect(() => {
         actions.getUsers();
+        actions.getCourses();
+        
     }, [])
 
-    if (state.user.id == -1) {
+    if (state.currentPage === "info") {
         return <Info />
     }
 
-    return (
-        <div className='box'>
-            <NavBar></NavBar>
-            <h1>Autograder</h1>
-            {listUsers}
-            {state.user.id > 0 &&
-            <div>
-            <h1>Welcome, {state.user.name}! Metadata: {state.users}</h1>
-            <img className="avatar" src={state.user.avatarurl}></img>
+    if (state.currentPage === "home") {
+        return (
+            <div className='box'>
+                <h1>Autograder</h1>
+                
+                {state.user.id > 0 &&
+                <div>
+                <h1>Welcome, {state.user.name}! Metadata: {state.users}</h1>
+                <img className="avatar" src={state.user.avatarurl}></img>
+                </div>
+                }
+                {state.user.id == -1 && <Info />}
+                <a><button onClick={() => actions.setCurrentPage("info")}>Courses</button></a>
+                {listCourses}
             </div>
-            }
-            {state.user.id == -1 && <Info />}
-            
-        </div>
-
-    )
+            )
+    }
+    return (<h1>404</h1>)
 }
 
 export default Home;

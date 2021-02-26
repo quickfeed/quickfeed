@@ -1,5 +1,5 @@
 import { Context, Action } from "overmind";
-import { User } from "../proto/ag_pb";
+import { Courses, Course, User } from "../proto/ag_pb";
 import { useEffects } from ".";
 
 
@@ -26,7 +26,15 @@ export const getUsers: Action<void> = ({state, effects}) => {
 }
 
 export const getCourses: Action<void> = ({state, effects}) => {
+    state.courses = []
     effects.api.getCourses(state).then(courses => {
-        console.log("getting courses")
-    })
+            courses.forEach(course => {
+                console.log(course)
+                state.courses.push(course)
+            })
+        });
+}
+
+export const setCurrentPage: Action<string> = ({state}, page) => {
+    state.currentPage = page;
 }

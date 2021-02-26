@@ -1,5 +1,7 @@
 import React, { Component } from "react";
 import { useOvermind } from "../overmind";
+import { Link } from 'react-router-dom'
+
 
 const NavBar = () => {
     const { state, actions } = useOvermind() 
@@ -11,14 +13,22 @@ const NavBar = () => {
         return <a href="/auth/github"><button>Login</button></a>
     }
    
-    const users = () => {
-        actions.getUsers()
-        actions.getCourses()
+    const goHome = () => {
+        state.currentPage = "home"
     }
 
     return (
         <nav className="navbar">
-            <button className="navbar-brand" onClick={users}>Autograder</button>
+            
+            <Link to="/">
+                <button className="navbar-brand">Autograder</button>
+            </Link>
+            <Link to="/info">
+                <button>Info</button>
+            </Link>
+            <Link to="/profile">
+                <button>Profile</button>
+            </Link>
             {checkUserLoggedIn()}
         </nav>
     )

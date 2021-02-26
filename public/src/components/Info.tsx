@@ -8,7 +8,6 @@ const Info = () => {
 
     return (
         <div>
-        <NavBar></NavBar>
         <h4>Test</h4>
         </div>
     )
