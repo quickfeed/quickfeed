@@ -1,6 +1,7 @@
 import { Context, Action } from "overmind";
 import { Courses, Course, User } from "../proto/ag_pb";
 import { useEffects } from ".";
+import { state } from "./state";
 
 
 export const getUser: Action<void, Promise<boolean>> = ({state, effects}) => {
@@ -35,6 +36,12 @@ export const getCourses: Action<void> = ({state, effects}) => {
         });
 }
 
-export const setCurrentPage: Action<string> = ({state}, page) => {
-    state.currentPage = page;
+export const setTheme: Action<void> = ({state}) => {
+    let theme = window.localStorage.getItem("theme")
+    state.theme = (theme == null) ? "light" : theme
+
+}
+
+export const changeTheme: Action<void> = ({state}) => {
+    state.theme = (state.theme == "light") ? "dark" : "light"
 }

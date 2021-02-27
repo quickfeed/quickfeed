@@ -17,6 +17,11 @@ const NavBar = () => {
         state.currentPage = "home"
     }
 
+    const changeTheme = () => {
+        actions.changeTheme()
+        window.localStorage.setItem("theme", state.theme)
+    }
+
     return (
         <nav className="navbar">
             
@@ -29,6 +34,7 @@ const NavBar = () => {
             <Link to="/profile">
                 <button>Profile</button>
             </Link>
+            <button onClick={() => changeTheme()}>{state.theme}</button>
             {checkUserLoggedIn()}
         </nav>
     )

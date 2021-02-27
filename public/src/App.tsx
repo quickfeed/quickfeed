@@ -15,28 +15,35 @@ const App = () => {
     useEffect(() => {
         actions.getUser()
         .then(res => setLoggedIn(res)) // .then(setLoggedIn(true))
-
+        actions.setTheme()
         // TODO Change action.getUser to a promise, add conditional rendering that only renders after getUser() has finished.
         // Change local state const [loggedIn, setLoggedIn] = useState(); to loggedIn when getUser() finished
         // Spinny loading thingy until done?
         // {loggedIn == false && <Loading></Loading}
         // {loggedIn == true && <UserPage></UserPage>}
 
+ 
     }, [loggedIn, setLoggedIn])
 
     // General
     const { state, actions, effects, reaction } = useOvermind()
-
     return ( 
         <Router>
-        <div>
-            <NavBar />
-            <Switch>
-            <Route path="/" exact component={Home} />
-            <Route path="/info" component={Info} />
-            <Route path="/profile" component={Profile} />
-            </Switch>
-        </div>
+            <div className={state.theme}>
+                <NavBar />
+                {!loggedIn ? (
+                    <Switch>
+                        <Route path="/" component={Info} />
+                    </Switch>
+                ) : (
+                <Switch>
+                    <Route path="/" exact component={Home} on/>
+                    <Route path="/info" component={Info} />
+                    <Route path="/profile" component={Profile} />
+                </Switch>
+                )}
+                
+            </div>
         </Router>
         )
 

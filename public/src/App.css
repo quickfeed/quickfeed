@@ -17,3 +17,13 @@
 body {
     margin: 0px;
 }
+
+.dark {
+    background-color: rgb(46, 45, 45);
+    color: white;
+}
+
+.light {
+    background-color: white;
+    color: black;
+}

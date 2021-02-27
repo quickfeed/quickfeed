@@ -23,9 +23,6 @@ const Home = () => {
         )
     })
 
-    const handleClick = {
-
-    }
 
     useEffect(() => {
         actions.getUsers();
@@ -33,28 +30,23 @@ const Home = () => {
         
     }, [])
 
-    if (state.currentPage === "info") {
-        return <Info />
-    }
-
-    if (state.currentPage === "home") {
-        return (
-            <div className='box'>
-                <h1>Autograder</h1>
+    return (
+        <div className='box'>
+            <h1>Autograder</h1>
                 
-                {state.user.id > 0 &&
-                <div>
-                <h1>Welcome, {state.user.name}! Metadata: {state.users}</h1>
-                <img className="avatar" src={state.user.avatarurl}></img>
-                </div>
-                }
-                {state.user.id == -1 && <Info />}
-                <a><button onClick={() => actions.setCurrentPage("info")}>Courses</button></a>
-                {listCourses}
+            {state.user.id > 0 &&
+            <div>
+            <h1>Welcome, {state.user.name}! Current theme: {state.theme}</h1>
+            <img className="avatar" src={state.user.avatarurl}></img>
             </div>
-            )
-    }
-    return (<h1>404</h1>)
+            }
+            {state.user.id == -1 && <Info />}
+            
+            <a><button>Courses</button></a>
+            {listCourses}
+        </div>
+        )
 }
+
 
 export default Home;

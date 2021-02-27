@@ -22,7 +22,8 @@ export type State = {
     Metadata: {user: string},
     users: User[],
     courses: Course[],
-    currentPage: string
+    currentPage: string,
+    theme: string
 }
 
 const getUserID = (currentState: State) => {
@@ -34,5 +35,6 @@ export const state: State = {
     Metadata: derived((state: State) =>  getUserID(state)),
     users: [],
     courses: [],
-    currentPage: "home"
+    currentPage: "home",
+    theme: "light"
 };
