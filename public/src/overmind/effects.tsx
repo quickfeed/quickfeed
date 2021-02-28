@@ -1,8 +1,7 @@
-import { Context} from 'overmind'
 import {IUser, State, state} from "./state";
 
 import { AutograderServiceClient } from "../proto/AgServiceClientPb";
-import { Void, User, Users, Course } from "../proto/ag_pb";
+import { Void, User, Course, Submissions, SubmissionRequest } from "../proto/ag_pb";
 import * as grpcWeb from "grpc-web"
 
 const AgService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
@@ -28,5 +27,11 @@ export const api = {
     // Returns all courses from the server
     getCourses: async (state: State): Promise<Course[]> => {
         return (await AgService.getCourses(new Void(), {'user': state.Metadata.user})).getCoursesList()
+    },
+    getSubmissions: async (courseID: number, userID: number): Promise<Submissions> => {
+        const request = new SubmissionRequest()
+        request.setUserid(userID)
+        request.setCourseid(courseID)
+        return (await AgService.getSubmissions(request, {'user': state.Metadata.user}))
     }
 }

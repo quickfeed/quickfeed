@@ -23,7 +23,7 @@ export type State = {
     users: User[],
     courses: Course[],
     currentPage: string,
-    theme: string
+    theme: string,
 }
 
 const getUserID = (currentState: State) => {
