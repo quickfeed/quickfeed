@@ -161,7 +161,7 @@ func registerFrontend(e *echo.Echo, entryPoint, public string) {
 	e.GET("/*", index)
 
 	// TODO: Whitelisted files only.
-	e.Static("/", public)
+	e.Static("/static", public+"/static")
 }
 
 func runWebServer(l *zap.SugaredLogger, e *echo.Echo, httpAddr string) {
