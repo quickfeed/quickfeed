@@ -3,12 +3,15 @@ import {IUser, State, state} from "./state";
 import { AutograderServiceClient } from "../proto/AgServiceClientPb";
 import { Void, User, Course, Submissions, SubmissionRequest, Enrollments, EnrollmentRequest, EnrollmentStatusRequest } from "../proto/ag_pb";
 import * as grpcWeb from "grpc-web"
+import { GrpcManager } from "../GRPCManager";
 
 const AgService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
 // Effects should contain all impure functions used to manage state.
 
-export const api = {
+export const grpcMan = new GrpcManager()
 
+export const api = {
+    
     // TODO:
     // Could structure this into either separate exports, ex. 'export const course_api' and 'export const user_api'
     // or 'export const api { course: { ... functions related to course ... }, user: { ... functions related to user ... }}'

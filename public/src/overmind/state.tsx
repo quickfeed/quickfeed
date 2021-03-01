@@ -1,7 +1,7 @@
 import { userInfo } from "os";
 import { derived } from "overmind";
 import { isMetaProperty } from "typescript";
-import { Course, User } from "../proto/ag_pb";
+import { Course, Enrollment, Submission, User } from "../proto/ag_pb";
 
 
 export interface IUser {
@@ -21,7 +21,9 @@ export type State = {
     user: IUser,
     Metadata: {user: string},
     users: User[],
+    enrollments: Enrollment[]
     courses: Course[],
+    submissions: Submission[],
     currentPage: string,
     theme: string,
 }
@@ -34,7 +36,9 @@ export const state: State = {
     user: {avatarurl: '', email: '', id: -1, isadmin: false, name: '', remoteID: -1, studentid: -1},
     Metadata: derived((state: State) =>  getUserID(state)),
     users: [],
+    enrollments: [],
     courses: [],
+    submissions: [],
     currentPage: "home",
     theme: "light"
 };
