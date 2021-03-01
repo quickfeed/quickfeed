@@ -41,8 +41,6 @@ import {
     Reviewers,
 } from "./proto/ag_pb";
 import { AutograderServiceClient } from "./proto/AgServiceClientPb";
-//import { UserManager } from "./UserManager";
-//import { ISubmission } from "../models";
 import { LoadCriteriaRequest } from './proto/ag_pb';
 
 export interface IGrpcResponse<T> {
@@ -53,18 +51,24 @@ export interface IGrpcResponse<T> {
 export class GrpcManager {
 
     private agService: AutograderServiceClient;
-    //private userMan: UserManager;
+
+    private userID: string
+
+    public setUserid = (id: string) => {
+        this.userID = id;
+    }
+
+    public getUserid = () => {
+        return this.userID;
+    }
 
     constructor() {
         // to test on localhost via port forwarding, use make local Makefile target
         this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
+        this.userID = "-1"
     }
 
-    //public setUserMan(man: UserManager) {
-    //    this.userMan = man;
-    //}
 
-    // /* USERS */ //
 
     public getUser(): Promise<IGrpcResponse<User>> {
         return this.grpcSend<User>(this.agService.getUser, new Void());
@@ -353,7 +357,6 @@ export class GrpcManager {
 
     private grpcSend<T>(method: any, request: any): Promise<IGrpcResponse<T>> {
         const grpcPromise = new Promise<IGrpcResponse<T>>((resolve) => {
-            let userID = "";
             // currentUser reference is created on authorization with a provider and stores a User object.
             // This object can be used for user validation. This implementation sends user ID to simplify
             // and standardize different server checks.
@@ -361,7 +364,7 @@ export class GrpcManager {
             //if (currentUser != null) {
             //    userID = currentUser.getId().toString();
             //}
-            method.call(this.agService, request, { "custom-header-1": "value1", "user": 1 },
+            method.call(this.agService, request, { "custom-header-1": "value1", "user": this.userID },
                 (err: grpcWeb.Error, response: T) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {
