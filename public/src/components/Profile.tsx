@@ -7,18 +7,37 @@ import { User } from "../proto/ag_pb"
 
 
 const Profile = () => {
-    const { state } = useOvermind()
+    const { state, actions } = useOvermind()
     // Holds a local state to check whether the user is editing their user information or not
     const [editing, setEditing] = useState(false)
 
-    // experimenting with object state
-    const [user, setUser] = useState(User)
-
-    // Flips the above local state.
+    // Local state holding information to be changed by user
+    const [user, setUser] = useState({'name': state.user.name, 'email': state.user.email, "studentid": state.user.studentid})
+    
+    // Flips between editable and uneditable view of user info
     const editProfile = () => {
         setEditing(!editing)
+    }
 
-        setUser(user)
+    // Updates local user state on change in an input field
+    const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
+        const { name, value } = event.currentTarget
+        setUser(prevState => ({
+            ...prevState,
+            [name]: value
+        }))
+    }
+
+    // Sends off the edited (or not) information to the server. ((Could change actions.changeUser to take (username, email, studentid) as args and create the new user object in the action, not sure what's best))
+    const submitHandler = () => {
+        const changedUser = new User()
+        changedUser.setId(state.user.id)
+        changedUser.setName(user.name)
+        changedUser.setEmail(user.email)
+        changedUser.setStudentid(user.studentid.toString())
+        actions.changeUser(changedUser)
+        // Flip back to the uneditable view
+        setEditing(false)
     }
 
     // Returns if the user has a valid ID
@@ -38,17 +57,16 @@ const Profile = () => {
         } 
         // Render editable user information
         else {
-            // TODO: Make a form and on save, push it into a gRPC call where the user is changed server-side. (Change state, then API call to server with state.user as input?)
+            
             return ( 
-                <form>
-                    <label>
-                    Name:
-                    <input type="text" value={state.user.name} />
-                    </label>
+                <div className="box">
+                <form onSubmit={e => {e.preventDefault(); submitHandler()}}>
+                    <h1><input name="name" type="text" value={user.name} onChange={handleChange} /></h1>
+                    <h2><input name="email" type="text" value={user.email} onChange={handleChange} /></h2>
+                    <h3><input name="studentid" type="text" value={user.studentid} onChange={handleChange} /></h3>
                     <input type="submit" value="Submit" />
-                    <button onClick={() => editProfile()}>Editing profile</button> 
                 </form>
-                
+                </div>
             )
         }
     }

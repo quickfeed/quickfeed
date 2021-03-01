@@ -50,3 +50,12 @@ export const getSubmissions: Action<void> = ({state, effects}) => {
     console.log("Not Implemented")
     //effects.api.getSubmissions()
 }
+
+export const changeUser: Action<User> = ({state, actions, effects}, user) => {
+    user.setIsadmin(state.user.isadmin)
+    user.setAvatarurl(state.user.avatarurl)
+    effects.api.updateUser(state, user).then(response => {
+        console.log(response)
+        actions.getUser()
+    })
+}

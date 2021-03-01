@@ -33,5 +33,8 @@ export const api = {
         request.setUserid(userID)
         request.setCourseid(courseID)
         return (await AgService.getSubmissions(request, {'user': state.Metadata.user}))
+    },
+    updateUser: async (state: State, user: User): Promise<Void> => {
+        return (await AgService.updateUser(user, {'user': state.user.id.toString()}))
     }
 }
