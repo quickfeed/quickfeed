@@ -55,7 +55,7 @@ const Profile = () => {
             </div>
             )
         } 
-        // Render editable user information
+        // Render editable user information.
         else {
             
             return ( 

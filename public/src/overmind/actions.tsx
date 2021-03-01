@@ -2,6 +2,7 @@ import { Context, Action } from "overmind";
 import { Courses, Course, User } from "../proto/ag_pb";
 import { useEffects } from ".";
 import { state } from "./state";
+import { useEffect } from "react";
 
 
 export const getUser: Action<void, Promise<boolean>> = ({state, effects}) => {
@@ -49,6 +50,10 @@ export const changeTheme: Action<void> = ({state}) => {
 export const getSubmissions: Action<void> = ({state, effects}) => {
     console.log("Not Implemented")
     //effects.api.getSubmissions()
+}
+
+export const getEnrollmentsByUser: Action<number> = ({state, effects}, courseId) => {
+    effects.api.getEnrollmentsByUser(state, courseId)
 }
 
 export const changeUser: Action<User> = ({state, actions, effects}, user) => {

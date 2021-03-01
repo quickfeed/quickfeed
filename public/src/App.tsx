@@ -6,6 +6,8 @@ import Info from "./components/Info";
 import NavBar from "./components/NavBar";
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import Profile from "./components/Profile";
+import Course from "./components/Course";
+
 
 
 const App = () => {
@@ -34,6 +36,7 @@ const App = () => {
                     <Route path="/" exact component={Home} on/>
                     <Route path="/info" component={Info} />
                     <Route path="/profile" component={Profile} />
+                    <Route path="/course/:id" component={Course} />
                 </Switch>
                 )}
                 

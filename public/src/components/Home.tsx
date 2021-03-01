@@ -4,6 +4,7 @@ import { useOvermind } from "../overmind";
 import NavBar from './NavBar'
 import Info from "./Info";
 import { Enrollment } from "../proto/ag_pb";
+import { Link } from "react-router-dom";
 
 
 
@@ -19,7 +20,9 @@ const Home = () => {
 
     const listCourses = state.courses.map(course => {
         return (
-            <h5>{course.getName()}</h5>
+            <h5 key={course.getId()}>
+                <Link to={`course/${course.getId()}`}>{course.getName()}</Link>
+            </h5>
         )
     })
 

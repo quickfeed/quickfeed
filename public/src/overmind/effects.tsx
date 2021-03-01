@@ -1,7 +1,7 @@
 import {IUser, State, state} from "./state";
 
 import { AutograderServiceClient } from "../proto/AgServiceClientPb";
-import { Void, User, Course, Submissions, SubmissionRequest } from "../proto/ag_pb";
+import { Void, User, Course, Submissions, SubmissionRequest, Enrollments, EnrollmentRequest, EnrollmentStatusRequest } from "../proto/ag_pb";
 import * as grpcWeb from "grpc-web"
 
 const AgService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
@@ -28,7 +28,7 @@ export const api = {
     getCourses: async (state: State): Promise<Course[]> => {
         return (await AgService.getCourses(new Void(), {'user': state.Metadata.user})).getCoursesList()
     },
-    getSubmissions: async (courseID: number, userID: number): Promise<Submissions> => {
+    getSubmissions: async (state: State, courseID: number, userID: number): Promise<Submissions> => {
         const request = new SubmissionRequest()
         request.setUserid(userID)
         request.setCourseid(courseID)
@@ -36,5 +36,10 @@ export const api = {
     },
     updateUser: async (state: State, user: User): Promise<Void> => {
         return (await AgService.updateUser(user, {'user': state.user.id.toString()}))
+    },
+    getEnrollmentsByUser: async (state: State, courseId: number): Promise<Enrollments> => {
+        const request = new EnrollmentStatusRequest()
+        request.setUserid(state.user.id)
+        return (await AgService.getEnrollmentsByUser(request, {'user': state.Metadata.user}))
     }
 }
