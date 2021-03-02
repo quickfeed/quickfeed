@@ -18,10 +18,11 @@ const Home = () => {
         )
     });
 
-    const listCourses = state.courses.map(course => {
+    const listCourses = state.enrollments.map(enrollment => {
+        console.log(enrollment.getCourse())
         return (
-            <h5 key={course.getId()}>
-                <Link to={`course/${course.getId()}`}>{course.getName()}</Link>
+            <h5 key={enrollment.getCourseid()}>
+                <Link to={`course/${enrollment.getCourseid()}`}>{enrollment.getCourse()?.getName()}</Link>
             </h5>
         )
     })
@@ -30,7 +31,8 @@ const Home = () => {
     useEffect(() => {
         actions.getUsers();
         actions.getCourses();
-        
+        actions.getEnrollmentsByUser();
+        console.log(state.enrollments)
     }, [])
 
     return (

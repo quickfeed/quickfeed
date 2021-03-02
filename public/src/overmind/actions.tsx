@@ -1,8 +1,9 @@
 import { Context, Action } from "overmind";
-import { Courses, Course, User } from "../proto/ag_pb";
+import { Courses, Course, User, EnrollmentStatusRequest, Enrollment, Status, Submissions } from "../proto/ag_pb";
 import { useEffects } from ".";
 import { state } from "./state";
 import { useEffect } from "react";
+import { resolve } from "url";
 
 
 export const getUser: Action<void, Promise<boolean>> = ({state, effects}) => {
@@ -12,29 +13,27 @@ export const getUser: Action<void, Promise<boolean>> = ({state, effects}) => {
             return false
         }
         state.user = user;
+        effects.grpcMan.setUserid(state.user.id.toString())
         return true
     })
     
 }
 export const getUsers: Action<void> = ({state, effects}) => {
     state.users = []
-    effects.api.getUsers(state).then(users => {
-        users.forEach(user => {
-            if (user.getStudentid() !== "") {
-                state.users.push(user)
-            }
-        });
+    effects.grpcMan.getUsers().then(res => {
+        if (res.data) {
+            state.users = res.data.getUsersList()
+        }
     })
 }
 
 export const getCourses: Action<void> = ({state, effects}) => {
     state.courses = []
-    effects.api.getCourses(state).then(courses => {
-            courses.forEach(course => {
-                console.log(course)
-                state.courses.push(course)
-            })
-        });
+    effects.grpcMan.getCourses().then(res => {
+        if (res.data) {
+            state.courses = res.data.getCoursesList()
+        }
+    })
 }
 
 export const setTheme: Action<void> = ({state}) => {
@@ -47,13 +46,25 @@ export const changeTheme: Action<void> = ({state}) => {
     state.theme = (state.theme === "light") ? "dark" : "light"
 }
 
-export const getSubmissions: Action<void> = ({state, effects}) => {
-    console.log("Not Implemented")
-    //effects.api.getSubmissions()
+export const getSubmissions: Action<number> = ({state, effects}, courseID) => {
+    effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
+        console.log(state.user.id, courseID)
+        if (res.data) {
+            state.submissions = res.data.getSubmissionsList()
+        }
+
+    })
 }
 
-export const getEnrollmentsByUser: Action<number> = ({state, effects}, courseId) => {
-    effects.api.getEnrollmentsByUser(state, courseId)
+export const getEnrollmentsByUser: Action<void, Promise<boolean>> = ({state, effects}) => {
+    return effects.grpcMan.getEnrollmentsByUser(state.user.id)
+    .then(res => {
+        if (res.data) {
+            state.enrollments = res.data.getEnrollmentsList()
+            return true
+        }
+        return false
+    })
 }
 
 export const changeUser: Action<User> = ({state, actions, effects}, user) => {
@@ -63,4 +74,14 @@ export const changeUser: Action<User> = ({state, actions, effects}, user) => {
         console.log(response)
         actions.getUser()
     })
+}
+
+export const getEnrollmentByCourseId: Action<number, Enrollment | null> = ({state}, courseID) => {
+    let enrol: Enrollment | null = null
+    state.enrollments.forEach(enrollment => {
+        if (enrollment.getCourseid() === courseID) {
+            enrol = enrollment
+        }
+    })
+    return enrol
 }
