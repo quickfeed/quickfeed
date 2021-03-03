@@ -7,6 +7,7 @@ import NavBar from "./components/NavBar";
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import Profile from "./components/Profile";
 import Course from "./components/Course";
+import Lab from "./components/Lab";
 
 
 
@@ -33,7 +34,7 @@ const App = () => {
                     </Switch>
                 ) : ( // Else, enable components that require authentication
                 <Switch>
-                    <Route path="/" exact component={Home} on/>
+                    <Route path="/" exact component={Home}/>
                     <Route path="/info" component={Info} />
                     <Route path="/profile" component={Profile} />
                     <Route path="/course/:id" component={Course} />

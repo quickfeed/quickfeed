@@ -19,7 +19,6 @@ const Home = () => {
     });
 
     const listCourses = state.enrollments.map(enrollment => {
-        console.log(enrollment.getCourse())
         return (
             <h5 key={enrollment.getCourseid()}>
                 <Link to={`course/${enrollment.getCourseid()}`}>{enrollment.getCourse()?.getName()}</Link>
@@ -27,11 +26,23 @@ const Home = () => {
         )
     })
 
+    const months = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
+    const listAssignments = state.assignments.map(assignment => {
+        const deadline = new Date(assignment.getDeadline())
+        return (
+            <h2>{assignment.getName()} Deadline: {deadline.getDate()} {months[deadline.getMonth()]} {deadline.getFullYear()} by {deadline.getHours()}:{deadline.getMinutes()} </h2>
+        )
+    })
 
     useEffect(() => {
-        actions.getUsers();
-        actions.getCourses();
-        actions.getEnrollmentsByUser();
+        actions.getEnrollmentsByUser()
+        .then(success => {
+            if (success) {
+                actions.getAssignments()
+            }
+        });
+
         console.log(state.enrollments)
     }, [])
 
@@ -45,10 +56,9 @@ const Home = () => {
             <img className="avatar" src={state.user.avatarurl}></img>
             </div>
             }
-            {state.user.id == -1 && <Info />}
-            
             <a><button>Courses</button></a>
             {listCourses}
+            {listAssignments}
         </div>
         )
 }

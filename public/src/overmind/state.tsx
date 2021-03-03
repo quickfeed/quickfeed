@@ -1,7 +1,7 @@
 import { userInfo } from "os";
 import { derived } from "overmind";
 import { isMetaProperty } from "typescript";
-import { Course, Enrollment, Submission, User } from "../proto/ag_pb";
+import { Assignment, Course, Enrollment, Submission, User } from "../proto/ag_pb";
 
 
 export interface IUser {
@@ -24,6 +24,7 @@ export type State = {
     enrollments: Enrollment[]
     courses: Course[],
     submissions: Submission[],
+    assignments: Assignment[],
     currentPage: string,
     theme: string,
 }
@@ -39,6 +40,7 @@ export const state: State = {
     enrollments: [],
     courses: [],
     submissions: [],
+    assignments: [],
     currentPage: "home",
     theme: "light"
 };
