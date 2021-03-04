@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react"
-import { RouteComponentProps, RouteProps, RouterProps } from "react-router"
+import React, { useEffect, useState } from "react"
+import { RouteComponentProps, Route, useRouteMatch } from "react-router"
+import { Link } from "react-router-dom"
 import { useOvermind } from "../overmind"
 
 import { Courses, Enrollment } from "../proto/ag_pb"
+import Lab from "./Lab"
 
 
 interface MatchProps {
@@ -11,7 +13,7 @@ interface MatchProps {
 
 const Course = (props: RouteComponentProps<MatchProps>) => {
     const { state, actions } = useOvermind()
-
+    const { url } = useRouteMatch()
     const [enrollment, setEnrollment] = useState(new Enrollment())
     useEffect(() => {
         actions.getEnrollmentsByUser()
@@ -21,6 +23,7 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
                 if (enrol !== null) {
                     setEnrollment(enrol)
                     actions.getSubmissions(enrol.getCourseid())
+                    actions.getAssignments()
                 }
             }
         })
@@ -34,12 +37,22 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
             </div>
         )
     })
-
-    if (enrollment !== null){
+    const months = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
+    const listAssignments = state.assignments.map(assignment => {
+        const deadline = new Date(assignment.getDeadline())
+        return (
+            <h2 key={assignment.getId()}><Link to={`/course/${props.match.params.id}/${assignment.getId()}`}>{assignment.getName()}</Link> Deadline: {deadline.getDate()} {months[deadline.getMonth()]} {deadline.getFullYear()} by {deadline.getHours()}:{deadline.getMinutes()} </h2>
+        )
+    })
+    if (enrollment.getId() !== 0){
         return (
         <div className="box">
             <h1>Welcome to {enrollment.getCourse()?.getName()}, {enrollment.getUser()?.getName()}! You are a {enrollment.getStatus() == Enrollment.UserStatus.STUDENT ? ("student") : ("teacher")}</h1>
-            {getSubmissions}
+            {listAssignments}
+            <Route path={`${url}/:lab`}>
+                <Lab></Lab>
+            </Route>
         </div>)
     }
     return <h1>404 Not Found</h1>

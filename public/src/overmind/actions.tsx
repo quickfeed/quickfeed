@@ -27,12 +27,14 @@ export const getUsers: Action<void> = ({state, effects}) => {
     })
 }
 
-export const getCourses: Action<void> = ({state, effects}) => {
+export const getCourses: Action<void, Promise<boolean>> = ({state, effects}) => {
     state.courses = []
-    effects.grpcMan.getCourses().then(res => {
+    return effects.grpcMan.getCourses().then(res => {
         if (res.data) {
             state.courses = res.data.getCoursesList()
+            return true
         }
+        return false
     })
 }
 
@@ -84,4 +86,16 @@ export const getEnrollmentByCourseId: Action<number, Enrollment | null> = ({stat
         }
     })
     return enrol
+}
+
+export const getAssignments: Action<void> = ({state, effects}) => {
+    state.enrollments.forEach(enrollment => {
+        console.log(enrollment.getCourseid())
+        effects.grpcMan.getAssignments(enrollment.getCourseid()).then(res => {
+            if (res.data) {
+                state.assignments = res.data.getAssignmentsList()
+                console.log(state.assignments)
+            }
+        })
+    })
 }
