@@ -30,5 +30,12 @@ body {
 
 a {
     text-decoration: none;
-    color: white;
+    color: black;
+}
+button{
+    color: black;
+}
+.box {
+    text-align: center;
+    font-family: Consolas;
 }
