@@ -12,10 +12,6 @@ const NavBar = () => {
         }
         return <a href="/auth/github"><button>Login</button></a>
     }
-   
-    const goHome = () => {
-        state.currentPage = "home"
-    }
 
     const changeTheme = () => {
         actions.changeTheme()
