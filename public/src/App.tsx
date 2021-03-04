@@ -16,8 +16,10 @@ const App = () => {
     const [loggedIn, setLoggedIn] = useState(false)
 
     useEffect(() => {
-        actions.getUser()
-        .then(res => setLoggedIn(res)) // Sets loggedIn to whatever getUser() resolves to. (fetches from /api/v1/user and resolves to true or false)
+        if (!loggedIn) {
+            actions.getUser()
+            .then(res => setLoggedIn(res)) // Sets loggedIn to whatever getUser() resolves to. (fetches from /api/v1/user and resolves to true or false)
+        }
         actions.setTheme()
         document.body.className = state.theme
     }, [loggedIn, setLoggedIn])
