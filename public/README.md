@@ -1,8 +1,7 @@
 
 ### `npm install`
 
-### `npm run-script build`
+### `webpack`
 
-### `quickfeed -http.public "public/build"` to serve 
 
 
