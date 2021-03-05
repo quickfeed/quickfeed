@@ -1,10 +1,7 @@
-import React, {useCallback, useState, useEffect} from "react";
+import React, {useEffect} from "react";
 import { useOvermind } from "../overmind";
-
-import NavBar from './NavBar'
-import Info from "./Info";
-import { Enrollment } from "../proto/ag_pb";
 import { Link } from "react-router-dom";
+import { getFormattedDeadline } from "../Helpers";
 
 
 
@@ -26,12 +23,9 @@ const Home = () => {
         )
     })
 
-    const months = ["January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"];
     const listAssignments = state.assignments.map(assignment => {
-        const deadline = new Date(assignment.getDeadline())
         return (
-            <h2>{assignment.getName()} Deadline: {deadline.getDate()} {months[deadline.getMonth()]} {deadline.getFullYear()} by {deadline.getHours()}:{deadline.getMinutes()} </h2>
+            <h2>{assignment.getName()} Deadline: {getFormattedDeadline(assignment.getDeadline())} </h2>
         )
     })
 
@@ -42,8 +36,6 @@ const Home = () => {
                 actions.getAssignments()
             }
         });
-
-        console.log(state.enrollments)
     }, [])
 
     return (
@@ -52,7 +44,7 @@ const Home = () => {
                 
             {state.user.id > 0 &&
             <div>
-            <h1>Welcome, {state.user.name}! Current theme: {state.theme}</h1>
+            <h1>Welcome, {state.user.name}!</h1>
             <img className="avatar" src={state.user.avatarurl}></img>
             </div>
             }
