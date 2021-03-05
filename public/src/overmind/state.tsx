@@ -12,6 +12,7 @@ export interface IUser {
     isadmin: boolean;
     name: string;
     studentid: number;
+    AccessToken: string;
 }
 
 
@@ -25,7 +26,6 @@ export type State = {
     courses: Course[],
     submissions: Submission[],
     assignments: Assignment[],
-    currentPage: string,
     theme: string,
 }
 
@@ -34,13 +34,12 @@ const getUserID = (currentState: State) => {
 }
 
 export const state: State = {
-    user: {avatarurl: '', email: '', id: -1, isadmin: false, name: '', remoteID: -1, studentid: -1},
+    user: {avatarurl: '', email: '', id: -1, isadmin: false, name: '', remoteID: -1, studentid: -1, AccessToken: ""},
     Metadata: derived((state: State) =>  getUserID(state)),
     users: [],
     enrollments: [],
     courses: [],
     submissions: [],
     assignments: [],
-    currentPage: "home",
     theme: "light"
 };

@@ -5,19 +5,22 @@ import { state } from "./state";
 import { useEffect } from "react";
 import { resolve } from "url";
 
-
+/** Fetches and stores an authenticated user in state */
 export const getUser: Action<void, Promise<boolean>> = ({state, effects}) => {
     return effects.api.getUser()
     .then((user) => {
+        console.log("Fetching.")
         if (user.id === undefined) {
             return false
         }
         state.user = user;
-        effects.grpcMan.setUserid(state.user.id.toString())
+        effects.grpcMan.setUserid(state.user.AccessToken)
         return true
     })
     
 }
+
+/** Fetches all users */
 export const getUsers: Action<void> = ({state, effects}) => {
     state.users = []
     effects.grpcMan.getUsers().then(res => {
@@ -27,6 +30,7 @@ export const getUsers: Action<void> = ({state, effects}) => {
     })
 }
 
+/** Fetches all courses */
 export const getCourses: Action<void, Promise<boolean>> = ({state, effects}) => {
     state.courses = []
     return effects.grpcMan.getCourses().then(res => {
@@ -38,16 +42,19 @@ export const getCourses: Action<void, Promise<boolean>> = ({state, effects}) => 
     })
 }
 
+/** Tries to get saved theme setting from localStorage, else sets theme to Light by default */
 export const setTheme: Action<void> = ({state}) => {
     let theme = window.localStorage.getItem("theme")
     state.theme = (theme === null) ? "light" : theme
 
 }
 
+/** Changes between Light and Dark theme */
 export const changeTheme: Action<void> = ({state}) => {
     state.theme = (state.theme === "light") ? "dark" : "light"
 }
 
+/** Gets all submission for the current user by Course ID and stores them in state */
 export const getSubmissions: Action<number> = ({state, effects}, courseID) => {
     effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
         console.log(state.user.id, courseID)
@@ -58,6 +65,7 @@ export const getSubmissions: Action<number> = ({state, effects}, courseID) => {
     })
 }
 
+/** Gets all enrollments for the current user and stores them in state */
 export const getEnrollmentsByUser: Action<void, Promise<boolean>> = ({state, effects}) => {
     return effects.grpcMan.getEnrollmentsByUser(state.user.id)
     .then(res => {
@@ -69,6 +77,7 @@ export const getEnrollmentsByUser: Action<void, Promise<boolean>> = ({state, eff
     })
 }
 
+/** Changes user information server-side */
 export const changeUser: Action<User> = ({state, actions, effects}, user) => {
     user.setIsadmin(state.user.isadmin)
     user.setAvatarurl(state.user.avatarurl)
@@ -78,6 +87,7 @@ export const changeUser: Action<User> = ({state, actions, effects}, user) => {
     })
 }
 
+/** Gets a specific enrollment for a given course by the course ID if the user has an enrollment for that course. Returns null if none found */
 export const getEnrollmentByCourseId: Action<number, Enrollment | null> = ({state}, courseID) => {
     let enrol: Enrollment | null = null
     state.enrollments.forEach(enrollment => {
@@ -88,6 +98,7 @@ export const getEnrollmentByCourseId: Action<number, Enrollment | null> = ({stat
     return enrol
 }
 
+/** TODO: Either store assignments for all courses, or get assignments by course ID. Currently sets state.assignments to the assignments in the last enrollment in state.enrollments */
 export const getAssignments: Action<void> = ({state, effects}) => {
     state.enrollments.forEach(enrollment => {
         console.log(enrollment.getCourseid())
