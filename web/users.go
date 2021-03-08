@@ -11,12 +11,13 @@ import (
 
 // JSONuser is a model to improve marshalling of user structure for authentication
 type JSONuser struct {
-	ID        uint64 `json:"id"`
-	IsAdmin   *bool  `json:"isadmin"`
-	Name      string `json:"name"`
-	StudentID string `json:"studentid"`
-	Email     string `json:"email"`
-	AvatarURL string `json:"avatarurl"`
+	ID          uint64 `json:"id"`
+	IsAdmin     *bool  `json:"isadmin"`
+	Name        string `json:"name"`
+	StudentID   string `json:"studentid"`
+	Email       string `json:"email"`
+	AvatarURL   string `json:"avatarurl"`
+	AccessToken string `json:token`
 }
 
 // GetSelf redirects to GetUser with the current user's id.
@@ -35,7 +36,7 @@ func GetSelf(db database.Database) echo.HandlerFunc {
 			}
 			return err
 		}
-		jsonUser := JSONuser{ID: user.ID, IsAdmin: &user.IsAdmin, Name: user.Name, StudentID: user.StudentID, Email: user.Email, AvatarURL: user.AvatarURL}
+		jsonUser := JSONuser{ID: user.ID, IsAdmin: &user.IsAdmin, Name: user.Name, StudentID: user.StudentID, Email: user.Email, AvatarURL: user.AvatarURL, AccessToken: user.RemoteIdentities[0].AccessToken}
 		return c.JSONPretty(http.StatusFound, jsonUser, "\t")
 	}
 }

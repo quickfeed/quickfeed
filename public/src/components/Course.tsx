@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { RouteComponentProps, Route, useRouteMatch } from "react-router"
 import { Link } from "react-router-dom"
+import { getFormattedDeadline } from "../Helpers"
 import { useOvermind } from "../overmind"
 
 import { Courses, Enrollment } from "../proto/ag_pb"
@@ -37,12 +38,10 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
             </div>
         )
     })
-    const months = ["January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"];
+
     const listAssignments = state.assignments.map(assignment => {
-        const deadline = new Date(assignment.getDeadline())
         return (
-            <h2 key={assignment.getId()}><Link to={`/course/${props.match.params.id}/${assignment.getId()}`}>{assignment.getName()}</Link> Deadline: {deadline.getDate()} {months[deadline.getMonth()]} {deadline.getFullYear()} by {deadline.getHours()}:{deadline.getMinutes()} </h2>
+            <h2 key={assignment.getId()}><Link to={`/course/${props.match.params.id}/${assignment.getId()}`}>{assignment.getName()}</Link> Deadline: {getFormattedDeadline(assignment.getDeadline())} </h2>
         )
     })
     if (enrollment.getId() !== 0){

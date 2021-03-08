@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -8,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/autograde/quickfeed/ci"
 	//"github.com/autograde/quickfeed/envoy"
@@ -21,6 +24,7 @@ import (
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
@@ -115,7 +119,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to start tcp listener: %v\n", err)
 	}
-	opt := grpc.UnaryInterceptor(pb.Interceptor(logger))
+
+	//  Experimental
+	accessControl := AccessControl{db}
+	opt := grpc.UnaryInterceptor(accessControl.UserVerifier)
+	//opt := grpc.UnaryInterceptor(pb.Interceptor(logger))
 	grpcServer := grpc.NewServer(opt)
 
 	// Create a HTTP server for prometheus.
@@ -133,4 +141,29 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}
+}
+
+// TODO: Move somewhere else that makes sense
+type AccessControl struct {
+	db *database.GormDB
+}
+
+// UserVerifier looks up a user (passed by AccessToken) in the database, and translates it into a User ID
+// Modifies the context to include the User ID to be passed along to the actual gRPC method.
+func (pc *AccessControl) UserVerifier(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (response interface{}, err error) {
+	meta, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not grab metadata from context")
+	}
+
+	user, err := pc.db.GetUserByAccessToken(meta.Get("user")[0])
+	if err != nil {
+		return nil, errors.New("could not associate token with a user")
+	}
+
+	meta.Set("user", strconv.FormatUint(user, 10))
+
+	edited := metadata.NewOutgoingContext(ctx, meta)
+
+	return handler(edited, req)
 }

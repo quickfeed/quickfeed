@@ -28,6 +28,8 @@ type Database interface {
 	GetUsers(...uint64) ([]*pb.User, error)
 	// UpdateUser updates the user's details, excluding remote identities.
 	UpdateUser(*pb.User) error
+	// GetUserByAccessToken returns a user ID associated with an access token
+	GetUserByAccessToken(string) (uint64, error)
 
 	// CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
 	CreateCourse(uint64, *pb.Course) error

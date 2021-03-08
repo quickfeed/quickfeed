@@ -34,8 +34,7 @@ When going live this should be from `test` to `production`
 ## Process for running from npm build
 ### `npm install`
 
-### `npm run-script build`
+### `webpack`
 
-### `quickfeed -http.public "public/build"` to serve 
 
 

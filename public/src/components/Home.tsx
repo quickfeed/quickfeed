@@ -1,11 +1,10 @@
-import React, {useCallback, useState, useEffect} from "react";
+import React, {useEffect} from "react";
 import { useOvermind } from "../overmind";
-
-import NavBar from './NavBar'
-import Info from "./Info";
-import { Enrollment } from "../proto/ag_pb";
 import { Link } from "react-router-dom";
-import LandingPageLabTable from "./LandingPageLabTable";
+import { getFormattedDeadline } from "../Helpers";
+import LandingPageLabTable from "./LandingPageLabTable"
+
+
 
 const Home = () => {
     const { state, actions } = useOvermind()
@@ -23,7 +22,13 @@ const Home = () => {
             </h5>
         )
     })
-    /*
+
+    const listAssignments = state.assignments.map(assignment => {
+        return (
+            <h2>{assignment.getName()} Deadline: {getFormattedDeadline(assignment.getDeadline())} </h2>
+        )
+    })
+
     useEffect(() => {
         actions.getEnrollmentsByUser()
         .then(success => {
@@ -34,17 +39,14 @@ const Home = () => {
                 })
             }
         });
-
-        //console.log(state.enrollments)
     }, [])
-    */
     return (
         <div className='box'>
             <h1>Autograder</h1>
                 
             {state.user.id > 0 &&
             <div>
-            <h1>Welcome, {state.user.name}! Current theme: {state.theme}</h1>
+            <h1>Welcome, {state.user.name}!</h1>
             <img className="avatar" src={state.user.avatarurl}></img>
             </div>
             }
