@@ -5,9 +5,7 @@ import NavBar from './NavBar'
 import Info from "./Info";
 import { Enrollment } from "../proto/ag_pb";
 import { Link } from "react-router-dom";
-
-
-
+import LandingPageLabTable from "./LandingPageLabTable";
 
 const Home = () => {
     const { state, actions } = useOvermind()
@@ -25,27 +23,21 @@ const Home = () => {
             </h5>
         )
     })
-
-    const months = ["January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"];
-    const listAssignments = state.assignments.map(assignment => {
-        const deadline = new Date(assignment.getDeadline())
-        return (
-            <h2>{assignment.getName()} Deadline: {deadline.getDate()} {months[deadline.getMonth()]} {deadline.getFullYear()} by {deadline.getHours()}:{deadline.getMinutes()} </h2>
-        )
-    })
-
+    /*
     useEffect(() => {
         actions.getEnrollmentsByUser()
         .then(success => {
             if (success) {
                 actions.getAssignments()
+                state.enrollments.map(enrol =>{
+                    actions.getSubmissions(enrol.getCourseid())
+                })
             }
         });
 
-        console.log(state.enrollments)
+        //console.log(state.enrollments)
     }, [])
-
+    */
     return (
         <div className='box'>
             <h1>Autograder</h1>
@@ -58,7 +50,7 @@ const Home = () => {
             }
             <a><button>Courses</button></a>
             {listCourses}
-            {listAssignments}
+            <LandingPageLabTable />
         </div>
         )
 }

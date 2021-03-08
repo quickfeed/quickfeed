@@ -8,7 +8,7 @@ import { config, useOvermind } from "./overmind";
 import App from './App'
 
 const overmind = createOvermind(config, {
-    devtools: true
+    devtools: "localhost:3031"
 })
 
 

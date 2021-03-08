@@ -38,6 +38,7 @@ const App = () => {
                     <Route path="/profile" component={Profile} />
                     <Route path="/course/:id" component={Course} />
                 </Switch>
+                // Admin stuff is probably also needed here somewhere :P. 
                 )}
                 
             </div>
