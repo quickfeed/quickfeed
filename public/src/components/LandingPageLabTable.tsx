@@ -1,22 +1,24 @@
 import { action } from "overmind";
 import React, {useCallback, useState, useEffect} from "react";
 import { useOvermind, useReaction } from "../overmind";
+import { Dict } from "../overmind/state";
+import { Assignment } from "../proto/ag_pb";
 import Home from "./Home";
 import NavBar from './NavBar';
+
 
 
 
 const LandingPageLabTable = () => {
     //TODO make this to inherit state/actions from Homepage.
     const { state , actions} = useOvermind()
-    /*
+    //replace {} with a type of dictionary/record
+    const [assignments,setAssignments] = useState({})
     useEffect(() => {
-       state.enrollments.map(enrol =>{
-           actions.getSubmissions(enrol.getCourseid())
-       })
-        //console.log(state.enrollments)
-    },[])
-    */
+        setAssignments(state.assignments)
+        console.log(state.assignments)
+    },[state.assignments])
+    /*
     const tableMap = state.assignments.map(assignment => {
         const deadline = new Date(assignment.getDeadline())
         const now = new Date()
@@ -50,10 +52,18 @@ const LandingPageLabTable = () => {
             )
         }
     })
-    
-
+    */
+    const deadlineTable = Object.values(state.assignments).map(test =>{
+        return(<h4 key={test.length}>{test}</h4>)
+    })
     return (
         <div>
+            
+            {Object.values(assignments).map(arr =>{
+                arr.map(assignment =>{
+                    <h2 key={assignment.getId()}>{assignment.getName()} {console.log(assignment)}</h2>
+                })
+            })}
             <table className="table">
                 <thead>
                     <tr>
@@ -66,7 +76,8 @@ const LandingPageLabTable = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {tableMap}
+                    {deadlineTable}
+                    
                 </tbody>
             </table>
             

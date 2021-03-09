@@ -8,7 +8,7 @@ const Info = () => {
 
     return (
         <div>
-        <h4>Test to see</h4>
+        <h4>Test to see compile time</h4>
         </div>
     )
 }

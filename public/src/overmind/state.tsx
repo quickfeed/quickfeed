@@ -15,9 +15,6 @@ export interface IUser {
     AccessToken: string;
 }
 
-
-
-
 export type State = {
     user: IUser,
     Metadata: {user: string},
@@ -25,7 +22,9 @@ export type State = {
     enrollments: Enrollment[]
     courses: Course[],
     submissions: Submission[],
-    assignments: Assignment[],
+    assignments: {
+        [courseid: number]:Assignment[]
+    },
     theme: string,
 }
 

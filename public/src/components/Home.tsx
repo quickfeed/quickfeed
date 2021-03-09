@@ -3,6 +3,7 @@ import { useOvermind } from "../overmind";
 import { Link } from "react-router-dom";
 import { getFormattedDeadline } from "../Helpers";
 import LandingPageLabTable from "./LandingPageLabTable"
+import { Assignment } from "../proto/ag_pb";
 
 
 
@@ -22,12 +23,19 @@ const Home = () => {
             </h5>
         )
     })
-
-    const listAssignments = state.assignments.map(assignment => {
-        return (
-            <h2>{assignment.getName()} Deadline: {getFormattedDeadline(assignment.getDeadline())} </h2>
-        )
+    
+    const listAssignments = Object.values(state.assignments).map(assignmentArray =>{
+        const abc = assignmentArray.map(assignment => {
+            return(
+                <h2>{assignment.getName()} Deadline: {getFormattedDeadline(assignment.getDeadline())} </h2>
+            )
+        })
+        return abc
     })
+    
+    
+    
+    
 
     useEffect(() => {
         actions.getEnrollmentsByUser()
@@ -40,6 +48,8 @@ const Home = () => {
             }
         });
     }, [])
+
+
     return (
         <div className='box'>
             <h1>Autograder</h1>
@@ -52,6 +62,7 @@ const Home = () => {
             }
             <a><button>Courses</button></a>
             {listCourses}
+            {listAssignments}
             <LandingPageLabTable />
         </div>
         )

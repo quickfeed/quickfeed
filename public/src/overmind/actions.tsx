@@ -101,12 +101,20 @@ export const getEnrollmentByCourseId: Action<number, Enrollment | null> = ({stat
 /** TODO: Either store assignments for all courses, or get assignments by course ID. Currently sets state.assignments to the assignments in the last enrollment in state.enrollments */
 export const getAssignments: Action<void> = ({state, effects}) => {
     state.enrollments.forEach(enrollment => {
-        console.log(enrollment.getCourseid())
+        //console.log(enrollment.getCourseid())
         effects.grpcMan.getAssignments(enrollment.getCourseid()).then(res => {
             if (res.data) {
-                state.assignments = res.data.getAssignmentsList()
-                console.log(state.assignments)
+                state.assignments[enrollment.getCourseid()] = res.data.getAssignmentsList()
+                //console.log(state.assignments)
             }
         })
+    })
+}
+/** Gets the assignments from a course by the course id. Meant to be used in places where you want only 1 assignment list. */
+export const getAssignmentsByCourse: Action<number> = ({state, effects}, courseid:number) => {
+    effects.grpcMan.getAssignments(courseid).then(res => {
+        if (res.data){
+            state.assignments[courseid] = res.data.getAssignmentsList()
+        }
     })
 }
