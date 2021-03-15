@@ -7,6 +7,16 @@ func NewScores() *Scores {
 	}
 }
 
+// ToScoreSlice returns a slice of score objects for use with the current frontend and database.
+// This is experimental API and should not be used. It may be removed in the future.
+func (s *Scores) ToScoreSlice() []*Score {
+	scores := make([]*Score, 0)
+	for _, name := range s.TestNames {
+		scores = append(scores, s.ScoreMap[name])
+	}
+	return scores
+}
+
 // AddScore adds the given score to the set of scores.
 // This method assumes that the provided score object is valid.
 func (s *Scores) AddScore(sc *Score) {
