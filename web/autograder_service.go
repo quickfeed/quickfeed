@@ -50,7 +50,6 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.Void) (*pb.User,
 		s.logger.Errorf("GetUser failed to get user with enrollments: %w ", err)
 	}
 	return userInfo, nil
-
 }
 
 // GetUsers returns a list of all users.
@@ -528,6 +527,45 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 	return submissions, nil
 }
 
+func (s *AutograderService) GetSubmissionStream(in *pb.SubmissionRequest, stream pb.AutograderService_GetSubmissionStreamServer) error {
+	ctx := stream.Context()
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("GetSubmissions failed: authentication error: %w", err)
+		return ErrInvalidUserInfo
+	}
+
+	// grp may be nil if there is no group ID in request; this is fine, since the grp.Contains() returns false in this case.
+	grp, _ := s.getGroup(&pb.GetGroupRequest{GroupID: in.GetGroupID()})
+
+	// ensure that current user is teacher, enrolled admin, or the current user is owner of the submission request
+	if !s.hasCourseAccess(usr.GetID(), in.GetCourseID(), func(e *pb.Enrollment) bool {
+		return e.Status == pb.Enrollment_TEACHER || (usr.GetIsAdmin() && e.Status == pb.Enrollment_STUDENT) ||
+			(e.Status == pb.Enrollment_STUDENT && (usr.IsOwner(in.GetUserID()) || grp.Contains(usr)))
+	}) {
+		s.logger.Error("GetSubmissions failed: user is not teacher or submission author")
+		return status.Errorf(codes.PermissionDenied, "only owner and teachers can get submissions")
+	}
+
+	// TODO(meling) This is a bit of a hack since the map in the ci package is global, which isn't ideal.
+	// But it seems too big of a refactor to make it nice.
+	login := usr.GetLogin()
+	if _, found := ci.SubmissionsMap[login]; !found {
+		ci.SubmissionsMap[login] = make(chan *pb.Submission)
+	}
+	userSubmissions := ci.SubmissionsMap[login]
+	defer func() {
+		delete(ci.SubmissionsMap, login)
+		close(userSubmissions)
+	}()
+	for submission := range userSubmissions {
+		if err := stream.Send(submission); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // GetSubmissionsByCourse returns all the latest submissions
 // for every individual or group course assignment for all course students/groups.
 // Access policy: Admin enrolled in CourseID, Teacher of CourseID.
@@ -860,7 +898,7 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 		s.logger.Errorf("GetRepositories failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	var urls = make(map[string]string)
+	urls := make(map[string]string)
 	for _, repoType := range in.GetRepoTypes() {
 		repo, _ := s.getRepositoryURL(usr, in.GetCourseID(), repoType)
 		// we do not care if some repo was not found, this will append an empty url string in that case

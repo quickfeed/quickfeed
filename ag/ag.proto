@@ -441,6 +441,7 @@ service AutograderService {
 
     // Get latest submissions for all course assignments for a user or a group.
     rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
+    rpc GetSubmissionStream(SubmissionRequest) returns (stream Submission) {}
     // Get lab submissions for every course user or every course group
     rpc GetSubmissionsByCourse(SubmissionsForCourseRequest) returns (CourseSubmissions) {}
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}

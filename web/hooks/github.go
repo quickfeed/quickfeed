@@ -200,7 +200,6 @@ func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
 		return
 	}
 	wh.logger.Debugf("Saved manual review submission for user %s for assignment %d", data.JobOwner, data.Assignment.ID)
-
 }
 
 // updateLastActivityDate sets a current date as a last activity date of the student

@@ -18,6 +18,10 @@ const (
 	layout     = "2006-01-02T15:04:05"
 )
 
+const submissionMapSize = 32
+
+var SubmissionsMap = make(map[string]chan *pb.Submission, submissionMapSize)
+
 // RunData stores CI data
 type RunData struct {
 	Course     *pb.Course
@@ -125,6 +129,10 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 	if err != nil {
 		logger.Errorf("Failed to add submission to database: %w", err)
 		return
+	}
+	if submissionChan, found := SubmissionsMap[rData.JobOwner]; found {
+		// only send on channels created in GetSubmissionStream
+		submissionChan <- newSubmission
 	}
 	logger.Debugf("Created submission for assignment '%s' with status %s", rData.Assignment.GetName(), approvedStatus)
 	updateSlipDays(logger, db, rData.Assignment, newSubmission, result.BuildInfo.BuildDate)
