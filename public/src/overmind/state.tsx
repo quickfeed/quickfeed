@@ -21,7 +21,10 @@ export type State = {
     users: User[],
     enrollments: Enrollment[]
     courses: Course[],
-    submissions: Submission[],
+    submissions:{
+        [courseid:number]:Submission[]
+    }
+    ,
     assignments: {
         [courseid: number]:Assignment[]
     },

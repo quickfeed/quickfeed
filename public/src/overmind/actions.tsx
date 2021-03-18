@@ -59,10 +59,17 @@ export const getSubmissions: Action<number> = ({state, effects}, courseID) => {
     effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
         console.log(state.user.id, courseID)
         if (res.data) {
-            state.submissions = res.data.getSubmissionsList()
+            state.submissions[courseID] = res.data.getSubmissionsList()
+            console.log("Hey submissions is happening")
         }
 
     })
+    /* TODO implement getting submission from grouplabs
+    effects.grpcMan.getGroupByUserAndCourse(courseID,state.user.id).then(res =>{
+        if (res.data){
+            state.submissions[courseID]
+        }
+    })*/
 }
 
 /** Gets all enrollments for the current user and stores them in state */
@@ -111,10 +118,12 @@ export const getAssignments: Action<void> = ({state, effects}) => {
     })
 }
 /** Gets the assignments from a course by the course id. Meant to be used in places where you want only 1 assignment list. */
-export const getAssignmentsByCourse: Action<number> = ({state, effects}, courseid:number) => {
-    effects.grpcMan.getAssignments(courseid).then(res => {
+export const getAssignmentsByCourse: Action<number, Promise<boolean>> = ({state, effects}, courseid:number) => {
+    return effects.grpcMan.getAssignments(courseid).then(res => {
         if (res.data){
             state.assignments[courseid] = res.data.getAssignmentsList()
+            return true
         }
+        return false
     })
 }
