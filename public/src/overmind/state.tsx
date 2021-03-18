@@ -23,10 +23,9 @@ export type State = {
     courses: Course[],
     submissions:{
         [courseid:number]:Submission[]
-    }
-    ,
+    },
     assignments: {
-        [courseid: number]:Assignment[]
+        [courseid:number]:Assignment[]
     },
     theme: string,
 }
