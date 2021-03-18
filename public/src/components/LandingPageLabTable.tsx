@@ -13,12 +13,12 @@ interface DictionaryProps{
     }
 }
 
-const LandingPageLabTable = (props:DictionaryProps) => {
+let LandingPageLabTable = (props:DictionaryProps) => {
     //TODO make this to inherit state/actions from Homepage.
     const { state , actions} = useOvermind()
     
     //replace {} with a type of dictionary/record
-    
+    console.log(props.assignments,props.submissions)
     const tableMap = Object.entries(props.assignments).map(([crsid,assignments]) => {
         const now = new Date()
         let courseid = Number(crsid)
@@ -43,11 +43,6 @@ const LandingPageLabTable = (props:DictionaryProps) => {
         
     })
     
-   const test = Object.keys(props.assignments).map(keys =>{
-       return(
-           <li key={keys}> {keys}</li>
-       )
-   })
     return (
         <div>
             <table className="table" id="LandingPageTable">
@@ -66,8 +61,6 @@ const LandingPageLabTable = (props:DictionaryProps) => {
                     {tableMap}
                 </tbody>
             </table>
-
-        
         </div>
     )
 }

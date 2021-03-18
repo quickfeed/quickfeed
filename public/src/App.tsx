@@ -16,13 +16,28 @@ const App = () => {
 
     useEffect(() => {
         if (!loggedIn) {
-            actions.getUser()
-            .then(res => setLoggedIn(res)) // Sets loggedIn to whatever getUser() resolves to. (fetches from /api/v1/user and resolves to true or false)
+            actions.getUser().then(res => {setLoggedIn(res)
+                if(res)
+                actions.getEnrollmentsByUser()
+                .then(success => {
+                    if (success) {
+                        if(actions.getAllSubmissionsFromEnrollments()){
+                            actions.getAssignments()
+                        }
+                    }
+                });
+            }
+                
+            
+            ) // Sets loggedIn to whatever getUser() resolves to. (fetches from /api/v1/user and resolves to true or false)
+           
         }
+        
+        console.log("App.tsx useeffect runs")
         actions.setTheme()
         document.body.className = state.theme
-    }, [loggedIn, setLoggedIn])
-
+    }, [])
+    
     // General
     const { state, actions, effects } = useOvermind()
     return ( 
@@ -35,7 +50,7 @@ const App = () => {
                     </Switch>
                 ) : ( // Else, enable components that require authentication
                 <Switch>
-                    <Route path="/" component={Home}/>
+                    <Route path="/" exact component={Home}/>
                     <Route path="/info" component={Info} />
                     <Route path="/profile" component={Profile} />
                     <Route path="/course/:id" component={Course} />
