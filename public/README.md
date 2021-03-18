@@ -5,8 +5,8 @@
 
 ### Things related to functionality yet to be solved:
 #### State
-Doesn't wait for state or it doesn't update on state change. Declaring local states might solve this issue, mby.
-Otherwise maybe a smart choice for dependency array. But that suually just results in the useEffect() method being ran twice and components.
+~~Doesn't wait for state or it doesn't update on state change. Declaring local states might solve this issue, mby.
+Otherwise maybe a smart choice for dependency array. But that suually just results in the useEffect() method being ran twice and components.~~
 ```
     useEffect(() => {
         actions.getEnrollmentsByUser()
@@ -24,10 +24,13 @@ Otherwise maybe a smart choice for dependency array. But that suually just resul
     }, []) <----
   
 ```
-Here at the last line the empty array indicates that this will only run once, when the component mounts. So state changes doesn't come through, unless we
-We choose a `[dependency array]`. Having noothing here, results in the section looping and state being refreshed all the time. Not good, this could be a symptom of badly managed logic idk. Need some thinking brain thoughts to think about and read about useEffect()
+~~Here at the last line the empty array indicates that this will only run once, when the component mounts. So state changes doesn't come through, unless we
+We choose a `[dependency array]`. Having noothing here, results in the section looping and state being refreshed all the time. Not good, this could be a symptom of badly managed logic idk. Need some thinking brain thoughts to think about and read about useEffect()~~
 
-Also rendering doesn't seem to wait for `getSubmissions(id)` but it SHOULD, because the call is synchronous, maybe somewhere along the overmind action->grpcManager->method.Call, doesn't actually wait for state at all. Needs more testing.
+~~Also rendering doesn't seem to wait for `getSubmissions(id)` but it SHOULD, because the call is synchronous, maybe somewhere along the overmind action->grpcManager->method.Call, doesn't actually wait for state at all. Needs more testing.~~
+
+## Think This is mostly fixed. Should create an init function to make everything a bit cleaner in App.tsx
+Other stuff still applies ->
 
 ---
 
