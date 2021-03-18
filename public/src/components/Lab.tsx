@@ -7,12 +7,15 @@ import { Submission } from "../proto/ag_pb"
 interface MatchProps {
     lab: string
 }
+interface CourseID {
+    crsID: number
+}
 
-const Lab = () => {
+const Lab = (props:CourseID) => {
     const { state } = useOvermind()
     const {lab} = useParams<MatchProps>()
-
-    const getSubmission = state.submissions.map(submission => {
+   
+    const getSubmission = state.submissions[props.crsID].map(submission => {
         if (submission.getAssignmentid() == Number(lab)) {
             console.log(submission.getId())
             return (

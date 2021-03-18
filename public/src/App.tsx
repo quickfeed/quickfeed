@@ -35,12 +35,12 @@ const App = () => {
                     </Switch>
                 ) : ( // Else, enable components that require authentication
                 <Switch>
-                    <Route path="/" exact component={Home}/>
+                    <Route path="/" component={Home}/>
                     <Route path="/info" component={Info} />
                     <Route path="/profile" component={Profile} />
                     <Route path="/course/:id" component={Course} />
                 </Switch>
-                // Admin stuff is probably also needed here somewhere :P. 
+                // Admin stuff is probably also needed here somewhere. 
                 )}
                 
             </div>
