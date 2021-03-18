@@ -1,0 +1,41 @@
+.avatar {
+    border-radius: 50%;
+}
+
+.navbar {
+    height: 50px;
+    background-color: darkgrey;
+    box-shadow: 0px 1px 1px 1px rgba(0, 0, 0, 0.4);
+}
+
+.navbar-brand {
+    vertical-align: middle;
+    text-decoration: none;
+    float: left;
+}
+
+body {
+    margin: 0px;
+}
+
+.dark {
+    background-color: rgb(46, 45, 45);
+    color: white;
+}
+
+.light {
+    background-color: white;
+    color: black;
+}
+
+a {
+    text-decoration: none;
+    color: red;
+}
+button {
+    color: black;
+}
+
+input{
+    color: black;
+}

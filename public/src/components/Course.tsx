@@ -15,7 +15,9 @@ interface MatchProps {
 const Course = (props: RouteComponentProps<MatchProps>) => {
     const { state, actions } = useOvermind()
     const { url } = useRouteMatch()
+    const [isLoading , setLoading] = useState(true)
     const [enrollment, setEnrollment] = useState(new Enrollment())
+    let crsID = Number(props.match.params.id)
     useEffect(() => {
         actions.getEnrollmentsByUser()
         .then(success => {
@@ -23,14 +25,22 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
                 const enrol = actions.getEnrollmentByCourseId(Number(props.match.params.id))
                 if (enrol !== null) {
                     setEnrollment(enrol)
-                    actions.getSubmissions(enrol.getCourseid())
-                    actions.getAssignments()
+                    actions.getSubmissions(Number(props.match.params.id))
+                    actions.getAssignmentsByCourse(Number(props.match.params.id))
+                    console.log(state.assignments)
                 }
+                
             }
         })
+        setLoading(false)
     }, [])
-
-    const getSubmissions = state.submissions.map(submission => {
+    if(isLoading){
+        return(
+            <h1>Loading icon here...</h1>
+        )
+    }
+    /*
+    const getSubmissions = state.submissions[crsID].map(submission => {
         return (
             <div>
                 <h1>{submission.getScore()} / 100</h1>
@@ -39,22 +49,30 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
         )
     })
 
-    const listAssignments = state.assignments.map(assignment => {
+    const listAssignments = state.assignments[Number(props.match.params.id)].map(assignment => {
         return (
             <h2 key={assignment.getId()}><Link to={`/course/${props.match.params.id}/${assignment.getId()}`}>{assignment.getName()}</Link> Deadline: {getFormattedDeadline(assignment.getDeadline())} </h2>
         )
-    })
-    if (enrollment.getId() !== 0){
+    })*/
+
+
+    if (enrollment.getId() !== 0 && typeof state.assignments[crsID] !== 'undefined'){
         return (
         <div className="box">
             <h1>Welcome to {enrollment.getCourse()?.getName()}, {enrollment.getUser()?.getName()}! You are a {enrollment.getStatus() == Enrollment.UserStatus.STUDENT ? ("student") : ("teacher")}</h1>
-            {listAssignments}
+            {
+                state.assignments[Number(props.match.params.id)].map(assignment => {
+                    return (
+                        <h2 key={assignment.getId()}><Link to={`/course/${props.match.params.id}/${assignment.getId()}`}>{assignment.getName()}</Link> Deadline: {getFormattedDeadline(assignment.getDeadline())} </h2>
+                    )
+                })
+            }
             <Route path={`${url}/:lab`}>
-                <Lab></Lab>
+                <Lab crsID={crsID}></Lab>
             </Route>
         </div>)
     }
-    return <h1>404 Not Found</h1>
+    return <h1>Loading</h1>
 }
 
 export default Course

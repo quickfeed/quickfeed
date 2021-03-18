@@ -1,3 +1,6 @@
+  
+var webpack = require("webpack")
+
 module.exports = {
     entry: "./src/index.tsx",
     output: {
@@ -5,7 +8,7 @@ module.exports = {
         path: __dirname + "/dist"
     },
     mode: "development",
-
+    watch: true,
     // Enable sourcemaps for debugging webpack's output.
     devtool: "source-map",
 
@@ -14,13 +17,24 @@ module.exports = {
         extensions: [".ts", ".tsx", ".js", ".json"]
     },
 
+
+    plugins: [
+        new webpack.DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify('test')
+        }),
+        new webpack.DefinePlugin({
+            'process.env.ASSET_PATH': JSON.stringify("static"),
+        }),
+    ],
+
     module: {
         rules: [
             // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
             { test: /\.tsx?$/, loader: "awesome-typescript-loader" },
 
             // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
-            { enforce: "pre", test: /\.js$/, loader: "source-map-loader" }
+            { enforce: "pre", test: /\.js$/, loader: "source-map-loader" },
+            { test: /\.css$/i,use: ["style-loader", "css-loader"],},
         ]
     },
 

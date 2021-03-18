@@ -1,5 +1,5 @@
 import { Context, Action } from "overmind";
-import { Courses, Course, User, EnrollmentStatusRequest, Enrollment, Status, Submissions } from "../proto/ag_pb";
+import { Courses, Course, User, EnrollmentStatusRequest, Enrollment, Status, Submissions, Assignment } from "../proto/ag_pb";
 import { useEffects } from ".";
 import { state } from "./state";
 import { useEffect } from "react";
@@ -54,16 +54,26 @@ export const changeTheme: Action<void> = ({state}) => {
     state.theme = (state.theme === "light") ? "dark" : "light"
 }
 
+
 /** Gets all submission for the current user by Course ID and stores them in state */
 export const getSubmissions: Action<number> = ({state, effects}, courseID) => {
     effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
         console.log(state.user.id, courseID)
         if (res.data) {
-            state.submissions = res.data.getSubmissionsList()
+            state.submissions[courseID] = res.data.getSubmissionsList()
+            console.log("Hey submissions is happening")
         }
+        state.submissions[courseID]
 
     })
+    /* TODO implement getting submission from grouplabs
+    effects.grpcMan.getGroupByUserAndCourse(courseID,state.user.id).then(res =>{
+        if (res.data){
+            state.submissions[courseID]
+        }
+    })*/
 }
+
 
 /** Gets all enrollments for the current user and stores them in state */
 export const getEnrollmentsByUser: Action<void, Promise<boolean>> = ({state, effects}) => {
@@ -100,13 +110,28 @@ export const getEnrollmentByCourseId: Action<number, Enrollment | null> = ({stat
 
 /** TODO: Either store assignments for all courses, or get assignments by course ID. Currently sets state.assignments to the assignments in the last enrollment in state.enrollments */
 export const getAssignments: Action<void> = ({state, effects}) => {
+    let assignments: { [courseID: number] : Assignment[]} = {}
     state.enrollments.forEach(enrollment => {
-        console.log(enrollment.getCourseid())
+        //console.log(enrollment.getCourseid())
         effects.grpcMan.getAssignments(enrollment.getCourseid()).then(res => {
             if (res.data) {
-                state.assignments = res.data.getAssignmentsList()
-                console.log(state.assignments)
+                assignments[enrollment.getCourseid()] = res.data.getAssignmentsList()
+                //console.log(state.assignments)
             }
+            
         })
+        .finally(() => {
+            state.assignments = assignments
+        })
+    })
+}
+/** Gets the assignments from a course by the course id. Meant to be used in places where you want only 1 assignment list. */
+export const getAssignmentsByCourse: Action<number, Promise<boolean>> = ({state, effects}, courseid:number) => {
+    return effects.grpcMan.getAssignments(courseid).then(res => {
+        if (res.data){
+            state.assignments[courseid] = res.data.getAssignmentsList()
+            return true
+        }
+        return false
     })
 }

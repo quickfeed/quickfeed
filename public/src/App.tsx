@@ -1,7 +1,6 @@
 import React, { Component, useEffect, useState } from "react";
 import { useOvermind } from "./overmind";
 import Home from './components/Home'
-import './App.css'
 import Info from "./components/Info";
 import NavBar from "./components/NavBar";
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
@@ -41,6 +40,7 @@ const App = () => {
                     <Route path="/profile" component={Profile} />
                     <Route path="/course/:id" component={Course} />
                 </Switch>
+                // Admin stuff is probably also needed here somewhere. 
                 )}
                 
             </div>

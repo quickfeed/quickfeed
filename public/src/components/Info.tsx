@@ -8,7 +8,7 @@ const Info = () => {
 
     return (
         <div>
-        <h4>Test</h4>
+        <h4>Welcome to AG</h4>
         </div>
     )
 }

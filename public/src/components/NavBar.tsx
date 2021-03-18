@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import { useOvermind } from "../overmind";
+import { useActions, useOvermind } from "../overmind";
 import { Link } from 'react-router-dom'
+import { ToggleSwitch } from "./ToggleSwitch";
 
 
 const NavBar = () => {

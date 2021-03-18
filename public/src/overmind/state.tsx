@@ -15,17 +15,18 @@ export interface IUser {
     AccessToken: string;
 }
 
-
-
-
 export type State = {
     user: IUser,
     Metadata: {user: string},
     users: User[],
     enrollments: Enrollment[]
     courses: Course[],
-    submissions: Submission[],
-    assignments: Assignment[],
+    submissions:{
+        [courseid:number]:Submission[]
+    },
+    assignments: {
+        [courseid:number]:Assignment[]
+    },
     theme: string,
 }
 
@@ -39,7 +40,7 @@ export const state: State = {
     users: [],
     enrollments: [],
     courses: [],
-    submissions: [],
-    assignments: [],
+    submissions: {},
+    assignments: {},
     theme: "light"
 };
