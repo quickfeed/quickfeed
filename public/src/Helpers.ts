@@ -6,3 +6,7 @@ export const getFormattedDeadline = (deadline_string: string) => {
     let deadline = new Date(deadline_string)
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} by ${deadline.getHours()}:${deadline.getMinutes() < 10 ? "0" + deadline.getMinutes() : deadline.getMinutes()}`
 }
+
+export const formatBuildInfo = (buildInfo: string) => {
+    console.log(buildInfo.split("/\n/"))
+}

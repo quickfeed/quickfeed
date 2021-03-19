@@ -2,12 +2,8 @@ import React from "react";
 import { getFormattedDeadline } from "../Helpers";
 import { useOvermind, useReaction } from "../overmind";
 
-
-
-
-
 const LandingPageLabTable = () => {
-    const { state , actions } = useOvermind()
+    const { state } = useOvermind()
     
     //replace {} with a type of dictionary/record
     
@@ -27,7 +23,7 @@ const LandingPageLabTable = () => {
                         <td>{getFormattedDeadline(assignment.getDeadline())}</td>
                         <td></td>
                         <td>{(assignment.getAutoapprove()==false && submission.getScore()>= assignment.getScorelimit()) ? "Awating approval":(assignment.getAutoapprove()==true && submission.getScore()>= assignment.getScorelimit())? "Approved(Auto approve)(shouldn't be in final version)":"Score not high enough"}</td>
-                        <td>{Boolean(assignment.getIsgrouplab()) ? "Yes": "No"}</td>
+                        <td>{assignment.getIsgrouplab() ? "Yes": "No"}</td>
                     </tr>
                 )
                 }
@@ -56,8 +52,6 @@ const LandingPageLabTable = () => {
                     {makeTable()}
                 </tbody>
             </table>
-
-        
         </div>
     )
 }

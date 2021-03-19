@@ -37,30 +37,21 @@ const Home = () => {
         });
     }, [])
     
-    if(true){
-        return(
-            <div className='box'>
+    return(
+        <div className='box'>
             <h1>Autograder</h1>
                 
             {state.user.id > 0 &&
             <div>
-            <h1>Welcome, {state.user.name}!</h1>
-            <img className="avatar img-thumbnail" src={state.user.avatarurl}></img>
+                <h1>Welcome, {state.user.name}!</h1>
+                <img className="avatar img-thumbnail" src={state.user.avatarurl}></img>
             </div>
             }
-            <a><button>Courses</button></a>
             {listCourses}
             {Object.keys(state.assignments).length>0 &&
             <a>test for state</a>
             }
             <LandingPageLabTable />           
-        </div>
-        )
-    }
-    
-    return (
-        <div className='box'>
-            <h1>loading</h1>
         </div>
         )
 }

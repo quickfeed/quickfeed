@@ -15,10 +15,10 @@ interface MatchProps {
 const Course = (props: RouteComponentProps<MatchProps>) => {
     const { state, actions } = useOvermind()
     const { url } = useRouteMatch()
-    const [isLoading , setLoading] = useState(true)
     const [enrollment, setEnrollment] = useState(new Enrollment())
     let crsID = Number(props.match.params.id)
     useEffect(() => {
+        state.isLoading = true
         actions.getEnrollmentsByUser()
         .then(success => {
             if (success){
@@ -32,9 +32,11 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
                 
             }
         })
-        setLoading(false)
+        .finally(() => {
+            actions.loading()
+        })
     }, [])
-    if(isLoading){
+    if(state.isLoading){
         return(
             <h1>Loading icon here...</h1>
         )

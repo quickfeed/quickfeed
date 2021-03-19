@@ -135,3 +135,7 @@ export const getAssignmentsByCourse: Action<number, Promise<boolean>> = ({state,
         return false
     })
 }
+
+export const loading: Action<void> = ({state}) => {
+    state.isLoading = !state.isLoading
+}
