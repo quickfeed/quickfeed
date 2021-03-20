@@ -17,15 +17,21 @@ const App = () => {
     useEffect(() => {
         if (!loggedIn) {
             actions.getUser().then(res => {setLoggedIn(res)
-                if(res)
-                actions.getEnrollmentsByUser()
-                .then(success => {
-                    if (success) {
-                        if(actions.getAllSubmissionsFromEnrollments()){
-                            actions.getAssignments()
+                if(res){
+                    actions.getEnrollmentsByUser()
+                    .then(success => {
+                        if (success) {
+                            state.enrollments.map(enroll => {
+                                actions.getAssignmentsByCourse(enroll.getCourseid()).then(success => {
+                                    if (success) {
+                                        actions.getSubmissions(enroll.getCourseid()).then(success => {if(success) actions.getCourses()})
+                                    }
+                                })
+                            })
+                            
                         }
-                    }
-                });
+                    });
+                }
             }
                 
             

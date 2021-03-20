@@ -40,7 +40,7 @@ export const state: State = {
     users: [],
     enrollments: [],
     courses: [],
-    submissions: [],
-    assignments: [],
+    submissions: {},
+    assignments: {},
     theme: "light"
 };

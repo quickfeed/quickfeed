@@ -1,5 +1,7 @@
 .avatar {
     border-radius: 50%;
+    width: 200px;
+    height: 200px;
 }
 
 .navbar {
@@ -38,4 +40,38 @@ button {
 
 input{
     color: black;
+}
+
+#LandingPageTable {
+    text-align: center;
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    border: 3px solid #ddd;
+    width: 75%;
+    margin: auto;
+}
+
+#LandingPageTable td, #LandingPageTable th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+
+#LandingPageTable tr:hover {opacity: 70%;}
+
+#LandingPageTable th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: center;
+    background-color: #4CAF50;
+    color: white;
+}
+img{
+    margin: auto;
+    
+}
+
+.box {
+    text-align: center;
+    font-family: Consolas;
 }

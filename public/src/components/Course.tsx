@@ -27,7 +27,6 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
                     setEnrollment(enrol)
                     actions.getSubmissions(Number(props.match.params.id))
                     actions.getAssignmentsByCourse(Number(props.match.params.id))
-                    console.log(state.assignments)
                 }
                 
             }

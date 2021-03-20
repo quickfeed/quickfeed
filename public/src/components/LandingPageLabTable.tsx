@@ -1,7 +1,8 @@
 import { render } from "@testing-library/react";
+import { useEffect } from "react";
 import { useOvermind, useReaction } from "../overmind";
 import { Assignment, Submission } from "../proto/ag_pb";
-
+import { getFormattedDeadline } from "../Helpers"
 
 
 interface DictionaryProps{
@@ -17,32 +18,33 @@ let LandingPageLabTable = (props:DictionaryProps) => {
     //TODO make this to inherit state/actions from Homepage.
     const { state , actions} = useOvermind()
     
-    //replace {} with a type of dictionary/record
-    console.log(props.assignments,props.submissions)
-    const tableMap = Object.entries(props.assignments).map(([crsid,assignments]) => {
-        const now = new Date()
-        let courseid = Number(crsid)
-        let crsName = state.courses.find(course => course.getId() === courseid)?.getCode()
-        return assignments.map((assignment)=>{
-            let submission = props.submissions[courseid].find(submission => submission.getAssignmentid() === assignment.getId())
-            let deadline = new Date(assignment.getDeadline())
-            if(submission && !submission?.getStatus()){
-                return(
+    const makeTable = (): JSX.Element[] => {
+        let table: JSX.Element[] = []
+        for (const courseID in state.assignments) {
+            let crsName = state.courses.find(course => course.getId() === Number(courseID))?.getCode()
+            state.assignments[courseID].map(assignment => {
+                if(state.submissions[courseID]) {
+                    let submission = state.submissions[courseID].find(submission => assignment.getId() === submission.getAssignmentid())
+                
+                if(submission){
+                table.push(
                     <tr key = {assignment.getId()} className= {"clickable-row "}>
                         <td>{crsName}</td>
                         <td>{assignment.getName()}</td>
                         <td>{submission.getScore()} / {assignment.getScorelimit()}</td>
-                        <td>{deadline.getDate()}-{deadline.getMonth()}-{deadline.getFullYear()}|{deadline.getHours()}:{deadline.getMinutes()}</td>
+                        <td>{getFormattedDeadline(assignment.getDeadline())}</td>
                         <td></td>
                         <td>{(assignment.getAutoapprove()==false && submission.getScore()>= assignment.getScorelimit()) ? "Awating approval":(assignment.getAutoapprove()==true && submission.getScore()>= assignment.getScorelimit())? "Approved(Auto approve)(shouldn't be in final version)":"Score not high enough"}</td>
                         <td>{Boolean(assignment.getIsgrouplab()) ? "Yes": "No"}</td>
                     </tr>
-                )    
+                )
+                }
             }
-        })
-        
-    })
-    
+            })
+        }
+        return table
+    }
+    //replace {} with a type of dictionary/record
     return (
         <div>
             <table className="table" id="LandingPageTable">
@@ -58,7 +60,7 @@ let LandingPageLabTable = (props:DictionaryProps) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {tableMap}
+                    {makeTable()}
                 </tbody>
             </table>
         </div>

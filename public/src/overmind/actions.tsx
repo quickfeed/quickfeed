@@ -1,5 +1,5 @@
 import { Context, Action } from "overmind";
-import { Courses, Course, User, EnrollmentStatusRequest, Enrollment, Status, Submissions } from "../proto/ag_pb";
+import { Courses, Course, User, EnrollmentStatusRequest, Enrollment, Status, Submissions, Assignment, Submission } from "../proto/ag_pb";
 import { useEffects } from ".";
 import { state } from "./state";
 import { useEffect } from "react";
@@ -108,14 +108,15 @@ export const getEnrollmentByCourseId: Action<number, Enrollment | null> = ({stat
 
 /** TODO: Either store assignments for all courses, or get assignments by course ID. Currently sets state.assignments to the assignments in the last enrollment in state.enrollments */
 export const getAssignments: Action<void> = ({state, effects}) => {
+    let assignments:{[crsid:number]:Assignment[]} = {}
     state.enrollments.forEach( enrollment => {
         //console.log(enrollment.getCourseid())
          effects.grpcMan.getAssignments(enrollment.getCourseid()).then(res => {
             if (res.data) {
-                state.assignments[enrollment.getCourseid()] = res.data.getAssignmentsList()
+                assignments[enrollment.getCourseid()] = res.data.getAssignmentsList()
                 //console.log(state.assignments)
             }
-        })
+        }).finally(()=>state.assignments = assignments)
     })
 }
 /** Gets the assignments from a course by the course id. Meant to be used in places where you want only 1 assignment list. */
@@ -128,15 +129,17 @@ export const getAssignmentsByCourse: Action<number, Promise<boolean>> = ({state,
         return false
     })
 }
-
+/** EXPERIMENTAL STUFF BUT SHOULD WORK FINE AS WELL. */
 export const getAllSubmissionsFromEnrollments: Action<void, boolean> = ({state,effects}) => {
+    let submissions: {[courseid:number]:Submission[]} = {}
     state.enrollments.forEach(enrollment =>{
         let crsid= enrollment.getCourseid()
         effects.grpcMan.getSubmissions(enrollment.getCourseid(),state.user.id).then(res =>{
             if (res.data){
-                state.submissions[crsid] = res.data.getSubmissionsList()
+                submissions[crsid] = res.data.getSubmissionsList()
             }
         })
     })
+    state.submissions = submissions
     return true
 }
