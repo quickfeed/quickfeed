@@ -9,30 +9,32 @@ const NavBar = () => {
 
     const checkUserLoggedIn = () => {
         if (state.user.id > 0) {
-            return <a href="/logout"><button>Logout</button></a>
+            return <a href="/logout" className="login">Log out</a>
         }
-        return <a href="/auth/github"><button>Login</button></a>
+        return <a href="/auth/github" className="login"><i className="fa fa-2x fa-github" id="github"></i></a>
     }
 
     const changeTheme = () => {
         actions.changeTheme()
         window.localStorage.setItem("theme", state.theme)
+        document.body.className = state.theme
     }
 
     return (
-        <nav className="navbar">
-            
+        <nav className="navigator">
+            <div className="container">
             <Link to="/">
-                <button className="navbar-brand">Autograder</button>
+                <span className="navbar-brand">Autograder</span>
             </Link>
-            <Link to="/info">
-                <button>Info</button>
+            <Link to="/info" className="navigator-item">
+                Info
             </Link>
-            <Link to="/profile">
-                <button>Profile</button>
+            <Link to="/profile" className="navigator-item">
+                Profile
             </Link>
-            <button onClick={() => changeTheme()}>{state.theme}</button>
+            <span onClick={() => changeTheme()}><i className={state.theme === "light" ? "fa fa-sun-o" : "fa fa-moon-o"} style={{color: "white"}}></i></span>
             {checkUserLoggedIn()}
+            </div>
         </nav>
     )
     

@@ -54,16 +54,17 @@ export const changeTheme: Action<void> = ({state}) => {
     state.theme = (state.theme === "light") ? "dark" : "light"
 }
 
+
 /** Gets all submission for the current user by Course ID and stores them in state */
-export const getSubmissions: Action<number, Promise<boolean>> = ({state, effects}, courseID) => {
-    return effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
+export const getSubmissions: Action<number> = ({state, effects}, courseID) => {
+    effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
         console.log(state.user.id, courseID)
         if (res.data) {
             state.submissions[courseID] = res.data.getSubmissionsList()
             console.log("Hey submissions is happening")
-            return true
         }
-        return false
+        state.submissions[courseID]
+        
     })
     /* TODO implement getting submission from grouplabs
     effects.grpcMan.getGroupByUserAndCourse(courseID,state.user.id).then(res =>{
@@ -72,6 +73,7 @@ export const getSubmissions: Action<number, Promise<boolean>> = ({state, effects
         }
     })*/
 }
+
 
 /** Gets all enrollments for the current user and stores them in state */
 export const getEnrollmentsByUser: Action<void, Promise<boolean>> = async ({state, effects}) => {
@@ -129,6 +131,11 @@ export const getAssignmentsByCourse: Action<number, Promise<boolean>> = ({state,
         return false
     })
 }
+
+export const loading: Action<void> = ({state}) => {
+    state.isLoading = !state.isLoading
+}
+
 /** EXPERIMENTAL STUFF BUT SHOULD WORK FINE AS WELL. */
 export const getAllSubmissionsFromEnrollments: Action<void, boolean> = ({state,effects}) => {
     let submissions: {[courseid:number]:Submission[]} = {}
@@ -138,6 +145,7 @@ export const getAllSubmissionsFromEnrollments: Action<void, boolean> = ({state,e
             if (res.data){
                 submissions[crsid] = res.data.getSubmissionsList()
             }
+            
         })
     })
     state.submissions = submissions

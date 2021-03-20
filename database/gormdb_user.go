@@ -27,7 +27,9 @@ func (db *GormDB) GetUserByAccessToken(token string) (uint64, error) {
 		tx.Rollback()
 		return 0, err
 	}
-	tx.Commit()
+	if err := tx.Commit().Error; err != nil {
+		return 0, err
+	}
 	return remoteIdentity.UserID, nil
 }
 

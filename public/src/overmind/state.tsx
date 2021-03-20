@@ -28,6 +28,7 @@ export type State = {
         [courseid:number]:Assignment[]
     },
     theme: string,
+    isLoading: boolean,
 }
 
 const getUserID = (currentState: State) => {
@@ -42,5 +43,6 @@ export const state: State = {
     courses: [],
     submissions: {},
     assignments: {},
-    theme: "light"
+    theme: "light",
+    isLoading: false,
 };

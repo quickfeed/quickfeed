@@ -1,22 +1,11 @@
-import { render } from "@testing-library/react";
-import { useEffect } from "react";
+import React from "react";
+import { getFormattedDeadline } from "../Helpers";
 import { useOvermind, useReaction } from "../overmind";
-import { Assignment, Submission } from "../proto/ag_pb";
-import { getFormattedDeadline } from "../Helpers"
 
-
-interface DictionaryProps{
-    submissions : {
-        [courseid:number] : Submission[]
-    }
-    assignments : {
-        [courseid:number] : Assignment[]
-    }
-}
-
-let LandingPageLabTable = (props:DictionaryProps) => {
-    //TODO make this to inherit state/actions from Homepage.
-    const { state , actions} = useOvermind()
+const LandingPageLabTable = () => {
+    const { state } = useOvermind()
+    
+    //replace {} with a type of dictionary/record
     
     const makeTable = (): JSX.Element[] => {
         let table: JSX.Element[] = []
@@ -35,7 +24,7 @@ let LandingPageLabTable = (props:DictionaryProps) => {
                         <td>{getFormattedDeadline(assignment.getDeadline())}</td>
                         <td></td>
                         <td>{(assignment.getAutoapprove()==false && submission.getScore()>= assignment.getScorelimit()) ? "Awating approval":(assignment.getAutoapprove()==true && submission.getScore()>= assignment.getScorelimit())? "Approved(Auto approve)(shouldn't be in final version)":"Score not high enough"}</td>
-                        <td>{Boolean(assignment.getIsgrouplab()) ? "Yes": "No"}</td>
+                        <td>{assignment.getIsgrouplab() ? "Yes": "No"}</td>
                     </tr>
                 )
                 }
@@ -43,8 +32,9 @@ let LandingPageLabTable = (props:DictionaryProps) => {
             })
         }
         return table
+
     }
-    //replace {} with a type of dictionary/record
+    
     return (
         <div>
             <table className="table" id="LandingPageTable">

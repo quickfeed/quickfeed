@@ -48,8 +48,9 @@ const App = () => {
     const { state, actions, effects } = useOvermind()
     return ( 
         <Router>
-            <div className={state.theme+" app"} >
-                <NavBar />
+            <NavBar />
+            <div className={state.theme+" app container"} >
+                
                 {!loggedIn ? ( // if not logged in, enable only the Info component to be rendered
                     <Switch>
                         <Route path="/" component={Info} />

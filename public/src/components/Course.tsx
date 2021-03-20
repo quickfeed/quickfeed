@@ -19,6 +19,7 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
     const [enrollment, setEnrollment] = useState(new Enrollment())
     let crsID = Number(props.match.params.id)
     useEffect(() => {
+        state.isLoading = true
         actions.getEnrollmentsByUser()
         .then(success => {
             if (success){
@@ -27,13 +28,16 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
                     setEnrollment(enrol)
                     actions.getSubmissions(Number(props.match.params.id))
                     actions.getAssignmentsByCourse(Number(props.match.params.id))
+                    console.log(state.assignments)
                 }
                 
             }
         })
-        setLoading(false)
+        .finally(() => {
+            actions.loading()
+        })
     }, [])
-    if(isLoading){
+    if(state.isLoading){
         return(
             <h1>Loading icon here...</h1>
         )

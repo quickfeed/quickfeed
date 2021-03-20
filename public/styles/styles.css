@@ -4,16 +4,23 @@
     height: 200px;
 }
 
-.navbar {
+.navigator {
+    position: fixed;
+    top: 0;
+    width: 100%;
     height: 50px;
-    background-color: darkgrey;
+    background-color: #222;
     box-shadow: 0px 1px 1px 1px rgba(0, 0, 0, 0.4);
 }
 
 .navbar-brand {
-    vertical-align: middle;
     text-decoration: none;
     float: left;
+}
+
+.navigator-item {
+    padding: 15px;
+    display: inline-block;
 }
 
 body {
@@ -30,16 +37,47 @@ body {
     color: black;
 }
 
-a {
+.login {
+    float: right;
+    padding: 15px;
     text-decoration: none;
-    color: red;
+    line-height: 20px;
 }
-button {
-    color: black;
+
+a {
+    color: #9d9d9d;
+    font-weight: bold;
+}
+
+a:link {
+    text-decoration: none;
+}
+
+a:hover {
+    color: #7a7a7a;
 }
 
 input{
     color: black;
+}
+
+#github {
+    line-height: 20px;
+}
+
+.theme {
+    
+    display: inline-block;
+    padding: 15px;
+}
+
+.box {
+    margin-top: 50px;
+}
+
+.logs {
+    padding: 2px 4px;
+    background-color: #f9f2f4;
 }
 
 #LandingPageTable {
@@ -55,8 +93,6 @@ input{
     border: 1px solid #ddd;
     padding: 8px;
 }
-
-
 #LandingPageTable tr:hover {opacity: 70%;}
 
 #LandingPageTable th {
@@ -65,13 +101,4 @@ input{
     text-align: center;
     background-color: #4CAF50;
     color: white;
-}
-img{
-    margin: auto;
-    
-}
-
-.box {
-    text-align: center;
-    font-family: Consolas;
 }

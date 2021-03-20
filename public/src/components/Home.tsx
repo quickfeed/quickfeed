@@ -3,12 +3,13 @@ import { useOvermind, useState } from "../overmind";
 import { Link } from "react-router-dom";
 import { getFormattedDeadline } from "../Helpers";
 import LandingPageLabTable from "./LandingPageLabTable"
-import { Assignment, Submission } from "../proto/ag_pb";
+import { Assignment } from "../proto/ag_pb";
+
 
 
 const Home = () => {
     const { state, actions } = useOvermind()
-
+    
 
     const listCourses = state.enrollments.map(enrollment => {
         return (
@@ -30,7 +31,7 @@ const Home = () => {
         }
         <a><button>Courses</button></a>
         {listCourses}
-        <LandingPageLabTable submissions={state.submissions} assignments={state.assignments}/>
+        <LandingPageLabTable />
         
 
     </div>
