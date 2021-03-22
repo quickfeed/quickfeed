@@ -1,6 +1,5 @@
-import * as React from 'react'
+import  React from 'react'
 import { useOvermind } from "../overmind";
-import NavBar from './NavBar';
 
 
 const Info = () => {

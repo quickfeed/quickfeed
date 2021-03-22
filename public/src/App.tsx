@@ -16,7 +16,7 @@ const App = () => {
 
     useEffect(() => {
         if (!loggedIn) {
-            actions.getUser()
+            actions.setupUser()
             .then(res => setLoggedIn(res)) // Sets loggedIn to whatever getUser() resolves to. (fetches from /api/v1/user and resolves to true or false)
         }
         actions.setTheme()
@@ -24,7 +24,7 @@ const App = () => {
     }, [loggedIn, setLoggedIn])
 
     // General
-    const { state, actions, effects } = useOvermind()
+    const { state, actions } = useOvermind()
     return ( 
         <Router>
             <NavBar />

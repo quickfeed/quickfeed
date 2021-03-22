@@ -10,8 +10,9 @@ const LandingPageLabTable = () => {
     const makeTable = (): JSX.Element[] => {
         let table: JSX.Element[] = []
         for (const courseID in state.assignments) {
-            state.assignments[courseID].map(assignment => {
+            state.assignments[courseID].forEach(assignment => {
                 if(state.submissions[courseID]) {
+                    
                     let submission = state.submissions[courseID].find(submission => assignment.getId() === submission.getAssignmentid())
                 
                 if(submission){
@@ -19,7 +20,7 @@ const LandingPageLabTable = () => {
                     <tr key = {assignment.getId()} className= {"clickable-row "}>
                         <td>{}</td>
                         <td>{assignment.getName()}</td>
-                        <td>{submission.getScore()} / {assignment.getScorelimit()}</td>
+                        <td>{submission.getScore()} / 100</td>
                         <td>{getFormattedDeadline(assignment.getDeadline())}</td>
                         <td></td>
                         <td>{(assignment.getAutoapprove()==false && submission.getScore()>= assignment.getScorelimit()) ? "Awating approval":(assignment.getAutoapprove()==true && submission.getScore()>= assignment.getScorelimit())? "Approved(Auto approve)(shouldn't be in final version)":"Score not high enough"}</td>

@@ -26,6 +26,18 @@ const NavBar = () => {
             <Link to="/">
                 <span className="navbar-brand">Autograder</span>
             </Link>
+            
+            {
+                // TODO: Figure out how to handle this
+                // Currently only show this link if the user has an enrollment, regardless of status
+                state.enrollments.length > 0 
+                ?             
+                <Link to="/courses" className="navigator-item">
+                    Courses
+                </Link>
+                : ""
+            }
+
             <Link to="/info" className="navigator-item">
                 Info
             </Link>

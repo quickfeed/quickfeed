@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 import { getFormattedDeadline } from "../Helpers"
 import { useOvermind } from "../overmind"
 
-import { Courses, Enrollment } from "../proto/ag_pb"
+import { Courses, Enrollment, Repositories, Repository } from "../proto/ag_pb"
 import Lab from "./Lab"
 
 
@@ -16,62 +16,44 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
     const { state, actions } = useOvermind()
     const { url } = useRouteMatch()
     const [enrollment, setEnrollment] = useState(new Enrollment())
-    let crsID = Number(props.match.params.id)
+    let courseID = Number(props.match.params.id)
+
+
     useEffect(() => {
-        state.isLoading = true
-        actions.getEnrollmentsByUser()
-        .then(success => {
-            if (success){
-                const enrol = actions.getEnrollmentByCourseId(Number(props.match.params.id))
-                if (enrol !== null) {
-                    setEnrollment(enrol)
-                    actions.getSubmissions(Number(props.match.params.id))
-                    actions.getAssignmentsByCourse(Number(props.match.params.id))
-                    console.log(state.assignments)
-                }
-                
-            }
-        })
-        .finally(() => {
-            actions.loading()
-        })
+        const enrol = actions.getEnrollmentByCourseId(courseID)
+        if (enrol !== null) {
+            setEnrollment(enrol)
+        }
     }, [])
-    if(state.isLoading){
+
+    /**if(state.isLoading){
         return(
             <h1>Loading icon here...</h1>
         )
-    }
-    /*
-    const getSubmissions = state.submissions[crsID].map(submission => {
-        return (
-            <div>
-                <h1>{submission.getScore()} / 100</h1>
-                <code>{submission.getBuildinfo()}</code>
-            </div>
-        )
-    })
-
-    const listAssignments = state.assignments[Number(props.match.params.id)].map(assignment => {
-        return (
-            <h2 key={assignment.getId()}><Link to={`/course/${props.match.params.id}/${assignment.getId()}`}>{assignment.getName()}</Link> Deadline: {getFormattedDeadline(assignment.getDeadline())} </h2>
-        )
-    })*/
+    }*/
 
 
-    if (enrollment.getId() !== 0 && typeof state.assignments[crsID] !== 'undefined'){
+    if (enrollment.getId() !== 0 && typeof state.assignments[courseID] !== 'undefined'){
         return (
         <div className="box">
             <h1>Welcome to {enrollment.getCourse()?.getName()}, {enrollment.getUser()?.getName()}! You are a {enrollment.getStatus() == Enrollment.UserStatus.STUDENT ? ("student") : ("teacher")}</h1>
             {
-                state.assignments[Number(props.match.params.id)].map(assignment => {
+                state.assignments[courseID].map(assignment => {
                     return (
-                        <h2 key={assignment.getId()}><Link to={`/course/${props.match.params.id}/${assignment.getId()}`}>{assignment.getName()}</Link> Deadline: {getFormattedDeadline(assignment.getDeadline())} </h2>
+                        <h2 key={assignment.getId()}><Link to={`/course/${courseID}/${assignment.getId()}`}>{assignment.getName()}</Link> Deadline: {getFormattedDeadline(assignment.getDeadline())} </h2>
                     )
                 })
             }
+            
             <Route path={`${url}/:lab`}>
-                <Lab crsID={crsID}></Lab>
+                <Lab crsID={courseID}></Lab>
             </Route>
+            <div className="Links">
+            <a href={state.repositories[courseID][Repository.Type.USER]}>User Repository</a>
+            <a href={state.repositories[courseID][Repository.Type.GROUP]}>Group Repository</a>
+            <a href={state.repositories[courseID][Repository.Type.COURSEINFO]}>Course Info</a>
+            <a href={state.repositories[courseID][Repository.Type.ASSIGNMENTS]}>Assignments</a>
+            </div>
         </div>)
     }
     return <h1>Loading</h1>

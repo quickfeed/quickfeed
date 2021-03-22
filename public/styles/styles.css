@@ -77,3 +77,8 @@ input{
     padding: 2px 4px;
     background-color: #f9f2f4;
 }
+
+.Links a {
+    display: block;
+    clear: both;
+}

@@ -3,7 +3,7 @@ import { useOvermind, useState } from "../overmind";
 import { Link } from "react-router-dom";
 import { getFormattedDeadline } from "../Helpers";
 import LandingPageLabTable from "./LandingPageLabTable"
-import { Assignment } from "../proto/ag_pb";
+import { Assignment, Repository } from "../proto/ag_pb";
 
 
 
@@ -22,19 +22,6 @@ const Home = () => {
     
     
     useEffect(() => {
-        actions.getEnrollmentsByUser()
-        .then(success => {
-            if (success) {
-                state.enrollments.map(enrol =>{
-                    actions.getAssignmentsByCourse(enrol.getCourseid()).then(success =>{
-                        if (success) {
-                            actions.getSubmissions(enrol.getCourseid())
-                        }
-                    })
-                    
-                })
-            }
-        });
     }, [])
     
     return(
