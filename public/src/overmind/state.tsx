@@ -1,6 +1,4 @@
-import { userInfo } from "os";
 import { derived } from "overmind";
-import { isMetaProperty } from "typescript";
 import { Assignment, Course, Enrollment, Submission, User } from "../proto/ag_pb";
 
 
@@ -27,6 +25,9 @@ export type State = {
     assignments: {
         [courseid:number]:Assignment[]
     },
+    repositories: {
+        [courseid:number]: { [repoType: number]: string }
+    }
     theme: string,
     isLoading: boolean,
 }
@@ -43,6 +44,7 @@ export const state: State = {
     courses: [],
     submissions: {},
     assignments: {},
+    repositories: {},
     theme: "light",
     isLoading: false,
 };
