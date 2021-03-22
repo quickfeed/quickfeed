@@ -1,6 +1,7 @@
 import React from "react";
 import { getFormattedDeadline } from "../Helpers";
 import { useOvermind, useReaction } from "../overmind";
+import { Submission } from "../proto/ag_pb";
 
 const LandingPageLabTable = () => {
     const { state } = useOvermind()
@@ -9,11 +10,15 @@ const LandingPageLabTable = () => {
     
     const makeTable = (): JSX.Element[] => {
         let table: JSX.Element[] = []
+        let submission: Submission | undefined = undefined
         for (const courseID in state.assignments) {
+            
             state.assignments[courseID].forEach(assignment => {
+                
                 if(state.submissions[courseID]) {
+                    submission = state.submissions[courseID][assignment.getOrder() - 1]
                     
-                    let submission = state.submissions[courseID].find(submission => assignment.getId() === submission.getAssignmentid())
+                    
                 
                 if(submission){
                 table.push(

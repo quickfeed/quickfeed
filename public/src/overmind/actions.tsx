@@ -133,19 +133,23 @@ export const getAssignmentsByCourse: Action<number, Promise<boolean>> = ({state,
     })
 }
 
-export const getRepository: Action<number> = ({state, effects}, courseID) => {
-    state.repositories[courseID] = {}
-    effects.grpcMan.getRepositories(courseID, [Repository.Type.USER, Repository.Type.GROUP, Repository.Type.COURSEINFO, Repository.Type.ASSIGNMENTS]).then(res => {
+export const getRepository: Action<number> = ({state, effects}) => {
+    
+    state.enrollments.forEach(enrollment => {
+        state.repositories[enrollment.getCourseid()] = {}    
+    
+    effects.grpcMan.getRepositories(enrollment.getCourseid(), [Repository.Type.USER, Repository.Type.GROUP, Repository.Type.COURSEINFO, Repository.Type.ASSIGNMENTS]).then(res => {
             if(res.data) {
                 const repoMap = res.data.toObject().urlsMap
                 repoMap.forEach(repo => {
                     console.log(state.repositories)
-                    state.repositories[courseID][(Repository.Type as any)[repo[0]]] = repo[1]
+                    state.repositories[enrollment.getCourseid()][(Repository.Type as any)[repo[0]]] = repo[1]
                 })
             }
         })
         .finally(
         )
+    });
 
 }
 
@@ -222,7 +226,7 @@ export const setupUser: Action<void, Promise<boolean>> = ({state, actions}) => {
     })
     .then(success => {
         if (success) {
-            actions.getRepository(1)
+            actions.getRepository()
             return true
         }
         return false
