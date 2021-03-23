@@ -164,12 +164,17 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 	if err != nil {
 		return nil, err
 	}
-	if !request.GetSkipBuildInfo() {
-		course.SetSlipDays()
-		for _, a := range assignments {
-			for _, sbm := range a.Submissions {
+
+	course.SetSlipDays()
+	for _, a := range assignments {
+		for _, sbm := range a.Submissions {
+			if request.GetSkipBuildInfo() {
+				sbm.BuildInfo = ""
+				sbm.ScoreObjects = ""
+			} else {
 				sbm.MakeSubmissionReviews()
 			}
+
 		}
 	}
 
