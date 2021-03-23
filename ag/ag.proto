@@ -373,6 +373,7 @@ message SubmissionsForCourseRequest {
     }
     uint64 courseID = 1;
     Type type = 2;
+    bool skipBuildInfo = 3;
 }
 
 message RebuildRequest {
