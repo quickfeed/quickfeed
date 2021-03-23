@@ -27,14 +27,20 @@ const App = () => {
     const { state, actions } = useOvermind()
     return ( 
         <Router>
+            <div className={state.theme+" app wrapper"} >
             <NavBar />
-            <div className={state.theme+" app container"} >
-                
+            
+                <div id="content">
                 {!loggedIn ? ( // if not logged in, enable only the Info component to be rendered
                     <Switch>
                         <Route path="/" component={Info} />
                     </Switch>
                 ) : ( // Else, enable components that require authentication
+                state.user.email.length == 0 || state.user.name.length == 0 || state.user.studentid == 0 ? (
+                    <Switch>
+                        <Route path="/" component={Profile} />
+                    </Switch>
+                ) : (
                 <Switch>
                     <Route path="/" exact component={Home}/>
                     <Route path="/info" component={Info} />
@@ -42,8 +48,8 @@ const App = () => {
                     <Route path="/course/:id" component={Course} />
                 </Switch>
                 // Admin stuff is probably also needed here somewhere. 
-                )}
-                
+                ))}
+                </div>
             </div>
         </Router>
         )
