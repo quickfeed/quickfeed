@@ -6,7 +6,7 @@ const Info = () => {
     const { state } = useOvermind()
 
     return (
-        <div>
+        <div className="box">
         <h4>Welcome to AG</h4>
         </div>
     )

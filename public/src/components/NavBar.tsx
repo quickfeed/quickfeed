@@ -1,17 +1,20 @@
-import React, { Component } from "react";
+import React, { Component, useState } from "react";
 import { useActions, useOvermind } from "../overmind";
 import { Link } from 'react-router-dom'
 import { ToggleSwitch } from "./ToggleSwitch";
+import { act } from "react-dom/test-utils";
 
 
 const NavBar = () => {
     const { state, actions } = useOvermind() 
 
+    const [active, setActive] = useState(false)
+
     const checkUserLoggedIn = () => {
         if (state.user.id > 0) {
-            return <a href="/logout" className="login">Log out</a>
+            return <li><div id="title"><a href="/logout">Log out</a></div></li>
         }
-        return <a href="/auth/github" className="login"><i className="fa fa-2x fa-github" id="github"></i></a>
+        return <li><a href="/auth/github"><i className="fa fa-2x fa-github" id="github"></i></a></li>
     }
 
     const changeTheme = () => {
@@ -20,33 +23,75 @@ const NavBar = () => {
         document.body.className = state.theme
     }
 
+    const courses = () => {
+        return state.enrollments.map(enrollment => {
+            return (
+            <li className={active ? "active" : "inactive"}>
+                <div id="title"><Link to={`/course/` + enrollment.getCourseid()}>{enrollment.getCourse()?.getCode()}</Link></div>
+            </li>)
+        })
+    }
     return (
         <nav className="navigator">
-            <div className="container">
-            <Link to="/">
-                <span className="navbar-brand">Autograder</span>
-            </Link>
+            <ul className="SidebarList">
+            <li>
+                <Link to="/">
+                    <span className="logo">Autograder</span>
+                </Link>
+            </li>
             
+        
+                {state.user.id > 0 ? 
+                <li>
+                    <div id="icon"><img src={state.user.avatarurl} id="avatar"></img></div>
+                        
+                        <div id="title">{state.user.name}</div>
+                </li>
+                 : ""}
+
+            
+
             {
-                // TODO: Figure out how to handle this
-                // Currently only show this link if the user has an enrollment, regardless of status
                 state.enrollments.length > 0 
                 ?             
-                <Link to="/courses" className="navigator-item">
-                    Courses
-                </Link>
+                <li onClick={() => setActive(!active)}>
+                    <div id="title">
+                        <Link to="/courses">
+                            Courses
+                        </Link>
+                    </div>
+                </li>
+
                 : ""
             }
-
-            <Link to="/info" className="navigator-item">
-                Info
-            </Link>
-            <Link to="/profile" className="navigator-item">
-                Profile
-            </Link>
-            <span onClick={() => changeTheme()}><i className={state.theme === "light" ? "fa fa-sun-o" : "fa fa-moon-o"} style={{color: "white"}}></i></span>
-            {checkUserLoggedIn()}
+            {
+                state.enrollments.length > 0 ?
+                courses()
+                : ""
+            }
+            <li>
+            <div id="title">
+                <Link to="/info">
+                    Info
+                </Link>
             </div>
+            </li>
+
+            <li>
+                <div id="title">
+                <Link to="/profile">
+                    Profile
+                </Link>
+                </div>
+            </li>
+
+            <li>
+                <span onClick={() => changeTheme()}>
+                    <i className={state.theme === "light" ? "icon fa fa-sun-o" : "icon fa fa-moon-o"} style={{color: "white"}}></i>
+                </span>
+            </li>
+            {checkUserLoggedIn()}
+            </ul>
         </nav>
     )
     

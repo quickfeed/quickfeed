@@ -35,9 +35,6 @@ export const getCourses: Action<void, Promise<boolean>> = ({state, effects}) => 
     state.courses = []
     return effects.grpcMan.getCourses().then(res => {
         if (res.data) {
-            state.enrollments.forEach(enrollment => {
-                enrollment.setCourse(res.data?.getCoursesList().find(course => course.getId() == enrollment.getCourseid()))
-            });
             state.courses = res.data.getCoursesList()
             return true
         }
@@ -133,7 +130,7 @@ export const getAssignmentsByCourse: Action<number, Promise<boolean>> = ({state,
     })
 }
 
-export const getRepository: Action<number> = ({state, effects}) => {
+export const getRepository: Action<void> = ({state, effects}) => {
     
     state.enrollments.forEach(enrollment => {
         state.repositories[enrollment.getCourseid()] = {}    
@@ -228,6 +225,11 @@ export const setupUser: Action<void, Promise<boolean>> = ({state, actions}) => {
         if (success) {
             actions.getRepository()
             return true
+        }
+        return false
+    }).then(success => {
+        if (success) {
+            return actions.getCourses()
         }
         return false
     })

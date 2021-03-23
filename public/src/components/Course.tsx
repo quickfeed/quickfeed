@@ -12,6 +12,7 @@ interface MatchProps {
     id: string
 }
 
+
 const Course = (props: RouteComponentProps<MatchProps>) => {
     const { state, actions } = useOvermind()
     const { url } = useRouteMatch()
