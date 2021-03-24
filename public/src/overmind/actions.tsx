@@ -194,7 +194,9 @@ export const getCourseSubmissions: Action<number> = ({state, effects}, courseID)
     })
 }
 
-
+export const setActiveCourse: Action<number> = ({state}, courseID) => {
+    state.activeCourse = courseID
+}
 
 // EXPERIMENTS BELOW
 export const setupUser: Action<void, Promise<boolean>> = ({state, actions}) => {

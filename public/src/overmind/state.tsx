@@ -30,6 +30,7 @@ export type State = {
     }
     theme: string,
     isLoading: boolean,
+    activeCourse: number,
 }
 
 const getUserID = (currentState: State) => {
@@ -47,4 +48,5 @@ export const state: State = {
     repositories: {},
     theme: "light",
     isLoading: false,
+    activeCourse: -1
 };

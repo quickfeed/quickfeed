@@ -38,6 +38,10 @@
     display: none;
 }
 
+#title {
+    margin-left: 10px;
+}
+
 .SidebarList .active {
     display: flex;
     background-color: rgb(39, 39, 39);
@@ -66,6 +70,8 @@
 
 #content {
     margin-left: 350px;
+    margin-right: 100px;
+    width: 100%;
 }
 
 body {
@@ -128,9 +134,31 @@ input{
     background-color: #f9f2f4;
 }
 
+.Links {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    
+}
+
 .Links a {
-    display: block;
-    clear: both;
+    background-color: #337ab7;
+    display: flex;
+    color: white;
+    align-items: center;
+    justify-content: center;
+    flex: 24%;
+    height: 50px;
+    text-align: center;
+    margin: 1%;
+
+    
+}
+
+.Links a:hover {
+    background-color: #296fac;
 }
 
 #LandingPageTable thead tr {
@@ -140,11 +168,26 @@ input{
 
 }
 
-#LandingPageTable tbody tr:nth-child(even) {
+#LandingPageTable tbody .dark td {
+    border-bottom: 1px solid black ;
+}
+
+#LandingPageTable tbody .light:nth-child(even) {
     background-color: #e0ebf1;
+}
+
+#LandingPageTable tbody .dark:nth-child(even) {
+    background-color: #222;
 }
 
 #LandingPageTable .APPROVED {
     color: green;
 }
 
+.jumbotron {
+    height: 200px;
+    margin-top: -50px;
+    margin-right: -100px;
+    margin-left: -100px;
+
+}

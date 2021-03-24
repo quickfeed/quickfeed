@@ -47,12 +47,17 @@ const Profile = () => {
         if(editing === false) {
         return (
             <div className="box">
-                <h1>Hello {state.user.name}!</h1>
-                <h2>Your email is {state.user.email}</h2>
-                <h3>Your student ID is {state.user.studentid}</h3>
-                <h4>You are {state.user.isadmin ? 'an' : 'not an' } admin</h4>
-                <h5><img src={state.user.avatarurl} width="20%"></img></h5>
-                <button onClick={() => editProfile()}>Edit Profile</button>
+                <div className="jumbotron"><div className="centerblock container"><h1>Hi, {state.user.name}</h1>You can edit your user information here.</div></div>
+                
+                    <div className="card well" style={{width: "400px"}}>
+                    <div className="card-header">Your Information</div>
+                        <ul className="list-group list-group-flush">
+                            <li className="list-group-item">Name: {state.user.name}</li>
+                            <li className="list-group-item">Email: {state.user.email}</li>
+                            <li className="list-group-item">Student ID: {state.user.studentid}</li>
+                        </ul>
+                    </div>
+                <button className="btn btn-primary" onClick={() => editProfile()}>Edit Profile</button>
             </div>
             )
         } 
@@ -61,18 +66,20 @@ const Profile = () => {
             
             return ( 
                 <div className="box">
-                <form onSubmit={e => {e.preventDefault(); submitHandler()}}>
-                    <h1><input name="name" type="text" value={user.name} onChange={handleChange} /></h1>
-                    <h2><input name="email" type="text" value={user.email} onChange={handleChange} /></h2>
-                    <h3><input name="studentid" type="text" value={user.studentid} onChange={handleChange} /></h3>
-                    <input type="submit" value="Submit" />
+                    <div className="jumbotron"><div className="centerblock container"><h1>Hi, {state.user.name}</h1>You can edit your user information here.</div></div>
+                    <form className="form-group well" style={{width: "400px"}} onSubmit={e => {e.preventDefault(); submitHandler()}}>
+                        <label htmlFor={"name"}>Name</label>
+                        <input className="form-control" name="name" type="text" value={user.name} onChange={handleChange} />
+                        <label htmlFor={"email"}>Email</label>
+                        <input className="form-control" name="email" type="text" value={user.email} onChange={handleChange} />
+                        <label htmlFor={"studentid"}>Student ID</label>
+                        <input className="form-control" name="studentid" type="text" value={user.studentid} onChange={handleChange} />
+                        <input className="btn btn-primary" type="submit" value="Save" style={{marginTop:"20px"}}/>
                 </form>
                 </div>
             )
         }
     }
-    // If the user does not have a valid ID (-1)
-    // TODO: Redirect ? Not needed currently as all components are disabled except Info if not logged in. Could change
     return <h1>Not logged in.</h1>
 
     

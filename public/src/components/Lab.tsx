@@ -1,6 +1,7 @@
 import React from 'react'
 import { useParams } from 'react-router'
 import { useOvermind } from '../overmind'
+import LabResultTable from './LabResultTable'
 
 interface MatchProps {
     lab: string
@@ -20,7 +21,7 @@ const Lab = (props:CourseID) => {
             const prettyBuildlog = buildInfo.buildlog.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
             return (
                 <div key={submission.getId()}>
-                    <h1>{submission.getScore()}%</h1>
+                    <LabResultTable id={submission.getAssignmentid()} courseID={props.crsID} />
                     <div className="well"><code>{prettyBuildlog}</code></div>
                     
                 </div>
@@ -30,7 +31,6 @@ const Lab = (props:CourseID) => {
 
     return (
         <div>
-        Lab:
         {getSubmission}
         </div>
     )

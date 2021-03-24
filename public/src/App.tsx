@@ -35,12 +35,12 @@ const App = () => {
                     <Switch>
                         <Route path="/" component={Info} />
                     </Switch>
-                ) : ( // Else, enable components that require authentication
+                ) : ( // Else if, user logged in, but has not added their information redirect to Profile
                 state.user.email.length == 0 || state.user.name.length == 0 || state.user.studentid == 0 ? (
                     <Switch>
                         <Route path="/" component={Profile} />
                     </Switch>
-                ) : (
+                ) : ( // Else render page as expected for a logged in user
                 <Switch>
                     <Route path="/" exact component={Home}/>
                     <Route path="/info" component={Info} />

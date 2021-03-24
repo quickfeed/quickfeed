@@ -6,6 +6,7 @@ import { useOvermind } from "../overmind"
 
 import { Courses, Enrollment, Repositories, Repository } from "../proto/ag_pb"
 import Lab from "./Lab"
+import LandingPageLabTable from "./LandingPageLabTable"
 
 
 interface MatchProps {
@@ -18,7 +19,7 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
     const { url } = useRouteMatch()
     const [enrollment, setEnrollment] = useState(new Enrollment())
     let courseID = Number(props.match.params.id)
-
+    actions.setActiveCourse(courseID)
 
     useEffect(() => {
         const enrol = actions.getEnrollmentByCourseId(courseID)
@@ -37,24 +38,19 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
     if (enrollment.getId() !== 0 && typeof state.assignments[courseID] !== 'undefined'){
         return (
         <div className="box">
-            <h1>Welcome to {enrollment.getCourse()?.getName()}, {enrollment.getUser()?.getName()}! You are a {enrollment.getStatus() == Enrollment.UserStatus.STUDENT ? ("student") : ("teacher")}</h1>
-            {
-                state.assignments[courseID].map(assignment => {
-                    return (
-                        <h2 key={assignment.getId()}><Link to={`/course/${courseID}/${assignment.getId()}`}>{assignment.getName()}</Link> Deadline: {getFormattedDeadline(assignment.getDeadline())} </h2>
-                    )
-                })
-            }
-            
-            <Route path={`${url}/:lab`}>
-                <Lab crsID={courseID}></Lab>
-            </Route>
+            <h1>{enrollment.getCourse()?.getName()}</h1>
             <div className="Links">
             <a href={state.repositories[courseID][Repository.Type.USER]}>User Repository</a>
             <a href={state.repositories[courseID][Repository.Type.GROUP]}>Group Repository</a>
             <a href={state.repositories[courseID][Repository.Type.COURSEINFO]}>Course Info</a>
             <a href={state.repositories[courseID][Repository.Type.ASSIGNMENTS]}>Assignments</a>
             </div>
+            <LandingPageLabTable courseID={courseID} />
+            
+            <Route path={`${url}/:lab`}>
+                <Lab crsID={courseID}></Lab>
+            </Route>
+
         </div>)
     }
     return <h1>Loading</h1>

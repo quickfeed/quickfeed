@@ -3,6 +3,7 @@ import { useActions, useOvermind } from "../overmind";
 import { Link } from 'react-router-dom'
 import { ToggleSwitch } from "./ToggleSwitch";
 import { act } from "react-dom/test-utils";
+import NavBarLabs from "./NavBarLabs";
 
 
 const NavBar = () => {
@@ -23,13 +24,29 @@ const NavBar = () => {
         document.body.className = state.theme
     }
 
-    const courses = () => {
-        return state.enrollments.map(enrollment => {
-            return (
-            <li className={active ? "active" : "inactive"}>
-                <div id="title"><Link to={`/course/` + enrollment.getCourseid()}>{enrollment.getCourse()?.getCode()}</Link></div>
-            </li>)
-        })
+    // Generates dropdown items related to Courses
+    const CourseItems = (): JSX.Element[] => {
+        let links: JSX.Element[] = []
+        if (state.enrollments.length > 0) {
+            
+            links.push(
+            <li key={0} onClick={() => setActive(!active)}>
+                <div id="title">
+                    <Link to="/courses">
+                        Courses
+                    </Link>
+                </div>
+            </li>
+            )
+            links.push(...state.enrollments.map(enrollment => {
+                return (
+                <li key={enrollment.getCourseid()} className={active ? "active" : "inactive"}>
+                    <div id="title"><Link to={`/course/` + enrollment.getCourseid()}>{enrollment.getCourse()?.getCode()}</Link></div>
+                </li>)
+            }))
+
+        }
+        return links
     }
     return (
         <nav className="navigator">
@@ -50,25 +67,9 @@ const NavBar = () => {
                  : ""}
 
             
-
-            {
-                state.enrollments.length > 0 
-                ?             
-                <li onClick={() => setActive(!active)}>
-                    <div id="title">
-                        <Link to="/courses">
-                            Courses
-                        </Link>
-                    </div>
-                </li>
-
-                : ""
-            }
-            {
-                state.enrollments.length > 0 ?
-                courses()
-                : ""
-            }
+            
+            {CourseItems()}
+            <NavBarLabs />
             <li>
             <div id="title">
                 <Link to="/info">

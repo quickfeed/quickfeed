@@ -34,7 +34,7 @@ const Home = () => {
             }
             {listCourses}
 
-            <LandingPageLabTable />           
+            <LandingPageLabTable courseID={0}/>           
         </div>
         )
 }
