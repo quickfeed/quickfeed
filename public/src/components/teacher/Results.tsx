@@ -139,13 +139,16 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         if (currentSubmissionLink && selectedSubmission) {
             const previousStatus = selectedSubmission.status;
             selectedSubmission.status = status;
+            // if the submission is for manual review, update submission score from reviews
+            if (currentSubmissionLink.assignment.getSkiptests()) {
+                selectedSubmission.score = scoreFromReviews(selectedSubmission.reviews);
+            }
             const ans = await this.props.onSubmissionStatusUpdate(selectedSubmission);
             if (ans) {
                 selectedSubmission.approvedDate = new Date().toLocaleString();
                 // If the submission is for group assignment, every group member will have a copy
                 // in their Submission link structures. When the submission has been
                 // approved for one student, update all its copies for every group member.
-
                 if (selectedSubmission.groupid > 0) {
                     this.state.allSubmissions.forEach((e) => {
                         if (e.enrollment.getGroup()?.getId() === selectedSubmission.groupid) {
