@@ -1,8 +1,6 @@
-import React, { Component, useState } from "react";
-import { useActions, useOvermind } from "../overmind";
+import React, { useState } from "react";
+import { useOvermind } from "../overmind";
 import { Link } from 'react-router-dom'
-import { ToggleSwitch } from "./ToggleSwitch";
-import { act } from "react-dom/test-utils";
 import NavBarLabs from "./NavBarLabs";
 
 
@@ -18,16 +16,10 @@ const NavBar = () => {
         return <li><a href="/auth/github"><i className="fa fa-2x fa-github" id="github"></i></a></li>
     }
 
-    const changeTheme = () => {
-        actions.changeTheme()
-        window.localStorage.setItem("theme", state.theme)
-        document.body.className = state.theme
-    }
-
     // Generates dropdown items related to Courses
     const CourseItems = (): JSX.Element[] => {
         let links: JSX.Element[] = []
-        if (state.enrollments.length > 0) {
+
             
             links.push(
             <li key={0} onClick={() => setActive(!active)}>
@@ -38,6 +30,7 @@ const NavBar = () => {
                 </div>
             </li>
             )
+        if (state.enrollments.length > 0) {
             links.push(...state.enrollments.map(enrollment => {
                 return (
                 <li key={enrollment.getCourseid()} className={active ? "active" : "inactive"}>
@@ -87,7 +80,7 @@ const NavBar = () => {
             </li>
 
             <li>
-                <span onClick={() => changeTheme()}>
+                <span onClick={() => actions.changeTheme()}>
                     <i className={state.theme === "light" ? "icon fa fa-sun-o" : "icon fa fa-moon-o"} style={{color: "white"}}></i>
                 </span>
             </li>
