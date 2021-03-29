@@ -8,23 +8,12 @@ import { Assignment, Repository } from "../proto/ag_pb";
 
 
 const Home = () => {
-    const { state, actions } = useOvermind()
-    
-
-    
-    const listCourses = state.enrollments.map(enrollment => {
-        return (
-            <h5 key={enrollment.getCourseid()}>
-                <Link to={`course/${enrollment.getCourseid()}`}>{enrollment.getCourse()?.getName()}</Link>
-            </h5>
-        )
-    })
-    
-    
+    const { state } = useOvermind()
     
     useEffect(() => {
     }, [])
     
+
     return(
         <div className='box'>
                 
@@ -33,8 +22,6 @@ const Home = () => {
                 <h1>Welcome, {state.user.name}!</h1>
             </div>
             }
-            {listCourses}
-
             <LandingPageLabTable courseID={0}/>           
         </div>
     )

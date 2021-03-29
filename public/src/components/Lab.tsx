@@ -4,24 +4,23 @@ import { useOvermind } from '../overmind'
 import LabResultTable from './LabResultTable'
 
 interface MatchProps {
+    id: string
     lab: string
 }
-interface CourseID {
-    crsID: number
-}
 
-const Lab = (props:CourseID) => {
+
+const Lab = () => {
     const { state } = useOvermind()
-    const {lab} = useParams<MatchProps>()
+    const {id ,lab} = useParams<MatchProps>()
 
-    const getSubmission = state.submissions[props.crsID]?.map(submission => {
+    const getSubmission = state.submissions[Number(id)]?.map(submission => {
         if (submission.getAssignmentid() == Number(lab)) {
             const buildInfo = JSON.parse(submission.getBuildinfo())
             const prettyBuildlog = buildInfo.buildlog.split('\n').map((x: string, i: number) => <span key={i} >{x}<br /></span>)
             console.log(submission.getScoreobjects())
             return (
                 <div key={submission.getId()}>
-                    <LabResultTable id={submission.getAssignmentid()} courseID={props.crsID} />
+                    <LabResultTable id={submission.getAssignmentid()} courseID={Number(id)} />
                     <div className="well"><code>{prettyBuildlog}</code></div>
                     
                 </div>

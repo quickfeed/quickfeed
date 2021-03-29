@@ -46,7 +46,7 @@ const Profile = () => {
         // Render user information
         if(editing === false) {
         return (
-            <div className="box">
+            <div className="box" style={{color: "black"}}>
                 <div className="jumbotron"><div className="centerblock container"><h1>Hi, {state.user.name}</h1>You can edit your user information here.</div></div>
                 
                     <div className="card well" style={{width: "400px"}}>

@@ -1,9 +1,6 @@
-import { Context, Action } from "overmind";
-import { Courses, Course, User, EnrollmentStatusRequest, Enrollment, Status, Submissions, Assignment, Submission, Repository } from "../proto/ag_pb";
-import { useEffects } from ".";
-import { state } from "./state";
-import { useEffect } from "react";
-import { resolve } from "url";
+import { Action } from "overmind";
+import {  User, Enrollment, Assignment, Submission, Repository } from "../proto/ag_pb";
+
 
 /** Fetches and stores an authenticated user in state */
 export const getUser: Action<void, Promise<boolean>> = ({state, effects}) => {
@@ -42,16 +39,29 @@ export const getCourses: Action<void, Promise<boolean>> = ({state, effects}) => 
     })
 }
 
+export const getCoursesByUser: Action<void> = ({state, effects}) => {
+    let statuses: Enrollment.UserStatus[] = []
+    effects.grpcMan.getCoursesByUser(state.user.id, statuses).then(res => {
+        if (res.data) {
+            console.log(res.data)
+            state.userCourses = res.data.getCoursesList()
+        }
+    })
+
+}
+
 /** Tries to get saved theme setting from localStorage, else sets theme to Light by default */
 export const setTheme: Action<void> = ({state}) => {
-    let theme = window.localStorage.getItem('theme')
-    state.theme = (theme === null) ? 'light' : theme
-
+    let theme = window.localStorage.getItem("theme")
+    state.theme = (theme === null) ? "light" : theme
+    document.body.className = state.theme
 }
 
 /** Changes between Light and Dark theme */
 export const changeTheme: Action<void> = ({state}) => {
-    state.theme = (state.theme === 'light') ? 'dark' : 'light'
+    state.theme = (state.theme === "light") ? "dark" : "light"
+    document.body.className = state.theme
+    window.localStorage.setItem("theme", state.theme)
 }
 
 
@@ -82,7 +92,7 @@ export const getEnrollmentsByUser: Action<void, Promise<boolean>> = async ({stat
 
 /** Changes user information server-side */
 export const changeUser: Action<User> = ({state, actions, effects}, user) => {
-    user.setIsadmin(state.user.isadmin)
+    
     user.setAvatarurl(state.user.avatarurl)
     effects.grpcMan.updateUser(user).then(response => {
         console.log(response)
@@ -103,17 +113,24 @@ export const getEnrollmentByCourseId: Action<number, Enrollment | null> = ({stat
 
 /** TODO: Either store assignments for all courses, or get assignments by course ID. Currently sets state.assignments to the assignments in the last enrollment in state.enrollments */
 export const getAssignments: Action<void> = ({state, effects}) => {
-    let assignments:{[crsid:number]:Assignment[]} = {}
-    state.enrollments.forEach( enrollment => {
+        let assignments: { [courseID: number] : Assignment[]} = {}
+        state.enrollments.forEach( enrollment => {
         //console.log(enrollment.getCourseid())
          effects.grpcMan.getAssignments(enrollment.getCourseid()).then(res => {
             if (res.data) {
+                console.log(enrollment, "load enrolls")
                 enrollment.getCourse()?.setAssignmentsList(res.data.getAssignmentsList())
                 assignments[enrollment.getCourseid()] = res.data.getAssignmentsList()
                 //console.log(state.assignments)
             }
-        }).finally(()=>state.assignments = assignments)
+            
+        }).finally(() => {
+            state.assignments = assignments
+        })
+        
+
     })
+    
 }
 /** Gets the assignments from a course by the course id. Meant to be used in places where you want only 1 assignment list. */
 export const getAssignmentsByCourse: Action<number, Promise<boolean>> = ({state, effects}, courseid) => {
@@ -135,7 +152,6 @@ export const getRepository: Action<void> = ({state, effects}) => {
             if(res.data) {
                 const repoMap = res.data.toObject().urlsMap
                 repoMap.forEach(repo => {
-                    console.log(state.repositories)
                     state.repositories[enrollment.getCourseid()][(Repository.Type as any)[repo[0]]] = repo[1]
                 })
             }
@@ -171,7 +187,7 @@ export const getCourseSubmissions: Action<number> = ({state, effects}, courseID)
         }
     })    
     )
-    .finally(() =>
+    .then(() =>
         // Make magic happen
         {
         state.submissions[courseID] = []
@@ -198,37 +214,48 @@ export const setActiveCourse: Action<number> = ({state}, courseID) => {
 export const setupUser: Action<void, Promise<boolean>> = ({state, actions}) => {
     return actions.getUser()
     .then(success => {
+        console.log("Loading enrollments", success)
         if (success) {
             return actions.getEnrollmentsByUser()
         }
         return false
     })
     .then(success => {
+        console.log("Loading assignments", success)
         if (success) {
+            
             actions.getAssignments()
             return true
         }
         return false
     })
     .then(success => {
+        console.log("Loading submissions", success)
         if (success) {
             state.enrollments.forEach(enrollment => {
-                actions.getCourseSubmissions(enrollment.getCourseid()) 
+                actions.getCourseSubmissions(enrollment.getCourseid())
             });
             return true
         }
         return false
     })
     .then(success => {
+        console.log("Loading repositories", success)
         if (success) {
             actions.getRepository()
             return true
         }
         return false
     }).then(success => {
+        console.log("Loading courses", success)
         if (success) {
-            return actions.getCourses()
+            return actions.getCourses().then(success => {
+                return success
+            })
+
         }
+        
         return false
+        
     })
 }
