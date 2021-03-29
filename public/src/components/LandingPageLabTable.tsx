@@ -1,5 +1,5 @@
 import { type } from "os";
-import React from "react";
+import React, { useEffect } from "react";
 import { getFormattedDeadline } from "../Helpers";
 import { useOvermind, useReaction } from "../overmind";
 import { Submission } from "../proto/ag_pb";
@@ -24,7 +24,7 @@ const LandingPageLabTable = (crs: course) => {
     const MakeLabTable = (): JSX.Element[] => {
         let table: JSX.Element[] = []
         let submission: Submission | undefined = undefined
-
+        let timeNow = Date.now()
             for (const courseID in state.assignments) {
                 // Use the index provided by the for loop if courseID provided == 0, else select the given course
                 let index = crs.courseID > 0 ? crs.courseID : Number(courseID)
@@ -60,7 +60,7 @@ const LandingPageLabTable = (crs: course) => {
         
     
         return table
-
+            
     }
     
     return (
@@ -68,7 +68,7 @@ const LandingPageLabTable = (crs: course) => {
             <table className="table table-curved" id="LandingPageTable">
                 <thead>
                     <tr>
-                        {crs.courseID == 0 ? <th>Course</th> : ""}
+                        {crs.courseID !== 0 ? <th>Course</th> : ""}
                         <th>Assignment</th>
                         <th>Progress</th>
                         <th>Deadline</th>
