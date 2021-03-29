@@ -1,26 +1,77 @@
-.avatar {
-    border-radius: 50%;
-    width: 200px;
-    height: 200px;
+
+.wrapper {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
 }
 
 .navigator {
     position: fixed;
     top: 0;
-    width: 100%;
-    height: 50px;
+    left: 0;
+    width: 250px;
+    height: 100vh;
     background-color: #222;
     box-shadow: 0px 1px 1px 1px rgba(0, 0, 0, 0.4);
+    color: #9d9d9d;
+    font-weight: bold;
 }
 
-.navbar-brand {
+.SidebarList {
+    width: 100%;
+    height: auto; 
+    padding: 0;
+}
+
+.SidebarList li {
+    width: 100%;
+    height: 60px;
+    list-style-type: none;
+    margin: 0%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.SidebarList .inactive {
+    display: none;
+}
+
+#title {
+    margin-left: 10px;
+}
+
+.SidebarList .active {
+    display: flex;
+    background-color: rgb(39, 39, 39);
+}
+
+.SidebarList li img {
+    width: 30px;
+    border-radius: 50%;
+}
+
+.SidebarList li:hover {
+    background-color: rgb(20, 20, 20);
+}
+
+.SidebarList #avatar {
+    width: 30px;
+    margin-right: 20px;
+}
+
+.logo {
     text-decoration: none;
-    float: left;
+    font-size: 24px;
+    text-align: center;
 }
 
-.navigator-item {
-    padding: 15px;
-    display: inline-block;
+
+#content {
+    margin-left: 350px;
+    margin-right: 100px;
+    width: 100%;
 }
 
 body {
@@ -38,15 +89,18 @@ body {
 }
 
 .login {
-    float: right;
+
     padding: 15px;
     text-decoration: none;
     line-height: 20px;
+    display: block;
+    width: 200px;
 }
 
 a {
     color: #9d9d9d;
     font-weight: bold;
+    display: inline-block;
 }
 
 a:link {
@@ -67,7 +121,7 @@ input{
 
 .theme {
     
-    display: inline-block;
+    display: block;
     padding: 15px;
 }
 
@@ -80,28 +134,60 @@ input{
     background-color: #f9f2f4;
 }
 
-#LandingPageTable {
+.Links {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
     text-align: center;
-    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-    border-collapse: collapse;
-    border: 3px solid #ddd;
-    width: 75%;
-    margin: auto;
+    width: 100%;
+    
 }
 
-#LandingPageTable td, #LandingPageTable th {
-    border: 1px solid #ddd;
-    padding: 8px;
-}
-#LandingPageTable tr:hover {opacity: 70%;}
-
-#LandingPageTable th {
-    padding-top: 12px;
-    padding-bottom: 12px;
-    text-align: center;
-    background-color: #4CAF50;
+.Links a {
+    background-color: #337ab7;
+    display: flex;
     color: white;
+    align-items: center;
+    justify-content: center;
+    flex: 24%;
+    height: 50px;
+    text-align: center;
+    margin: 1%;
+
+    
 }
-#themeButton{
-    cursor: pointer;
+
+.Links a:hover {
+    background-color: #296fac;
+}
+
+#LandingPageTable thead tr {
+    background-color: #337ab7;
+    color: white;
+
+
+}
+
+#LandingPageTable tbody .dark td {
+    border-bottom: 1px solid black ;
+}
+
+#LandingPageTable tbody .light:nth-child(even) {
+    background-color: #e0ebf1;
+}
+
+#LandingPageTable tbody .dark:nth-child(even) {
+    background-color: #222;
+}
+
+#LandingPageTable .APPROVED {
+    color: green;
+}
+
+.jumbotron {
+    height: 200px;
+    margin-top: -50px;
+    margin-right: -100px;
+    margin-left: -100px;
+
 }

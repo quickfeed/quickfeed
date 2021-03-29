@@ -1,66 +1,84 @@
-import React from 'react'
-import { Link, useHistory } from 'react-router-dom'
-import { getFormattedDeadline, timeFormatter } from '../Helpers'
-import { useOvermind, useReaction } from '../overmind'
+import { type } from "os";
+import React from "react";
+import { getFormattedDeadline } from "../Helpers";
+import { useOvermind, useReaction } from "../overmind";
+import { Submission } from "../proto/ag_pb";
 
-const LandingPageLabTable = () => {
+const Status = {
+    0: "NONE",
+    1: "APPROVED",
+    2: "REJECTED",
+    3: "REVISION",
+}
+
+interface course {
+    courseID: number
+}
+
+//** This component takes a courseID (number) to render a table containing lab information
+/* Giving a courseID of zero (0) makes it display ALL labs for all courses, whereas providing a courseID displays labs for ONLY ONE course */
+const LandingPageLabTable = (crs: course) => {
     const { state } = useOvermind()
     
-    const history = useHistory()
-    const handleRowClick = (crsid:string,assignid:number) => {
-      history.push(`/course/${crsid}/${assignid}`)
-    }  
-    //replace {} with a type of dictionary/record
-    
-    const makeTable = (): JSX.Element[] => {
+
+    const MakeLabTable = (): JSX.Element[] => {
         let table: JSX.Element[] = []
-        const now = new Date()
-        for (const courseID in state.assignments) {
-            let crsName = state.courses.find(course => course.getId() === Number(courseID))?.getCode()
-            state.assignments[courseID].map(assignment => {
-                if(state.submissions[courseID]) {
-                    let submission = state.submissions[courseID].find(submission => assignment.getId() === submission.getAssignmentid())
+        let submission: Submission | undefined = undefined
+
+            for (const courseID in state.assignments) {
+                // Use the index provided by the for loop if courseID provided == 0, else select the given course
+                let index = crs.courseID > 0 ? crs.courseID : Number(courseID)
+                let course = state.courses.find(course => course.getId() == index)  
+
+                state.assignments[index].forEach(assignment => {
+                    
+                    if(state.submissions[courseID]) {
+                        // Submissions are indexed by the assignment order.
+                        submission = state.submissions[courseID][assignment.getOrder() - 1]
+                           
                     if(submission){
-                        
-                        let timetoDeadline = timeFormatter(new Date(assignment.getDeadline()).getTime(), now)
                         table.push(
-                            
-                            // eslint-disable-next-line quotes
-                            <tr key = {assignment.getId()} className= {`clickable-row ${timetoDeadline[0] ? String(timetoDeadline[1]):''}`} onClick={()=>{handleRowClick(courseID,assignment.getId())}} >
-                                <th scope="row">{crsName}</th>
+                            <tr key = {assignment.getId()} className= {"clickable-row "}>
+                                <td>{course?.getCode()}</td>
                                 <td>{assignment.getName()}</td>
-                                <td>{submission.getScore()} / {assignment.getScorelimit()}</td>
+                                <td>{submission.getScore()} / 100</td>
                                 <td>{getFormattedDeadline(assignment.getDeadline())}</td>
-                                <td>{timetoDeadline[0] ? String(timetoDeadline[2]):''}</td>
-                                <td>{(assignment.getAutoapprove()==false && submission.getScore()>= assignment.getScorelimit()) ? 'Awating approval':(assignment.getAutoapprove()==true && submission.getScore()>= assignment.getScorelimit())? 'Approved(Auto approve)(shouldn\'t be in final version)':'Score not high enough'}</td>
-                                <td>{assignment.getIsgrouplab() ? 'Yes': 'No'}</td>
+                                <td>time left</td>
+                                <td className={Status[submission.getStatus()]}>{(assignment.getAutoapprove()==false && submission.getScore()>= assignment.getScorelimit()) ? "Awating approval":(assignment.getAutoapprove()==true && submission.getScore()>= assignment.getScorelimit())? "Approved(Auto approve)(shouldn't be in final version)":"Score not high enough"}</td>
+                                <td>{assignment.getIsgrouplab() ? "Yes": "No"}</td>
                             </tr>
-                            
-                        )
+                        )}
                     }
+                })
+
+                // Break out of the for loop on the first iteration if we are only rendering information for one course
+                if (crs.courseID > 0) {
+                    break
                 }
-            })
-        }
+            }
+        
+        
+    
         return table
 
     }
     
     return (
         <div>
-            <table className="table table-dark table-hover">
+            <table className="table table-curved" id="LandingPageTable">
                 <thead>
                     <tr>
-                        <th scope="col">Course</th>
-                        <th scope="col">Assignment Name</th>
-                        <th scope="col">Progress</th>
-                        <th scope="col">Deadline</th>
-                        <th scope="col">Time Left</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Grouplab</th>
+                        {crs.courseID == 0 ? <th>Course</th> : ""}
+                        <th>Assignment</th>
+                        <th>Progress</th>
+                        <th>Deadline</th>
+                        <th>Due in</th>
+                        <th>Status</th>
+                        <th>Grouplab</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {makeTable()}
+                    {MakeLabTable()}
                 </tbody>
             </table>
         </div>

@@ -1,5 +1,9 @@
-import { Action } from 'overmind'
-import { User, Enrollment, Assignment, Submission } from '../proto/ag_pb'
+import { Context, Action } from "overmind";
+import { Courses, Course, User, EnrollmentStatusRequest, Enrollment, Status, Submissions, Assignment, Submission, Repository } from "../proto/ag_pb";
+import { useEffects } from ".";
+import { state } from "./state";
+import { useEffect } from "react";
+import { resolve } from "url";
 
 /** Fetches and stores an authenticated user in state */
 export const getUser: Action<void, Promise<boolean>> = ({state, effects}) => {
@@ -57,18 +61,10 @@ export const getSubmissions: Action<number, Promise<Boolean>> = ({state, effects
         console.log(state.user.id, courseID)
         if (res.data) {
             state.submissions[courseID] = res.data.getSubmissionsList()
-            console.log('Hey submissions is happening')
-            return true
         }
         return false
         
     })
-    /* TODO implement getting submission from grouplabs
-    effects.grpcMan.getGroupByUserAndCourse(courseID,state.user.id).then(res =>{
-        if (res.data){
-            state.submissions[courseID]
-        }
-    })*/
 }
 
 
@@ -88,7 +84,7 @@ export const getEnrollmentsByUser: Action<void, Promise<boolean>> = async ({stat
 export const changeUser: Action<User> = ({state, actions, effects}, user) => {
     user.setIsadmin(state.user.isadmin)
     user.setAvatarurl(state.user.avatarurl)
-    effects.api.updateUser(state, user).then(response => {
+    effects.grpcMan.updateUser(user).then(response => {
         console.log(response)
         actions.getUser()
     })
@@ -112,6 +108,7 @@ export const getAssignments: Action<void> = ({state, effects}) => {
         //console.log(enrollment.getCourseid())
          effects.grpcMan.getAssignments(enrollment.getCourseid()).then(res => {
             if (res.data) {
+                enrollment.getCourse()?.setAssignmentsList(res.data.getAssignmentsList())
                 assignments[enrollment.getCourseid()] = res.data.getAssignmentsList()
                 //console.log(state.assignments)
             }
@@ -129,22 +126,109 @@ export const getAssignmentsByCourse: Action<number, Promise<boolean>> = ({state,
     })
 }
 
+export const getRepository: Action<void> = ({state, effects}) => {
+    
+    state.enrollments.forEach(enrollment => {
+        state.repositories[enrollment.getCourseid()] = {}    
+    
+    effects.grpcMan.getRepositories(enrollment.getCourseid(), [Repository.Type.USER, Repository.Type.GROUP, Repository.Type.COURSEINFO, Repository.Type.ASSIGNMENTS]).then(res => {
+            if(res.data) {
+                const repoMap = res.data.toObject().urlsMap
+                repoMap.forEach(repo => {
+                    console.log(state.repositories)
+                    state.repositories[enrollment.getCourseid()][(Repository.Type as any)[repo[0]]] = repo[1]
+                })
+            }
+        })
+        .finally(
+        )
+    });
+
+}
+
 export const loading: Action<void> = ({state}) => {
     state.isLoading = !state.isLoading
 }
 
-/** EXPERIMENTAL STUFF BUT SHOULD WORK FINE AS WELL. */
-export const getAllSubmissionsFromEnrollments: Action<void, boolean> = ({state,effects}) => {
-    let submissions: {[courseid:number]:Submission[]} = {}
-    state.enrollments.forEach(enrollment =>{
-        let crsid= enrollment.getCourseid()
-        effects.grpcMan.getSubmissions(enrollment.getCourseid(),state.user.id).then(res =>{
-            if (res.data){
-                submissions[crsid] = res.data.getSubmissionsList()
+// Attempt at getting all submissions at once
+export const getCourseSubmissions: Action<number> = ({state, effects}, courseID) => {
+    let userSubmissions: Submission[] = []
+    let groupSubmissions: Submission[] = []
+    const groupID: number | undefined = state.enrollments.find(enrollment => enrollment.getCourseid() == courseID)?.getGroupid()
+
+
+    effects.grpcMan.getGroupSubmissions(courseID, groupID !== undefined ? groupID : -1)
+    .then(res => {
+        if (res.data) {
+            groupSubmissions = res.data.getSubmissionsList()
+        }
+    })
+    .then(() =>
+    effects.grpcMan.getSubmissions(courseID, state.user.id)
+    .then(res => {
+        if (res.data) {
+            userSubmissions = res.data.getSubmissionsList()
+        }
+    })    
+    )
+    .finally(() =>
+        // Make magic happen
+        {
+        state.submissions[courseID] = []
+        state.assignments[courseID].forEach(assignment => {
+            let submission: Submission | undefined = undefined
+            if (assignment.getIsgrouplab()) {
+                submission = groupSubmissions.find(submission => submission.getAssignmentid() == assignment.getId())
             }
-            
+            else {
+                submission = userSubmissions.find(submission => submission.getAssignmentid() == assignment.getId())
+            }
+            if(submission) {
+                state.submissions[courseID][assignment.getOrder() - 1] = submission
+            }
         })
     })
-    state.submissions = submissions
-    return true
+}
+
+export const setActiveCourse: Action<number> = ({state}, courseID) => {
+    state.activeCourse = courseID
+}
+
+// EXPERIMENTS BELOW
+export const setupUser: Action<void, Promise<boolean>> = ({state, actions}) => {
+    return actions.getUser()
+    .then(success => {
+        if (success) {
+            return actions.getEnrollmentsByUser()
+        }
+        return false
+    })
+    .then(success => {
+        if (success) {
+            actions.getAssignments()
+            return true
+        }
+        return false
+    })
+    .then(success => {
+        if (success) {
+            state.enrollments.forEach(enrollment => {
+                actions.getCourseSubmissions(enrollment.getCourseid()) 
+            });
+            return true
+        }
+        return false
+    })
+    .then(success => {
+        if (success) {
+            actions.getRepository()
+            return true
+        }
+        return false
+    }).then(success => {
+        if (success) {
+            return actions.getCourses()
+        }
+        return false
+    })
 }

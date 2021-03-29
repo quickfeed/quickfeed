@@ -1,9 +1,9 @@
-import React, {useEffect} from 'react'
-import { useOvermind, useState } from '../overmind'
-import { Link } from 'react-router-dom'
-import { getFormattedDeadline } from '../Helpers'
-import LandingPageLabTable from './LandingPageLabTable'
-import { Assignment } from '../proto/ag_pb'
+import React, {useEffect} from "react";
+import { useOvermind, useState } from "../overmind";
+import { Link } from "react-router-dom";
+import { getFormattedDeadline } from "../Helpers";
+import LandingPageLabTable from "./LandingPageLabTable"
+import { Assignment, Repository } from "../proto/ag_pb";
 
 
 
@@ -19,23 +19,24 @@ const Home = () => {
             </h5>
         )
     })
-
+    
+    
+    
+    useEffect(() => {
+    }, [])
+    
     return(
         <div className='box'>
-        <h1>Autograder</h1>
-            
-        {state.user.id > 0 &&
-        <div>
-        <h1>Welcome, {state.user.name}!</h1>
-        <img className="avatar img-thumbnail" src={state.user.avatarurl}></img>
-        </div>
-        }
-        <a><button>Courses</button></a>
-        {listCourses}
-        <LandingPageLabTable />
-        
+                
+            {state.user.id > 0 &&
+            <div>
+                <h1>Welcome, {state.user.name}!</h1>
+            </div>
+            }
+            {listCourses}
 
-    </div>
+            <LandingPageLabTable courseID={0}/>           
+        </div>
     )
 }
 

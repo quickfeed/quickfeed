@@ -1,5 +1,5 @@
-import { derived } from 'overmind'
-import { Assignment, Course, Enrollment, Submission, User } from '../proto/ag_pb'
+import { derived } from "overmind";
+import { Assignment, Course, Enrollment, Submission, User } from "../proto/ag_pb";
 
 
 export interface IUser {
@@ -25,8 +25,12 @@ export type State = {
     assignments: {
         [courseid:number]:Assignment[]
     },
+    repositories: {
+        [courseid:number]: { [repoType: number]: string }
+    }
     theme: string,
     isLoading: boolean,
+    activeCourse: number,
 }
 
 const getUserID = (currentState: State) => {
@@ -41,6 +45,8 @@ export const state: State = {
     courses: [],
     submissions: {},
     assignments: {},
-    theme: 'light',
+    repositories: {},
+    theme: "light",
     isLoading: false,
-}
+    activeCourse: -1
+};

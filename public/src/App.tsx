@@ -16,29 +16,8 @@ const App = () => {
     
     useEffect(() => {
         if (!loggedIn) {
-            actions.getUser().then(res => {setLoggedIn(res)
-                if(res){
-                    actions.getEnrollmentsByUser()
-                    .then(success => {
-                        if (success) {
-                            state.enrollments.map(enroll => {
-                                actions.getAssignmentsByCourse(enroll.getCourseid()).then(success => {
-                                    if (success) {
-                                        actions.getSubmissions(enroll.getCourseid())
-                                        
-                                    }
-                                })
-                            })
-                            actions.getCourses()
-                            
-                        }
-                    })
-                }
-            }
-                
-            
-            ) // Sets loggedIn to whatever getUser() resolves to. (fetches from /api/v1/user and resolves to true or false)
-           
+            actions.setupUser()
+            .then(res => setLoggedIn(res)) // Sets loggedIn to whatever getUser() resolves to. (fetches from /api/v1/user and resolves to true or false)
         }
         
         console.log('App.tsx useeffect runs')
@@ -47,17 +26,23 @@ const App = () => {
     }, [])
     
     // General
-    const { state, actions, effects } = useOvermind()
+    const { state, actions } = useOvermind()
     return ( 
         <Router>
+            <div className={state.theme+" app wrapper"} >
             <NavBar />
-            <div className={state.theme+' app container'} >
-                
+            
+                <div id="content">
                 {!loggedIn ? ( // if not logged in, enable only the Info component to be rendered
                     <Switch>
                         <Route path="/" component={Info} />
                     </Switch>
-                ) : ( // Else, enable components that require authentication
+                ) : ( // Else if, user logged in, but has not added their information redirect to Profile
+                state.user.email.length == 0 || state.user.name.length == 0 || state.user.studentid == 0 ? (
+                    <Switch>
+                        <Route path="/" component={Profile} />
+                    </Switch>
+                ) : ( // Else render page as expected for a logged in user
                 <Switch>
                     <Route path="/" exact component={Home}/>
                     <Route path="/info" component={Info} />
@@ -65,8 +50,8 @@ const App = () => {
                     <Route path="/course/:id" component={Course} />
                 </Switch>
                 // Admin stuff is probably also needed here somewhere. 
-                )}
-                
+                ))}
+                </div>
             </div>
         </Router>
         )
