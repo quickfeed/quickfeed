@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react"
-import { RouteComponentProps, Route, useRouteMatch } from "react-router"
-import { Link } from "react-router-dom"
-import { getFormattedDeadline } from "../Helpers"
-import { useOvermind } from "../overmind"
+import React, { useEffect, useState } from 'react'
+import { RouteComponentProps, Route, useRouteMatch } from 'react-router'
+import { Link } from 'react-router-dom'
+import { getFormattedDeadline } from '../Helpers'
+import { useOvermind } from '../overmind'
 
-import { Courses, Enrollment } from "../proto/ag_pb"
-import Lab from "./Lab"
+import { Courses, Enrollment } from '../proto/ag_pb'
+import Lab from './Lab'
 
 
 interface MatchProps {
@@ -62,7 +62,7 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
     if (enrollment.getId() !== 0 && typeof state.assignments[crsID] !== 'undefined'){
         return (
         <div className="box">
-            <h1>Welcome to {enrollment.getCourse()?.getName()}, {enrollment.getUser()?.getName()}! You are a {enrollment.getStatus() == Enrollment.UserStatus.STUDENT ? ("student") : ("teacher")}</h1>
+            <h1>Welcome to {enrollment.getCourse()?.getName()}, {enrollment.getUser()?.getName()}! You are a {enrollment.getStatus() == Enrollment.UserStatus.STUDENT ? ('student') : ('teacher')}</h1>
             {
                 state.assignments[Number(props.match.params.id)].map(assignment => {
                     return (

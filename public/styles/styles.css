@@ -102,3 +102,6 @@ input{
     background-color: #4CAF50;
     color: white;
 }
+#themeButton{
+    cursor: pointer;
+}

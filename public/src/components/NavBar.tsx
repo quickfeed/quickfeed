@@ -1,7 +1,6 @@
-import React, { Component } from "react";
-import { useActions, useOvermind } from "../overmind";
+import React, { Component } from 'react'
+import { useActions, useOvermind } from '../overmind'
 import { Link } from 'react-router-dom'
-import { ToggleSwitch } from "./ToggleSwitch";
 
 
 const NavBar = () => {
@@ -16,7 +15,7 @@ const NavBar = () => {
 
     const changeTheme = () => {
         actions.changeTheme()
-        window.localStorage.setItem("theme", state.theme)
+        window.localStorage.setItem('theme', state.theme)
         document.body.className = state.theme
     }
 
@@ -32,7 +31,7 @@ const NavBar = () => {
             <Link to="/profile" className="navigator-item">
                 Profile
             </Link>
-            <span onClick={() => changeTheme()}><i className={state.theme === "light" ? "fa fa-sun-o" : "fa fa-moon-o"} style={{color: "white"}}></i></span>
+            <span onClick={() => changeTheme()}><i className={state.theme === 'light' ? 'fa fa-sun-o' : 'fa fa-moon-o'} style={{color: 'white'}} id="themeButton"></i></span>
             {checkUserLoggedIn()}
             </div>
         </nav>

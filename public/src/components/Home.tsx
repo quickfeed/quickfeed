@@ -1,9 +1,9 @@
-import React, {useEffect} from "react";
-import { useOvermind, useState } from "../overmind";
-import { Link } from "react-router-dom";
-import { getFormattedDeadline } from "../Helpers";
-import LandingPageLabTable from "./LandingPageLabTable"
-import { Assignment } from "../proto/ag_pb";
+import React, {useEffect} from 'react'
+import { useOvermind, useState } from '../overmind'
+import { Link } from 'react-router-dom'
+import { getFormattedDeadline } from '../Helpers'
+import LandingPageLabTable from './LandingPageLabTable'
+import { Assignment } from '../proto/ag_pb'
 
 
 
@@ -11,6 +11,7 @@ const Home = () => {
     const { state, actions } = useOvermind()
     
 
+    
     const listCourses = state.enrollments.map(enrollment => {
         return (
             <h5 key={enrollment.getCourseid()}>
@@ -39,4 +40,4 @@ const Home = () => {
 }
 
 
-export default Home;
+export default Home

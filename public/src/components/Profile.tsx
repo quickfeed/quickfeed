@@ -1,8 +1,8 @@
 
-import React, { useState } from "react"
-import { useOvermind } from "../overmind"
-import { state } from "../overmind/state"
-import { User } from "../proto/ag_pb"
+import React, { useState } from 'react'
+import { useOvermind } from '../overmind'
+import { state } from '../overmind/state'
+import { User } from '../proto/ag_pb'
 
 
 
@@ -13,7 +13,7 @@ const Profile = () => {
     const [editing, setEditing] = useState(false)
 
     // Local state holding information to be changed by user
-    const [user, setUser] = useState({'name': state.user.name, 'email': state.user.email, "studentid": state.user.studentid})
+    const [user, setUser] = useState({'name': state.user.name, 'email': state.user.email, 'studentid': state.user.studentid})
     
     // Flips between editable and uneditable view of user info
     const editProfile = () => {

@@ -1,19 +1,19 @@
-import React, { Component, useEffect, useState } from "react";
-import { useOvermind } from "./overmind";
+import React, { Component, useEffect, useState } from 'react'
+import { useOvermind } from './overmind'
 import Home from './components/Home'
-import Info from "./components/Info";
-import NavBar from "./components/NavBar";
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
-import Profile from "./components/Profile";
-import Course from "./components/Course";
-import Lab from "./components/Lab";
+import Info from './components/Info'
+import NavBar from './components/NavBar'
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
+import Profile from './components/Profile'
+import Course from './components/Course'
+import Lab from './components/Lab'
 
 
 
 const App = () => {
 
     const [loggedIn, setLoggedIn] = useState(false)
-
+    
     useEffect(() => {
         if (!loggedIn) {
             actions.getUser().then(res => {setLoggedIn(res)
@@ -24,13 +24,15 @@ const App = () => {
                             state.enrollments.map(enroll => {
                                 actions.getAssignmentsByCourse(enroll.getCourseid()).then(success => {
                                     if (success) {
-                                        actions.getSubmissions(enroll.getCourseid()).then(success => {if(success) actions.getCourses()})
+                                        actions.getSubmissions(enroll.getCourseid())
+                                        
                                     }
                                 })
                             })
+                            actions.getCourses()
                             
                         }
-                    });
+                    })
                 }
             }
                 
@@ -39,7 +41,7 @@ const App = () => {
            
         }
         
-        console.log("App.tsx useeffect runs")
+        console.log('App.tsx useeffect runs')
         actions.setTheme()
         document.body.className = state.theme
     }, [])
@@ -49,7 +51,7 @@ const App = () => {
     return ( 
         <Router>
             <NavBar />
-            <div className={state.theme+" app container"} >
+            <div className={state.theme+' app container'} >
                 
                 {!loggedIn ? ( // if not logged in, enable only the Info component to be rendered
                     <Switch>
@@ -73,4 +75,4 @@ const App = () => {
 
 
 
-export default App;
+export default App

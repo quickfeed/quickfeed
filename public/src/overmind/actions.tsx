@@ -1,19 +1,15 @@
-import { Context, Action } from "overmind";
-import { Courses, Course, User, EnrollmentStatusRequest, Enrollment, Status, Submissions, Assignment, Submission } from "../proto/ag_pb";
-import { useEffects } from ".";
-import { state } from "./state";
-import { useEffect } from "react";
-import { resolve } from "url";
+import { Action } from 'overmind'
+import { User, Enrollment, Assignment, Submission } from '../proto/ag_pb'
 
 /** Fetches and stores an authenticated user in state */
 export const getUser: Action<void, Promise<boolean>> = ({state, effects}) => {
     return effects.api.getUser()
     .then((user) => {
-        console.log("Fetching.")
+        console.log('Fetching.')
         if (user.id === undefined) {
             return false
         }
-        state.user = user;
+        state.user = user
         effects.grpcMan.setUserid(state.user.AccessToken)
         return true
     })
@@ -44,26 +40,27 @@ export const getCourses: Action<void, Promise<boolean>> = ({state, effects}) => 
 
 /** Tries to get saved theme setting from localStorage, else sets theme to Light by default */
 export const setTheme: Action<void> = ({state}) => {
-    let theme = window.localStorage.getItem("theme")
-    state.theme = (theme === null) ? "light" : theme
+    let theme = window.localStorage.getItem('theme')
+    state.theme = (theme === null) ? 'light' : theme
 
 }
 
 /** Changes between Light and Dark theme */
 export const changeTheme: Action<void> = ({state}) => {
-    state.theme = (state.theme === "light") ? "dark" : "light"
+    state.theme = (state.theme === 'light') ? 'dark' : 'light'
 }
 
 
 /** Gets all submission for the current user by Course ID and stores them in state */
-export const getSubmissions: Action<number> = ({state, effects}, courseID) => {
-    effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
+export const getSubmissions: Action<number, Promise<Boolean>> = ({state, effects}, courseID) => {
+    return effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
         console.log(state.user.id, courseID)
         if (res.data) {
             state.submissions[courseID] = res.data.getSubmissionsList()
-            console.log("Hey submissions is happening")
+            console.log('Hey submissions is happening')
+            return true
         }
-        state.submissions[courseID]
+        return false
         
     })
     /* TODO implement getting submission from grouplabs
