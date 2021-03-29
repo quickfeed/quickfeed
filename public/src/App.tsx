@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import Profile from "./components/Profile";
 import Course from "./components/Course";
 import Lab from "./components/Lab";
+import Courses from "./components/Courses";
 
 
 
@@ -16,11 +17,13 @@ const App = () => {
 
     useEffect(() => {
         if (!loggedIn) {
-            actions.setupUser()
-            .then(res => setLoggedIn(res)) // Sets loggedIn to whatever getUser() resolves to. (fetches from /api/v1/user and resolves to true or false)
+             actions.setupUser().then(success => {
+                if (success) {
+                    setLoggedIn(true)
+                }
+            })
         }
         actions.setTheme()
-        document.body.className = state.theme
     }, [loggedIn, setLoggedIn])
 
     // General
@@ -36,19 +39,23 @@ const App = () => {
                         <Route path="/" component={Info} />
                     </Switch>
                 ) : ( // Else if, user logged in, but has not added their information redirect to Profile
-                state.user.email.length == 0 || state.user.name.length == 0 || state.user.studentid == 0 ? (
+                (state.user.email.length == 0 || state.user.name.length == 0 || state.user.studentid == 0) && loggedIn ? (
                     <Switch>
                         <Route path="/" component={Profile} />
                     </Switch>
-                ) : ( // Else render page as expected for a logged in user
+                ) : ( state.isLoading ? ( // Else render page as expected for a logged in user
                 <Switch>
                     <Route path="/" exact component={Home}/>
                     <Route path="/info" component={Info} />
                     <Route path="/profile" component={Profile} />
-                    <Route path="/course/:id" component={Course} />
+                    <Route path="/course/:id" exact component={Course} />
+                    <Route path="/courses" exact component={Courses} />
+                    <Route path="/course/:id/:lab" component={Lab} />
                 </Switch>
                 // Admin stuff is probably also needed here somewhere. 
-                ))}
+                ) : (
+                    <h1>Loading</h1>
+                )))}
                 </div>
             </div>
         </Router>

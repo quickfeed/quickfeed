@@ -13,12 +13,17 @@ export interface IUser {
     AccessToken: string;
 }
 
+export interface IStudent {
+    enrollments: Enrollment[]
+    courses: Course[]
+}
+
 export type State = {
     user: IUser,
-    Metadata: {user: string},
     users: User[],
     enrollments: Enrollment[]
     courses: Course[],
+    userCourses: Course[],
     submissions:{
         [courseid:number]:Submission[]
     },
@@ -31,22 +36,27 @@ export type State = {
     theme: string,
     isLoading: boolean,
     activeCourse: number,
-}
-
-const getUserID = (currentState: State) => {
-    return {'user': currentState.user.id.toString()}
+    student: IStudent
 }
 
 export const state: State = {
     user: {avatarurl: '', email: '', id: -1, isadmin: false, name: '', remoteID: -1, studentid: -1, AccessToken: ""},
-    Metadata: derived((state: State) =>  getUserID(state)),
     users: [],
     enrollments: [],
     courses: [],
+    userCourses: [],
     submissions: {},
     assignments: {},
     repositories: {},
     theme: "light",
-    isLoading: false,
-    activeCourse: -1
+    isLoading: true,
+    activeCourse: -1,
+    student: derived((state: State) => { 
+        return {
+            courses: state.courses, 
+            enrollments: state.enrollments.filter(enrollment => {
+                return enrollment.getStatus() === Enrollment.UserStatus.STUDENT
+            }) 
+        }
+    })
 };

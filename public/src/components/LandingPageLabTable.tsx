@@ -1,5 +1,4 @@
-import { type } from "os";
-import React from "react";
+import React, { useEffect } from "react";
 import { getFormattedDeadline } from "../Helpers";
 import { useOvermind, useReaction } from "../overmind";
 import { Submission } from "../proto/ag_pb";
@@ -20,6 +19,7 @@ interface course {
 const LandingPageLabTable = (crs: course) => {
     const { state } = useOvermind()
     
+    
 
     const MakeLabTable = (): JSX.Element[] => {
         let table: JSX.Element[] = []
@@ -30,7 +30,7 @@ const LandingPageLabTable = (crs: course) => {
                 let index = crs.courseID > 0 ? crs.courseID : Number(courseID)
                 let course = state.courses.find(course => course.getId() == index)  
 
-                state.assignments[index].forEach(assignment => {
+                state.assignments[index]?.forEach(assignment => {
                     
                     if(state.submissions[courseID]) {
                         // Submissions are indexed by the assignment order.

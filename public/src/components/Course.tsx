@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useLayoutEffect, useState } from "react"
 import { RouteComponentProps, Route, useRouteMatch } from "react-router"
 import { Link } from "react-router-dom"
 import { getFormattedDeadline } from "../Helpers"
@@ -19,32 +19,28 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
     const { url } = useRouteMatch()
     const [enrollment, setEnrollment] = useState(new Enrollment())
     let courseID = Number(props.match.params.id)
-    actions.setActiveCourse(courseID)
+
 
     useEffect(() => {
-        const enrol = actions.getEnrollmentByCourseId(courseID)
+        courseID = Number(props.match.params.id)
+        let enrol = actions.getEnrollmentByCourseId(courseID)
+        actions.setActiveCourse(courseID)
         if (enrol !== null) {
             setEnrollment(enrol)
         }
-    }, [])
+    }, [props])
 
-    /**if(state.isLoading){
-        return(
-            <h1>Loading icon here...</h1>
-        )
-    }*/
-
-
-    if (enrollment.getId() !== 0 && typeof state.assignments[courseID] !== 'undefined'){
+    if (state.courses){
         return (
         <div className="box">
             <h1>{enrollment.getCourse()?.getName()}</h1>
-            <div className="Links">
+                        <div className="Links">
             <a href={state.repositories[courseID][Repository.Type.USER]}>User Repository</a>
             <a href={state.repositories[courseID][Repository.Type.GROUP]}>Group Repository</a>
             <a href={state.repositories[courseID][Repository.Type.COURSEINFO]}>Course Info</a>
             <a href={state.repositories[courseID][Repository.Type.ASSIGNMENTS]}>Assignments</a>
             </div>
+            
             <LandingPageLabTable courseID={courseID} />
             
             <Route path={`${url}/:lab`}>
