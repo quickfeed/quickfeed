@@ -7,8 +7,13 @@ const NavBarLabs = () => {
     const {state} = useOvermind()
 
     const [active, setActive] = useState(-1)
-    
+    let course = -1
     useEffect(() => {
+        // If the active course changes, this prevents the previously selected lab to be active for the incoming course
+        if (course !== state.activeCourse) {
+            setActive(-1)
+            course = state.activeCourse
+        }
     }, [state.activeCourse])
 
     const labs = (): JSX.Element[] => { 
