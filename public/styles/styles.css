@@ -191,3 +191,17 @@ input{
     margin-left: -100px;
 
 }
+
+.course {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+}
+
+.courseCode {
+    flex: 10%;
+}
+
+.courseName {
+    flex: 70%;
+}

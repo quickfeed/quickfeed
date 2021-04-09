@@ -39,6 +39,7 @@ export const getCourses: Action<void, Promise<boolean>> = ({state, effects}) => 
     })
 }
 
+/**  */
 export const getCoursesByUser: Action<void> = ({state, effects}) => {
     let statuses: Enrollment.UserStatus[] = []
     effects.grpcMan.getCoursesByUser(state.user.id, statuses).then(res => {
@@ -210,7 +211,18 @@ export const setActiveCourse: Action<number> = ({state}, courseID) => {
     state.activeCourse = courseID
 }
 
+export const enroll: Action<number> = ({state, effects}, courseID) => {
+    effects.grpcMan.createEnrollment(courseID, state.user.id).then(res => {
+        console.log(res.status)
+    })
+    .catch(res => {
+        console.log("catch")
+    })
+}
+
 // EXPERIMENTS BELOW
+/** Initializes a student user with all required data */
+/** //TODO: Figure out how to await this monster  */
 export const setupUser: Action<void, Promise<boolean>> = ({state, actions}) => {
     return actions.getUser()
     .then(success => {

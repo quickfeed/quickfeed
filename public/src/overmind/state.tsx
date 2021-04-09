@@ -2,7 +2,8 @@ import { derived } from "overmind";
 import { Assignment, Course, Enrollment, Submission, User } from "../proto/ag_pb";
 
 
-export interface IUser {
+// TODO Style for members of Self should be camelCase. The JSON from /api/v1/user does not return an object with camelCase. Rewrite return on backend to comply with camelCase
+export interface Self {
     remoteID: number;
     avatarurl: string;
     email: string;
@@ -13,13 +14,13 @@ export interface IUser {
     AccessToken: string;
 }
 
-export interface IStudent {
+export interface Student {
     enrollments: Enrollment[]
     courses: Course[]
 }
 
 export type State = {
-    user: IUser,
+    user: Self,
     users: User[],
     enrollments: Enrollment[]
     courses: Course[],
@@ -36,7 +37,7 @@ export type State = {
     theme: string,
     isLoading: boolean,
     activeCourse: number,
-    student: IStudent
+    student: Student
 }
 
 export const state: State = {
