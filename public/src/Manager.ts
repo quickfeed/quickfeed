@@ -1,10 +1,10 @@
-import { IUser } from "./overmind/state";
+import { Self } from "./overmind/state";
 
 
 
 
 export class Manager {
-    public async tryRemoteLogin(): Promise<IUser | null> {
+    public async tryRemoteLogin(): Promise<Self | null> {
         
         const requestString = "/" + "auth" + "/" + "github";
         window.location.assign(requestString);
