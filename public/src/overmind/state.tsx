@@ -58,7 +58,7 @@ export const state: State = {
     search: "",
     userSearch: derived((state: State) => {
         return state.users.filter(user => 
-            user.getUser()?.getName().includes(state.search)
+            user.getUser()?.getName().toLowerCase().includes(state.search.toLowerCase())
         )
     }),
     student: derived((state: State) => { 
