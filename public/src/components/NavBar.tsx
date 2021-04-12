@@ -31,13 +31,14 @@ const NavBar = () => {
             </li>
             )
         if (state.enrollments.length > 0) {
-            links.push(...state.enrollments.map(enrollment => {
-                return (
-                <li key={enrollment.getCourseid()} className={active ? "active" : "inactive"} onClick={() => actions.setActiveCourse(enrollment.getCourseid())}>
-                    <div id="title"><Link to={`/course/` + enrollment.getCourseid()}>{enrollment.getCourse()?.getCode()}</Link></div>
-                    
-                </li>)
-            }))
+            state.enrollments.map((enrollment) =>{
+                if(enrollment.getStatus()>=2) {
+                    links.push(
+                        <li key={enrollment.getCourseid()} className={active ? "active" : "inactive"} onClick={() => actions.setActiveCourse(enrollment.getCourseid())}>
+                            <div id="title"><Link to={`/course/` + enrollment.getCourseid()}>{enrollment.getCourse()?.getCode()}</Link></div> 
+                        </li>)
+                }
+            })
 
         }
         return links
