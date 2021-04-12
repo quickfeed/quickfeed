@@ -35,6 +35,7 @@ const NavBar = () => {
                 return (
                 <li key={enrollment.getCourseid()} className={active ? "active" : "inactive"}>
                     <div id="title"><Link to={`/course/` + enrollment.getCourseid()}>{enrollment.getCourse()?.getCode()}</Link></div>
+                    
                 </li>)
             }))
 
@@ -44,9 +45,9 @@ const NavBar = () => {
     return (
         <nav className="navigator">
             <ul className="SidebarList">
-            <li>
+            <li className="logo">
                 <Link to="/">
-                    <span className="logo">Autograder</span>
+                    Autograder
                 </Link>
             </li>
             
