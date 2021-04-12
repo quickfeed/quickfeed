@@ -21,7 +21,7 @@ export interface Student {
 
 export type State = {
     user: Self,
-    users: User[],
+    users: Enrollment[],
     enrollments: Enrollment[]
     courses: Course[],
     userCourses: Course[],
@@ -37,6 +37,8 @@ export type State = {
     theme: string,
     isLoading: boolean,
     activeCourse: number,
+    search: string,
+    userSearch: Enrollment[],
     student: Student
 }
 
@@ -52,6 +54,12 @@ export const state: State = {
     theme: "light",
     isLoading: true,
     activeCourse: -1,
+    search: "",
+    userSearch: derived((state: State) => {
+        return state.users.filter(user => 
+            user.getUser()?.getName().includes(state.search)
+        )
+    }),
     student: derived((state: State) => { 
         return {
             courses: state.courses, 

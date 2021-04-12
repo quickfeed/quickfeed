@@ -22,7 +22,7 @@ export const getUsers: Action<void> = ({state, effects}) => {
     state.users = []
     effects.grpcMan.getUsers().then(res => {
         if (res.data) {
-            state.users = res.data.getUsersList()
+            console.log(res.data)
         }
     })
 }
@@ -84,7 +84,8 @@ export const getEnrollmentsByUser: Action<void, Promise<boolean>> = ({state, eff
     return effects.grpcMan.getEnrollmentsByUser(state.user.id)
     .then(res => {
         if (res.data) {
-            state.enrollments = res.data.getEnrollmentsList()
+            const enrollments = res.data.getEnrollmentsList().filter(enrollment =>  enrollment.getStatus() >= Enrollment.UserStatus.STUDENT )
+            state.enrollments = enrollments
             return true
         }
         return false
@@ -93,10 +94,8 @@ export const getEnrollmentsByUser: Action<void, Promise<boolean>> = ({state, eff
 
 /** Changes user information server-side */
 export const changeUser: Action<User> = ({state, actions, effects}, user) => {
-    
     user.setAvatarurl(state.user.avatarurl)
     effects.grpcMan.updateUser(user).then(response => {
-        console.log(response)
         actions.getUser()
     })
 }
@@ -110,6 +109,15 @@ export const getEnrollmentByCourseId: Action<number, Enrollment | null> = ({stat
         }
     })
     return enrol
+}
+
+export const getEnrollmentsByCourse: Action<number> = ({state, effects}, courseID) => {
+    state.users = []
+    effects.grpcMan.getEnrollmentsByCourse(courseID, undefined, undefined, [Enrollment.UserStatus.STUDENT]).then(res => {
+        if (res.data) {
+            state.users = res.data.getEnrollmentsList()
+        }
+    })
 }
 
 /** TODO: Either store assignments for all courses, or get assignments by course ID. Currently sets state.assignments to the assignments in the last enrollment in state.enrollments */
@@ -218,6 +226,10 @@ export const enroll: Action<number> = ({state, effects}, courseID) => {
     .catch(res => {
         console.log("catch")
     })
+}
+
+export const updateSearch: Action<string> = ({state}, search) => {
+    state.search = search
 }
 
 // EXPERIMENTS BELOW
