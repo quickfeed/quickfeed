@@ -21,7 +21,6 @@ const Courses = () => {
     useEffect(() => {
         // TODO: getCoursesByUser returns courses a user has an enrollment in. I thought a UserStatus = 0 (NONE) would be default, but apparently not.
         //
-        console.log(crsArr)
     })
     // TODO: UserCourses contains elements describing a course that a user has an enrollment in, regardless of status currently. Need to figure out what UserStatus.NONE is used for
     

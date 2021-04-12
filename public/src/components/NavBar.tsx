@@ -55,10 +55,9 @@ const NavBar = () => {
                 {state.user.id > 0 ? 
                 <li>
                     <Link to="/profile">
-                        <li>
+                        
                         <div id="icon"><img src={state.user.avatarurl} id="avatar"></img></div>    
                         <div id="title">{state.user.name}</div>
-                        </li>
                     </Link>
                 </li>
                  : ""}
