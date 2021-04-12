@@ -13,7 +13,7 @@ const NavBar = () => {
         if (state.user.id > 0) {
             return <li><div id="title"><a href="/logout">Log out</a></div></li>
         }
-        return <li><a href="/auth/github"><i className="fa fa-2x fa-github" id="github"></i></a></li>
+        return <div><li>Log in with</li><li><a href="/auth/github"><i className="fa fa-2x fa-github" id="github"></i></a></li></div>
     }
 
     // Generates dropdown items related to Courses
@@ -65,7 +65,7 @@ const NavBar = () => {
 
             
             
-            {CourseItems()}
+            {state.user.id > 0 ? CourseItems() : ""}
             <NavBarLabs />
             <li>
             <div id="title">
