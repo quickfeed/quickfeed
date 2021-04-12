@@ -48,6 +48,7 @@ export const formatBuildInfo = (buildInfo: string) => {
 
 /** Utility function for LangindpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
 export const timeFormatter = (deadline:number , now: Date) => {
+    console.log(deadline)
     const timeToDeadline = deadline - now.getTime()
     let days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     let hours = Math.floor(timeToDeadline / (1000 * 3600))
@@ -63,10 +64,23 @@ export const timeFormatter = (deadline:number , now: Date) => {
                     return [true,'table-warning', `${hours} hours to deadline!`]
                 }
 
-                return [true,'table-warning', `${days} hours to deadline`]
+                return [true,'table-warning', `${days} days to deadline`]
             }
         }
-        return[true,'table-success',`${days} days until deadline`]
+        return[true,'table-primary',`${days} days until deadline`]
     }
     return [false]
+}
+export const layoutTime = "2021-03-20T23:59:00"
+// Used for displaying enrollment status
+export const EnrollmentStatus = {
+    0 : "NONE",
+    1 : "PENDING",
+    2 : "STUDENT",
+    3 : "TEACHER",
+}
+export const EnrollmentStatusColors = {
+    1: "",
+    2: "",
+    3: "",
 }
