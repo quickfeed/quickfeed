@@ -23,17 +23,24 @@ const App = () => {
                 }
             })
         }
-        
         console.log('App.tsx useeffect runs')
         actions.setTheme()
     }, [loggedIn, setLoggedIn])
 
+    // This is just to Update the Time object in state, every 20 minutes (after mount, it mounts with a new dateobject)
+    useEffect(()=> {
+        let updateDateNow = setInterval(()=>{
+            actions.setTimeNow()
+        },1200000)
+        return() => clearInterval(updateDateNow)
+    },[])
     // General
     const { state, actions } = useOvermind()
     return ( 
         <Router>
-            <div className={state.theme+" app wrapper"} >
             <NavBar />
+            <div className={state.theme+" app wrapper"} >
+            
             
                 <div id="content">
                 {!loggedIn ? ( // if not logged in, enable only the Info component to be rendered

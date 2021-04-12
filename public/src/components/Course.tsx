@@ -43,10 +43,6 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
             </div>
             
             <LandingPageLabTable courseID={courseID} />
-            
-            <Route path={`${url}/:lab`}>
-                <Lab crsID={courseID}></Lab>
-            </Route>
 
         </div>)
     }
