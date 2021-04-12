@@ -69,7 +69,7 @@ export const getEnrollmentsByUser: Action<void, Promise<boolean>> = async ({stat
     return await effects.grpcMan.getEnrollmentsByUser(state.user.id)
     .then(res => {
         if (res.data) {
-            const enrollments = res.data.getEnrollmentsList().filter(enrollment =>  enrollment.getStatus() >= Enrollment.UserStatus.STUDENT )
+            const enrollments = res.data.getEnrollmentsList()
             state.enrollments = enrollments
             return true
         }
