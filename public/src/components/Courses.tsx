@@ -6,6 +6,15 @@ import CourseCard from "./CourseCard"
 
 
 
+
+const EnrollmentStatus = {
+    0: "None",
+    1: "Pending",
+    2: "Enrolled",
+    3: "Teacher"
+}
+
+/** This component should list user courses, and available courses and allow enrollment */
 const Courses = () => {
     const {state, actions} = useOvermind()
 

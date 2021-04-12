@@ -22,7 +22,7 @@ export const getUsers: Action<void> = ({state, effects}) => {
     state.users = []
     effects.grpcMan.getUsers().then(res => {
         if (res.data) {
-            state.users = res.data.getUsersList()
+            console.log(res.data)
         }
     })
 }
@@ -39,6 +39,7 @@ export const getCourses: Action<void, Promise<boolean>> = ({state, effects}) => 
     })
 }
 
+/**  */
 export const getCoursesByUser: Action<void> = ({state, effects}) => {
     let statuses: Enrollment.UserStatus[] = []
     effects.grpcMan.getCoursesByUser(state.user.id, statuses).then(res => {
@@ -68,7 +69,8 @@ export const getEnrollmentsByUser: Action<void, Promise<boolean>> = async ({stat
     return await effects.grpcMan.getEnrollmentsByUser(state.user.id)
     .then(res => {
         if (res.data) {
-            state.enrollments = res.data.getEnrollmentsList()
+            const enrollments = res.data.getEnrollmentsList().filter(enrollment =>  enrollment.getStatus() >= Enrollment.UserStatus.STUDENT )
+            state.enrollments = enrollments
             return true
         }
         return false
@@ -77,10 +79,8 @@ export const getEnrollmentsByUser: Action<void, Promise<boolean>> = async ({stat
 
 /** Changes user information server-side */
 export const changeUser: Action<User> = ({state, actions, effects}, user) => {
-    
     user.setAvatarurl(state.user.avatarurl)
     effects.grpcMan.updateUser(user).then(response => {
-        console.log(response)
         actions.getUser()
     })
 }
@@ -94,6 +94,15 @@ export const getEnrollmentByCourseId: Action<number, Enrollment | null> = ({stat
         }
     })
     return enrol
+}
+
+export const getEnrollmentsByCourse: Action<number> = ({state, effects}, courseID) => {
+    state.users = []
+    effects.grpcMan.getEnrollmentsByCourse(courseID, undefined, undefined, [Enrollment.UserStatus.STUDENT]).then(res => {
+        if (res.data) {
+            state.users = res.data.getEnrollmentsList()
+        }
+    })
 }
 
 /** TODO: Either store assignments for all courses, or get assignments by course ID. Currently sets state.assignments to the assignments in the last enrollment in state.enrollments */
@@ -195,7 +204,22 @@ export const setActiveCourse: Action<number> = ({state}, courseID) => {
     state.activeCourse = courseID
 }
 
+export const enroll: Action<number> = ({state, effects}, courseID) => {
+    effects.grpcMan.createEnrollment(courseID, state.user.id).then(res => {
+        console.log(res.status)
+    })
+    .catch(res => {
+        console.log("catch")
+    })
+}
+
+export const updateSearch: Action<string> = ({state}, search) => {
+    state.search = search
+}
+
 // EXPERIMENTS BELOW
+/** Initializes a student user with all required data */
+/** //TODO: Figure out how to await this monster  */
 export const setupUser: Action<void, Promise<boolean>> = ({state, actions}) => {
     return actions.getUser()
     .then(success => {

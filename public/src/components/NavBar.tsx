@@ -33,7 +33,7 @@ const NavBar = () => {
         if (state.enrollments.length > 0) {
             links.push(...state.enrollments.map(enrollment => {
                 return (
-                <li key={enrollment.getCourseid()} className={active ? "active" : "inactive"}>
+                <li key={enrollment.getCourseid()} className={active ? "active" : "inactive"} onClick={() => actions.setActiveCourse(enrollment.getCourseid())}>
                     <div id="title"><Link to={`/course/` + enrollment.getCourseid()}>{enrollment.getCourse()?.getCode()}</Link></div>
                     
                 </li>)
@@ -54,9 +54,12 @@ const NavBar = () => {
         
                 {state.user.id > 0 ? 
                 <li>
-                    <div id="icon"><img src={state.user.avatarurl} id="avatar"></img></div>
-                        
+                    <Link to="/profile">
+                        <li>
+                        <div id="icon"><img src={state.user.avatarurl} id="avatar"></img></div>    
                         <div id="title">{state.user.name}</div>
+                        </li>
+                    </Link>
                 </li>
                  : ""}
 
@@ -67,17 +70,9 @@ const NavBar = () => {
             <li>
             <div id="title">
                 <Link to="/info">
-                    Info
+                    About
                 </Link>
             </div>
-            </li>
-
-            <li>
-                <div id="title">
-                <Link to="/profile">
-                    Profile
-                </Link>
-                </div>
             </li>
 
             <li>

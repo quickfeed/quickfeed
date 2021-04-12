@@ -16,8 +16,9 @@ const Lab = () => {
     const getSubmission = state.submissions[Number(id)]?.map(submission => {
         if (submission.getAssignmentid() == Number(lab)) {
             const buildInfo = JSON.parse(submission.getBuildinfo())
-            const prettyBuildlog = buildInfo.buildlog.split('\n').map((x: string, i: number) => <span key={i} >{x}<br /></span>)
-            console.log(submission.getScoreobjects())
+            
+            const prettyBuildlog = buildInfo.buildlog.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
+            console.log(JSON.parse(buildInfo.buildlog))
             return (
                 <div key={submission.getId()}>
                     <LabResultTable id={submission.getAssignmentid()} courseID={Number(id)} />
@@ -29,7 +30,7 @@ const Lab = () => {
     })
 
     return (
-        <div>
+        <div className="box">
         {getSubmission}
         </div>
     )

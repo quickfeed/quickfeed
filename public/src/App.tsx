@@ -8,6 +8,7 @@ import Profile from "./components/Profile";
 import Course from "./components/Course";
 import Lab from "./components/Lab";
 import Courses from "./components/Courses";
+import Group from "./components/Group";
 
 
 
@@ -60,6 +61,7 @@ const App = () => {
                     <Route path="/course/:id" exact component={Course} />
                     <Route path="/courses" exact component={Courses} />
                     <Route path="/course/:id/:lab" component={Lab} />
+                    <Route path="/users" component={Group} />
                 </Switch>
                 // Admin stuff is probably also needed here somewhere. 
                 ) : (

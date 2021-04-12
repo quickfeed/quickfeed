@@ -5,7 +5,6 @@ import { getFormattedDeadline } from "../Helpers"
 import { useOvermind } from "../overmind"
 
 import { Courses, Enrollment, Repositories, Repository } from "../proto/ag_pb"
-import Lab from "./Lab"
 import LandingPageLabTable from "./LandingPageLabTable"
 
 
@@ -16,8 +15,6 @@ interface MatchProps {
 
 const Course = (props: RouteComponentProps<MatchProps>) => {
     const { state, actions } = useOvermind()
-    const { url } = useRouteMatch()
-    const [isLoading , setLoading] = useState(true)
     const [enrollment, setEnrollment] = useState(new Enrollment())
     let courseID = Number(props.match.params.id)
 
@@ -43,6 +40,7 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
             </div>
             
             <LandingPageLabTable courseID={courseID} />
+            
 
         </div>)
     }
