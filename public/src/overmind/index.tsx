@@ -1,6 +1,6 @@
 
-import { IConfig } from "overmind";
-import {createActionsHook, createEffectsHook, createHook, createReactionHook, createStateHook} from "overmind-react";
+import { IConfig } from 'overmind'
+import {createActionsHook, createEffectsHook, createHook, createReactionHook, createStateHook} from 'overmind-react'
 import { state } from './state'
 import * as actions from './actions'
 import * as effects from './effects'

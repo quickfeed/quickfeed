@@ -24,8 +24,8 @@ const Home = () => {
             }
             <LandingPageLabTable courseID={0}/>           
         </div>
-        )
+    )
 }
 
 
-export default Home;
+export default Home

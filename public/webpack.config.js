@@ -7,6 +7,7 @@ module.exports = {
         path: __dirname + "/dist"
     },
     mode: "development",
+    // watch enables webpacks Watch flag, which means it will run endlessly and recompile on saves
     watch: true,
     // Enable sourcemaps for debugging webpack's output.
     devtool: "source-map",

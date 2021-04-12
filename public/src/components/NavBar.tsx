@@ -35,6 +35,7 @@ const NavBar = () => {
                 return (
                 <li key={enrollment.getCourseid()} className={active ? "active" : "inactive"} onClick={() => actions.setActiveCourse(enrollment.getCourseid())}>
                     <div id="title"><Link to={`/course/` + enrollment.getCourseid()}>{enrollment.getCourse()?.getCode()}</Link></div>
+                    
                 </li>)
             }))
 
@@ -44,9 +45,9 @@ const NavBar = () => {
     return (
         <nav className="navigator">
             <ul className="SidebarList">
-            <li>
+            <li className="logo">
                 <Link to="/">
-                    <span className="logo">Autograder</span>
+                    Autograder
                 </Link>
             </li>
             
@@ -54,10 +55,9 @@ const NavBar = () => {
                 {state.user.id > 0 ? 
                 <li>
                     <Link to="/profile">
-                        <li>
+                        
                         <div id="icon"><img src={state.user.avatarurl} id="avatar"></img></div>    
                         <div id="title">{state.user.name}</div>
-                        </li>
                     </Link>
                 </li>
                  : ""}

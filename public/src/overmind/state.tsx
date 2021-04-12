@@ -39,7 +39,8 @@ export type State = {
     activeCourse: number,
     search: string,
     userSearch: Enrollment[],
-    student: Student
+    student: Student,
+    timeNow: Date
 }
 
 export const state: State = {
@@ -67,5 +68,6 @@ export const state: State = {
                 return enrollment.getStatus() === Enrollment.UserStatus.STUDENT
             }) 
         }
-    })
+    }),
+    timeNow : new Date()
 };

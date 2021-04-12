@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useParams } from 'react-router'
 import { useOvermind } from '../overmind'
 import LabResultTable from './LabResultTable'

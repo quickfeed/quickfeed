@@ -5,7 +5,7 @@ import { AutograderServiceClient } from "../proto/AgServiceClientPb";
 import * as grpcWeb from "grpc-web"
 import { GrpcManager } from "../GRPCManager";
 
-const AgService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
+const AgService = new AutograderServiceClient('https://' + window.location.hostname, null, null)
 // Effects should contain all impure functions used to manage state.
 
 export const grpcMan = new GrpcManager()

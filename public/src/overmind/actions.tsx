@@ -6,11 +6,11 @@ import {  User, Enrollment, Assignment, Submission, Repository } from "../proto/
 export const getUser: Action<void, Promise<boolean>> = ({state, effects}) => {
     return effects.api.getUser()
     .then((user) => {
-        console.log("Fetching.")
+        console.log('Fetching.')
         if (user.id === undefined) {
             return false
         }
-        state.user = user;
+        state.user = user
         effects.grpcMan.setUserid(state.user.AccessToken)
         return true
     })
@@ -51,40 +51,25 @@ export const getCoursesByUser: Action<void> = ({state, effects}) => {
 
 }
 
-/** Tries to get saved theme setting from localStorage, else sets theme to Light by default */
-export const setTheme: Action<void> = ({state}) => {
-    let theme = window.localStorage.getItem("theme")
-    state.theme = (theme === null) ? "light" : theme
-    document.body.className = state.theme
-}
-
-/** Changes between Light and Dark theme */
-export const changeTheme: Action<void> = ({state}) => {
-    state.theme = (state.theme === "light") ? "dark" : "light"
-    document.body.className = state.theme
-    window.localStorage.setItem("theme", state.theme)
-}
-
-
 /** Gets all submission for the current user by Course ID and stores them in state */
-export const getSubmissions: Action<number> = ({state, effects}, courseID) => {
-    effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
+export const getSubmissions: Action<number, Promise<Boolean>> = ({state, effects}, courseID) => {
+    return effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
         console.log(state.user.id, courseID)
         if (res.data) {
             state.submissions[courseID] = res.data.getSubmissionsList()
         }
-        state.submissions[courseID]
-
+        return false
+        
     })
 }
 
 
 /** Gets all enrollments for the current user and stores them in state */
-export const getEnrollmentsByUser: Action<void, Promise<boolean>> = ({state, effects}) => {
-    return effects.grpcMan.getEnrollmentsByUser(state.user.id)
+export const getEnrollmentsByUser: Action<void, Promise<boolean>> = async ({state, effects}) => {
+    return await effects.grpcMan.getEnrollmentsByUser(state.user.id)
     .then(res => {
         if (res.data) {
-            const enrollments = res.data.getEnrollmentsList().filter(enrollment =>  enrollment.getStatus() >= Enrollment.UserStatus.STUDENT )
+            const enrollments = res.data.getEnrollmentsList()
             state.enrollments = enrollments
             return true
         }
@@ -125,7 +110,7 @@ export const getAssignments: Action<void> = ({state, effects}) => {
         let assignments: { [courseID: number] : Assignment[]} = {}
         state.enrollments.forEach( enrollment => {
         //console.log(enrollment.getCourseid())
-        effects.grpcMan.getAssignments(enrollment.getCourseid()).then(res => {
+         effects.grpcMan.getAssignments(enrollment.getCourseid()).then(res => {
             if (res.data) {
                 console.log(enrollment, "load enrolls")
                 enrollment.getCourse()?.setAssignmentsList(res.data.getAssignmentsList())
@@ -142,7 +127,7 @@ export const getAssignments: Action<void> = ({state, effects}) => {
     
 }
 /** Gets the assignments from a course by the course id. Meant to be used in places where you want only 1 assignment list. */
-export const getAssignmentsByCourse: Action<number, Promise<boolean>> = ({state, effects}, courseid:number) => {
+export const getAssignmentsByCourse: Action<number, Promise<boolean>> = ({state, effects}, courseid) => {
     return effects.grpcMan.getAssignments(courseid).then(res => {
         if (res.data){
             state.assignments[courseid] = res.data.getAssignmentsList()
@@ -282,4 +267,25 @@ export const setupUser: Action<void, Promise<boolean>> = ({state, actions}) => {
         return false
         
     })
+}
+
+/* START UTILITY ACTIONS */
+
+/** Tries to get saved theme setting from localStorage, else sets theme to Light by default */
+export const setTheme: Action<void> = ({state}) => {
+    let theme = window.localStorage.getItem("theme")
+    state.theme = (theme === null) ? "light" : theme
+    document.body.className = state.theme
+}
+
+/** Changes between Light and Dark theme */
+export const changeTheme: Action<void> = ({state}) => {
+    state.theme = (state.theme === "light") ? "dark" : "light"
+    document.body.className = state.theme
+    window.localStorage.setItem("theme", state.theme)
+}
+
+/** Sets the time to now. */
+export const setTimeNow: Action<void> = ({state}) =>{
+    state.timeNow = new Date()
 }
