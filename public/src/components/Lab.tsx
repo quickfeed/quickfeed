@@ -18,7 +18,7 @@ const Lab = () => {
             const buildInfo = JSON.parse(submission.getBuildinfo())
             
             const prettyBuildlog = buildInfo.buildlog.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
-            console.log(JSON.parse(buildInfo.buildlog))
+            
             return (
                 <div key={submission.getId()}>
                     <LabResultTable id={submission.getAssignmentid()} courseID={Number(id)} />
