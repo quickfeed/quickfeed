@@ -50,21 +50,6 @@ export const getCoursesByUser: Action<void> = ({state, effects}) => {
 
 }
 
-/** Tries to get saved theme setting from localStorage, else sets theme to Light by default */
-export const setTheme: Action<void> = ({state}) => {
-    let theme = window.localStorage.getItem("theme")
-    state.theme = (theme === null) ? "light" : theme
-    document.body.className = state.theme
-}
-
-/** Changes between Light and Dark theme */
-export const changeTheme: Action<void> = ({state}) => {
-    state.theme = (state.theme === "light") ? "dark" : "light"
-    document.body.className = state.theme
-    window.localStorage.setItem("theme", state.theme)
-}
-
-
 /** Gets all submission for the current user by Course ID and stores them in state */
 export const getSubmissions: Action<number, Promise<Boolean>> = ({state, effects}, courseID) => {
     return effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
@@ -258,4 +243,25 @@ export const setupUser: Action<void, Promise<boolean>> = ({state, actions}) => {
         return false
         
     })
+}
+
+/* START UTILITY ACTIONS */
+
+/** Tries to get saved theme setting from localStorage, else sets theme to Light by default */
+export const setTheme: Action<void> = ({state}) => {
+    let theme = window.localStorage.getItem("theme")
+    state.theme = (theme === null) ? "light" : theme
+    document.body.className = state.theme
+}
+
+/** Changes between Light and Dark theme */
+export const changeTheme: Action<void> = ({state}) => {
+    state.theme = (state.theme === "light") ? "dark" : "light"
+    document.body.className = state.theme
+    window.localStorage.setItem("theme", state.theme)
+}
+
+/** Sets the time to now. */
+export const setTimeNow: Action<void> = ({state}) =>{
+    state.timeNow = new Date()
 }
