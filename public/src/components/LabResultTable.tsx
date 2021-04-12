@@ -1,5 +1,5 @@
 import React, { useEffect } from "react"
-import { getBuildInfo, getScoreObjects } from "../Helpers"
+import { getBuildInfo, getScoreObjects, IScoreObjects } from "../Helpers"
 import { useOvermind } from "../overmind"
 import { state } from "../overmind/state"
 
@@ -10,6 +10,25 @@ interface lab {
 
 const LabResultTable = ({id, courseID}: lab) => {
     const {state} = useOvermind()
+
+
+    const ListScoreObjects = (scoreObjects: IScoreObjects[]) => {
+        return scoreObjects.map(scoreObject => {
+            return (
+                <tr>
+                    <th>
+                        {scoreObject.TestName}
+                    </th>
+                    <th>
+                        {scoreObject.Score}/{scoreObject.MaxScore}
+                    </th>
+                    <th>
+                        {scoreObject.Weight}
+                    </th>
+                </tr>
+            )
+        })
+    }
 
     const LabResult = (): JSX.Element => {
 
@@ -38,10 +57,10 @@ const LabResultTable = ({id, courseID}: lab) => {
                     <th>Deadline</th>
                     <td>{assignment.getDeadline()}</td>
                 </tr>
-                <tr>
-                    <th>Tests passed</th>
-                    <td>{submission.getScoreobjects()}</td>
-                </tr>
+                {ListScoreObjects(scoreObjects)}
+                <tfoot>
+                    {submission.getScore()}%
+                </tfoot>
             </table>
             )
         }
@@ -50,7 +69,6 @@ const LabResultTable = ({id, courseID}: lab) => {
 
     return (
     <div>
-        test
         {LabResult()}
     </div>
     )
