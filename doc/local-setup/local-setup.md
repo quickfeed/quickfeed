@@ -1,5 +1,26 @@
 # Installing Quickfeed on localhost
 
+## Table of Contents
+[Ubuntu installation](#ubuntu-installation)
+1. [Installing Go](#installing-go)
+3. [Installing Envoy](#installing-envoy)
+4. [Installing Nginx](#installing-nginx)
+5. [Installing Node.js, npm and npm(webpack)](#installing-nodejs-npm-and-npmwebpack)
+
+[Configure Quickfeed for localhost](#configure-quickfeed-for-localhost)
+1. [Quickfeed](#quickfeed)
+2. [Envoy](#envoy)
+3. [Self-signed SSL certificates](#self-signed-ssl-certificates)
+4. [Nginx](#nginx)
+5. [Setting up a Github login](#setting-up-a-github-login)
+
+[Starting the application](#starting-the-application)
+1. [Nginx & Envoy](#nginx--envoy)
+2. [Go dependencies](#go-dependencies)
+3. [Webpack](#webpack)
+4. [Github key](#github-key)
+5. [Quickfeed](#quickfeed)
+
 ## Ubuntu installation
 
 These instructions should also work on Windows with WSL. First, make sure that you have installed Go, npm, npm(webpack), Envoy and Nginx.
