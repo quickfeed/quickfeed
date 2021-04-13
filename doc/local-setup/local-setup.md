@@ -280,3 +280,29 @@ quickfeed -http.addr ":8081" -service.url "127.0.0.1"
 ```
 
 You can now visit Quickfeed on the ip-address 127.0.0.1.
+
+
+
+
+### Running Quickfeed using only Envoy
+
+This can be done using the configuration found in [this config file](/local-setup/envoy.yaml).
+
+Replace the content of lines preceeded by a comment in the envoy.yaml file with the configuration your setup is using.
+
+Additionally, you must modify this line in GRPCManager.ts (line 60) to include the port you configure Envoy to listen for GRPC traffic (default :8080).
+
+```ts
+    constructor() {
+        this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
+    }
+```
+
+Example:
+
+```ts
+    constructor() {
+        this.agService = new AutograderServiceClient("https://" + window.location.hostname + ":8080", null, null);
+    }
+```
+
