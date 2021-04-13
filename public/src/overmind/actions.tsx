@@ -201,7 +201,11 @@ export const getCourseSubmissions: Action<number> = ({state, effects}, courseID)
 }
 
 export const setActiveCourse: Action<number> = ({state}, courseID) => {
-    state.activeCourse = courseID
+    if(state.activeCourse === courseID) {
+        state.activeCourse = -1
+    } else {
+        state.activeCourse = courseID
+    }
 }
 
 export const enroll: Action<number> = ({state, effects}, courseID) => {

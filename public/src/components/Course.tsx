@@ -22,7 +22,7 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
     useEffect(() => {
         courseID = Number(props.match.params.id)
         let enrol = actions.getEnrollmentByCourseId(courseID)
-        actions.setActiveCourse(courseID)
+        // actions.setActiveCourse(courseID)
         if (enrol !== null) {
             setEnrollment(enrol)
         }
