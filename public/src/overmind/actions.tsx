@@ -105,6 +105,23 @@ export const getEnrollmentsByCourse: Action<number> = ({state, effects}, courseI
     })
 }
 
+export const setEnrollmentState: Action<Enrollment> = ({state, effects}, enrollment) => {
+    let e = new Enrollment()
+    e.setCourseid(enrollment.getCourseid())
+    e.setUserid(enrollment.getUserid())
+    e.setState(enrollment.getState() == Enrollment.DisplayState.VISIBLE ? Enrollment.DisplayState.FAVORITE : Enrollment.DisplayState.VISIBLE)
+    state.enrollments.find(e => e.getId() === enrollment.getId())?.setState(e.getState())
+    if (e) {
+        effects.grpcMan.updateCourseVisibility(e).then(res => {
+            console.log(res)
+        })
+        .catch(res => {
+            console.log(res)
+        })
+    }
+
+}
+
 /** TODO: Either store assignments for all courses, or get assignments by course ID. Currently sets state.assignments to the assignments in the last enrollment in state.enrollments */
 export const getAssignments: Action<void> = ({state, effects}) => {
         let assignments: { [courseID: number] : Assignment[]} = {}
