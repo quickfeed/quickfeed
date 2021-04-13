@@ -37,6 +37,7 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
             <a href={state.repositories[courseID][Repository.Type.GROUP]}>Group Repository</a>
             <a href={state.repositories[courseID][Repository.Type.COURSEINFO]}>Course Info</a>
             <a href={state.repositories[courseID][Repository.Type.ASSIGNMENTS]}>Assignments</a>
+            <Link to={"/course/" + courseID + "/group"} >Group</Link>
             </div>
             
             <LandingPageLabTable courseID={courseID} />
