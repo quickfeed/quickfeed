@@ -1,5 +1,29 @@
 # Installing Quickfeed on localhost
 
+## Table of Contents
+[Ubuntu installation](#ubuntu-installation)
+1. [Installing Go](#installing-go)
+3. [Installing Envoy](#installing-envoy)
+4. [Installing Nginx](#installing-nginx)
+5. [Installing Node.js, npm and npm(webpack)](#installing-nodejs-npm-and-npmwebpack)
+
+[Configure Quickfeed for localhost](#configure-quickfeed-for-localhost)
+1. [Quickfeed](#quickfeed)
+2. [Envoy](#envoy)
+3. [Self-signed SSL certificates](#self-signed-ssl-certificates)
+4. [Nginx](#nginx)
+5. [Setting up a Github login](#setting-up-a-github-login)
+
+[Starting the application](#starting-the-application)
+1. [Nginx & Envoy](#nginx--envoy)
+2. [Go dependencies](#go-dependencies)
+3. [Webpack](#webpack)
+4. [Github key](#github-key)
+5. [Quickfeed](#quickfeed)
+
+[Alternative to using Nginx](#alternative-to-using-nginx)
+1. [Running Quickfeed using only Envoy](#running-quickfeed-using-only-envoy)
+
 ## Ubuntu installation
 
 These instructions should also work on Windows with WSL. First, make sure that you have installed Go, npm, npm(webpack), Envoy and Nginx.
@@ -280,3 +304,32 @@ quickfeed -http.addr ":8081" -service.url "127.0.0.1"
 ```
 
 You can now visit Quickfeed on the ip-address 127.0.0.1.
+
+
+
+
+## Alternative to using Nginx
+
+### Running Quickfeed using only Envoy
+
+This can be done using the configuration found in [this Envoy config file](/doc/local-setup/envoy.yaml).
+
+Replace the content of lines preceeded by a comment in the envoy.yaml file with the configuration your setup is using.
+
+Additionally, you must modify this line in [GRPCManager.ts](/public/src/managers/GRPCManager.ts) (line 60) to include the port you configure Envoy to listen for GRPC traffic (default :8080).
+
+```ts
+    constructor() {
+        this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
+    }
+```
+
+Example:
+
+```ts
+    constructor() {
+        this.agService = new AutograderServiceClient("https://" + window.location.hostname + ":8080", null, null);
+    }
+```
+
+Note: For a local dev server using a port is no issue, and should work with no additional steps needed than described above. To access the gRPC server externally through gRPC-web, however, the port you choose in the Envoy config file (and set gRPC to in GRPCManager.tsx) has to be opened.
