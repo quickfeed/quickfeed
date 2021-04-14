@@ -75,9 +75,9 @@ static_resources:
             # Replace certificate with your certificates
             tls_certificates:
               certificate_chain:
-                filename: /etc/letsencrypt/live/www.xini.no/fullchain.pem
+                filename: /etc/letsencrypt/live/www.example.com/fullchain.pem
               private_key:
-                filename: /etc/letsencrypt/live/www.xini.no/privkey.pem
+                filename: /etc/letsencrypt/live/www.example.com/privkey.pem
 
 
     # Gateway for the AutograderService gRPC server
@@ -156,4 +156,4 @@ static_resources:
                 socket_address:
                   address: localhost
                   # Replace this with the http.addr you use
-                  port_value: 3333
+                  port_value: 8081
