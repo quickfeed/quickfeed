@@ -21,6 +21,9 @@
 4. [Github key](#github-key)
 5. [Quickfeed](#quickfeed)
 
+[Alternative to using Nginx](#alternative-to-using-nginx)
+1. [Running Quickfeed using only Envoy](#running-quickfeed-using-only-envoy)
+
 ## Ubuntu installation
 
 These instructions should also work on Windows with WSL. First, make sure that you have installed Go, npm, npm(webpack), Envoy and Nginx.
@@ -305,6 +308,8 @@ You can now visit Quickfeed on the ip-address 127.0.0.1.
 
 
 
+## Alternative to using Nginx
+
 ### Running Quickfeed using only Envoy
 
 This can be done using the configuration found in [this config file](/local-setup/envoy.yaml).
@@ -327,3 +332,4 @@ Example:
     }
 ```
 
+Note: For a local dev server using a port is no issue, and should work with no additional steps needed than described above. To access the gRPC server externally through gRPC-web, however, the port you choose in the Envoy config file (and set gRPC to in GRPCManager.tsx) has to be opened.
