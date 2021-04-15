@@ -4,15 +4,15 @@ import {  User, Enrollment, Assignment, Submission, Repository } from "../proto/
 
 
 /** Fetches and stores an authenticated user in state */
-export const getUser: Action<void, Promise<boolean>> = ({state, effects}) => {
-    return effects.api.getUser()
-    .then((user) => {
+export const getUser: AsyncAction<void, boolean> = async ({state, effects}) => {
+    return await effects.api.getUser()
+    .then(async (user) => {
         console.log('Fetching.')
         if (user.id === undefined) {
             return false
         }
         state.user = user
-        effects.grpcMan.setUserid(state.user.AccessToken)
+        await effects.grpcMan.setUserid(state.user.AccessToken)
         return true
     })
     
@@ -33,9 +33,9 @@ export const getPerson: AsyncAction<void, boolean> = async ({ state, effects }) 
 
 
 /** Fetches all users */
-export const getUsers: Action<void> = ({state, effects}) => {
+export const getUsers: AsyncAction<void> = async ({state, effects}) => {
     state.users = []
-    effects.grpcMan.getUsers().then(res => {
+    await effects.grpcMan.getUsers().then(res => {
         if (res.data) {
             console.log(res.data)
         }
@@ -56,9 +56,9 @@ export const getCourses: AsyncAction<void, boolean> = async ({state, effects}) =
 }
 
 /**  */
-export const getCoursesByUser: Action<void> = ({state, effects}) => {
+export const getCoursesByUser: AsyncAction<void> = async ({state, effects}) => {
     let statuses: Enrollment.UserStatus[] = []
-    effects.grpcMan.getCoursesByUser(state.user.id, statuses).then(res => {
+    await effects.grpcMan.getCoursesByUser(state.user.id, statuses).then(res => {
         if (res.data) {
             console.log(res.data)
             state.userCourses = res.data.getCoursesList()
@@ -68,8 +68,8 @@ export const getCoursesByUser: Action<void> = ({state, effects}) => {
 }
 
 /** Gets all submission for the current user by Course ID and stores them in state */
-export const getSubmissions: Action<number, Promise<Boolean>> = ({state, effects}, courseID) => {
-    return effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
+export const getSubmissions: AsyncAction<number, Boolean> = async ({state, effects}, courseID) => {
+    return await effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
         console.log(state.user.id, courseID)
         if (res.data) {
             state.submissions[courseID] = res.data.getSubmissionsList()
@@ -96,9 +96,9 @@ export const getEnrollmentsByUser: AsyncAction<void, boolean> = async ({state, e
 
 
 /** Changes user information server-side */
-export const changeUser: Action<User> = ({state, actions, effects}, user) => {
+export const changeUser: AsyncAction<User> = async ({state, actions, effects}, user) => {
     user.setAvatarurl(state.user.avatarurl)
-    effects.grpcMan.updateUser(user).then(response => {
+    await effects.grpcMan.updateUser(user).then(response => {
         actions.getUser()
     })
 }
@@ -114,23 +114,23 @@ export const getEnrollmentByCourseId: Action<number, Enrollment | null> = ({stat
     return enrol
 }
 
-export const getEnrollmentsByCourse: Action<number> = ({state, effects}, courseID) => {
+export const getEnrollmentsByCourse: AsyncAction<number> = async ({state, effects}, courseID) => {
     state.users = []
-    effects.grpcMan.getEnrollmentsByCourse(courseID, undefined, undefined, [Enrollment.UserStatus.STUDENT]).then(res => {
+    await effects.grpcMan.getEnrollmentsByCourse(courseID, undefined, undefined, [Enrollment.UserStatus.STUDENT]).then(res => {
         if (res.data) {
             state.users = res.data.getEnrollmentsList()
         }
     })
 }
 
-export const setEnrollmentState: Action<Enrollment> = ({state, effects}, enrollment) => {
+export const setEnrollmentState: AsyncAction<Enrollment> = async ({state, effects}, enrollment) => {
     let e = new Enrollment()
     e.setCourseid(enrollment.getCourseid())
     e.setUserid(enrollment.getUserid())
     e.setState(enrollment.getState() == Enrollment.DisplayState.VISIBLE ? Enrollment.DisplayState.FAVORITE : Enrollment.DisplayState.VISIBLE)
     state.enrollments.find(e => e.getId() === enrollment.getId())?.setState(e.getState())
     if (e) {
-        effects.grpcMan.updateCourseVisibility(e).then(res => {
+        await effects.grpcMan.updateCourseVisibility(e).then(res => {
             console.log(res)
         })
         .catch(res => {
@@ -170,11 +170,11 @@ export const getAssignments: AsyncAction<number> = async ({ state, effects }, co
             console.log("Fetched assignment")
         }
     })
-
 }
+
 /** Gets the assignments from a course by the course id. Meant to be used in places where you want only 1 assignment list. */
-export const getAssignmentsByCourse: Action<number, Promise<boolean>> = ({state, effects}, courseid) => {
-    return effects.grpcMan.getAssignments(courseid).then(res => {
+export const getAssignmentsByCourse: AsyncAction<number, boolean> = async ({state, effects}, courseid) => {
+    return await effects.grpcMan.getAssignments(courseid).then(res => {
         if (res.data){
             state.assignments[courseid] = res.data.getAssignmentsList()
             return true
@@ -255,8 +255,8 @@ export const setActiveCourse: Action<number> = ({state}, courseID) => {
     }
 }
 
-export const enroll: Action<number> = ({state, effects}, courseID) => {
-    effects.grpcMan.createEnrollment(courseID, state.user.id).then(res => {
+export const enroll: AsyncAction<number> = async ({state, effects}, courseID) => {
+    await effects.grpcMan.createEnrollment(courseID, state.user.id).then(res => {
         console.log(res.status)
     })
     .catch(res => {
@@ -272,8 +272,8 @@ export const updateSearch: Action<string> = ({state}, search) => {
 /** Initializes a student user with all required data */
 /** //TODO: Figure out how to await this monster  */
 export const setupUser: AsyncAction<void, boolean> = async ({state, actions}) => {
-    // state.isLoading = false
-    return await actions.getPerson()
+    actions.loading()
+    const check = await actions.getPerson()
     .then(async success => {
         console.log("Loading enrollments", success)
         if (success) {
@@ -319,7 +319,10 @@ export const setupUser: AsyncAction<void, boolean> = async ({state, actions}) =>
         }
         return false
         
+    }).finally(() => {
+        console.log("Complete")
     })
+    return check
 }
 
 /* START UTILITY ACTIONS */

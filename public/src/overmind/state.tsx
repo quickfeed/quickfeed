@@ -53,7 +53,7 @@ export const state: State = {
     assignments: {},
     repositories: {},
     theme: "light",
-    isLoading: true,
+    isLoading: false,
     activeCourse: -1,
     search: "",
     userSearch: derived((state: State) => {
