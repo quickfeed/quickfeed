@@ -196,6 +196,11 @@ export const getCourseSubmissions: Action<number> = ({state, effects}, courseID)
             if(submission) {
                 state.submissions[courseID][assignment.getOrder() - 1] = submission
             }
+            if(submission==undefined){
+                submission= new Submission()
+                console.log(submission, "Here is a dummy submition")
+                state.submissions[courseID][assignment.getOrder() - 1] = submission
+            }
         })
     })
 }
@@ -242,7 +247,9 @@ export const setupUser: Action<void, Promise<boolean>> = ({state, actions}) => {
         console.log("Loading submissions", success)
         if (success) {
             state.enrollments.forEach(enrollment => {
-                actions.getCourseSubmissions(enrollment.getCourseid())
+                if(enrollment.getStatus()>=2){
+                    actions.getCourseSubmissions(enrollment.getCourseid())
+                }
             });
             return true
         }

@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useHistory } from "react-router";
 import { getFormattedDeadline, layoutTime, timeFormatter } from "../Helpers";
 import { useOvermind, useReaction } from "../overmind";
 import { Submission } from "../proto/ag_pb";
@@ -18,8 +19,11 @@ interface course {
 /* Giving a courseID of zero (0) makes it display ALL labs for all courses, whereas providing a courseID displays labs for ONLY ONE course */
 const LandingPageLabTable = (crs: course) => {
     const { state } = useOvermind()
+    const history  = useHistory()
     
-    
+    function redirectToLab(courseid:number,assignmentid:number){
+        history.push(`/course/${courseid}/${assignmentid}`)
+    }
 
     const MakeLabTable = (): JSX.Element[] => {
         let table: JSX.Element[] = []
@@ -27,20 +31,20 @@ const LandingPageLabTable = (crs: course) => {
         let timeNow = Date.now()
             for (const courseID in state.assignments) {
                 // Use the index provided by the for loop if courseID provided == 0, else select the given course
-                let index = crs.courseID > 0 ? crs.courseID : Number(courseID)
-                let course = state.courses.find(course => course.getId() == index)  
-
-                state.assignments[index]?.forEach(assignment => {
-                    if(state.submissions[courseID]) {
+                let key = crs.courseID > 0 ? crs.courseID : Number(courseID)
+                let course = state.courses.find(course => course.getId() == key)  
+                console.log(courseID)
+                state.assignments[key]?.forEach(assignment => {
+                    if(state.submissions[key]) {
                         // Submissions are indexed by the assignment order.
-                        submission = state.submissions[courseID][assignment.getOrder() - 1]
-                        
+                        submission = state.submissions[key][assignment.getOrder() - 1]
+                        if (submission===undefined){submission = new Submission()}
                     if(submission){
                         const timeofDeadline = new Date(assignment.getDeadline())
                         let time2Deadline = timeFormatter(timeofDeadline.getTime(),state.timeNow)
                         //Rewrite this to hide, this who are approved. if submission.getStatus() = 1 -> hide it.
                         table.push(
-                            <tr key={assignment.getId()} className={"clickable-row " + time2Deadline[1]}>
+                            <tr key={assignment.getId()} className={"clickable-row " + time2Deadline[1]} onClick={()=>redirectToLab(assignment.getCourseid(),assignment.getId())}>
                                 {crs.courseID==0 &&
                                 <td>{course?.getCode()}</td>
                                 }
