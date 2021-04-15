@@ -22,7 +22,7 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
     useEffect(() => {
         courseID = Number(props.match.params.id)
         let enrol = actions.getEnrollmentByCourseId(courseID)
-        actions.setActiveCourse(courseID)
+        // actions.setActiveCourse(courseID)
         if (enrol !== null) {
             setEnrollment(enrol)
         }
@@ -37,6 +37,7 @@ const Course = (props: RouteComponentProps<MatchProps>) => {
             <a href={state.repositories[courseID][Repository.Type.GROUP]}>Group Repository</a>
             <a href={state.repositories[courseID][Repository.Type.COURSEINFO]}>Course Info</a>
             <a href={state.repositories[courseID][Repository.Type.ASSIGNMENTS]}>Assignments</a>
+            <Link to={"/course/" + courseID + "/group"} >Group</Link>
             </div>
             
             <LandingPageLabTable courseID={courseID} />

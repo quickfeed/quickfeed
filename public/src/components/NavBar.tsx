@@ -22,7 +22,7 @@ const NavBar = () => {
 
             
             links.push(
-            <li key={0} onClick={() => setActive(!active)}>
+            <li key={0} onClick={() => { setActive(!active); actions.setActiveCourse(-1);}}>
                 <div id="title">
                     <Link to="/courses">
                         Courses
@@ -34,9 +34,19 @@ const NavBar = () => {
             state.enrollments.map((enrollment) =>{
                 if(enrollment.getStatus()>=2) {
                     links.push(
-                        <li key={enrollment.getCourseid()} className={active ? "active" : "inactive"} onClick={() => actions.setActiveCourse(enrollment.getCourseid())}>
-                            <div id="title"><Link to={`/course/` + enrollment.getCourseid()}>{enrollment.getCourse()?.getCode()}</Link></div> 
-                        </li>)
+                        <div>
+                            <li key={enrollment.getCourseid()} className={active ? "active" : "inactive"} onClick={() => actions.setActiveCourse(enrollment.getCourseid())}>
+                                <div id="title">
+                                    <Link to={`/course/` + enrollment.getCourseid()}>
+                                        {enrollment.getCourse()?.getCode()}
+                                    </Link>
+                                </div> 
+                            </li>
+                            <div className={active ? "activelabs" : "inactive"}>
+                                {state.activeCourse === enrollment.getCourseid() ? <NavBarLabs /> : ""}
+                            </div>
+                        </div>
+                    )
                 }
             })
 
@@ -46,13 +56,13 @@ const NavBar = () => {
     return (
         <nav className="navigator">
             <ul className="SidebarList">
-            <li className="logo">
-                <Link to="/">
-                    Autograder
-                </Link>
-            </li>
+                <li className="logo">
+                    <Link to="/">
+                        Autograder
+                    </Link>
+                </li>
+                
             
-        
                 {state.user.id > 0 ? 
                 <li>
                     <Link to="/profile">
@@ -61,26 +71,25 @@ const NavBar = () => {
                         <div id="title">{state.user.name}</div>
                     </Link>
                 </li>
-                 : ""}
+                    : ""}
 
-            
-            
-            {state.user.id > 0 ? CourseItems() : ""}
-            <NavBarLabs />
-            <li>
-            <div id="title">
-                <Link to="/info">
-                    About
-                </Link>
-            </div>
-            </li>
+                
+                
+                {state.user.id > 0 ? CourseItems() : ""}
+                <li>
+                    <div id="title">
+                        <Link to="/info">
+                            About
+                        </Link>
+                    </div>
+                </li>
 
-            <li>
-                <span onClick={() => actions.changeTheme()}>
-                    <i className={state.theme === "light" ? "icon fa fa-sun-o" : "icon fa fa-moon-o"} style={{color: "white"}}></i>
-                </span>
-            </li>
-            {checkUserLoggedIn()}
+                <li>
+                    <span onClick={() => actions.changeTheme()}>
+                        <i className={state.theme === "light" ? "icon fa fa-sun-o" : "icon fa fa-moon-o"} style={{color: "white"}}></i>
+                    </span>
+                </li>
+                {checkUserLoggedIn()}
             </ul>
         </nav>
     )

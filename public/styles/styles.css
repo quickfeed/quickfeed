@@ -61,6 +61,11 @@
     margin-left: 10px;
 }
 
+.SidebarList .activelabs {
+    display: block;
+    background-color: rgb(39, 39, 39);
+}
+
 .SidebarList .active {
     display: flex;
     background-color: rgb(39, 39, 39);
