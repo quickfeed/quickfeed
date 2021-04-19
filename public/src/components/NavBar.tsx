@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useOvermind } from "../overmind";
 import { Link } from 'react-router-dom'
 import NavBarLabs from "./NavBarLabs";
+import { Enrollment } from "../proto/ag_pb";
+import NavBarTeacher from "./NavBarTeacher";
 
 
 const NavBar = () => {
@@ -43,7 +45,8 @@ const NavBar = () => {
                                 </div> 
                             </li>
                             <div className={active ? "activelabs" : "inactive"}>
-                                {state.activeCourse === enrollment.getCourseid() ? <NavBarLabs /> : ""}
+                                {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? <NavBarLabs /> : ""}
+                                {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.TEACHER ? <NavBarTeacher  courseID={enrollment.getCourseid()}/> : ""}
                             </div>
                         </div>
                     )
