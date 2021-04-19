@@ -8,8 +8,11 @@ import Profile from "./components/Profile";
 import Course from "./components/Course";
 import Lab from "./components/Lab";
 import Courses from "./components/Courses";
-import Group from "./components/Group";
 import { SingleEntryPlugin } from 'webpack';
+import Group from './components/Group';
+import Alert from './components/Alert';
+import Members from './components/Members';
+
 
 
 
@@ -28,7 +31,9 @@ const App = () => {
                 }, 500)
             })
         }
+
         // state.isLoading = false
+
         console.log('App.tsx useeffect runs')
         actions.setTheme()
     }, [loggedIn, setLoggedIn])
@@ -63,10 +68,11 @@ const App = () => {
                                     <Route path="/" exact component={Home} />
                                     <Route path="/info" component={Info} />
                                     <Route path="/profile" component={Profile} />
+                                    <Route path="/course/:id/members" component={Members} />
+                                    <Route path="/course/:id/group" exact component={Group} />
                                     <Route path="/course/:id" exact component={Course} />
                                     <Route path="/courses" exact component={Courses} />
                                     <Route path="/course/:id/:lab" component={Lab} />
-                                    <Route path="/users" component={Group} />
                                 </Switch>
                                 // Admin stuff is probably also needed here somewhere. 
                             ) : (

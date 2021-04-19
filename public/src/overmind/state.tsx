@@ -14,15 +14,19 @@ export interface Self {
     AccessToken: string;
 }
 
-export interface Student {
-    enrollments: Enrollment[]
-    courses: Course[]
+export interface CourseGroup {
+    enrollments: number[]
+    users: User[]
+    groupName: string
 }
 
 export type State = {
     user: Self,
     users: Enrollment[],
-    enrollments: Enrollment[]
+    enrollments: Enrollment[],
+    enrollmentsByCourseId: {
+        [courseid: number]: Enrollment
+    }
     courses: Course[],
     userCourses: Course[],
     submissions:{
@@ -39,14 +43,26 @@ export type State = {
     activeCourse: number,
     search: string,
     userSearch: Enrollment[],
-    student: Student,
-    timeNow: Date
+    timeNow: Date,
+    cg: CourseGroup,
+    alerts: string[],
+    courseEnrollments: {
+        [courseid: number]: Enrollment[]
+    }
 }
 
 export const state: State = {
     user: {avatarurl: '', email: '', id: -1, isadmin: false, name: '', remoteID: -1, studentid: -1, AccessToken: ""},
     users: [],
     enrollments: [],
+    enrollmentsByCourseId: derived((state: State) => {
+        type e = {[courseid: number]: Enrollment}
+        let d: e = {}
+        state.enrollments.forEach(enrollment => {
+            d[enrollment.getCourseid()] = enrollment
+        });
+        return d
+    }),
     courses: [],
     userCourses: [],
     submissions: {},
@@ -59,15 +75,11 @@ export const state: State = {
     userSearch: derived((state: State) => {
         return state.users.filter(user => 
             user.getUser()?.getName().toLowerCase().includes(state.search.toLowerCase())
-        )
+        ).filter(user => !state.cg.enrollments.includes(user.getId()))
     }),
-    student: derived((state: State) => { 
-        return {
-            courses: state.courses, 
-            enrollments: state.enrollments.filter(enrollment => {
-                return enrollment.getStatus() === Enrollment.UserStatus.STUDENT
-            }) 
-        }
-    }),
-    timeNow : new Date()
+
+    timeNow : new Date(),
+    cg: {enrollments: [], users: [], groupName: ""},
+    alerts: [],
+    courseEnrollments: {}
 };
