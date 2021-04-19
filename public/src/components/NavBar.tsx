@@ -6,6 +6,7 @@ import { Enrollment } from "../proto/ag_pb";
 import NavBarTeacher from "./NavBarTeacher";
 
 
+
 const NavBar = () => {
     const { state, actions } = useOvermind() 
 
@@ -24,17 +25,25 @@ const NavBar = () => {
 
             
             links.push(
-            <li key={0} onClick={() => { setActive(!active); actions.setActiveCourse(-1);}}>
-                <div id="title">
-                    <Link to="/courses">
-                        Courses
-                    </Link>
-                </div>
-            </li>
+            <div>
+                <li key={0} onClick={() => { setActive(!active); actions.setActiveCourse(-1);}}>
+                    <div id="title">
+                            Courses &nbsp;&nbsp;
+                        <i className={active ? "icon fa fa-caret-down fa-lg" : "icon fa fa-caret-down fa-rotate-90 fa-lg"}></i>
+                    </div>
+                </li>
+                <li className={active ? "active" : "inactive"}>
+                    <div id="title">
+                        <Link to="/courses">
+                            View all courses
+                        </Link>
+                    </div>
+                </li>
+            </div>
             )
         if (state.enrollments.length > 0) {
             state.enrollments.map((enrollment) =>{
-                if(enrollment.getStatus()>=2) {
+                if (enrollment.getStatus() >= 2 && enrollment.getState() === Enrollment.DisplayState.FAVORITE) {
                     links.push(
                         <div>
                             <li key={enrollment.getCourseid()} className={active ? "active" : "inactive"} onClick={() => actions.setActiveCourse(enrollment.getCourseid())}>
@@ -59,7 +68,7 @@ const NavBar = () => {
     return (
         <nav className="navigator">
             <ul className="SidebarList">
-                <li className="logo">
+                <li key="logo" className="logo">
                     <Link to="/">
                         Autograder
                     </Link>
@@ -67,7 +76,7 @@ const NavBar = () => {
                 
             
                 {state.user.id > 0 ? 
-                <li>
+                <li key="profile">
                     <Link to="/profile">
                         
                         <div id="icon"><img src={state.user.avatarurl} id="avatar"></img></div>    
@@ -79,7 +88,7 @@ const NavBar = () => {
                 
                 
                 {state.user.id > 0 ? CourseItems() : ""}
-                <li>
+                <li key="about">
                     <div id="title">
                         <Link to="/info">
                             About
@@ -87,9 +96,9 @@ const NavBar = () => {
                     </div>
                 </li>
 
-                <li>
+                <li key="theme">
                     <span onClick={() => actions.changeTheme()}>
-                        <i className={state.theme === "light" ? "icon fa fa-sun-o" : "icon fa fa-moon-o"} style={{color: "white"}}></i>
+                        <i className={state.theme === "light" ? "icon fa fa-sun-o fa-lg" : "icon fa fa-moon-o fa-lg"} style={{color: "white"}}></i>
                     </span>
                 </li>
                 {checkUserLoggedIn()}
