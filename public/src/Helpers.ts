@@ -48,7 +48,6 @@ export const formatBuildInfo = (buildInfo: string) => {
 
 /** Utility function for LangindpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
 export const timeFormatter = (deadline:number , now: Date) => {
-    console.log(deadline)
     const timeToDeadline = deadline - now.getTime()
     let days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     let hours = Math.floor(timeToDeadline / (1000 * 3600))
