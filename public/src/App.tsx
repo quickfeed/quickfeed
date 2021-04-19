@@ -24,6 +24,7 @@ const App = () => {
         if (!loggedIn) {
              actions.setupUser().then(success => {
                 if (success) {
+                    console.log(success)
                     setLoggedIn(true)
                 }
                 setTimeout(() => {
@@ -63,7 +64,7 @@ const App = () => {
                                 <Switch>
                                     <Route path="/" component={Profile} />
                                 </Switch>
-                            ) : (!state.isLoading && loggedIn ? ( // Else render page as expected for a logged in user
+                            ) : ( loggedIn ? ( // Else render page as expected for a logged in user
                                 <Switch>
                                     <Route path="/" exact component={Home} />
                                     <Route path="/info" component={Info} />

@@ -1,6 +1,8 @@
 import { Action, AsyncAction } from "overmind";
 import { useActions } from ".";
+import { IGrpcResponse } from "../GRPCManager";
 import {  User, Enrollment, Assignment, Submission, Repository } from "../proto/ag_pb";
+import { CourseGroup } from "./state";
 
 
 /** Fetches and stores an authenticated user in state */
@@ -114,14 +116,21 @@ export const getEnrollmentByCourseId: Action<number, Enrollment | null> = ({stat
     return enrol
 }
 
-export const getEnrollmentsByCourse: AsyncAction<number> = async ({state, effects}, courseID) => {
+export const getEnrollmentsByCourse: AsyncAction<{courseID: number, statuses: Enrollment.UserStatus[]}> = async ({state, effects}, value) => {
+
     state.users = []
-    await effects.grpcMan.getEnrollmentsByCourse(courseID, undefined, undefined, [Enrollment.UserStatus.STUDENT]).then(res => {
+    state.courseEnrollments[value.courseID] = []
+    await effects.grpcMan.getEnrollmentsByCourse(value.courseID, undefined, undefined, value.statuses).then(res => {
         if (res.data) {
             state.users = res.data.getEnrollmentsList()
+            state.courseEnrollments[value.courseID] = res.data.getEnrollmentsList()
+            console.log(state.courseEnrollments)
+            return true
         }
+        return false
     })
 }
+
 
 export const setEnrollmentState: AsyncAction<Enrollment> = async ({state, effects}, enrollment) => {
     let e = new Enrollment()
@@ -201,6 +210,38 @@ export const getRepository: AsyncAction<void> = async ({state, effects}) => {
     });
 
 }
+
+
+
+export const updateCourseGroup: Action<CourseGroup> = ({state}, cg) => {
+    state.cg = cg
+}
+
+export const alertHandler: Action<IGrpcResponse<any>> = ({state}, response) => {
+    if (response.status.getCode() >= 0) {
+        state.alerts.push(response.status.getError())
+    }
+}
+
+export const createGroup: Action<number> = ({state, actions, effects}, courseID) => {
+    let users: number[] = []
+    state.cg.users.forEach(user => {
+        users.push(user.getId())
+    })
+    effects.grpcMan.createGroup(courseID, state.cg.groupName, users)
+    .then(res => {
+        if (res.data) {
+            console.log("Group Creation Success", res.data)
+        }
+        actions.alertHandler(res)
+    })
+}
+
+export const popAlert: Action<number> = ({state}, index) => {
+    state.alerts = state.alerts.filter((s, i) => i != index)
+}
+
+
 
 export const loading: Action<void> = ({state}) => {
     state.isLoading = !state.isLoading
@@ -319,7 +360,17 @@ export const setupUser: AsyncAction<void, boolean> = async ({state, actions}) =>
         }
         return false
         
-    }).finally(() => {
+    }).then(async success => {
+        if (success) {
+            state.enrollments.forEach(async enrollment => {
+                let statuses = enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER ] : []
+                await actions.getEnrollmentsByCourse({courseID: enrollment.getCourseid(), statuses: statuses})
+            })
+            return true
+        }
+        return false
+    })
+    .finally(() => {
         console.log("Complete")
     })
     return check
