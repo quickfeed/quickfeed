@@ -69,7 +69,7 @@ const App = () => {
                                     <Switch>
                                         <Route path="/" component={Profile} />
                                     </Switch>
-                            ) : ( loggedIn ? ( // Else render page as expected for a logged in user
+                            ) : ( !state.isLoading && loggedIn ? ( // Else render page as expected for a logged in user
                                 <Switch>
                                     <Route path="/" exact component={Home} />
                                     <Route path="/info" component={Info} />
