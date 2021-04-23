@@ -1,5 +1,5 @@
 import { derived } from "overmind";
-import { Assignment, Course, Enrollment, Submission, User } from "../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Submission, User } from "../proto/ag_pb";
 
 
 // TODO Style for members of Self should be camelCase. The JSON from /api/v1/user does not return an object with camelCase. Rewrite return on backend to comply with camelCase
@@ -32,6 +32,9 @@ export type State = {
     submissions:{
         [courseid:number]:Submission[]
     },
+    courseSubmissions:{
+        [courseid:number]:Submission[]
+    }
     assignments: {
         [courseid:number]:Assignment[]
     },
@@ -48,6 +51,9 @@ export type State = {
     alerts: string[],
     courseEnrollments: {
         [courseid: number]: Enrollment[]
+    },
+    groups: {
+        [courseid: number]: Group[]
     }
 }
 
@@ -66,6 +72,7 @@ export const state: State = {
     courses: [],
     userCourses: [],
     submissions: {},
+    courseSubmissions: {},
     assignments: {},
     repositories: {},
     theme: "light",
@@ -81,5 +88,6 @@ export const state: State = {
     timeNow : new Date(),
     cg: {enrollments: [], users: [], groupName: ""},
     alerts: [],
-    courseEnrollments: {}
+    courseEnrollments: {},
+    groups: {}
 };

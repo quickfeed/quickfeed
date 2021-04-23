@@ -1,8 +1,8 @@
 import { Action, AsyncAction } from "overmind";
 import { useActions } from ".";
 import { IGrpcResponse } from "../GRPCManager";
-import {  User, Enrollment, Assignment, Submission, Repository } from "../proto/ag_pb";
-import { CourseGroup } from "./state";
+import {  User, Enrollment, Assignment, Submission, Repository, Organization, Course, SubmissionsForCourseRequest } from "../proto/ag_pb";
+import { CourseGroup, state } from "./state";
 
 
 /** Fetches and stores an authenticated user in state */
@@ -149,28 +149,20 @@ export const setEnrollmentState: AsyncAction<Enrollment> = async ({state, effect
 
 }
 
-/** TODO: Either store assignments for all courses, or get assignments by course ID. Currently sets state.assignments to the assignments in the last enrollment in state.enrollments */
-// export const getAssignments: AsyncAction<void> = async ({state, effects}) => {
-//         let assignments: { [courseID: number] : Assignment[]} = {}
-//         state.enrollments.forEach(async enrollment => {
-//         //console.log(enrollment.getCourseid())
-//          await effects.grpcMan.getAssignments(enrollment.getCourseid()).then(res => {
-//             if (res.data) {
-//                 // console.log(enrollment, "load enrolls")
-//                 enrollment.getCourse()?.setAssignmentsList(res.data.getAssignmentsList())
-//                 assignments[enrollment.getCourseid()] = res.data.getAssignmentsList()
-//                 //console.log(state.assignments)
-//             }
-            
-//         }).finally(() => {
-//             state.assignments = assignments
-//             console.log("Fetched assignments")
-//         })
-        
+export const updateEnrollment: Action<{enrollment: Enrollment, status: Enrollment.UserStatus}> = ({state, actions, effects}, update) => {
+    let e = new Enrollment()
+    e.setId(update.enrollment.getId())
+    e.setStatus(update.status)
+    e.setUserid(update.enrollment.getUserid())
+    e.setCourseid(update.enrollment.getCourseid())
 
-//     })
-    
-// }
+    effects.grpcMan.updateEnrollment(e).then(res => {
+        if (res.data) {
+            // Good
+        }
+        actions.alertHandler(res)
+    })
+}
 
 export const getAssignments: AsyncAction<number> = async ({ state, effects }, courseID) => {
     await effects.grpcMan.getAssignments(courseID).then(res => {
@@ -242,9 +234,63 @@ export const popAlert: Action<number> = ({state}, index) => {
 }
 
 
+export const getOrganization: Action<string> = ({actions, effects}, orgName) => {
+    effects.grpcMan.getOrganization(orgName).then(res => {
+        if (res.data) {
+            console.log(res.data)
+        }
+        actions.alertHandler(res)
+    })
+}
+
+export const createCourse: Action<{course: Course, orgName: string}> = ({state, actions, effects}, value) => {
+    let course = new Course()
+    effects.grpcMan.getOrganization(value.orgName).then(res => {
+        if (res.data) {
+            // TODO: Is there a more elegant way to do this?
+            course.setOrganizationid(res.data.getId())
+            course.setOrganizationpath(res.data.getPath())
+            course.setSlipdays(value.course.getSlipdays())
+            course.setTag(value.course.getTag())
+            course.setCode(value.course.getCode())
+            course.setYear(value.course.getYear())
+            course.setName(value.course.getName())
+            course.setProvider("github")
+            course.setCoursecreatorid(state.user.id)
+            effects.grpcMan.createCourse(course).then(res => {
+                if (res.data) {
+                    state.courses.push(res.data)
+
+                    // success
+                }
+                actions.alertHandler(res)
+            })
+        }
+        actions.alertHandler(res)
+    })
+}
 
 export const loading: Action<void> = ({state}) => {
     state.isLoading = !state.isLoading
+}
+
+export const getAllCourseSubmissions: AsyncAction<number> = async ({state, effects}, courseID) => {
+    await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL).then(res => {
+        if(res.data) {
+            console.log(res.data)
+        }
+        else {
+            console.log("FAIL")
+        }
+    })
+}
+
+export const getGroupsByCourse: AsyncAction<number> = async ({state, effects}, courseID) => {
+    await effects.grpcMan.getGroupsByCourse(courseID).then(res => {
+        if (res.data) {
+            state.groups[courseID] = res.data.getGroupsList()
+        }
+    })
 }
 
 // Attempt at getting all submissions at once
@@ -337,7 +383,9 @@ export const setupUser: AsyncAction<void, boolean> = async ({state, actions}) =>
         console.log("Loading submissions", success)
         if (success) {
             state.enrollments.forEach(async enrollment => {
-                await actions.getCourseSubmissions(enrollment.getCourseid())
+                if (enrollment.getStatus() === Enrollment.UserStatus.STUDENT) {
+                    await actions.getCourseSubmissions(enrollment.getCourseid())
+                }
             });
             return true
         }
@@ -364,7 +412,9 @@ export const setupUser: AsyncAction<void, boolean> = async ({state, actions}) =>
         if (success) {
             state.enrollments.forEach(async enrollment => {
                 let statuses = enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER ] : []
-                await actions.getEnrollmentsByCourse({courseID: enrollment.getCourseid(), statuses: statuses})
+                if (enrollment.getStatus() >= 2) {
+                    await actions.getEnrollmentsByCourse({courseID: enrollment.getCourseid(), statuses: statuses})
+                }
             })
             return true
         }
