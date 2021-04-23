@@ -31,11 +31,10 @@ const Courses = () => {
         let student: JSX.Element[] = []
         let teacher: JSX.Element[] = []
         let pending: JSX.Element[] = []
-        let courseArr = state.courses
-        state.enrollments.map(enrol => {       
-            let course = courseArr.find(course => course.getId() == enrol.getCourseid())
-            if (course){
-                courseArr =courseArr.filter(item => item !== course)
+        let enrolArr = state.enrollments
+        state.courses.map(course => {       
+            let enrol = enrolArr.find(enrol => course.getId() == enrol.getCourseid())
+            if (enrol){
                 if (enrol.getState()==3){
                     // add to favorite list.
                     favorite.push(
@@ -72,11 +71,15 @@ const Courses = () => {
         
                 }
                 
-                
                     
             }
+            else {
+                pending.push(
+                    <CourseCard key={course.getId()} course= {course} enrollment={new Enrollment} status={Enrollment.UserStatus.NONE}/>
+                )
+            }
         })
-        crsArr = courseArr
+        
         // create enroll modal, to enroll to new courses.
         return (
             <div>
