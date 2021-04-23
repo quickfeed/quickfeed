@@ -28,6 +28,7 @@ export const UserProfileForm = (props: IProps) => {
         changedUser.setName(user.name)
         changedUser.setEmail(user.email)
         changedUser.setStudentid(user.studentid.toString())
+        changedUser.setIsadmin(state.user.isadmin)
         actions.changeUser(changedUser)
         // Flip back to the uneditable view
         props.setEditing(false)
