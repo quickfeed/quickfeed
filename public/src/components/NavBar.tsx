@@ -102,6 +102,17 @@ const NavBar = () => {
                     </span>
                 </li>
                 {checkUserLoggedIn()}
+
+                { state.user.isadmin ? 
+                    <li key="admin">
+                        <div id="title">
+                        <Link to="/admin">
+                            Admin
+                        </Link>
+                        </div>
+                    </li>
+                    : ""
+                }
             </ul>
         </nav>
     )
