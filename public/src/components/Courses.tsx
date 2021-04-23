@@ -1,6 +1,5 @@
-import React, { useEffect } from "react"
-import { Link } from "react-router-dom"
-import { useOvermind, useState } from "../overmind"
+import React, { useEffect, useState } from "react"
+import { useOvermind } from "../overmind"
 import { Course, Enrollment } from "../proto/ag_pb"
 import CourseCard from "./CourseCard"
 
@@ -17,7 +16,7 @@ const EnrollmentStatus = {
 /** This component should list user courses, and available courses and allow enrollment */
 const Courses = () => {
     const {state, actions} = useOvermind()
-
+    const [displayModal, setDisplayModal] = useState(false) 
     useEffect(() => {
         // TODO: getCoursesByUser returns courses a user has an enrollment in. I thought a UserStatus = 0 (NONE) would be default, but apparently not.
         //
@@ -26,12 +25,16 @@ const Courses = () => {
     // TODO: UserCourses contains elements describing a course that a user has an enrollment in, regardless of status currently. Need to figure out what UserStatus.NONE is used for
     
     let crsArr:Course[] = []
+    function setcrsArr(arr:Course[]) {
+        crsArr=arr
+    }
     // push to seperate arrays, for layout purposes. Favorite - Student - Teacher - Pending
     function upDateArrays(){
         let favorite: JSX.Element[] = []
         let student: JSX.Element[] = []
         let teacher: JSX.Element[] = []
         let pending: JSX.Element[] = []
+        let allOther:    JSX.Element[] = []
         let courseArr = state.courses
         state.enrollments.map(enrol => {
                
@@ -46,21 +49,21 @@ const Courses = () => {
                 }else{
                     switch (enrol.getStatus()){
                         //pending
-                        case 1:
+                        case Enrollment.UserStatus.PENDING:
                             //color orange
                             pending.push(
                                 <CourseCard key={course.getId()} course= {course} enrollment={enrol} status={enrol.getStatus()}/>
                             )
                             break
                               
-                        case 2:
+                        case Enrollment.UserStatus.STUDENT:
                             // Student
                             //color blue
                             student.push(
                                 <CourseCard key={course.getId()} course= {course} enrollment={enrol} status={enrol.getStatus()}/>
                             )
                             break
-                        case 3:
+                        case Enrollment.UserStatus.TEACHER:
                             // color green
                             // Teacher
                             teacher.push(
@@ -78,28 +81,56 @@ const Courses = () => {
                     
             }
         })
-        crsArr = courseArr
-        // create enroll modal, to enroll to new courses.
+        // This is passed into the modal to enrol in new courses.
+        
+        courseArr.map((course) =>{
+            allOther.push(
+                <CourseCard status={0} course={course} enrollment={new Enrollment} />
+            )
+        })
+        
+        
         return (
-            <div>
-                <h1>Favorites</h1>
-                <div className="card-deck row favorite-row">
-                    {favorite}
-                    
+            <div className="container-fluid">
+                {favorite.length >0 &&
+                <div className="container-fluid">
+                    <h1>Favorites</h1>
+                    <div className="card-deck row favorite-row">
+                        {favorite}
+                        
+                    </div>
                 </div>
-                <h1>Courses</h1>
-                
+                }
+                    
                 {(student.length>0 || teacher.length>0) &&
-                    <div className="card-deck row">
-                        {teacher}
-                        {student}
-                    </div>    
+                    <div className="container-fluid">
+                        <h1>My Courses</h1>
+                        <div className="card-deck row">
+                            {teacher}
+                            {student}
+                        </div>
+                    </div>
                 }
                 {pending.length>0 &&
-                    <div className="card-deck row">
-                    {pending}
+                    <div className="container-fluid">
+                        <div className="card-deck row">
+                        {pending}
+                        </div>
                     </div>
-                }  
+                }
+                {(student.length==0 && teacher.length==0 && pending.length==0) &&
+                <div className="container-fluid">
+                    <h1>Seems Like you aren't enrolled in any courses </h1>
+                    <h1>Find you course in the list below Maybe make this into an alert?</h1>
+                
+                 </div>
+                }
+                <h2>All courses</h2>
+                {courseArr.length >0 &&
+                    <div className="card-deck row">
+                    {allOther}
+                    </div>
+                }
             </div>
         
             

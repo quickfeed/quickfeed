@@ -33,7 +33,6 @@ const LandingPageLabTable = (crs: course) => {
                 // Use the index provided by the for loop if courseID provided == 0, else select the given course
                 let key = crs.courseID > 0 ? crs.courseID : Number(courseID)
                 let course = state.courses.find(course => course.getId() == key)  
-                console.log(courseID)
                 state.assignments[key]?.forEach(assignment => {
                     if(state.submissions[key]) {
                         // Submissions are indexed by the assignment order.

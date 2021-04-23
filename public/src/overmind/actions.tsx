@@ -174,6 +174,7 @@ export const getRepository: Action<void> = ({state, effects}) => {
 }
 
 export const loading: Action<void> = ({state}) => {
+    console.log("State has finished loading")
     state.isLoading = !state.isLoading
 }
 
@@ -182,8 +183,7 @@ export const getCourseSubmissions: Action<number> = ({state, effects}, courseID)
     let userSubmissions: Submission[] = []
     let groupSubmissions: Submission[] = []
     const groupID: number | undefined = state.enrollments.find(enrollment => enrollment.getCourseid() == courseID)?.getGroupid()
-
-
+    
     effects.grpcMan.getGroupSubmissions(courseID, groupID !== undefined ? groupID : -1)
     .then(res => {
         if (res.data) {
@@ -215,7 +215,6 @@ export const getCourseSubmissions: Action<number> = ({state, effects}, courseID)
             }
             if(submission==undefined){
                 submission= new Submission()
-                console.log(submission, "Here is a dummy submition")
                 state.submissions[courseID][assignment.getOrder() - 1] = submission
             }
         })
@@ -230,7 +229,7 @@ export const setActiveCourse: Action<number> = ({state}, courseID) => {
     }
 }
 
-export const enroll: Action<number> = ({state, effects}, courseID) => {
+export const enrollToCourse: Action<number> = ({state, effects}, courseID) => {
     effects.grpcMan.createEnrollment(courseID, state.user.id).then(res => {
         console.log(res.status)
     })
@@ -291,14 +290,13 @@ export const setupUser: Action<void, Promise<boolean>> = ({state, actions}) => {
             })
 
         }
-        
         return false
         
     })
 }
 
-/* START UTILITY ACTIONS */
 
+/* START UTILITY ACTIONS */
 /** Tries to get saved theme setting from localStorage, else sets theme to Light by default */
 export const setTheme: Action<void> = ({state}) => {
     let theme = window.localStorage.getItem("theme")
