@@ -14,23 +14,17 @@ interface MatchProps {
 
 const Course = (props: RouteComponentProps<MatchProps>) => {
     const { state, actions } = useOvermind()
-    const [enrollment, setEnrollment] = useState(new Enrollment())
     let courseID = Number(props.match.params.id)
 
 
     useEffect(() => {
-        courseID = Number(props.match.params.id)
-        let enrol = actions.getEnrollmentByCourseId(courseID)
-        // actions.setActiveCourse(courseID)
-        if (enrol !== null) {
-            setEnrollment(enrol)
-        }
+        
     }, [props])
 
     if (state.courses){
         return (
         <div className="box">
-            <h1>{enrollment.getCourse()?.getName()}</h1>
+            <h1>{state.enrollmentsByCourseId[courseID].getCourse()?.getName()}</h1>
             <div className="Links">
                 <a href={state.repositories[courseID][Repository.Type.USER]}>User Repository</a>
                 <a href={state.repositories[courseID][Repository.Type.GROUP]}>Group Repository</a>
