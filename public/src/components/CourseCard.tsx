@@ -49,9 +49,12 @@ const CourseCard = (props: CardProps) => {
                 </div>
                 
                 <div className="card-body">
-                    <h5 className="card-title">{props.course.getName()}</h5>
-                    <h5 className="card-title">{props.course.getYear()}/{props.course.getTag()}</h5>
+                    <h5 className="card-title">{props.course.getName()} - {props.course.getYear()}/{props.course.getTag()}</h5>
+                    { props.status === Enrollment.UserStatus.NONE ? 
+                    <div className="btn btn-primary" onClick={() => actions.enroll(props.course.getId())}>Enroll</div>
+                    :
                     <p className="card-text">placeholder, don't know what to put here</p>
+                    }
                 </div>
 
             </div>

@@ -23,24 +23,17 @@ const Courses = () => {
         actions.setActiveCourse(-1)
     })
     // TODO: UserCourses contains elements describing a course that a user has an enrollment in, regardless of status currently. Need to figure out what UserStatus.NONE is used for
-    
-    let crsArr:Course[] = []
-    function setcrsArr(arr:Course[]) {
-        crsArr=arr
-    }
     // push to seperate arrays, for layout purposes. Favorite - Student - Teacher - Pending
     function upDateArrays(){
-        let favorite: JSX.Element[] = []
-        let student: JSX.Element[] = []
-        let teacher: JSX.Element[] = []
-        let pending: JSX.Element[] = []
-        let allOther:    JSX.Element[] = []
-        let courseArr = state.courses
-        state.enrollments.map(enrol => {
-               
-            let course = courseArr.find(course => course.getId() == enrol.getCourseid())
-            if (course){
-                courseArr =courseArr.filter(item => item !== course)
+        let favorite:   JSX.Element[] = []
+        let student:    JSX.Element[] = []
+        let teacher:    JSX.Element[] = []
+        let pending:    JSX.Element[] = []
+        let crsArr:     JSX.Element[] = []
+        let enrolArr = state.enrollments
+        state.courses.map(course => {       
+            let enrol = enrolArr.find(enrol => course.getId() == enrol.getCourseid())
+            if (enrol){
                 if (enrol.getState()==3){
                     // add to favorite list.
                     favorite.push(
@@ -77,19 +70,16 @@ const Courses = () => {
         
                 }
                 
-                
                     
             }
-        })
-        // This is passed into the modal to enrol in new courses.
-        
-        courseArr.map((course) =>{
-            allOther.push(
-                <CourseCard status={0} course={course} enrollment={new Enrollment} />
-            )
+            else {
+                crsArr.push(
+                    <CourseCard key={course.getId()} course= {course} enrollment={new Enrollment} status={Enrollment.UserStatus.NONE}/>
+                )
+            }
         })
         
-        
+        // create enroll modal, to enroll to new courses.
         return (
             <div className="container-fluid">
                 {favorite.length >0 &&
@@ -119,16 +109,15 @@ const Courses = () => {
                     </div>
                 }
                 {(student.length==0 && teacher.length==0 && pending.length==0) &&
-                <div className="container-fluid">
-                    <h1>Seems Like you aren't enrolled in any courses </h1>
-                    <h1>Find you course in the list below Maybe make this into an alert?</h1>
-                
-                 </div>
+                    <div className="container-fluid">
+                        <h1>Seems Like you aren't enrolled in any courses </h1>
+                        <h1>Find you course in the list below Maybe make this into an alert?</h1>
+                    </div>
                 }
-                <h2>All courses</h2>
-                {courseArr.length >0 &&
+                <h2>All courses  // Enrol in a new Course</h2>
+                {crsArr.length >0 &&
                     <div className="card-deck row">
-                    {allOther}
+                    {crsArr}
                     </div>
                 }
             </div>
