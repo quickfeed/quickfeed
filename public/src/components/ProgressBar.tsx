@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import React from "react"
 import { useOvermind } from "../overmind"
+import { Submission } from "../proto/ag_pb"
 
 
-export const ProgressBar = (props: {courseID: number, assignmentID: number, type: string}) => {
+export const ProgressBar = (props: {courseID: number, assignmentID: number, submission?: Submission, type: string}) => {
     const { state } = useOvermind()
 
     let percentage = 0
@@ -27,6 +27,13 @@ export const ProgressBar = (props: {courseID: number, assignmentID: number, type
                 , opacity: 0.3 }}>
     
                 </div>
+        )
+    }
+    if(props.type === "lab") {
+        return (
+            <div className="progress">
+                <div className="progress-bar bg-success" role="progressbar" style={{width: props.submission?.getScore() + "%", transitionDelay: "0.5s"}} aria-valuenow={state.submissions[props.courseID][props.assignmentID]?.getScore()} aria-valuemin={0} aria-valuemax={100}>{props.submission?.getScore()}%</div>
+            </div>
         )
     }
     return (

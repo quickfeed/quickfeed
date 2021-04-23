@@ -2,6 +2,7 @@ import React, { useEffect } from "react"
 import { getBuildInfo, getScoreObjects, IScoreObjects } from "../Helpers"
 import { useOvermind } from "../overmind"
 import { state } from "../overmind/state"
+import { ProgressBar } from "./ProgressBar"
 
 interface lab {
     id: number
@@ -41,7 +42,10 @@ const LabResultTable = ({id, courseID}: lab) => {
                 const buildInfo = getBuildInfo(submission.getBuildinfo())
                 const scoreObjects = getScoreObjects(submission.getScoreobjects())
             return (
+            <React.Fragment>
+            <ProgressBar courseID={courseID} assignmentID={assignment.getId()} submission={submission} type={"lab"} />
             <table className="table table-curved">
+                
                 <thead>
                     <th>Lab information</th>
                 </thead>
@@ -59,9 +63,10 @@ const LabResultTable = ({id, courseID}: lab) => {
                 </tr>
                 {ListScoreObjects(scoreObjects)}
                 <tfoot>
-                    {submission.getScore()}%
+                    
                 </tfoot>
             </table>
+            </React.Fragment>
             )
         }
         return (<div></div>)
