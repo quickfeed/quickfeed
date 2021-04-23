@@ -364,7 +364,6 @@ export const updateSearch: Action<string> = ({state}, search) => {
 /** Initializes a student user with all required data */
 /** //TODO: Figure out how to await this monster  */
 export const setupUser: AsyncAction<void, boolean> = async ({state, actions}) => {
-    actions.loading()
     const check = await actions.getPerson()
     .then(async success => {
         console.log("Loading enrollments", success)

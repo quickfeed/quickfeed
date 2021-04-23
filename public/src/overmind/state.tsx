@@ -76,7 +76,7 @@ export const state: State = {
     assignments: {},
     repositories: {},
     theme: "light",
-    isLoading: false,
+    isLoading: true,
     activeCourse: -1,
     search: "",
     userSearch: derived((state: State) => {
