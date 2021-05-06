@@ -6,15 +6,14 @@ import NavBar from "./components/NavBar";
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import { useHistory } from 'react-router'
 import Profile from "./components/Profile";
-import Course from "./components/Course";
-import Lab from "./components/Lab";
+import CoursePage from "./components/CoursePage"
+
 import Courses from "./components/Courses";
-import Group from './components/Group';
+
 import Alert from './components/Alert';
-import Members from './components/Members';
+
 import Admin from './components/Admin';
-import Review from './components/Review';
-import Groups from './components/Groups';
+
 
 
 
@@ -77,7 +76,7 @@ const App = () => {
                                     <Route path="/" exact component={Home} />
                                     <Route path="/about" component={About} />
                                     <Route path="/profile" component={Profile} />
-                                    <Route path="/course/:id" component={Course} />
+                                    <Route path="/course/:id" component={CoursePage} />
                                     <Route path="/courses" exact component={Courses} />
                                     <Route path="/admin" component={Admin} />
                                 </Switch>
