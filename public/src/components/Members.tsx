@@ -2,7 +2,7 @@ import React from "react"
 import { useEffect, useState } from "react"
 import { RouteComponentProps } from "react-router-dom"
 import { useOvermind } from "../overmind"
-import { Enrollment } from "../proto/ag_pb"
+import { Enrollment } from "../../proto/ag_pb"
 
 
 export const Members = (props: RouteComponentProps<{id?: string | undefined}>) => {

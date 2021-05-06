@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 import { RouteComponentProps } from "react-router"
 import { useOvermind } from "../overmind"
 import { CourseGroup } from "../overmind/state"
-import { Enrollment, User } from "../proto/ag_pb"
+import { Enrollment, User } from "../../proto/ag_pb"
 
 
 export const Group = (props: RouteComponentProps<{id?: string | undefined}>) => {
@@ -53,16 +53,16 @@ export const Group = (props: RouteComponentProps<{id?: string | undefined}>) => 
 
 
     return(
-        <div className="container">
+        <div className="container box">
             
-            <div className='row '>
+            <div className="row">
                 <div className="card well col-md-offset-2">
                     <div className="card-header" style={{textAlign: "center"}}>Students</div>
                     <input onKeyUp={updateSearchState} placeholder={"Search"}></input>
                         <ul className="list-group list-group-flush">
                         {state.userSearch.map(user => {
                             return (
-                                <li key={user.getUserid()} className="list-group-item">{user.getUser()?.getName()} <i style={{float: "right"}} onClick={() => updateGroupUsers(user.getUser(), false, user.getId())}>+</i></li>
+                                <li key={user.getUserid()} className="list-group-item">{user.getUser()?.getName()} <i style={{float: "right", cursor:"pointer"}} onClick={() => updateGroupUsers(user.getUser(), false, user.getId())}>+</i></li>
                                 )
                         })} 
                         </ul>
@@ -78,7 +78,7 @@ export const Group = (props: RouteComponentProps<{id?: string | undefined}>) => 
                                     <img src={user.getAvatarurl()} style={{width: "23px", marginRight: "10px", borderRadius: "50%"}}>
                                     </img>
                                     {user.getName()} 
-                                    <i style={{float: "right"}} onClick={() => updateGroupUsers(user, true)}>-</i>
+                                    <i style={{float: "right",cursor:"pointer"}} onClick={() => updateGroupUsers(user, true)}>-</i>
                                 </li>
                                 )
                         })} 

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useOvermind } from "../overmind";
 import { Link } from 'react-router-dom'
 import NavBarLabs from "./NavBarLabs";
-import { Enrollment } from "../proto/ag_pb";
+import { Enrollment } from "../../proto/ag_pb";
 import NavBarTeacher from "./NavBarTeacher";
 
 
@@ -16,7 +16,7 @@ const NavBar = () => {
         if (state.user.id > 0) {
             return <li><div id="title"><a href="/logout">Log out</a></div></li>
         }
-        return <li><a href="/auth/github">Log in with<i className="fa fa-2x fa-github" id="github"></i></a></li>
+        return <li><a href="/auth/github" style={{textAlign:"center",paddingTop:"15px"}}>Log in with<i className="fa fa-2x fa-github" id="github"></i></a></li>
     }
 
     // Generates dropdown items related to Courses
@@ -80,7 +80,7 @@ const NavBar = () => {
                     <Link to="/profile">
                         
                         <div id="icon"><img src={state.user.avatarurl} id="avatar"></img></div>    
-                        <div id="title">{state.user.name}</div>
+                        <div id="title" className="overflow-ellipses">{state.user.name}</div>
                     </Link>
                 </li>
                     : ""}
@@ -97,7 +97,7 @@ const NavBar = () => {
                 </li>
 
                 <li key="theme">
-                    <span onClick={() => actions.changeTheme()}>
+                    <span onClick={() => actions.changeTheme()}style={{paddingTop:"15px"}}>
                         <i className={state.theme === "light" ? "icon fa fa-sun-o fa-lg" : "icon fa fa-moon-o fa-lg"} style={{color: "white"}}></i>
                     </span>
                 </li>

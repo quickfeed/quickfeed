@@ -39,9 +39,9 @@ import {
     Users,
     Void,
     Reviewers,
-} from "./proto/ag_pb";
-import { AutograderServiceClient } from "./proto/AgServiceClientPb";
-import { LoadCriteriaRequest } from './proto/ag_pb';
+} from "../proto/ag_pb";
+import { AutograderServiceClient } from "../proto/AgServiceClientPb";
+import { LoadCriteriaRequest } from '../proto/ag_pb';
 
 export interface IGrpcResponse<T> {
     status: Status;
@@ -238,6 +238,7 @@ export class GrpcManager {
 
     public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
         const request = new SubmissionsForCourseRequest();
+        request.setSkipbuildinfo(true)
         request.setCourseid(courseID);
         request.setType(type);
         return this.grpcSend<CourseSubmissions>(this.agService.getSubmissionsByCourse, request);

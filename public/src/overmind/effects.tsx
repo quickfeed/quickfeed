@@ -1,11 +1,10 @@
 import {Self, State, state} from "./state";
 
-import { AutograderServiceClient } from "../proto/AgServiceClientPb";
-// import { Void, User, Course, Submissions, SubmissionRequest, Enrollments, EnrollmentRequest, EnrollmentStatusRequest } from "../proto/ag_pb";
+import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
+// import { Void, User, Course, Submissions, SubmissionRequest, Enrollments, EnrollmentRequest, EnrollmentStatusRequest } from "../../proto/ag_pb";
 import * as grpcWeb from "grpc-web"
 import { GrpcManager } from "../GRPCManager";
 
-const AgService = new AutograderServiceClient('https://' + window.location.hostname, null, null)
 // Effects should contain all impure functions used to manage state.
 
 export const grpcMan = new GrpcManager()

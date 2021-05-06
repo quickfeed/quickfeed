@@ -1,7 +1,7 @@
 import { Action, AsyncAction } from "overmind";
 import { useActions } from ".";
 import { IGrpcResponse } from "../GRPCManager";
-import {  User, Enrollment, Assignment, Submission, Repository, Organization, Course, SubmissionsForCourseRequest } from "../proto/ag_pb";
+import {  User, Enrollment, Assignment, Submission, Repository, Organization, Course, SubmissionsForCourseRequest } from "../../proto/ag_pb";
 import { CourseGroup, state } from "./state";
 
 
