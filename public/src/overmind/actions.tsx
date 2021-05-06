@@ -1,7 +1,6 @@
 import { Action, AsyncAction } from "overmind";
-import { useActions } from ".";
 import { IGrpcResponse } from "../GRPCManager";
-import {  User, Enrollment, Assignment, Submission, Repository, Organization, Course, SubmissionsForCourseRequest } from "../proto/ag_pb";
+import {  User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest } from "../proto/ag_pb";
 import { CourseGroup, state } from "./state";
 
 
@@ -14,10 +13,43 @@ export const getUser: AsyncAction<void, boolean> = async ({state, effects}) => {
             return false
         }
         state.user = user
-        await effects.grpcMan.setUserid(state.user.AccessToken)
+        effects.grpcMan.setUserid(state.user.Token)
+        console.log(state.user, "hallais")
         return true
     })
     
+}
+
+export const getHash: Action<{courseID: number, assignmentID: number}> = ({state, actions, effects}, value) => {
+    const submission = state.submissions[value.courseID].find(submission => submission.getAssignmentid() === value.assignmentID)
+    if (submission) {
+        effects.grpcMan.getSubmissionCommitHash(submission.getId()).then(res => {
+            if (res.data) {
+                if (submission.getCommithash() !== res.data.getCommithash()) {
+                    actions.labTest(value.courseID)
+                }
+            }
+        })
+    }
+}
+
+export const sHash: Action<{courseID: number, assignmentID: number}> = ({state, actions, effects}, value) => {
+    const submission = state.submissions[value.courseID].find(submission => submission.getAssignmentid() === value.assignmentID)
+    if (submission) {
+        effects.grpcMan.streamSubmissionCommitHash(submission.getId()).on('data', (res) =>
+            console.log(res)
+        )
+        
+    }
+}
+
+export const gas: Action<number> = ({state, actions, effects}, courseID) => {
+    const groupID = state.enrollmentsByCourseId[courseID].getGroupid()
+    effects.grpcMan.getAllSubmissions(courseID, state.user.id, groupID).then(res => {
+        if (res.data) {
+            console.log(res.data.getSubmissionsList())
+        }
+    })
 }
 
 export const getPerson: AsyncAction<void, boolean> = async ({ state, effects }) => {
@@ -28,7 +60,8 @@ export const getPerson: AsyncAction<void, boolean> = async ({ state, effects }) 
     }
     console.log("Fetched user")
     state.user = user
-    effects.grpcMan.setUserid(state.user.AccessToken)
+    effects.grpcMan.setUserid(state.user.Token)
+    console.log(state.user, "hallais")
     return true
 }
 
@@ -149,6 +182,10 @@ export const setEnrollmentState: AsyncAction<Enrollment> = async ({state, effect
 
 }
 
+export const test: Action<void, Enrollment.AsObject> = ({state}) => {
+    return state.enrollmentsByCourseId[1].toObject()
+}
+
 export const updateEnrollment: Action<{enrollment: Enrollment, status: Enrollment.UserStatus}> = ({state, actions, effects}, update) => {
     let e = new Enrollment()
     e.setId(update.enrollment.getId())
@@ -206,7 +243,7 @@ export const getRepository: AsyncAction<void> = async ({state, effects}) => {
 
 
 export const updateCourseGroup: Action<CourseGroup> = ({state}, cg) => {
-    state.cg = cg
+    state.courseGroup = cg
 }
 
 export const alertHandler: Action<IGrpcResponse<any>> = ({state}, response) => {
@@ -215,12 +252,19 @@ export const alertHandler: Action<IGrpcResponse<any>> = ({state}, response) => {
     }
 }
 
+export const getGroupByUserAndCourse: AsyncAction<number> = async ({state, effects}, courseID) => {
+    const result = await effects.grpcMan.getGroupByUserAndCourse(courseID, state.user.id)
+    if (result.data) {
+        state.userGroup[courseID] = result.data
+    }
+}
+
 export const createGroup: Action<number> = ({state, actions, effects}, courseID) => {
     let users: number[] = []
-    state.cg.users.forEach(user => {
+    state.courseGroup.users.forEach(user => {
         users.push(user.getId())
     })
-    effects.grpcMan.createGroup(courseID, state.cg.groupName, users)
+    effects.grpcMan.createGroup(courseID, state.courseGroup.groupName, users)
     .then(res => {
         if (res.data) {
             console.log("Group Creation Success", res.data)
@@ -275,10 +319,33 @@ export const loading: Action<void> = ({state}) => {
     state.isLoading = !state.isLoading
 }
 
-export const getAllCourseSubmissions: AsyncAction<number> = async ({state, effects}, courseID) => {
-    await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL).then(res => {
+export const labTest: Action<number> = ({state, effects}, submissionID) => {
+        effects.grpcMan.getSubmissions(1, state.user.id).then(res => {
+            if (res.data) {
+                console.log("Checking ...")
+                let subs = res.data.getSubmissionsList()
+                subs.forEach(sub => {
+                    let ass = state.assignments[1].find(a => a.getId() === sub.getAssignmentid())
+                    if (ass) {
+                        if (state.submissions[1][ass.getOrder() - 1].getCommithash() !== sub.getCommithash()) {
+                            state.submissions[1][ass.getOrder() - 1] = sub
+                        }
+                        
+                    }
+                })
+            }
+        })
+
+
+
+}
+
+export const getAllCourseSubmissions: Action<number> = ({state, effects}, courseID) => {
+    state.courseSubmissions[courseID] = []
+    effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL).then(res => {
         if(res.data) {
-            console.log(res.data)
+            state.courseSubmissions[courseID] = res.data.getLinksList()
+            console.log(state.courseSubmissions[courseID])
         }
         else {
             console.log("FAIL")
@@ -328,23 +395,28 @@ export const getCourseSubmissions: AsyncAction<number> = async ({state, effects}
                 submission = userSubmissions.find(submission => submission.getAssignmentid() == assignment.getId())
             }
             if(submission) {
+                console.log(submission.getReviewsList())
                 state.submissions[courseID][assignment.getOrder() - 1] = submission
             }
-            if(submission==undefined){
-                submission= new Submission()
+            if(submission == undefined){
+                submission = new Submission()
                 state.submissions[courseID][assignment.getOrder() - 1] = submission
             }
         })
         console.log("Fetched submission")
+        effects.grpcMan.getReviewers
     })
 }
 
 export const setActiveCourse: Action<number> = ({state}, courseID) => {
-    if(state.activeCourse === courseID) {
-        state.activeCourse = -1
-    } else {
+
         state.activeCourse = courseID
-    }
+
+    console.log(state.activeCourse)
+}
+
+export const setActiveLab: Action<number> = ({state}, assignmentID) => {
+    state.activeLab = assignmentID
 }
 
 export const enroll: AsyncAction<number> = async ({state, effects}, courseID) => {
