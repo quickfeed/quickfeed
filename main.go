@@ -121,11 +121,10 @@ func main() {
 	}
 
 	//  Experimental
-	accessControl := AccessControl{db}
+	accessControl := AccessControl{}
 	opt := grpc.UnaryInterceptor(accessControl.UserVerifier)
-	//opt := grpc.UnaryInterceptor(pb.Interceptor(logger))
-	grpcServer := grpc.NewServer(opt)
 
+	grpcServer := grpc.NewServer(opt)
 	// Create a HTTP server for prometheus.
 	httpServer := &http.Server{
 		Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
@@ -145,25 +144,23 @@ func main() {
 
 // TODO: Move somewhere else that makes sense
 type AccessControl struct {
-	db *database.GormDB
 }
 
-// UserVerifier looks up a user (passed by AccessToken) in the database, and translates it into a User ID
+// UserVerifier looks up a user (passed by Session Token) in a (currently) public map, and translates it into a User ID
 // Modifies the context to include the User ID to be passed along to the actual gRPC method.
 func (pc *AccessControl) UserVerifier(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (response interface{}, err error) {
 	meta, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, errors.New("could not grab metadata from context")
+		return nil, errors.New("Could not grab metadata from context")
 	}
 
-	user, err := pc.db.GetUserByAccessToken(meta.Get("user")[0])
-	if err != nil {
-		return nil, errors.New("could not associate token with a user")
+	token := meta.Get("user")[0]
+	if web.TokenToUserMap[token] == 0 {
+		return nil, errors.New("Could not associate token with a user")
 	}
 
-	meta.Set("user", strconv.FormatUint(user, 10))
+	meta.Set("user", strconv.FormatUint(web.TokenToUserMap[token], 10))
+	newCtx := metadata.NewOutgoingContext(ctx, meta)
 
-	edited := metadata.NewOutgoingContext(ctx, meta)
-
-	return handler(edited, req)
+	return handler(newCtx, req)
 }

@@ -11,21 +11,22 @@ import (
 
 // JSONuser is a model to improve marshalling of user structure for authentication
 type JSONuser struct {
-	ID          uint64 `json:"id"`
-	IsAdmin     *bool  `json:"isadmin"`
-	Name        string `json:"name"`
-	StudentID   string `json:"studentid"`
-	Email       string `json:"email"`
-	AvatarURL   string `json:"avatarurl"`
-	AccessToken string `json:token`
+	ID        uint64 `json:"id"`
+	IsAdmin   *bool  `json:"isadmin"`
+	Name      string `json:"name"`
+	StudentID string `json:"studentid"`
+	Email     string `json:"email"`
+	AvatarURL string `json:"avatarurl"`
+	Token     string `json:sessiontoken`
 }
+
+var TokenToUserMap = make(map[string]uint64)
 
 // GetSelf redirects to GetUser with the current user's id.
 func GetSelf(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		usr := c.Get("user").(*pb.User)
-
 		// defer closing the http request body
 		defer c.Request().Body.Close()
 
@@ -36,7 +37,23 @@ func GetSelf(db database.Database) echo.HandlerFunc {
 			}
 			return err
 		}
-		jsonUser := JSONuser{ID: user.ID, IsAdmin: &user.IsAdmin, Name: user.Name, StudentID: user.StudentID, Email: user.Email, AvatarURL: user.AvatarURL, AccessToken: user.RemoteIdentities[0].AccessToken}
+		token, err := c.Cookie("session")
+		if err != nil {
+			return err
+		}
+
+		// Check if user exists in map with an old session token
+		if TokenToUserMap[token.Value] != user.GetID() {
+			// Delete key and value pair if ID has an old session token
+			for key, id := range TokenToUserMap {
+				if id == user.GetID() {
+					delete(TokenToUserMap, key)
+				}
+			}
+			TokenToUserMap[token.Value] = user.GetID()
+		}
+
+		jsonUser := JSONuser{ID: user.ID, IsAdmin: &user.IsAdmin, Name: user.Name, StudentID: user.StudentID, Email: user.Email, AvatarURL: user.AvatarURL, Token: token.Value}
 		return c.JSONPretty(http.StatusFound, jsonUser, "\t")
 	}
 }
