@@ -81,7 +81,7 @@ const Courses = () => {
         
         // create enroll modal, to enroll to new courses.
         return (
-            <div className="container-fluid">
+            <div className="box container-fluid">
                 {favorite.length >0 &&
                 <div className="container-fluid">
                     <h1>Favorites</h1>
@@ -114,11 +114,13 @@ const Courses = () => {
                         <h1>Find you course in the list below Maybe make this into an alert?</h1>
                     </div>
                 }
-                <h2>All courses  // Enrol in a new Course</h2>
                 {crsArr.length >0 &&
+                    <React.Fragment>
+                    <h2>Available Courses</h2>
                     <div className="card-deck row">
                     {crsArr}
                     </div>
+                    </React.Fragment>
                 }
             </div>
         
