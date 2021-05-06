@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useOvermind } from "../overmind";
-import { Link } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import NavBarLabs from "./NavBarLabs";
 import { Enrollment } from "../proto/ag_pb";
 import NavBarTeacher from "./NavBarTeacher";
@@ -9,10 +9,18 @@ import NavBarTeacher from "./NavBarTeacher";
 
 const NavBar = () => {
     const { state, actions } = useOvermind() 
+    const history = useHistory()
 
-    const [active, setActive] = useState(false)
+    const [active, setActive] = useState(0)
+    const [showCourses, setShowCourses] = useState(false)
+    useEffect(() => {
+        if (state.activeCourse > 0) {
+            setActive(state.activeCourse)
+            setShowCourses(false)
+        }
+    }, [state.activeCourse])
 
-    const checkUserLoggedIn = () => {
+    const LogInButton = () => {
         if (state.user.id > 0) {
             return <li><div id="title"><a href="/logout">Log out</a></div></li>
         }
@@ -22,17 +30,17 @@ const NavBar = () => {
     // Generates dropdown items related to Courses
     const CourseItems = (): JSX.Element[] => {
         let links: JSX.Element[] = []
-
+        console.log(state.activeCourse)
             
-            links.push(
+        links.push(
             <div>
-                <li key={0} onClick={() => { setActive(!active); actions.setActiveCourse(-1);}}>
+                <li key={0} onClick={() => { setShowCourses(!showCourses); actions.setActiveCourse(-1)}}>
                     <div id="title">
                             Courses &nbsp;&nbsp;
-                        <i className={active ? "icon fa fa-caret-down fa-lg" : "icon fa fa-caret-down fa-rotate-90 fa-lg"}></i>
+                        <i className={showCourses ? "icon fa fa-caret-down fa-lg" : "icon fa fa-caret-down fa-rotate-90 fa-lg"}></i>
                     </div>
                 </li>
-                <li className={active ? "active" : "inactive"}>
+                <li className={showCourses ? "active" : "inactive"}>
                     <div id="title">
                         <Link to="/courses">
                             View all courses
@@ -45,19 +53,17 @@ const NavBar = () => {
             state.enrollments.map((enrollment) =>{
                 if (enrollment.getStatus() >= 2 && enrollment.getState() === Enrollment.DisplayState.FAVORITE) {
                     links.push(
-                        <div>
-                            <li key={enrollment.getCourseid()} className={active ? "active" : "inactive"} onClick={() => actions.setActiveCourse(enrollment.getCourseid())}>
+                        <React.Fragment>
+                            <li key={enrollment.getCourseid()} className={showCourses || active === enrollment.getCourseid()  ? "active" : "inactive"}  onClick={() => {history.push(`/course/` + enrollment.getCourseid()); setShowCourses(false)}}>
                                 <div id="title">
-                                    <Link to={`/course/` + enrollment.getCourseid()}>
                                         {enrollment.getCourse()?.getCode()}
-                                    </Link>
                                 </div> 
                             </li>
-                            <div className={active ? "activelabs" : "inactive"}>
+                            <div className={ state.activeCourse === enrollment.getCourseid()  ? "activelabs" : "inactive"}>
                                 {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? <NavBarLabs /> : ""}
                                 {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.TEACHER ? <NavBarTeacher  courseID={enrollment.getCourseid()}/> : ""}
                             </div>
-                        </div>
+                        </React.Fragment>
                     )
                 }
             })
@@ -75,33 +81,26 @@ const NavBar = () => {
                 </li>
                 
             
-                {state.user.id > 0 ? 
-                <li key="profile">
-                    <Link to="/profile">
-                        
-                        <div id="icon"><img src={state.user.avatarurl} id="avatar"></img></div>    
-                        <div id="title">{state.user.name}</div>
-                    </Link>
-                </li>
-                    : ""}
+                
 
                 
                 
                 {state.user.id > 0 ? CourseItems() : ""}
+
+                <div className="SidebarFooter">
+                
                 <li key="about">
                     <div id="title">
-                        <Link to="/info">
+                        <Link to="/about">
                             About
                         </Link>
                     </div>
                 </li>
 
-                <li key="theme">
-                    <span onClick={() => actions.changeTheme()}>
-                        <i className={state.theme === "light" ? "icon fa fa-sun-o fa-lg" : "icon fa fa-moon-o fa-lg"} style={{color: "white"}}></i>
-                    </span>
+                <li key="theme" onClick={() => actions.changeTheme()}>
+                        <i className={state.theme === "light" ? "icon fa fa-sun-o fa-lg fa-flip-horizontal" : "icon fa fa-moon-o fa-lg flip-horizontal"} style={{color: "white"}}></i>  
                 </li>
-                {checkUserLoggedIn()}
+                {LogInButton()}
 
                 { state.user.isadmin ? 
                     <li key="admin">
@@ -113,6 +112,14 @@ const NavBar = () => {
                     </li>
                     : ""
                 }
+
+                {state.user.id > 0 ? 
+                    <li key="profile" onClick={() => history.push("/profile")}>
+                        <div id="title"><img src={state.user.avatarurl} id="avatar"></img></div>    
+                    </li>
+                : ""}
+
+                </div>
             </ul>
         </nav>
     )
