@@ -1,7 +1,6 @@
 import React, { useEffect } from "react"
 import { getBuildInfo, getScoreObjects, IScoreObjects } from "../Helpers"
 import { useOvermind } from "../overmind"
-import { state } from "../overmind/state"
 import { ProgressBar } from "./ProgressBar"
 
 interface lab {
@@ -10,7 +9,7 @@ interface lab {
 }
 
 const LabResultTable = ({id, courseID}: lab) => {
-    const {state} = useOvermind()
+    const {state: {assignments, submissions}} = useOvermind()
 
 
     const ListScoreObjects = (scoreObjects: IScoreObjects[]) => {
@@ -33,40 +32,42 @@ const LabResultTable = ({id, courseID}: lab) => {
 
     const LabResult = (): JSX.Element => {
 
+        let submission = submissions[courseID]?.find(s => s.getAssignmentid() === id)
+        let assignment = assignments[courseID]?.find(a => a.getId() == id)
+        
+        if (submission && assignment) {
+            const buildInfo = getBuildInfo(submission.getBuildinfo())
+            const scoreObjects = getScoreObjects(submission.getScoreobjects())
             
-            let submission = state.submissions[courseID]?.find(s => s.getAssignmentid() === id)
-            let assignment = state.assignments[courseID]?.find(a => a.getId() == id)
-            console.log(state.submissions[courseID])
-            if (submission && assignment) {
-                console.log("Found")
-                const buildInfo = getBuildInfo(submission.getBuildinfo())
-                const scoreObjects = getScoreObjects(submission.getScoreobjects())
             return (
-            <React.Fragment>
-            <ProgressBar courseID={courseID} assignmentID={assignment.getId()} submission={submission} type={"lab"} />
-            <table className="table table-curved">
-                
-                <thead>
-                    <th>Lab information</th>
-                </thead>
-                <tr className="clickable-row">
-                    <th>Status</th>
-                    <td>{submission.getStatus()}</td>
-                </tr>
-                <tr>
-                    <th>Delivered</th>
-                    <td>{buildInfo.builddate}</td>
-                </tr>
-                <tr>
-                    <th>Deadline</th>
-                    <td>{assignment.getDeadline()}</td>
-                </tr>
-                {ListScoreObjects(scoreObjects)}
-                <tfoot>
+                <div className="container" style={{paddingBottom: "20px"}}>
+                    <ProgressBar courseID={courseID} assignmentID={assignment.getId()} submission={submission} type={"lab"} />
+                    <table className="table table-curved">
+                        <thead>
+                            <th colSpan={3}>Lab information</th>
+                        </thead>
+                        <tr className="clickable-row">
+                            <th colSpan={2}>Status</th>
+                            <td>{submission.getStatus()}</td>
+                        </tr>
+                        <tr>
+                            <th colSpan={2}>Delivered</th>
+                            <td>{buildInfo.builddate}</td>
+                        </tr>
+                        <tr>
+                            <th colSpan={2}>Approved</th>
+                            <td>{submission.getApproveddate()}</td>
+                        </tr>
+                        <tr>
+                            <th colSpan={2}>Deadline</th>
+                            <td>{assignment.getDeadline()}</td>
+                        </tr>
+                        {ListScoreObjects(scoreObjects)}
+                    <tfoot>
                     
-                </tfoot>
-            </table>
-            </React.Fragment>
+                    </tfoot>
+                </table>
+            </div>
             )
         }
         return (<div></div>)
