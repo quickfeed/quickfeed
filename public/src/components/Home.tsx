@@ -1,31 +1,20 @@
-import React, {useEffect} from "react";
-import { useOvermind, useState } from "../overmind";
-import { Link } from "react-router-dom";
-import { getFormattedDeadline } from "../Helpers";
-import LandingPageLabTable from "./LandingPageLabTable"
-import { Assignment, Repository } from "../proto/ag_pb";
+import React from "react";
+import { useOvermind } from "../overmind";
+import SubmissionsTable from "./SubmissionsTable"
 
 
-
+/* Dashboard for a signed in user. */
 const Home = () => {
-    const { state } = useOvermind()
-    
-    useEffect(() => {
-    }, [])
-    
+    const { state: {user} } = useOvermind()
 
     return(
-        <div className='box'>
-                
-            {state.user.id > 0 &&
+        <div className='box'>       
             <div>
-                <h1>Welcome, {state.user.name}!</h1>
+                <h1>Welcome, {user.name}!</h1>
             </div>
-            }
-            <LandingPageLabTable courseID={0}/>           
+            <SubmissionsTable courseID={0}/>           
         </div>
     )
 }
-
 
 export default Home
