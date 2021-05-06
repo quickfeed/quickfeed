@@ -2,7 +2,7 @@ import  React from 'react'
 import { useOvermind } from "../overmind";
 
 
-const Info = () => {
+const About = () => {
     const { state } = useOvermind()
 
     return (
@@ -194,4 +194,4 @@ const Info = () => {
     )
 }
 
-export default Info
+export default About
