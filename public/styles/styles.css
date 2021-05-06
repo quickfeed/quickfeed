@@ -36,6 +36,13 @@
     cursor: pointer;
 }
 
+.SidebarFooter {
+    position: absolute;
+    bottom: 0;
+    padding: 0;
+    width: 100%;
+}
+
 .SidebarList li a { 
     width: 100%;
     height: 100%;
