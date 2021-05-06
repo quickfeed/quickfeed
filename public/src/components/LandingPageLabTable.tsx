@@ -1,15 +1,9 @@
 import React, { useEffect } from "react";
 import { useHistory } from "react-router";
-import { getFormattedDeadline, layoutTime, timeFormatter } from "../Helpers";
+import { getFormattedDeadline, layoutTime, SubmissionStatus, timeFormatter } from "../Helpers";
 import { useOvermind, useReaction } from "../overmind";
-import { Submission } from "../proto/ag_pb";
+import { Submission } from "../../proto/ag_pb";
 
-const Status = {
-    0: "NONE",
-    1: "APPROVED",
-    2: "REJECTED",
-    3: "REVISION",
-}
 
 interface course {
     courseID: number
@@ -27,8 +21,7 @@ const LandingPageLabTable = (crs: course) => {
 
     const MakeLabTable = (): JSX.Element[] => {
         let table: JSX.Element[] = []
-        let submission: Submission | undefined = new Submission().setScore(0)
-        let timeNow = Date.now()
+        let submission: Submission = new Submission()
             for (const courseID in state.assignments) {
                 // Use the index provided by the for loop if courseID provided == 0, else select the given course
                 let key = crs.courseID > 0 ? crs.courseID : Number(courseID)
@@ -38,23 +31,28 @@ const LandingPageLabTable = (crs: course) => {
                         // Submissions are indexed by the assignment order.
                         submission = state.submissions[key][assignment.getOrder() - 1]
                         if (submission===undefined){submission = new Submission()}
-                    if(submission){
-                        const timeofDeadline = new Date(assignment.getDeadline())
-                        let time2Deadline = timeFormatter(timeofDeadline.getTime(),state.timeNow)
-                        //Rewrite this to hide, this who are approved. if submission.getStatus() = 1 -> hide it.
-                        table.push(
-                            <tr key={assignment.getId()} className={"clickable-row " + time2Deadline[1]} onClick={()=>redirectToLab(assignment.getCourseid(),assignment.getId())}>
-                                {crs.courseID==0 &&
-                                <td>{course?.getCode()}</td>
-                                }
-                                <td>{assignment.getName()}</td>
-                                <td>{submission.getScore()} / 100</td>
-                                <td>{getFormattedDeadline(assignment.getDeadline())}</td>
-                                <td>{time2Deadline[0] ? time2Deadline[2]: '--'}</td>
-                                <td className={Status[submission.getStatus()]}>{(assignment.getAutoapprove()==false && submission.getScore()>= assignment.getScorelimit()) ? "Awating approval":(assignment.getAutoapprove()==true && submission.getScore()>= assignment.getScorelimit())? "Approved(Auto approve)(shouldn't be in final version)":"Score not high enough"}</td>
-                                <td>{assignment.getIsgrouplab() ? "Yes": "No"}</td>
-                            </tr>
-                        )}
+                        if(submission.getStatus()!==1){
+                            const timeofDeadline = new Date(assignment.getDeadline())
+                            let time2Deadline = timeFormatter(timeofDeadline.getTime(),state.timeNow)
+                            if(time2Deadline[3] >3 && (submission.getScore() >= assignment.getScorelimit() &&(submission.getStatus()<1))){
+                                time2Deadline[1]= "table-success"
+                            }
+                            if(time2Deadline[0]){
+                                table.push(
+                                    <tr key={assignment.getId()} className={"clickable-row " + time2Deadline[1]} onClick={()=>redirectToLab(assignment.getCourseid(),assignment.getId())}>
+                                        {crs.courseID==0 &&
+                                        <th scope="row">{course?.getCode()}</th>
+                                        }
+                                        <td>{assignment.getName()}</td>
+                                        <td>{submission.getScore()} / 100</td>
+                                        <td>{getFormattedDeadline(assignment.getDeadline())}</td>
+                                        <td>{time2Deadline[0] ? time2Deadline[2]: '--'}</td>
+                                        <td className={SubmissionStatus[submission.getStatus()]}>{(assignment.getAutoapprove()==false && submission.getScore()>= assignment.getScorelimit()) ? "Awating approval":(assignment.getAutoapprove()==true && submission.getScore()>= assignment.getScorelimit() && submission.getStatus()<1)? "Awaiting approval":(submission.getScore()>=assignment.getScorelimit()? SubmissionStatus[submission.getStatus()] :"Score not high enough")}</td>
+                                        <td>{assignment.getIsgrouplab() ? "Yes": "No"}</td>
+                                    </tr>
+                                )
+                            }
+                        }
                     }
                 })
 
@@ -72,16 +70,16 @@ const LandingPageLabTable = (crs: course) => {
     
     return (
         <div>
-            <table className="table table-curved" id="LandingPageTable">
-                <thead>
+            <table className="table rounded-lg table-bordered table-hover" id="LandingPageTable">
+                <thead >
                     <tr>
-                        {crs.courseID !== 0 ? "" : <th>Course</th>}
-                        <th>Assignment</th>
-                        <th>Progress</th>
-                        <th>Deadline</th>
-                        <th>Due in</th>
-                        <th>Status</th>
-                        <th>Grouplab</th>
+                        {crs.courseID !== 0 ? null : <th scope="col">Course</th>}
+                        <th scope="col">Assignment</th>
+                        <th scope="col">Progress</th>
+                        <th scope="col">Deadline</th>
+                        <th scope="col">Due in</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Grouplab</th>
                     </tr>
                 </thead>
                 <tbody>

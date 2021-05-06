@@ -2,7 +2,7 @@ import React from "react"
 import { Link } from "react-router-dom"
 import { useOvermind } from "../overmind"
 import { state } from "../overmind/state"
-import { Enrollment } from "../proto/ag_pb"
+import { Enrollment } from "../../proto/ag_pb"
 
 
 

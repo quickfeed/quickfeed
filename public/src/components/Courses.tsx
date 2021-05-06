@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { useOvermind } from "../overmind"
-import { Course, Enrollment } from "../proto/ag_pb"
+import { Course, Enrollment } from "../../proto/ag_pb"
 import CourseCard from "./CourseCard"
 
 
@@ -84,8 +84,8 @@ const Courses = () => {
             <div className="container-fluid">
                 {favorite.length >0 &&
                 <div className="container-fluid">
-                    <h1>Favorites</h1>
-                    <div className="card-deck row favorite-row">
+                    <h2>Favorites</h2>
+                    <div className="card-deck course-card-row favorite-row">
                         {favorite}
                         
                     </div>
@@ -94,8 +94,8 @@ const Courses = () => {
                     
                 {(student.length>0 || teacher.length>0) &&
                     <div className="container-fluid">
-                        <h1>My Courses</h1>
-                        <div className="card-deck row">
+                        <h2>My Courses</h2>
+                        <div className="card-deck course-card-row">
                             {teacher}
                             {student}
                         </div>
@@ -103,12 +103,15 @@ const Courses = () => {
                 }
                 {pending.length>0 &&
                     <div className="container-fluid">
-                        <div className="card-deck row">
+                        {(student.length==0 && teacher.length==0) &&
+                            <h2>My Courses</h2>
+                        }
+                        <div className="card-deck">
                         {pending}
                         </div>
                     </div>
                 }
-                {(student.length==0 && teacher.length==0 && pending.length==0) &&
+                {(student.length==0 && teacher.length==0 && pending.length==0 && favorite.length==0) &&
                     <div className="container-fluid">
                         <h1>Seems Like you aren't enrolled in any courses </h1>
                         <h1>Find you course in the list below Maybe make this into an alert?</h1>
@@ -116,7 +119,7 @@ const Courses = () => {
                 }
                 <h2>All courses  // Enrol in a new Course</h2>
                 {crsArr.length >0 &&
-                    <div className="card-deck row">
+                    <div className="card-deck course-card-row">
                     {crsArr}
                     </div>
                 }
