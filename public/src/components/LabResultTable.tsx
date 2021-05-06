@@ -43,7 +43,7 @@ const LabResultTable = ({id, courseID}: lab) => {
                 const scoreObjects = getScoreObjects(submission.getScoreobjects())
             return (
             <React.Fragment>
-            <ProgressBar courseID={courseID} assignmentID={assignment.getId()} submission={submission} type={"lab"} />
+            <ProgressBar courseID={courseID} assignmentIndex={assignment.getOrder()-1} submission={submission} type={"lab"} />
             <table className="table table-curved">
                 
                 <thead>
