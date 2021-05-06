@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 import { useOvermind } from "../overmind"
 
-
+/* This component displays all alerts found in state.alerts */
 export const Alert = () => {
     const { state, actions } = useOvermind()
     useEffect(() => {

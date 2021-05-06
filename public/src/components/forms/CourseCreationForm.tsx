@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react"
-import { useOvermind } from "../overmind"
-import { Course, Enrollment } from "../proto/ag_pb"
-import CourseCard from "./CourseCard"
+import { useOvermind } from "../../overmind"
+import { Course, Enrollment } from "../../proto/ag_pb"
+import CourseCard from "../CourseCard"
 
 
 
 
-export const CreateCourse = () => {
+export const CourseCreationForm = () => {
     const {actions} = useOvermind()
     const [orgName, setOrgName] = useState("")
-    const [course, setCourse] = useState(new Course())
+    const [course, setCourse] = useState(new Course)
 
 
     const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
@@ -60,4 +60,4 @@ export const CreateCourse = () => {
     )
 }
 
-export default CreateCourse
+export default CourseCreationForm

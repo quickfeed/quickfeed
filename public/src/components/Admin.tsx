@@ -1,14 +1,12 @@
 import React from "react"
 import { Redirect } from "react-router"
 import { useOvermind } from "../overmind"
-import CreateCourse from "./CreateCourse"
-
+import CourseCreationForm from "./forms/CourseCreationForm"
 
 
 
 export const Admin = () => {
-    const {state, actions, effects} = useOvermind()
-
+    const {state} = useOvermind()
 
     // Ideas: Statistics, Create Course, Promote Users
 
@@ -16,7 +14,7 @@ export const Admin = () => {
         return (
             
             <div className="box">
-                <CreateCourse></CreateCourse>
+                <CourseCreationForm></CourseCreationForm>
             </div>
         )
     }
