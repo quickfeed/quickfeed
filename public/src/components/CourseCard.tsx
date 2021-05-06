@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useHistory } from 'react-router';
 import { EnrollmentStatus } from '../Helpers';
 import { useActions } from '../overmind';
 import { Course, Enrollment } from '../proto/ag_pb';
@@ -21,6 +22,8 @@ const cardcolor = [
 
 const CourseCard = (props: CardProps) => {
     const actions = useActions()
+    const history = useHistory()
+
     if(props.status===Enrollment.DisplayState.UNSET){
         return(
             <div className="col-sm-4">
@@ -32,7 +35,7 @@ const CourseCard = (props: CardProps) => {
                     <div className="card-body">
                         <h5 className="card-title">{props.course.getName()}</h5>
                         <h5 className="card-title">{props.course.getYear()}/{props.course.getTag()}</h5>
-                        <p className="card-text">enroll button here.</p>
+                        <div className="btn btn-primary" onClick={() => actions.enroll(props.course.getId())}>Enroll</div>
                     </div>
     
                 </div>
@@ -48,7 +51,7 @@ const CourseCard = (props: CardProps) => {
                     <p className="float-sm-right">{props.enrollment ? EnrollmentStatus[props.enrollment?.getStatus()]  : ''}</p>
                 </div>
                 
-                <div className="card-body">
+                <div className="card-body" onClick={() => history.push(`/course/${props.course.getId()}`)}>
                     <h5 className="card-title">{props.course.getName()} - {props.course.getYear()}/{props.course.getTag()}</h5>
                     { props.status === Enrollment.UserStatus.NONE ? 
                     <div className="btn btn-primary" onClick={() => actions.enroll(props.course.getId())}>Enroll</div>
