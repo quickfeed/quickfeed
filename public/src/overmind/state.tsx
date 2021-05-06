@@ -1,5 +1,5 @@
 import { derived } from "overmind";
-import { Assignment, Course, Enrollment, Group, Submission, User } from "../proto/ag_pb";
+import { Assignment, Course, Enrollment, EnrollmentLink, Group, Submission, User } from "../proto/ag_pb";
 
 
 // TODO Style for members of Self should be camelCase. The JSON from /api/v1/user does not return an object with camelCase. Rewrite return on backend to comply with camelCase
@@ -11,7 +11,7 @@ export interface Self {
     isadmin: boolean;
     name: string;
     studentid: number;
-    AccessToken: string;
+    Token: string;
 }
 
 export interface CourseGroup {
@@ -20,7 +20,10 @@ export interface CourseGroup {
     groupName: string
 }
 
+type EnrollmentsByCourse = {[courseid: number]: Enrollment}
+
 export type State = {
+    /*  */
     user: Self,
     users: Enrollment[],
     enrollments: Enrollment[],
@@ -29,11 +32,14 @@ export type State = {
     }
     courses: Course[],
     userCourses: Course[],
+    userGroup: {
+        [courseid: number]: Group
+    }
     submissions:{
         [courseid:number]:Submission[]
     },
     courseSubmissions:{
-        [courseid:number]:Submission[]
+        [courseid:number]: EnrollmentLink[]
     }
     assignments: {
         [courseid:number]:Assignment[]
@@ -44,10 +50,11 @@ export type State = {
     theme: string,
     isLoading: boolean,
     activeCourse: number,
+    activeLab: number,
     search: string,
     userSearch: Enrollment[],
     timeNow: Date,
-    cg: CourseGroup,
+    courseGroup: CourseGroup,
     alerts: string[],
     courseEnrollments: {
         [courseid: number]: Enrollment[]
@@ -57,37 +64,43 @@ export type State = {
     }
 }
 
+/* Initial State */
+/* To add to state, extend the State type and initialize the variable below */
 export const state: State = {
-    user: {avatarurl: '', email: '', id: -1, isadmin: false, name: '', remoteID: -1, studentid: -1, AccessToken: ""},
+    user: {avatarurl: '', email: '', id: -1, isadmin: false, name: '', remoteID: -1, studentid: -1, Token: ""},
     users: [],
     enrollments: [],
     enrollmentsByCourseId: derived((state: State) => {
-        type e = {[courseid: number]: Enrollment}
-        let d: e = {}
+        // 
+        let obj: EnrollmentsByCourse = {}
         state.enrollments.forEach(enrollment => {
-            d[enrollment.getCourseid()] = enrollment
+            obj[enrollment.getCourseid()] = enrollment
         });
-        return d
+        return obj
     }),
     courses: [],
     userCourses: [],
+    userGroup: {},
     submissions: {},
     courseSubmissions: {},
     assignments: {},
     repositories: {},
-    theme: "light",
-    isLoading: true,
-    activeCourse: -1,
+
     search: "",
+    // 
     userSearch: derived((state: State) => {
         return state.users.filter(user => 
             user.getUser()?.getName().toLowerCase().includes(state.search.toLowerCase())
-        ).filter(user => !state.cg.enrollments.includes(user.getId()))
+        ).filter(user => !state.courseGroup.enrollments.includes(user.getId()))
     }),
 
+    courseGroup: {enrollments: [], users: [], groupName: ""},
     timeNow : new Date(),
-    cg: {enrollments: [], users: [], groupName: ""},
     alerts: [],
+    theme: "light",
+    isLoading: true,
+    activeCourse: -1,
+    activeLab: -1,
     courseEnrollments: {},
     groups: {}
 };
