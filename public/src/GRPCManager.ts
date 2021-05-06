@@ -39,9 +39,11 @@ import {
     Users,
     Void,
     Reviewers,
-} from "./proto/ag_pb";
+    CommitHashRequest
+} from "../proto/ag_pb";
 import { AutograderServiceClient } from "./proto/AgServiceClientPb";
 import { LoadCriteriaRequest } from './proto/ag_pb';
+import { CommitHashResponse } from "./proto/ag_pb";
 
 export interface IGrpcResponse<T> {
     status: Status;
@@ -52,20 +54,20 @@ export class GrpcManager {
 
     private agService: AutograderServiceClient;
 
-    private userID: string
+    private token: string
 
     public setUserid = (id: string) => {
-        this.userID = id;
+        this.token = id;
     }
 
     public getUserid = () => {
-        return this.userID;
+        return this.token;
     }
 
     constructor() {
         // to test on localhost via port forwarding, use make local Makefile target
-        this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
-        this.userID = "-1"
+        this.agService = new AutograderServiceClient("https://" + window.location.hostname + ":8080", null, null);
+        this.token = "-1"
     }
 
 
@@ -221,6 +223,13 @@ export class GrpcManager {
     }
 
     // /* SUBMISSIONS */ //
+    public getAllSubmissions(courseID: number, userID: number, groupID: number): Promise<IGrpcResponse<Submissions>> {
+        const request = new SubmissionRequest();
+        request.setCourseid(courseID);
+        request.setUserid(userID);
+        request.setGroupid(groupID)
+        return this.grpcSend<Submissions>(this.agService.getSubmissions, request);
+    }
 
     public getSubmissions(courseID: number, userID: number): Promise<IGrpcResponse<Submissions>> {
         const request = new SubmissionRequest();
@@ -250,16 +259,6 @@ export class GrpcManager {
         return this.grpcSend<Submission>(this.agService.rebuildSubmission, request);
     }
 
-    //public updateSubmission(courseID: number, s: ISubmission): Promise<IGrpcResponse<Void>> {
-    //    const request = new UpdateSubmissionRequest();
-    //    request.setSubmissionid(s.id);
-    //    request.setCourseid(courseID);
-    //    request.setStatus(s.status);
-    //    request.setReleased(s.released);
-    //    request.setScore(s.score);
-    //    return this.grpcSend<Void>(this.agService.updateSubmission, request);
-    //}
-
     public updatesubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean) {
         const request = new UpdateSubmissionsRequest();
         request.setAssignmentid(assignmentID);
@@ -268,6 +267,26 @@ export class GrpcManager {
         request.setRelease(release);
         request.setApprove(approve);
         return this.grpcSend<Void>(this.agService.updateSubmissions, request);
+    }
+
+    /* 
+        Returns the commit hash of the given submission.
+        Used to ping the server for changes to a submission
+    */
+    public getSubmissionCommitHash(submissionID: number) {
+        const request = new CommitHashRequest();
+        request.setSubmissionid(submissionID)
+        return this.grpcSend<CommitHashResponse>(this.agService.getSubmissionCommitHash, request)
+    }
+
+    stream?: grpcWeb.ClientReadableStream<CommitHashResponse>
+
+    public streamSubmissionCommitHash(submissionID: number): grpcWeb.ClientReadableStream<CommitHashResponse> {
+        const request = new CommitHashRequest()
+        request.setSubmissionid(submissionID)
+        this.stream = this.agService.streamSubmissionCommitHash(request, { "custom-header-1": "value1", "user": this.token })
+        this.stream.on('data', (r) => console.log("GO"))
+        return this.stream
     }
 
     // /* MANUAL GRADING */ //
@@ -364,7 +383,7 @@ export class GrpcManager {
             //if (currentUser != null) {
             //    userID = currentUser.getId().toString();
             //}
-            method.call(this.agService, request, { "custom-header-1": "value1", "user": this.userID },
+            method.call(this.agService, request, { "custom-header-1": "value1", "user": this.token },
                 (err: grpcWeb.Error, response: T) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {
