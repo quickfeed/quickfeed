@@ -1,6 +1,4 @@
 /* eslint-disable quotes */
-import { Assignment, Submission } from './proto/ag_pb'
-
 export interface IBuildInfo {
     builddate: string;
     buildid: number;
@@ -46,29 +44,29 @@ export const formatBuildInfo = (buildInfo: string) => {
     console.log(buildInfo.split('/\n/'))
 }
 
-/** Utility function for LangindpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
+/** Utility function for LandingpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
 export const timeFormatter = (deadline:number , now: Date) => {
     const timeToDeadline = deadline - now.getTime()
     let days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     let hours = Math.floor(timeToDeadline / (1000 * 3600))
-    let minutes = Math.floor(timeToDeadline)
+    let minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000*60))
     
     if (days<14){
         if(days<7){
             if (days<3){
                 if (timeToDeadline<0){
-                    return [true,'table-danger', `deadline was ${-days > 0 ? -days+" days" : -hours+" hours"} ago`]
+                    return [true,'table-danger', `deadline was ${-days > 0 ? -days+" days" : -hours+" hours"} ago`,0]
                 }
                 if (days==0){
-                    return [true,'table-warning', `${hours} hours to deadline!`]
+                    return [true,'table-danger', `${hours} hours and ${minutes} minutes to deadline!`,0]
                 }
 
-                return [true,'table-warning', `${days} days to deadline`]
+                return [true,'table-warning', `${days} day${days==1?'':'s'} to deadline`,days]
             }
         }
-        return[true,'table-primary',`${days} days until deadline`]
+        return[true,'table-primary',`${days} days until deadline`,days]
     }
-    return [false]
+    return [false,'','',days]
 }
 export const layoutTime = "2021-03-20T23:59:00"
 // Used for displaying enrollment status
@@ -82,4 +80,10 @@ export const EnrollmentStatusColors = {
     1: "",
     2: "",
     3: "",
+}
+export const SubmissionStatus = {
+    0: "NONE",
+    1: "APPROVED",
+    2: "REJECTED",
+    3: "REVISION",
 }

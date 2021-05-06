@@ -3,7 +3,8 @@ import { RouteComponentProps } from "react-router"
 import { Link } from "react-router-dom"
 import { useOvermind } from "../overmind"
 
-import { Enrollment, Repository } from "../proto/ag_pb"
+import { Enrollment, Repository } from "../../proto/ag_pb"
+import { CourseLabs } from "./CourseLabs"
 import LandingPageLabTable from "./LandingPageLabTable"
 
 
@@ -15,30 +16,44 @@ interface MatchProps {
 const Course = (props: RouteComponentProps<MatchProps>) => {
     const { state, actions } = useOvermind()
     let courseID = Number(props.match.params.id)
-
+    const allsubs = {}
 
     useEffect(() => {
-        
+        if(state.enrollmentsByCourseId[courseID]?.getStatus()>2){
+            actions.getAllCourseSubmissions(courseID)
+        }
     }, [props])
 
-    if (state.courses){
+    if (state.enrollmentsByCourseId[courseID]!==undefined){
         return (
         <div className="box">
-            <h1>{state.enrollmentsByCourseId[courseID].getCourse()?.getName()}</h1>
-            <div className="Links">
-                <a href={state.repositories[courseID][Repository.Type.USER]}>User Repository</a>
-                <a href={state.repositories[courseID][Repository.Type.GROUP]}>Group Repository</a>
-                <a href={state.repositories[courseID][Repository.Type.COURSEINFO]}>Course Info</a>
-                <a href={state.repositories[courseID][Repository.Type.ASSIGNMENTS]}>Assignments</a>
-                <Link to={"/course/" + courseID + "/group"} >Group</Link>
+            <h1>{state.enrollmentsByCourseId[courseID].getCourse()?.getName()} <span className=""><i className={state.enrollmentsByCourseId[courseID].getState() === Enrollment.DisplayState.VISIBLE ? 'fa fa-star-o' : "fa fa-star "} onClick={() => actions.setEnrollmentState(state.enrollmentsByCourseId[courseID])}></i></span></h1>
+            
+            <div className="row">
+                <div className="col-md-9" >
+                    <CourseLabs crsid={courseID}/>
+                </div>
+                <div className="col-sm-3" >
+                    
+                    <div className="list-group">
+                        <div className="list-group-item list-group-item-action active text-center"><h6><strong>Utility</strong></h6></div>
+                        <a href={state.repositories[courseID][Repository.Type.USER]} className="list-group-item list-group-item-action">User Repository</a>
+                        {state.repositories[courseID][Repository.Type.GROUP] !== "" ?(
+                        <a href={state.repositories[courseID][Repository.Type.GROUP]} className="list-group-item list-group-item-action overflow-ellipses" style={{textAlign:"left"}}>Group Repository ({state.enrollmentsByCourseId[courseID].getGroup()?.getName()})</a>
+                        ):(
+                            <Link to={"/course/" + courseID + "/group"} className="list-group-item list-group-item-action list-group-item-success">Create a Group</Link>
+                        )}
+                        <a href={state.repositories[courseID][Repository.Type.ASSIGNMENTS]} className="list-group-item list-group-item-action">Assignments</a>
+
+                        <a href={state.repositories[courseID][Repository.Type.COURSEINFO]} className="list-group-item list-group-item-action">Course Info</a>
+                        
+                    </div>
+                </div>
             </div>
             
-            <LandingPageLabTable courseID={courseID} />
-            
-
         </div>)
     }
-    return <h1>Loading</h1>
+    return <h1>404 redirect mby</h1>
 }
 
 export default Course
