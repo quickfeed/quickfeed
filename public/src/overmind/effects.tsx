@@ -1,8 +1,7 @@
-import {Self, State, state} from "./state";
+import {Self} from "./state";
 
 import { AutograderServiceClient } from "../proto/AgServiceClientPb";
 // import { Void, User, Course, Submissions, SubmissionRequest, Enrollments, EnrollmentRequest, EnrollmentStatusRequest } from "../proto/ag_pb";
-import * as grpcWeb from "grpc-web"
 import { GrpcManager } from "../GRPCManager";
 
 const AgService = new AutograderServiceClient('https://' + window.location.hostname, null, null)
