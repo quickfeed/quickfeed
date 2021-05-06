@@ -9,10 +9,9 @@ export const ProgressBar = (props: {courseID: number, assignmentID: number, subm
     let percentage = 0
     let score = 0
     if (state.submissions[props.courseID][props.assignmentID] !== undefined) {
-        let rand = Math.random()
         let submission = state.submissions[props.courseID][props.assignmentID]
-        percentage = 100 - (submission.getScore() - rand * 100)
-        score = submission.getScore() - rand * 100
+        percentage = 100 - submission.getScore()
+        score = submission.getScore()* 100
     }
 
     if(props.type === "navbar") {
