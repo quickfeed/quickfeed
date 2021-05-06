@@ -146,6 +146,22 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 	return &pb.Submissions{Submissions: submissions}, nil
 }
 
+func (s *AutograderService) getCommitHash(request *pb.CommitHashRequest) (string, error) {
+
+	//TODO: Enforce access control
+	query := &pb.Submission{
+		ID: request.GetSubmissionID(),
+	}
+	submission, err := s.db.GetSubmissions(query)
+	if err != nil {
+		return "", err
+	}
+	if len(submission) > 0 {
+		return submission[0].GetCommitHash(), nil
+	}
+	return "", nil
+}
+
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
 func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
 	assignments, err := s.db.GetCourseAssignmentsWithSubmissions(request.GetCourseID(), request.Type)

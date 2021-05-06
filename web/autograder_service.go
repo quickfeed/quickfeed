@@ -588,6 +588,15 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 	return submission, nil
 }
 
+func (s *AutograderService) GetSubmissionCommitHash(ctx context.Context, in *pb.CommitHashRequest) (*pb.CommitHashResponse, error) {
+
+	commitHash, err := s.getCommitHash(in)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CommitHashResponse{CommitHash: commitHash}, nil
+}
+
 // CreateBenchmark adds a new grading benchmark for an assignment
 // Access policy: Teacher of CourseID
 func (s *AutograderService) CreateBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
