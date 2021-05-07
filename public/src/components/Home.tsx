@@ -1,5 +1,6 @@
 import React from "react";
 import { useOvermind } from "../overmind";
+import Courses from "./Courses";
 import SubmissionsTable from "./SubmissionsTable"
 
 
@@ -12,7 +13,8 @@ const Home = () => {
             <div>
                 <h1>Welcome, {user.name}!</h1>
             </div>
-            <SubmissionsTable courseID={0}/>           
+            <SubmissionsTable courseID={0}/>
+            <Courses home={true} />
         </div>
     )
 }

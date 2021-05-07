@@ -13,13 +13,16 @@ const EnrollmentStatus = {
     3: "Teacher"
 }
 
+interface overview {
+    home: boolean
+}
+
 /** This component should list user courses, and available courses and allow enrollment */
-const Courses = () => {
+const Courses = (overview: overview) => {
     const {state, actions} = useOvermind()
-    const [displayModal, setDisplayModal] = useState(false) 
+
     useEffect(() => {
-        // TODO: getCoursesByUser returns courses a user has an enrollment in. I thought a UserStatus = 0 (NONE) would be default, but apparently not.
-        //
+
         actions.setActiveCourse(-1)
     })
     // TODO: UserCourses contains elements describing a course that a user has an enrollment in, regardless of status currently. Need to figure out what UserStatus.NONE is used for
@@ -80,6 +83,22 @@ const Courses = () => {
         })
         
         // create enroll modal, to enroll to new courses.
+        if (overview.home) {
+            return (
+                <React.Fragment>
+                {favorite.length > 0 &&
+                    <div className="container-fluid">
+                        
+                        <div className="card-deck course-card-row favorite-row">
+                            {favorite}
+                            
+                        </div>
+                    </div>
+                }
+                </React.Fragment>
+            )
+        }
+
         return (
             <div className="box container-fluid">
                 {favorite.length >0 &&
