@@ -13,7 +13,7 @@ export const NavBarTeacher = (props: {courseID: number}) => {
 
     return (
         <React.Fragment>
-        <li className="active">
+        <li className="activeLabs">
             <div id="icon" className={"badge badge-danger"}>
                 {state.courseEnrollments[props.courseID].filter(user => user.getStatus() === Enrollment.UserStatus.PENDING).length}
             </div>
@@ -24,7 +24,7 @@ export const NavBarTeacher = (props: {courseID: number}) => {
                 <Link to={`/course/${state.activeCourse}/members`}>Members</Link>
             </div>
         </li>
-        <li className="active">
+        <li className="activeLabs">
             <div id="icon">
 
             </div>
@@ -32,7 +32,7 @@ export const NavBarTeacher = (props: {courseID: number}) => {
                 <Link to={`/course/${state.activeCourse}/review`}>Review</Link>
             </div>
         </li>
-        <li className="active">
+        <li className="activeLabs">
             <div id="icon">
 
             </div>
