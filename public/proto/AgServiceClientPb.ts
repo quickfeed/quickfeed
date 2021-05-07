@@ -731,25 +731,6 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoStreamSubmissionCommitHash = new grpcWeb.AbstractClientBase.MethodInfo(
-    CommitHashResponse,
-    (request: CommitHashRequest) => {
-      return request.serializeBinary();
-    },
-    CommitHashResponse.deserializeBinary
-  );
-
-  streamSubmissionCommitHash(
-    request: CommitHashRequest,
-    metadata?: grpcWeb.Metadata) {
-    return this.client_.serverStreaming(
-      this.hostname_ +
-        '/AutograderService/StreamSubmissionCommitHash',
-      request,
-      metadata || {},
-      this.methodInfoStreamSubmissionCommitHash);
-  }
-
   methodInfoCreateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(
     GradingBenchmark,
     (request: GradingBenchmark) => {

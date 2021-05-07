@@ -96,6 +96,10 @@
     display:block;
     margin:auto;
 }
+
+#title {
+    margin-left: 10px;
+}
 .card-body{
     color: black;
 }

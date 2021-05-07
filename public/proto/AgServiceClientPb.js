@@ -101,9 +101,6 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetSubmissionCommitHash = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.CommitHashResponse, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.CommitHashResponse.deserializeBinary);
-        this.methodInfoStreamSubmissionCommitHash = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.CommitHashResponse, function (request) {
-            return request.serializeBinary();
-        }, ag_pb_1.CommitHashResponse.deserializeBinary);
         this.methodInfoCreateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.GradingBenchmark, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.GradingBenchmark.deserializeBinary);
@@ -273,10 +270,6 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.getSubmissionCommitHash = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/GetSubmissionCommitHash', request, metadata || {}, this.methodInfoGetSubmissionCommitHash, callback);
-    };
-    AutograderServiceClient.prototype.streamSubmissionCommitHash = function (request, metadata) {
-        return this.client_.serverStreaming(this.hostname_ +
-            '/AutograderService/StreamSubmissionCommitHash', request, metadata || {}, this.methodInfoStreamSubmissionCommitHash);
     };
     AutograderServiceClient.prototype.createBenchmark = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +

@@ -456,7 +456,6 @@ service AutograderService {
     rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
     rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
     rpc GetSubmissionCommitHash(CommitHashRequest) returns (CommitHashResponse) {}
-    rpc StreamSubmissionCommitHash(CommitHashRequest) returns (stream CommitHashResponse) {}
 
     // manual grading //
     rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
