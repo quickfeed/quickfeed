@@ -1,5 +1,5 @@
 import React from "react"
-import { getBuildInfo, getScoreObjects, IScoreObjects } from "../Helpers"
+import { getBuildInfo, getScoreObjects, IScoreObjects, SubmissionStatus } from "../Helpers"
 import { useOvermind } from "../overmind"
 import { ProgressBar } from "./ProgressBar"
 
@@ -14,9 +14,10 @@ const LabResultTable = ({id, courseID}: lab) => {
 
     const ListScoreObjects = (scoreObjects: IScoreObjects[]) => {
         return scoreObjects.map(scoreObject => {
+            const boxShadow = (scoreObject.Score === scoreObject.MaxScore) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 5px 0 0 red inset"
             return (
                 <tr>
-                    <th>
+                    <th style={{boxShadow: boxShadow}}>
                         {scoreObject.TestName}
                     </th>
                     <th>
@@ -48,7 +49,7 @@ const LabResultTable = ({id, courseID}: lab) => {
                         </thead>
                         <tr className="clickable-row">
                             <th colSpan={2}>Status</th>
-                            <td>{submission.getStatus()}</td>
+                            <td>{SubmissionStatus[submission.getStatus()]}</td>
                         </tr>
                         <tr>
                             <th colSpan={2}>Delivered</th>

@@ -1,10 +1,7 @@
 import React, { useEffect } from "react"
 import { Redirect, RouteComponentProps } from "react-router"
 import { Switch, Route } from "react-router-dom"
-
 import { useOvermind } from "../overmind"
-
-
 import CourseOverview from "./CourseOverview"
 import Group from "./Group"
 import Groups from "./Groups"
