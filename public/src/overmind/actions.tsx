@@ -26,30 +26,12 @@ export const getHash: Action<{courseID: number, assignmentID: number}> = ({state
         effects.grpcMan.getSubmissionCommitHash(submission.getId()).then(res => {
             if (res.data) {
                 if (submission.getCommithash() !== res.data.getCommithash()) {
-                    actions.labTest(value.courseID)
+                    
+                    actions.refreshSubmissions({courseID: value.courseID, submissionID: submission.getId()})
                 }
             }
         })
     }
-}
-/*
-export const sHash: Action<{courseID: number, assignmentID: number}> = ({state, actions, effects}, value) => {
-    const submission = state.submissions[value.courseID].find(submission => submission.getAssignmentid() === value.assignmentID)
-    if (submission) {
-        effects.grpcMan.streamSubmissionCommitHash(submission.getId()).on('data', (res) =>
-            console.log(res)
-        )
-        
-    }
-}/*
-
-export const gas: Action<number> = ({state, actions, effects}, courseID) => {
-    const groupID = state.enrollmentsByCourseId[courseID].getGroupid()
-    effects.grpcMan.getAllSubmissions(courseID, state.user.id, groupID).then(res => {
-        if (res.data) {
-            console.log(res.data.getSubmissionsList())
-        }
-    })
 }
 
 export const getPerson: AsyncAction<void, boolean> = async ({ state, effects }) => {
@@ -319,25 +301,21 @@ export const loading: Action<void> = ({state}) => {
     state.isLoading = !state.isLoading
 }
 
-export const labTest: Action<number> = ({state, effects}, submissionID) => {
-        effects.grpcMan.getSubmissions(1, state.user.id).then(res => {
-            if (res.data) {
-                console.log("Checking ...")
-                let subs = res.data.getSubmissionsList()
-                subs.forEach(sub => {
-                    let ass = state.assignments[1].find(a => a.getId() === sub.getAssignmentid())
-                    if (ass) {
-                        if (state.submissions[1][ass.getOrder() - 1].getCommithash() !== sub.getCommithash()) {
-                            state.submissions[1][ass.getOrder() - 1] = sub
-                        }
-                        
+export const refreshSubmissions: Action<{courseID: number, submissionID: number}> = ({state, effects}, input) => {
+    effects.grpcMan.getSubmissions(input.courseID, state.user.id).then(res => {
+        if (res.data) {
+            let submissions = res.data.getSubmissionsList()
+            submissions.forEach(submission => {
+                let assignment = state.assignments[input.courseID].find(a => a.getId() === submission.getAssignmentid())
+                if (assignment) {
+                    if (state.submissions[input.courseID][assignment.getOrder() - 1].getCommithash() !== submission.getCommithash()) {
+                        state.submissions[input.courseID][assignment.getOrder() - 1] = submission
                     }
-                })
-            }
-        })
-
-
-
+                    
+                }
+            })
+        }
+    })
 }
 
 export const getAllCourseSubmissions: Action<number> = ({state, effects}, courseID) => {
