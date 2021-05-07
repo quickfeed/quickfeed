@@ -3,13 +3,11 @@ import { useHistory } from "react-router"
 import { sortByField } from "../Helpers"
 import { useOvermind } from "../overmind"
 import { Enrollment, EnrollmentLink, User } from "../../proto/ag_pb"
-import Lab from "./Lab"
 
 
 const Review = () => {
     const {state, actions} = useOvermind()
 
-    const history = useHistory()
     useEffect(() => {
             actions.getAllCourseSubmissions(4)
 
@@ -17,17 +15,17 @@ const Review = () => {
 
 
     if (state.courseSubmissions[4]) {
-        const s = sortByField(state.courseSubmissions[4], [EnrollmentLink.prototype.getEnrollment, Enrollment.prototype.getUser], User.prototype.getEmail, true).map((l: EnrollmentLink) => {
+        const submissions = sortByField(state.courseSubmissions[4], [EnrollmentLink.prototype.getEnrollment], Enrollment.prototype.setStatus, false).map((link: EnrollmentLink) => {
             
             return (
             <div className="card well" style={{width: "400px", marginBottom: "5px"}}>
-            <div className="card-header">{l.getEnrollment()?.getUser()?.getEmail()} - {l.getEnrollment()?.getStatus()}</div>
+            <div className="card-header">{link.getEnrollment()?.getUser()?.getEmail()} - {link.getEnrollment()?.getSlipdaysremaining()}</div>
             <ul className="list-group list-group-flush">
                 
-                {l.getSubmissionsList().map(s => {
+                {link.getSubmissionsList().map(submissionLink => {
                     return (
                     <React.Fragment>
-                    <li className="list-group-item">{s.getAssignment()?.getName()} - {s.getSubmission()?.getScore()} / 100</li>
+                    <li className="list-group-item">{submissionLink.getAssignment()?.getName()} - {submissionLink.getSubmission()?.getScore()} / 100</li>
                     
                     </React.Fragment>
                     )
@@ -41,7 +39,7 @@ const Review = () => {
 
         return (
             <div>
-                {s}
+                {submissions}
             </div>
         )
     }
