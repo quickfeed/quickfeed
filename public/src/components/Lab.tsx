@@ -13,34 +13,34 @@ interface MatchProps {
 const Lab = () => {
     const { state, actions } = useOvermind()
     const {id ,lab} = useParams<MatchProps>()
-
+    const courseID = Number(id)
+    const assignmentID = Number(lab)
     useEffect(() => {
-        //actions.sHash({courseID: Number(id), assignmentID: Number(lab)})
-        //const t = setInterval(() => {
-        //    actions.getHash({courseID: Number(id), assignmentID: Number(lab)})
-        //}, 10000)
-        //return () => clearInterval(t)
-        actions.setActiveLab(Number(lab))
-        return () => actions.setActiveLab(-1)
+        actions.setActiveLab(assignmentID)
+        
+        // Needs to handle what to do in case of no commit hash, such as manually graded submissions
+        const t = setInterval(() => {  
+            actions.getHash({courseID: courseID, assignmentID: assignmentID})
+        }, 10000)
+        return () => {clearInterval(t), actions.setActiveLab(-1)}
     }, [lab])
 
-    const getSubmission = state.submissions[Number(id)]?.map(submission => {
-        if (submission.getAssignmentid() == Number(lab)) {
-            
+    const getSubmission = state.submissions[courseID]?.map(submission => {
+        if (submission.getAssignmentid() == assignmentID) {
             const buildInfo = JSON.parse(submission.getBuildinfo())
             const prettyBuildlog = buildInfo.buildlog.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
 
             return (
                 <div key={submission.getId()}>
-                    <LabResultTable id={submission.getAssignmentid()} courseID={Number(id)} />
-                    {state.assignments[Number(id)].find(a => a.getId() === submission.getAssignmentid())?.getSkiptests() ? <ReviewResult review={submission.getReviewsList()}/> : ""}
+                    <LabResultTable id={submission.getAssignmentid()} courseID={courseID} />
+                    {state.assignments[courseID].find(a => a.getId() === assignmentID)?.getSkiptests() ? <ReviewResult review={submission.getReviewsList()}/> : ""}
                     <div className="card bg-light"><code className="card-body" style={{color: "#c7254e"}}>{prettyBuildlog}</code></div>
                 </div>
             )
     }})
 
     return (
-        <div className="container box">
+        <div className="col-md-8 box">
         {getSubmission}
         </div>
     )
