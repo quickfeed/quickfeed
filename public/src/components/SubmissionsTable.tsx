@@ -17,7 +17,9 @@ interface course {
 }
 
 //** This component takes a courseID (number) to render a table containing lab information
-/* Giving a courseID of zero (0) makes it display ALL labs for all courses, whereas providing a courseID displays labs for ONLY ONE course */
+/*  Giving a courseID of zero (0) makes it display ALL labs for all courses, whereas providing a courseID displays labs for ONLY ONE course 
+    Passing in group = true lists only group assignments
+*/
 const SubmissionsTable = (crs: course) => {
     const { state } = useOvermind()
     const history  = useHistory()
@@ -28,8 +30,7 @@ const SubmissionsTable = (crs: course) => {
 
 
     const row = (assignment: Assignment, submission: Submission, course?: Course): JSX.Element => {
-        const timeofDeadline = new Date(assignment.getDeadline())
-        let time2Deadline = timeFormatter(timeofDeadline.getTime(),state.timeNow)
+        let time2Deadline = timeFormatter(assignment.getDeadline(),state.timeNow)
         return (
             <tr key={assignment.getId()} className={"clickable-row " + time2Deadline[1]} onClick={()=>redirectToLab(assignment.getCourseid(),assignment.getId())}>
             
