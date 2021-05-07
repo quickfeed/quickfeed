@@ -3,7 +3,7 @@ import { RouteComponentProps } from "react-router"
 import { sortByField } from "../Helpers"
 import { useOvermind } from "../overmind"
 import { CourseGroup } from "../overmind/state"
-import { Enrollment, User } from "../proto/ag_pb"
+import { Enrollment, User } from "../../proto/ag_pb"
 import SubmissionsTable from "./SubmissionsTable"
 
 /*  The Group component provides an interface to create a group for a course.
@@ -84,9 +84,9 @@ export const Group = (props: RouteComponentProps<{id?: string | undefined}>) => 
     }
 
     return(
-        <div className="container">
+        <div className="container box">
             
-            <div className='row '>
+            <div className="row">
                 <div className="card well col-md-offset-2">
                     <div className="card-header" style={{textAlign: "center"}}>
                         Students
@@ -103,7 +103,7 @@ export const Group = (props: RouteComponentProps<{id?: string | undefined}>) => 
                                 )
                             }
                         })} 
-                        </ul>
+                    </ul>
                 </div>
                 
                 <div className='col'>
@@ -115,7 +115,7 @@ export const Group = (props: RouteComponentProps<{id?: string | undefined}>) => 
                                 <li key={user.getId()} className="list-group-item">
                                     <img src={user.getAvatarurl()} style={{width: "23px", marginRight: "10px", borderRadius: "50%"}}></img>
                                     {user.getName()} 
-                                    <i style={{float: "right"}} onClick={() => updateGroupUsers(user, true)}>-</i>
+                                    <i style={{float: "right",cursor:"pointer"}} onClick={() => updateGroupUsers(user, true)}>-</i>
                                 </li>
                                 )
                         })} 

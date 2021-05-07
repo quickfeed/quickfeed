@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useOvermind } from '../overmind'
 import UserProfileForm from './forms/UserProfileForm'
 
+
 const Profile = () => {
     const { state } = useOvermind()
     // Holds a local state to check whether the user is editing their user information or not

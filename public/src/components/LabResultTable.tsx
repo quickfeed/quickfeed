@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { getBuildInfo, getScoreObjects, IScoreObjects } from "../Helpers"
 import { useOvermind } from "../overmind"
 import { ProgressBar } from "./ProgressBar"
@@ -41,7 +41,7 @@ const LabResultTable = ({id, courseID}: lab) => {
             
             return (
                 <div className="container" style={{paddingBottom: "20px"}}>
-                    <ProgressBar courseID={courseID} assignmentID={assignment.getId()} submission={submission} type={"lab"} />
+                    <ProgressBar courseID={courseID} assignmentIndex={assignment.getOrder() - 1} submission={submission} type={"lab"} />
                     <table className="table table-curved">
                         <thead>
                             <th colSpan={3}>Lab information</th>

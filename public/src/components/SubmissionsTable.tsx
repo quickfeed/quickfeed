@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useHistory } from "react-router";
 import { getFormattedDeadline, layoutTime, timeFormatter } from "../Helpers";
 import { useOvermind, useReaction } from "../overmind";
-import { Assignment, Course, Submission } from "../proto/ag_pb";
+import { Assignment, Course, Submission } from "../../proto/ag_pb";
 
 const Status = {
     0: "NONE",

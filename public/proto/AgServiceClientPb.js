@@ -7,8 +7,6 @@
 exports.__esModule = true;
 exports.AutograderServiceClient = void 0;
 // GENERATED CODE -- DO NOT EDIT!
-/* eslint-disable */
-// @ts-nocheck
 var grpcWeb = require("grpc-web");
 var ag_pb_1 = require("./ag_pb");
 var AutograderServiceClient = /** @class */ (function () {
@@ -100,6 +98,12 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submission, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submission.deserializeBinary);
+        this.methodInfoGetSubmissionCommitHash = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.CommitHashResponse, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.CommitHashResponse.deserializeBinary);
+        this.methodInfoStreamSubmissionCommitHash = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.CommitHashResponse, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.CommitHashResponse.deserializeBinary);
         this.methodInfoCreateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.GradingBenchmark, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.GradingBenchmark.deserializeBinary);
@@ -144,8 +148,6 @@ var AutograderServiceClient = /** @class */ (function () {
         }, ag_pb_1.Void.deserializeBinary);
         if (!options)
             options = {};
-        if (!credentials)
-            credentials = {};
         options['format'] = 'binary';
         this.client_ = new grpcWeb.GrpcWebClientBase(options);
         this.hostname_ = hostname;
@@ -153,305 +155,184 @@ var AutograderServiceClient = /** @class */ (function () {
         this.options_ = options;
     }
     AutograderServiceClient.prototype.getUser = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetUser', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetUser, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetUser', request, metadata || {}, this.methodInfoGetUser);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetUser', request, metadata || {}, this.methodInfoGetUser, callback);
     };
     AutograderServiceClient.prototype.getUsers = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetUsers', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetUsers, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetUsers', request, metadata || {}, this.methodInfoGetUsers);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetUsers', request, metadata || {}, this.methodInfoGetUsers, callback);
     };
     AutograderServiceClient.prototype.getUserByCourse = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetUserByCourse', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetUserByCourse, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetUserByCourse', request, metadata || {}, this.methodInfoGetUserByCourse);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetUserByCourse', request, metadata || {}, this.methodInfoGetUserByCourse, callback);
     };
     AutograderServiceClient.prototype.updateUser = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/UpdateUser', this.hostname_).toString(), request, metadata || {}, this.methodInfoUpdateUser, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/UpdateUser', request, metadata || {}, this.methodInfoUpdateUser);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateUser', request, metadata || {}, this.methodInfoUpdateUser, callback);
     };
     AutograderServiceClient.prototype.isAuthorizedTeacher = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/IsAuthorizedTeacher', this.hostname_).toString(), request, metadata || {}, this.methodInfoIsAuthorizedTeacher, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher, callback);
     };
     AutograderServiceClient.prototype.getGroup = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetGroup', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetGroup, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetGroup', request, metadata || {}, this.methodInfoGetGroup);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetGroup', request, metadata || {}, this.methodInfoGetGroup, callback);
     };
     AutograderServiceClient.prototype.getGroupByUserAndCourse = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetGroupByUserAndCourse', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetGroupByUserAndCourse, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetGroupByUserAndCourse', request, metadata || {}, this.methodInfoGetGroupByUserAndCourse);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetGroupByUserAndCourse', request, metadata || {}, this.methodInfoGetGroupByUserAndCourse, callback);
     };
     AutograderServiceClient.prototype.getGroupsByCourse = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetGroupsByCourse', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetGroupsByCourse, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetGroupsByCourse', request, metadata || {}, this.methodInfoGetGroupsByCourse);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetGroupsByCourse', request, metadata || {}, this.methodInfoGetGroupsByCourse, callback);
     };
     AutograderServiceClient.prototype.createGroup = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/CreateGroup', this.hostname_).toString(), request, metadata || {}, this.methodInfoCreateGroup, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/CreateGroup', request, metadata || {}, this.methodInfoCreateGroup);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/CreateGroup', request, metadata || {}, this.methodInfoCreateGroup, callback);
     };
     AutograderServiceClient.prototype.updateGroup = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/UpdateGroup', this.hostname_).toString(), request, metadata || {}, this.methodInfoUpdateGroup, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/UpdateGroup', request, metadata || {}, this.methodInfoUpdateGroup);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateGroup', request, metadata || {}, this.methodInfoUpdateGroup, callback);
     };
     AutograderServiceClient.prototype.deleteGroup = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/DeleteGroup', this.hostname_).toString(), request, metadata || {}, this.methodInfoDeleteGroup, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/DeleteGroup', request, metadata || {}, this.methodInfoDeleteGroup);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/DeleteGroup', request, metadata || {}, this.methodInfoDeleteGroup, callback);
     };
     AutograderServiceClient.prototype.getCourse = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetCourse', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetCourse, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetCourse', request, metadata || {}, this.methodInfoGetCourse);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetCourse', request, metadata || {}, this.methodInfoGetCourse, callback);
     };
     AutograderServiceClient.prototype.getCourses = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetCourses', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetCourses, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetCourses', request, metadata || {}, this.methodInfoGetCourses);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetCourses', request, metadata || {}, this.methodInfoGetCourses, callback);
     };
     AutograderServiceClient.prototype.getCoursesByUser = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetCoursesByUser', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetCoursesByUser, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetCoursesByUser', request, metadata || {}, this.methodInfoGetCoursesByUser);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetCoursesByUser', request, metadata || {}, this.methodInfoGetCoursesByUser, callback);
     };
     AutograderServiceClient.prototype.createCourse = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/CreateCourse', this.hostname_).toString(), request, metadata || {}, this.methodInfoCreateCourse, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/CreateCourse', request, metadata || {}, this.methodInfoCreateCourse);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/CreateCourse', request, metadata || {}, this.methodInfoCreateCourse, callback);
     };
     AutograderServiceClient.prototype.updateCourse = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/UpdateCourse', this.hostname_).toString(), request, metadata || {}, this.methodInfoUpdateCourse, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/UpdateCourse', request, metadata || {}, this.methodInfoUpdateCourse);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateCourse', request, metadata || {}, this.methodInfoUpdateCourse, callback);
     };
     AutograderServiceClient.prototype.updateCourseVisibility = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/UpdateCourseVisibility', this.hostname_).toString(), request, metadata || {}, this.methodInfoUpdateCourseVisibility, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/UpdateCourseVisibility', request, metadata || {}, this.methodInfoUpdateCourseVisibility);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateCourseVisibility', request, metadata || {}, this.methodInfoUpdateCourseVisibility, callback);
     };
     AutograderServiceClient.prototype.getAssignments = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetAssignments', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetAssignments, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetAssignments', request, metadata || {}, this.methodInfoGetAssignments);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetAssignments', request, metadata || {}, this.methodInfoGetAssignments, callback);
     };
     AutograderServiceClient.prototype.updateAssignments = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/UpdateAssignments', this.hostname_).toString(), request, metadata || {}, this.methodInfoUpdateAssignments, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/UpdateAssignments', request, metadata || {}, this.methodInfoUpdateAssignments);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateAssignments', request, metadata || {}, this.methodInfoUpdateAssignments, callback);
     };
     AutograderServiceClient.prototype.getEnrollmentsByUser = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetEnrollmentsByUser', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetEnrollmentsByUser, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetEnrollmentsByUser', request, metadata || {}, this.methodInfoGetEnrollmentsByUser);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetEnrollmentsByUser', request, metadata || {}, this.methodInfoGetEnrollmentsByUser, callback);
     };
     AutograderServiceClient.prototype.getEnrollmentsByCourse = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetEnrollmentsByCourse', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetEnrollmentsByCourse, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetEnrollmentsByCourse', request, metadata || {}, this.methodInfoGetEnrollmentsByCourse);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetEnrollmentsByCourse', request, metadata || {}, this.methodInfoGetEnrollmentsByCourse, callback);
     };
     AutograderServiceClient.prototype.createEnrollment = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/CreateEnrollment', this.hostname_).toString(), request, metadata || {}, this.methodInfoCreateEnrollment, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/CreateEnrollment', request, metadata || {}, this.methodInfoCreateEnrollment);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/CreateEnrollment', request, metadata || {}, this.methodInfoCreateEnrollment, callback);
     };
     AutograderServiceClient.prototype.updateEnrollment = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/UpdateEnrollment', this.hostname_).toString(), request, metadata || {}, this.methodInfoUpdateEnrollment, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/UpdateEnrollment', request, metadata || {}, this.methodInfoUpdateEnrollment);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateEnrollment', request, metadata || {}, this.methodInfoUpdateEnrollment, callback);
     };
     AutograderServiceClient.prototype.updateEnrollments = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/UpdateEnrollments', this.hostname_).toString(), request, metadata || {}, this.methodInfoUpdateEnrollments, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/UpdateEnrollments', request, metadata || {}, this.methodInfoUpdateEnrollments);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateEnrollments', request, metadata || {}, this.methodInfoUpdateEnrollments, callback);
     };
     AutograderServiceClient.prototype.getSubmissions = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetSubmissions', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetSubmissions, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetSubmissions', request, metadata || {}, this.methodInfoGetSubmissions);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetSubmissions', request, metadata || {}, this.methodInfoGetSubmissions, callback);
     };
     AutograderServiceClient.prototype.getSubmissionsByCourse = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetSubmissionsByCourse', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetSubmissionsByCourse, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetSubmissionsByCourse', request, metadata || {}, this.methodInfoGetSubmissionsByCourse);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetSubmissionsByCourse', request, metadata || {}, this.methodInfoGetSubmissionsByCourse, callback);
     };
     AutograderServiceClient.prototype.updateSubmission = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/UpdateSubmission', this.hostname_).toString(), request, metadata || {}, this.methodInfoUpdateSubmission, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/UpdateSubmission', request, metadata || {}, this.methodInfoUpdateSubmission);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateSubmission', request, metadata || {}, this.methodInfoUpdateSubmission, callback);
     };
     AutograderServiceClient.prototype.updateSubmissions = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/UpdateSubmissions', this.hostname_).toString(), request, metadata || {}, this.methodInfoUpdateSubmissions, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/UpdateSubmissions', request, metadata || {}, this.methodInfoUpdateSubmissions);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateSubmissions', request, metadata || {}, this.methodInfoUpdateSubmissions, callback);
     };
     AutograderServiceClient.prototype.rebuildSubmission = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/RebuildSubmission', this.hostname_).toString(), request, metadata || {}, this.methodInfoRebuildSubmission, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/RebuildSubmission', request, metadata || {}, this.methodInfoRebuildSubmission);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/RebuildSubmission', request, metadata || {}, this.methodInfoRebuildSubmission, callback);
+    };
+    AutograderServiceClient.prototype.getSubmissionCommitHash = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetSubmissionCommitHash', request, metadata || {}, this.methodInfoGetSubmissionCommitHash, callback);
+    };
+    AutograderServiceClient.prototype.streamSubmissionCommitHash = function (request, metadata) {
+        return this.client_.serverStreaming(this.hostname_ +
+            '/AutograderService/StreamSubmissionCommitHash', request, metadata || {}, this.methodInfoStreamSubmissionCommitHash);
     };
     AutograderServiceClient.prototype.createBenchmark = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/CreateBenchmark', this.hostname_).toString(), request, metadata || {}, this.methodInfoCreateBenchmark, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/CreateBenchmark', request, metadata || {}, this.methodInfoCreateBenchmark);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/CreateBenchmark', request, metadata || {}, this.methodInfoCreateBenchmark, callback);
     };
     AutograderServiceClient.prototype.updateBenchmark = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/UpdateBenchmark', this.hostname_).toString(), request, metadata || {}, this.methodInfoUpdateBenchmark, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/UpdateBenchmark', request, metadata || {}, this.methodInfoUpdateBenchmark);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateBenchmark', request, metadata || {}, this.methodInfoUpdateBenchmark, callback);
     };
     AutograderServiceClient.prototype.deleteBenchmark = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/DeleteBenchmark', this.hostname_).toString(), request, metadata || {}, this.methodInfoDeleteBenchmark, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/DeleteBenchmark', request, metadata || {}, this.methodInfoDeleteBenchmark);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/DeleteBenchmark', request, metadata || {}, this.methodInfoDeleteBenchmark, callback);
     };
     AutograderServiceClient.prototype.createCriterion = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/CreateCriterion', this.hostname_).toString(), request, metadata || {}, this.methodInfoCreateCriterion, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/CreateCriterion', request, metadata || {}, this.methodInfoCreateCriterion);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/CreateCriterion', request, metadata || {}, this.methodInfoCreateCriterion, callback);
     };
     AutograderServiceClient.prototype.updateCriterion = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/UpdateCriterion', this.hostname_).toString(), request, metadata || {}, this.methodInfoUpdateCriterion, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/UpdateCriterion', request, metadata || {}, this.methodInfoUpdateCriterion);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateCriterion', request, metadata || {}, this.methodInfoUpdateCriterion, callback);
     };
     AutograderServiceClient.prototype.deleteCriterion = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/DeleteCriterion', this.hostname_).toString(), request, metadata || {}, this.methodInfoDeleteCriterion, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/DeleteCriterion', request, metadata || {}, this.methodInfoDeleteCriterion);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/DeleteCriterion', request, metadata || {}, this.methodInfoDeleteCriterion, callback);
     };
     AutograderServiceClient.prototype.createReview = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/CreateReview', this.hostname_).toString(), request, metadata || {}, this.methodInfoCreateReview, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/CreateReview', request, metadata || {}, this.methodInfoCreateReview);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/CreateReview', request, metadata || {}, this.methodInfoCreateReview, callback);
     };
     AutograderServiceClient.prototype.updateReview = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/UpdateReview', this.hostname_).toString(), request, metadata || {}, this.methodInfoUpdateReview, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/UpdateReview', request, metadata || {}, this.methodInfoUpdateReview);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateReview', request, metadata || {}, this.methodInfoUpdateReview, callback);
     };
     AutograderServiceClient.prototype.getReviewers = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetReviewers', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetReviewers, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetReviewers', request, metadata || {}, this.methodInfoGetReviewers);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetReviewers', request, metadata || {}, this.methodInfoGetReviewers, callback);
     };
     AutograderServiceClient.prototype.loadCriteria = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/LoadCriteria', this.hostname_).toString(), request, metadata || {}, this.methodInfoLoadCriteria, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/LoadCriteria', request, metadata || {}, this.methodInfoLoadCriteria);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/LoadCriteria', request, metadata || {}, this.methodInfoLoadCriteria, callback);
     };
     AutograderServiceClient.prototype.getProviders = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetProviders', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetProviders, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetProviders', request, metadata || {}, this.methodInfoGetProviders);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetProviders', request, metadata || {}, this.methodInfoGetProviders, callback);
     };
     AutograderServiceClient.prototype.getOrganization = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetOrganization', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetOrganization, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetOrganization', request, metadata || {}, this.methodInfoGetOrganization);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetOrganization', request, metadata || {}, this.methodInfoGetOrganization, callback);
     };
     AutograderServiceClient.prototype.getRepositories = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/GetRepositories', this.hostname_).toString(), request, metadata || {}, this.methodInfoGetRepositories, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/GetRepositories', request, metadata || {}, this.methodInfoGetRepositories);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetRepositories', request, metadata || {}, this.methodInfoGetRepositories, callback);
     };
     AutograderServiceClient.prototype.isEmptyRepo = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(new URL('/AutograderService/IsEmptyRepo', this.hostname_).toString(), request, metadata || {}, this.methodInfoIsEmptyRepo, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/AutograderService/IsEmptyRepo', request, metadata || {}, this.methodInfoIsEmptyRepo);
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/IsEmptyRepo', request, metadata || {}, this.methodInfoIsEmptyRepo, callback);
     };
     return AutograderServiceClient;
 }());

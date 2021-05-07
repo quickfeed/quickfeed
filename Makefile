@@ -16,7 +16,7 @@ pbpath				:= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
 # necessary when target is not tied to a file
 .PHONY: download install-tools install ui proto devtools grpcweb envoy-build envoy-run scm
 
-devtools: install-tools grpcweb npmtools
+devtools: install-tools grpcweb
 
 download:
 	@echo Download go.mod dependencies
@@ -54,14 +54,6 @@ grpcweb:
 	@sudo mv $(tmpdir)/$(protoc-grpcweb-long) $(grpcweb-path)
 	@chmod +x $(grpcweb-path)
 	@rm -rf $(tmpdir)
-
-npmtools:
-	@echo "Install webpack and typescript compiler (requires sudo access)"
-	@npm install -g --save typescript
-	@npm install -g --force webpack
-	@npm install -g --force webpack-cli
-	@npm install -g tslint
-	@npm install -g serve
 
 # TODO(meling) this is just for macOS; we should guard against non-macOS.
 brew:

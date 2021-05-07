@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { useOvermind } from "../overmind"
-import { Submission } from "../proto/ag_pb"
+import { Submission } from "../../proto/ag_pb"
 import { ProgressBar } from "./ProgressBar"
 
 
@@ -23,12 +23,15 @@ const NavBarLabs = () => {
                         <div id="icon">
                             <i className={assignment.getIsgrouplab() ? "fa fa-users" : "fa fa-user"} title={assignment.getIsgrouplab() ? "Group Lab" : "Individual Lab"}>
                             </i>
+                            
                         </div>
                         <div id="title">
                             <Link to={`/course/${state.activeCourse}/${assignment.getId()}`}>{assignment.getName()}</Link>
                         </div> 
-                        
-                        <ProgressBar courseID={state.activeCourse} assignmentID={index} type="navbar" />
+                        {/*approved==1 && 
+                            <i className="fa fa-check">    </i>
+                        */}
+                        <ProgressBar courseID={state.activeCourse} assignmentIndex={index} type="navbar" />
 
                     </li>
                 )

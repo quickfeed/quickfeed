@@ -41,9 +41,9 @@ import {
     Reviewers,
     CommitHashRequest
 } from "../proto/ag_pb";
-import { AutograderServiceClient } from "./proto/AgServiceClientPb";
-import { LoadCriteriaRequest } from './proto/ag_pb';
-import { CommitHashResponse } from "./proto/ag_pb";
+import { AutograderServiceClient } from "../proto/AgServiceClientPb";
+import { LoadCriteriaRequest } from '../proto/ag_pb';
+import { CommitHashResponse } from "../proto/ag_pb";
 
 export interface IGrpcResponse<T> {
     status: Status;
@@ -247,6 +247,7 @@ export class GrpcManager {
 
     public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
         const request = new SubmissionsForCourseRequest();
+        request.setSkipbuildinfo(true)
         request.setCourseid(courseID);
         request.setType(type);
         return this.grpcSend<CourseSubmissions>(this.agService.getSubmissionsByCourse, request);
@@ -279,15 +280,6 @@ export class GrpcManager {
         return this.grpcSend<CommitHashResponse>(this.agService.getSubmissionCommitHash, request)
     }
 
-    stream?: grpcWeb.ClientReadableStream<CommitHashResponse>
-
-    public streamSubmissionCommitHash(submissionID: number): grpcWeb.ClientReadableStream<CommitHashResponse> {
-        const request = new CommitHashRequest()
-        request.setSubmissionid(submissionID)
-        this.stream = this.agService.streamSubmissionCommitHash(request, { "custom-header-1": "value1", "user": this.token })
-        this.stream.on('data', (r) => console.log("GO"))
-        return this.stream
-    }
 
     // /* MANUAL GRADING */ //
 

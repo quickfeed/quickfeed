@@ -3,7 +3,7 @@ import { useEffect } from "react"
 import { Redirect, RouteComponentProps } from "react-router-dom"
 import { sortByField } from "../Helpers"
 import { useOvermind } from "../overmind"
-import { Enrollment } from "../proto/ag_pb"
+import { Enrollment } from "../../proto/ag_pb"
 
 
 export const Members = (props: RouteComponentProps<{id?: string | undefined}>) => {

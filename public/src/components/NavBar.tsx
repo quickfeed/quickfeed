@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useOvermind } from "../overmind";
 import { Link, useHistory } from 'react-router-dom'
 import NavBarLabs from "./NavBarLabs";
-import { Enrollment } from "../proto/ag_pb";
+import { Enrollment } from "../../proto/ag_pb";
 import NavBarTeacher from "./NavBarTeacher";
 
 
@@ -24,7 +24,7 @@ const NavBar = () => {
         if (state.user.id > 0) {
             return <li><div id="title"><a href="/logout">Log out</a></div></li>
         }
-        return <li><a href="/auth/github">Log in with<i className="fa fa-2x fa-github" id="github"></i></a></li>
+        return <li><a href="/auth/github" style={{textAlign:"center",paddingTop:"15px"}}>Log in with<i className="fa fa-2x fa-github" id="github"></i></a></li>
     }
 
     // Generates dropdown items related to Courses
@@ -81,7 +81,7 @@ const NavBar = () => {
                 </li>
                 
             
-                
+
 
                 
                 
@@ -98,8 +98,9 @@ const NavBar = () => {
                 </li>
 
                 <li key="theme" onClick={() => actions.changeTheme()}>
-                        <i className={state.theme === "light" ? "icon fa fa-sun-o fa-lg fa-flip-horizontal" : "icon fa fa-moon-o fa-lg flip-horizontal"} style={{color: "white"}}></i>  
+                        <i className={state.theme === "light" ? "icon fa fa-sun-o fa-lg fa-flip-horizontal" : "icon fa fa-moon-o fa-lg flip-horizontal"} style={{color: "white"}}></i> 
                 </li>
+
                 {LogInButton()}
 
                 { state.user.isadmin ? 

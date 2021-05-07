@@ -15,6 +15,13 @@
     box-shadow: 0px 1px 1px 1px rgba(0, 0, 0, 0.4);
     color: #d4d4d4;
     font-weight: bold;
+    overflow-y: scroll;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+/* Hide scrollbar for Chrome, Safari and Opera */
+.navigator::-webkit-scrollbar {
+    display: none;
 }
 
 .SidebarList {
@@ -64,9 +71,6 @@
     display: none;
 }
 
-#title {
-    margin-left: 10px;
-}
 
 .SidebarList .activelabs {
     display: block;
@@ -89,8 +93,8 @@
 
 .SidebarList #avatar {
     width: 30px;
-    margin-right: 20px;
-    margin-left: 5px;
+    display:block;
+    margin:auto;
 }
 .card-body{
     color: black;
@@ -208,10 +212,8 @@ input{
 }
 
 #LandingPageTable thead tr {
-    background-color: #337ab7;
+    background-color: #343a40;
     color: white;
-
-
 }
 
 #LandingPageTable tbody .dark td {
@@ -226,9 +228,6 @@ input{
     background-color: #222;
 }
 
-#LandingPageTable .APPROVED {
-    color: green;
-}
 #LandingPageTable tbody tr {
     cursor: pointer;
 }
@@ -240,13 +239,14 @@ input{
 
 }
 
-.row {
+.course-card-row{
     padding: 40px 0;
     border-top: 1px solid #ccc;
 }
 
 .fa-star,.fa-star-o{
-    color: yellow
+    color: yellow;
+    text-shadow: 0 0 3px #000;
 }
 
 .centered {
@@ -259,6 +259,17 @@ input{
     transform: -ms-translate(-50%, -50%);
 }  
 
-.icon {
+.icon{
     transition-duration: 0.5s;
+}
+.float-down-left {
+    position:absolute;
+    bottom: 10px;
+    left: 20px;
+}
+.overflow-ellipses {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    text-align: center;
 }

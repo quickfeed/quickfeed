@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 import { useHistory } from "react-router"
 import { sortByField } from "../Helpers"
 import { useOvermind } from "../overmind"
-import { Enrollment, EnrollmentLink, User } from "../proto/ag_pb"
+import { Enrollment, EnrollmentLink, User } from "../../proto/ag_pb"
 import Lab from "./Lab"
 
 

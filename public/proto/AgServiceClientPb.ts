@@ -7,10 +7,6 @@
 // GENERATED CODE -- DO NOT EDIT!
 
 
-/* eslint-disable */
-// @ts-nocheck
-
-
 import * as grpcWeb from 'grpc-web';
 
 
@@ -18,6 +14,8 @@ import {
   Assignments,
   AuthorizationResponse,
   Benchmarks,
+  CommitHashRequest,
+  CommitHashResponse,
   Course,
   CourseRequest,
   CourseSubmissions,
@@ -62,10 +60,9 @@ export class AutograderServiceClient {
   options_: null | { [index: string]: string; };
 
   constructor (hostname: string,
-               credentials?: null | { [index: string]: string; },
-               options?: null | { [index: string]: string; }) {
+               credentials: null | { [index: string]: string; },
+               options: null | { [index: string]: string; }) {
     if (!options) options = {};
-    if (!credentials) credentials = {};
     options['format'] = 'binary';
 
     this.client_ = new grpcWeb.GrpcWebClientBase(options);
@@ -84,33 +81,16 @@ export class AutograderServiceClient {
 
   getUser(
     request: Void,
-    metadata: grpcWeb.Metadata | null): Promise<User>;
-
-  getUser(
-    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: User) => void): grpcWeb.ClientReadableStream<User>;
-
-  getUser(
-    request: Void,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: User) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetUser', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetUser,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetUser',
-    request,
-    metadata || {},
-    this.methodInfoGetUser);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetUser',
+      request,
+      metadata || {},
+      this.methodInfoGetUser,
+      callback);
   }
 
   methodInfoGetUsers = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -123,33 +103,16 @@ export class AutograderServiceClient {
 
   getUsers(
     request: Void,
-    metadata: grpcWeb.Metadata | null): Promise<Users>;
-
-  getUsers(
-    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Users) => void): grpcWeb.ClientReadableStream<Users>;
-
-  getUsers(
-    request: Void,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Users) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetUsers', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetUsers,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetUsers',
-    request,
-    metadata || {},
-    this.methodInfoGetUsers);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetUsers',
+      request,
+      metadata || {},
+      this.methodInfoGetUsers,
+      callback);
   }
 
   methodInfoGetUserByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -162,33 +125,16 @@ export class AutograderServiceClient {
 
   getUserByCourse(
     request: CourseUserRequest,
-    metadata: grpcWeb.Metadata | null): Promise<User>;
-
-  getUserByCourse(
-    request: CourseUserRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: User) => void): grpcWeb.ClientReadableStream<User>;
-
-  getUserByCourse(
-    request: CourseUserRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: User) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetUserByCourse', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetUserByCourse,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetUserByCourse',
-    request,
-    metadata || {},
-    this.methodInfoGetUserByCourse);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetUserByCourse',
+      request,
+      metadata || {},
+      this.methodInfoGetUserByCourse,
+      callback);
   }
 
   methodInfoUpdateUser = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -201,33 +147,16 @@ export class AutograderServiceClient {
 
   updateUser(
     request: User,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  updateUser(
-    request: User,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  updateUser(
-    request: User,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateUser', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoUpdateUser,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/UpdateUser',
-    request,
-    metadata || {},
-    this.methodInfoUpdateUser);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateUser',
+      request,
+      metadata || {},
+      this.methodInfoUpdateUser,
+      callback);
   }
 
   methodInfoIsAuthorizedTeacher = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -240,33 +169,16 @@ export class AutograderServiceClient {
 
   isAuthorizedTeacher(
     request: Void,
-    metadata: grpcWeb.Metadata | null): Promise<AuthorizationResponse>;
-
-  isAuthorizedTeacher(
-    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: AuthorizationResponse) => void): grpcWeb.ClientReadableStream<AuthorizationResponse>;
-
-  isAuthorizedTeacher(
-    request: Void,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: AuthorizationResponse) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/IsAuthorizedTeacher', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoIsAuthorizedTeacher,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/IsAuthorizedTeacher',
-    request,
-    metadata || {},
-    this.methodInfoIsAuthorizedTeacher);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/IsAuthorizedTeacher',
+      request,
+      metadata || {},
+      this.methodInfoIsAuthorizedTeacher,
+      callback);
   }
 
   methodInfoGetGroup = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -279,33 +191,16 @@ export class AutograderServiceClient {
 
   getGroup(
     request: GetGroupRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Group>;
-
-  getGroup(
-    request: GetGroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Group) => void): grpcWeb.ClientReadableStream<Group>;
-
-  getGroup(
-    request: GetGroupRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Group) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetGroup', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetGroup,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetGroup',
-    request,
-    metadata || {},
-    this.methodInfoGetGroup);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetGroup',
+      request,
+      metadata || {},
+      this.methodInfoGetGroup,
+      callback);
   }
 
   methodInfoGetGroupByUserAndCourse = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -318,33 +213,16 @@ export class AutograderServiceClient {
 
   getGroupByUserAndCourse(
     request: GroupRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Group>;
-
-  getGroupByUserAndCourse(
-    request: GroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Group) => void): grpcWeb.ClientReadableStream<Group>;
-
-  getGroupByUserAndCourse(
-    request: GroupRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Group) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetGroupByUserAndCourse', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetGroupByUserAndCourse,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetGroupByUserAndCourse',
-    request,
-    metadata || {},
-    this.methodInfoGetGroupByUserAndCourse);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetGroupByUserAndCourse',
+      request,
+      metadata || {},
+      this.methodInfoGetGroupByUserAndCourse,
+      callback);
   }
 
   methodInfoGetGroupsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -357,33 +235,16 @@ export class AutograderServiceClient {
 
   getGroupsByCourse(
     request: CourseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Groups>;
-
-  getGroupsByCourse(
-    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Groups) => void): grpcWeb.ClientReadableStream<Groups>;
-
-  getGroupsByCourse(
-    request: CourseRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Groups) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetGroupsByCourse', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetGroupsByCourse,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetGroupsByCourse',
-    request,
-    metadata || {},
-    this.methodInfoGetGroupsByCourse);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetGroupsByCourse',
+      request,
+      metadata || {},
+      this.methodInfoGetGroupsByCourse,
+      callback);
   }
 
   methodInfoCreateGroup = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -396,33 +257,16 @@ export class AutograderServiceClient {
 
   createGroup(
     request: Group,
-    metadata: grpcWeb.Metadata | null): Promise<Group>;
-
-  createGroup(
-    request: Group,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Group) => void): grpcWeb.ClientReadableStream<Group>;
-
-  createGroup(
-    request: Group,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Group) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/CreateGroup', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoCreateGroup,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/CreateGroup',
-    request,
-    metadata || {},
-    this.methodInfoCreateGroup);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/CreateGroup',
+      request,
+      metadata || {},
+      this.methodInfoCreateGroup,
+      callback);
   }
 
   methodInfoUpdateGroup = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -435,33 +279,16 @@ export class AutograderServiceClient {
 
   updateGroup(
     request: Group,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  updateGroup(
-    request: Group,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  updateGroup(
-    request: Group,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateGroup', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoUpdateGroup,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/UpdateGroup',
-    request,
-    metadata || {},
-    this.methodInfoUpdateGroup);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateGroup',
+      request,
+      metadata || {},
+      this.methodInfoUpdateGroup,
+      callback);
   }
 
   methodInfoDeleteGroup = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -474,33 +301,16 @@ export class AutograderServiceClient {
 
   deleteGroup(
     request: GroupRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  deleteGroup(
-    request: GroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  deleteGroup(
-    request: GroupRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/DeleteGroup', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoDeleteGroup,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/DeleteGroup',
-    request,
-    metadata || {},
-    this.methodInfoDeleteGroup);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/DeleteGroup',
+      request,
+      metadata || {},
+      this.methodInfoDeleteGroup,
+      callback);
   }
 
   methodInfoGetCourse = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -513,33 +323,16 @@ export class AutograderServiceClient {
 
   getCourse(
     request: CourseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Course>;
-
-  getCourse(
-    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Course) => void): grpcWeb.ClientReadableStream<Course>;
-
-  getCourse(
-    request: CourseRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Course) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetCourse', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetCourse,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetCourse',
-    request,
-    metadata || {},
-    this.methodInfoGetCourse);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetCourse',
+      request,
+      metadata || {},
+      this.methodInfoGetCourse,
+      callback);
   }
 
   methodInfoGetCourses = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -552,33 +345,16 @@ export class AutograderServiceClient {
 
   getCourses(
     request: Void,
-    metadata: grpcWeb.Metadata | null): Promise<Courses>;
-
-  getCourses(
-    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Courses) => void): grpcWeb.ClientReadableStream<Courses>;
-
-  getCourses(
-    request: Void,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Courses) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetCourses', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetCourses,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetCourses',
-    request,
-    metadata || {},
-    this.methodInfoGetCourses);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetCourses',
+      request,
+      metadata || {},
+      this.methodInfoGetCourses,
+      callback);
   }
 
   methodInfoGetCoursesByUser = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -591,33 +367,16 @@ export class AutograderServiceClient {
 
   getCoursesByUser(
     request: EnrollmentStatusRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Courses>;
-
-  getCoursesByUser(
-    request: EnrollmentStatusRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Courses) => void): grpcWeb.ClientReadableStream<Courses>;
-
-  getCoursesByUser(
-    request: EnrollmentStatusRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Courses) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetCoursesByUser', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetCoursesByUser,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetCoursesByUser',
-    request,
-    metadata || {},
-    this.methodInfoGetCoursesByUser);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetCoursesByUser',
+      request,
+      metadata || {},
+      this.methodInfoGetCoursesByUser,
+      callback);
   }
 
   methodInfoCreateCourse = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -630,33 +389,16 @@ export class AutograderServiceClient {
 
   createCourse(
     request: Course,
-    metadata: grpcWeb.Metadata | null): Promise<Course>;
-
-  createCourse(
-    request: Course,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Course) => void): grpcWeb.ClientReadableStream<Course>;
-
-  createCourse(
-    request: Course,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Course) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/CreateCourse', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoCreateCourse,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/CreateCourse',
-    request,
-    metadata || {},
-    this.methodInfoCreateCourse);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/CreateCourse',
+      request,
+      metadata || {},
+      this.methodInfoCreateCourse,
+      callback);
   }
 
   methodInfoUpdateCourse = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -669,33 +411,16 @@ export class AutograderServiceClient {
 
   updateCourse(
     request: Course,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  updateCourse(
-    request: Course,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  updateCourse(
-    request: Course,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateCourse', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoUpdateCourse,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/UpdateCourse',
-    request,
-    metadata || {},
-    this.methodInfoUpdateCourse);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateCourse',
+      request,
+      metadata || {},
+      this.methodInfoUpdateCourse,
+      callback);
   }
 
   methodInfoUpdateCourseVisibility = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -708,33 +433,16 @@ export class AutograderServiceClient {
 
   updateCourseVisibility(
     request: Enrollment,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  updateCourseVisibility(
-    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  updateCourseVisibility(
-    request: Enrollment,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateCourseVisibility', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoUpdateCourseVisibility,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/UpdateCourseVisibility',
-    request,
-    metadata || {},
-    this.methodInfoUpdateCourseVisibility);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateCourseVisibility',
+      request,
+      metadata || {},
+      this.methodInfoUpdateCourseVisibility,
+      callback);
   }
 
   methodInfoGetAssignments = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -747,33 +455,16 @@ export class AutograderServiceClient {
 
   getAssignments(
     request: CourseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Assignments>;
-
-  getAssignments(
-    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Assignments) => void): grpcWeb.ClientReadableStream<Assignments>;
-
-  getAssignments(
-    request: CourseRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Assignments) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetAssignments', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetAssignments,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetAssignments',
-    request,
-    metadata || {},
-    this.methodInfoGetAssignments);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetAssignments',
+      request,
+      metadata || {},
+      this.methodInfoGetAssignments,
+      callback);
   }
 
   methodInfoUpdateAssignments = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -786,33 +477,16 @@ export class AutograderServiceClient {
 
   updateAssignments(
     request: CourseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  updateAssignments(
-    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  updateAssignments(
-    request: CourseRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateAssignments', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoUpdateAssignments,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/UpdateAssignments',
-    request,
-    metadata || {},
-    this.methodInfoUpdateAssignments);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateAssignments',
+      request,
+      metadata || {},
+      this.methodInfoUpdateAssignments,
+      callback);
   }
 
   methodInfoGetEnrollmentsByUser = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -825,33 +499,16 @@ export class AutograderServiceClient {
 
   getEnrollmentsByUser(
     request: EnrollmentStatusRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Enrollments>;
-
-  getEnrollmentsByUser(
-    request: EnrollmentStatusRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Enrollments) => void): grpcWeb.ClientReadableStream<Enrollments>;
-
-  getEnrollmentsByUser(
-    request: EnrollmentStatusRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Enrollments) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetEnrollmentsByUser', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetEnrollmentsByUser,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetEnrollmentsByUser',
-    request,
-    metadata || {},
-    this.methodInfoGetEnrollmentsByUser);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetEnrollmentsByUser',
+      request,
+      metadata || {},
+      this.methodInfoGetEnrollmentsByUser,
+      callback);
   }
 
   methodInfoGetEnrollmentsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -864,33 +521,16 @@ export class AutograderServiceClient {
 
   getEnrollmentsByCourse(
     request: EnrollmentRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Enrollments>;
-
-  getEnrollmentsByCourse(
-    request: EnrollmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Enrollments) => void): grpcWeb.ClientReadableStream<Enrollments>;
-
-  getEnrollmentsByCourse(
-    request: EnrollmentRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Enrollments) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetEnrollmentsByCourse', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetEnrollmentsByCourse,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetEnrollmentsByCourse',
-    request,
-    metadata || {},
-    this.methodInfoGetEnrollmentsByCourse);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetEnrollmentsByCourse',
+      request,
+      metadata || {},
+      this.methodInfoGetEnrollmentsByCourse,
+      callback);
   }
 
   methodInfoCreateEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -903,33 +543,16 @@ export class AutograderServiceClient {
 
   createEnrollment(
     request: Enrollment,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  createEnrollment(
-    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  createEnrollment(
-    request: Enrollment,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/CreateEnrollment', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoCreateEnrollment,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/CreateEnrollment',
-    request,
-    metadata || {},
-    this.methodInfoCreateEnrollment);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/CreateEnrollment',
+      request,
+      metadata || {},
+      this.methodInfoCreateEnrollment,
+      callback);
   }
 
   methodInfoUpdateEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -942,33 +565,16 @@ export class AutograderServiceClient {
 
   updateEnrollment(
     request: Enrollment,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  updateEnrollment(
-    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  updateEnrollment(
-    request: Enrollment,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateEnrollment', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoUpdateEnrollment,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/UpdateEnrollment',
-    request,
-    metadata || {},
-    this.methodInfoUpdateEnrollment);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateEnrollment',
+      request,
+      metadata || {},
+      this.methodInfoUpdateEnrollment,
+      callback);
   }
 
   methodInfoUpdateEnrollments = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -981,33 +587,16 @@ export class AutograderServiceClient {
 
   updateEnrollments(
     request: CourseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  updateEnrollments(
-    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  updateEnrollments(
-    request: CourseRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateEnrollments', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoUpdateEnrollments,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/UpdateEnrollments',
-    request,
-    metadata || {},
-    this.methodInfoUpdateEnrollments);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateEnrollments',
+      request,
+      metadata || {},
+      this.methodInfoUpdateEnrollments,
+      callback);
   }
 
   methodInfoGetSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1020,33 +609,16 @@ export class AutograderServiceClient {
 
   getSubmissions(
     request: SubmissionRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Submissions>;
-
-  getSubmissions(
-    request: SubmissionRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Submissions) => void): grpcWeb.ClientReadableStream<Submissions>;
-
-  getSubmissions(
-    request: SubmissionRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Submissions) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetSubmissions', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetSubmissions,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetSubmissions',
-    request,
-    metadata || {},
-    this.methodInfoGetSubmissions);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetSubmissions',
+      request,
+      metadata || {},
+      this.methodInfoGetSubmissions,
+      callback);
   }
 
   methodInfoGetSubmissionsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1059,33 +631,16 @@ export class AutograderServiceClient {
 
   getSubmissionsByCourse(
     request: SubmissionsForCourseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<CourseSubmissions>;
-
-  getSubmissionsByCourse(
-    request: SubmissionsForCourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: CourseSubmissions) => void): grpcWeb.ClientReadableStream<CourseSubmissions>;
-
-  getSubmissionsByCourse(
-    request: SubmissionsForCourseRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: CourseSubmissions) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetSubmissionsByCourse', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetSubmissionsByCourse,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetSubmissionsByCourse',
-    request,
-    metadata || {},
-    this.methodInfoGetSubmissionsByCourse);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetSubmissionsByCourse',
+      request,
+      metadata || {},
+      this.methodInfoGetSubmissionsByCourse,
+      callback);
   }
 
   methodInfoUpdateSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1098,33 +653,16 @@ export class AutograderServiceClient {
 
   updateSubmission(
     request: UpdateSubmissionRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  updateSubmission(
-    request: UpdateSubmissionRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  updateSubmission(
-    request: UpdateSubmissionRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateSubmission', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoUpdateSubmission,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/UpdateSubmission',
-    request,
-    metadata || {},
-    this.methodInfoUpdateSubmission);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateSubmission',
+      request,
+      metadata || {},
+      this.methodInfoUpdateSubmission,
+      callback);
   }
 
   methodInfoUpdateSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1137,33 +675,16 @@ export class AutograderServiceClient {
 
   updateSubmissions(
     request: UpdateSubmissionsRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  updateSubmissions(
-    request: UpdateSubmissionsRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  updateSubmissions(
-    request: UpdateSubmissionsRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateSubmissions', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoUpdateSubmissions,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/UpdateSubmissions',
-    request,
-    metadata || {},
-    this.methodInfoUpdateSubmissions);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateSubmissions',
+      request,
+      metadata || {},
+      this.methodInfoUpdateSubmissions,
+      callback);
   }
 
   methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1176,33 +697,57 @@ export class AutograderServiceClient {
 
   rebuildSubmission(
     request: RebuildRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Submission>;
-
-  rebuildSubmission(
-    request: RebuildRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Submission) => void): grpcWeb.ClientReadableStream<Submission>;
-
-  rebuildSubmission(
-    request: RebuildRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Submission) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/RebuildSubmission', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoRebuildSubmission,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/RebuildSubmission',
-    request,
-    metadata || {},
-    this.methodInfoRebuildSubmission);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/RebuildSubmission',
+      request,
+      metadata || {},
+      this.methodInfoRebuildSubmission,
+      callback);
+  }
+
+  methodInfoGetSubmissionCommitHash = new grpcWeb.AbstractClientBase.MethodInfo(
+    CommitHashResponse,
+    (request: CommitHashRequest) => {
+      return request.serializeBinary();
+    },
+    CommitHashResponse.deserializeBinary
+  );
+
+  getSubmissionCommitHash(
+    request: CommitHashRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: CommitHashResponse) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetSubmissionCommitHash',
+      request,
+      metadata || {},
+      this.methodInfoGetSubmissionCommitHash,
+      callback);
+  }
+
+  methodInfoStreamSubmissionCommitHash = new grpcWeb.AbstractClientBase.MethodInfo(
+    CommitHashResponse,
+    (request: CommitHashRequest) => {
+      return request.serializeBinary();
+    },
+    CommitHashResponse.deserializeBinary
+  );
+
+  streamSubmissionCommitHash(
+    request: CommitHashRequest,
+    metadata?: grpcWeb.Metadata) {
+    return this.client_.serverStreaming(
+      this.hostname_ +
+        '/AutograderService/StreamSubmissionCommitHash',
+      request,
+      metadata || {},
+      this.methodInfoStreamSubmissionCommitHash);
   }
 
   methodInfoCreateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1215,33 +760,16 @@ export class AutograderServiceClient {
 
   createBenchmark(
     request: GradingBenchmark,
-    metadata: grpcWeb.Metadata | null): Promise<GradingBenchmark>;
-
-  createBenchmark(
-    request: GradingBenchmark,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: GradingBenchmark) => void): grpcWeb.ClientReadableStream<GradingBenchmark>;
-
-  createBenchmark(
-    request: GradingBenchmark,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: GradingBenchmark) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/CreateBenchmark', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoCreateBenchmark,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/CreateBenchmark',
-    request,
-    metadata || {},
-    this.methodInfoCreateBenchmark);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/CreateBenchmark',
+      request,
+      metadata || {},
+      this.methodInfoCreateBenchmark,
+      callback);
   }
 
   methodInfoUpdateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1254,33 +782,16 @@ export class AutograderServiceClient {
 
   updateBenchmark(
     request: GradingBenchmark,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  updateBenchmark(
-    request: GradingBenchmark,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  updateBenchmark(
-    request: GradingBenchmark,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateBenchmark', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoUpdateBenchmark,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/UpdateBenchmark',
-    request,
-    metadata || {},
-    this.methodInfoUpdateBenchmark);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateBenchmark',
+      request,
+      metadata || {},
+      this.methodInfoUpdateBenchmark,
+      callback);
   }
 
   methodInfoDeleteBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1293,33 +804,16 @@ export class AutograderServiceClient {
 
   deleteBenchmark(
     request: GradingBenchmark,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  deleteBenchmark(
-    request: GradingBenchmark,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  deleteBenchmark(
-    request: GradingBenchmark,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/DeleteBenchmark', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoDeleteBenchmark,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/DeleteBenchmark',
-    request,
-    metadata || {},
-    this.methodInfoDeleteBenchmark);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/DeleteBenchmark',
+      request,
+      metadata || {},
+      this.methodInfoDeleteBenchmark,
+      callback);
   }
 
   methodInfoCreateCriterion = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1332,33 +826,16 @@ export class AutograderServiceClient {
 
   createCriterion(
     request: GradingCriterion,
-    metadata: grpcWeb.Metadata | null): Promise<GradingCriterion>;
-
-  createCriterion(
-    request: GradingCriterion,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: GradingCriterion) => void): grpcWeb.ClientReadableStream<GradingCriterion>;
-
-  createCriterion(
-    request: GradingCriterion,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: GradingCriterion) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/CreateCriterion', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoCreateCriterion,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/CreateCriterion',
-    request,
-    metadata || {},
-    this.methodInfoCreateCriterion);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/CreateCriterion',
+      request,
+      metadata || {},
+      this.methodInfoCreateCriterion,
+      callback);
   }
 
   methodInfoUpdateCriterion = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1371,33 +848,16 @@ export class AutograderServiceClient {
 
   updateCriterion(
     request: GradingCriterion,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  updateCriterion(
-    request: GradingCriterion,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  updateCriterion(
-    request: GradingCriterion,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateCriterion', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoUpdateCriterion,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/UpdateCriterion',
-    request,
-    metadata || {},
-    this.methodInfoUpdateCriterion);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateCriterion',
+      request,
+      metadata || {},
+      this.methodInfoUpdateCriterion,
+      callback);
   }
 
   methodInfoDeleteCriterion = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1410,33 +870,16 @@ export class AutograderServiceClient {
 
   deleteCriterion(
     request: GradingCriterion,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  deleteCriterion(
-    request: GradingCriterion,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  deleteCriterion(
-    request: GradingCriterion,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/DeleteCriterion', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoDeleteCriterion,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/DeleteCriterion',
-    request,
-    metadata || {},
-    this.methodInfoDeleteCriterion);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/DeleteCriterion',
+      request,
+      metadata || {},
+      this.methodInfoDeleteCriterion,
+      callback);
   }
 
   methodInfoCreateReview = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1449,33 +892,16 @@ export class AutograderServiceClient {
 
   createReview(
     request: ReviewRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Review>;
-
-  createReview(
-    request: ReviewRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Review) => void): grpcWeb.ClientReadableStream<Review>;
-
-  createReview(
-    request: ReviewRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Review) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/CreateReview', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoCreateReview,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/CreateReview',
-    request,
-    metadata || {},
-    this.methodInfoCreateReview);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/CreateReview',
+      request,
+      metadata || {},
+      this.methodInfoCreateReview,
+      callback);
   }
 
   methodInfoUpdateReview = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1488,33 +914,16 @@ export class AutograderServiceClient {
 
   updateReview(
     request: ReviewRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  updateReview(
-    request: ReviewRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  updateReview(
-    request: ReviewRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateReview', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoUpdateReview,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/UpdateReview',
-    request,
-    metadata || {},
-    this.methodInfoUpdateReview);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateReview',
+      request,
+      metadata || {},
+      this.methodInfoUpdateReview,
+      callback);
   }
 
   methodInfoGetReviewers = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1527,33 +936,16 @@ export class AutograderServiceClient {
 
   getReviewers(
     request: SubmissionReviewersRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Reviewers>;
-
-  getReviewers(
-    request: SubmissionReviewersRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Reviewers) => void): grpcWeb.ClientReadableStream<Reviewers>;
-
-  getReviewers(
-    request: SubmissionReviewersRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Reviewers) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetReviewers', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetReviewers,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetReviewers',
-    request,
-    metadata || {},
-    this.methodInfoGetReviewers);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetReviewers',
+      request,
+      metadata || {},
+      this.methodInfoGetReviewers,
+      callback);
   }
 
   methodInfoLoadCriteria = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1566,33 +958,16 @@ export class AutograderServiceClient {
 
   loadCriteria(
     request: LoadCriteriaRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Benchmarks>;
-
-  loadCriteria(
-    request: LoadCriteriaRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Benchmarks) => void): grpcWeb.ClientReadableStream<Benchmarks>;
-
-  loadCriteria(
-    request: LoadCriteriaRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Benchmarks) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/LoadCriteria', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoLoadCriteria,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/LoadCriteria',
-    request,
-    metadata || {},
-    this.methodInfoLoadCriteria);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/LoadCriteria',
+      request,
+      metadata || {},
+      this.methodInfoLoadCriteria,
+      callback);
   }
 
   methodInfoGetProviders = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1605,33 +980,16 @@ export class AutograderServiceClient {
 
   getProviders(
     request: Void,
-    metadata: grpcWeb.Metadata | null): Promise<Providers>;
-
-  getProviders(
-    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Providers) => void): grpcWeb.ClientReadableStream<Providers>;
-
-  getProviders(
-    request: Void,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Providers) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetProviders', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetProviders,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetProviders',
-    request,
-    metadata || {},
-    this.methodInfoGetProviders);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetProviders',
+      request,
+      metadata || {},
+      this.methodInfoGetProviders,
+      callback);
   }
 
   methodInfoGetOrganization = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1644,33 +1002,16 @@ export class AutograderServiceClient {
 
   getOrganization(
     request: OrgRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Organization>;
-
-  getOrganization(
-    request: OrgRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Organization) => void): grpcWeb.ClientReadableStream<Organization>;
-
-  getOrganization(
-    request: OrgRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Organization) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetOrganization', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetOrganization,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetOrganization',
-    request,
-    metadata || {},
-    this.methodInfoGetOrganization);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetOrganization',
+      request,
+      metadata || {},
+      this.methodInfoGetOrganization,
+      callback);
   }
 
   methodInfoGetRepositories = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1683,33 +1024,16 @@ export class AutograderServiceClient {
 
   getRepositories(
     request: URLRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Repositories>;
-
-  getRepositories(
-    request: URLRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Repositories) => void): grpcWeb.ClientReadableStream<Repositories>;
-
-  getRepositories(
-    request: URLRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Repositories) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/GetRepositories', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoGetRepositories,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/GetRepositories',
-    request,
-    metadata || {},
-    this.methodInfoGetRepositories);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetRepositories',
+      request,
+      metadata || {},
+      this.methodInfoGetRepositories,
+      callback);
   }
 
   methodInfoIsEmptyRepo = new grpcWeb.AbstractClientBase.MethodInfo(
@@ -1722,33 +1046,16 @@ export class AutograderServiceClient {
 
   isEmptyRepo(
     request: RepositoryRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
-
-  isEmptyRepo(
-    request: RepositoryRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
-
-  isEmptyRepo(
-    request: RepositoryRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/AutograderService/IsEmptyRepo', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoIsEmptyRepo,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/AutograderService/IsEmptyRepo',
-    request,
-    metadata || {},
-    this.methodInfoIsEmptyRepo);
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/IsEmptyRepo',
+      request,
+      metadata || {},
+      this.methodInfoIsEmptyRepo,
+      callback);
   }
 
 }

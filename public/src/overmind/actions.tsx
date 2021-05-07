@@ -1,6 +1,6 @@
 import { Action, AsyncAction } from "overmind";
 import { IGrpcResponse } from "../GRPCManager";
-import {  User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest } from "../proto/ag_pb";
+import {  User, Enrollment, Assignment, Submission, Repository, Organization, Course, SubmissionsForCourseRequest } from "../../proto/ag_pb";
 import { CourseGroup, state } from "./state";
 
 
@@ -32,7 +32,7 @@ export const getHash: Action<{courseID: number, assignmentID: number}> = ({state
         })
     }
 }
-
+/*
 export const sHash: Action<{courseID: number, assignmentID: number}> = ({state, actions, effects}, value) => {
     const submission = state.submissions[value.courseID].find(submission => submission.getAssignmentid() === value.assignmentID)
     if (submission) {
@@ -41,7 +41,7 @@ export const sHash: Action<{courseID: number, assignmentID: number}> = ({state, 
         )
         
     }
-}
+}/*
 
 export const gas: Action<number> = ({state, actions, effects}, courseID) => {
     const groupID = state.enrollmentsByCourseId[courseID].getGroupid()
@@ -436,7 +436,7 @@ export const updateSearch: Action<string> = ({state}, search) => {
 /** Initializes a student user with all required data */
 /** //TODO: Figure out how to await this monster  */
 export const setupUser: AsyncAction<void, boolean> = async ({state, actions}) => {
-    const check = await actions.getPerson()
+    const check = await actions.getUser()
     .then(async success => {
         console.log("Loading enrollments", success)
         if (success) {

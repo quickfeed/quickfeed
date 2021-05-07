@@ -1,6 +1,6 @@
 import React, { Dispatch, SetStateAction, useState } from "react"
 import { useOvermind } from "../../overmind"
-import { User } from "../../proto/ag_pb"
+import { User } from "../../../proto/ag_pb"
 
 interface IProps {
     editing: boolean;

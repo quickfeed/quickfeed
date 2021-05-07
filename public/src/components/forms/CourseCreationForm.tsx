@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { useOvermind } from "../../overmind"
-import { Course, Enrollment } from "../../proto/ag_pb"
+import { Course, Enrollment } from "../../../proto/ag_pb"
 import CourseCard from "../CourseCard"
 
 
