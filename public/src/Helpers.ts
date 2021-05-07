@@ -46,8 +46,9 @@ export const formatBuildInfo = (buildInfo: string) => {
 }
 
 /** Utility function for LandingpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
-export const timeFormatter = (deadline:number , now: Date) => {
-    const timeToDeadline = deadline - now.getTime()
+export const timeFormatter = (deadline:string , now: Date) => {
+    const timeOfDeadline = new Date(deadline)
+    const timeToDeadline =  timeOfDeadline.getTime() - now.getTime()
     let days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     let hours = Math.floor(timeToDeadline / (1000 * 3600))
     let minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000*60))
@@ -96,10 +97,14 @@ export const EnrollmentStatusColors = {
     Returns an array of the same type as arr, sorted by the by-function
 */ 
 export const sortByField = (arr: any[], funcs: Function[], by: Function, descending?: boolean) => {
-    let sortedArray
-    sortedArray = arr.sort((a, b) => {
+    const unsortedArray = Object.assign([], arr)
+    //let sortedArray
+    const sortedArray = unsortedArray.sort((a, b) => {
         let x: any
         let y: any
+        if (!a || !b) {
+            return 0
+        }
         if (funcs.length > 0) {
             funcs.forEach(func => {
                 if (!x) {
@@ -127,7 +132,7 @@ export const sortByField = (arr: any[], funcs: Function[], by: Function, descend
         if (by.call(x) > by.call(y)) {
             return descending ? -1 : 1
         }
-        return 0
+        return -1
     })
     return sortedArray
 }
