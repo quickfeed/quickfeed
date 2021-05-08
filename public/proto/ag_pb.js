@@ -7345,7 +7345,8 @@ proto.Review.toObject = function(includeInstance, msg) {
     ready: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
     score: jspb.Message.getFieldWithDefault(msg, 7, 0),
     benchmarksList: jspb.Message.toObjectList(msg.getBenchmarksList(),
-    proto.GradingBenchmark.toObject, includeInstance)
+    proto.GradingBenchmark.toObject, includeInstance),
+    edited: jspb.Message.getFieldWithDefault(msg, 9, "")
   };
 
   if (includeInstance) {
@@ -7414,6 +7415,10 @@ proto.Review.deserializeBinaryFromReader = function(msg, reader) {
       var value = new proto.GradingBenchmark;
       reader.readMessage(value,proto.GradingBenchmark.deserializeBinaryFromReader);
       msg.addBenchmarks(value);
+      break;
+    case 9:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setEdited(value);
       break;
     default:
       reader.skipField();
@@ -7499,6 +7504,13 @@ proto.Review.serializeBinaryToWriter = function(message, writer) {
       8,
       f,
       proto.GradingBenchmark.serializeBinaryToWriter
+    );
+  }
+  f = message.getEdited();
+  if (f.length > 0) {
+    writer.writeString(
+      9,
+      f
     );
   }
 };
@@ -7665,6 +7677,24 @@ proto.Review.prototype.addBenchmarks = function(opt_value, opt_index) {
  */
 proto.Review.prototype.clearBenchmarksList = function() {
   return this.setBenchmarksList([]);
+};
+
+
+/**
+ * optional string edited = 9;
+ * @return {string}
+ */
+proto.Review.prototype.getEdited = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.Review} returns this
+ */
+proto.Review.prototype.setEdited = function(value) {
+  return jspb.Message.setProto3StringField(this, 9, value);
 };
 
 
