@@ -438,10 +438,8 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             });
         }
         if (!rw && s && this.canTakeOver(s)) {
-
             const r = s.reviews.slice(-1).pop();
             if (r) {
-                console.log("Taking over a review from ID: " + r.getReviewerid())
                 r.setReviewerid(this.props.reviewerID);
             }
             return r;
