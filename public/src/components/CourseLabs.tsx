@@ -1,5 +1,5 @@
 import { useHistory } from "react-router"
-import { getFormattedDeadline, SubmissionStatus } from "../Helpers"
+import { getFormattedTime, SubmissionStatus } from "../Helpers"
 import { useOvermind } from "../overmind"
 import { Submission } from "../../proto/ag_pb"
 import { ProgressBar } from "./ProgressBar"
@@ -36,7 +36,7 @@ export const CourseLabs = (props:MatchProps) =>  {
                         <div className="row" >
                             <div className="col-5"><ProgressBar courseID={props.crsid} assignmentIndex={assignment.getOrder()-1} submission={submission} type="lab"/></div>
                             <div className="col-3 text-center">{(submission.getStatus()==0 && submission.getScore()>=assignment.getScorelimit()) ? "AWAITING APPROVAL":SubmissionStatus[submission.getStatus()]}</div>
-                            <div className="col-4 text-center">{getFormattedDeadline(assignment.getDeadline())}</div>
+                            <div className="col-4 text-center">{getFormattedTime(assignment.getDeadline())}</div>
                         </div>
                     </li>
                 )
