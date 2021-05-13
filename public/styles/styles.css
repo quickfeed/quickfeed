@@ -67,6 +67,11 @@
 
 }
 
+.Sidebar-items-link{
+    text-align: center;
+    line-height: 60px;
+}
+
 .SidebarList .inactive {
     display: none;
 }
@@ -276,4 +281,26 @@ input{
     white-space: nowrap;
     overflow: hidden;
     text-align: center;
+}
+
+.review {
+    display: flex;
+    flex-direction: row;
+    position: absolute
+}
+
+.reviewTable {
+    flex: 20;
+}
+
+.reviewLab {
+    padding-left: 10px;
+    flex: 80;
+    position: sticky;
+    top: 50px; 
+    height: 800px;
+    overflow: scroll;
+    overflow-y: scroll; 
+    max-width: 80%;
+    min-width: 50%;
 }
