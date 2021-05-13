@@ -9,11 +9,16 @@ interface submission {
 
 const ReviewResult = ({review}: submission) => {
     const {state: {theme}} = useOvermind()
-    const result = (): JSX.Element[] => {
+
+
+    const Result: Function = (): JSX.Element[] => {
         let b: JSX.Element[] = []
 
         review.forEach(r => {
-            
+            try {
+                
+
+        
             r.getBenchmarksList().map(benchmark => {
                 b.push(
                 <tr className="table-info">
@@ -32,7 +37,10 @@ const ReviewResult = ({review}: submission) => {
                         </tr>)
                 })
             })
-            
+        
+            }catch (error) {
+                console.log(error)
+            }
         })
         return b
     }
@@ -41,18 +49,21 @@ const ReviewResult = ({review}: submission) => {
         <div className="container">
             <table className="table"> 
                 <thead className={theme == "light" ? "thead-dark" : "thead-light"}>
+                    {review.length > 0 ?
                     <tr className="table-primary">
                         <th>{review[0].getFeedback()}</th>
                         <th>{review[0].getScore()}%</th>
                         <th></th>
                     </tr>
+                    : ""
+                    }  
                     <tr>
                         <th scope="col">Criteria</th>
                         <th scope="col">Status</th>
                         <th scope="col">Comment</th>
                     </tr>
                 </thead>
-                    {result()}
+                <Result />
             </table>    
 
         </div>
