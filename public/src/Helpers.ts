@@ -9,10 +9,16 @@ export interface IBuildInfo {
 
 export const getBuildInfo = (buildString: string) => {
     let buildinfo: IBuildInfo
-    buildinfo = JSON.parse(buildString)
+    if (buildString.length === 0) {
+        buildinfo = {builddate: "", buildid: 0, buildlog: "", execTime: 0}
+    }
+    else {
+        buildinfo = JSON.parse(buildString)
+    }
     return buildinfo
     
 }
+
 
 export interface IScoreObjects {
     Secret: string;
@@ -24,9 +30,11 @@ export interface IScoreObjects {
 
 export const getScoreObjects = (scoreString: string) => {
     let scoreObjects: IScoreObjects[] = []
-    const parsedScoreObjects = JSON.parse(scoreString)
-    for (const scoreObject in parsedScoreObjects) {
-        scoreObjects.push(parsedScoreObjects[scoreObject])
+    if (scoreString.length > 0) {
+        const parsedScoreObjects = JSON.parse(scoreString)
+        for (const scoreObject in parsedScoreObjects) {
+            scoreObjects.push(parsedScoreObjects[scoreObject])
+        }
     }
     return scoreObjects
     
@@ -34,7 +42,7 @@ export const getScoreObjects = (scoreString: string) => {
 
 
 /** Returns a string with a prettier format for a deadline */
-export const getFormattedDeadline = (deadline_string: string) => {
+export const getFormattedTime = (deadline_string: string) => {
     const months = ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December']
     let deadline = new Date(deadline_string)
@@ -98,7 +106,6 @@ export const EnrollmentStatusColors = {
 */ 
 export const sortByField = (arr: any[], funcs: Function[], by: Function, descending?: boolean) => {
     const unsortedArray = Object.assign([], arr)
-    //let sortedArray
     const sortedArray = unsortedArray.sort((a, b) => {
         let x: any
         let y: any
@@ -139,8 +146,8 @@ export const sortByField = (arr: any[], funcs: Function[], by: Function, descend
 
 export const SubmissionStatus = {
     0: "NONE",
-    1: "APPROVED",
-    2: "REJECTED",
-    3: "REVISION",
+    1: "Approved",
+    2: "Rejected",
+    3: "Revision",
 }
 
