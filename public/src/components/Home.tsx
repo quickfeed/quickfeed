@@ -1,7 +1,7 @@
 import React from "react";
 import { useOvermind } from "../overmind";
 import Courses from "./Courses";
-import SubmissionsTable from "./SubmissionsTable"
+import LandingPageLabTable from "./LandingPageLabTable";
 
 
 /* Dashboard for a signed in user. */
@@ -13,7 +13,7 @@ const Home = () => {
             <div>
                 <h1>Welcome, {user.name}!</h1>
             </div>
-            <SubmissionsTable courseID={0}/>
+            <LandingPageLabTable courseID={0}/>
             <Courses home={true} />
         </div>
     )
