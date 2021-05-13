@@ -38,6 +38,8 @@ const CourseCard = (props: CardProps) => {
                     <h5 className="card-title">{props.course.getName()} - {props.course.getYear()}/{props.course.getTag()}</h5>
                     { props.status === Enrollment.UserStatus.NONE ? 
                         <div className="btn btn-primary float-down-left" onClick={() => actions.enroll(props.course.getId())}>Enroll to Course</div>
+                    : props.status === Enrollment.UserStatus.PENDING ?
+                        ""
                     :
                         <div className="btn btn-primary float-down-left" onClick={() => history.push("/course/"+props.enrollment.getCourseid())}>Go to Course</div>
                     }
