@@ -5,19 +5,17 @@ import { useOvermind } from "../overmind"
 
 const NavBarFooter = () => {
     const {
-        state: {user, theme},
+        state: {user: {id,avatarurl,isadmin}, theme},
         actions: {changeTheme}
     } = useOvermind()
     const history = useHistory()
 
 
     const LogInButton = () => {
-        if (user.id > 0) {
+        if (id > 0) {
             return (
             <li>
-                <div id="title">
-                    <a href="/logout">Log out</a>
-                </div>
+                <a href="/logout" className="Sidebar-items-link">Log out</a>
             </li>
             )
         }
@@ -36,11 +34,9 @@ const NavBarFooter = () => {
         <div className="SidebarFooter">
                 
         <li key="about">
-            <div id="title">
-                <Link to="/about">
-                    About
-                </Link>
-            </div>
+            <Link to="/about" className="Sidebar-items-link">
+                About
+            </Link>
         </li>
 
         <li key="theme" onClick={() => changeTheme()}>
@@ -49,20 +45,18 @@ const NavBarFooter = () => {
 
         <LogInButton />
 
-        {user.isadmin ? 
+        {isadmin ? 
             <li key="admin">
-                <div id="title">
-                <Link to="/admin">
+                <Link to="/admin" className="Sidebar-items-link">
                     Admin
                 </Link>
-                </div>
             </li>
             : ""
         }
 
-        {user.id > 0 ? 
+        {id > 0 ? 
             <li key="profile" onClick={() => history.push("/profile")}>
-                <div id="title"><img src={user.avatarurl} id="avatar"></img></div>    
+                <div><img src={avatarurl} id="avatar"></img></div>    
             </li>
         : ""}
 

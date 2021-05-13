@@ -10,21 +10,23 @@ export const NavBarTeacher = (props: {courseID: number}) => {
 
     const {state} = useOvermind()
 
+    const pendingMembers = state.courseEnrollments[props.courseID].filter(user => user.getStatus() === Enrollment.UserStatus.PENDING).length
+    const totalMembers = state.courseEnrollments[props.courseID].filter(user => user.getStatus() !== Enrollment.UserStatus.PENDING).length
 
     return (
         <React.Fragment>
-        <li className="activeLabs">
+        <li key={"members"} className="activeLabs">
             <div id="icon" className={"badge badge-danger"}>
-                {state.courseEnrollments[props.courseID].filter(user => user.getStatus() === Enrollment.UserStatus.PENDING).length}
+                {pendingMembers}
             </div>
             <div id="icon" className={"badge badge-primary"}>
-            {state.courseEnrollments[props.courseID].filter(user => user.getStatus() !== Enrollment.UserStatus.PENDING).length}
+                {totalMembers}
             </div>
             <div id="title">
                 <Link to={`/course/${state.activeCourse}/members`}>Members</Link>
             </div>
         </li>
-        <li className="activeLabs">
+        <li key={"review"} className="activeLabs">
             <div id="icon">
 
             </div>
@@ -32,7 +34,7 @@ export const NavBarTeacher = (props: {courseID: number}) => {
                 <Link to={`/course/${state.activeCourse}/review`}>Review</Link>
             </div>
         </li>
-        <li className="activeLabs">
+        <li key={"groups"} className="activeLabs">
             <div id="icon">
 
             </div>

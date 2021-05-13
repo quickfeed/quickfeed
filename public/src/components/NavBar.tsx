@@ -40,11 +40,9 @@ const NavBar = () => {
                     </div>
                 </li>
                 <li key={"allCourses"} className={showCourses ? "active" : "inactive"}>
-                    <div id="title">
-                        <Link to="/courses">
-                            View all courses
-                        </Link>
-                    </div>
+                    <Link to="/courses" className="Sidebar-items-link">
+                        View all courses
+                    </Link>
                 </li>
             </div>
         )
@@ -53,7 +51,7 @@ const NavBar = () => {
                 links.push(
                     <React.Fragment>
                         <li key={enrollment.getCourseid()} className={showCourses || active === enrollment.getCourseid()  ? "active" : "inactive"}  onClick={() => {history.push(`/course/` + enrollment.getCourseid()); setShowCourses(false)}}>
-                            <div id="title">
+                            <div>
                                 {enrollment.getCourse()?.getCode()}
                             </div> 
                         </li>
@@ -73,11 +71,11 @@ const NavBar = () => {
             <ul className="SidebarList">
                 <li key="logo" className="logo">
                     <Link to="/">
-                        Autograder
+                        QuickFeed
                     </Link>
                 </li>
                 
-                <CourseItems />
+                <CourseItems key="courseItems" />
                 <NavBarFooter />
             </ul>
         </nav>
