@@ -39,7 +39,7 @@ import {
     Users,
     Void,
     Reviewers,
-    CommitHashRequest
+    CommitHashRequest,
 } from "../proto/ag_pb";
 import { AutograderServiceClient } from "../proto/AgServiceClientPb";
 import { LoadCriteriaRequest } from '../proto/ag_pb';
@@ -66,7 +66,7 @@ export class GrpcManager {
 
     constructor() {
         // to test on localhost via port forwarding, use make local Makefile target
-        this.agService = new AutograderServiceClient("https://" + window.location.hostname + ":8080", null, null);
+        this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
         this.token = "-1"
     }
 
@@ -247,7 +247,8 @@ export class GrpcManager {
 
     public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
         const request = new SubmissionsForCourseRequest();
-        request.setSkipbuildinfo(true)
+        // TODO: Make this an argument?
+        request.setSkipbuildinfo(false)
         request.setCourseid(courseID);
         request.setType(type);
         return this.grpcSend<CourseSubmissions>(this.agService.getSubmissionsByCourse, request);
@@ -258,6 +259,16 @@ export class GrpcManager {
         request.setAssignmentid(assignmentID);
         request.setSubmissionid(submissionID);
         return this.grpcSend<Submission>(this.agService.rebuildSubmission, request);
+    }
+
+    public updateSubmission(courseID: number, s: Submission): Promise<IGrpcResponse<Void>> {
+        const request = new UpdateSubmissionRequest();
+        request.setSubmissionid(s.getId());
+        request.setCourseid(courseID);
+        request.setStatus(s.getStatus());
+        request.setReleased(s.getReleased());
+        request.setScore(s.getScore());
+        return this.grpcSend<Void>(this.agService.updateSubmission, request);
     }
 
     public updatesubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean) {
@@ -280,7 +291,16 @@ export class GrpcManager {
         return this.grpcSend<CommitHashResponse>(this.agService.getSubmissionCommitHash, request)
     }
 
-
+    /*
+    public stream() {
+        const request = new CommitHashRequest();
+        request.setSubmissionid(1)
+        const s = this.agService.streamSubmissionCommitHash(request, { "custom-header-1": "value1", "user": this.token })
+        s.on("data", (response) => console.log(response.getCommithash()))
+        s.on("error", (error) => console.log(error.code, error.message))
+        s.on("status", (e) => console.log(e.code, e.details, e.metadata))
+    }
+    */
     // /* MANUAL GRADING */ //
 
     public createBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<GradingBenchmark>> {
