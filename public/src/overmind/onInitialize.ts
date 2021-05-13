@@ -5,7 +5,5 @@ export const onInitialize: OnInitialize = async ({
     actions,
     effects
   }, overmind) => {
-    actions.setupUser().then(success => {
-      console.log("print")
-    })
-  }
+    
+}

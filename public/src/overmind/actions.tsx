@@ -2,7 +2,6 @@ import { Action, AsyncAction } from "overmind";
 import { IGrpcResponse } from "../GRPCManager";
 import {  User, Enrollment, Assignment, Submission, Repository, Organization, Course, SubmissionsForCourseRequest } from "../../proto/ag_pb";
 import { CourseGroup, state } from "./state";
-import { time } from "node:console";
 
 
 /** Fetches and stores an authenticated user in state */
