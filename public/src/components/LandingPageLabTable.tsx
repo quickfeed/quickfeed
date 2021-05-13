@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useHistory } from "react-router";
-import { getFormattedDeadline, layoutTime, SubmissionStatus, timeFormatter } from "../Helpers";
+import { getFormattedTime, layoutTime, SubmissionStatus, timeFormatter } from "../Helpers";
 import { useOvermind, useReaction } from "../overmind";
 import { Submission } from "../../proto/ag_pb";
 
@@ -30,10 +30,11 @@ const LandingPageLabTable = (crs: course) => {
                     if(state.submissions[key]) {
                         // Submissions are indexed by the assignment order.
                         submission = state.submissions[key][assignment.getOrder() - 1]
-                        if (submission===undefined){submission = new Submission()}
-                        if(submission.getStatus()!==1){
-                            const timeofDeadline = new Date(assignment.getDeadline())
-                            let time2Deadline = timeFormatter(timeofDeadline.getTime(),state.timeNow)
+                        if (submission===undefined){
+                            submission = new Submission()
+                        }
+                        if (submission.getStatus() !== Submission.Status.APPROVED){
+                            let time2Deadline = timeFormatter(assignment.getDeadline(),state.timeNow)
                             if(time2Deadline[3] >3 && (submission.getScore() >= assignment.getScorelimit() &&(submission.getStatus()<1))){
                                 time2Deadline[1]= "table-success"
                             }
@@ -45,7 +46,7 @@ const LandingPageLabTable = (crs: course) => {
                                         }
                                         <td>{assignment.getName()}</td>
                                         <td>{submission.getScore()} / 100</td>
-                                        <td>{getFormattedDeadline(assignment.getDeadline())}</td>
+                                        <td>{getFormattedTime(assignment.getDeadline())}</td>
                                         <td>{time2Deadline[0] ? time2Deadline[2]: '--'}</td>
                                         <td className={SubmissionStatus[submission.getStatus()]}>{(assignment.getAutoapprove()==false && submission.getScore()>= assignment.getScorelimit()) ? "Awating approval":(assignment.getAutoapprove()==true && submission.getScore()>= assignment.getScorelimit() && submission.getStatus()<1)? "Awaiting approval":(submission.getScore()>=assignment.getScorelimit()? SubmissionStatus[submission.getStatus()] :"Score not high enough")}</td>
                                         <td>{assignment.getIsgrouplab() ? "Yes": "No"}</td>
