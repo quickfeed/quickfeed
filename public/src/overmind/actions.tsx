@@ -2,48 +2,41 @@ import { Action, AsyncAction } from "overmind";
 import { IGrpcResponse } from "../GRPCManager";
 import {  User, Enrollment, Assignment, Submission, Repository, Organization, Course, SubmissionsForCourseRequest } from "../../proto/ag_pb";
 import { CourseGroup, state } from "./state";
+import { time } from "node:console";
 
 
 /** Fetches and stores an authenticated user in state */
 export const getUser: AsyncAction<void, boolean> = async ({state, effects}) => {
-    return await effects.api.getUser()
-    .then(async (user) => {
-        console.log('Fetching.')
-        if (user.id === undefined) {
-            return false
-        }
+    const user = await effects.api.getUser()
+    
+    if (user.id) {
         state.user = user
         effects.grpcMan.setUserid(state.user.Token)
-        console.log(state.user, "hallais")
         return true
-    })
-    
+    }
+    return false
 }
 
-export const getHash: Action<{courseID: number, assignmentID: number}> = ({state, actions, effects}, value) => {
-    const submission = state.submissions[value.courseID].find(submission => submission.getAssignmentid() === value.assignmentID)
+export const getSubmissionCommitHash: Action<{assignmentID: number, courseID: number}> = ({state, actions, effects}, value) => {
+    const submission = state.submissions[value.courseID].find(s => s.getAssignmentid() === value.assignmentID)
     if (submission) {
-        effects.grpcMan.getSubmissionCommitHash(submission.getId()).then(res => {
+        effects.grpcMan.getSubmissionCommitHash(submission.getId()).then(async res => {
             if (res.data) {
                 if (submission.getCommithash() !== res.data.getCommithash()) {
-                    
-                    actions.refreshSubmissions({courseID: value.courseID, submissionID: submission.getId()})
+                    await actions.refreshSubmissions({courseID: value.courseID, submissionID: submission.getId()})
                 }
             }
-        })
+        })  
     }
 }
 
 export const getPerson: AsyncAction<void, boolean> = async ({ state, effects }) => {
     const user = await effects.api.getUser()
     if (user.id === undefined) {
-        console.log("No user ID")
         return false
     }
-    console.log("Fetched user")
     state.user = user
     effects.grpcMan.setUserid(state.user.Token)
-    console.log(state.user, "hallais")
     return true
 }
 
@@ -62,53 +55,48 @@ export const getUsers: AsyncAction<void> = async ({state, effects}) => {
 /** Fetches all courses */
 export const getCourses: AsyncAction<void, boolean> = async ({state, effects}) => {
     state.courses = []
-    return await effects.grpcMan.getCourses().then(res => {
-        if (res.data) {
-            state.courses = res.data.getCoursesList()
-            console.log("Fetched courses")
-            return true
-        }
-        return false
-    })
+    const result = await effects.grpcMan.getCourses()
+    if (result.data) {
+        state.courses = result.data.getCoursesList()
+        return true
+    }
+    return false
 }
 
 /**  */
-export const getCoursesByUser: AsyncAction<void> = async ({state, effects}) => {
+export const getCoursesByUser: AsyncAction<void, boolean> = async ({state, effects}) => {
     let statuses: Enrollment.UserStatus[] = []
-    await effects.grpcMan.getCoursesByUser(state.user.id, statuses).then(res => {
-        if (res.data) {
-            console.log(res.data)
-            state.userCourses = res.data.getCoursesList()
-        }
-    })
-
+    let courses = await effects.grpcMan.getCoursesByUser(state.user.id, statuses)
+    if (courses.data) {
+        courses.data.getCoursesList().forEach(course => {
+            state.userCourses[course.getId()] = course
+        })
+        return true
+    }
+    return false
 }
 
+
 /** Gets all submission for the current user by Course ID and stores them in state */
-export const getSubmissions: AsyncAction<number, Boolean> = async ({state, effects}, courseID) => {
-    return await effects.grpcMan.getSubmissions(courseID, state.user.id).then(res => {
-        console.log(state.user.id, courseID)
-        if (res.data) {
-            state.submissions[courseID] = res.data.getSubmissionsList()
-        }
-        return false
-        
-    })
+export const getSubmissions: AsyncAction<number, boolean> = async ({state, effects}, courseID) => {
+    const result = await effects.grpcMan.getSubmissions(courseID, state.user.id)
+    if (result.data) {
+        state.submissions[courseID] = result.data.getSubmissionsList()
+        return true
+    }
+    return false
 }
 
 
 /** Gets all enrollments for the current user and stores them in state */
 export const getEnrollmentsByUser: AsyncAction<void, boolean> = async ({state, effects}) => {
-    return await effects.grpcMan.getEnrollmentsByUser(state.user.id)
-    .then(res => {
-        if (res.data) {
-            const enrollments = res.data.getEnrollmentsList()
+    const result = await effects.grpcMan.getEnrollmentsByUser(state.user.id)
+    if (result.data) {
+            const enrollments = result.data.getEnrollmentsList()
             state.enrollments = enrollments
-            console.log("Fetched enrollments")
             return true
         }
-        return false
-    })
+    return false
 }
 
 
@@ -131,19 +119,17 @@ export const getEnrollmentByCourseId: Action<number, Enrollment | null> = ({stat
     return enrol
 }
 
-export const getEnrollmentsByCourse: AsyncAction<{courseID: number, statuses: Enrollment.UserStatus[]}> = async ({state, effects}, value) => {
+export const getEnrollmentsByCourse: AsyncAction<{courseID: number, statuses: Enrollment.UserStatus[]}, boolean> = async ({state, effects}, value) => {
 
     state.users = []
     state.courseEnrollments[value.courseID] = []
-    await effects.grpcMan.getEnrollmentsByCourse(value.courseID, undefined, undefined, value.statuses).then(res => {
-        if (res.data) {
-            state.users = res.data.getEnrollmentsList()
-            state.courseEnrollments[value.courseID] = res.data.getEnrollmentsList()
-            console.log(state.courseEnrollments)
+    const result = await effects.grpcMan.getEnrollmentsByCourse(value.courseID, undefined, undefined, value.statuses)
+    if (result.data) {
+            state.users = result.data.getEnrollmentsList()
+            state.courseEnrollments[value.courseID] = result.data.getEnrollmentsList()
             return true
-        }
-        return false
-    })
+    }
+    return false
 }
 
 
@@ -162,6 +148,13 @@ export const setEnrollmentState: AsyncAction<Enrollment> = async ({state, effect
         })
     }
 
+}
+
+export const updateSubmission: AsyncAction<{courseID: number, submission: Submission}> = async ({actions, effects}, value) => {
+    const result = await effects.grpcMan.updateSubmission(value.courseID, value.submission)
+    if (result.status.getCode() > 0) {
+        actions.alertHandler(result)
+    }
 }
 
 export const test: Action<void, Enrollment.AsObject> = ({state}) => {
@@ -183,13 +176,17 @@ export const updateEnrollment: Action<{enrollment: Enrollment, status: Enrollmen
     })
 }
 
-export const getAssignments: AsyncAction<number> = async ({ state, effects }, courseID) => {
-    await effects.grpcMan.getAssignments(courseID).then(res => {
-        if(res.data) {
-            state.assignments[courseID] = res.data.getAssignmentsList()
-            console.log("Fetched assignment")
+export const getAssignments: AsyncAction<void, boolean> = async ({ state, effects }) => {
+    let success = false
+    for (const enrollment of state.enrollments) {
+        const result = await effects.grpcMan.getAssignments(enrollment.getCourseid())
+        if(result.data) {
+            state.assignments[enrollment.getCourseid()] = result.data.getAssignmentsList()
+            success = true
         }
-    })
+        success = false
+    }
+    return success
 }
 
 /** Gets the assignments from a course by the course id. Meant to be used in places where you want only 1 assignment list. */
@@ -203,22 +200,22 @@ export const getAssignmentsByCourse: AsyncAction<number, boolean> = async ({stat
     })
 }
 
-export const getRepository: AsyncAction<void> = async ({state, effects}) => {
-    
-    state.enrollments.forEach(async enrollment => {
+export const getRepositories: AsyncAction<void, boolean> = async ({state, effects}) => {
+    let success = true
+    for (const enrollment of state.enrollments) {
         state.repositories[enrollment.getCourseid()] = {};
 
-        await effects.grpcMan.getRepositories(enrollment.getCourseid(), [Repository.Type.USER, Repository.Type.GROUP, Repository.Type.COURSEINFO, Repository.Type.ASSIGNMENTS]).then(res => {
-            if (res.data) {
-                const repoMap = res.data.toObject().urlsMap;
-                repoMap.forEach(repo => {
+        const result = await effects.grpcMan.getRepositories(enrollment.getCourseid(), [Repository.Type.USER, Repository.Type.GROUP, Repository.Type.COURSEINFO, Repository.Type.ASSIGNMENTS])
+        if (result.data) {
+            const repoMap = result.data.toObject().urlsMap;
+            repoMap.forEach(repo => {
                     state.repositories[enrollment.getCourseid()][(Repository.Type as any)[repo[0]]] = repo[1];
-                    console.log("Fetched repo")
-                });
-            }
-        })
-            .finally();
-    });
+            });
+            success = success === false ? false : true
+        }
+        success = false
+    }
+    return success
 
 }
 
@@ -232,6 +229,10 @@ export const alertHandler: Action<IGrpcResponse<any>> = ({state}, response) => {
     if (response.status.getCode() >= 0) {
         state.alerts.push(response.status.getError())
     }
+}
+
+export const alert: Action<string> = ({state}, alertString) => {
+    state.alerts.push(alertString)
 }
 
 export const getGroupByUserAndCourse: AsyncAction<number> = async ({state, effects}, courseID) => {
@@ -297,38 +298,37 @@ export const createCourse: Action<{course: Course, orgName: string}> = ({state, 
 }
 
 export const loading: Action<void> = ({state}) => {
-    console.log("State has finished loading")
     state.isLoading = !state.isLoading
 }
 
-export const refreshSubmissions: Action<{courseID: number, submissionID: number}> = ({state, effects}, input) => {
-    effects.grpcMan.getSubmissions(input.courseID, state.user.id).then(res => {
-        if (res.data) {
-            let submissions = res.data.getSubmissionsList()
-            submissions.forEach(submission => {
-                let assignment = state.assignments[input.courseID].find(a => a.getId() === submission.getAssignmentid())
-                if (assignment) {
-                    if (state.submissions[input.courseID][assignment.getOrder() - 1].getCommithash() !== submission.getCommithash()) {
-                        state.submissions[input.courseID][assignment.getOrder() - 1] = submission
-                    }
-                    
+export const refreshSubmissions: AsyncAction<{courseID: number, submissionID: number}> = async ({state, effects}, input) => {
+    const result = await effects.grpcMan.getSubmissions(input.courseID, state.user.id)
+    if (result.data) {
+        let submissions = result.data.getSubmissionsList()
+        submissions.forEach(submission => {
+            let assignment = state.assignments[input.courseID].find(a => a.getId() === submission.getAssignmentid())
+            if (assignment) {
+                if (state.submissions[input.courseID][assignment.getOrder() - 1].getCommithash() !== submission.getCommithash()) {
+                    state.submissions[input.courseID][assignment.getOrder() - 1] = submission
                 }
-            })
-        }
-    })
+                    
+            }
+        })
+    }
 }
 
-export const getAllCourseSubmissions: Action<number> = ({state, effects}, courseID) => {
+export const getAllCourseSubmissions: AsyncAction<number, boolean> = async ({state, effects}, courseID) => {
     state.courseSubmissions[courseID] = []
-    effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL).then(res => {
-        if(res.data) {
-            state.courseSubmissions[courseID] = res.data.getLinksList()
-            console.log(state.courseSubmissions[courseID])
-        }
-        else {
-            console.log("FAIL")
-        }
-    })
+    state.isLoading = true
+    const result =  await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL)
+    if (result.data) {
+            state.courseSubmissions[courseID] = result.data.getLinksList()
+            state.isLoading = false
+            return true
+            
+    }
+    state.isLoading = false
+    return false
 }
 
 export const getGroupsByCourse: AsyncAction<number> = async ({state, effects}, courseID) => {
@@ -340,57 +340,47 @@ export const getGroupsByCourse: AsyncAction<number> = async ({state, effects}, c
 }
 
 // Attempt at getting all submissions at once
-export const getCourseSubmissions: AsyncAction<number> = async ({state, effects}, courseID) => {
+export const getCourseSubmissions: AsyncAction<number, boolean> = async ({state, effects}, courseID) => {
     let userSubmissions: Submission[] = []
     let groupSubmissions: Submission[] = []
     const groupID: number | undefined = state.enrollments.find(enrollment => enrollment.getCourseid() == courseID)?.getGroupid()
 
 
-    await effects.grpcMan.getGroupSubmissions(courseID, groupID !== undefined ? groupID : -1)
-    .then(res => {
-        if (res.data) {
-            groupSubmissions = res.data.getSubmissionsList()
+    const groupResult = await effects.grpcMan.getGroupSubmissions(courseID, groupID !== undefined ? groupID : -1)
+    
+    if (groupResult.data) {
+        groupSubmissions = groupResult.data.getSubmissionsList()
+    }
+
+    const userResult = await effects.grpcMan.getSubmissions(courseID, state.user.id)
+    if (userResult.data) {
+            userSubmissions = userResult.data.getSubmissionsList()
+    }    
+    if (groupResult.status.getCode() > 0 || userResult.status.getCode() > 0) {
+        return false
+    }
+    state.submissions[courseID] = []
+    state.assignments[courseID].forEach(assignment => {
+        let submission: Submission | undefined = undefined
+        if (assignment.getIsgrouplab()) {
+            submission = groupSubmissions.find(submission => submission.getAssignmentid() == assignment.getId())
+        }
+        else {
+            submission = userSubmissions.find(submission => submission.getAssignmentid() == assignment.getId())
+        }
+        if(submission) {
+            state.submissions[courseID][assignment.getOrder() - 1] = submission
+        }
+        if(submission == undefined){
+            submission = new Submission()
+            state.submissions[courseID][assignment.getOrder() - 1] = submission
         }
     })
-    .then(() =>
-    effects.grpcMan.getSubmissions(courseID, state.user.id)
-    .then(res => {
-        if (res.data) {
-            userSubmissions = res.data.getSubmissionsList()
-        }
-    })    
-    )
-    .then(() =>
-        // Make magic happen
-        {
-        state.submissions[courseID] = []
-        state.assignments[courseID].forEach(assignment => {
-            let submission: Submission | undefined = undefined
-            if (assignment.getIsgrouplab()) {
-                submission = groupSubmissions.find(submission => submission.getAssignmentid() == assignment.getId())
-            }
-            else {
-                submission = userSubmissions.find(submission => submission.getAssignmentid() == assignment.getId())
-            }
-            if(submission) {
-                console.log(submission.getReviewsList())
-                state.submissions[courseID][assignment.getOrder() - 1] = submission
-            }
-            if(submission == undefined){
-                submission = new Submission()
-                state.submissions[courseID][assignment.getOrder() - 1] = submission
-            }
-        })
-        console.log("Fetched submission")
-        effects.grpcMan.getReviewers
-    })
+    return true
 }
 
 export const setActiveCourse: Action<number> = ({state}, courseID) => {
-
-        state.activeCourse = courseID
-
-    console.log(state.activeCourse)
+    state.activeCourse = courseID
 }
 
 export const setActiveLab: Action<number> = ({state}, assignmentID) => {
@@ -413,73 +403,29 @@ export const updateSearch: Action<string> = ({state}, search) => {
 // EXPERIMENTS BELOW
 /** Initializes a student user with all required data */
 /** //TODO: Figure out how to await this monster  */
-export const setupUser: AsyncAction<void, boolean> = async ({state, actions}) => {
-    const check = await actions.getUser()
-    .then(async success => {
-        console.log("Loading enrollments", success)
-        if (success) {
-            return await actions.getEnrollmentsByUser()
-        }
-        return false
-    })
-    .then(async success => {
-        console.log("Loading assignments", success)
-        if (success) {
-            state.enrollments.forEach(async enrollment => {
-                await actions.getAssignments(enrollment.getCourseid())
-            })
-            console.log("Fetched assignments")
-            return true
-        }
-        return false
-    })
-    .then(success => {
-        console.log("Loading submissions", success)
-        if (success) {
-            state.enrollments.forEach(async enrollment => {
-                if (enrollment.getStatus() === Enrollment.UserStatus.STUDENT) {
-                    await actions.getCourseSubmissions(enrollment.getCourseid())
-                }
-            });
-            return true
-        }
-        return false
-    })
-    .then(async success => {
-        console.log("Loading repositories", success)
-        if (success) {
-            await actions.getRepository()
-            return true
-        }
-        return false
-    }).then(async success => {
-        console.log("Loading courses", success)
-        if (success) {
-            return await actions.getCourses().then(success => {
-                return success
-            })
 
-        }
-        return false
-        
-    }).then(async success => {
-        if (success) {
-            state.enrollments.forEach(async enrollment => {
+export const fetchUserData: AsyncAction<void, boolean> = async ({state, actions}) =>  {
+    let success = await actions.getUser()
+    if (!success) { state.isLoading = false; return false;}
+    while (state.isLoading) {
+        success = await actions.getEnrollmentsByUser()
+        success = await actions.getAssignments()
+        for (const enrollment of state.enrollments) {
+            if (enrollment.getStatus() === Enrollment.UserStatus.STUDENT) {
+                success = await actions.getCourseSubmissions(enrollment.getCourseid())
+            }
+            if (enrollment.getStatus() >= 2) {
                 let statuses = enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER ] : []
-                if (enrollment.getStatus() >= 2) {
-                    await actions.getEnrollmentsByCourse({courseID: enrollment.getCourseid(), statuses: statuses})
-                }
-            })
-            return true
+                success = await actions.getEnrollmentsByCourse({courseID: enrollment.getCourseid(), statuses: statuses})
+            }
         }
-        return false
-    })
-    .finally(() => {
-        console.log("Complete")
-    })
-    return check
-}
+        success = await actions.getRepositories()
+        success = await actions.getCourses()
+        state.isLoading = false
 
+    }
+    return success
+}
 
 /* START UTILITY ACTIONS */
 /** Tries to get saved theme setting from localStorage, else sets theme to Light by default */

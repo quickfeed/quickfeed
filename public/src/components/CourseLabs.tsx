@@ -16,19 +16,17 @@ export const CourseLabs = (props:MatchProps) =>  {
     function redirectToLab(assignmentid:number){
         history.push(`/course/${props.crsid}/${assignmentid}`)
     }
-    const makeListItems =  ():JSX.Element[] =>{
-        let listItems:JSX.Element[] = []
+    const Labs: Function = (): JSX.Element[] => {
+        let labs :JSX.Element[] = []
         let submission: Submission = new Submission()
-        if(state.assignments[props.crsid]!==undefined){
+        if(state.assignments[props.crsid] && state.submissions[props.crsid]) {
             state.assignments[props.crsid].forEach(assignment => {
-                if(state.submissions[props.crsid]!==undefined) {
-                    // Submissions are indexed by the assignment order.
-                    
-                    if (state.submissions[props.crsid][assignment.getOrder() - 1]!==undefined){
-                        submission = state.submissions[props.crsid][assignment.getOrder() - 1]
-                    }
+                // Submissions are indexed by the assignment order.    
+                if (state.submissions[props.crsid][assignment.getOrder() - 1]){
+                    submission = state.submissions[props.crsid][assignment.getOrder() - 1]
                 }
-                listItems.push(
+                
+                labs.push(
                     <li key={assignment.getId()} className="list-group-item border"style={{marginBottom:"5px",cursor:"pointer"}} onClick={()=>redirectToLab(assignment.getId())}>
                         
                         <div className="row" >
@@ -44,11 +42,11 @@ export const CourseLabs = (props:MatchProps) =>  {
                 )
             })
         }
-        return listItems
+        return labs
     }
     return (
         <ul className="list-group">
-            {makeListItems()}
+            <Labs />
         </ul>
     )
 }
