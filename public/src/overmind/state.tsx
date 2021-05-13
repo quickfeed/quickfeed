@@ -31,12 +31,14 @@ export type State = {
     enrollments: Enrollment[],
     enrollmentsByCourseId: {
         [courseid: number]: Enrollment
-    }
+    },
     courses: Course[],
-    userCourses: Course[],
+    userCourses: {
+        [courseid: number]: Course
+    },
     userGroup: {
         [courseid: number]: Group
-    }
+    },
     submissions:{
         [courseid:number]:Submission[]
     },
@@ -48,7 +50,7 @@ export type State = {
     },
     repositories: {
         [courseid:number]: { [repoType: number]: string }
-    }
+    },
     theme: string,
     isLoading: boolean,
     activeCourse: number,
@@ -81,7 +83,7 @@ export const state: State = {
         return obj
     }),
     courses: [],
-    userCourses: [],
+    userCourses: {},
     userGroup: {},
     submissions: {},
     courseSubmissions: {},
