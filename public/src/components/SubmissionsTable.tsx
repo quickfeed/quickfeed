@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useHistory } from "react-router";
-import { getFormattedDeadline, layoutTime, timeFormatter } from "../Helpers";
+import { getFormattedTime, layoutTime, timeFormatter } from "../Helpers";
 import { useOvermind, useReaction } from "../overmind";
 import { Assignment, Course, Submission } from "../../proto/ag_pb";
 
@@ -39,7 +39,7 @@ const SubmissionsTable = (crs: course) => {
             }
                 <td>{assignment.getName()}</td>
                 <td>{submission.getScore()} / 100</td>
-                <td>{getFormattedDeadline(assignment.getDeadline())}</td>
+                <td>{getFormattedTime(assignment.getDeadline())}</td>
                 <td>{time2Deadline[0] ? time2Deadline[2]: '--'}</td>
                 <td className={Status[submission.getStatus()]}>{(assignment.getAutoapprove()==false && submission.getScore()>= assignment.getScorelimit()) ? "Awating approval":(assignment.getAutoapprove()==true && submission.getScore()>= assignment.getScorelimit())? "Approved(Auto approve)(shouldn't be in final version)":"Score not high enough"}</td>
                 <td>{assignment.getIsgrouplab() ? "Yes": "No"}</td>
@@ -47,7 +47,7 @@ const SubmissionsTable = (crs: course) => {
         )
     }
 
-    const MakeLabTable = (): JSX.Element[] => {
+    const LabTable: Function = (): JSX.Element[] => {
         let table: JSX.Element[] = []
         let submission: Submission | undefined = new Submission()
         submission.setScore(0)
@@ -102,7 +102,7 @@ const SubmissionsTable = (crs: course) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {MakeLabTable()}
+                    <LabTable />
                 </tbody>
             </table>
         </div>
