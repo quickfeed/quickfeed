@@ -1,19 +1,20 @@
 import React from "react"
 import { useOvermind } from "../overmind"
-import { Assignment, Submission } from "../../proto/ag_pb"
+import { Submission } from "../../proto/ag_pb"
 
 
 export const ProgressBar = (props: {courseID: number, assignmentIndex: number, submission?: Submission, type: string}) => {
     const { state } = useOvermind()
-    let submission:Submission = props?.submission !== undefined ? props?.submission : new Submission()
+    let submission: Submission = props?.submission ? props.submission : new Submission()
     let percentage = 0
     let score = 0
-    if (state.submissions[props.courseID] !== undefined) {
+    if (state.submissions[props.courseID]) {
         let submission = state.submissions[props.courseID][props.assignmentIndex]
         percentage = 100 - submission.getScore()
         score = submission.getScore()
     }
 
+    // Returns a thin line to be used for labs in the NavBar
     if(props.type === "navbar") {
         return (
             <div style={{ 
@@ -28,23 +29,30 @@ export const ProgressBar = (props: {courseID: number, assignmentIndex: number, s
                 </div>
         )
     }
-    if(props.type === "lab") {
-        let color = "bg-success"
-        if (submission.getStatus()==0){
-            if(submission.getScore()>=state.assignments[props.courseID][props.assignmentIndex].getScorelimit()){
-                color = "bg-primary"
-            }else{
-                color = "bg-secondary"
-            }
 
+    // Returns a regular size progress bar to be used for labs
+    if(props.type === "lab") {
+        let color: string
+        switch (submission.getStatus()) {
+            case Submission.Status.NONE:
+                if(submission.getScore()>=state.assignments[props.courseID][props.assignmentIndex].getScorelimit()){
+                    color = "bg-primary"
+                }
+                else{
+                    color = "bg-secondary"
+                }
+                break
+            case Submission.Status.APPROVED:
+                color = "bg-success"
+                break
+            case Submission.Status.REJECTED:
+                color = "bg-danger"
+                break
+            case Submission.Status.REVISION:
+                color = "bg-warning text-dark"
+                break
         }
-        //Not completed
-        if (submission.getStatus()==2){
-            color = "bg-danger"
-        }
-        if (submission.getStatus()==3){
-            color = "bg-warning text-dark"
-        }
+
         return (
             <div className="progress">
                 <div className={"progress-bar "+color} role="progressbar" style={{width: props.submission?.getScore() + "%", transitionDelay: "0.5s"}} aria-valuenow={submission.getScore()} aria-valuemin={0} aria-valuemax={100}>{props.submission?.getScore()}%</div>
