@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react'
 import { useParams } from 'react-router'
+import { Assignment, Submission } from '../../proto/ag_pb'
 import { useOvermind } from '../overmind'
+import CourseUtilityLinks from './CourseUtilityLinks'
 import LabResultTable from './LabResultTable'
 import ReviewResult from './ReviewResult'
 
@@ -9,39 +11,91 @@ interface MatchProps {
     lab: string
 }
 
+interface TeacherLab {
+    submissionID: number
+    assignmentID: number
+}
 
-const Lab = () => {
+/** Displays a Lab submission based on the /course/:id/:lab route
+ *  
+ *  If used to display a lab for grading purposes, pass in a TeacherLab object
+ */
+const Lab = (teacher: TeacherLab) => {
     const { state, actions } = useOvermind()
     const {id ,lab} = useParams<MatchProps>()
     const courseID = Number(id)
     const assignmentID = Number(lab)
+    const teacherLab = teacher.assignmentID && teacher.submissionID
     useEffect(() => {
-        actions.setActiveLab(assignmentID)
-        
-        // Needs to handle what to do in case of no commit hash, such as manually graded submissions
-        const t = setInterval(() => {  
-            actions.getHash({courseID: courseID, assignmentID: assignmentID})
-        }, 10000)
-        return () => {clearInterval(t), actions.setActiveLab(-1)}
+        // Do not start the commit hash fetch-loop for submissions that are not personal
+        if (!teacherLab) {
+            actions.setActiveLab(assignmentID)
+
+            const ping = setInterval(() => {  
+                actions.getSubmissionCommitHash({courseID: courseID, assignmentID: assignmentID})
+            }, 5000)
+
+            return () => {clearInterval(ping), actions.setActiveLab(-1)}
+        }
     }, [lab])
 
-    const getSubmission = state.submissions[courseID]?.map(submission => {
-        if (submission.getAssignmentid() == assignmentID) {
-            const buildInfo = JSON.parse(submission.getBuildinfo())
-            const prettyBuildlog = buildInfo.buildlog.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
+    
+    const Lab = () => {
+        let submission: Submission | undefined
+        let assignment: Assignment | undefined
 
+        // If used for grading purposes, retrieve submission from courseSubmissions
+        if (teacherLab) {
+            state.courseSubmissions[courseID].forEach(link => {
+                link.getSubmissionsList().forEach(s => {
+                    if (s.getSubmission()?.getId() === teacher.submissionID) {
+                        submission = s.getSubmission()
+                    }
+                })
+            });
+            assignment = state.assignments[courseID].find(a => a.getId() === teacher.assignmentID)
+        } 
+        // Retreive personal submission
+        else {
+            submission = state.submissions[courseID]?.find(s => s.getAssignmentid() === assignmentID)
+            assignment = state.assignments[courseID]?.find(a => a.getId() === assignmentID)
+        }
+        
+        // Confirm both assignment and submission exists before attempting to render
+        if (assignment && submission) {
+            let buildLog = ""
+            if (submission.getBuildinfo()) {
+                const buildInfo = JSON.parse(submission.getBuildinfo())
+                // Prettifies the build log. (credit to nicro950 for this snippet)
+                buildLog = buildInfo.buildlog.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
+            }
             return (
                 <div key={submission.getId()}>
-                    <LabResultTable id={submission.getAssignmentid()} courseID={courseID} />
-                    {state.assignments[courseID].find(a => a.getId() === assignmentID)?.getSkiptests() ? <ReviewResult review={submission.getReviewsList()}/> : ""}
-                    <div className="card bg-light"><code className="card-body" style={{color: "#c7254e"}}>{prettyBuildlog}</code></div>
+
+                    <LabResultTable submission={submission} assignment={assignment} />
+
+                    {assignment.getSkiptests() && submission.getReviewsList().length > 0 ? 
+                    <ReviewResult review={submission.getReviewsList()}/> 
+                    : ""}
+
+                    <div className="card bg-light">
+                        <code className="card-body" style={{color: "#c7254e"}}>{buildLog}</code>
+                    </div>
                 </div>
             )
-    }})
+        }
+        return (
+            <div>No submission found</div>
+        )
+    }
 
     return (
-        <div className="col-md-8 box">
-        {getSubmission}
+        <div className="box row">
+            <div className={teacherLab ? "" : "col-md-9"}>
+                <Lab />
+            </div>
+            {!teacherLab ? <CourseUtilityLinks courseID={courseID} />
+            : "" }
         </div>
     )
 }
