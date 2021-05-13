@@ -16,22 +16,22 @@ export const Members = (props: RouteComponentProps<{id?: string | undefined}>) =
 
     }, [func, setFunc])
 
-    const search = (): Function => {
-        if (func === "STATUS") {
-            return Enrollment.prototype.getStatus
+    const sort = (): Function => {
+        switch (func) {
+            case "STATUS":
+                return Enrollment.prototype.getStatus
+            case "ID":
+                return Enrollment.prototype.getId
+            default:
+                return Enrollment.prototype.getStatus
         }
-        if (func === "ID") {
-            return Enrollment.prototype.getId
-        }
-        return Enrollment.prototype.getStatus
+
     }
 
     if (courseID && state.enrollmentsByCourseId[courseID].getStatus() === Enrollment.UserStatus.TEACHER) {
         const pending = state.courseEnrollments[courseID].filter(enrollment => enrollment.getStatus() === Enrollment.UserStatus.PENDING)
+        
         return (
-
-            
-            
             <div className='row '>
                 {pending.length > 0 ?
                 <div className="card well  col-md-offset-2">
@@ -63,7 +63,7 @@ export const Members = (props: RouteComponentProps<{id?: string | undefined}>) =
                     Descending<input type={"checkbox"} checked={descending} onChange={(e) => setDescending(e.target.checked)}></input>
                         <div className="card-header" style={{textAlign: "center"}}>Members</div>
                             <ul className="list-group list-group-flush">
-                                {sortByField(state.courseEnrollments[courseID], [], search(), descending).map((user: Enrollment) => {
+                                {sortByField(state.courseEnrollments[courseID], [], sort(), descending).map((user: Enrollment) => {
                                 return (
                                     <li key={user.getUserid()} className={"list-group-item" }>{user.getUser()?.getName()} {user.getId()} <i style={{float: "right"}} className={"badge badge-" + (user.getStatus() === 2 ? "primary" : user.getStatus() === 3 ? "danger" : "info")}>{user.getStatus() === 2 ? "Student" : user.getStatus() === 3 ? "Teacher" : user.getStatus() == 1 ?  "Pending" : "None"}</i></li>
                                 )
