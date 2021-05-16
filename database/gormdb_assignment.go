@@ -105,10 +105,8 @@ func (db *GormDB) GetCourseAssignmentsWithSubmissions(courseID uint64, submissio
 	var assignments []*pb.Assignment
 
 	if err := db.conn.Preload("Submissions").Preload("Submissions.Reviews").Where(&pb.Assignment{CourseID: courseID}).Order("order").Find(&assignments).Error; err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
-
 	if submissionType == pb.SubmissionsForCourseRequest_ALL {
 		return assignments, nil
 	}
