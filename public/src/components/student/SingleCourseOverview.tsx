@@ -2,7 +2,7 @@ import * as React from "react";
 import { formatDate } from "../../helper";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
-import { submissionStatusToString } from "../../componentHelper";
+import { scoreFromReviews, submissionStatusToString } from "../../componentHelper";
 
 interface ISingleCourseOverviewProps {
     courseAndLabs: IAllSubmissionsForEnrollment;
@@ -27,9 +27,10 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
         const labs: JSX.Element[] = submissionArray.map((submissionLink, k) => {
             let submissionInfo = <div>No submissions</div>;
             if (submissionLink.submission) {
+                const score = submissionLink.assignment.getSkiptests() ? scoreFromReviews(submissionLink.submission.reviews) : submissionLink.submission.score;
                 submissionInfo = <div className="row">
                     <div className="col-md-6 col-lg-6">
-                        <ProgressBar progress={submissionLink.submission.score} scoreToPass={submissionLink.assignment.getScorelimit()}/>
+                        <ProgressBar progress={score} scoreToPass={submissionLink.assignment.getScorelimit()}/>
                     </div>
                     <div className="col-md-2 col-lg-2" >
                         <span className="text-success"> Passed: {submissionLink.submission.passedTests} </span>

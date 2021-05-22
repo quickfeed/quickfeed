@@ -142,15 +142,13 @@ func (db *GormDB) CreateReview(query *pb.Review) error {
 
 // UpdateReview updates feedback text, review and ready status
 func (db *GormDB) UpdateReview(query *pb.Review) error {
-	return db.conn.Model(query).Where(&pb.Review{
-		ID:           query.ID,
-		SubmissionID: query.SubmissionID,
-		ReviewerID:   query.ReviewerID,
-	}).Update(&pb.Review{
-		Feedback: query.Feedback,
-		Review:   query.Review,
-		Ready:    query.Ready,
-		Score:    query.Score,
+	return db.conn.Model(&pb.Review{ID: query.ID}).Update(&pb.Review{
+		Feedback:   query.Feedback,
+		Review:     query.Review,
+		Ready:      query.Ready,
+		Score:      query.Score,
+		ReviewerID: query.ReviewerID,
+		Edited:     query.Edited,
 	}).Error
 }
 
