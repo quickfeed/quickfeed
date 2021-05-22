@@ -348,9 +348,6 @@ async function main(): Promise<void> {
     Promise.all(all);
 
     navMan.registerErrorPage(404, new ErrorPage());
-    navMan.onNavigate.addEventListener((e) => {
-        console.log(e);
-    });
 
     ReactDOM.render(
         <AutoGrader userManager={userMan} navigationManager={navMan} logManager={logMan}>

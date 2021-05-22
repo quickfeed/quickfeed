@@ -249,7 +249,7 @@ export function scoreFromReviews(reviews: Review[]): number {
             sum += rv.getScore();
         }
     });
-    return Math.floor(sum / reviews.length);
+    return Math.floor(sum / ready);
 }
 
 // Some manually graded assignments can have custom max score (not necessary 100%), it will be
