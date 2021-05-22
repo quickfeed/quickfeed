@@ -148,7 +148,13 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
 func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
-	assignments, err := s.db.GetCourseAssignmentsWithSubmissions(request.GetCourseID(), request.Type)
+	var getCourseSubFn func(uint64, pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error)
+	if request.GetSkipBuildInfo() {
+		getCourseSubFn = s.db.GetCourseAssignmentsWithSubmissionsNoBuildInfo
+	} else {
+		getCourseSubFn = s.db.GetCourseAssignmentsWithSubmissions
+	}
+	assignments, err := getCourseSubFn(request.GetCourseID(), request.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -157,11 +163,17 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 	if err != nil {
 		return nil, err
 	}
-	course.SetSlipDays()
 
+	course.SetSlipDays()
 	for _, a := range assignments {
 		for _, sbm := range a.Submissions {
-			sbm.MakeSubmissionReviews()
+			if request.GetSkipBuildInfo() {
+				sbm.BuildInfo = ""
+				sbm.ScoreObjects = ""
+			} else {
+				sbm.MakeSubmissionReviews()
+			}
+
 		}
 	}
 
