@@ -43,7 +43,7 @@ proto:
 	Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:. \
 	--js_out=import_style=commonjs:../$(proto-path)/ \
-	--grpc-web_out=import_style=typescript,mode=grpcweb:../$(proto-path)/ ag.proto
+	--grpc-web_out=import_style=typescript,mode=grpcwebtext:../$(proto-path)/ ag.proto
 	$(sedi) '/gogo/d' $(proto-path)/ag_pb.js $(proto-path)/AgServiceClientPb.ts $(proto-path)/ag_pb.d.ts
 	@tsc $(proto-path)/AgServiceClientPb.ts
 
