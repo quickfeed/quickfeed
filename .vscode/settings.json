@@ -85,6 +85,7 @@
         "testdb",
         "tmpl",
         "unittests",
+        "unmarshalled",
         "unmarshalling",
         "unmarshalls",
         "urfave",

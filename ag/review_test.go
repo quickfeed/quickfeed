@@ -55,10 +55,23 @@ func TestReviewMarshalString(t *testing.T) {
 }
 
 func TestReviewUnmarshalString(t *testing.T) {
-	// Based on protobuf/jsonpb package (being deprecated)
-	// in := `{"assignmentID":"10","heading":"Steve","comment":"Jobs","criteria":[{"ID":"1","points":"50","description":"Ping"},{"ID":"2","points":"50","description":"Pong"}]}; {"ID":"1","assignmentID":"10","heading":"Johnny","comment":"Ive","criteria":[{"ID":"1","points":"50","description":"Ding"},{"ID":"2","points":"50","description":"Dong"}]}`
 	// Based on stdlib json package
 	in := `{"assignmentID":10,"heading":"Steve","comment":"Jobs","criteria":[{"ID":1,"points":50,"description":"Ping"},{"ID":2,"points":50,"description":"Pong"}]}; {"ID":1,"assignmentID":10,"heading":"Johnny","comment":"Ive","criteria":[{"ID":1,"points":50,"description":"Ding"},{"ID":2,"points":50,"description":"Dong"}]}`
+	r := &ag.Review{Review: in}
+	err := r.UnmarshalReviewString()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := tst
+	if diff := cmp.Diff(r.Benchmarks, want); diff != "" {
+		t.Errorf("r.UnmarshalReviewString() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestReviewUnmarshalStringProtobufJsonPB(t *testing.T) {
+	// This test checks that the old JSON format can still be unmarshalled
+	// Based on protobuf/jsonpb package (being deprecated)
+	in := `{"assignmentID":"10","heading":"Steve","comment":"Jobs","criteria":[{"ID":"1","points":"50","description":"Ping"},{"ID":"2","points":"50","description":"Pong"}]}; {"ID":"1","assignmentID":"10","heading":"Johnny","comment":"Ive","criteria":[{"ID":"1","points":"50","description":"Ding"},{"ID":"2","points":"50","description":"Dong"}]}`
 	r := &ag.Review{Review: in}
 	err := r.UnmarshalReviewString()
 	if err != nil {

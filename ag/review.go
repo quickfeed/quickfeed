@@ -2,6 +2,7 @@ package ag
 
 import (
 	"encoding/json"
+	"regexp"
 	"strings"
 )
 
@@ -19,10 +20,16 @@ func (r *Review) MarshalReviewString() error {
 	return nil
 }
 
+var re = regexp.MustCompile(`("\w+"):"(\d+)",`)
+
 // UnmarshalReviewString converts database string with all submission reviews
 // into protobuf messages
 func (r *Review) UnmarshalReviewString() error {
-	rs := strings.Split(r.Review, ";")
+	// Replace number fields in quotes with non-quoted number fields.
+	// This should make our previous strings (stored in db) that were
+	// using protobuf/jsonpb package compatible with stdlib json package.
+	review := re.ReplaceAllString(r.Review, "$1:$2,")
+	rs := strings.Split(review, ";")
 	bms := make([]*GradingBenchmark, 0)
 	for _, s := range rs {
 		bm := GradingBenchmark{}
