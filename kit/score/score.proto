@@ -19,6 +19,14 @@ message Scores {
     map<string, Score> ScoreMap = 2; // map from TestName to Score
 }
 
+// Results holds a map from test names to score objects and build info.
+// message Results {
+//     repeated string TestNames = 1;           // defines the iteration order of the tests
+//     map<string, Score> ScoreMap = 2;         // map from TestName to Score
+//     map<string, BuildInfo> BuildInfoMap = 3; // map from TestName to BuildInfo
+// }
+
+
 // Result holds build information and scores for an assignment's test execution.
 message Result {
     BuildInfo BuildInfo = 1;

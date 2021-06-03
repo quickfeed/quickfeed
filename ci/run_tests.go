@@ -9,6 +9,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/kit/score"
 	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
 )
@@ -86,7 +87,8 @@ func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) 
 }
 
 // recordResults for the assignment given by the run data structure.
-func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunData, result *Result) {
+func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunData, result *score.Result) {
+	// TODO(meling) Avoid Marshal here; pass in Scores or new Results protobuf
 	buildInfo, scores, err := result.Marshal()
 	if err != nil {
 		logger.Errorf("Failed to marshal build info and scores: %w", err)

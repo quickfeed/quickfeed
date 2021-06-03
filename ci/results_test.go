@@ -115,7 +115,7 @@ var scoreObjects = `
 `
 
 func TestTotalScore(t *testing.T) {
-	result := &Result{}
+	result := &score.Result{}
 	result.Scores = make([]*score.Score, 0)
 	dec := json.NewDecoder(strings.NewReader(scoreObjects))
 	for {

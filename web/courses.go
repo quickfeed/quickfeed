@@ -8,7 +8,7 @@ import (
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/scm"
 )
 
@@ -566,8 +566,10 @@ func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.Submi
 }
 
 func (s *AutograderService) extractSubmissionDate(submission *pb.Submission, submissionDate time.Time) time.Time {
+	// TODO(meling) Pass score.BuildInfo directly in submission to avoid unmarshal
+	// TODO(meling) Add test for this method
 	buildInfoString := submission.BuildInfo
-	var buildInfo ci.BuildInfo
+	var buildInfo score.BuildInfo
 	if err := json.Unmarshal([]byte(buildInfoString), &buildInfo); err != nil {
 		// don't fail the method on a parsing error, just log
 		s.logger.Errorf("Failed to unmarshal build info %s: %s", buildInfoString, err)

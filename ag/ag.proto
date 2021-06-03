@@ -181,6 +181,9 @@ message Assignments {
     repeated Assignment assignments = 1;
 }
 
+// TODO(meling) Replace string buildInfo with BuildInfo message (from score.proto)
+// TODO(meling) Replace string scoreObjects with Score message (from score.proto)
+
 message Submission {
     enum Status {
         NONE = 0;

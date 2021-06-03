@@ -10,6 +10,7 @@ import (
 	"github.com/autograde/quickfeed/assignments"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/log"
 	"github.com/google/go-github/v30/github"
 	"go.uber.org/zap"
@@ -178,16 +179,19 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 // recordSubmissionWithoutTests saves a new submission without running any tests
 // for a manually graded assignment.
 func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
-	noTestBuildInfo, err := json.Marshal(&ci.BuildInfo{
+	buildInfo := &score.BuildInfo{
 		BuildID:   0,
 		BuildDate: time.Now().Format("2006-01-02T15:04:05"),
 		BuildLog:  "No automated tests for this assignment",
 		ExecTime:  1,
-	})
+	}
+	// TODO(meling) Avoid marshal here.
+	noTestBuildInfo, err := json.Marshal(buildInfo)
 	if err != nil {
 		wh.logger.Errorf("Error marshalling build info for %s of course %s for student %s: %s", data.Course.Name, data.Assignment.Name, data.JobOwner, err)
 		return
 	}
+	// TODO(meling) Replace BuildInfo field in Submission with score.BuildInfo (must import score.proto)
 	newSubmission := &pb.Submission{
 		AssignmentID: data.Assignment.ID,
 		BuildInfo:    string(noTestBuildInfo),
@@ -200,7 +204,6 @@ func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
 		return
 	}
 	wh.logger.Debugf("Saved manual review submission for user %s for assignment %d", data.JobOwner, data.Assignment.ID)
-
 }
 
 // updateLastActivityDate sets a current date as a last activity date of the student
