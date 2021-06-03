@@ -65,8 +65,8 @@ Here are some more logs for the student.
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(res.Scores) != 2 {
-		t.Fatalf("ExtractResult() expected 2 Score entries, got %d: %+v", len(res.Scores), res.Scores)
+	if len(res.ScoreMap) != 2 {
+		t.Fatalf("ExtractResult() expected 2 Score entries, got %d: %+v", len(res.ScoreMap), res.ScoreMap)
 	}
 }
 
@@ -89,8 +89,8 @@ func TestExtractResultWithPanicedAndMaliciousScoreLines(t *testing.T) {
 		t.Fatal(err)
 	}
 	const expected = 6
-	if len(res.Scores) != expected {
-		t.Fatalf("ExtractResult() expected %d Score entries, got %d: %+v", expected, len(res.Scores), res.Scores)
+	if len(res.ScoreMap) != expected {
+		t.Fatalf("ExtractResult() expected %d Score entries, got %d: %+v", expected, len(res.ScoreMap), res.ScoreMap)
 	}
 
 	testOrder := []string{
@@ -101,9 +101,9 @@ func TestExtractResultWithPanicedAndMaliciousScoreLines(t *testing.T) {
 		"PanicedTest3",
 		"MaliciousTest",
 	}
-	for i, score := range res.Scores {
-		if score.TestName != testOrder[i] {
-			t.Errorf("ExtractResult() returned unexpected order of tests: expected %s, got %s", testOrder[i], score.TestName)
+	for i, testName := range res.TestNames {
+		if testName != testOrder[i] {
+			t.Errorf("ExtractResult() returned unexpected order of tests: expected %s, got %s", testOrder[i], testName)
 		}
 	}
 }

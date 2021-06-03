@@ -10,6 +10,7 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/kit/score"
+	"github.com/autograde/quickfeed/log"
 	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
 )
@@ -45,11 +46,14 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 		}
 		// we only get here if err was a timeout, so that we can log 'out' to the user
 	}
-	result, err := ExtractResult(logger, ed.out, info.RandomSecret, ed.execTime)
+	result, err := score.ExtractResults(ed.out, info.RandomSecret, ed.execTime)
 	if err != nil {
 		logger.Errorf("Failed to extract results from log: %w", err)
 		return
 	}
+	logger.Debug("ci.ExtractResults",
+		zap.Any("results", log.IndentJson(result)),
+	)
 	recordResults(logger, db, rData, result)
 }
 
@@ -87,14 +91,7 @@ func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) 
 }
 
 // recordResults for the assignment given by the run data structure.
-func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunData, result *score.Result) {
-	// TODO(meling) Avoid Marshal here; pass in Scores or new Results protobuf
-	buildInfo, scores, err := result.Marshal()
-	if err != nil {
-		logger.Errorf("Failed to marshal build info and scores: %w", err)
-		return
-	}
-
+func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunData, result *score.Results) {
 	logger.Debugf("Fetching most recent submission for assignment %d", rData.Assignment.GetID())
 	submissionQuery := &pb.Submission{
 		AssignmentID: rData.Assignment.GetID(),
@@ -108,20 +105,22 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 	}
 	// keep approved status if already approved
 	approvedStatus := newest.GetStatus()
-	if rData.Assignment.AutoApprove && result.TotalScore() >= rData.Assignment.GetScoreLimit() {
+
+	if rData.Assignment.AutoApprove && result.Sum() >= rData.Assignment.GetScoreLimit() {
 		approvedStatus = pb.Submission_APPROVED
 	}
 
-	score := result.TotalScore()
+	// TODO(meling) Submission should accept score.Results message type
+	score := result.Sum()
 	newSubmission := &pb.Submission{
 		AssignmentID: rData.Assignment.ID,
-		BuildInfo:    buildInfo,
-		CommitHash:   rData.CommitID,
-		Score:        score,
-		ScoreObjects: scores,
-		UserID:       rData.Repo.GetUserID(),
-		GroupID:      rData.Repo.GetGroupID(),
-		Status:       approvedStatus,
+		// BuildInfo:    result.BuildInfo,
+		CommitHash: rData.CommitID,
+		Score:      score,
+		// ScoreObjects: scores,
+		UserID:  rData.Repo.GetUserID(),
+		GroupID: rData.Repo.GetGroupID(),
+		Status:  approvedStatus,
 	}
 	err = db.CreateSubmission(newSubmission)
 	if err != nil {

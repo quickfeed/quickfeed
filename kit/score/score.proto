@@ -11,7 +11,7 @@ message Score {
     int32 Weight = 5;    // the weight of this test; used to compute final grade
 }
 
-// TODO(meling) Should Result and Scores be merged?
+// TODO(meling) Migrate Scores to Results?
 
 // Scores holds a map from test names to score objects.
 message Scores {
@@ -20,14 +20,15 @@ message Scores {
 }
 
 // Results holds a map from test names to score objects and build info.
-// message Results {
-//     repeated string TestNames = 1;           // defines the iteration order of the tests
-//     map<string, Score> ScoreMap = 2;         // map from TestName to Score
-//     map<string, BuildInfo> BuildInfoMap = 3; // map from TestName to BuildInfo
-// }
+message Results {
+    BuildInfo BuildInfo = 1;         // build info for tests
+    repeated string TestNames = 2;   // defines the iteration order of the tests
+    map<string, Score> ScoreMap = 3; // map from TestName to Score
+}
 
-
+//TODO(meling) Remove Result
 // Result holds build information and scores for an assignment's test execution.
+// Deprecated: Result should not be used
 message Result {
     BuildInfo BuildInfo = 1;
     repeated Score Scores = 2;
