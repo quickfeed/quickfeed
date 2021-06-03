@@ -11,14 +11,6 @@ message Score {
     int32 Weight = 5;    // the weight of this test; used to compute final grade
 }
 
-// TODO(meling) Migrate Scores to Results?
-
-// Scores holds a map from test names to score objects.
-message Scores {
-    repeated string TestNames = 1;   // defines the iteration order of the tests
-    map<string, Score> ScoreMap = 2; // map from TestName to Score
-}
-
 // Results holds a map from test names to score objects and build info.
 message Results {
     BuildInfo BuildInfo = 1;         // build info for tests
