@@ -67,6 +67,11 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	// Otherwise create a new submission record
 	var labSubmission pb.Submission
 	err := db.conn.Where(query).Assign(submission).FirstOrCreate(&labSubmission).Error
+
+	if submission.GetScore() == 0 {
+		// GORM doesn't update zero value fields, unless forced:
+		err = db.conn.Model(submission).Where(query).Updates(map[string]interface{}{"Score": 0}).Error
+	}
 	submission.ID = labSubmission.GetID()
 	return err
 }
@@ -137,15 +142,13 @@ func (db *GormDB) CreateReview(query *pb.Review) error {
 
 // UpdateReview updates feedback text, review and ready status
 func (db *GormDB) UpdateReview(query *pb.Review) error {
-	return db.conn.Model(query).Where(&pb.Review{
-		ID:           query.ID,
-		SubmissionID: query.SubmissionID,
-		ReviewerID:   query.ReviewerID,
-	}).Update(&pb.Review{
-		Feedback: query.Feedback,
-		Review:   query.Review,
-		Ready:    query.Ready,
-		Score:    query.Score,
+	return db.conn.Model(&pb.Review{ID: query.ID}).Update(&pb.Review{
+		Feedback:   query.Feedback,
+		Review:     query.Review,
+		Ready:      query.Ready,
+		Score:      query.Score,
+		ReviewerID: query.ReviewerID,
+		Edited:     query.Edited,
 	}).Error
 }
 

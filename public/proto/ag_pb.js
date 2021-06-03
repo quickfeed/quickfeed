@@ -2,11 +2,14 @@
 /**
  * @fileoverview
  * @enhanceable
+ * @suppress {missingRequire} reports error on implicit type usages.
  * @suppress {messageConventions} JS Compiler reports an error if a variable or
  *     field starts with 'MSG_' and isn't a translatable message.
  * @public
  */
 // GENERATED CODE -- DO NOT EDIT!
+/* eslint-disable */
+// @ts-nocheck
 
 var jspb = require('google-protobuf');
 var goog = jspb;
@@ -7345,7 +7348,8 @@ proto.Review.toObject = function(includeInstance, msg) {
     ready: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
     score: jspb.Message.getFieldWithDefault(msg, 7, 0),
     benchmarksList: jspb.Message.toObjectList(msg.getBenchmarksList(),
-    proto.GradingBenchmark.toObject, includeInstance)
+    proto.GradingBenchmark.toObject, includeInstance),
+    edited: jspb.Message.getFieldWithDefault(msg, 9, "")
   };
 
   if (includeInstance) {
@@ -7414,6 +7418,10 @@ proto.Review.deserializeBinaryFromReader = function(msg, reader) {
       var value = new proto.GradingBenchmark;
       reader.readMessage(value,proto.GradingBenchmark.deserializeBinaryFromReader);
       msg.addBenchmarks(value);
+      break;
+    case 9:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setEdited(value);
       break;
     default:
       reader.skipField();
@@ -7499,6 +7507,13 @@ proto.Review.serializeBinaryToWriter = function(message, writer) {
       8,
       f,
       proto.GradingBenchmark.serializeBinaryToWriter
+    );
+  }
+  f = message.getEdited();
+  if (f.length > 0) {
+    writer.writeString(
+      9,
+      f
     );
   }
 };
@@ -7665,6 +7680,24 @@ proto.Review.prototype.addBenchmarks = function(opt_value, opt_index) {
  */
 proto.Review.prototype.clearBenchmarksList = function() {
   return this.setBenchmarksList([]);
+};
+
+
+/**
+ * optional string edited = 9;
+ * @return {string}
+ */
+proto.Review.prototype.getEdited = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.Review} returns this
+ */
+proto.Review.prototype.setEdited = function(value) {
+  return jspb.Message.setProto3StringField(this, 9, value);
 };
 
 
@@ -9321,8 +9354,10 @@ proto.EnrollmentRequest.deserializeBinaryFromReader = function(msg, reader) {
       msg.setWithactivity(value);
       break;
     case 4:
-      var value = /** @type {!Array<!proto.Enrollment.UserStatus>} */ (reader.readPackedEnum());
-      msg.setStatusesList(value);
+      var values = /** @type {!Array<!proto.Enrollment.UserStatus>} */ (reader.isDelimited() ? reader.readPackedEnum() : [reader.readEnum()]);
+      for (var i = 0; i < values.length; i++) {
+        msg.addStatuses(values[i]);
+      }
       break;
     default:
       reader.skipField();
@@ -9557,8 +9592,10 @@ proto.EnrollmentStatusRequest.deserializeBinaryFromReader = function(msg, reader
       msg.setUserid(value);
       break;
     case 2:
-      var value = /** @type {!Array<!proto.Enrollment.UserStatus>} */ (reader.readPackedEnum());
-      msg.setStatusesList(value);
+      var values = /** @type {!Array<!proto.Enrollment.UserStatus>} */ (reader.isDelimited() ? reader.readPackedEnum() : [reader.readEnum()]);
+      for (var i = 0; i < values.length; i++) {
+        msg.addStatuses(values[i]);
+      }
       break;
     default:
       reader.skipField();
@@ -10749,8 +10786,10 @@ proto.URLRequest.deserializeBinaryFromReader = function(msg, reader) {
       msg.setCourseid(value);
       break;
     case 2:
-      var value = /** @type {!Array<!proto.Repository.Type>} */ (reader.readPackedEnum());
-      msg.setRepotypesList(value);
+      var values = /** @type {!Array<!proto.Repository.Type>} */ (reader.isDelimited() ? reader.readPackedEnum() : [reader.readEnum()]);
+      for (var i = 0; i < values.length; i++) {
+        msg.addRepotypes(values[i]);
+      }
       break;
     default:
       reader.skipField();
@@ -11499,7 +11538,8 @@ proto.SubmissionsForCourseRequest.prototype.toObject = function(opt_includeInsta
 proto.SubmissionsForCourseRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     courseid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    type: jspb.Message.getFieldWithDefault(msg, 2, 0)
+    type: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    skipbuildinfo: jspb.Message.getBooleanFieldWithDefault(msg, 3, false)
   };
 
   if (includeInstance) {
@@ -11544,6 +11584,10 @@ proto.SubmissionsForCourseRequest.deserializeBinaryFromReader = function(msg, re
       var value = /** @type {!proto.SubmissionsForCourseRequest.Type} */ (reader.readEnum());
       msg.setType(value);
       break;
+    case 3:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setSkipbuildinfo(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -11584,6 +11628,13 @@ proto.SubmissionsForCourseRequest.serializeBinaryToWriter = function(message, wr
   if (f !== 0.0) {
     writer.writeEnum(
       2,
+      f
+    );
+  }
+  f = message.getSkipbuildinfo();
+  if (f) {
+    writer.writeBool(
+      3,
       f
     );
   }
@@ -11632,6 +11683,24 @@ proto.SubmissionsForCourseRequest.prototype.getType = function() {
  */
 proto.SubmissionsForCourseRequest.prototype.setType = function(value) {
   return jspb.Message.setProto3EnumField(this, 2, value);
+};
+
+
+/**
+ * optional bool skipBuildInfo = 3;
+ * @return {boolean}
+ */
+proto.SubmissionsForCourseRequest.prototype.getSkipbuildinfo = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.SubmissionsForCourseRequest} returns this
+ */
+proto.SubmissionsForCourseRequest.prototype.setSkipbuildinfo = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 3, value);
 };
 
 
