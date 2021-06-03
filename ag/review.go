@@ -1,36 +1,39 @@
 package ag
 
 import (
+	"encoding/json"
+	"regexp"
 	"strings"
-
-	"github.com/golang/protobuf/jsonpb"
 )
 
-// MakeReviewString generates a slice of JSON strings
-// to store in the database
-func (r *Review) MakeReviewString() error {
-	m := jsonpb.Marshaler{EnumsAsInts: true}
+// MarshalReviewString generates a slice of JSON strings to store in the database
+func (r *Review) MarshalReviewString() error {
 	str := make([]string, 0)
 	for _, bm := range r.Benchmarks {
-		s, err := m.MarshalToString(bm)
+		b, err := json.Marshal(bm)
 		if err != nil {
 			return err
 		}
-		str = append(str, s)
-
+		str = append(str, string(b))
 	}
 	r.Review = strings.Join(str, "; ")
 	return nil
 }
 
-// FromReviewString converts database string with all submission reviews
+var re = regexp.MustCompile(`("\w+"):"(\d+)",`)
+
+// UnmarshalReviewString converts database string with all submission reviews
 // into protobuf messages
-func (r *Review) FromReviewString() error {
-	rs := strings.Split(r.Review, ";")
+func (r *Review) UnmarshalReviewString() error {
+	// Replace number fields in quotes with non-quoted number fields.
+	// This should make our previous strings (stored in db) that were
+	// using protobuf/jsonpb package compatible with stdlib json package.
+	review := re.ReplaceAllString(r.Review, "$1:$2,")
+	rs := strings.Split(review, ";")
 	bms := make([]*GradingBenchmark, 0)
 	for _, s := range rs {
 		bm := GradingBenchmark{}
-		if err := jsonpb.UnmarshalString(s, &bm); err != nil {
+		if err := json.Unmarshal([]byte(s), &bm); err != nil {
 			return err
 		}
 		bms = append(bms, &bm)
@@ -40,8 +43,11 @@ func (r *Review) FromReviewString() error {
 }
 
 // MakeSubmissionReviews unmarshalls review string for a submission
-func (s Submission) MakeSubmissionReviews() {
+func (s Submission) MakeSubmissionReviews() error {
 	for _, r := range s.Reviews {
-		r.FromReviewString()
+		if err := r.UnmarshalReviewString(); err != nil {
+			return err
+		}
 	}
+	return nil
 }

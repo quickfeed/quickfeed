@@ -141,7 +141,10 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 		return nil, err
 	}
 	for _, sbm := range submissions {
-		sbm.MakeSubmissionReviews()
+		err = sbm.MakeSubmissionReviews()
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &pb.Submissions{Submissions: submissions}, nil
 }
@@ -171,9 +174,11 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 				sbm.BuildInfo = ""
 				sbm.ScoreObjects = ""
 			} else {
-				sbm.MakeSubmissionReviews()
+				err = sbm.MakeSubmissionReviews()
+				if err != nil {
+					return nil, err
+				}
 			}
-
 		}
 	}
 
