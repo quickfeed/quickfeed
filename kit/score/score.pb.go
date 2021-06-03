@@ -220,64 +220,6 @@ func (x *Results) GetScoreMap() map[string]*Score {
 	return nil
 }
 
-//TODO(meling) Remove Result
-// Result holds build information and scores for an assignment's test execution.
-// Deprecated: Result should not be used
-type Result struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	BuildInfo *BuildInfo `protobuf:"bytes,1,opt,name=BuildInfo,proto3" json:"BuildInfo,omitempty"`
-	Scores    []*Score   `protobuf:"bytes,2,rep,name=Scores,proto3" json:"Scores,omitempty"`
-}
-
-func (x *Result) Reset() {
-	*x = Result{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_score_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Result) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Result) ProtoMessage() {}
-
-func (x *Result) ProtoReflect() protoreflect.Message {
-	mi := &file_score_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Result.ProtoReflect.Descriptor instead.
-func (*Result) Descriptor() ([]byte, []int) {
-	return file_score_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *Result) GetBuildInfo() *BuildInfo {
-	if x != nil {
-		return x.BuildInfo
-	}
-	return nil
-}
-
-func (x *Result) GetScores() []*Score {
-	if x != nil {
-		return x.Scores
-	}
-	return nil
-}
-
 // BuildInfo holds build data for an assignment's test execution.
 type BuildInfo struct {
 	state         protoimpl.MessageState
@@ -293,7 +235,7 @@ type BuildInfo struct {
 func (x *BuildInfo) Reset() {
 	*x = BuildInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_score_proto_msgTypes[4]
+		mi := &file_score_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -306,7 +248,7 @@ func (x *BuildInfo) String() string {
 func (*BuildInfo) ProtoMessage() {}
 
 func (x *BuildInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_score_proto_msgTypes[4]
+	mi := &file_score_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -319,7 +261,7 @@ func (x *BuildInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BuildInfo.ProtoReflect.Descriptor instead.
 func (*BuildInfo) Descriptor() ([]byte, []int) {
-	return file_score_proto_rawDescGZIP(), []int{4}
+	return file_score_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *BuildInfo) GetBuildID() int64 {
@@ -387,13 +329,7 @@ var file_score_proto_rawDesc = []byte{
 	0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79,
 	0x12, 0x22, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
 	0x0c, 0x2e, 0x73, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x53, 0x63, 0x6f, 0x72, 0x65, 0x52, 0x05, 0x76,
-	0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x5e, 0x0a, 0x06, 0x52, 0x65, 0x73, 0x75,
-	0x6c, 0x74, 0x12, 0x2e, 0x0a, 0x09, 0x42, 0x75, 0x69, 0x6c, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x73, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x42, 0x75,
-	0x69, 0x6c, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x09, 0x42, 0x75, 0x69, 0x6c, 0x64, 0x49, 0x6e,
-	0x66, 0x6f, 0x12, 0x24, 0x0a, 0x06, 0x53, 0x63, 0x6f, 0x72, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03,
-	0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x73, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x53, 0x63, 0x6f, 0x72, 0x65,
-	0x52, 0x06, 0x53, 0x63, 0x6f, 0x72, 0x65, 0x73, 0x22, 0x7b, 0x0a, 0x09, 0x42, 0x75, 0x69, 0x6c,
+	0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x7b, 0x0a, 0x09, 0x42, 0x75, 0x69, 0x6c,
 	0x64, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x18, 0x0a, 0x07, 0x42, 0x75, 0x69, 0x6c, 0x64, 0x49, 0x44,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x42, 0x75, 0x69, 0x6c, 0x64, 0x49, 0x44, 0x12,
 	0x1c, 0x0a, 0x09, 0x42, 0x75, 0x69, 0x6c, 0x64, 0x44, 0x61, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01,
@@ -419,29 +355,26 @@ func file_score_proto_rawDescGZIP() []byte {
 	return file_score_proto_rawDescData
 }
 
-var file_score_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_score_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_score_proto_goTypes = []interface{}{
 	(*Score)(nil),     // 0: score.Score
 	(*Scores)(nil),    // 1: score.Scores
 	(*Results)(nil),   // 2: score.Results
-	(*Result)(nil),    // 3: score.Result
-	(*BuildInfo)(nil), // 4: score.BuildInfo
-	nil,               // 5: score.Scores.ScoreMapEntry
-	nil,               // 6: score.Results.ScoreMapEntry
+	(*BuildInfo)(nil), // 3: score.BuildInfo
+	nil,               // 4: score.Scores.ScoreMapEntry
+	nil,               // 5: score.Results.ScoreMapEntry
 }
 var file_score_proto_depIdxs = []int32{
-	5, // 0: score.Scores.ScoreMap:type_name -> score.Scores.ScoreMapEntry
-	4, // 1: score.Results.BuildInfo:type_name -> score.BuildInfo
-	6, // 2: score.Results.ScoreMap:type_name -> score.Results.ScoreMapEntry
-	4, // 3: score.Result.BuildInfo:type_name -> score.BuildInfo
-	0, // 4: score.Result.Scores:type_name -> score.Score
-	0, // 5: score.Scores.ScoreMapEntry.value:type_name -> score.Score
-	0, // 6: score.Results.ScoreMapEntry.value:type_name -> score.Score
-	7, // [7:7] is the sub-list for method output_type
-	7, // [7:7] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	4, // 0: score.Scores.ScoreMap:type_name -> score.Scores.ScoreMapEntry
+	3, // 1: score.Results.BuildInfo:type_name -> score.BuildInfo
+	5, // 2: score.Results.ScoreMap:type_name -> score.Results.ScoreMapEntry
+	0, // 3: score.Scores.ScoreMapEntry.value:type_name -> score.Score
+	0, // 4: score.Results.ScoreMapEntry.value:type_name -> score.Score
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_score_proto_init() }
@@ -487,18 +420,6 @@ func file_score_proto_init() {
 			}
 		}
 		file_score_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Result); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_score_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*BuildInfo); i {
 			case 0:
 				return &v.state
@@ -517,7 +438,7 @@ func file_score_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_score_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

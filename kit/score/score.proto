@@ -26,14 +26,6 @@ message Results {
     map<string, Score> ScoreMap = 3; // map from TestName to Score
 }
 
-//TODO(meling) Remove Result
-// Result holds build information and scores for an assignment's test execution.
-// Deprecated: Result should not be used
-message Result {
-    BuildInfo BuildInfo = 1;
-    repeated Score Scores = 2;
-}
-
 // BuildInfo holds build data for an assignment's test execution.
 message BuildInfo {
     int64 BuildID = 1;
