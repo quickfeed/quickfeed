@@ -17,7 +17,7 @@ var globalBuildID = new(int64)
 func NewResults() *Results {
 	return &Results{
 		TestNames: make([]string, 0),
-		ScoreMap:  make(map[string]*Score),
+		Scores:    make(map[string]*Score),
 	}
 }
 
@@ -51,7 +51,7 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 // This method assumes that the provided score object is valid.
 func (r *Results) AddScore(sc *Score) {
 	testName := sc.GetTestName()
-	if current, found := r.ScoreMap[testName]; found {
+	if current, found := r.Scores[testName]; found {
 		if current.GetScore() != 0 {
 			// We reach here only if a second non-zero score is found
 			// Mark it as faulty with -1.
@@ -65,13 +65,13 @@ func (r *Results) AddScore(sc *Score) {
 	// Record score object if:
 	// - current score is nil or zero, or
 	// - the first score was zero.
-	r.ScoreMap[testName] = sc
+	r.Scores[testName] = sc
 }
 
 // Validate returns an error if one of the recorded score objects are invalid.
 // Otherwise, nil is returned.
 func (r *Results) Validate(secret string) error {
-	for _, sc := range r.GetScoreMap() {
+	for _, sc := range r.GetScores() {
 		if err := sc.IsValid(secret); err != nil {
 			return err
 		}
@@ -85,7 +85,7 @@ func (r *Results) Validate(secret string) error {
 func (r *Results) Sum() uint32 {
 	totalWeight := float32(0)
 	var max, score, weight []float32
-	for _, ts := range r.GetScoreMap() {
+	for _, ts := range r.GetScores() {
 		totalWeight += float32(ts.Weight)
 		weight = append(weight, float32(ts.Weight))
 		score = append(score, float32(ts.Score))

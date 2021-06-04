@@ -372,7 +372,7 @@ proto.score.Results.toObject = function(includeInstance, msg) {
   var f, obj = {
     buildinfo: (f = msg.getBuildinfo()) && proto.score.BuildInfo.toObject(includeInstance, f),
     testnamesList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
-    scoremapMap: (f = msg.getScoremapMap()) ? f.toObject(includeInstance, proto.score.Score.toObject) : []
+    scoresMap: (f = msg.getScoresMap()) ? f.toObject(includeInstance, proto.score.Score.toObject) : []
   };
 
   if (includeInstance) {
@@ -419,7 +419,7 @@ proto.score.Results.deserializeBinaryFromReader = function(msg, reader) {
       msg.addTestnames(value);
       break;
     case 3:
-      var value = msg.getScoremapMap();
+      var value = msg.getScoresMap();
       reader.readMessage(value, function(message, reader) {
         jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readMessage, proto.score.Score.deserializeBinaryFromReader, "", new proto.score.Score());
          });
@@ -468,7 +468,7 @@ proto.score.Results.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getScoremapMap(true);
+  f = message.getScoresMap(true);
   if (f && f.getLength() > 0) {
     f.serializeBinary(3, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeMessage, proto.score.Score.serializeBinaryToWriter);
   }
@@ -550,12 +550,12 @@ proto.score.Results.prototype.clearTestnamesList = function() {
 
 
 /**
- * map<string, Score> ScoreMap = 3;
+ * map<string, Score> Scores = 3;
  * @param {boolean=} opt_noLazyCreate Do not create the map if
  * empty, instead returning `undefined`
  * @return {!jspb.Map<string,!proto.score.Score>}
  */
-proto.score.Results.prototype.getScoremapMap = function(opt_noLazyCreate) {
+proto.score.Results.prototype.getScoresMap = function(opt_noLazyCreate) {
   return /** @type {!jspb.Map<string,!proto.score.Score>} */ (
       jspb.Message.getMapField(this, 3, opt_noLazyCreate,
       proto.score.Score));
@@ -566,8 +566,8 @@ proto.score.Results.prototype.getScoremapMap = function(opt_noLazyCreate) {
  * Clears values from the map. The map will be non-null.
  * @return {!proto.score.Results} returns this
  */
-proto.score.Results.prototype.clearScoremapMap = function() {
-  this.getScoremapMap().clear();
+proto.score.Results.prototype.clearScoresMap = function() {
+  this.getScoresMap().clear();
   return this;};
 
 

@@ -65,8 +65,8 @@ Here are some more logs for the student.
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(res.ScoreMap) != 2 {
-		t.Fatalf("ExtractResult() expected 2 Score entries, got %d: %+v", len(res.ScoreMap), res.ScoreMap)
+	if len(res.Scores) != 2 {
+		t.Fatalf("ExtractResult() expected 2 Score entries, got %d: %+v", len(res.Scores), res.Scores)
 	}
 }
 
@@ -89,8 +89,8 @@ func TestExtractResultWithPanicedAndMaliciousScoreLines(t *testing.T) {
 		t.Fatal(err)
 	}
 	const expectedTests = 6
-	if len(res.ScoreMap) != expectedTests {
-		t.Fatalf("ExtractResult() expected %d Score entries, got %d: %+v", expectedTests, len(res.ScoreMap), res.ScoreMap)
+	if len(res.Scores) != expectedTests {
+		t.Fatalf("ExtractResult() expected %d Score entries, got %d: %+v", expectedTests, len(res.Scores), res.Scores)
 	}
 	if len(res.TestNames) != expectedTests {
 		t.Fatalf("Extract() expected %d Test entries, got %d: %+v", expectedTests, len(res.TestNames), scores)
@@ -193,7 +193,7 @@ var scoreTests = []struct {
 		},
 		want: &score.Results{
 			TestNames: []string{"A", "B", "C"},
-			ScoreMap: map[string]*score.Score{
+			Scores: map[string]*score.Score{
 				"A": {TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 50},
 				"B": {TestName: "B", Secret: theSecret, Weight: 20, MaxScore: 100, Score: 60},
 				"C": {TestName: "C", Secret: theSecret, Weight: 30, MaxScore: 100, Score: 70},
@@ -214,7 +214,7 @@ var scoreTests = []struct {
 		},
 		want: &score.Results{
 			TestNames: []string{"A", "B", "C", "D"},
-			ScoreMap: map[string]*score.Score{
+			Scores: map[string]*score.Score{
 				"A": {TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 50},
 				"B": {TestName: "B", Secret: theSecret, Weight: 20, MaxScore: 100, Score: 60},
 				"C": {TestName: "C", Secret: theSecret, Weight: 30, MaxScore: 100, Score: 70},
@@ -232,7 +232,7 @@ var scoreTests = []struct {
 		},
 		want: &score.Results{
 			TestNames: []string{"A"},
-			ScoreMap: map[string]*score.Score{
+			Scores: map[string]*score.Score{
 				"A": {TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: -1},
 			},
 		},
@@ -247,7 +247,7 @@ var scoreTests = []struct {
 		},
 		want: &score.Results{
 			TestNames: []string{"A"},
-			ScoreMap: map[string]*score.Score{
+			Scores: map[string]*score.Score{
 				"A": {TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: -1},
 			},
 		},
@@ -264,7 +264,7 @@ var scoreTests = []struct {
 		},
 		want: &score.Results{
 			TestNames: []string{"A"},
-			ScoreMap: map[string]*score.Score{
+			Scores: map[string]*score.Score{
 				"A": {TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: -1},
 			},
 		},
