@@ -7,6 +7,7 @@ import (
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/scm"
 )
 
@@ -171,6 +172,10 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 			if request.GetSkipBuildInfo() {
 				sbm.BuildInfo = ""
 				sbm.ScoreObjects = ""
+				// TODO(meling) Check if this is enough: @Oskar and @BK
+				sbm.Results = &score.Results{
+					BuildInfo: &score.BuildInfo{},
+				}
 			} else {
 				err = sbm.MakeSubmissionReviews()
 				if err != nil {

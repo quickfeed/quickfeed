@@ -1,7 +1,6 @@
 package hooks
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -176,28 +175,24 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 	ci.RunTests(wh.logger, wh.db, wh.runner, runData)
 }
 
+const layout = "2006-01-02T15:04:05"
+
 // recordSubmissionWithoutTests saves a new submission without running any tests
 // for a manually graded assignment.
 func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
-	buildInfo := &score.BuildInfo{
-		BuildID:   0,
-		BuildDate: time.Now().Format("2006-01-02T15:04:05"),
-		BuildLog:  "No automated tests for this assignment",
-		ExecTime:  1,
-	}
-	// TODO(meling) Avoid marshal here.
-	noTestBuildInfo, err := json.Marshal(buildInfo)
-	if err != nil {
-		wh.logger.Errorf("Error marshalling build info for %s of course %s for student %s: %s", data.Course.Name, data.Assignment.Name, data.JobOwner, err)
-		return
-	}
-	// TODO(meling) Replace BuildInfo field in Submission with score.BuildInfo (must import score.proto)
 	newSubmission := &pb.Submission{
 		AssignmentID: data.Assignment.ID,
-		BuildInfo:    string(noTestBuildInfo),
-		CommitHash:   data.CommitID,
-		UserID:       data.Repo.UserID,
-		GroupID:      data.Repo.GroupID,
+		Results: &score.Results{
+			BuildInfo: &score.BuildInfo{
+				BuildID:   0,
+				BuildDate: time.Now().Format(layout),
+				BuildLog:  "No automated tests for this assignment",
+				ExecTime:  1,
+			},
+		},
+		CommitHash: data.CommitID,
+		UserID:     data.Repo.UserID,
+		GroupID:    data.Repo.GroupID,
 	}
 	if err := wh.db.CreateSubmission(newSubmission); err != nil {
 		wh.logger.Errorf("Failed to save submission for user ID %s for assignment ID %d: %s", data.JobOwner, data.Assignment.ID, err)
