@@ -2,13 +2,11 @@ package web
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sort"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/scm"
 )
 
@@ -509,12 +507,16 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 		var totalApproved uint64
 		var submissionDate time.Time
 		for _, submissionLink := range enrolLink.Submissions {
-			if submissionLink.Submission != nil {
-				if submissionLink.Submission.Status == pb.Submission_APPROVED {
+			submission := submissionLink.Submission
+			if submission != nil {
+				if submission.Status == pb.Submission_APPROVED {
 					totalApproved++
 				}
 				if enrol.LastActivityDate == "" {
-					submissionDate = s.extractSubmissionDate(submissionLink.Submission, submissionDate)
+					submissionDate, err = submission.NewestBuildDate(submissionDate)
+					if err != nil {
+						return nil, err
+					}
 				}
 			}
 		}
@@ -563,23 +565,4 @@ func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.Submi
 		return unsorted[i].Assignment.Order < unsorted[j].Assignment.Order
 	})
 	return unsorted
-}
-
-func (s *AutograderService) extractSubmissionDate(submission *pb.Submission, submissionDate time.Time) time.Time {
-	// TODO(meling) Pass score.BuildInfo directly in submission to avoid unmarshal
-	// TODO(meling) Add test for this method
-	buildInfoString := submission.BuildInfo
-	var buildInfo score.BuildInfo
-	if err := json.Unmarshal([]byte(buildInfoString), &buildInfo); err != nil {
-		// don't fail the method on a parsing error, just log
-		s.logger.Errorf("Failed to unmarshal build info %s: %s", buildInfoString, err)
-	}
-
-	currentSubmissionDate, err := time.Parse(layout, buildInfo.BuildDate)
-	if err != nil {
-		s.logger.Errorf("Failed extracting submission date: %s", err)
-	} else if currentSubmissionDate.After(submissionDate) {
-		submissionDate = currentSubmissionDate
-	}
-	return submissionDate
 }

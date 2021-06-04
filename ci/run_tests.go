@@ -110,13 +110,15 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		approvedStatus = pb.Submission_APPROVED
 	}
 
-	// TODO(meling) Submission should accept score.Results message type
 	score := result.Sum()
 	newSubmission := &pb.Submission{
 		AssignmentID: rData.Assignment.ID,
+		CommitHash:   rData.CommitID,
+		Score:        score,
+		Results:      result,
+		// Results replaces both BuildInfo and ScoreObjects
+		// TODO(meling) Frontend code must be updated accordingly
 		// BuildInfo:    result.BuildInfo,
-		CommitHash: rData.CommitID,
-		Score:      score,
 		// ScoreObjects: scores,
 		UserID:  rData.Repo.GetUserID(),
 		GroupID: rData.Repo.GetGroupID(),
