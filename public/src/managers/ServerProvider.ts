@@ -15,9 +15,11 @@ import {
     SubmissionsForCourseRequest,
     User,
 } from "../../proto/ag/ag_pb";
+
+import { BuildInfo }from "../../proto/kit/score/score_pb";
+
 import {
     IAllSubmissionsForEnrollment,
-    IBuildInfo,
     ISubmissionLink,
     ISubmission,
     ITestCases,
@@ -425,22 +427,25 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     private toISubmission(sbm: Submission): ISubmission {
-        const buildInfoAsString = sbm.getBuildinfo();
+        const results = sbm.getResults()
+        let buildInfo = results?.getBuildinfo();
+        if (!buildInfo) {
+            // TODO(meling) This seems a bit useless. How to avoid?
+            buildInfo = new BuildInfo();
+            buildInfo.setBuildid(0);
+            buildInfo.setBuilddate("2017-07-28");
+            buildInfo.setBuildlog("No automated tests for this assignment");
+            buildInfo.setExectime(1);
+        }
+
         const scoreInfoAsString = sbm.getScoreobjects();
-        let buildInfo: IBuildInfo;
+
         let scoreObj: ITestCases[];
         // IMPORTANT: Field names of the Score struct found in the kit/score/score.go,
         // of the ITestCases struct found in the public/src/models.ts,
         // and names in the string passed to JSON.parse() method must match.
         // If experiencing an uncaught error in the browser which results in a blank page
         // when addressing lab information for a student/group, it is likely originates from here.
-        try {
-            buildInfo = JSON.parse(buildInfoAsString);
-        } catch (e) {
-            buildInfo = JSON.parse(
-                "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"No tests for this assignment\", \"execTime\": 1}",
-            );
-        }
         try {
             scoreObj = JSON.parse(scoreInfoAsString);
         } catch (e) {
@@ -460,7 +465,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 }
             });
         }
-        const bDate = new Date(buildInfo.builddate);
         const isbm: ISubmission = {
             id: sbm.getId(),
             userid: sbm.getUserid(),
@@ -469,10 +473,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             passedTests: passed,
             failedTests: failed,
             score: sbm.getScore(),
-            buildId: buildInfo.buildid,
-            buildDate: bDate,
-            executionTime: buildInfo.execTime,
-            buildLog: buildInfo.buildlog,
+            buildId: buildInfo.getBuildid(),
+            buildDate: new Date(buildInfo.getBuilddate()),
+            executionTime: buildInfo.getExectime(),
+            buildLog: buildInfo.getBuildlog(),
             testCases: scoreObj,
             reviews: sbm.getReviewsList(),
             released: sbm.getReleased(),

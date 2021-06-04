@@ -661,9 +661,6 @@ export class Submission extends jspb.Message {
   getScoreobjects(): string;
   setScoreobjects(value: string): Submission;
 
-  getBuildinfo(): string;
-  setBuildinfo(value: string): Submission;
-
   getCommithash(): string;
   setCommithash(value: string): Submission;
 
@@ -702,7 +699,6 @@ export namespace Submission {
     groupid: number,
     score: number,
     scoreobjects: string,
-    buildinfo: string,
     commithash: string,
     released: boolean,
     status: Submission.Status,

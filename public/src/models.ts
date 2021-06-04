@@ -29,14 +29,6 @@ export interface ISubmissionLink {
 
 // Browser only objects END
 
-// Lab submission results
-export interface IBuildInfo {
-    buildid: number;
-    builddate: Date;
-    buildlog: string;
-    execTime: number;
-}
-
 // A single test case object
 export interface ITestCases {
     TestName: string;
