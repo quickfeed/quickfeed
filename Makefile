@@ -42,8 +42,8 @@ proto:
 	Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:. \
-	--js_out=import_style=commonjs:$(proto-path)/ \
-	--grpc-web_out=import_style=typescript,mode=grpcweb:$(proto-path)/ kit/score/score.proto
+	--js_out=import_style=commonjs:$(proto-path) \
+	--grpc-web_out=import_style=typescript,mode=grpcweb:$(proto-path) kit/score/score.proto
 
 	@echo Compiling QuickFeed proto definitions
 	@protoc -I=. -I=$(pbpath) --gogofast_out=plugins=grpc,\
@@ -52,11 +52,11 @@ proto:
 	Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:. \
-	--js_out=import_style=commonjs:$(proto-path)/ \
-	--grpc-web_out=import_style=typescript,mode=grpcweb:$(proto-path)/ ag/ag.proto
+	--js_out=import_style=commonjs:$(proto-path) \
+	--grpc-web_out=import_style=typescript,mode=grpcweb:$(proto-path) ag/ag.proto
 
-	$(sedi) '/gogo/d' $(proto-path)/ag_pb.js $(proto-path)/AgServiceClientPb.ts $(proto-path)/ag_pb.d.ts
-	@cd public && npm run tsc -- proto/AgServiceClientPb.ts
+	$(sedi) '/gogo/d' $(proto-path)/ag/AgServiceClientPb.ts $(proto-path)/ag/ag_pb.js $(proto-path)/ag/ag_pb.d.ts
+	@cd public && npm run tsc -- proto/ag/AgServiceClientPb.ts
 
 grpcweb:
 	@echo "Fetch and install grpcweb protoc plugin (requires sudo access)"

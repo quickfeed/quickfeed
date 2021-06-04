@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Enrollment } from "../../../proto/ag_pb";
+import { Assignment, Enrollment } from "../../../proto/ag/ag_pb";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink, NavigationManager, UserManager } from "../../managers";
 

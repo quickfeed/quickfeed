@@ -1,5 +1,5 @@
 import * as React from "react";
-import { User } from "../../proto/ag_pb";
+import { User } from "../../proto/ag/ag_pb";
 import { NavigationManager, UserManager } from "../managers";
 import { INavInfo } from "../NavigationHelper";
 import { View, ViewPage } from "./ViewPage";

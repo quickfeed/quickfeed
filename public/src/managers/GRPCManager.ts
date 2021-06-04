@@ -40,8 +40,8 @@ import {
     Users,
     Void,
     Reviewers,
-} from "../../proto/ag_pb";
-import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
+} from "../../proto/ag/ag_pb";
+import { AutograderServiceClient } from "../../proto/ag/AgServiceClientPb";
 import { UserManager } from "./UserManager";
 import { ISubmission } from "../models";
 

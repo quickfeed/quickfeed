@@ -2,7 +2,7 @@ import * as React from "react";
 import { CoursePanel, Row } from "../../components";
 import { NavigationManager } from "../../managers/NavigationManager";
 import { IAllSubmissionsForEnrollment } from "../../models";
-import { Enrollment } from "../../../proto/ag_pb";
+import { Enrollment } from "../../../proto/ag/ag_pb";
 
 interface ICourseOverviewProps {
     courseOverview: IAllSubmissionsForEnrollment[];

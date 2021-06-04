@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { View, ViewPage } from "./ViewPage";
 
-import { User } from "../../proto/ag_pb";
+import { User } from "../../proto/ag/ag_pb";
 import { UserProfile } from "../components/forms/UserProfile";
 import { NavigationManager, UserManager } from "../managers";
 

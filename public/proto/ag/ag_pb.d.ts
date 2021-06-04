@@ -1,6 +1,5 @@
 import * as jspb from "google-protobuf"
 
-import * as gogoproto_gogo_pb from '../gogoproto/gogo_pb';
 import * as kit_score_score_pb from '../kit/score/score_pb';
 
 export class User extends jspb.Message {

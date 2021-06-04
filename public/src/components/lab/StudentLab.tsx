@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ISubmissionLink } from "../../models";
 import { LabResultView } from "../../pages/views/LabResultView";
-import { User, Submission } from "../../../proto/ag_pb";
+import { User, Submission } from "../../../proto/ag/ag_pb";
 
 interface IStudentLabProps {
     studentSubmission: ISubmissionLink;
