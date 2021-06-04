@@ -170,7 +170,6 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 	for _, a := range assignments {
 		for _, sbm := range a.Submissions {
 			if request.GetSkipBuildInfo() {
-				sbm.ScoreObjects = ""
 				// TODO(meling) Check if this is enough: @Oskar and @BK
 				sbm.Results = &score.Results{
 					BuildInfo: &score.BuildInfo{},
