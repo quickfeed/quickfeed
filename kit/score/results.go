@@ -12,6 +12,8 @@ const (
 
 var globalBuildID = new(int64)
 
+// TODO(meling) make most methods herein private; only ExtractResults is really needed, I think?
+
 func NewResults() *Results {
 	return &Results{
 		TestNames: make([]string, 0),

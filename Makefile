@@ -35,15 +35,26 @@ ui:
 	@cd public; npm install; npm run webpack
 
 proto:
-	@echo Compiling Autograders proto definitions
-	@cd ag; protoc -I=. -I=$(pbpath) --gogofast_out=plugins=grpc,\
+	@echo Compiling QuickFeed Score proto definitions
+	@protoc -I=. -I=$(pbpath) --gogofast_out=plugins=grpc,paths=source_relative,\
 	Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:. \
-	--js_out=import_style=commonjs:../$(proto-path)/ \
-	--grpc-web_out=import_style=typescript,mode=grpcweb:../$(proto-path)/ ag.proto
+	--js_out=import_style=commonjs:$(proto-path)/ \
+	--grpc-web_out=import_style=typescript,mode=grpcweb:$(proto-path)/ kit/score/score.proto
+
+	@echo Compiling QuickFeed proto definitions
+	@protoc -I=. -I=$(pbpath) --gogofast_out=plugins=grpc,\
+	Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,\
+	Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types,\
+	Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types,\
+	Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
+	Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:. \
+	--js_out=import_style=commonjs:$(proto-path)/ \
+	--grpc-web_out=import_style=typescript,mode=grpcweb:$(proto-path)/ ag/ag.proto
+
 	$(sedi) '/gogo/d' $(proto-path)/ag_pb.js $(proto-path)/AgServiceClientPb.ts $(proto-path)/ag_pb.d.ts
 	@cd public && npm run tsc -- proto/AgServiceClientPb.ts
 

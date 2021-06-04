@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "gogoproto/gogo.proto";
+import "kit/score/score.proto";
 
 // Note on use of gogo's moretags to translate to a database schama via GORM
 //
@@ -203,6 +204,7 @@ message Submission {
     Status status = 10;
     string approvedDate = 11;
     repeated Review reviews = 12;
+    score.Results results = 13; // TODO(meling) replaces buildInfo and scoreObjects
 }
 
 message Submissions {
