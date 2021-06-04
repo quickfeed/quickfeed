@@ -5958,7 +5958,6 @@ proto.Submission.toObject = function(includeInstance, msg) {
     userid: jspb.Message.getFieldWithDefault(msg, 3, 0),
     groupid: jspb.Message.getFieldWithDefault(msg, 4, 0),
     score: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    scoreobjects: jspb.Message.getFieldWithDefault(msg, 6, ""),
     commithash: jspb.Message.getFieldWithDefault(msg, 8, ""),
     released: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
     status: jspb.Message.getFieldWithDefault(msg, 10, 0),
@@ -6021,10 +6020,6 @@ proto.Submission.deserializeBinaryFromReader = function(msg, reader) {
     case 5:
       var value = /** @type {number} */ (reader.readUint32());
       msg.setScore(value);
-      break;
-    case 6:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setScoreobjects(value);
       break;
     case 8:
       var value = /** @type {string} */ (reader.readString());
@@ -6113,13 +6108,6 @@ proto.Submission.serializeBinaryToWriter = function(message, writer) {
   if (f !== 0) {
     writer.writeUint32(
       5,
-      f
-    );
-  }
-  f = message.getScoreobjects();
-  if (f.length > 0) {
-    writer.writeString(
-      6,
       f
     );
   }
@@ -6267,24 +6255,6 @@ proto.Submission.prototype.getScore = function() {
  */
 proto.Submission.prototype.setScore = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
-};
-
-
-/**
- * optional string scoreObjects = 6;
- * @return {string}
- */
-proto.Submission.prototype.getScoreobjects = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.Submission} returns this
- */
-proto.Submission.prototype.setScoreobjects = function(value) {
-  return jspb.Message.setProto3StringField(this, 6, value);
 };
 
 

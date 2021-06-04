@@ -116,13 +116,9 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		CommitHash:   rData.CommitID,
 		Score:        score,
 		Results:      result,
-		// Results replaces both BuildInfo and ScoreObjects
-		// TODO(meling) Frontend code must be updated accordingly
-		// BuildInfo:    result.BuildInfo,
-		// ScoreObjects: scores,
-		UserID:  rData.Repo.GetUserID(),
-		GroupID: rData.Repo.GetGroupID(),
-		Status:  approvedStatus,
+		UserID:       rData.Repo.GetUserID(),
+		GroupID:      rData.Repo.GetGroupID(),
+		Status:       approvedStatus,
 	}
 	err = db.CreateSubmission(newSubmission)
 	if err != nil {

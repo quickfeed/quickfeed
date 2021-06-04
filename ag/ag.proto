@@ -194,14 +194,12 @@ message Submission {
     uint64 userID = 3;
     uint64 groupID = 4;
     uint32 score = 5;
-    string scoreObjects = 6; // deprecated: do not use
-    // string buildInfo = 7;    // deprecated: do not use
     string commitHash = 8;
     bool released = 9;       // true => feedback is visible to the student or group members
     Status status = 10;
     string approvedDate = 11;
     repeated Review reviews = 12;
-    score.Results results = 13; // TODO(meling) replaces buildInfo and scoreObjects
+    score.Results results = 13;
 }
 
 message Submissions {
