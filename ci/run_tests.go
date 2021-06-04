@@ -130,7 +130,7 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		return
 	}
 	logger.Debugf("Created submission for assignment '%s' with status %s", rData.Assignment.GetName(), approvedStatus)
-	updateSlipDays(logger, db, rData.Assignment, newSubmission, result.BuildInfo.BuildDate)
+	updateSlipDays(logger, db, rData.Assignment, newSubmission)
 }
 
 func randomSecret() string {
@@ -142,7 +142,8 @@ func randomSecret() string {
 	return fmt.Sprintf("%x", sha1.Sum(randomness))
 }
 
-func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission, buildDate string) {
+func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission) {
+	buildDate := submission.Results.BuildInfo.BuildDate
 	buildTime, err := time.Parse(layout, buildDate)
 	if err != nil {
 		logger.Errorf("Failed to parse time from string (%s)", buildDate)
