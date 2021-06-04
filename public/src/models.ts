@@ -1,4 +1,5 @@
 import { Assignment, Course, Enrollment, Review, Submission } from '../proto/ag/ag_pb';
+import { BuildInfo, Score } from "../proto/kit/score/score_pb";
 
 export interface IUser {
     id: number;
@@ -29,14 +30,6 @@ export interface ISubmissionLink {
 
 // Browser only objects END
 
-// A single test case object
-export interface ITestCases {
-    TestName: string;
-    Score: number;
-    MaxScore: number;
-    Weight: number;
-}
-
 // A student/group submission
 export interface ISubmission {
     id: number;
@@ -50,7 +43,7 @@ export interface ISubmission {
     buildDate: Date;
     executionTime: number;
     buildLog: string;
-    testCases: ITestCases[];
+    testCases: Score[];
     reviews: Review[];
     released: boolean;
     status: Submission.Status;
