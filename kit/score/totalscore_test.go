@@ -71,10 +71,11 @@ func TestSumGrade(t *testing.T) {
 		for _, sc := range s.in {
 			scoreTable.AddScore(sc)
 		}
-		if err := scoreTable.Validate(""); err != nil {
+		results := &score.Results{Scores: scoreTable.ToScoreSlice()}
+		if err := results.Validate(""); err != nil {
 			t.Error(err)
 		}
-		tot := scoreTable.Sum()
+		tot := results.Sum()
 		grade := g.Grade(tot)
 		if grade != s.wantGrade {
 			t.Errorf("Grade(%d) = %s, expected %s", tot, grade, s.wantGrade)
@@ -228,7 +229,8 @@ func TestValidate(t *testing.T) {
 		for _, sc := range s.in {
 			scoreTable.AddScore(sc)
 		}
-		if err := scoreTable.Validate(""); err != s.err {
+		results := &score.Results{Scores: scoreTable.ToScoreSlice()}
+		if err := results.Validate(""); err != s.err {
 			var e, se string
 			if err != nil {
 				e = err.Error()

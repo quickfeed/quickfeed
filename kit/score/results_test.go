@@ -92,9 +92,6 @@ func TestExtractResultWithPanicedAndMaliciousScoreLines(t *testing.T) {
 	if len(res.Scores) != expectedTests {
 		t.Fatalf("ExtractResult() expected %d Score entries, got %d: %+v", expectedTests, len(res.Scores), res.Scores)
 	}
-	if len(res.TestNames) != expectedTests {
-		t.Fatalf("Extract() expected %d Test entries, got %d: %+v", expectedTests, len(res.TestNames), scores)
-	}
 
 	testOrder := []string{
 		"GoodTest1",
@@ -104,9 +101,9 @@ func TestExtractResultWithPanicedAndMaliciousScoreLines(t *testing.T) {
 		"PanicedTest3",
 		"MaliciousTest",
 	}
-	for i, testName := range res.TestNames {
-		if testName != testOrder[i] {
-			t.Errorf("ExtractResult() returned unexpected order of tests: expected %s, got %s", testOrder[i], testName)
+	for i, sc := range res.Scores {
+		if sc.TestName != testOrder[i] {
+			t.Errorf("ExtractResult() returned unexpected order of tests: expected %s, got %s", testOrder[i], sc.TestName)
 		}
 	}
 }
@@ -137,11 +134,12 @@ func TestScoresSum(t *testing.T) {
 			s.AddScore(sc)
 		}
 	}
-	err := s.Validate(hiddenSecret)
+	results := &score.Results{Scores: s.ToScoreSlice()}
+	err := results.Validate(hiddenSecret)
 	if err != nil {
 		t.Errorf("Validate() = %v, expected <nil>", err)
 	}
-	got := s.Sum()
+	got := results.Sum()
 	const want = 100
 	if got != want {
 		t.Errorf("Sum() = '%d', want '%d'", got, want)
@@ -192,11 +190,10 @@ var scoreTests = []struct {
 			{TestName: "C", Secret: theSecret, Weight: 30, MaxScore: 100, Score: 70},
 		},
 		want: &score.Results{
-			TestNames: []string{"A", "B", "C"},
-			Scores: map[string]*score.Score{
-				"A": {TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 50},
-				"B": {TestName: "B", Secret: theSecret, Weight: 20, MaxScore: 100, Score: 60},
-				"C": {TestName: "C", Secret: theSecret, Weight: 30, MaxScore: 100, Score: 70},
+			Scores: []*score.Score{
+				{TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 50},
+				{TestName: "B", Secret: theSecret, Weight: 20, MaxScore: 100, Score: 60},
+				{TestName: "C", Secret: theSecret, Weight: 30, MaxScore: 100, Score: 70},
 			},
 		},
 	},
@@ -213,12 +210,11 @@ var scoreTests = []struct {
 			{TestName: "C", Secret: theSecret, Weight: 30, MaxScore: 100, Score: 70},
 		},
 		want: &score.Results{
-			TestNames: []string{"A", "B", "C", "D"},
-			Scores: map[string]*score.Score{
-				"A": {TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 50},
-				"B": {TestName: "B", Secret: theSecret, Weight: 20, MaxScore: 100, Score: 60},
-				"C": {TestName: "C", Secret: theSecret, Weight: 30, MaxScore: 100, Score: 70},
-				"D": {TestName: "D", Secret: theSecret, Weight: 30, MaxScore: 100, Score: 0},
+			Scores: []*score.Score{
+				{TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 50},
+				{TestName: "B", Secret: theSecret, Weight: 20, MaxScore: 100, Score: 60},
+				{TestName: "C", Secret: theSecret, Weight: 30, MaxScore: 100, Score: 70},
+				{TestName: "D", Secret: theSecret, Weight: 30, MaxScore: 100, Score: 0},
 			},
 		},
 	},
@@ -231,9 +227,8 @@ var scoreTests = []struct {
 			{TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 100},
 		},
 		want: &score.Results{
-			TestNames: []string{"A"},
-			Scores: map[string]*score.Score{
-				"A": {TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: -1},
+			Scores: []*score.Score{
+				{TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: -1},
 			},
 		},
 	},
@@ -246,9 +241,8 @@ var scoreTests = []struct {
 			{TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 100},
 		},
 		want: &score.Results{
-			TestNames: []string{"A"},
-			Scores: map[string]*score.Score{
-				"A": {TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: -1},
+			Scores: []*score.Score{
+				{TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: -1},
 			},
 		},
 	},
@@ -263,9 +257,8 @@ var scoreTests = []struct {
 			{TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: 100},
 		},
 		want: &score.Results{
-			TestNames: []string{"A"},
-			Scores: map[string]*score.Score{
-				"A": {TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: -1},
+			Scores: []*score.Score{
+				{TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: -1},
 			},
 		},
 	},
@@ -278,7 +271,8 @@ func TestAddScore(t *testing.T) {
 			for _, sc := range test.in {
 				scores.AddScore(sc)
 			}
-			if diff := cmp.Diff(test.want, scores, cmpopts.IgnoreUnexported(score.Results{})); diff != "" {
+			results := &score.Results{Scores: scores.ToScoreSlice()}
+			if diff := cmp.Diff(test.want, results, cmpopts.IgnoreUnexported(score.Results{})); diff != "" {
 				t.Errorf("\nDescription: %s\nScores are different (-want +got):\n%s", test.desc, diff)
 			}
 		})

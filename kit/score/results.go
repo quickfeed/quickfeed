@@ -14,11 +14,25 @@ var globalBuildID = new(int64)
 
 // TODO(meling) make most methods herein private; only ExtractResults is really needed, I think?
 
-func NewResults() *Results {
-	return &Results{
-		TestNames: make([]string, 0),
-		Scores:    make(map[string]*Score),
+type results struct {
+	testNames []string
+	scores    map[string]*Score
+}
+
+func NewResults() *results {
+	return &results{
+		testNames: make([]string, 0),
+		scores:    make(map[string]*Score),
 	}
+}
+
+// ToScoreSlice returns a slice of score objects for the proto file.
+func (r *results) ToScoreSlice() []*Score {
+	scores := make([]*Score, len(r.testNames))
+	for i, name := range r.testNames {
+		scores[i] = r.scores[name]
+	}
+	return scores
 }
 
 // ExtractResults returns the results from a test execution extracted from the given out string.
@@ -38,20 +52,22 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 			filteredLog = append(filteredLog, line)
 		}
 	}
-	results.BuildInfo = &BuildInfo{
-		BuildID:   atomic.AddInt64(globalBuildID, 1),
-		BuildDate: time.Now().Format(layout),
-		BuildLog:  strings.Join(filteredLog, "\n"),
-		ExecTime:  execTime.Milliseconds(),
-	}
-	return results, nil
+	return &Results{
+		BuildInfo: &BuildInfo{
+			BuildID:   atomic.AddInt64(globalBuildID, 1),
+			BuildDate: time.Now().Format(layout),
+			BuildLog:  strings.Join(filteredLog, "\n"),
+			ExecTime:  execTime.Milliseconds(),
+		},
+		Scores: results.ToScoreSlice(),
+	}, nil
 }
 
 // AddScore adds the given score to the set of scores.
 // This method assumes that the provided score object is valid.
-func (r *Results) AddScore(sc *Score) {
+func (r *results) AddScore(sc *Score) {
 	testName := sc.GetTestName()
-	if current, found := r.Scores[testName]; found {
+	if current, found := r.scores[testName]; found {
 		if current.GetScore() != 0 {
 			// We reach here only if a second non-zero score is found
 			// Mark it as faulty with -1.
@@ -59,13 +75,13 @@ func (r *Results) AddScore(sc *Score) {
 		}
 	} else {
 		// New test: record in TestNames
-		r.TestNames = append(r.TestNames, testName)
+		r.testNames = append(r.testNames, testName)
 	}
 
 	// Record score object if:
 	// - current score is nil or zero, or
 	// - the first score was zero.
-	r.Scores[testName] = sc
+	r.scores[testName] = sc
 }
 
 // Validate returns an error if one of the recorded score objects are invalid.

@@ -371,8 +371,8 @@ proto.score.Results.prototype.toObject = function(opt_includeInstance) {
 proto.score.Results.toObject = function(includeInstance, msg) {
   var f, obj = {
     buildinfo: (f = msg.getBuildinfo()) && proto.score.BuildInfo.toObject(includeInstance, f),
-    testnamesList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
-    scoresMap: (f = msg.getScoresMap()) ? f.toObject(includeInstance, proto.score.Score.toObject) : []
+    scoresList: jspb.Message.toObjectList(msg.getScoresList(),
+    proto.score.Score.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -415,14 +415,9 @@ proto.score.Results.deserializeBinaryFromReader = function(msg, reader) {
       msg.setBuildinfo(value);
       break;
     case 2:
-      var value = /** @type {string} */ (reader.readString());
-      msg.addTestnames(value);
-      break;
-    case 3:
-      var value = msg.getScoresMap();
-      reader.readMessage(value, function(message, reader) {
-        jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readMessage, proto.score.Score.deserializeBinaryFromReader, "", new proto.score.Score());
-         });
+      var value = new proto.score.Score;
+      reader.readMessage(value,proto.score.Score.deserializeBinaryFromReader);
+      msg.addScores(value);
       break;
     default:
       reader.skipField();
@@ -461,16 +456,13 @@ proto.score.Results.serializeBinaryToWriter = function(message, writer) {
       proto.score.BuildInfo.serializeBinaryToWriter
     );
   }
-  f = message.getTestnamesList();
+  f = message.getScoresList();
   if (f.length > 0) {
-    writer.writeRepeatedString(
+    writer.writeRepeatedMessage(
       2,
-      f
+      f,
+      proto.score.Score.serializeBinaryToWriter
     );
-  }
-  f = message.getScoresMap(true);
-  if (f && f.getLength() > 0) {
-    f.serializeBinary(3, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeMessage, proto.score.Score.serializeBinaryToWriter);
   }
 };
 
@@ -513,30 +505,31 @@ proto.score.Results.prototype.hasBuildinfo = function() {
 
 
 /**
- * repeated string TestNames = 2;
- * @return {!Array<string>}
+ * repeated Score Scores = 2;
+ * @return {!Array<!proto.score.Score>}
  */
-proto.score.Results.prototype.getTestnamesList = function() {
-  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 2));
+proto.score.Results.prototype.getScoresList = function() {
+  return /** @type{!Array<!proto.score.Score>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.score.Score, 2));
 };
 
 
 /**
- * @param {!Array<string>} value
+ * @param {!Array<!proto.score.Score>} value
  * @return {!proto.score.Results} returns this
- */
-proto.score.Results.prototype.setTestnamesList = function(value) {
-  return jspb.Message.setField(this, 2, value || []);
+*/
+proto.score.Results.prototype.setScoresList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 2, value);
 };
 
 
 /**
- * @param {string} value
+ * @param {!proto.score.Score=} opt_value
  * @param {number=} opt_index
- * @return {!proto.score.Results} returns this
+ * @return {!proto.score.Score}
  */
-proto.score.Results.prototype.addTestnames = function(value, opt_index) {
-  return jspb.Message.addToRepeatedField(this, 2, value, opt_index);
+proto.score.Results.prototype.addScores = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 2, opt_value, proto.score.Score, opt_index);
 };
 
 
@@ -544,31 +537,9 @@ proto.score.Results.prototype.addTestnames = function(value, opt_index) {
  * Clears the list making it empty but non-null.
  * @return {!proto.score.Results} returns this
  */
-proto.score.Results.prototype.clearTestnamesList = function() {
-  return this.setTestnamesList([]);
+proto.score.Results.prototype.clearScoresList = function() {
+  return this.setScoresList([]);
 };
-
-
-/**
- * map<string, Score> Scores = 3;
- * @param {boolean=} opt_noLazyCreate Do not create the map if
- * empty, instead returning `undefined`
- * @return {!jspb.Map<string,!proto.score.Score>}
- */
-proto.score.Results.prototype.getScoresMap = function(opt_noLazyCreate) {
-  return /** @type {!jspb.Map<string,!proto.score.Score>} */ (
-      jspb.Message.getMapField(this, 3, opt_noLazyCreate,
-      proto.score.Score));
-};
-
-
-/**
- * Clears values from the map. The map will be non-null.
- * @return {!proto.score.Results} returns this
- */
-proto.score.Results.prototype.clearScoresMap = function() {
-  this.getScoresMap().clear();
-  return this;};
 
 
 

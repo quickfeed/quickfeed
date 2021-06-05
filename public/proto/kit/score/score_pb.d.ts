@@ -40,13 +40,10 @@ export class Results extends jspb.Message {
   hasBuildinfo(): boolean;
   clearBuildinfo(): Results;
 
-  getTestnamesList(): Array<string>;
-  setTestnamesList(value: Array<string>): Results;
-  clearTestnamesList(): Results;
-  addTestnames(value: string, index?: number): Results;
-
-  getScoresMap(): jspb.Map<string, Score>;
-  clearScoresMap(): Results;
+  getScoresList(): Array<Score>;
+  setScoresList(value: Array<Score>): Results;
+  clearScoresList(): Results;
+  addScores(value?: Score, index?: number): Score;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Results.AsObject;
@@ -59,8 +56,7 @@ export class Results extends jspb.Message {
 export namespace Results {
   export type AsObject = {
     buildinfo?: BuildInfo.AsObject,
-    testnamesList: Array<string>,
-    scoresMap: Array<[string, Score.AsObject]>,
+    scoresList: Array<Score.AsObject>,
   }
 }
 
