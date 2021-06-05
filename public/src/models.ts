@@ -39,10 +39,8 @@ export interface ISubmission {
     passedTests: number;
     failedTests: number;
     score: number;
-    buildId: number;
     buildDate: Date;
-    executionTime: number;
-    buildLog: string;
+    buildInfo: BuildInfo;
     testCases: Score[];
     reviews: Review[];
     released: boolean;

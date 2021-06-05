@@ -19,9 +19,9 @@ export class LabResultView extends React.Component<ILabInfoProps> {
     public render() {
         if (this.props.submissionLink.submission) {
             const latest = this.props.submissionLink.submission;
-            const buildLog = latest.buildLog.split("\n").map((x, i) => <span key={i} >{x}<br /></span>);
+            const buildLog = latest.buildInfo.getBuildlog().split("\n").map((x, i) => <span key={i} >{x}<br /></span>);
             const score = this.props.submissionLink.assignment.getSkiptests() ? scoreFromReviews(latest.reviews) : latest.score;
-            const lastBuilTable = (<LastBuild
+            const lastBuildTable = (<LastBuild
             test_cases={latest.testCases}
             score={score}
             scoreLimit={this.props.submissionLink.assignment.getScorelimit()}
@@ -49,7 +49,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 assignment={this.props.submissionLink.assignment}
                                 teacherView={this.props.teacherPageView}
                             />
-                            {this.props.submissionLink.assignment.getSkiptests() ? null : lastBuilTable}
+                            {this.props.submissionLink.assignment.getSkiptests() ? null : lastBuildTable}
                             {this.props.submissionLink.assignment.getReviewers() > 0 && latest.released ? this.renderReviewInfo(latest) : null}
                             <Row><div key="loghead" className="col-lg-12"><div key="logview" className="well"><code id="logs">{buildLog}</code></div></div></Row>
                         </section>

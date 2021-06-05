@@ -437,23 +437,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             buildInfo.setBuildlog("No automated tests for this assignment");
             buildInfo.setExectime(1);
         }
-        let scoreMap = results?.getScoresMap();
-        if (!scoreMap) {
-            // TODO(meling) This seems a bit useless. How to avoid?
-            scoreMap = new jspb.Map<string, Score>(Array<[string, Score]>());
-        }
-        // TestNames defines the order.
-        // We copy the Score objects from the scoreMap
-        // into scores array in the order defined by TestNames.
-        const scores: Score[] = [];
-        const tests = results?.getTestnamesList();
-        tests?.forEach((testName) => {
-            const sc = scoreMap?.get(testName);
-            if (sc) {
-                scores.push(sc)
-            }
-        })
-
+        const scores = results ? results.getScoresList() : [];
         // TODO(meling) This notion of passed vs failed tests is perhaps not what we want.
         // Should be added to the ag/Submission message and be controlled on server-side.
         let failed = 0;
@@ -474,10 +458,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             passedTests: passed,
             failedTests: failed,
             score: sbm.getScore(),
-            buildId: buildInfo.getBuildid(),
             buildDate: new Date(buildInfo.getBuilddate()),
-            executionTime: buildInfo.getExectime(),
-            buildLog: buildInfo.getBuildlog(),
+            buildInfo,
             testCases: scores,
             reviews: sbm.getReviewsList(),
             released: sbm.getReleased(),

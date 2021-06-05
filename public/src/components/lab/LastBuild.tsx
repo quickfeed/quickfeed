@@ -1,7 +1,6 @@
 import * as React from "react";
 import { DynamicTable, Row } from "../../components";
 import { Score } from "../../../proto/kit/score/score_pb";
-
 import { ICellElement } from "../data/DynamicTable";
 
 interface ILastBuildProps {
