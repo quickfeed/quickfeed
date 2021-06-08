@@ -195,6 +195,8 @@ message Submission {
     uint64 groupID = 4;
     uint32 score = 5;
     string commitHash = 8;
+    string scoreObjects = 6; // deprecated: do not use
+    string buildInfo = 7;    // deprecated: do not use
     bool released = 9;       // true => feedback is visible to the student or group members
     Status status = 10;
     string approvedDate = 11;

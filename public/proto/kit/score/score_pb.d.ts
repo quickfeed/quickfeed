@@ -34,32 +34,6 @@ export namespace Score {
   }
 }
 
-export class Results extends jspb.Message {
-  getBuildinfo(): BuildInfo | undefined;
-  setBuildinfo(value?: BuildInfo): Results;
-  hasBuildinfo(): boolean;
-  clearBuildinfo(): Results;
-
-  getScoresList(): Array<Score>;
-  setScoresList(value: Array<Score>): Results;
-  clearScoresList(): Results;
-  addScores(value?: Score, index?: number): Score;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Results.AsObject;
-  static toObject(includeInstance: boolean, msg: Results): Results.AsObject;
-  static serializeBinaryToWriter(message: Results, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Results;
-  static deserializeBinaryFromReader(message: Results, reader: jspb.BinaryReader): Results;
-}
-
-export namespace Results {
-  export type AsObject = {
-    buildinfo?: BuildInfo.AsObject,
-    scoresList: Array<Score.AsObject>,
-  }
-}
-
 export class BuildInfo extends jspb.Message {
   getBuildid(): number;
   setBuildid(value: number): BuildInfo;
@@ -87,6 +61,36 @@ export namespace BuildInfo {
     builddate: string,
     buildlog: string,
     exectime: number,
+  }
+}
+
+export class Results extends jspb.Message {
+  getBuildinfo(): BuildInfo | undefined;
+  setBuildinfo(value?: BuildInfo): Results;
+  hasBuildinfo(): boolean;
+  clearBuildinfo(): Results;
+
+  getScoresList(): Array<Score>;
+  setScoresList(value: Array<Score>): Results;
+  clearScoresList(): Results;
+  addScores(value?: Score, index?: number): Score;
+
+  getSubmissionid(): number;
+  setSubmissionid(value: number): Results;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Results.AsObject;
+  static toObject(includeInstance: boolean, msg: Results): Results.AsObject;
+  static serializeBinaryToWriter(message: Results, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Results;
+  static deserializeBinaryFromReader(message: Results, reader: jspb.BinaryReader): Results;
+}
+
+export namespace Results {
+  export type AsObject = {
+    buildinfo?: BuildInfo.AsObject,
+    scoresList: Array<Score.AsObject>,
+    submissionid: number,
   }
 }
 

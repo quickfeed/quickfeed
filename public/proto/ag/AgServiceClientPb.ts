@@ -100,7 +100,8 @@ export class AutograderServiceClient {
                response: User) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetUser', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetUser',
         request,
         metadata || {},
         this.methodInfoGetUser,
@@ -139,7 +140,8 @@ export class AutograderServiceClient {
                response: Users) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetUsers', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetUsers',
         request,
         metadata || {},
         this.methodInfoGetUsers,
@@ -178,7 +180,8 @@ export class AutograderServiceClient {
                response: User) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetUserByCourse', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetUserByCourse',
         request,
         metadata || {},
         this.methodInfoGetUserByCourse,
@@ -217,7 +220,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateUser', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/UpdateUser',
         request,
         metadata || {},
         this.methodInfoUpdateUser,
@@ -256,7 +260,8 @@ export class AutograderServiceClient {
                response: AuthorizationResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/IsAuthorizedTeacher', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/IsAuthorizedTeacher',
         request,
         metadata || {},
         this.methodInfoIsAuthorizedTeacher,
@@ -295,7 +300,8 @@ export class AutograderServiceClient {
                response: Group) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetGroup', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetGroup',
         request,
         metadata || {},
         this.methodInfoGetGroup,
@@ -334,7 +340,8 @@ export class AutograderServiceClient {
                response: Group) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetGroupByUserAndCourse', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetGroupByUserAndCourse',
         request,
         metadata || {},
         this.methodInfoGetGroupByUserAndCourse,
@@ -373,7 +380,8 @@ export class AutograderServiceClient {
                response: Groups) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetGroupsByCourse', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetGroupsByCourse',
         request,
         metadata || {},
         this.methodInfoGetGroupsByCourse,
@@ -412,7 +420,8 @@ export class AutograderServiceClient {
                response: Group) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/CreateGroup', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/CreateGroup',
         request,
         metadata || {},
         this.methodInfoCreateGroup,
@@ -451,7 +460,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateGroup', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/UpdateGroup',
         request,
         metadata || {},
         this.methodInfoUpdateGroup,
@@ -490,7 +500,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/DeleteGroup', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/DeleteGroup',
         request,
         metadata || {},
         this.methodInfoDeleteGroup,
@@ -529,7 +540,8 @@ export class AutograderServiceClient {
                response: Course) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetCourse', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetCourse',
         request,
         metadata || {},
         this.methodInfoGetCourse,
@@ -568,7 +580,8 @@ export class AutograderServiceClient {
                response: Courses) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetCourses', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetCourses',
         request,
         metadata || {},
         this.methodInfoGetCourses,
@@ -607,7 +620,8 @@ export class AutograderServiceClient {
                response: Courses) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetCoursesByUser', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetCoursesByUser',
         request,
         metadata || {},
         this.methodInfoGetCoursesByUser,
@@ -646,7 +660,8 @@ export class AutograderServiceClient {
                response: Course) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/CreateCourse', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/CreateCourse',
         request,
         metadata || {},
         this.methodInfoCreateCourse,
@@ -685,7 +700,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateCourse', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/UpdateCourse',
         request,
         metadata || {},
         this.methodInfoUpdateCourse,
@@ -724,7 +740,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateCourseVisibility', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/UpdateCourseVisibility',
         request,
         metadata || {},
         this.methodInfoUpdateCourseVisibility,
@@ -763,7 +780,8 @@ export class AutograderServiceClient {
                response: Assignments) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetAssignments', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetAssignments',
         request,
         metadata || {},
         this.methodInfoGetAssignments,
@@ -802,7 +820,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateAssignments', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/UpdateAssignments',
         request,
         metadata || {},
         this.methodInfoUpdateAssignments,
@@ -841,7 +860,8 @@ export class AutograderServiceClient {
                response: Enrollments) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetEnrollmentsByUser', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetEnrollmentsByUser',
         request,
         metadata || {},
         this.methodInfoGetEnrollmentsByUser,
@@ -880,7 +900,8 @@ export class AutograderServiceClient {
                response: Enrollments) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetEnrollmentsByCourse', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetEnrollmentsByCourse',
         request,
         metadata || {},
         this.methodInfoGetEnrollmentsByCourse,
@@ -919,7 +940,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/CreateEnrollment', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/CreateEnrollment',
         request,
         metadata || {},
         this.methodInfoCreateEnrollment,
@@ -958,7 +980,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateEnrollment', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/UpdateEnrollment',
         request,
         metadata || {},
         this.methodInfoUpdateEnrollment,
@@ -997,7 +1020,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateEnrollments', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/UpdateEnrollments',
         request,
         metadata || {},
         this.methodInfoUpdateEnrollments,
@@ -1036,7 +1060,8 @@ export class AutograderServiceClient {
                response: Submissions) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetSubmissions', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetSubmissions',
         request,
         metadata || {},
         this.methodInfoGetSubmissions,
@@ -1075,7 +1100,8 @@ export class AutograderServiceClient {
                response: CourseSubmissions) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetSubmissionsByCourse', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetSubmissionsByCourse',
         request,
         metadata || {},
         this.methodInfoGetSubmissionsByCourse,
@@ -1114,7 +1140,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateSubmission', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/UpdateSubmission',
         request,
         metadata || {},
         this.methodInfoUpdateSubmission,
@@ -1153,7 +1180,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateSubmissions', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/UpdateSubmissions',
         request,
         metadata || {},
         this.methodInfoUpdateSubmissions,
@@ -1192,7 +1220,8 @@ export class AutograderServiceClient {
                response: Submission) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/RebuildSubmission', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/RebuildSubmission',
         request,
         metadata || {},
         this.methodInfoRebuildSubmission,
@@ -1231,7 +1260,8 @@ export class AutograderServiceClient {
                response: GradingBenchmark) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/CreateBenchmark', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/CreateBenchmark',
         request,
         metadata || {},
         this.methodInfoCreateBenchmark,
@@ -1270,7 +1300,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateBenchmark', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/UpdateBenchmark',
         request,
         metadata || {},
         this.methodInfoUpdateBenchmark,
@@ -1309,7 +1340,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/DeleteBenchmark', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/DeleteBenchmark',
         request,
         metadata || {},
         this.methodInfoDeleteBenchmark,
@@ -1348,7 +1380,8 @@ export class AutograderServiceClient {
                response: GradingCriterion) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/CreateCriterion', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/CreateCriterion',
         request,
         metadata || {},
         this.methodInfoCreateCriterion,
@@ -1387,7 +1420,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateCriterion', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/UpdateCriterion',
         request,
         metadata || {},
         this.methodInfoUpdateCriterion,
@@ -1426,7 +1460,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/DeleteCriterion', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/DeleteCriterion',
         request,
         metadata || {},
         this.methodInfoDeleteCriterion,
@@ -1465,7 +1500,8 @@ export class AutograderServiceClient {
                response: Review) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/CreateReview', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/CreateReview',
         request,
         metadata || {},
         this.methodInfoCreateReview,
@@ -1504,7 +1540,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/UpdateReview', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/UpdateReview',
         request,
         metadata || {},
         this.methodInfoUpdateReview,
@@ -1543,7 +1580,8 @@ export class AutograderServiceClient {
                response: Reviewers) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetReviewers', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetReviewers',
         request,
         metadata || {},
         this.methodInfoGetReviewers,
@@ -1582,7 +1620,8 @@ export class AutograderServiceClient {
                response: Benchmarks) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/LoadCriteria', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/LoadCriteria',
         request,
         metadata || {},
         this.methodInfoLoadCriteria,
@@ -1621,7 +1660,8 @@ export class AutograderServiceClient {
                response: Providers) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetProviders', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetProviders',
         request,
         metadata || {},
         this.methodInfoGetProviders,
@@ -1660,7 +1700,8 @@ export class AutograderServiceClient {
                response: Organization) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetOrganization', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetOrganization',
         request,
         metadata || {},
         this.methodInfoGetOrganization,
@@ -1699,7 +1740,8 @@ export class AutograderServiceClient {
                response: Repositories) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/GetRepositories', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/GetRepositories',
         request,
         metadata || {},
         this.methodInfoGetRepositories,
@@ -1738,7 +1780,8 @@ export class AutograderServiceClient {
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        new URL('/AutograderService/IsEmptyRepo', this.hostname_).toString(),
+        this.hostname_ +
+          '/AutograderService/IsEmptyRepo',
         request,
         metadata || {},
         this.methodInfoIsEmptyRepo,

@@ -11,16 +11,17 @@ message Score {
     int32 Weight = 5;    // the weight of this test; used to compute final grade
 }
 
-// Results holds a map from test names to score objects and build info.
-message Results {
-    BuildInfo BuildInfo = 1;   // build info for tests
-    repeated Score Scores = 2; // list of scores for different tests
-}
-
 // BuildInfo holds build data for an assignment's test execution.
 message BuildInfo {
     int64 BuildID = 1;
     string BuildDate = 2;
     string BuildLog = 3;
     int64 ExecTime = 4;
+}
+
+// Results holds a map from test names to score objects and build info.
+message Results {
+    BuildInfo BuildInfo = 1;   // build info for tests
+    repeated Score Scores = 2; // list of scores for different tests
+    int64 SubmissionID = 3;       // foreign key for Submission has one relation
 }
