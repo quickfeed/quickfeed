@@ -15,8 +15,6 @@ var jspb = require('google-protobuf');
 var goog = jspb;
 var global = Function('return this')();
 
-var patch_go_pb = require('../patch/go_pb.js');
-goog.object.extend(proto, patch_go_pb);
 goog.exportSymbol('proto.ag.Assignment', null, global);
 goog.exportSymbol('proto.ag.Assignments', null, global);
 goog.exportSymbol('proto.ag.AuthorizationResponse', null, global);

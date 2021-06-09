@@ -13,7 +13,6 @@
 
 import * as grpcWeb from 'grpc-web';
 
-import * as patch_go_pb from '../patch/go_pb';
 
 import {
   Assignments,

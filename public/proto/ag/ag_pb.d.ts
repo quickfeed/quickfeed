@@ -1,6 +1,5 @@
 import * as jspb from "google-protobuf"
 
-import * as patch_go_pb from '../patch/go_pb';
 
 export class User extends jspb.Message {
   getId(): number;

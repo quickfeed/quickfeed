@@ -45,6 +45,11 @@ proto:
 	--js_out=import_style=commonjs:$(proto-path) \
 	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(proto-path) \
 	ag/ag.proto
+	@echo "Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529)"
+	@$(sedi) '/patch_go_pb/d' \
+	$(proto-path)/ag/ag_pb.js \
+	$(proto-path)/ag/ag_pb.d.ts \
+	$(proto-path)/ag/AgServiceClientPb.ts
 	@cd public && npm run tsc -- proto/ag/AgServiceClientPb.ts
 
 grpcweb:
