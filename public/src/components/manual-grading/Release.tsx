@@ -108,11 +108,13 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                 <table className="table">
                     <thead><tr key="it">
                             <td key="itd1" >Reviewers:</td>
+                            <td key="itd3">Status:</td>
                             <td key="itd2">Score:</td>
                         </tr></thead>
                         <tbody>
                         {Array.from(this.state.reviewers.keys()).map((r, i) => <tr key={"it" + i}>
                             <td key={"itm " + i}>{r.getName()}</td>
+                            <td key={"its " + i}>{this.state.reviewers.get(r)?.getReady() ? "Ready" : "Pending"}</td>
                             <td key={"itr " + i}>{this.state.reviewers.get(r)?.getScore() ?? 0}</td>
                         </tr>)}</tbody>
                 </table>
@@ -297,9 +299,9 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private async mapReviewers() {
-        const reviews = this.selectReadyReviews();
+        const reviews = this.props.submission?.reviews;
         const updatedMap = new Map<User, Review>();
-        if (this.props.submission && reviews.length > 0) {
+        if (this.props.submission && reviews && reviews.length > 0) {
             const reviewers = await this.props.getReviewers(this.props.submission.id);
             reviewers.forEach(r => {
                 const selectedReview = this.selectReviewByReviewer(r, reviews);

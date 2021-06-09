@@ -19,4 +19,5 @@ startag.sh
 backups
 misc/ag-env.sh
 tmp.db
+ag-test.db
 
