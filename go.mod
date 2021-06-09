@@ -4,8 +4,6 @@ go 1.14
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
-	github.com/BurntSushi/xgb v0.0.0-20200324125942-20f126ea2843 // indirect
-	github.com/BurntSushi/xgbutil v0.0.0-20190907113008-ad855c713046 // indirect
 	github.com/Microsoft/go-winio v0.4.15 // indirect
 	github.com/autograde/quickfeed/kit v0.0.0-20201031112539-d315b568016d
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
@@ -40,7 +38,6 @@ require (
 	github.com/prometheus/client_golang v1.8.0
 	github.com/prometheus/common v0.15.0 // indirect
 	github.com/stretchr/testify v1.5.1 // indirect
-	github.com/tebeka/selenium v0.9.9
 	github.com/urfave/cli v1.22.4
 	github.com/xanzy/go-gitlab v0.39.0
 	go.uber.org/multierr v1.6.0 // indirect
