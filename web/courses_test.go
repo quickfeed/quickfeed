@@ -71,12 +71,11 @@ func TestGetCourses(t *testing.T) {
 
 	var testCourses []*pb.Course
 	for _, course := range allCourses {
-		testCourse := *course
-		err := db.CreateCourse(admin.ID, &testCourse)
+		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
 		}
-		testCourses = append(testCourses, &testCourse)
+		testCourses = append(testCourses, course)
 	}
 
 	foundCourses, err := ags.GetCourses(context.Background(), &pb.Void{})
@@ -299,12 +298,11 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 
 	var testCourses []*pb.Course
 	for _, course := range allCourses {
-		testCourse := *course
-		err := db.CreateCourse(admin.ID, &testCourse)
+		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
 		}
-		testCourses = append(testCourses, &testCourse)
+		testCourses = append(testCourses, course)
 	}
 
 	if err := db.CreateEnrollment(&pb.Enrollment{
@@ -366,12 +364,11 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	admin := createFakeUser(t, db, 1)
 	var testCourses []*pb.Course
 	for _, course := range allCourses {
-		testCourse := *course
-		err := db.CreateCourse(admin.ID, &testCourse)
+		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
 		}
-		testCourses = append(testCourses, &testCourse)
+		testCourses = append(testCourses, course)
 	}
 
 	user := createFakeUser(t, db, 2)
@@ -431,8 +428,8 @@ func TestGetCourse(t *testing.T) {
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
-	course := *allCourses[0]
-	err := db.CreateCourse(admin.ID, &course)
+	course := allCourses[0]
+	err := db.CreateCourse(admin.ID, course)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -444,7 +441,7 @@ func TestGetCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if diff := cmp.Diff(foundCourse, &course, cmpopts.IgnoreUnexported(pb.Course{})); diff != "" {
+	if diff := cmp.Diff(foundCourse, course, cmpopts.IgnoreUnexported(pb.Course{})); diff != "" {
 		t.Errorf("mismatch (-foundCourse +course):\n%s", diff)
 	}
 }
@@ -460,8 +457,8 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	student2 := createFakeUser(t, db, 12)
 	ta := createFakeUser(t, db, 13)
 
-	course := *allCourses[0]
-	err := db.CreateCourse(teacher.ID, &course)
+	course := allCourses[0]
+	err := db.CreateCourse(teacher.ID, course)
 	if err != nil {
 		t.Fatal(err)
 	}
