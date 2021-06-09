@@ -1,13 +1,16 @@
 # Installing Quickfeed on localhost
 
 ## Table of Contents
+
 [Ubuntu installation](#ubuntu-installation)
+
 1. [Installing Go](#installing-go)
-3. [Installing Envoy](#installing-envoy)
-4. [Installing Nginx](#installing-nginx)
-5. [Installing Node.js, npm and npm(webpack)](#installing-nodejs-npm-and-npmwebpack)
+2. [Installing Envoy](#installing-envoy)
+3. [Installing Nginx](#installing-nginx)
+4. [Installing Node.js, npm and npm(webpack)](#installing-nodejs-npm-and-npmwebpack)
 
 [Configure Quickfeed for localhost](#configure-quickfeed-for-localhost)
+
 1. [Quickfeed](#quickfeed)
 2. [Envoy](#envoy)
 3. [Self-signed SSL certificates](#self-signed-ssl-certificates)
@@ -15,6 +18,7 @@
 5. [Setting up a Github login](#setting-up-a-github-login)
 
 [Starting the application](#starting-the-application)
+
 1. [Nginx & Envoy](#nginx--envoy)
 2. [Go dependencies](#go-dependencies)
 3. [Webpack](#webpack)
@@ -22,7 +26,16 @@
 5. [Quickfeed](#quickfeed)
 
 [Alternative to using Nginx](#alternative-to-using-nginx)
+
 1. [Running Quickfeed using only Envoy](#running-quickfeed-using-only-envoy)
+
+## macOS Installation with Homebrew
+
+On macOS with homebrew:
+
+```bash
+brew install go envoy node npm
+```
 
 ## Ubuntu installation
 
@@ -38,7 +51,8 @@ sudo apt update
 sudo apt install golang-go
 ```
 
-Make sure to add PATH to `~/.bashrc`. Editors like VIM works great for this. 
+Make sure to add PATH to `~/.bashrc`.
+Editors like `vim` works great for this.
 
 ```bash
 export GOPATH="$HOME/go"
@@ -65,6 +79,7 @@ Nginx can be installed in the terminal with these commands.
 sudo apt-get update
 sudo apt-get install nginx
 ```
+
 ### Installing Node.js, npm and npm(webpack)
 
 Node.js, npm can be installed in the terminal with these commands.
@@ -80,7 +95,7 @@ Verify the installation:
 nodejs --version
 ```
 
-Install webpack in the `/quickfeed` folder with this command:
+Install webpack in the `quickfeed/public` folder with this command:
 
 ```bash
 npm install --save-dev webpack
@@ -96,11 +111,12 @@ Make sure to comment these lines in `main.go` (line number might differ, but sho
 14. "github.com/autograde/quickfeed/envoy"
 109. go envoy.StartEnvoy(logger)
 ```
-Also ***don't*** use the `make local` because it will trigger _Same-origin policy_ 
+
+Also ***don't*** use the `make local` because it will trigger _Same-origin policy_
 
 ### Envoy
 
-Take a backup of `/envoy/envoy.yaml` and change the file to this.
+Take a backup of `envoy/envoy.yaml` and change the file to this.
 
 ```yaml
 admin:
@@ -161,11 +177,12 @@ static_resources:
 ```
 
 ## Nginx And Certificates
+
 *Alternatively you can use [this script](https://github.com/plakolaki/bachelor-redesign-quickfeed/blob/main/Quickfeed_setup/create-cert%2Bnginx-conf.sh) instead that configures certificates and nginx config for you. If you did use it you can skip to [GitHub Login](#setting-up-a-github-login)*
 
 ### Self-signed SSL certificates
 
-#### WARNING: Never use self-signed SSL certificates for anything other than localhost applications. If the application will be used online, a certificate can be created by `Certbot`or other providers.
+#### WARNING: Never use self-signed SSL certificates for anything other than localhost applications. If the application will be used online, a certificate can be created by `Certbot`or other providers
 
 These instructions install the certificates inside the folder `/etc/nginx/sites-available/`. If one wants the certificates in a different folder, make sure to change the Nginx `default` file accordingly.
 
@@ -176,13 +193,15 @@ cd /etc/nginx/sites-available/
 sudo openssl req -x509 -nodes -new -sha256 -days 1024 -newkey rsa:2048 -keyout RootCA.key -out RootCA.pem -subj "/C=US/CN=Example-Root-CA"
 sudo openssl x509 -outform pem -in RootCA.pem -out RootCA.crt
 ```
+
 You need certificates because OAuth won't work over regular HTTP
 
 ### Nginx
 
 Edit `/etc/nginx/sites-available/default` by adding this to the bottom, make sure that everything else is commented out.
 
-If VIM is installed the file can be accessed like this:
+If `vim` is installed the file can be accessed like this:
+
 ```bash
 sudo vim /etc/nginx/sites-available/default
 ```
@@ -234,11 +253,13 @@ ssl_trusted_certificate /etc/nginx/sites-available/RootCA.pem;
 ```
 
 To run Nginx:
+
 ```bash
 sudo nginx
 ```
 
 If any changes are made, reload the file with this:
+
 ```bash
 sudo nginx -s reload
 ```
@@ -248,12 +269,14 @@ sudo nginx -s reload
 Create a new Github app by following the instructions on this [page](https://docs.github.com/en/developers/apps/creating-a-github-app).
 
 Ensure that homepage URL is `127.0.0.1` and callback URL is `127.0.0.1/auth/github/callback` like in the photo.
+
 ![Adding URL](./figures/github_app_url.png)
 
 Create a secret key by pressing `Generate new client secret` outline in the picture. Make sure to copy the client key before leaving the page.
+
 ![Secret key](./figures/github_app_client_secret.png)
 
-Create a new file in `/quickfeed` named `ag-env.sh` and insert these line, changing `client_key` and `client_secret` with the key and secret generated: 
+Create a new file in `quickfeed` named `ag-env.sh` and insert these line, changing `client_key` and `client_secret` with the key and secret generated:
 
 ```sh
 export GITHUB_KEY='client_key'
@@ -265,13 +288,16 @@ Allow oauth access by following the instructions on this [page](https://docs.git
 ## Starting the application
 
 ### Nginx & Envoy
-Make sure Nginx is running, start Envoy with this command inside `/quickfeed/envoy`:
+
+Make sure Nginx is running, start Envoy with this command inside `quickfeed/envoy`:
+
 ```bash
 envoy -c envoy.yaml
 ```
 
 ### Go dependencies
-While Nginx and Envoy is running, install Go dependencies with the commands instide `/quickfeed`:
+
+While Nginx and Envoy is running, install Go dependencies with the commands inside `quickfeed`:
 
 ```bash
 go mod download
@@ -279,7 +305,8 @@ go install
 ```
 
 ### Webpack
-Initialise the webpack by running this command inside `/quickfeed/public`:
+
+Initialize the webpack by running this command inside `quickfeed/public`:
 
 ```bash
 webpack
@@ -288,6 +315,7 @@ webpack
 This command needs to be run when editing files inside `quickfeed/public`. This works while the application is running.
 
 ### Github key
+
 Mount ag-env.sh with this command:
 
 ```bash
@@ -297,6 +325,7 @@ source ag-env.sh
 The file must be mounted every time the computer has been restarted.
 
 ### Quickfeed
+
 Start quickfeed with this command:
 
 ```bash
@@ -305,16 +334,13 @@ quickfeed -http.addr ":8081" -service.url "127.0.0.1"
 
 You can now visit Quickfeed on the ip-address 127.0.0.1.
 
-
-
-
 ## Alternative to using Nginx
 
 ### Running Quickfeed using only Envoy
 
 This can be done using the configuration found in [this Envoy config file](/doc/local-setup/envoy.yaml).
 
-Replace the content of lines preceeded by a comment in the envoy.yaml file with the configuration your setup is using.
+Replace the content of lines preceded by a comment in the envoy.yaml file with the configuration your setup is using.
 
 Additionally, you must modify this line in [GRPCManager.ts](/public/src/managers/GRPCManager.ts) (line 60) to include the port you configure Envoy to listen for GRPC traffic (default :8080).
 
