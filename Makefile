@@ -43,9 +43,9 @@ proto:
 	--go-patch_out=plugin=go,paths=source_relative:. \
 	--go-patch_out=plugin=go-grpc,paths=source_relative:. \
 	--js_out=import_style=commonjs:$(proto-path) \
-	--grpc-web_out=import_style=typescript,mode=grpcweb:$(proto-path) \
+	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(proto-path) \
 	ag/ag.proto
-	@cd public && npm run tsc -- proto/AgServiceClientPb.ts
+	@cd public && npm run tsc -- proto/ag/AgServiceClientPb.ts
 
 grpcweb:
 	@echo "Fetch and install grpcweb protoc plugin (requires sudo access)"
