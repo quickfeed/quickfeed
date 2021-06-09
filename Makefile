@@ -11,7 +11,6 @@ sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "se
 testorg				:= ag-test-course
 endpoint 			:= test.itest.run
 agport				:= 8081
-pbpath				:= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
 
 # necessary when target is not tied to a file
 .PHONY: download install-tools install ui proto devtools grpcweb envoy-build envoy-run scm
@@ -35,7 +34,7 @@ ui:
 	@cd public; npm install; npm run webpack
 
 proto:
-	@echo Compiling Autograders proto definitions
+	@echo "Compiling Autograders proto definitions"
 	@protoc \
 	-I . \
 	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
@@ -85,8 +84,14 @@ envoy-purge:
 # protoset is a file used as a server reflection to mock-testing of grpc methods via command line
 protoset:
 	@echo "Compiling protoset for grpcurl"
-	@cd ag; protoc -I=. -I=$(GOPATH)/src -I=$(GOPATH)/src/github.com/gogo/protobuf/protobuf \
-	--proto_path=. --descriptor_set_out=ag.protoset --include_imports ag.proto
+	@protoc \
+	-I . \
+	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
+	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
+	--proto_path=ag \
+	--descriptor_set_out=ag/ag.protoset \
+	--include_imports \
+	ag/ag.proto
 
 test:
 	@go clean -testcache ./...
