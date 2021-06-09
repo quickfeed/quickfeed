@@ -14,12 +14,12 @@ func (course *Course) GetAccessToken() string {
 }
 
 // SetSlipDays sets number of remaining slip days for each course enrollment
-func (course Course) SetSlipDays() {
+func (course *Course) SetSlipDays() {
 	for _, e := range course.Enrollments {
-		e.SetSlipDays(&course)
+		e.SetSlipDays(course)
 	}
 
 	for _, g := range course.Groups {
-		g.SetSlipDays(&course)
+		g.SetSlipDays(course)
 	}
 }

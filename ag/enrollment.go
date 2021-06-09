@@ -52,7 +52,7 @@ func (m *Enrollment) updateSlipDays(assignmentID uint64, slipDays uint32) {
 }
 
 // totalSlipDays returns the total number of slipdays used for this enrollment.
-func (m Enrollment) totalSlipDays() uint32 {
+func (m *Enrollment) totalSlipDays() uint32 {
 	var total uint32
 	for _, val := range m.GetUsedSlipDays() {
 		total += val.GetUsedSlipDays()
@@ -63,7 +63,7 @@ func (m Enrollment) totalSlipDays() uint32 {
 // RemainingSlipDays returns the remaining number of slip days for this
 // user/course enrollment. Note that if the returned amount is negative,
 // the user has used up all slip days.
-func (m Enrollment) RemainingSlipDays(c *Course) int32 {
+func (m *Enrollment) RemainingSlipDays(c *Course) int32 {
 	if m.GetCourseID() != c.GetID() {
 		return 0
 	}
@@ -79,10 +79,10 @@ func (m *Enrollment) SetSlipDays(c *Course) {
 	}
 }
 
-func (m Enrollment) IsTeacher() bool {
+func (m *Enrollment) IsTeacher() bool {
 	return m.GetStatus() == Enrollment_TEACHER
 }
 
-func (m Enrollment) IsStudent() bool {
+func (m *Enrollment) IsStudent() bool {
 	return m.GetStatus() == Enrollment_STUDENT
 }
