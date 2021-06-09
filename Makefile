@@ -14,17 +14,25 @@ agport				:= 8081
 pbpath				:= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
 
 # necessary when target is not tied to a file
-.PHONY: download install-tools install ui proto devtools grpcweb envoy-build envoy-run scm
+.PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm
 
-devtools: install-tools grpcweb
+devtools: grpcweb go-tools
 
 download:
-	@echo Download go.mod dependencies
+	@echo "Download go.mod dependencies"
 	@go mod download
 
-install-tools: download
-	@echo Installing tools from tools.go
-	@cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
+go-tools:
+	@echo "Installing tools from tools.go"
+	@go install `go list -f "{{range .Imports}}{{.}} {{end}}" tools.go`
+
+grpcweb:
+	@echo "Fetch and install grpcweb protoc plugin"
+	@mkdir -p $(tmpdir)
+	@cd $(tmpdir); curl -LOs $(grpcweb-url)
+	@mv $(tmpdir)/$(protoc-grpcweb-long) $(grpcweb-path)
+	@chmod +x $(grpcweb-path)
+	@rm -rf $(tmpdir)
 
 install:
 	@echo go install
@@ -35,7 +43,7 @@ ui:
 	@cd public; npm install; npm run webpack
 
 proto:
-	@echo Compiling Autograders proto definitions
+	@echo "Compiling Autograders proto definitions"
 	@cd ag; protoc -I=. -I=$(pbpath) --gogofast_out=plugins=grpc,\
 	Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types,\
@@ -46,14 +54,6 @@ proto:
 	--grpc-web_out=import_style=typescript,mode=grpcweb:../$(proto-path)/ ag.proto
 	$(sedi) '/gogo/d' $(proto-path)/ag_pb.js $(proto-path)/AgServiceClientPb.ts $(proto-path)/ag_pb.d.ts
 	@cd public && npm run tsc -- proto/AgServiceClientPb.ts
-
-grpcweb:
-	@echo "Fetch and install grpcweb protoc plugin (requires sudo access)"
-	@mkdir -p $(tmpdir)
-	@cd $(tmpdir); curl -LOs $(grpcweb-url)
-	@sudo mv $(tmpdir)/$(protoc-grpcweb-long) $(grpcweb-path)
-	@chmod +x $(grpcweb-path)
-	@rm -rf $(tmpdir)
 
 # TODO(meling) this is just for macOS; we should guard against non-macOS.
 brew:
