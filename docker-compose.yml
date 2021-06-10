@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  proxy:
+    image: nginx-proxy
+    build: 
+      context: ./
+      dockerfile: ./dev/proxy/Dockerfile
+    ports:
+      - "80:80"
+    networks:
+      - grpc_proxy
+
+  quickfeed:
+    image: quickfeed
+    build:
+      context: ./
+      dockerfile: ./dev/quickfeed/Dockerfile
+    links:
+      - proxy
+    networks:
+      - grpc_proxy
+
+networks:
+  grpc_proxy:
+    ipam:
+      config:
+      - subnet: 172.20.0.0/16
+
