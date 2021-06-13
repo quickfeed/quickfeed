@@ -41,6 +41,7 @@
         "autograde",
         "backports",
         "buildid",
+        "certonly",
         "cmds",
         "codecov",
         "containertimeout",

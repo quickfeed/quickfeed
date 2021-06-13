@@ -3,6 +3,12 @@ admin:
   address:
     socket_address: { address: 0.0.0.0, port_value: 9901 }
 
+layered_runtime:
+  layers:
+  - name: disable_apple_dns
+    static_layer:
+      envoy.restart_features.use_apple_api_for_dns_lookups: false
+
 static_resources:
   listeners:
     # Redirects all traffic coming from port 80 to port 443 for SSL
