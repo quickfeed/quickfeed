@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/log"
 	"go.uber.org/zap"
@@ -58,7 +59,7 @@ func ExtractResult(logger *zap.SugaredLogger, out, secret string, execTime time.
 		Scores: scores,
 		BuildInfo: &BuildInfo{
 			BuildID:   atomic.AddInt64(globalBuildID, 1),
-			BuildDate: time.Now().Format("2006-01-02T15:04:05"),
+			BuildDate: time.Now().Format(pb.TimeLayout),
 			BuildLog:  strings.Join(filteredLog, "\n"),
 			ExecTime:  execTime.Milliseconds(),
 		},
