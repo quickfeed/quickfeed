@@ -180,7 +180,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
 	noTestBuildInfo, err := json.Marshal(&ci.BuildInfo{
 		BuildID:   0,
-		BuildDate: time.Now().Format("2006-01-02T15:04:05"),
+		BuildDate: time.Now().Format(pb.TimeLayout),
 		BuildLog:  "No automated tests for this assignment",
 		ExecTime:  1,
 	})
