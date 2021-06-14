@@ -1,38 +1,39 @@
-# Deploy
+# Deployment with Domain Name and Let's Encrypt Certificates
 
 The following instructions assume a fixed IP and domain name for the server to be `cyclone.meling.me`.
 Replace the relevant IP address and domain name with your own.
-You may also use `127.0.0.1` and self-signed certificates.
-
-## Install Tools for Ubuntu
-
-Here is commands to upgrade `certbot` according to [Certbot instructions](https://certbot.eff.org/lets-encrypt/ubuntufocal-nginx).
-
-```sh
-apt-get remove certbot
-snap install core
-snap refresh core
-snap install --classic certbot
-ln -s /snap/bin/certbot /usr/bin/certbot
-```
-
-## Install Tools for macOS
-
-```sh
-% make brew
-```
 
 ## Configure Fixed IP and Router
 
-Configure NameCheap with your fixed IP; in my case 92.221.105.172 and host name `cyclone`.
+In your domain name provider, configure your IP and domain name; for instance:
 
 ```text
 Type         Host          Value                TTL
 A Record     cyclone       92.221.105.172       5 min
 ```
 
-Set up port forwarding on Google Home for Heins-Cyclone.
-External ports 80/443 maps to internal ports 80/443 for TCP.
+Set up port forwarding on your router.
+External ports 80/443/8080 maps to internal ports 80/443/8080 for TCP.
+
+## Install Tools for Deployment
+
+This assumes you have homebrew installed.
+For systems without homebrew, the make target should list well-known packages available on most Unix distributions.
+
+```sh
+% make brew
+```
+
+## Install Tools for Development
+
+The development tools are only needed for development, and can be skipped for deployment only.
+To install:
+
+```sh
+% make devtools
+```
+
+The `devtools` make target will download and install various Protobuf compiler plugins and the grpcweb Protobuf compiler.
 
 ## Generate Certbot Private Key and Certificate
 
@@ -59,44 +60,33 @@ IMPORTANT NOTES:
    certificates, run "certbot renew"
 ```
 
+## Configuring Docker
+
+To ensure that Docker containers has access to networking, you may need to set up IPv4 port forwarding on your server machine:
+
+```sh
+sudo sysctl net.ipv4.ip_forward=1
+sudo sysctl -p  (to confirm the change)
+sudo service docker restart
+```
+
 ## Run with Envoy
 
-```bash
+```sh
 % sudo envoy -c envoy-cyclone.yaml
 ```
 
-## Setting up a Github Application for QuickFeed
+## Configure GitHub OAuth Application for QuickFeed
 
-Create a new Github app by following the instructions on this [page](https://docs.github.com/en/developers/apps/creating-a-github-app).
-The following fields should be specified as follows:
+To deploy QuickFeed, you need to configure a GitHub account for communicating with QuickFeed.
+See the instructions for configuring a [GitHub OAuth2 application](./github.md).
+
+For this tutorial, we use the following:
 
 ```text
-Homepage URL: https://cyclone.meling.me/
-Callback URL: https://cyclone.meling.me/auth/github/callback
-Request user authorization (OAuth) during installation: Enabled
-Webhook Active: Enabled
-Webhook URL: https://cyclone.meling.me/hook/github/events
+Homepage URL: https://cyclone.meling.me
+Authorization callback URL: https://cyclone.meling.me/auth/github/callback
 ```
-
-An alternative is to replace the `cyclone.meling.me` with `127.0.0.1`, as shown in the picture below.
-
-![Adding URL](./local-setup/figures/github_app_url.png)
-
-Create a secret key using the `Generate new client secret` button shown in the picture.
-Make sure to copy the client secret key before leaving the page.
-
-![Secret key](./local-setup/figures/github_app_client_secret.png)
-
-Create a new file in the `quickfeed` folder named `cyclone.sh` and insert these line, replacing `client_key` and `client_secret` with the generated key and secret:
-
-```sh
-export GITHUB_KEY='client_key'
-export GITHUB_SECRET='client_secret'
-```
-
-TODO(meling) The following instruction is not necessary to run the server; only for creating a course.
-
-Allow OAuth access by following the instructions on this [page](https://docs.github.com/en/github/setting-up-and-managing-organizations-and-teams/approving-oauth-apps-for-your-organization).
 
 ## Build and Run QuickFeed Server
 
@@ -111,7 +101,57 @@ webpack
 Build and run the `quickfeed` server; here we use all default values:
 
 ```bash
+% cd $QUICKFEED
 % go install
-% source cyclone.sh
+% source quickfeed-env.sh
 % quickfeed -service.url cyclone.meling.me
+```
+
+## Running the QuickFeed Server
+
+The following provides additional details for running QuickFeed.
+Before running the QuickFeed server, you need to configure [GitHub](./github.md).
+
+The command line arguments for the QuickFeed server looks roughly like this:
+
+```sh
+quickfeed -service.url <DNS name of deployed service> -database.file <path to database> -http.addr <HTTP listener address>
+```
+
+To view the full usage details:
+
+```sh
+quickfeed -help
+```
+
+Here is an example with all default values:
+
+```sh
+quickfeed -service.url uis.itest.run &> quickfeed.log &
+```
+
+*As a bootstrap mechanism, the first user to sign in, automatically becomes administrator for the system.*
+
+### Flags
+
+| **Flag**        | **Description**                        | **Example**     |
+|-----------------|----------------------------------------|-----------------|
+| `service.url`   | Base DNS name for QuickFeed deployment | `uis.itest.run` |
+| `database.file` | Path to QuickFeed database             | `qf.db`         |
+| `grpc.addr`     | Listener address for gRPC service      | `:9090`         |
+| `http.addr`     | Listener address for HTTP service      | `:3005`         |
+| `http.public`   | Path to service content                | `public`        |
+| `script.path`   | Path to continuous integration scripts | `ci/scripts`    |
+
+### Custom Docker Image for a Course
+
+QuickFeed will pull publicly available docker images from Docker Hub on demand.
+However, you may create custom docker images locally on your QuickFeed server machine, and use these locally only.
+That is, you don't need to upload your custom image to Docker Hub or elsewhere.
+
+To prepare a new custom Docker image for a course, prepare the relevant `Dockerfile` and build it.
+The `quickfeed-go` make target gives an example:
+
+```sh
+make quickfeed-go
 ```
