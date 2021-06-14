@@ -94,7 +94,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 }
 
 func FixDeadline(in string) string {
-	wantLayout := "2006-01-02T15:04:05"
+	wantLayout := pb.TimeLayout
 	acceptedLayouts := []string{
 		"2006-1-2T15:04:05",
 		"2006-1-2 15:04:05",
