@@ -20,5 +20,3 @@ backups
 misc/ag-env.sh
 tmp.db
 ag-test.db
-qf-env.sh
-

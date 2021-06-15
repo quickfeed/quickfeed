@@ -59,12 +59,12 @@ proto:
 	$(proto-path)/ag/AgServiceClientPb.ts
 	@cd public && npm run tsc -- proto/ag/AgServiceClientPb.ts
 
-# TODO(meling) this is just for macOS; we should guard against non-macOS.
 brew:
-	@echo "Install homebrew packages needed for development"
-	@brew update
-	@brew cleanup
-	@brew install go protobuf npm docker
+    ifeq (, $(shell which brew))
+		$(error "No brew command in $$PATH")
+    endif
+	@echo "Installing homebrew packages needed for development and deployment"
+	@brew install go protobuf npm node docker certbot envoy
 
 envoy-build:
 	@echo "Building Autograder Envoy proxy"
@@ -125,12 +125,12 @@ nginx: nginx-test
 # changes where the grpc-client is being run, use "remote" target when starting from ag2
 local:
 	@echo "Changing grpc client location to localhost"
-	@cd ./public/src/managers/; sed -i 's/"https:\/\/" + window.location.hostname/"http:\/\/localhost:8080"/g' GRPCManager.ts
+	@cd ./public/src/managers/; $(sedi) 's/"https:\/\/" + window.location.hostname/"http:\/\/localhost:8080"/g' GRPCManager.ts
 	@cd ./public; webpack
 
 remote:
 	@echo "Changing grpc client location to remote domain"
-	@cd ./public/src/managers/; sed -i 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
+	@cd ./public/src/managers/; $(sedi) 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
 
 prometheus:
 	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --storage.tsdb.retention.size=1024MB --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &

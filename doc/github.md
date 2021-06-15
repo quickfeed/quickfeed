@@ -9,10 +9,10 @@ The first step is to create a new API key for your QuickFeed application.
    - For deployment, we recommend creating a separate GitHub account.
 2. Log in to your chosen GitHub account.
 3. Click your profile picture and select Settings.
-4. In Settings, click Developer Settings and create a New OAuth App.
-    1. Name your application, e.g. `QuickFeed Development`.
-    2. Homepage URL should be your public landing page for QuickFeed, e.g. `https://uis.itest.run/`.
-    3. Authorization callback URL must be unique for each instance of QuickFeed, e.g. `https://uis.itest.run/auth/github/callback`.
+4. In Settings, click Developer Settings and create a [New OAuth App](https://docs.github.com/en/developers/apps/building-oauth-apps/creating-an-oauth-app).
+    1. Name your application, e.g., `QuickFeed Development`.
+    2. Homepage URL should be your public landing page for QuickFeed, e.g., `https://uis.itest.run/`.
+    3. Authorization callback URL must be unique for each instance of QuickFeed, e.g., `https://uis.itest.run/auth/github/callback`.
 5. When you click Register application, you will be able to retrieve your Client ID and Client Secret.
    These are necessary for QuickFeed to access GitHub, and for GitHub to communicate back to the QuickFeed server.
    Create a shell script `quickfeed-env.sh` and copy the Client ID and Client Secret values as shown below:
@@ -22,12 +22,14 @@ The first step is to create a new API key for your QuickFeed application.
    export GITHUB_SECRET="Client Secret"
    ```
 
-   Then, to start the QuickFeed server:
+6. Then, to start the QuickFeed server:
 
    ```sh
-   source quickfeed-env.sh
-   quickfeed -service.url uis.itest.run -database.file ./qf.db -http.addr :3005 &> quickfeed.log &
+   % source quickfeed-env.sh
+   % quickfeed -service.url uis.itest.run &> quickfeed.log &
    ```
+
+   The first GitHub user to login becomes admin for the server.
 
    Note that the `-service.url` should not be specified with the `https://` prefix.
 
