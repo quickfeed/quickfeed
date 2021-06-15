@@ -11,7 +11,7 @@ import (
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/log"
-	"github.com/google/go-github/v30/github"
+	"github.com/google/go-github/v32/github"
 	"go.uber.org/zap"
 )
 
