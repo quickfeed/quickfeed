@@ -15,8 +15,8 @@ require (
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.3
-	github.com/google/go-cmp v0.5.2
-	github.com/google/go-github/v32 v32.1.0
+	github.com/google/go-cmp v0.5.6
+	github.com/google/go-github/v35 v35.3.0
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/sessions v1.2.1
 	github.com/gosimple/slug v1.9.0
