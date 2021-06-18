@@ -273,7 +273,7 @@ func ExampleEnrollment_GetUsedSlipDays() {
 	fmt.Println(enrol.GetUsedSlipDays())
 	// Output:
 	// []
-	// [assignmentID:1  usedSlipDays:2]
+	// [assignmentID:1 usedSlipDays:2]
 }
 
 func TestSlipDaysWGracePeriod(t *testing.T) {
