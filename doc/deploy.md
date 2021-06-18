@@ -90,6 +90,15 @@ Authorization callback URL: https://cyclone.meling.me/auth/github/callback
 
 ## Build and Run QuickFeed Server
 
+Specify the port envoy uses to recieve gRPC traffic in the client's [GRPCManager](https://github.com/autograde/quickfeed/blob/master/public/src/managers/GRPCManager.ts). Example:
+
+```ts
+constructor() {
+    // to test on localhost via port forwarding, use make local Makefile target
+    this.agService = new AutograderServiceClient("https://" + window.location.hostname + ":8080", null, null);
+}
+```
+
 The `webpack` command must be executed after editing files in the `public` folder.
 This works while the application is running.
 
