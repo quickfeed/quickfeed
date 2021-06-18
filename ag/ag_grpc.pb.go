@@ -11,6 +11,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // AutograderServiceClient is the client API for AutograderService service.
@@ -656,7 +657,7 @@ type UnsafeAutograderServiceServer interface {
 }
 
 func RegisterAutograderServiceServer(s grpc.ServiceRegistrar, srv AutograderServiceServer) {
-	s.RegisterService(&_AutograderService_serviceDesc, srv)
+	s.RegisterService(&AutograderService_ServiceDesc, srv)
 }
 
 func _AutograderService_GetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1433,7 +1434,10 @@ func _AutograderService_IsEmptyRepo_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-var _AutograderService_serviceDesc = grpc.ServiceDesc{
+// AutograderService_ServiceDesc is the grpc.ServiceDesc for AutograderService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var AutograderService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "ag.AutograderService",
 	HandlerType: (*AutograderServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
