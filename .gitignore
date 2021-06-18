@@ -20,3 +20,8 @@ backups
 misc/ag-env.sh
 tmp.db
 ag-test.db
+empty.db
+qf.db
+envoy.log
+quickfeed.log
+quickfeed-env.sh
