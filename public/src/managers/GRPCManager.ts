@@ -55,9 +55,8 @@ export class GrpcManager {
     private agService: AutograderServiceClient;
     private userMan: UserManager;
 
-    constructor() {
-        // to test on localhost via port forwarding, use make local Makefile target
-        this.agService = new AutograderServiceClient("https://" + window.location.hostname + ":8080", null, null);
+    constructor(port: string) {
+        this.agService = new AutograderServiceClient("https://" + window.location.hostname + port, null, null);
     }
 
     public setUserMan(man: UserManager) {
