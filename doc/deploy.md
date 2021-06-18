@@ -73,7 +73,7 @@ sudo service docker restart
 ## Run with Envoy
 
 ```sh
-% sudo envoy -c envoy-cyclone.yaml
+% sudo envoy -c envoy/envoy-cyclone.yaml
 ```
 
 ## Configure GitHub OAuth Application for QuickFeed
@@ -90,12 +90,11 @@ Authorization callback URL: https://cyclone.meling.me/auth/github/callback
 
 ## Build and Run QuickFeed Server
 
-The `webpack` command must be executed after editing files in the `public` folder.
-This works while the application is running.
+After editing files in the `public` folder, run the following command.
+This should also work while the application is running.
 
 ```bash
-cd public
-webpack
+% make ui
 ```
 
 Build and run the `quickfeed` server; here we use all default values:
@@ -105,6 +104,21 @@ Build and run the `quickfeed` server; here we use all default values:
 % go install
 % source quickfeed-env.sh
 % quickfeed -service.url cyclone.meling.me
+```
+
+### Troubleshooting
+
+If `go install` fails with the following (on Ubuntu):
+
+```sh
+cgo: exec gcc-5: exec: "gcc-5": executable file not found in $PATH
+```
+
+Then run and retry `go install`:
+
+```bash
+% brew install gcc@5
+% go install
 ```
 
 ## Running the QuickFeed Server
