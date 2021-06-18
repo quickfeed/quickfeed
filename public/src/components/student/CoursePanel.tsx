@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course } from "../../../proto/ag_pb";
+import { Assignment, Course } from "../../../proto/ag/ag_pb";
 import { DynamicTable } from "../../components";
 import { formatDate } from "../../helper";
 import { NavigationManager } from "../../managers/NavigationManager";

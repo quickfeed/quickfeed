@@ -11,7 +11,7 @@ import { StudentPage } from "./pages/StudentPage";
 import { TeacherPage } from "./pages/TeacherPage";
 import { ViewPage } from "./pages/ViewPage";
 
-import { User } from "../proto/ag_pb";
+import { User } from "../proto/ag/ag_pb";
 import { AdminPage } from "./pages/AdminPage";
 
 import { NavBarLogin } from "./components/navigation/NavBarLogin";

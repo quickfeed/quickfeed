@@ -18,7 +18,7 @@ import {
     GradingBenchmark,
     GradingCriterion,
     SubmissionsForCourseRequest
-} from "../../proto/ag_pb";
+} from "../../proto/ag/ag_pb";
 import { ILogger } from "./LogManager";
 import { sortAssignmentsByOrder } from "../componentHelper";
 

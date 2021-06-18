@@ -1,4 +1,4 @@
-import { Assignment, Submission } from "../../../proto/ag_pb";
+import { Assignment, Submission } from "../../../proto/ag/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmissionLink } from "../../models";
 
 export function sortByScore(students: IAllSubmissionsForEnrollment[], assignments: Assignment[], isGroupLab: boolean): IAllSubmissionsForEnrollment[] {

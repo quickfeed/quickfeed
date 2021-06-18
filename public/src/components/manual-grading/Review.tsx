@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission } from '../../../proto/ag_pb';
+import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission } from '../../../proto/ag/ag_pb';
 import { ISubmission } from "../../models";
 import { GradeBenchmark } from "./GradeBenchmark";
 import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider, maxAssignmentScore } from "../../componentHelper";

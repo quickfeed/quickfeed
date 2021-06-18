@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment } from "../../../proto/ag_pb";
+import { Course, Enrollment } from "../../../proto/ag/ag_pb";
 import { DynamicTable } from "../../components";
 import { IAllSubmissionsForEnrollment } from "../../models";
 

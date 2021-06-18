@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course } from "../../../proto/ag_pb";
+import { Course } from "../../../proto/ag/ag_pb";
 import { DynamicTable, Search } from "../../components";
 import { searchForCourses } from "../../componentHelper";
 

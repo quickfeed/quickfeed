@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Group, User, Status } from "../../../proto/ag_pb";
+import { Course, Group, User, Status } from "../../../proto/ag/ag_pb";
 import { BootstrapButton, DynamicTable, Search } from "../../components";
 import { bindFunc, RProp } from "../../helper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";

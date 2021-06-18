@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Group } from "../../../proto/ag_pb";
+import { Course, Group } from "../../../proto/ag/ag_pb";
 
 interface IGroupProps {
     group: Group;

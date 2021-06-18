@@ -9,7 +9,7 @@ import { View, ViewPage } from "./ViewPage";
 import { CourseView } from "./views/CourseView";
 import { ActionType, UserView } from "./views/UserView";
 
-import { Assignment, Enrollment, User } from "../../proto/ag_pb";
+import { Assignment, Enrollment, User } from "../../proto/ag/ag_pb";
 import { formatDate } from "../helper";
 import { sortUsersByAdminStatus } from "../componentHelper";
 
