@@ -11,7 +11,7 @@ layered_runtime:
 
 static_resources:
   listeners:
-    # Redirects all traffic coming from port 80 to port 443 for SSL
+  # Redirects all traffic coming from port 80 to port 443 for SSL
   - name: http_to_https_redirect
     address:
       socket_address: { address: 0.0.0.0, port_value: 80 }
@@ -38,7 +38,7 @@ static_resources:
           http_filters:
           - name: envoy.filters.http.router
 
-    # HTTPS Gateway for the frontend server
+  # HTTPS Gateway for the frontend server
   - name: https_server_gateway
     address:
       socket_address: { address: 0.0.0.0, port_value: 443 }
@@ -85,8 +85,7 @@ static_resources:
               private_key:
                 filename: /etc/letsencrypt/live/cyclone.meling.me/privkey.pem
 
-
-    # Gateway for the AutograderService gRPC server
+  # Gateway for the AutograderService gRPC server
   - name: grpc_gateway
     address:
       # Replace 8080 with whichever port you want to be routed to the gRPC server

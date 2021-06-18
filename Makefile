@@ -64,7 +64,7 @@ brew:
 		$(error "No brew command in $$PATH")
     endif
 	@echo "Installing homebrew packages needed for development and deployment"
-	@brew install go protobuf npm node docker certbot envoy
+	@brew install go protobuf webpack npm node docker certbot envoy
 
 envoy-build:
 	@echo "Building Autograder Envoy proxy"
