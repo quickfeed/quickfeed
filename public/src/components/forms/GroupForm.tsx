@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Course, Enrollment, Group, Status, User } from "../../../proto/ag_pb";
+import { Course, Enrollment, Group, Status, User } from "../../../proto/ag/ag_pb";
 import { Search } from "../../components";
 import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";

@@ -43,7 +43,7 @@ func (r *Review) UnmarshalReviewString() error {
 }
 
 // MakeSubmissionReviews unmarshalls review string for a submission
-func (s Submission) MakeSubmissionReviews() error {
+func (s *Submission) MakeSubmissionReviews() error {
 	for _, r := range s.Reviews {
 		if err := r.UnmarshalReviewString(); err != nil {
 			return err

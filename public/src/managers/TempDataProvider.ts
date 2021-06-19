@@ -11,7 +11,7 @@ import {
     User,
     Review,
     SubmissionsForCourseRequest
-} from '../../proto/ag_pb';
+} from '../../proto/ag/ag_pb';
 import { IAllSubmissionsForEnrollment, ISubmission } from '../models';
 
 import { ICourseProvider } from "./CourseManager";

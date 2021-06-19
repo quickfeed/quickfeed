@@ -6,6 +6,8 @@ import (
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 const (
@@ -255,7 +257,7 @@ func TestMismatchingCourseID(t *testing.T) {
 	}
 }
 
-func ExampleEnrollment_GetUsedSlipDays() {
+func TestEnrollmentGetUsedSlipDays(t *testing.T) {
 	enrol := &pb.Enrollment{
 		Course:       course,
 		CourseID:     course.ID,
@@ -265,15 +267,27 @@ func ExampleEnrollment_GetUsedSlipDays() {
 	lab1 := a(-2)
 	lab1.ID = 1
 	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID}
-	fmt.Println(enrol.GetUsedSlipDays())
+	usedSlipDays := enrol.GetUsedSlipDays()
+	if len(usedSlipDays) != 0 {
+		t.Errorf("len(usedSlipDays) = %d, expected 0", len(usedSlipDays))
+	}
 	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err != nil {
-		fmt.Println(err)
+		t.Error(err)
 	}
-	fmt.Println(enrol.GetUsedSlipDays())
-	// Output:
-	// []
-	// [assignmentID:1 usedSlipDays:2 ]
+	usedSlipDays = enrol.GetUsedSlipDays()
+	if len(usedSlipDays) != 1 {
+		t.Errorf("len(usedSlipDays) = %d, expected 1", len(usedSlipDays))
+	}
+	wantUsedSlipDays := []*pb.UsedSlipDays{
+		{
+			AssignmentID: 1,
+			UsedSlipDays: 2,
+		},
+	}
+	if diff := cmp.Diff(wantUsedSlipDays, usedSlipDays, cmpopts.IgnoreUnexported(pb.UsedSlipDays{})); diff != "" {
+		t.Errorf("GetUsedSlipDays() mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestSlipDaysWGracePeriod(t *testing.T) {

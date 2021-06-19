@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
+import { Course, Enrollment, Group, Repository } from "../../proto/ag/ag_pb";
 import { CoursesOverview, GroupForm, GroupInfo, SingleCourseOverview, StudentLab } from "../components";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { ILinkCollection } from "../managers";

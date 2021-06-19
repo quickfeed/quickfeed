@@ -1,5 +1,5 @@
 import * as React from "react";
-import { User } from "../../../proto/ag_pb";
+import { User } from "../../../proto/ag/ag_pb";
 import { BootstrapButton } from "../../components";
 import { UserManager } from "../../managers";
 

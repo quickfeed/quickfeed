@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GradingBenchmark, GradingCriterion } from "../../../proto/ag_pb";
+import { GradingBenchmark, GradingCriterion } from "../../../proto/ag/ag_pb";
 import { EditCriterion } from "./EditCriterion";
 
 interface EditBenchmarkProps {

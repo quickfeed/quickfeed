@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Submission } from "../../../proto/ag_pb";
+import { Assignment, Submission } from "../../../proto/ag/ag_pb";
 import { Row } from "../../components";
 import { formatDate } from "../../helper";
 import { ISubmission } from "../../models";

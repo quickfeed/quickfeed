@@ -40,8 +40,8 @@ import {
     Users,
     Void,
     Reviewers,
-} from "../../proto/ag_pb";
-import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
+} from "../../proto/ag/ag_pb";
+import { AutograderServiceClient } from "../../proto/ag/AgServiceClientPb";
 import { UserManager } from "./UserManager";
 import { ISubmission } from "../models";
 
@@ -55,9 +55,8 @@ export class GrpcManager {
     private agService: AutograderServiceClient;
     private userMan: UserManager;
 
-    constructor() {
-        // to test on localhost via port forwarding, use make local Makefile target
-        this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
+    constructor(port: string) {
+        this.agService = new AutograderServiceClient("https://" + window.location.hostname + port, null, null);
     }
 
     public setUserMan(man: UserManager) {

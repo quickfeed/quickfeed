@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Enrollment } from "../../../proto/ag_pb";
+import { Enrollment } from "../../../proto/ag/ag_pb";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink } from "../../managers/NavigationManager";
 import { searchForCourses, sortEnrollmentsByVisibility } from "../../componentHelper";

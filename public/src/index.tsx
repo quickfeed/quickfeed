@@ -11,7 +11,7 @@ import { StudentPage } from "./pages/StudentPage";
 import { TeacherPage } from "./pages/TeacherPage";
 import { ViewPage } from "./pages/ViewPage";
 
-import { User } from "../proto/ag_pb";
+import { User } from "../proto/ag/ag_pb";
 import { AdminPage } from "./pages/AdminPage";
 
 import { NavBarLogin } from "./components/navigation/NavBarLogin";
@@ -298,12 +298,13 @@ async function main(): Promise<void> {
     const DEBUG_BROWSER = "DEBUG_BROWSER";
     const DEBUG_SERVER = "DEBUG_SERVER";
 
-    let curRunning: string;
-    curRunning = DEBUG_SERVER;
+    let curRunning = DEBUG_SERVER;
+    let grpcPort = ":8080";
 
     if (window.location.host.match("localhost")
         || localStorage.getItem("debug")) {
         curRunning = DEBUG_BROWSER;
+        grpcPort = "";
     }
 
     const tempData = new TempDataProvider();
@@ -314,20 +315,15 @@ async function main(): Promise<void> {
     const navMan: NavigationManager = new NavigationManager(history, logMan.createLogger("NavigationManager"));
 
     if (curRunning === DEBUG_SERVER) {
-
         const httpHelper = new HttpHelper("/api/v1");
-
-        const grpcHelper = new GrpcManager();
-
+        const grpcHelper = new GrpcManager(grpcPort);
         const serverData = new ServerProvider(httpHelper, grpcHelper, logMan.createLogger("ServerProvider"));
-
         userMan = new UserManager(serverData, logMan.createLogger("UserManager"));
         grpcHelper.setUserMan(userMan);
         courseMan = new CourseManager(serverData, logMan.createLogger("CourseManager"));
     } else {
         userMan = new UserManager(tempData, logMan.createLogger("UserManager"));
         courseMan = new CourseManager(tempData, logMan.createLogger("CourseManager"));
-
         const user = await userMan.tryLogin("test@testersen.no", "1234");
     }
 

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course, Group, User, Submission } from "../../../proto/ag_pb";
+import { Assignment, Course, Group, User, Submission } from "../../../proto/ag/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from "../../models";
 import { Search } from "../../components";
 import { mapAllSubmissions, sortStudentsForRelease, scoreFromReviews, selectFromSubmissionLinks, searchForUsers, searchForGroups, sortAssignmentsByOrder } from "../../componentHelper";

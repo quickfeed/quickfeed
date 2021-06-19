@@ -23,6 +23,7 @@ type AutograderService struct {
 	scms   *auth.Scms
 	bh     BaseHookOptions
 	runner ci.Runner
+	pb.UnimplementedAutograderServiceServer
 }
 
 // NewAutograderService returns an AutograderService object.

@@ -5,7 +5,7 @@ import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager }
 import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
-import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest, Review } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest, Review } from "../../proto/ag/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";

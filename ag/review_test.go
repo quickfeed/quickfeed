@@ -5,6 +5,7 @@ import (
 
 	"github.com/autograde/quickfeed/ag"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 var tst = []*ag.GradingBenchmark{
@@ -61,7 +62,7 @@ func TestReviewUnmarshalString(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := tst
-	if diff := cmp.Diff(r.Benchmarks, want); diff != "" {
+	if diff := cmp.Diff(r.Benchmarks, want, cmpopts.IgnoreUnexported(ag.GradingBenchmark{}, ag.GradingCriterion{})); diff != "" {
 		t.Errorf("r.UnmarshalReviewString() mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -76,7 +77,7 @@ func TestReviewUnmarshalStringProtobufJsonPB(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := tst
-	if diff := cmp.Diff(r.Benchmarks, want); diff != "" {
+	if diff := cmp.Diff(r.Benchmarks, want, cmpopts.IgnoreUnexported(ag.GradingBenchmark{}, ag.GradingCriterion{})); diff != "" {
 		t.Errorf("r.UnmarshalReviewString() mismatch (-want +got):\n%s", diff)
 	}
 }

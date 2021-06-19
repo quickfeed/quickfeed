@@ -14,7 +14,7 @@ import {
     Submission,
     SubmissionsForCourseRequest,
     User,
-} from "../../proto/ag_pb";
+} from "../../proto/ag/ag_pb";
 import {
     IAllSubmissionsForEnrollment,
     IBuildInfo,

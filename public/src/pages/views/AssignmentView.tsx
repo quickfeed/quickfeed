@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, Benchmarks } from '../../../proto/ag_pb';
+import { Assignment, GradingBenchmark, GradingCriterion, Benchmarks } from '../../../proto/ag/ag_pb';
 import { EditBenchmark } from "../../components/manual-grading/EditBenchmark";
 import { maxAssignmentScore } from '../../componentHelper';
 

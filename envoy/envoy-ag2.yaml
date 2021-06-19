@@ -57,7 +57,7 @@ static_resources:
             - name: local_service
               domains: 
                 # Replace domain with your domain
-                - "cyclone.meling.me"
+                - "ag2.ux.uis.no"
               routes:
               - match: { prefix: "/"}
                 route:
@@ -81,9 +81,9 @@ static_resources:
             # Replace certificate with your certificates
             tls_certificates:
               certificate_chain:
-                filename: /etc/letsencrypt/live/cyclone.meling.me/fullchain.pem
+                filename: /etc/letsencrypt/live/ag2.ux.uis.no/fullchain.pem
               private_key:
-                filename: /etc/letsencrypt/live/cyclone.meling.me/privkey.pem
+                filename: /etc/letsencrypt/live/ag2.ux.uis.no/privkey.pem
 
   # Gateway for the AutograderService gRPC server
   - name: grpc_gateway
@@ -128,9 +128,9 @@ static_resources:
             # Replace with path to your certificates
             tls_certificates:
               certificate_chain:
-                filename: /etc/letsencrypt/live/cyclone.meling.me/fullchain.pem
+                filename: /etc/letsencrypt/live/ag2.ux.uis.no/fullchain.pem
               private_key:
-                filename: /etc/letsencrypt/live/cyclone.meling.me/privkey.pem
+                filename: /etc/letsencrypt/live/ag2.ux.uis.no/privkey.pem
   clusters:
   - name: grpc_service
     connect_timeout: 15s

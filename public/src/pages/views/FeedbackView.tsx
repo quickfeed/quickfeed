@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course, Group, Review, User } from "../../../proto/ag_pb";
+import { Assignment, Course, Group, Review, User } from "../../../proto/ag/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmissionLink } from "../../models";
 import { ReviewPage } from "../../components/manual-grading/Review";
 import { Search } from "../../components";

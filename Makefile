@@ -11,7 +11,6 @@ sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "se
 testorg				:= ag-test-course
 endpoint 			:= test.itest.run
 agport				:= 8081
-pbpath				:= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
 
 # necessary when target is not tied to a file
 .PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm
@@ -44,23 +43,28 @@ ui:
 
 proto:
 	@echo "Compiling Autograders proto definitions"
-	@cd ag; protoc -I=. -I=$(pbpath) --gogofast_out=plugins=grpc,\
-	Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,\
-	Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types,\
-	Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types,\
-	Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
-	Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:. \
-	--js_out=import_style=commonjs:../$(proto-path)/ \
-	--grpc-web_out=import_style=typescript,mode=grpcweb:../$(proto-path)/ ag.proto
-	$(sedi) '/gogo/d' $(proto-path)/ag_pb.js $(proto-path)/AgServiceClientPb.ts $(proto-path)/ag_pb.d.ts
-	@cd public && npm run tsc -- proto/AgServiceClientPb.ts
+	@protoc \
+	-I . \
+	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
+	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
+	--go-patch_out=plugin=go,paths=source_relative:. \
+	--go-patch_out=plugin=go-grpc,paths=source_relative:. \
+	--js_out=import_style=commonjs:$(proto-path) \
+	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(proto-path) \
+	ag/ag.proto
+	@echo "Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529)"
+	@$(sedi) '/patch_go_pb/d' \
+	$(proto-path)/ag/ag_pb.js \
+	$(proto-path)/ag/ag_pb.d.ts \
+	$(proto-path)/ag/AgServiceClientPb.ts
+	@cd public && npm run tsc -- proto/ag/AgServiceClientPb.ts
 
 brew:
     ifeq (, $(shell which brew))
 		$(error "No brew command in $$PATH")
     endif
 	@echo "Installing homebrew packages needed for development and deployment"
-	@brew install go protobuf npm node docker certbot envoy
+	@brew install go protobuf webpack npm node docker certbot envoy
 
 envoy-build:
 	@echo "Building Autograder Envoy proxy"
@@ -80,8 +84,14 @@ envoy-purge:
 # protoset is a file used as a server reflection to mock-testing of grpc methods via command line
 protoset:
 	@echo "Compiling protoset for grpcurl"
-	@cd ag; protoc -I=. -I=$(GOPATH)/src -I=$(GOPATH)/src/github.com/gogo/protobuf/protobuf \
-	--proto_path=. --descriptor_set_out=ag.protoset --include_imports ag.proto
+	@protoc \
+	-I . \
+	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
+	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
+	--proto_path=ag \
+	--descriptor_set_out=ag/ag.protoset \
+	--include_imports \
+	ag/ag.proto
 
 test:
 	@go clean -testcache ./...
