@@ -270,6 +270,7 @@ func ExampleEnrollment_GetUsedSlipDays() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	// added dummy comment to fix issue causing this test to fail
 	fmt.Println(enrol.GetUsedSlipDays())
 	// Output:
 	// []
