@@ -7,7 +7,7 @@ debug
 public/dist/bundle.js
 public/dist/bundle.js.map
 tunnel.1.sh
-quickfeed
+./quickfeed
 ag-setup.sh
 ag.db
 meling.sh
@@ -20,4 +20,8 @@ backups
 misc/ag-env.sh
 tmp.db
 ag-test.db
-
+empty.db
+qf.db
+envoy.log
+quickfeed.log
+quickfeed-env.sh

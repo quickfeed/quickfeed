@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v35/github"
 	"github.com/gosimple/slug"
 	"golang.org/x/oauth2"
 )

@@ -9,6 +9,7 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/jinzhu/gorm"
 )
 
@@ -83,7 +84,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		Status:       pb.Submission_NONE,
 		Reviews:      []*ag.Review{},
 	}
-	if diff := cmp.Diff(submissions[0], want); diff != "" {
+	if diff := cmp.Diff(submissions[0], want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 
@@ -108,7 +109,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		Status:       pb.Submission_NONE,
 		Reviews:      []*ag.Review{},
 	}
-	if diff := cmp.Diff(submissions[0], want); diff != "" {
+	if diff := cmp.Diff(submissions[0], want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 }
@@ -145,8 +146,8 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		Status:       pb.Submission_NONE,
 		Reviews:      []*pb.Review{},
 	}
-	if !reflect.DeepEqual(submissions[0], want) {
-		t.Errorf("have %#v want %#v", submissions[0], want)
+	if diff := cmp.Diff(submissions[0], want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
+		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 
 	if submissions[0].GetStatus() != pb.Submission_NONE {

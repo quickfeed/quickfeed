@@ -21,12 +21,12 @@ func (t Repository_Type) IsCourseRepo() bool {
 }
 
 // IsTestsRepo returns true if the repository is a 'tests' type.
-func (t Repository) IsTestsRepo() bool {
+func (t *Repository) IsTestsRepo() bool {
 	return t.RepoType == Repository_TESTS
 }
 
 // IsStudentRepo returns true if the repository is a user repo type.
-func (t Repository) IsStudentRepo() bool {
+func (t *Repository) IsStudentRepo() bool {
 	return t.RepoType == Repository_USER || t.RepoType == Repository_GROUP
 }
 
@@ -36,12 +36,12 @@ func (t Repository_Type) IsStudentRepo() bool {
 }
 
 // IsGroupRepo returns true if the repository is a group repo type.
-func (t Repository) IsGroupRepo() bool {
+func (t *Repository) IsGroupRepo() bool {
 	return t.RepoType == Repository_GROUP
 }
 
 // IsUserRepo returns true if the repository is a user repo type.
-func (t Repository) IsUserRepo() bool {
+func (t *Repository) IsUserRepo() bool {
 	return t.RepoType == Repository_USER
 }
 
@@ -49,7 +49,7 @@ func (t Repository) IsUserRepo() bool {
 // This repository can be any repository belonging to a course,
 // e.g. a user or group repository.
 // Using this method we can avoid a database lookup.
-func (t Repository) GetTestURL() string {
+func (t *Repository) GetTestURL() string {
 	repoURL := t.GetHTMLURL()
 	return repoURL[:strings.LastIndex(repoURL, "/")+1] + TestsRepo
 }

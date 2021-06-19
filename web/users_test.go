@@ -12,6 +12,7 @@ import (
 	"github.com/autograde/quickfeed/web"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
@@ -74,8 +75,8 @@ func TestGetUsers(t *testing.T) {
 	wantUsers := make([]*pb.User, 0)
 	wantUsers = append(wantUsers, admin, user2)
 
-	if !cmp.Equal(foundUsers.Users, wantUsers) {
-		t.Errorf("have users %+v want %+v", foundUsers.Users, wantUsers)
+	if diff := cmp.Diff(foundUsers.Users, wantUsers, cmpopts.IgnoreUnexported(pb.User{}, pb.RemoteIdentity{})); diff != "" {
+		t.Errorf("mismatch (-Users +wantUsers):\n%s", diff)
 	}
 }
 
@@ -172,7 +173,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		foundUsers = append(foundUsers, e.User)
 	}
 
-	if !cmp.Equal(foundUsers, wantUsers) {
+	if !cmp.Equal(foundUsers, wantUsers, cmpopts.IgnoreUnexported(pb.User{}, pb.RemoteIdentity{})) {
 		for _, u := range foundUsers {
 			t.Logf("user %+v", u)
 		}
@@ -223,7 +224,8 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 		} else if i%3 != 0 {
 			// enroll every third student as a group member
 			if err := db.CreateEnrollment(&pb.Enrollment{
-				UserID: user.ID, CourseID: course.ID, GroupID: 1}); err != nil {
+				UserID: user.ID, CourseID: course.ID, GroupID: 1,
+			}); err != nil {
 				t.Fatal(err)
 			}
 			if err := db.UpdateEnrollment(query); err != nil {
@@ -232,7 +234,8 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 		} else {
 			// enroll rest of the students and add them to the list to check against
 			if err := db.CreateEnrollment(&pb.Enrollment{
-				UserID: user.ID, CourseID: course.ID}); err != nil {
+				UserID: user.ID, CourseID: course.ID,
+			}); err != nil {
 				t.Fatal(err)
 			}
 			if err := db.UpdateEnrollment(query); err != nil {
@@ -258,7 +261,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 		u.Course = nil
 	}
 
-	if !cmp.Equal(gotEnrollments.Enrollments, wantEnrollments) {
+	if !cmp.Equal(gotEnrollments.Enrollments, wantEnrollments, cmpopts.IgnoreUnexported(pb.Enrollment{})) {
 		for _, u := range gotEnrollments.Enrollments {
 			t.Logf("user %+v", u)
 		}
@@ -267,7 +270,6 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 		}
 		t.Errorf("have users %+v want %+v", gotEnrollments, wantEnrollments)
 	}
-
 }
 
 func TestUpdateUser(t *testing.T) {
@@ -325,7 +327,7 @@ func TestUpdateUser(t *testing.T) {
 		RemoteIdentities: nonAdminUser.RemoteIdentities,
 	}
 
-	if !cmp.Equal(withName, wantUser) {
+	if !cmp.Equal(withName, wantUser, cmpopts.IgnoreUnexported(pb.User{}, pb.RemoteIdentity{})) {
 		t.Errorf("have users\n%+v want\n%+v\n", withName, wantUser)
 	}
 }
@@ -333,7 +335,7 @@ func TestUpdateUser(t *testing.T) {
 func TestUpdateUserFailures(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
-	//user := &pb.User{Name: "Test User", StudentID: "11", Email: "test@email", AvatarURL: "url.com"}
+	// user := &pb.User{Name: "Test User", StudentID: "11", Email: "test@email", AvatarURL: "url.com"}
 	adminUser := createFakeUser(t, db, 1)
 	createFakeUser(t, db, 11)
 
@@ -367,7 +369,7 @@ func TestUpdateUserFailures(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !cmp.Equal(noChangeAdmin, adminUser) {
+	if !cmp.Equal(noChangeAdmin, adminUser, cmpopts.IgnoreUnexported(pb.User{}, pb.RemoteIdentity{})) {
 		t.Errorf("\nhave: %+v\nwant: %+v\n", noChangeAdmin, adminUser)
 	}
 
@@ -398,7 +400,7 @@ func TestUpdateUserFailures(t *testing.T) {
 		RemoteIdentities: u.RemoteIdentities,
 	}
 
-	if !cmp.Equal(withName, wantUser) {
+	if !cmp.Equal(withName, wantUser, cmpopts.IgnoreUnexported(pb.User{}, pb.RemoteIdentity{})) {
 		t.Errorf("\nhave: %+v\nwant: %+v\n", withName, wantUser)
 	}
 }

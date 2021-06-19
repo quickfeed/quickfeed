@@ -6,11 +6,12 @@ import (
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 const (
-	layout = "2006-01-02T15:04:05"
-	days   = time.Duration(24 * time.Hour)
+	days = time.Duration(24 * time.Hour)
 )
 
 var (
@@ -26,7 +27,7 @@ var (
 		return &pb.Assignment{
 			CourseID:   course.ID,
 			ScoreLimit: 60,
-			Deadline:   testNow.Add(time.Duration(daysFromNow) * days).Format(layout),
+			Deadline:   testNow.Add(time.Duration(daysFromNow) * days).Format(pb.TimeLayout),
 		}
 	}
 )
@@ -113,7 +114,7 @@ func TestSlipDays(t *testing.T) {
 					}
 					remaining := enrol.RemainingSlipDays(course)
 					if remaining != sd.remaining[i][j] {
-						t.Errorf("UpdateSlipdays(%q, %q, %q, %q) == %d, want %d", testNow.Format(layout), sd.labs[i], submission, enrol, remaining, sd.remaining[i][j])
+						t.Errorf("UpdateSlipdays(%q, %q, %q, %q) == %d, want %d", testNow.Format(pb.TimeLayout), sd.labs[i], submission, enrol, remaining, sd.remaining[i][j])
 					}
 				}
 			})
@@ -193,7 +194,7 @@ func TestScoreLimitSlipDays(t *testing.T) {
 			}
 			remaining := enrol.RemainingSlipDays(course)
 			if uint32(remaining) != test.remaining {
-				t.Errorf("UpdateSlipdays(%q, %q, %q, %q) = %d, want %d", testNow.Format(layout), test.assignment, test.submission, enrol, remaining, test.remaining)
+				t.Errorf("UpdateSlipdays(%q, %q, %q, %q) = %d, want %d", testNow.Format(pb.TimeLayout), test.assignment, test.submission, enrol, remaining, test.remaining)
 			}
 		})
 	}
@@ -227,7 +228,7 @@ func TestMismatchingAssignmentID(t *testing.T) {
 	// lab1's deadline is incorrectly formatted
 	lab1 := &pb.Assignment{
 		CourseID: course.ID,
-		Deadline: testNow.Add(time.Duration(2) * days).Format(layout),
+		Deadline: testNow.Add(time.Duration(2) * days).Format(pb.TimeLayout),
 	}
 	lab1.ID = 1
 	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID + 1}
@@ -246,7 +247,7 @@ func TestMismatchingCourseID(t *testing.T) {
 	// lab1's deadline is incorrectly formatted
 	lab1 := &pb.Assignment{
 		CourseID: course.ID + 1,
-		Deadline: testNow.Add(time.Duration(2) * days).Format(layout),
+		Deadline: testNow.Add(time.Duration(2) * days).Format(pb.TimeLayout),
 	}
 	lab1.ID = 1
 	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID}
@@ -256,7 +257,7 @@ func TestMismatchingCourseID(t *testing.T) {
 	}
 }
 
-func ExampleEnrollment_GetUsedSlipDays() {
+func TestEnrollmentGetUsedSlipDays(t *testing.T) {
 	enrol := &pb.Enrollment{
 		Course:       course,
 		CourseID:     course.ID,
@@ -266,21 +267,33 @@ func ExampleEnrollment_GetUsedSlipDays() {
 	lab1 := a(-2)
 	lab1.ID = 1
 	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID}
-	fmt.Println(enrol.GetUsedSlipDays())
+	usedSlipDays := enrol.GetUsedSlipDays()
+	if len(usedSlipDays) != 0 {
+		t.Errorf("len(usedSlipDays) = %d, expected 0", len(usedSlipDays))
+	}
 	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err != nil {
-		fmt.Println(err)
+		t.Error(err)
 	}
-	fmt.Println(enrol.GetUsedSlipDays())
-	// Output:
-	// []
-	// [assignmentID:1 usedSlipDays:2 ]
+	usedSlipDays = enrol.GetUsedSlipDays()
+	if len(usedSlipDays) != 1 {
+		t.Errorf("len(usedSlipDays) = %d, expected 1", len(usedSlipDays))
+	}
+	wantUsedSlipDays := []*pb.UsedSlipDays{
+		{
+			AssignmentID: 1,
+			UsedSlipDays: 2,
+		},
+	}
+	if diff := cmp.Diff(wantUsedSlipDays, usedSlipDays, cmpopts.IgnoreUnexported(pb.UsedSlipDays{})); diff != "" {
+		t.Errorf("GetUsedSlipDays() mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestSlipDaysWGracePeriod(t *testing.T) {
 	lab := a(0)
 	lab.ID = 1
-	timeOfDeadline, err := time.Parse(layout, lab.Deadline)
+	timeOfDeadline, err := time.Parse(pb.TimeLayout, lab.Deadline)
 	if err != nil {
 		t.Fatal(err)
 	}

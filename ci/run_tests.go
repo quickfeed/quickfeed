@@ -17,7 +17,6 @@ import (
 
 const (
 	scriptPath = "ci/scripts"
-	layout     = "2006-01-02T15:04:05"
 )
 
 // RunData stores CI data
@@ -140,7 +139,7 @@ func randomSecret() string {
 
 func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission) {
 	buildDate := submission.Results.BuildInfo.BuildDate
-	buildTime, err := time.Parse(layout, buildDate)
+	buildTime, err := time.Parse(pb.TimeLayout, buildDate)
 	if err != nil {
 		logger.Errorf("Failed to parse time from string (%s)", buildDate)
 	}

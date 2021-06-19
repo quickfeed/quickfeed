@@ -11,8 +11,6 @@ import (
 	"github.com/autograde/quickfeed/scm"
 )
 
-var layout = "2006-01-02T15:04:05"
-
 // getCourses returns all courses.
 func (s *AutograderService) getCourses() (*pb.Courses, error) {
 	courses, err := s.db.GetCourses()
@@ -271,7 +269,7 @@ func (s *AutograderService) updateSubmission(courseID, submissionID uint64, stat
 
 	// if approving previously unapproved submission
 	if status == pb.Submission_APPROVED && submission.Status != pb.Submission_APPROVED {
-		submission.ApprovedDate = time.Now().Format(layout)
+		submission.ApprovedDate = time.Now().Format(pb.TimeLayout)
 		if err := s.setLastApprovedAssignment(submission, courseID); err != nil {
 			return err
 		}
