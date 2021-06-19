@@ -175,8 +175,6 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 	ci.RunTests(wh.logger, wh.db, wh.runner, runData)
 }
 
-const layout = "2006-01-02T15:04:05"
-
 // recordSubmissionWithoutTests saves a new submission without running any tests
 // for a manually graded assignment.
 func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
@@ -185,7 +183,7 @@ func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
 		Results: &score.Results{
 			BuildInfo: &score.BuildInfo{
 				BuildID:   0,
-				BuildDate: time.Now().Format(layout),
+				BuildDate: time.Now().Format(pb.TimeLayout),
 				BuildLog:  "No automated tests for this assignment",
 				ExecTime:  1,
 			},

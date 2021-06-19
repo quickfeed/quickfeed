@@ -17,7 +17,7 @@ func (s *Submission) NewestBuildDate(submissionDate time.Time) (t time.Time, err
 	if s == nil || s.Results == nil || s.Results.BuildInfo == nil {
 		return t, ErrMissingBuildInfo
 	}
-	currentSubmissionDate, err := time.Parse(layout, s.Results.BuildInfo.BuildDate)
+	currentSubmissionDate, err := time.Parse(TimeLayout, s.Results.BuildInfo.BuildDate)
 	if err != nil {
 		return t, err
 	}

@@ -50,7 +50,7 @@ func TestNewestSubmissionDate(t *testing.T) {
 	submission = &pb.Submission{
 		Results: &score.Results{
 			BuildInfo: &score.BuildInfo{
-				BuildDate: buildDate.Format(layout),
+				BuildDate: buildDate.Format(pb.TimeLayout),
 			},
 		},
 	}
