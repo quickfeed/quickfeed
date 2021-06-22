@@ -360,7 +360,7 @@ export class GrpcManager {
             if (currentUser != null) {
                 userID = currentUser.getId().toString();
             }
-            method.call(this.agService, request, { "custom-header-1": "value1", "user": userID },
+            method.call(this.agService, request, {},
                 (err: grpcWeb.Error, response: T) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {
