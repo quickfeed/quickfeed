@@ -58,12 +58,16 @@ func Interceptor(logger *zap.Logger, userMap map[string]uint64) grpc.UnaryServer
 			return nil, errors.New("Could not grab metadata from context")
 		}
 
-		token := meta.Get("cookie")[0]
-		if userMap[token] == 0 {
-			return nil, errors.New("Could not associate token with a user")
+		if len(meta.Get("cookie")) > 0 {
+			token := meta.Get("cookie")[0]
+			if userMap[token] == 0 {
+				return nil, errors.New("Could not associate token with a user")
+			}
+			meta.Set("user", strconv.FormatUint(userMap[token], 10))
+			ctx = metadata.NewOutgoingContext(ctx, meta)
+		} else {
+			return nil, errors.New("x")
 		}
-		meta.Set("user", strconv.FormatUint(userMap[token], 10))
-		ctx = metadata.NewOutgoingContext(ctx, meta)
 
 		// if response has information on remote ID, it will be removed
 		resp, err := handler(ctx, req)
