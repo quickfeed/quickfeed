@@ -137,3 +137,6 @@ prometheus:
 
 quickfeed-go:
 	docker build -f ci/scripts/go/Dockerfile -t quickfeed:go .
+
+envoy-config:
+	@go run cmd/qconf/main.go
