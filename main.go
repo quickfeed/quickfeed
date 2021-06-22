@@ -114,7 +114,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to start tcp listener: %v\n", err)
 	}
-	opt := grpc.UnaryInterceptor(pb.Interceptor(logger))
+	opt := grpc.UnaryInterceptor(pb.Interceptor(logger, auth.TokenToUserMap))
 	grpcServer := grpc.NewServer(opt)
 
 	// Create a HTTP server for prometheus.

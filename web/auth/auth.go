@@ -45,6 +45,9 @@ func newUserSession(id uint64) *UserSession {
 	}
 }
 
+// TokenToUserMap
+var TokenToUserMap = make(map[string]uint64)
+
 func (us *UserSession) enableProvider(provider string) {
 	us.Providers[provider] = struct{}{}
 }
@@ -321,6 +324,22 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 			if !foundSCMProvider {
 				logger.Info("no SCM providers found for", zap.String("user", user.String()))
 				return echo.NewHTTPError(http.StatusBadRequest, err)
+			}
+
+			token, err := c.Cookie("session")
+			if err != nil {
+				return err
+			}
+
+			// Check if user exists in map with an old session token
+			if TokenToUserMap[token.String()] != user.GetID() {
+				// Delete key and value pair if ID has an old session token
+				for key, id := range TokenToUserMap {
+					if id == user.GetID() {
+						delete(TokenToUserMap, key)
+					}
+				}
+				TokenToUserMap[token.String()] = user.GetID()
 			}
 
 			// TODO: Add access control list.

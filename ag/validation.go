@@ -2,7 +2,9 @@ package ag
 
 import (
 	"context"
+	"errors"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -10,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -29,7 +32,7 @@ type idCleaner interface {
 // Invalid requests are rejected without logging and before it reaches any
 // user-level code and returns an illegal argument to the client.
 // In addition, the interceptor also implements a cancel mechanism.
-func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
+func Interceptor(logger *zap.Logger, userMap map[string]uint64) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		methodName := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
 		AgMethodSuccessRateMetric.WithLabelValues(methodName, "total").Inc()
@@ -49,6 +52,19 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 		}
 		ctx, cancel := context.WithTimeout(ctx, MaxWait)
 		defer cancel()
+
+		meta, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, errors.New("Could not grab metadata from context")
+		}
+
+		token := meta.Get("cookie")[0]
+		if userMap[token] == 0 {
+			return nil, errors.New("Could not associate token with a user")
+		}
+		meta.Set("user", strconv.FormatUint(userMap[token], 10))
+		ctx = metadata.NewOutgoingContext(ctx, meta)
+
 		// if response has information on remote ID, it will be removed
 		resp, err := handler(ctx, req)
 		if resp != nil {
