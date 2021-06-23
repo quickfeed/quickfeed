@@ -84,19 +84,13 @@ func Interceptor(logger *zap.Logger, userMap map[string]uint64) grpc.UnaryServer
 
 // userValidation returns modified metadata containing a valid user. An error is returned if the user is not authenticated.
 func userValidation(meta metadata.MD, userMap map[string]uint64) (metadata.MD, error) {
-	cookie := meta.Get(Cookie)
-
-	if len(cookie) == 0 {
-		return nil, errors.New("Request does not contain a session token")
+	for _, cookie := range meta.Get(Cookie) {
+		if user := userMap[cookie]; user > 0 {
+			meta.Set(UserKey, strconv.FormatUint(user, 10))
+			return meta, nil
+		}
 	}
-	token := cookie[0]
-	user := userMap[token]
-	if user == 0 {
-		return nil, errors.New("Could not associate token with a user")
-	}
-	meta.Set(UserKey, strconv.FormatUint(user, 10))
-
-	return meta, nil
+	return nil, errors.New("Request does not contain a valid session cookie.")
 }
 
 // IsValid on void message always returns true.
