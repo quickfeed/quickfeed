@@ -17,6 +17,7 @@ import (
 
 func init() {
 	gob.Register(&UserSession{})
+	TokenStore = &UserToken{store: make(map[string]uint64)}
 }
 
 // Session keys.
@@ -46,7 +47,24 @@ func newUserSession(id uint64) *UserSession {
 }
 
 // TokenToUserMap
-var TokenToUserMap = make(map[string]uint64)
+type UserToken struct {
+	store map[string]uint64
+}
+
+func (ut *UserToken) add(token string, id uint64) {
+	for token, userID := range TokenStore.store {
+		if userID == id {
+			delete(TokenStore.store, token)
+		}
+	}
+	ut.store[token] = id
+}
+
+func (ut *UserToken) Get(token string) uint64 {
+	return TokenStore.store[token]
+}
+
+var TokenStore *UserToken
 
 func (us *UserSession) enableProvider(provider string) {
 	us.Providers[provider] = struct{}{}
@@ -330,16 +348,8 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 			if err != nil {
 				return err
 			}
-
-			// Check if user exists in map with an old session token
-			if TokenToUserMap[token.String()] != user.GetID() {
-				// Delete key and value pair if ID has an old session token
-				for key, id := range TokenToUserMap {
-					if id == user.GetID() {
-						delete(TokenToUserMap, key)
-					}
-				}
-				TokenToUserMap[token.String()] = user.GetID()
+			if id := TokenStore.Get(token.String()); id != user.GetID() {
+				TokenStore.add(token.String(), user.GetID())
 			}
 
 			// TODO: Add access control list.
