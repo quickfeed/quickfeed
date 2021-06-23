@@ -59,7 +59,7 @@ func Interceptor(logger *zap.Logger, userMap map[string]uint64) grpc.UnaryServer
 		if !ok {
 			return nil, errors.New("Could not grab metadata from context")
 		}
-		meta, err := UserValidation(meta, userMap)
+		meta, err := userValidation(meta, userMap)
 		if err != nil {
 			return nil, err
 		}
@@ -82,20 +82,20 @@ func Interceptor(logger *zap.Logger, userMap map[string]uint64) grpc.UnaryServer
 	}
 }
 
-// Returns modified metadata containing a valid user. Returns an error if the user is not authenticated.
-func UserValidation(meta metadata.MD, userMap map[string]uint64) (metadata.MD, error) {
-	token := meta.Get(Cookie)
+// userValidation returns modified metadata containing a valid user. An error is returned if the user is not authenticated.
+func userValidation(meta metadata.MD, userMap map[string]uint64) (metadata.MD, error) {
+	cookie := meta.Get(Cookie)
 
-	if len(token) > 0 {
-		token := token[0]
-		user := userMap[token]
-		if user == 0 {
-			return nil, errors.New("Could not associate token with a user")
-		}
-		meta.Set(UserKey, strconv.FormatUint(user, 10))
-	} else {
+	if len(cookie) == 0 {
 		return nil, errors.New("Request does not contain a session token")
 	}
+	token := cookie[0]
+	user := userMap[token]
+	if user == 0 {
+		return nil, errors.New("Could not associate token with a user")
+	}
+	meta.Set(UserKey, strconv.FormatUint(user, 10))
+
 	return meta, nil
 }
 
