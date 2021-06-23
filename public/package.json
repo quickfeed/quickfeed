@@ -10,23 +10,23 @@
     "@types/node": "^12.19.12",
     "@types/react": "^16.14.2",
     "@types/react-dom": "^16.9.10",
-    "axios": "^0.21.1",
     "google-protobuf": "^3.15.0-rc.1",
     "grpc-web": "^1.2.1",
-    "overmind": "^26.0.0",
-    "overmind-react": "^27.0.0",
+    "overmind": "^27.0.0",
+    "overmind-react": "^28.0.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.1",
     "source-map-loader": "^2.0.1",
+    "tsc": "^1.20150623.0",
     "web-vitals": "^0.2.4"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "NODE_ENV=test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -56,6 +56,7 @@
     "source-map-loader": "^2.0.1",
     "typescript": "^4.2.3",
     "webpack": "^5.31.2",
-    "webpack-cli": "^4.6.0"
+    "webpack-cli": "^4.6.0",
+    "process": "0.11.10"
   }
 }
