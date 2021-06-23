@@ -326,7 +326,7 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 				return echo.NewHTTPError(http.StatusBadRequest, err)
 			}
 
-			token, err := c.Cookie("session")
+			token, err := c.Cookie(SessionKey)
 			if err != nil {
 				return err
 			}
