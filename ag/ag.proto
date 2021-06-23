@@ -1,6 +1,7 @@
 syntax = "proto3";
 package ag;
 option go_package = "github.com/autograde/quickfeed/ag";
+option swift_prefix="";
 
 import "patch/go.proto";
 
