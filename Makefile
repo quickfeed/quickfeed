@@ -43,7 +43,7 @@ ui:
 	@cd public; npm install; npm run webpack
 
 proto:
-	@echo "Compiling Autograders proto definitions"
+	@echo "Compiling QuickFeed's proto definitions for Go and TypeScript"
 	@protoc \
 	-I . \
 	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
@@ -61,7 +61,7 @@ proto:
 	@cd public && npm run tsc -- proto/ag/AgServiceClientPb.ts
 
 proto-swift:
-	@echo "Compiling Autograders proto definitions for swift"
+	@echo "Compiling QuickFeed's proto definitions for Swift"
 	@protoc \
 	-I . \
 	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
@@ -69,7 +69,6 @@ proto-swift:
 	--swift_out=:$(proto-swift-path) \
 	--grpc-swift_out=$(proto-swift-path) \
 	ag/ag.proto
-	
 
 brew:
     ifeq (, $(shell which brew))
