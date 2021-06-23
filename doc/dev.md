@@ -202,10 +202,6 @@ One of the solutions is to uncomment or change `DOCKER_OPTS` line in `/etc/defau
 
 [Problem description and possible solutions](https://development.robinwinslow.uk/2016/06/23/fix-docker-networking-dns/)
 
-## Webpack
-
-The project uses `Webpack` to compile and bundle all TypeScript files. Currently used TypeScript loader is `awesome-typescript-loader`. It is known for its irregular updates. In case of it having any vulnerable dependencies, `awesome-typescript-loader` can be easily perlaced with an alternative loader - `ts-loader`. To start using another loader, replace `awesome-typescript-loader` line with `ts-loader` in `/public/webpack.config.js`
-
 ## npm
 
 `npm install` (or `npm i`) no longer installs all dependencies with versions stated in `package-lock.json`, but will also attempt to load latest versions for all root packages. If you just want to install the package dependencies without altering your `package-lock.json`, run `npm ci` instead.

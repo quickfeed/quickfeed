@@ -31,7 +31,6 @@
     "terser-webpack-plugin": "^5.0.3"
   },
   "devDependencies": {
-    "awesome-typescript-loader": "^5.2.1",
     "base": "^3.0.0",
     "braces": "^3.0.2",
     "cache-base": "^4.0.0",
