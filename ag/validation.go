@@ -18,6 +18,8 @@ import (
 
 // MaxWait is the maximum time a request is allowed to stay open before aborting.
 const MaxWait = 2 * time.Minute
+const Cookie = "cookie"
+const UserKey = "user"
 
 type validator interface {
 	IsValid() bool
@@ -57,17 +59,12 @@ func Interceptor(logger *zap.Logger, userMap map[string]uint64) grpc.UnaryServer
 		if !ok {
 			return nil, errors.New("Could not grab metadata from context")
 		}
-
-		if len(meta.Get("cookie")) > 0 {
-			token := meta.Get("cookie")[0]
-			if userMap[token] == 0 {
-				return nil, errors.New("Could not associate token with a user")
-			}
-			meta.Set("user", strconv.FormatUint(userMap[token], 10))
-			ctx = metadata.NewOutgoingContext(ctx, meta)
-		} else {
-			return nil, errors.New("x")
+		meta, err := UserValidation(meta, userMap)
+		if err != nil {
+			return nil, err
 		}
+
+		ctx = metadata.NewOutgoingContext(ctx, meta)
 
 		// if response has information on remote ID, it will be removed
 		resp, err := handler(ctx, req)
@@ -83,6 +80,23 @@ func Interceptor(logger *zap.Logger, userMap map[string]uint64) grpc.UnaryServer
 		}
 		return resp, err
 	}
+}
+
+// Returns modified metadata containing a valid user. Returns an error if the user is not authenticated.
+func UserValidation(meta metadata.MD, userMap map[string]uint64) (metadata.MD, error) {
+	token := meta.Get(Cookie)
+
+	if len(token) > 0 {
+		token := token[0]
+		user := userMap[token]
+		if user == 0 {
+			return nil, errors.New("Could not associate token with a user")
+		}
+		meta.Set(UserKey, strconv.FormatUint(user, 10))
+	} else {
+		return nil, errors.New("Request does not contain a session token")
+	}
+	return meta, nil
 }
 
 // IsValid on void message always returns true.
