@@ -134,10 +134,10 @@ remote:
 
 envoy-config:
 ifeq ($(DOMAIN),)
-	@echo You must run \'source envs.sh\' before configuring Envoy.
+	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)."
 else
 	@echo "Generating Envoy configuration for '$$DOMAIN'."
-	@$(shell CONFIG='$$DOMAIN:$$GRPC_PORT:$$HTTP_PORT'; envsubst "$$CONFIG" < envoy/envoy.tmpl > envoy/envoy.yaml)
+	@$(shell CONFIG='$$DOMAIN:$$GRPC_PORT:$$HTTP_PORT'; envsubst "$$CONFIG" < envoy/envoy.tmpl > $$ENVOY_CONFIG)
 endif
 
 prometheus:
@@ -145,6 +145,3 @@ prometheus:
 
 quickfeed-go:
 	docker build -f ci/scripts/go/Dockerfile -t quickfeed:go .
-
-#envoy-config:
-#	@go run cmd/qconf/main.go

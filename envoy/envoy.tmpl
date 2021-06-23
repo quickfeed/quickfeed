@@ -55,8 +55,7 @@ static_resources:
             name: local_route
             virtual_hosts:
             - name: local_service
-              domains: 
-                # Replace domain with your domain
+              domains:
                 - "$DOMAIN"
               routes:
               - match: { prefix: "/ag.AutograderService/"}
@@ -99,12 +98,9 @@ static_resources:
       cluster_name: cluster_0
       endpoints:
         - lb_endpoints:
-            - endpoint:
-                address:
-                  socket_address:
-                    address: localhost
-                    # Replace this port with the gRPC server listening port (grpc.addr)
-                    port_value: $GRPC_PORT
+          - endpoint:
+              address:
+                socket_address: { address: localhost, port_value: $GRPC_PORT }
   - name: web_service
     connect_timeout: 15s
     type: strict_dns
@@ -116,7 +112,4 @@ static_resources:
         - lb_endpoints:
           - endpoint:
               address:
-                socket_address:
-                  address: localhost
-                  # Change this to the http.addr you use
-                  port_value: $HTTP_PORT
+                socket_address: { address: localhost, port_value: $HTTP_PORT }
