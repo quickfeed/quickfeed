@@ -1,5 +1,5 @@
 # Make a copy of this file and update the variables.
-# WARNING: Do not push your secret values to GitHub or elsewhere.
+# WARNING: Do not push your file with secret values to GitHub or elsewhere.
 
 # GitHub OAUTH App keys
 export GITHUB_KEY="KEY"
