@@ -132,11 +132,19 @@ remote:
 	@echo "Changing grpc client location to remote domain"
 	@cd ./public/src/managers/; $(sedi) 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
 
+envoy-config:
+ifeq ($(DOMAIN),)
+	@echo You must run \'source envs.sh\' before configuring Envoy.
+else
+	@echo "Generating Envoy configuration for '$$DOMAIN'."
+	@$(shell CONFIG='$$DOMAIN:$$GRPC_PORT:$$HTTP_PORT'; envsubst "$$CONFIG" < envoy/envoy.tmpl > envoy/envoy.yaml)
+endif
+
 prometheus:
 	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --storage.tsdb.retention.size=1024MB --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &
 
 quickfeed-go:
 	docker build -f ci/scripts/go/Dockerfile -t quickfeed:go .
 
-envoy-config:
-	@go run cmd/qconf/main.go
+#envoy-config:
+#	@go run cmd/qconf/main.go
