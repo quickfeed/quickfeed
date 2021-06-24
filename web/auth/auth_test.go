@@ -329,6 +329,7 @@ func TestAccessControl(t *testing.T) {
 		provider = "github"
 		remoteID = 0
 		secret   = "secret"
+		token    = "test"
 	)
 
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
@@ -366,7 +367,7 @@ func TestAccessControl(t *testing.T) {
 	}
 
 	// Add cookie to mimic logged in request
-	c.Request().AddCookie(&http.Cookie{Name: "session", Value: "test"})
+	c.Request().AddCookie(&http.Cookie{Name: auth.SessionKey, Value: token})
 
 	// User is logged in.
 	if err := protected(c); err != nil {
