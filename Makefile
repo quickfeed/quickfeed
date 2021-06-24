@@ -116,7 +116,7 @@ purge: scm
 	@scm delete team -all -namespace=$(testorg)
 
 run:
-	@quickfeed -service.url $$DOMAIN -database.file ./tmp.db
+	@quickfeed -service.url $(DOMAIN) -database.file ./tmp.db
 
 runlocal:
 	@quickfeed -service.url 127.0.0.1
