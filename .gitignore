@@ -25,3 +25,6 @@ qf.db
 envoy.log
 quickfeed.log
 quickfeed-env.sh
+envoy/envoy-cyclone.yaml
+envoy/envoy-ag2.yaml
+envoy/envoy-xini.yaml
