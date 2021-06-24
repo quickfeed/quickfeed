@@ -299,12 +299,10 @@ async function main(): Promise<void> {
     const DEBUG_SERVER = "DEBUG_SERVER";
 
     let curRunning = DEBUG_SERVER;
-    let grpcPort = ":8080";
 
     if (window.location.host.match("localhost")
         || localStorage.getItem("debug")) {
         curRunning = DEBUG_BROWSER;
-        grpcPort = "";
     }
 
     const tempData = new TempDataProvider();
@@ -316,7 +314,7 @@ async function main(): Promise<void> {
 
     if (curRunning === DEBUG_SERVER) {
         const httpHelper = new HttpHelper("/api/v1");
-        const grpcHelper = new GrpcManager(grpcPort);
+        const grpcHelper = new GrpcManager();
         const serverData = new ServerProvider(httpHelper, grpcHelper, logMan.createLogger("ServerProvider"));
         userMan = new UserManager(serverData, logMan.createLogger("UserManager"));
         grpcHelper.setUserMan(userMan);

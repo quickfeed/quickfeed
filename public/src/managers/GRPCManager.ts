@@ -55,8 +55,8 @@ export class GrpcManager {
     private agService: AutograderServiceClient;
     private userMan: UserManager;
 
-    constructor(port: string) {
-        this.agService = new AutograderServiceClient("https://" + window.location.hostname + port, null, null);
+    constructor() {
+        this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
     }
 
     public setUserMan(man: UserManager) {
@@ -360,7 +360,7 @@ export class GrpcManager {
             if (currentUser != null) {
                 userID = currentUser.getId().toString();
             }
-            method.call(this.agService, request, { "custom-header-1": "value1", "user": userID },
+            method.call(this.agService, request, {},
                 (err: grpcWeb.Error, response: T) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {

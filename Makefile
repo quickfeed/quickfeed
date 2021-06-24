@@ -2,6 +2,7 @@ OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
 tmpdir				:= tmp
 proto-path			:= public/proto
+proto-swift-path	:= ../quickfeed-swiftui/Quickfeed/Proto
 grpcweb-ver			:= 1.2.0
 protoc-grpcweb		:= protoc-gen-grpc-web
 protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
@@ -42,7 +43,7 @@ ui:
 	@cd public; npm install; npm run webpack
 
 proto:
-	@echo "Compiling Autograders proto definitions"
+	@echo "Compiling QuickFeed's proto definitions for Go and TypeScript"
 	@protoc \
 	-I . \
 	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
@@ -58,6 +59,16 @@ proto:
 	$(proto-path)/ag/ag_pb.d.ts \
 	$(proto-path)/ag/AgServiceClientPb.ts
 	@cd public && npm run tsc -- proto/ag/AgServiceClientPb.ts
+
+proto-swift:
+	@echo "Compiling QuickFeed's proto definitions for Swift"
+	@protoc \
+	-I . \
+	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
+	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
+	--swift_out=:$(proto-swift-path) \
+	--grpc-swift_out=$(proto-swift-path) \
+	ag/ag.proto
 
 brew:
     ifeq (, $(shell which brew))
