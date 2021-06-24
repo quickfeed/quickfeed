@@ -10,8 +10,6 @@ grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ve
 grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 testorg				:= ag-test-course
-endpoint 			:= test.itest.run
-agport				:= 8081
 
 # necessary when target is not tied to a file
 .PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm
@@ -117,31 +115,19 @@ purge: scm
 	@scm delete repo -all -namespace=$(testorg)
 	@scm delete team -all -namespace=$(testorg)
 
-# will start ag client and server, serve static files at 'endpoint' and webserver at 'agport'
-# change agport variable to the number of bound local port when using tunnel script
 run:
-	@quickfeed -service.url $(endpoint) -http.addr :$(agport) -http.public ./public -database.file ./tmp.db
+	@quickfeed -service.url $(DOMAIN) -database.file ./tmp.db
 
 runlocal:
-	@quickfeed -service.url 127.0.0.1 -http.addr :9091 -http.public ./public
+	@quickfeed -service.url 127.0.0.1
 
-# test nginx configuration syntax
-nginx-test:
-	@sudo nginx -t
-
-# restart nginx with updated configuration
-nginx: nginx-test
-	@sudo nginx -s reload
-
-# changes where the grpc-client is being run, use "remote" target when starting from ag2
-local:
-	@echo "Changing grpc client location to localhost"
-	@cd ./public/src/managers/; $(sedi) 's/"https:\/\/" + window.location.hostname/"http:\/\/localhost:8080"/g' GRPCManager.ts
-	@cd ./public; webpack
-
-remote:
-	@echo "Changing grpc client location to remote domain"
-	@cd ./public/src/managers/; $(sedi) 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
+envoy-config:
+ifeq ($(DOMAIN),)
+	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)."
+else
+	@echo "Generating Envoy configuration for '$$DOMAIN'."
+	@$(shell CONFIG='$$DOMAIN:$$GRPC_PORT:$$HTTP_PORT'; envsubst "$$CONFIG" < envoy/envoy.tmpl > $$ENVOY_CONFIG)
+endif
 
 prometheus:
 	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --storage.tsdb.retention.size=1024MB --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &
