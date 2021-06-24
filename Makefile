@@ -121,24 +121,6 @@ run:
 runlocal:
 	@quickfeed -service.url 127.0.0.1
 
-# test nginx configuration syntax
-nginx-test:
-	@sudo nginx -t
-
-# restart nginx with updated configuration
-nginx: nginx-test
-	@sudo nginx -s reload
-
-# changes where the grpc-client is being run, use "remote" target when starting from ag2
-local:
-	@echo "Changing grpc client location to localhost"
-	@cd ./public/src/managers/; $(sedi) 's/"https:\/\/" + window.location.hostname/"http:\/\/localhost:8080"/g' GRPCManager.ts
-	@cd ./public; webpack
-
-remote:
-	@echo "Changing grpc client location to remote domain"
-	@cd ./public/src/managers/; $(sedi) 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
-
 envoy-config:
 ifeq ($(DOMAIN),)
 	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)."
