@@ -25,6 +25,7 @@ const (
 	SessionKey       = "session"
 	GothicSessionKey = "_gothic_session"
 	UserKey          = "user"
+	Cookie           = "cookie"
 )
 
 // Query keys.
@@ -46,7 +47,7 @@ func newUserSession(id uint64) *UserSession {
 	}
 }
 
-// TokenToUserMap
+// UserToken holds a map from session cookies to user IDs.
 type UserToken struct {
 	store map[string]uint64
 }

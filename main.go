@@ -138,8 +138,6 @@ func main() {
 	}
 }
 
-const Cookie = "cookie"
-
 func UserVerifier() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		meta, ok := metadata.FromIncomingContext(ctx)
@@ -158,7 +156,7 @@ func UserVerifier() grpc.UnaryServerInterceptor {
 
 // userValidation returns modified metadata containing a valid user. An error is returned if the user is not authenticated.
 func userValidation(meta metadata.MD) (metadata.MD, error) {
-	for _, cookie := range meta.Get(Cookie) {
+	for _, cookie := range meta.Get(auth.Cookie) {
 		if user := auth.TokenStore.Get(cookie); user > 0 {
 			meta.Set(auth.UserKey, strconv.FormatUint(user, 10))
 			return meta, nil

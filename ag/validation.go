@@ -15,8 +15,6 @@ import (
 
 // MaxWait is the maximum time a request is allowed to stay open before aborting.
 const MaxWait = 2 * time.Minute
-const Cookie = "cookie"
-const UserKey = "user"
 
 type validator interface {
 	IsValid() bool
