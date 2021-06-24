@@ -55,8 +55,7 @@ static_resources:
             name: local_route
             virtual_hosts:
             - name: local_service
-              domains: 
-                # Replace domain with your domain
+              domains:
                 - "www.xini.no"
               routes:
               - match: { prefix: "/ag.AutograderService/"}
@@ -89,9 +88,6 @@ static_resources:
               private_key:
                 filename: /etc/letsencrypt/live/www.xini.no/privkey.pem
 
-
-    # Gateway for the AutograderService gRPC server
-
   clusters:
   - name: grpc_service
     connect_timeout: 1500s
@@ -102,12 +98,9 @@ static_resources:
       cluster_name: cluster_0
       endpoints:
         - lb_endpoints:
-            - endpoint:
-                address:
-                  socket_address:
-                    address: localhost
-                    # Replace this port with the gRPC server listening port (grpc.addr)
-                    port_value: 9090
+          - endpoint:
+              address:
+                socket_address: { address: localhost, port_value: 9090 }
   - name: web_service
     connect_timeout: 15s
     type: strict_dns
@@ -119,7 +112,4 @@ static_resources:
         - lb_endpoints:
           - endpoint:
               address:
-                socket_address:
-                  address: localhost
-                  # Change this to the http.addr you use
-                  port_value: 8081
+                socket_address: { address: localhost, port_value: 8081 }
