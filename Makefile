@@ -10,8 +10,6 @@ grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ve
 grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 testorg				:= ag-test-course
-endpoint 			:= test.itest.run
-agport				:= 8081
 
 # necessary when target is not tied to a file
 .PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm
@@ -117,13 +115,11 @@ purge: scm
 	@scm delete repo -all -namespace=$(testorg)
 	@scm delete team -all -namespace=$(testorg)
 
-# will start ag client and server, serve static files at 'endpoint' and webserver at 'agport'
-# change agport variable to the number of bound local port when using tunnel script
 run:
-	@quickfeed -service.url $(endpoint) -http.addr :$(agport) -http.public ./public -database.file ./tmp.db
+	@quickfeed -service.url $$DOMAIN -database.file ./tmp.db
 
 runlocal:
-	@quickfeed -service.url 127.0.0.1 -http.addr :9091 -http.public ./public
+	@quickfeed -service.url 127.0.0.1
 
 # test nginx configuration syntax
 nginx-test:
