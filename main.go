@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -8,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/web"
@@ -20,6 +23,7 @@ import (
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
@@ -114,7 +118,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to start tcp listener: %v\n", err)
 	}
-	opt := grpc.UnaryInterceptor(pb.Interceptor(logger))
+	opt := grpc.ChainUnaryInterceptor(UserVerifier(), pb.Interceptor(logger))
 	grpcServer := grpc.NewServer(opt)
 
 	// Create a HTTP server for prometheus.
@@ -132,4 +136,31 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}
+}
+
+func UserVerifier() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		meta, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, errors.New("Could not grab metadata from context")
+		}
+		meta, err := userValidation(meta)
+		if err != nil {
+			return nil, err
+		}
+		ctx = metadata.NewOutgoingContext(ctx, meta)
+		resp, err := handler(ctx, req)
+		return resp, err
+	}
+}
+
+// userValidation returns modified metadata containing a valid user. An error is returned if the user is not authenticated.
+func userValidation(meta metadata.MD) (metadata.MD, error) {
+	for _, cookie := range meta.Get(auth.Cookie) {
+		if user := auth.TokenStore.Get(cookie); user > 0 {
+			meta.Set(auth.UserKey, strconv.FormatUint(user, 10))
+			return meta, nil
+		}
+	}
+	return nil, errors.New("Request does not contain a valid session cookie.")
 }
