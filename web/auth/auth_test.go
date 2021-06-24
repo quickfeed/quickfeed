@@ -365,6 +365,9 @@ func TestAccessControl(t *testing.T) {
 		t.Error(err)
 	}
 
+	// Add cookie to mimic logged in request
+	c.Request().AddCookie(&http.Cookie{Name: "session", Value: "test"})
+
 	// User is logged in.
 	if err := protected(c); err != nil {
 		t.Error(err)
