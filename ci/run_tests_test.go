@@ -49,7 +49,6 @@ func TestRunTests(t *testing.T) {
 		JobOwner: "muggles",
 	}
 
-
 	runner, err := NewDockerCI(log.Zap(true))
 	if err != nil {
 		t.Fatal(err)
