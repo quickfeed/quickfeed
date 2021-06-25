@@ -15,6 +15,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"go.uber.org/zap"
 )
 
 var (
@@ -27,19 +28,26 @@ var (
 // Docker is an implementation of the CI interface using Docker.
 type Docker struct {
 	client *client.Client
+	logger *zap.SugaredLogger
 }
 
 // NewDockerCI returns a runner to run CI tests.
-func NewDockerCI() (*Docker, error) {
+func NewDockerCI(logger *zap.Logger) (*Docker, error) {
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		return nil, err
 	}
-	return &Docker{cli}, nil
+	return &Docker{
+		client: cli,
+		logger: logger.Sugar(),
+	}, nil
 }
 
 // Close ensures that the docker client is closed.
 func (d *Docker) Close() error {
+	if d.logger != nil {
+		d.logger.Sync()
+	}
 	return d.client.Close()
 }
 
@@ -59,6 +67,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 
 	resp, err := create()
 	if err != nil {
+		d.logger.Debugf("Failed to create container image '%s' for %s: %v\n", job.Image, job.Name, err)
 		// if image not found locally, try to pull it
 		if err := pullImage(ctx, d.client, job.Image); err != nil {
 			return "", err

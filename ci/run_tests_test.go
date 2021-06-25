@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/log"
 )
 
 const (
@@ -48,7 +49,8 @@ func TestRunTests(t *testing.T) {
 		JobOwner: "muggles",
 	}
 
-	runner, err := NewDockerCI()
+
+	runner, err := NewDockerCI(log.Zap(true))
 	if err != nil {
 		t.Fatal(err)
 	}

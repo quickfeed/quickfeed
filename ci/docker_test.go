@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/log"
 	"github.com/docker/docker/client"
 )
 
@@ -43,7 +44,7 @@ func TestDocker(t *testing.T) {
 		wantOut = "hello world"
 	)
 
-	docker, err := ci.NewDockerCI()
+	docker, err := ci.NewDockerCI(log.Zap(true))
 	if err != nil {
 		t.Fatalf("failed to set up docker client: %v", err)
 	}
@@ -79,7 +80,7 @@ func TestDockerTimeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1000*time.Millisecond)
 	defer cancel()
 
-	docker, err := ci.NewDockerCI()
+	docker, err := ci.NewDockerCI(log.Zap(true))
 	if err != nil {
 		t.Fatalf("failed to set up docker client: %v", err)
 	}
@@ -113,7 +114,7 @@ func TestDockerOpenFileDescriptors(t *testing.T) {
 		numContainers = 5
 	)
 
-	docker, err := ci.NewDockerCI()
+	docker, err := ci.NewDockerCI(log.Zap(true))
 	if err != nil {
 		t.Fatalf("failed to set up docker client: %v", err)
 	}

@@ -78,6 +78,7 @@
         "keyout",
         "killall",
         "letsencrypt",
+        "logq",
         "logrotate",
         "longsleep",
         "lsof",
