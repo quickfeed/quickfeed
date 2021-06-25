@@ -115,19 +115,35 @@ purge: scm
 	@scm delete repo -all -namespace=$(testorg)
 	@scm delete team -all -namespace=$(testorg)
 
-run:
+run: run-envoy-local
 	@quickfeed -service.url $(DOMAIN) -database.file ./tmp.db
 
-runlocal:
-	@quickfeed -service.url 127.0.0.1
+runlocal: run-envoy
+	@GITHUB_SECRET=$$LOCAL_GITHUB_SECRET; GITHUB_KEY=$$LOCAL_GITHUB_KEY; quickfeed -service.url $(LOCAL_DOMAIN)
 
 envoy-config:
 ifeq ($(DOMAIN),)
 	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)."
 else
 	@echo "Generating Envoy configuration for '$$DOMAIN'."
-	@$(shell CONFIG='$$DOMAIN:$$GRPC_PORT:$$HTTP_PORT'; envsubst "$$CONFIG" < envoy/envoy.tmpl > $$ENVOY_CONFIG)
+	@$(shell CONFIG='$$DOMAIN:$$CERT:$$CERT_KEY:$$GRPC_PORT:$$HTTP_PORT'; envsubst "$$CONFIG" < envoy/envoy.tmpl > $$ENVOY_CONFIG)
 endif
+
+
+envoy-config-local:
+ifeq ($(LOCAL_DOMAIN),)
+	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)."
+else
+	@echo "Generating Envoy configuration for '$$LOCAL_DOMAIN'."
+	@DOMAIN=$$LOCAL_DOMAIN; CERT=$$LOCAL_CERT; CERT_KEY=$$LOCAL_CERT_KEY; CONFIG='$$DOMAIN:$$CERT:$$CERT_KEY:$$GRPC_PORT:$$HTTP_PORT'; envsubst "$$CONFIG" < envoy/envoy.tmpl > $$ENVOY_CONFIG
+endif
+
+run-envoy: envoy-config-local
+	@sudo envoy -c $$ENVOY_CONFIG &
+
+run-envoy-local: envoy-config
+	@sudo envoy -c $$ENVOY_CONFIG &
+
 
 prometheus:
 	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --storage.tsdb.retention.size=1024MB --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &
