@@ -84,9 +84,9 @@ static_resources:
             # Replace certificate with your certificates
             tls_certificates:
               certificate_chain:
-                filename: /etc/letsencrypt/live/$DOMAIN/fullchain.pem
+                filename: "$CERT"
               private_key:
-                filename: /etc/letsencrypt/live/$DOMAIN/privkey.pem
+                filename: "$CERT_KEY"
 
   clusters:
   - name: grpc_service
