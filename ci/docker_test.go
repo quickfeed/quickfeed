@@ -64,6 +64,43 @@ func TestDocker(t *testing.T) {
 	}
 }
 
+func TestDockerBuild(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	cmd := exec.Command("docker", "image", "rm", "--force", "quickfeed:go", "golang:1.17beta1-alpine")
+	dockerOut, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(dockerOut))
+
+	const (
+		script  = `echo -n "hello world"`
+		wantOut = "hello world"
+	)
+
+	docker, err := ci.NewDockerCI(log.Zap(true))
+	if err != nil {
+		t.Fatalf("failed to set up docker client: %v", err)
+	}
+	defer docker.Close()
+
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:     "TestDockerBuild-" + randomString(t),
+		Image:    "quickfeed:go",
+		Commands: []string{script},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
+	}
+}
+
 func TestDockerTimeout(t *testing.T) {
 	if !docker {
 		t.SkipNow()
