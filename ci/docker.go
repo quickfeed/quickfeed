@@ -37,7 +37,7 @@ type Docker struct {
 
 // NewDockerCI returns a runner to run CI tests.
 func NewDockerCI(logger *zap.Logger) (*Docker, error) {
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}

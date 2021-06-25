@@ -25,7 +25,7 @@ func init() {
 	if os.Getenv("DOCKER_TESTS") != "" {
 		docker = true
 	}
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		docker = false
 	}
