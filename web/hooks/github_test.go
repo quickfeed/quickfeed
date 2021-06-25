@@ -9,10 +9,9 @@ import (
 
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
+	logq "github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/google/go-cmp/cmp"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 const (
@@ -44,7 +43,7 @@ func TestGitHubWebHook(t *testing.T) {
 		t.Skip("This test requires a 'NGROK_FWD' and access to the 'autograder-test' GitHub organization")
 	}
 
-	logger := getLogger(true)
+	logger := logq.Zap(true).Sugar()
 	defer func() { _ = logger.Sync() }()
 
 	var s scm.SCM
@@ -79,23 +78,6 @@ func TestGitHubWebHook(t *testing.T) {
 	log.Println("starting webhook server")
 	http.HandleFunc("/webhook", webhook.Handle)
 	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-func getLogger(verbose bool) *zap.SugaredLogger {
-	if verbose {
-		cfg := zap.NewDevelopmentConfig()
-		// database logging is only enabled if the LOGDB environment variable is set
-		cfg = database.GormLoggerConfig(cfg)
-		// add colorization
-		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-		// we only want stack trace enabled for panic level and above
-		logger, err := cfg.Build(zap.AddStacktrace(zapcore.PanicLevel))
-		if err != nil {
-			log.Fatalf("can't initialize logger: %v\n", err)
-		}
-		return logger.Sugar()
-	}
-	return zap.NewNop().Sugar()
 }
 
 func TestExtractChanges(t *testing.T) {
