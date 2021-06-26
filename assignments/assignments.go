@@ -18,12 +18,12 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), pb.TestsRepo)
 	s, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
 	if err != nil {
-		logger.Errorf("Failed to create SCM Client: %w", err)
+		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
 	}
 	assignments, err := FetchAssignments(context.Background(), s, course)
 	if err != nil {
-		logger.Errorf("Failed to fetch assignments from '%s' repository: %w", pb.TestsRepo, err)
+		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
 		return
 	}
 	for _, assignment := range assignments {
@@ -34,7 +34,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)
 		}
-		logger.Errorf("Failed to update assignments in database: %w", err)
+		logger.Errorf("Failed to update assignments in database: %v", err)
 		return
 	}
 

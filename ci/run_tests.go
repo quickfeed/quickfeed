@@ -37,7 +37,7 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 	logger.Debugf("Running tests for %s", rData.JobOwner)
 	ed, err := runTests(scriptPath, runner, info, rData)
 	if err != nil {
-		logger.Errorf("Failed to run tests: %w", err)
+		logger.Errorf("Failed to run tests: %v", err)
 		if ed == nil {
 			return
 		}
@@ -45,7 +45,7 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 	}
 	result, err := ExtractResult(logger, ed.out, info.RandomSecret, ed.execTime)
 	if err != nil {
-		logger.Errorf("Failed to extract results from log: %w", err)
+		logger.Errorf("Failed to extract results from log: %v", err)
 		return
 	}
 	recordResults(logger, db, rData, result)
@@ -88,7 +88,7 @@ func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) 
 func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunData, result *Result) {
 	buildInfo, scores, err := result.Marshal()
 	if err != nil {
-		logger.Errorf("Failed to marshal build info and scores: %w", err)
+		logger.Errorf("Failed to marshal build info and scores: %v", err)
 		return
 	}
 
@@ -100,7 +100,7 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 	}
 	newest, err := db.GetSubmission(submissionQuery)
 	if err != nil && err != gorm.ErrRecordNotFound {
-		logger.Errorf("Failed to get submission data from database: %w", err)
+		logger.Errorf("Failed to get submission data from database: %v", err)
 		return
 	}
 	// keep approved status if already approved
@@ -122,7 +122,7 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 	}
 	err = db.CreateSubmission(newSubmission)
 	if err != nil {
-		logger.Errorf("Failed to add submission to database: %w", err)
+		logger.Errorf("Failed to add submission to database: %v", err)
 		return
 	}
 	logger.Debugf("Created submission for assignment '%s' with status %s", rData.Assignment.GetName(), approvedStatus)
@@ -141,21 +141,22 @@ func randomSecret() string {
 func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission, buildDate string) {
 	buildTime, err := time.Parse(pb.TimeLayout, buildDate)
 	if err != nil {
-		logger.Errorf("Failed to parse time from string (%s)", buildDate)
+		logger.Errorf("Failed to parse time from build date (%s): %v", buildDate, err)
+		return
 	}
 
 	enrollments := make([]*pb.Enrollment, 0)
 	if submission.GroupID > 0 {
 		group, err := db.GetGroup(submission.GroupID)
 		if err != nil {
-			logger.Errorf("Failed to get group %d: %w", submission.GroupID, err)
+			logger.Errorf("Failed to get group %d: %v", submission.GroupID, err)
 			return
 		}
 		enrollments = append(enrollments, group.Enrollments...)
 	} else {
 		enrol, err := db.GetEnrollmentByCourseAndUser(assignment.CourseID, submission.UserID)
 		if err != nil {
-			logger.Errorf("Failed to get enrollment for user %d: %w", submission.UserID, err)
+			logger.Errorf("Failed to get enrollment for user %d: %v", submission.UserID, err)
 			return
 		}
 		enrollments = append(enrollments, enrol)
@@ -163,11 +164,11 @@ func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment 
 
 	for _, enrol := range enrollments {
 		if err := enrol.UpdateSlipDays(buildTime, assignment, submission); err != nil {
-			logger.Errorf("Failed updating slip days for submission ID (%d): %w", submission.ID, err)
+			logger.Errorf("Failed to update slip days for submission %d: %v", submission.ID, err)
 			return
 		}
 		if err := db.UpdateSlipDays(enrol.UsedSlipDays); err != nil {
-			logger.Errorf("Failed to update slip days (enrollment ID %d): %w", enrol.GetID(), err)
+			logger.Errorf("Failed to update slip days for enrollment %d: %v", enrol.ID, err)
 			return
 		}
 	}
