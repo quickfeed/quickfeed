@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/autograde/quickfeed/kit/score"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -62,61 +61,18 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		return "", fmt.Errorf("cannot run job: %s; docker client not initialized", job.Name)
 	}
 
-	create := func() (container.ContainerCreateCreatedBody, error) {
-		return d.client.ContainerCreate(ctx, &container.Config{
-			Image: job.Image,
-			Cmd:   []string{"/bin/bash", "-c", strings.Join(job.Commands, "\n")},
-		}, nil, nil, nil, job.Name)
-	}
-
-	resp, err := create()
+	resp, err := d.createImage(ctx, job)
 	if err != nil {
-		d.logger.Errorf("Failed to create container image '%s' for %s: %v", job.Image, job.Name, err)
-		// if image not found locally, try to pull it
-		if err := d.pullImage(ctx, job.Image); err != nil {
-			d.logger.Errorf("Failed to pull image '%s' from docker.io: %v", job.Image, err)
-			if err := d.buildImage(ctx, job.Image); err != nil {
-				return "", err
-			}
-		}
-		resp, err = create()
-		if err != nil {
-			return "", err
-		}
+		return "", err
 	}
-
 	d.logger.Infof("Created container image '%s' for %s", job.Image, job.Name)
 	if err := d.client.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return "", err
 	}
 
-	// wait until the container stops or context times out.
-	statusCh, errCh := d.client.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-	select {
-	case err := <-errCh:
-		if err != nil {
-			d.logger.Errorf("Failed to stop container image '%s' for %s: %v", job.Image, job.Name, err)
-			if !errors.Is(err, context.DeadlineExceeded) {
-				return "", err
-			}
-
-			// stop runaway container whose deadline was exceeded
-			timeout := time.Duration(1 * time.Second)
-			stopErr := d.client.ContainerStop(context.Background(), resp.ID, &timeout)
-			if stopErr != nil {
-				return "", stopErr
-			}
-
-			// remove the docker container (when stopped due to timeout) to prevent too many open files
-			rmErr := d.client.ContainerRemove(context.Background(), resp.ID, types.ContainerRemoveOptions{})
-			if rmErr != nil {
-				return "", rmErr
-			}
-
-			// return message to user to be shown in the results log
-			return "Container timeout. Please check for infinite loops or other slowness.", err
-		}
-	case <-statusCh:
+	msg, err := d.waitForContainer(ctx, job, resp.ID)
+	if err != nil {
+		return msg, err
 	}
 
 	// extract the logs before removing the container below
@@ -138,43 +94,65 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		return "", err
 	}
 	if stdout.Len() > maxLogSize+lastSegmentSize {
-		// converting to string here;
-		// could be done more efficiently using stdout.Truncate(maxLogSize)
-		// but then we wouldn't get the last part
-		all := stdout.String()
-		// find the last full line to keep before the truncate point
-		startMiddleSegment := strings.LastIndex(all[0:maxLogSize], "\n") + 1
-		// find the last full line to truncate and scan for score lines, before the last segment to output
-		startLastSegment := strings.LastIndex(all[0:len(all)-lastSegmentSize], "\n") + 1
-
-		middleSegment := all[startMiddleSegment:startLastSegment]
-		// score lines will normally replace this string, unless too much output
-		scoreLines := "too much output data to scan (skipping; fix your code)"
-		// only scan if middle segment is less than maxToScan
-		if len(middleSegment) < maxToScan {
-			// find score lines in the middle segment that otherwise gets truncated
-			scoreLines = findScoreLines(middleSegment)
-		}
-		return all[0:startMiddleSegment] + scoreLines + `
-
-		...
-		truncated output
-		...
-
-		` + all[startLastSegment:], nil
+		return truncateLog(&stdout, maxLogSize, lastSegmentSize, maxToScan), nil
 	}
 	return stdout.String(), nil
 }
 
-func findScoreLines(lines string) string {
-	scoreLines := make([]string, 0)
-	for _, line := range strings.Split(lines, "\n") {
-		// check if line has expected JSON score string
-		if score.HasPrefix(line) {
-			scoreLines = append(scoreLines, line)
+// createImage creates an image for the given job.
+func (d *Docker) createImage(ctx context.Context, job *Job) (*container.ContainerCreateCreatedBody, error) {
+	create := func() (container.ContainerCreateCreatedBody, error) {
+		return d.client.ContainerCreate(ctx, &container.Config{
+			Image: job.Image,
+			Cmd:   []string{"/bin/bash", "-c", strings.Join(job.Commands, "\n")},
+		}, nil, nil, nil, job.Name)
+	}
+
+	resp, err := create()
+	if err != nil {
+		d.logger.Errorf("Failed to create container image '%s' for %s: %v", job.Image, job.Name, err)
+		// if image not found locally, try to pull it
+		if err := d.pullImage(ctx, job.Image); err != nil {
+			d.logger.Errorf("Failed to pull image '%s' from docker.io: %v", job.Image, err)
+			if err := d.buildImage(ctx, job.Image); err != nil {
+				return nil, err
+			}
+		}
+		resp, err = create()
+		if err != nil {
+			return nil, err
 		}
 	}
-	return strings.Join(scoreLines, "\n")
+	return &resp, err
+}
+
+// waitForContainer waits until the container stops or context times out.
+func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) (string, error) {
+	statusCh, errCh := d.client.ContainerWait(ctx, respID, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			d.logger.Errorf("Failed to stop container image '%s' for %s: %v", job.Image, job.Name, err)
+			if !errors.Is(err, context.DeadlineExceeded) {
+				return "", err
+			}
+			// stop runaway container whose deadline was exceeded
+			timeout := time.Duration(1 * time.Second)
+			stopErr := d.client.ContainerStop(context.Background(), respID, &timeout)
+			if stopErr != nil {
+				return "", stopErr
+			}
+			// remove the docker container (when stopped due to timeout) to prevent too many open files
+			rmErr := d.client.ContainerRemove(context.Background(), respID, types.ContainerRemoveOptions{})
+			if rmErr != nil {
+				return "", rmErr
+			}
+			// return message to user to be shown in the results log
+			return "Container timeout. Please check for infinite loops or other slowness.", err
+		}
+	case <-statusCh:
+	}
+	return "", nil
 }
 
 // pullImage pulls an image from docker hub; this can be slow and should be
