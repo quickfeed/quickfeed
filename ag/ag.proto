@@ -396,13 +396,7 @@ message LoadCriteriaRequest {
     uint64 assignmentID = 2;
 }
 
-message CommitHashRequest {
-    uint64 submissionID = 1;
-}
 
-message CommitHashResponse {
-    string commitHash = 1;
-}
 
 // Void contains no fields. A server response with a Void still contains a gRPC status code,
 // which can be checked for success or failure. Status code 0 indicates that the requested action was successful,
@@ -459,7 +453,7 @@ service AutograderService {
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
     rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
     rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
-    rpc GetSubmissionCommitHash(CommitHashRequest) returns (CommitHashResponse) {}
+
 
     // manual grading //
     rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
