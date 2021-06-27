@@ -1,6 +1,6 @@
 import React from "react"
 import { Link } from "react-router-dom"
-import { Repository } from "../../proto/ag_pb"
+import { Repository } from "../../proto/ag/ag_pb"
 import { useOvermind } from "../overmind"
 
 
@@ -37,7 +37,7 @@ const CourseUtilityLinks = ({courseID}: {courseID: number}) => {
                 <Link to={"/course/" + courseID + "/group"} className="list-group-item list-group-item-action">
                     View Group
                 </Link>
-            : ""}
+            : null}
         </div>
     </div>
     )

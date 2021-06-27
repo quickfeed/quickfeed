@@ -1,6 +1,6 @@
 import React, { Dispatch, SetStateAction, useState } from "react"
 import { useOvermind } from "../../overmind"
-import { User } from "../../../proto/ag_pb"
+import { User } from "../../../proto/ag/ag_pb"
 
 interface IProps {
     editing: boolean;
@@ -10,7 +10,7 @@ interface IProps {
 export const UserProfileForm = (props: IProps) => {
     const {state, actions} = useOvermind()
 
-    const [user, setUser] = useState({'name': state.user.name, 'email': state.user.email, 'studentid': state.user.studentid})
+    const [user, setUser] = useState({'name': state.self.getName(), 'email': state.self.getEmail(), 'studentid': state.self.getStudentid()})
 
     // Updates local user state on change in an input field
     const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
@@ -24,11 +24,11 @@ export const UserProfileForm = (props: IProps) => {
     // Sends off the edited (or not) information to the server. ((Could change actions.changeUser to take (username, email, studentid) as args and create the new user object in the action, not sure what's best))
     const submitHandler = () => {
         const changedUser = new User()
-        changedUser.setId(state.user.id)
+        changedUser.setId(state.self.getId())
         changedUser.setName(user.name)
         changedUser.setEmail(user.email)
         changedUser.setStudentid(user.studentid.toString())
-        changedUser.setIsadmin(state.user.isadmin)
+        changedUser.setIsadmin(state.self.getIsadmin())
         actions.changeUser(changedUser)
         // Flip back to the uneditable view
         props.setEditing(false)
@@ -38,7 +38,7 @@ export const UserProfileForm = (props: IProps) => {
         <div className="box">
             <div className="jumbotron">
                 <div className="centerblock container">
-                    <h1>Hi, {state.user.name}</h1>
+                    <h1>Hi, {state.self.getName()}</h1>
                     You can edit your user information here.
                 </div>
             </div>

@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useHistory } from "react-router";
 import { getFormattedTime, layoutTime, SubmissionStatus, timeFormatter } from "../Helpers";
 import { useOvermind, useReaction } from "../overmind";
-import { Submission } from "../../proto/ag_pb";
+import { Submission } from "../../proto/ag/ag_pb";
 
 
 interface course {
