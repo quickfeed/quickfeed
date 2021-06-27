@@ -7,14 +7,13 @@ import (
 	"crypto/sha1"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/log"
 	"github.com/docker/docker/client"
 )
 
@@ -24,7 +23,7 @@ func init() {
 	if os.Getenv("DOCKER_TESTS") != "" {
 		docker = true
 	}
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		docker = false
 	}
@@ -43,7 +42,7 @@ func TestDocker(t *testing.T) {
 		wantOut = "hello world"
 	)
 
-	docker, err := ci.NewDockerCI()
+	docker, err := ci.NewDockerCI(log.Zap(true))
 	if err != nil {
 		t.Fatalf("failed to set up docker client: %v", err)
 	}
@@ -52,6 +51,43 @@ func TestDocker(t *testing.T) {
 	out, err := docker.Run(context.Background(), &ci.Job{
 		Name:     "TestDocker-" + randomString(t),
 		Image:    "golang:latest",
+		Commands: []string{script},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
+	}
+}
+
+func TestDockerBuild(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	cmd := exec.Command("docker", "image", "rm", "--force", "quickfeed:go", "golang:1.17beta1-alpine")
+	dockerOut, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(dockerOut))
+
+	const (
+		script  = `echo -n "hello world"`
+		wantOut = "hello world"
+	)
+
+	docker, err := ci.NewDockerCI(log.Zap(true))
+	if err != nil {
+		t.Fatalf("failed to set up docker client: %v", err)
+	}
+	defer docker.Close()
+
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:     "TestDockerBuild-" + randomString(t),
+		Image:    "quickfeed:go",
 		Commands: []string{script},
 	})
 	if err != nil {
@@ -79,7 +115,7 @@ func TestDockerTimeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1000*time.Millisecond)
 	defer cancel()
 
-	docker, err := ci.NewDockerCI()
+	docker, err := ci.NewDockerCI(log.Zap(true))
 	if err != nil {
 		t.Fatalf("failed to set up docker client: %v", err)
 	}
@@ -113,7 +149,7 @@ func TestDockerOpenFileDescriptors(t *testing.T) {
 		numContainers = 5
 	)
 
-	docker, err := ci.NewDockerCI()
+	docker, err := ci.NewDockerCI(log.Zap(true))
 	if err != nil {
 		t.Fatalf("failed to set up docker client: %v", err)
 	}
@@ -169,23 +205,4 @@ func randomString(t *testing.T) string {
 		t.Fatal(err)
 	}
 	return fmt.Sprintf("%x", sha1.Sum(randomness))[:6]
-}
-
-func TestDockerLogLimit(t *testing.T) {
-	// This is just for testing
-	t.SkipNow()
-	const maxLogSize = 4
-	const lastSegmentSize = 5
-	logReader := strings.NewReader("want only that some small last thing")
-	var stdout bytes.Buffer
-	n, err := io.Copy(&stdout, logReader)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("x(%d=%d): %s", n, stdout.Len(), stdout.String())
-	if stdout.Len() > maxLogSize {
-		all := stdout.String()
-		t.Logf("%s ONLY %s", all[0:maxLogSize], all[len(all)-lastSegmentSize:])
-	}
-	t.Logf("x(%d=%d): %s", n, stdout.Len(), stdout.String())
 }

@@ -13,10 +13,9 @@ import (
 	"strconv"
 
 	"github.com/autograde/quickfeed/ci"
+	logq "github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/web"
 	"github.com/autograde/quickfeed/web/auth"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
@@ -73,16 +72,7 @@ func main() {
 	)
 	flag.Parse()
 
-	cfg := zap.NewDevelopmentConfig()
-	// database logging is only enabled if the LOGDB environment variable is set
-	cfg = database.GormLoggerConfig(cfg)
-	// add colorization
-	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	// we only want stack trace enabled for panic level and above
-	logger, err := cfg.Build(zap.AddStacktrace(zapcore.PanicLevel))
-	if err != nil {
-		log.Fatalf("can't initialize logger: %v\n", err)
-	}
+	logger := logq.Zap(true)
 	defer logger.Sync()
 
 	db, err := database.NewGormDB("sqlite3", *dbFile, database.NewGormLogger(logger))
@@ -105,7 +95,7 @@ func main() {
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
-	runner, err := ci.NewDockerCI()
+	runner, err := ci.NewDockerCI(logger)
 	if err != nil {
 		log.Fatalf("failed to set up docker client: %v\n", err)
 	}
