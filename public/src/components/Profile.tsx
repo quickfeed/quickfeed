@@ -14,19 +14,18 @@ const Profile = () => {
     }
 
     // Returns if the user has a valid ID
-    if (state.user.id > 0) {
+    if (state.self.getId() > 0) {
         // Render user information
         if(editing === false) {
         return (
             <div className="box" style={{color: "black"}}>
-                <div className="jumbotron"><div className="centerblock container"><h1>Hi, {state.user.name}</h1>You can edit your user information here.</div></div>
-                
+                <div className="jumbotron"><div className="centerblock container"><h1>Hi, {state.self.getName()}</h1>You can edit your user information here.</div></div>
                     <div className="card well" style={{width: "400px"}}>
                     <div className="card-header">Your Information</div>
                         <ul className="list-group list-group-flush">
-                            <li className="list-group-item">Name: {state.user.name}</li>
-                            <li className="list-group-item">Email: {state.user.email}</li>
-                            <li className="list-group-item">Student ID: {state.user.studentid}</li>
+                            <li className="list-group-item">Name: {state.self.getName()}</li>
+                            <li className="list-group-item">Email: {state.self.getEmail()}</li>
+                            <li className="list-group-item">Student ID: {state.self.getStudentid()}</li>
                         </ul>
                     </div>
                 <button className="btn btn-primary" onClick={() => editProfile()}>Edit Profile</button>
@@ -40,7 +39,7 @@ const Profile = () => {
             )
         }
     }
-    return <h1>Not logged in.</h1>
+    return <h1>Not logged in.  </h1>
 
     
 }

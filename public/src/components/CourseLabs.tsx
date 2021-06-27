@@ -1,7 +1,7 @@
 import { useHistory } from "react-router"
 import { getFormattedTime, SubmissionStatus } from "../Helpers"
 import { useOvermind } from "../overmind"
-import { Submission } from "../../proto/ag_pb"
+import { Submission } from "../../proto/ag/ag_pb"
 import { ProgressBar } from "./ProgressBar"
 import React from "react"
 
