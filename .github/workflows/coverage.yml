@@ -27,7 +27,7 @@ jobs:
         go-version: ${{ matrix.go-version }}
 
     - name: Generate coverage report
-      run: go test -v -coverprofile=profile.cov -covermode=atomic `go list ./... | grep -v public`
+      run: DOCKER_TESTS=1 go test -v -coverprofile=profile.cov -covermode=atomic `go list ./... | grep -v public`
 
     - name: Send coverage report to Coveralls.io
       uses: shogo82148/actions-goveralls@v1
