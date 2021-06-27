@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect } from "react"
 import { Link, useHistory } from "react-router-dom"
-import { useOvermind } from "../overmind"
-import { Enrollment, Submission } from "../../proto/ag_pb"
-import { ProgressBar } from "./ProgressBar"
+import { useOvermind } from "../../overmind"
+import { Submission } from "../../../proto/ag/ag_pb"
+import { ProgressBar } from "../ProgressBar"
 
 
 const NavBarLabs = () => {
     const {state} = useOvermind()
+    useEffect(() => {
+        console.log(state.submissions[state.activeCourse])
+    })
     
     const history  = useHistory()
     
@@ -15,8 +18,9 @@ const NavBarLabs = () => {
     }
 
     const Links: Function = (): JSX.Element[] => { 
-        
+        console.log(state.activeCourse)
         if(state.assignments[state.activeCourse]) {
+            console.log(state.activeCourse)
             let links = state.assignments[state.activeCourse]?.map((assignment, index) => {
                 // Class name to determine background color
                 let active = state.activeLab === assignment.getId() && state.activeCourse === assignment.getCourseid() ? "active" : ""

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useOvermind } from "../overmind";
 import { Link, useHistory } from 'react-router-dom'
-import NavBarLabs from "./NavBarLabs";
-import { Enrollment } from "../../proto/ag_pb";
-import NavBarTeacher from "./NavBarTeacher";
-import NavBarFooter from "./NavBarFooter";
+import { Enrollment } from "../../proto/ag/ag_pb";
+import NavBarLabs from "./navbar/NavBarLabs";
+import NavBarTeacher from "./navbar/NavBarTeacher";
+import NavBarFooter from "./navbar/NavBarFooter";
 
 
 
@@ -27,7 +27,7 @@ const NavBar = () => {
     // Generates dropdown items related to Courses
     const CourseItems: Function = (): JSX.Element[] => {
         let links: JSX.Element[] = []
-        if (state.user.id <= 0) {
+        if (state.self.getId() <= 0) {
             return links
         }
         const favorites = state.enrollments.filter(enrollment => enrollment.getStatus() >= Enrollment.UserStatus.STUDENT && enrollment.getState() == Enrollment.DisplayState.FAVORITE)

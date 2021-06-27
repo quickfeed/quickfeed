@@ -1,8 +1,7 @@
 import React from "react"
 import { Link } from "react-router-dom"
-import { useOvermind } from "../overmind"
-import { state } from "../overmind/state"
-import { Enrollment } from "../../proto/ag_pb"
+import { useOvermind } from "../../overmind"
+import { Enrollment } from "../../../proto/ag/ag_pb"
 
 
 
@@ -40,6 +39,14 @@ export const NavBarTeacher = (props: {courseID: number}) => {
             </div>
             <div id="title">
                 <Link to={`/course/${state.activeCourse}/groups`}>Groups</Link>
+            </div>
+        </li>
+        <li key={"results"} className="activeLabs">
+            <div id="icon">
+
+            </div>
+            <div id="title">
+                <Link to={`/course/${state.activeCourse}/results`}>Results</Link>
             </div>
         </li>
         </React.Fragment>
