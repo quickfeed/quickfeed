@@ -5,13 +5,13 @@ import LandingPageLabTable from "./LandingPageLabTable";
 
 
 /* Dashboard for a signed in user. */
-const Home = () => {
-    const { state: {user} } = useOvermind()
+const Dashboard = () => {
+    const { state: {self: user} } = useOvermind()
 
     return(
-        <div className='box'>       
+        <div className='box'>
             <div>
-                <h1>Welcome, {user.name}!</h1>
+                <h1>Welcome, {user.getName()}!</h1>
             </div>
             <LandingPageLabTable courseID={0}/>
             <Courses home={true} />
@@ -19,4 +19,4 @@ const Home = () => {
     )
 }
 
-export default Home
+export default Dashboard
