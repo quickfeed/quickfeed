@@ -13,7 +13,6 @@ import (
 	"strconv"
 
 	"github.com/autograde/quickfeed/ci"
-	//"github.com/autograde/quickfeed/envoy"
 	"github.com/autograde/quickfeed/web"
 	"github.com/autograde/quickfeed/web/auth"
 	"go.uber.org/zap"
@@ -97,7 +96,7 @@ func main() {
 	}()
 
 	// start envoy in a docker container; fetch envoy docker image if necessary
-	//go envoy.StartEnvoy(logger)
+	// go envoy.StartEnvoy(logger)
 
 	// holds references for activated providers for current user token
 	scms := auth.NewScms()
@@ -119,11 +118,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to start tcp listener: %v\n", err)
 	}
-
-	//  Experimental
-	accessControl := AccessControl{}
-	opt := grpc.UnaryInterceptor(accessControl.UserVerifier)
-
+	opt := grpc.ChainUnaryInterceptor(UserVerifier(), pb.Interceptor(logger))
 	grpcServer := grpc.NewServer(opt)
 	// Create a HTTP server for prometheus.
 	httpServer := &http.Server{
@@ -142,25 +137,29 @@ func main() {
 	}
 }
 
-// TODO: Move somewhere else that makes sense
-type AccessControl struct {
+func UserVerifier() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		meta, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, errors.New("Could not grab metadata from context")
+		}
+		meta, err := userValidation(meta)
+		if err != nil {
+			return nil, err
+		}
+		ctx = metadata.NewOutgoingContext(ctx, meta)
+		resp, err := handler(ctx, req)
+		return resp, err
+	}
 }
 
-// UserVerifier looks up a user (passed by Session Token) in a (currently) public map, and translates it into a User ID
-// Modifies the context to include the User ID to be passed along to the actual gRPC method.
-func (pc *AccessControl) UserVerifier(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (response interface{}, err error) {
-	meta, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New("Could not grab metadata from context")
+// userValidation returns modified metadata containing a valid user. An error is returned if the user is not authenticated.
+func userValidation(meta metadata.MD) (metadata.MD, error) {
+	for _, cookie := range meta.Get(auth.Cookie) {
+		if user := auth.TokenStore.Get(cookie); user > 0 {
+			meta.Set(auth.UserKey, strconv.FormatUint(user, 10))
+			return meta, nil
+		}
 	}
-
-	token := meta.Get("user")[0]
-	if web.TokenToUserMap[token] == 0 {
-		return nil, errors.New("Could not associate token with a user")
-	}
-
-	meta.Set("user", strconv.FormatUint(web.TokenToUserMap[token], 10))
-	newCtx := metadata.NewOutgoingContext(ctx, meta)
-
-	return handler(newCtx, req)
+	return nil, errors.New("Request does not contain a valid session cookie.")
 }

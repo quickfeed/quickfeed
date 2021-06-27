@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/assignments"
@@ -126,9 +127,19 @@ func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, reques
 }
 
 func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
-	if _, err := s.db.GetSubmission(&pb.Submission{ID: query.SubmissionID}); err != nil {
+	submission, err := s.db.GetSubmission(&pb.Submission{ID: query.SubmissionID})
+	if err != nil {
 		return nil, err
 	}
+	assignment, err := s.db.GetAssignment(&pb.Assignment{ID: submission.AssignmentID})
+	if err != nil {
+		return nil, err
+	}
+	if len(submission.Reviews) >= int(assignment.Reviewers) {
+		return nil, fmt.Errorf("Failed to create a new review for submission %d to assignment %s: all %d reviews already created",
+			submission.ID, assignment.Name, assignment.Reviewers)
+	}
+	query.Edited = time.Now().Format("02 Jan 15:04")
 	if err := s.db.CreateReview(query); err != nil {
 		return nil, err
 	}
@@ -136,6 +147,10 @@ func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
 }
 
 func (s *AutograderService) updateReview(query *pb.Review) error {
+	if query.ID == 0 {
+		return fmt.Errorf("Cannot update review with empty ID")
+	}
+	query.Edited = time.Now().Format("02 Jan 15:04")
 	return s.db.UpdateReview(query)
 }
 

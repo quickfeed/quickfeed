@@ -2,10 +2,10 @@ package web_test
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.uber.org/zap"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -65,8 +65,8 @@ func TestNewGroup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(&respGroup, &group) {
-		t.Errorf("have response group %+v, while database has %+v", respGroup, group)
+	if diff := cmp.Diff(respGroup, group, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+		t.Errorf("mismatch (-respGroup +group):\n%s", diff)
 	}
 }
 
@@ -204,9 +204,9 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 
 	// JSON marshalling removes the enrollment field from respGroup,
 	// so we remove group.Enrollments obtained from the database before comparing.
-	//group.Enrollments = nil
-	if !cmp.Equal(respGroup, group) {
-		t.Errorf("have response group %+v, while database has %+v", respGroup, group)
+	// group.Enrollments = nil
+	if diff := cmp.Diff(respGroup, group, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+		t.Errorf("mismatch (-respGroup +group):\n%s", diff)
 	}
 }
 
@@ -362,9 +362,9 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	// JSON marshalling removes the enrollment field from respGroup,
 	// so we remove group.Enrollments obtained from the database before comparing.
-	//group.Enrollments = nil
-	if !reflect.DeepEqual(respGroup, group) {
-		t.Errorf("have response group %+v, while database has %+v", respGroup, group)
+	// group.Enrollments = nil
+	if diff := cmp.Diff(respGroup, group, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+		t.Errorf("mismatch (-respGroup +group):\n%s", diff)
 	}
 
 	// ******************* Teacher UpdateGroup *******************
@@ -408,9 +408,8 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	wantGroup.Status = pb.Group_APPROVED
 	haveGroup.Enrollments = nil
 	wantGroup.Enrollments = nil
-	if !cmp.Equal(haveGroup, wantGroup) {
-		t.Errorf("have group %+v", haveGroup)
-		t.Errorf("want group %+v", wantGroup)
+	if diff := cmp.Diff(haveGroup, wantGroup, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+		t.Errorf("mismatch (-haveGroup +wantGroup):\n%s", diff)
 	}
 
 	// ******************* Teacher UpdateGroup *******************
@@ -452,9 +451,8 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	wantGroup.Status = pb.Group_APPROVED
 	haveGroup.Enrollments = nil
 	wantGroup.Enrollments = nil
-	if !reflect.DeepEqual(wantGroup, haveGroup) {
-		t.Errorf("have group %+v", haveGroup)
-		t.Errorf("want group %+v", wantGroup)
+	if diff := cmp.Diff(haveGroup, wantGroup, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+		t.Errorf("mismatch (-haveGroup +wantGroup):\n%s", diff)
 	}
 }
 
@@ -563,9 +561,8 @@ func TestGetGroup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if !reflect.DeepEqual(gotGroup, respGroup) {
-		t.Errorf("have response group %+v, while database has %+v", &gotGroup, &respGroup)
+	if diff := cmp.Diff(respGroup, gotGroup, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+		t.Errorf("mismatch (-respGroup +gotGroup):\n%s", diff)
 	}
 }
 
@@ -620,7 +617,8 @@ func TestPatchGroupStatus(t *testing.T) {
 
 	// enroll users in course and group
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserID: user1.ID, CourseID: course.ID, GroupID: 1}); err != nil {
+		UserID: user1.ID, CourseID: course.ID, GroupID: 1,
+	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.UpdateEnrollment(&pb.Enrollment{
@@ -631,7 +629,8 @@ func TestPatchGroupStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserID: user2.ID, CourseID: course.ID, GroupID: 1}); err != nil {
+		UserID: user2.ID, CourseID: course.ID, GroupID: 1,
+	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.UpdateEnrollment(&pb.Enrollment{
@@ -670,8 +669,8 @@ func TestPatchGroupStatus(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(prePatchGroup, haveGroup) {
-		t.Errorf("have\n%+v\nwant\n%+v\n", haveGroup, prePatchGroup)
+	if diff := cmp.Diff(prePatchGroup, haveGroup, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+		t.Errorf("mismatch (-prePatchGroup +haveGroup):\n%s", diff)
 	}
 }
 
@@ -704,7 +703,8 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 
 	// enroll users in course and group
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserID: user1.ID, CourseID: course.ID, GroupID: 1}); err != nil {
+		UserID: user1.ID, CourseID: course.ID, GroupID: 1,
+	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.UpdateEnrollment(&pb.Enrollment{
@@ -715,7 +715,8 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserID: user2.ID, CourseID: course.ID, GroupID: 1}); err != nil {
+		UserID: user2.ID, CourseID: course.ID, GroupID: 1,
+	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.UpdateEnrollment(&pb.Enrollment{
@@ -746,8 +747,8 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(respGroup, dbGroup) {
-		t.Errorf("have response group %+v, while database has %+v", respGroup, dbGroup)
+	if diff := cmp.Diff(respGroup, dbGroup, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+		t.Errorf("mismatch (-respGroup +dbGroup):\n%s", diff)
 	}
 }
 
@@ -778,7 +779,8 @@ func TestDeleteApprovedGroup(t *testing.T) {
 
 	// enroll users in course and group
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserID: user1.ID, CourseID: course.ID}); err != nil {
+		UserID: user1.ID, CourseID: course.ID,
+	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.UpdateEnrollment(&pb.Enrollment{
@@ -789,7 +791,8 @@ func TestDeleteApprovedGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserID: user2.ID, CourseID: course.ID}); err != nil {
+		UserID: user2.ID, CourseID: course.ID,
+	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.UpdateEnrollment(&pb.Enrollment{
@@ -858,11 +861,11 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	enr2.GroupID = 0
 
 	// then check that new enrollments have group IDs nullified automatically
-	if !reflect.DeepEqual(enr1, newEnr1) {
-		t.Errorf("want enrollment %+v, while database has %+v", enr1, newEnr1)
+	if diff := cmp.Diff(enr1, newEnr1, cmpopts.IgnoreUnexported(pb.Enrollment{}, pb.User{}, pb.Course{})); diff != "" {
+		t.Errorf("mismatch (-enr1 +newEnr1):\n%s", diff)
 	}
-	if !reflect.DeepEqual(enr2, newEnr2) {
-		t.Errorf("want enrollment %+v, while database has %+v", enr2, newEnr2)
+	if diff := cmp.Diff(enr2, newEnr2, cmpopts.IgnoreUnexported(pb.Enrollment{}, pb.User{}, pb.Course{})); diff != "" {
+		t.Errorf("mismatch (-enr2 +newEnr2):\n%s", diff)
 	}
 }
 
@@ -891,7 +894,8 @@ func TestGetGroups(t *testing.T) {
 	// enroll all users in course
 	for _, user := range users[1:] {
 		if err := db.CreateEnrollment(&pb.Enrollment{
-			UserID: user.ID, CourseID: course.ID}); err != nil {
+			UserID: user.ID, CourseID: course.ID,
+		}); err != nil {
 			t.Fatal(err)
 		}
 		if err := db.UpdateEnrollment(&pb.Enrollment{
@@ -935,7 +939,7 @@ func TestGetGroups(t *testing.T) {
 	}
 
 	// check that the method returns expected groups
-	if diff := cmp.Diff(wantGroups, gotGroups); diff != "" {
+	if diff := cmp.Diff(wantGroups, gotGroups, cmpopts.IgnoreUnexported(pb.Group{}, pb.Groups{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
 		t.Errorf("mismatch (-wantGroups +gotGroups):\n%s", diff)
 	}
 }

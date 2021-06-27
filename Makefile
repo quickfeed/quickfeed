@@ -2,29 +2,35 @@ OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
 tmpdir				:= tmp
 proto-path			:= public/proto
-grpcweb-ver			:= 1.0.4
+proto-swift-path	:= ../quickfeed-swiftui/Quickfeed/Proto
+grpcweb-ver			:= 1.2.0
 protoc-grpcweb		:= protoc-gen-grpc-web
 protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
 grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ver)/$(protoc-grpcweb-long)
 grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 testorg				:= ag-test-course
-endpoint 			:= test.itest.run
-agport				:= 8081
-pbpath				:= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
 
 # necessary when target is not tied to a file
-.PHONY: download install-tools install ui proto devtools grpcweb envoy-build envoy-run scm
+.PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm
 
-devtools: install-tools grpcweb
+devtools: grpcweb go-tools
 
 download:
-	@echo Download go.mod dependencies
+	@echo "Download go.mod dependencies"
 	@go mod download
 
-install-tools: download
-	@echo Installing tools from tools.go
-	@cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
+go-tools:
+	@echo "Installing tools from tools.go"
+	@go install `go list -f "{{range .Imports}}{{.}} {{end}}" tools.go`
+
+grpcweb:
+	@echo "Fetch and install grpcweb protoc plugin"
+	@mkdir -p $(tmpdir)
+	@cd $(tmpdir); curl -LOs $(grpcweb-url)
+	@mv $(tmpdir)/$(protoc-grpcweb-long) $(grpcweb-path)
+	@chmod +x $(grpcweb-path)
+	@rm -rf $(tmpdir)
 
 install:
 	@echo go install
@@ -32,35 +38,42 @@ install:
 
 ui:
 	@echo Running webpack
-	@cd public; npm install; webpack
+	@cd public; npm install; npm run webpack
 
 proto:
-	@echo Compiling Autograders proto definitions
-	@cd ag; protoc -I=. -I=$(pbpath) --gogofast_out=plugins=grpc,\
-	Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,\
-	Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types,\
-	Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types,\
-	Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
-	Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:. \
-	--js_out=import_style=commonjs:../$(proto-path)/ \
-	--grpc-web_out=import_style=typescript,mode=grpcwebtext:../$(proto-path)/ ag.proto
-	$(sedi) '/gogo/d' $(proto-path)/ag_pb.js $(proto-path)/AgServiceClientPb.ts $(proto-path)/ag_pb.d.ts
-	@tsc $(proto-path)/AgServiceClientPb.ts
+	@echo "Compiling QuickFeed's proto definitions for Go and TypeScript"
+	@protoc \
+	-I . \
+	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
+	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
+	--go-patch_out=plugin=go,paths=source_relative:. \
+	--go-patch_out=plugin=go-grpc,paths=source_relative:. \
+	--js_out=import_style=commonjs:$(proto-path) \
+	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(proto-path) \
+	ag/ag.proto
+	@echo "Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529)"
+	@$(sedi) '/patch_go_pb/d' \
+	$(proto-path)/ag/ag_pb.js \
+	$(proto-path)/ag/ag_pb.d.ts \
+	$(proto-path)/ag/AgServiceClientPb.ts
+	@cd public && npm run tsc -- proto/ag/AgServiceClientPb.ts
 
-grpcweb:
-	@echo "Fetch and install grpcweb protoc plugin (requires sudo access)"
-	@mkdir -p $(tmpdir)
-	@cd $(tmpdir); curl -LOs $(grpcweb-url)
-	@sudo mv $(tmpdir)/$(protoc-grpcweb-long) $(grpcweb-path)
-	@chmod +x $(grpcweb-path)
-	@rm -rf $(tmpdir)
+proto-swift:
+	@echo "Compiling QuickFeed's proto definitions for Swift"
+	@protoc \
+	-I . \
+	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
+	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
+	--swift_out=:$(proto-swift-path) \
+	--grpc-swift_out=$(proto-swift-path) \
+	ag/ag.proto
 
-# TODO(meling) this is just for macOS; we should guard against non-macOS.
 brew:
-	@echo "Install homebrew packages needed for development"
-	@brew update
-	@brew cleanup
-	@brew install go protobuf npm docker
+    ifeq (, $(shell which brew))
+		$(error "No brew command in $$PATH")
+    endif
+	@echo "Installing homebrew packages needed for development and deployment"
+	@brew install go protobuf webpack npm node docker certbot envoy
 
 envoy-build:
 	@echo "Building Autograder Envoy proxy"
@@ -80,8 +93,14 @@ envoy-purge:
 # protoset is a file used as a server reflection to mock-testing of grpc methods via command line
 protoset:
 	@echo "Compiling protoset for grpcurl"
-	@cd ag; protoc -I=. -I=$(GOPATH)/src -I=$(GOPATH)/src/github.com/gogo/protobuf/protobuf \
-	--proto_path=. --descriptor_set_out=ag.protoset --include_imports ag.proto
+	@protoc \
+	-I . \
+	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
+	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
+	--proto_path=ag \
+	--descriptor_set_out=ag/ag.protoset \
+	--include_imports \
+	ag/ag.proto
 
 test:
 	@go clean -testcache ./...
@@ -96,31 +115,19 @@ purge: scm
 	@scm delete repo -all -namespace=$(testorg)
 	@scm delete team -all -namespace=$(testorg)
 
-# will start ag client and server, serve static files at 'endpoint' and webserver at 'agport'
-# change agport variable to the number of bound local port when using tunnel script
 run:
-	@quickfeed -service.url $(endpoint) -http.addr :$(agport) -http.public ./public -database.file ./tmp.db
+	@quickfeed -service.url $(DOMAIN) -database.file ./tmp.db
 
 runlocal:
-	@quickfeed -service.url 127.0.0.1 -http.addr :9091 -http.public ./public
+	@quickfeed -service.url 127.0.0.1
 
-# test nginx configuration syntax
-nginx-test:
-	@sudo nginx -t
-
-# restart nginx with updated configuration
-nginx: nginx-test
-	@sudo nginx -s reload
-
-# changes where the grpc-client is being run, use "remote" target when starting from ag2
-local:
-	@echo "Changing grpc client location to localhost"
-	@cd ./public/src/managers/; sed -i 's/"https:\/\/" + window.location.hostname/"http:\/\/localhost:8080"/g' GRPCManager.ts
-	@cd ./public; webpack
-
-remote:
-	@echo "Changing grpc client location to remote domain"
-	@cd ./public/src/managers/; sed -i 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
+envoy-config:
+ifeq ($(DOMAIN),)
+	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)."
+else
+	@echo "Generating Envoy configuration for '$$DOMAIN'."
+	@$(shell CONFIG='$$DOMAIN:$$GRPC_PORT:$$HTTP_PORT'; envsubst "$$CONFIG" < envoy/envoy.tmpl > $$ENVOY_CONFIG)
+endif
 
 prometheus:
 	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --storage.tsdb.retention.size=1024MB --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &

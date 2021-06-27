@@ -12,8 +12,6 @@ import (
 	"github.com/autograde/quickfeed/scm"
 )
 
-var layout = "2006-01-02T15:04:05"
-
 // getCourses returns all courses.
 func (s *AutograderService) getCourses() (*pb.Courses, error) {
 	courses, err := s.db.GetCourses()
@@ -141,7 +139,10 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 		return nil, err
 	}
 	for _, sbm := range submissions {
-		sbm.MakeSubmissionReviews()
+		err = sbm.MakeSubmissionReviews()
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &pb.Submissions{Submissions: submissions}, nil
 }
@@ -164,13 +165,13 @@ func (s *AutograderService) getCommitHash(request *pb.CommitHashRequest) (string
 
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
 func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
-	var assignments []*pb.Assignment
-	var err error
+	var getCourseSubFn func(uint64, pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error)
 	if request.GetSkipBuildInfo() {
-		assignments, err = s.db.GetCourseAssignmentsWithSubmissionsNoBuildInfo(request.GetCourseID(), request.Type)
+		getCourseSubFn = s.db.GetCourseAssignmentsWithSubmissionsNoBuildInfo
 	} else {
-		assignments, err = s.db.GetCourseAssignmentsWithSubmissions(request.GetCourseID(), request.Type)
+		getCourseSubFn = s.db.GetCourseAssignmentsWithSubmissions
 	}
+	assignments, err := getCourseSubFn(request.GetCourseID(), request.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -179,15 +180,18 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 	if err != nil {
 		return nil, err
 	}
-	course.SetSlipDays()
 
+	course.SetSlipDays()
 	for _, a := range assignments {
 		for _, sbm := range a.Submissions {
 			if request.GetSkipBuildInfo() {
 				sbm.BuildInfo = ""
 				sbm.ScoreObjects = ""
 			} else {
-				sbm.MakeSubmissionReviews()
+				err = sbm.MakeSubmissionReviews()
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
@@ -280,7 +284,7 @@ func (s *AutograderService) updateSubmission(courseID, submissionID uint64, stat
 
 	// if approving previously unapproved submission
 	if status == pb.Submission_APPROVED && submission.Status != pb.Submission_APPROVED {
-		submission.ApprovedDate = time.Now().Format(layout)
+		submission.ApprovedDate = time.Now().Format(pb.TimeLayout)
 		if err := s.setLastApprovedAssignment(submission, courseID); err != nil {
 			return err
 		}
@@ -583,7 +587,7 @@ func (s *AutograderService) extractSubmissionDate(submission *pb.Submission, sub
 		s.logger.Errorf("Failed to unmarshal build info %s: %s", buildInfoString, err)
 	}
 
-	currentSubmissionDate, err := time.Parse(layout, buildInfo.BuildDate)
+	currentSubmissionDate, err := time.Parse(pb.TimeLayout, buildInfo.BuildDate)
 	if err != nil {
 		s.logger.Errorf("Failed extracting submission date: %s", err)
 	} else if currentSubmissionDate.After(submissionDate) {

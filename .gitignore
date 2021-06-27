@@ -7,7 +7,7 @@ debug
 public/dist/bundle.js
 public/dist/bundle.js.map
 tunnel.1.sh
-quickfeed
+./quickfeed
 ag-setup.sh
 ag.db
 meling.sh
@@ -19,5 +19,12 @@ startag.sh
 backups
 misc/ag-env.sh
 tmp.db
-!public/.eslintcache
-
+ag-test.db
+empty.db
+qf.db
+envoy.log
+quickfeed.log
+quickfeed-env.sh
+envoy/envoy-cyclone.yaml
+envoy/envoy-ag2.yaml
+envoy/envoy-xini.yaml

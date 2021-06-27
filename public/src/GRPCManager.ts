@@ -17,6 +17,7 @@ import {
     Group,
     GroupRequest,
     Groups,
+    LoadCriteriaRequest,
     Organization,
     OrgRequest,
     Providers,
@@ -39,11 +40,10 @@ import {
     Users,
     Void,
     Reviewers,
-    CommitHashRequest,
-} from "../proto/ag_pb";
-import { AutograderServiceClient } from "../proto/AgServiceClientPb";
-import { LoadCriteriaRequest } from '../proto/ag_pb';
-import { CommitHashResponse } from "../proto/ag_pb";
+} from "../../proto/ag/ag_pb";
+import { AutograderServiceClient } from "../../proto/ag/AgServiceClientPb";
+import { UserManager } from "./UserManager";
+import { ISubmission } from "../models";
 
 export interface IGrpcResponse<T> {
     status: Status;
@@ -65,7 +65,6 @@ export class GrpcManager {
     }
 
     constructor() {
-        // to test on localhost via port forwarding, use make local Makefile target
         this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
         this.token = "-1"
     }
@@ -388,14 +387,7 @@ export class GrpcManager {
 
     private grpcSend<T>(method: any, request: any): Promise<IGrpcResponse<T>> {
         const grpcPromise = new Promise<IGrpcResponse<T>>((resolve) => {
-            // currentUser reference is created on authorization with a provider and stores a User object.
-            // This object can be used for user validation. This implementation sends user ID to simplify
-            // and standardize different server checks.
-            //const currentUser = this.userMan.getCurrentUser();
-            //if (currentUser != null) {
-            //    userID = currentUser.getId().toString();
-            //}
-            method.call(this.agService, request, { "custom-header-1": "value1", "user": this.token },
+            method.call(this.agService, request, {},
                 (err: grpcWeb.Error, response: T) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {
