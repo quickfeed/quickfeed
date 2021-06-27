@@ -13,29 +13,10 @@ func (db *GormDB) GetUser(userID uint64) (*pb.User, error) {
 	return &user, nil
 }
 
-// GetUserByAccessToken fetches user ID by access token
-func (db *GormDB) GetUserByAccessToken(token string) (uint64, error) {
-	tx := db.conn.Begin()
-
-	var remoteIdentity pb.RemoteIdentity
-	if err := tx.
-		Where(
-			&pb.RemoteIdentity{
-				AccessToken: token,
-			}).
-		First(&remoteIdentity).Error; err != nil {
-		tx.Rollback()
-		return 0, err
-	}
-	if err := tx.Commit().Error; err != nil {
-		return 0, err
-	}
-	return remoteIdentity.UserID, nil
-}
-
 // GetUserByRemoteIdentity fetches user by remote identity.
 func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, error) {
 	tx := db.conn.Begin()
+
 	// Get the remote identity.
 	var remoteIdentity pb.RemoteIdentity
 	if err := tx.
