@@ -49,6 +49,7 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 		}
 		ctx, cancel := context.WithTimeout(ctx, MaxWait)
 		defer cancel()
+
 		// if response has information on remote ID, it will be removed
 		resp, err := handler(ctx, req)
 		if resp != nil {

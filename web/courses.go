@@ -441,7 +441,7 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 	if enrolled.Status == pb.Enrollment_TEACHER {
 		err = revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
 		if err != nil {
-			s.logger.Errorf("Revoking teacher status failed for user %s and course %s: %s", user.Login, course.Name, err)
+			s.logger.Errorf("Failed to revoke teacher status for user %s and course %s: %v", user.Login, course.Name, err)
 		}
 	} else {
 
@@ -453,7 +453,7 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		// create user repo, user team, and add user to students team
 		repo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
 		if err != nil {
-			s.logger.Errorf("failed to update repos or team membersip for student %s: %s", user.Login, err.Error())
+			s.logger.Errorf("Failed to update repos or team membership for student %s: %v", user.Login, err)
 			return err
 		}
 		s.logger.Debug("Enrolling student: ", user.GetLogin(), " repo and team update done")
@@ -482,7 +482,7 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 
 	// make owner, remove from students, add to teachers
 	if _, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_TEACHER); err != nil {
-		s.logger.Errorf("failed to update team membership for teacher %s: %s", user.Login, err.Error())
+		s.logger.Errorf("Failed to update team membership for teacher %s: %v", user.Login, err)
 		return err
 	}
 	return s.db.UpdateEnrollment(&pb.Enrollment{

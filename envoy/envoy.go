@@ -14,12 +14,12 @@ import (
 // StartEnvoy creates a Docker API client. If an envoy container is not running,
 // it will be started from an image. If no image exists, it will pull an Envoy
 // image from docker and build it with options from envoy.yaml.
-//TODO(meling) since this runs in a separate goroutine it is actually bad practice
-//to Panic or Fatal on error, since other goroutines may not exit cleanly.
-//Instead it would be better to return an error and run synchronously.
+// TODO(meling) since this runs in a separate goroutine it is actually bad practice
+// to Panic or Fatal on error, since other goroutines may not exit cleanly.
+// Instead it would be better to return an error and run synchronously.
 func StartEnvoy(l *zap.Logger) {
 	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		l.Fatal("failed to start docker client", zap.Error(err))
 	}
@@ -46,7 +46,7 @@ func StartEnvoy(l *zap.Logger) {
 	if !hasEnvoyImage(ctx, l, cli) {
 		// if there is no active Envoy image, we build it
 		l.Info("building Envoy image...")
-		//TODO(meling) use docker api to build image: "docker build -t ag_envoy -f ./envoy/envoy.Dockerfile ."
+		// TODO(meling) use docker api to build image: "docker build -t ag_envoy -f ./envoy/envoy.Dockerfile ."
 		out, err := exec.Command("/bin/sh", "./envoy/envoy.sh", "build").Output()
 		if err != nil {
 			l.Fatal("failed to execute bash script", zap.Error(err))
@@ -54,7 +54,7 @@ func StartEnvoy(l *zap.Logger) {
 		l.Debug("envoy.sh build", zap.String("output", string(out)))
 	}
 	l.Info("starting Envoy container...")
-	//TODO(meling) use docker api to run image: "docker run --name=envoy -p 8080:8080 --net=host ag_envoy"
+	// TODO(meling) use docker api to run image: "docker run --name=envoy -p 8080:8080 --net=host ag_envoy"
 	out, err := exec.Command("/bin/sh", "./envoy/envoy.sh").Output()
 	if err != nil {
 		l.Fatal("failed to execute bash script", zap.Error(err))

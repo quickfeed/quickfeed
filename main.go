@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -8,18 +10,19 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/autograde/quickfeed/ci"
+	logq "github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/web"
 	"github.com/autograde/quickfeed/web/auth"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
@@ -69,16 +72,7 @@ func main() {
 	)
 	flag.Parse()
 
-	cfg := zap.NewDevelopmentConfig()
-	// database logging is only enabled if the LOGDB environment variable is set
-	cfg = database.GormLoggerConfig(cfg)
-	// add colorization
-	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	// we only want stack trace enabled for panic level and above
-	logger, err := cfg.Build(zap.AddStacktrace(zapcore.PanicLevel))
-	if err != nil {
-		log.Fatalf("can't initialize logger: %v\n", err)
-	}
+	logger := logq.Zap(true)
 	defer logger.Sync()
 
 	db, err := database.NewGormDB("sqlite3", *dbFile, database.NewGormLogger(logger))
@@ -101,7 +95,7 @@ func main() {
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
-	runner, err := ci.NewDockerCI()
+	runner, err := ci.NewDockerCI(logger)
 	if err != nil {
 		log.Fatalf("failed to set up docker client: %v\n", err)
 	}
@@ -114,7 +108,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to start tcp listener: %v\n", err)
 	}
-	opt := grpc.UnaryInterceptor(pb.Interceptor(logger))
+	opt := grpc.ChainUnaryInterceptor(UserVerifier(), pb.Interceptor(logger))
 	grpcServer := grpc.NewServer(opt)
 
 	// Create a HTTP server for prometheus.
@@ -132,4 +126,31 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}
+}
+
+func UserVerifier() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		meta, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, errors.New("Could not grab metadata from context")
+		}
+		meta, err := userValidation(meta)
+		if err != nil {
+			return nil, err
+		}
+		ctx = metadata.NewOutgoingContext(ctx, meta)
+		resp, err := handler(ctx, req)
+		return resp, err
+	}
+}
+
+// userValidation returns modified metadata containing a valid user. An error is returned if the user is not authenticated.
+func userValidation(meta metadata.MD) (metadata.MD, error) {
+	for _, cookie := range meta.Get(auth.Cookie) {
+		if user := auth.TokenStore.Get(cookie); user > 0 {
+			meta.Set(auth.UserKey, strconv.FormatUint(user, 10))
+			return meta, nil
+		}
+	}
+	return nil, errors.New("Request does not contain a valid session cookie.")
 }

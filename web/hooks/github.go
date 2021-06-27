@@ -34,14 +34,14 @@ func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, runner ci
 func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 	payload, err := github.ValidatePayload(r, []byte(wh.secret))
 	if err != nil {
-		wh.logger.Errorf("Error in request body: %w", err)
+		wh.logger.Errorf("Error in request body: %v", err)
 		return
 	}
 	defer r.Body.Close()
 
 	event, err := github.ParseWebHook(github.WebHookType(r), payload)
 	if err != nil {
-		wh.logger.Errorf("Could not parse github webhook: %w", err)
+		wh.logger.Errorf("Could not parse github webhook: %v", err)
 		return
 	}
 	switch e := event.(type) {
@@ -63,14 +63,14 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 
 	repo, err := wh.db.GetRepositoryByRemoteID(uint64(payload.GetRepo().GetID()))
 	if err != nil {
-		wh.logger.Errorf("Failed to get repository from database: %w", err)
+		wh.logger.Errorf("Failed to get repository from database: %v", err)
 		return
 	}
 	wh.logger.Debugf("Received push event for repository %v", repo)
 
 	course, err := wh.db.GetCourseByOrganizationID(repo.OrganizationID)
 	if err != nil {
-		wh.logger.Errorf("Failed to get course from database: %w", err)
+		wh.logger.Errorf("Failed to get course from database: %v", err)
 		return
 	}
 	wh.logger.Debugf("For course(%d)=%v", course.GetID(), course.GetName())
@@ -98,7 +98,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
 		jobOwner, _, err := wh.db.GetUserByCourse(course, payload.GetSender().GetLogin())
 		if err != nil {
-			wh.logger.Errorf("Failed to find user %s in the course %s: %s", payload.GetSender().GetLogin(), course.GetName(), err)
+			wh.logger.Errorf("Failed to find user %s in course %s: %v", payload.GetSender().GetLogin(), course.GetName(), err)
 			return
 		}
 		wh.updateLastActivityDate(jobOwner.ID, course.ID)
@@ -193,7 +193,7 @@ func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
 		GroupID:    data.Repo.GroupID,
 	}
 	if err := wh.db.CreateSubmission(newSubmission); err != nil {
-		wh.logger.Errorf("Failed to save submission for user ID %s for assignment ID %d: %s", data.JobOwner, data.Assignment.ID, err)
+		wh.logger.Errorf("Failed to save submission for user %s, assignment %d: %v", data.JobOwner, data.Assignment.ID, err)
 		return
 	}
 	wh.logger.Debugf("Saved manual review submission for user %s for assignment %d", data.JobOwner, data.Assignment.ID)
@@ -209,6 +209,6 @@ func (wh GitHubWebHook) updateLastActivityDate(userID, courseID uint64) {
 	}
 
 	if err := wh.db.UpdateEnrollment(query); err != nil {
-		wh.logger.Errorf("Failed to update the last activity date for user %d: %s", userID, err)
+		wh.logger.Errorf("Failed to update the last activity date for user %d: %v", userID, err)
 	}
 }
