@@ -40,10 +40,8 @@ import {
     Users,
     Void,
     Reviewers,
-} from "../../proto/ag/ag_pb";
-import { AutograderServiceClient } from "../../proto/ag/AgServiceClientPb";
-import { UserManager } from "./UserManager";
-import { ISubmission } from "../models";
+} from "../proto/ag/ag_pb";
+import { AutograderServiceClient } from "../proto/ag/AgServiceClientPb";
 
 export interface IGrpcResponse<T> {
     status: Status;
@@ -54,19 +52,8 @@ export class GrpcManager {
 
     private agService: AutograderServiceClient;
 
-    private token: string
-
-    public setUserid = (id: string) => {
-        this.token = id;
-    }
-
-    public getUserid = () => {
-        return this.token;
-    }
-
     constructor() {
         this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
-        this.token = "-1"
     }
 
 
@@ -284,22 +271,15 @@ export class GrpcManager {
         Returns the commit hash of the given submission.
         Used to ping the server for changes to a submission
     */
+    /*
     public getSubmissionCommitHash(submissionID: number) {
         const request = new CommitHashRequest();
         request.setSubmissionid(submissionID)
         return this.grpcSend<CommitHashResponse>(this.agService.getSubmissionCommitHash, request)
     }
-
-    /*
-    public stream() {
-        const request = new CommitHashRequest();
-        request.setSubmissionid(1)
-        const s = this.agService.streamSubmissionCommitHash(request, { "custom-header-1": "value1", "user": this.token })
-        s.on("data", (response) => console.log(response.getCommithash()))
-        s.on("error", (error) => console.log(error.code, error.message))
-        s.on("status", (e) => console.log(e.code, e.details, e.metadata))
-    }
     */
+    /*
+
     // /* MANUAL GRADING */ //
 
     public createBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<GradingBenchmark>> {
