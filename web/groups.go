@@ -83,7 +83,7 @@ func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
 	}
 	// get users of group, check consistency of group request
 	if _, err := s.getGroupUsers(request); err != nil {
-		s.logger.Errorf("CreateGroup: failed to retrieve users for group %s: %s", request.GetName(), err)
+		s.logger.Errorf("CreateGroup: failed to retrieve users for group %s: %v", request.GetName(), err)
 		return nil, err
 	}
 	// create new group and update groupID in enrollment table
@@ -212,7 +212,7 @@ func (s *AutograderService) isValidGroupName(courseID uint64, groupName string) 
 	courseGroups, _ := s.db.GetGroupsByCourse(courseID)
 	for _, group := range courseGroups {
 		if slug.Make(groupName) == slug.Make(group.GetName()) {
-			s.logger.Errorf("failed to create group %s, another group % already exists, both names will result in %s on GitHub", groupName, group.Name, slug.Make(groupName))
+			s.logger.Errorf("Failed to create group %s, another group % already exists, both names will result in %s on GitHub", groupName, group.Name, slug.Make(groupName))
 			return false
 		}
 	}
