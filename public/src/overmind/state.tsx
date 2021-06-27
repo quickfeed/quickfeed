@@ -1,6 +1,7 @@
 import { derived } from "overmind";
 
-import { Assignment, Course, Enrollment, EnrollmentLink, Group, Submission, User } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, EnrollmentLink, Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb";
+import { AlertType } from "../Helpers";
 
 
 
@@ -17,22 +18,28 @@ export interface Self {
 }
 
 export interface CourseGroup {
+    courseID: number
     enrollments: number[]
     users: User[]
     groupName: string
 }
 
+interface CourseSubmissions {
+    enrollment?: Enrollment
+    user?: User
+    submissions?: SubmissionLink[]
+}
+
 type EnrollmentsByCourse = {[courseid: number]: Enrollment}
 
-export type State = {
-    /*  */
-    user: Self,
-    users: Enrollment[],
+type State = {
+
+    /* Data relating to self */
+    self: User,
     enrollments: Enrollment[],
     enrollmentsByCourseId: {
         [courseid: number]: Enrollment
     },
-    courses: Course[],
     userCourses: {
         [courseid: number]: Course
     },
@@ -42,36 +49,53 @@ export type State = {
     submissions:{
         [courseid:number]:Submission[]
     },
-    courseSubmissions:{
-        [courseid:number]: EnrollmentLink[]
-    }
+
+    /* Public Data */
+    users: Enrollment[],
+    courses: Course[],
     assignments: {
         [courseid:number]:Assignment[]
+    },
+
+    /* Course Specific Data */
+    courseSubmissions: {
+        [courseid:number]: EnrollmentLink[]
+    },
+    cSubs: {
+        [courseid:number]: CourseSubmissions[]
+    },
+
+    courseGroupSubmissions: {
+        [courseid: number]: EnrollmentLink[]
     },
     repositories: {
         [courseid:number]: { [repoType: number]: string }
     },
-    theme: string,
-    isLoading: boolean,
-    activeCourse: number,
-    activeLab: number,
-    search: string,
-    userSearch: Enrollment[],
-    timeNow: Date,
-    courseGroup: CourseGroup,
-    alerts: string[],
     courseEnrollments: {
         [courseid: number]: Enrollment[]
     },
     groups: {
         [courseid: number]: Group[]
-    }
+    },
+
+    /* Utility */
+    theme: string,
+    isLoading: boolean,
+    activeCourse: number,
+    activeLab: number,
+    timeNow: Date,
+    // Used to create new group
+    courseGroup: CourseGroup,
+    alerts: {text: string, type: number}[],
+
 }
+
+
 
 /* Initial State */
 /* To add to state, extend the State type and initialize the variable below */
 export const state: State = {
-    user: {avatarurl: '', email: '', id: -1, isadmin: false, name: '', remoteID: -1, studentid: -1, Token: ""},
+    self: new User,
     users: [],
     enrollments: [],
     enrollmentsByCourseId: derived((state: State) => {
@@ -87,24 +111,29 @@ export const state: State = {
     userGroup: {},
     submissions: {},
     courseSubmissions: {},
+    cSubs: derived((state: State) => {
+        let obj: {[id: number]: CourseSubmissions[]} = {}
+        state.courses.forEach(course => {
+            if (state.courseSubmissions[course.getId()]) {
+                obj[course.getId()] = []
+                state.courseSubmissions[course.getId()].forEach(element => {
+                    obj[course.getId()].push({enrollment: element.getEnrollment(), user: element.getEnrollment()?.getUser(), submissions: element.getSubmissionsList()})
+                });
+            }
+        });
+        return obj
+    }),
+    courseGroupSubmissions: {},
     assignments: {},
     repositories: {},
 
-    search: "",
-    // 
-    userSearch: derived((state: State) => {
-        return state.users.filter(user => 
-            user.getUser()?.getName().toLowerCase().includes(state.search.toLowerCase())
-        ).filter(user => !state.courseGroup.enrollments.includes(user.getId()))
-    }),
-
-    courseGroup: {enrollments: [], users: [], groupName: ""},
+    courseGroup: {courseID: 0, enrollments: [], users: [], groupName: ""},
     timeNow : new Date(),
-    alerts: [],
+    alerts: [{text: "Welcome!", type: AlertType.INFO}],
     theme: "light",
     isLoading: true,
     activeCourse: -1,
     activeLab: -1,
     courseEnrollments: {},
-    groups: {}
+    groups: {},
 };
