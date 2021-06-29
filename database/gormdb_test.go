@@ -10,6 +10,8 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"gorm.io/gorm"
 )
 
@@ -87,7 +89,7 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 	}
 
 	// user entries from the database will have to be enrolled as
-	// teacher ans student respectively
+	// teacher and student respectively
 	teacher.Enrollments = append(teacher.Enrollments, &pb.Enrollment{
 		ID:           1,
 		CourseID:     course.ID,
@@ -112,15 +114,15 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if diff := cmp.Diff(teacher, gotTeacher, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{})); diff != "" {
+		t.Errorf("enrollment mismatch (-teacher +gotTeacher):\n%s", diff)
+	}
 	gotStudent, err := db.GetUserWithEnrollments(student.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(teacher, gotTeacher) {
-		t.Errorf("want %+v \n got %+v", teacher, gotTeacher)
-	}
-	if !reflect.DeepEqual(student, gotStudent) {
-		t.Errorf("want %+v \n got %+v", student, gotStudent)
+	if diff := cmp.Diff(student, gotStudent, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{})); diff != "" {
+		t.Errorf("enrollment mismatch (-student +gotStudent):\n%s", diff)
 	}
 }
 
