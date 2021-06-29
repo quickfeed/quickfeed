@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 /// Assignments ///
@@ -16,7 +16,7 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 		return gorm.ErrRecordNotFound
 	}
 
-	var course uint64
+	var course int64
 	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
 		ID: assignment.CourseID,
 	}).Count(&course).Error; err != nil {
@@ -89,7 +89,7 @@ func (db *GormDB) GetAssignmentsByCourse(courseID uint64, withGrading bool) ([]*
 
 // UpdateAssignments updates assignment information.
 func (db *GormDB) UpdateAssignments(assignments []*pb.Assignment) error {
-	//TODO(meling) Updating the database may need locking?? Or maybe rewrite as a single query or txn.
+	// TODO(meling) Updating the database may need locking?? Or maybe rewrite as a single query or txn.
 	for _, v := range assignments {
 		// this will create or update an existing assignment
 		if err := db.CreateAssignment(v); err != nil {
@@ -141,7 +141,7 @@ func (db *GormDB) CreateBenchmark(query *pb.GradingBenchmark) error {
 func (db *GormDB) UpdateBenchmark(query *pb.GradingBenchmark) error {
 	return db.conn.Model(query).
 		Where(&pb.GradingBenchmark{ID: query.ID, AssignmentID: query.AssignmentID}).
-		Update(&pb.GradingBenchmark{Heading: query.Heading, Comment: query.Comment}).Error
+		Updates(&pb.GradingBenchmark{Heading: query.Heading, Comment: query.Comment}).Error
 }
 
 // DeleteBenchmark removes the given benchmark
@@ -159,7 +159,7 @@ func (db *GormDB) CreateCriterion(query *pb.GradingCriterion) error {
 func (db *GormDB) UpdateCriterion(query *pb.GradingCriterion) error {
 	return db.conn.Model(query).
 		Where(&pb.GradingCriterion{ID: query.ID, BenchmarkID: query.BenchmarkID}).
-		Update(&pb.GradingCriterion{Description: query.Description, Comment: query.Comment, Grade: query.Grade, Points: query.Points}).Error
+		Updates(&pb.GradingCriterion{Description: query.Description, Comment: query.Comment, Grade: query.Grade, Points: query.Points}).Error
 }
 
 // DeleteCriterion removes the given criterion

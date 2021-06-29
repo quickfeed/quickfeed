@@ -8,11 +8,11 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
-	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/markbates/goth/gothic"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 func init() {

@@ -69,7 +69,7 @@ func main() {
 
 func before(db *database.GormDB) cli.BeforeFunc {
 	return func(c *cli.Context) error {
-		tdb, err := database.NewGormDB("sqlite3", c.String("database"),
+		tdb, err := database.NewGormDB(c.String("database"),
 			database.NewGormLogger(database.BuildLogger()),
 		)
 		if err != nil {
@@ -82,9 +82,6 @@ func before(db *database.GormDB) cli.BeforeFunc {
 
 func after(db *database.GormDB) cli.AfterFunc {
 	return func(c *cli.Context) error {
-		if db != nil {
-			return db.Close()
-		}
 		return nil
 	}
 }

@@ -19,7 +19,6 @@ import (
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web"
 	"github.com/autograde/quickfeed/web/auth"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var allCourses = []*pb.Course{

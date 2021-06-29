@@ -12,7 +12,6 @@ import (
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestNewGroup(t *testing.T) {

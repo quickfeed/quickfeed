@@ -10,13 +10,11 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"gorm.io/gorm"
 )
 
 func setup(t *testing.T) (database.Database, func()) {
 	const (
-		driver = "sqlite3"
 		prefix = "testdb"
 	)
 
@@ -29,7 +27,7 @@ func setup(t *testing.T) (database.Database, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(driver, f.Name(),
+	db, err := database.NewGormDB(f.Name(),
 		database.NewGormLogger(database.BuildLogger()),
 	)
 	if err != nil {
@@ -38,9 +36,6 @@ func setup(t *testing.T) (database.Database, func()) {
 	}
 
 	return db, func() {
-		if err := db.Close(); err != nil {
-			t.Error(err)
-		}
 		if err := os.Remove(f.Name()); err != nil {
 			t.Error(err)
 		}

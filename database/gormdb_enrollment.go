@@ -2,12 +2,12 @@ package database
 
 import (
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 // CreateEnrollment creates a new pending enrollment.
 func (db *GormDB) CreateEnrollment(enrollment *pb.Enrollment) error {
-	var user, course uint64
+	var user, course int64
 	if err := db.conn.Model(&pb.User{}).Where(&pb.User{
 		ID: enrollment.UserID,
 	}).Count(&user).Error; err != nil {
@@ -40,7 +40,7 @@ func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 func (db *GormDB) UpdateEnrollment(enrol *pb.Enrollment) error {
 	return db.conn.Model(&pb.Enrollment{}).
 		Where(&pb.Enrollment{CourseID: enrol.CourseID, UserID: enrol.UserID}).
-		Update(&pb.Enrollment{State: enrol.State, Status: enrol.Status, LastActivityDate: enrol.LastActivityDate}).Error
+		Updates(&pb.Enrollment{State: enrol.State, Status: enrol.Status, LastActivityDate: enrol.LastActivityDate}).Error
 }
 
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
@@ -85,7 +85,7 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_Us
 		Model(model).
 		Where("status in (?)", statuses).
 		Association("Enrollments").
-		Find(&enrollments).Error; err != nil {
+		Find(&enrollments); err != nil {
 		return nil, err
 	}
 	return enrollments, nil

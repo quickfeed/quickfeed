@@ -60,8 +60,3 @@ func (db *GormDB) DeleteRepositoryByRemoteID(rid uint64) error {
 	}
 	return db.conn.Delete(repo).Error
 }
-
-// Close closes the gorm database.
-func (db *GormDB) Close() error {
-	return db.conn.Close()
-}
