@@ -377,7 +377,6 @@ func TestAccessControl(t *testing.T) {
 
 func setup(t *testing.T) (*database.GormDB, func()) {
 	const (
-		driver = "sqlite3"
 		prefix = "testdb"
 	)
 
@@ -390,7 +389,7 @@ func setup(t *testing.T) (*database.GormDB, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(driver, f.Name(),
+	db, err := database.NewGormDB(f.Name(),
 		database.NewGormLogger(database.BuildLogger()),
 	)
 	if err != nil {
@@ -399,9 +398,6 @@ func setup(t *testing.T) (*database.GormDB, func()) {
 	}
 
 	return db, func() {
-		if err := db.Close(); err != nil {
-			t.Error(err)
-		}
 		if err := os.Remove(f.Name()); err != nil {
 			t.Error(err)
 		}

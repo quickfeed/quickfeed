@@ -7,9 +7,9 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/gosimple/slug"
-	"github.com/jinzhu/gorm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
 )
 
 // ErrGroupNameDuplicate indicates that another group with the same name already exists on this course

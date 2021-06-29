@@ -14,7 +14,7 @@ func (db *GormDB) CreateCourse(userID uint64, course *pb.Course) error {
 		return ErrInsufficientAccess
 	}
 
-	var courses uint64
+	var courses int64
 	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
 		OrganizationID: course.OrganizationID,
 	}).Count(&courses).Error; err != nil {
@@ -24,7 +24,7 @@ func (db *GormDB) CreateCourse(userID uint64, course *pb.Course) error {
 		return ErrCourseExists
 	}
 
-	//TODO(meling) these db updates should be done as a transaction
+	// TODO(meling) these db updates should be done as a transaction
 	if err := db.conn.Create(course).Error; err != nil {
 		return err
 	}

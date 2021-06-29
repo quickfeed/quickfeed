@@ -10,8 +10,6 @@ import (
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web"
 	"go.uber.org/zap"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestSubmissionsAccess(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 // CreateGroup creates a new group and assign users to newly created group.
@@ -16,7 +16,7 @@ func (db *GormDB) CreateGroup(group *pb.Group) error {
 	if group.CourseID == 0 {
 		return gorm.ErrRecordNotFound
 	}
-	var course uint64
+	var course int64
 	if err := db.conn.Model(&pb.Course{}).
 		Where(&pb.Course{ID: group.CourseID}).
 		Count(&course).Error; err != nil {
@@ -62,7 +62,7 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 	if group.CourseID == 0 {
 		return gorm.ErrRecordNotFound
 	}
-	var course uint64
+	var course int64
 	if err := db.conn.Model(&pb.Course{}).
 		Where(&pb.Course{ID: group.CourseID}).
 		Count(&course).Error; err != nil {

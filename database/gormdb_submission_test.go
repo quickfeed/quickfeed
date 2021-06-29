@@ -10,7 +10,7 @@ import (
 	"github.com/autograde/quickfeed/database"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 func TestGormDBGetSubmissionForUser(t *testing.T) {

@@ -11,8 +11,6 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // the test expects a grpc server already running on port :9090
@@ -46,7 +44,6 @@ func TestDiscordClient(t *testing.T) {
 	}
 
 	userInfo, err := client.GetUserByCourse(requestContext, request)
-
 	if err != nil {
 		t.Fatal(err)
 	}
