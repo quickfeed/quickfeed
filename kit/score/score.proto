@@ -23,5 +23,4 @@ message BuildInfo {
 message Results {
     BuildInfo BuildInfo = 1;   // build info for tests
     repeated Score Scores = 2; // list of scores for different tests
-    int64 SubmissionID = 3;       // foreign key for Submission has one relation
 }

@@ -592,8 +592,7 @@ proto.score.Results.toObject = function(includeInstance, msg) {
   var f, obj = {
     buildinfo: (f = msg.getBuildinfo()) && proto.score.BuildInfo.toObject(includeInstance, f),
     scoresList: jspb.Message.toObjectList(msg.getScoresList(),
-    proto.score.Score.toObject, includeInstance),
-    submissionid: jspb.Message.getFieldWithDefault(msg, 3, 0)
+    proto.score.Score.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -640,10 +639,6 @@ proto.score.Results.deserializeBinaryFromReader = function(msg, reader) {
       reader.readMessage(value,proto.score.Score.deserializeBinaryFromReader);
       msg.addScores(value);
       break;
-    case 3:
-      var value = /** @type {number} */ (reader.readInt64());
-      msg.setSubmissionid(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -687,13 +682,6 @@ proto.score.Results.serializeBinaryToWriter = function(message, writer) {
       2,
       f,
       proto.score.Score.serializeBinaryToWriter
-    );
-  }
-  f = message.getSubmissionid();
-  if (f !== 0) {
-    writer.writeInt64(
-      3,
-      f
     );
   }
 };
@@ -771,24 +759,6 @@ proto.score.Results.prototype.addScores = function(opt_value, opt_index) {
  */
 proto.score.Results.prototype.clearScoresList = function() {
   return this.setScoresList([]);
-};
-
-
-/**
- * optional int64 SubmissionID = 3;
- * @return {number}
- */
-proto.score.Results.prototype.getSubmissionid = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.score.Results} returns this
- */
-proto.score.Results.prototype.setSubmissionid = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 

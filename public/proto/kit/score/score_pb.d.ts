@@ -75,9 +75,6 @@ export class Results extends jspb.Message {
   clearScoresList(): Results;
   addScores(value?: Score, index?: number): Score;
 
-  getSubmissionid(): number;
-  setSubmissionid(value: number): Results;
-
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Results.AsObject;
   static toObject(includeInstance: boolean, msg: Results): Results.AsObject;
@@ -90,7 +87,6 @@ export namespace Results {
   export type AsObject = {
     buildinfo?: BuildInfo.AsObject,
     scoresList: Array<Score.AsObject>,
-    submissionid: number,
   }
 }
 
