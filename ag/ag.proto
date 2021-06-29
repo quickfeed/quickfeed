@@ -13,7 +13,7 @@ import "patch/go.proto";
 // To define multiple database attributes (fields) that combine to form a unique identifier,
 // use the following tag, replacing the <id_name> with the specific unique database identifier;
 // this will set the SQL UNIQUE constraint for the database:
-//   [(go.field) = {tags: 'gorm:"unique_index:<id_name>"'}];
+//   [(go.field) = {tags: 'gorm:"uniqueIndex:<id_name>"'}];
 
 
 // USERS AND USERGROUPS //
@@ -37,8 +37,8 @@ message Users {
 
 message RemoteIdentity {
     uint64 ID = 1;
-    string provider = 2 [(go.field) = {tags: 'gorm:"unique_index:uid_provider_remote_id"'}]; 
-    uint64 remoteID = 3 [(go.field) = {tags: 'gorm:"unique_index:uid_provider_remote_id"'}]; 
+    string provider = 2 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_provider_remote_id"'}]; 
+    uint64 remoteID = 3 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_provider_remote_id"'}]; 
     string accessToken = 4;
     uint64 userID = 5;
 }
@@ -49,12 +49,12 @@ message Group {
         APPROVED = 1;
     }
     uint64 ID = 1;
-    string name = 2 [(go.field) = {tags: 'gorm:"unique_index:idx_unique_group_name"'}];
-    uint64 courseID = 3 [(go.field) = {tags: 'gorm:"unique_index:idx_unique_group_name"'}]; 
+    string name = 2 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_group_name"'}];
+    uint64 courseID = 3 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_group_name"'}]; 
     uint64 teamID = 4;
     GroupStatus status = 5;
 
-    repeated User users = 6;
+    repeated User users = 6 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
     repeated Enrollment enrollments = 7;
 }
 
@@ -96,12 +96,12 @@ message Repository {
         GROUP = 5;
     }
     uint64 ID = 1;
-    uint64 organizationID = 2 [(go.field) = {tags: 'gorm:"unique_index:uid_gid_org_type"'}];
+    uint64 organizationID = 2 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_gid_org_type"'}];
     uint64 repositoryID = 3; // ID of a github repository
-    uint64 userID = 4 [(go.field) = {tags: 'gorm:"unique_index:uid_gid_org_type"'}];
-    uint64 groupID = 5 [(go.field) = {tags: 'gorm:"unique_index:uid_gid_org_type"'}];
+    uint64 userID = 4 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_gid_org_type"'}];
+    uint64 groupID = 5 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_gid_org_type"'}];
     string HTMLURL = 6;
-    Type repoType = 7 [(go.field) = {tags: 'gorm:"unique_index:uid_gid_org_type"'}];
+    Type repoType = 7 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_gid_org_type"'}];
 }
 
 message Enrollment {
@@ -118,8 +118,8 @@ message Enrollment {
         FAVORITE = 3;
     }
     uint64 ID = 1;
-    uint64 courseID = 2 [(go.field) = {tags: 'gorm:"unique_index:idx_unique_enrollment"'}];
-    uint64 userID = 3 [(go.field) = {tags: 'gorm:"unique_index:idx_unique_enrollment"'}]; 
+    uint64 courseID = 2 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_enrollment"'}];
+    uint64 userID = 3 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_enrollment"'}]; 
     uint64 groupID = 4;
     bool hasTeacherScopes = 5;
     User user = 6;
@@ -216,7 +216,7 @@ message GradingBenchmark {
     uint64 assignmentID = 2;
     string heading = 3;
     string comment = 4;
-    repeated GradingCriterion criteria = 5;
+    repeated GradingCriterion criteria = 5 [(go.field) = {tags: 'gorm:"foreignKey:BenchmarkID"'}];
 }
 
 message Benchmarks {
@@ -245,7 +245,7 @@ message Review {
     string feedback = 5;
     bool ready = 6;
     uint64 score = 7;
-    repeated GradingBenchmark benchmarks = 8 [(go.field) = {tags: 'sql:\"-\"'}];
+    repeated GradingBenchmark benchmarks = 8 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
     string edited = 9;
 }
 
