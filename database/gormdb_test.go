@@ -832,30 +832,28 @@ func TestGormDBGetCourseNoRecord(t *testing.T) {
 }
 
 func TestGormDBUpdateCourse(t *testing.T) {
-	var (
-		course = &pb.Course{
-			Name:           "Test Course",
-			Code:           "DAT100",
-			Year:           2017,
-			Tag:            "Spring",
-			Provider:       "github",
-			OrganizationID: 1234,
-		}
-		updates = &pb.Course{
-			Name:           "Test Course Edit",
-			Code:           "DAT100-1",
-			Year:           2018,
-			Tag:            "Autumn",
-			Provider:       "gitlab",
-			OrganizationID: 12345,
-		}
-	)
+	course := &pb.Course{
+		Name:           "Test Course",
+		Code:           "DAT100",
+		Year:           2017,
+		Tag:            "Spring",
+		Provider:       "github",
+		OrganizationID: 1234,
+	}
+	updates := &pb.Course{
+		Name:           "Test Course Edit",
+		Code:           "DAT100-1",
+		Year:           2018,
+		Tag:            "Autumn",
+		Provider:       "gitlab",
+		OrganizationID: 12345,
+	}
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(user.ID, course); err != nil {
+	admin := createFakeUser(t, db, 10)
+	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
