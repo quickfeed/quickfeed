@@ -137,5 +137,7 @@ func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_User
 
 // UpdateCourse updates course information.
 func (db *GormDB) UpdateCourse(course *pb.Course) error {
-	return db.conn.Model(&pb.Course{}).Updates(course).Error
+	return db.conn.Model(&pb.Course{}).
+		Where(&pb.Course{ID: course.GetID()}).
+		Updates(course).Error
 }
