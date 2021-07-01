@@ -75,83 +75,49 @@ var createGroupTests = []struct {
 		err:         database.ErrUpdateGroup,
 	},
 	{
-		name: "with users but without enrollments",
-		desc: "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
-		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
-			var users []*pb.User
-			for _, uid := range uids {
-				users = append(users, &pb.User{ID: uid})
-			}
-			return &pb.Group{
-				CourseID: cid,
-				Users:    users,
-			}
-		},
+		name:        "with users but without enrollments",
+		desc:        "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
+		getGroup:    groupWithUsers,
 		enrollments: []uint{uint(pb.Enrollment_PENDING), uint(pb.Enrollment_PENDING)},
 		err:         database.ErrUpdateGroup,
 	},
 	{
-		name: "with users and pending enrollments",
-		desc: "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
-		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
-			var users []*pb.User
-			for _, uid := range uids {
-				users = append(users, &pb.User{ID: uid})
-			}
-			return &pb.Group{
-				CourseID: cid,
-				Users:    users,
-			}
-		},
+		name:        "with users and pending enrollments",
+		desc:        "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
+		getGroup:    groupWithUsers,
 		enrollments: []uint{uint(pb.Enrollment_PENDING), uint(pb.Enrollment_PENDING)},
 		err:         database.ErrUpdateGroup,
 	},
 	{
-		name: "with users and rejected enrollments",
-		desc: "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
-		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
-			var users []*pb.User
-			for _, uid := range uids {
-				users = append(users, &pb.User{ID: uid})
-			}
-			return &pb.Group{
-				CourseID: cid,
-				Users:    users,
-			}
-		},
+		name:        "with users and rejected enrollments",
+		desc:        "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
+		getGroup:    groupWithUsers,
 		enrollments: []uint{uint(pb.Enrollment_NONE), uint(pb.Enrollment_NONE)},
 		err:         database.ErrUpdateGroup,
 	},
 	{
-		name: "with user and accepted enrollment",
-		desc: "Should pass as the user exists and is enrolled in the course.",
-		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
-			var users []*pb.User
-			for _, uid := range uids {
-				users = append(users, &pb.User{ID: uid})
-			}
-			return &pb.Group{
-				CourseID: cid,
-				Users:    users,
-			}
-		},
+		name:        "with user and accepted enrollment",
+		desc:        "Should pass as the user exists and is enrolled in the course.",
+		getGroup:    groupWithUsers,
 		enrollments: []uint{uint(pb.Enrollment_STUDENT)},
 	},
 	{
-		name: "with users and accepted enrollments",
-		desc: "Should pass as the users exists and are enrolled in the course.",
-		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
-			var users []*pb.User
-			for _, uid := range uids {
-				users = append(users, &pb.User{ID: uid})
-			}
-			return &pb.Group{
-				CourseID: cid,
-				Users:    users,
-			}
-		},
+		name:        "with users and accepted enrollments",
+		desc:        "Should pass as the users exists and are enrolled in the course.",
+		getGroup:    groupWithUsers,
 		enrollments: []uint{uint(pb.Enrollment_STUDENT), uint(pb.Enrollment_STUDENT)},
 	},
+}
+
+var groupWithUsers = func(cid uint64, uids ...uint64) *pb.Group {
+	var users []*pb.User
+	for _, uid := range uids {
+		users = append(users, &pb.User{ID: uid})
+	}
+	return &pb.Group{
+		CourseID: cid,
+		Users:    users,
+	}
 }
 
 func TestGormDBCreateAndGetGroup(t *testing.T) {

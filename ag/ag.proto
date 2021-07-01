@@ -5,7 +5,7 @@ option swift_prefix="";
 
 import "patch/go.proto";
 
-// Note on use of protopatch's go.field to translate to a database schama via GORM
+// Note on use of protopatch's go.field to translate to a database schema via GORM
 //
 // To define fields that should be ignored by the database, use this tag:
 //   [(go.field) = {tags: 'sql:\"-\"'}];
