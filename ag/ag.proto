@@ -54,7 +54,7 @@ message Group {
     uint64 teamID = 4;
     GroupStatus status = 5;
 
-    repeated User users = 6 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
+    repeated User users = 6 [(go.field) = {tags: 'gorm:"many2many:group_users;"'}];
     repeated Enrollment enrollments = 7;
 }
 
