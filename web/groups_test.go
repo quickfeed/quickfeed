@@ -274,6 +274,8 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	// set up fake goth provider (only needs to be done once)
+	fakeGothProvider()
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	_, err := fakeProvider.CreateOrganization(context.Background(),
