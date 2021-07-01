@@ -2,7 +2,6 @@ package database_test
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -343,11 +342,13 @@ func TestGetGroupsByCourse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(groups[0].GetUsers(), group.GetUsers()) {
-		t.Errorf("have %#v want %#v", groups[0].GetUsers(), group.GetUsers())
+	wantUsers, gotUsers := groups[0].GetUsers(), group.GetUsers()
+	if diff := cmp.Diff(wantUsers, gotUsers, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{}, pb.RemoteIdentity{})); diff != "" {
+		t.Errorf("group users mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
-	if !reflect.DeepEqual(groups[1].GetUsers(), group2.GetUsers()) {
-		t.Errorf("have %#v want %#v", groups[1].GetUsers(), group2.GetUsers())
+	wantUsers, gotUsers = groups[1].GetUsers(), group2.GetUsers()
+	if diff := cmp.Diff(wantUsers, gotUsers, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{}, pb.RemoteIdentity{})); diff != "" {
+		t.Errorf("group users mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
 
 	pendingGroups, err := db.GetGroupsByCourse(course.ID, pb.Group_PENDING)
