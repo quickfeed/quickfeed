@@ -702,13 +702,50 @@ func TestGormDBCreateCourse(t *testing.T) {
 		OrganizationID: 1,
 	}
 
-	user := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(user.ID, &course); err != nil {
+	admin := createFakeUser(t, db, 10)
+	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
-
 	if course.ID == 0 {
 		t.Error("expected id to be set")
+	}
+
+	// check that admin (teacher) was automatically enrolled when creating course
+	enroll, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if enroll.CourseID != course.ID || enroll.UserID != admin.ID {
+		t.Errorf("expected user %d to be enrolled in course %d, but got user %d and course %d", admin.ID, course.ID, enroll.UserID, enroll.CourseID)
+	}
+	if enroll.Status != pb.Enrollment_TEACHER || enroll.State != pb.Enrollment_VISIBLE {
+		t.Errorf("expected enrolled user to be teacher and visible, but got status: %v and state: %v", enroll.Status, enroll.State)
+	}
+
+	// check that no users were enrolled as students
+	enrolls, err := db.GetEnrollmentsByCourse(course.ID, pb.Enrollment_STUDENT)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(enrolls) > 0 {
+		t.Errorf("expected no enrollments, but got %d enrollments: %v", len(enrolls), enrolls)
+	}
+
+	// check that exactly one user was enrolled as teacher for the course
+	enrolls, err = db.GetEnrollmentsByCourse(course.ID, pb.Enrollment_TEACHER)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(enrolls) != 1 {
+		t.Errorf("expected exactly one enrollment, but got %d enrollments: %v", len(enrolls), enrolls)
+	}
+	for _, enroll := range enrolls {
+		if enroll.CourseID != course.ID || enroll.UserID != admin.ID {
+			t.Errorf("expected user %d to be enrolled in course %d, but got user %d and course %d", admin.ID, course.ID, enroll.UserID, enroll.CourseID)
+		}
+		if enroll.Status != pb.Enrollment_TEACHER || enroll.State != pb.Enrollment_VISIBLE {
+			t.Errorf("expected enrolled user to be teacher and visible, but got status: %v and state: %v", enroll.Status, enroll.State)
+		}
 	}
 }
 
