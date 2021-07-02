@@ -70,7 +70,7 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 
 	if submission.GetScore() == 0 {
 		// GORM doesn't update zero value fields, unless forced:
-		err = db.conn.Model(submission).Where(query).Updates(map[string]interface{}{"Score": 0}).Error
+		err = db.conn.Model(submission).Where(query).Update("score", 0).Error
 	}
 	submission.ID = labSubmission.GetID()
 	return err
