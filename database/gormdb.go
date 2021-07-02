@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/driver/sqlite"
@@ -40,17 +41,13 @@ type GormDB struct {
 }
 
 // NewGormDB creates a new gorm database using the provided driver.
-func NewGormDB(path string, logger GormLogger) (*GormDB, error) {
-	conn, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
+func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
+	conn, err := gorm.Open(sqlite.Open(path), &gorm.Config{
+		Logger: NewGORMLogger(logger),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO(meling) Fix GormLogger to be compatible
-	// if logger != nil {
-	// 	conn.SetLogger(logger)
-	// }
-	// conn.LogMode(logger != nil)
 
 	if err := conn.AutoMigrate(
 		&pb.User{},

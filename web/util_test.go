@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/autograde/quickfeed/database"
+	"go.uber.org/zap"
 )
 
 func setup(t *testing.T) (*database.GormDB, func()) {
@@ -23,9 +24,7 @@ func setup(t *testing.T) (*database.GormDB, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(f.Name(),
-		database.NewGormLogger(database.BuildLogger()),
-	)
+	db, err := database.NewGormDB(f.Name(), zap.NewNop())
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)

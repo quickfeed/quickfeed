@@ -13,7 +13,6 @@ import (
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/scm"
 
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 )
@@ -242,9 +241,7 @@ func before(client *scm.SCM) cli.BeforeFunc {
 		}
 
 		// access token not provided in env variable; check if database holds access token
-		db, err := database.NewGormDB(c.String("database"),
-			database.NewGormLogger(database.BuildLogger()),
-		)
+		db, err := database.NewGormDB(c.String("database"), zap.NewNop())
 		if err != nil {
 			return err
 		}

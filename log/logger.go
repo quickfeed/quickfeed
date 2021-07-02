@@ -3,7 +3,6 @@ package log
 import (
 	"log"
 
-	"github.com/autograde/quickfeed/database"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -11,8 +10,6 @@ import (
 func Zap(verbose bool) *zap.Logger {
 	if verbose {
 		cfg := zap.NewDevelopmentConfig()
-		// database logging is only enabled if the LOGDB environment variable is set
-		cfg = database.GormLoggerConfig(cfg)
 		// add colorization
 		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 		// we only want stack trace enabled for panic level and above
