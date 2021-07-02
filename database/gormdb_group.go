@@ -1,7 +1,6 @@
 package database
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -26,7 +25,6 @@ func (db *GormDB) CreateGroup(group *pb.Group) error {
 	if course != 1 {
 		return gorm.ErrRecordNotFound
 	}
-	db.conn.Logger.Warn(context.Background(), "group %v", group)
 
 	tx := db.conn.Begin()
 	if err := tx.Model(&pb.Group{}).Create(group).Error; err != nil {
@@ -36,13 +34,11 @@ func (db *GormDB) CreateGroup(group *pb.Group) error {
 		}
 		return err
 	}
-	db.conn.Logger.Warn(context.Background(), "group %v", group)
 
 	var userids []uint64
 	for _, u := range group.Users {
 		userids = append(userids, u.ID)
 	}
-	db.conn.Logger.Warn(context.Background(), "group %v", group)
 	query := tx.Model(&pb.Enrollment{}).
 		Where(&pb.Enrollment{CourseID: group.CourseID}).
 		Where("user_id IN (?) AND status IN (?)", userids,
