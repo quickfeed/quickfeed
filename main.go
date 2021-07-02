@@ -74,7 +74,7 @@ func main() {
 	logger := logq.Zap(true)
 	defer logger.Sync()
 
-	db, err := database.NewGormDB(*dbFile, database.NewGormLogger(logger))
+	db, err := database.NewGormDB(*dbFile, logger)
 	if err != nil {
 		log.Fatalf("can't connect to database: %v\n", err)
 	}

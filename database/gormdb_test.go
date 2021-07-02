@@ -10,6 +10,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/log"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"gorm.io/gorm"
@@ -29,9 +30,7 @@ func setup(t *testing.T) (database.Database, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(f.Name(),
-		database.NewGormLogger(database.BuildLogger()),
-	)
+	db, err := database.NewGormDB(f.Name(), log.Zap(true))
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)

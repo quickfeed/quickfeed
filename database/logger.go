@@ -1,144 +1,119 @@
 package database
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"os"
-	"regexp"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
-	"unicode"
 
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 )
 
-// GormLogger exposes the methods needed for gorm database logging.
-type GormLogger interface {
-	Print(v ...interface{})
+// NewGORMLogger returns a zap-based logger for GORM. A logger instance is only returned
+// if the LOGDB environment variable is set to a specific level. This logger is not
+// recommended for production due to the high volume of SQL queries being performed and
+// the associated noise in the logs; it is mainly useful for debugging database issues.
+// If LOGDB is not set, the discard logger is returned.
+func NewGORMLogger(zapLogger *zap.Logger) gormlogger.Interface {
+	var level gormlogger.LogLevel
+	switch os.Getenv("LOGDB") {
+	case "":
+		return gormlogger.Discard
+	case "1":
+		level = gormlogger.Silent
+	case "2":
+		level = gormlogger.Error
+	case "3":
+		level = gormlogger.Warn
+	case "4":
+		level = gormlogger.Info
+	}
+	return Logger{
+		ZapLogger:                 zapLogger,
+		LogLevel:                  level,
+		SlowThreshold:             100 * time.Millisecond,
+		IgnoreRecordNotFoundError: false,
+	}
 }
 
 // Logger is an adaption of gorm.Logger that uses the zap logger.
+// The logger is based on code from moul.io/zapgorm2.
 type Logger struct {
-	*zap.Logger
+	ZapLogger                 *zap.Logger
+	LogLevel                  gormlogger.LogLevel
+	SlowThreshold             time.Duration
+	IgnoreRecordNotFoundError bool
 }
 
-// NewGormLogger returns a logger for Gorm. A logger instance is only returned
-// if the LOGDB environment variable is set.
-// This logger should probably not be used in production due to the
-// high volume of SQL queries; it is mainly meant to assist with debugging
-// database query issues.
-func NewGormLogger(l *zap.Logger) GormLogger {
-	if os.Getenv("LOGDB") != "" {
-		return Logger{Logger: l}
+func (l Logger) LogMode(level gormlogger.LogLevel) gormlogger.Interface {
+	return Logger{
+		ZapLogger:                 l.ZapLogger,
+		SlowThreshold:             l.SlowThreshold,
+		LogLevel:                  level,
+		IgnoreRecordNotFoundError: l.IgnoreRecordNotFoundError,
 	}
-	return nil
 }
 
-// BuildLogger returns a zap logger with Gorm logging enabled.
-// This can be passed to NewGormLogger, if no other loggers are needed.
-func BuildLogger() *zap.Logger {
-	cfg := GormLoggerConfig(zap.NewDevelopmentConfig())
-	l, _ := cfg.Build()
-	return l
-}
-
-// GormLoggerConfig returns a zap logger configuration with Gorm logging
-// enabled with special handling for SQL queries.
-// Gorm logging is only enabled if the LOGDB environment variable is set.
-func GormLoggerConfig(cfg zap.Config) zap.Config {
-	if os.Getenv("LOGDB") != "" {
-		cfg.EncoderConfig.EncodeCaller = GormCallerEncoder
+func (l Logger) Info(ctx context.Context, str string, args ...interface{}) {
+	if l.LogLevel < gormlogger.Info {
+		return
 	}
-	return cfg
+	l.logger().Sugar().Debugf(str, args...)
 }
 
-// GormCallerEncoder finds the file and line number of the first use in gormdb.go.
-// The default caller encoder from zapcore is unreliable. Hence this implementation
-// ignores the caller argument from zap, and instead we create our own caller for Gorm.
-func GormCallerEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-	// be careful when modifying these; they have been determined experimentally,
-	// but things may change due to changes both internally and externally to Gorm.
-	const (
-		// lowest is the first stack entry to include in the frame
-		lowestEntry = 8
-		// highest is the stack entry we need to check
-		highestEntry = 28
-	)
-	pc := make([]uintptr, highestEntry)
-	n := runtime.Callers(lowestEntry, pc)
-	frames := runtime.CallersFrames(pc[:n])
-
-	var frame runtime.Frame
-	more := true
-	for more {
-		frame, more = frames.Next()
-		if strings.HasSuffix(frame.File, "database/gormdb.go") {
-			caller = zapcore.EntryCaller{Defined: true, File: frame.File, Line: frame.Line}
-			// we may have multiple stack entries from gormdb,
-			// but we use the first one; the entry point into gormdb.
-			break
-		}
+func (l Logger) Warn(ctx context.Context, str string, args ...interface{}) {
+	if l.LogLevel < gormlogger.Warn {
+		return
 	}
-	enc.AppendString(caller.TrimmedPath())
+	l.logger().Sugar().Warnf(str, args...)
 }
 
-var sqlRegexp = regexp.MustCompile(`(\$\d+)|\?`)
+func (l Logger) Error(ctx context.Context, str string, args ...interface{}) {
+	if l.LogLevel < gormlogger.Error {
+		return
+	}
+	l.logger().Sugar().Errorf(str, args...)
+}
 
-// Print implements the GormLogger interface.
-func (l Logger) Print(values ...interface{}) {
-	// values[0] = level (sql, log)
-	// values[1] = source file:line
-	// values[2] = latency (query execution time)
-	// values[3] = sql query
-	// values[4] = values for query
-	// values[5] = affected-rows (if available)
-	if len(values) > 1 {
-		level := values[0].(string)
-		switch level {
-		case "sql":
-			formattedValues := getFormattedValues(values)
-			sql := fmt.Sprintf(sqlRegexp.ReplaceAllString(values[3].(string), "%v"), formattedValues...)
-			l := l.With(zap.Any("latency", values[2]))
-			if len(values) > 5 {
-				l = l.With(zap.Any("affected-rows", values[5]))
-			}
-			l.Debug(sql)
+func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
+	if l.LogLevel <= 0 {
+		return
+	}
+	elapsed := time.Since(begin)
+	switch {
+	case err != nil && l.LogLevel >= gormlogger.Error && (!l.IgnoreRecordNotFoundError || !errors.Is(err, gorm.ErrRecordNotFound)):
+		sql, rows := fc()
+		l.logger().Error("trace", zap.Error(err), zap.Duration("elapsed", elapsed), zap.Int64("rows", rows), zap.String("sql", sql))
+	case l.SlowThreshold != 0 && elapsed > l.SlowThreshold && l.LogLevel >= gormlogger.Warn:
+		sql, rows := fc()
+		l.logger().Warn("trace", zap.Duration("elapsed", elapsed), zap.Int64("rows", rows), zap.String("sql", sql))
+	case l.LogLevel >= gormlogger.Info:
+		sql, rows := fc()
+		l.logger().Debug("trace", zap.Duration("elapsed", elapsed), zap.Int64("rows", rows), zap.String("sql", sql))
+	}
+}
+
+var (
+	gormPackage      = filepath.Join("gorm.io", "gorm")
+	quickfeedPackage = filepath.Join("github.com", "autograde", "quickfeed", "log")
+)
+
+func (l Logger) logger() *zap.Logger {
+	for i := 2; i < 15; i++ {
+		_, file, _, ok := runtime.Caller(i)
+		switch {
+		case !ok:
+		case strings.HasSuffix(file, "_test.go"):
+		case strings.Contains(file, gormPackage):
+		case strings.Contains(file, quickfeedPackage):
 		default:
-			l.Sugar().Info(values[2:]...)
+			return l.ZapLogger.WithOptions(zap.AddCallerSkip(i))
 		}
 	}
-}
-
-func getFormattedValues(values []interface{}) []interface{} {
-	rawValues := values[4].([]interface{})
-	formattedValues := make([]interface{}, 0, len(rawValues))
-	for _, value := range rawValues {
-		switch v := value.(type) {
-		case time.Time:
-			formattedValues = append(formattedValues, fmt.Sprint(v))
-		case []byte:
-			if str := string(v); isPrintable(str) {
-				formattedValues = append(formattedValues, fmt.Sprint(str))
-			} else {
-				formattedValues = append(formattedValues, "<binary>")
-			}
-		default:
-			str := "NULL"
-			if v != nil {
-				str = fmt.Sprint(v)
-			}
-			formattedValues = append(formattedValues, str)
-		}
-	}
-	return formattedValues
-}
-
-func isPrintable(s string) bool {
-	for _, r := range s {
-		if !unicode.IsPrint(r) {
-			return false
-		}
-	}
-	return true
+	return l.ZapLogger
 }
