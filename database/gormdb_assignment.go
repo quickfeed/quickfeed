@@ -1,8 +1,6 @@
 package database
 
 import (
-	"fmt"
-
 	pb "github.com/autograde/quickfeed/ag"
 	"gorm.io/gorm"
 )
@@ -103,7 +101,12 @@ func (db *GormDB) UpdateAssignments(assignments []*pb.Assignment) error {
 // of requested type with preloaded submissions.
 func (db *GormDB) GetCourseAssignmentsWithSubmissions(courseID uint64, submissionType pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error) {
 	var assignments []*pb.Assignment
-	if err := db.conn.Preload("Submissions").Preload("Submissions.Reviews").Where(&pb.Assignment{CourseID: courseID}).Order("order").Find(&assignments).Error; err != nil {
+	// the 'order' field of pb.Assignment must be in 'qoutes' since otherwise it will be interpreted as SQL
+	if err := db.conn.Preload("Submissions").
+		Preload("Submissions.Reviews").
+		Where(&pb.Assignment{CourseID: courseID}).
+		Order("'order'").
+		Find(&assignments).Error; err != nil {
 		return nil, err
 	}
 	if submissionType == pb.SubmissionsForCourseRequest_ALL {
@@ -123,12 +126,13 @@ func (db *GormDB) GetCourseAssignmentsWithSubmissions(courseID uint64, submissio
 // returns data required for results page (score and status)
 func (db *GormDB) GetCourseAssignmentsWithSubmissionsNoBuildInfo(courseID uint64, submissionType pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error) {
 	var assignments []*pb.Assignment
-
-	if err := db.conn.Preload("Submissions").Where(&pb.Assignment{CourseID: courseID}).Order("order").Find(&assignments).Error; err != nil {
-		fmt.Println(err.Error())
+	// the 'order' field of pb.Assignment must be in 'qoutes' since otherwise it will be interpreted as SQL
+	if err := db.conn.Preload("Submissions").
+		Where(&pb.Assignment{CourseID: courseID}).
+		Order("'order'").
+		Find(&assignments).Error; err != nil {
 		return nil, err
 	}
-
 	return assignments, nil
 }
 
