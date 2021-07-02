@@ -29,18 +29,8 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 			CourseID: assignment.CourseID,
 			Order:    assignment.Order,
 		}).
-		Assign(map[string]interface{}{
-			"name":              assignment.Name,
-			"order":             assignment.Order,
-			"script_file":       assignment.ScriptFile,
-			"deadline":          assignment.Deadline,
-			"auto_approve":      assignment.AutoApprove,
-			"score_limit":       assignment.ScoreLimit,
-			"is_group_lab":      assignment.IsGroupLab,
-			"reviewers":         assignment.Reviewers,
-			"container_timeout": assignment.ContainerTimeout,
-			"skip_tests":        assignment.SkipTests,
-		}).FirstOrCreate(assignment).Error
+		Assign(assignment).
+		FirstOrCreate(assignment).Error
 }
 
 // GetAssignment returns assignment with the given ID.
