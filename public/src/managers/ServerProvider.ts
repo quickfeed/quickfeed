@@ -301,20 +301,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getLoggedInUser(): Promise<User | null> {
-        const result = await this.helper.get<IUser>(URL_ENDPOINT.user);
-        if (result.statusCode !== 302 || !result.data) {
-            console.log("failed to get logged in user; status code: " + result.statusCode);
+        const result = await this.grpcHelper.getUser();
+        if (result.status.getCode() !== 0 || !result.data) {
+            console.log("failed to get logged in user; status code: " + result.status.getCode());
             return null;
         }
-        const iusr = result.data;
-        const usr = new User();
-        usr.setId(iusr.id);
-        usr.setStudentid(iusr.studentid);
-        usr.setName(iusr.name);
-        usr.setEmail(iusr.email);
-        usr.setAvatarurl(iusr.avatarurl);
-        usr.setIsadmin(iusr.isadmin);
-        return usr;
+        const iusr = result.data
+        return iusr;
     }
 
     public async updateAssignments(courseID: number): Promise<boolean> {
