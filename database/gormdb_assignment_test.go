@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/proto"
 	"gorm.io/gorm"
 )
 

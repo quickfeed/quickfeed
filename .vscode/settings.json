@@ -97,6 +97,7 @@
         "paxos",
         "pgrep",
         "privkey",
+        "protobuf",
         "protoimpl",
         "quickfeed",
         "repotoken",
