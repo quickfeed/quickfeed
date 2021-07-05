@@ -147,10 +147,6 @@ func registerAuth(ags *AutograderService, e *echo.Echo) {
 	oauth2.GET("", auth.OAuth2Login(logger, ags.db))
 	oauth2.GET("/callback", auth.OAuth2Callback(logger, ags.db))
 	e.GET("/logout", auth.OAuth2Logout(logger))
-
-	api := e.Group("/api/v1")
-	api.Use(auth.AccessControl(logger, ags.db, ags.scms))
-	api.GET("/user", GetSelf(ags.db))
 }
 
 func registerFrontend(e *echo.Echo, entryPoint, public string) {
