@@ -17,7 +17,7 @@ import (
 
 func init() {
 	gob.Register(&UserSession{})
-	TokenStore = &UserToken{store: make(map[string]uint64)}
+	TokenStore = &UserToken{store: make(map[string]*http.Request)}
 }
 
 // Session keys.
@@ -49,20 +49,27 @@ func newUserSession(id uint64) *UserSession {
 
 // UserToken holds a map from session cookies to user IDs.
 type UserToken struct {
-	store map[string]uint64
+	store map[string]*http.Request
 }
 
-func (ut *UserToken) add(token string, id uint64) {
-	for token, userID := range TokenStore.store {
-		if userID == id {
-			delete(TokenStore.store, token)
+func (ut *UserToken) add(token string) {
+	if ut.store[token] == nil {
+		if request, err := http.NewRequest("GET", "/", nil); err == nil {
+			request.Header.Set(Cookie, token)
+			ut.store[token] = request
 		}
 	}
-	ut.store[token] = id
 }
 
 func (ut *UserToken) Get(token string) uint64 {
-	return TokenStore.store[token]
+	ut.add(token)
+	if sess, err := gothic.Store.Get(ut.store[token], SessionKey); err == nil {
+		if i, ok := sess.Values[UserKey]; ok {
+			us := i.(*UserSession)
+			return us.ID
+		}
+	}
+	return 0
 }
 
 var TokenStore *UserToken
@@ -343,14 +350,6 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 			if !foundSCMProvider {
 				logger.Info("no SCM providers found for", zap.String("user", user.String()))
 				return echo.NewHTTPError(http.StatusBadRequest, err)
-			}
-
-			token, err := c.Cookie(SessionKey)
-			if err != nil {
-				return err
-			}
-			if id := TokenStore.Get(token.String()); id != user.GetID() {
-				TokenStore.add(token.String(), user.GetID())
 			}
 
 			// TODO: Add access control list.
