@@ -98,6 +98,7 @@
         "pgrep",
         "privkey",
         "protobuf",
+        "protoc",
         "protoimpl",
         "quickfeed",
         "repotoken",
