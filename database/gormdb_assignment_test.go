@@ -138,3 +138,98 @@ func TestUpdateAssignment(t *testing.T) {
 		}
 	}
 }
+
+func disabledTestGetAssignmentsWithSubmissions(t *testing.T) {
+	// TODO(meling) disabled pending fix to ensure that CreateSubmission also updates review fields
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	// create teacher, course, user (student) and assignment
+	user, course, assignment := setupCourseAssignment(t, db)
+	teacher := uint64(1)
+
+	want := &pb.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Score:        42,
+		ScoreObjects: "scores",
+		BuildInfo:    "build info",
+		Reviews: []*pb.Review{
+			{ReviewerID: teacher, Ready: true, Score: 24},
+		},
+	}
+	if err := db.CreateSubmission(want); err != nil {
+		t.Fatal(err)
+	}
+
+	assignments, err := db.GetAssignmentsWithSubmissions(course.ID, pb.SubmissionsForCourseRequest_ALL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantAssignment := (proto.Clone(assignment)).(*pb.Assignment)
+	wantAssignment.Submissions = append(wantAssignment.Submissions, want)
+	if diff := cmp.Diff(wantAssignment, assignments[0], cmpopts.IgnoreUnexported(pb.Assignment{}, pb.Submission{}, pb.Review{})); diff != "" {
+		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
+	}
+
+	for _, a := range assignments {
+		t.Logf("1 assignment: %+v", a)
+	}
+
+	want2 := &pb.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Score:        45,
+		ScoreObjects: "scores 45",
+		BuildInfo:    "build info 56",
+		Reviews: []*pb.Review{
+			{ReviewerID: teacher, Ready: false, Score: 54},
+		},
+	}
+	if err := db.CreateSubmission(want2); err != nil {
+		t.Fatal(err)
+	}
+
+	assignments, err = db.GetAssignmentsWithSubmissions(course.ID, pb.SubmissionsForCourseRequest_ALL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantAssignment2 := (proto.Clone(assignment)).(*pb.Assignment)
+	wantAssignment2.Submissions = append(wantAssignment2.Submissions, want2)
+	if diff := cmp.Diff(wantAssignment2, assignments[0], cmpopts.IgnoreUnexported(pb.Assignment{}, pb.Submission{}, pb.Review{})); diff != "" {
+		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
+	}
+
+	for _, a := range assignments {
+		t.Logf("2 assignment: %+v", a)
+		t.Logf("2 wssignment: %+v", wantAssignment2)
+	}
+
+	// new assignment without manual review
+	// assignment = &pb.Assignment{
+	// 	CourseID: course.ID,
+	// 	Order:    2,
+	// }
+	// if err := db.CreateAssignment(assignment); err != nil {
+	// 	t.Fatal(err)
+	// }
+
+	// want3 := &pb.Submission{
+	// 	AssignmentID: assignment.ID,
+	// 	UserID:       user.ID,
+	// 	Score:        99,
+	// 	ScoreObjects: "scores 99",
+	// 	BuildInfo:    "build info xx",
+	// }
+	// if err := db.CreateSubmission(want3); err != nil {
+	// 	t.Fatal(err)
+	// }
+
+	// assignments, err = db.GetAssignmentsWithSubmissions(course.ID, pb.SubmissionsForCourseRequest_ALL)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// for _, a := range assignments {
+	// 	t.Logf("assignment: %+v", a)
+	// }
+}
