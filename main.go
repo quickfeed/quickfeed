@@ -20,7 +20,6 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
@@ -75,15 +74,10 @@ func main() {
 	logger := logq.Zap(true)
 	defer logger.Sync()
 
-	db, err := database.NewGormDB("sqlite3", *dbFile, database.NewGormLogger(logger))
+	db, err := database.NewGormDB(*dbFile, logger)
 	if err != nil {
 		log.Fatalf("can't connect to database: %v\n", err)
 	}
-	defer func() {
-		if dbErr := db.Close(); dbErr != nil {
-			log.Printf("error closing database: %v\n", dbErr)
-		}
-	}()
 
 	// start envoy in a docker container; fetch envoy docker image if necessary
 	// go envoy.StartEnvoy(logger)

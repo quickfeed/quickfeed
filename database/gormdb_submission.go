@@ -2,7 +2,7 @@ package database
 
 import (
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 // CreateSubmission creates a new submission record or updates the most
@@ -29,13 +29,13 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	}
 
 	// Check that user/group with given ID exists.
-	var group uint64
+	var group int64
 	if err := m.Count(&group).Error; err != nil {
 		return err
 	}
 
 	// Checks that the assignment exists.
-	var assignment uint64
+	var assignment int64
 	if err := db.conn.Model(&pb.Assignment{}).Where(&pb.Assignment{
 		ID: submission.AssignmentID,
 	}).Count(&assignment).Error; err != nil {
@@ -64,13 +64,14 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	}
 
 	// If a submission for the given assignment and student/group already exists, update it.
-	// Otherwise create a new submission record
+	// Otherwise create a new submission record. Note that Submission.Reviews will not be updated;
+	// to update Submission.Reviews, use UpdateReview().
 	var labSubmission pb.Submission
 	err := db.conn.Where(query).Assign(submission).FirstOrCreate(&labSubmission).Error
 
 	if submission.GetScore() == 0 {
 		// GORM doesn't update zero value fields, unless forced:
-		err = db.conn.Model(submission).Where(query).Updates(map[string]interface{}{"Score": 0}).Error
+		err = db.conn.Model(submission).Where(query).Update("score", 0).Error
 	}
 	submission.ID = labSubmission.GetID()
 	return err
@@ -142,7 +143,7 @@ func (db *GormDB) CreateReview(query *pb.Review) error {
 
 // UpdateReview updates feedback text, review and ready status
 func (db *GormDB) UpdateReview(query *pb.Review) error {
-	return db.conn.Model(&pb.Review{ID: query.ID}).Update(&pb.Review{
+	return db.conn.Model(&pb.Review{ID: query.ID}).Updates(&pb.Review{
 		Feedback:   query.Feedback,
 		Review:     query.Review,
 		Ready:      query.Ready,

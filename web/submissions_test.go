@@ -7,11 +7,10 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web"
 	"go.uber.org/zap"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestSubmissionsAccess(t *testing.T) {
@@ -446,7 +445,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})

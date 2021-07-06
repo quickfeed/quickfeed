@@ -11,8 +11,8 @@ import (
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/log"
-	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 const (

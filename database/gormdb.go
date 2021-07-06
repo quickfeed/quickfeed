@@ -4,9 +4,11 @@ import (
 	"errors"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/jinzhu/gorm"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 var (
@@ -39,16 +41,13 @@ type GormDB struct {
 }
 
 // NewGormDB creates a new gorm database using the provided driver.
-func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
-	conn, err := gorm.Open(driver, path)
+func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
+	conn, err := gorm.Open(sqlite.Open(path), &gorm.Config{
+		Logger: NewGORMLogger(logger),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	if logger != nil {
-		conn.SetLogger(logger)
-	}
-	conn.LogMode(logger != nil)
 
 	if err := conn.AutoMigrate(
 		&pb.User{},
@@ -63,7 +62,7 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 		&pb.GradingBenchmark{},
 		&pb.GradingCriterion{},
 		&pb.Review{},
-	).Error; err != nil {
+	); err != nil {
 		return nil, err
 	}
 
@@ -90,7 +89,7 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *pb.User, remoteIdentity *pb
 
 // AssociateUserWithRemoteIdentity associates remote identity with the user with given ID.
 func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, remoteID uint64, accessToken string) error {
-	var count uint64
+	var count int64
 	if err := db.conn.
 		Model(&pb.RemoteIdentity{}).
 		Where(&pb.RemoteIdentity{

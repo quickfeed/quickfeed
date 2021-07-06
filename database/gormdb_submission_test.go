@@ -10,7 +10,7 @@ import (
 	"github.com/autograde/quickfeed/database"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 func TestGormDBGetSubmissionForUser(t *testing.T) {
@@ -192,6 +192,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	// expected to fail with record not found
 	if err := db.CreateSubmission(&pb.Submission{
 		AssignmentID: 1,
 		UserID:       1,
@@ -199,42 +200,14 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	teacher := createFakeUser(t, db, 10)
-	// create a course and an assignment
-	var course pb.Course
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
-	assignment := pb.Assignment{
-		CourseID: course.ID,
-		Order:    1,
-	}
-	if err := db.CreateAssignment(&assignment); err != nil {
-		t.Fatal(err)
-	}
+	// create teacher, course, user (student) and assignment
+	user, course, assignment := setupCourseAssignment(t, db)
 
-	// create a submission for the assignment; should fail
+	// create a submission for the assignment for non-existing user; should fail
 	if err := db.CreateSubmission(&pb.Submission{
 		AssignmentID: assignment.ID,
-		UserID:       2,
+		UserID:       3,
 	}); err != gorm.ErrRecordNotFound {
-		t.Fatal(err)
-	}
-
-	// create user and enroll as student
-	user := createFakeUser(t, db, 11)
-	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	query := &pb.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   pb.Enrollment_STUDENT,
-	}
-	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 

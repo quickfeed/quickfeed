@@ -7,8 +7,8 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/urfave/cli"
+	"go.uber.org/zap"
 )
 
 // Example usage (to set admin user to the first user registered):
@@ -69,9 +69,7 @@ func main() {
 
 func before(db *database.GormDB) cli.BeforeFunc {
 	return func(c *cli.Context) error {
-		tdb, err := database.NewGormDB("sqlite3", c.String("database"),
-			database.NewGormLogger(database.BuildLogger()),
-		)
+		tdb, err := database.NewGormDB(c.String("database"), zap.NewNop())
 		if err != nil {
 			return err
 		}
@@ -82,9 +80,6 @@ func before(db *database.GormDB) cli.BeforeFunc {
 
 func after(db *database.GormDB) cli.AfterFunc {
 	return func(c *cli.Context) error {
-		if db != nil {
-			return db.Close()
-		}
 		return nil
 	}
 }

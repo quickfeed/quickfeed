@@ -152,7 +152,7 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 	if request.GetSkipBuildInfo() {
 		getCourseSubFn = s.db.GetCourseAssignmentsWithSubmissionsNoBuildInfo
 	} else {
-		getCourseSubFn = s.db.GetCourseAssignmentsWithSubmissions
+		getCourseSubFn = s.db.GetAssignmentsWithSubmissions
 	}
 	assignments, err := getCourseSubFn(request.GetCourseID(), request.Type)
 	if err != nil {
