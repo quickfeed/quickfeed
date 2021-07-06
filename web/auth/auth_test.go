@@ -12,7 +12,6 @@ import (
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/gorilla/sessions"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/markbates/goth"
