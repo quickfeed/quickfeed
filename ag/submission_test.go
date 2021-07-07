@@ -16,8 +16,14 @@ func TestNewestSubmissionDate(t *testing.T) {
 		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, new, pb.ErrMissingBuildInfo)
 	}
 
+	submission = &pb.Submission{}
+	new, err = submission.NewestBuildDate(tim)
+	if err == nil {
+		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, new, pb.ErrMissingBuildInfo)
+	}
+
 	submission = &pb.Submission{
-		Results: &score.Results{},
+		BuildInfo: &score.BuildInfo{},
 	}
 	new, err = submission.NewestBuildDate(tim)
 	if err == nil {
@@ -25,20 +31,8 @@ func TestNewestSubmissionDate(t *testing.T) {
 	}
 
 	submission = &pb.Submission{
-		Results: &score.Results{
-			BuildInfo: &score.BuildInfo{},
-		},
-	}
-	new, err = submission.NewestBuildDate(tim)
-	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, new, pb.ErrMissingBuildInfo)
-	}
-
-	submission = &pb.Submission{
-		Results: &score.Results{
-			BuildInfo: &score.BuildInfo{
-				BuildDate: "string",
-			},
+		BuildInfo: &score.BuildInfo{
+			BuildDate: "string",
 		},
 	}
 	new, err = submission.NewestBuildDate(tim)
@@ -48,10 +42,8 @@ func TestNewestSubmissionDate(t *testing.T) {
 
 	buildDate := time.Now()
 	submission = &pb.Submission{
-		Results: &score.Results{
-			BuildInfo: &score.BuildInfo{
-				BuildDate: buildDate.Format(pb.TimeLayout),
-			},
+		BuildInfo: &score.BuildInfo{
+			BuildDate: buildDate.Format(pb.TimeLayout),
 		},
 	}
 	new, err = submission.NewestBuildDate(tim)

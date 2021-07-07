@@ -114,11 +114,13 @@ proto.score.Score.prototype.toObject = function(opt_includeInstance) {
 proto.score.Score.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    secret: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    testname: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    score: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    maxscore: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    weight: jspb.Message.getFieldWithDefault(msg, 6, 0)
+    submissionid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    secret: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    testname: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    score: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    maxscore: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    weight: jspb.Message.getFieldWithDefault(msg, 7, 0),
+    testdetails: jspb.Message.getFieldWithDefault(msg, 8, "")
   };
 
   if (includeInstance) {
@@ -160,24 +162,32 @@ proto.score.Score.deserializeBinaryFromReader = function(msg, reader) {
       msg.setId(value);
       break;
     case 2:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setSecret(value);
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setSubmissionid(value);
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
-      msg.setTestname(value);
+      msg.setSecret(value);
       break;
     case 4:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setScore(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setTestname(value);
       break;
     case 5:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setMaxscore(value);
+      msg.setScore(value);
       break;
     case 6:
       var value = /** @type {number} */ (reader.readInt32());
+      msg.setMaxscore(value);
+      break;
+    case 7:
+      var value = /** @type {number} */ (reader.readInt32());
       msg.setWeight(value);
+      break;
+    case 8:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setTestdetails(value);
       break;
     default:
       reader.skipField();
@@ -215,38 +225,52 @@ proto.score.Score.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getSecret();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getSubmissionid();
+  if (f !== 0) {
+    writer.writeUint64(
       2,
       f
     );
   }
-  f = message.getTestname();
+  f = message.getSecret();
   if (f.length > 0) {
     writer.writeString(
       3,
       f
     );
   }
-  f = message.getScore();
-  if (f !== 0) {
-    writer.writeInt32(
+  f = message.getTestname();
+  if (f.length > 0) {
+    writer.writeString(
       4,
       f
     );
   }
-  f = message.getMaxscore();
+  f = message.getScore();
   if (f !== 0) {
     writer.writeInt32(
       5,
       f
     );
   }
-  f = message.getWeight();
+  f = message.getMaxscore();
   if (f !== 0) {
     writer.writeInt32(
       6,
+      f
+    );
+  }
+  f = message.getWeight();
+  if (f !== 0) {
+    writer.writeInt32(
+      7,
+      f
+    );
+  }
+  f = message.getTestdetails();
+  if (f.length > 0) {
+    writer.writeString(
+      8,
       f
     );
   }
@@ -272,28 +296,28 @@ proto.score.Score.prototype.setId = function(value) {
 
 
 /**
- * optional string Secret = 2;
+ * optional uint64 SubmissionID = 2;
+ * @return {number}
+ */
+proto.score.Score.prototype.getSubmissionid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.score.Score} returns this
+ */
+proto.score.Score.prototype.setSubmissionid = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string Secret = 3;
  * @return {string}
  */
 proto.score.Score.prototype.getSecret = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.score.Score} returns this
- */
-proto.score.Score.prototype.setSecret = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
-};
-
-
-/**
- * optional string TestName = 3;
- * @return {string}
- */
-proto.score.Score.prototype.getTestname = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
@@ -302,34 +326,34 @@ proto.score.Score.prototype.getTestname = function() {
  * @param {string} value
  * @return {!proto.score.Score} returns this
  */
-proto.score.Score.prototype.setTestname = function(value) {
+proto.score.Score.prototype.setSecret = function(value) {
   return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
 /**
- * optional int32 Score = 4;
+ * optional string TestName = 4;
+ * @return {string}
+ */
+proto.score.Score.prototype.getTestname = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.score.Score} returns this
+ */
+proto.score.Score.prototype.setTestname = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
+};
+
+
+/**
+ * optional int32 Score = 5;
  * @return {number}
  */
 proto.score.Score.prototype.getScore = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.score.Score} returns this
- */
-proto.score.Score.prototype.setScore = function(value) {
-  return jspb.Message.setProto3IntField(this, 4, value);
-};
-
-
-/**
- * optional int32 MaxScore = 5;
- * @return {number}
- */
-proto.score.Score.prototype.getMaxscore = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
@@ -338,16 +362,16 @@ proto.score.Score.prototype.getMaxscore = function() {
  * @param {number} value
  * @return {!proto.score.Score} returns this
  */
-proto.score.Score.prototype.setMaxscore = function(value) {
+proto.score.Score.prototype.setScore = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional int32 Weight = 6;
+ * optional int32 MaxScore = 6;
  * @return {number}
  */
-proto.score.Score.prototype.getWeight = function() {
+proto.score.Score.prototype.getMaxscore = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
@@ -356,8 +380,44 @@ proto.score.Score.prototype.getWeight = function() {
  * @param {number} value
  * @return {!proto.score.Score} returns this
  */
-proto.score.Score.prototype.setWeight = function(value) {
+proto.score.Score.prototype.setMaxscore = function(value) {
   return jspb.Message.setProto3IntField(this, 6, value);
+};
+
+
+/**
+ * optional int32 Weight = 7;
+ * @return {number}
+ */
+proto.score.Score.prototype.getWeight = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.score.Score} returns this
+ */
+proto.score.Score.prototype.setWeight = function(value) {
+  return jspb.Message.setProto3IntField(this, 7, value);
+};
+
+
+/**
+ * optional string TestDetails = 8;
+ * @return {string}
+ */
+proto.score.Score.prototype.getTestdetails = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.score.Score} returns this
+ */
+proto.score.Score.prototype.setTestdetails = function(value) {
+  return jspb.Message.setProto3StringField(this, 8, value);
 };
 
 
@@ -393,10 +453,11 @@ proto.score.BuildInfo.prototype.toObject = function(opt_includeInstance) {
  */
 proto.score.BuildInfo.toObject = function(includeInstance, msg) {
   var f, obj = {
-    buildid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    builddate: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    buildlog: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    exectime: jspb.Message.getFieldWithDefault(msg, 4, 0)
+    id: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    submissionid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    builddate: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    buildlog: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    exectime: jspb.Message.getFieldWithDefault(msg, 5, 0)
   };
 
   if (includeInstance) {
@@ -435,17 +496,21 @@ proto.score.BuildInfo.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setBuildid(value);
+      msg.setId(value);
       break;
     case 2:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setBuilddate(value);
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setSubmissionid(value);
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
-      msg.setBuildlog(value);
+      msg.setBuilddate(value);
       break;
     case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setBuildlog(value);
+      break;
+    case 5:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setExectime(value);
       break;
@@ -478,31 +543,38 @@ proto.score.BuildInfo.prototype.serializeBinary = function() {
  */
 proto.score.BuildInfo.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getBuildid();
+  f = message.getId();
   if (f !== 0) {
     writer.writeUint64(
       1,
       f
     );
   }
-  f = message.getBuilddate();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getSubmissionid();
+  if (f !== 0) {
+    writer.writeUint64(
       2,
       f
     );
   }
-  f = message.getBuildlog();
+  f = message.getBuilddate();
   if (f.length > 0) {
     writer.writeString(
       3,
       f
     );
   }
+  f = message.getBuildlog();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
   f = message.getExectime();
   if (f !== 0) {
     writer.writeInt64(
-      4,
+      5,
       f
     );
   }
@@ -510,10 +582,10 @@ proto.score.BuildInfo.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional uint64 BuildID = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
-proto.score.BuildInfo.prototype.getBuildid = function() {
+proto.score.BuildInfo.prototype.getId = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -522,34 +594,34 @@ proto.score.BuildInfo.prototype.getBuildid = function() {
  * @param {number} value
  * @return {!proto.score.BuildInfo} returns this
  */
-proto.score.BuildInfo.prototype.setBuildid = function(value) {
+proto.score.BuildInfo.prototype.setId = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string BuildDate = 2;
+ * optional uint64 SubmissionID = 2;
+ * @return {number}
+ */
+proto.score.BuildInfo.prototype.getSubmissionid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.score.BuildInfo} returns this
+ */
+proto.score.BuildInfo.prototype.setSubmissionid = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string BuildDate = 3;
  * @return {string}
  */
 proto.score.BuildInfo.prototype.getBuilddate = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.score.BuildInfo} returns this
- */
-proto.score.BuildInfo.prototype.setBuilddate = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
-};
-
-
-/**
- * optional string BuildLog = 3;
- * @return {string}
- */
-proto.score.BuildInfo.prototype.getBuildlog = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
@@ -558,17 +630,35 @@ proto.score.BuildInfo.prototype.getBuildlog = function() {
  * @param {string} value
  * @return {!proto.score.BuildInfo} returns this
  */
-proto.score.BuildInfo.prototype.setBuildlog = function(value) {
+proto.score.BuildInfo.prototype.setBuilddate = function(value) {
   return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
 /**
- * optional int64 ExecTime = 4;
+ * optional string BuildLog = 4;
+ * @return {string}
+ */
+proto.score.BuildInfo.prototype.getBuildlog = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.score.BuildInfo} returns this
+ */
+proto.score.BuildInfo.prototype.setBuildlog = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
+};
+
+
+/**
+ * optional int64 ExecTime = 5;
  * @return {number}
  */
 proto.score.BuildInfo.prototype.getExectime = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
 
@@ -577,7 +667,7 @@ proto.score.BuildInfo.prototype.getExectime = function() {
  * @return {!proto.score.BuildInfo} returns this
  */
 proto.score.BuildInfo.prototype.setExectime = function(value) {
-  return jspb.Message.setProto3IntField(this, 4, value);
+  return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 

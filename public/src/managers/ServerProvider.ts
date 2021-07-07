@@ -427,17 +427,15 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     private toISubmission(sbm: Submission): ISubmission {
-        const results = sbm.getResults()
-        let buildInfo = results?.getBuildinfo();
+        let buildInfo = sbm.getBuildinfo();
         if (!buildInfo) {
             // TODO(meling) This seems a bit useless. How to avoid?
             buildInfo = new BuildInfo();
-            buildInfo.setBuildid(0);
             buildInfo.setBuilddate("2017-07-28");
             buildInfo.setBuildlog("No automated tests for this assignment");
             buildInfo.setExectime(1);
         }
-        const scores = results ? results.getScoresList() : [];
+        const scores = sbm.getScoresList();
         // TODO(meling) This notion of passed vs failed tests is perhaps not what we want.
         // Should be added to the ag/Submission message and be controlled on server-side.
         let failed = 0;

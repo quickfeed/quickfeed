@@ -169,9 +169,8 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 		for _, sbm := range a.Submissions {
 			if request.GetSkipBuildInfo() {
 				// TODO(meling) Check if this is enough: @Oskar and @BK
-				sbm.Results = &score.Results{
-					BuildInfo: &score.BuildInfo{},
-				}
+				sbm.BuildInfo = &score.BuildInfo{}
+				sbm.Scores = []*score.Score{}
 			} else {
 				err = sbm.MakeSubmissionReviews()
 				if err != nil {

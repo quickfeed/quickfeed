@@ -114,7 +114,8 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		AssignmentID: rData.Assignment.ID,
 		CommitHash:   rData.CommitID,
 		Score:        score,
-		Results:      result,
+		BuildInfo:    result.BuildInfo,
+		Scores:       result.Scores,
 		UserID:       rData.Repo.GetUserID(),
 		GroupID:      rData.Repo.GetGroupID(),
 		Status:       approvedStatus,
@@ -138,7 +139,7 @@ func randomSecret() string {
 }
 
 func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission) {
-	buildDate := submission.Results.BuildInfo.BuildDate
+	buildDate := submission.GetBuildInfo().GetBuildDate()
 	buildTime, err := time.Parse(pb.TimeLayout, buildDate)
 	if err != nil {
 		logger.Errorf("Failed to parse time from build date (%s): %v", buildDate, err)

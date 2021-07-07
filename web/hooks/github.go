@@ -180,13 +180,10 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
 	newSubmission := &pb.Submission{
 		AssignmentID: data.Assignment.ID,
-		Results: &score.Results{
-			BuildInfo: &score.BuildInfo{
-				BuildID:   0,
-				BuildDate: time.Now().Format(pb.TimeLayout),
-				BuildLog:  "No automated tests for this assignment",
-				ExecTime:  1,
-			},
+		BuildInfo: &score.BuildInfo{
+			BuildDate: time.Now().Format(pb.TimeLayout),
+			BuildLog:  "No automated tests for this assignment",
+			ExecTime:  1,
 		},
 		CommitHash: data.CommitID,
 		UserID:     data.Repo.UserID,

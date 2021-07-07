@@ -5,6 +5,9 @@ export class Score extends jspb.Message {
   getId(): number;
   setId(value: number): Score;
 
+  getSubmissionid(): number;
+  setSubmissionid(value: number): Score;
+
   getSecret(): string;
   setSecret(value: string): Score;
 
@@ -20,6 +23,9 @@ export class Score extends jspb.Message {
   getWeight(): number;
   setWeight(value: number): Score;
 
+  getTestdetails(): string;
+  setTestdetails(value: string): Score;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Score.AsObject;
   static toObject(includeInstance: boolean, msg: Score): Score.AsObject;
@@ -31,17 +37,22 @@ export class Score extends jspb.Message {
 export namespace Score {
   export type AsObject = {
     id: number,
+    submissionid: number,
     secret: string,
     testname: string,
     score: number,
     maxscore: number,
     weight: number,
+    testdetails: string,
   }
 }
 
 export class BuildInfo extends jspb.Message {
-  getBuildid(): number;
-  setBuildid(value: number): BuildInfo;
+  getId(): number;
+  setId(value: number): BuildInfo;
+
+  getSubmissionid(): number;
+  setSubmissionid(value: number): BuildInfo;
 
   getBuilddate(): string;
   setBuilddate(value: string): BuildInfo;
@@ -62,7 +73,8 @@ export class BuildInfo extends jspb.Message {
 
 export namespace BuildInfo {
   export type AsObject = {
-    buildid: number,
+    id: number,
+    submissionid: number,
     builddate: string,
     buildlog: string,
     exectime: number,

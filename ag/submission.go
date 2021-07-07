@@ -14,10 +14,10 @@ func (s *Submission) IsApproved() bool {
 // NewestBuildDate returns the submission's build date if newer than the provided submission date.
 // Otherwise, the provided submission date is returned, i.e., if it is newer.
 func (s *Submission) NewestBuildDate(submissionDate time.Time) (t time.Time, err error) {
-	if s == nil || s.Results == nil || s.Results.BuildInfo == nil {
+	if s == nil || s.BuildInfo == nil {
 		return t, ErrMissingBuildInfo
 	}
-	currentSubmissionDate, err := time.Parse(TimeLayout, s.Results.BuildInfo.BuildDate)
+	currentSubmissionDate, err := time.Parse(TimeLayout, s.BuildInfo.BuildDate)
 	if err != nil {
 		return t, err
 	}
