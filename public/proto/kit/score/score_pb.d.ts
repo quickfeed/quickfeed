@@ -1,6 +1,10 @@
 import * as jspb from "google-protobuf"
 
+
 export class Score extends jspb.Message {
+  getId(): number;
+  setId(value: number): Score;
+
   getSecret(): string;
   setSecret(value: string): Score;
 
@@ -26,6 +30,7 @@ export class Score extends jspb.Message {
 
 export namespace Score {
   export type AsObject = {
+    id: number,
     secret: string,
     testname: string,
     score: number,
@@ -65,6 +70,9 @@ export namespace BuildInfo {
 }
 
 export class Results extends jspb.Message {
+  getId(): number;
+  setId(value: number): Results;
+
   getBuildinfo(): BuildInfo | undefined;
   setBuildinfo(value?: BuildInfo): Results;
   hasBuildinfo(): boolean;
@@ -85,6 +93,7 @@ export class Results extends jspb.Message {
 
 export namespace Results {
   export type AsObject = {
+    id: number,
     buildinfo?: BuildInfo.AsObject,
     scoresList: Array<Score.AsObject>,
   }

@@ -113,11 +113,12 @@ proto.score.Score.prototype.toObject = function(opt_includeInstance) {
  */
 proto.score.Score.toObject = function(includeInstance, msg) {
   var f, obj = {
-    secret: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    testname: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    score: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    maxscore: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    weight: jspb.Message.getFieldWithDefault(msg, 5, 0)
+    id: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    secret: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    testname: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    score: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    maxscore: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    weight: jspb.Message.getFieldWithDefault(msg, 6, 0)
   };
 
   if (includeInstance) {
@@ -155,22 +156,26 @@ proto.score.Score.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setSecret(value);
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setId(value);
       break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
-      msg.setTestname(value);
+      msg.setSecret(value);
       break;
     case 3:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setScore(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setTestname(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setMaxscore(value);
+      msg.setScore(value);
       break;
     case 5:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setMaxscore(value);
+      break;
+    case 6:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setWeight(value);
       break;
@@ -203,38 +208,45 @@ proto.score.Score.prototype.serializeBinary = function() {
  */
 proto.score.Score.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getSecret();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getId();
+  if (f !== 0) {
+    writer.writeUint64(
       1,
       f
     );
   }
-  f = message.getTestname();
+  f = message.getSecret();
   if (f.length > 0) {
     writer.writeString(
       2,
       f
     );
   }
-  f = message.getScore();
-  if (f !== 0) {
-    writer.writeInt32(
+  f = message.getTestname();
+  if (f.length > 0) {
+    writer.writeString(
       3,
       f
     );
   }
-  f = message.getMaxscore();
+  f = message.getScore();
   if (f !== 0) {
     writer.writeInt32(
       4,
       f
     );
   }
-  f = message.getWeight();
+  f = message.getMaxscore();
   if (f !== 0) {
     writer.writeInt32(
       5,
+      f
+    );
+  }
+  f = message.getWeight();
+  if (f !== 0) {
+    writer.writeInt32(
+      6,
       f
     );
   }
@@ -242,28 +254,28 @@ proto.score.Score.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional string Secret = 1;
+ * optional uint64 ID = 1;
+ * @return {number}
+ */
+proto.score.Score.prototype.getId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.score.Score} returns this
+ */
+proto.score.Score.prototype.setId = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional string Secret = 2;
  * @return {string}
  */
 proto.score.Score.prototype.getSecret = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.score.Score} returns this
- */
-proto.score.Score.prototype.setSecret = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * optional string TestName = 2;
- * @return {string}
- */
-proto.score.Score.prototype.getTestname = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
@@ -272,34 +284,34 @@ proto.score.Score.prototype.getTestname = function() {
  * @param {string} value
  * @return {!proto.score.Score} returns this
  */
-proto.score.Score.prototype.setTestname = function(value) {
+proto.score.Score.prototype.setSecret = function(value) {
   return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
 /**
- * optional int32 Score = 3;
+ * optional string TestName = 3;
+ * @return {string}
+ */
+proto.score.Score.prototype.getTestname = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.score.Score} returns this
+ */
+proto.score.Score.prototype.setTestname = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional int32 Score = 4;
  * @return {number}
  */
 proto.score.Score.prototype.getScore = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.score.Score} returns this
- */
-proto.score.Score.prototype.setScore = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
-};
-
-
-/**
- * optional int32 MaxScore = 4;
- * @return {number}
- */
-proto.score.Score.prototype.getMaxscore = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
@@ -308,16 +320,16 @@ proto.score.Score.prototype.getMaxscore = function() {
  * @param {number} value
  * @return {!proto.score.Score} returns this
  */
-proto.score.Score.prototype.setMaxscore = function(value) {
+proto.score.Score.prototype.setScore = function(value) {
   return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional int32 Weight = 5;
+ * optional int32 MaxScore = 5;
  * @return {number}
  */
-proto.score.Score.prototype.getWeight = function() {
+proto.score.Score.prototype.getMaxscore = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
@@ -326,8 +338,26 @@ proto.score.Score.prototype.getWeight = function() {
  * @param {number} value
  * @return {!proto.score.Score} returns this
  */
-proto.score.Score.prototype.setWeight = function(value) {
+proto.score.Score.prototype.setMaxscore = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
+};
+
+
+/**
+ * optional int32 Weight = 6;
+ * @return {number}
+ */
+proto.score.Score.prototype.getWeight = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.score.Score} returns this
+ */
+proto.score.Score.prototype.setWeight = function(value) {
+  return jspb.Message.setProto3IntField(this, 6, value);
 };
 
 
@@ -404,7 +434,7 @@ proto.score.BuildInfo.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {number} */ (reader.readInt64());
+      var value = /** @type {number} */ (reader.readUint64());
       msg.setBuildid(value);
       break;
     case 2:
@@ -450,7 +480,7 @@ proto.score.BuildInfo.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getBuildid();
   if (f !== 0) {
-    writer.writeInt64(
+    writer.writeUint64(
       1,
       f
     );
@@ -480,7 +510,7 @@ proto.score.BuildInfo.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int64 BuildID = 1;
+ * optional uint64 BuildID = 1;
  * @return {number}
  */
 proto.score.BuildInfo.prototype.getBuildid = function() {
@@ -557,7 +587,7 @@ proto.score.BuildInfo.prototype.setExectime = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.score.Results.repeatedFields_ = [2];
+proto.score.Results.repeatedFields_ = [3];
 
 
 
@@ -590,6 +620,7 @@ proto.score.Results.prototype.toObject = function(opt_includeInstance) {
  */
 proto.score.Results.toObject = function(includeInstance, msg) {
   var f, obj = {
+    id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     buildinfo: (f = msg.getBuildinfo()) && proto.score.BuildInfo.toObject(includeInstance, f),
     scoresList: jspb.Message.toObjectList(msg.getScoresList(),
     proto.score.Score.toObject, includeInstance)
@@ -630,11 +661,15 @@ proto.score.Results.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setId(value);
+      break;
+    case 2:
       var value = new proto.score.BuildInfo;
       reader.readMessage(value,proto.score.BuildInfo.deserializeBinaryFromReader);
       msg.setBuildinfo(value);
       break;
-    case 2:
+    case 3:
       var value = new proto.score.Score;
       reader.readMessage(value,proto.score.Score.deserializeBinaryFromReader);
       msg.addScores(value);
@@ -668,10 +703,17 @@ proto.score.Results.prototype.serializeBinary = function() {
  */
 proto.score.Results.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getId();
+  if (f !== 0) {
+    writer.writeUint64(
+      1,
+      f
+    );
+  }
   f = message.getBuildinfo();
   if (f != null) {
     writer.writeMessage(
-      1,
+      2,
       f,
       proto.score.BuildInfo.serializeBinaryToWriter
     );
@@ -679,7 +721,7 @@ proto.score.Results.serializeBinaryToWriter = function(message, writer) {
   f = message.getScoresList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      2,
+      3,
       f,
       proto.score.Score.serializeBinaryToWriter
     );
@@ -688,12 +730,30 @@ proto.score.Results.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional BuildInfo BuildInfo = 1;
+ * optional uint64 ID = 1;
+ * @return {number}
+ */
+proto.score.Results.prototype.getId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.score.Results} returns this
+ */
+proto.score.Results.prototype.setId = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional BuildInfo BuildInfo = 2;
  * @return {?proto.score.BuildInfo}
  */
 proto.score.Results.prototype.getBuildinfo = function() {
   return /** @type{?proto.score.BuildInfo} */ (
-    jspb.Message.getWrapperField(this, proto.score.BuildInfo, 1));
+    jspb.Message.getWrapperField(this, proto.score.BuildInfo, 2));
 };
 
 
@@ -702,7 +762,7 @@ proto.score.Results.prototype.getBuildinfo = function() {
  * @return {!proto.score.Results} returns this
 */
 proto.score.Results.prototype.setBuildinfo = function(value) {
-  return jspb.Message.setWrapperField(this, 1, value);
+  return jspb.Message.setWrapperField(this, 2, value);
 };
 
 
@@ -720,17 +780,17 @@ proto.score.Results.prototype.clearBuildinfo = function() {
  * @return {boolean}
  */
 proto.score.Results.prototype.hasBuildinfo = function() {
-  return jspb.Message.getField(this, 1) != null;
+  return jspb.Message.getField(this, 2) != null;
 };
 
 
 /**
- * repeated Score Scores = 2;
+ * repeated Score Scores = 3;
  * @return {!Array<!proto.score.Score>}
  */
 proto.score.Results.prototype.getScoresList = function() {
   return /** @type{!Array<!proto.score.Score>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.score.Score, 2));
+    jspb.Message.getRepeatedWrapperField(this, proto.score.Score, 3));
 };
 
 
@@ -739,7 +799,7 @@ proto.score.Results.prototype.getScoresList = function() {
  * @return {!proto.score.Results} returns this
 */
 proto.score.Results.prototype.setScoresList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 2, value);
+  return jspb.Message.setRepeatedWrapperField(this, 3, value);
 };
 
 
@@ -749,7 +809,7 @@ proto.score.Results.prototype.setScoresList = function(value) {
  * @return {!proto.score.Score}
  */
 proto.score.Results.prototype.addScores = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 2, opt_value, proto.score.Score, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 3, opt_value, proto.score.Score, opt_index);
 };
 
 

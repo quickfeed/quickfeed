@@ -10,7 +10,7 @@ const (
 	layout = "2006-01-02T15:04:05"
 )
 
-var globalBuildID = new(int64)
+var globalBuildID = new(uint64)
 
 // TODO(meling) make most methods herein private; only ExtractResults is really needed, I think?
 
@@ -54,7 +54,7 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 	}
 	return &Results{
 		BuildInfo: &BuildInfo{
-			BuildID:   atomic.AddInt64(globalBuildID, 1),
+			BuildID:   atomic.AddUint64(globalBuildID, 1),
 			BuildDate: time.Now().Format(layout),
 			BuildLog:  strings.Join(filteredLog, "\n"),
 			ExecTime:  execTime.Milliseconds(),

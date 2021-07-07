@@ -175,7 +175,7 @@ message Assignment {
     bool isGroupLab = 8;
     uint32 scoreLimit = 9;  // defines minimal score limit for auto approval
     uint32 reviewers = 10; // number of TA's to review submissions for this assignment 
-    bool skipTests = 11;
+    bool skipTests = 11; //TODO(meling) check why necessary; can we figure out if tests exists in some other way
     repeated Submission submissions = 12; 
     repeated GradingBenchmark gradingBenchmarks = 13;    
     uint32 containerTimeout = 14;
@@ -204,7 +204,9 @@ message Submission {
     Status status = 10;
     string approvedDate = 11;
     repeated Review reviews = 12;
-    score.Results results = 13;
+    score.Results results = 13 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
+    // score.BuildInfo BuildInform = 14 [(go.field) = {tags: 'gorm:"foreignKey:BuildID"'}]; // build info for tests
+    // repeated score.Score Scores = 15 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];    // list of scores for different tests
 }
 
 message Submissions {
@@ -247,6 +249,7 @@ message Review {
     string feedback = 5;
     bool ready = 6;
     uint64 score = 7;
+    //TODO Consider if benchmarks field is needed; it can be obtained from Assignments via submissionID??
     repeated GradingBenchmark benchmarks = 8 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
     string edited = 9;
 }

@@ -2,18 +2,21 @@ syntax = "proto3";
 package score;
 option go_package = "github.com/autograde/quickfeed/kit/score";
 
+import "patch/go.proto";
+
 // Score give the score for a single test named TestName.
 message Score {
-    string Secret = 1;   // the unique identifier for a scoring session
-    string TestName = 2; // name of the test
-    int32 Score = 3;     // the score obtained
-    int32 MaxScore = 4;  // max score possible to get on this specific test
-    int32 Weight = 5;    // the weight of this test; used to compute final grade
+    uint64 ID = 1;
+    string Secret = 2;   // the unique identifier for a scoring session
+    string TestName = 3; // name of the test
+    int32 Score = 4;     // the score obtained
+    int32 MaxScore = 5;  // max score possible to get on this specific test
+    int32 Weight = 6;    // the weight of this test; used to compute final grade
 }
 
 // BuildInfo holds build data for an assignment's test execution.
 message BuildInfo {
-    int64 BuildID = 1;
+    uint64 BuildID = 1 [(go.field) = {tags: 'gorm:"primaryKey"'}];
     string BuildDate = 2;
     string BuildLog = 3;
     int64 ExecTime = 4;
@@ -21,6 +24,7 @@ message BuildInfo {
 
 // Results holds a map from test names to score objects and build info.
 message Results {
-    BuildInfo BuildInfo = 1;   // build info for tests
-    repeated Score Scores = 2; // list of scores for different tests
+    uint64 ID = 1;
+    BuildInfo BuildInfo = 2 [(go.field) = {tags: 'gorm:"foreignKey:BuildID"'}]; // build info for tests
+    repeated Score Scores = 3 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];    // list of scores for different tests
 }
