@@ -2,6 +2,8 @@ package web_test
 
 import (
 	"context"
+	"log"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,38 +15,105 @@ import (
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/labstack/echo/v4"
+	"github.com/gorilla/sessions"
+	"github.com/markbates/goth/gothic"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/test/bufconn"
 )
+
+var lis *bufconn.Listener
+
+func bufDialer(context.Context, string) (net.Conn, error) {
+	return lis.Dial()
+}
+
+var userTest = []struct {
+	id       uint64
+	code     codes.Code
+	metadata bool
+	token    string
+}{
+	{1, codes.Unauthenticated, false, ""},
+	{6, codes.PermissionDenied, true, ""},
+	{1, codes.Unauthenticated, true, "shouldfail"},
+	{1, codes.OK, true, ""},
+}
 
 func TestGetSelf(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	_ = createFakeUser(t, db, 1)
-
 	const (
-		selfURL   = "/user"
-		apiPrefix = "/api/v1"
+		bufSize        = 1024 * 1024
+		OutgoingCookie = "Set-Cookie"
 	)
 
-	r := httptest.NewRequest(http.MethodGet, selfURL, nil)
-	w := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(r, w)
+	_, scms := fakeProviderMap(t)
 
-	user := &pb.User{ID: 1}
-	c.Set(auth.UserKey, user)
+	_ = createFakeUser(t, db, 1)
+	_ = createFakeUser(t, db, 56)
 
-	userHandler := web.GetSelf(db)
-	if err := userHandler(c); err != nil {
-		t.Error(err)
+	store := sessions.NewCookieStore([]byte("secret"))
+	store.Options.HttpOnly = true
+	store.Options.Secure = true
+	gothic.Store = store
+
+	lis = bufconn.Listen(bufSize)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier())
+	s := grpc.NewServer(opt)
+	pb.RegisterAutograderServiceServer(s, ags)
+
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("Server exited with error: %v", err)
+		}
+	}()
+
+	ctx := context.Background()
+	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
+	if err != nil {
+		t.Fatalf("Failed to dial bufnet: %v", err)
 	}
+	defer conn.Close()
 
-	if w.Code == http.StatusNotFound {
-		t.Fatal("not found")
+	client := pb.NewAutograderServiceClient(conn)
+
+	for _, user := range userTest {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		w := httptest.NewRecorder()
+		sess := sessions.NewSession(store, auth.SessionKey)
+
+		us := &auth.UserSession{
+			ID:        user.id,
+			Providers: make(map[string]struct{}),
+		}
+		us.Providers["github"] = struct{}{}
+		sess.Values[auth.UserKey] = us
+		sess.Save(r, w)
+
+		if user.metadata {
+			meta := metadata.MD{}
+			if len(user.token) > 0 {
+				meta.Set(auth.Cookie, user.token)
+			} else {
+				meta.Set(auth.Cookie, w.HeaderMap.Get(OutgoingCookie))
+			}
+			ctx = metadata.NewOutgoingContext(ctx, meta)
+		}
+		resp, err := client.GetUser(ctx, &pb.Void{})
+		if s, ok := status.FromError(err); ok {
+			if s.Code() != user.code {
+				t.Errorf("GetUser: %v", err)
+			}
+		}
+
+		log.Printf("Response: %+v", resp)
 	}
-	assertCode(t, w.Code, http.StatusFound)
 }
 
 func TestGetUsers(t *testing.T) {
