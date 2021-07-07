@@ -41,17 +41,7 @@ ui:
 	@cd public; npm install; npm run webpack
 
 proto:
-	@echo "Compiling QuickFeed's Score proto definitions for Go and TypeScript"
-	@protoc \
-	-I . \
-	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
-	--go_out=paths=source_relative:. \
-	--go-grpc_out=paths=source_relative:. \
-	--js_out=import_style=commonjs:$(proto-path) \
-	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(proto-path) \
-	kit/score/score.proto
-
-	@echo "Compiling QuickFeed's proto definitions for Go and TypeScript"
+	@echo "Compiling QuickFeed's ag and kit/score proto definitions for Go and TypeScript"
 	@protoc \
 	-I . \
 	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
@@ -60,9 +50,12 @@ proto:
 	--go-patch_out=plugin=go-grpc,paths=source_relative:. \
 	--js_out=import_style=commonjs:$(proto-path) \
 	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(proto-path) \
-	ag/ag.proto
+	ag/ag.proto kit/score/score.proto
+
 	@echo "Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529)"
 	@$(sedi) '/patch_go_pb/d' \
+	$(proto-path)/kit/score/score_pb.js \
+	$(proto-path)/kit/score/score_pb.d.ts \
 	$(proto-path)/ag/ag_pb.js \
 	$(proto-path)/ag/ag_pb.d.ts \
 	$(proto-path)/ag/AgServiceClientPb.ts
