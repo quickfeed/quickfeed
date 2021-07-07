@@ -1,7 +1,6 @@
 import { derived } from "overmind";
 
 import { Assignment, Course, Enrollment, EnrollmentLink, Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb";
-import { AlertType } from "../Helpers";
 
 
 
@@ -24,7 +23,7 @@ export interface CourseGroup {
     groupName: string
 }
 
-interface CourseSubmissions {
+export interface ParsedCourseSubmissions {
     enrollment?: Enrollment
     user?: User
     submissions?: SubmissionLink[]
@@ -59,11 +58,11 @@ type State = {
 
     /* Course Specific Data */
     courseSubmissions: {
-        [courseid:number]: EnrollmentLink[]
+        [courseid:number]: ParsedCourseSubmissions[]
     },
-    cSubs: {
-        [courseid:number]: CourseSubmissions[]
-    },
+    /*cSubs: {
+        [courseid:number]: ParsedCourseSubmissions[]
+    },*/
 
     courseGroupSubmissions: {
         [courseid: number]: EnrollmentLink[]
@@ -111,25 +110,31 @@ export const state: State = {
     userGroup: {},
     submissions: {},
     courseSubmissions: {},
-    cSubs: derived((state: State) => {
+    /*cSubs: derived((state: State) => {
         let obj: {[id: number]: CourseSubmissions[]} = {}
         state.courses.forEach(course => {
             if (state.courseSubmissions[course.getId()]) {
                 obj[course.getId()] = []
                 state.courseSubmissions[course.getId()].forEach(element => {
-                    obj[course.getId()].push({enrollment: element.getEnrollment(), user: element.getEnrollment()?.getUser(), submissions: element.getSubmissionsList()})
-                });
+                    if (element.getEnrollment()){
+                    obj[course.getId()].push({
+                        enrollment: element.getEnrollment(),
+                        user: element.getEnrollment()?.getUser(),
+                        submissions: []
+                    })
+                }
+            });
             }
         });
         return obj
-    }),
+    }),*/
     courseGroupSubmissions: {},
     assignments: {},
     repositories: {},
 
     courseGroup: {courseID: 0, enrollments: [], users: [], groupName: ""},
     timeNow : new Date(),
-    alerts: [{text: "Welcome!", type: AlertType.INFO}],
+    alerts: [],
     theme: "light",
     isLoading: true,
     activeCourse: -1,

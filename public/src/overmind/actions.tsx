@@ -1,17 +1,13 @@
 import { Context } from "overmind";
 import { IGrpcResponse } from "../GRPCManager";
-import {  User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, Status } from "../../proto/ag/ag_pb";
-import { CourseGroup } from "./state";
+import {  User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, Status, CourseSubmissions, SubmissionLink } from "../../proto/ag/ag_pb";
+import { CourseGroup, ParsedCourseSubmissions } from "./state";
 import { AlertType } from "../Helpers";
 import { StatusCode } from "grpc-web";
 
 
 /** Fetches and stores an authenticated user in state */
 export const getUser = async ({state, actions, effects}: Context) => {
-    // TODO: Remove this wildly hacky solution
-    const test = await fetch("/", {credentials: "include", cache: "no-cache"})
-    
-    if (test.ok) {
         const user = await effects.grpcMan.getUser()
     
         if (user.data) {
@@ -19,7 +15,7 @@ export const getUser = async ({state, actions, effects}: Context) => {
             state.self = user.data
             return true
         } 
-    }
+    
     return false
 }
 
@@ -152,7 +148,7 @@ export const updateSubmission = async ({state, actions, effects}: Context, value
     if (result.status.getCode() > 0) {
         actions.alertHandler(result)
     } else {
-        let c = state.cSubs[value.courseID][value.userIndex].submissions?.find((e, i) => i === value.submissionIndex)
+        let c = state.courseSubmissions[value.courseID][value.userIndex].submissions?.find((e, i) => i === value.submissionIndex)
         if (c) { c.getSubmission()?.setStatus(value.submission.getStatus())}
     }
 }
@@ -303,6 +299,15 @@ export const refreshSubmissions = async ({state, effects}: Context, input: {cour
     }
 }
 
+const convertCourseSubmission = (data: CourseSubmissions) => {
+    // TODO: {[index]: {Parsed}}
+    const courseSubmissions: ParsedCourseSubmissions[] = []
+    data.getLinksList().forEach((l, index) => {
+        courseSubmissions.push({enrollment: l.getEnrollment(), submissions: l.getSubmissionsList(), user: l.getEnrollment()?.getUser()}) 
+    })
+    return courseSubmissions
+}
+
 export const getAllCourseSubmissions = async ({state, effects}: Context, courseID: number) => {
     let success = false
 
@@ -310,7 +315,7 @@ export const getAllCourseSubmissions = async ({state, effects}: Context, courseI
     state.isLoading = true
     const result =  await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL)
     if (result.data) {
-            state.courseSubmissions[courseID] = result.data.getLinksList()
+            state.courseSubmissions[courseID] = convertCourseSubmission(result.data)
             state.isLoading = false
             success = true
             
@@ -320,11 +325,28 @@ export const getAllCourseSubmissions = async ({state, effects}: Context, courseI
 }
 
 export const getGroupsByCourse = async ({state, effects}: Context, courseID: number) => {
+    /** TODO:
+     *  An interesting interaction between gRPC and Overmind
+     *  It seems that as the server returns a Group that has no enrollments or users
+     *  that an empty array is not created until you try to retrieve it.
+     * 
+     *  This was experienced when a Group was returned and stored in the state.
+     *  When attempting to access Group.getEnrollmentsList for a Group that does not have any enrollments
+     *  we get an error implying that a third party is attempting to modify the state.
+     * 
+     *  Simply calling Group.getEnrollmentsList from an action before saving to the state enables
+     *  us to call Group.getEnrollmentsList from components without issue.
+     */
+    state.groups[courseID] = []
     const res = await effects.grpcMan.getGroupsByCourse(courseID)
     if (res.data) {
+        res.data.getGroupsList().forEach(element => {
+            if (element.getEnrollmentsList() || element.getUsersList()) {
+                // TODO: This serves as a temporary fix for the issue described above.
+            }
+        });
         state.groups[courseID] = res.data.getGroupsList()
     }
-            
 
 }
 
@@ -335,11 +357,9 @@ export const getUserSubmissions = async ({state, effects}: Context, courseID: nu
         state.assignments[courseID].forEach(assignment => {
             let submission = res.data?.getSubmissionsList().find(s => s.getAssignmentid() === assignment.getId())
             if (submission) {
-                console.log(submission)
                 state.submissions[courseID][assignment.getOrder() - 1] = submission
             }
             else {
-                console.log("Not found", assignment)
                 state.submissions[courseID][assignment.getOrder() - 1] = new Submission()
             }
         })
