@@ -1,6 +1,7 @@
 /* eslint-disable quotes */
 
-import { User } from "../proto/ag/ag_pb"
+import { useParams } from "react-router"
+import { Enrollment, EnrollmentLink, User } from "../proto/ag/ag_pb"
 
 export interface IBuildInfo {
     builddate: string;
@@ -26,6 +27,12 @@ export enum AlertType {
     DANGER,
     SUCCESS,
     PRIMARY
+}
+
+export enum Sort {
+    NAME,
+    STATUS,
+    ID
 }
 
 export interface IScoreObjects {
@@ -159,9 +166,26 @@ export const SubmissionStatus = {
     3: "Revision",
 }
 
-export const isValid = (user: User) => {
-    if (user.getName().length === 0 || user.getEmail().length === 0 || user.getStudentid().length === 0) {
-        return false
+
+export const isValid = (element: any) => {
+    if (element instanceof User){
+        if (element.getName().length === 0 || element.getEmail().length === 0 || element.getStudentid().length === 0) {
+            return false
+        }
+    }
+    if (element instanceof EnrollmentLink) {
+        console.log("HEI", element)
+        console.log(element.getSubmissionsList())
+        if (!element.getEnrollment() && !element.getEnrollment()?.getUser() && element.getSubmissionsList().length === 0) {
+            console.log("FEIL")
+            return false
+        }
     }
     return true
+}
+
+
+export const getCourseID = () => {
+    const route = useParams<{id?: string}>()
+    return Number(route.id)
 }

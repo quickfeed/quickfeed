@@ -1,15 +1,16 @@
 import React, { useEffect } from "react"
-import { RouteComponentProps } from "react-router"
 import { useOvermind } from "../overmind"
 import Group from "./group/Group"
 import CreateGroup from "./group/CreateGroup"
+import { getCourseID } from "../Helpers"
 
 
-export const GroupPage = (props: RouteComponentProps<{id?: string | undefined}>) => {
+export const GroupPage = () => {
     const {state, actions} = useOvermind()
-    const courseID = Number(props.match.params.id)
+    const courseID = getCourseID()
 
     useEffect(() => {
+        console.log(courseID)
         actions.getGroupByUserAndCourse(courseID)
     })
 

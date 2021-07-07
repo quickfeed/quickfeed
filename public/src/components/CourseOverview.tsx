@@ -1,6 +1,7 @@
 import React, { useEffect } from "react"
 import { RouteComponentProps } from "react-router-dom"
 import { Enrollment } from "../../proto/ag/ag_pb"
+import { getCourseID } from "../Helpers"
 import { useOvermind } from "../overmind"
 import { CourseLabs } from "./CourseLabs"
 import CourseUtilityLinks from "./CourseUtilityLinks"
@@ -11,13 +12,13 @@ interface MatchProps {
 }
 
 /* */
-const CourseOverview = (props: RouteComponentProps<MatchProps>) => {
+const CourseOverview = () => {
     const { state, actions } = useOvermind()
-    const courseID = Number(props.match.params.id)
+    const courseID = getCourseID()
     const style = state.enrollmentsByCourseId[courseID].getState() === Enrollment.DisplayState.VISIBLE ? 'fa fa-star-o' : "fa fa-star "
     
     useEffect(() => {
-    }, [props])
+    }, [])
     
     return (
         <div className="box">

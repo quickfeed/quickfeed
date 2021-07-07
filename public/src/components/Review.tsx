@@ -3,12 +3,12 @@ import { useOvermind } from "../overmind"
 import { Submission, SubmissionLink } from "../../proto/ag/ag_pb"
 import { useParams } from "react-router"
 import Lab from "./Lab"
+import { getCourseID } from "../Helpers"
 
 
 const Review = () => {
     const {state, actions} = useOvermind()
-    const course = useParams<{id?: string}>()
-    const courseID = Number(course.id)
+    const courseID = getCourseID()
 
     const [submission, setSubmission] = useState<number | undefined>(undefined)
     const [assignment, setAssignment] = useState<number | undefined>(undefined)
@@ -35,7 +35,7 @@ const Review = () => {
         return (
                 <li className="list-group-item" hidden={selected !== props.submissionLink.getAssignment()?.getId() && selected !== 0}>
                     <span  onClick={() => { setSubmission(props.submissionLink.getSubmission()?.getId()), setAssignment(props.submissionLink.getAssignment()?.getId())}}>{props.submissionLink.getAssignment()?.getName()} - {props.submissionLink.getSubmission()?.getScore()} / 100</span>
-                    <button style={{float: "right"}} onClick={() => {updateStatus(Submission.Status.REJECTED, props.submissionLink.getSubmission(), props.userIndex, props.submissionLink.getAssignment()?.getOrder()), console.log(state.cSubs[courseID][props.userIndex])}}>
+                    <button style={{float: "right"}} onClick={() => {updateStatus(Submission.Status.REJECTED, props.submissionLink.getSubmission(), props.userIndex, props.submissionLink.getAssignment()?.getOrder()), console.log(state.courseSubmissions[courseID][props.userIndex])}}>
                         Reject
                     </button>
                     <button style={{float: "right"}} onClick={() => updateStatus(Submission.Status.APPROVED, props.submissionLink.getSubmission(), props.userIndex, props.submissionLink.getAssignment()?.getOrder())}>
@@ -47,7 +47,7 @@ const Review = () => {
     
 
     if (state.courseSubmissions[courseID]) {
-        const ReviewSubmissionsTable = state.cSubs[courseID].map((user, userIndex) => {
+        const ReviewSubmissionsTable = state.courseSubmissions[courseID].map((user, userIndex) => {
             if (user.enrollment && user.submissions) {
                 return (
                     <div className="card well" style={{width: "400px", marginBottom: "5px"}}>
@@ -56,7 +56,7 @@ const Review = () => {
                         </div>
                         <ul key={"list"} className="list-group list-group-flush">
                             {user.submissions.map((submissionLink, index) => 
-                                <ReviewSubmissionsListItem key={userIndex + "-" + index} submissionLink={submissionLink} userIndex={userIndex} />
+                                <ReviewSubmissionsListItem key={index} submissionLink={submissionLink} userIndex={userIndex} />
                             )}
                         </ul>
                     </div>
@@ -71,6 +71,7 @@ const Review = () => {
         return (
             <div className="box">
                 <select onChange={e => setSelected(Number(e.currentTarget.value))}>
+                    <option value={0}>All Submissions</option>
                     {Options}
                 </select>
                 <button onClick={() => actions.getAllCourseSubmissions(courseID)}>Refresh ... </button>
@@ -88,7 +89,7 @@ const Review = () => {
                             <Lab submissionID={submission} assignmentID={assignment} />
                         </div> )
 
-                    : "" }
+                    : null }
                         
                     
                     

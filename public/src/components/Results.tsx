@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react"
 import { Redirect, useParams } from "react-router-dom"
 import { Enrollment } from "../../proto/ag/ag_pb"
+import { getCourseID } from "../Helpers"
 import { useOvermind } from "../overmind"
 import ResultItem from "./teacher/ResultItem"
 
 
 const Results = () => {
-
     const {state, actions} = useOvermind()
-    const course = useParams<{id?: string}>()
-    const courseID = Number(course.id)
+    const courseID = getCourseID()
 
     const [query, setQuery] = useState<string>("")
 
@@ -25,11 +24,11 @@ const Results = () => {
     })
 
     // TODO: Allow admin to view
-    if (!state.cSubs[courseID] || state.enrollmentsByCourseId[courseID].getStatus() !== Enrollment.UserStatus.TEACHER) {
+    if (!state.courseSubmissions[courseID] || state.enrollmentsByCourseId[courseID].getStatus() !== Enrollment.UserStatus.TEACHER) {
         return <h1>Nothing</h1>
     }
 
-    const UserResults = state.cSubs[courseID].map(user => {
+    const UserResults = state.courseSubmissions[courseID].map(user => {
         if (user.enrollment && user.submissions) {
             return <ResultItem enrollment={user.enrollment} submissionsLink={user.submissions} query={query} />
         }
@@ -46,7 +45,8 @@ const Results = () => {
             </thead>
             {UserResults}
         </table>
-         </React.Fragment>
+        </React.Fragment>
+
     )
 }
 

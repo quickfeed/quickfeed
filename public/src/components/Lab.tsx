@@ -50,12 +50,14 @@ const Lab = (teacher: TeacherLab) => {
 
         // If used for grading purposes, retrieve submission from courseSubmissions
         if (teacherLab) {
-            state.courseSubmissions[courseID].forEach(link => {
-                link.getSubmissionsList().forEach(s => {
+            state.courseSubmissions[courseID].forEach(psub => {
+                if (psub.submissions) {
+                psub.submissions.forEach(s => {
                     if (s.getSubmission()?.getId() === teacher.submissionID) {
                         submission = s.getSubmission()
                     }
                 })
+            }
             });
             assignment = state.assignments[courseID].find(a => a.getId() === teacher.assignmentID)
         } 
@@ -78,9 +80,7 @@ const Lab = (teacher: TeacherLab) => {
 
                     <LabResultTable submission={submission} assignment={assignment} />
 
-                    {assignment.getSkiptests() && submission.getReviewsList().length > 0 ? 
-                    <ReviewResult review={submission.getReviewsList()}/> 
-                    : ""}
+                    {assignment.getSkiptests() && submission.getReleased() ? <ReviewResult review={submission.getReviewsList()}/> : null}
 
                     <div className="card bg-light">
                         <code className="card-body" style={{color: "#c7254e"}}>{buildLog}</code>
@@ -98,8 +98,7 @@ const Lab = (teacher: TeacherLab) => {
             <div className={teacherLab ? "" : "col-md-9"}>
                 <Lab />
             </div>
-            {!teacherLab ? <CourseUtilityLinks courseID={courseID} />
-            : "" }
+            {teacherLab ? null : <CourseUtilityLinks courseID={courseID} />}
         </div>
     )
 }
