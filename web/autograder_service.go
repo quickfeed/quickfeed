@@ -534,18 +534,18 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetCourseLabSubmissions failed: authentication error: %v", err)
+		s.logger.Errorf("GetSubmissionsByCourse failed: authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !(s.isTeacher(usr.GetID(), in.GetCourseID()) || usr.IsAdmin && s.isEnrolled(usr.GetID(), in.GetCourseID())) {
-		s.logger.Errorf("GetCourseLabSubmissions failed: user %s is not teacher or submission author", usr.GetLogin())
+		s.logger.Errorf("GetSubmissionsByCourse failed: user %s is not teacher or submission author", usr.GetLogin())
 		return nil, status.Error(codes.PermissionDenied, "only teachers can get all lab submissions")
 	}
-	s.logger.Debugf("GetCourseLabSubmissions: %v", in)
+	s.logger.Debugf("GetSubmissionsByCourse: %v", in)
 
 	courseLinks, err := s.getAllCourseSubmissions(in)
 	if err != nil {
-		s.logger.Errorf("GetCourseLabSubmissions failed: %v", err)
+		s.logger.Errorf("GetSubmissionsByCourse failed: %v", err)
 		return nil, status.Error(codes.NotFound, "no submissions found")
 	}
 	return courseLinks, nil
