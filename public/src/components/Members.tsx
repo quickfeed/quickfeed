@@ -3,7 +3,7 @@ import { useEffect } from "react"
 import { Redirect, RouteComponentProps } from "react-router-dom"
 import { sortByField } from "../Helpers"
 import { useOvermind } from "../overmind"
-import { Enrollment } from "../../proto/ag_pb"
+import { Enrollment } from "../../proto/ag/ag_pb"
 
 
 export const Members = (props: RouteComponentProps<{id?: string | undefined}>) => {
@@ -37,8 +37,7 @@ export const Members = (props: RouteComponentProps<{id?: string | undefined}>) =
                 <div className="card well  col-md-offset-2">
                     <div className="card-header" style={{textAlign: "center"}}>Pending</div>
                         <ul className="list-group list-group-flush">
-
-                        
+  
                         {pending.map(user => {
                             if (user.getStatus() === Enrollment.UserStatus.PENDING) {
                                 return (
@@ -52,7 +51,7 @@ export const Members = (props: RouteComponentProps<{id?: string | undefined}>) =
                         })} 
                         </ul>
                 </div>
-                : ""}
+                : null}
                 <div className="col">
                     <div className="card well  col-md-offset-2">
                     <select onChange={(e) => setFunc(e.target.value)}>

@@ -304,3 +304,13 @@ input{
     max-width: 80%;
     min-width: 50%;
 }
+
+#group-image {
+    width: 23px; 
+    margin-right: 10px;
+    border-radius: 50%;
+}
+
+.about {
+    width: 100%;
+}

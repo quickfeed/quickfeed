@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/jinzhu/gorm"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -246,7 +247,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 
 			have.RemoveRemoteID()
 			group.RemoveRemoteID()
-			if diff := cmp.Diff(group, have); diff != "" {
+			if diff := cmp.Diff(group, have, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.Enrollment{})); diff != "" {
 				t.Errorf("mismatch (-group +have):\n%s", diff)
 			}
 			cleanup()

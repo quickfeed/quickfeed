@@ -28,6 +28,8 @@ var (
 	idleTimeout  = 5 * time.Minute
 )
 
+
+
 // New starts a new web server
 func New(ags *AutograderService, public, httpAddr, scriptPath string, fake bool) {
 	entryPoint := filepath.Join(public, "index.html")
@@ -37,7 +39,7 @@ func New(ags *AutograderService, public, httpAddr, scriptPath string, fake bool)
 
 	store := newStore([]byte("secret"))
 	gothic.Store = store
-	e := newServer(ags.logger, store)
+	e := newServer(ags, ags.logger, store)
 
 	enabled := enableProviders(ags.logger, ags.bh.BaseURL, fake)
 	registerWebhooks(ags, e, enabled, scriptPath)
@@ -47,7 +49,7 @@ func New(ags *AutograderService, public, httpAddr, scriptPath string, fake bool)
 	runWebServer(ags.logger, e, httpAddr)
 }
 
-func newServer(l *zap.SugaredLogger, store sessions.Store) *echo.Echo {
+func newServer(ags *AutograderService, l *zap.SugaredLogger, store sessions.Store) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(
@@ -55,6 +57,7 @@ func newServer(l *zap.SugaredLogger, store sessions.Store) *echo.Echo {
 		Logger(l.Desugar()),
 		middleware.Secure(),
 		session.Middleware(store),
+		auth.AccessControl(l.Desugar(), ags.db, ags.scms),
 	)
 	return e
 }
@@ -147,19 +150,15 @@ func registerAuth(ags *AutograderService, e *echo.Echo) {
 	oauth2.GET("", auth.OAuth2Login(logger, ags.db))
 	oauth2.GET("/callback", auth.OAuth2Callback(logger, ags.db))
 	e.GET("/logout", auth.OAuth2Logout(logger))
-
-	api := e.Group("/api/v1")
-	api.Use(auth.AccessControl(logger, ags.db, ags.scms))
-	api.GET("/user", GetSelf(ags.db))
 }
 
 func registerFrontend(e *echo.Echo, entryPoint, public string) {
 	index := func(c echo.Context) error {
 		return c.File(entryPoint)
 	}
+
 	e.GET("/", index)
 	e.GET("/*", index)
-
 	// TODO: Whitelisted files only.
 	e.Static("/static", public)
 }

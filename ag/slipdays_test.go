@@ -6,11 +6,12 @@ import (
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 const (
-	layout = "2006-01-02T15:04:05"
-	days   = time.Duration(24 * time.Hour)
+	days = time.Duration(24 * time.Hour)
 )
 
 var (
@@ -26,7 +27,7 @@ var (
 		return &pb.Assignment{
 			CourseID:   course.ID,
 			ScoreLimit: 60,
-			Deadline:   testNow.Add(time.Duration(daysFromNow) * days).Format(layout),
+			Deadline:   testNow.Add(time.Duration(daysFromNow) * days).Format(pb.TimeLayout),
 		}
 	}
 )
@@ -37,27 +38,32 @@ var slipTests = []struct {
 	submissions [][]int32
 	remaining   [][]int32
 }{
-	{"One assignment with deadline two days ago, two submissions same day",
+	{
+		"One assignment with deadline two days ago, two submissions same day",
 		[]*pb.Assignment{a(-2)},
 		[][]int32{{0, 0}},
 		[][]int32{{3, 3}},
 	},
-	{"One assignment with deadline in two days, two submissions same day",
+	{
+		"One assignment with deadline in two days, two submissions same day",
 		[]*pb.Assignment{a(2)},
 		[][]int32{{0, 0}},
 		[][]int32{{5, 5}},
 	},
-	{"One assignment with deadline in two days, five submissions one day apart",
+	{
+		"One assignment with deadline in two days, five submissions one day apart",
 		[]*pb.Assignment{a(2)},
 		[][]int32{{0, 1, 1, 1, 1}},
 		[][]int32{{5, 5, 5, 4, 3}},
 	},
-	{"One assignment with deadline in two days, ten submissions one day apart",
+	{
+		"One assignment with deadline in two days, ten submissions one day apart",
 		[]*pb.Assignment{a(2)},
 		[][]int32{{0, 1, 1, 1, 1, 1, 1, 1, 1, 1}},
 		[][]int32{{5, 5, 5, 4, 3, 2, 1, 0, -1, -2}},
 	},
-	{"Four assignments with different deadlines, five or more submissions for each assignment",
+	{
+		"Four assignments with different deadlines, five or more submissions for each assignment",
 		[]*pb.Assignment{a(0), a(2), a(5), a(20)},
 		[][]int32{ // each number is a submission; if >0 the number is #days since previous submission; they carry over from one line to the next.
 			{0, 0, 0, 0, 0},        // 0 ==> five submissions on the same day
@@ -108,7 +114,7 @@ func TestSlipDays(t *testing.T) {
 					}
 					remaining := enrol.RemainingSlipDays(course)
 					if remaining != sd.remaining[i][j] {
-						t.Errorf("UpdateSlipdays(%q, %q, %q, %q) == %d, want %d", testNow.Format(layout), sd.labs[i], submission, enrol, remaining, sd.remaining[i][j])
+						t.Errorf("UpdateSlipdays(%q, %q, %q, %q) == %d, want %d", testNow.Format(pb.TimeLayout), sd.labs[i], submission, enrol, remaining, sd.remaining[i][j])
 					}
 				}
 			})
@@ -188,11 +194,10 @@ func TestScoreLimitSlipDays(t *testing.T) {
 			}
 			remaining := enrol.RemainingSlipDays(course)
 			if uint32(remaining) != test.remaining {
-				t.Errorf("UpdateSlipdays(%q, %q, %q, %q) == %d, want %d", testNow.Format(layout), test.assignment, test.submission, enrol, remaining, test.remaining)
+				t.Errorf("UpdateSlipdays(%q, %q, %q, %q) = %d, want %d", testNow.Format(pb.TimeLayout), test.assignment, test.submission, enrol, remaining, test.remaining)
 			}
 		})
 	}
-
 }
 
 func TestBadDeadlineFormat(t *testing.T) {
@@ -223,7 +228,7 @@ func TestMismatchingAssignmentID(t *testing.T) {
 	// lab1's deadline is incorrectly formatted
 	lab1 := &pb.Assignment{
 		CourseID: course.ID,
-		Deadline: testNow.Add(time.Duration(2) * days).Format(layout),
+		Deadline: testNow.Add(time.Duration(2) * days).Format(pb.TimeLayout),
 	}
 	lab1.ID = 1
 	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID + 1}
@@ -242,7 +247,7 @@ func TestMismatchingCourseID(t *testing.T) {
 	// lab1's deadline is incorrectly formatted
 	lab1 := &pb.Assignment{
 		CourseID: course.ID + 1,
-		Deadline: testNow.Add(time.Duration(2) * days).Format(layout),
+		Deadline: testNow.Add(time.Duration(2) * days).Format(pb.TimeLayout),
 	}
 	lab1.ID = 1
 	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID}
@@ -252,7 +257,7 @@ func TestMismatchingCourseID(t *testing.T) {
 	}
 }
 
-func ExampleEnrollment_GetUsedSlipDays() {
+func TestEnrollmentGetUsedSlipDays(t *testing.T) {
 	enrol := &pb.Enrollment{
 		Course:       course,
 		CourseID:     course.ID,
@@ -262,13 +267,97 @@ func ExampleEnrollment_GetUsedSlipDays() {
 	lab1 := a(-2)
 	lab1.ID = 1
 	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID}
-	fmt.Println(enrol.GetUsedSlipDays())
+	usedSlipDays := enrol.GetUsedSlipDays()
+	if len(usedSlipDays) != 0 {
+		t.Errorf("len(usedSlipDays) = %d, expected 0", len(usedSlipDays))
+	}
 	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err != nil {
-		fmt.Println(err)
+		t.Error(err)
 	}
-	fmt.Println(enrol.GetUsedSlipDays())
-	// Output:
-	// []
-	// [assignmentID:1 usedSlipDays:2 ]
+	usedSlipDays = enrol.GetUsedSlipDays()
+	if len(usedSlipDays) != 1 {
+		t.Errorf("len(usedSlipDays) = %d, expected 1", len(usedSlipDays))
+	}
+	wantUsedSlipDays := []*pb.UsedSlipDays{
+		{
+			AssignmentID: 1,
+			UsedSlipDays: 2,
+		},
+	}
+	if diff := cmp.Diff(wantUsedSlipDays, usedSlipDays, cmpopts.IgnoreUnexported(pb.UsedSlipDays{})); diff != "" {
+		t.Errorf("GetUsedSlipDays() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestSlipDaysWGracePeriod(t *testing.T) {
+	lab := a(0)
+	lab.ID = 1
+	timeOfDeadline, err := time.Parse(pb.TimeLayout, lab.Deadline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab.ID}
+	submissionTimes := []struct {
+		delivered    time.Time
+		comment      string
+		wantSlipDays uint32
+	}{
+		{
+			delivered:    timeOfDeadline.Add(time.Duration(15) * time.Minute),
+			comment:      "Delivered 15 minutes after the deadline",
+			wantSlipDays: 0,
+		},
+		{
+			delivered:    timeOfDeadline.Add(time.Duration(119) * time.Minute),
+			comment:      "Delivered 1 hour and 59 minutes after the deadline",
+			wantSlipDays: 0,
+		},
+		{
+			delivered:    timeOfDeadline.Add(time.Duration(2) * time.Hour),
+			comment:      "Delivered exactly 2 hours after the deadline",
+			wantSlipDays: 0,
+		},
+		{
+			delivered:    timeOfDeadline.Add(time.Duration(2)*time.Hour + time.Second),
+			comment:      "Delivered 2 hours and 1 second after the deadline",
+			wantSlipDays: 1,
+		},
+		{
+			delivered:    timeOfDeadline.Add(days + time.Hour),
+			comment:      "Delivered 1 day and 1 hour after the deadline",
+			wantSlipDays: 1,
+		},
+		{
+			delivered:    timeOfDeadline.Add(days + 3*time.Hour),
+			comment:      "Delivered 1 day and 3 hours after the deadline",
+			wantSlipDays: 2,
+		},
+		{
+			delivered:    timeOfDeadline.Add(3*days + 6*time.Hour),
+			comment:      "Delivered 3 days and 6 hours after the deadline",
+			wantSlipDays: 4,
+		},
+	}
+
+	for _, test := range submissionTimes {
+		enrol := &pb.Enrollment{
+			Course:       course,
+			CourseID:     course.ID,
+			UsedSlipDays: make([]*pb.UsedSlipDays, 0),
+		}
+		t.Run(fmt.Sprintf("%s/Want UsedSlipDays:%d", test.comment, test.wantSlipDays), func(t *testing.T) {
+			err := enrol.UpdateSlipDays(test.delivered, lab, submission)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var usedSlipDays uint32
+			for _, days := range enrol.GetUsedSlipDays() {
+				usedSlipDays += days.UsedSlipDays
+			}
+			if usedSlipDays != test.wantSlipDays {
+				t.Errorf("UpdateSlipDays('%v', '%v', '%v') = %d, want %d", test.delivered, lab, submission, usedSlipDays, test.wantSlipDays)
+			}
+		})
+	}
 }

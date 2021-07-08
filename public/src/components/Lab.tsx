@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
-import { Assignment, Submission } from '../../proto/ag_pb'
+import { Assignment, Submission } from '../../proto/ag/ag_pb'
 import { useOvermind } from '../overmind'
 import CourseUtilityLinks from './CourseUtilityLinks'
 import LabResultTable from './LabResultTable'
@@ -26,16 +26,20 @@ const Lab = (teacher: TeacherLab) => {
     const courseID = Number(id)
     const assignmentID = Number(lab)
     const teacherLab = teacher.assignmentID && teacher.submissionID
+
     useEffect(() => {
         // Do not start the commit hash fetch-loop for submissions that are not personal
         if (!teacherLab) {
             actions.setActiveLab(assignmentID)
 
+            // TODO: Implement SubmissionCommitHash
+            /*
             const ping = setInterval(() => {  
                 actions.getSubmissionCommitHash({courseID: courseID, assignmentID: assignmentID})
             }, 5000)
 
             return () => {clearInterval(ping), actions.setActiveLab(-1)}
+            */
         }
     }, [lab])
 
@@ -46,12 +50,14 @@ const Lab = (teacher: TeacherLab) => {
 
         // If used for grading purposes, retrieve submission from courseSubmissions
         if (teacherLab) {
-            state.courseSubmissions[courseID].forEach(link => {
-                link.getSubmissionsList().forEach(s => {
+            state.courseSubmissions[courseID].forEach(psub => {
+                if (psub.submissions) {
+                psub.submissions.forEach(s => {
                     if (s.getSubmission()?.getId() === teacher.submissionID) {
                         submission = s.getSubmission()
                     }
                 })
+            }
             });
             assignment = state.assignments[courseID].find(a => a.getId() === teacher.assignmentID)
         } 
@@ -74,9 +80,7 @@ const Lab = (teacher: TeacherLab) => {
 
                     <LabResultTable submission={submission} assignment={assignment} />
 
-                    {assignment.getSkiptests() && submission.getReviewsList().length > 0 ? 
-                    <ReviewResult review={submission.getReviewsList()}/> 
-                    : ""}
+                    {assignment.getSkiptests() && submission.getReleased() ? <ReviewResult review={submission.getReviewsList()}/> : null}
 
                     <div className="card bg-light">
                         <code className="card-body" style={{color: "#c7254e"}}>{buildLog}</code>
@@ -94,8 +98,7 @@ const Lab = (teacher: TeacherLab) => {
             <div className={teacherLab ? "" : "col-md-9"}>
                 <Lab />
             </div>
-            {!teacherLab ? <CourseUtilityLinks courseID={courseID} />
-            : "" }
+            {teacherLab ? null : <CourseUtilityLinks courseID={courseID} />}
         </div>
     )
 }

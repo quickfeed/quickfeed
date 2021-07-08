@@ -4,7 +4,7 @@ import { useHistory } from 'react-router';
 import { EnrollmentStatus } from '../Helpers';
 
 import { useActions } from '../overmind';
-import { Course, Enrollment } from '../../proto/ag_pb';
+import { Course, Enrollment } from '../../proto/ag/ag_pb';
 
 // TODO Should be exported to a seperate file 
 
@@ -39,12 +39,10 @@ const CourseCard = (props: CardProps) => {
                     { props.status === Enrollment.UserStatus.NONE ? 
                         <div className="btn btn-primary float-down-left" onClick={() => actions.enroll(props.course.getId())}>Enroll to Course</div>
                     : props.status === Enrollment.UserStatus.PENDING ?
-                        ""
+                        null
                     :
                         <div className="btn btn-primary float-down-left" onClick={() => history.push("/course/"+props.enrollment.getCourseid())}>Go to Course</div>
                     }
-                    
-
                 </div>
 
             </div>

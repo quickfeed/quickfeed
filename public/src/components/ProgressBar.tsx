@@ -1,6 +1,6 @@
 import React from "react"
 import { useOvermind } from "../overmind"
-import { Submission } from "../../proto/ag_pb"
+import { Submission } from "../../proto/ag/ag_pb"
 
 
 export const ProgressBar = (props: {courseID: number, assignmentIndex: number, submission?: Submission, type: string}) => {
@@ -23,10 +23,9 @@ export const ProgressBar = (props: {courseID: number, assignmentIndex: number, s
                 bottom: 0, 
                 left: 0, 
                 right: `${percentage}%`, 
-                borderColor: `${score >= state.assignments[props.courseID][props.assignmentIndex].getScorelimit() ? "green" : "yellow"}`
-                , opacity: 0.3 }}>
-    
-                </div>
+                borderColor: `${score >= state.assignments[props.courseID][props.assignmentIndex].getScorelimit() ? "green" : "yellow"}`, 
+                opacity: 0.3 }}>
+            </div>
         )
     }
 

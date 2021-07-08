@@ -10,7 +10,7 @@ export const Admin = () => {
 
     // Ideas: Statistics, Create Course, Promote Users
 
-    if (state.user.isadmin) {
+    if (state.self.getIsadmin()) {
         return (
             
             <div className="box">

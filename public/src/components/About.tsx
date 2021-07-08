@@ -46,7 +46,6 @@ const About = () => {
                         <img
                             className="img-circle"
                             src="/static/img/overlapping-arrows.png"
-                            alt=""
                             style={{ width: "140px", height: "140px" }}
                         />
                         <h2>Continuous Integration</h2>
@@ -103,7 +102,7 @@ const About = () => {
                         </div>
                         <div key="c2r1" className="col-md-5">
                             <img
-                                className="featurette-image img-responsive"
+                                className="featurette-image img-responsive about"
                                 src="/static/img/intro1.png"
                                 alt="Generic placeholder image" />
                         </div>
@@ -116,7 +115,7 @@ const About = () => {
                     <div key="row2" className="row featurette">
                         <div key="c1r2" className="col-md-5">
                             <img
-                                className="featurette-image img-responsive"
+                                className="featurette-image img-responsive about"
                                 src="/static/img/intro3.png"
                                 alt="Generic placeholder image" />
                         </div>
@@ -153,7 +152,7 @@ const About = () => {
                         </div>
                         <div key="c2r3" className="col-md-5">
                             <img
-                                className="featurette-image img-responsive"
+                                className="featurette-image img-responsive about"
                                 src="/static/img/intro4.png"
                                 alt="Generic placeholder image" />
                         </div>
@@ -166,7 +165,7 @@ const About = () => {
                     <div key="row4" className="row featurette">
                         <div key="c1r4" className="col-md-5">
                             <img
-                                className="featurette-image img-responsive"
+                                className="featurette-image img-responsive about"
                                 src="/static/img/intro2.png"
                                 alt="Generic placeholder image" />
                         </div>

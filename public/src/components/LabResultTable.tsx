@@ -1,5 +1,5 @@
 import React from "react"
-import { Assignment, Submission } from "../../proto/ag_pb"
+import { Assignment, Submission } from "../../proto/ag/ag_pb"
 import { getBuildInfo, getScoreObjects, IScoreObjects, SubmissionStatus } from "../Helpers"
 import { useOvermind } from "../overmind"
 import { ProgressBar } from "./ProgressBar"

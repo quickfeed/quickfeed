@@ -23,6 +23,7 @@ type AutograderService struct {
 	scms   *auth.Scms
 	bh     BaseHookOptions
 	runner ci.Runner
+	pb.UnimplementedAutograderServiceServer
 }
 
 // NewAutograderService returns an AutograderService object.
@@ -50,7 +51,6 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.Void) (*pb.User,
 		s.logger.Errorf("GetUser failed to get user with enrollments: %w ", err)
 	}
 	return userInfo, nil
-
 }
 
 // GetUsers returns a list of all users.
@@ -588,15 +588,6 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 	return submission, nil
 }
 
-func (s *AutograderService) GetSubmissionCommitHash(ctx context.Context, in *pb.CommitHashRequest) (*pb.CommitHashResponse, error) {
-
-	commitHash, err := s.getCommitHash(in)
-	if err != nil {
-		return nil, err
-	}
-	return &pb.CommitHashResponse{CommitHash: commitHash}, nil
-}
-
 // CreateBenchmark adds a new grading benchmark for an assignment
 // Access policy: Teacher of CourseID
 func (s *AutograderService) CreateBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
@@ -700,7 +691,7 @@ func (s *AutograderService) CreateReview(ctx context.Context, in *pb.ReviewReque
 		s.logger.Errorf("CreateReview failed: current user's ID: %d, when the reviewer's ID is %d ", usr.ID, in.Review.ReviewerID)
 		return nil, status.Errorf(codes.PermissionDenied, "failed to create review: reviewers' IDs don't match")
 	}
-	if err := in.Review.MakeReviewString(); err != nil {
+	if err := in.Review.MarshalReviewString(); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to create review: parsing error")
 	}
 	review, err := s.createReview(in.Review)
@@ -727,7 +718,7 @@ func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewReque
 		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.Review.ReviewerID)
 		return nil, status.Errorf(codes.PermissionDenied, "reviews can only be updated by original authors or course creator")
 	}
-	if err := in.Review.MakeReviewString(); err != nil {
+	if err := in.Review.MarshalReviewString(); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to create review: parsing error")
 	}
 	if err = s.updateReview(in.Review); err != nil {
@@ -869,7 +860,7 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 		s.logger.Errorf("GetRepositories failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	var urls = make(map[string]string)
+	urls := make(map[string]string)
 	for _, repoType := range in.GetRepoTypes() {
 		repo, _ := s.getRepositoryURL(usr, in.GetCourseID(), repoType)
 		// we do not care if some repo was not found, this will append an empty url string in that case

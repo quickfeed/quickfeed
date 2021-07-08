@@ -1,6 +1,6 @@
 import React from "react"
 import { useOvermind } from "../overmind"
-import { GradingCriterion, Review } from "../../proto/ag_pb"
+import { GradingCriterion, Review } from "../../proto/ag/ag_pb"
 
 
 interface submission {
