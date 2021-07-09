@@ -7,6 +7,10 @@
 // GENERATED CODE -- DO NOT EDIT!
 
 
+/* eslint-disable */
+// @ts-nocheck
+
+
 import * as grpcWeb from 'grpc-web';
 
 
@@ -14,8 +18,6 @@ import {
   Assignments,
   AuthorizationResponse,
   Benchmarks,
-  CommitHashRequest,
-  CommitHashResponse,
   Course,
   CourseRequest,
   CourseSubmissions,
@@ -60,8 +62,8 @@ export class AutograderServiceClient {
   options_: null | { [index: string]: string; };
 
   constructor (hostname: string,
-               credentials: null | { [index: string]: string; },
-               options: null | { [index: string]: string; }) {
+               credentials?: null | { [index: string]: string; },
+               options?: null | { [index: string]: string; }) {
     if (!options) options = {};
     if (!credentials) credentials = {};
     options['format'] = 'text';
@@ -82,8 +84,18 @@ export class AutograderServiceClient {
 
   getUser(
     request: Void,
+    metadata: grpcWeb.Metadata | null): Promise<User>;
+
+  getUser(
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: User) => void): grpcWeb.ClientReadableStream<User>;
+
+  getUser(
+    request: Void,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: User) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -111,8 +123,18 @@ export class AutograderServiceClient {
 
   getUsers(
     request: Void,
+    metadata: grpcWeb.Metadata | null): Promise<Users>;
+
+  getUsers(
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Users) => void): grpcWeb.ClientReadableStream<Users>;
+
+  getUsers(
+    request: Void,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Users) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -140,8 +162,18 @@ export class AutograderServiceClient {
 
   getUserByCourse(
     request: CourseUserRequest,
+    metadata: grpcWeb.Metadata | null): Promise<User>;
+
+  getUserByCourse(
+    request: CourseUserRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: User) => void): grpcWeb.ClientReadableStream<User>;
+
+  getUserByCourse(
+    request: CourseUserRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: User) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -169,8 +201,18 @@ export class AutograderServiceClient {
 
   updateUser(
     request: User,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  updateUser(
+    request: User,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  updateUser(
+    request: User,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -198,8 +240,18 @@ export class AutograderServiceClient {
 
   isAuthorizedTeacher(
     request: Void,
+    metadata: grpcWeb.Metadata | null): Promise<AuthorizationResponse>;
+
+  isAuthorizedTeacher(
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: AuthorizationResponse) => void): grpcWeb.ClientReadableStream<AuthorizationResponse>;
+
+  isAuthorizedTeacher(
+    request: Void,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: AuthorizationResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -227,8 +279,18 @@ export class AutograderServiceClient {
 
   getGroup(
     request: GetGroupRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Group>;
+
+  getGroup(
+    request: GetGroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Group) => void): grpcWeb.ClientReadableStream<Group>;
+
+  getGroup(
+    request: GetGroupRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Group) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -256,8 +318,18 @@ export class AutograderServiceClient {
 
   getGroupByUserAndCourse(
     request: GroupRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Group>;
+
+  getGroupByUserAndCourse(
+    request: GroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Group) => void): grpcWeb.ClientReadableStream<Group>;
+
+  getGroupByUserAndCourse(
+    request: GroupRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Group) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -285,8 +357,18 @@ export class AutograderServiceClient {
 
   getGroupsByCourse(
     request: CourseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Groups>;
+
+  getGroupsByCourse(
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Groups) => void): grpcWeb.ClientReadableStream<Groups>;
+
+  getGroupsByCourse(
+    request: CourseRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Groups) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -314,8 +396,18 @@ export class AutograderServiceClient {
 
   createGroup(
     request: Group,
+    metadata: grpcWeb.Metadata | null): Promise<Group>;
+
+  createGroup(
+    request: Group,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Group) => void): grpcWeb.ClientReadableStream<Group>;
+
+  createGroup(
+    request: Group,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Group) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -343,8 +435,18 @@ export class AutograderServiceClient {
 
   updateGroup(
     request: Group,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  updateGroup(
+    request: Group,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  updateGroup(
+    request: Group,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -372,8 +474,18 @@ export class AutograderServiceClient {
 
   deleteGroup(
     request: GroupRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  deleteGroup(
+    request: GroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  deleteGroup(
+    request: GroupRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -401,8 +513,18 @@ export class AutograderServiceClient {
 
   getCourse(
     request: CourseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Course>;
+
+  getCourse(
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Course) => void): grpcWeb.ClientReadableStream<Course>;
+
+  getCourse(
+    request: CourseRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Course) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -430,8 +552,18 @@ export class AutograderServiceClient {
 
   getCourses(
     request: Void,
+    metadata: grpcWeb.Metadata | null): Promise<Courses>;
+
+  getCourses(
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Courses) => void): grpcWeb.ClientReadableStream<Courses>;
+
+  getCourses(
+    request: Void,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Courses) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -459,8 +591,18 @@ export class AutograderServiceClient {
 
   getCoursesByUser(
     request: EnrollmentStatusRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Courses>;
+
+  getCoursesByUser(
+    request: EnrollmentStatusRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Courses) => void): grpcWeb.ClientReadableStream<Courses>;
+
+  getCoursesByUser(
+    request: EnrollmentStatusRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Courses) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -488,8 +630,18 @@ export class AutograderServiceClient {
 
   createCourse(
     request: Course,
+    metadata: grpcWeb.Metadata | null): Promise<Course>;
+
+  createCourse(
+    request: Course,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Course) => void): grpcWeb.ClientReadableStream<Course>;
+
+  createCourse(
+    request: Course,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Course) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -517,8 +669,18 @@ export class AutograderServiceClient {
 
   updateCourse(
     request: Course,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  updateCourse(
+    request: Course,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  updateCourse(
+    request: Course,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -546,8 +708,18 @@ export class AutograderServiceClient {
 
   updateCourseVisibility(
     request: Enrollment,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  updateCourseVisibility(
+    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  updateCourseVisibility(
+    request: Enrollment,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -575,8 +747,18 @@ export class AutograderServiceClient {
 
   getAssignments(
     request: CourseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Assignments>;
+
+  getAssignments(
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Assignments) => void): grpcWeb.ClientReadableStream<Assignments>;
+
+  getAssignments(
+    request: CourseRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Assignments) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -604,8 +786,18 @@ export class AutograderServiceClient {
 
   updateAssignments(
     request: CourseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  updateAssignments(
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  updateAssignments(
+    request: CourseRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -633,8 +825,18 @@ export class AutograderServiceClient {
 
   getEnrollmentsByUser(
     request: EnrollmentStatusRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Enrollments>;
+
+  getEnrollmentsByUser(
+    request: EnrollmentStatusRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Enrollments) => void): grpcWeb.ClientReadableStream<Enrollments>;
+
+  getEnrollmentsByUser(
+    request: EnrollmentStatusRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Enrollments) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -662,8 +864,18 @@ export class AutograderServiceClient {
 
   getEnrollmentsByCourse(
     request: EnrollmentRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Enrollments>;
+
+  getEnrollmentsByCourse(
+    request: EnrollmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Enrollments) => void): grpcWeb.ClientReadableStream<Enrollments>;
+
+  getEnrollmentsByCourse(
+    request: EnrollmentRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Enrollments) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -691,8 +903,18 @@ export class AutograderServiceClient {
 
   createEnrollment(
     request: Enrollment,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  createEnrollment(
+    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  createEnrollment(
+    request: Enrollment,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -720,8 +942,18 @@ export class AutograderServiceClient {
 
   updateEnrollment(
     request: Enrollment,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  updateEnrollment(
+    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  updateEnrollment(
+    request: Enrollment,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -749,8 +981,18 @@ export class AutograderServiceClient {
 
   updateEnrollments(
     request: CourseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  updateEnrollments(
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  updateEnrollments(
+    request: CourseRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -778,8 +1020,18 @@ export class AutograderServiceClient {
 
   getSubmissions(
     request: SubmissionRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Submissions>;
+
+  getSubmissions(
+    request: SubmissionRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Submissions) => void): grpcWeb.ClientReadableStream<Submissions>;
+
+  getSubmissions(
+    request: SubmissionRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Submissions) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -807,8 +1059,18 @@ export class AutograderServiceClient {
 
   getSubmissionsByCourse(
     request: SubmissionsForCourseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<CourseSubmissions>;
+
+  getSubmissionsByCourse(
+    request: SubmissionsForCourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: CourseSubmissions) => void): grpcWeb.ClientReadableStream<CourseSubmissions>;
+
+  getSubmissionsByCourse(
+    request: SubmissionsForCourseRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: CourseSubmissions) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -836,8 +1098,18 @@ export class AutograderServiceClient {
 
   updateSubmission(
     request: UpdateSubmissionRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  updateSubmission(
+    request: UpdateSubmissionRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  updateSubmission(
+    request: UpdateSubmissionRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -865,8 +1137,18 @@ export class AutograderServiceClient {
 
   updateSubmissions(
     request: UpdateSubmissionsRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  updateSubmissions(
+    request: UpdateSubmissionsRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  updateSubmissions(
+    request: UpdateSubmissionsRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -894,28 +1176,16 @@ export class AutograderServiceClient {
 
   rebuildSubmission(
     request: RebuildRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Submission>;
+
+  rebuildSubmission(
+    request: RebuildRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Submission) => void) {
-    return this.client_.rpcCall(
-      this.hostname_ +
-        '/AutograderService/RebuildSubmission',
-      request,
-      metadata || {},
-      this.methodInfoRebuildSubmission,
-      callback);
-  }
+               response: Submission) => void): grpcWeb.ClientReadableStream<Submission>;
 
-  methodInfoGetSubmissionCommitHash = new grpcWeb.AbstractClientBase.MethodInfo(
-    CommitHashResponse,
-    (request: CommitHashRequest) => {
-      return request.serializeBinary();
-    },
-    CommitHashResponse.deserializeBinary
-  );
-
-  getSubmissionCommitHash(
-    request: CommitHashRequest,
+  rebuildSubmission(
+    request: RebuildRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
                response: Submission) => void) {
@@ -945,8 +1215,18 @@ export class AutograderServiceClient {
 
   createBenchmark(
     request: GradingBenchmark,
+    metadata: grpcWeb.Metadata | null): Promise<GradingBenchmark>;
+
+  createBenchmark(
+    request: GradingBenchmark,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: GradingBenchmark) => void): grpcWeb.ClientReadableStream<GradingBenchmark>;
+
+  createBenchmark(
+    request: GradingBenchmark,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: GradingBenchmark) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -974,8 +1254,18 @@ export class AutograderServiceClient {
 
   updateBenchmark(
     request: GradingBenchmark,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  updateBenchmark(
+    request: GradingBenchmark,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  updateBenchmark(
+    request: GradingBenchmark,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1003,8 +1293,18 @@ export class AutograderServiceClient {
 
   deleteBenchmark(
     request: GradingBenchmark,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  deleteBenchmark(
+    request: GradingBenchmark,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  deleteBenchmark(
+    request: GradingBenchmark,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1032,8 +1332,18 @@ export class AutograderServiceClient {
 
   createCriterion(
     request: GradingCriterion,
+    metadata: grpcWeb.Metadata | null): Promise<GradingCriterion>;
+
+  createCriterion(
+    request: GradingCriterion,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: GradingCriterion) => void): grpcWeb.ClientReadableStream<GradingCriterion>;
+
+  createCriterion(
+    request: GradingCriterion,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: GradingCriterion) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1061,8 +1371,18 @@ export class AutograderServiceClient {
 
   updateCriterion(
     request: GradingCriterion,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  updateCriterion(
+    request: GradingCriterion,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  updateCriterion(
+    request: GradingCriterion,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1090,8 +1410,18 @@ export class AutograderServiceClient {
 
   deleteCriterion(
     request: GradingCriterion,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  deleteCriterion(
+    request: GradingCriterion,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  deleteCriterion(
+    request: GradingCriterion,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1119,8 +1449,18 @@ export class AutograderServiceClient {
 
   createReview(
     request: ReviewRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Review>;
+
+  createReview(
+    request: ReviewRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Review) => void): grpcWeb.ClientReadableStream<Review>;
+
+  createReview(
+    request: ReviewRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Review) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1148,8 +1488,18 @@ export class AutograderServiceClient {
 
   updateReview(
     request: ReviewRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  updateReview(
+    request: ReviewRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  updateReview(
+    request: ReviewRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1177,8 +1527,18 @@ export class AutograderServiceClient {
 
   getReviewers(
     request: SubmissionReviewersRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Reviewers>;
+
+  getReviewers(
+    request: SubmissionReviewersRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Reviewers) => void): grpcWeb.ClientReadableStream<Reviewers>;
+
+  getReviewers(
+    request: SubmissionReviewersRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Reviewers) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1206,8 +1566,18 @@ export class AutograderServiceClient {
 
   loadCriteria(
     request: LoadCriteriaRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Benchmarks>;
+
+  loadCriteria(
+    request: LoadCriteriaRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Benchmarks) => void): grpcWeb.ClientReadableStream<Benchmarks>;
+
+  loadCriteria(
+    request: LoadCriteriaRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Benchmarks) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1235,8 +1605,18 @@ export class AutograderServiceClient {
 
   getProviders(
     request: Void,
+    metadata: grpcWeb.Metadata | null): Promise<Providers>;
+
+  getProviders(
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Providers) => void): grpcWeb.ClientReadableStream<Providers>;
+
+  getProviders(
+    request: Void,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Providers) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1264,8 +1644,18 @@ export class AutograderServiceClient {
 
   getOrganization(
     request: OrgRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Organization>;
+
+  getOrganization(
+    request: OrgRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Organization) => void): grpcWeb.ClientReadableStream<Organization>;
+
+  getOrganization(
+    request: OrgRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Organization) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1293,8 +1683,18 @@ export class AutograderServiceClient {
 
   getRepositories(
     request: URLRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Repositories>;
+
+  getRepositories(
+    request: URLRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Repositories) => void): grpcWeb.ClientReadableStream<Repositories>;
+
+  getRepositories(
+    request: URLRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Repositories) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1322,8 +1722,18 @@ export class AutograderServiceClient {
 
   isEmptyRepo(
     request: RepositoryRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  isEmptyRepo(
+    request: RepositoryRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  isEmptyRepo(
+    request: RepositoryRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
                response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
