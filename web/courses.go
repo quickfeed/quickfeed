@@ -147,6 +147,8 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 	return &pb.Submissions{Submissions: submissions}, nil
 }
 
+
+
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
 func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
 	var getCourseSubFn func(uint64, pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error)

@@ -7,8 +7,6 @@
 exports.__esModule = true;
 exports.AutograderServiceClient = void 0;
 // GENERATED CODE -- DO NOT EDIT!
-/* eslint-disable */
-// @ts-nocheck
 var grpcWeb = require("grpc-web");
 var ag_pb_1 = require("./ag_pb");
 var AutograderServiceClient = /** @class */ (function () {
@@ -100,6 +98,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submission, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submission.deserializeBinary);
+        this.methodInfoGetSubmissionCommitHash = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.CommitHashResponse, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.CommitHashResponse.deserializeBinary);
         this.methodInfoCreateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.GradingBenchmark, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.GradingBenchmark.deserializeBinary);
@@ -354,6 +355,10 @@ var AutograderServiceClient = /** @class */ (function () {
         }
         return this.client_.unaryCall(this.hostname_ +
             '/ag.AutograderService/RebuildSubmission', request, metadata || {}, this.methodInfoRebuildSubmission);
+    };
+    AutograderServiceClient.prototype.getSubmissionCommitHash = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetSubmissionCommitHash', request, metadata || {}, this.methodInfoGetSubmissionCommitHash, callback);
     };
     AutograderServiceClient.prototype.createBenchmark = function (request, metadata, callback) {
         if (callback !== undefined) {

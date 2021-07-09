@@ -311,7 +311,10 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 			i, ok := sess.Values[UserKey]
 			if !ok {
 				logger.Error(echo.ErrUnauthorized.Error())
-				return echo.ErrUnauthorized
+				// TODO: This used to return echo.ErrUnauthorized
+				// Changed to next(c) as AccessControl now applies to all routes
+				// If a user has no session, e.g. not logged in, the user should still be allowed visit the website.
+				return next(c)
 			}
 
 			// If type assertion fails, the recover middleware will catch the panic and log a stack trace.

@@ -1,51 +1,31 @@
 {
-  "name": "reactcomponents",
+  "name": "untitled3",
   "version": "0.1.0",
-  "description": "React Components for the Autograder Project",
-  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "@types/node": "^12.19.12",
+    "@types/react": "^16.14.2",
+    "@types/react-dom": "^16.9.10",
+    "google-protobuf": "^3.15.0-rc.1",
+    "grpc-web": "^1.2.1",
+    "overmind": "^27.0.0",
+    "overmind-react": "^28.0.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-router": "^5.2.0",
+    "react-router-dom": "^5.2.0"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "webpack": "webpack --progress",
     "tsc": "tsc"
   },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@types/google-protobuf": "^3.7.4",
-    "@types/node": "^14.14.8",
-    "@types/protobufjs": "^6.0.0",
-    "@types/react": "^16.9.56",
-    "@types/react-dom": "^16.9.9",
-    "async": "^3.2.0",
-    "fs": "0.0.1-security",
-    "google-protobuf": "^3.14.0",
-    "grpc-web": "^1.2.0",
-    "lodash": "^4.17.21",
-    "minimist": "^1.2.5",
-    "nan": "^2.14.2",
-    "react": "^17.0.1",
-    "react-components": "^0.5.1",
-    "react-dom": "^17.0.1",
-    "react-tooltip": "^4.2.10",
-    "serialize-javascript": "^5.0.1",
-    "terser-webpack-plugin": "^5.0.3"
-  },
   "devDependencies": {
-    "base": "^3.0.0",
-    "braces": "^3.0.2",
-    "cache-base": "^4.0.0",
-    "chokidar": "^3.4.3",
-    "mixin-deep": "^2.0.1",
-    "snapdragon": "^0.12.0",
-    "source-map-loader": "^1.1.2",
+    "@types/react-router-dom": "^5.1.7",
+    "eslint": "^7.22.0",
+    "source-map-loader": "^2.0.1",
+    "typescript": "^4.0.5",
     "ts-loader": "^8.0.11",
-    "typescript": "^4.3.4",
-    "union-value": "^2.0.1",
-    "webpack": "^5.38.1",
-    "webpack-cli": "^4.2.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/autograde/quickfeed.git"
+    "webpack": "^5.31.2",
+    "webpack-cli": "^4.6.0",
+    "process": "0.11.10"
   }
 }

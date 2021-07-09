@@ -3,34 +3,34 @@ import * as jspb from "google-protobuf"
 
 export class User extends jspb.Message {
   getId(): number;
-  setId(value: number): User;
+  setId(value: number): void;
 
   getIsadmin(): boolean;
-  setIsadmin(value: boolean): User;
+  setIsadmin(value: boolean): void;
 
   getName(): string;
-  setName(value: string): User;
+  setName(value: string): void;
 
   getStudentid(): string;
-  setStudentid(value: string): User;
+  setStudentid(value: string): void;
 
   getEmail(): string;
-  setEmail(value: string): User;
+  setEmail(value: string): void;
 
   getAvatarurl(): string;
-  setAvatarurl(value: string): User;
+  setAvatarurl(value: string): void;
 
   getLogin(): string;
-  setLogin(value: string): User;
+  setLogin(value: string): void;
 
   getRemoteidentitiesList(): Array<RemoteIdentity>;
-  setRemoteidentitiesList(value: Array<RemoteIdentity>): User;
-  clearRemoteidentitiesList(): User;
+  setRemoteidentitiesList(value: Array<RemoteIdentity>): void;
+  clearRemoteidentitiesList(): void;
   addRemoteidentities(value?: RemoteIdentity, index?: number): RemoteIdentity;
 
   getEnrollmentsList(): Array<Enrollment>;
-  setEnrollmentsList(value: Array<Enrollment>): User;
-  clearEnrollmentsList(): User;
+  setEnrollmentsList(value: Array<Enrollment>): void;
+  clearEnrollmentsList(): void;
   addEnrollments(value?: Enrollment, index?: number): Enrollment;
 
   serializeBinary(): Uint8Array;
@@ -57,8 +57,8 @@ export namespace User {
 
 export class Users extends jspb.Message {
   getUsersList(): Array<User>;
-  setUsersList(value: Array<User>): Users;
-  clearUsersList(): Users;
+  setUsersList(value: Array<User>): void;
+  clearUsersList(): void;
   addUsers(value?: User, index?: number): User;
 
   serializeBinary(): Uint8Array;
@@ -77,19 +77,19 @@ export namespace Users {
 
 export class RemoteIdentity extends jspb.Message {
   getId(): number;
-  setId(value: number): RemoteIdentity;
+  setId(value: number): void;
 
   getProvider(): string;
-  setProvider(value: string): RemoteIdentity;
+  setProvider(value: string): void;
 
   getRemoteid(): number;
-  setRemoteid(value: number): RemoteIdentity;
+  setRemoteid(value: number): void;
 
   getAccesstoken(): string;
-  setAccesstoken(value: string): RemoteIdentity;
+  setAccesstoken(value: string): void;
 
   getUserid(): number;
-  setUserid(value: number): RemoteIdentity;
+  setUserid(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): RemoteIdentity.AsObject;
@@ -111,28 +111,28 @@ export namespace RemoteIdentity {
 
 export class Group extends jspb.Message {
   getId(): number;
-  setId(value: number): Group;
+  setId(value: number): void;
 
   getName(): string;
-  setName(value: string): Group;
+  setName(value: string): void;
 
   getCourseid(): number;
-  setCourseid(value: number): Group;
+  setCourseid(value: number): void;
 
   getTeamid(): number;
-  setTeamid(value: number): Group;
+  setTeamid(value: number): void;
 
   getStatus(): Group.GroupStatus;
-  setStatus(value: Group.GroupStatus): Group;
+  setStatus(value: Group.GroupStatus): void;
 
   getUsersList(): Array<User>;
-  setUsersList(value: Array<User>): Group;
-  clearUsersList(): Group;
+  setUsersList(value: Array<User>): void;
+  clearUsersList(): void;
   addUsers(value?: User, index?: number): User;
 
   getEnrollmentsList(): Array<Enrollment>;
-  setEnrollmentsList(value: Array<Enrollment>): Group;
-  clearEnrollmentsList(): Group;
+  setEnrollmentsList(value: Array<Enrollment>): void;
+  clearEnrollmentsList(): void;
   addEnrollments(value?: Enrollment, index?: number): Enrollment;
 
   serializeBinary(): Uint8Array;
@@ -162,8 +162,8 @@ export namespace Group {
 
 export class Groups extends jspb.Message {
   getGroupsList(): Array<Group>;
-  setGroupsList(value: Array<Group>): Groups;
-  clearGroupsList(): Groups;
+  setGroupsList(value: Array<Group>): void;
+  clearGroupsList(): void;
   addGroups(value?: Group, index?: number): Group;
 
   serializeBinary(): Uint8Array;
@@ -182,51 +182,51 @@ export namespace Groups {
 
 export class Course extends jspb.Message {
   getId(): number;
-  setId(value: number): Course;
+  setId(value: number): void;
 
   getCoursecreatorid(): number;
-  setCoursecreatorid(value: number): Course;
+  setCoursecreatorid(value: number): void;
 
   getName(): string;
-  setName(value: string): Course;
+  setName(value: string): void;
 
   getCode(): string;
-  setCode(value: string): Course;
+  setCode(value: string): void;
 
   getYear(): number;
-  setYear(value: number): Course;
+  setYear(value: number): void;
 
   getTag(): string;
-  setTag(value: string): Course;
+  setTag(value: string): void;
 
   getProvider(): string;
-  setProvider(value: string): Course;
+  setProvider(value: string): void;
 
   getOrganizationid(): number;
-  setOrganizationid(value: number): Course;
+  setOrganizationid(value: number): void;
 
   getOrganizationpath(): string;
-  setOrganizationpath(value: string): Course;
+  setOrganizationpath(value: string): void;
 
   getSlipdays(): number;
-  setSlipdays(value: number): Course;
+  setSlipdays(value: number): void;
 
   getEnrolled(): Enrollment.UserStatus;
-  setEnrolled(value: Enrollment.UserStatus): Course;
+  setEnrolled(value: Enrollment.UserStatus): void;
 
   getEnrollmentsList(): Array<Enrollment>;
-  setEnrollmentsList(value: Array<Enrollment>): Course;
-  clearEnrollmentsList(): Course;
+  setEnrollmentsList(value: Array<Enrollment>): void;
+  clearEnrollmentsList(): void;
   addEnrollments(value?: Enrollment, index?: number): Enrollment;
 
   getAssignmentsList(): Array<Assignment>;
-  setAssignmentsList(value: Array<Assignment>): Course;
-  clearAssignmentsList(): Course;
+  setAssignmentsList(value: Array<Assignment>): void;
+  clearAssignmentsList(): void;
   addAssignments(value?: Assignment, index?: number): Assignment;
 
   getGroupsList(): Array<Group>;
-  setGroupsList(value: Array<Group>): Course;
-  clearGroupsList(): Course;
+  setGroupsList(value: Array<Group>): void;
+  clearGroupsList(): void;
   addGroups(value?: Group, index?: number): Group;
 
   serializeBinary(): Uint8Array;
@@ -258,8 +258,8 @@ export namespace Course {
 
 export class Courses extends jspb.Message {
   getCoursesList(): Array<Course>;
-  setCoursesList(value: Array<Course>): Courses;
-  clearCoursesList(): Courses;
+  setCoursesList(value: Array<Course>): void;
+  clearCoursesList(): void;
   addCourses(value?: Course, index?: number): Course;
 
   serializeBinary(): Uint8Array;
@@ -278,25 +278,25 @@ export namespace Courses {
 
 export class Repository extends jspb.Message {
   getId(): number;
-  setId(value: number): Repository;
+  setId(value: number): void;
 
   getOrganizationid(): number;
-  setOrganizationid(value: number): Repository;
+  setOrganizationid(value: number): void;
 
   getRepositoryid(): number;
-  setRepositoryid(value: number): Repository;
+  setRepositoryid(value: number): void;
 
   getUserid(): number;
-  setUserid(value: number): Repository;
+  setUserid(value: number): void;
 
   getGroupid(): number;
-  setGroupid(value: number): Repository;
+  setGroupid(value: number): void;
 
   getHtmlurl(): string;
-  setHtmlurl(value: string): Repository;
+  setHtmlurl(value: string): void;
 
   getRepotype(): Repository.Type;
-  setRepotype(value: Repository.Type): Repository;
+  setRepotype(value: Repository.Type): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Repository.AsObject;
@@ -329,53 +329,53 @@ export namespace Repository {
 
 export class Enrollment extends jspb.Message {
   getId(): number;
-  setId(value: number): Enrollment;
+  setId(value: number): void;
 
   getCourseid(): number;
-  setCourseid(value: number): Enrollment;
+  setCourseid(value: number): void;
 
   getUserid(): number;
-  setUserid(value: number): Enrollment;
+  setUserid(value: number): void;
 
   getGroupid(): number;
-  setGroupid(value: number): Enrollment;
+  setGroupid(value: number): void;
 
   getHasteacherscopes(): boolean;
-  setHasteacherscopes(value: boolean): Enrollment;
+  setHasteacherscopes(value: boolean): void;
 
   getUser(): User | undefined;
-  setUser(value?: User): Enrollment;
+  setUser(value?: User): void;
   hasUser(): boolean;
-  clearUser(): Enrollment;
+  clearUser(): void;
 
   getCourse(): Course | undefined;
-  setCourse(value?: Course): Enrollment;
+  setCourse(value?: Course): void;
   hasCourse(): boolean;
-  clearCourse(): Enrollment;
+  clearCourse(): void;
 
   getGroup(): Group | undefined;
-  setGroup(value?: Group): Enrollment;
+  setGroup(value?: Group): void;
   hasGroup(): boolean;
-  clearGroup(): Enrollment;
+  clearGroup(): void;
 
   getStatus(): Enrollment.UserStatus;
-  setStatus(value: Enrollment.UserStatus): Enrollment;
+  setStatus(value: Enrollment.UserStatus): void;
 
   getState(): Enrollment.DisplayState;
-  setState(value: Enrollment.DisplayState): Enrollment;
+  setState(value: Enrollment.DisplayState): void;
 
   getSlipdaysremaining(): number;
-  setSlipdaysremaining(value: number): Enrollment;
+  setSlipdaysremaining(value: number): void;
 
   getLastactivitydate(): string;
-  setLastactivitydate(value: string): Enrollment;
+  setLastactivitydate(value: string): void;
 
   getTotalapproved(): number;
-  setTotalapproved(value: number): Enrollment;
+  setTotalapproved(value: number): void;
 
   getUsedslipdaysList(): Array<UsedSlipDays>;
-  setUsedslipdaysList(value: Array<UsedSlipDays>): Enrollment;
-  clearUsedslipdaysList(): Enrollment;
+  setUsedslipdaysList(value: Array<UsedSlipDays>): void;
+  clearUsedslipdaysList(): void;
   addUsedslipdays(value?: UsedSlipDays, index?: number): UsedSlipDays;
 
   serializeBinary(): Uint8Array;
@@ -421,16 +421,16 @@ export namespace Enrollment {
 
 export class UsedSlipDays extends jspb.Message {
   getId(): number;
-  setId(value: number): UsedSlipDays;
+  setId(value: number): void;
 
   getEnrollmentid(): number;
-  setEnrollmentid(value: number): UsedSlipDays;
+  setEnrollmentid(value: number): void;
 
   getAssignmentid(): number;
-  setAssignmentid(value: number): UsedSlipDays;
+  setAssignmentid(value: number): void;
 
   getUsedslipdays(): number;
-  setUsedslipdays(value: number): UsedSlipDays;
+  setUsedslipdays(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): UsedSlipDays.AsObject;
@@ -451,8 +451,8 @@ export namespace UsedSlipDays {
 
 export class Enrollments extends jspb.Message {
   getEnrollmentsList(): Array<Enrollment>;
-  setEnrollmentsList(value: Array<Enrollment>): Enrollments;
-  clearEnrollmentsList(): Enrollments;
+  setEnrollmentsList(value: Array<Enrollment>): void;
+  clearEnrollmentsList(): void;
   addEnrollments(value?: Enrollment, index?: number): Enrollment;
 
   serializeBinary(): Uint8Array;
@@ -471,14 +471,14 @@ export namespace Enrollments {
 
 export class SubmissionLink extends jspb.Message {
   getAssignment(): Assignment | undefined;
-  setAssignment(value?: Assignment): SubmissionLink;
+  setAssignment(value?: Assignment): void;
   hasAssignment(): boolean;
-  clearAssignment(): SubmissionLink;
+  clearAssignment(): void;
 
   getSubmission(): Submission | undefined;
-  setSubmission(value?: Submission): SubmissionLink;
+  setSubmission(value?: Submission): void;
   hasSubmission(): boolean;
-  clearSubmission(): SubmissionLink;
+  clearSubmission(): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): SubmissionLink.AsObject;
@@ -497,13 +497,13 @@ export namespace SubmissionLink {
 
 export class EnrollmentLink extends jspb.Message {
   getEnrollment(): Enrollment | undefined;
-  setEnrollment(value?: Enrollment): EnrollmentLink;
+  setEnrollment(value?: Enrollment): void;
   hasEnrollment(): boolean;
-  clearEnrollment(): EnrollmentLink;
+  clearEnrollment(): void;
 
   getSubmissionsList(): Array<SubmissionLink>;
-  setSubmissionsList(value: Array<SubmissionLink>): EnrollmentLink;
-  clearSubmissionsList(): EnrollmentLink;
+  setSubmissionsList(value: Array<SubmissionLink>): void;
+  clearSubmissionsList(): void;
   addSubmissions(value?: SubmissionLink, index?: number): SubmissionLink;
 
   serializeBinary(): Uint8Array;
@@ -523,13 +523,13 @@ export namespace EnrollmentLink {
 
 export class CourseSubmissions extends jspb.Message {
   getCourse(): Course | undefined;
-  setCourse(value?: Course): CourseSubmissions;
+  setCourse(value?: Course): void;
   hasCourse(): boolean;
-  clearCourse(): CourseSubmissions;
+  clearCourse(): void;
 
   getLinksList(): Array<EnrollmentLink>;
-  setLinksList(value: Array<EnrollmentLink>): CourseSubmissions;
-  clearLinksList(): CourseSubmissions;
+  setLinksList(value: Array<EnrollmentLink>): void;
+  clearLinksList(): void;
   addLinks(value?: EnrollmentLink, index?: number): EnrollmentLink;
 
   serializeBinary(): Uint8Array;
@@ -549,50 +549,50 @@ export namespace CourseSubmissions {
 
 export class Assignment extends jspb.Message {
   getId(): number;
-  setId(value: number): Assignment;
+  setId(value: number): void;
 
   getCourseid(): number;
-  setCourseid(value: number): Assignment;
+  setCourseid(value: number): void;
 
   getName(): string;
-  setName(value: string): Assignment;
+  setName(value: string): void;
 
   getScriptfile(): string;
-  setScriptfile(value: string): Assignment;
+  setScriptfile(value: string): void;
 
   getDeadline(): string;
-  setDeadline(value: string): Assignment;
+  setDeadline(value: string): void;
 
   getAutoapprove(): boolean;
-  setAutoapprove(value: boolean): Assignment;
+  setAutoapprove(value: boolean): void;
 
   getOrder(): number;
-  setOrder(value: number): Assignment;
+  setOrder(value: number): void;
 
   getIsgrouplab(): boolean;
-  setIsgrouplab(value: boolean): Assignment;
+  setIsgrouplab(value: boolean): void;
 
   getScorelimit(): number;
-  setScorelimit(value: number): Assignment;
+  setScorelimit(value: number): void;
 
   getReviewers(): number;
-  setReviewers(value: number): Assignment;
+  setReviewers(value: number): void;
 
   getSkiptests(): boolean;
-  setSkiptests(value: boolean): Assignment;
+  setSkiptests(value: boolean): void;
 
   getSubmissionsList(): Array<Submission>;
-  setSubmissionsList(value: Array<Submission>): Assignment;
-  clearSubmissionsList(): Assignment;
+  setSubmissionsList(value: Array<Submission>): void;
+  clearSubmissionsList(): void;
   addSubmissions(value?: Submission, index?: number): Submission;
 
   getGradingbenchmarksList(): Array<GradingBenchmark>;
-  setGradingbenchmarksList(value: Array<GradingBenchmark>): Assignment;
-  clearGradingbenchmarksList(): Assignment;
+  setGradingbenchmarksList(value: Array<GradingBenchmark>): void;
+  clearGradingbenchmarksList(): void;
   addGradingbenchmarks(value?: GradingBenchmark, index?: number): GradingBenchmark;
 
   getContainertimeout(): number;
-  setContainertimeout(value: number): Assignment;
+  setContainertimeout(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Assignment.AsObject;
@@ -623,8 +623,8 @@ export namespace Assignment {
 
 export class Assignments extends jspb.Message {
   getAssignmentsList(): Array<Assignment>;
-  setAssignmentsList(value: Array<Assignment>): Assignments;
-  clearAssignmentsList(): Assignments;
+  setAssignmentsList(value: Array<Assignment>): void;
+  clearAssignmentsList(): void;
   addAssignments(value?: Assignment, index?: number): Assignment;
 
   serializeBinary(): Uint8Array;
@@ -643,41 +643,41 @@ export namespace Assignments {
 
 export class Submission extends jspb.Message {
   getId(): number;
-  setId(value: number): Submission;
+  setId(value: number): void;
 
   getAssignmentid(): number;
-  setAssignmentid(value: number): Submission;
+  setAssignmentid(value: number): void;
 
   getUserid(): number;
-  setUserid(value: number): Submission;
+  setUserid(value: number): void;
 
   getGroupid(): number;
-  setGroupid(value: number): Submission;
+  setGroupid(value: number): void;
 
   getScore(): number;
-  setScore(value: number): Submission;
+  setScore(value: number): void;
 
   getScoreobjects(): string;
-  setScoreobjects(value: string): Submission;
+  setScoreobjects(value: string): void;
 
   getBuildinfo(): string;
-  setBuildinfo(value: string): Submission;
+  setBuildinfo(value: string): void;
 
   getCommithash(): string;
-  setCommithash(value: string): Submission;
+  setCommithash(value: string): void;
 
   getReleased(): boolean;
-  setReleased(value: boolean): Submission;
+  setReleased(value: boolean): void;
 
   getStatus(): Submission.Status;
-  setStatus(value: Submission.Status): Submission;
+  setStatus(value: Submission.Status): void;
 
   getApproveddate(): string;
-  setApproveddate(value: string): Submission;
+  setApproveddate(value: string): void;
 
   getReviewsList(): Array<Review>;
-  setReviewsList(value: Array<Review>): Submission;
-  clearReviewsList(): Submission;
+  setReviewsList(value: Array<Review>): void;
+  clearReviewsList(): void;
   addReviews(value?: Review, index?: number): Review;
 
   serializeBinary(): Uint8Array;
@@ -714,8 +714,8 @@ export namespace Submission {
 
 export class Submissions extends jspb.Message {
   getSubmissionsList(): Array<Submission>;
-  setSubmissionsList(value: Array<Submission>): Submissions;
-  clearSubmissionsList(): Submissions;
+  setSubmissionsList(value: Array<Submission>): void;
+  clearSubmissionsList(): void;
   addSubmissions(value?: Submission, index?: number): Submission;
 
   serializeBinary(): Uint8Array;
@@ -734,20 +734,20 @@ export namespace Submissions {
 
 export class GradingBenchmark extends jspb.Message {
   getId(): number;
-  setId(value: number): GradingBenchmark;
+  setId(value: number): void;
 
   getAssignmentid(): number;
-  setAssignmentid(value: number): GradingBenchmark;
+  setAssignmentid(value: number): void;
 
   getHeading(): string;
-  setHeading(value: string): GradingBenchmark;
+  setHeading(value: string): void;
 
   getComment(): string;
-  setComment(value: string): GradingBenchmark;
+  setComment(value: string): void;
 
   getCriteriaList(): Array<GradingCriterion>;
-  setCriteriaList(value: Array<GradingCriterion>): GradingBenchmark;
-  clearCriteriaList(): GradingBenchmark;
+  setCriteriaList(value: Array<GradingCriterion>): void;
+  clearCriteriaList(): void;
   addCriteria(value?: GradingCriterion, index?: number): GradingCriterion;
 
   serializeBinary(): Uint8Array;
@@ -770,8 +770,8 @@ export namespace GradingBenchmark {
 
 export class Benchmarks extends jspb.Message {
   getBenchmarksList(): Array<GradingBenchmark>;
-  setBenchmarksList(value: Array<GradingBenchmark>): Benchmarks;
-  clearBenchmarksList(): Benchmarks;
+  setBenchmarksList(value: Array<GradingBenchmark>): void;
+  clearBenchmarksList(): void;
   addBenchmarks(value?: GradingBenchmark, index?: number): GradingBenchmark;
 
   serializeBinary(): Uint8Array;
@@ -790,22 +790,22 @@ export namespace Benchmarks {
 
 export class GradingCriterion extends jspb.Message {
   getId(): number;
-  setId(value: number): GradingCriterion;
+  setId(value: number): void;
 
   getPoints(): number;
-  setPoints(value: number): GradingCriterion;
+  setPoints(value: number): void;
 
   getBenchmarkid(): number;
-  setBenchmarkid(value: number): GradingCriterion;
+  setBenchmarkid(value: number): void;
 
   getDescription(): string;
-  setDescription(value: string): GradingCriterion;
+  setDescription(value: string): void;
 
   getGrade(): GradingCriterion.Grade;
-  setGrade(value: GradingCriterion.Grade): GradingCriterion;
+  setGrade(value: GradingCriterion.Grade): void;
 
   getComment(): string;
-  setComment(value: string): GradingCriterion;
+  setComment(value: string): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GradingCriterion.AsObject;
@@ -834,29 +834,29 @@ export namespace GradingCriterion {
 
 export class Review extends jspb.Message {
   getId(): number;
-  setId(value: number): Review;
+  setId(value: number): void;
 
   getSubmissionid(): number;
-  setSubmissionid(value: number): Review;
+  setSubmissionid(value: number): void;
 
   getReviewerid(): number;
-  setReviewerid(value: number): Review;
+  setReviewerid(value: number): void;
 
   getReview(): string;
-  setReview(value: string): Review;
+  setReview(value: string): void;
 
   getFeedback(): string;
-  setFeedback(value: string): Review;
+  setFeedback(value: string): void;
 
   getReady(): boolean;
-  setReady(value: boolean): Review;
+  setReady(value: boolean): void;
 
   getScore(): number;
-  setScore(value: number): Review;
+  setScore(value: number): void;
 
   getBenchmarksList(): Array<GradingBenchmark>;
-  setBenchmarksList(value: Array<GradingBenchmark>): Review;
-  clearBenchmarksList(): Review;
+  setBenchmarksList(value: Array<GradingBenchmark>): void;
+  clearBenchmarksList(): void;
   addBenchmarks(value?: GradingBenchmark, index?: number): GradingBenchmark;
 
   getEdited(): string;
@@ -886,8 +886,8 @@ export namespace Review {
 
 export class Reviewers extends jspb.Message {
   getReviewersList(): Array<User>;
-  setReviewersList(value: Array<User>): Reviewers;
-  clearReviewersList(): Reviewers;
+  setReviewersList(value: Array<User>): void;
+  clearReviewersList(): void;
   addReviewers(value?: User, index?: number): User;
 
   serializeBinary(): Uint8Array;
@@ -906,12 +906,12 @@ export namespace Reviewers {
 
 export class ReviewRequest extends jspb.Message {
   getCourseid(): number;
-  setCourseid(value: number): ReviewRequest;
+  setCourseid(value: number): void;
 
   getReview(): Review | undefined;
-  setReview(value?: Review): ReviewRequest;
+  setReview(value?: Review): void;
   hasReview(): boolean;
-  clearReview(): ReviewRequest;
+  clearReview(): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ReviewRequest.AsObject;
@@ -930,7 +930,7 @@ export namespace ReviewRequest {
 
 export class CourseRequest extends jspb.Message {
   getCourseid(): number;
-  setCourseid(value: number): CourseRequest;
+  setCourseid(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): CourseRequest.AsObject;
@@ -948,7 +948,7 @@ export namespace CourseRequest {
 
 export class UserRequest extends jspb.Message {
   getUserid(): number;
-  setUserid(value: number): UserRequest;
+  setUserid(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): UserRequest.AsObject;
@@ -966,7 +966,7 @@ export namespace UserRequest {
 
 export class GetGroupRequest extends jspb.Message {
   getGroupid(): number;
-  setGroupid(value: number): GetGroupRequest;
+  setGroupid(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GetGroupRequest.AsObject;
@@ -984,13 +984,13 @@ export namespace GetGroupRequest {
 
 export class GroupRequest extends jspb.Message {
   getUserid(): number;
-  setUserid(value: number): GroupRequest;
+  setUserid(value: number): void;
 
   getGroupid(): number;
-  setGroupid(value: number): GroupRequest;
+  setGroupid(value: number): void;
 
   getCourseid(): number;
-  setCourseid(value: number): GroupRequest;
+  setCourseid(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GroupRequest.AsObject;
@@ -1010,7 +1010,7 @@ export namespace GroupRequest {
 
 export class Provider extends jspb.Message {
   getProvider(): string;
-  setProvider(value: string): Provider;
+  setProvider(value: string): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Provider.AsObject;
@@ -1028,7 +1028,7 @@ export namespace Provider {
 
 export class OrgRequest extends jspb.Message {
   getOrgname(): string;
-  setOrgname(value: string): OrgRequest;
+  setOrgname(value: string): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): OrgRequest.AsObject;
@@ -1046,16 +1046,16 @@ export namespace OrgRequest {
 
 export class Organization extends jspb.Message {
   getId(): number;
-  setId(value: number): Organization;
+  setId(value: number): void;
 
   getPath(): string;
-  setPath(value: string): Organization;
+  setPath(value: string): void;
 
   getAvatar(): string;
-  setAvatar(value: string): Organization;
+  setAvatar(value: string): void;
 
   getPaymentplan(): string;
-  setPaymentplan(value: string): Organization;
+  setPaymentplan(value: string): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Organization.AsObject;
@@ -1076,8 +1076,8 @@ export namespace Organization {
 
 export class Organizations extends jspb.Message {
   getOrganizationsList(): Array<Organization>;
-  setOrganizationsList(value: Array<Organization>): Organizations;
-  clearOrganizationsList(): Organizations;
+  setOrganizationsList(value: Array<Organization>): void;
+  clearOrganizationsList(): void;
   addOrganizations(value?: Organization, index?: number): Organization;
 
   serializeBinary(): Uint8Array;
@@ -1096,18 +1096,18 @@ export namespace Organizations {
 
 export class EnrollmentRequest extends jspb.Message {
   getCourseid(): number;
-  setCourseid(value: number): EnrollmentRequest;
+  setCourseid(value: number): void;
 
   getIgnoregroupmembers(): boolean;
-  setIgnoregroupmembers(value: boolean): EnrollmentRequest;
+  setIgnoregroupmembers(value: boolean): void;
 
   getWithactivity(): boolean;
-  setWithactivity(value: boolean): EnrollmentRequest;
+  setWithactivity(value: boolean): void;
 
   getStatusesList(): Array<Enrollment.UserStatus>;
-  setStatusesList(value: Array<Enrollment.UserStatus>): EnrollmentRequest;
-  clearStatusesList(): EnrollmentRequest;
-  addStatuses(value: Enrollment.UserStatus, index?: number): EnrollmentRequest;
+  setStatusesList(value: Array<Enrollment.UserStatus>): void;
+  clearStatusesList(): void;
+  addStatuses(value: Enrollment.UserStatus, index?: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): EnrollmentRequest.AsObject;
@@ -1128,12 +1128,12 @@ export namespace EnrollmentRequest {
 
 export class EnrollmentStatusRequest extends jspb.Message {
   getUserid(): number;
-  setUserid(value: number): EnrollmentStatusRequest;
+  setUserid(value: number): void;
 
   getStatusesList(): Array<Enrollment.UserStatus>;
-  setStatusesList(value: Array<Enrollment.UserStatus>): EnrollmentStatusRequest;
-  clearStatusesList(): EnrollmentStatusRequest;
-  addStatuses(value: Enrollment.UserStatus, index?: number): EnrollmentStatusRequest;
+  setStatusesList(value: Array<Enrollment.UserStatus>): void;
+  clearStatusesList(): void;
+  addStatuses(value: Enrollment.UserStatus, index?: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): EnrollmentStatusRequest.AsObject;
@@ -1152,13 +1152,13 @@ export namespace EnrollmentStatusRequest {
 
 export class SubmissionRequest extends jspb.Message {
   getUserid(): number;
-  setUserid(value: number): SubmissionRequest;
+  setUserid(value: number): void;
 
   getGroupid(): number;
-  setGroupid(value: number): SubmissionRequest;
+  setGroupid(value: number): void;
 
   getCourseid(): number;
-  setCourseid(value: number): SubmissionRequest;
+  setCourseid(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): SubmissionRequest.AsObject;
@@ -1178,19 +1178,19 @@ export namespace SubmissionRequest {
 
 export class UpdateSubmissionRequest extends jspb.Message {
   getSubmissionid(): number;
-  setSubmissionid(value: number): UpdateSubmissionRequest;
+  setSubmissionid(value: number): void;
 
   getCourseid(): number;
-  setCourseid(value: number): UpdateSubmissionRequest;
+  setCourseid(value: number): void;
 
   getScore(): number;
-  setScore(value: number): UpdateSubmissionRequest;
+  setScore(value: number): void;
 
   getReleased(): boolean;
-  setReleased(value: boolean): UpdateSubmissionRequest;
+  setReleased(value: boolean): void;
 
   getStatus(): Submission.Status;
-  setStatus(value: Submission.Status): UpdateSubmissionRequest;
+  setStatus(value: Submission.Status): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): UpdateSubmissionRequest.AsObject;
@@ -1212,19 +1212,19 @@ export namespace UpdateSubmissionRequest {
 
 export class UpdateSubmissionsRequest extends jspb.Message {
   getCourseid(): number;
-  setCourseid(value: number): UpdateSubmissionsRequest;
+  setCourseid(value: number): void;
 
   getAssignmentid(): number;
-  setAssignmentid(value: number): UpdateSubmissionsRequest;
+  setAssignmentid(value: number): void;
 
   getScorelimit(): number;
-  setScorelimit(value: number): UpdateSubmissionsRequest;
+  setScorelimit(value: number): void;
 
   getRelease(): boolean;
-  setRelease(value: boolean): UpdateSubmissionsRequest;
+  setRelease(value: boolean): void;
 
   getApprove(): boolean;
-  setApprove(value: boolean): UpdateSubmissionsRequest;
+  setApprove(value: boolean): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): UpdateSubmissionsRequest.AsObject;
@@ -1246,10 +1246,10 @@ export namespace UpdateSubmissionsRequest {
 
 export class SubmissionReviewersRequest extends jspb.Message {
   getSubmissionid(): number;
-  setSubmissionid(value: number): SubmissionReviewersRequest;
+  setSubmissionid(value: number): void;
 
   getCourseid(): number;
-  setCourseid(value: number): SubmissionReviewersRequest;
+  setCourseid(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): SubmissionReviewersRequest.AsObject;
@@ -1268,9 +1268,9 @@ export namespace SubmissionReviewersRequest {
 
 export class Providers extends jspb.Message {
   getProvidersList(): Array<string>;
-  setProvidersList(value: Array<string>): Providers;
-  clearProvidersList(): Providers;
-  addProviders(value: string, index?: number): Providers;
+  setProvidersList(value: Array<string>): void;
+  clearProvidersList(): void;
+  addProviders(value: string, index?: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Providers.AsObject;
@@ -1288,12 +1288,12 @@ export namespace Providers {
 
 export class URLRequest extends jspb.Message {
   getCourseid(): number;
-  setCourseid(value: number): URLRequest;
+  setCourseid(value: number): void;
 
   getRepotypesList(): Array<Repository.Type>;
-  setRepotypesList(value: Array<Repository.Type>): URLRequest;
-  clearRepotypesList(): URLRequest;
-  addRepotypes(value: Repository.Type, index?: number): URLRequest;
+  setRepotypesList(value: Array<Repository.Type>): void;
+  clearRepotypesList(): void;
+  addRepotypes(value: Repository.Type, index?: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): URLRequest.AsObject;
@@ -1312,13 +1312,13 @@ export namespace URLRequest {
 
 export class RepositoryRequest extends jspb.Message {
   getUserid(): number;
-  setUserid(value: number): RepositoryRequest;
+  setUserid(value: number): void;
 
   getGroupid(): number;
-  setGroupid(value: number): RepositoryRequest;
+  setGroupid(value: number): void;
 
   getCourseid(): number;
-  setCourseid(value: number): RepositoryRequest;
+  setCourseid(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): RepositoryRequest.AsObject;
@@ -1338,7 +1338,7 @@ export namespace RepositoryRequest {
 
 export class Repositories extends jspb.Message {
   getUrlsMap(): jspb.Map<string, string>;
-  clearUrlsMap(): Repositories;
+  clearUrlsMap(): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Repositories.AsObject;
@@ -1356,7 +1356,7 @@ export namespace Repositories {
 
 export class AuthorizationResponse extends jspb.Message {
   getIsauthorized(): boolean;
-  setIsauthorized(value: boolean): AuthorizationResponse;
+  setIsauthorized(value: boolean): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): AuthorizationResponse.AsObject;
@@ -1374,10 +1374,10 @@ export namespace AuthorizationResponse {
 
 export class Status extends jspb.Message {
   getCode(): number;
-  setCode(value: number): Status;
+  setCode(value: number): void;
 
   getError(): string;
-  setError(value: string): Status;
+  setError(value: string): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Status.AsObject;
@@ -1396,10 +1396,13 @@ export namespace Status {
 
 export class SubmissionsForCourseRequest extends jspb.Message {
   getCourseid(): number;
-  setCourseid(value: number): SubmissionsForCourseRequest;
+  setCourseid(value: number): void;
 
   getType(): SubmissionsForCourseRequest.Type;
-  setType(value: SubmissionsForCourseRequest.Type): SubmissionsForCourseRequest;
+  setType(value: SubmissionsForCourseRequest.Type): void;
+
+  getSkipbuildinfo(): boolean;
+  setSkipbuildinfo(value: boolean): void;
 
   getSkipbuildinfo(): boolean;
   setSkipbuildinfo(value: boolean): SubmissionsForCourseRequest;
@@ -1428,10 +1431,10 @@ export namespace SubmissionsForCourseRequest {
 
 export class RebuildRequest extends jspb.Message {
   getSubmissionid(): number;
-  setSubmissionid(value: number): RebuildRequest;
+  setSubmissionid(value: number): void;
 
   getAssignmentid(): number;
-  setAssignmentid(value: number): RebuildRequest;
+  setAssignmentid(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): RebuildRequest.AsObject;
@@ -1450,13 +1453,13 @@ export namespace RebuildRequest {
 
 export class CourseUserRequest extends jspb.Message {
   getCoursecode(): string;
-  setCoursecode(value: string): CourseUserRequest;
+  setCoursecode(value: string): void;
 
   getCourseyear(): number;
-  setCourseyear(value: number): CourseUserRequest;
+  setCourseyear(value: number): void;
 
   getUserlogin(): string;
-  setUserlogin(value: string): CourseUserRequest;
+  setUserlogin(value: string): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): CourseUserRequest.AsObject;
@@ -1476,10 +1479,10 @@ export namespace CourseUserRequest {
 
 export class LoadCriteriaRequest extends jspb.Message {
   getCourseid(): number;
-  setCourseid(value: number): LoadCriteriaRequest;
+  setCourseid(value: number): void;
 
   getAssignmentid(): number;
-  setAssignmentid(value: number): LoadCriteriaRequest;
+  setAssignmentid(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): LoadCriteriaRequest.AsObject;
@@ -1493,6 +1496,42 @@ export namespace LoadCriteriaRequest {
   export type AsObject = {
     courseid: number,
     assignmentid: number,
+  }
+}
+
+export class CommitHashRequest extends jspb.Message {
+  getSubmissionid(): number;
+  setSubmissionid(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): CommitHashRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: CommitHashRequest): CommitHashRequest.AsObject;
+  static serializeBinaryToWriter(message: CommitHashRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CommitHashRequest;
+  static deserializeBinaryFromReader(message: CommitHashRequest, reader: jspb.BinaryReader): CommitHashRequest;
+}
+
+export namespace CommitHashRequest {
+  export type AsObject = {
+    submissionid: number,
+  }
+}
+
+export class CommitHashResponse extends jspb.Message {
+  getCommithash(): string;
+  setCommithash(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): CommitHashResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: CommitHashResponse): CommitHashResponse.AsObject;
+  static serializeBinaryToWriter(message: CommitHashResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CommitHashResponse;
+  static deserializeBinaryFromReader(message: CommitHashResponse, reader: jspb.BinaryReader): CommitHashResponse;
+}
+
+export namespace CommitHashResponse {
+  export type AsObject = {
+    commithash: string,
   }
 }
 
