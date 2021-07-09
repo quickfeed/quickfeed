@@ -49,6 +49,14 @@ export const NavBarTeacher = (props: {courseID: number}) => {
                 <Link to={`/course/${state.activeCourse}/results`}>Results</Link>
             </div>
         </li>
+        <li key={"statistics"} className="activeLabs">
+            <div id="icon">
+
+            </div>
+            <div id="title">
+                <Link to={`/course/${state.activeCourse}/statistics`}>Statistics</Link>
+            </div>
+        </li>
         </React.Fragment>
     )
 }
