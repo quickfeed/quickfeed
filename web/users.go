@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// TODO: Remove JSONuser & GetSelf as it is no longer used.
 // JSONuser is a model to improve marshalling of user structure for authentication
 type JSONuser struct {
 	ID        uint64 `json:"id"`
