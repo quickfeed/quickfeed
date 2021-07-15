@@ -216,6 +216,7 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 			return err
 		}
 
+		// session.Get(name, context) returns an existing session, or a new session if the context does not have an existing session
 		sess, err := session.Get(SessionKey, c)
 		if err != nil {
 			logger.Error(err.Error())
@@ -223,6 +224,7 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 		}
 
 		// Try to get already logged in user.
+		// If session.Get(...) returns a new session, the check below will be nil.
 		if sess.Values[UserKey] != nil {
 			i, ok := sess.Values[UserKey]
 			if !ok {
@@ -293,6 +295,7 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 		us := newUserSession(user.ID)
 		us.enableProvider(provider)
 		sess.Values[UserKey] = us
+		// sess.Save(...) saves the session to a store in addition to adding an outgoing session cookie to the response.
 		if err := sess.Save(r, w); err != nil {
 			logger.Error(err.Error())
 			return err
@@ -325,7 +328,7 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 			i, ok := sess.Values[UserKey]
 			if !ok {
 				logger.Error(echo.ErrUnauthorized.Error())
-				return echo.ErrUnauthorized
+				return next(c)
 			}
 
 			// If type assertion fails, the recover middleware will catch the panic and log a stack trace.
@@ -406,6 +409,7 @@ func UserVerifier() grpc.UnaryServerInterceptor {
 			return nil, err
 		}
 		ctx = metadata.NewOutgoingContext(ctx, meta)
+		//grpc.SendHeader(ctx, meta)
 		resp, err := handler(ctx, req)
 		return resp, err
 	}
@@ -416,6 +420,8 @@ func userValidation(meta metadata.MD) (metadata.MD, error) {
 	for _, cookie := range meta.Get(Cookie) {
 		if user := TokenStore.Get(cookie); user > 0 {
 			meta.Set(UserKey, strconv.FormatUint(user, 10))
+			//meta.Set("set-cookie", "gRPC=Cookie; Path=/; Expires=Thu, 01 Jan 2022 00:00:01 GMT; Max-Age=259000; HttpOnly; Secure")
+			//meta.Set("set-cookie", "session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=-1; HttpOnly; Secure")
 			return meta, nil
 		}
 	}

@@ -37,7 +37,7 @@ func New(ags *AutograderService, public, httpAddr, scriptPath string, fake bool)
 
 	store := newStore([]byte("secret"))
 	gothic.Store = store
-	e := newServer(ags.logger, store)
+	e := newServer(ags, store)
 
 	enabled := enableProviders(ags.logger, ags.bh.BaseURL, fake)
 	registerWebhooks(ags, e, enabled, scriptPath)
@@ -47,14 +47,15 @@ func New(ags *AutograderService, public, httpAddr, scriptPath string, fake bool)
 	runWebServer(ags.logger, e, httpAddr)
 }
 
-func newServer(l *zap.SugaredLogger, store sessions.Store) *echo.Echo {
+func newServer(ags *AutograderService, store sessions.Store) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(
 		middleware.Recover(),
-		Logger(l.Desugar()),
+		Logger(ags.logger.Desugar()),
 		middleware.Secure(),
 		session.Middleware(store),
+		auth.AccessControl(ags.logger.Desugar(), ags.db, ags.scms),
 	)
 	return e
 }
