@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react"
 import { useOvermind } from "../overmind"
 import { Course, Enrollment } from "../../proto/ag/ag_pb"
 import CourseCard from "./CourseCard"
+import { AlertType } from "../Helpers"
 
 
 
@@ -22,9 +23,12 @@ const Courses = (overview: overview) => {
     const {state, actions} = useOvermind()
 
     useEffect(() => {
-
+        if (state.enrollments.filter(enrollment => 
+                enrollment.getState() == Enrollment.DisplayState.FAVORITE && 
+                enrollment.getStatus() >= Enrollment.UserStatus.STUDENT).length == 0) 
+            { actions.alert({text: "Favorite a course to make it appear on the dashboard and in the sidebar", type: AlertType.INFO}) }
         actions.setActiveCourse(-1)
-    })
+    }, [])
     // TODO: UserCourses contains elements describing a course that a user has an enrollment in, regardless of status currently. Need to figure out what UserStatus.NONE is used for
     // push to seperate arrays, for layout purposes. Favorite - Student - Teacher - Pending
     function upDateArrays(){
@@ -37,12 +41,12 @@ const Courses = (overview: overview) => {
         state.courses.map(course => {       
             let enrol = enrolArr.find(enrol => course.getId() == enrol.getCourseid())
             if (enrol){
-                if (enrol.getState()==3){
+                if (enrol.getState() == 3){
                     // add to favorite list.
                     favorite.push(
                         <CourseCard key={course.getId()} course= {course} enrollment={enrol} status={enrol.getStatus()}/>
                     )
-                }else{
+                } else {
                     switch (enrol.getStatus()){
                         //pending
                         case Enrollment.UserStatus.PENDING:
@@ -70,10 +74,7 @@ const Courses = (overview: overview) => {
                             console.log("Something went wrong")
                             break
                     }
-        
-                }
-                
-                    
+                }              
             }
             else {
                 crsArr.push(
@@ -82,16 +83,14 @@ const Courses = (overview: overview) => {
             }
         })
         
-        // create enroll modal, to enroll to new courses.
+        // If overview.home == true, only render favorited courses.
         if (overview.home) {
             return (
                 <React.Fragment>
                 {favorite.length > 0 &&
-                    <div className="container-fluid">
-                        
+                    <div className="container-fluid">       
                         <div className="card-deck course-card-row favorite-row">
-                            {favorite}
-                            
+                            {favorite}    
                         </div>
                     </div>
                 }
@@ -101,7 +100,7 @@ const Courses = (overview: overview) => {
 
         return (
             <div className="box container-fluid">
-                {favorite.length >0 &&
+                {favorite.length > 0 &&
                 <div className="container-fluid">
                     <h2>Favorites</h2>
                     <div className="card-deck course-card-row favorite-row">
@@ -111,7 +110,7 @@ const Courses = (overview: overview) => {
                 </div>
                 }
                     
-                {(student.length>0 || teacher.length>0) &&
+                {(student.length > 0 || teacher.length > 0) &&
                     <div className="container-fluid">
                         <h2>My Courses</h2>
                         <div className="card-deck course-card-row">
@@ -120,7 +119,7 @@ const Courses = (overview: overview) => {
                         </div>
                     </div>
                 }
-                {pending.length>0 &&
+                {pending.length > 0 &&
                     <div className="container-fluid">
                         {(student.length==0 && teacher.length==0) &&
                             <h2>My Courses</h2>
@@ -130,13 +129,13 @@ const Courses = (overview: overview) => {
                         </div>
                     </div>
                 }
-                {(student.length==0 && teacher.length==0 && pending.length==0 && favorite.length==0) &&
+                {(student.length == 0 && teacher.length == 0 && pending.length == 0 && favorite.length == 0) &&
                     <div className="container-fluid">
                         <h1>Seems Like you aren't enrolled in any courses </h1>
                         <h1>Find you course in the list below Maybe make this into an alert?</h1>
                     </div>
                 }
-                {crsArr.length >0 &&
+                {crsArr.length > 0 &&
                     <React.Fragment>
                     <h2>Available Courses</h2>
                     <div className="card-deck course-card-row">
