@@ -7,7 +7,8 @@ export const Alert = () => {
     const { state, actions } = useOvermind()
 
     const alerts = state.alerts.map((alert, index) => {
-        return  <div 
+        return  <div
+                    key={index} 
                     className={`alert alert-${AlertType[alert.type].toLowerCase()}`} 
                     role="alert" style={{marginTop: "20px"}} 
                     onClick={() => actions.popAlert(index)}>
