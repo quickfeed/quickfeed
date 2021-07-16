@@ -96,12 +96,15 @@ func TestGetSelf(t *testing.T) {
 		sess.Values[auth.UserKey] = us
 		sess.Save(r, w)
 
+		token := w.HeaderMap.Get(auth.OutgoingCookie)
+		auth.TokenStore.Add(token, user.id)
+
 		if user.metadata {
 			meta := metadata.MD{}
 			if len(user.token) > 0 {
 				meta.Set(auth.Cookie, user.token)
 			} else {
-				meta.Set(auth.Cookie, w.HeaderMap.Get(OutgoingCookie))
+				meta.Set(auth.Cookie, token)
 			}
 			ctx = metadata.NewOutgoingContext(ctx, meta)
 		}
