@@ -1,10 +1,7 @@
 import  React from 'react'
-import { useOvermind } from "../overmind";
 
 
-const About = () => {
-    const { state } = useOvermind()
-
+const AboutPage = () => {
     return (
         <div>
             <div key="jb" id="0" className="jumbotron">
@@ -193,4 +190,4 @@ const About = () => {
     )
 }
 
-export default About
+export default AboutPage
