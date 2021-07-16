@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { useOvermind } from './overmind'
-import About from "./components/About";
 import NavBar from "./components/NavBar";
 import { Switch, Route } from 'react-router-dom';
 import Profile from "./components/Profile";
 import CoursePage from "./components/CoursePage"
 import Courses from "./components/Courses";
 import Alert from './components/Alert';
-import Admin from './components/Admin';
+import AdminPage from './components/AdminPage';
 import Loading from './components/Loading';
 import { isValid } from './Helpers';
 import Dashboard from './components/Dashboard';
+import AboutPage from './components/AboutPage';
 
 
 
@@ -56,16 +56,15 @@ const App = () => {
                         ) : (loggedIn ? ( // Else render page as expected for a logged in user
                             <Switch>
                                 <Route path="/" exact component={Dashboard} />
-                                <Route path="/about" component={About} />
+                                <Route path="/about" component={AboutPage} />
                                 <Route path="/profile" component={Profile} />
                                 <Route path="/course/:id" component={CoursePage} />
                                 <Route path="/courses" exact component={Courses} />
-                                <Route path="/admin" component={Admin} />
+                                <Route path="/admin" component={AdminPage} />
                             </Switch>
-                            // Admin stuff is probably also needed here somewhere. 
                         ) : (
                             <Switch>
-                                <Route path="/" component={About} />
+                                <Route path="/" component={AboutPage} />
                             </Switch>
                     )))}
                 </div>
