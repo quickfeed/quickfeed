@@ -3,6 +3,8 @@ import { useOvermind } from "../overmind"
 import Group from "./group/Group"
 import CreateGroup from "./group/CreateGroup"
 import { getCourseID } from "../Helpers"
+import { Enrollment } from "../../proto/ag/ag_pb"
+import Groups from "./Groups"
 
 
 export const GroupPage = () => {
@@ -10,9 +12,12 @@ export const GroupPage = () => {
     const courseID = getCourseID()
 
     useEffect(() => {
-        console.log(courseID)
         actions.getGroupByUserAndCourse(courseID)
     })
+
+    if (state.enrollmentsByCourseId[courseID].getStatus() == Enrollment.UserStatus.TEACHER) {
+        return <Groups courseID={courseID}></Groups>
+    }
 
     if (!state.userGroup[courseID]) {
         return <CreateGroup courseID={courseID} />    
