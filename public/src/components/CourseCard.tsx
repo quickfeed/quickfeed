@@ -30,7 +30,7 @@ const CourseCard = (props: CardProps) => {
             <div className="card" style= {{maxWidth: "35rem", marginBottom:"10px",minHeight:"205px"}}>
                 <div className={"card-header bg-"+cardcolor[props.status]+" text-white"}>
                     {props.course.getCode()}
-                    <span className="float-right "><i className={props.enrollment.getState() === Enrollment.DisplayState.VISIBLE ? 'fa fa-star-o' : "fa fa-star "} onClick={() => actions.setEnrollmentState(props.enrollment)}></i></span>
+                    <span className="float-right"><i className={props.enrollment.getState() === Enrollment.DisplayState.VISIBLE ? 'fa fa-star-o' : "fa fa-star "} onClick={() => actions.setEnrollmentState(props.enrollment)}></i></span>
                     <p className="float-sm-right">{props.enrollment ? EnrollmentStatus[props.enrollment?.getStatus()]  : ''}</p>
                 </div>
                 

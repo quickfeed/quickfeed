@@ -36,7 +36,7 @@ const CoursePage = () => {
         )
     }
     else {
-        return (<Redirect to={"/"}></Redirect>)
+        return <Redirect to={"/"}></Redirect>
     }
 }
 

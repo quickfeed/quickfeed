@@ -6,11 +6,6 @@ import { useOvermind } from "../overmind"
 import { CourseLabs } from "./CourseLabs"
 import CourseUtilityLinks from "./CourseUtilityLinks"
 
-
-interface MatchProps {
-    id: string
-}
-
 /* */
 const CourseOverview = () => {
     const { state, actions } = useOvermind()
@@ -32,7 +27,7 @@ const CourseOverview = () => {
             
             <div className="row">
                 <div className="col-md-9" >
-                    <CourseLabs crsid={courseID}/>
+                    <CourseLabs courseID={courseID}/>
                 </div>
                 <CourseUtilityLinks courseID={courseID} />
             </div>
