@@ -1,7 +1,7 @@
 /* eslint-disable quotes */
 
 import { useParams } from "react-router"
-import { Enrollment, EnrollmentLink, User } from "../proto/ag/ag_pb"
+import { EnrollmentLink, User } from "../proto/ag/ag_pb"
 
 export interface IBuildInfo {
     builddate: string;
@@ -94,6 +94,7 @@ export const timeFormatter = (deadline:string , now: Date) => {
     return [false,'','',days]
 }
 export const layoutTime = "2021-03-20T23:59:00"
+
 // Used for displaying enrollment status
 export const EnrollmentStatus = {
     0 : "NONE",
@@ -101,12 +102,6 @@ export const EnrollmentStatus = {
     2 : "STUDENT",
     3 : "TEACHER",
 }
-export const EnrollmentStatusColors = {
-    1: "",
-    2: "",
-    3: "",
-}
-
 
 /* 
     arr: Any array, ex. Enrollment[], User[],    
@@ -160,7 +155,7 @@ export const sortByField = (arr: any[], funcs: Function[], by: Function, descend
 }
 
 export const SubmissionStatus = {
-    0: "NONE",
+    0: "None",
     1: "Approved",
     2: "Rejected",
     3: "Revision",
@@ -174,10 +169,8 @@ export const isValid = (element: any) => {
         }
     }
     if (element instanceof EnrollmentLink) {
-        console.log("HEI", element)
         console.log(element.getSubmissionsList())
         if (!element.getEnrollment() && !element.getEnrollment()?.getUser() && element.getSubmissionsList().length === 0) {
-            console.log("FEIL")
             return false
         }
     }
