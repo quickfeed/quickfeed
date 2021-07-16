@@ -30,6 +30,7 @@ const (
 	GothicSessionKey = "_gothic_session"
 	UserKey          = "user"
 	Cookie           = "cookie"
+	OutgoingCookie   = "Set-Cookie"
 )
 
 // Query keys.
@@ -53,29 +54,22 @@ func newUserSession(id uint64) *UserSession {
 
 // UserToken holds a map from session cookies to user IDs.
 type UserToken struct {
-	store map[string]*http.Request
+	store map[string]uint64
 }
 
-var TokenStore = &UserToken{store: make(map[string]*http.Request)}
+var TokenStore = &UserToken{store: make(map[string]uint64)}
 
-func (ut *UserToken) add(token string) {
-	if ut.store[token] == nil {
-		if request, err := http.NewRequest("GET", "/", nil); err == nil {
-			request.Header.Set(Cookie, token)
-			ut.store[token] = request
+func (ut *UserToken) Add(token string, id uint64) {
+	for currToken, currId := range ut.store {
+		if currId == id && currToken != token {
+			delete(ut.store, currToken)
 		}
 	}
+	ut.store[token] = id
 }
 
 func (ut *UserToken) Get(token string) uint64 {
-	ut.add(token)
-	if sess, err := gothic.Store.Get(ut.store[token], SessionKey); err == nil {
-		if i, ok := sess.Values[UserKey]; ok {
-			us := i.(*UserSession)
-			return us.ID
-		}
-	}
-	return 0
+	return ut.store[token]
 }
 
 func (us *UserSession) enableProvider(provider string) {
@@ -117,7 +111,6 @@ func OAuth2Logout(logger *zap.Logger) echo.HandlerFunc {
 		if err := sess.Save(r, w); err != nil {
 			logger.Error(err.Error())
 		}
-
 		return c.Redirect(http.StatusFound, extractRedirectURL(r, Redirect))
 	}
 }
@@ -248,6 +241,10 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 				logger.Error(err.Error())
 				return err
 			}
+			// Enable gRPC requests for session
+			if token := extractSessionCookie(w); len(token) > 0 {
+				TokenStore.Add(token, us.ID)
+			}
 			return c.Redirect(http.StatusFound, redirect)
 		}
 
@@ -295,13 +292,16 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 		us := newUserSession(user.ID)
 		us.enableProvider(provider)
 		sess.Values[UserKey] = us
-		// sess.Save(...) saves the session to a store in addition to adding an outgoing session cookie to the response.
+		// sess.Save(...) saves the session to a store in addition to adding an outgoing ('set-cookie') session cookie to the response.
 		if err := sess.Save(r, w); err != nil {
 			logger.Error(err.Error())
 			return err
 		}
 
-		// TODO: Could register a session token and ID in UserToken from here
+		// Register session and associated user ID to enable gRPC calls for the session.
+		if token := extractSessionCookie(w); len(token) > 0 {
+			TokenStore.Add(token, us.ID)
+		}
 
 		return c.Redirect(http.StatusFound, redirect)
 	}
@@ -328,7 +328,7 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 			i, ok := sess.Values[UserKey]
 			if !ok {
 				logger.Error(echo.ErrUnauthorized.Error())
-				return next(c)
+				return echo.ErrUnauthorized
 			}
 
 			// If type assertion fails, the recover middleware will catch the panic and log a stack trace.
@@ -395,6 +395,18 @@ func extractState(r *http.Request, key string) (redirect string, teacher bool) {
 	return url[1:], teacher
 }
 
+func extractSessionCookie(w *echo.Response) string {
+	// Helper function that extracts an outgoing session cookie.
+	outgoingCookies := w.Header().Values(OutgoingCookie)
+	for _, cookie := range outgoingCookies {
+		if c := strings.Split(cookie, "="); c[0] == SessionKey {
+			token := strings.Split(cookie, ";")[0]
+			return token
+		}
+	}
+	return ""
+}
+
 var ErrInvalidSessionCookie = status.Errorf(codes.Unauthenticated, "Request does not contain a valid session cookie.")
 var ErrContextMetadata = status.Errorf(codes.Unauthenticated, "Could not grab metadata from context")
 
@@ -404,13 +416,12 @@ func UserVerifier() grpc.UnaryServerInterceptor {
 		if !ok {
 			return nil, ErrContextMetadata
 		}
-		meta, err := userValidation(meta)
+		newMeta, err := userValidation(meta)
 		if err != nil {
 			return nil, err
 		}
-		ctx = metadata.NewOutgoingContext(ctx, meta)
-		//grpc.SendHeader(ctx, meta)
-		resp, err := handler(ctx, req)
+		newCtx := metadata.NewIncomingContext(ctx, newMeta)
+		resp, err := handler(newCtx, req)
 		return resp, err
 	}
 }
@@ -420,8 +431,6 @@ func userValidation(meta metadata.MD) (metadata.MD, error) {
 	for _, cookie := range meta.Get(Cookie) {
 		if user := TokenStore.Get(cookie); user > 0 {
 			meta.Set(UserKey, strconv.FormatUint(user, 10))
-			//meta.Set("set-cookie", "gRPC=Cookie; Path=/; Expires=Thu, 01 Jan 2022 00:00:01 GMT; Max-Age=259000; HttpOnly; Secure")
-			//meta.Set("set-cookie", "session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=-1; HttpOnly; Secure")
 			return meta, nil
 		}
 	}
