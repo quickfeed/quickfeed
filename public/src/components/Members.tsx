@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { useEffect } from "react"
 import { Redirect, RouteComponentProps } from "react-router-dom"
-import { sortByField } from "../Helpers"
+import { EnrollmentStatus, sortByField } from "../Helpers"
 import { useOvermind } from "../overmind"
 import { Enrollment } from "../../proto/ag/ag_pb"
 
@@ -64,7 +64,13 @@ export const Members = (props: RouteComponentProps<{id?: string | undefined}>) =
                             <ul className="list-group list-group-flush">
                                 {sortByField(state.courseEnrollments[courseID], [], sort(), descending).map((user: Enrollment) => {
                                 return (
-                                    <li key={user.getUserid()} className={"list-group-item" }>{user.getUser()?.getName()} {user.getId()} <i style={{float: "right"}} className={"badge badge-" + (user.getStatus() === 2 ? "primary" : user.getStatus() === 3 ? "danger" : "info")}>{user.getStatus() === 2 ? "Student" : user.getStatus() === 3 ? "Teacher" : user.getStatus() == 1 ?  "Pending" : "None"}</i></li>
+                                    <li key={user.getUserid()} className={"list-group-item" }>
+                                        {user.getUser()?.getName()} ({user.getUser()?.getStudentid()})
+                                        <i  style={{float: "right"}} 
+                                            className={"badge badge-" + (user.getStatus() === 2 ? "primary" : user.getStatus() === 3 ? "danger" : "info")}>
+                                                {EnrollmentStatus[user.getStatus()]}
+                                        </i>
+                                    </li>
                                 )
                                 })} 
                             </ul>

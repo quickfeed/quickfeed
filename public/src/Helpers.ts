@@ -97,10 +97,10 @@ export const layoutTime = "2021-03-20T23:59:00"
 
 // Used for displaying enrollment status
 export const EnrollmentStatus = {
-    0 : "NONE",
-    1 : "PENDING",
-    2 : "STUDENT",
-    3 : "TEACHER",
+    0 : "None",
+    1 : "Pending",
+    2 : "Student",
+    3 : "Teacher",
 }
 
 /* 
