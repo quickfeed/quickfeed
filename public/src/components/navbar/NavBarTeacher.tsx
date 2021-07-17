@@ -38,7 +38,7 @@ export const NavBarTeacher = (props: {courseID: number}) => {
 
             </div>
             <div id="title">
-                <Link to={`/course/${state.activeCourse}/groups`}>Groups</Link>
+                <Link to={`/course/${state.activeCourse}/group`}>Groups</Link>
             </div>
         </li>
         <li key={"results"} className="activeLabs">
