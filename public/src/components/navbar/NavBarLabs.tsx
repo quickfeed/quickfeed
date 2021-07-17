@@ -7,14 +7,14 @@ import { ProgressBar } from "../ProgressBar"
 
 const NavBarLabs = () => {
     const {state} = useOvermind()
-    useEffect(() => {
-        console.log(state.submissions[state.activeCourse])
-    })
     
+    useEffect(() => {
+        
+    })
     const history  = useHistory()
     
-    const redirectToLab = (assignmentid: number) => {
-        history.push(`/course/${state.activeCourse}/${assignmentid}`)
+    const redirectToLab = (assignmentID: number) => {
+        history.push(`/course/${state.activeCourse}/${assignmentID}`)
     }
 
     const Links: Function = (): JSX.Element[] => { 
