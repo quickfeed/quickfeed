@@ -35,14 +35,20 @@ export const getSubmissionCommitHash: Action<{assignmentID: number, courseID: nu
 }
 */
 
-/** Fetches all users */
+/** Fetches all users (requires admin priveleges) */
 export const getUsers = async ({state, effects}: Context) => {
     state.users = []
+    state.isLoading = true
     const users = await effects.grpcMan.getUsers()
     if (users.data) {
-            users.data.getUsersList()
+        // Insert users sorted by admin priveleges
+        state.allUsers = users.data.getUsersList().sort((a, b) => {
+            if(a.getIsadmin() > b.getIsadmin()) { return -1 }
+            if(a.getIsadmin() < b.getIsadmin()) { return 1 }
+            return 0
+        })
     }
-
+    state.isLoading = false
 }
 
 /** Fetches all courses */
@@ -94,11 +100,21 @@ export const getEnrollmentsByUser = async ({state, effects}: Context) => {
 
 
 /** Changes user information server-side */
-export const changeUser = async ({state, actions, effects}: Context, user: User) => {
-    user.setAvatarurl(state.self.getAvatarurl())
-    await effects.grpcMan.updateUser(user).then(response => {
+export const changeUser = async ({actions, effects}: Context, user: User) => {
+    const result = await effects.grpcMan.updateUser(user)
+    if (result.status.getCode() == 0) {
         actions.getUser()
-    })
+    }
+}
+
+export const updateAdmin = async ({ effects }: Context, user: User) => {
+    let u = new User
+    u.setIsadmin(!user.getIsadmin())
+    u.setId(user.getId())
+    const result = await effects.grpcMan.updateUser(u) 
+    if (result.status.getCode() == 0) {
+        user.setIsadmin(!user.getIsadmin())
+    }
 }
 
 /** Gets a specific enrollment for a given course by the course ID if the user has an enrollment for that course. Returns null if none found */
@@ -113,7 +129,6 @@ export const getEnrollmentByCourseId = ({state}: Context, courseID: number) => {
 }
 
 export const getEnrollmentsByCourse = async ({state, effects}: Context, value: {courseID: number, statuses: Enrollment.UserStatus[]}) => {
-
     state.users = []
     state.courseEnrollments[value.courseID] = []
     const result = await effects.grpcMan.getEnrollmentsByCourse(value.courseID, undefined, undefined, value.statuses)
@@ -252,31 +267,27 @@ export const getOrganization = ({actions, effects}: Context, orgName: string) =>
     })
 }
 
-export const createCourse = ({state, actions, effects}: Context, value: {course: Course, orgName: string}) => {
+export const createCourse = async ({state, actions, effects}: Context, value: {course: Course, orgName: string}) => {
     let course = new Course()
-    effects.grpcMan.getOrganization(value.orgName).then(res => {
-        if (res.data) {
-            // TODO: Is there a more elegant way to do this?
-            course.setOrganizationid(res.data.getId())
-            course.setOrganizationpath(res.data.getPath())
-            course.setSlipdays(value.course.getSlipdays())
-            course.setTag(value.course.getTag())
-            course.setCode(value.course.getCode())
-            course.setYear(value.course.getYear())
-            course.setName(value.course.getName())
-            course.setProvider("github")
-            course.setCoursecreatorid(state.self.getId())
-            effects.grpcMan.createCourse(course).then(res => {
-                if (res.data) {
-                    state.courses.push(res.data)
-
-                    // success
-                }
-                actions.alertHandler(res)
-            })
+    const result = await effects.grpcMan.getOrganization(value.orgName)
+    if (result.data) {
+        // TODO: Is there a more elegant way to do this?
+        course.setOrganizationid(result.data.getId())
+        course.setOrganizationpath(result.data.getPath())
+        course.setSlipdays(value.course.getSlipdays())
+        course.setTag(value.course.getTag())
+        course.setCode(value.course.getCode())
+        course.setYear(value.course.getYear())
+        course.setName(value.course.getName())
+        course.setProvider("github")
+        course.setCoursecreatorid(state.self.getId())
+        const response =  await effects.grpcMan.createCourse(course)
+        if (response.data) {
+            state.courses.push(response.data)
         }
-        actions.alertHandler(res)
-    })
+        actions.alertHandler(response)
+    }
+    actions.alertHandler(result)
 }
 
 export const loading = ({state}: Context) => {
@@ -436,10 +447,8 @@ export const enroll = async ({state, effects}: Context, courseID: number) => {
 export const logout = ({state}: Context) => {
     state.self = new User()
 }
-// EXPERIMENTS BELOW
-/** Initializes a student user with all required data */
-/** //TODO: Figure out how to await this monster  */
 
+/** Initializes a student user with all required data */
 export const fetchUserData = async ({state, actions, effects}: Context) =>  {
     let success = await actions.getUser()
     if (!success) { state.isLoading = false; return false;}

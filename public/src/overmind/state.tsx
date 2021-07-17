@@ -64,6 +64,7 @@ type State = {
         [courseid:number]: ParsedCourseSubmissions[]
     },*/
 
+    allUsers: User[],
     courseGroupSubmissions: {
         [courseid: number]: EnrollmentLink[]
     },
@@ -96,6 +97,7 @@ type State = {
 export const state: State = {
     self: new User,
     users: [],
+    allUsers: [],
     enrollments: [],
     enrollmentsByCourseId: derived((state: State) => {
         // 
