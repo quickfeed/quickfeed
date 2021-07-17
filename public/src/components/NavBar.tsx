@@ -50,7 +50,7 @@ const NavBar = () => {
         favorites.map((enrollment) =>{
                 links.push(
                     <React.Fragment key={enrollment.getId()}>
-                        <li className={active === enrollment.getCourseid()  ? "active" : "inactive"}  onClick={() => {history.push(`/course/` + enrollment.getCourseid()); setShowCourses(false); actions.setActiveCourse(enrollment.getCourseid())}}>
+                        <li className={showCourses || active === enrollment.getCourseid()  ? "active" : "inactive"}  onClick={() => {history.push(`/course/` + enrollment.getCourseid()); setShowCourses(false); actions.setActiveCourse(enrollment.getCourseid())}}>
                             <div>
                                 {enrollment.getCourse()?.getCode()}
                             </div> 
