@@ -314,3 +314,9 @@ input{
 .about {
     width: 100%;
 }
+
+.redirectButton {
+    position: fixed;
+    top: 50px;
+    transform: translateX(-70px);
+}
