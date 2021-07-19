@@ -13,6 +13,7 @@ const Review = () => {
     const [submission, setSubmission] = useState<number | undefined>(undefined)
     const [assignment, setAssignment] = useState<number | undefined>(undefined)
     const [selected, setSelected] = useState<number>(0)
+    const [hideApproved, setHideApproved] = useState<boolean>(false)
     useEffect(() => {
         if (courseID && !state.courseSubmissions[courseID]) {
             actions.getAllCourseSubmissions(courseID)
@@ -33,7 +34,7 @@ const Review = () => {
 
     const ReviewSubmissionsListItem = (props: { submissionLink: SubmissionLink, userIndex: number}) => {
         return (
-                <li className="list-group-item" hidden={selected !== props.submissionLink.getAssignment()?.getId() && selected !== 0}>
+                <li className="list-group-item" hidden={selected !== props.submissionLink.getAssignment()?.getId() && selected !== 0 || hideApproved && props.submissionLink.getSubmission()?.getStatus() == Submission.Status.APPROVED}>
                     <span  onClick={() => { setSubmission(props.submissionLink.getSubmission()?.getId()), setAssignment(props.submissionLink.getAssignment()?.getId())}}>{props.submissionLink.getAssignment()?.getName()} - {props.submissionLink.getSubmission()?.getScore()} / 100</span>
                     <button style={{float: "right"}} onClick={() => {updateStatus(Submission.Status.REJECTED, props.submissionLink.getSubmission(), props.userIndex, props.submissionLink.getAssignment()?.getOrder()), console.log(state.courseSubmissions[courseID][props.userIndex])}}>
                         Reject
@@ -74,6 +75,7 @@ const Review = () => {
                     <option value={0}>All Submissions</option>
                     {Options}
                 </select>
+                <input type={"checkbox"} checked={hideApproved} onChange={(e) => setHideApproved(e.target.checked)}></input>
                 <button onClick={() => actions.getAllCourseSubmissions(courseID)}>Refresh ... </button>
                 <div className="review">
                     
