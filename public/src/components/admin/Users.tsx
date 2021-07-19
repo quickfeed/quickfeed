@@ -14,11 +14,11 @@ const Users = () => {
         }
     })
 
-    const PromoteButton = ({user}: {user: User}) => {
-        let classname = user.getIsadmin() ? "badge badge-danger float-right" : "badge badge-primary float-right"
-        let text = user.getIsadmin() ? "Demote" : "Promote"
+    const PromoteButton = (props: {user: User, onClick?: Function}) => {
+        const classname = props.user.getIsadmin() ? "badge badge-danger float-right" : "badge badge-primary float-right"
+        const text = props.user.getIsadmin() ? "Demote" : "Promote"
         return (
-            <span className={classname} style={{cursor: "pointer"}} onClick={() => actions.updateAdmin(user)}>
+            <span className={classname} style={{cursor: "pointer"}} onClick={() => {if (props.onClick) { props.onClick(props.user)} }}>
                 {text}
             </span>
         )
@@ -34,7 +34,7 @@ const Users = () => {
                     </span> 
                     : null
                 }
-                <PromoteButton user={user}></PromoteButton>
+                <PromoteButton user={user} onClick={actions.updateAdmin}></PromoteButton>
             </li>
         )
     }
