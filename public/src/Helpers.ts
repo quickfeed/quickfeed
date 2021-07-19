@@ -1,7 +1,7 @@
 /* eslint-disable quotes */
 
 import { useParams } from "react-router"
-import { EnrollmentLink, User } from "../proto/ag/ag_pb"
+import { Enrollment, EnrollmentLink, Submission, User } from "../proto/ag/ag_pb"
 
 export interface IBuildInfo {
     builddate: string;
@@ -161,6 +161,20 @@ export const SubmissionStatus = {
     3: "Revision",
 }
 
+export const getPassedTestsCount = (submission: Submission) => {
+    const scoreObjects = getScoreObjects(submission.getScoreobjects())
+    let totalTests = 0
+    let passedTests = 0
+    scoreObjects.forEach(scoreObject => {
+        if (scoreObject.Score === scoreObject.MaxScore) {
+            passedTests++
+        } 
+        totalTests++
+    })
+
+    return `${passedTests}/${totalTests}`
+}
+
 
 export const isValid = (element: any) => {
     if (element instanceof User){
@@ -177,6 +191,14 @@ export const isValid = (element: any) => {
     return true
 }
 
+export const isEnrolled = (enrollments: Enrollment[]) => {
+    for (const enrollment of enrollments) {
+        if (enrollment.getStatus() > Enrollment.UserStatus.PENDING) {
+            return true
+        }
+    }
+    return false
+}
 
 export const getCourseID = () => {
     const route = useParams<{id?: string}>()
