@@ -77,7 +77,7 @@
 }
 
 
-.SidebarList .activelabs {
+.SidebarList .activelab {
     display: block;
     background-color: rgb(50, 50, 50);
 }
