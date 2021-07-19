@@ -1,6 +1,7 @@
 import React from "react"
 import { useOvermind } from "../overmind"
 import { Submission } from "../../proto/ag/ag_pb"
+import { getPassedTestsCount } from "../Helpers"
 
 
 export const ProgressBar = (props: {courseID: number, assignmentIndex: number, submission?: Submission, type: string}) => {
@@ -54,7 +55,15 @@ export const ProgressBar = (props: {courseID: number, assignmentIndex: number, s
 
         return (
             <div className="progress">
-                <div className={"progress-bar "+color} role="progressbar" style={{width: props.submission?.getScore() + "%", transitionDelay: "0.5s"}} aria-valuenow={submission.getScore()} aria-valuemin={0} aria-valuemax={100}>{props.submission?.getScore()}%</div>
+                <div 
+                    className={"progress-bar "+color} 
+                    role="progressbar" 
+                    style={{width: props.submission?.getScore() + "%", transitionDelay: "0.5s"}} 
+                    aria-valuenow={submission.getScore()} 
+                    aria-valuemin={0} 
+                    aria-valuemax={100}>
+                        {props.submission?.getScore()}% ({getPassedTestsCount(submission)})
+                </div>
             </div>
         )
     }
