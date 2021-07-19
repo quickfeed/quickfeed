@@ -1,7 +1,6 @@
 package hooks
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"github.com/autograde/quickfeed/assignments"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/log"
 	"github.com/google/go-github/v35/github"
 	"go.uber.org/zap"
@@ -178,22 +178,16 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 // recordSubmissionWithoutTests saves a new submission without running any tests
 // for a manually graded assignment.
 func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
-	noTestBuildInfo, err := json.Marshal(&ci.BuildInfo{
-		BuildID:   0,
-		BuildDate: time.Now().Format(pb.TimeLayout),
-		BuildLog:  "No automated tests for this assignment",
-		ExecTime:  1,
-	})
-	if err != nil {
-		wh.logger.Errorf("Failed to marshal build info for course %s, assignment %s for student %s: %v", data.Course.Name, data.Assignment.Name, data.JobOwner, err)
-		return
-	}
 	newSubmission := &pb.Submission{
 		AssignmentID: data.Assignment.ID,
-		BuildInfo:    string(noTestBuildInfo),
-		CommitHash:   data.CommitID,
-		UserID:       data.Repo.UserID,
-		GroupID:      data.Repo.GroupID,
+		BuildInfo: &score.BuildInfo{
+			BuildDate: time.Now().Format(pb.TimeLayout),
+			BuildLog:  "No automated tests for this assignment",
+			ExecTime:  1,
+		},
+		CommitHash: data.CommitID,
+		UserID:     data.Repo.UserID,
+		GroupID:    data.Repo.GroupID,
 	}
 	if err := wh.db.CreateSubmission(newSubmission); err != nil {
 		wh.logger.Errorf("Failed to save submission for user %s, assignment %d: %v", data.JobOwner, data.Assignment.ID, err)

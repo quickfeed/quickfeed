@@ -15,6 +15,8 @@ var jspb = require('google-protobuf');
 var goog = jspb;
 var global = Function('return this')();
 
+var kit_score_score_pb = require('../kit/score/score_pb.js');
+goog.object.extend(proto, kit_score_score_pb);
 goog.exportSymbol('proto.ag.Assignment', null, global);
 goog.exportSymbol('proto.ag.Assignments', null, global);
 goog.exportSymbol('proto.ag.AuthorizationResponse', null, global);
@@ -5479,7 +5481,7 @@ proto.ag.Assignment.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 courseID = 2;
+ * optional uint64 CourseID = 2;
  * @return {number}
  */
 proto.ag.Assignment.prototype.getCourseid = function() {
@@ -5918,7 +5920,7 @@ proto.ag.Assignments.prototype.clearAssignmentsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.ag.Submission.repeatedFields_ = [12];
+proto.ag.Submission.repeatedFields_ = [12,14];
 
 
 
@@ -5956,14 +5958,17 @@ proto.ag.Submission.toObject = function(includeInstance, msg) {
     userid: jspb.Message.getFieldWithDefault(msg, 3, 0),
     groupid: jspb.Message.getFieldWithDefault(msg, 4, 0),
     score: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    scoreobjects: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    buildinfo: jspb.Message.getFieldWithDefault(msg, 7, ""),
     commithash: jspb.Message.getFieldWithDefault(msg, 8, ""),
+    scoreobjects: jspb.Message.getFieldWithDefault(msg, 6, ""),
+    oldbuildinfo: jspb.Message.getFieldWithDefault(msg, 7, ""),
     released: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
     status: jspb.Message.getFieldWithDefault(msg, 10, 0),
     approveddate: jspb.Message.getFieldWithDefault(msg, 11, ""),
     reviewsList: jspb.Message.toObjectList(msg.getReviewsList(),
-    proto.ag.Review.toObject, includeInstance)
+    proto.ag.Review.toObject, includeInstance),
+    buildinfo: (f = msg.getBuildinfo()) && kit_score_score_pb.BuildInfo.toObject(includeInstance, f),
+    scoresList: jspb.Message.toObjectList(msg.getScoresList(),
+    kit_score_score_pb.Score.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -6020,17 +6025,17 @@ proto.ag.Submission.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {number} */ (reader.readUint32());
       msg.setScore(value);
       break;
+    case 8:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCommithash(value);
+      break;
     case 6:
       var value = /** @type {string} */ (reader.readString());
       msg.setScoreobjects(value);
       break;
     case 7:
       var value = /** @type {string} */ (reader.readString());
-      msg.setBuildinfo(value);
-      break;
-    case 8:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setCommithash(value);
+      msg.setOldbuildinfo(value);
       break;
     case 9:
       var value = /** @type {boolean} */ (reader.readBool());
@@ -6048,6 +6053,16 @@ proto.ag.Submission.deserializeBinaryFromReader = function(msg, reader) {
       var value = new proto.ag.Review;
       reader.readMessage(value,proto.ag.Review.deserializeBinaryFromReader);
       msg.addReviews(value);
+      break;
+    case 13:
+      var value = new kit_score_score_pb.BuildInfo;
+      reader.readMessage(value,kit_score_score_pb.BuildInfo.deserializeBinaryFromReader);
+      msg.setBuildinfo(value);
+      break;
+    case 14:
+      var value = new kit_score_score_pb.Score;
+      reader.readMessage(value,kit_score_score_pb.Score.deserializeBinaryFromReader);
+      msg.addScores(value);
       break;
     default:
       reader.skipField();
@@ -6113,6 +6128,13 @@ proto.ag.Submission.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getCommithash();
+  if (f.length > 0) {
+    writer.writeString(
+      8,
+      f
+    );
+  }
   f = message.getScoreobjects();
   if (f.length > 0) {
     writer.writeString(
@@ -6120,17 +6142,10 @@ proto.ag.Submission.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getBuildinfo();
+  f = message.getOldbuildinfo();
   if (f.length > 0) {
     writer.writeString(
       7,
-      f
-    );
-  }
-  f = message.getCommithash();
-  if (f.length > 0) {
-    writer.writeString(
-      8,
       f
     );
   }
@@ -6161,6 +6176,22 @@ proto.ag.Submission.serializeBinaryToWriter = function(message, writer) {
       12,
       f,
       proto.ag.Review.serializeBinaryToWriter
+    );
+  }
+  f = message.getBuildinfo();
+  if (f != null) {
+    writer.writeMessage(
+      13,
+      f,
+      kit_score_score_pb.BuildInfo.serializeBinaryToWriter
+    );
+  }
+  f = message.getScoresList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      14,
+      f,
+      kit_score_score_pb.Score.serializeBinaryToWriter
     );
   }
 };
@@ -6195,7 +6226,7 @@ proto.ag.Submission.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 assignmentID = 2;
+ * optional uint64 AssignmentID = 2;
  * @return {number}
  */
 proto.ag.Submission.prototype.getAssignmentid = function() {
@@ -6267,6 +6298,24 @@ proto.ag.Submission.prototype.setScore = function(value) {
 
 
 /**
+ * optional string commitHash = 8;
+ * @return {string}
+ */
+proto.ag.Submission.prototype.getCommithash = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.ag.Submission} returns this
+ */
+proto.ag.Submission.prototype.setCommithash = function(value) {
+  return jspb.Message.setProto3StringField(this, 8, value);
+};
+
+
+/**
  * optional string scoreObjects = 6;
  * @return {string}
  */
@@ -6285,10 +6334,10 @@ proto.ag.Submission.prototype.setScoreobjects = function(value) {
 
 
 /**
- * optional string buildInfo = 7;
+ * optional string oldBuildInfo = 7;
  * @return {string}
  */
-proto.ag.Submission.prototype.getBuildinfo = function() {
+proto.ag.Submission.prototype.getOldbuildinfo = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
 };
 
@@ -6297,26 +6346,8 @@ proto.ag.Submission.prototype.getBuildinfo = function() {
  * @param {string} value
  * @return {!proto.ag.Submission} returns this
  */
-proto.ag.Submission.prototype.setBuildinfo = function(value) {
+proto.ag.Submission.prototype.setOldbuildinfo = function(value) {
   return jspb.Message.setProto3StringField(this, 7, value);
-};
-
-
-/**
- * optional string commitHash = 8;
- * @return {string}
- */
-proto.ag.Submission.prototype.getCommithash = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.ag.Submission} returns this
- */
-proto.ag.Submission.prototype.setCommithash = function(value) {
-  return jspb.Message.setProto3StringField(this, 8, value);
 };
 
 
@@ -6409,6 +6440,81 @@ proto.ag.Submission.prototype.addReviews = function(opt_value, opt_index) {
  */
 proto.ag.Submission.prototype.clearReviewsList = function() {
   return this.setReviewsList([]);
+};
+
+
+/**
+ * optional score.BuildInfo BuildInfo = 13;
+ * @return {?proto.score.BuildInfo}
+ */
+proto.ag.Submission.prototype.getBuildinfo = function() {
+  return /** @type{?proto.score.BuildInfo} */ (
+    jspb.Message.getWrapperField(this, kit_score_score_pb.BuildInfo, 13));
+};
+
+
+/**
+ * @param {?proto.score.BuildInfo|undefined} value
+ * @return {!proto.ag.Submission} returns this
+*/
+proto.ag.Submission.prototype.setBuildinfo = function(value) {
+  return jspb.Message.setWrapperField(this, 13, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.ag.Submission} returns this
+ */
+proto.ag.Submission.prototype.clearBuildinfo = function() {
+  return this.setBuildinfo(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.ag.Submission.prototype.hasBuildinfo = function() {
+  return jspb.Message.getField(this, 13) != null;
+};
+
+
+/**
+ * repeated score.Score Scores = 14;
+ * @return {!Array<!proto.score.Score>}
+ */
+proto.ag.Submission.prototype.getScoresList = function() {
+  return /** @type{!Array<!proto.score.Score>} */ (
+    jspb.Message.getRepeatedWrapperField(this, kit_score_score_pb.Score, 14));
+};
+
+
+/**
+ * @param {!Array<!proto.score.Score>} value
+ * @return {!proto.ag.Submission} returns this
+*/
+proto.ag.Submission.prototype.setScoresList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 14, value);
+};
+
+
+/**
+ * @param {!proto.score.Score=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.score.Score}
+ */
+proto.ag.Submission.prototype.addScores = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 14, opt_value, proto.score.Score, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.ag.Submission} returns this
+ */
+proto.ag.Submission.prototype.clearScoresList = function() {
+  return this.setScoresList([]);
 };
 
 
@@ -6761,7 +6867,7 @@ proto.ag.GradingBenchmark.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 assignmentID = 2;
+ * optional uint64 AssignmentID = 2;
  * @return {number}
  */
 proto.ag.GradingBenchmark.prototype.getAssignmentid = function() {
@@ -7045,8 +7151,8 @@ proto.ag.GradingCriterion.prototype.toObject = function(opt_includeInstance) {
 proto.ag.GradingCriterion.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    points: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    benchmarkid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    benchmarkid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    points: jspb.Message.getFieldWithDefault(msg, 3, 0),
     description: jspb.Message.getFieldWithDefault(msg, 4, ""),
     grade: jspb.Message.getFieldWithDefault(msg, 5, 0),
     comment: jspb.Message.getFieldWithDefault(msg, 6, "")
@@ -7092,11 +7198,11 @@ proto.ag.GradingCriterion.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setPoints(value);
+      msg.setBenchmarkid(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setBenchmarkid(value);
+      msg.setPoints(value);
       break;
     case 4:
       var value = /** @type {string} */ (reader.readString());
@@ -7146,14 +7252,14 @@ proto.ag.GradingCriterion.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getPoints();
+  f = message.getBenchmarkid();
   if (f !== 0) {
     writer.writeUint64(
       2,
       f
     );
   }
-  f = message.getBenchmarkid();
+  f = message.getPoints();
   if (f !== 0) {
     writer.writeUint64(
       3,
@@ -7212,10 +7318,10 @@ proto.ag.GradingCriterion.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 points = 2;
+ * optional uint64 BenchmarkID = 2;
  * @return {number}
  */
-proto.ag.GradingCriterion.prototype.getPoints = function() {
+proto.ag.GradingCriterion.prototype.getBenchmarkid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -7224,16 +7330,16 @@ proto.ag.GradingCriterion.prototype.getPoints = function() {
  * @param {number} value
  * @return {!proto.ag.GradingCriterion} returns this
  */
-proto.ag.GradingCriterion.prototype.setPoints = function(value) {
+proto.ag.GradingCriterion.prototype.setBenchmarkid = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional uint64 benchmarkID = 3;
+ * optional uint64 points = 3;
  * @return {number}
  */
-proto.ag.GradingCriterion.prototype.getBenchmarkid = function() {
+proto.ag.GradingCriterion.prototype.getPoints = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -7242,7 +7348,7 @@ proto.ag.GradingCriterion.prototype.getBenchmarkid = function() {
  * @param {number} value
  * @return {!proto.ag.GradingCriterion} returns this
  */
-proto.ag.GradingCriterion.prototype.setBenchmarkid = function(value) {
+proto.ag.GradingCriterion.prototype.setPoints = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 
@@ -7538,7 +7644,7 @@ proto.ag.Review.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 submissionID = 2;
+ * optional uint64 SubmissionID = 2;
  * @return {number}
  */
 proto.ag.Review.prototype.getSubmissionid = function() {
@@ -7556,7 +7662,7 @@ proto.ag.Review.prototype.setSubmissionid = function(value) {
 
 
 /**
- * optional uint64 reviewerID = 3;
+ * optional uint64 ReviewerID = 3;
  * @return {number}
  */
 proto.ag.Review.prototype.getReviewerid = function() {

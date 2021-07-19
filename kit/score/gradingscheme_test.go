@@ -5,8 +5,8 @@ import (
 )
 
 func TestPassFailGradingScheme(t *testing.T) {
-	var passFailTests = []struct {
-		points        uint8
+	passFailTests := []struct {
+		points        uint32
 		expectedGrade string
 	}{
 		{0, "Fail"},
@@ -19,7 +19,7 @@ func TestPassFailGradingScheme(t *testing.T) {
 	}
 	g := GradingScheme{
 		Name:        "Pass/Fail (60 % pass level)",
-		GradePoints: []uint8{60, 0},
+		GradePoints: []uint32{60, 0},
 		GradeNames:  []string{"Pass", "Fail"},
 	}
 	if g.ID != 0 {
@@ -33,8 +33,8 @@ func TestPassFailGradingScheme(t *testing.T) {
 }
 
 func TestCBiasGradingScheme(t *testing.T) {
-	var cBiasTests = []struct {
-		points        uint8
+	cBiasTests := []struct {
+		points        uint32
 		expectedGrade string
 	}{
 		{0, "F"},
@@ -56,7 +56,7 @@ func TestCBiasGradingScheme(t *testing.T) {
 	}
 	g := GradingScheme{
 		Name:        "C Bias (UiS Scheme)",
-		GradePoints: []uint8{90, 80, 60, 50, 40, 0},
+		GradePoints: []uint32{90, 80, 60, 50, 40, 0},
 		GradeNames:  []string{"A", "B", "C", "D", "E", "F"},
 	}
 	if g.ID != 0 {
@@ -70,8 +70,8 @@ func TestCBiasGradingScheme(t *testing.T) {
 }
 
 func TestNoBiasGradingScheme(t *testing.T) {
-	var noBiasTests = []struct {
-		points        uint8
+	noBiasTests := []struct {
+		points        uint32
 		expectedGrade string
 	}{
 		{0, "F"},
@@ -91,7 +91,7 @@ func TestNoBiasGradingScheme(t *testing.T) {
 	}
 	g := GradingScheme{
 		Name:        "No Bias (NTNU Scheme)",
-		GradePoints: []uint8{88, 76, 64, 52, 40, 0},
+		GradePoints: []uint32{88, 76, 64, 52, 40, 0},
 		GradeNames:  []string{"A", "B", "C", "D", "E", "F"},
 	}
 	if g.ID != 0 {

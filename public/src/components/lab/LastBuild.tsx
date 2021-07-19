@@ -1,10 +1,10 @@
 import * as React from "react";
 import { DynamicTable, Row } from "../../components";
-import { ITestCases } from "../../models";
+import { Score } from "../../../proto/kit/score/score_pb";
 import { ICellElement } from "../data/DynamicTable";
 
 interface ILastBuildProps {
-    test_cases: ITestCases[];
+    test_cases: Score[];
     score: number;
     weight: number;
     scoreLimit: number;
@@ -19,10 +19,10 @@ export class LastBuild extends React.Component<ILastBuildProps> {
                     <DynamicTable
                         header={["Test name", "Score", "Weight"]}
                         data={this.props.test_cases ? this.props.test_cases : []}
-                        selector={(item: ITestCases) => [item.TestName ? item.TestName : "-",
-                         (item.Score ? item.Score.toString() : "0")
-                          + "/" + (item.MaxScore ? item.MaxScore.toString() : "0") + " pts",
-                          item.Weight ? item.Weight.toString() : "0"]}
+                        selector={(sc: Score) => [sc.getTestname(),
+                         (sc.getScore() ? sc.getScore().toString() : "0")
+                          + "/" + (sc.getMaxscore() ? sc.getMaxscore().toString() : "0") + " pts",
+                          sc.getWeight() ? sc.getWeight().toString() : "0"]}
                         footer={this.makeDynamicFooter()}
                     />
                 </div>

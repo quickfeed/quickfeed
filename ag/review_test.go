@@ -43,7 +43,7 @@ func TestReviewMarshalString(t *testing.T) {
 	r.Benchmarks = tst
 
 	// Based on stdlib json package
-	want := `{"assignmentID":10,"heading":"Steve","comment":"Jobs","criteria":[{"ID":1,"points":50,"description":"Ping"},{"ID":2,"points":50,"description":"Pong"}]}; {"ID":1,"assignmentID":10,"heading":"Johnny","comment":"Ive","criteria":[{"ID":1,"points":50,"description":"Ding"},{"ID":2,"points":50,"description":"Dong"}]}`
+	want := `{"AssignmentID":10,"heading":"Steve","comment":"Jobs","criteria":[{"ID":1,"points":50,"description":"Ping"},{"ID":2,"points":50,"description":"Pong"}]}; {"ID":1,"AssignmentID":10,"heading":"Johnny","comment":"Ive","criteria":[{"ID":1,"points":50,"description":"Ding"},{"ID":2,"points":50,"description":"Dong"}]}`
 	err = r.MarshalReviewString()
 	if err != nil {
 		t.Fatal(err)

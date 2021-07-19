@@ -97,7 +97,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                             {formatDate(this.props.assignment.getDeadline())}</li>
                     <li key="li1" className="list-group-item r-li">
                         <span className="r-table">Delivered: </span>
-                            {this.props.submission ? formatDate(this.props.submission?.buildDate) + (afterDeadline > 0 ? "   (" + afterDeadline + " days after deadline)" : "") : "Not delivered"}</li>
+                            {this.props.submission ? formatDate(this.props.submission.buildDate) + (afterDeadline > 0 ? "   (" + afterDeadline + " days after deadline)" : "") : "Not delivered"}</li>
                     <li key="li3" className="list-group-item r-li">
                         <span className="r-table">Repository: </span>
                         {userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL, "btn btn-default")}</li>
