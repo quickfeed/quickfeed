@@ -1,6 +1,6 @@
 import React from "react"
 import { Assignment, Submission } from "../../proto/ag/ag_pb"
-import { getBuildInfo, getScoreObjects, IScoreObjects, SubmissionStatus } from "../Helpers"
+import { getBuildInfo, getPassedTestsCount, getScoreObjects, IScoreObjects, SubmissionStatus } from "../Helpers"
 import { useOvermind } from "../overmind"
 import { ProgressBar } from "./ProgressBar"
 
@@ -35,15 +35,6 @@ const LabResultTable = ({submission, assignment}: lab) => {
         if (submission && assignment) {
             const buildInfo = getBuildInfo(submission.getBuildinfo())
             const scoreObjects = getScoreObjects(submission.getScoreobjects())
-            
-            let totalTests = 0
-            let passedTests = 0
-            scoreObjects.forEach(scoreObject => {
-                if (scoreObject.Score === scoreObject.MaxScore) {
-                    passedTests++
-                } 
-                totalTests++
-            })
 
             const boxShadow = (submission.getStatus() === Submission.Status.APPROVED) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 8px 0 0 red inset"
             return (
@@ -77,7 +68,7 @@ const LabResultTable = ({submission, assignment}: lab) => {
                         </tr>
                         <tr>
                         <th colSpan={2}>Tests Passed</th>
-                            <td>{passedTests}/{totalTests}</td>
+                            <td>{getPassedTestsCount(submission)}</td>
                         </tr>
                         <tr>
                             <th colSpan={2}>Slip days</th>
