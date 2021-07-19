@@ -55,7 +55,7 @@ const ReviewResult = ({review}: submission) => {
                         <th>{review[0].getScore()}%</th>
                         <th></th>
                     </tr>
-                    : ""
+                    : null
                     }  
                     <tr>
                         <th scope="col">Criteria</th>

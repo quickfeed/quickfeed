@@ -13,14 +13,16 @@ import Results from "./Results"
 import Review from "./Review"
 import StatisticsView from "./Statistics"
 
-
+// TODO: Perhaps split this into StudentPage and TeacherPage
 const CoursePage = () => {
     const { state, actions: {setActiveCourse} } = useOvermind()
-    let courseID = getCourseID()
+    const courseID = getCourseID()
+
     useEffect(() => {
         setActiveCourse(courseID)
     }, [courseID])
 
+    // TODO: Make and 'hasAccess(status, page)' helper?
     if (state.enrollmentsByCourseId[courseID] && state.enrollmentsByCourseId[courseID].getStatus() >= Enrollment.UserStatus.STUDENT){
         return (
             <Switch>

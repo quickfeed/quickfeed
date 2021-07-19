@@ -29,19 +29,19 @@ const Courses = (overview: overview) => {
             { actions.alert({text: "Favorite a course to make it appear on the dashboard and in the sidebar", type: AlertType.INFO}) }
         actions.setActiveCourse(-1)
     }, [])
-    // TODO: UserCourses contains elements describing a course that a user has an enrollment in, regardless of status currently. Need to figure out what UserStatus.NONE is used for
+
     // push to seperate arrays, for layout purposes. Favorite - Student - Teacher - Pending
-    function upDateArrays(){
-        let favorite:   JSX.Element[] = []
-        let student:    JSX.Element[] = []
-        let teacher:    JSX.Element[] = []
-        let pending:    JSX.Element[] = []
-        let crsArr:     JSX.Element[] = []
-        let enrolArr = state.enrollments
+    const upDateArrays = () => {
+        const favorite:   JSX.Element[] = []
+        const student:    JSX.Element[] = []
+        const teacher:    JSX.Element[] = []
+        const pending:    JSX.Element[] = []
+        const crsArr:     JSX.Element[] = []
+        const enrolArr = state.enrollments
         state.courses.map(course => {       
             let enrol = enrolArr.find(enrol => course.getId() == enrol.getCourseid())
             if (enrol){
-                if (enrol.getState() == 3){
+                if (enrol.getState() == Enrollment.DisplayState.FAVORITE){
                     // add to favorite list.
                     favorite.push(
                         <CourseCard key={course.getId()} course= {course} enrollment={enrol} status={enrol.getStatus()}/>
@@ -105,7 +105,6 @@ const Courses = (overview: overview) => {
                     <h2>Favorites</h2>
                     <div className="card-deck course-card-row favorite-row">
                         {favorite}
-                        
                     </div>
                 </div>
                 }

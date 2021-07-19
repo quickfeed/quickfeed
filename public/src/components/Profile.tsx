@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Redirect } from 'react-router'
 import { useOvermind } from '../overmind'
 import UserProfileForm from './forms/UserProfileForm'
 
@@ -39,7 +40,7 @@ const Profile = () => {
             )
         }
     }
-    return <h1>Not logged in.  </h1>
+    return <Redirect to="/" />
 
     
 }

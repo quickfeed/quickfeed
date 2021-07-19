@@ -66,7 +66,7 @@ export const Members = (props: RouteComponentProps<{id?: string | undefined}>) =
                                 return (
                                     <li key={user.getUserid()} className={"list-group-item" }>
                                         {user.getUser()?.getName()} ({user.getUser()?.getStudentid()})
-                                        <i  style={{float: "right"}} 
+                                        <i style={{float: "right"}} 
                                             className={"badge badge-" + (user.getStatus() === 2 ? "primary" : user.getStatus() === 3 ? "danger" : "info")}>
                                                 {EnrollmentStatus[user.getStatus()]}
                                         </i>

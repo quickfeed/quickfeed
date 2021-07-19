@@ -5,7 +5,7 @@ import { useOvermind } from "../../overmind"
 
 const NavBarFooter = () => {
     const {
-        state: {self, theme},
+        state: {self},
         actions: { logout }
     } = useOvermind()
     const history = useHistory()

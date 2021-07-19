@@ -43,17 +43,17 @@ export const CourseCreationForm = () => {
             <div>Organization Name</div>
             <div><input onKeyUp={e => setOrgName(e.currentTarget.value)}></input><div className="btn btn-primary" onClick={() => actions.getOrganization(orgName)}>Check</div></div>
             <form className="form-group well" style={{width: "400px"}} onSubmit={e => {e.preventDefault(), submitHandler()}}>
-                        <label htmlFor={"name"}>Course Name</label>
-                        <input className="form-control" name="courseName" type="text" placeholder={"Course Name"} onChange={e => handleChange(e)}/>
-                        <label htmlFor={"email"}>Course Code</label>
-                        <input className="form-control" name="courseCode" type="text" placeholder={"Tag (ex. DAT320)"} onChange={e => handleChange(e)} />
-                        <label htmlFor={"email"}>Course Tag</label>
-                        <input className="form-control" name="courseTag" type="text" placeholder={"Tag (ex. Fall / Spring)"} onChange={e => handleChange(e)} />
-                        <label htmlFor={"studentid"}>Slip Days</label>
-                        <input className="form-control" name="slipDays" type="number" placeholder={"Days (ex. 7)"} onChange={e => handleChange(e)}  />
-                        <label htmlFor={"studentid"}>Year</label>
-                        <input className="form-control" name="courseYear" type="number" placeholder={"Year (ex. 2021)"} onChange={e => handleChange(e)}  />
-                        <input className="btn btn-primary" type="submit" value="Create Course" style={{marginTop:"20px"}}/>
+                <label htmlFor={"name"}>Course Name</label>
+                <input className="form-control" name="courseName" type="text" placeholder={"Course Name"} onChange={e => handleChange(e)}/>
+                <label htmlFor={"email"}>Course Code</label>
+                <input className="form-control" name="courseCode" type="text" placeholder={"Tag (ex. DAT320)"} onChange={e => handleChange(e)} />
+                <label htmlFor={"email"}>Course Tag</label>
+                <input className="form-control" name="courseTag" type="text" placeholder={"Tag (ex. Fall / Spring)"} onChange={e => handleChange(e)} />
+                <label htmlFor={"studentid"}>Slip Days</label>
+                <input className="form-control" name="slipDays" type="number" placeholder={"Days (ex. 7)"} onChange={e => handleChange(e)}  />
+                <label htmlFor={"studentid"}>Year</label>
+                <input className="form-control" name="courseYear" type="number" placeholder={"Year (ex. 2021)"} onChange={e => handleChange(e)}  />
+                <input className="btn btn-primary" type="submit" value="Create Course" style={{marginTop:"20px"}}/>
             </form>
         </div>
         
