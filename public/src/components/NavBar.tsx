@@ -5,6 +5,7 @@ import { Enrollment } from "../../proto/ag/ag_pb";
 import NavBarLabs from "./navbar/NavBarLabs";
 import NavBarTeacher from "./navbar/NavBarTeacher";
 import NavBarFooter from "./navbar/NavBarFooter";
+import { Status } from "../consts";
 
 
 
@@ -23,6 +24,11 @@ const NavBar = () => {
     }, [state.activeCourse])
 
     
+    const onCourseClick = (enrollment: Enrollment) => {
+        history.push(`/course/` + enrollment.getCourseid())
+        setShowCourses(false)
+        actions.setActiveCourse(enrollment.getCourseid())
+    }
 
     // Generates dropdown items related to Courses
     const CourseItems: Function = (): JSX.Element[] => {
@@ -39,7 +45,7 @@ const NavBar = () => {
                         <i className={showCourses ? "icon fa fa-caret-down fa-lg" : "icon fa fa-caret-down fa-rotate-90 fa-lg"}></i>
                     </div>
                 </li>
-                <li key={"allCourses"} className={showCourses ? "active" : "inactive"}>
+                <li key={"allCourses"} className={showCourses ? Status.Active : Status.Inactive}>
                     <Link to="/courses" className="Sidebar-items-link">
                         View all courses
                     </Link>
@@ -50,14 +56,14 @@ const NavBar = () => {
         favorites.map((enrollment) =>{
                 links.push(
                     <React.Fragment key={enrollment.getId()}>
-                        <li className={showCourses || active === enrollment.getCourseid()  ? "active" : "inactive"}  onClick={() => {history.push(`/course/` + enrollment.getCourseid()); setShowCourses(false); actions.setActiveCourse(enrollment.getCourseid())}}>
+                        <li className={showCourses || active === enrollment.getCourseid()  ? Status.Active : Status.Inactive}  onClick={() => {onCourseClick(enrollment)}}>
                             <div>
                                 {enrollment.getCourse()?.getCode()}
                             </div> 
                         </li>
-                        <div className={ state.activeCourse === enrollment.getCourseid()  ? "activelabs" : "inactive"}>
-                            {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? <NavBarLabs /> : ""}
-                            {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.TEACHER ? <NavBarTeacher  courseID={enrollment.getCourseid()}/> : ""}
+                        <div className={ state.activeCourse === enrollment.getCourseid()  ? Status.ActiveLab : Status.Inactive}>
+                            {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? <NavBarLabs /> : null}
+                            {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.TEACHER ? <NavBarTeacher  courseID={enrollment.getCourseid()}/> : null}
                         </div>
                     </React.Fragment>
                     )
