@@ -11,7 +11,7 @@ import CourseCreationForm from "./forms/CourseCreationForm"
 export const AdminPage = () => {
     
     const {state} = useOvermind()
-
+    const history  = useHistory()
     // Ideas: Statistics, Create Course, Promote Users
     
     const manageUsers = {title: "Manage Users", text: "View and manage all users.", buttonText: "Manage Users", to: "/admin/manage"}
@@ -20,8 +20,7 @@ export const AdminPage = () => {
     
     /** Button used to redirect a user, ex. return to top layer of course page */
     const RedirectButton = ({to}: {to: string}) => {
-        const history  = useHistory()
-        const hide = history.location.pathname == "/admin" ? true : false
+        const hide = history.location.pathname == to ? true : false
         return (
             <div className={"btn btn-dark redirectButton"} onClick={() => history.push(to)} hidden={hide}>
                 <i className="fa fa-arrow-left"></i>
@@ -30,10 +29,11 @@ export const AdminPage = () => {
     }
     
     if (state.self.getIsadmin()) {
+        const root = "/admin"
         return (
             <div className="box">
-                <RedirectButton to={"/admin"}></RedirectButton>
-                <div className="row">
+                <RedirectButton to={root}></RedirectButton>
+                <div className="row" hidden={history.location.pathname != root}>
                     <Card title={createCourse.title} text={createCourse.text} buttonText={createCourse.buttonText} to={createCourse.to}></Card>
                     <Card title={editCourse.title} text={editCourse.text} buttonText={editCourse.buttonText} to={editCourse.to}></Card>
                     <Card title={manageUsers.title} text={manageUsers.text} buttonText={manageUsers.buttonText} to={manageUsers.to}></Card>
