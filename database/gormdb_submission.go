@@ -62,19 +62,11 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	if err := db.conn.Last(query, query).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return err
 	}
+	// TODO(meling) temporary transformation of submission data
+	transform(submission)
 
-	// If a submission for the given assignment and student/group already exists, update it.
-	// Otherwise create a new submission record. Note that Submission.Reviews will not be updated;
-	// to update Submission.Reviews, use UpdateReview().
-	var labSubmission pb.Submission
-	err := db.conn.Where(query).Assign(submission).FirstOrCreate(&labSubmission).Error
-
-	if submission.GetScore() == 0 {
-		// GORM doesn't update zero value fields, unless forced:
-		err = db.conn.Model(submission).Where(query).Update("score", 0).Error
-	}
-	submission.ID = labSubmission.GetID()
-	return err
+	// Save a submission record for the given assignment and student/group.
+	return db.conn.Where(query).Save(submission).Error
 }
 
 // GetSubmission fetches a submission record.
@@ -83,6 +75,9 @@ func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	if err := db.conn.Preload("Reviews").Where(query).Last(&submission).Error; err != nil {
 		return nil, err
 	}
+	// TODO(meling) temporary transformation of submission data
+	transform(&submission)
+
 	return &submission, nil
 }
 
@@ -106,6 +101,8 @@ func (db *GormDB) GetLastSubmissions(courseID uint64, query *pb.Submission) ([]*
 		}
 		latestSubs = append(latestSubs, temp)
 	}
+	// TODO(meling) temporary transformation of submission data
+	transform(latestSubs...)
 	return latestSubs, nil
 }
 
@@ -115,6 +112,8 @@ func (db *GormDB) GetSubmissions(query *pb.Submission) ([]*pb.Submission, error)
 	if err := db.conn.Find(&submissions, &query).Error; err != nil {
 		return nil, err
 	}
+	// TODO(meling) temporary transformation of submission data
+	transform(submissions...)
 	return submissions, nil
 }
 

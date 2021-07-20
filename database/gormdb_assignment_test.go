@@ -5,9 +5,10 @@ import (
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )
 
@@ -133,7 +134,7 @@ func TestUpdateAssignment(t *testing.T) {
 		t.Error(err)
 	}
 	for i := range gotAssignments {
-		if diff := cmp.Diff(wantAssignments[i], gotAssignments[i], cmpopts.IgnoreUnexported(pb.Assignment{})); diff != "" {
+		if diff := cmp.Diff(wantAssignments[i], gotAssignments[i], protocmp.Transform()); diff != "" {
 			t.Errorf("UpdateAssignments() mismatch (-want +got):\n%s", diff)
 		}
 	}
@@ -146,47 +147,86 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	// create teacher, course, user (student) and assignment
 	user, course, assignment := setupCourseAssignment(t, db)
 
-	want := &pb.Submission{
+	wantStruct := &pb.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Score:        42,
-		ScoreObjects: "scores",
-		BuildInfo:    "build info",
 		Reviews:      []*pb.Review{},
+		BuildInfo: &score.BuildInfo{
+			BuildDate: "2021-01-21",
+			BuildLog:  "what do you say",
+			ExecTime:  50,
+		},
+		Scores: []*score.Score{
+			{TestName: "TestBigNum", MaxScore: 100, Score: 60, Weight: 10},
+			{TestName: "TestDigNum", MaxScore: 100, Score: 70, Weight: 10},
+		},
 	}
-	if err := db.CreateSubmission(want); err != nil {
+	if err := db.CreateSubmission(wantStruct); err != nil {
 		t.Fatal(err)
 	}
-
 	assignments, err := db.GetAssignmentsWithSubmissions(course.ID, pb.SubmissionsForCourseRequest_ALL)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantAssignment := (proto.Clone(assignment)).(*pb.Assignment)
-	wantAssignment.Submissions = append(wantAssignment.Submissions, want)
-	if diff := cmp.Diff(wantAssignment, assignments[0], cmpopts.IgnoreUnexported(pb.Assignment{}, pb.Submission{}, pb.Review{})); diff != "" {
+	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct)
+	if diff := cmp.Diff(wantAssignment, assignments[0], protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
 	}
 
-	want2 := &pb.Submission{
+	// Legacy Submission struct with ScoreObjects and BuildInfo as string:
+	wantLegacy := &pb.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
-		Score:        45,
-		ScoreObjects: "scores 45",
-		BuildInfo:    "build info 56",
+		Score:        42,
+		ScoreObjects: `[{"Secret":"hidden","TestName":"TestLintAG","Score":3,"MaxScore":3,"Weight":5},{"Secret":"hidden","TestName":"TestSchedulersAG/FIFO/No_jobs","Score":0,"MaxScore":0,"Weight":2}]`,
+		OldBuildInfo: `{"BuildID":1,"BuildDate":"xya","BuildLog":"log data","ExecTime":50}`,
 		Reviews:      []*pb.Review{},
 	}
-	if err := db.CreateSubmission(want2); err != nil {
+	if err := db.CreateSubmission(wantLegacy); err != nil {
 		t.Fatal(err)
 	}
-
 	assignments, err = db.GetAssignmentsWithSubmissions(course.ID, pb.SubmissionsForCourseRequest_ALL)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantAssignment2 := (proto.Clone(assignment)).(*pb.Assignment)
-	wantAssignment2.Submissions = append(wantAssignment2.Submissions, want2)
-	if diff := cmp.Diff(wantAssignment2, assignments[0], cmpopts.IgnoreUnexported(pb.Assignment{}, pb.Submission{}, pb.Review{})); diff != "" {
+	wantAssignment = (proto.Clone(assignment)).(*pb.Assignment)
+	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct, wantLegacy)
+	if diff := cmp.Diff(wantAssignment, assignments[0], protocmp.Transform()); diff != "" {
+		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
+	}
+
+	// Submission with Review
+	wantReview := &pb.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Score:        45,
+		Reviews: []*pb.Review{
+			{
+				ReviewerID: 1, Review: "LGTM!", Feedback: "SGTM!", Score: 42, Ready: true,
+				// TODO(meling) Remove Benchmarks, since benchmarks should only be kept in one place and associated with the assignment (see also TODO in ag.proto)
+				// Benchmarks: []*pb.GradingBenchmark{
+				// 	{
+				// 		Heading: "Ding Dong", Comment: "Communication",
+				// 		Criteria: []*pb.GradingCriterion{
+				// 			{Points: 50, Description: "Loads of ding"},
+				// 		},
+				// 	},
+				// },
+			},
+		},
+	}
+	if err := db.CreateSubmission(wantReview); err != nil {
+		t.Fatal(err)
+	}
+	assignments, err = db.GetAssignmentsWithSubmissions(course.ID, pb.SubmissionsForCourseRequest_ALL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantAssignment = (proto.Clone(assignment)).(*pb.Assignment)
+	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct, wantLegacy, wantReview)
+	if diff := cmp.Diff(wantAssignment, assignments[0], protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
 	}
 }
