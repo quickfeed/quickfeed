@@ -19,7 +19,6 @@ const CreateGroup = (props: {courseID: number}) => {
             users.push(state.self.getId())
             setUsers([...users])
         }
-        console.log(users)
     })
 
 
