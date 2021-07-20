@@ -1,5 +1,4 @@
 import React, { useEffect } from "react"
-import { RouteComponentProps } from "react-router-dom"
 import { useOvermind } from "../overmind"
 
 /* Lists all groups for a given course. */
