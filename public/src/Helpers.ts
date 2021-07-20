@@ -43,6 +43,18 @@ export interface IScoreObjects {
     Weight: number;
 }
 
+export interface NavLink {
+    icons?: { 
+        text: string | number, 
+        classname: string
+        }[], 
+    link: {
+        text: string, 
+        to: string
+    }
+}
+
+
 export const getScoreObjects = (scoreString: string) => {
     let scoreObjects: IScoreObjects[] = []
     if (scoreString.length > 0) {
@@ -62,10 +74,6 @@ export const getFormattedTime = (deadline_string: string) => {
     'July', 'August', 'September', 'October', 'November', 'December']
     let deadline = new Date(deadline_string)
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} at ${deadline.getHours()}:${deadline.getMinutes() < 10 ? '0' + deadline.getMinutes() : deadline.getMinutes()}`
-}
-
-export const formatBuildInfo = (buildInfo: string) => {
-    console.log(buildInfo.split('/\n/'))
 }
 
 /** Utility function for LandingpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
@@ -183,7 +191,6 @@ export const isValid = (element: any) => {
         }
     }
     if (element instanceof EnrollmentLink) {
-        console.log(element.getSubmissionsList())
         if (!element.getEnrollment() && !element.getEnrollment()?.getUser() && element.getSubmissionsList().length === 0) {
             return false
         }
