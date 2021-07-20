@@ -14,13 +14,9 @@ const Profile = () => {
         setEditing(!editing)
     }
 
-    // Returns if the user has a valid ID
-    if (state.self.getId() > 0) {
-        // Render user information
-        if(editing === false) {
+    const ProfileInfo = () => {
         return (
-            <div className="box" style={{color: "black"}}>
-                <div className="jumbotron"><div className="centerblock container"><h1>Hi, {state.self.getName()}</h1>You can edit your user information here.</div></div>
+            <div className="box">
                     <div className="card well" style={{width: "400px"}}>
                     <div className="card-header">Your Information</div>
                         <ul className="list-group list-group-flush">
@@ -32,13 +28,21 @@ const Profile = () => {
                 <button className="btn btn-primary" onClick={() => editProfile()}>Edit Profile</button>
             </div>
             )
-        } 
-        // Render editable user information.
-        else {
-            return (
-                <UserProfileForm editing={editing} setEditing={setEditing} />
+    }
+
+
+    if (state.self.getId() > 0) {
+        return (
+            <div className="box">
+                <div className="jumbotron">
+                    <div className="centerblock container">
+                    <h1>Hi, {state.self.getName()}</h1>
+                    You can edit your user information here.
+                    </div>
+                </div>
+                {editing ? <UserProfileForm editing={editing} setEditing={setEditing} /> : <ProfileInfo />}
+            </div>
             )
-        }
     }
     return <Redirect to="/" />
 

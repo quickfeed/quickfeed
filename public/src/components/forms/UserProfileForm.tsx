@@ -36,12 +36,6 @@ export const UserProfileForm = (props: IProps) => {
 
     return ( 
         <div className="box">
-            <div className="jumbotron">
-                <div className="centerblock container">
-                    <h1>Hi, {state.self.getName()}</h1>
-                    You can edit your user information here.
-                </div>
-            </div>
             <form className="form-group well" style={{width: "400px"}} onSubmit={e => {e.preventDefault(); submitHandler()}}>
                 <label htmlFor={"name"}>Name</label>
                 <input className="form-control" name="name" type="text" value={user.name} onChange={handleChange} />
