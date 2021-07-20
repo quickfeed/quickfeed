@@ -7,11 +7,10 @@ import { StatusCode } from "grpc-web";
 
 
 /** Fetches and stores an authenticated user in state */
-export const getUser = async ({state, actions, effects}: Context) => {
+export const getSelf = async ({state, effects}: Context) => {
         const user = await effects.grpcMan.getUser()
     
         if (user.data) {
-            console.log(user.data)
             state.self = user.data
             return true
         } 
@@ -103,7 +102,7 @@ export const getEnrollmentsByUser = async ({state, effects}: Context) => {
 export const changeUser = async ({actions, effects}: Context, user: User) => {
     const result = await effects.grpcMan.updateUser(user)
     if (result.status.getCode() == 0) {
-        actions.getUser()
+        actions.getSelf()
     }
 }
 
@@ -258,13 +257,9 @@ export const popAlert = ({state}: Context, index: number) => {
 }
 
 
-export const getOrganization = ({actions, effects}: Context, orgName: string) => {
-    effects.grpcMan.getOrganization(orgName).then(res => {
-        if (res.data) {
-            console.log(res.data)
-        }
-        actions.alertHandler(res)
-    })
+export const getOrganization = async ({actions, effects}: Context, orgName: string) => {
+    const res = await effects.grpcMan.getOrganization(orgName)
+    actions.alertHandler(res)
 }
 
 export const createCourse = async ({state, actions, effects}: Context, value: {course: Course, orgName: string}) => {
@@ -436,12 +431,7 @@ export const setActiveLab = ({state}: Context, assignmentID: number) => {
 }
 
 export const enroll = async ({state, effects}: Context, courseID: number) => {
-    await effects.grpcMan.createEnrollment(courseID, state.self.getId()).then(res => {
-        console.log(res.status)
-    })
-    .catch(res => {
-        console.log("catch")
-    })
+    const res = await effects.grpcMan.createEnrollment(courseID, state.self.getId())
 }
 
 export const logout = ({state}: Context) => {
@@ -449,8 +439,8 @@ export const logout = ({state}: Context) => {
 }
 
 /** Initializes a student user with all required data */
-export const fetchUserData = async ({state, actions, effects}: Context) =>  {
-    let success = await actions.getUser()
+export const fetchUserData = async ({state, actions}: Context) =>  {
+    let success = await actions.getSelf()
     if (!success) { state.isLoading = false; return false;}
     while (state.isLoading) {
         success = await actions.getEnrollmentsByUser()
