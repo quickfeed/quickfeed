@@ -32,20 +32,20 @@ const NavBar = () => {
 
     // Generates dropdown items related to Courses
     const CourseItems: Function = (): JSX.Element[] => {
-        let links: JSX.Element[] = []
+        const links: JSX.Element[] = []
         if (state.self.getId() <= 0) {
             return links
         }
         const favorites = state.enrollments.filter(enrollment => enrollment.getStatus() >= Enrollment.UserStatus.STUDENT && enrollment.getState() == Enrollment.DisplayState.FAVORITE)
         links.push(
             <div>
-                <li key={"courses"} onClick={() => { setShowCourses(!showCourses); actions.setActiveCourse(-1)}}>
+                <li onClick={() => { setShowCourses(!showCourses); actions.setActiveCourse(-1)}}>
                     <div id="title">
                             Courses &nbsp;&nbsp;
                         <i className={showCourses ? "icon fa fa-caret-down fa-lg" : "icon fa fa-caret-down fa-rotate-90 fa-lg"}></i>
                     </div>
                 </li>
-                <li key={"allCourses"} className={showCourses ? Status.Active : Status.Inactive}>
+                <li className={showCourses ? Status.Active : Status.Inactive}>
                     <Link to="/courses" className="Sidebar-items-link">
                         View all courses
                     </Link>
@@ -56,7 +56,7 @@ const NavBar = () => {
         favorites.map((enrollment) =>{
                 links.push(
                     <React.Fragment key={enrollment.getId()}>
-                        <li className={showCourses || active === enrollment.getCourseid()  ? Status.Active : Status.Inactive}  onClick={() => {onCourseClick(enrollment)}}>
+                        <li className={showCourses || active === enrollment.getCourseid() ? Status.Active : Status.Inactive}  onClick={() => {onCourseClick(enrollment)}}>
                             <div>
                                 {enrollment.getCourse()?.getCode()}
                             </div> 
