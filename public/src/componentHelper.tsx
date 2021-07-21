@@ -238,20 +238,6 @@ export function slugify(str: string): string {
     return str.replace(/[^a-z0-9 -_]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
 }
 
-// export function scoreFromReviews(reviews: Review[]): number {
-//     if (reviews.length < 1) return 0;
-//     if (reviews.length === 1) return reviews[0].getScore();
-//     let sum = 0;
-//     let ready = 0;
-//     reviews.forEach(rv => {
-//         if (rv.getReady()) {
-//             ready += 1;
-//             sum += rv.getScore();
-//         }
-//     });
-//     return Math.floor(sum / ready);
-// }
-
 // Some manually graded assignments can have custom max score (not necessary 100%), it will be
 // calculated as sum of all scores given for each grading criteria.
 export function maxAssignmentScore(benchmarks: GradingBenchmark[]): number {
