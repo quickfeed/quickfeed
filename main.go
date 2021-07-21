@@ -128,12 +128,12 @@ func UserVerifier() grpc.UnaryServerInterceptor {
 		if !ok {
 			return nil, errors.New("Could not grab metadata from context")
 		}
-		meta, err := userValidation(meta)
+		newMeta, err := userValidation(meta)
 		if err != nil {
 			return nil, err
 		}
-		ctx = metadata.NewOutgoingContext(ctx, meta)
-		resp, err := handler(ctx, req)
+		newCtx := metadata.NewIncomingContext(ctx, newMeta)
+		resp, err := handler(newCtx, req)
 		return resp, err
 	}
 }

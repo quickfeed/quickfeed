@@ -140,7 +140,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
             const previousStatus = selectedSubmission.status;
             selectedSubmission.status = status;
             // if the submission is for manual review, update submission score from reviews
-            if (currentSubmissionLink.assignment.getSkiptests()) {
+            if (currentSubmissionLink.assignment.getReviewers() > 0) {
                 selectedSubmission.score = scoreFromReviews(selectedSubmission.reviews);
             }
             const ans = await this.props.onSubmissionStatusUpdate(selectedSubmission);
@@ -209,7 +209,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         let selector: (string | JSX.Element | ICellElement)[] = [displayName, groupName];
         selector = selector.concat(student.labs.map(
             (e) => {
-                const setScore = e.assignment.getSkiptests() ? scoreFromReviews(e.submission?.reviews ?? []) : e.submission?.score ?? 0;
+                const setScore = e.assignment.getReviewers() > 0 ? scoreFromReviews(e.submission?.reviews ?? []) : e.submission?.score ?? 0;
                 let cellCss: string = "";
                 if (e.submission) {
                     cellCss = generateCellClass(e);

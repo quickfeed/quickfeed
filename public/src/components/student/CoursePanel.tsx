@@ -30,7 +30,7 @@ export class CoursePanel extends React.Component<IPanelProps> {
                             selector={(item: ISubmissionLink) => {
                                 let score = "N/A";
                                 if (item.submission) {
-                                    score = item.assignment.getSkiptests() ? scoreFromReviews(item.submission.reviews).toString() : item.submission.score.toString();
+                                    score = item.assignment.getReviewers() > 0 ? scoreFromReviews(item.submission.reviews).toString() : item.submission.score.toString();
                                     score += "%";
                                 }
                                 return [
