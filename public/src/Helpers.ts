@@ -170,11 +170,10 @@ export const SubmissionStatus = {
 }
 
 export const getPassedTestsCount = (submission: Submission) => {
-    const scoreObjects = getScoreObjects(submission.getScoreobjects())
     let totalTests = 0
     let passedTests = 0
-    scoreObjects.forEach(scoreObject => {
-        if (scoreObject.Score === scoreObject.MaxScore) {
+    submission.getScoresList().forEach(score => {
+        if (score.getScore() === score.getMaxscore()) {
             passedTests++
         } 
         totalTests++
