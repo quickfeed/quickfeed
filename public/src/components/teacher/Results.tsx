@@ -4,7 +4,7 @@ import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { searchForLabs, userRepoLink, getSlipDays, legalIndex, groupRepoLink, scoreFromReviews } from '../../componentHelper';
+import { searchForLabs, userRepoLink, getSlipDays, legalIndex, groupRepoLink, setScoreString } from '../../componentHelper';
 
 interface IResultsProps {
     course: Course;
@@ -139,10 +139,6 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         if (currentSubmissionLink && selectedSubmission) {
             const previousStatus = selectedSubmission.status;
             selectedSubmission.status = status;
-            // if the submission is for manual review, update submission score from reviews
-            if (currentSubmissionLink.assignment.getReviewers() > 0) {
-                selectedSubmission.score = scoreFromReviews(selectedSubmission.reviews);
-            }
             const ans = await this.props.onSubmissionStatusUpdate(selectedSubmission);
             if (ans) {
                 selectedSubmission.approvedDate = new Date().toLocaleString();
@@ -209,7 +205,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
         let selector: (string | JSX.Element | ICellElement)[] = [displayName, groupName];
         selector = selector.concat(student.labs.map(
             (e) => {
-                const setScore = e.assignment.getReviewers() > 0 ? scoreFromReviews(e.submission?.reviews ?? []) : e.submission?.score ?? 0;
+                const setScore = setScoreString(e.submission);
                 let cellCss: string = "";
                 if (e.submission) {
                     cellCss = generateCellClass(e);

@@ -2,7 +2,7 @@ import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission } from '../../../proto/ag/ag_pb';
 import { ISubmission } from "../../models";
 import { GradeBenchmark } from "./GradeBenchmark";
-import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider, maxAssignmentScore } from "../../componentHelper";
+import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider, maxAssignmentScore, forManualReview } from "../../componentHelper";
 
 interface ReviewPageProps {
     assignment: Assignment;
@@ -53,14 +53,14 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         const reviewInfoSpan = <span className="r-info">Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()}</span>;
         const noReviewsSpan = <span className="r-info">N/A</span>;
         const headerDiv = <div className="row review-header" onClick={() => this.toggleOpen()}>
-        <h3><span className="r-number">{this.props.studentNumber}. </span> <span className="r-header">{this.props.authorName}</span>{this.props.assignment.getReviewers() > 0 ?
+        <h3><span className="r-number">{this.props.studentNumber}. </span> <span className="r-header">{this.props.authorName}</span>{forManualReview(this.props.assignment) ?
              reviewInfoSpan : noReviewsSpan}</h3>
         </div>;
 
         const noSubmissionDiv = <div className="alert alert-info">No submissions for {this.props.assignment.getName()}</div>;
         const noReviewsDiv = <div className="alert alert-info">{this.props.assignment.getName()} is not for manual grading</div>;
 
-        if (this.props.assignment.getReviewers() < 1) {
+        if (!forManualReview(this.props.assignment)) {
             return <div className="review">
                 {headerDiv}
                 {open ? noReviewsDiv : null}

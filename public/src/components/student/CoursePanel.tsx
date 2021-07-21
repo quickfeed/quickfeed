@@ -4,7 +4,7 @@ import { DynamicTable } from "../../components";
 import { formatDate } from "../../helper";
 import { NavigationManager } from "../../managers/NavigationManager";
 import { ISubmissionLink } from "../../models";
-import { scoreFromReviews } from '../../componentHelper';
+import { setScoreString } from '../../componentHelper';
 
 interface IPanelProps {
     course: Course;
@@ -30,7 +30,7 @@ export class CoursePanel extends React.Component<IPanelProps> {
                             selector={(item: ISubmissionLink) => {
                                 let score = "N/A";
                                 if (item.submission) {
-                                    score = item.assignment.getReviewers() > 0 ? scoreFromReviews(item.submission.reviews).toString() : item.submission.score.toString();
+                                    score = setScoreString(item.submission);
                                     score += "%";
                                 }
                                 return [
