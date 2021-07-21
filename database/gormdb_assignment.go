@@ -68,7 +68,9 @@ func (db *GormDB) GetAssignmentsByCourse(courseID uint64, withGrading bool) ([]*
 	if withGrading {
 		for _, a := range assignments {
 			var benchmarks []*pb.GradingBenchmark
-			if err := db.conn.Where("assignment_id = ?", a.ID).Find(&benchmarks).Error; err != nil {
+			if err := db.conn.Where("assignment_id = ?", a.ID).
+				Where("review_id = ?", 0).
+				Find(&benchmarks).Error; err != nil {
 				return nil, err
 			}
 			a.GradingBenchmarks = benchmarks

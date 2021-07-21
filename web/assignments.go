@@ -144,8 +144,7 @@ func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
 			submission.ID, assignment.Name, assignment.Reviewers)
 	}
 	query.Edited = time.Now().Format(reviewLayout)
-
-	// TODO(vera): calculate score from the graded criteria, update review score
+	query.CalculateScore()
 
 	for _, bm := range query.GradingBenchmarks {
 		bm.ID = 0
@@ -157,7 +156,10 @@ func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
 		return nil, err
 	}
 
-	// TODO(vera): update the score of the related submission
+	submission.Score = query.Score
+	if err := s.db.UpdateSubmission(submission); err != nil {
+		return nil, err
+	}
 
 	// TODO(vera): make sure benchmarks and criteria in the query get their IDs updated
 	log.Println("ID of the new review: ", query.ID)
@@ -174,10 +176,14 @@ func (s *AutograderService) updateReview(query *pb.Review) (*pb.Review, error) {
 	if query.ID == 0 {
 		return nil, fmt.Errorf("Cannot update review with empty ID")
 	}
+	submission, err := s.db.GetSubmission(&pb.Submission{ID: query.SubmissionID})
+	if err != nil {
+		return nil, err
+	}
 
 	query.Edited = time.Now().Format(reviewLayout)
+	query.CalculateScore()
 
-	// TODO(vera): recalculate the review score before saving
 	if err := s.db.UpdateReview(query); err != nil {
 		return nil, err
 	}
@@ -192,7 +198,11 @@ func (s *AutograderService) updateReview(query *pb.Review) (*pb.Review, error) {
 			}
 		}
 	}
-	// TODO(vera): update the submission score here
+	// Updated review will most probably have a new score. Update the submission score as well.
+	submission.Score = query.Score
+	if err := s.db.UpdateSubmission(submission); err != nil {
+		return nil, err
+	}
 
 	// TODO(vera): check that all IDs have been set properly
 	return query, nil

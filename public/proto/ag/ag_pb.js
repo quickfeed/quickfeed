@@ -7512,7 +7512,7 @@ proto.ag.Review.deserializeBinaryFromReader = function(msg, reader) {
       msg.setReady(value);
       break;
     case 6:
-      var value = /** @type {number} */ (reader.readUint64());
+      var value = /** @type {number} */ (reader.readUint32());
       msg.setScore(value);
       break;
     case 7:
@@ -7590,7 +7590,7 @@ proto.ag.Review.serializeBinaryToWriter = function(message, writer) {
   }
   f = message.getScore();
   if (f !== 0) {
-    writer.writeUint64(
+    writer.writeUint32(
       6,
       f
     );
@@ -7704,7 +7704,7 @@ proto.ag.Review.prototype.setReady = function(value) {
 
 
 /**
- * optional uint64 score = 6;
+ * optional uint32 score = 6;
  * @return {number}
  */
 proto.ag.Review.prototype.getScore = function() {

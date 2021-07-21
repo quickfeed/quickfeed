@@ -246,7 +246,7 @@ message Review {
     uint64 ReviewerID = 3;   // UserID of the reviewer
     string feedback = 4;
     bool ready = 5;
-    uint64 score = 6;
+    uint32 score = 6;
     repeated GradingBenchmark gradingBenchmarks = 7; //[(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
     string edited = 8;
 }
