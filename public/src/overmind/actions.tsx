@@ -309,6 +309,7 @@ const convertCourseSubmission = (data: CourseSubmissions) => {
     // TODO: {[index]: {Parsed}}
     const courseSubmissions: ParsedCourseSubmissions[] = []
     data.getLinksList().forEach((l, index) => {
+        l.getSubmissionsList().forEach(s => { s.getSubmission()?.getBuildinfo(); s.getSubmission()?.getScoresList()})
         courseSubmissions.push({enrollment: l.getEnrollment(), submissions: l.getSubmissionsList(), user: l.getEnrollment()?.getUser()}) 
     })
     return courseSubmissions
@@ -363,6 +364,7 @@ export const getUserSubmissions = async ({state, effects}: Context, courseID: nu
         state.assignments[courseID].forEach(assignment => {
             let submission = res.data?.getSubmissionsList().find(s => s.getAssignmentid() === assignment.getId())
             if (submission) {
+                submission.getBuildinfo()
                 state.submissions[courseID][assignment.getOrder() - 1] = submission
             }
             else {
@@ -376,13 +378,11 @@ export const getUserSubmissions = async ({state, effects}: Context, courseID: nu
 
 // Attempt at getting all submissions at once
 export const getCourseSubmissions = async ({state, effects}: Context, courseID: number) => {
-    console.log("Subs get")
     let userSubmissions: Submission[] = []
     let groupSubmissions: Submission[] = []
 
     const groupID: number = state.enrollmentsByCourseId[courseID].getGroupid()
     //const groupID: number | undefined = state.enrollments.find(enrollment => enrollment.getCourseid() == courseID)?.getGroupid()
-    console.log("GRP: ", groupID)
 
     const groupResult = await effects.grpcMan.getGroupSubmissions(courseID, 0) 
     if (groupResult.status.getCode() > 0 || !groupResult.data) {

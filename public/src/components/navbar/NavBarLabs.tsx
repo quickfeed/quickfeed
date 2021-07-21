@@ -7,10 +7,6 @@ import { ProgressBar } from "../ProgressBar"
 
 const NavBarLabs = () => {
     const {state} = useOvermind()
-    
-    useEffect(() => {
-        
-    })
     const history  = useHistory()
     
     const redirectToLab = (assignmentID: number) => {
@@ -18,12 +14,10 @@ const NavBarLabs = () => {
     }
 
     const Links: Function = (): JSX.Element[] => { 
-        console.log(state.activeCourse)
         if(state.assignments[state.activeCourse]) {
-            console.log(state.activeCourse)
-            let links = state.assignments[state.activeCourse]?.map((assignment, index) => {
+            const links = state.assignments[state.activeCourse]?.map((assignment, index) => {
                 // Class name to determine background color
-                let active = state.activeLab === assignment.getId() && state.activeCourse === assignment.getCourseid() ? "active" : ""
+                const active = state.activeLab === assignment.getId() && state.activeCourse === assignment.getCourseid() ? "active" : ""
 
                 return (
                     <li style={{position: "relative", height: "50px"}} className={active} key={assignment.getId()} onClick={() => {redirectToLab(assignment.getId())}}>

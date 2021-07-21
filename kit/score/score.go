@@ -3,64 +3,15 @@ package score
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
+	"math"
 	"runtime/debug"
 	"strings"
 	"testing"
 )
 
-const (
-	secretEnvName = "QUICKFEED_SESSION_SECRET"
-)
-
-var sessionSecret string
-
-func init() {
-	sessionSecret = os.Getenv(secretEnvName)
-	// remove variable as soon as it has been read
-	_ = os.Setenv(secretEnvName, "")
-}
-
-// Score encodes the score of a test or a group of tests.
-type Score struct {
-	Secret   string // the unique identifier for a scoring session
-	TestName string // name of the test
-	Score    int    // the score obtained
-	MaxScore int    // max score possible to get on this specific test
-	Weight   int    // the weight of this test; used to compute final grade
-}
-
-// NewScore returns a new Score object with the given max and weight.
-// The Score is initially 0, and Inc() and IncBy() can be called
-// on the returned Score object, for each test that passes.
-// The TestName is initialized to the name of the provided t.Name().
-// This function also prints a JSON representation of the Score object
-// to ensure that the test is recorded by Quickfeed.
-func NewScore(t *testing.T, max, weight int) *Score {
-	sc := &Score{
-		Secret:   sessionSecret,
-		TestName: t.Name(),
-		MaxScore: max,
-		Weight:   weight,
-	}
-	// prints JSON score object with zero score, e.g.:
-	// {"Secret":"my secret code","TestName":"TestPanicHandler","Score":0,"MaxScore":8,"Weight":5}
-	// This registers the test, in case a panic occurs that prevents printing the score object.
-	fmt.Println(sc.json())
-	return sc
-}
-
-// NewScoreMax returns a new Score object with the given max and weight.
-// The Score is initially set to max, and Dec() and DecBy() can be called
-// on the returned Score object, for each test that fails.
-// The TestName is initialized as the name of the provided t.Name().
-// This function also prints a JSON representation of the Score object
-// to ensure that the test is recorded by Quickfeed.
-func NewScoreMax(t *testing.T, max, weight int) *Score {
-	sc := NewScore(t, max, weight)
-	sc.Score = max
-	return sc
+// Fail sets Score to zero.
+func (s *Score) Fail() {
+	s.Score = 0
 }
 
 // Inc increments score if score is less than MaxScore.
@@ -72,8 +23,9 @@ func (s *Score) Inc() {
 
 // IncBy increments score n times or until score equals MaxScore.
 func (s *Score) IncBy(n int) {
-	if s.Score+n < s.MaxScore {
-		s.Score += n
+	m := int32(n)
+	if s.Score+m < s.MaxScore {
+		s.Score += m
 	} else {
 		s.Score = s.MaxScore
 	}
@@ -88,42 +40,39 @@ func (s *Score) Dec() {
 
 // DecBy decrements score n times or until Score equals zero.
 func (s *Score) DecBy(n int) {
-	if s.Score-n > 0 {
-		s.Score -= n
+	m := int32(n)
+	if s.Score-m > 0 {
+		s.Score -= m
 	} else {
 		s.Score = 0
 	}
 }
 
-// String returns a string representation of the score.
-// Format: "TestName: 2/10 test cases passed".
-func (s Score) String() string {
-	return fmt.Sprintf("%s: %d/%d test cases passed", s.TestName, s.Score, s.MaxScore)
+// Normalize the score to the given maxScore.
+func (s *Score) Normalize(maxScore int) {
+	f := float64(maxScore) / float64(s.MaxScore)
+	normScore := float64(s.Score) * f
+	s.Score = int32(math.Round(normScore))
+	s.MaxScore = int32(maxScore)
 }
 
-// WriteString writes the string representation of s to w.
-// Deprecated: Do not use this function; it will be removed in the future.
-// Use Print() instead to replace both WriteString() and WriteJSON().
-func (s *Score) WriteString(w io.Writer) {
-	if r := recover(); r != nil {
-		s.Score = 0
-		fmt.Fprintf(w, "******************\n%s panicked:\n%s\n******************\n", s.TestName, r)
-	}
-	fmt.Fprintf(w, "%v\n", s)
+// Equal returns true if s equals other. Ignores the Secret field.
+func (s *Score) Equal(other *Score) bool {
+	return other != nil &&
+		s.TestName == other.TestName &&
+		s.Score == other.Score &&
+		s.MaxScore == other.MaxScore &&
+		s.Weight == other.Weight
 }
 
-// WriteJSON writes the JSON representation of s to w.
-// Deprecated: Do not use this function; it will be removed in the future.
-// Use Print() instead to replace both WriteString() and WriteJSON().
-func (s *Score) WriteJSON(w io.Writer) {
-	if r := recover(); r != nil {
-		s.Score = 0
-		fmt.Fprintf(w, "******************\n%s panicked:\n%s\n******************\n", s.TestName, r)
-	}
-	fmt.Fprintf(w, "\n%s\n", s.json())
+// RelativeScore returns a string with the following format:
+// "TestName: score = x/y = s".
+func (s *Score) RelativeScore() string {
+	return fmt.Sprintf("%s: score = %d/%d = %.1f", s.TestName, s.Score, s.MaxScore, float32(s.Score)/float32(s.MaxScore))
 }
 
-// Print prints both the JSON secret string and emits the number of test cases passed.
+// Print prints a JSON representation of the score that can be picked up by QuickFeed.
+// To ensure that panic message and stack trace is printed, this method must be called via defer.
 // If a test panics, the score will be set to zero, and a panic message will be emitted.
 // Note that, if subtests are used, each subtest must defer call the PanicHandler method
 // to ensure that panics are caught and handled appropriately.
@@ -134,8 +83,6 @@ func (s *Score) Print(t *testing.T) {
 	}
 	// print JSON score object: {"Secret":"my secret code","TestName": ...}
 	fmt.Println(s.json())
-	// print: TestName: x/y test cases passed
-	fmt.Println(s)
 }
 
 // PanicHandler recovers from a panicking test, resets the score to zero and
@@ -163,7 +110,7 @@ func (s *Score) fail(t *testing.T) {
 }
 
 // json returns a JSON string for the score object.
-func (s Score) json() string {
+func (s *Score) json() string {
 	b, err := json.Marshal(s)
 	if err != nil {
 		return fmt.Sprintf("json.Marshal error: %v\n", err)

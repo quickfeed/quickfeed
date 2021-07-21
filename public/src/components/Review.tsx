@@ -36,7 +36,7 @@ const Review = () => {
         return (
                 <li className="list-group-item" hidden={selected !== props.submissionLink.getAssignment()?.getId() && selected !== 0 || hideApproved && props.submissionLink.getSubmission()?.getStatus() == Submission.Status.APPROVED}>
                     <span  onClick={() => { setSubmission(props.submissionLink.getSubmission()?.getId()), setAssignment(props.submissionLink.getAssignment()?.getId())}}>{props.submissionLink.getAssignment()?.getName()} - {props.submissionLink.getSubmission()?.getScore()} / 100</span>
-                    <button style={{float: "right"}} onClick={() => {updateStatus(Submission.Status.REJECTED, props.submissionLink.getSubmission(), props.userIndex, props.submissionLink.getAssignment()?.getOrder()), console.log(state.courseSubmissions[courseID][props.userIndex])}}>
+                    <button style={{float: "right"}} onClick={() => {updateStatus(Submission.Status.REJECTED, props.submissionLink.getSubmission(), props.userIndex, props.submissionLink.getAssignment()?.getOrder())}}>
                         Reject
                     </button>
                     <button style={{float: "right"}} onClick={() => updateStatus(Submission.Status.APPROVED, props.submissionLink.getSubmission(), props.userIndex, props.submissionLink.getAssignment()?.getOrder())}>

@@ -2,10 +2,19 @@ package score_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
+)
+
+// To run all these tests, to show stack trace and panic output, use:
+//   QUICKFEED_PANIC_TEST=1 go test -v -run TestPanic
+//
+
+const (
+	panicTestEnvName = "QUICKFEED_PANIC_TEST"
 )
 
 var triangularTests = []struct {
@@ -21,10 +30,18 @@ var triangularTests = []struct {
 	{7, 28},
 }
 
-func TestPanicTriangular(t *testing.T) {
-	sc := score.NewScoreMax(t, len(triangularTests), 5)
-	defer sc.Print(t)
+var scores = score.NewRegistry()
 
+func init() {
+	scores.Add(TestPanicTriangularBefore, len(triangularTests), 5)
+	scores.Add(TestPanicTriangularPanic, len(triangularTests), 5)
+	scores.Add(TestPanicTriangularAfter, len(triangularTests), 5)
+	scores.Add(TestPanicHandler, len(triangularTests), 5)
+}
+
+func TestPanicTriangularBefore(t *testing.T) {
+	sc := scores.Max()
+	defer sc.Print(t)
 	for _, test := range triangularTests {
 		if diff := cmp.Diff(test.want, triangular(test.in)); diff != "" {
 			sc.Dec()
@@ -33,14 +50,17 @@ func TestPanicTriangular(t *testing.T) {
 	}
 }
 
-func TestPanicTriangular2(t *testing.T) {
-	// This test aims to emulate what students may write, which could result in a panic.
-	// Hence, we do not run this as part of the CI tests.
-	// Comment t.Skip to test that TestPanicTriangular2 fails with a panic stack trace, which is expected.
-	t.Skip("Skipping because it is expected to fail (see comment).")
-	sc := score.NewScoreMax(t, len(triangularTests), 5)
-	defer sc.Print(t)
+func TestPanicTriangularPanic(t *testing.T) {
+	// This test aims to emulate that student submitted code may result in a panic,
+	// and thus a test failure along with a stack trace would be expected.
+	// Hence, we do not run this as part of the CI tests. To run, see instructions below.
+	panicTest := os.Getenv(panicTestEnvName)
+	if panicTest == "" {
+		t.Skipf("Skipping; expected to fail. Run with: %s=1 go test -v -run %s", panicTestEnvName, t.Name())
+	}
 
+	sc := scores.Max()
+	defer sc.Print(t)
 	for _, test := range triangularTests {
 		if diff := cmp.Diff(test.want, triangularPanic(test.in)); diff != "" {
 			sc.Dec()
@@ -49,10 +69,9 @@ func TestPanicTriangular2(t *testing.T) {
 	}
 }
 
-func TestPanicTriangular3(t *testing.T) {
-	sc := score.NewScoreMax(t, len(triangularTests), 5)
+func TestPanicTriangularAfter(t *testing.T) {
+	sc := scores.Max()
 	defer sc.Print(t)
-
 	for _, test := range triangularTests {
 		if diff := cmp.Diff(test.want, triangular(test.in)); diff != "" {
 			sc.Dec()
@@ -62,13 +81,16 @@ func TestPanicTriangular3(t *testing.T) {
 }
 
 func TestPanicHandler(t *testing.T) {
-	// This test aims to emulate what students may write, which could result in a panic.
-	// Hence, we do not run this as part of the CI tests.
-	// Comment t.Skip to test that TestPanicHandler fails with a panic stack trace, which is expected.
-	t.Skip("Skipping because it is expected to fail (see comment).")
-	sc := score.NewScoreMax(t, len(triangularTests), 5)
-	defer sc.Print(t)
+	// This test aims to emulate that student submitted code may result in a panic,
+	// and thus a test failure along with a stack trace would be expected.
+	// Hence, we do not run this as part of the CI tests. To run, see instructions below.
+	panicTest := os.Getenv(panicTestEnvName)
+	if panicTest == "" {
+		t.Skipf("Skipping; expected to fail. Run with: %s=1 go test -v -run %s", panicTestEnvName, t.Name())
+	}
 
+	sc := scores.Max()
+	defer sc.Print(t)
 	for _, test := range triangularTests {
 		t.Run(fmt.Sprintf("triangular(%d)=%d", test.in, test.want), func(t *testing.T) {
 			defer sc.PanicHandler(t)

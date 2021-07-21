@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import { Assignment, Submission } from '../../proto/ag/ag_pb'
+import { BuildInfo } from '../../proto/kit/score/score_pb'
+import { getBuildInfo } from '../Helpers'
 import { useOvermind } from '../overmind'
 import CourseUtilityLinks from './CourseUtilityLinks'
 import LabResultTable from './LabResultTable'
@@ -69,12 +71,12 @@ const Lab = (teacher: TeacherLab) => {
         
         // Confirm both assignment and submission exists before attempting to render
         if (assignment && submission) {
-            let buildLog = ""
-            if (submission.getBuildinfo()) {
-                const buildInfo = JSON.parse(submission.getBuildinfo())
-                // Prettifies the build log. (credit to nicro950 for this snippet)
-                buildLog = buildInfo.buildlog.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
+            let buildLog: JSX.Element[] = []
+            const buildInfo = submission.getBuildinfo()?.getBuildlog()
+            if (buildInfo){
+                buildLog = buildInfo.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
             }
+            
             return (
                 <div key={submission.getId()}>
 

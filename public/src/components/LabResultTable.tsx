@@ -1,5 +1,6 @@
 import React from "react"
 import { Assignment, Submission } from "../../proto/ag/ag_pb"
+import { Score } from "../../proto/kit/score/score_pb"
 import { getBuildInfo, getPassedTestsCount, getScoreObjects, IScoreObjects, SubmissionStatus } from "../Helpers"
 import { useOvermind } from "../overmind"
 import { ProgressBar } from "./ProgressBar"
@@ -14,18 +15,18 @@ const LabResultTable = ({submission, assignment}: lab) => {
         enrollmentsByCourseId, }
     } = useOvermind()
 
-    const ScoreObject = ({ scoreObject }: {scoreObject: IScoreObjects}) => {
-        const boxShadow = (scoreObject.Score === scoreObject.MaxScore) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 8px 0 0 red inset"
+    const ScoreObject = ({ score }: {score: Score}) => {
+        const boxShadow = (score.getScore() === score.getMaxscore()) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 8px 0 0 red inset"
         return (
             <tr>
                 <th style={{boxShadow: boxShadow, paddingLeft: "15px"}}>
-                    {scoreObject.TestName}
+                    {score.getTestname()}
                 </th>
                 <th>
-                    {scoreObject.Score}/{scoreObject.MaxScore}
+                    {score.getScore()}/{score.getMaxscore()}
                 </th>
                 <th>
-                    {scoreObject.Weight}
+                    {score.getWeight()}
                 </th>
             </tr>
             )
@@ -33,9 +34,8 @@ const LabResultTable = ({submission, assignment}: lab) => {
 
     const LabResult = (): JSX.Element => {
         if (submission && assignment) {
-            const buildInfo = getBuildInfo(submission.getBuildinfo())
-            const scoreObjects = getScoreObjects(submission.getScoreobjects())
-
+            const buildInfo = submission.getBuildinfo()
+            
             const boxShadow = (submission.getStatus() === Submission.Status.APPROVED) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 8px 0 0 red inset"
             return (
                 <div className="container" style={{paddingBottom: "20px"}}>
@@ -56,7 +56,7 @@ const LabResultTable = ({submission, assignment}: lab) => {
                         </tr>
                         <tr>
                             <th colSpan={2}>Delivered</th>
-                            <td>{buildInfo.builddate}</td>
+                            <td>{buildInfo?.getBuilddate()}</td>
                         </tr>
                         <tr>
                             <th colSpan={2}>Approved</th>
@@ -80,8 +80,8 @@ const LabResultTable = ({submission, assignment}: lab) => {
                             <th colSpan={1}>Weight</th>
                         
                         </tr>
-                        {scoreObjects.map((scoreObject, index) => 
-                            <ScoreObject key={index} scoreObject={scoreObject} />
+                        {submission.getScoresList().map((score, index) => 
+                            <ScoreObject key={index} score={score} />
                         )}
                         
                         </tbody>

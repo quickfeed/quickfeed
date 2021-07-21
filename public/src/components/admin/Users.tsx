@@ -14,11 +14,11 @@ const Users = () => {
         }
     })
 
-    const PromoteButton = (props: {user: User, onClick?: Function}) => {
+    const PromoteButton = (props: {user: User, onClick?: Function, input?: any}) => {
         const classname = props.user.getIsadmin() ? "badge badge-danger float-right" : "badge badge-primary float-right"
         const text = props.user.getIsadmin() ? "Demote" : "Promote"
         return (
-            <span className={classname} style={{cursor: "pointer"}} onClick={() => {if (props.onClick) { props.onClick(props.user)} }}>
+            <span className={classname} style={{cursor: "pointer"}} onClick={() => {if (props.onClick) { props.onClick(props.input)} }}>
                 {text}
             </span>
         )
@@ -34,7 +34,7 @@ const Users = () => {
                     </span> 
                     : null
                 }
-                <PromoteButton user={user} onClick={actions.updateAdmin}></PromoteButton>
+                <PromoteButton user={user} onClick={actions.updateAdmin} input={user}></PromoteButton>
             </li>
         )
     }

@@ -17,7 +17,6 @@ const StatisticsView = () => {
                 }
                 let c = s.getSubmission()?.getStatus()
                 if (c === Submission.Status.APPROVED) {
-                    console.log(s)
                     d[0] += 1
                 }
                 else {
@@ -46,7 +45,6 @@ const StatisticsView = () => {
         ],
     };
 
-    console.log(d)
     return (
         <div>
             <Bar id={"bar"} type={'bar'} data={data}></Bar>
