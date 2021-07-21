@@ -221,7 +221,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
 
         const r = this.props.teacherView ? allReviewers.get(u) : allReviews.find(item => item.getReviewerid() === u.getId());
         if (r) {
-            const rbm = r.getBenchmarksList().find(item => item.getId() === bm.getId())
+            const rbm = r.getGradingbenchmarksList().find(item => item.getId() === bm.getId())
             if (rbm) bm = rbm;
         }
         return bm;
@@ -232,7 +232,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const allReviews = Array.from(allReviewers.values());
         const r = this.props.teacherView ? allReviewers.get(u) : allReviews.find(item => item.getReviewerid() === u.getId());
         if (r) {
-            r.getBenchmarksList().forEach(bm => {
+            r.getGradingbenchmarksList().forEach(bm => {
                 const rc = bm.getCriteriaList().find(item => item.getId() === c.getId());
                 if (rc) {
                     c = rc;

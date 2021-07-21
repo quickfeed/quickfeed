@@ -328,8 +328,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return r;
     }
 
-    public async editReview(r: Review): Promise<boolean> {
-        return true;
+    public async editReview(r: Review): Promise<Review | null> {
+        return r;
     }
 
     public async updateAssignments(courseID: number): Promise<any> {

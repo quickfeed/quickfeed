@@ -175,10 +175,9 @@ message Assignment {
     bool isGroupLab = 8;
     uint32 scoreLimit = 9;                            // minimal score limit for auto approval
     uint32 reviewers = 10;                            // number of reviewers that will review submissions for this assignment 
-    bool skipTests = 11; // TODO(meling) check why necessary; can we figure out if tests exists in some other way
-    repeated Submission submissions = 12;             // submissions produced for this assignment
-    repeated GradingBenchmark gradingBenchmarks = 13; // grading benchmarks for this assignment
-    uint32 containerTimeout = 14; // TODO(meling) Do we need this?
+    repeated Submission submissions = 11;             // submissions produced for this assignment
+    repeated GradingBenchmark gradingBenchmarks = 12; // grading benchmarks for this assignment
+    uint32 containerTimeout = 13; // TODO(meling) Do we need this?
 }
 
 message Assignments {
@@ -217,9 +216,10 @@ message Submissions {
 message GradingBenchmark {
     uint64 ID = 1;
     uint64 AssignmentID = 2; // foreign key
-    string heading = 3;
-    string comment = 4;
-    repeated GradingCriterion criteria = 5 [(go.field) = {tags: 'gorm:"foreignKey:BenchmarkID"'}];
+    uint64 ReviewID = 3; // foreign key
+    string heading = 4;
+    string comment = 5;
+    repeated GradingCriterion criteria = 6 [(go.field) = {tags: 'gorm:"foreignKey:BenchmarkID"'}];
 }
 
 message Benchmarks {
@@ -243,15 +243,12 @@ message GradingCriterion {
 message Review {
     uint64 ID = 1;
     uint64 SubmissionID = 2; // foreign key
-    uint64 ReviewerID = 3;   // TODO(meling) is this the UserID of the reviewer? If so, add a doc comment
-    string review = 4; // JSON encoded grading criteria
-    string feedback = 5;
-    bool ready = 6;
-    uint64 score = 7;
-    // TODO(meling) Consider if benchmarks field is needed; it can be obtained from Assignments via submissionID??
-    // TODO(meling) If we need benchmarks here, there must be a foreign key `ReviewID` in `GradingBenchmark`; then we can also remove the gorm tag.
-    repeated GradingBenchmark benchmarks = 8 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
-    string edited = 9;
+    uint64 ReviewerID = 3;   // UserID of the reviewer
+    string feedback = 4;
+    bool ready = 5;
+    uint64 score = 6;
+    repeated GradingBenchmark gradingBenchmarks = 7; //[(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
+    string edited = 8;
 }
 
 message Reviewers {
@@ -467,7 +464,7 @@ service AutograderService {
     rpc DeleteCriterion(GradingCriterion) returns (Void) {}
 
     rpc CreateReview(ReviewRequest) returns (Review) {}
-    rpc UpdateReview(ReviewRequest) returns (Void) {}
+    rpc UpdateReview(ReviewRequest) returns (Review) {}
     rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers) {}
 
     rpc LoadCriteria(LoadCriteriaRequest) returns (Benchmarks) {}

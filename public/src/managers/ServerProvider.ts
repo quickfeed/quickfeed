@@ -408,9 +408,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async editReview(ir: Review, courseID: number): Promise<boolean> {
+    public async editReview(ir: Review, courseID: number): Promise<Review | null> {
         const result = await this.grpcHelper.updateReview(ir, courseID);
-        return this.responseCodeSuccess(result);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return null;
+        }
+        return result.data;
     }
 
     public async getReviewers(submissionID: number, courseID: number): Promise<User[]> {

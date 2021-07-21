@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"path/filepath"
 	"time"
 
@@ -12,7 +13,10 @@ import (
 	"github.com/autograde/quickfeed/scm"
 )
 
-var criteriaFile = "criteria.json"
+var (
+	criteriaFile = "criteria.json"
+	reviewLayout = "02 Jan 15:04"
+)
 
 // getAssignments lists the assignments for the provided course.
 func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, error) {
@@ -139,19 +143,59 @@ func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
 		return nil, fmt.Errorf("Failed to create a new review for submission %d to assignment %s: all %d reviews already created",
 			submission.ID, assignment.Name, assignment.Reviewers)
 	}
-	query.Edited = time.Now().Format("02 Jan 15:04")
+	query.Edited = time.Now().Format(reviewLayout)
+
+	// TODO(vera): calculate score from the graded criteria, update review score
+
+	for _, bm := range query.GradingBenchmarks {
+		bm.ID = 0
+		for _, c := range bm.Criteria {
+			c.ID = 0
+		}
+	}
 	if err := s.db.CreateReview(query); err != nil {
 		return nil, err
+	}
+
+	// TODO(vera): update the score of the related submission
+
+	// TODO(vera): make sure benchmarks and criteria in the query get their IDs updated
+	log.Println("ID of the new review: ", query.ID)
+	for _, bm := range query.GradingBenchmarks {
+		log.Println("Benchmark ID: ", bm.ID)
+		for _, c := range bm.Criteria {
+			log.Println("Criterion ID: ", c.ID)
+		}
 	}
 	return query, nil
 }
 
-func (s *AutograderService) updateReview(query *pb.Review) error {
+func (s *AutograderService) updateReview(query *pb.Review) (*pb.Review, error) {
 	if query.ID == 0 {
-		return fmt.Errorf("Cannot update review with empty ID")
+		return nil, fmt.Errorf("Cannot update review with empty ID")
 	}
-	query.Edited = time.Now().Format("02 Jan 15:04")
-	return s.db.UpdateReview(query)
+
+	query.Edited = time.Now().Format(reviewLayout)
+
+	// TODO(vera): recalculate the review score before saving
+	if err := s.db.UpdateReview(query); err != nil {
+		return nil, err
+	}
+
+	for _, bm := range query.GradingBenchmarks {
+		if err := s.db.UpdateBenchmark(bm); err != nil {
+			return nil, err
+		}
+		for _, c := range bm.Criteria {
+			if err := s.db.UpdateCriterion(c); err != nil {
+				return nil, err
+			}
+		}
+	}
+	// TODO(vera): update the submission score here
+
+	// TODO(vera): check that all IDs have been set properly
+	return query, nil
 }
 
 func (s *AutograderService) removeOldCriteriaAndReviews(assignment *pb.Assignment) error {

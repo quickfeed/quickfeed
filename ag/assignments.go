@@ -47,7 +47,6 @@ func (a *Assignment) CloneWithoutSubmissions() *Assignment {
 		IsGroupLab:        a.IsGroupLab,
 		ScoreLimit:        a.ScoreLimit,
 		Reviewers:         a.Reviewers,
-		SkipTests:         a.SkipTests,
 		GradingBenchmarks: a.GradingBenchmarks,
 	}
 }
