@@ -105,6 +105,8 @@ func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType 
 	// the 'order' field of pb.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
 	if err := db.conn.Preload("Submissions").
 		Preload("Submissions.Reviews").
+		Preload("Submissions.Reviews.GradingBenchmarks").
+		Preload("Submissions.Reviews.GradingBenchmarks.Criteria").
 		Preload("Submissions.BuildInfo").
 		Preload("Submissions.Scores").
 		Where(&pb.Assignment{CourseID: courseID}).
