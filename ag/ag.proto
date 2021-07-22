@@ -247,7 +247,7 @@ message Review {
     string feedback = 4;
     bool ready = 5;
     uint32 score = 6;
-    repeated GradingBenchmark gradingBenchmarks = 7; //[(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
+    repeated GradingBenchmark gradingBenchmarks = 7 [(go.field) = {tags: 'gorm:"foreignKey:ReviewID"'}];
     string edited = 8;
 }
 

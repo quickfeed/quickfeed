@@ -1,9 +1,12 @@
 package ag
 
+import "log"
+
 // CalculateScore returns total score for the review. If grading criteria give
 // a predefined amount of points (not necessary summing up to 100), returns the sum of such points.
 // Otherwise, gives each criterion an equal weight and sets max score to 100
 func (r *Review) CalculateScore() {
+
 	scorePoints := 0
 	totalCriteria := 0
 	passedCriteria := 0
@@ -15,6 +18,10 @@ func (r *Review) CalculateScore() {
 				scorePoints += int(c.Points)
 			}
 		}
+	}
+	if totalCriteria == 0 {
+		log.Println("CalculateScore: review has benchmarks: ", len(r.GradingBenchmarks))
+		return
 	}
 	if scorePoints == 0 {
 		r.Score = uint32(100 * passedCriteria / totalCriteria)
