@@ -99,10 +99,10 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
                             const ans = await this.props.addReview(review);
                             if (ans) {
                                 current.submission.reviews.push(ans);
-                                return true;
+                                return ans;
                             }
                         }
-                        return false;
+                        return null;
                     }}
                     updateReview={async (review: Review) => {
                         const current = this.state.submissionsForGroupAssignment.get(grp);
@@ -111,10 +111,10 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
                             const idx = current.submission.reviews.findIndex(item => item.getId() === review.getId());
                             if (ans && idx > -1) {
                                 current.submission.reviews.splice(idx, 1, ans);
-                                return true;
+                                return ans;
                             }
                         }
-                        return false;
+                        return null;
                     }}
                     studentNumber={this.state.allGroups.indexOf(grp) + 1}
                     isSelected={this.state.selectedGroup === grp}
@@ -139,10 +139,10 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
                             const ans = await this.props.addReview(review);
                             if (ans) {
                                 current.submission.reviews.push(ans);
-                                return true;
+                                return ans;
                             }
                         }
-                        return false;
+                        return null;
                     }}
                     updateReview={async (review: Review) => {
                         const current = this.state.submissionsForAssignment.get(s);
@@ -151,10 +151,10 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
                             const idx = current.submission.reviews.findIndex(item => item.getId() === review.getId());
                             if (ans && idx > -1) {
                                 current.submission.reviews.splice(idx, 1, ans);
-                                return true;
+                                return ans;
                             }
                         }
-                        return false;
+                        return null;
                     }}
                     studentNumber={this.state.allStudents.indexOf(s) + 1}
                     isSelected={this.state.selectedStudent === s}

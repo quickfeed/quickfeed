@@ -13,8 +13,8 @@ interface ReviewPageProps {
     courseURL: string;
     reviewerID: number;
     isSelected: boolean;
-    addReview: (review: Review) => Promise<boolean>;
-    updateReview: (review: Review) => Promise<boolean>;
+    addReview: (review: Review) => Promise<Review | null>;
+    updateReview: (review: Review) => Promise<Review | null>;
 }
 
 interface ReviewPageState {
@@ -24,7 +24,6 @@ interface ReviewPageState {
     feedback: string;
     ready: boolean;
     editing: boolean;
-    // score: number;
     alert: string;
     graded: number;
     scoreFromCriteria: number;
@@ -40,7 +39,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             feedback: "",
             ready: false,
             editing: false,
-            // score: 0,
             alert: "",
             graded: 0,
             review: undefined,
@@ -225,29 +223,24 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         const r: Review = this.state.review ?? this.makeNewReview();
         r.setReady(this.state.ready);
         r.setGradingbenchmarksList(this.state.benchmarks);
-        // r.setScore(this.setScore());
         r.setFeedback(this.state.feedback);
         r.setReviewerid(this.props.reviewerID);
         if (r.getId() > 0) {
-            console.log("Review ID is " + r.getId() + ": UPDATING");
             const ans = await this.props.updateReview(r);
             if (ans) {
-                const newRw = this.selectReview(this.props.submission);
                 this.setState({
-                    review: newRw,
-                    // benchmarks: newRw?.getGradingbenchmarksList() ?? this.state.benchmarks,
-                    graded: this.gradedTotal(newRw),
+                    review: ans,
+                    benchmarks: ans.getGradingbenchmarksList(),
+                    graded: this.gradedTotal(ans),
                 });
             }
         } else {
-            console.log("Review ID is 0, CREATING");
             const ans = await this.props.addReview(r);
             if (ans) {
-                const newRw = this.selectReview(this.props.submission);
                 this.setState({
-                    review: newRw,
-                    // benchmarks: newRw?.getGradingbenchmarksList() ?? this.state.benchmarks,
-                    graded: this.gradedTotal(newRw),
+                    review: ans,
+                    benchmarks: ans.getGradingbenchmarksList(),
+                    graded: this.gradedTotal(ans),
 
                 });
             }
@@ -295,38 +288,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         return counter;
     }
 
-    // private scoreString(): string {
-    //     return this.setScore().toPrecision() + " %";
-    // }
-
-    // private setScore(): number {
-    //     return this.state.scoreFromCriteria > 0 ? this.setCustomScore() : this.setFullScore();
-    // }
-
-    // private setFullScore(): number {
-    //     let passed = 0;
-    //     this.state.benchmarks.forEach((bm) => {
-    //         bm.getCriteriaList().forEach((c) => {
-    //             if (c.getGrade() === GradingCriterion.Grade.PASSED) passed++;
-    //         });
-    //     });
-    //     const total = this.criteriaTotal() > 0 ? this.criteriaTotal() : 1;
-    //     const scoreNow = passed * 100 / total;
-    //     return Math.floor(scoreNow);
-    // }
-
-    // private setCustomScore(): number {
-    //     let scoreNow = 0;
-    //     this.state.benchmarks.forEach((bm) => {
-    //         bm.getCriteriaList().forEach((c) => {
-    //             if (c.getGrade() === GradingCriterion.Grade.PASSED) {
-    //                 scoreNow += c.getPoints();
-    //             }
-    //         });
-    //     });
-    //     return scoreNow;
-    // }
-
     private toggleEdit() {
         this.setState({
             feedback: this.state.review?.getFeedback() ?? "",
@@ -339,7 +300,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         if (this.state.open) {
             this.setState({
                 review: undefined,
-                // score: this.setScore(),
                 benchmarks: [],
                 feedback: "",
                 open: false,
@@ -352,8 +312,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         const rw = this.selectReview(this.props.submission);
         this.setState({
             review: rw,
-            // score: rw.getScore(),
-            benchmarks: this.getGradingBenchmarks(),
+            benchmarks: rw?.getGradingbenchmarksList() ?? this.getGradingBenchmarks(),
             feedback: rw?.getFeedback() ?? "",
             open: this.props.isSelected ? !this.state.open : true,
             graded: this.gradedTotal(rw),
@@ -378,6 +337,9 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         if (!this.state.review && this.props.assignment.getReviewers() <= this.props.submission.reviews.length) return "All reviews are ready for this submission";
         return alert ?? "";
     }
+
+    // TODO(vera): need to discuss if this functionality is needed.
+    // Alternatively: remove all unfinished reviews if changing grading criteria later, leave the finished ones untouched?
 
     // check and update review in case the assignment benchmarks have been changed
     // after the review had been submitted
@@ -443,7 +405,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     private getGradingBenchmarks(): GradingBenchmark[] {
         const benchmarksFromReview = this.selectReview(this.props.submission)?.getGradingbenchmarksList()
         if (!benchmarksFromReview || benchmarksFromReview.length === 0) {
-            console.log("GetGradingBenchmarks: empty bms: " + benchmarksFromReview);
             return deepCopy(this.props.assignment.getGradingbenchmarksList());
         }
         return benchmarksFromReview;

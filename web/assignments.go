@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"path/filepath"
 	"time"
 
@@ -155,19 +154,9 @@ func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
 	if err := s.db.CreateReview(query); err != nil {
 		return nil, err
 	}
-
 	submission.Score = query.Score
 	if err := s.db.UpdateSubmission(submission); err != nil {
 		return nil, err
-	}
-
-	// TODO(vera): make sure benchmarks and criteria in the query get their IDs updated
-	log.Println("ID of the new review: ", query.ID)
-	for _, bm := range query.GradingBenchmarks {
-		log.Println("Benchmark ID: ", bm.ID)
-		for _, c := range bm.Criteria {
-			log.Println("Criterion ID: ", c.ID)
-		}
 	}
 	return query, nil
 }
@@ -203,8 +192,6 @@ func (s *AutograderService) updateReview(query *pb.Review) (*pb.Review, error) {
 	if err := s.db.UpdateSubmission(submission); err != nil {
 		return nil, err
 	}
-
-	// TODO(vera): check that all IDs have been set properly
 	return query, nil
 }
 
