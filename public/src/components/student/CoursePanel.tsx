@@ -4,7 +4,7 @@ import { DynamicTable } from "../../components";
 import { formatDate } from "../../helper";
 import { NavigationManager } from "../../managers/NavigationManager";
 import { ISubmissionLink } from "../../models";
-import { setScoreString } from '../../componentHelper';
+import { setScoreString } from "../../componentHelper";
 
 interface IPanelProps {
     course: Course;

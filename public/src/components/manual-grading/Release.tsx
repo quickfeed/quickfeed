@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from "../../../proto/ag/ag_pb";
-import { userSubmissionLink, setDivider, submissionStatusSelector, getDaysAfterDeadline, forManualReview, setScoreString } from '../../componentHelper';
+import { userSubmissionLink, setDivider, submissionStatusSelector, getDaysAfterDeadline, forManualReview, setScoreString } from "../../componentHelper";
 import { ISubmission } from "../../models";
 import { formatDate } from "../../helper";
 import ReactTooltip from "react-tooltip";

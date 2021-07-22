@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course, Enrollment, Group, Review, User, Submission, GradingBenchmark, GradingCriterion } from '../proto/ag/ag_pb';
+import { Assignment, Course, Enrollment, Group, Review, User, Submission, GradingBenchmark, GradingCriterion } from "../proto/ag/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "./models";
 
 export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {

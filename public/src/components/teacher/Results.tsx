@@ -4,7 +4,7 @@ import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { searchForLabs, userRepoLink, getSlipDays, legalIndex, groupRepoLink, setScoreString } from '../../componentHelper';
+import { searchForLabs, userRepoLink, getSlipDays, legalIndex, groupRepoLink, setScoreString } from "../../componentHelper";
 
 interface IResultsProps {
     course: Course;

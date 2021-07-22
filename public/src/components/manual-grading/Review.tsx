@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission } from '../../../proto/ag/ag_pb';
+import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission } from "../../../proto/ag/ag_pb";
 import { ISubmission } from "../../models";
 import { GradeBenchmark } from "./GradeBenchmark";
-import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider, maxAssignmentScore, forManualReview, setScoreString } from '../../componentHelper';
+import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider, maxAssignmentScore, forManualReview, setScoreString } from "../../componentHelper";
 
 interface ReviewPageProps {
     assignment: Assignment;
@@ -20,7 +20,7 @@ interface ReviewPageProps {
 interface ReviewPageState {
     review: Review | undefined;
     open: boolean;
-    // benchmarks: GradingBenchmark[];
+    benchmarks: GradingBenchmark[];
     feedback: string;
     ready: boolean;
     editing: boolean;
@@ -36,7 +36,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         super(props);
         this.state = {
             open: false,
-            // benchmarks: [],
+            benchmarks: [],
             feedback: "",
             ready: false,
             editing: false,
@@ -135,7 +135,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private renderBenchmarkList(): JSX.Element {
-        const bms: GradingBenchmark[] = this.getGradingBenchmarks();
+        const bms: GradingBenchmark[] = this.state.benchmarks;
         return <div className="row">
             {bms.map((bm, i) => <GradeBenchmark
             key={"bm" + i}
@@ -224,11 +224,12 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     private async updateReview() {
         const r: Review = this.state.review ?? this.makeNewReview();
         r.setReady(this.state.ready);
-        // r.setGradingbenchmarksList(this.state.benchmarks);
+        r.setGradingbenchmarksList(this.state.benchmarks);
         // r.setScore(this.setScore());
         r.setFeedback(this.state.feedback);
         r.setReviewerid(this.props.reviewerID);
         if (r.getId() > 0) {
+            console.log("Review ID is " + r.getId() + ": UPDATING");
             const ans = await this.props.updateReview(r);
             if (ans) {
                 const newRw = this.selectReview(this.props.submission);
@@ -239,6 +240,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 });
             }
         } else {
+            console.log("Review ID is 0, CREATING");
             const ans = await this.props.addReview(r);
             if (ans) {
                 const newRw = this.selectReview(this.props.submission);
@@ -282,7 +284,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
     private gradedTotal(rw?: Review): number {
         let counter = 0;
-        const bms = this.getGradingBenchmarks();
+        const bms = this.state.benchmarks;
         bms.forEach((r) => {
             r.getCriteriaList().forEach((c) => {
                 if (c.getGrade() !== GradingCriterion.Grade.NONE) {
@@ -338,7 +340,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             this.setState({
                 review: undefined,
                 // score: this.setScore(),
-                // benchmarks: [],
+                benchmarks: [],
                 feedback: "",
                 open: false,
                 graded: 0,
@@ -348,27 +350,16 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             return;
         }
         const rw = this.selectReview(this.props.submission);
-        if (rw) {
-            this.setState({
-                review: rw,
-                // score: rw.getScore(),
-                // benchmarks: this.refreshBenchmarks(rw),
-                feedback: rw.getFeedback(),
-                open: this.props.isSelected ? !this.state.open : true,
-                graded: this.gradedTotal(rw),
-                ready: rw.getReady(),
-                scoreFromCriteria: maxAssignmentScore(this.props.assignment.getGradingbenchmarksList()),
-            });
-        } else {
-            this.setState({
-                review: undefined,
-                // benchmarks: deepCopy(this.props.assignment.getGradingbenchmarksList()),
-                open: this.props.isSelected ? !this.state.open : true,
-                graded: this.gradedTotal(),
-                // score: 0,
-                scoreFromCriteria: maxAssignmentScore(this.props.assignment.getGradingbenchmarksList()),
-            });
-        }
+        this.setState({
+            review: rw,
+            // score: rw.getScore(),
+            benchmarks: this.getGradingBenchmarks(),
+            feedback: rw?.getFeedback() ?? "",
+            open: this.props.isSelected ? !this.state.open : true,
+            graded: this.gradedTotal(rw),
+            ready: rw?.getReady() ?? false,
+            scoreFromCriteria: maxAssignmentScore(this.props.assignment.getGradingbenchmarksList()),
+        });
     }
 
     private renderAlert(): JSX.Element | null {
@@ -390,44 +381,44 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
     // check and update review in case the assignment benchmarks have been changed
     // after the review had been submitted
-    private refreshBenchmarks(r: Review): GradingBenchmark[] {
-        const oldList = r.getGradingbenchmarksList();
-        // update benchmarks
-        oldList.forEach(bm => {
-            const assignmentBM = this.props.assignment.getGradingbenchmarksList().find(item => item.getId() === bm.getId());
-            // remove deleted benchmarks
-            if (!assignmentBM) {
-                oldList.splice(oldList.indexOf(bm), 1);
-            } else {
-                // update description in case there were some changes
-                bm.setHeading(assignmentBM.getHeading());
-                // remove deleted criteria
-                const oldCriteriaList = bm.getCriteriaList();
-                oldCriteriaList.forEach(c => {
-                    const assignmentCriterium = assignmentBM.getCriteriaList().find(item => item.getId() === c.getId());
-                    if (!assignmentCriterium) {
-                        oldCriteriaList.splice(oldCriteriaList.indexOf(c), 1);
-                    } else {
-                        c.setDescription(assignmentCriterium.getDescription());
-                        c.setPoints(assignmentCriterium.getPoints());
-                    }
-                });
-                // add new criteria
-                assignmentBM.getCriteriaList().forEach(c => {
-                    if (!oldCriteriaList.find(item => item.getId() === c.getId())) {
-                        oldCriteriaList.push(c);
-                    }
-                });
-            }
-        });
-        // add new benchmarks
-        this.props.assignment.getGradingbenchmarksList().forEach(bm => {
-            if (!oldList.find(item => item.getId() === bm.getId())) {
-                oldList.push(bm);
-            }
-        });
-        return oldList;
-    }
+    // private refreshBenchmarks(r: Review): GradingBenchmark[] {
+    //     const oldList = r.getGradingbenchmarksList();
+    //     // update benchmarks
+    //     oldList.forEach(bm => {
+    //         const assignmentBM = this.props.assignment.getGradingbenchmarksList().find(item => item.getId() === bm.getId());
+    //         // remove deleted benchmarks
+    //         if (!assignmentBM) {
+    //             oldList.splice(oldList.indexOf(bm), 1);
+    //         } else {
+    //             // update description in case there were some changes
+    //             bm.setHeading(assignmentBM.getHeading());
+    //             // remove deleted criteria
+    //             const oldCriteriaList = bm.getCriteriaList();
+    //             oldCriteriaList.forEach(c => {
+    //                 const assignmentCriterium = assignmentBM.getCriteriaList().find(item => item.getId() === c.getId());
+    //                 if (!assignmentCriterium) {
+    //                     oldCriteriaList.splice(oldCriteriaList.indexOf(c), 1);
+    //                 } else {
+    //                     c.setDescription(assignmentCriterium.getDescription());
+    //                     c.setPoints(assignmentCriterium.getPoints());
+    //                 }
+    //             });
+    //             // add new criteria
+    //             assignmentBM.getCriteriaList().forEach(c => {
+    //                 if (!oldCriteriaList.find(item => item.getId() === c.getId())) {
+    //                     oldCriteriaList.push(c);
+    //                 }
+    //             });
+    //         }
+    //     });
+    //     // add new benchmarks
+    //     this.props.assignment.getGradingbenchmarksList().forEach(bm => {
+    //         if (!oldList.find(item => item.getId() === bm.getId())) {
+    //             oldList.push(bm);
+    //         }
+    //     });
+    //     return oldList;
+    // }
 
     private selectReview(s: ISubmission | undefined): Review | undefined {
         let rw: Review | undefined;
@@ -450,7 +441,11 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
     // When starting a new review copy an initial set of benchmarks from the assignment
     private getGradingBenchmarks(): GradingBenchmark[] {
-        return this.selectReview(this.props.submission)?.getGradingbenchmarksList()
-            ?? deepCopy(this.props.assignment.getGradingbenchmarksList())
+        const benchmarksFromReview = this.selectReview(this.props.submission)?.getGradingbenchmarksList()
+        if (!benchmarksFromReview || benchmarksFromReview.length === 0) {
+            console.log("GetGradingBenchmarks: empty bms: " + benchmarksFromReview);
+            return deepCopy(this.props.assignment.getGradingbenchmarksList());
+        }
+        return benchmarksFromReview;
     }
 }
