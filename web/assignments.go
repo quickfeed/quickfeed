@@ -129,8 +129,8 @@ func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, reques
 	return benchmarks, nil
 }
 
-func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
-	submission, err := s.db.GetSubmission(&pb.Submission{ID: query.SubmissionID})
+func (s *AutograderService) createReview(review *pb.Review) (*pb.Review, error) {
+	submission, err := s.db.GetSubmission(&pb.Submission{ID: review.SubmissionID})
 	if err != nil {
 		return nil, err
 	}
@@ -142,42 +142,42 @@ func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
 		return nil, fmt.Errorf("Failed to create a new review for submission %d to assignment %s: all %d reviews already created",
 			submission.ID, assignment.Name, assignment.Reviewers)
 	}
-	query.Edited = time.Now().Format(reviewLayout)
-	query.ComputeScore()
+	review.Edited = time.Now().Format(reviewLayout)
+	review.ComputeScore()
 
-	for _, bm := range query.GradingBenchmarks {
+	for _, bm := range review.GradingBenchmarks {
 		bm.ID = 0
 		for _, c := range bm.Criteria {
 			c.ID = 0
 		}
 	}
-	if err := s.db.CreateReview(query); err != nil {
+	if err := s.db.CreateReview(review); err != nil {
 		return nil, err
 	}
-	submission.Score = query.Score
+	submission.Score = review.Score
 	if err := s.db.UpdateSubmission(submission); err != nil {
 		return nil, err
 	}
-	return query, nil
+	return review, nil
 }
 
-func (s *AutograderService) updateReview(query *pb.Review) (*pb.Review, error) {
-	if query.ID == 0 {
+func (s *AutograderService) updateReview(review *pb.Review) (*pb.Review, error) {
+	if review.ID == 0 {
 		return nil, fmt.Errorf("Cannot update review with empty ID")
 	}
-	submission, err := s.db.GetSubmission(&pb.Submission{ID: query.SubmissionID})
+	submission, err := s.db.GetSubmission(&pb.Submission{ID: review.SubmissionID})
 	if err != nil {
 		return nil, err
 	}
 
-	query.Edited = time.Now().Format(reviewLayout)
-	query.ComputeScore()
+	review.Edited = time.Now().Format(reviewLayout)
+	review.ComputeScore()
 
-	if err := s.db.UpdateReview(query); err != nil {
+	if err := s.db.UpdateReview(review); err != nil {
 		return nil, err
 	}
 
-	for _, bm := range query.GradingBenchmarks {
+	for _, bm := range review.GradingBenchmarks {
 		if err := s.db.UpdateBenchmark(bm); err != nil {
 			return nil, err
 		}
@@ -188,11 +188,11 @@ func (s *AutograderService) updateReview(query *pb.Review) (*pb.Review, error) {
 		}
 	}
 	// Updated review will most probably have a new score. Update the submission score as well.
-	submission.Score = query.Score
+	submission.Score = review.Score
 	if err := s.db.UpdateSubmission(submission); err != nil {
 		return nil, err
 	}
-	return query, nil
+	return review, nil
 }
 
 func (s *AutograderService) removeOldCriteriaAndReviews(assignment *pb.Assignment) error {
