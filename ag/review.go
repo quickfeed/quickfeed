@@ -1,7 +1,5 @@
 package ag
 
-import "log"
-
 // ComputeScore computes the total score for the review and assigns it to r.
 // If the grading criteria have predefined points, the score is the sum of these points.
 // Otherwise, each criterion is given equal weight, such that the max score is 100.
@@ -19,7 +17,6 @@ func (r *Review) ComputeScore() {
 		}
 	}
 	if totalCriteria == 0 {
-		log.Println("CalculateScore: review has benchmarks: ", len(r.GradingBenchmarks))
 		return
 	}
 	if scorePoints == 0 {
