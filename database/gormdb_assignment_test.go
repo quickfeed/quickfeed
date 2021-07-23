@@ -138,6 +138,60 @@ func TestUpdateAssignment(t *testing.T) {
 			t.Errorf("UpdateAssignments() mismatch (-want +got):\n%s", diff)
 		}
 	}
+
+	assignmentID := gotAssignments[0].ID
+	gradingBenchmarks := []*pb.GradingBenchmark{
+		{
+			ID:           1,
+			AssignmentID: assignmentID,
+			Heading:      "Test benchmark 1",
+			Criteria: []*pb.GradingCriterion{
+				{
+					ID:          1,
+					Description: "Criterion 1",
+					BenchmarkID: 1,
+					Points:      5,
+				},
+				{
+					ID:          2,
+					Description: "Criterion 2",
+					BenchmarkID: 1,
+					Points:      10,
+				},
+			},
+		},
+		{
+			ID:           2,
+			AssignmentID: assignmentID,
+			Heading:      "Test benchmark 2",
+			Criteria: []*pb.GradingCriterion{
+				{
+					ID:          3,
+					Description: "Criterion 3",
+					BenchmarkID: 2,
+					Points:      1,
+				},
+			},
+		},
+	}
+
+	for _, bm := range gradingBenchmarks {
+		if err := db.CreateBenchmark(bm); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	gotAssignments, err = db.GetAssignmentsByCourse(course.ID, true)
+	if err != nil {
+		t.Error(err)
+	}
+
+	wantAssignments[0].GradingBenchmarks = gradingBenchmarks
+	for i := range gotAssignments {
+		if diff := cmp.Diff(wantAssignments[i], gotAssignments[i], protocmp.Transform()); diff != "" {
+			t.Errorf("UpdateAssignments() mismatch (-want +got):\n%s", diff)
+		}
+	}
 }
 
 func TestGetAssignmentsWithSubmissions(t *testing.T) {
