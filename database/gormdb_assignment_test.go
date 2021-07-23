@@ -205,15 +205,6 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 		Reviews: []*pb.Review{
 			{
 				ReviewerID: 1, Feedback: "SGTM!", Score: 42, Ready: true,
-				// TODO(meling) Remove Benchmarks, since benchmarks should only be kept in one place and associated with the assignment (see also TODO in ag.proto)
-				// Benchmarks: []*pb.GradingBenchmark{
-				// 	{
-				// 		Heading: "Ding Dong", Comment: "Communication",
-				// 		Criteria: []*pb.GradingCriterion{
-				// 			{Points: 50, Description: "Loads of ding"},
-				// 		},
-				// 	},
-				// },
 			},
 		},
 	}
