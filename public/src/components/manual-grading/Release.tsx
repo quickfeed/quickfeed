@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from "../../../proto/ag/ag_pb";
-import { userSubmissionLink, setDivider, submissionStatusSelector, getDaysAfterDeadline, forManualReview, setScoreString } from "../../componentHelper";
+import { userSubmissionLink, setDivider, submissionStatusSelector, getDaysAfterDeadline, gradedManually, setScoreString } from "../../componentHelper";
 import { ISubmission } from "../../models";
 import { formatDate } from "../../helper";
 import ReactTooltip from "react-tooltip";
@@ -51,11 +51,11 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
 
         const headerDiv = <div className="row review-header" onClick={() => {if (this.props.teacherView) this.toggleOpen()}}>
         <h3><span className="r-number">{this.props.studentNumber}. </span><span className="r-header">{this.props.authorName}</span>
-            <span className="r-score">Score: {setScoreString(this.props.submission)} </span>{forManualReview(this.props.assignment) ?
+            <span className="r-score">Score: {setScoreString(this.props.submission)} </span>{gradedManually(this.props.assignment) ?
                 reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
         </div>;
 
-        if (!forManualReview(this.props.assignment)) {
+        if (!gradedManually(this.props.assignment)) {
             return <div className="release">
                 {headerDiv}
                 {open ? noReviewsDiv : null}
@@ -128,14 +128,14 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         return <div
             className={this.releaseButtonClass()}
             onClick={() => {
-                if (this.props.submission && forManualReview(this.props.assignment) && this.props.userIsCourseCreator) {
+                if (this.props.submission && gradedManually(this.props.assignment) && this.props.userIsCourseCreator) {
                     this.props.release(!this.props.submission.released);
                 }
             }}>{this.releaseButtonString()}</div>;
         }
 
     private releaseButtonClass(): string {
-        if (!this.props.submission || !forManualReview(this.props.assignment) ||
+        if (!this.props.submission || !gradedManually(this.props.assignment) ||
          this.props.submission.reviews.length < this.props.assignment.getReviewers()) {
              return "btn release-btn";
          }
@@ -143,7 +143,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private releaseButtonString(): string {
-        if (!this.props.submission || !forManualReview(this.props.assignment)) {
+        if (!this.props.submission || !gradedManually(this.props.assignment)) {
              return "N/A";
          }
         return this.props.submission.released ? "Released" : "Release";

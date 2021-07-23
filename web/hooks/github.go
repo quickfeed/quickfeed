@@ -167,7 +167,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 		CommitID:   payload.GetHeadCommit().GetID(),
 		JobOwner:   payload.GetSender().GetLogin(),
 	}
-	if assignment.IsForManualGrading() {
+	if assignment.GradedManually() {
 		wh.logger.Debugf("Assignment %s for course %s is manually reviewed", assignment.Name, course.Name)
 		wh.recordSubmissionWithoutTests(runData)
 		return

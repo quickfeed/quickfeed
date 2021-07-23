@@ -143,7 +143,7 @@ func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
 			submission.ID, assignment.Name, assignment.Reviewers)
 	}
 	query.Edited = time.Now().Format(reviewLayout)
-	query.CalculateScore()
+	query.ComputeScore()
 
 	for _, bm := range query.GradingBenchmarks {
 		bm.ID = 0
@@ -171,7 +171,7 @@ func (s *AutograderService) updateReview(query *pb.Review) (*pb.Review, error) {
 	}
 
 	query.Edited = time.Now().Format(reviewLayout)
-	query.CalculateScore()
+	query.ComputeScore()
 
 	if err := s.db.UpdateReview(query); err != nil {
 		return nil, err

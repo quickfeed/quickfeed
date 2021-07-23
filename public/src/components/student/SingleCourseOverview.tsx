@@ -2,7 +2,7 @@ import * as React from "react";
 import { formatDate } from "../../helper";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
-import { forManualReview, submissionStatusToString } from "../../componentHelper";
+import { gradedManually, submissionStatusToString } from "../../componentHelper";
 
 interface ISingleCourseOverviewProps {
     courseAndLabs: IAllSubmissionsForEnrollment;
@@ -37,7 +37,7 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
                         <span className="text-danger"> Failed: {submissionLink.submission.failedTests} </span>
                     </div>
                     <div className="col-md-2 col-lg-2">
-                        <span > {this.setStatusString(submissionLink.submission, forManualReview(submissionLink.assignment))} </span>
+                        <span > {this.setStatusString(submissionLink.submission, gradedManually(submissionLink.assignment))} </span>
                     </div>
                     <div className="col-md-2 col-lg-2">
                         Deadline:

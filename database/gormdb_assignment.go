@@ -68,7 +68,8 @@ func (db *GormDB) GetAssignmentsByCourse(courseID uint64, withGrading bool) ([]*
 	if withGrading {
 		for _, a := range assignments {
 			var benchmarks []*pb.GradingBenchmark
-			if err := db.conn.Where("assignment_id = ?", a.ID).
+			if err := db.conn.
+				Where("assignment_id = ?", a.ID).
 				Where("review_id = ?", 0).
 				Find(&benchmarks).Error; err != nil {
 				return nil, err
@@ -149,8 +150,13 @@ func (db *GormDB) CreateBenchmark(query *pb.GradingBenchmark) error {
 // UpdateBenchmark updates the given benchmark
 func (db *GormDB) UpdateBenchmark(query *pb.GradingBenchmark) error {
 	return db.conn.
-		Where(&pb.GradingBenchmark{ID: query.ID, AssignmentID: query.AssignmentID, ReviewID: query.ReviewID}).
-		Updates(&pb.GradingBenchmark{Heading: query.Heading, Comment: query.Comment}).Error
+		Where(&pb.GradingBenchmark{
+			ID:           query.ID,
+			AssignmentID: query.AssignmentID,
+			ReviewID:     query.ReviewID}).
+		Updates(&pb.GradingBenchmark{
+			Heading: query.Heading,
+			Comment: query.Comment}).Error
 }
 
 // DeleteBenchmark removes the given benchmark

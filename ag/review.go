@@ -2,11 +2,10 @@ package ag
 
 import "log"
 
-// CalculateScore returns total score for the review. If grading criteria give
-// a predefined amount of points (not necessary summing up to 100), returns the sum of such points.
-// Otherwise, gives each criterion an equal weight and sets max score to 100
-func (r *Review) CalculateScore() {
-
+// ComputeScore computes the total score for the review and assigns it to r.
+// If the grading criteria have predefined points, the score is the sum of these points.
+// Otherwise, each criterion is given equal weight, such that the max score is 100.
+func (r *Review) ComputeScore() {
 	scorePoints := 0
 	totalCriteria := 0
 	passedCriteria := 0

@@ -362,7 +362,7 @@ export function legalIndex(i: number, len: number): boolean {
     return i >= 0 && i <= len - 1;
 }
 
-export function forManualReview(a: Assignment): boolean {
+export function gradedManually(a: Assignment): boolean {
     return a && a.getReviewers() > 0;
 }
 

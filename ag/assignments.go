@@ -52,6 +52,6 @@ func (a *Assignment) CloneWithoutSubmissions() *Assignment {
 }
 
 // IsForManualGrading returns true if the assignment will be graded manually.
-func (a *Assignment) IsForManualGrading() bool {
+func (a *Assignment) GradedManually() bool {
 	return a.GetReviewers() > 0
 }
