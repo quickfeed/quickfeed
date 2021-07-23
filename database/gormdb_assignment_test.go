@@ -205,6 +205,14 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 		Reviews: []*pb.Review{
 			{
 				ReviewerID: 1, Feedback: "SGTM!", Score: 42, Ready: true,
+				GradingBenchmarks: []*pb.GradingBenchmark{
+					{
+						Heading: "Ding Dong", Comment: "Communication",
+						Criteria: []*pb.GradingCriterion{
+							{Points: 50, Description: "Loads of ding"},
+						},
+					},
+				},
 			},
 		},
 	}

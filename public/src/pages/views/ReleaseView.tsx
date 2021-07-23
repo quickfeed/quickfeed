@@ -168,8 +168,6 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForGroupAssignment.get(grp)?.submission;
                                 if (current) {
                                     current.status = status;
-                                    // TODO(vera): make sure these changes don't break things on Release pages
-                                    // current.score = scoreFromReviews(current.reviews);
                                     return this.props.onUpdate(current);
                                 }
                                 return false;
@@ -178,7 +176,6 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForGroupAssignment.get(grp)?.submission;
                                 if (current) {
                                     current.released = release;
-                                    // current.score = scoreFromReviews(current.reviews);
                                     const ans = await this.props.onUpdate(current);
                                     if (ans) return;
                                     current.released = !release;
@@ -210,7 +207,6 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForAssignment.get(s)?.submission;
                                 if (current) {
                                     current.status = status;
-                                    // current.score = scoreFromReviews(current.reviews);
                                     return this.props.onUpdate(current);
                                 }
                                 return false;
@@ -219,7 +215,6 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForAssignment.get(s)?.submission;
                                 if (current) {
                                     current.released = release;
-                                    // current.score = scoreFromReviews(current.reviews);
                                     const ans = await this.props.onUpdate(current);
                                     if (ans) return;
                                     current.released = !release;

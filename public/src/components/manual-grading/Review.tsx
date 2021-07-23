@@ -343,44 +343,44 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
     // check and update review in case the assignment benchmarks have been changed
     // after the review had been submitted
-    // private refreshBenchmarks(r: Review): GradingBenchmark[] {
-    //     const oldList = r.getGradingbenchmarksList();
-    //     // update benchmarks
-    //     oldList.forEach(bm => {
-    //         const assignmentBM = this.props.assignment.getGradingbenchmarksList().find(item => item.getId() === bm.getId());
-    //         // remove deleted benchmarks
-    //         if (!assignmentBM) {
-    //             oldList.splice(oldList.indexOf(bm), 1);
-    //         } else {
-    //             // update description in case there were some changes
-    //             bm.setHeading(assignmentBM.getHeading());
-    //             // remove deleted criteria
-    //             const oldCriteriaList = bm.getCriteriaList();
-    //             oldCriteriaList.forEach(c => {
-    //                 const assignmentCriterium = assignmentBM.getCriteriaList().find(item => item.getId() === c.getId());
-    //                 if (!assignmentCriterium) {
-    //                     oldCriteriaList.splice(oldCriteriaList.indexOf(c), 1);
-    //                 } else {
-    //                     c.setDescription(assignmentCriterium.getDescription());
-    //                     c.setPoints(assignmentCriterium.getPoints());
-    //                 }
-    //             });
-    //             // add new criteria
-    //             assignmentBM.getCriteriaList().forEach(c => {
-    //                 if (!oldCriteriaList.find(item => item.getId() === c.getId())) {
-    //                     oldCriteriaList.push(c);
-    //                 }
-    //             });
-    //         }
-    //     });
-    //     // add new benchmarks
-    //     this.props.assignment.getGradingbenchmarksList().forEach(bm => {
-    //         if (!oldList.find(item => item.getId() === bm.getId())) {
-    //             oldList.push(bm);
-    //         }
-    //     });
-    //     return oldList;
-    // }
+    private refreshBenchmarks(r: Review): GradingBenchmark[] {
+        const oldList = r.getGradingbenchmarksList();
+        // update benchmarks
+        oldList.forEach(bm => {
+            const assignmentBM = this.props.assignment.getGradingbenchmarksList().find(item => item.getId() === bm.getId());
+            // remove deleted benchmarks
+            if (!assignmentBM) {
+                oldList.splice(oldList.indexOf(bm), 1);
+            } else {
+                // update description in case there were some changes
+                bm.setHeading(assignmentBM.getHeading());
+                // remove deleted criteria
+                const oldCriteriaList = bm.getCriteriaList();
+                oldCriteriaList.forEach(c => {
+                    const assignmentCriterium = assignmentBM.getCriteriaList().find(item => item.getId() === c.getId());
+                    if (!assignmentCriterium) {
+                        oldCriteriaList.splice(oldCriteriaList.indexOf(c), 1);
+                    } else {
+                        c.setDescription(assignmentCriterium.getDescription());
+                        c.setPoints(assignmentCriterium.getPoints());
+                    }
+                });
+                // add new criteria
+                assignmentBM.getCriteriaList().forEach(c => {
+                    if (!oldCriteriaList.find(item => item.getId() === c.getId())) {
+                        oldCriteriaList.push(c);
+                    }
+                });
+            }
+        });
+        // add new benchmarks
+        this.props.assignment.getGradingbenchmarksList().forEach(bm => {
+            if (!oldList.find(item => item.getId() === bm.getId())) {
+                oldList.push(bm);
+            }
+        });
+        return oldList;
+    }
 
     private selectReview(s: ISubmission | undefined): Review | undefined {
         let rw: Review | undefined;

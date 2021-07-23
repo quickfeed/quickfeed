@@ -25,7 +25,6 @@ interface ReleaseState {
     open: boolean;
     reviews: Review[];
     reviewers: Map<User, Review>;
-    // score: number;
     status: Submission.Status;
 }
 export class Release extends React.Component<ReleaseProps, ReleaseState>{
@@ -34,7 +33,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         super(props);
         this.state = {
             reviews: this.selectReadyReviews(),
-            // score: props.submission?.score ?? 0,
             reviewers: new Map<User, Review>(),
             open: !props.teacherView,
             status: props.submission?.status ?? Submission.Status.NONE,
@@ -335,7 +333,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             this.setState({
                 open: this.props.isSelected ? !this.state.open : true,
                 reviews: ready,
-                // score: setScoreString(this.props.submission),
                 status: this.props.submission?.status ?? Submission.Status.NONE,
             });
         } else {
