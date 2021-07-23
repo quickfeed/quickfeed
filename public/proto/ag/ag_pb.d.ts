@@ -1,5 +1,6 @@
 import * as jspb from "google-protobuf"
 
+import * as kit_score_score_pb from '../kit/score/score_pb';
 
 export class User extends jspb.Message {
   getId(): number;
@@ -657,14 +658,14 @@ export class Submission extends jspb.Message {
   getScore(): number;
   setScore(value: number): Submission;
 
+  getCommithash(): string;
+  setCommithash(value: string): Submission;
+
   getScoreobjects(): string;
   setScoreobjects(value: string): Submission;
 
-  getBuildinfo(): string;
-  setBuildinfo(value: string): Submission;
-
-  getCommithash(): string;
-  setCommithash(value: string): Submission;
+  getOldbuildinfo(): string;
+  setOldbuildinfo(value: string): Submission;
 
   getReleased(): boolean;
   setReleased(value: boolean): Submission;
@@ -679,6 +680,16 @@ export class Submission extends jspb.Message {
   setReviewsList(value: Array<Review>): Submission;
   clearReviewsList(): Submission;
   addReviews(value?: Review, index?: number): Review;
+
+  getBuildinfo(): kit_score_score_pb.BuildInfo | undefined;
+  setBuildinfo(value?: kit_score_score_pb.BuildInfo): Submission;
+  hasBuildinfo(): boolean;
+  clearBuildinfo(): Submission;
+
+  getScoresList(): Array<kit_score_score_pb.Score>;
+  setScoresList(value: Array<kit_score_score_pb.Score>): Submission;
+  clearScoresList(): Submission;
+  addScores(value?: kit_score_score_pb.Score, index?: number): kit_score_score_pb.Score;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Submission.AsObject;
@@ -695,13 +706,15 @@ export namespace Submission {
     userid: number,
     groupid: number,
     score: number,
-    scoreobjects: string,
-    buildinfo: string,
     commithash: string,
+    scoreobjects: string,
+    oldbuildinfo: string,
     released: boolean,
     status: Submission.Status,
     approveddate: string,
     reviewsList: Array<Review.AsObject>,
+    buildinfo?: kit_score_score_pb.BuildInfo.AsObject,
+    scoresList: Array<kit_score_score_pb.Score.AsObject>,
   }
 
   export enum Status { 
@@ -792,11 +805,11 @@ export class GradingCriterion extends jspb.Message {
   getId(): number;
   setId(value: number): GradingCriterion;
 
-  getPoints(): number;
-  setPoints(value: number): GradingCriterion;
-
   getBenchmarkid(): number;
   setBenchmarkid(value: number): GradingCriterion;
+
+  getPoints(): number;
+  setPoints(value: number): GradingCriterion;
 
   getDescription(): string;
   setDescription(value: string): GradingCriterion;
@@ -818,8 +831,8 @@ export class GradingCriterion extends jspb.Message {
 export namespace GradingCriterion {
   export type AsObject = {
     id: number,
-    points: number,
     benchmarkid: number,
+    points: number,
     description: string,
     grade: GradingCriterion.Grade,
     comment: string,

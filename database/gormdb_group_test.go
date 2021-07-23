@@ -2,12 +2,11 @@ package database_test
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
@@ -75,83 +74,49 @@ var createGroupTests = []struct {
 		err:         database.ErrUpdateGroup,
 	},
 	{
-		name: "with users but without enrollments",
-		desc: "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
-		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
-			var users []*pb.User
-			for _, uid := range uids {
-				users = append(users, &pb.User{ID: uid})
-			}
-			return &pb.Group{
-				CourseID: cid,
-				Users:    users,
-			}
-		},
+		name:        "with users but without enrollments",
+		desc:        "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
+		getGroup:    groupWithUsers,
 		enrollments: []uint{uint(pb.Enrollment_PENDING), uint(pb.Enrollment_PENDING)},
 		err:         database.ErrUpdateGroup,
 	},
 	{
-		name: "with users and pending enrollments",
-		desc: "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
-		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
-			var users []*pb.User
-			for _, uid := range uids {
-				users = append(users, &pb.User{ID: uid})
-			}
-			return &pb.Group{
-				CourseID: cid,
-				Users:    users,
-			}
-		},
+		name:        "with users and pending enrollments",
+		desc:        "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
+		getGroup:    groupWithUsers,
 		enrollments: []uint{uint(pb.Enrollment_PENDING), uint(pb.Enrollment_PENDING)},
 		err:         database.ErrUpdateGroup,
 	},
 	{
-		name: "with users and rejected enrollments",
-		desc: "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
-		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
-			var users []*pb.User
-			for _, uid := range uids {
-				users = append(users, &pb.User{ID: uid})
-			}
-			return &pb.Group{
-				CourseID: cid,
-				Users:    users,
-			}
-		},
+		name:        "with users and rejected enrollments",
+		desc:        "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
+		getGroup:    groupWithUsers,
 		enrollments: []uint{uint(pb.Enrollment_NONE), uint(pb.Enrollment_NONE)},
 		err:         database.ErrUpdateGroup,
 	},
 	{
-		name: "with user and accepted enrollment",
-		desc: "Should pass as the user exists and is enrolled in the course.",
-		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
-			var users []*pb.User
-			for _, uid := range uids {
-				users = append(users, &pb.User{ID: uid})
-			}
-			return &pb.Group{
-				CourseID: cid,
-				Users:    users,
-			}
-		},
+		name:        "with user and accepted enrollment",
+		desc:        "Should pass as the user exists and is enrolled in the course.",
+		getGroup:    groupWithUsers,
 		enrollments: []uint{uint(pb.Enrollment_STUDENT)},
 	},
 	{
-		name: "with users and accepted enrollments",
-		desc: "Should pass as the users exists and are enrolled in the course.",
-		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
-			var users []*pb.User
-			for _, uid := range uids {
-				users = append(users, &pb.User{ID: uid})
-			}
-			return &pb.Group{
-				CourseID: cid,
-				Users:    users,
-			}
-		},
+		name:        "with users and accepted enrollments",
+		desc:        "Should pass as the users exists and are enrolled in the course.",
+		getGroup:    groupWithUsers,
 		enrollments: []uint{uint(pb.Enrollment_STUDENT), uint(pb.Enrollment_STUDENT)},
 	},
+}
+
+var groupWithUsers = func(cid uint64, uids ...uint64) *pb.Group {
+	var users []*pb.User
+	for _, uid := range uids {
+		users = append(users, &pb.User{ID: uid})
+	}
+	return &pb.Group{
+		CourseID: cid,
+		Users:    users,
+	}
 }
 
 func TestGormDBCreateAndGetGroup(t *testing.T) {
@@ -377,11 +342,13 @@ func TestGetGroupsByCourse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(groups[0].GetUsers(), group.GetUsers()) {
-		t.Errorf("have %#v want %#v", groups[0].GetUsers(), group.GetUsers())
+	wantUsers, gotUsers := groups[0].GetUsers(), group.GetUsers()
+	if diff := cmp.Diff(wantUsers, gotUsers, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{}, pb.RemoteIdentity{})); diff != "" {
+		t.Errorf("group users mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
-	if !reflect.DeepEqual(groups[1].GetUsers(), group2.GetUsers()) {
-		t.Errorf("have %#v want %#v", groups[1].GetUsers(), group2.GetUsers())
+	wantUsers, gotUsers = groups[1].GetUsers(), group2.GetUsers()
+	if diff := cmp.Diff(wantUsers, gotUsers, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{}, pb.RemoteIdentity{})); diff != "" {
+		t.Errorf("group users mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
 
 	pendingGroups, err := db.GetGroupsByCourse(course.ID, pb.Group_PENDING)

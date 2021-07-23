@@ -9,7 +9,6 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
-	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/markbates/goth/gothic"
@@ -18,6 +17,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
 )
 
 func init() {
@@ -407,8 +407,10 @@ func extractSessionCookie(w *echo.Response) string {
 	return ""
 }
 
-var ErrInvalidSessionCookie = status.Errorf(codes.Unauthenticated, "Request does not contain a valid session cookie.")
-var ErrContextMetadata = status.Errorf(codes.Unauthenticated, "Could not grab metadata from context")
+var (
+	ErrInvalidSessionCookie = status.Errorf(codes.Unauthenticated, "Request does not contain a valid session cookie.")
+	ErrContextMetadata      = status.Errorf(codes.Unauthenticated, "Could not grab metadata from context")
+)
 
 func UserVerifier() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {

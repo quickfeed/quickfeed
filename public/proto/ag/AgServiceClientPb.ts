@@ -13,6 +13,7 @@
 
 import * as grpcWeb from 'grpc-web';
 
+import * as kit_score_score_pb from '../kit/score/score_pb';
 
 import {
   Assignments,

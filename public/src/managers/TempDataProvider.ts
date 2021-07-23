@@ -654,7 +654,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                     { TestName: "Test 3", Score: 3, MaxScore: 3, Weight: 40 },
                 ],
             },
-        ] as ISubmission[], (ele: ISubmission) => {
+        ] as unknown as ISubmission[], (ele: ISubmission) => {
             return ele.id;
         });
     }

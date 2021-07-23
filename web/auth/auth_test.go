@@ -12,7 +12,6 @@ import (
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/gorilla/sessions"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/markbates/goth"
@@ -377,7 +376,6 @@ func TestAccessControl(t *testing.T) {
 
 func setup(t *testing.T) (*database.GormDB, func()) {
 	const (
-		driver = "sqlite3"
 		prefix = "testdb"
 	)
 
@@ -390,18 +388,13 @@ func setup(t *testing.T) (*database.GormDB, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(driver, f.Name(),
-		database.NewGormLogger(database.BuildLogger()),
-	)
+	db, err := database.NewGormDB(f.Name(), zap.NewNop())
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)
 	}
 
 	return db, func() {
-		if err := db.Close(); err != nil {
-			t.Error(err)
-		}
 		if err := os.Remove(f.Name()); err != nil {
 			t.Error(err)
 		}

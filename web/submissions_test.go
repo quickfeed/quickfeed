@@ -7,11 +7,13 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/kit/score"
+	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web"
+	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
-
-	_ "github.com/mattn/go-sqlite3"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestSubmissionsAccess(t *testing.T) {
@@ -431,12 +433,14 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		AssignmentID: lab1c1.ID,
 		Score:        44,
 		Reviews:      []*pb.Review{},
+		Scores:       []*score.Score{},
 	}
 	sub2 := &pb.Submission{
 		UserID:       student.ID,
 		AssignmentID: lab2c2.ID,
 		Score:        66,
 		Reviews:      []*pb.Review{},
+		Scores:       []*score.Score{},
 	}
 	if err := db.CreateSubmission(sub1); err != nil {
 		t.Fatal(err)
@@ -446,7 +450,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
@@ -484,8 +488,8 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 			if len(labs) != 2 {
 				t.Fatalf("Expected 2 submission links for course 1, got %d", len(labs))
 			}
-			if !reflect.DeepEqual(sub1, labs[0].Submission) {
-				t.Errorf("Want submission %+v, got %+v", sub1, labs[0].Submission)
+			if diff := cmp.Diff(sub1, labs[0].Submission, protocmp.Transform()); diff != "" {
+				t.Errorf("TestGetCourseLabSubmissions() mismatch (-sub1 +labs[0]):\n%s", diff)
 			}
 		}
 	}
@@ -500,8 +504,8 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 			if len(labs) != 2 {
 				t.Fatalf("Expected 2 submission for course 1, got %d", len(labs))
 			}
-			if !reflect.DeepEqual(sub2, labs[1].Submission) {
-				t.Errorf("Want submission %+v, got %+v", sub1, labs[1].Submission)
+			if diff := cmp.Diff(sub2, labs[1].Submission, protocmp.Transform()); diff != "" {
+				t.Errorf("TestGetCourseLabSubmissions() mismatch (-sub2 +labs[1]):\n%s", diff)
 			}
 		}
 	}

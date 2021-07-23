@@ -15,12 +15,14 @@ import {
     SubmissionsForCourseRequest,
     User,
 } from "../../proto/ag/ag_pb";
+
+import { BuildInfo, Score }from "../../proto/kit/score/score_pb";
+import * as jspb from "google-protobuf"
+
 import {
     IAllSubmissionsForEnrollment,
-    IBuildInfo,
     ISubmissionLink,
     ISubmission,
-    ITestCases,
     IUser,
 } from "../models";
 
@@ -418,42 +420,27 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     private toISubmission(sbm: Submission): ISubmission {
-        const buildInfoAsString = sbm.getBuildinfo();
-        const scoreInfoAsString = sbm.getScoreobjects();
-        let buildInfo: IBuildInfo;
-        let scoreObj: ITestCases[];
-        // IMPORTANT: Field names of the Score struct found in the kit/score/score.go,
-        // of the ITestCases struct found in the public/src/models.ts,
-        // and names in the string passed to JSON.parse() method must match.
-        // If experiencing an uncaught error in the browser which results in a blank page
-        // when addressing lab information for a student/group, it is likely originates from here.
-        try {
-            buildInfo = JSON.parse(buildInfoAsString);
-        } catch (e) {
-            buildInfo = JSON.parse(
-                "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"No tests for this assignment\", \"execTime\": 1}",
-            );
+        let buildInfo = sbm.getBuildinfo();
+        if (!buildInfo) {
+            // TODO(meling) This seems a bit useless. How to avoid?
+            buildInfo = new BuildInfo();
+            buildInfo.setBuilddate("2017-07-28");
+            buildInfo.setBuildlog("No automated tests for this assignment");
+            buildInfo.setExectime(1);
         }
-        try {
-            scoreObj = JSON.parse(scoreInfoAsString);
-        } catch (e) {
-            scoreObj = JSON.parse(
-                "[{\"TestName\": \"Test 1\", \"Score\": 3, \"MaxScore\": 4, \"Weight\": 100}]",
-            );
-        }
-
+        const scores = sbm.getScoresList();
+        // TODO(meling) This notion of passed vs failed tests is perhaps not what we want.
+        // Should be added to the ag/Submission message and be controlled on server-side.
         let failed = 0;
         let passed = 0;
-        if (scoreObj) {
-            scoreObj.forEach((ele) => {
-                if (ele.MaxScore !== ele.Score) {
-                    failed++;
-                } else {
-                    passed++;
-                }
-            });
-        }
-        const bDate = new Date(buildInfo.builddate);
+        scores.forEach((sc) => {
+            if (sc.getMaxscore() > sc.getScore()){
+                failed++;
+            } else {
+                passed++;
+            }
+        });
+
         const isbm: ISubmission = {
             id: sbm.getId(),
             userid: sbm.getUserid(),
@@ -462,11 +449,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             passedTests: passed,
             failedTests: failed,
             score: sbm.getScore(),
-            buildId: buildInfo.buildid,
-            buildDate: bDate,
-            executionTime: buildInfo.execTime,
-            buildLog: buildInfo.buildlog,
-            testCases: scoreObj,
+            buildDate: new Date(buildInfo.getBuilddate()),
+            buildInfo,
+            testCases: scores,
             reviews: sbm.getReviewsList(),
             released: sbm.getReleased(),
             status: sbm.getStatus(),

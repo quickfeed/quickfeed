@@ -9,8 +9,10 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
-	"github.com/jinzhu/gorm"
+	"github.com/autograde/quickfeed/kit/score"
+	"github.com/autograde/quickfeed/log"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 const (
@@ -43,11 +45,14 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 		}
 		// we only get here if err was a timeout, so that we can log 'out' to the user
 	}
-	result, err := ExtractResult(logger, ed.out, info.RandomSecret, ed.execTime)
+	result, err := score.ExtractResults(ed.out, info.RandomSecret, ed.execTime)
 	if err != nil {
 		logger.Errorf("Failed to extract results from log: %v", err)
 		return
 	}
+	logger.Debug("ci.ExtractResults",
+		zap.Any("results", log.IndentJson(result)),
+	)
 	recordResults(logger, db, rData, result)
 }
 
@@ -85,13 +90,7 @@ func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) 
 }
 
 // recordResults for the assignment given by the run data structure.
-func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunData, result *Result) {
-	buildInfo, scores, err := result.Marshal()
-	if err != nil {
-		logger.Errorf("Failed to marshal build info and scores: %v", err)
-		return
-	}
-
+func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunData, result *score.Results) {
 	logger.Debugf("Fetching most recent submission for assignment %d", rData.Assignment.GetID())
 	submissionQuery := &pb.Submission{
 		AssignmentID: rData.Assignment.GetID(),
@@ -105,17 +104,18 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 	}
 	// keep approved status if already approved
 	approvedStatus := newest.GetStatus()
-	if rData.Assignment.AutoApprove && result.TotalScore() >= rData.Assignment.GetScoreLimit() {
+
+	if rData.Assignment.AutoApprove && result.Sum() >= rData.Assignment.GetScoreLimit() {
 		approvedStatus = pb.Submission_APPROVED
 	}
 
-	score := result.TotalScore()
+	score := result.Sum()
 	newSubmission := &pb.Submission{
 		AssignmentID: rData.Assignment.ID,
-		BuildInfo:    buildInfo,
 		CommitHash:   rData.CommitID,
 		Score:        score,
-		ScoreObjects: scores,
+		BuildInfo:    result.BuildInfo,
+		Scores:       result.Scores,
 		UserID:       rData.Repo.GetUserID(),
 		GroupID:      rData.Repo.GetGroupID(),
 		Status:       approvedStatus,
@@ -126,7 +126,7 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		return
 	}
 	logger.Debugf("Created submission for assignment '%s' with status %s", rData.Assignment.GetName(), approvedStatus)
-	updateSlipDays(logger, db, rData.Assignment, newSubmission, result.BuildInfo.BuildDate)
+	updateSlipDays(logger, db, rData.Assignment, newSubmission)
 }
 
 func randomSecret() string {
@@ -138,7 +138,8 @@ func randomSecret() string {
 	return fmt.Sprintf("%x", sha1.Sum(randomness))
 }
 
-func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission, buildDate string) {
+func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission) {
+	buildDate := submission.GetBuildInfo().GetBuildDate()
 	buildTime, err := time.Parse(pb.TimeLayout, buildDate)
 	if err != nil {
 		logger.Errorf("Failed to parse time from build date (%s): %v", buildDate, err)

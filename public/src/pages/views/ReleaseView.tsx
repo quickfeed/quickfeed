@@ -165,11 +165,11 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                             courseURL={this.props.courseURL}
                             isSelected={this.state.selectedGroup === grp}
                             setGrade={async (status: Submission.Status, approved: boolean) => {
-                                const current = this.state.submissionsForGroupAssignment.get(grp);
-                                if (current && current.submission) {
-                                    current.submission.status = status;
-                                    current.submission.score = scoreFromReviews(current.submission.reviews);
-                                    return this.props.onUpdate(current.submission);
+                                const current = this.state.submissionsForGroupAssignment.get(grp)?.submission;
+                                if (current) {
+                                    current.status = status;
+                                    current.score = scoreFromReviews(current.reviews);
+                                    return this.props.onUpdate(current);
                                 }
                                 return false;
                             }}
@@ -178,10 +178,9 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 if (current) {
                                     current.released = release;
                                     current.score = scoreFromReviews(current.reviews);
-                                    const ans = this.props.onUpdate(current);
-                                    if (ans) return true;
+                                    const ans = await this.props.onUpdate(current);
+                                    if (ans) return;
                                     current.released = !release;
-                                    return false;
                                 }
                             }}
                             getReviewers={this.props.getReviewers}
@@ -207,11 +206,11 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                             courseURL={this.props.courseURL}
                             isSelected={this.state.selectedStudent === s}
                             setGrade={async (status: Submission.Status, approved: boolean) => {
-                                const current = this.state.submissionsForAssignment.get(s);
-                                if (current && current.submission) {
-                                    current.submission.status = status;
-                                    current.submission.score = scoreFromReviews(current.submission.reviews);
-                                    return this.props.onUpdate(current.submission);
+                                const current = this.state.submissionsForAssignment.get(s)?.submission;
+                                if (current) {
+                                    current.status = status;
+                                    current.score = scoreFromReviews(current.reviews);
+                                    return this.props.onUpdate(current);
                                 }
                                 return false;
                             }}
@@ -220,10 +219,9 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 if (current) {
                                     current.released = release;
                                     current.score = scoreFromReviews(current.reviews);
-                                    const ans = this.props.onUpdate(current);
-                                    if (ans) return true;
+                                    const ans = await this.props.onUpdate(current);
+                                    if (ans) return;
                                     current.released = !release;
-                                    return false;
                                 }
                             }}
                             getReviewers={this.props.getReviewers}

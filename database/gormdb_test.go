@@ -10,13 +10,14 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/autograde/quickfeed/log"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"gorm.io/gorm"
 )
 
 func setup(t *testing.T) (database.Database, func()) {
 	const (
-		driver = "sqlite3"
 		prefix = "testdb"
 	)
 
@@ -29,18 +30,13 @@ func setup(t *testing.T) (database.Database, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(driver, f.Name(),
-		database.NewGormLogger(database.BuildLogger()),
-	)
+	db, err := database.NewGormDB(f.Name(), log.Zap(true))
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)
 	}
 
 	return db, func() {
-		if err := db.Close(); err != nil {
-			t.Error(err)
-		}
 		if err := os.Remove(f.Name()); err != nil {
 			t.Error(err)
 		}
@@ -92,7 +88,7 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 	}
 
 	// user entries from the database will have to be enrolled as
-	// teacher ans student respectively
+	// teacher and student respectively
 	teacher.Enrollments = append(teacher.Enrollments, &pb.Enrollment{
 		ID:           1,
 		CourseID:     course.ID,
@@ -117,15 +113,15 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if diff := cmp.Diff(teacher, gotTeacher, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{})); diff != "" {
+		t.Errorf("enrollment mismatch (-teacher +gotTeacher):\n%s", diff)
+	}
 	gotStudent, err := db.GetUserWithEnrollments(student.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(teacher, gotTeacher) {
-		t.Errorf("want %+v \n got %+v", teacher, gotTeacher)
-	}
-	if !reflect.DeepEqual(student, gotStudent) {
-		t.Errorf("want %+v \n got %+v", student, gotStudent)
+	if diff := cmp.Diff(student, gotStudent, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{})); diff != "" {
+		t.Errorf("enrollment mismatch (-student +gotStudent):\n%s", diff)
 	}
 }
 
@@ -263,70 +259,6 @@ func TestGormDBGetCourses(t *testing.T) {
 	wantCourse1and2 := []*pb.Course{&c1, &c2}
 	if !reflect.DeepEqual(course1and2, wantCourse1and2) {
 		t.Errorf("have %v want %v", course1and2, wantCourse1and2)
-	}
-}
-
-func TestGormDBGetAssignment(t *testing.T) {
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	if _, err := db.GetAssignmentsByCourse(10, false); err != gorm.ErrRecordNotFound {
-		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
-	}
-
-	if _, err := db.GetAssignment(&pb.Assignment{ID: 10}); err != gorm.ErrRecordNotFound {
-		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
-	}
-}
-
-func TestGormDBCreateAssignmentNoRecord(t *testing.T) {
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	assignment := pb.Assignment{
-		CourseID: 1,
-		Name:     "Lab 1",
-	}
-
-	// Should fail as course 1 does not exist.
-	if err := db.CreateAssignment(&assignment); err != gorm.ErrRecordNotFound {
-		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
-	}
-}
-
-func TestGormDBCreateAssignment(t *testing.T) {
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	user := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(user.ID, &pb.Course{}); err != nil {
-		t.Fatal(err)
-	}
-
-	assignment := pb.Assignment{
-		CourseID: 1,
-		Order:    1,
-	}
-
-	if err := db.CreateAssignment(&assignment); err != nil {
-		t.Fatal(err)
-	}
-
-	assignments, err := db.GetAssignmentsByCourse(1, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(assignments) != 1 {
-		t.Fatalf("have size %v wanted %v", len(assignments), 1)
-	}
-
-	if !reflect.DeepEqual(assignments[0], &assignment) {
-		t.Fatalf("want %v have %v", assignments[0], &assignment)
-	}
-
-	if _, err = db.GetAssignment(&pb.Assignment{ID: 1}); err != nil {
-		t.Errorf("failed to get existing assignment by ID: %s", err)
 	}
 }
 
@@ -705,13 +637,50 @@ func TestGormDBCreateCourse(t *testing.T) {
 		OrganizationID: 1,
 	}
 
-	user := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(user.ID, &course); err != nil {
+	admin := createFakeUser(t, db, 10)
+	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
-
 	if course.ID == 0 {
 		t.Error("expected id to be set")
+	}
+
+	// check that admin (teacher) was automatically enrolled when creating course
+	enroll, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if enroll.CourseID != course.ID || enroll.UserID != admin.ID {
+		t.Errorf("expected user %d to be enrolled in course %d, but got user %d and course %d", admin.ID, course.ID, enroll.UserID, enroll.CourseID)
+	}
+	if enroll.Status != pb.Enrollment_TEACHER || enroll.State != pb.Enrollment_VISIBLE {
+		t.Errorf("expected enrolled user to be teacher and visible, but got status: %v and state: %v", enroll.Status, enroll.State)
+	}
+
+	// check that no users were enrolled as students
+	enrolls, err := db.GetEnrollmentsByCourse(course.ID, pb.Enrollment_STUDENT)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(enrolls) > 0 {
+		t.Errorf("expected no enrollments, but got %d enrollments: %v", len(enrolls), enrolls)
+	}
+
+	// check that exactly one user was enrolled as teacher for the course
+	enrolls, err = db.GetEnrollmentsByCourse(course.ID, pb.Enrollment_TEACHER)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(enrolls) != 1 {
+		t.Errorf("expected exactly one enrollment, but got %d enrollments: %v", len(enrolls), enrolls)
+	}
+	for _, enroll := range enrolls {
+		if enroll.CourseID != course.ID || enroll.UserID != admin.ID {
+			t.Errorf("expected user %d to be enrolled in course %d, but got user %d and course %d", admin.ID, course.ID, enroll.UserID, enroll.CourseID)
+		}
+		if enroll.Status != pb.Enrollment_TEACHER || enroll.State != pb.Enrollment_VISIBLE {
+			t.Errorf("expected enrolled user to be teacher and visible, but got status: %v and state: %v", enroll.Status, enroll.State)
+		}
 	}
 }
 
@@ -798,30 +767,28 @@ func TestGormDBGetCourseNoRecord(t *testing.T) {
 }
 
 func TestGormDBUpdateCourse(t *testing.T) {
-	var (
-		course = &pb.Course{
-			Name:           "Test Course",
-			Code:           "DAT100",
-			Year:           2017,
-			Tag:            "Spring",
-			Provider:       "github",
-			OrganizationID: 1234,
-		}
-		updates = &pb.Course{
-			Name:           "Test Course Edit",
-			Code:           "DAT100-1",
-			Year:           2018,
-			Tag:            "Autumn",
-			Provider:       "gitlab",
-			OrganizationID: 12345,
-		}
-	)
+	course := &pb.Course{
+		Name:           "Test Course",
+		Code:           "DAT100",
+		Year:           2017,
+		Tag:            "Spring",
+		Provider:       "github",
+		OrganizationID: 1234,
+	}
+	updates := &pb.Course{
+		Name:           "Test Course Edit",
+		Code:           "DAT100-1",
+		Year:           2018,
+		Tag:            "Autumn",
+		Provider:       "gitlab",
+		OrganizationID: 12345,
+	}
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(user.ID, course); err != nil {
+	admin := createFakeUser(t, db, 10)
+	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
