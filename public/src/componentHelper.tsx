@@ -270,11 +270,9 @@ export function deepCopy(bms: GradingBenchmark[]): GradingBenchmark[] {
         newBm.setAssignmentid(bm.getAssignmentid());
         newBm.setComment(bm.getComment());
         newBm.setHeading(bm.getHeading());
-        newBm.setId(bm.getId());
         const newCriteria: GradingCriterion[] = [];
         bm.getCriteriaList().forEach((c, j) => {
             const newCriterion = new GradingCriterion();
-            newCriterion.setId(c.getId());
             newCriterion.setBenchmarkid(c.getBenchmarkid());
             newCriterion.setComment(c.getComment());
             newCriterion.setDescription(c.getDescription());

@@ -229,6 +229,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         if (r.getId() > 0) {
             const ans = await this.props.updateReview(r);
             if (ans) {
+                r.setGradingbenchmarksList(ans.getGradingbenchmarksList());
                 this.setState({
                     review: ans,
                     benchmarks: ans.getGradingbenchmarksList(),
@@ -238,11 +239,11 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         } else {
             const ans = await this.props.addReview(r);
             if (ans) {
+                r.setGradingbenchmarksList(ans.getGradingbenchmarksList());
                 this.setState({
                     review: ans,
                     benchmarks: ans.getGradingbenchmarksList(),
                     graded: this.gradedTotal(ans),
-
                 });
             }
         }
