@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from "../../../proto/ag/ag_pb";
-import { userSubmissionLink, setDivider, submissionStatusSelector, getDaysAfterDeadline, gradedManually, setScoreString } from "../../componentHelper";
+import { userSubmissionLink, setDivider, submissionStatusSelector, getDaysAfterDeadline, gradedManually, scoreFromReviews } from "../../componentHelper";
 import { ISubmission } from "../../models";
 import { formatDate } from "../../helper";
 import ReactTooltip from "react-tooltip";
@@ -49,7 +49,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
 
         const headerDiv = <div className="row review-header" onClick={() => {if (this.props.teacherView) this.toggleOpen()}}>
         <h3><span className="r-number">{this.props.studentNumber}. </span><span className="r-header">{this.props.authorName}</span>
-            <span className="r-score">Score: {setScoreString(this.props.submission)} </span>{gradedManually(this.props.assignment) ?
+            <span className="r-score">Score: {scoreFromReviews(this.state.reviews)} </span>{gradedManually(this.props.assignment) ?
                 reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
         </div>;
 
@@ -189,7 +189,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         rows.push(<tr key="rtf"><td key="fbrow">Feedbacks:</td>
             {reviewersList.map((u, i) => <td key={"fbrow" + i}>{this.commentSpan(allReviewers.get(u)?.getFeedback() ?? "No feedback", "fb" + i)}</td>)}
         </tr>);
-        rows.push(<tr key="tscore"><td key="scrow">Score: {setScoreString(this.props.submission)}</td>
+        rows.push(<tr key="tscore"><td key="scrow">Score: {scoreFromReviews(this.state.reviews)}</td>
             {reviewersList.map(u => <td key={"scrow" + u.getId()}>{allReviewers.get(u)?.getScore() ?? 0}</td>)}
         </tr>);
         return rows;

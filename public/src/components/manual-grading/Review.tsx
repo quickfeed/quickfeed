@@ -2,7 +2,7 @@ import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission } from "../../../proto/ag/ag_pb";
 import { ISubmission } from "../../models";
 import { GradeBenchmark } from "./GradeBenchmark";
-import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider, maxAssignmentScore, gradedManually, setScoreString } from "../../componentHelper";
+import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider, maxAssignmentScore, gradedManually, scoreFromReviews } from "../../componentHelper";
 
 interface ReviewPageProps {
     assignment: Assignment;
@@ -174,10 +174,11 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private renderInfoTableRow(): JSX.Element {
+        const rv = this.state.review;
         return <div className="row">
             <div className="col-md-10">
                 <ul className="list-group">
-                    <li key="li1" className="list-group-item r-li"><span className="r-table">Score: </span>{setScoreString(this.props.submission)}</li>
+                    <li key="li1" className="list-group-item r-li"><span className="r-table">Score: </span>{rv ? scoreFromReviews([rv]) : 0 }</li>
                     <li key="li2" className="list-group-item r-li"><span className="r-table">Submission status: </span>{submissionStatusToString(this.props.submission?.status)}</li>
                     <li key="li3" className="list-group-item r-li"><span className="r-table">Review status: </span>{this.state.ready ? "Ready" : "In progress"}</li>
                     <li key="li4" className="list-group-item r-li"><span className="r-table">Graded: </span>{this.gradedTotal()}/{this.criteriaTotal()}</li>

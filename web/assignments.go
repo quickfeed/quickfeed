@@ -154,10 +154,7 @@ func (s *AutograderService) createReview(review *pb.Review) (*pb.Review, error) 
 	if err := s.db.CreateReview(review); err != nil {
 		return nil, err
 	}
-	submission.Score = review.Score
-	if err := s.db.UpdateSubmission(submission); err != nil {
-		return nil, err
-	}
+
 	return review, nil
 }
 
@@ -187,11 +184,15 @@ func (s *AutograderService) updateReview(review *pb.Review) (*pb.Review, error) 
 			}
 		}
 	}
-	// Updated review will most probably have a new score. Update the submission score as well.
-	submission.Score = review.Score
-	if err := s.db.UpdateSubmission(submission); err != nil {
-		return nil, err
+	if submission.Released {
+		// Updated review will most probably have a new score. Update the submission score as well
+		// for submissions with released review.
+		submission.Score = review.Score
+		if err := s.db.UpdateSubmission(submission); err != nil {
+			return nil, err
+		}
 	}
+
 	return review, nil
 }
 
