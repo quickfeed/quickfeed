@@ -25,7 +25,6 @@ interface ReviewPageState {
     ready: boolean;
     editing: boolean;
     alert: string;
-    graded: number;
     scoreFromCriteria: number;
 }
 
@@ -40,7 +39,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             ready: false,
             editing: false,
             alert: "",
-            graded: 0,
             review: undefined,
             scoreFromCriteria: maxAssignmentScore(props.assignment.getGradingbenchmarksList()),
         }
@@ -211,7 +209,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private setReady() {
-        if (this.state.graded < this.criteriaTotal()) {
+        if (this.gradedTotal() < this.criteriaTotal()) {
             this.setAlert("All grading criteria must be checked before marking review as ready.");
         } else {
             this.setState({
@@ -233,7 +231,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 this.setState({
                     review: ans,
                     benchmarks: ans.getGradingbenchmarksList(),
-                    graded: this.gradedTotal(ans),
                 });
             }
         } else {
@@ -243,7 +240,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 this.setState({
                     review: ans,
                     benchmarks: ans.getGradingbenchmarksList(),
-                    graded: this.gradedTotal(ans),
                 });
             }
         }
@@ -305,7 +301,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 benchmarks: [],
                 feedback: "",
                 open: false,
-                graded: 0,
                 ready: false,
                 scoreFromCriteria: maxAssignmentScore(this.props.assignment.getGradingbenchmarksList()),
             });
@@ -317,7 +312,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             benchmarks: rw?.getGradingbenchmarksList() ?? this.getGradingBenchmarks(),
             feedback: rw?.getFeedback() ?? "",
             open: this.props.isSelected ? !this.state.open : true,
-            graded: this.gradedTotal(rw),
             ready: rw?.getReady() ?? false,
             scoreFromCriteria: maxAssignmentScore(this.props.assignment.getGradingbenchmarksList()),
         });
