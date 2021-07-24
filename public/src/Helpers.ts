@@ -172,13 +172,14 @@ export const SubmissionStatus = {
 export const getPassedTestsCount = (submission: Submission) => {
     let totalTests = 0
     let passedTests = 0
-    submission.getScoresList().forEach(score => {
-        if (score.getScore() === score.getMaxscore()) {
-            passedTests++
-        } 
-        totalTests++
-    })
-
+    if (submission.getId() > 0) {
+        submission.getScoresList()?.forEach(score => {
+            if (score.getScore() === score.getMaxscore()) {
+                passedTests++
+            } 
+            totalTests++
+        })
+    }
     return `${passedTests}/${totalTests}`
 }
 
@@ -197,13 +198,21 @@ export const isValid = (element: any) => {
     return true
 }
 
-export const isEnrolled = (enrollments: Enrollment[]) => {
+export const hasEnrollment = (enrollments: Enrollment[]) => {
     for (const enrollment of enrollments) {
         if (enrollment.getStatus() > Enrollment.UserStatus.PENDING) {
             return true
         }
     }
     return false
+}
+
+export const isTeacher = (enrollment: Enrollment) => {
+    return enrollment.getStatus() >= Enrollment.UserStatus.TEACHER
+}
+
+export const isEnrolled = (enrollment: Enrollment) => {
+    return enrollment.getStatus() >= Enrollment.UserStatus.STUDENT
 }
 
 export const getCourseID = () => {
