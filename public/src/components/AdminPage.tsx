@@ -5,6 +5,7 @@ import EditCourse from "./admin/EditCourse"
 import Users from "./admin/Users"
 import Card from "./Card"
 import CourseCreationForm from "./forms/CourseCreationForm"
+import RedirectButton from "./RedirectButton"
 
 
 
@@ -17,16 +18,6 @@ export const AdminPage = () => {
     const manageUsers = {title: "Manage Users", text: "View and manage all users.", buttonText: "Manage Users", to: "/admin/manage"}
     const createCourse = {title: "Create Course", text: "Create a new course.", buttonText: "Create Course", to: "/admin/create"}
     const editCourse = {title: "Edit Course", text: "Edit an existing course.", buttonText: "Edit Course", to: "/admin/edit"}
-    
-    /** Button used to redirect a user, ex. return to top layer of course page */
-    const RedirectButton = ({to}: {to: string}) => {
-        const hide = history.location.pathname == to ? true : false
-        return (
-            <div className={"btn btn-dark redirectButton"} onClick={() => history.push(to)} hidden={hide}>
-                <i className="fa fa-arrow-left"></i>
-            </div>
-        )
-    }
     
     if (state.self.getIsadmin()) {
         const root = "/admin"
