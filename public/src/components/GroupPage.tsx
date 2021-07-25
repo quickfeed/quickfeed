@@ -2,7 +2,7 @@ import React, { useEffect } from "react"
 import { useOvermind } from "../overmind"
 import Group from "./group/Group"
 import CreateGroup from "./group/CreateGroup"
-import { getCourseID } from "../Helpers"
+import { getCourseID, isTeacher } from "../Helpers"
 import { Enrollment } from "../../proto/ag/ag_pb"
 import Groups from "./Groups"
 
@@ -15,7 +15,7 @@ export const GroupPage = () => {
         actions.getGroupByUserAndCourse(courseID)
     })
 
-    if (state.enrollmentsByCourseId[courseID].getStatus() == Enrollment.UserStatus.TEACHER) {
+    if (isTeacher(state.enrollmentsByCourseId[courseID])) {
         return <Groups courseID={courseID}></Groups>
     }
 
