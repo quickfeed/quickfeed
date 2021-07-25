@@ -87,7 +87,8 @@ type State = {
     // Used to create new group
     courseGroup: CourseGroup,
     alerts: {text: string, type: number}[],
-
+    query: string,
+    enableRedirect: boolean
 }
 
 
@@ -143,4 +144,6 @@ export const state: State = {
     activeLab: -1,
     courseEnrollments: {},
     groups: {},
+    query: "",
+    enableRedirect: true
 };

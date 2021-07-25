@@ -3,6 +3,7 @@ import { Enrollment, User } from "../../../proto/ag/ag_pb"
 import { sortByField } from "../../Helpers"
 import { useOvermind } from "../../overmind"
 import { CourseGroup } from "../../overmind/state"
+import Search from "../Search"
 
 
 
@@ -14,7 +15,7 @@ const CreateGroup = (props: {courseID: number}) => {
     const [query, setQuery] = useState<string>("")
 
     useEffect(() => {
-        if (!users.includes(state.self.getId())) {
+        if (!users.includes(state.self.getId()) && state.enrollmentsByCourseId[props.courseID].getStatus() != Enrollment.UserStatus.TEACHER) {
             actions.getEnrollmentsByCourse({courseID: props.courseID, statuses: [Enrollment.UserStatus.STUDENT]})
             users.push(state.self.getId())
             setUsers([...users])
@@ -22,9 +23,9 @@ const CreateGroup = (props: {courseID: number}) => {
     })
 
 
-    const check = (query: string, user?: User): boolean => {
+    const check = (user?: User): boolean => {
         if (user) {
-            return !user.getName().toLowerCase().includes(query.toLowerCase())
+            return !user.getName().toLowerCase().includes(state.query)
         } 
         return true
     }
@@ -54,7 +55,7 @@ const CreateGroup = (props: {courseID: number}) => {
                     <div className="card-header" style={{textAlign: "center"}}>
                         Students
                     </div>
-                    <input onKeyUp={e => setQuery(e.currentTarget.value)} placeholder={"Search"}></input>
+                    <Search placeholder={"Search"} />
 
                     <ul className="list-group list-group-flush">
                         {sortByField(state.courseEnrollments[props.courseID], [Enrollment.prototype.getUser], User.prototype.getName).map((enrollment: Enrollment) => {
@@ -66,7 +67,7 @@ const CreateGroup = (props: {courseID: number}) => {
                                 }
 
                                 return (
-                                    <li hidden={check(query, user) || (user.getId() in users)} key={user.getId()} className="list-group-item">
+                                    <li hidden={check(user) || (user.getId() in users)} key={user.getId()} className="list-group-item">
                                         {user.getName()} 
                                         <i style={{float: "right", cursor:"pointer"}} onClick={() => updateGroupUsers(user)}>+</i>
                                     </li>

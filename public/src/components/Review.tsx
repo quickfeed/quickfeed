@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react"
 import { useOvermind } from "../overmind"
 import { Submission, SubmissionLink } from "../../proto/ag/ag_pb"
-import { useParams } from "react-router"
 import Lab from "./Lab"
 import { getCourseID } from "../Helpers"
+import Search from "./Search"
 
 
 const Review = () => {
@@ -14,12 +14,13 @@ const Review = () => {
     const [assignment, setAssignment] = useState<number | undefined>(undefined)
     const [selected, setSelected] = useState<number>(0)
     const [hideApproved, setHideApproved] = useState<boolean>(false)
+
     useEffect(() => {
         if (courseID && !state.courseSubmissions[courseID]) {
             actions.getAllCourseSubmissions(courseID)
         }
 
-    })
+    }, [])
 
     const updateStatus = (status: Submission.Status, submission?: Submission, userIndex?: number, submissionIndex?: number) => {
         if (submission && userIndex && submissionIndex) {
@@ -51,9 +52,9 @@ const Review = () => {
         const ReviewSubmissionsTable = state.courseSubmissions[courseID].map((user, userIndex) => {
             if (user.enrollment && user.submissions) {
                 return (
-                    <div className="card well" style={{width: "400px", marginBottom: "5px"}}>
+                    <div className="card well" style={{width: "400px", marginBottom: "5px"}} hidden={!user.user?.getName().toLowerCase().includes(state.query)}>
                         <div key={"header"} className="card-header">
-                            {user.user?.getName()} - {user.enrollment.getSlipdaysremaining()}
+                            {user.user?.getName()}
                         </div>
                         <ul key={"list"} className="list-group list-group-flush">
                             {user.submissions.map((submissionLink, index) => 
@@ -76,6 +77,7 @@ const Review = () => {
                     {Options}
                 </select>
                 <input type={"checkbox"} checked={hideApproved} onChange={(e) => setHideApproved(e.target.checked)}></input>
+                <Search placeholder={"Search by name ..."} />
                 <button onClick={() => actions.getAllCourseSubmissions(courseID)}>Refresh ... </button>
                 <div className="review">
                     

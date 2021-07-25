@@ -3,8 +3,6 @@ import { IGrpcResponse } from "../GRPCManager";
 import {  User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, Status, CourseSubmissions, SubmissionLink } from "../../proto/ag/ag_pb";
 import { CourseGroup, ParsedCourseSubmissions } from "./state";
 import { AlertType } from "../Helpers";
-import { StatusCode } from "grpc-web";
-
 
 /** Fetches and stores an authenticated user in state */
 export const getSelf = async ({state, effects}: Context) => {
@@ -365,6 +363,7 @@ export const getUserSubmissions = async ({state, effects}: Context, courseID: nu
             let submission = res.data?.getSubmissionsList().find(s => s.getAssignmentid() === assignment.getId())
             if (submission) {
                 submission.getBuildinfo()
+                submission.getScoresList()
                 state.submissions[courseID][assignment.getOrder() - 1] = submission
             }
             else {
@@ -481,4 +480,12 @@ export const changeTheme = ({state}: Context) => {
 /** Sets the time to now. */
 export const setTimeNow = ({state}: Context) =>{
     state.timeNow = new Date()
+}
+
+export const setQuery = ({state}: Context, query: string) => {
+    state.query = query
+}
+
+export const enableRedirect = ({state}: Context, bool: boolean) => {
+    state.enableRedirect = bool
 }
