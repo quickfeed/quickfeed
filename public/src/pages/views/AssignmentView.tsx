@@ -30,7 +30,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
             adding: false,
             open: false,
             newBenchmark: "",
-            benchmarks: this.props.assignment.getGradingbenchmarksList(),
+            benchmarks: [],
             maxScore: this.renderTotalScore(this.props.assignment.getGradingbenchmarksList()),
         }
     }
@@ -166,6 +166,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
 
     private toggleOpen() {
         this.setState({
+            benchmarks: this.props.assignment.getGradingbenchmarksList(),
             open: !this.state.open,
         })
     }
