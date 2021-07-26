@@ -1,10 +1,9 @@
 import React, { useEffect } from "react"
 import { useOvermind } from "../overmind"
-import Group from "./group/Group"
-import CreateGroup from "./group/CreateGroup"
+import CreateGroup from "../components/group/CreateGroup"
 import { getCourseID, isTeacher } from "../Helpers"
-import { Enrollment } from "../../proto/ag/ag_pb"
-import Groups from "./Groups"
+import Groups from "../components/Groups"
+import GroupComponent from "../components/group/Group"
 
 
 export const GroupPage = () => {
@@ -12,17 +11,19 @@ export const GroupPage = () => {
     const courseID = getCourseID()
 
     useEffect(() => {
-        actions.getGroupByUserAndCourse(courseID)
+        if (!isTeacher(state.enrollmentsByCourseId[courseID])) {
+            actions.getGroupByUserAndCourse(courseID)
+        }
     })
 
     if (isTeacher(state.enrollmentsByCourseId[courseID])) {
-        return <Groups courseID={courseID}></Groups>
+        return <Groups></Groups>
     }
 
     if (!state.userGroup[courseID]) {
-        return <CreateGroup courseID={courseID} />    
+        return <CreateGroup />    
     }
-    return <Group courseID={courseID} />
+    return <GroupComponent />
     
 }
 

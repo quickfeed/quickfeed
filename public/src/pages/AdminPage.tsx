@@ -1,11 +1,11 @@
 import React from "react"
 import { Redirect, Route, Switch, useHistory } from "react-router"
 import { useOvermind } from "../overmind"
-import EditCourse from "./admin/EditCourse"
-import Users from "./admin/Users"
-import Card from "./Card"
-import CourseCreationForm from "./forms/CourseCreationForm"
-import RedirectButton from "./RedirectButton"
+import EditCourse from "../components/admin/EditCourse"
+import Users from "../components/admin/Users"
+import Card from "../components/Card"
+import CourseCreationForm from "../components/forms/CourseCreationForm"
+import RedirectButton from "../components/RedirectButton"
 
 
 
