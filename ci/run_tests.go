@@ -26,6 +26,7 @@ type RunData struct {
 	Repo       *pb.Repository
 	CommitID   string
 	JobOwner   string
+	Rebuild    bool
 }
 
 // String returns a string representation of the run data structure
@@ -126,7 +127,9 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		return
 	}
 	logger.Debugf("Created submission for assignment '%s' with status %s", rData.Assignment.GetName(), approvedStatus)
-	updateSlipDays(logger, db, rData.Assignment, newSubmission)
+	if !rData.Rebuild {
+		updateSlipDays(logger, db, rData.Assignment, newSubmission)
+	}
 }
 
 func randomSecret() string {
