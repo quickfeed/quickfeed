@@ -110,6 +110,11 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		approvedStatus = pb.Submission_APPROVED
 	}
 
+	// Don't change the build date on a manual rebuild, the date is used as a submission's delivery date
+	if rData.Rebuild {
+		result.BuildInfo.BuildDate = newest.BuildInfo.BuildDate
+	}
+
 	score := result.Sum()
 	newSubmission := &pb.Submission{
 		AssignmentID: rData.Assignment.ID,
