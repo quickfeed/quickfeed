@@ -110,13 +110,14 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		approvedStatus = pb.Submission_APPROVED
 	}
 
-	// Don't change the build date on a manual rebuild, the date is used as a submission's delivery date
+	// Keep the original submission's delivery date (obtained from the database (newest)) if this is a manual rebuild.
 	if rData.Rebuild {
 		result.BuildInfo.BuildDate = newest.BuildInfo.BuildDate
 	}
 
 	score := result.Sum()
 	newSubmission := &pb.Submission{
+		ID:           newest.GetID(),
 		AssignmentID: rData.Assignment.ID,
 		CommitHash:   rData.CommitID,
 		Score:        score,
@@ -149,6 +150,7 @@ func randomSecret() string {
 func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission) {
 	buildDate := submission.GetBuildInfo().GetBuildDate()
 	buildTime, err := time.Parse(pb.TimeLayout, buildDate)
+
 	if err != nil {
 		logger.Errorf("Failed to parse time from build date (%s): %v", buildDate, err)
 		return
