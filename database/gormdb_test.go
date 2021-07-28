@@ -10,6 +10,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/log"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -984,6 +985,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		GroupID:      group.ID,
 		AssignmentID: assignment1.ID,
 		Reviews:      []*pb.Review{},
+		Scores:       []*score.Score{},
 	}
 	if err := db.CreateSubmission(&submission1); err != nil {
 		t.Fatal(err)
@@ -993,6 +995,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		GroupID:      group.ID,
 		AssignmentID: assignment1.ID,
 		Reviews:      []*pb.Review{},
+		Scores:       []*score.Score{},
 	}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
@@ -1002,6 +1005,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		GroupID:      group.ID,
 		AssignmentID: assignment2.ID,
 		Reviews:      []*pb.Review{},
+		Scores:       []*score.Score{},
 	}
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)
@@ -1011,6 +1015,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		UserID:       users[0].ID,
 		AssignmentID: assignment3.ID,
 		Reviews:      []*pb.Review{},
+		Scores:       []*score.Score{},
 	}
 	if err := db.CreateSubmission(&submission4); err != nil {
 		t.Fatal(err)

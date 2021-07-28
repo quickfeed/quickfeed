@@ -1,6 +1,8 @@
 package database
 
 import (
+	"fmt"
+
 	pb "github.com/autograde/quickfeed/ag"
 	"gorm.io/gorm"
 )
@@ -65,8 +67,10 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	// TODO(meling) temporary transformation of submission data
 	transform(submission)
 
-	if err := db.conn.Save(submission.BuildInfo).Error; err != nil {
-		return err
+	if submission.BuildInfo != nil {
+		if err := db.conn.Save(submission.BuildInfo).Error; err != nil {
+			return fmt.Errorf("Cant save build info: %+v", submission.BuildInfo) //err
+		}
 	}
 	// Save a submission record for the given assignment and student/group.
 	return db.conn.Where(query).Save(submission).Error
