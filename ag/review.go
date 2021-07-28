@@ -1,53 +1,27 @@
 package ag
 
-import (
-	"encoding/json"
-	"regexp"
-	"strings"
-)
-
-// MarshalReviewString generates a slice of JSON strings to store in the database
-func (r *Review) MarshalReviewString() error {
-	str := make([]string, 0)
-	for _, bm := range r.Benchmarks {
-		b, err := json.Marshal(bm)
-		if err != nil {
-			return err
-		}
-		str = append(str, string(b))
-	}
-	r.Review = strings.Join(str, "; ")
-	return nil
-}
-
-var re = regexp.MustCompile(`("\w+"):"(\d+)",`)
-
-// UnmarshalReviewString converts database string with all submission reviews
-// into protobuf messages
-func (r *Review) UnmarshalReviewString() error {
-	// Replace number fields in quotes with non-quoted number fields.
-	// This should make our previous strings (stored in db) that were
-	// using protobuf/jsonpb package compatible with stdlib json package.
-	review := re.ReplaceAllString(r.Review, "$1:$2,")
-	rs := strings.Split(review, ";")
-	bms := make([]*GradingBenchmark, 0)
-	for _, s := range rs {
-		bm := GradingBenchmark{}
-		if err := json.Unmarshal([]byte(s), &bm); err != nil {
-			return err
-		}
-		bms = append(bms, &bm)
-	}
-	r.Benchmarks = bms
-	return nil
-}
-
-// MakeSubmissionReviews unmarshalls review string for a submission
-func (s *Submission) MakeSubmissionReviews() error {
-	for _, r := range s.Reviews {
-		if err := r.UnmarshalReviewString(); err != nil {
-			return err
+// ComputeScore computes the total score for the review and assigns it to r.
+// If the grading criteria have predefined points, the score is the sum of these points.
+// Otherwise, each criterion is given equal weight, such that the max score is 100.
+func (r *Review) ComputeScore() {
+	scorePoints := 0
+	totalCriteria := 0
+	passedCriteria := 0
+	for _, bm := range r.GradingBenchmarks {
+		for _, c := range bm.Criteria {
+			totalCriteria++
+			if c.Grade == GradingCriterion_PASSED {
+				passedCriteria++
+				scorePoints += int(c.Points)
+			}
 		}
 	}
-	return nil
+	if totalCriteria == 0 {
+		return
+	}
+	if scorePoints == 0 {
+		r.Score = uint32(100 * passedCriteria / totalCriteria)
+	} else {
+		r.Score = uint32(scorePoints)
+	}
 }

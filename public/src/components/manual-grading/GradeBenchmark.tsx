@@ -10,7 +10,6 @@ interface GradeBenchmarkProps {
 }
 
 interface GradeBenchmarkState {
-    criteria: GradingCriterion[];
     commenting: boolean;
     comment: string;
 }
@@ -19,7 +18,6 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
     constructor(props: GradeBenchmarkProps) {
         super(props);
         this.state = {
-            criteria: this.props.benchmark.getCriteriaList(),
             comment: this.props.benchmark.getComment(),
             commenting: false,
         }
@@ -50,16 +48,16 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
     }
 
     private renderList(): JSX.Element[] {
-        return this.state.criteria.map((c, i) => <GradeCriterion
+        return this.props.benchmark.getCriteriaList().map((c, i) => <GradeCriterion
             key={"c" + i}
             criterion={c}
             addComment={(comment: string) => {
                 c.setComment(comment);
-                this.props.onUpdate(this.state.criteria);
+                this.props.onUpdate(this.props.benchmark.getCriteriaList());
             }}
             addGrade={(grade: GradingCriterion.Grade) => {
                 c.setGrade(grade);
-                this.props.onUpdate(this.state.criteria);
+                this.props.onUpdate(this.props.benchmark.getCriteriaList());
             }}
         />)
     }

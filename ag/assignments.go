@@ -34,7 +34,7 @@ func (m *Assignment) IsApproved(latest *Submission, score uint32) bool {
 }
 
 // CloneWithoutSubmissions returns a deep copy of the given assignment
-// without submissions
+// without submissions.
 func (a *Assignment) CloneWithoutSubmissions() *Assignment {
 	return &Assignment{
 		ID:                a.ID,
@@ -47,7 +47,11 @@ func (a *Assignment) CloneWithoutSubmissions() *Assignment {
 		IsGroupLab:        a.IsGroupLab,
 		ScoreLimit:        a.ScoreLimit,
 		Reviewers:         a.Reviewers,
-		SkipTests:         a.SkipTests,
 		GradingBenchmarks: a.GradingBenchmarks,
 	}
+}
+
+// IsForManualGrading returns true if the assignment will be graded manually.
+func (a *Assignment) GradedManually() bool {
+	return a.GetReviewers() > 0
 }

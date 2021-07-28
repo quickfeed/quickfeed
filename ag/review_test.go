@@ -3,81 +3,113 @@ package ag_test
 import (
 	"testing"
 
-	"github.com/autograde/quickfeed/ag"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
+	pb "github.com/autograde/quickfeed/ag"
 )
 
-var tst = []*ag.GradingBenchmark{
+var reviewScoreTests = []struct {
+	name   string
+	score  uint32
+	review *pb.Review
+}{
 	{
-		ID:           0,
-		AssignmentID: 10,
-		Heading:      "Steve",
-		Comment:      "Jobs",
-		Criteria: []*ag.GradingCriterion{
-			{ID: 1, Points: 50, BenchmarkID: 0, Description: "Ping"},
-			{ID: 2, Points: 50, BenchmarkID: 0, Description: "Pong"},
+		"Test 25% score",
+		25,
+		&pb.Review{
+			ID: 1,
+			GradingBenchmarks: []*pb.GradingBenchmark{
+				{
+					Criteria: []*pb.GradingCriterion{
+						{
+							Grade: pb.GradingCriterion_FAILED,
+						},
+						{
+							Grade: pb.GradingCriterion_PASSED,
+						},
+					},
+				},
+				{
+					Criteria: []*pb.GradingCriterion{
+						{
+							Grade: pb.GradingCriterion_FAILED,
+						},
+						{
+							Grade: pb.GradingCriterion_FAILED,
+						},
+					},
+				},
+			},
 		},
 	},
 	{
-		ID:           1,
-		AssignmentID: 10,
-		Heading:      "Johnny",
-		Comment:      "Ive",
-		Criteria: []*ag.GradingCriterion{
-			{ID: 1, Points: 50, BenchmarkID: 0, Description: "Ding"},
-			{ID: 2, Points: 50, BenchmarkID: 0, Description: "Dong"},
+		"Test 75% score",
+		75,
+		&pb.Review{
+			ID: 2,
+			GradingBenchmarks: []*pb.GradingBenchmark{
+				{
+					Criteria: []*pb.GradingCriterion{
+						{
+							Grade: pb.GradingCriterion_PASSED,
+						},
+						{
+							Grade: pb.GradingCriterion_PASSED,
+						},
+					},
+				},
+				{
+					Criteria: []*pb.GradingCriterion{
+						{
+							Grade: pb.GradingCriterion_FAILED,
+						},
+						{
+							Grade: pb.GradingCriterion_PASSED,
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		"Test 6/10 score",
+		6,
+		&pb.Review{
+			ID:       3,
+			Feedback: "Test 6/10 score",
+			GradingBenchmarks: []*pb.GradingBenchmark{
+				{
+					Criteria: []*pb.GradingCriterion{
+						{
+							Points: 3,
+							Grade:  pb.GradingCriterion_PASSED,
+						},
+						{
+							Points: 2,
+							Grade:  pb.GradingCriterion_FAILED,
+						},
+					},
+				},
+				{
+					Criteria: []*pb.GradingCriterion{
+						{
+							Points: 2,
+							Grade:  pb.GradingCriterion_FAILED,
+						},
+						{
+							Points: 3,
+							Grade:  pb.GradingCriterion_PASSED,
+						},
+					},
+				},
+			},
 		},
 	},
 }
 
-func TestReviewMarshalString(t *testing.T) {
-	r := &ag.Review{}
-	err := r.MarshalReviewString()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if r.Review != "" {
-		t.Errorf("MarshalReviewString() = %s, expected empty review", r.Review)
-	}
-	r.Benchmarks = tst
-
-	// Based on stdlib json package
-	want := `{"AssignmentID":10,"heading":"Steve","comment":"Jobs","criteria":[{"ID":1,"points":50,"description":"Ping"},{"ID":2,"points":50,"description":"Pong"}]}; {"ID":1,"AssignmentID":10,"heading":"Johnny","comment":"Ive","criteria":[{"ID":1,"points":50,"description":"Ding"},{"ID":2,"points":50,"description":"Dong"}]}`
-	err = r.MarshalReviewString()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if diff := cmp.Diff(r.Review, want); diff != "" {
-		t.Errorf("r.MarshalReviewString() mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestReviewUnmarshalString(t *testing.T) {
-	// Based on stdlib json package
-	in := `{"assignmentID":10,"heading":"Steve","comment":"Jobs","criteria":[{"ID":1,"points":50,"description":"Ping"},{"ID":2,"points":50,"description":"Pong"}]}; {"ID":1,"assignmentID":10,"heading":"Johnny","comment":"Ive","criteria":[{"ID":1,"points":50,"description":"Ding"},{"ID":2,"points":50,"description":"Dong"}]}`
-	r := &ag.Review{Review: in}
-	err := r.UnmarshalReviewString()
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := tst
-	if diff := cmp.Diff(r.Benchmarks, want, cmpopts.IgnoreUnexported(ag.GradingBenchmark{}, ag.GradingCriterion{})); diff != "" {
-		t.Errorf("r.UnmarshalReviewString() mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestReviewUnmarshalStringProtobufJsonPB(t *testing.T) {
-	// This test checks that the old JSON format can still be unmarshalled
-	// Based on protobuf/jsonpb package (being deprecated)
-	in := `{"assignmentID":"10","heading":"Steve","comment":"Jobs","criteria":[{"ID":"1","points":"50","description":"Ping"},{"ID":"2","points":"50","description":"Pong"}]}; {"ID":"1","assignmentID":"10","heading":"Johnny","comment":"Ive","criteria":[{"ID":"1","points":"50","description":"Ding"},{"ID":"2","points":"50","description":"Dong"}]}`
-	r := &ag.Review{Review: in}
-	err := r.UnmarshalReviewString()
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := tst
-	if diff := cmp.Diff(r.Benchmarks, want, cmpopts.IgnoreUnexported(ag.GradingBenchmark{}, ag.GradingCriterion{})); diff != "" {
-		t.Errorf("r.UnmarshalReviewString() mismatch (-want +got):\n%s", diff)
+func TestComputeScore(t *testing.T) {
+	for _, reviewTest := range reviewScoreTests {
+		reviewTest.review.ComputeScore()
+		if reviewTest.review.Score != reviewTest.score {
+			t.Fatalf("Computed wrong review score: expected %d, got %d", reviewTest.score, reviewTest.review.Score)
+		}
 	}
 }

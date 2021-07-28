@@ -79,7 +79,6 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					IsGroupLab:       newAssignment.IsGroupLab,
 					Reviewers:        uint32(newAssignment.Reviewers),
 					ContainerTimeout: uint32(newAssignment.ContainerTimeout),
-					SkipTests:        newAssignment.SkipTests,
 				}
 
 				assignments = append(assignments, assignment)

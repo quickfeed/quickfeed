@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Assignment, Course, Enrollment, Status } from "../../../proto/ag/ag_pb";
 import { Search } from "../../components";
-import { searchForStudents } from '../../componentHelper';
+import { searchForStudents } from "../../componentHelper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { ActionType, UserView } from "./UserView";
 

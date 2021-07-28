@@ -39,7 +39,6 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 			"is_group_lab":      assignment.IsGroupLab,
 			"reviewers":         assignment.Reviewers,
 			"container_timeout": assignment.ContainerTimeout,
-			"skip_tests":        assignment.SkipTests,
 		}).FirstOrCreate(assignment).Error
 }
 
@@ -69,7 +68,10 @@ func (db *GormDB) GetAssignmentsByCourse(courseID uint64, withGrading bool) ([]*
 	if withGrading {
 		for _, a := range assignments {
 			var benchmarks []*pb.GradingBenchmark
-			if err := db.conn.Where("assignment_id = ?", a.ID).Find(&benchmarks).Error; err != nil {
+			if err := db.conn.
+				Where("assignment_id = ?", a.ID).
+				Where("review_id = ?", 0).
+				Find(&benchmarks).Error; err != nil {
 				return nil, err
 			}
 			a.GradingBenchmarks = benchmarks
@@ -104,6 +106,8 @@ func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType 
 	// the 'order' field of pb.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
 	if err := db.conn.Preload("Submissions").
 		Preload("Submissions.Reviews").
+		Preload("Submissions.Reviews.GradingBenchmarks").
+		Preload("Submissions.Reviews.GradingBenchmarks.Criteria").
 		Preload("Submissions.BuildInfo").
 		Preload("Submissions.Scores").
 		Where(&pb.Assignment{CourseID: courseID}).
@@ -145,9 +149,14 @@ func (db *GormDB) CreateBenchmark(query *pb.GradingBenchmark) error {
 
 // UpdateBenchmark updates the given benchmark
 func (db *GormDB) UpdateBenchmark(query *pb.GradingBenchmark) error {
-	return db.conn.Model(query).
-		Where(&pb.GradingBenchmark{ID: query.ID, AssignmentID: query.AssignmentID}).
-		Updates(&pb.GradingBenchmark{Heading: query.Heading, Comment: query.Comment}).Error
+	return db.conn.
+		Where(&pb.GradingBenchmark{
+			ID:           query.ID,
+			AssignmentID: query.AssignmentID,
+			ReviewID:     query.ReviewID}).
+		Updates(&pb.GradingBenchmark{
+			Heading: query.Heading,
+			Comment: query.Comment}).Error
 }
 
 // DeleteBenchmark removes the given benchmark
@@ -163,7 +172,7 @@ func (db *GormDB) CreateCriterion(query *pb.GradingCriterion) error {
 
 // UpdateCriterion updates the given criterion
 func (db *GormDB) UpdateCriterion(query *pb.GradingCriterion) error {
-	return db.conn.Model(query).
+	return db.conn.
 		Where(&pb.GradingCriterion{ID: query.ID, BenchmarkID: query.BenchmarkID}).
 		Updates(&pb.GradingCriterion{Description: query.Description, Comment: query.Comment, Grade: query.Grade, Points: query.Points}).Error
 }

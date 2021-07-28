@@ -121,9 +121,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoCreateReview = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Review, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Review.deserializeBinary);
-        this.methodInfoUpdateReview = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+        this.methodInfoUpdateReview = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Review, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.Void.deserializeBinary);
+        }, ag_pb_1.Review.deserializeBinary);
         this.methodInfoGetReviewers = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Reviewers, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Reviewers.deserializeBinary);
