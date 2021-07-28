@@ -57,6 +57,7 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 	defer cancel()
 
 	// ensuring compatibility with the old database:
+	// TODO(meling) Check if this is still needed with the new database?
 	if course.OrganizationPath == "" {
 		org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID})
 		if err != nil {

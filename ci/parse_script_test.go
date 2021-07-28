@@ -6,7 +6,14 @@ import (
 	"fmt"
 	"os"
 	"testing"
+
+	pb "github.com/autograde/quickfeed/ag"
 )
+
+// To run this test, please see instructions in the developer guide (dev.md).
+
+// This test is meant for debugging template parsing of script files, such as go.sh and python.sh.
+// We don't actually test anything here since the output is expected to be unstable; must be inspected manually.
 
 func TestParseScript(t *testing.T) {
 	randomness := make([]byte, 10)
@@ -19,8 +26,8 @@ func TestParseScript(t *testing.T) {
 		AssignmentName:     "lab2",
 		Script:             "go.sh",
 		CreatorAccessToken: "secret",
-		GetURL:             getURL,
-		TestURL:            testURL,
+		GetURL:             pb.StudentRepoURL(gh, qf101, ghUserName),
+		TestURL:            pb.TestsRepoURL(gh, qf101),
 		RandomSecret:       randomString,
 	}
 	j, err := parseScriptTemplate("scripts", info)

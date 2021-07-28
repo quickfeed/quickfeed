@@ -77,7 +77,43 @@ make nginx
 
 ### Testing
 
-Use `make test` to run all the tests in `web` and `database` packages.
+To run all tests that does not require remote interactions.
+
+```sh
+make test
+```
+
+To run specific tests that requires remote interactions with GitHub you must create a personal access token and assign it to `GITHUB_ACCESS_TOKEN`:
+
+```sh
+export GITHUB_ACCESS_TOKEN=<your-personal-access-token>
+```
+
+Some tests may also require access to a specific test course organization, e.g., `qf101`.
+If you do not have access to `qf101`, you can create your own test course organization and set the `QF_TEST_ORG` environment variable:
+
+```sh
+export QF_TEST_ORG=<your-test-course-organization>
+```
+
+To run such tests use:
+
+```sh
+cd assignments
+go test -v -run TestFetchAssignments
+cd web
+go test -v -run XXX
+cd ci
+QF_TEST_ORG=qf101 go test -v -run TestRunTests
+TEST_TMPL=1 go test -v -run TestParseScript
+TEST_IMAGE=1 go test -v -run TestParseScript
+```
+
+Alternatively, you can run such tests using (without having to set the `QF_TEST_ORG` environment variable):
+
+```sh
+QF_TEST_ORG=qf101 go test -v -run TestFetchAssignments
+```
 
 ### Utility
 
@@ -165,7 +201,7 @@ For GitHub integration we are using [Go implementation](https://github.com/googl
 ### Slugs
 
 When retrieving team, organization or repository by name, GitHub expects a slugified string instead of a full name as displayed on the organization page.
-For example, organization with a name like `Autograder Test Org` will have slugified name `autograder-test-org`.
+For example, organization with a name like `QuickFeed Test Org` will have slugified name `quickfeed-test-org`.
 
 [URL slugs explained](http://patterns.dataincubator.org/book/url-slug.html)
 
