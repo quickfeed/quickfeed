@@ -10,44 +10,34 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	// gitHubTestOrg   = "autograder-test"
-	gitHubTestOrgID = 30462712
-)
-
-// To enable this test, please see instructions in the developer guide (dev.md).
-// You will also need access to the autograder-test organization; you may request
-// access by sending your GitHub username to hein.meling at uis.no.
+// To run this test, please see instructions in the developer guide (dev.md).
 
 func TestFetchAssignments(t *testing.T) {
+	qfTestOrg := os.Getenv("QF_TEST_ORG")
+	if len(qfTestOrg) < 1 {
+		qfTestOrg = "qf101"
+		t.Logf("This test requires access to the '%s' GitHub organization; to use another organization set the 'QF_TEST_ORG' environment variable", qfTestOrg)
+	}
 	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
 	if len(accessToken) < 1 {
-		t.Skip("This test requires a 'GITHUB_ACCESS_TOKEN' and access to the 'autograder-test' GitHub organization")
+		t.Skipf("This test requires that 'GITHUB_ACCESS_TOKEN' is set and that you have access to the '%v' GitHub organization", qfTestOrg)
 	}
-	provider := "github"
 
-	var s scm.SCM
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), provider, accessToken)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	ctx := context.Background()
-
-	courseOrgID := uint64(gitHubTestOrgID)
-	if courseOrgID == 0 {
-		t.Fatal("Organization ID not provided.")
 	}
 
 	course := &pb.Course{
-		Name:           "Autograder Test Course",
-		OrganizationID: courseOrgID,
+		Name:             "QuickFeed Test Course",
+		OrganizationPath: qfTestOrg,
 	}
 
-	assignments, err := FetchAssignments(ctx, s, course)
+	assignments, err := FetchAssignments(context.Background(), s, course)
 	if err != nil {
 		t.Fatal(err)
 	}
+	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
 	for _, assignment := range assignments {
 		t.Logf("assignment: %v", assignment)
 	}

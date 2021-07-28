@@ -43,7 +43,7 @@ If you are employee or teaching assistant at the University of Stavanger, contac
 1. Log into a GitHub account with access to the enterprise account.
 2. Navigate to the [enterprise account](https://github.com/enterprises/university-of-stavanger).
 3. Click New organization.
-4. Name your organization, e.g. `qf101-2020`.
+4. Name your organization, e.g., `qf101-2020`.
 5. Skip Invite members; QuickFeed handles this.
 
 Others may follow the instructions below.
@@ -53,6 +53,6 @@ Others may follow the instructions below.
 3. Select billing plan.
    Note that QuickFeed requires a billing plan to allows private repositories.
    Academic institutions can get free access through GitHub's [Academic Campus Program](https://education.github.com/schools).
-4. Name your organization, e.g. `qf101-2020`.
+4. Name your organization, e.g., `qf101-2020`.
 5. Skip Invite members; QuickFeed handles this.
 6. Skip Organization details.
