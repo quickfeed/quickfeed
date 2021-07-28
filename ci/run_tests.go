@@ -91,9 +91,10 @@ func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) 
 
 // recordResults for the assignment given by the run data structure.
 func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunData, result *score.Results) {
-	logger.Debugf("Fetching most recent submission for assignment %d", rData.Assignment.GetID())
+	assignment := rData.Assignment
+	logger.Debugf("Fetching most recent submission for assignment %d", assignment.GetID())
 	submissionQuery := &pb.Submission{
-		AssignmentID: rData.Assignment.GetID(),
+		AssignmentID: assignment.GetID(),
 		UserID:       rData.Repo.GetUserID(),
 		GroupID:      rData.Repo.GetGroupID(),
 	}
@@ -102,30 +103,24 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		logger.Errorf("Failed to get submission data from database: %v", err)
 		return
 	}
-	// keep approved status if already approved
-	approvedStatus := newest.GetStatus()
-
-	if rData.Assignment.AutoApprove && result.Sum() >= rData.Assignment.GetScoreLimit() {
-		approvedStatus = pb.Submission_APPROVED
-	}
 
 	score := result.Sum()
 	newSubmission := &pb.Submission{
-		AssignmentID: rData.Assignment.ID,
+		AssignmentID: assignment.GetID(),
 		CommitHash:   rData.CommitID,
 		Score:        score,
 		BuildInfo:    result.BuildInfo,
 		Scores:       result.Scores,
 		UserID:       rData.Repo.GetUserID(),
 		GroupID:      rData.Repo.GetGroupID(),
-		Status:       approvedStatus,
+		Status:       assignment.IsApproved(newest, score),
 	}
 	err = db.CreateSubmission(newSubmission)
 	if err != nil {
 		logger.Errorf("Failed to add submission to database: %v", err)
 		return
 	}
-	logger.Debugf("Created submission for assignment '%s' with status %s", rData.Assignment.GetName(), approvedStatus)
+	logger.Debugf("Created submission for assignment '%s' with score %d, status %s", assignment.GetName(), score, newSubmission.GetStatus())
 	updateSlipDays(logger, db, rData.Assignment, newSubmission)
 }
 
