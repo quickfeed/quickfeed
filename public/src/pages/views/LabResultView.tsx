@@ -3,7 +3,6 @@ import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { ISubmissionLink, ISubmission } from "../../models";
 import { User, Submission } from "../../../proto/ag/ag_pb";
 import { Release } from "../../components/manual-grading/Release";
-import { scoreFromReviews } from '../../componentHelper';
 interface ILabInfoProps {
     submissionLink: ISubmissionLink;
     student: User;
@@ -18,12 +17,11 @@ export class LabResultView extends React.Component<ILabInfoProps> {
 
     public render() {
         if (this.props.submissionLink.submission) {
-            const latest = this.props.submissionLink.submission;
-            const buildLog = latest.buildInfo.getBuildlog().split("\n").map((x, i) => <span key={i} >{x}<br /></span>);
-            const score = this.props.submissionLink.assignment.getSkiptests() ? scoreFromReviews(latest.reviews) : latest.score;
+            const currentSubmission = this.props.submissionLink.submission;
+            const buildLog = currentSubmission.buildInfo.getBuildlog().split("\n").map((x, i) => <span key={i} >{x}<br /></span>);
             const lastBuildTable = (<LastBuild
-            test_cases={latest.testCases}
-            score={score}
+            test_cases={currentSubmission.testCases}
+            score={currentSubmission.score}
             scoreLimit={this.props.submissionLink.assignment.getScorelimit()}
             weight={100}
         />)
@@ -33,24 +31,24 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                         <section id="result">
                             <LabResult
                                 assignmentID={this.props.submissionLink.assignment.getId()}
-                                submissionID={latest.id}
+                                submissionID={currentSubmission.id}
                                 scoreLimit={this.props.submissionLink.assignment.getScorelimit()}
                                 teacherView={this.props.teacherPageView}
                                 lab={this.props.submissionLink.assignment.getName()}
-                                progress={score}
-                                status={latest.status}
+                                progress={currentSubmission.score}
+                                status={currentSubmission.status}
                                 authorName={this.props.submissionLink.authorName}
                                 onSubmissionStatusUpdate={this.props.onSubmissionStatusUpdate}
                                 onSubmissionRebuild={this.props.onSubmissionRebuild}
                             />
                             <LastBuildInfo
-                                submission={latest}
+                                submission={currentSubmission}
                                 slipdays={this.props.slipdays}
                                 assignment={this.props.submissionLink.assignment}
                                 teacherView={this.props.teacherPageView}
                             />
-                            {this.props.submissionLink.assignment.getSkiptests() ? null : lastBuildTable}
-                            {this.props.submissionLink.assignment.getReviewers() > 0 && latest.released ? this.renderReviewInfo(latest) : null}
+                            {this.props.submissionLink.assignment.getReviewers() > 0 ? null : lastBuildTable}
+                            {this.props.submissionLink.assignment.getReviewers() > 0 && currentSubmission.released ? this.renderReviewInfo(currentSubmission) : null}
                             <Row><div key="loghead" className="col-lg-12"><div key="logview" className="well"><code id="logs">{buildLog}</code></div></div></Row>
                         </section>
                     </div>
