@@ -193,6 +193,10 @@ func main() {
 							Usage: "Repository name. [required by GitHub]",
 						},
 						cli.StringFlag{
+							Name:  "org",
+							Usage: "Github organization [for organization level hooks]",
+						},
+						cli.StringFlag{
 							Name:  "secret",
 							Usage: "Webhook secret",
 						},
@@ -402,8 +406,9 @@ func createHook(client *scm.SCM) cli.ActionFunc {
 
 	return func(c *cli.Context) error {
 		return (*client).CreateHook(ctx, &scm.CreateHookOptions{
-			URL:    c.String("url"),
-			Secret: c.String("secret"),
+			URL:          c.String("url"),
+			Secret:       c.String("secret"),
+			Organization: c.String("org"),
 			Repository: &scm.Repository{
 				ID:    c.Uint64("id"),
 				Path:  c.String("repo"),
