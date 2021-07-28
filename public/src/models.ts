@@ -1,4 +1,4 @@
-import { Assignment, Course, Enrollment, Review, Submission } from '../proto/ag/ag_pb';
+import { Assignment, Course, Enrollment, Review, Submission } from "../proto/ag/ag_pb";
 import { BuildInfo, Score } from "../proto/kit/score/score_pb";
 
 export interface IUser {

@@ -78,6 +78,8 @@ func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	if err := db.conn.Preload("Reviews").
 		Preload("BuildInfo").
 		Preload("Scores").
+		Preload("Reviews.GradingBenchmarks").
+		Preload("Reviews.GradingBenchmarks.Criteria").
 		Where(query).Last(&submission).Error; err != nil {
 		return nil, err
 	}
@@ -150,7 +152,6 @@ func (db *GormDB) CreateReview(query *pb.Review) error {
 func (db *GormDB) UpdateReview(query *pb.Review) error {
 	return db.conn.Model(&pb.Review{ID: query.ID}).Updates(&pb.Review{
 		Feedback:   query.Feedback,
-		Review:     query.Review,
 		Ready:      query.Ready,
 		Score:      query.Score,
 		ReviewerID: query.ReviewerID,

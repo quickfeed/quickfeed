@@ -691,9 +691,6 @@ func (s *AutograderService) CreateReview(ctx context.Context, in *pb.ReviewReque
 		s.logger.Errorf("CreateReview failed: current user's ID: %d, when the reviewer's ID is %d ", usr.ID, in.Review.ReviewerID)
 		return nil, status.Error(codes.PermissionDenied, "failed to create review: reviewers' IDs don't match")
 	}
-	if err := in.Review.MarshalReviewString(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, "failed to create review: parsing error")
-	}
 	review, err := s.createReview(in.Review)
 	if err != nil {
 		s.logger.Errorf("CreateReview failed for review %+v: %v", in, err)
@@ -704,7 +701,7 @@ func (s *AutograderService) CreateReview(ctx context.Context, in *pb.ReviewReque
 
 // UpdateReview updates a submission review
 // Access policy: Teacher of CourseID, Author of the given Review
-func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewRequest) (*pb.Void, error) {
+func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewRequest) (*pb.Review, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateReview failed: authentication error: %v", err)
@@ -718,14 +715,12 @@ func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewReque
 		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.Review.ReviewerID)
 		return nil, status.Error(codes.PermissionDenied, "reviews can only be updated by original authors or course creator")
 	}
-	if err := in.Review.MarshalReviewString(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, "failed to create review: parsing error")
-	}
-	if err = s.updateReview(in.Review); err != nil {
+	review, err := s.updateReview(in.Review)
+	if err != nil {
 		s.logger.Errorf("UpdateReview failed for review %+v: %v", in, err)
 		err = status.Error(codes.InvalidArgument, "failed to update review")
 	}
-	return &pb.Void{}, err
+	return review, err
 }
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment

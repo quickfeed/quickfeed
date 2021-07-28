@@ -579,9 +579,6 @@ export class Assignment extends jspb.Message {
   getReviewers(): number;
   setReviewers(value: number): Assignment;
 
-  getSkiptests(): boolean;
-  setSkiptests(value: boolean): Assignment;
-
   getSubmissionsList(): Array<Submission>;
   setSubmissionsList(value: Array<Submission>): Assignment;
   clearSubmissionsList(): Assignment;
@@ -615,7 +612,6 @@ export namespace Assignment {
     isgrouplab: boolean,
     scorelimit: number,
     reviewers: number,
-    skiptests: boolean,
     submissionsList: Array<Submission.AsObject>,
     gradingbenchmarksList: Array<GradingBenchmark.AsObject>,
     containertimeout: number,
@@ -752,6 +748,9 @@ export class GradingBenchmark extends jspb.Message {
   getAssignmentid(): number;
   setAssignmentid(value: number): GradingBenchmark;
 
+  getReviewid(): number;
+  setReviewid(value: number): GradingBenchmark;
+
   getHeading(): string;
   setHeading(value: string): GradingBenchmark;
 
@@ -775,6 +774,7 @@ export namespace GradingBenchmark {
   export type AsObject = {
     id: number,
     assignmentid: number,
+    reviewid: number,
     heading: string,
     comment: string,
     criteriaList: Array<GradingCriterion.AsObject>,
@@ -855,9 +855,6 @@ export class Review extends jspb.Message {
   getReviewerid(): number;
   setReviewerid(value: number): Review;
 
-  getReview(): string;
-  setReview(value: string): Review;
-
   getFeedback(): string;
   setFeedback(value: string): Review;
 
@@ -867,10 +864,10 @@ export class Review extends jspb.Message {
   getScore(): number;
   setScore(value: number): Review;
 
-  getBenchmarksList(): Array<GradingBenchmark>;
-  setBenchmarksList(value: Array<GradingBenchmark>): Review;
-  clearBenchmarksList(): Review;
-  addBenchmarks(value?: GradingBenchmark, index?: number): GradingBenchmark;
+  getGradingbenchmarksList(): Array<GradingBenchmark>;
+  setGradingbenchmarksList(value: Array<GradingBenchmark>): Review;
+  clearGradingbenchmarksList(): Review;
+  addGradingbenchmarks(value?: GradingBenchmark, index?: number): GradingBenchmark;
 
   getEdited(): string;
   setEdited(value: string): Review;
@@ -888,11 +885,10 @@ export namespace Review {
     id: number,
     submissionid: number,
     reviewerid: number,
-    review: string,
     feedback: string,
     ready: boolean,
     score: number,
-    benchmarksList: Array<GradingBenchmark.AsObject>,
+    gradingbenchmarksList: Array<GradingBenchmark.AsObject>,
     edited: string,
   }
 }

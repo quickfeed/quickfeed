@@ -1480,28 +1480,28 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateReview = new grpcWeb.AbstractClientBase.MethodInfo(
-    Void,
+    Review,
     (request: ReviewRequest) => {
       return request.serializeBinary();
     },
-    Void.deserializeBinary
+    Review.deserializeBinary
   );
 
   updateReview(
     request: ReviewRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Void>;
+    metadata: grpcWeb.Metadata | null): Promise<Review>;
 
   updateReview(
     request: ReviewRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+               response: Review) => void): grpcWeb.ClientReadableStream<Review>;
 
   updateReview(
     request: ReviewRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: Void) => void) {
+               response: Review) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         new URL('/ag.AutograderService/UpdateReview', this.hostname_).toString(),
