@@ -26,12 +26,6 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 )
 
-var lis *bufconn.Listener
-
-func bufDialer(context.Context, string) (net.Conn, error) {
-	return lis.Dial()
-}
-
 var userTest = []struct {
 	id       uint64
 	code     codes.Code
@@ -63,7 +57,11 @@ func TestGetSelf(t *testing.T) {
 	store.Options.Secure = true
 	gothic.Store = store
 
-	lis = bufconn.Listen(bufSize)
+	lis := bufconn.Listen(bufSize)
+	bufDialer := func(context.Context, string) (net.Conn, error) {
+		return lis.Dial()
+	}
+
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier())
 	s := grpc.NewServer(opt)

@@ -46,6 +46,8 @@
         "autoapprove",
         "autograde",
         "backports",
+        "bufconn",
+        "bufnet",
         "buildid",
         "certonly",
         "cmds",
