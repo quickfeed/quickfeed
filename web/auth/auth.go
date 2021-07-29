@@ -59,13 +59,14 @@ type UserToken struct {
 
 var TokenStore = &UserToken{store: make(map[string]uint64)}
 
-func (ut *UserToken) Add(token string, id uint64) {
-	for currToken, currId := range ut.store {
-		if currId == id && currToken != token {
-			delete(ut.store, currToken)
+// Add adds token for userID, replacing the current token for userID, if any.
+func (ut *UserToken) Add(token string, userID uint64) {
+	for currentToken, id := range ut.store {
+		if id == userID && currentToken != token {
+			delete(ut.store, currentToken)
 		}
 	}
-	ut.store[token] = id
+	ut.store[token] = userID
 }
 
 func (ut *UserToken) Get(token string) uint64 {
@@ -327,7 +328,7 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 
 			i, ok := sess.Values[UserKey]
 			if !ok {
-				//logger.Error(echo.ErrUnauthorized.Error())
+				// logger.Error(echo.ErrUnauthorized.Error())
 				return next(c)
 			}
 
