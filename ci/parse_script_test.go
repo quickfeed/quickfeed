@@ -16,18 +16,24 @@ import (
 // We don't actually test anything here since the output is expected to be unstable; must be inspected manually.
 
 func TestParseScript(t *testing.T) {
+	const (
+		// these are only used in text; no access to qf101 organization or user is needed
+		qfTestOrg      = "qf101"
+		githubUserName = "user"
+	)
 	randomness := make([]byte, 10)
-	_, err := rand.Read(randomness)
-	if err != nil {
+	if _, err := rand.Read(randomness); err != nil {
 		t.Fatal(err)
 	}
 	randomString := fmt.Sprintf("%x", sha1.Sum(randomness))
+
+	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	info := &AssignmentInfo{
 		AssignmentName:     "lab2",
 		Script:             "go.sh",
 		CreatorAccessToken: "secret",
-		GetURL:             pb.StudentRepoURL(gh, qf101, ghUserName),
-		TestURL:            pb.TestsRepoURL(gh, qf101),
+		GetURL:             repo.StudentRepoURL(githubUserName),
+		TestURL:            repo.TestsRepoURL(),
 		RandomSecret:       randomString,
 	}
 	j, err := parseScriptTemplate("scripts", info)

@@ -2,7 +2,6 @@ package assignments
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -13,15 +12,8 @@ import (
 // To run this test, please see instructions in the developer guide (dev.md).
 
 func TestFetchAssignments(t *testing.T) {
-	qfTestOrg := os.Getenv("QF_TEST_ORG")
-	if len(qfTestOrg) < 1 {
-		qfTestOrg = "qf101"
-		t.Logf("This test requires access to the '%s' GitHub organization; to use another organization set the 'QF_TEST_ORG' environment variable", qfTestOrg)
-	}
-	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
-	if len(accessToken) < 1 {
-		t.Skipf("This test requires that 'GITHUB_ACCESS_TOKEN' is set and that you have access to the '%v' GitHub organization", qfTestOrg)
-	}
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
 
 	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
 	if err != nil {

@@ -1,20 +1,20 @@
 package ci
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
-	"os"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/log"
+	"github.com/autograde/quickfeed/scm"
+	"go.uber.org/zap"
 )
 
 const (
-	gh         = "github.com"
-	qf101      = "qf101"
-	ghUserName = "meling"
+	gh = "github.com"
 )
 
 // To run this test, please see instructions in the developer guide (dev.md).
@@ -23,28 +23,32 @@ const (
 // The test below will run locally on the test machine, not on the QuickFeed machine.
 
 func TestRunTests(t *testing.T) {
-	qfTestOrg := os.Getenv("QF_TEST_ORG")
-	if len(qfTestOrg) < 1 {
-		qfTestOrg = qf101
-		t.Logf("This test requires access to the '%s' GitHub organization; to use another organization set the 'QF_TEST_ORG' environment variable", qfTestOrg)
-	}
-	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
-	if len(accessToken) < 1 {
-		t.Skipf("This test requires that 'GITHUB_ACCESS_TOKEN' is set and that you have access to the '%v' GitHub organization", qfTestOrg)
-	}
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
 
-	randomness := make([]byte, 10)
-	_, err := rand.Read(randomness)
+	// Only used to fetch the user's GitHub login (user name)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
+	userName, err := s.GetUserName(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	randomness := make([]byte, 10)
+	if _, err := rand.Read(randomness); err != nil {
+		t.Fatal(err)
+	}
 	randomString := fmt.Sprintf("%x", sha1.Sum(randomness))
+
+	repo := pb.RepoURL{ProviderURL: gh, Organization: qfTestOrg}
 	info := &AssignmentInfo{
 		AssignmentName:     "lab1",
 		Script:             "go.sh",
 		CreatorAccessToken: accessToken,
-		GetURL:             pb.StudentRepoURL(gh, qfTestOrg, ghUserName),
-		TestURL:            pb.TestsRepoURL(gh, qfTestOrg),
+		GetURL:             repo.StudentRepoURL(userName),
+		TestURL:            repo.TestsRepoURL(),
 		RandomSecret:       randomString,
 	}
 	runData := &RunData{
