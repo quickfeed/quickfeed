@@ -1,41 +1,8 @@
 package web_test
 
 import (
-	"io/ioutil"
-	"os"
 	"testing"
-
-	"github.com/autograde/quickfeed/database"
-	"go.uber.org/zap"
 )
-
-func setup(t *testing.T) (*database.GormDB, func()) {
-	t.Helper()
-	const (
-		prefix = "testdb"
-	)
-
-	f, err := ioutil.TempFile(os.TempDir(), prefix)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := f.Close(); err != nil {
-		os.Remove(f.Name())
-		t.Fatal(err)
-	}
-
-	db, err := database.NewGormDB(f.Name(), zap.NewNop())
-	if err != nil {
-		os.Remove(f.Name())
-		t.Fatal(err)
-	}
-
-	return db, func() {
-		if err := os.Remove(f.Name()); err != nil {
-			t.Error(err)
-		}
-	}
-}
 
 func assertCode(t *testing.T, haveCode, wantCode int) {
 	t.Helper()
