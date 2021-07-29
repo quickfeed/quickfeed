@@ -1,8 +1,6 @@
 package database
 
 import (
-	"fmt"
-
 	pb "github.com/autograde/quickfeed/ag"
 	"gorm.io/gorm"
 )
@@ -69,7 +67,7 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 
 	if submission.BuildInfo != nil {
 		if err := db.conn.Save(submission.BuildInfo).Error; err != nil {
-			return fmt.Errorf("Cant save build info: %+v", submission.BuildInfo) //err
+			return err
 		}
 	}
 	// Save a submission record for the given assignment and student/group.
