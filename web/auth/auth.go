@@ -327,8 +327,8 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 
 			i, ok := sess.Values[UserKey]
 			if !ok {
-				logger.Error(echo.ErrUnauthorized.Error())
-				return echo.ErrUnauthorized
+				//logger.Error(echo.ErrUnauthorized.Error())
+				return next(c)
 			}
 
 			// If type assertion fails, the recover middleware will catch the panic and log a stack trace.
@@ -343,7 +343,7 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 					return OAuth2Logout(logger)(c)
 				}
 				logger.Error(echo.ErrUnauthorized.Error())
-				return echo.ErrUnauthorized
+				return next(c)
 			}
 			c.Set(UserKey, user)
 

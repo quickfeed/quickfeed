@@ -358,7 +358,7 @@ func TestAccessControl(t *testing.T) {
 	}))
 
 	// User is not logged in.
-	if err := protected(c); err != echo.ErrUnauthorized {
+	if err := protected(c); err != nil {
 		t.Error(err)
 	}
 
