@@ -308,8 +308,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             console.log("failed to get logged in user; status code: " + result.status.getCode());
             return null;
         }
-        const iusr = result.data
-        return iusr;
+        return result.data;
     }
 
     public async updateAssignments(courseID: number): Promise<boolean> {
