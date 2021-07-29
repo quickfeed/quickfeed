@@ -68,7 +68,7 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 
 	log.Printf("org %s\n", course.GetOrganizationPath())
 
-	cloneURL := sc.CreateCloneURL(&scm.CreateClonePathOptions{
+	cloneURL := sc.CreateCloneURL(&scm.URLPathOptions{
 		Organization: course.OrganizationPath,
 		Repository:   pb.TestsRepo,
 	})
