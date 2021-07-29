@@ -26,11 +26,10 @@ func init() {
 
 // Session keys.
 const (
-	SessionKey       = "session"
-	GothicSessionKey = "_gothic_session"
-	UserKey          = "user"
-	Cookie           = "cookie"
-	OutgoingCookie   = "Set-Cookie"
+	SessionKey     = "session"
+	UserKey        = "user"
+	Cookie         = "cookie"
+	OutgoingCookie = "Set-Cookie"
 )
 
 // Query keys.
@@ -94,7 +93,7 @@ func OAuth2Logout(logger *zap.Logger) echo.HandlerFunc {
 			us := i.(*UserSession)
 			// Invalidate gothic user sessions.
 			for provider := range us.Providers {
-				sess, err := session.Get(provider+GothicSessionKey, c)
+				sess, err := session.Get(provider+gothic.SessionName, c)
 				if err != nil {
 					logger.Error(err.Error())
 					return err
