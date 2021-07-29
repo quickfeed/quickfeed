@@ -23,3 +23,13 @@ func GetAccessToken(t *testing.T) string {
 	}
 	return accessToken
 }
+
+func GetWebHookServer(t *testing.T) string {
+	t.Helper()
+	serverURL := os.Getenv("QF_WEBHOOK_SERVER")
+	if len(serverURL) < 1 {
+		qfTestOrg := GetTestOrganization(t)
+		t.Skipf("This test requires that 'QF_WEBHOOK_SERVER' is set and that you have access to the '%v' GitHub organization", qfTestOrg)
+	}
+	return serverURL
+}
