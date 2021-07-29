@@ -100,6 +100,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submission, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submission.deserializeBinary);
+        this.methodInfoRebuildSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.CourseSubmissions, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.CourseSubmissions.deserializeBinary);
         this.methodInfoCreateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.GradingBenchmark, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.GradingBenchmark.deserializeBinary);
@@ -354,6 +357,13 @@ var AutograderServiceClient = /** @class */ (function () {
         }
         return this.client_.unaryCall(this.hostname_ +
             '/ag.AutograderService/RebuildSubmission', request, metadata || {}, this.methodInfoRebuildSubmission);
+    };
+    AutograderServiceClient.prototype.rebuildSubmissions = function (request, metadata, callback) {
+        if (callback !== undefined) {
+            return this.client_.rpcCall(new URL('/ag.AutograderService/RebuildSubmissions', this.hostname_).toString(), request, metadata || {}, this.methodInfoRebuildSubmissions, callback);
+        }
+        return this.client_.unaryCall(this.hostname_ +
+            '/ag.AutograderService/RebuildSubmissions', request, metadata || {}, this.methodInfoRebuildSubmissions);
     };
     AutograderServiceClient.prototype.createBenchmark = function (request, metadata, callback) {
         if (callback !== undefined) {

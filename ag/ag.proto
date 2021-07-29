@@ -393,7 +393,7 @@ message CourseUserRequest {
     string userLogin = 3;
 }
 
-message LoadCriteriaRequest {
+message AssignmentRequest {
     uint64 courseID = 1;
     uint64 assignmentID = 2;
 }
@@ -453,6 +453,7 @@ service AutograderService {
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
     rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
     rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
+    rpc RebuildSubmissions(AssignmentRequest) returns (CourseSubmissions) {}
 
     // manual grading //
     rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
@@ -467,7 +468,7 @@ service AutograderService {
     rpc UpdateReview(ReviewRequest) returns (Review) {}
     rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers) {}
 
-    rpc LoadCriteria(LoadCriteriaRequest) returns (Benchmarks) {}
+    rpc LoadCriteria(AssignmentRequest) returns (Benchmarks) {}
 
     // misc //
     

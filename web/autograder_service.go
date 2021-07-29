@@ -588,6 +588,22 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 	return submission, nil
 }
 
+// RebuildAllSubmissions runs tests for all submissions for the given assignment ID.
+func (s *AutograderService) RebuildAllSubmissions(ctx context.Context, in *pb.AssignmentRequest) (*pb.CourseSubmissions, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("RebuildAllSubmissions failed: authentication error: %v", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if !s.isTeacher(usr.ID, in.GetCourseID()) {
+		s.logger.Error("RebuildAllSubmissions failed: user is not teacher")
+		return nil, status.Error(codes.PermissionDenied, "only teachers can approve submissions")
+	}
+
+	// TODO(vera): return all updated submissions when tests are done? Possible timeout issues
+	return nil, nil
+}
+
 // CreateBenchmark adds a new grading benchmark for an assignment
 // Access policy: Teacher of CourseID
 func (s *AutograderService) CreateBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
@@ -656,7 +672,7 @@ func (s *AutograderService) DeleteCriterion(ctx context.Context, in *pb.GradingC
 
 // LoadCriteria loads grading criteria for an assignment from a json file
 // Access policy: Teacher of CourseID
-func (s *AutograderService) LoadCriteria(ctx context.Context, in *pb.LoadCriteriaRequest) (*pb.Benchmarks, error) {
+func (s *AutograderService) LoadCriteria(ctx context.Context, in *pb.AssignmentRequest) (*pb.Benchmarks, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("LoadCriteria failed: scm authentication error: %v", err)

@@ -84,7 +84,7 @@ func (s *AutograderService) deleteCriterion(query *pb.GradingCriterion) error {
 }
 
 // TODO(meling) The criteria.json can be loaded in assignments/FetchAssignments() which already clones the tests repo
-func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, request *pb.LoadCriteriaRequest) ([]*pb.GradingBenchmark, error) {
+func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, request *pb.AssignmentRequest) ([]*pb.GradingBenchmark, error) {
 	query := &pb.Assignment{ID: request.AssignmentID, CourseID: request.CourseID}
 	assignment, course, err := s.getAssignmentWithCourse(query, false)
 	if err != nil {

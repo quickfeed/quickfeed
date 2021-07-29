@@ -45,6 +45,8 @@ func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.R
 	return s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
 }
 
+func (s *AutograderService) rebuildAllSubmissions()
+
 func (s *AutograderService) lookupName(submission *pb.Submission) string {
 	if submission.GetGroupID() > 0 {
 		group, _ := s.db.GetGroup(submission.GetGroupID())

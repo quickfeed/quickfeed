@@ -56,6 +56,7 @@ export interface ICourseProvider {
     updateSubmission(courseID: number, submission: ISubmission): Promise<boolean>;
     updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean>;
     rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null>;
+    rebuildSubmissions(assignmentID: number, courseID: number): Promise<IAllSubmissionsForEnrollment[]>;
     getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
     isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean>;
     addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null>;
@@ -291,6 +292,10 @@ export class CourseManager {
 
     public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null> {
         return this.courseProvider.rebuildSubmission(assignmentID, submissionID);
+    }
+
+    public async rebuildSubmissions(assignmentID: number, courseID: number): Promise<IAllSubmissionsForEnrollment[]> {
+        return this.courseProvider.rebuildSubmissions(assignmentID, courseID);
     }
 
     public async updateSubmission(courseID: number, submission: ISubmission): Promise<boolean> {
