@@ -43,8 +43,7 @@ func TestGetSelf(t *testing.T) {
 	defer cleanup()
 
 	const (
-		bufSize        = 1024 * 1024
-		OutgoingCookie = "Set-Cookie"
+		bufSize = 1024 * 1024
 	)
 
 	_, scms := fakeProviderMap(t)
