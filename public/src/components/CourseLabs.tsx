@@ -1,12 +1,12 @@
 import { useHistory } from "react-router"
 import { getFormattedTime, SubmissionStatus } from "../Helpers"
-import { useOvermind } from "../overmind"
+import { useAppState } from "../overmind"
 import { Submission } from "../../proto/ag/ag_pb"
 import { ProgressBar } from "./ProgressBar"
 import React from "react"
 
 export const CourseLabs = ({courseID}: {courseID: number}) =>  {
-    const { state } = useOvermind()
+    const state = useAppState()
     const history  = useHistory()
     
     const redirectToLab = (assignmentID: number) => {
@@ -17,7 +17,7 @@ export const CourseLabs = ({courseID}: {courseID: number}) =>  {
         let labs :JSX.Element[] = []
         let submission: Submission = new Submission()
         
-        if(state.assignments[courseID] && state.submissions[courseID]) {
+        if (state.assignments[courseID] && state.submissions[courseID]) {
             state.assignments[courseID].forEach(assignment => {
                 // Submissions are indexed by the assignment order.    
                 if (state.submissions[courseID][assignment.getOrder() - 1]){
@@ -37,7 +37,7 @@ export const CourseLabs = ({courseID}: {courseID: number}) =>  {
                         </div>
                         <div className="row" >
                             <div className="col-5">
-                                <ProgressBar courseID={courseID} assignmentIndex={assignment.getOrder()-1} submission={submission} type="lab"/>
+                                <ProgressBar courseID={courseID} assignmentIndex={assignment.getOrder() - 1} submission={submission} type="lab"/>
                             </div>
                             <div className="col-3 text-center">
                                 {(submission.getStatus() == 0 && submission.getScore() >= assignment.getScorelimit()) ? "Awaiting Approval" : SubmissionStatus[submission.getStatus()]}

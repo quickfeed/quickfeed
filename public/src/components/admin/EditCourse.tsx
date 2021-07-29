@@ -1,9 +1,9 @@
 import React from "react"
-import { useOvermind } from "../../overmind"
+import { useAppState } from "../../overmind"
 
 /** TODO:  */
 const EditCourse = () => {
-    const { state } = useOvermind()
+    const state  = useAppState()
 
     const courses = state.courses.map(course => {
         return (

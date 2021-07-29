@@ -1,7 +1,7 @@
 import React from "react"
 import { Route, Switch, useHistory } from "react-router"
 import { getCourseID } from "../Helpers"
-import { useOvermind } from "../overmind"
+import { useAppState } from "../overmind"
 import Card from "../components/Card"
 import CourseBanner from "../components/CourseBanner"
 import GroupPage from "./GroupPage"
@@ -13,7 +13,7 @@ import StatisticsView from "../components/Statistics"
 
 /* */
 const TeacherPage = () => {
-    const { state } = useOvermind()
+    const state = useAppState()
     const courseID = getCourseID()
     const history = useHistory()
     const root = `/course/${courseID}`

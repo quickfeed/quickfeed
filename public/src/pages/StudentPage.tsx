@@ -1,7 +1,7 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { Route, Switch, useHistory } from "react-router"
 import { getCourseID } from "../Helpers"
-import { useOvermind } from "../overmind"
+import { useAppState } from "../overmind"
 import CourseBanner from "../components/CourseBanner"
 import { CourseLabs } from "../components/CourseLabs"
 import CourseUtilityLinks from "../components/CourseUtilityLinks"
@@ -11,7 +11,7 @@ import RedirectButton from "../components/RedirectButton"
 
 /* */
 const StudentPage = () => {
-    const { state } = useOvermind()
+    const state = useAppState()
     const courseID = getCourseID()
     const history = useHistory()
     const root = `/course/${courseID}`

@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from "react"
-import { useOvermind } from "../../overmind"
-import { Course, Enrollment } from "../../../proto/ag/ag_pb"
-import CourseCard from "../CourseCard"
+import React, { useState } from "react"
+import { useActions } from "../../overmind"
+import { Course } from "../../../proto/ag/ag_pb"
 
 
 
 
 export const CourseCreationForm = () => {
-    const {actions} = useOvermind()
+    const actions = useActions()
     const [orgName, setOrgName] = useState("")
     const [course, setCourse] = useState(new Course)
 

@@ -1,11 +1,11 @@
 import React, { useEffect } from "react"
 import { AlertType } from "../Helpers"
-import { useOvermind } from "../overmind"
+import { useAppState, useActions } from "../overmind"
 
 /* This component displays all alerts found in state.alerts */
 export const Alert = () => {
-    const { state, actions } = useOvermind()
-
+    const state = useAppState()
+    const actions = useActions()
     const alerts = state.alerts.map((alert, index) => {
         return  <div
                     key={index} 

@@ -1,13 +1,12 @@
 import React, { useState } from "react"
 import { Link, useHistory } from "react-router-dom"
-import { useOvermind } from "../../overmind"
+import { useActions, useAppState } from "../../overmind"
 
 
 const NavBarFooter = () => {
-    const {
-        state: {self},
-        actions: { logout }
-    } = useOvermind()
+    const logout = useActions().logout
+    const self = useAppState((state) => state.self)
+
     const history = useHistory()
 
     const [hidden, setHidden] = useState<boolean>(true)

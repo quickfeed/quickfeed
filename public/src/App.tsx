@@ -1,23 +1,24 @@
 import React, { useEffect, useState } from 'react'
-import { useOvermind } from './overmind'
+import { useAppState, useActions } from './overmind'
 import NavBar from "./components/NavBar";
 import { Switch, Route } from 'react-router-dom';
 import Profile from "./components/Profile";
-import CoursePage from "./components/CoursePage"
+import CoursePage from "./pages/CoursePage"
 import Courses from "./components/Courses";
 import Alert from './components/Alert';
-import AdminPage from './components/AdminPage';
+import AdminPage from './pages/AdminPage';
 import Loading from './components/Loading';
 import { isValid } from './Helpers';
 import Dashboard from './components/Dashboard';
-import AboutPage from './components/AboutPage';
+import AboutPage from './pages/AboutPage';
 
 
 
 
 
 const App = () => {
-    const { state, actions } = useOvermind()
+    const state = useAppState()
+    const actions = useActions()
     const [loggedIn, setLoggedIn] = useState(false)
     useEffect( () => {
         async function setup() {

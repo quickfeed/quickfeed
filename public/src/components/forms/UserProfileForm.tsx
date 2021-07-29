@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useState } from "react"
-import { useOvermind } from "../../overmind"
+import { useActions, useAppState } from "../../overmind"
 import { User } from "../../../proto/ag/ag_pb"
 
 interface IProps {
@@ -8,7 +8,8 @@ interface IProps {
   }
 
 export const UserProfileForm = (props: IProps) => {
-    const {state, actions} = useOvermind()
+    const state = useAppState()
+    const actions = useActions()
 
     const [user, setUser] = useState({'name': state.self.getName(), 'email': state.self.getEmail(), 'studentid': state.self.getStudentid()})
 

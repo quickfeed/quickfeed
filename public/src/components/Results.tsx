@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react"
 import { Redirect, useParams } from "react-router-dom"
 import { Enrollment } from "../../proto/ag/ag_pb"
 import { getCourseID } from "../Helpers"
-import { useOvermind } from "../overmind"
+import { useActions, useAppState } from "../overmind"
 import ResultItem from "./teacher/ResultItem"
 
 
 const Results = () => {
-    const {state, actions} = useOvermind()
+    const state = useAppState()
+    const actions = useActions()
+    
     const courseID = getCourseID()
 
     const [query, setQuery] = useState<string>("")

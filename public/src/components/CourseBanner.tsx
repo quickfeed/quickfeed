@@ -1,10 +1,10 @@
 import React from "react";
 import { Enrollment } from "../../proto/ag/ag_pb";
-import { useOvermind } from "../overmind";
+import { useActions } from "../overmind";
 
 
 const CourseBanner = ({enrollment}: {enrollment: Enrollment}) => {
-    const {actions} = useOvermind()
+    const actions = useActions()
     const style = enrollment.getState() === Enrollment.DisplayState.VISIBLE ? 'fa fa-star-o' : "fa fa-star "
     return (
         <div className="jumbotron">

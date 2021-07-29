@@ -1,5 +1,5 @@
 import React, { useEffect } from "react"
-import { useOvermind } from "../overmind"
+import { useActions, useAppState } from "../overmind"
 import CreateGroup from "../components/group/CreateGroup"
 import { getCourseID, isTeacher } from "../Helpers"
 import Groups from "../components/Groups"
@@ -7,7 +7,8 @@ import GroupComponent from "../components/group/Group"
 
 
 export const GroupPage = () => {
-    const {state, actions} = useOvermind()
+    const state = useAppState()
+    const actions = useActions()
     const courseID = getCourseID()
 
     useEffect(() => {

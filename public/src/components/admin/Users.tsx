@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react"
 import { User } from "../../../proto/ag/ag_pb"
-import { useOvermind } from "../../overmind"
+import { useAppState, useActions } from "../../overmind"
 import Search from "../Search"
 
 
 const Users = () => {
-    const {state, actions} = useOvermind()
+    const state = useAppState()
+    const actions = useActions()
 
     useEffect(() => {
         if (state.allUsers.length == 0) {
@@ -13,11 +14,11 @@ const Users = () => {
         }
     }, [state.query])
 
-    const PromoteButton = (props: {user: User, onClick?: Function, input?: any}) => {
+    const PromoteButton = (props: {user: User, input?: any}) => {
         const classname = props.user.getIsadmin() ? "badge badge-danger float-right" : "badge badge-primary float-right"
         const text = props.user.getIsadmin() ? "Demote" : "Promote"
         return (
-            <span className={classname} style={{cursor: "pointer"}} onClick={() => {if (props.onClick) { props.onClick(props.input)} }}>
+            <span className={classname} style={{cursor: "pointer"}} onClick={() => { actions.updateAdmin(props.user) }}>
                 {text}
             </span>
         )
@@ -33,7 +34,7 @@ const Users = () => {
                     </span> 
                     : null
                 }
-                <PromoteButton user={user} onClick={actions.updateAdmin} input={user}></PromoteButton>
+                <PromoteButton user={user} input={user}></PromoteButton>
             </li>
         )
     }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useOvermind } from "../overmind";
+import { useActions, useAppState } from "../overmind";
 import { Link, useHistory } from 'react-router-dom'
 import { Enrollment } from "../../proto/ag/ag_pb";
 import NavBarLabs from "./navbar/NavBarLabs";
@@ -10,7 +10,8 @@ import { Status } from "../consts";
 
 
 const NavBar = () => {
-    const { state, actions } = useOvermind() 
+    const state = useAppState()
+    const actions = useActions()
     const history = useHistory()
 
     const [active, setActive] = useState(0)

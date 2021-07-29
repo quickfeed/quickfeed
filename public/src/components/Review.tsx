@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { useOvermind } from "../overmind"
+import { useActions, useAppState } from "../overmind"
 import { Submission, SubmissionLink } from "../../proto/ag/ag_pb"
 import Lab from "./Lab"
 import { getCourseID } from "../Helpers"
@@ -7,7 +7,9 @@ import Search from "./Search"
 
 
 const Review = () => {
-    const {state, actions} = useOvermind()
+    const state = useAppState()
+    const actions = useActions()
+
     const courseID = getCourseID()
 
     const [submission, setSubmission] = useState<number | undefined>(undefined)

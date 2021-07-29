@@ -1,10 +1,10 @@
 import React, { useEffect } from "react"
 import { useHistory } from "react-router"
-import { useOvermind } from "../overmind"
+import { useAppState } from "../overmind"
 
 
 const RedirectButton = ({to}: {to: string}) => {
-    const { state } = useOvermind()
+    const state = useAppState()
     const history = useHistory()
     const hide = history.location.pathname == to ? true : false
     

@@ -1,8 +1,8 @@
 import React, { useEffect } from "react"
-import { useOvermind } from "../overmind"
+import { useActions } from "../overmind"
 
 export const Search = ({placeholder}: {placeholder?: string}) => {
-    const { actions } = useOvermind()
+    const actions = useActions()
 
     useEffect(() => {
         return actions.setQuery("")

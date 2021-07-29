@@ -1,12 +1,12 @@
 import React, { useEffect } from "react"
 import { Link, useHistory } from "react-router-dom"
-import { useOvermind } from "../../overmind"
+import { useAppState } from "../../overmind"
 import { Submission } from "../../../proto/ag/ag_pb"
 import { ProgressBar } from "../ProgressBar"
 
 
 const NavBarLabs = () => {
-    const {state} = useOvermind()
+    const state = useAppState()
     const history  = useHistory()
     
     const redirectToLab = (assignmentID: number) => {
@@ -38,7 +38,7 @@ const NavBarLabs = () => {
                     </li>
                 )
             })
-        return links
+            return links
         }
         return []
 

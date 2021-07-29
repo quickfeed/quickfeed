@@ -2,12 +2,13 @@ import React, { useState } from "react"
 import { useEffect } from "react"
 import { Redirect, RouteComponentProps } from "react-router-dom"
 import { EnrollmentStatus, sortByField } from "../Helpers"
-import { useOvermind } from "../overmind"
+import { useAppState, useActions } from "../overmind"
 import { Enrollment } from "../../proto/ag/ag_pb"
 
 
 export const Members = (props: RouteComponentProps<{id?: string | undefined}>) => {
-    const {state, actions} = useOvermind()
+    const state = useAppState()
+    const actions = useActions()
     let courseID = Number(props.match.params.id)
 
     const [func, setFunc] = useState("STATUS")

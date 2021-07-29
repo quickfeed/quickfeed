@@ -1,15 +1,14 @@
 import React from "react";
 import { Redirect } from "react-router";
-import { Enrollment } from "../../proto/ag/ag_pb";
 import { hasEnrollment } from "../Helpers";
-import { useOvermind } from "../overmind";
+import { useAppState } from "../overmind";
 import Courses from "./Courses";
 import LandingPageLabTable from "./LandingPageLabTable";
 
 
 /* Dashboard for a signed in user. */
 const Dashboard = () => {
-    const { state } = useOvermind()
+    const state = useAppState()
 
     // New users logging in are redirected to courses to ease enrollment
     if (!hasEnrollment(state.enrollments)) {

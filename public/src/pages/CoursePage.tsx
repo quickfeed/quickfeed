@@ -1,13 +1,15 @@
 import React, { useEffect } from "react"
 import { Redirect } from "react-router"
 import { getCourseID, isEnrolled, isTeacher } from "../Helpers"
-import { useOvermind } from "../overmind"
+import { useActions, useAppState } from "../overmind"
 import StudentPage from "./StudentPage"
 import TeacherPage from "./TeacherPage"
 
 /** This component is mainly used to determine which view (Student or Teacher) to render, based on enrollment status. */
 const CoursePage = () => {
-    const { state, actions: {setActiveCourse} } = useOvermind()
+    const state = useAppState()
+    const setActiveCourse = useActions().setActiveCourse
+    
     const courseID = getCourseID()
     const enrollment = state.enrollmentsByCourseId[courseID]
 

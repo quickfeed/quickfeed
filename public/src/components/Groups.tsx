@@ -1,11 +1,13 @@
 import React, { useEffect } from "react"
-import { useOvermind } from "../overmind"
+import { getCourseID } from "../Helpers"
+import { useActions, useAppState } from "../overmind"
+import Card from "./Card"
 
 /* Lists all groups for a given course. */
-export const Groups = (props: {courseID: number}) => {
-    const {state, actions} = useOvermind()
-    const courseID = props.courseID
-
+export const Groups = () => {
+    const state = useAppState()
+    const actions = useActions()
+    const courseID = getCourseID()
     const style = {width: "40px", borderRadius: "50%", marginRight: "10px"}
 
     useEffect(() => {
@@ -26,7 +28,6 @@ export const Groups = (props: {courseID: number}) => {
                         <li key={enrol.getId()} className="list-group-item">
                             <img src={enrol.getUser()?.getAvatarurl()} style={style}></img>
                             {enrol.getUser()?.getName()} 
-                            <span>{enrol.getSlipdaysremaining()}</span>
                         </li>
                 )}
             </ul>
