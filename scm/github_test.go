@@ -2,7 +2,6 @@ package scm_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/autograde/quickfeed/scm"
@@ -12,7 +11,6 @@ import (
 const (
 	qf101Org   = "qf101"
 	qf101OrdID = 77283363
-	serverURL  = "https://53c51fa9.ngrok.io" // TODO(meling) Should make this a persistent URL for receiving hook events
 	secret     = "the-secret-quickfeed-test"
 )
 
@@ -82,12 +80,13 @@ func TestListHooks(t *testing.T) {
 }
 
 func TestCreateHook(t *testing.T) {
-	// Only enable this test to add a new webhook to your test course organization
-	if os.Getenv("QF_WEBHOOK") == "" {
-		t.Skip("Disabled pending support for deleting webhooks")
-	}
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
+	serverURL := scm.GetWebHookServer(t)
+	// Only enable this test to add a new webhook to your test course organization
+	if serverURL == "" {
+		t.Skip("Disabled pending support for deleting webhooks")
+	}
 
 	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
 	if err != nil {
