@@ -10,7 +10,7 @@ import (
 )
 
 // TestDB returns a test database and close function.
-// This function should only be as a test helper.
+// This function should only be used as a test helper.
 func TestDB(t *testing.T) (database.Database, func()) {
 	t.Helper()
 
