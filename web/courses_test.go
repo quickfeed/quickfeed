@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/internal"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/markbates/goth"
@@ -61,7 +62,7 @@ var allCourses = []*pb.Course{
 }
 
 func TestGetCourses(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 10)
@@ -119,7 +120,7 @@ func fakeGothProvider() {
 }
 
 func TestNewCourse(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	// set up fake goth provider (only needs to be done once)
@@ -157,7 +158,7 @@ func TestNewCourse(t *testing.T) {
 }
 
 func TestNewCourseExistingRepos(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 10)
@@ -184,7 +185,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 }
 
 func TestEnrollmentProcess(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
@@ -287,7 +288,7 @@ func TestEnrollmentProcess(t *testing.T) {
 }
 
 func TestListCoursesWithEnrollment(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
@@ -357,7 +358,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 }
 
 func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
@@ -423,7 +424,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 }
 
 func TestGetCourse(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
@@ -446,7 +447,7 @@ func TestGetCourse(t *testing.T) {
 }
 
 func TestPromoteDemoteRejectTeacher(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	fakeGothProvider()
