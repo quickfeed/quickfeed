@@ -52,6 +52,10 @@ func newUserSession(id uint64) *UserSession {
 	}
 }
 
+func (us *UserSession) enableProvider(provider string) {
+	us.Providers[provider] = struct{}{}
+}
+
 // UserToken holds a map from session cookies to user IDs.
 type UserToken struct {
 	store map[string]uint64
@@ -71,10 +75,6 @@ func (ut *UserToken) Add(token string, userID uint64) {
 
 func (ut *UserToken) Get(token string) uint64 {
 	return ut.store[token]
-}
-
-func (us *UserSession) enableProvider(provider string) {
-	us.Providers[provider] = struct{}{}
 }
 
 // OAuth2Logout invalidates the session for the logged in user.
