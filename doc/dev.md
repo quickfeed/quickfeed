@@ -100,17 +100,17 @@ Here are some examples of such tests:
 ```sh
 cd assignments
 go test -v -run TestFetchAssignments
-cd web
-go test -v -run XXX
 cd ci
-QF_TEST_ORG=qf101 go test -v -run TestRunTests
+go test -v -run TestRunTests
 TEST_TMPL=1 go test -v -run TestParseScript
 TEST_IMAGE=1 go test -v -run TestParseScript
 cd scm
 go test -v -run TestGetOrganization
 go test -v -run TestListHooks
-QF_WEBHOOK=1 go test -v -run TestCreateHook
+QF_WEBHOOK_SERVER=https://62b9b9c05ece.ngrok.io go test -v -run TestCreateHook
 go test -v -run TestListHooks
+cd web/hooks
+QF_WEBHOOK_SERVER=https://62b9b9c05ece.ngrok.io go test -v -run TestGitHubWebHook
 ```
 
 ### Utility
