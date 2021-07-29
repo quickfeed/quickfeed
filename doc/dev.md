@@ -89,14 +89,13 @@ To run specific tests that requires remote interactions with GitHub you must cre
 export GITHUB_ACCESS_TOKEN=<your-personal-access-token>
 ```
 
-Some tests may also require access to a specific test course organization, e.g., `qf101`.
-If you do not have access to `qf101`, you can create your own test course organization and set the `QF_TEST_ORG` environment variable:
+Some other tests may also require access to a specific test course organization; for these tests use `QF_TEST_ORG`:
 
 ```sh
 export QF_TEST_ORG=<your-test-course-organization>
 ```
 
-To run such tests use:
+Here are some examples of such tests:
 
 ```sh
 cd assignments
@@ -107,12 +106,11 @@ cd ci
 QF_TEST_ORG=qf101 go test -v -run TestRunTests
 TEST_TMPL=1 go test -v -run TestParseScript
 TEST_IMAGE=1 go test -v -run TestParseScript
-```
-
-Alternatively, you can run such tests using (without having to set the `QF_TEST_ORG` environment variable):
-
-```sh
-QF_TEST_ORG=qf101 go test -v -run TestFetchAssignments
+cd scm
+go test -v -run TestGetOrganization
+go test -v -run TestListHooks
+QF_WEBHOOK=1 go test -v -run TestCreateHook
+go test -v -run TestListHooks
 ```
 
 ### Utility
