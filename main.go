@@ -57,13 +57,12 @@ var reg = prometheus.NewRegistry()
 
 func main() {
 	var (
-		baseURL    = flag.String("service.url", "", "base service DNS name")
-		dbFile     = flag.String("database.file", "qf.db", "database file")
-		public     = flag.String("http.public", "public", "path to content to serve")
-		httpAddr   = flag.String("http.addr", ":8081", "HTTP listen address")
-		grpcAddr   = flag.String("grpc.addr", ":9090", "gRPC listen address")
-		scriptPath = flag.String("script.path", "ci/scripts", "path to continuous integration scripts")
-		fake       = flag.Bool("provider.fake", false, "enable fake provider")
+		baseURL  = flag.String("service.url", "", "base service DNS name")
+		dbFile   = flag.String("database.file", "qf.db", "database file")
+		public   = flag.String("http.public", "public", "path to content to serve")
+		httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
+		grpcAddr = flag.String("grpc.addr", ":9090", "gRPC listen address")
+		fake     = flag.Bool("provider.fake", false, "enable fake provider")
 	)
 	flag.Parse()
 
@@ -92,7 +91,7 @@ func main() {
 	defer runner.Close()
 
 	agService := web.NewAutograderService(logger, db, scms, bh, runner)
-	go web.New(agService, *public, *httpAddr, *scriptPath, *fake)
+	go web.New(agService, *public, *httpAddr, *fake)
 
 	lis, err := net.Listen("tcp", *grpcAddr)
 	if err != nil {

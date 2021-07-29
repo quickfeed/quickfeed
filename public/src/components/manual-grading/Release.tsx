@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from "../../../proto/ag/ag_pb";
-import { scoreFromReviews, userSubmissionLink, setDivider, submissionStatusSelector, getDaysAfterDeadline } from "../../componentHelper";
+import { userSubmissionLink, setDivider, submissionStatusSelector, getDaysAfterDeadline, gradedManually, scoreFromReviews } from "../../componentHelper";
 import { ISubmission } from "../../models";
 import { formatDate } from "../../helper";
 import ReactTooltip from "react-tooltip";
@@ -23,9 +23,7 @@ interface ReleaseProps {
 
 interface ReleaseState {
     open: boolean;
-    reviews: Review[];
     reviewers: Map<User, Review>;
-    score: number;
     status: Submission.Status;
 }
 export class Release extends React.Component<ReleaseProps, ReleaseState>{
@@ -33,8 +31,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     constructor(props: ReleaseProps) {
         super(props);
         this.state = {
-            reviews: this.selectReadyReviews(),
-            score: scoreFromReviews(this.selectReadyReviews()),
             reviewers: new Map<User, Review>(),
             open: !props.teacherView,
             status: props.submission?.status ?? Submission.Status.NONE,
@@ -50,10 +46,12 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const noReadyReviewsDiv = <div className="alert alert-info">No ready reviews for {this.props.assignment.getName()}</div>
 
         const headerDiv = <div className="row review-header" onClick={() => {if (this.props.teacherView) this.toggleOpen()}}>
-        <h3><span className="r-number">{this.props.studentNumber}. </span><span className="r-header">{this.props.authorName}</span><span className="r-score">Score: {scoreFromReviews(this.selectReadyReviews())} </span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
+        <h3><span className="r-number">{this.props.studentNumber}. </span><span className="r-header">{this.props.authorName}</span>
+            <span className="r-score">Score: {scoreFromReviews(this.props.submission?.reviews ?? [])} </span>{gradedManually(this.props.assignment) ?
+                reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
         </div>;
 
-        if (this.props.assignment.getReviewers() < 1) {
+        if (!gradedManually(this.props.assignment)) {
             return <div className="release">
                 {headerDiv}
                 {open ? noReviewsDiv : null}
@@ -126,14 +124,14 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         return <div
             className={this.releaseButtonClass()}
             onClick={() => {
-                if (this.props.submission && this.props.assignment.getReviewers() > 0 && this.props.userIsCourseCreator) {
+                if (this.props.submission && gradedManually(this.props.assignment) && this.props.userIsCourseCreator) {
                     this.props.release(!this.props.submission.released);
                 }
             }}>{this.releaseButtonString()}</div>;
         }
 
     private releaseButtonClass(): string {
-        if (!this.props.submission || this.props.assignment.getReviewers() < 1 ||
+        if (!this.props.submission || !gradedManually(this.props.assignment) ||
          this.props.submission.reviews.length < this.props.assignment.getReviewers()) {
              return "btn release-btn";
          }
@@ -141,7 +139,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private releaseButtonString(): string {
-        if (!this.props.submission || this.props.assignment.getReviewers() < 1) {
+        if (!this.props.submission || !gradedManually(this.props.assignment)) {
              return "N/A";
          }
         return this.props.submission.released ? "Released" : "Release";
@@ -189,7 +187,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         rows.push(<tr key="rtf"><td key="fbrow">Feedbacks:</td>
             {reviewersList.map((u, i) => <td key={"fbrow" + i}>{this.commentSpan(allReviewers.get(u)?.getFeedback() ?? "No feedback", "fb" + i)}</td>)}
         </tr>);
-        rows.push(<tr key="tscore"><td key="scrow">Score: {scoreFromReviews(this.selectReadyReviews())}</td>
+        rows.push(<tr key="tscore"><td key="scrow">Score: {scoreFromReviews(this.props.submission?.reviews ?? [])}</td>
             {reviewersList.map(u => <td key={"scrow" + u.getId()}>{allReviewers.get(u)?.getScore() ?? 0}</td>)}
         </tr>);
         return rows;
@@ -218,11 +216,12 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     private selectBenchmark(u: User, bm: GradingBenchmark): GradingBenchmark {
         const allReviewers = this.state.reviewers;
         const allReviews = Array.from(allReviewers.values());
-
         const r = this.props.teacherView ? allReviewers.get(u) : allReviews.find(item => item.getReviewerid() === u.getId());
         if (r) {
-            const rbm = r.getBenchmarksList().find(item => item.getId() === bm.getId())
-            if (rbm) bm = rbm;
+            const rbm = r.getGradingbenchmarksList().find(item => item.getHeading() === bm.getHeading());
+            if (rbm) {
+                bm = rbm;
+            }
         }
         return bm;
     }
@@ -232,8 +231,8 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const allReviews = Array.from(allReviewers.values());
         const r = this.props.teacherView ? allReviewers.get(u) : allReviews.find(item => item.getReviewerid() === u.getId());
         if (r) {
-            r.getBenchmarksList().forEach(bm => {
-                const rc = bm.getCriteriaList().find(item => item.getId() === c.getId());
+            r.getGradingbenchmarksList().forEach(bm => {
+                const rc = bm.getCriteriaList().find(item => item.getDescription() === c.getDescription());
                 if (rc) {
                     c = rc;
                 }
@@ -321,7 +320,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         // if closing, flush the state
         if (this.state.open) {
             this.setState({
-                reviews: [],
                 open: false,
             });
             return;
@@ -332,8 +330,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         if (ready.length > 0) {
             this.setState({
                 open: this.props.isSelected ? !this.state.open : true,
-                reviews: ready,
-                score: scoreFromReviews(ready),
                 status: this.props.submission?.status ?? Submission.Status.NONE,
             });
         } else {

@@ -13,7 +13,7 @@ interface FeedbackViewProps {
     groups: IAllSubmissionsForEnrollment[];
     curUser: User;
     addReview: (review: Review) => Promise<Review | null>;
-    updateReview: (review: Review) => Promise<boolean>;
+    updateReview: (review: Review) => Promise<Review | null>;
 }
 
 interface FeedbackViewState {
@@ -99,17 +99,22 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
                             const ans = await this.props.addReview(review);
                             if (ans) {
                                 current.submission.reviews.push(ans);
-                                return true;
+                                return ans;
                             }
                         }
-                        return false;
+                        return null;
                     }}
                     updateReview={async (review: Review) => {
                         const current = this.state.submissionsForGroupAssignment.get(grp);
                         if (current?.submission) {
-                            return this.props.updateReview(review);
+                            const ans = await this.props.updateReview(review);
+                            const idx = current.submission.reviews.findIndex(item => item.getId() === review.getId());
+                            if (ans && idx > -1) {
+                                current.submission.reviews.splice(idx, 1, ans);
+                                return ans;
+                            }
                         }
-                        return false;
+                        return null;
                     }}
                     studentNumber={this.state.allGroups.indexOf(grp) + 1}
                     isSelected={this.state.selectedGroup === grp}
@@ -134,17 +139,22 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
                             const ans = await this.props.addReview(review);
                             if (ans) {
                                 current.submission.reviews.push(ans);
-                                return true;
+                                return ans;
                             }
                         }
-                        return false;
+                        return null;
                     }}
                     updateReview={async (review: Review) => {
                         const current = this.state.submissionsForAssignment.get(s);
                         if (current?.submission) {
-                            return this.props.updateReview(review);
+                            const ans = await this.props.updateReview(review);
+                            const idx = current.submission.reviews.findIndex(item => item.getId() === review.getId());
+                            if (ans && idx > -1) {
+                                current.submission.reviews.splice(idx, 1, ans);
+                                return ans;
+                            }
                         }
-                        return false;
+                        return null;
                     }}
                     studentNumber={this.state.allStudents.indexOf(s) + 1}
                     isSelected={this.state.selectedStudent === s}

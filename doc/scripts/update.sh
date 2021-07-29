@@ -1,5 +1,14 @@
 #!/bin/bash
 
+if sysctl -q -n net.ipv4.ip_forward | grep -q '0'; then
+	echo "IP packet forwarding disabled on host machine; run these commands before restarting again:"
+	echo ""
+	echo "sudo sysctl net.ipv4.ip_forward=1"
+	echo "sudo sysctl -p"
+	echo "sudo service docker restart"
+	exit 1
+fi
+
 AG_BIN="/home/autograder/go/bin"
 AG_ROOT="/home/autograder/quickfeed"
 

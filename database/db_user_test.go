@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/internal"
 )
 
 func TestGormDBUpdateAccessToken(t *testing.T) {
@@ -37,7 +38,7 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 		}
 	)
 
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	var user pb.User

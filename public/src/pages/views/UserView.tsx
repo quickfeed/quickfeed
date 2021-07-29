@@ -4,7 +4,7 @@ import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../com
 import { ILink, NavigationManager, UserManager } from "../../managers";
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
-import { searchForStudents, userRepoLink, sortEnrollmentsByActivity } from '../../componentHelper';
+import { searchForStudents, userRepoLink, sortEnrollmentsByActivity } from "../../componentHelper";
 
 interface IUserViewerProps {
     users: Enrollment[];

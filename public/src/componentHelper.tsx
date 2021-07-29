@@ -238,20 +238,6 @@ export function slugify(str: string): string {
     return str.replace(/[^a-z0-9 -_]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
 }
 
-export function scoreFromReviews(reviews: Review[]): number {
-    if (reviews.length < 1) return 0;
-    if (reviews.length === 1) return reviews[0].getScore();
-    let sum = 0;
-    let ready = 0;
-    reviews.forEach(rv => {
-        if (rv.getReady()) {
-            ready += 1;
-            sum += rv.getScore();
-        }
-    });
-    return Math.floor(sum / ready);
-}
-
 // Some manually graded assignments can have custom max score (not necessary 100%), it will be
 // calculated as sum of all scores given for each grading criteria.
 export function maxAssignmentScore(benchmarks: GradingBenchmark[]): number {
@@ -284,11 +270,9 @@ export function deepCopy(bms: GradingBenchmark[]): GradingBenchmark[] {
         newBm.setAssignmentid(bm.getAssignmentid());
         newBm.setComment(bm.getComment());
         newBm.setHeading(bm.getHeading());
-        newBm.setId(bm.getId());
         const newCriteria: GradingCriterion[] = [];
         bm.getCriteriaList().forEach((c, j) => {
             const newCriterion = new GradingCriterion();
-            newCriterion.setId(c.getId());
             newCriterion.setBenchmarkid(c.getBenchmarkid());
             newCriterion.setComment(c.getComment());
             newCriterion.setDescription(c.getDescription());
@@ -371,11 +355,29 @@ export function getDaysAfterDeadline(deadline: Date, delivered: Date): number {
     return after > 0 ? after : 0;
 }
 
-export function isValidUserName(username: string): boolean {
-    const onlyCharsAndSpaces = /^[a-zA-Z\s]*$/;
-    return onlyCharsAndSpaces.test(username);
-}
 
 export function legalIndex(i: number, len: number): boolean {
     return i >= 0 && i <= len - 1;
+}
+
+export function gradedManually(a: Assignment): boolean {
+    return a && a.getReviewers() > 0;
+}
+
+export function setScoreString(s: ISubmission | undefined) {
+    return s?.score.toString() ?? "0";
+}
+
+export function scoreFromReviews(reviews: Review[]): number {
+    if (reviews.length < 1) return 0;
+    if (reviews.length === 1) return reviews[0].getScore();
+    let sum = 0;
+    let ready = 0;
+    reviews.forEach(rv => {
+        if (rv.getReady()) {
+            ready += 1;
+            sum += rv.getScore();
+        }
+    });
+    return Math.floor(sum / ready);
 }
