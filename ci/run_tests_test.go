@@ -13,10 +13,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	gh = "github.com"
-)
-
 // To run this test, please see instructions in the developer guide (dev.md).
 
 // This test uses a test course for experimenting with go.sh behavior.
@@ -42,7 +38,7 @@ func TestRunTests(t *testing.T) {
 	}
 	randomString := fmt.Sprintf("%x", sha1.Sum(randomness))
 
-	repo := pb.RepoURL{ProviderURL: gh, Organization: qfTestOrg}
+	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	info := &AssignmentInfo{
 		AssignmentName:     "lab1",
 		Script:             "go.sh",
