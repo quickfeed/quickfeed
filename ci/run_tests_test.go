@@ -4,12 +4,11 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/internal"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/log"
 	"github.com/google/go-cmp/cmp"
@@ -68,27 +67,8 @@ func TestRunTests(t *testing.T) {
 }
 
 func TestRecordResults(t *testing.T) {
-	f, err := ioutil.TempFile(os.TempDir(), "testing")
-	if err != nil {
-		t.Error(err)
-	}
-	if err := f.Close(); err != nil {
-		os.Remove(f.Name())
-		t.Error(err)
-	}
-
-	db, err := database.NewGormDB(f.Name(), zap.NewNop())
-	if err != nil {
-		os.Remove(f.Name())
-		t.Error(err)
-	}
-
-	// clean up the temp database file
-	defer func() {
-		if err := os.Remove(f.Name()); err != nil {
-			t.Error(err)
-		}
-	}()
+	db, cleanup := internal.TestDB(t)
+	defer cleanup()
 
 	var user pb.User
 	if err := db.CreateUserFromRemoteIdentity(&user,
@@ -97,11 +77,11 @@ func TestRecordResults(t *testing.T) {
 			RemoteID:    1,
 			AccessToken: "token",
 		}); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if err := db.UpdateUser(&pb.User{ID: user.ID, IsAdmin: true}); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	course := &pb.Course{
@@ -111,7 +91,7 @@ func TestRecordResults(t *testing.T) {
 		SlipDays:        5,
 	}
 	if err := db.CreateCourse(user.ID, course); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	assignment := &pb.Assignment{
@@ -125,8 +105,8 @@ func TestRecordResults(t *testing.T) {
 		IsGroupLab:       false,
 		ContainerTimeout: 1,
 	}
-	if err = db.CreateAssignment(assignment); err != nil {
-		t.Error(err)
+	if err := db.CreateAssignment(assignment); err != nil {
+		t.Fatal(err)
 	}
 
 	buildInfo := &score.BuildInfo{
@@ -160,7 +140,7 @@ func TestRecordResults(t *testing.T) {
 	recordResults(zap.NewNop().Sugar(), db, runData, results)
 	submission, err := db.GetSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: user.ID})
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if submission.Status == pb.Submission_APPROVED {
 		t.Error("Submission must not be auto approved")
@@ -179,14 +159,14 @@ func TestRecordResults(t *testing.T) {
 
 	enrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if enrollment.RemainingSlipDays(course) == int32(course.SlipDays) || len(enrollment.UsedSlipDays) < 1 {
 		t.Error("Student must have reduced slip days")
 	}
 	updatedSubmission, err := db.GetSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: user.ID})
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if updatedSubmission.BuildInfo.BuildDate != newBuildDate {
 		t.Errorf("Incorrect build date: want %s, got %s", newBuildDate, updatedSubmission.BuildInfo.BuildDate)
@@ -199,7 +179,7 @@ func TestRecordResults(t *testing.T) {
 	recordResults(zap.NewNop().Sugar(), db, runData, results)
 	updatedEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if updatedEnrollment.RemainingSlipDays(course) != slipDaysBeforeUpdate {
 		t.Errorf("Incorrect number of slip days: expected %d, got %d", slipDaysBeforeUpdate, updatedEnrollment.RemainingSlipDays(course))
