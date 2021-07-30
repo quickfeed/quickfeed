@@ -98,7 +98,7 @@ func TestGetSelf(t *testing.T) {
 		}
 
 		token := w.Result().Header.Get(auth.OutgoingCookie)
-		auth.TokenStore.Add(token, user.id)
+		auth.Add(token, user.id)
 
 		if user.metadata {
 			meta := metadata.MD{}

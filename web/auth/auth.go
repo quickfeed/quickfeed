@@ -55,25 +55,21 @@ func (us *UserSession) enableProvider(provider string) {
 	us.Providers[provider] = struct{}{}
 }
 
-// UserToken holds a map from session cookies to user IDs.
-type UserToken struct {
-	store map[string]uint64
-}
+// map from session cookies to user IDs.
+var tokenStore = make(map[string]uint64)
 
-var TokenStore = &UserToken{store: make(map[string]uint64)}
-
-// Add adds token for userID, replacing the current token for userID, if any.
-func (ut *UserToken) Add(token string, userID uint64) {
-	for currentToken, id := range ut.store {
+// Add adds token for userID, replacing userID's current token, if any.
+func Add(token string, userID uint64) {
+	for currentToken, id := range tokenStore {
 		if id == userID && currentToken != token {
-			delete(ut.store, currentToken)
+			delete(tokenStore, currentToken)
 		}
 	}
-	ut.store[token] = userID
+	tokenStore[token] = userID
 }
 
-func (ut *UserToken) Get(token string) uint64 {
-	return ut.store[token]
+func Get(token string) uint64 {
+	return tokenStore[token]
 }
 
 // OAuth2Logout invalidates the session for the logged in user.
@@ -243,7 +239,7 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 			}
 			// Enable gRPC requests for session
 			if token := extractSessionCookie(w); len(token) > 0 {
-				TokenStore.Add(token, us.ID)
+				Add(token, us.ID)
 			}
 			return c.Redirect(http.StatusFound, redirect)
 		}
@@ -300,7 +296,7 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 
 		// Register session and associated user ID to enable gRPC calls for the session.
 		if token := extractSessionCookie(w); len(token) > 0 {
-			TokenStore.Add(token, us.ID)
+			Add(token, us.ID)
 		}
 
 		return c.Redirect(http.StatusFound, redirect)
@@ -431,7 +427,7 @@ func UserVerifier() grpc.UnaryServerInterceptor {
 // userValidation returns modified metadata containing a valid user. An error is returned if the user is not authenticated.
 func userValidation(meta metadata.MD) (metadata.MD, error) {
 	for _, cookie := range meta.Get(Cookie) {
-		if user := TokenStore.Get(cookie); user > 0 {
+		if user := Get(cookie); user > 0 {
 			meta.Set(UserKey, strconv.FormatUint(user, 10))
 			return meta, nil
 		}
