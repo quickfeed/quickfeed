@@ -128,20 +128,6 @@ func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType 
 	return filteredAssignments, nil
 }
 
-// GetCourseAssignmentsWithSubmissionsNoBuildInfo
-// returns data required for results page (score and status)
-func (db *GormDB) GetCourseAssignmentsWithSubmissionsNoBuildInfo(courseID uint64, submissionType pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error) {
-	var assignments []*pb.Assignment
-	// the 'order' field of pb.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
-	if err := db.conn.Preload("Submissions").
-		Where(&pb.Assignment{CourseID: courseID}).
-		Order("'order'").
-		Find(&assignments).Error; err != nil {
-		return nil, err
-	}
-	return assignments, nil
-}
-
 // CreateBenchmark creates a new grading benchmark
 func (db *GormDB) CreateBenchmark(query *pb.GradingBenchmark) error {
 	return db.conn.Create(query).Error
