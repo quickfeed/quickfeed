@@ -37,8 +37,8 @@ func TestGetSelf(t *testing.T) {
 
 	_, scms := fakeProviderMap(t)
 
-	_ = createFakeUser(t, db, 1)
-	_ = createFakeUser(t, db, 56)
+	adminUser := createFakeUser(t, db, 1)
+	student := createFakeUser(t, db, 56)
 
 	store := sessions.NewCookieStore([]byte("secret"))
 	store.Options.HttpOnly = true
@@ -80,7 +80,8 @@ func TestGetSelf(t *testing.T) {
 		{id: 1, code: codes.Unauthenticated, metadata: false, token: "", wantUser: nil},
 		{id: 6, code: codes.PermissionDenied, metadata: true, token: "", wantUser: nil},
 		{id: 1, code: codes.Unauthenticated, metadata: true, token: "shouldfail", wantUser: nil},
-		{id: 1, code: codes.OK, metadata: true, token: "", wantUser: &pb.User{ID: 1, IsAdmin: true}},
+		{id: 1, code: codes.OK, metadata: true, token: "", wantUser: adminUser},
+		{id: 2, code: codes.OK, metadata: true, token: "", wantUser: student},
 	}
 
 	for _, user := range userTest {
@@ -112,6 +113,10 @@ func TestGetSelf(t *testing.T) {
 			if s.Code() != user.code {
 				t.Errorf("GetUser().Code(): %v, want: %v", s.Code(), user.code)
 			}
+		}
+		if user.wantUser != nil {
+			// ignore comparing remote identity
+			user.wantUser.RemoteIdentities = nil
 		}
 		if diff := cmp.Diff(user.wantUser, gotUser, protocmp.Transform()); diff != "" {
 			t.Errorf("GetSelf() mismatch (-wantUser +gotUser):\n%s", diff)
