@@ -355,7 +355,7 @@ func TestAccessControl(t *testing.T) {
 	}))
 
 	// User is not logged in.
-	if err := protected(c); err != echo.ErrUnauthorized {
+	if err := protected(c); err != nil {
 		t.Error(err)
 	}
 
@@ -373,6 +373,7 @@ func TestAccessControl(t *testing.T) {
 }
 
 func assertCode(t *testing.T, haveCode, wantCode int) {
+	t.Helper()
 	if haveCode != wantCode {
 		t.Errorf("have status code %d want %d", haveCode, wantCode)
 	}
