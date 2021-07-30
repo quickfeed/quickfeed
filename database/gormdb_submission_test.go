@@ -9,6 +9,7 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/internal"
+	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"gorm.io/gorm"
@@ -84,6 +85,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		Score:        80,
 		Status:       pb.Submission_NONE,
 		Reviews:      []*ag.Review{},
+		Scores:       []*score.Score{},
 	}
 	if diff := cmp.Diff(submissions[0], want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
@@ -109,6 +111,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		Score:        0,
 		Status:       pb.Submission_NONE,
 		Reviews:      []*ag.Review{},
+		Scores:       []*score.Score{},
 	}
 	if diff := cmp.Diff(submissions[0], want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
@@ -146,6 +149,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		UserID:       user.ID,
 		Status:       pb.Submission_NONE,
 		Reviews:      []*pb.Review{},
+		Scores:       []*score.Score{},
 	}
 	if diff := cmp.Diff(submissions[0], want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
@@ -233,6 +237,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Reviews:      []*pb.Review{},
+		Scores:       []*score.Score{},
 	}
 	if !reflect.DeepEqual(submissions[0], want) {
 		t.Errorf("have %#v want %#v", submissions[0], want)
@@ -302,6 +307,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		UserID:       user.ID,
 		AssignmentID: assignment1.ID,
 		Reviews:      []*pb.Review{},
+		Scores:       []*score.Score{},
 	}
 	if err := db.CreateSubmission(&submission1); err != nil {
 		t.Fatal(err)
@@ -311,6 +317,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		UserID:       user.ID,
 		AssignmentID: assignment1.ID,
 		Reviews:      []*pb.Review{},
+		Scores:       []*score.Score{},
 	}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
@@ -320,6 +327,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		UserID:       user.ID,
 		AssignmentID: assignment2.ID,
 		Reviews:      []*pb.Review{},
+		Scores:       []*score.Score{},
 	}
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)

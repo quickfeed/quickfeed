@@ -26,6 +26,7 @@ type RunData struct {
 	Repo       *pb.Repository
 	CommitID   string
 	JobOwner   string
+	Rebuild    bool
 }
 
 // String returns a string representation of the run data structure
@@ -104,8 +105,14 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		return
 	}
 
+	// Keep the original submission's delivery date (obtained from the database (newest)) if this is a manual rebuild.
+	if rData.Rebuild {
+		result.BuildInfo.BuildDate = newest.BuildInfo.BuildDate
+	}
+
 	score := result.Sum()
 	newSubmission := &pb.Submission{
+		ID:           newest.GetID(),
 		AssignmentID: assignment.GetID(),
 		CommitHash:   rData.CommitID,
 		Score:        score,
@@ -121,7 +128,9 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		return
 	}
 	logger.Debugf("Created submission for assignment '%s' with score %d, status %s", assignment.GetName(), score, newSubmission.GetStatus())
-	updateSlipDays(logger, db, rData.Assignment, newSubmission)
+	if !rData.Rebuild {
+		updateSlipDays(logger, db, rData.Assignment, newSubmission)
+	}
 }
 
 func randomSecret() string {
@@ -136,6 +145,7 @@ func randomSecret() string {
 func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission) {
 	buildDate := submission.GetBuildInfo().GetBuildDate()
 	buildTime, err := time.Parse(pb.TimeLayout, buildDate)
+
 	if err != nil {
 		logger.Errorf("Failed to parse time from build date (%s): %v", buildDate, err)
 		return
