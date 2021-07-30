@@ -1,9 +1,10 @@
+import { json } from 'overmind'
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import { Assignment, Submission } from '../../proto/ag/ag_pb'
 import { BuildInfo } from '../../proto/kit/score/score_pb'
-import { getBuildInfo } from '../Helpers'
-import { useOvermind } from '../overmind'
+import { getBuildInfo, isManuallyGraded } from '../Helpers'
+import { useAppState, useActions } from '../overmind'
 import CourseUtilityLinks from './CourseUtilityLinks'
 import LabResultTable from './LabResultTable'
 import ReviewResult from './ReviewResult'
@@ -13,25 +14,23 @@ interface MatchProps {
     lab: string
 }
 
-interface TeacherLab {
-    submissionID: number
-    assignmentID: number
-}
+
 
 /** Displays a Lab submission based on the /course/:id/:lab route
  *  
  *  If used to display a lab for grading purposes, pass in a TeacherLab object
  */
-const Lab = (teacher: TeacherLab) => {
-    const { state, actions } = useOvermind()
+const Lab = ({teacherSubmission}: {teacherSubmission?: Submission}) => {
+    
+    const state = useAppState()
+    const actions = useActions()
     const {id ,lab} = useParams<MatchProps>()
     const courseID = Number(id)
     const assignmentID = Number(lab)
-    const teacherLab = teacher.assignmentID && teacher.submissionID
 
     useEffect(() => {
         // Do not start the commit hash fetch-loop for submissions that are not personal
-        if (!teacherLab) {
+        if (!teacherSubmission) {
             actions.setActiveLab(assignmentID)
 
             // TODO: Implement SubmissionCommitHash
@@ -51,17 +50,9 @@ const Lab = (teacher: TeacherLab) => {
         let assignment: Assignment | undefined
 
         // If used for grading purposes, retrieve submission from courseSubmissions
-        if (teacherLab) {
-            state.courseSubmissions[courseID].forEach(psub => {
-                if (psub.submissions) {
-                psub.submissions.forEach(s => {
-                    if (s.getSubmission()?.getId() === teacher.submissionID) {
-                        submission = s.getSubmission()
-                    }
-                })
-            }
-            });
-            assignment = state.assignments[courseID].find(a => a.getId() === teacher.assignmentID)
+        if (teacherSubmission) {
+            submission = teacherSubmission
+            assignment = state.assignments[courseID].find(a => a.getId() === submission?.getAssignmentid())
         } 
         // Retreive personal submission
         else {
@@ -71,18 +62,19 @@ const Lab = (teacher: TeacherLab) => {
         
         // Confirm both assignment and submission exists before attempting to render
         if (assignment && submission) {
+            const review = json(submission).getReviewsList()
             let buildLog: JSX.Element[] = []
             const buildInfo = submission.getBuildinfo()?.getBuildlog()
             if (buildInfo){
                 buildLog = buildInfo.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
             }
-            
+
             return (
                 <div key={submission.getId()}>
 
                     <LabResultTable submission={submission} assignment={assignment} />
 
-                    {assignment.getSkiptests() && submission.getReleased() ? <ReviewResult review={submission.getReviewsList()}/> : null}
+                    {isManuallyGraded(assignment) ? <ReviewResult review={review}/> : null}
 
                     <div className="card bg-light">
                         <code className="card-body" style={{color: "#c7254e"}}>{buildLog}</code>
@@ -97,10 +89,10 @@ const Lab = (teacher: TeacherLab) => {
 
     return (
         <div className="box row">
-            <div className={teacherLab ? "" : "col-md-9"}>
+            <div className={teacherSubmission ? "" : "col-md-9"}>
                 <Lab />
             </div>
-            {teacherLab ? null : <CourseUtilityLinks courseID={courseID} />}
+            {teacherSubmission ? null : <CourseUtilityLinks courseID={courseID} />}
         </div>
     )
 }
