@@ -429,12 +429,18 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	buildInfo1 := &score.BuildInfo{
+		BuildDate: "2020-02-23T18:00:00",
+		BuildLog:  "runtime error",
+	}
+
 	sub1 := &pb.Submission{
 		UserID:       student.ID,
 		AssignmentID: lab1c1.ID,
 		Score:        44,
 		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
+		BuildInfo:    buildInfo1,
 	}
 	sub2 := &pb.Submission{
 		UserID:       student.ID,
@@ -510,6 +516,20 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 			}
 		}
 	}
+
+	// check that buildInformation is not included when not requested
+	labsForCourse3, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID, SkipBuildInfo: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, labLink := range labsForCourse3.GetLinks() {
+		for _, submission := range labLink.GetSubmissions() {
+			if submission.Submission.GetBuildInfo().GetBuildLog() != "" {
+				t.Errorf("Expected build log to be empty, got %+v", submission.Submission.BuildInfo.GetBuildLog())
+			}
+		}
+	}
+
 	// check that no submissions will be returned for a wrong course ID
 	if _, err = ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: 234}); err == nil {
 		t.Error("Expected 'no submissions found'")
