@@ -60,6 +60,7 @@ type State = {
     courseSubmissions: {
         [courseid:number]: ParsedCourseSubmissions[]
     },
+    activeSubmission: Submission | undefined,
     /*cSubs: {
         [courseid:number]: ParsedCourseSubmissions[]
     },*/
@@ -113,6 +114,7 @@ export const state: State = {
     userGroup: {},
     submissions: {},
     courseSubmissions: {},
+    activeSubmission: undefined,
     /*cSubs: derived((state: State) => {
         let obj: {[id: number]: CourseSubmissions[]} = {}
         state.courses.forEach(course => {

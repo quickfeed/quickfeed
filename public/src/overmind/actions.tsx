@@ -1,7 +1,7 @@
 import { Overmind } from 'overmind'
 import { Context } from "./";
 import { IGrpcResponse } from "../GRPCManager";
-import {  User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions } from "../../proto/ag/ag_pb";
+import {  User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group } from "../../proto/ag/ag_pb";
 import { CourseGroup, ParsedCourseSubmissions } from "./state";
 import { AlertType } from "../Helpers";
 
@@ -138,13 +138,13 @@ export const setEnrollmentState = async ({state, effects}: Context, enrollment: 
     }
 };
 
-export const updateSubmission = async ({state, actions, effects}: Context, value: {courseID: number, submission: Submission, userIndex: number,  submissionIndex: number}) => {
+export const updateSubmission = async ({state, actions, effects}: Context, value: {courseID: number, submission: Submission, status: Submission.Status}) => {
+    value.submission.setStatus(value.status)
     const result = await effects.grpcMan.updateSubmission(value.courseID, value.submission)
     if (result.status.getCode() > 0) {
         actions.alertHandler(result)
     } else {
-        let c = state.courseSubmissions[value.courseID][value.userIndex].submissions?.find((e, i) => i === value.submissionIndex)
-        if (c) { c.getSubmission()?.setStatus(value.submission.getStatus())}
+        value.submission.setStatus(value.status)
     }
 };
 
@@ -197,9 +197,10 @@ export const getRepositories = async ({state, effects}: Context) => {
             repoMap.forEach(repo => {
                     state.repositories[enrollment.getCourseid()][(Repository.Type as any)[repo[0]]] = repo[1];
             });
-            success = success === false ? false : true
-        }
+            success = true
+        } else {
         success = false
+        }
     }
     return success
 };
@@ -264,6 +265,11 @@ export const createCourse = async ({state, actions, effects}: Context, value: {c
     }
     actions.alertHandler(result)
 };
+
+export const editCourse = async ({effects}: Context, {course}: {course: Course} ) => {
+    const response = await effects.grpcMan.updateCourse(course)
+    console.log(response.status, response.data)
+}
 
 export const loading = ({state}: Context) => {
     state.isLoading = !state.isLoading
@@ -343,7 +349,6 @@ export const getUserSubmissions = async ({state, effects}: Context, courseID: nu
         state.assignments[courseID].forEach(assignment => {
             let submission = res.data?.getSubmissionsList().find(s => s.getAssignmentid() === assignment.getId())
             if (submission) {
-                submission.getBuildinfo()
                 state.submissions[courseID][assignment.getOrder() - 1] = submission
             }
             else {
@@ -488,12 +493,6 @@ export const enableRedirect = ({state}: Context, bool: boolean) => {
     state.enableRedirect = bool
 };
 
-export const getReviews = (context: Context, submission: Submission) => {
-    console.log(submission.getReviewsList())
-    return submission.getReviewsList()
-};
-
-export const getScores = ({state}: Context, submission: Submission) => {
-
-    return submission.getScoresList()
-};
+export const setActiveSubmission = ({state}: Context, submission: Submission | undefined) => {
+    state.activeSubmission = submission
+}
