@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/internal"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/proto"
@@ -13,7 +14,7 @@ import (
 )
 
 func TestGormDBGetAssignment(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	if _, err := db.GetAssignmentsByCourse(10, false); err != gorm.ErrRecordNotFound {
@@ -26,7 +27,7 @@ func TestGormDBGetAssignment(t *testing.T) {
 }
 
 func TestGormDBCreateAssignmentNoRecord(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	assignment := pb.Assignment{
@@ -41,7 +42,7 @@ func TestGormDBCreateAssignmentNoRecord(t *testing.T) {
 }
 
 func TestGormDBCreateAssignment(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	user := createFakeUser(t, db, 10)
@@ -77,7 +78,7 @@ func TestGormDBCreateAssignment(t *testing.T) {
 }
 
 func TestUpdateAssignment(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	course := &pb.Course{}
@@ -141,7 +142,7 @@ func TestUpdateAssignment(t *testing.T) {
 }
 
 func TestGetAssignmentsWithSubmissions(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	// create teacher, course, user (student) and assignment
@@ -231,7 +232,7 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 }
 
 func TestUpdateBenchmarks(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	course := &pb.Course{}

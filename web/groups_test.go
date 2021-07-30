@@ -10,12 +10,13 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/internal"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web"
 )
 
 func TestNewGroup(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
@@ -70,7 +71,7 @@ func TestNewGroup(t *testing.T) {
 }
 
 func TestCreateGroupWithMissingFields(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
@@ -127,7 +128,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 }
 
 func TestNewGroupTeacherCreator(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
@@ -210,7 +211,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 }
 
 func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
@@ -271,7 +272,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 }
 
 func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	// set up fake goth provider (only needs to be done once)
@@ -458,7 +459,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 }
 
 func TestDeleteGroup(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	testCourse := pb.Course{
@@ -519,7 +520,7 @@ func TestDeleteGroup(t *testing.T) {
 }
 
 func TestGetGroup(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	testCourse := pb.Course{
@@ -568,7 +569,7 @@ func TestGetGroup(t *testing.T) {
 }
 
 func TestPatchGroupStatus(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	course := pb.Course{
@@ -676,7 +677,7 @@ func TestPatchGroupStatus(t *testing.T) {
 }
 
 func TestGetGroupByUserAndCourse(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	course := pb.Course{
@@ -754,7 +755,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 }
 
 func TestDeleteApprovedGroup(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
@@ -871,7 +872,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 }
 
 func TestGetGroups(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	var users []*pb.User

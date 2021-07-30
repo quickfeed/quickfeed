@@ -1,6 +1,6 @@
 module github.com/autograde/quickfeed
 
-go 1.14
+go 1.16
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1

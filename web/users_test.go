@@ -9,6 +9,7 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/internal"
 	"github.com/autograde/quickfeed/web"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/google/go-cmp/cmp"
@@ -18,7 +19,7 @@ import (
 )
 
 func TestGetSelf(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	_ = createFakeUser(t, db, 1)
@@ -48,7 +49,7 @@ func TestGetSelf(t *testing.T) {
 }
 
 func TestGetUsers(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	_, scms := fakeProviderMap(t)
@@ -97,7 +98,7 @@ var allUsers = []struct {
 }
 
 func TestGetEnrollmentsByCourse(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	var users []*pb.User
@@ -185,7 +186,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 }
 
 func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	var users []*pb.User
@@ -273,7 +274,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 	firstAdminUser := createFakeUser(t, db, 1)
 	nonAdminUser := createFakeUser(t, db, 11)
@@ -333,7 +334,7 @@ func TestUpdateUser(t *testing.T) {
 }
 
 func TestUpdateUserFailures(t *testing.T) {
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 	// user := &pb.User{Name: "Test User", StudentID: "11", Email: "test@email", AvatarURL: "url.com"}
 	adminUser := createFakeUser(t, db, 1)
