@@ -90,7 +90,9 @@ func TestGetSelf(t *testing.T) {
 			ID:        user.id,
 			Providers: map[string]struct{}{"github": {}},
 		}
-		sess.Save(r, w)
+		if err := sess.Save(r, w); err != nil {
+			t.Errorf("sess.Save(): %v", err)
+		}
 
 		token := w.HeaderMap.Get(auth.OutgoingCookie)
 		auth.TokenStore.Add(token, user.id)
