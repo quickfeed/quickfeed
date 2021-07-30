@@ -26,18 +26,6 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 )
 
-var userTest = []struct {
-	id       uint64
-	code     codes.Code
-	metadata bool
-	token    string
-}{
-	{1, codes.Unauthenticated, false, ""},
-	{6, codes.PermissionDenied, true, ""},
-	{1, codes.Unauthenticated, true, "shouldfail"},
-	{1, codes.OK, true, ""},
-}
-
 func TestGetSelf(t *testing.T) {
 	db, cleanup := internal.TestDB(t)
 	defer cleanup()
@@ -80,6 +68,18 @@ func TestGetSelf(t *testing.T) {
 	defer conn.Close()
 
 	client := pb.NewAutograderServiceClient(conn)
+
+	userTest := []struct {
+		id       uint64
+		code     codes.Code
+		metadata bool
+		token    string
+	}{
+		{1, codes.Unauthenticated, false, ""},
+		{6, codes.PermissionDenied, true, ""},
+		{1, codes.Unauthenticated, true, "shouldfail"},
+		{1, codes.OK, true, ""},
+	}
 
 	for _, user := range userTest {
 		r := httptest.NewRequest(http.MethodGet, "/", nil)
