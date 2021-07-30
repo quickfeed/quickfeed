@@ -1,22 +1,26 @@
 import React from "react"
-import { useOvermind } from "../overmind"
+import { useAppState, useActions } from "../overmind"
 import { Submission } from "../../proto/ag/ag_pb"
 import { getPassedTestsCount } from "../Helpers"
+import { json } from "overmind"
 
 
 export const ProgressBar = (props: {courseID: number, assignmentIndex: number, submission?: Submission, type: string}) => {
-    const { state } = useOvermind()
-    let submission: Submission = props?.submission ? props.submission : new Submission()
-    let percentage = 0
-    let score = 0
-    if (state.submissions[props.courseID]) {
-        let submission = state.submissions[props.courseID][props.assignmentIndex]
-        percentage = 100 - submission.getScore()
-        score = submission.getScore()
-    }
+    const state = useAppState()
+
+    const submission = props.submission ? props.submission : state.submissions[props.courseID][props.assignmentIndex]
+    const assignment = state.assignments[props.courseID][props.assignmentIndex]
+    const passedTests =  getPassedTestsCount(json(submission).getScoresList())
+
 
     // Returns a thin line to be used for labs in the NavBar
     if(props.type === "navbar") {
+        let percentage = 0
+        let score = 0
+        if (submission) {
+            percentage = 100 - submission.getScore()
+            score = submission.getScore()
+        }
         return (
             <div style={{ 
                 position: "absolute", 
@@ -24,7 +28,7 @@ export const ProgressBar = (props: {courseID: number, assignmentIndex: number, s
                 bottom: 0, 
                 left: 0, 
                 right: `${percentage}%`, 
-                borderColor: `${score >= state.assignments[props.courseID][props.assignmentIndex].getScorelimit() ? "green" : "yellow"}`, 
+                borderColor: `${score >= assignment.getScorelimit() ? "green" : "yellow"}`, 
                 opacity: 0.3 }}>
             </div>
         )
@@ -62,7 +66,7 @@ export const ProgressBar = (props: {courseID: number, assignmentIndex: number, s
                     aria-valuenow={submission.getScore()} 
                     aria-valuemin={0} 
                     aria-valuemax={100}>
-                        {props.submission?.getScore()}% ({getPassedTestsCount(submission)})
+                        {props.submission?.getScore()}% ({passedTests})
                 </div>
             </div>
         )
