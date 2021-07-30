@@ -18,7 +18,7 @@ export const GroupPage = () => {
     })
 
     if (isTeacher(state.enrollmentsByCourseId[courseID])) {
-        return <Groups></Groups>
+        return <Groups />
     }
 
     if (!state.userGroup[courseID]) {

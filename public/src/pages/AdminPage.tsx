@@ -4,7 +4,7 @@ import { useAppState } from "../overmind"
 import EditCourse from "../components/admin/EditCourse"
 import Users from "../components/admin/Users"
 import Card from "../components/Card"
-import CourseCreationForm from "../components/forms/CourseCreationForm"
+import CourseForm from "../components/forms/CourseForm"
 import RedirectButton from "../components/RedirectButton"
 
 
@@ -31,7 +31,7 @@ export const AdminPage = () => {
                 </div>
                 <Switch>
                     <Route path={"/admin/manage"} component={Users}></Route>
-                    <Route path={"/admin/create"} component={CourseCreationForm}></Route>
+                    <Route path={"/admin/create"} component={CourseForm}></Route>
                     <Route path={"/admin/edit"} component={EditCourse}></Route>
                 </Switch>
             </div>
