@@ -6,13 +6,18 @@ Hence, the `DisableForeignKeyConstraintWhenMigrating` (`gormdb.go:48`) should no
 - The easiest way to inspect or edit the database is to use a sqlite database browser GUI, for example the [DB Browser](https://sqlitebrowser.org/) or the `sqlite3` command-line tool.
 
 - User with ID 1 is a super user registered as `CourseCreator` of all courses in the database.
-  The `RemoteIdentity` record for this user can be replaced with GitHub's remote ID and access token of your GitHub user to login as super user.
+  The `RemoteIdentity` record for this user can be replaced with GitHub's remote ID and access token of your GitHub user to login as super user. Additionally, replace `login` field of the `User` record with your GitHub login.
+  
   To update with the command-line tool:
 
   ```sql
   sqlite3 test.db
   update remote_identities
   set remote_id = {id: int}, access_token = {token: string}
+  where id = 1;
+
+  update users
+  set login = {login: string}
   where id = 1;
   ```
 
