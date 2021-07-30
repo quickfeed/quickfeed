@@ -86,12 +86,10 @@ func TestGetSelf(t *testing.T) {
 		w := httptest.NewRecorder()
 		sess := sessions.NewSession(store, auth.SessionKey)
 
-		us := &auth.UserSession{
+		sess.Values[auth.UserKey] = &auth.UserSession{
 			ID:        user.id,
-			Providers: make(map[string]struct{}),
+			Providers: map[string]struct{}{"github": {}},
 		}
-		us.Providers["github"] = struct{}{}
-		sess.Values[auth.UserKey] = us
 		sess.Save(r, w)
 
 		token := w.HeaderMap.Get(auth.OutgoingCookie)

@@ -409,7 +409,7 @@ func extractSessionCookie(w *echo.Response) string {
 
 var (
 	ErrInvalidSessionCookie = status.Errorf(codes.Unauthenticated, "Request does not contain a valid session cookie.")
-	ErrContextMetadata      = status.Errorf(codes.Unauthenticated, "Could not grab metadata from context")
+	ErrContextMetadata      = status.Errorf(codes.Unauthenticated, "Could not obtain metadata from context")
 )
 
 func UserVerifier() grpc.UnaryServerInterceptor {
