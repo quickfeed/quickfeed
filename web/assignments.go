@@ -225,7 +225,7 @@ func (s *AutograderService) getAssignmentWithCourse(query *pb.Assignment, withCo
 		return nil, nil, err
 	}
 
-	course, err := s.db.GetCourse(assignment.CourseID, false)
+	course, err := s.db.GetCourse(assignment.CourseID, withCourseInfo)
 	if err != nil {
 		return nil, nil, err
 	}

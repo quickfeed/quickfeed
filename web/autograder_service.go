@@ -581,7 +581,7 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 		s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
 		return nil, status.Error(codes.PermissionDenied, "submitter has no course access")
 	}
-	submission, err := s.rebuildSubmission(ctx, in)
+	submission, err := s.rebuildSubmission(in)
 	if err != nil {
 		return nil, err
 	}
@@ -600,6 +600,9 @@ func (s *AutograderService) RebuildAllSubmissions(ctx context.Context, in *pb.As
 		return nil, status.Error(codes.PermissionDenied, "only teachers can approve submissions")
 	}
 
+	if err := s.rebuildAllSubmissions(in); err != nil {
+		return nil, err
+	}
 	// TODO(vera): return all updated submissions when tests are done? Possible timeout issues
 	return nil, nil
 }

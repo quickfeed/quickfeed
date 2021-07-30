@@ -1,15 +1,13 @@
 package web
 
 import (
-	"context"
-
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/gosimple/slug"
 )
 
 // rebuildSubmission rebuilds the given assignment and submission.
-func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.RebuildRequest) (*pb.Submission, error) {
+func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.Submission, error) {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
 	if err != nil {
 		return nil, err
@@ -45,7 +43,20 @@ func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.R
 	return s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
 }
 
-func (s *AutograderService) rebuildAllSubmissions()
+func (s *AutograderService) rebuildAllSubmissions(request *pb.AssignmentRequest) error {
+	submissions, err := s.db.GetSubmissions(&pb.Submission{AssignmentID: request.AssignmentID})
+	if err != nil {
+		return err
+	}
+	rebuildRequest := &pb.RebuildRequest{AssignmentID: request.AssignmentID}
+	for _, submission := range submissions {
+		rebuildRequest.SubmissionID = submission.ID
+		if _, err = s.rebuildSubmission(rebuildRequest); err != nil {
+			return err
+		}
+	}
+	return err
+}
 
 func (s *AutograderService) lookupName(submission *pb.Submission) string {
 	if submission.GetGroupID() > 0 {
