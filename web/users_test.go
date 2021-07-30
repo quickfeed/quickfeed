@@ -71,16 +71,16 @@ func TestGetSelf(t *testing.T) {
 	client := pb.NewAutograderServiceClient(conn)
 
 	userTest := []struct {
-		id           uint64
-		code         codes.Code
-		metadata     bool
-		token        string
-		expectedUser *pb.User
+		id       uint64
+		code     codes.Code
+		metadata bool
+		token    string
+		wantUser *pb.User
 	}{
-		{id: 1, code: codes.Unauthenticated, metadata: false, token: "", expectedUser: nil},
-		{id: 6, code: codes.PermissionDenied, metadata: true, token: "", expectedUser: nil},
-		{id: 1, code: codes.Unauthenticated, metadata: true, token: "shouldfail", expectedUser: nil},
-		{id: 1, code: codes.OK, metadata: true, token: "", expectedUser: &pb.User{ID: 1, IsAdmin: true}},
+		{id: 1, code: codes.Unauthenticated, metadata: false, token: "", wantUser: nil},
+		{id: 6, code: codes.PermissionDenied, metadata: true, token: "", wantUser: nil},
+		{id: 1, code: codes.Unauthenticated, metadata: true, token: "shouldfail", wantUser: nil},
+		{id: 1, code: codes.OK, metadata: true, token: "", wantUser: &pb.User{ID: 1, IsAdmin: true}},
 	}
 
 	for _, user := range userTest {
@@ -102,20 +102,19 @@ func TestGetSelf(t *testing.T) {
 		if user.metadata {
 			meta := metadata.MD{}
 			if len(user.token) > 0 {
-				meta.Set(auth.Cookie, user.token)
-			} else {
-				meta.Set(auth.Cookie, token)
+				token = user.token
 			}
+			meta.Set(auth.Cookie, token)
 			ctx = metadata.NewOutgoingContext(ctx, meta)
 		}
-		resp, err := client.GetUser(ctx, &pb.Void{})
+		gotUser, err := client.GetUser(ctx, &pb.Void{})
 		if s, ok := status.FromError(err); ok {
 			if s.Code() != user.code {
-				t.Errorf("GetUser: %v", err)
+				t.Errorf("GetUser().Code(): %v, want: %v", s.Code(), user.code)
 			}
 		}
-		if diff := cmp.Diff(resp, user.expectedUser, protocmp.Transform()); diff != "" {
-			t.Errorf("GetSelf() mismatch (-want +got):\n%s", diff)
+		if diff := cmp.Diff(user.wantUser, gotUser, protocmp.Transform()); diff != "" {
+			t.Errorf("GetSelf() mismatch (-wantUser +gotUser):\n%s", diff)
 		}
 	}
 }
