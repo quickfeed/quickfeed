@@ -94,7 +94,7 @@ func TestGetSelf(t *testing.T) {
 			t.Errorf("sess.Save(): %v", err)
 		}
 
-		token := w.HeaderMap.Get(auth.OutgoingCookie)
+		token := w.Result().Header.Get(auth.OutgoingCookie)
 		auth.TokenStore.Add(token, user.id)
 
 		if user.metadata {
