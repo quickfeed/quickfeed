@@ -24,6 +24,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestGetSelf(t *testing.T) {
@@ -70,15 +71,16 @@ func TestGetSelf(t *testing.T) {
 	client := pb.NewAutograderServiceClient(conn)
 
 	userTest := []struct {
-		id       uint64
-		code     codes.Code
-		metadata bool
-		token    string
+		id           uint64
+		code         codes.Code
+		metadata     bool
+		token        string
+		expectedUser *pb.User
 	}{
-		{1, codes.Unauthenticated, false, ""},
-		{6, codes.PermissionDenied, true, ""},
-		{1, codes.Unauthenticated, true, "shouldfail"},
-		{1, codes.OK, true, ""},
+		{id: 1, code: codes.Unauthenticated, metadata: false, token: "", expectedUser: nil},
+		{id: 6, code: codes.PermissionDenied, metadata: true, token: "", expectedUser: nil},
+		{id: 1, code: codes.Unauthenticated, metadata: true, token: "shouldfail", expectedUser: nil},
+		{id: 1, code: codes.OK, metadata: true, token: "", expectedUser: &pb.User{ID: 1, IsAdmin: true}},
 	}
 
 	for _, user := range userTest {
@@ -112,8 +114,9 @@ func TestGetSelf(t *testing.T) {
 				t.Errorf("GetUser: %v", err)
 			}
 		}
-
-		log.Printf("Response: %+v", resp)
+		if diff := cmp.Diff(resp, user.expectedUser, protocmp.Transform()); diff != "" {
+			t.Errorf("GetSelf() mismatch (-want +got):\n%s", diff)
+		}
 	}
 }
 
