@@ -2,13 +2,13 @@ import React from "react"
 import {Bar} from 'react-chartjs-2'
 import { useParams } from "react-router-dom";
 import { Submission } from "../../proto/ag/ag_pb";
-import { useOvermind } from "../overmind";
+import { useAppState } from "../overmind";
 
 const StatisticsView = () => {
     const course = useParams<{id?: string}>()
     const courseID = Number(course.id)
     let d: number[] = [0, 0]
-    const { state } = useOvermind()
+    const state = useAppState()
     const extractData = () => {
         state.courseSubmissions[courseID]?.forEach(link => {
             link.submissions?.forEach(s => {
@@ -47,7 +47,7 @@ const StatisticsView = () => {
 
     return (
         <div>
-            <Bar id={"bar"} type={'bar'} data={data}></Bar>
+            
         </div>
     )
 }

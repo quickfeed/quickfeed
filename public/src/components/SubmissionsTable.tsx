@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useHistory } from "react-router";
-import { getFormattedTime, layoutTime, timeFormatter } from "../Helpers";
-import { useOvermind, useReaction } from "../overmind";
+import { getFormattedTime, timeFormatter } from "../Helpers";
+import { useAppState } from "../overmind";
 import { Assignment, Course, Submission } from "../../proto/ag/ag_pb";
 
 const Status = {
@@ -21,7 +21,7 @@ interface course {
     Passing in group = true lists only group assignments
 */
 const SubmissionsTable = (crs: course) => {
-    const { state } = useOvermind()
+    const state = useAppState()
     const history  = useHistory()
     
     const redirectToLab = (courseid:number,assignmentid:number) => {

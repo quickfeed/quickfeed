@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react"
-import { useOvermind } from "../overmind"
-import { Course, Enrollment } from "../../proto/ag/ag_pb"
+import React, { useEffect } from "react"
+import { useActions, useAppState } from "../overmind"
+import { Enrollment } from "../../proto/ag/ag_pb"
 import CourseCard from "./CourseCard"
 import { AlertType } from "../Helpers"
 
@@ -20,7 +20,8 @@ interface overview {
 
 /** This component should list user courses, and available courses and allow enrollment */
 const Courses = (overview: overview) => {
-    const {state, actions} = useOvermind()
+    const state = useAppState()
+    const actions = useActions()
 
     useEffect(() => {
         if (state.enrollments.filter(enrollment => 

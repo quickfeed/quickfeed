@@ -1,5 +1,4 @@
 import React from "react"
-import { useOvermind } from "../overmind"
 import { GradingCriterion, Review } from "../../proto/ag/ag_pb"
 
 
@@ -8,9 +7,6 @@ interface submission {
 }
 
 const ReviewResult = ({review}: submission) => {
-    const {state: {theme}} = useOvermind()
-
-
     const Result: Function = (): JSX.Element[] => {
         let b: JSX.Element[] = []
 
@@ -48,7 +44,7 @@ const ReviewResult = ({review}: submission) => {
     return (
         <div className="container">
             <table className="table"> 
-                <thead className={theme == "light" ? "thead-dark" : "thead-light"}>
+                <thead className="thead-dark">
                     {review.length > 0 ?
                     <tr className="table-primary">
                         <th>{review[0].getFeedback()}</th>

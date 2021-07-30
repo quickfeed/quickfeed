@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useHistory } from "react-router";
 import { getFormattedTime, layoutTime, SubmissionStatus, timeFormatter } from "../Helpers";
-import { useOvermind, useReaction } from "../overmind";
+import { useAppState } from "../overmind";
 import { Submission } from "../../proto/ag/ag_pb";
 
 
@@ -12,7 +12,7 @@ interface course {
 //** This component takes a courseID (number) to render a table containing lab information
 /* Giving a courseID of zero (0) makes it display ALL labs for all courses, whereas providing a courseID displays labs for ONLY ONE course */
 const LandingPageLabTable = (crs: course) => {
-    const { state } = useOvermind()
+    const state = useAppState()
     const history  = useHistory()
     
     function redirectToLab(courseid:number,assignmentid:number){

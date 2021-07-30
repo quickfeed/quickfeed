@@ -1,13 +1,13 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { Repository } from "../../proto/ag/ag_pb"
-import { useOvermind } from "../overmind"
+import { useAppState } from "../overmind"
 
 
 
 const CourseUtilityLinks = ({courseID}: {courseID: number}) => {
 
-    const {state} = useOvermind()
+    const state = useAppState()
 
     return (
         <div className="col-sm-3" >           

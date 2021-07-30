@@ -60,6 +60,7 @@ type State = {
     courseSubmissions: {
         [courseid:number]: ParsedCourseSubmissions[]
     },
+    activeSubmission: Submission | undefined,
     /*cSubs: {
         [courseid:number]: ParsedCourseSubmissions[]
     },*/
@@ -87,7 +88,8 @@ type State = {
     // Used to create new group
     courseGroup: CourseGroup,
     alerts: {text: string, type: number}[],
-
+    query: string,
+    enableRedirect: boolean
 }
 
 
@@ -112,6 +114,7 @@ export const state: State = {
     userGroup: {},
     submissions: {},
     courseSubmissions: {},
+    activeSubmission: undefined,
     /*cSubs: derived((state: State) => {
         let obj: {[id: number]: CourseSubmissions[]} = {}
         state.courses.forEach(course => {
@@ -143,4 +146,6 @@ export const state: State = {
     activeLab: -1,
     courseEnrollments: {},
     groups: {},
+    query: "",
+    enableRedirect: true
 };

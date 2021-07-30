@@ -1,23 +1,21 @@
-
-import { IConfig } from 'overmind'
-import {createActionsHook, createEffectsHook, createHook, createReactionHook, createStateHook} from 'overmind-react'
+import { createStateHook, createActionsHook } from 'overmind-react'
 import { state } from './state'
 import * as actions from './actions'
 import * as effects from './effects'
+import { IContext } from 'overmind'
 
 export const config = {
     state,
     actions,
-    effects
+    effects,
 }
 
-declare module 'overmind' {
-    interface Config extends IConfig<typeof config> {}
-}
+export type Context = IContext<{
+    state: typeof config.state;
+    actions: typeof config.actions;
+    effects: typeof config.effects;
+}>;
 
 
-export const useOvermind = createHook<typeof config>()
-export const useState = createStateHook<typeof config>()
-export const useActions = createActionsHook<typeof config>()
-export const useEffects = createEffectsHook<typeof config>()
-export const useReaction = createReactionHook<typeof config>()
+export const useAppState = createStateHook<Context>()
+export const useActions = createActionsHook<Context>()

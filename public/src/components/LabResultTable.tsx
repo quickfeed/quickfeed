@@ -1,8 +1,9 @@
+import { json } from "overmind"
 import React from "react"
 import { Assignment, Submission } from "../../proto/ag/ag_pb"
 import { Score } from "../../proto/kit/score/score_pb"
-import { getBuildInfo, getPassedTestsCount, getScoreObjects, IScoreObjects, SubmissionStatus } from "../Helpers"
-import { useOvermind } from "../overmind"
+import { getPassedTestsCount, SubmissionStatus } from "../Helpers"
+import { useAppState, useActions } from "../overmind"
 import { ProgressBar } from "./ProgressBar"
 
 interface lab {
@@ -11,9 +12,8 @@ interface lab {
 }
 
 const LabResultTable = ({submission, assignment}: lab) => {
-    const {state: {
-        enrollmentsByCourseId, }
-    } = useOvermind()
+    const state = useAppState()
+    const actions = useActions()
 
     const ScoreObject = ({ score }: {score: Score}) => {
         const boxShadow = (score.getScore() === score.getMaxscore()) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 8px 0 0 red inset"
@@ -35,7 +35,6 @@ const LabResultTable = ({submission, assignment}: lab) => {
     const LabResult = (): JSX.Element => {
         if (submission && assignment) {
             const buildInfo = submission.getBuildinfo()
-            
             const boxShadow = (submission.getStatus() === Submission.Status.APPROVED) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 8px 0 0 red inset"
             return (
                 <div className="container" style={{paddingBottom: "20px"}}>
@@ -68,11 +67,11 @@ const LabResultTable = ({submission, assignment}: lab) => {
                         </tr>
                         <tr>
                         <th colSpan={2}>Tests Passed</th>
-                            <td>{getPassedTestsCount(submission)}</td>
+                            <td>{getPassedTestsCount(json(submission).getScoresList())}</td>
                         </tr>
                         <tr>
                             <th colSpan={2}>Slip days</th>
-                            <td>{enrollmentsByCourseId[assignment.getCourseid()].getSlipdaysremaining()}</td>
+                            <td>{state.enrollmentsByCourseId[assignment.getCourseid()].getSlipdaysremaining()}</td>
                         </tr>
                         <tr className={"thead-dark"}>
                             <th colSpan={1}>Test Name</th>

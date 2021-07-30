@@ -1,28 +1,32 @@
 import React from "react"
-import { useOvermind } from "../../overmind"
+import { Group } from "../../../proto/ag/ag_pb"
+import { getCourseID } from "../../Helpers"
+import { useAppState } from "../../overmind"
 import SubmissionsTable from "../SubmissionsTable"
 
-const Group = (props: {courseID: number}) => {
-    const {state} = useOvermind()
-    return (
-        <React.Fragment>
-        <div className="box">
-            <div className="jumbotron">
-                <div className="centerblock container">
-                    <h1>{state.userGroup[props.courseID].getName()}</h1>
-                    {state.enrollmentsByCourseId[props.courseID].getCourse()?.getName()}
-                </div>
-            </div>
-            {state.userGroup[props.courseID].getUsersList().map(user => 
+const GroupComponent = () => {
+    const state = useAppState()
+    const courseID = getCourseID()
+
+    const GroupList = (group: Group) => {
+        const elements: JSX.Element[] = []
+        elements.push(<li className="list-group-item active">{state.userGroup[courseID].getName()}</li>)
+        group.getUsersList().forEach(user => {
+            elements.push(
                 <li key={user.getId()} className="list-group-item">
-                                    <img src={user.getAvatarurl()} style={{width: "23px", marginRight: "10px", borderRadius: "50%"}}></img>
-                        {user.getName()} 
-                </li>
-            )}
+                    <img src={user.getAvatarurl()} style={{width: "23px", marginRight: "10px", borderRadius: "50%"}}></img>
+                    {user.getName()} 
+                </li>)
+        })
+        return elements
+    }
+
+    return (
+        <div className="box">
+            {GroupList(state.userGroup[courseID]) }
             <br />
-            <SubmissionsTable courseID={props.courseID} group={true} />
+            <SubmissionsTable courseID={courseID} group={true} />
         </div>
-        </React.Fragment>
     )
 }
-export default Group
+export default GroupComponent
