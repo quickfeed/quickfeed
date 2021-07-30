@@ -1,3 +1,4 @@
+import { json } from "overmind"
 import React from "react"
 import { Assignment, Submission } from "../../proto/ag/ag_pb"
 import { Score } from "../../proto/kit/score/score_pb"
@@ -66,7 +67,7 @@ const LabResultTable = ({submission, assignment}: lab) => {
                         </tr>
                         <tr>
                         <th colSpan={2}>Tests Passed</th>
-                            <td>{getPassedTestsCount(actions.getScores(submission))}</td>
+                            <td>{getPassedTestsCount(json(submission).getScoresList())}</td>
                         </tr>
                         <tr>
                             <th colSpan={2}>Slip days</th>
