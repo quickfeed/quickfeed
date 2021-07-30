@@ -56,20 +56,20 @@ func (us *UserSession) enableProvider(provider string) {
 }
 
 // map from session cookies to user IDs.
-var tokenStore = make(map[string]uint64)
+var cookieStore = make(map[string]uint64)
 
-// Add adds token for userID, replacing userID's current token, if any.
-func Add(token string, userID uint64) {
-	for currentToken, id := range tokenStore {
-		if id == userID && currentToken != token {
-			delete(tokenStore, currentToken)
+// Add adds cookie for userID, replacing userID's current cookie, if any.
+func Add(cookie string, userID uint64) {
+	for currentCookie, id := range cookieStore {
+		if id == userID && currentCookie != cookie {
+			delete(cookieStore, currentCookie)
 		}
 	}
-	tokenStore[token] = userID
+	cookieStore[cookie] = userID
 }
 
-func Get(token string) uint64 {
-	return tokenStore[token]
+func Get(cookie string) uint64 {
+	return cookieStore[cookie]
 }
 
 // OAuth2Logout invalidates the session for the logged in user.
