@@ -1,7 +1,8 @@
 /* eslint-disable quotes */
 
 import { useParams } from "react-router"
-import { Enrollment, EnrollmentLink, Submission, User } from "../proto/ag/ag_pb"
+import { Assignment, Course, Enrollment, EnrollmentLink, Enrollments, Group, Groups, Submission, Submissions, User } from "../proto/ag/ag_pb"
+import { Score } from "../proto/kit/score/score_pb"
 
 export interface IBuildInfo {
     builddate: string;
@@ -169,17 +170,15 @@ export const SubmissionStatus = {
     3: "Revision",
 }
 
-export const getPassedTestsCount = (submission: Submission) => {
+export const getPassedTestsCount = (score: Score[]) => {
     let totalTests = 0
     let passedTests = 0
-    if (submission.getId() > 0) {
-        submission.getScoresList()?.forEach(score => {
-            if (score.getScore() === score.getMaxscore()) {
-                passedTests++
-            } 
-            totalTests++
-        })
-    }
+    score.forEach(score => {
+        if (score.getScore() === score.getMaxscore()) {
+            passedTests++
+        } 
+        totalTests++
+    })
     return `${passedTests}/${totalTests}`
 }
 
@@ -213,6 +212,10 @@ export const isTeacher = (enrollment: Enrollment) => {
 
 export const isEnrolled = (enrollment: Enrollment) => {
     return enrollment.getStatus() >= Enrollment.UserStatus.STUDENT
+}
+
+export const isManuallyGraded = (assignment: Assignment) => {
+    return assignment.getReviewers() > 0
 }
 
 export const getCourseID = () => {
