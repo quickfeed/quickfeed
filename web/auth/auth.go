@@ -323,7 +323,6 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 
 			i, ok := sess.Values[UserKey]
 			if !ok {
-				// logger.Error(echo.ErrUnauthorized.Error())
 				return next(c)
 			}
 
