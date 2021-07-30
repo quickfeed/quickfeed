@@ -1207,28 +1207,28 @@ export class AutograderServiceClient {
   }
 
   methodInfoRebuildSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
-    CourseSubmissions,
+    Void,
     (request: AssignmentRequest) => {
       return request.serializeBinary();
     },
-    CourseSubmissions.deserializeBinary
+    Void.deserializeBinary
   );
 
   rebuildSubmissions(
     request: AssignmentRequest,
-    metadata: grpcWeb.Metadata | null): Promise<CourseSubmissions>;
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   rebuildSubmissions(
     request: AssignmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: CourseSubmissions) => void): grpcWeb.ClientReadableStream<CourseSubmissions>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   rebuildSubmissions(
     request: AssignmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: CourseSubmissions) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         new URL('/ag.AutograderService/RebuildSubmissions', this.hostname_).toString(),

@@ -348,12 +348,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         return this.toISubmission(result.data);
     }
-    public async rebuildSubmissions(assignmentID: number, courseID: number): Promise<IAllSubmissionsForEnrollment[]> {
+    public async rebuildSubmissions(assignmentID: number, courseID: number): Promise<boolean> {
         const result = await this.grpcHelper.rebuildSubmissions(assignmentID, courseID);
-        if (!this.responseCodeSuccess(result) || !result.data) {
-            return [];
-        }
-        return this.toUILinks(result.data);
+        return this.responseCodeSuccess(result);
     }
 
     public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {

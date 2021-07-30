@@ -100,9 +100,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submission, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submission.deserializeBinary);
-        this.methodInfoRebuildSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.CourseSubmissions, function (request) {
+        this.methodInfoRebuildSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.CourseSubmissions.deserializeBinary);
+        }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoCreateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.GradingBenchmark, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.GradingBenchmark.deserializeBinary);

@@ -589,7 +589,7 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 }
 
 // RebuildAllSubmissions runs tests for all submissions for the given assignment ID.
-func (s *AutograderService) RebuildAllSubmissions(ctx context.Context, in *pb.AssignmentRequest) (*pb.CourseSubmissions, error) {
+func (s *AutograderService) RebuildAllSubmissions(ctx context.Context, in *pb.AssignmentRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("RebuildAllSubmissions failed: authentication error: %v", err)
@@ -603,8 +603,7 @@ func (s *AutograderService) RebuildAllSubmissions(ctx context.Context, in *pb.As
 	if err := s.rebuildAllSubmissions(in); err != nil {
 		return nil, err
 	}
-	// TODO(vera): return all updated submissions when tests are done? Possible timeout issues
-	return nil, nil
+	return &pb.Void{}, nil
 }
 
 // CreateBenchmark adds a new grading benchmark for an assignment

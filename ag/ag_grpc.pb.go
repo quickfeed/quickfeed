@@ -49,7 +49,7 @@ type AutograderServiceClient interface {
 	UpdateSubmission(ctx context.Context, in *UpdateSubmissionRequest, opts ...grpc.CallOption) (*Void, error)
 	UpdateSubmissions(ctx context.Context, in *UpdateSubmissionsRequest, opts ...grpc.CallOption) (*Void, error)
 	RebuildSubmission(ctx context.Context, in *RebuildRequest, opts ...grpc.CallOption) (*Submission, error)
-	RebuildSubmissions(ctx context.Context, in *AssignmentRequest, opts ...grpc.CallOption) (*CourseSubmissions, error)
+	RebuildSubmissions(ctx context.Context, in *AssignmentRequest, opts ...grpc.CallOption) (*Void, error)
 	// manual grading //
 	CreateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*GradingBenchmark, error)
 	UpdateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*Void, error)
@@ -336,8 +336,8 @@ func (c *autograderServiceClient) RebuildSubmission(ctx context.Context, in *Reb
 	return out, nil
 }
 
-func (c *autograderServiceClient) RebuildSubmissions(ctx context.Context, in *AssignmentRequest, opts ...grpc.CallOption) (*CourseSubmissions, error) {
-	out := new(CourseSubmissions)
+func (c *autograderServiceClient) RebuildSubmissions(ctx context.Context, in *AssignmentRequest, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/RebuildSubmissions", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -506,7 +506,7 @@ type AutograderServiceServer interface {
 	UpdateSubmission(context.Context, *UpdateSubmissionRequest) (*Void, error)
 	UpdateSubmissions(context.Context, *UpdateSubmissionsRequest) (*Void, error)
 	RebuildSubmission(context.Context, *RebuildRequest) (*Submission, error)
-	RebuildSubmissions(context.Context, *AssignmentRequest) (*CourseSubmissions, error)
+	RebuildSubmissions(context.Context, *AssignmentRequest) (*Void, error)
 	// manual grading //
 	CreateBenchmark(context.Context, *GradingBenchmark) (*GradingBenchmark, error)
 	UpdateBenchmark(context.Context, *GradingBenchmark) (*Void, error)
@@ -616,7 +616,7 @@ func (UnimplementedAutograderServiceServer) UpdateSubmissions(context.Context, *
 func (UnimplementedAutograderServiceServer) RebuildSubmission(context.Context, *RebuildRequest) (*Submission, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RebuildSubmission not implemented")
 }
-func (UnimplementedAutograderServiceServer) RebuildSubmissions(context.Context, *AssignmentRequest) (*CourseSubmissions, error) {
+func (UnimplementedAutograderServiceServer) RebuildSubmissions(context.Context, *AssignmentRequest) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RebuildSubmissions not implemented")
 }
 func (UnimplementedAutograderServiceServer) CreateBenchmark(context.Context, *GradingBenchmark) (*GradingBenchmark, error) {
