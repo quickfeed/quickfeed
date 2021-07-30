@@ -1,47 +1,54 @@
 package ci
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
-	"os"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/internal"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/log"
+	"github.com/autograde/quickfeed/scm"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
-const (
-	// qf101 is a test course for experimenting with go.sh behavior.
-	// The test below will run locally on the test machine, not on the QuickFeed machine.
-	getURL  = "https://github.com/qf101/meling-labs.git"
-	testURL = "https://github.com/qf101/tests.git"
-)
+// To run this test, please see instructions in the developer guide (dev.md).
+
+// This test uses a test course for experimenting with go.sh behavior.
+// The test below will run locally on the test machine, not on the QuickFeed machine.
 
 func TestRunTests(t *testing.T) {
-	// The access token is a 'personal access token' for the user that has access to the repos below.
-	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
-	if len(accessToken) < 1 {
-		t.Skip("This test requires a 'GITHUB_ACCESS_TOKEN' and access to the 'autograder-test' GitHub organization")
-	}
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
 
-	randomness := make([]byte, 10)
-	_, err := rand.Read(randomness)
+	// Only used to fetch the user's GitHub login (user name)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
+	userName, err := s.GetUserName(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	randomness := make([]byte, 10)
+	if _, err := rand.Read(randomness); err != nil {
+		t.Fatal(err)
+	}
 	randomString := fmt.Sprintf("%x", sha1.Sum(randomness))
+
+	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	info := &AssignmentInfo{
 		AssignmentName:     "lab1",
 		Script:             "go.sh",
 		CreatorAccessToken: accessToken,
-		GetURL:             getURL,
-		TestURL:            testURL,
+		GetURL:             repo.StudentRepoURL(userName),
+		TestURL:            repo.TestsRepoURL(),
 		RandomSecret:       randomString,
 	}
 	runData := &RunData{
@@ -63,6 +70,7 @@ func TestRunTests(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
 	t.Logf("\n%s\nExecTime: %v\nSecret: %v\n", ed.out, ed.execTime, info.RandomSecret)
 }
 
