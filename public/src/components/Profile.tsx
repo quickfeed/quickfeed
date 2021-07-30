@@ -40,7 +40,7 @@ const Profile = () => {
                     You can edit your user information here.
                     </div>
                 </div>
-                {editing ? <UserProfileForm editing={editing} setEditing={setEditing} /> : <ProfileInfo />}
+                {editing ? <UserProfileForm setEditing={setEditing} /> : <ProfileInfo />}
             </div>
             )
     }
