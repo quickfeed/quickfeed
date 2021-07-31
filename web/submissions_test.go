@@ -430,8 +430,11 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	buildInfo1 := &score.BuildInfo{
-		BuildDate: "2020-02-23T18:00:00",
-		BuildLog:  "runtime error",
+		ID:           1,
+		SubmissionID: 1,
+		BuildDate:    "2020-02-23T18:00:00",
+		BuildLog:     "runtime error",
+		ExecTime:     3,
 	}
 
 	sub1 := &pb.Submission{
