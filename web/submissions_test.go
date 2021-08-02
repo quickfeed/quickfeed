@@ -537,12 +537,12 @@ func TestCreateApproveList(t *testing.T) {
 	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Fatal(err)
 	}
-	student1 := createNamedUser(t, db, 2, "Leslie Lamport")
-	student2 := createNamedUser(t, db, 3, "Hein Meling")
-	student3 := createNamedUser(t, db, 4, "John Doe")
-	enrollStudent(t, db, student1, course)
-	enrollStudent(t, db, student2, course)
-	enrollStudent(t, db, student3, course)
+	student1 := qtest.CreateNamedUser(t, db, 2, "Leslie Lamport")
+	student2 := qtest.CreateNamedUser(t, db, 3, "Hein Meling")
+	student3 := qtest.CreateNamedUser(t, db, 4, "John Doe")
+	qtest.EnrollStudent(t, db, student1, course)
+	qtest.EnrollStudent(t, db, student2, course)
+	qtest.EnrollStudent(t, db, student3, course)
 
 	assignments := []*pb.Assignment{
 		{
