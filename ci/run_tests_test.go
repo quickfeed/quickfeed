@@ -2,9 +2,6 @@ package ci
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/sha1"
-	"fmt"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -36,11 +33,7 @@ func TestRunTests(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	randomness := make([]byte, 10)
-	if _, err := rand.Read(randomness); err != nil {
-		t.Fatal(err)
-	}
-	randomString := fmt.Sprintf("%x", sha1.Sum(randomness))
+	randomString := qtest.RandomString(t)
 
 	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	info := &AssignmentInfo{

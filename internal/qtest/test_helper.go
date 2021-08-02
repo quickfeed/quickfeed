@@ -1,6 +1,9 @@
 package qtest
 
 import (
+	"crypto/rand"
+	"crypto/sha1"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -95,4 +98,13 @@ func FakeProviderMap(t *testing.T) (scm.SCM, *auth.Scms) {
 		t.Fatal(err)
 	}
 	return scm, scms
+}
+
+func RandomString(t *testing.T) string {
+	t.Helper()
+	randomness := make([]byte, 10)
+	if _, err := rand.Read(randomness); err != nil {
+		t.Fatal(err)
+	}
+	return fmt.Sprintf("%x", sha1.Sum(randomness))[:6]
 }
