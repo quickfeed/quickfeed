@@ -125,7 +125,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			db, cleanup := qtest.TestDB(t)
 
-			teacher := createFakeUser(t, db, 10)
+			teacher := qtest.CreateFakeUser(t, db, 10)
 			var course pb.Course
 			if err := db.CreateCourse(teacher.ID, &course); err != nil {
 				t.Fatal(err)
@@ -134,7 +134,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			var uids []uint64
 			// create as many users as the desired number of enrollments
 			for i, enrollment := range test.enrollments {
-				user := createFakeUser(t, db, uint64(i))
+				user := qtest.CreateFakeUser(t, db, uint64(i))
 				uids = append(uids, user.ID)
 				if enrollment == uint(pb.Enrollment_PENDING) {
 					continue
@@ -225,7 +225,7 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := createFakeUser(t, db, 10)
+	teacher := qtest.CreateFakeUser(t, db, 10)
 	var course pb.Course
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
@@ -234,7 +234,7 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 	enrollments := []pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_STUDENT}
 	// create as many users as the desired number of enrollments
 	for i := 0; i < len(enrollments); i++ {
-		user := createFakeUser(t, db, uint64(i))
+		user := qtest.CreateFakeUser(t, db, uint64(i))
 		users = append(users, user)
 		if enrollments[i] == pb.Enrollment_PENDING {
 			continue
@@ -281,7 +281,7 @@ func TestGetGroupsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := createFakeUser(t, db, 10)
+	teacher := qtest.CreateFakeUser(t, db, 10)
 	var course pb.Course
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
@@ -296,7 +296,7 @@ func TestGetGroupsByCourse(t *testing.T) {
 	}
 	// create as many users as the desired number of enrollments
 	for i := 0; i < len(enrollments); i++ {
-		user := createFakeUser(t, db, uint64(i))
+		user := qtest.CreateFakeUser(t, db, uint64(i))
 		users = append(users, user)
 		if enrollments[i] == pb.Enrollment_PENDING {
 			continue

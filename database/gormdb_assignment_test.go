@@ -45,7 +45,7 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	user := createFakeUser(t, db, 10)
+	user := qtest.CreateFakeUser(t, db, 10)
 	if err := db.CreateCourse(user.ID, &pb.Course{}); err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func TestUpdateAssignment(t *testing.T) {
 	defer cleanup()
 
 	course := &pb.Course{}
-	admin := createFakeUser(t, db, 10)
+	admin := qtest.CreateFakeUser(t, db, 10)
 	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Fatal(err)
 	}
@@ -236,7 +236,7 @@ func TestUpdateBenchmarks(t *testing.T) {
 	defer cleanup()
 
 	course := &pb.Course{}
-	admin := createFakeUser(t, db, 10)
+	admin := qtest.CreateFakeUser(t, db, 10)
 	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Fatal(err)
 	}

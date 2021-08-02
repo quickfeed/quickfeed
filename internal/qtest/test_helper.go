@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/log"
 )
@@ -34,4 +35,21 @@ func TestDB(t *testing.T) (database.Database, func()) {
 			t.Error(err)
 		}
 	}
+}
+
+// CreateFakeUser is a test helper to create a user in the database
+// with the given remote id and the fake scm provider.
+func CreateFakeUser(t *testing.T, db database.Database, remoteID uint64) *pb.User {
+	t.Helper()
+	var user pb.User
+	err := db.CreateUserFromRemoteIdentity(&user,
+		&pb.RemoteIdentity{
+			Provider:    "fake",
+			RemoteID:    remoteID,
+			AccessToken: "token",
+		})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return &user
 }
