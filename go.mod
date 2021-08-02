@@ -11,6 +11,7 @@ require (
 	github.com/docker/docker v20.10.7+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/fatih/color v1.9.0 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-github/v35 v35.3.0
 	github.com/google/go-querystring v1.1.0 // indirect
