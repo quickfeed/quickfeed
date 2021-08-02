@@ -38,7 +38,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
 
     public render() {
         const headerDiv = <div className="row"><h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3></div>;
-        const noReviewersDiv = <div><div className="alert alert-info">This assignment is not for manual grading</div>{this.testAllButton()}</div>;
+        const noReviewersDiv = <div className="alert alert-info">This assignment is not for manual grading {this.testAllButton()}</div>;
         const topDiv = <div className="row top-div"><div className="assignment-p">Reviewers: {this.props.assignment.getReviewers()}</div>
                 <div className="score-p">Max points: {this.state.maxScore}</div> {this.loadButton()} </div>;
         if (this.props.assignment.getReviewers() < 1) {
@@ -182,34 +182,12 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
     private testAllButton(): JSX.Element {
         return <button type="button"
                 id="rebuild"
-                className="btn btn-default rebuild-button"
+                className="btn btn-default rebuild-btn"
             onClick={ () => this.testAll()}
         >Run all tests</button>;
     }
 
     private async testAll() {
-        if (confirm(
-            "Warning! This action will run tests for each submission delivered for this assignment. This can take a several minutes."
-        )) {
-            const ans = await this.props.rebuildSubmissions(this.props.assignment.getId(), this.props.assignment.getCourseid());
-            if (ans) {
-                // TODO: remove, only for testing
-                console.log("Rebuild successful");
-            } else {
-                console.log("Rebuild failed")
-            }
-        }
-    }
-
-    private testAllButton(): JSX.Element {
-        return <button type="button"
-                id="rebuild"
-                className="btn btn-default rebuild-button"
-            onClick={ () => this.testAll()}
-        >Run all tests</button>;
-    }
-
-    private testAll() {
         if (confirm(
             "Warning! This action will run tests for each submission delivered for this assignment. This can take a several minutes."
         )) {
