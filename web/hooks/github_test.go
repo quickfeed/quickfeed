@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 	"testing"
 
 	"github.com/autograde/quickfeed/ci"
@@ -15,38 +14,34 @@ import (
 )
 
 const (
-	gitHubTestOrg = "autograder-test"
-	secret        = "the-secret-autograder-test"
+	secret = "the-secret-quickfeed-test"
 )
 
-// To enable this test, please see instructions in the developer guide (dev.md).
-// You will also need access to the autograder-test organization; you may request
-// access by sending your GitHub username to hein.meling at uis.no.
+// To run this test, please see instructions in the developer guide (dev.md).
 
-// On macOS, get ngrok using `brew cask install ngrok`.
+// On macOS, get ngrok using `brew install ngrok`.
 // See steps to follow [here](https://groob.io/tutorial/go-github-webhook/).
 
 // To run this test, use the following (replace the forwarding URL with your own):
 //
-// NGROK_FWD=https://53c51fa9.ngrok.io go test -v -run TestGitHubWebHook
+// QF_WEBHOOK_SERVER=https://53c51fa9.ngrok.io go test -v -run TestGitHubWebHook
 //
-// This will block waiting for a push event from GitHub; meaning that you
+// This will create a new webhook with URL `https://53c51fa9.ngrok.io/webhook`
+// for the $QF_TEST_ORG/tests repository for handling push events.
+//
+// This test will then block waiting for a push event from GitHub; meaning that you
 // will manually have to create a push event to the 'tests' repository.
+//
+// TODO(meling) add code to create a push event to the tests repository.
 
 func TestGitHubWebHook(t *testing.T) {
-	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
-	if len(accessToken) < 1 {
-		t.Skip("This test requires a 'GITHUB_ACCESS_TOKEN' and access to the 'autograder-test' GitHub organization")
-	}
-	serverURL := os.Getenv("NGROK_FWD")
-	if len(serverURL) < 1 {
-		t.Skip("This test requires a 'NGROK_FWD' and access to the 'autograder-test' GitHub organization")
-	}
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
+	serverURL := scm.GetWebHookServer(t)
 
 	logger := logq.Zap(true).Sugar()
 	defer func() { _ = logger.Sync() }()
 
-	var s scm.SCM
 	s, err := scm.NewSCMClient(logger, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
@@ -54,9 +49,9 @@ func TestGitHubWebHook(t *testing.T) {
 
 	ctx := context.Background()
 	opt := &scm.CreateHookOptions{
-		URL:        serverURL,
+		URL:        serverURL + "/webhook",
 		Secret:     secret,
-		Repository: &scm.Repository{Owner: gitHubTestOrg, Path: "tests"},
+		Repository: &scm.Repository{Owner: qfTestOrg, Path: "tests"},
 	}
 	err = s.CreateHook(ctx, opt)
 	if err != nil {
@@ -71,6 +66,7 @@ func TestGitHubWebHook(t *testing.T) {
 		t.Logf("hook: %v", hook)
 	}
 
+	// TODO(meling) db is nil; will cause handling of push event to panic; will need a database with content for this to work fully.
 	var db database.Database
 	var runner ci.Runner
 	webhook := NewGitHubWebHook(logger, db, runner, secret)

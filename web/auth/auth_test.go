@@ -1,15 +1,13 @@
 package auth_test
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"reflect"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/internal"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
@@ -87,7 +85,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	authHandler := auth.OAuth2Login(zap.NewNop(), db)
@@ -109,7 +107,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	authHandler := auth.OAuth2Callback(zap.NewNop(), db)
@@ -164,7 +162,7 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 		}
 	}
 
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	if existingUser {
@@ -232,7 +230,7 @@ func TestOAuth2LoginAuthenticated(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	authHandler := auth.OAuth2Login(zap.NewNop(), db)
@@ -295,7 +293,7 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 		}
 	}
 
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	if existingUser {
@@ -339,7 +337,7 @@ func TestAccessControl(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	db, cleanup := setup(t)
+	db, cleanup := internal.TestDB(t)
 	defer cleanup()
 
 	// Create a new user.
@@ -357,7 +355,7 @@ func TestAccessControl(t *testing.T) {
 	}))
 
 	// User is not logged in.
-	if err := protected(c); err != echo.ErrUnauthorized {
+	if err := protected(c); err != nil {
 		t.Error(err)
 	}
 
@@ -374,34 +372,8 @@ func TestAccessControl(t *testing.T) {
 	}
 }
 
-func setup(t *testing.T) (*database.GormDB, func()) {
-	const (
-		prefix = "testdb"
-	)
-
-	f, err := ioutil.TempFile(os.TempDir(), prefix)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := f.Close(); err != nil {
-		os.Remove(f.Name())
-		t.Fatal(err)
-	}
-
-	db, err := database.NewGormDB(f.Name(), zap.NewNop())
-	if err != nil {
-		os.Remove(f.Name())
-		t.Fatal(err)
-	}
-
-	return db, func() {
-		if err := os.Remove(f.Name()); err != nil {
-			t.Error(err)
-		}
-	}
-}
-
 func assertCode(t *testing.T, haveCode, wantCode int) {
+	t.Helper()
 	if haveCode != wantCode {
 		t.Errorf("have status code %d want %d", haveCode, wantCode)
 	}

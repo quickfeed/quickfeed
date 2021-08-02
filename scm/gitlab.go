@@ -246,7 +246,7 @@ func (s *GitlabSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (strin
 }
 
 // CreateCloneURL implements the SCM interface.
-func (s *GitlabSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
+func (s *GitlabSCM) CreateCloneURL(opt *URLPathOptions) string {
 	return ""
 }
 

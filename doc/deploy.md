@@ -60,6 +60,27 @@ IMPORTANT NOTES:
    certificates, run "certbot renew"
 ```
 
+```terminal
+% sudo certbot certonly --standalone
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Please enter the domain name(s) you would like on your certificate (comma and/or
+space separated) (Enter 'c' to cancel): ag2.ux.uis.no
+Renewing an existing certificate for ag2.ux.uis.no
+
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/ag2.ux.uis.no/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/ag2.ux.uis.no/privkey.pem
+This certificate expires on 2021-10-28.
+These files will be updated when the certificate renews.
+Certbot has set up a scheduled task to automatically renew this certificate in the background.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+```
+
 ## Configuring Docker
 
 To ensure that Docker containers has access to networking, you may need to set up IPv4 port forwarding on your server machine:
@@ -70,10 +91,64 @@ sudo sysctl -p  (to confirm the change)
 sudo service docker restart
 ```
 
-## Run with Envoy
+## Run Envoy
+
+### TODO make docker image with both envoy and quickfeed and expose ports needed etc
+
+```
+TODO(meling)
+% brew install tmux overmind 
+% Procfile
+```
+
+### Generate Envoy Configuration File
 
 ```sh
-% sudo envoy -c envoy/envoy-cyclone.yaml
+% cd $QUICKFEED
+% cp doc/scripts/envs.sh quickfeed-env.sh
+# Edit quickfeed-env.sh according to your domain
+% source quickfeed-env.sh
+% make envoy-config
+```
+
+### Running with Locally Installed Envoy (macOS homebrew)
+
+```sh
+% sudo envoy -c $ENVOY_CONFIG &
+```
+
+With additional logging:
+
+```sh
+% sudo envoy -c $ENVOY_CONFIG --log-path envoy.log --enable-fine-grain-logging -l debug &
+```
+
+### Running with func-e (Linux)
+
+Install the `func-e` command in `/usr/local/bin` with:
+
+```sh
+% curl https://func-e.io/install.sh | sudo bash -s -- -b /usr/local/bin
+```
+
+Alternatively, install via linuxbrew instead:
+
+```sh
+% brew install func-e
+% sudo ln -s /home/linuxbrew/.linuxbrew/bin/func-e /usr/local/bin
+```
+
+Run with:
+
+```sh
+% sudo func-e run -c $ENVOY_CONFIG &
+```
+
+### Running Envoy via Docker Image
+
+```sh
+% docker pull envoyproxy/envoy:v1.19.0
+% docker run --rm envoyproxy/envoy:v1.19.0 -c $ENVOY_CONFIG
 ```
 
 ## Configure GitHub OAuth Application for QuickFeed
@@ -100,10 +175,8 @@ This should also work while the application is running.
 Build and run the `quickfeed` server; here we use all default values:
 
 ```bash
-% cd $QUICKFEED
 % go install
-% source quickfeed-env.sh
-% quickfeed -service.url cyclone.meling.me
+% quickfeed -service.url $DOMAIN  &> quickfeed.log &
 ```
 
 ### Troubleshooting
@@ -121,7 +194,7 @@ Then run and retry `go install`:
 % go install
 ```
 
-## Running the QuickFeed Server
+## Running the QuickFeed Server Details
 
 The following provides additional details for running QuickFeed.
 Before running the QuickFeed server, you need to configure [GitHub](./github.md).
@@ -155,7 +228,6 @@ quickfeed -service.url uis.itest.run &> quickfeed.log &
 | `grpc.addr`     | Listener address for gRPC service      | `:9090`         |
 | `http.addr`     | Listener address for HTTP service      | `:3005`         |
 | `http.public`   | Path to service content                | `public`        |
-| `script.path`   | Path to continuous integration scripts | `ci/scripts`    |
 
 ### Custom Docker Image for a Course
 

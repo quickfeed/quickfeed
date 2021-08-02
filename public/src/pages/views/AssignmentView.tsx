@@ -179,6 +179,27 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
                 onClick={() => this.loadCriteriaFromFile()}
         >Load from file</button>;
     }
+    private testAllButton(): JSX.Element {
+        return <button type="button"
+                id="rebuild"
+                className="btn btn-default rebuild-button"
+            onClick={ () => this.testAll()}
+        >Run all tests</button>;
+    }
+
+    private async testAll() {
+        if (confirm(
+            "Warning! This action will run tests for each submission delivered for this assignment. This can take a several minutes."
+        )) {
+            const ans = await this.props.rebuildSubmissions(this.props.assignment.getId(), this.props.assignment.getCourseid());
+            if (ans) {
+                // TODO: remove, only for testing
+                console.log("Rebuild successful");
+            } else {
+                console.log("Rebuild failed")
+            }
+        }
+    }
 
     private testAllButton(): JSX.Element {
         return <button type="button"

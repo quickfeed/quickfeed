@@ -38,6 +38,7 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 		Repo:       repo,
 		CommitID:   submission.GetCommitHash(),
 		JobOwner:   slug.Make(name),
+		Rebuild:    true,
 	}
 	ci.RunTests(s.logger, s.db, s.runner, runData)
 	return s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})

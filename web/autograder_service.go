@@ -20,7 +20,7 @@ import (
 // other shared data structures.
 type AutograderService struct {
 	logger *zap.SugaredLogger
-	db     *database.GormDB
+	db     database.Database
 	scms   *auth.Scms
 	bh     BaseHookOptions
 	runner ci.Runner
@@ -28,7 +28,7 @@ type AutograderService struct {
 }
 
 // NewAutograderService returns an AutograderService object.
-func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *auth.Scms, bh BaseHookOptions, runner ci.Runner) *AutograderService {
+func NewAutograderService(logger *zap.Logger, db database.Database, scms *auth.Scms, bh BaseHookOptions, runner ci.Runner) *AutograderService {
 	return &AutograderService{
 		logger: logger.Sugar(),
 		db:     db,

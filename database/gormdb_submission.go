@@ -65,6 +65,11 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	// TODO(meling) temporary transformation of submission data
 	transform(submission)
 
+	if submission.BuildInfo != nil {
+		if err := db.conn.Save(submission.BuildInfo).Error; err != nil {
+			return err
+		}
+	}
 	// Save a submission record for the given assignment and student/group.
 	return db.conn.Where(query).Save(submission).Error
 }
@@ -73,6 +78,8 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	var submission pb.Submission
 	if err := db.conn.Preload("Reviews").
+		Preload("BuildInfo").
+		Preload("Scores").
 		Preload("Reviews.GradingBenchmarks").
 		Preload("Reviews.GradingBenchmarks.Criteria").
 		Where(query).Last(&submission).Error; err != nil {

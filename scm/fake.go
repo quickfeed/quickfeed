@@ -181,7 +181,7 @@ func (s *FakeSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOptions)
 }
 
 // CreateCloneURL implements the SCM interface.
-func (s *FakeSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
+func (s *FakeSCM) CreateCloneURL(opt *URLPathOptions) string {
 	return ""
 }
 

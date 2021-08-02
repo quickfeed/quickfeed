@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/gob"
 	"net/http"
 	"strconv"
@@ -12,20 +13,23 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/markbates/goth/gothic"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
 func init() {
 	gob.Register(&UserSession{})
-	TokenStore = &UserToken{store: make(map[string]uint64)}
 }
 
 // Session keys.
 const (
-	SessionKey       = "session"
-	GothicSessionKey = "_gothic_session"
-	UserKey          = "user"
-	Cookie           = "cookie"
+	SessionKey     = "session"
+	UserKey        = "user"
+	Cookie         = "cookie"
+	OutgoingCookie = "Set-Cookie"
 )
 
 // Query keys.
@@ -47,28 +51,25 @@ func newUserSession(id uint64) *UserSession {
 	}
 }
 
-// UserToken holds a map from session cookies to user IDs.
-type UserToken struct {
-	store map[string]uint64
-}
-
-func (ut *UserToken) add(token string, id uint64) {
-	for token, userID := range TokenStore.store {
-		if userID == id {
-			delete(TokenStore.store, token)
-		}
-	}
-	ut.store[token] = id
-}
-
-func (ut *UserToken) Get(token string) uint64 {
-	return TokenStore.store[token]
-}
-
-var TokenStore *UserToken
-
 func (us *UserSession) enableProvider(provider string) {
 	us.Providers[provider] = struct{}{}
+}
+
+// map from session cookies to user IDs.
+var cookieStore = make(map[string]uint64)
+
+// Add adds cookie for userID, replacing userID's current cookie, if any.
+func Add(cookie string, userID uint64) {
+	for currentCookie, id := range cookieStore {
+		if id == userID && currentCookie != cookie {
+			delete(cookieStore, currentCookie)
+		}
+	}
+	cookieStore[cookie] = userID
+}
+
+func Get(cookie string) uint64 {
+	return cookieStore[cookie]
 }
 
 // OAuth2Logout invalidates the session for the logged in user.
@@ -88,7 +89,7 @@ func OAuth2Logout(logger *zap.Logger) echo.HandlerFunc {
 			us := i.(*UserSession)
 			// Invalidate gothic user sessions.
 			for provider := range us.Providers {
-				sess, err := session.Get(provider+GothicSessionKey, c)
+				sess, err := session.Get(provider+gothic.SessionName, c)
 				if err != nil {
 					logger.Error(err.Error())
 					return err
@@ -106,7 +107,6 @@ func OAuth2Logout(logger *zap.Logger) echo.HandlerFunc {
 		if err := sess.Save(r, w); err != nil {
 			logger.Error(err.Error())
 		}
-
 		return c.Redirect(http.StatusFound, extractRedirectURL(r, Redirect))
 	}
 }
@@ -205,6 +205,7 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 			return err
 		}
 
+		// session.Get(name, context) returns an existing session, or a new session if the context does not have an existing session
 		sess, err := session.Get(SessionKey, c)
 		if err != nil {
 			logger.Error(err.Error())
@@ -212,6 +213,7 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 		}
 
 		// Try to get already logged in user.
+		// If session.Get(...) returns a new session, the check below will be nil.
 		if sess.Values[UserKey] != nil {
 			i, ok := sess.Values[UserKey]
 			if !ok {
@@ -234,6 +236,10 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 			if err := sess.Save(r, w); err != nil {
 				logger.Error(err.Error())
 				return err
+			}
+			// Enable gRPC requests for session
+			if token := extractSessionCookie(w); len(token) > 0 {
+				Add(token, us.ID)
 			}
 			return c.Redirect(http.StatusFound, redirect)
 		}
@@ -282,10 +288,17 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 		us := newUserSession(user.ID)
 		us.enableProvider(provider)
 		sess.Values[UserKey] = us
+		// sess.Save(...) saves the session to a store in addition to adding an outgoing ('set-cookie') session cookie to the response.
 		if err := sess.Save(r, w); err != nil {
 			logger.Error(err.Error())
 			return err
 		}
+
+		// Register session and associated user ID to enable gRPC calls for the session.
+		if token := extractSessionCookie(w); len(token) > 0 {
+			Add(token, us.ID)
+		}
+
 		return c.Redirect(http.StatusFound, redirect)
 	}
 }
@@ -310,8 +323,7 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 
 			i, ok := sess.Values[UserKey]
 			if !ok {
-				logger.Error(echo.ErrUnauthorized.Error())
-				return echo.ErrUnauthorized
+				return next(c)
 			}
 
 			// If type assertion fails, the recover middleware will catch the panic and log a stack trace.
@@ -326,7 +338,7 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 					return OAuth2Logout(logger)(c)
 				}
 				logger.Error(echo.ErrUnauthorized.Error())
-				return echo.ErrUnauthorized
+				return next(c)
 			}
 			c.Set(UserKey, user)
 
@@ -343,14 +355,6 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 			if !foundSCMProvider {
 				logger.Info("no SCM providers found for", zap.String("user", user.String()))
 				return echo.NewHTTPError(http.StatusBadRequest, err)
-			}
-
-			token, err := c.Cookie(SessionKey)
-			if err != nil {
-				return err
-			}
-			if id := TokenStore.Get(token.String()); id != user.GetID() {
-				TokenStore.add(token.String(), user.GetID())
 			}
 
 			// TODO: Add access control list.
@@ -384,4 +388,48 @@ func extractState(r *http.Request, key string) (redirect string, teacher bool) {
 		return "/", teacher
 	}
 	return url[1:], teacher
+}
+
+func extractSessionCookie(w *echo.Response) string {
+	// Helper function that extracts an outgoing session cookie.
+	outgoingCookies := w.Header().Values(OutgoingCookie)
+	for _, cookie := range outgoingCookies {
+		if c := strings.Split(cookie, "="); c[0] == SessionKey {
+			token := strings.Split(cookie, ";")[0]
+			return token
+		}
+	}
+	return ""
+}
+
+var (
+	ErrInvalidSessionCookie = status.Errorf(codes.Unauthenticated, "Request does not contain a valid session cookie.")
+	ErrContextMetadata      = status.Errorf(codes.Unauthenticated, "Could not obtain metadata from context")
+)
+
+func UserVerifier() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		meta, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, ErrContextMetadata
+		}
+		newMeta, err := userValidation(meta)
+		if err != nil {
+			return nil, err
+		}
+		newCtx := metadata.NewIncomingContext(ctx, newMeta)
+		resp, err := handler(newCtx, req)
+		return resp, err
+	}
+}
+
+// userValidation returns modified metadata containing a valid user. An error is returned if the user is not authenticated.
+func userValidation(meta metadata.MD) (metadata.MD, error) {
+	for _, cookie := range meta.Get(Cookie) {
+		if user := Get(cookie); user > 0 {
+			meta.Set(UserKey, strconv.FormatUint(user, 10))
+			return meta, nil
+		}
+	}
+	return nil, ErrInvalidSessionCookie
 }

@@ -55,7 +55,7 @@ type SCM interface {
 	// GetUserNameByID returns the login name of user with the given remoteID.
 	GetUserNameByID(context.Context, uint64) (string, error)
 	// Returns a provider specific clone path.
-	CreateCloneURL(*CreateClonePathOptions) string
+	CreateCloneURL(*URLPathOptions) string
 	// Promotes or demotes organization member, based on Role field in OrgMembership.
 	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
 	// RevokeOrgMembership removes user from the organization.
@@ -195,8 +195,8 @@ type OrgMembershipOptions struct {
 	Role         string // Role can be "admin" (organization owner) or "member".
 }
 
-// CreateClonePathOptions holds elements used when constructing a clone URL string.
-type CreateClonePathOptions struct {
+// URLPathOptions holds elements used when constructing a clone URL string.
+type URLPathOptions struct {
 	UserToken    string
 	Organization string
 	Repository   string
