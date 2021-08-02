@@ -7,7 +7,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/internal"
+	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
@@ -18,7 +18,7 @@ import (
 )
 
 func TestSubmissionsAccess(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
@@ -257,7 +257,7 @@ func TestSubmissionsAccess(t *testing.T) {
 }
 
 func TestApproveSubmission(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
@@ -346,7 +346,7 @@ func TestApproveSubmission(t *testing.T) {
 }
 
 func TestGetCourseLabSubmissions(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
@@ -528,7 +528,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 }
 
 func TestCreateApproveList(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)

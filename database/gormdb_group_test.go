@@ -10,7 +10,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/internal"
+	"github.com/autograde/quickfeed/internal/qtest"
 )
 
 var createGroupTests = []struct {
@@ -123,7 +123,7 @@ var groupWithUsers = func(cid uint64, uids ...uint64) *pb.Group {
 func TestGormDBCreateAndGetGroup(t *testing.T) {
 	for _, test := range createGroupTests {
 		t.Run(test.name, func(t *testing.T) {
-			db, cleanup := internal.TestDB(t)
+			db, cleanup := qtest.TestDB(t)
 
 			teacher := createFakeUser(t, db, 10)
 			var course pb.Course
@@ -222,7 +222,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 }
 
 func TestGormDBCreateGroupTwice(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	teacher := createFakeUser(t, db, 10)
@@ -278,7 +278,7 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 }
 
 func TestGetGroupsByCourse(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	teacher := createFakeUser(t, db, 10)

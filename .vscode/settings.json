@@ -106,6 +106,7 @@
         "protobuf",
         "protoc",
         "protoimpl",
+        "qtest",
         "quickfeed",
         "repotoken",
         "run",

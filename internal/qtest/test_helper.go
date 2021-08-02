@@ -1,4 +1,4 @@
-package internal
+package qtest
 
 import (
 	"io/ioutil"
