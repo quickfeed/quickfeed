@@ -66,7 +66,7 @@ func TestGetCourses(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	var testCourses []*pb.Course
@@ -98,17 +98,6 @@ func withUserContext(ctx context.Context, user *pb.User) context.Context {
 	return metadata.NewIncomingContext(ctx, meta)
 }
 
-// fakeProviderMap is a test helper function to create an SCM map.
-func fakeProviderMap(t *testing.T) (scm.SCM, *auth.Scms) {
-	t.Helper()
-	scms := auth.NewScms()
-	scm, err := scms.GetOrCreateSCMEntry(zap.NewNop(), "fake", "token")
-	if err != nil {
-		t.Fatal(err)
-	}
-	return scm, scms
-}
-
 func fakeGothProvider() {
 	baseURL := "fake"
 	goth.UseProviders(&auth.FakeProvider{
@@ -127,7 +116,7 @@ func TestNewCourse(t *testing.T) {
 	fakeGothProvider()
 	admin := qtest.CreateFakeUser(t, db, 10)
 	ctx := withUserContext(context.Background(), admin)
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	for _, testCourse := range allCourses {
@@ -163,7 +152,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 10)
 	ctx := withUserContext(context.Background(), admin)
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
@@ -190,7 +179,7 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	ctx := withUserContext(context.Background(), admin)
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
@@ -293,7 +282,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user := qtest.CreateFakeUser(t, db, 2)
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	var testCourses []*pb.Course
@@ -372,7 +361,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	}
 
 	user := qtest.CreateFakeUser(t, db, 2)
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	if err := db.CreateEnrollment(&pb.Enrollment{
@@ -433,7 +422,7 @@ func TestGetCourse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	foundCourse, err := ags.GetCourse(context.Background(), &pb.CourseRequest{CourseID: course.ID})
@@ -463,7 +452,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	if err := db.CreateEnrollment(&pb.Enrollment{

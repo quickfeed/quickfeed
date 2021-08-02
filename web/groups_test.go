@@ -40,7 +40,7 @@ func TestNewGroup(t *testing.T) {
 	}
 
 	ctx := withUserContext(context.Background(), admin)
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	_, err := fakeProvider.CreateOrganization(ctx,
@@ -95,7 +95,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	}
 
 	ctx := withUserContext(context.Background(), admin)
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	_, err := fakeProvider.CreateOrganization(ctx,
@@ -164,7 +164,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	_, err := fakeProvider.CreateOrganization(context.Background(),
@@ -247,7 +247,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ctx := withUserContext(context.Background(), user)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
@@ -277,7 +277,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	// set up fake goth provider (only needs to be done once)
 	fakeGothProvider()
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	_, err := fakeProvider.CreateOrganization(context.Background(),
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
@@ -503,7 +503,7 @@ func TestDeleteGroup(t *testing.T) {
 
 	group := &pb.Group{Name: "Test Delete Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	ctx := withUserContext(context.Background(), user)
@@ -549,7 +549,7 @@ func TestGetGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), user)
 
@@ -603,7 +603,7 @@ func TestPatchGroupStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), teacher)
 
@@ -696,7 +696,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
@@ -765,7 +765,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
@@ -882,7 +882,7 @@ func TestGetGroups(t *testing.T) {
 	}
 	admin := users[0]
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	// admin will be enrolled as teacher because of course creation below
 	withUserContext(context.Background(), admin)

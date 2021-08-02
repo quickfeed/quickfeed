@@ -66,7 +66,7 @@ func TestSubmissionsAccess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), teacher)
 
@@ -299,7 +299,7 @@ func TestApproveSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
@@ -450,7 +450,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
@@ -638,7 +638,7 @@ func TestCreateApproveList(t *testing.T) {
 		}
 	}
 
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})

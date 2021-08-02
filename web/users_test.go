@@ -34,7 +34,7 @@ func TestGetSelf(t *testing.T) {
 		bufSize = 1024 * 1024
 	)
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 
 	adminUser := qtest.CreateFakeUser(t, db, 1)
 	student := qtest.CreateFakeUser(t, db, 56)
@@ -127,7 +127,7 @@ func TestGetUsers(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	unexpectedUsers, err := ags.GetUsers(context.Background(), &pb.Void{})
 	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
@@ -191,7 +191,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
@@ -271,7 +271,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	}
 	admin := users[0]
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
@@ -354,7 +354,7 @@ func TestUpdateUser(t *testing.T) {
 	firstAdminUser := qtest.CreateFakeUser(t, db, 1)
 	nonAdminUser := qtest.CreateFakeUser(t, db, 11)
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), firstAdminUser)
 
@@ -415,7 +415,7 @@ func TestUpdateUserFailures(t *testing.T) {
 	adminUser := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateFakeUser(t, db, 11)
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	u := qtest.CreateFakeUser(t, db, 3)
