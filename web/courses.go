@@ -163,7 +163,7 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 	course.SetSlipDays()
 	for _, a := range assignments {
 		for _, sbm := range a.Submissions {
-			if request.GetSkipBuildInfo() {
+			if !request.GetWithBuildInfo() {
 				// TODO(meling) Check if this is enough: @Oskar and @BK
 				sbm.BuildInfo = &score.BuildInfo{}
 				sbm.Scores = []*score.Score{}
