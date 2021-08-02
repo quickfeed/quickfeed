@@ -2,13 +2,10 @@ package ci
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/sha1"
-	"fmt"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/internal"
+	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
@@ -36,11 +33,7 @@ func TestRunTests(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	randomness := make([]byte, 10)
-	if _, err := rand.Read(randomness); err != nil {
-		t.Fatal(err)
-	}
-	randomString := fmt.Sprintf("%x", sha1.Sum(randomness))
+	randomString := qtest.RandomString(t)
 
 	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	info := &AssignmentInfo{
@@ -75,7 +68,7 @@ func TestRunTests(t *testing.T) {
 }
 
 func TestRecordResults(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	var user pb.User
