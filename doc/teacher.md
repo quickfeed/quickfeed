@@ -200,14 +200,13 @@ hoursmin: 6
 hoursmax: 7
 reviewers: 2
 containertimeout: 10
-skiptests: false
 ```
 
 | Field              | Description                                                                                           |
 |--------------------|-------------------------------------------------------------------------------------------------------|
 | `assignmentid`     | TBD                                                                                                   |
 | `name`             | Name of assignment folder                                                                             |
-| `scriptfile`       | Script to use for running tests. Ignored if `skiptests` is set to `true`.                             |
+| `scriptfile`       | Script to use for running tests.                                                                      |
 | `deadline`         | Submission deadline for the assignment.                                                               |
 | `autoapprove`      | Automatically approve the assignment when `scorelimit` is achieved.                                   |
 | `scorelimit`       | Minimal score needed for approval. Default is 80 %.                                                   |

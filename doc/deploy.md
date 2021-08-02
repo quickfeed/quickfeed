@@ -87,7 +87,7 @@ To ensure that Docker containers has access to networking, you may need to set u
 
 ```sh
 sudo sysctl net.ipv4.ip_forward=1
-sudo sysctl -p  (to confirm the change)
+sudo sysctl -p
 sudo service docker restart
 ```
 
@@ -95,8 +95,7 @@ sudo service docker restart
 
 ### TODO make docker image with both envoy and quickfeed and expose ports needed etc
 
-```
-TODO(meling)
+```sh
 % brew install tmux overmind 
 % Procfile
 ```
