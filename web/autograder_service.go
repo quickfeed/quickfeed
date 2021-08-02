@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"errors"
+	"log"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -589,7 +590,9 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 }
 
 // RebuildAllSubmissions runs tests for all submissions for the given assignment ID.
-func (s *AutograderService) RebuildAllSubmissions(ctx context.Context, in *pb.AssignmentRequest) (*pb.Void, error) {
+func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.AssignmentRequest) (*pb.Void, error) {
+	log.Println("REBUILDING ALL")
+
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("RebuildAllSubmissions failed: authentication error: %v", err)
@@ -600,7 +603,7 @@ func (s *AutograderService) RebuildAllSubmissions(ctx context.Context, in *pb.As
 		return nil, status.Error(codes.PermissionDenied, "only teachers can approve submissions")
 	}
 
-	if err := s.rebuildAllSubmissions(in); err != nil {
+	if err := s.rebuildSubmissions(in); err != nil {
 		return nil, err
 	}
 	return &pb.Void{}, nil

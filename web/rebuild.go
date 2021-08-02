@@ -43,7 +43,7 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 	return s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
 }
 
-func (s *AutograderService) rebuildAllSubmissions(request *pb.AssignmentRequest) error {
+func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) error {
 	submissions, err := s.db.GetSubmissions(&pb.Submission{AssignmentID: request.AssignmentID})
 	if err != nil {
 		return err

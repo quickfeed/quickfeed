@@ -266,7 +266,9 @@ export class GrpcManager {
     }
 
     public rebuildSubmissions(assignmentID: number, courseID: number): Promise<IGrpcResponse<Void>> {
-        const request = new AssignmentRequest().setAssignmentid(assignmentID).setCourseid(courseID);
+        const request = new AssignmentRequest()
+        request.setAssignmentid(assignmentID);
+        request.setCourseid(courseID);
         return this.grpcSend<Void>(this.agService.rebuildSubmissions, request);
     }
 
