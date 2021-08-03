@@ -12,7 +12,7 @@ interface AssignmentViewProps {
     addCriterion: (c: GradingCriterion) => Promise<GradingCriterion | null>;
     removeCriterion: (c: GradingCriterion) => Promise<boolean>;
     loadBenchmarks: () => Promise<GradingBenchmark[]>;
-    rebuildSubmissions: (assignmentID: number, courseID: number) => Promise<boolean>;
+    runAllTests: (assignmentID: number, courseID: number) => Promise<boolean>;
 }
 
 interface AssignmentViewState {
@@ -21,6 +21,7 @@ interface AssignmentViewState {
     newBenchmark: string;
     benchmarks: GradingBenchmark[];
     maxScore: number;
+    allTestsState: string;
 }
 
 export class AssignmentView extends React.Component<AssignmentViewProps, AssignmentViewState> {
@@ -32,6 +33,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
             open: false,
             newBenchmark: "",
             benchmarks: [],
+            allTestsState: "Run all tests",
             maxScore: this.renderTotalScore(this.props.assignment.getGradingbenchmarksList()),
         }
     }
@@ -129,8 +131,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
             } else if (e.key === "Escape") {
                 this.toggleAdd();
             }
-        }}
-        />
+        }}/>
         </div>;
         return this.state.adding ? addingRow : addRow;
     }
@@ -179,19 +180,32 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
                 onClick={() => this.loadCriteriaFromFile()}
         >Load from file</button>;
     }
+
     private testAllButton(): JSX.Element {
         return <button type="button"
                 id="rebuild"
                 className="btn btn-default rebuild-btn"
             onClick={ () => this.testAll()}
-        >Run all tests</button>;
+        >{this.state.allTestsState}</button>;
     }
 
     private async testAll() {
         if (confirm(
             "Warning! This action will run tests for each submission delivered for this assignment. This can take a several minutes."
         )) {
-            this.props.rebuildSubmissions(this.props.assignment.getId(), this.props.assignment.getCourseid());
+            this.setState({
+                allTestsState: "Running tests...",
+            });
+            const ans = await this.props.runAllTests(this.props.assignment.getId(), this.props.assignment.getCourseid());
+            if (ans) {
+                this.setState({
+                    allTestsState: "Finished",
+                });
+            } else {
+                this.setState({
+                    allTestsState: "Failed",
+                });
+            }
         }
     }
 

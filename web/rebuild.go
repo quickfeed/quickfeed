@@ -1,7 +1,7 @@
 package web
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -49,7 +49,7 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 }
 
 func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) error {
-	fmt.Printf("Running tests for all submissions for assignment ID %d of course ID %d\n", request.AssignmentID, request.CourseID)
+	log.Printf("Running tests for all submissions for assignment ID %d of course ID %d\n", request.AssignmentID, request.CourseID)
 	start := time.Now()
 	submissions, err := s.db.GetSubmissions(&pb.Submission{AssignmentID: request.AssignmentID})
 	if err != nil {
@@ -67,7 +67,7 @@ func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) er
 	}
 	err = errgrp.Wait()
 	total := time.Since(start)
-	fmt.Println("Finished running all tests, took ", total)
+	log.Println("Finished running all tests, took ", total)
 	return err
 }
 

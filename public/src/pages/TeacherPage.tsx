@@ -468,7 +468,7 @@ export class TeacherPage extends ViewPage {
                 removeCriterion={(c: GradingCriterion) => {
                     return this.courseMan.deleteCriterion(c);
                 }}
-                rebuildSubmissions={(assignmentID: number, courseID: number) => {
+                runAllTests={(assignmentID: number, courseID: number) => {
                     return this.courseMan.rebuildSubmissions(assignmentID, courseID);
                 }}
                 loadBenchmarks={async () => {
