@@ -1,9 +1,13 @@
 package web
 
 import (
+	"fmt"
+	"time"
+
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/gosimple/slug"
+	"golang.org/x/sync/errgroup"
 )
 
 // rebuildSubmission rebuilds the given assignment and submission.
@@ -45,17 +49,25 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 }
 
 func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) error {
+	fmt.Printf("Running tests for all submissions for assignment ID %d of course ID %d\n", request.AssignmentID, request.CourseID)
+	start := time.Now()
 	submissions, err := s.db.GetSubmissions(&pb.Submission{AssignmentID: request.AssignmentID})
 	if err != nil {
 		return err
 	}
 	rebuildRequest := &pb.RebuildRequest{AssignmentID: request.AssignmentID}
+
+	var errgrp errgroup.Group
 	for _, submission := range submissions {
 		rebuildRequest.SubmissionID = submission.ID
-		if _, err = s.rebuildSubmission(rebuildRequest); err != nil {
+		errgrp.Go(func() error {
+			_, err := s.rebuildSubmission(rebuildRequest)
 			return err
-		}
+		})
 	}
+	err = errgrp.Wait()
+	total := time.Since(start)
+	fmt.Println("Finished running all tests, took ", total)
 	return err
 }
 
