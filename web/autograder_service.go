@@ -588,7 +588,7 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 	return submission, nil
 }
 
-// RebuildAllSubmissions runs tests for all submissions for the given assignment ID.
+// RebuildSubmissions runs tests for all submissions for the given assignment ID.
 func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.AssignmentRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
