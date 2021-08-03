@@ -2,7 +2,7 @@ import * as React from "react";
 import { formatDate } from "../../helper";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
-import { gradedManually, submissionStatusToString } from "../../componentHelper";
+import { gradedManually, submissionStatusToString, sortSubmissionsByDeadline } from "../../componentHelper";
 
 interface ISingleCourseOverviewProps {
     courseAndLabs: IAllSubmissionsForEnrollment;
@@ -23,6 +23,8 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
         if (!submissionArray) {
             submissionArray = this.props.courseAndLabs.labs;
         }
+
+        submissionArray = sortSubmissionsByDeadline(submissionArray);
 
         const labs: JSX.Element[] = submissionArray.map((submissionLink, k) => {
             let submissionInfo = <div>No submissions</div>;

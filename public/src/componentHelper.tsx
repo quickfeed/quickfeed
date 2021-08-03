@@ -102,8 +102,12 @@ export function sortAssignmentsByOrder(assignments: Assignment[]): Assignment[] 
     return assignments.sort((a, b) => a.getOrder() - b.getOrder());
 }
 
+export function sortSubmissionsByDeadline(labs: ISubmissionLink[]): ISubmissionLink[] {
+    return labs.sort((x, y) => x.assignment.getOrder() > y.assignment.getOrder() ? 1 : -1);
+}
+
 export function sortUsersByAdminStatus(users: Enrollment[]): Enrollment[] {
-    return users.sort((x, y) => ((x.getUser()?.getIsadmin() ?? false) < (y.getUser()?.getIsadmin() ?? false) ? 1 : -1));
+    return users.sort((x, y) => ((x.getUser()?.getIsadmin() ?? false) > (y.getUser()?.getIsadmin() ?? false) ? 1 : -1));
 }
 
 export function getSlipDays(allLabs: IAllSubmissionsForEnrollment[], selected: ISubmission, forGroups: boolean): number {
