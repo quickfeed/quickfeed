@@ -40,7 +40,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
 
     public render() {
         const headerDiv = <div className="row"><h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3></div>;
-        const noReviewersDiv = <div className="alert alert-info">This assignment is not for manual grading {this.testAllButton()}</div>;
+        const noReviewersDiv = <div className="row alert alert-info">This assignment is not for manual grading {this.testAllButton()}</div>;
         const topDiv = <div className="row top-div"><div className="assignment-p">Reviewers: {this.props.assignment.getReviewers()}</div>
                 <div className="score-p">Max points: {this.state.maxScore}</div> {this.loadButton()} </div>;
         if (this.props.assignment.getReviewers() < 1) {
