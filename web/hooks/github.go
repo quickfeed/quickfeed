@@ -13,6 +13,7 @@ import (
 	"github.com/autograde/quickfeed/log"
 	"github.com/google/go-github/v35/github"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // GitHubWebHook holds references and data for handling webhook events.
@@ -181,7 +182,7 @@ func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
 	newSubmission := &pb.Submission{
 		AssignmentID: data.Assignment.ID,
 		BuildInfo: &score.BuildInfo{
-			BuildDate: time.Now().Format(pb.TimeLayout),
+			BuildDate: timestamppb.Now(),
 			BuildLog:  "No automated tests for this assignment",
 			ExecTime:  1,
 		},

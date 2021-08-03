@@ -16,10 +16,12 @@ func transform(submissions ...*pb.Submission) {
 	for _, sub := range submissions {
 		buildInfo := unmarshalBuildInfo(sub)
 		scores := unmarshalScores(sub)
-		if buildInfo != nil && scores != nil {
+		if buildInfo != nil {
 			sub.BuildInfo = buildInfo
-			sub.Scores = scores
 			sub.OldBuildInfo = ""
+		}
+		if scores != nil {
+			sub.Scores = scores
 			sub.ScoreObjects = ""
 		}
 	}

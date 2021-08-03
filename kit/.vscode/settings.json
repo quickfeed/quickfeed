@@ -13,6 +13,7 @@
         "protobuf",
         "protoc",
         "protoimpl",
-        "struct"
+        "struct",
+        "timestamppb"
     ]
 }

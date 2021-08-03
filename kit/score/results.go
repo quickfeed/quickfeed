@@ -3,10 +3,8 @@ package score
 import (
 	"strings"
 	"time"
-)
 
-const (
-	layout = "2006-01-02T15:04:05"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // TODO(meling) make most methods herein private; only ExtractResults is really needed, I think?
@@ -51,7 +49,7 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 	}
 	return &Results{
 		BuildInfo: &BuildInfo{
-			BuildDate: time.Now().Format(layout),
+			BuildDate: timestamppb.Now(),
 			BuildLog:  strings.Join(filteredLog, "\n"),
 			ExecTime:  execTime.Milliseconds(),
 		},

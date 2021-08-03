@@ -6,8 +6,10 @@ import (
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -106,9 +108,10 @@ func TestSlipDays(t *testing.T) {
 					}
 					// emulate advancing time for this submission
 					testNow = testNow.Add(time.Duration(sd.submissions[i][j]) * days)
+					submission.BuildInfo = &score.BuildInfo{BuildDate: timestamppb.New(testNow)}
 
 					// functions to test
-					err := enrol.UpdateSlipDays(testNow, sd.labs[i], submission)
+					err := enrol.UpdateSlipDays(sd.labs[i], submission)
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -188,7 +191,8 @@ func TestScoreLimitSlipDays(t *testing.T) {
 			UsedSlipDays: make([]*pb.UsedSlipDays, 0),
 		}
 		t.Run(test.name, func(t *testing.T) {
-			err := enrol.UpdateSlipDays(testNow, test.assignment, test.submission)
+			test.submission.BuildInfo = &score.BuildInfo{BuildDate: timestamppb.New(testNow)}
+			err := enrol.UpdateSlipDays(test.assignment, test.submission)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -212,8 +216,11 @@ func TestBadDeadlineFormat(t *testing.T) {
 		Deadline: "14-Sep-2020",
 	}
 	lab1.ID = 1
-	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID}
-	err := enrol.UpdateSlipDays(testNow, lab1, submission)
+	submission := &pb.Submission{
+		AssignmentID: lab1.ID, Status: pb.Submission_NONE,
+		BuildInfo: &score.BuildInfo{BuildDate: timestamppb.New(testNow)},
+	}
+	err := enrol.UpdateSlipDays(lab1, submission)
 	if err == nil {
 		t.Errorf("expected parsing error due to incorrect deadline date format")
 	}
@@ -231,8 +238,11 @@ func TestMismatchingAssignmentID(t *testing.T) {
 		Deadline: testNow.Add(time.Duration(2) * days).Format(pb.TimeLayout),
 	}
 	lab1.ID = 1
-	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID + 1}
-	err := enrol.UpdateSlipDays(testNow, lab1, submission)
+	submission := &pb.Submission{
+		AssignmentID: lab1.ID + 1, Status: pb.Submission_NONE,
+		BuildInfo: &score.BuildInfo{BuildDate: timestamppb.New(testNow)},
+	}
+	err := enrol.UpdateSlipDays(lab1, submission)
 	if err == nil {
 		t.Errorf("expected invariant violation since (assignment.ID != submission.AssignmentID)")
 	}
@@ -250,8 +260,11 @@ func TestMismatchingCourseID(t *testing.T) {
 		Deadline: testNow.Add(time.Duration(2) * days).Format(pb.TimeLayout),
 	}
 	lab1.ID = 1
-	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID}
-	err := enrol.UpdateSlipDays(testNow, lab1, submission)
+	submission := &pb.Submission{
+		AssignmentID: lab1.ID, Status: pb.Submission_NONE,
+		BuildInfo: &score.BuildInfo{BuildDate: timestamppb.New(testNow)},
+	}
+	err := enrol.UpdateSlipDays(lab1, submission)
 	if err == nil {
 		t.Errorf("expected invariant violation since (enrollment.CourseID != assignment.CourseID)")
 	}
@@ -266,12 +279,15 @@ func TestEnrollmentGetUsedSlipDays(t *testing.T) {
 	// lab1's deadline passed two days ago
 	lab1 := a(-2)
 	lab1.ID = 1
-	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID}
+	submission := &pb.Submission{
+		AssignmentID: lab1.ID, Status: pb.Submission_NONE,
+		BuildInfo: &score.BuildInfo{BuildDate: timestamppb.New(testNow)},
+	}
 	usedSlipDays := enrol.GetUsedSlipDays()
 	if len(usedSlipDays) != 0 {
 		t.Errorf("len(usedSlipDays) = %d, expected 0", len(usedSlipDays))
 	}
-	err := enrol.UpdateSlipDays(testNow, lab1, submission)
+	err := enrol.UpdateSlipDays(lab1, submission)
 	if err != nil {
 		t.Error(err)
 	}
@@ -347,7 +363,8 @@ func TestSlipDaysWGracePeriod(t *testing.T) {
 			UsedSlipDays: make([]*pb.UsedSlipDays, 0),
 		}
 		t.Run(fmt.Sprintf("%s/Want UsedSlipDays:%d", test.comment, test.wantSlipDays), func(t *testing.T) {
-			err := enrol.UpdateSlipDays(test.delivered, lab, submission)
+			submission.BuildInfo = &score.BuildInfo{BuildDate: timestamppb.New(test.delivered)}
+			err := enrol.UpdateSlipDays(lab, submission)
 			if err != nil {
 				t.Fatal(err)
 			}

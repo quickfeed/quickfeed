@@ -109,6 +109,7 @@ func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType 
 		Preload("Submissions.Reviews.GradingBenchmarks").
 		Preload("Submissions.Reviews.GradingBenchmarks.Criteria").
 		Preload("Submissions.BuildInfo").
+		Preload("Submissions.BuildInfo.BuildDate").
 		Preload("Submissions.Scores").
 		Where(&pb.Assignment{CourseID: courseID}).
 		Order("'order'").
@@ -153,10 +154,12 @@ func (db *GormDB) UpdateBenchmark(query *pb.GradingBenchmark) error {
 		Where(&pb.GradingBenchmark{
 			ID:           query.ID,
 			AssignmentID: query.AssignmentID,
-			ReviewID:     query.ReviewID}).
+			ReviewID:     query.ReviewID,
+		}).
 		Updates(&pb.GradingBenchmark{
 			Heading: query.Heading,
-			Comment: query.Comment}).Error
+			Comment: query.Comment,
+		}).Error
 }
 
 // DeleteBenchmark removes the given benchmark

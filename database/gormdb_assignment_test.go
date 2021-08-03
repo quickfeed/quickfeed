@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -154,7 +155,7 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 		Score:        42,
 		Reviews:      []*pb.Review{},
 		BuildInfo: &score.BuildInfo{
-			BuildDate: "2021-01-21",
+			BuildDate: timestamppb.Now(),
 			BuildLog:  "what do you say",
 			ExecTime:  50,
 		},
@@ -163,6 +164,7 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 			{TestName: "TestDigNum", MaxScore: 100, Score: 70, Weight: 10},
 		},
 	}
+	t.Logf("B   wantStruct.bdate=%v", wantStruct.BuildInfo.BuildDate)
 	if err := db.CreateSubmission(wantStruct); err != nil {
 		t.Fatal(err)
 	}
@@ -172,17 +174,20 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	}
 	wantAssignment := (proto.Clone(assignment)).(*pb.Assignment)
 	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct)
+	t.Logf("assignments[0].bdate=%v", assignments[0].Submissions[0].BuildInfo.BuildDate)
+	t.Logf("A   wantStruct.bdate=%v", wantStruct.BuildInfo.BuildDate)
 	if diff := cmp.Diff(wantAssignment, assignments[0], protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
 	}
 
+	// TODO(meling) Remove this legacy test; it will not actually work with the OldBuildInfo format (which is "2020-02-03")
 	// Legacy Submission struct with ScoreObjects and BuildInfo as string:
 	wantLegacy := &pb.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Score:        42,
 		ScoreObjects: `[{"Secret":"hidden","TestName":"TestLintAG","Score":3,"MaxScore":3,"Weight":5},{"Secret":"hidden","TestName":"TestSchedulersAG/FIFO/No_jobs","Score":0,"MaxScore":0,"Weight":2}]`,
-		OldBuildInfo: `{"BuildID":1,"BuildDate":"xya","BuildLog":"log data","ExecTime":50}`,
+		OldBuildInfo: `{"BuildID":1,"BuildDate":{"seconds":1,"nanos":666550000},"BuildLog":"log data","ExecTime":50}`,
 		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(wantLegacy); err != nil {

@@ -1,6 +1,8 @@
 package database
 
 import (
+	"fmt"
+
 	pb "github.com/autograde/quickfeed/ag"
 	"gorm.io/gorm"
 )
@@ -64,13 +66,16 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	}
 	// TODO(meling) temporary transformation of submission data
 	transform(submission)
+	fmt.Printf("xt1 submission: %v\n", submission.BuildInfo)
 
 	if submission.BuildInfo != nil {
 		if err := db.conn.Save(submission.BuildInfo).Error; err != nil {
 			return err
 		}
+		fmt.Printf("xt2 submission: %v\n", submission.BuildInfo)
 	}
 	// Save a submission record for the given assignment and student/group.
+	fmt.Printf("xt3 submission: %v\n", submission.BuildInfo)
 	return db.conn.Where(query).Save(submission).Error
 }
 
@@ -79,6 +84,7 @@ func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	var submission pb.Submission
 	if err := db.conn.Preload("Reviews").
 		Preload("BuildInfo").
+		Preload("BuildInfo.BuildDate").
 		Preload("Scores").
 		Preload("Reviews.GradingBenchmarks").
 		Preload("Reviews.GradingBenchmarks.Criteria").

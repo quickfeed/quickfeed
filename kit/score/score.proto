@@ -2,6 +2,7 @@ syntax = "proto3";
 package score;
 option go_package = "github.com/autograde/quickfeed/kit/score";
 
+import "google/protobuf/timestamp.proto";
 import "patch/go.proto";
 
 // Score give the score for a single test named TestName.
@@ -20,7 +21,7 @@ message Score {
 message BuildInfo {
     uint64 ID = 1;
     uint64 SubmissionID = 2;
-    string BuildDate = 3;
+    google.protobuf.Timestamp BuildDate = 3 [(go.field) = {tags: 'gorm:"foreignKey:Seconds"'}];
     string BuildLog = 4;
     int64 ExecTime = 5;
 }

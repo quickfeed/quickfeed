@@ -12,6 +12,7 @@ import (
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )
 
@@ -363,5 +364,51 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	} else if len(data) != 0 {
 		t.Errorf("Expected '%v' elements in the array, got '%v'", 0, len(data))
+	}
+}
+
+func TestGormDBSubmissionWithBuildDate(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	user, course, assignment := setupCourseAssignment(t, db)
+
+	if err := db.CreateSubmission(&pb.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		BuildInfo: &score.BuildInfo{
+			BuildDate: qtest.Timestamp(t, "2022-11-12T13:00:00"),
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	want := &pb.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		Status:       pb.Submission_NONE,
+		Reviews:      []*pb.Review{},
+		Scores:       []*score.Score{},
+		BuildInfo: &score.BuildInfo{
+			BuildDate: qtest.Timestamp(t, "2022-11-12T13:00:00"),
+		},
+	}
+	submission, err := db.GetSubmission(&pb.Submission{UserID: user.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want.ID = submission.ID
+	want.BuildInfo.ID = 1
+	want.BuildInfo.SubmissionID = submission.ID
+	if diff := cmp.Diff(submission, want, protocmp.Transform()); diff != "" {
+		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
+	}
+
+	submissions, err := db.GetLastSubmissions(course.ID, &pb.Submission{UserID: user.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want.ID = submissions[0].ID
+	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
+		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 }

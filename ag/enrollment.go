@@ -11,14 +11,15 @@ import (
 const gracePeriod time.Duration = time.Duration(2 * time.Hour)
 
 // UpdateSlipDays updates the number of slipdays for the given assignment/submission.
-func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, submission *Submission) error {
+func (m *Enrollment) UpdateSlipDays(assignment *Assignment, submission *Submission) error {
 	if m.GetCourseID() != assignment.GetCourseID() {
 		return fmt.Errorf("invariant violation (enrollment.CourseID != assignment.CourseID) (%d != %d)", m.CourseID, assignment.CourseID)
 	}
 	if assignment.GetID() != submission.GetAssignmentID() {
 		return fmt.Errorf("invariant violation (assignment.ID != submission.AssignmentID) (%d != %d)", assignment.ID, submission.AssignmentID)
 	}
-	sinceDeadline, err := assignment.SinceDeadline(start)
+	buildTime := submission.GetBuildInfo().GetBuildDate().AsTime()
+	sinceDeadline, err := assignment.SinceDeadline(buildTime)
 	if err != nil {
 		return err
 	}

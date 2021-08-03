@@ -124,6 +124,7 @@
         "sqlite",
         "structs",
         "testdb",
+        "timestamppb",
         "tmpl",
         "unittests",
         "unmarshalled",

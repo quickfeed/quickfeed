@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
@@ -14,6 +15,7 @@ import (
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web/auth"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // TestDB returns a test database and close function.
@@ -107,4 +109,14 @@ func RandomString(t *testing.T) string {
 		t.Fatal(err)
 	}
 	return fmt.Sprintf("%x", sha1.Sum(randomness))[:6]
+}
+
+// Timestamp returns a protobuf timestamp representation of the given string time.
+func Timestamp(t *testing.T, tim string) *timestamppb.Timestamp {
+	t.Helper()
+	timeTime, err := time.Parse(pb.TimeLayout, tim)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return timestamppb.New(timeTime)
 }

@@ -111,7 +111,7 @@ func TestRecordResults(t *testing.T) {
 	}
 
 	buildInfo := &score.BuildInfo{
-		BuildDate: "2022-11-10T13:00:00",
+		BuildDate: qtest.Timestamp(t, "2022-11-10T13:00:00"),
 		BuildLog:  "Testing",
 		ExecTime:  33333,
 	}
@@ -149,33 +149,37 @@ func TestRecordResults(t *testing.T) {
 	if diff := cmp.Diff(testScores, submission.Scores, protocmp.Transform()); diff != "" {
 		t.Errorf("Incorrect submission scores. Want: %+v, got %+v", testScores, submission.Scores)
 	}
-	if diff := cmp.Diff(buildInfo.BuildDate, submission.BuildInfo.BuildDate); diff != "" {
-		t.Errorf("Incorrect build date. Want: %s, got %s", buildInfo.BuildDate, submission.BuildInfo.BuildDate)
+	if diff := cmp.Diff(buildInfo.BuildDate, submission.BuildInfo.BuildDate, protocmp.Transform()); diff != "" {
+		t.Errorf("GetSubmission() mismatch (-buildInfo.BuildDate +submission.BuildDate):\n%s", diff)
 	}
 
 	// Updating submission after deadline: build info and slip days must be updated
-	newBuildDate := "2022-11-12T13:00:00"
+	newBuildDate := qtest.Timestamp(t, "2022-11-12T13:00:00")
 	results.BuildInfo.BuildDate = newBuildDate
+	t.Logf("newBuildDate=%v", newBuildDate)
+
 	recordResults(zap.NewNop().Sugar(), db, runData, results)
+	t.Logf("newBuildDate2=%v", newBuildDate)
 
 	enrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if enrollment.RemainingSlipDays(course) == int32(course.SlipDays) || len(enrollment.UsedSlipDays) < 1 {
-		t.Error("Student must have reduced slip days")
+		t.Errorf("Student must have reduced slip days: expected remaining %d != %d or len() = %d < 1", enrollment.RemainingSlipDays(course), int32(course.SlipDays), len(enrollment.UsedSlipDays))
 	}
 	updatedSubmission, err := db.GetSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: user.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if updatedSubmission.BuildInfo.BuildDate != newBuildDate {
-		t.Errorf("Incorrect build date: want %s, got %s", newBuildDate, updatedSubmission.BuildInfo.BuildDate)
+	t.Logf("newBuildDate3=%v, updateSub.BuildDate=%v", newBuildDate, updatedSubmission.BuildInfo.BuildDate)
+	if diff := cmp.Diff(newBuildDate, updatedSubmission.BuildInfo.BuildDate, protocmp.Transform()); diff != "" {
+		t.Errorf("GetSubmission() mismatch (-newBuildDate +updatedSubmission.BuildDate):\n%s", diff)
 	}
 
 	// Rebuilding after deadline: delivery date and slip days must stay unchanged
 	runData.Rebuild = true
-	results.BuildInfo.BuildDate = "2022-11-13T13:00:00"
+	results.BuildInfo.BuildDate = qtest.Timestamp(t, "2022-11-13T13:00:00")
 	slipDaysBeforeUpdate := enrollment.RemainingSlipDays(course)
 	recordResults(zap.NewNop().Sugar(), db, runData, results)
 	updatedEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)

@@ -142,13 +142,6 @@ func randomSecret() string {
 }
 
 func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission) {
-	buildDate := submission.GetBuildInfo().GetBuildDate()
-	buildTime, err := time.Parse(pb.TimeLayout, buildDate)
-	if err != nil {
-		logger.Errorf("Failed to parse time from build date (%s): %v", buildDate, err)
-		return
-	}
-
 	enrollments := make([]*pb.Enrollment, 0)
 	if submission.GroupID > 0 {
 		group, err := db.GetGroup(submission.GroupID)
@@ -167,7 +160,7 @@ func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment 
 	}
 
 	for _, enrol := range enrollments {
-		if err := enrol.UpdateSlipDays(buildTime, assignment, submission); err != nil {
+		if err := enrol.UpdateSlipDays(assignment, submission); err != nil {
 			logger.Errorf("Failed to update slip days for submission %d: %v", submission.ID, err)
 			return
 		}

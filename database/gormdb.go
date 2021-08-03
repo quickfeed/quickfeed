@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -65,6 +66,7 @@ func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 		&pb.Review{},
 		&score.BuildInfo{},
 		&score.Score{},
+		&timestamppb.Timestamp{},
 	); err != nil {
 		return nil, err
 	}
