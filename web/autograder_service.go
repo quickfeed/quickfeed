@@ -584,7 +584,8 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 	}
 	submission, err := s.rebuildSubmission(in)
 	if err != nil {
-		return nil, err
+		s.logger.Errorf("RebuildSubmission failed: %v", err)
+		return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission")
 	}
 	return submission, nil
 }
@@ -594,15 +595,16 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.AssignmentRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("RebuildAllSubmissions failed: authentication error: %v", err)
+		s.logger.Errorf("RebuildSubmissions failed: authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.ID, in.GetCourseID()) {
-		s.logger.Error("RebuildAllSubmissions failed: user is not teacher")
-		return nil, status.Error(codes.PermissionDenied, "only teachers can approve submissions")
+		s.logger.Error("RebuildSubmissions failed: user is not teacher")
+		return nil, status.Error(codes.PermissionDenied, "only teachers can rebuild all submissions")
 	}
 	if err := s.rebuildSubmissions(in); err != nil {
-		return nil, err
+		s.logger.Errorf("RebuildSubmissions failed: %v", err)
+		return nil, status.Error(codes.InvalidArgument, "failed to rebuild submissions")
 	}
 	return &pb.Void{}, nil
 }
