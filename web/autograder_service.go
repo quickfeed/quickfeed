@@ -576,6 +576,7 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 }
 
 // RebuildSubmission rebuilds the submission with the given ID
+// Access policy: any user.
 func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.RebuildRequest) (*pb.Submission, error) {
 	if !s.isValidSubmission(in.GetSubmissionID()) {
 		s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
@@ -589,6 +590,7 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 }
 
 // RebuildSubmissions runs tests for all submissions for the given assignment ID.
+// Access policy: Teacher of CourseID.
 func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.AssignmentRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
@@ -599,7 +601,6 @@ func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.Assig
 		s.logger.Error("RebuildAllSubmissions failed: user is not teacher")
 		return nil, status.Error(codes.PermissionDenied, "only teachers can approve submissions")
 	}
-
 	if err := s.rebuildSubmissions(in); err != nil {
 		return nil, err
 	}
