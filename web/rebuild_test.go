@@ -6,17 +6,17 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/internal"
+	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web"
 	"go.uber.org/zap"
 )
 
 func TestRebuildSubmissions(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := createFakeUser(t, db, 1)
+	teacher := qtest.CreateFakeUser(t, db, 1)
 	err := db.UpdateUser(&pb.User{ID: teacher.ID, IsAdmin: true})
 	if err != nil {
 		t.Fatal(err)
@@ -27,7 +27,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
-	student1 := createFakeUser(t, db, 2)
+	student1 := qtest.CreateFakeUser(t, db, 2)
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student1.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	student2 := createFakeUser(t, db, 4)
+	student2 := qtest.CreateFakeUser(t, db, 4)
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student2.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	if err := db.CreateRepository(&repo2); err != nil {
 		t.Fatal(err)
 	}
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), teacher)
 
