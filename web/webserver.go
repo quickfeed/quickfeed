@@ -29,7 +29,7 @@ var (
 )
 
 // New starts a new web server
-func New(ags *AutograderService, public, httpAddr string, fake bool) {
+func New(ags *AutograderService, public, httpAddr string) {
 	entryPoint := filepath.Join(public, "index.html")
 	if _, err := os.Stat(entryPoint); os.IsNotExist(err) {
 		ags.logger.Fatalf("file not found %s", entryPoint)
@@ -39,7 +39,7 @@ func New(ags *AutograderService, public, httpAddr string, fake bool) {
 	gothic.Store = store
 	e := newServer(ags, store)
 
-	enabled := enableProviders(ags.logger, ags.bh.BaseURL, fake)
+	enabled := enableProviders(ags.logger, ags.bh.BaseURL)
 	registerWebhooks(ags, e, enabled)
 	registerAuth(ags, e)
 
@@ -67,7 +67,7 @@ func newStore(keyPairs ...[]byte) sessions.Store {
 	return store
 }
 
-func enableProviders(l *zap.SugaredLogger, baseURL string, fake bool) map[string]bool {
+func enableProviders(l *zap.SugaredLogger, baseURL string) map[string]bool {
 	enabled := make(map[string]bool)
 
 	if ok := auth.EnableProvider(&auth.Provider{
@@ -98,16 +98,6 @@ func enableProviders(l *zap.SugaredLogger, baseURL string, fake bool) map[string
 		enabled["gitlab"] = true
 	} else {
 		l.Debug("environment variable not set for gitlab")
-	}
-
-	if fake {
-		l.Debug("fake provider enabled")
-		goth.UseProviders(&auth.FakeProvider{
-			Callback: auth.GetCallbackURL(baseURL, "fake"),
-		})
-		goth.UseProviders(&auth.FakeProvider{
-			Callback: auth.GetCallbackURL(baseURL, "fake-teacher"),
-		})
 	}
 
 	return enabled

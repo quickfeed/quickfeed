@@ -8,7 +8,7 @@ import (
 	"github.com/autograde/quickfeed/ag"
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/internal"
+	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -16,7 +16,7 @@ import (
 )
 
 func TestGormDBGetSubmissionForUser(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	query := &pb.Submission{AssignmentID: 10, UserID: 10}
 	if _, err := db.GetSubmission(query); err != gorm.ErrRecordNotFound {
@@ -25,7 +25,7 @@ func TestGormDBGetSubmissionForUser(t *testing.T) {
 }
 
 func setupCourseAssignment(t *testing.T, db database.Database) (*pb.User, *pb.Course, *pb.Assignment) {
-	teacher := createFakeUser(t, db, 10)
+	teacher := qtest.CreateFakeUser(t, db, 10)
 	// create a course and an assignment
 	course := &pb.Course{}
 	if err := db.CreateCourse(teacher.ID, course); err != nil {
@@ -40,7 +40,7 @@ func setupCourseAssignment(t *testing.T, db database.Database) (*pb.User, *pb.Co
 	}
 
 	// create user and enroll as student
-	user := createFakeUser(t, db, 11)
+	user := qtest.CreateFakeUser(t, db, 11)
 	if err := db.CreateEnrollment(&pb.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
@@ -59,7 +59,7 @@ func setupCourseAssignment(t *testing.T, db database.Database) (*pb.User, *pb.Co
 }
 
 func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	user, course, assignment := setupCourseAssignment(t, db)
 
@@ -119,7 +119,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 }
 
 func TestGormDBUpdateSubmission(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	user, course, assignment := setupCourseAssignment(t, db)
 
@@ -186,7 +186,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 }
 
 func TestGormDBGetNonExistingSubmissions(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	if _, err := db.GetLastSubmissions(10, &pb.Submission{UserID: 10}); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
@@ -194,7 +194,7 @@ func TestGormDBGetNonExistingSubmissions(t *testing.T) {
 }
 
 func TestGormDBInsertSubmissions(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	// expected to fail with record not found
@@ -245,10 +245,10 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 }
 
 func TestGormDBGetInsertSubmissions(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := createFakeUser(t, db, 10)
+	teacher := qtest.CreateFakeUser(t, db, 10)
 	// Create course c1 and c2
 	c1 := pb.Course{OrganizationID: 1}
 	if err := db.CreateCourse(teacher.ID, &c1); err != nil {
@@ -260,7 +260,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	}
 
 	// create user and enroll as student
-	user := createFakeUser(t, db, 11)
+	user := qtest.CreateFakeUser(t, db, 11)
 
 	// enroll student in course c1
 	if err := db.CreateEnrollment(&pb.Enrollment{

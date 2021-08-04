@@ -135,8 +135,7 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 
 func randomSecret() string {
 	randomness := make([]byte, 10)
-	_, err := rand.Read(randomness)
-	if err != nil {
+	if _, err := rand.Read(randomness); err != nil {
 		panic("couldn't generate randomness")
 	}
 	return fmt.Sprintf("%x", sha1.Sum(randomness))
@@ -145,7 +144,6 @@ func randomSecret() string {
 func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission) {
 	buildDate := submission.GetBuildInfo().GetBuildDate()
 	buildTime, err := time.Parse(pb.TimeLayout, buildDate)
-
 	if err != nil {
 		logger.Errorf("Failed to parse time from build date (%s): %v", buildDate, err)
 		return

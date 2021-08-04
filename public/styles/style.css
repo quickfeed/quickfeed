@@ -302,6 +302,16 @@ table thead tr:first-child {
     font-weight: 300;
 }
 
+.deadline-header {
+    display: block;
+    float: right;
+    margin-right: 10%;
+}
+
+.deadline-date {
+    margin-left: 6%;
+}
+
 .addon-mini {
     min-width: 70px;
     text-align: left;
