@@ -7,7 +7,6 @@ import { View, ViewPage } from "./ViewPage";
 import { INavInfo } from "../NavigationHelper";
 import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest, Review } from "../../proto/ag/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
-import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from "../loader";
 import { sortCoursesByVisibility, sortAssignmentsByOrder, submissionStatusToString } from "../componentHelper";
@@ -38,7 +37,6 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("courses/{course}", this.course);
         this.navHelper.registerFunction("courses/{course}/members", this.courseUsers);
         this.navHelper.registerFunction("courses/{course}/results", this.results);
-        this.navHelper.registerFunction("courses/{course}/groupresults", this.groupresults);
         this.navHelper.registerFunction("courses/{course}/review", this.manualReview);
         this.navHelper.registerFunction("courses/{course}/release", this.releaseReview);
         this.navHelper.registerFunction("courses/{course}/groups", this.groups);
@@ -140,29 +138,6 @@ export class TeacherPage extends ViewPage {
             </Results>;
         });
     }
-
-    public async groupresults(info: INavInfo<{ course: string }>): View {
-        return this.courseFunc(info.params.course, async (course) => {
-            const results = await this.courseMan.getSubmissionsByCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
-            const labs = await this.courseMan.getAssignments(course.getId());
-            const labResults = await this.courseMan.fillLabLinks(course, results, labs);
-            return <GroupResults
-                course={course}
-                courseURL={await this.getCourseURL(course.getId())}
-                assignments={sortAssignmentsByOrder(labs)}
-                allGroupSubmissions={labResults}
-                onSubmissionRebuild={async (assignmentID: number, submissionID: number) => {
-                    const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
-                    this.navMan.refresh();
-                    return ans;
-                }}
-                onSubmissionStatusUpdate={async (submission: ISubmission): Promise<boolean> => {
-                    return this.approveFunc(submission, course.getId());
-                }}>
-            </GroupResults>;
-        });
-    }
-
     public async manualReview(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const assignments = await this.courseMan.getAssignments(course.getId());
@@ -340,7 +315,6 @@ export class TeacherPage extends ViewPage {
             item: link,
             children: [
                 { name: "Results", uri: link.uri + "/results" },
-                { name: "Group Results", uri: link.uri + "/groupresults", extra: "disabled" },
                 { name: "Review", uri: link.uri + "/review" },
                 { name: "Release", uri: link.uri + "/release" },
                 { name: "Groups", uri: link.uri + "/groups" },
