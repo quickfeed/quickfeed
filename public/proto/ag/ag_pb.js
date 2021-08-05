@@ -13,6 +13,7 @@ var global = Function('return this')();
 
 var kit_score_score_pb = require('../kit/score/score_pb.js');
 goog.exportSymbol('proto.ag.Assignment', null, global);
+goog.exportSymbol('proto.ag.AssignmentRequest', null, global);
 goog.exportSymbol('proto.ag.Assignments', null, global);
 goog.exportSymbol('proto.ag.AuthorizationResponse', null, global);
 goog.exportSymbol('proto.ag.Benchmarks', null, global);
@@ -36,7 +37,6 @@ goog.exportSymbol('proto.ag.Group', null, global);
 goog.exportSymbol('proto.ag.Group.GroupStatus', null, global);
 goog.exportSymbol('proto.ag.GroupRequest', null, global);
 goog.exportSymbol('proto.ag.Groups', null, global);
-goog.exportSymbol('proto.ag.LoadCriteriaRequest', null, global);
 goog.exportSymbol('proto.ag.OrgRequest', null, global);
 goog.exportSymbol('proto.ag.Organization', null, global);
 goog.exportSymbol('proto.ag.Organizations', null, global);
@@ -11150,12 +11150,12 @@ proto.ag.CourseUserRequest.prototype.setUserlogin = function(value) {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.ag.LoadCriteriaRequest = function(opt_data) {
+proto.ag.AssignmentRequest = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
-goog.inherits(proto.ag.LoadCriteriaRequest, jspb.Message);
+goog.inherits(proto.ag.AssignmentRequest, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.ag.LoadCriteriaRequest.displayName = 'proto.ag.LoadCriteriaRequest';
+  proto.ag.AssignmentRequest.displayName = 'proto.ag.AssignmentRequest';
 }
 
 
@@ -11170,8 +11170,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.ag.LoadCriteriaRequest.prototype.toObject = function(opt_includeInstance) {
-  return proto.ag.LoadCriteriaRequest.toObject(opt_includeInstance, this);
+proto.ag.AssignmentRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.ag.AssignmentRequest.toObject(opt_includeInstance, this);
 };
 
 
@@ -11180,11 +11180,11 @@ proto.ag.LoadCriteriaRequest.prototype.toObject = function(opt_includeInstance) 
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.ag.LoadCriteriaRequest} msg The msg instance to transform.
+ * @param {!proto.ag.AssignmentRequest} msg The msg instance to transform.
  * @return {!Object}
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.ag.LoadCriteriaRequest.toObject = function(includeInstance, msg) {
+proto.ag.AssignmentRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     courseid: jspb.Message.getFieldWithDefault(msg, 1, 0),
     assignmentid: jspb.Message.getFieldWithDefault(msg, 2, 0)
@@ -11201,23 +11201,23 @@ proto.ag.LoadCriteriaRequest.toObject = function(includeInstance, msg) {
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.ag.LoadCriteriaRequest}
+ * @return {!proto.ag.AssignmentRequest}
  */
-proto.ag.LoadCriteriaRequest.deserializeBinary = function(bytes) {
+proto.ag.AssignmentRequest.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.ag.LoadCriteriaRequest;
-  return proto.ag.LoadCriteriaRequest.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.ag.AssignmentRequest;
+  return proto.ag.AssignmentRequest.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.ag.LoadCriteriaRequest} msg The message object to deserialize into.
+ * @param {!proto.ag.AssignmentRequest} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.ag.LoadCriteriaRequest}
+ * @return {!proto.ag.AssignmentRequest}
  */
-proto.ag.LoadCriteriaRequest.deserializeBinaryFromReader = function(msg, reader) {
+proto.ag.AssignmentRequest.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -11245,9 +11245,9 @@ proto.ag.LoadCriteriaRequest.deserializeBinaryFromReader = function(msg, reader)
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.ag.LoadCriteriaRequest.prototype.serializeBinary = function() {
+proto.ag.AssignmentRequest.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  proto.ag.LoadCriteriaRequest.serializeBinaryToWriter(this, writer);
+  proto.ag.AssignmentRequest.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
@@ -11255,11 +11255,11 @@ proto.ag.LoadCriteriaRequest.prototype.serializeBinary = function() {
 /**
  * Serializes the given message to binary data (in protobuf wire
  * format), writing to the given BinaryWriter.
- * @param {!proto.ag.LoadCriteriaRequest} message
+ * @param {!proto.ag.AssignmentRequest} message
  * @param {!jspb.BinaryWriter} writer
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.ag.LoadCriteriaRequest.serializeBinaryToWriter = function(message, writer) {
+proto.ag.AssignmentRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getCourseid();
   if (f !== 0) {
@@ -11282,13 +11282,13 @@ proto.ag.LoadCriteriaRequest.serializeBinaryToWriter = function(message, writer)
  * optional uint64 courseID = 1;
  * @return {number}
  */
-proto.ag.LoadCriteriaRequest.prototype.getCourseid = function() {
+proto.ag.AssignmentRequest.prototype.getCourseid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
 
 /** @param {number} value */
-proto.ag.LoadCriteriaRequest.prototype.setCourseid = function(value) {
+proto.ag.AssignmentRequest.prototype.setCourseid = function(value) {
   jspb.Message.setProto3IntField(this, 1, value);
 };
 
@@ -11297,13 +11297,13 @@ proto.ag.LoadCriteriaRequest.prototype.setCourseid = function(value) {
  * optional uint64 assignmentID = 2;
  * @return {number}
  */
-proto.ag.LoadCriteriaRequest.prototype.getAssignmentid = function() {
+proto.ag.AssignmentRequest.prototype.getAssignmentid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
 /** @param {number} value */
-proto.ag.LoadCriteriaRequest.prototype.setAssignmentid = function(value) {
+proto.ag.AssignmentRequest.prototype.setAssignmentid = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
 };
 

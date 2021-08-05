@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, Benchmarks } from "../../../proto/ag/ag_pb";
+import { Assignment, GradingBenchmark, GradingCriterion } from "../../../proto/ag/ag_pb";
 import { EditBenchmark } from "../../components/manual-grading/EditBenchmark";
 import { maxAssignmentScore } from "../../componentHelper";
 
@@ -12,6 +12,7 @@ interface AssignmentViewProps {
     addCriterion: (c: GradingCriterion) => Promise<GradingCriterion | null>;
     removeCriterion: (c: GradingCriterion) => Promise<boolean>;
     loadBenchmarks: () => Promise<GradingBenchmark[]>;
+    runAllTests: (assignmentID: number, courseID: number) => Promise<boolean>;
 }
 
 interface AssignmentViewState {
@@ -20,6 +21,7 @@ interface AssignmentViewState {
     newBenchmark: string;
     benchmarks: GradingBenchmark[];
     maxScore: number;
+    allTestsState: string;
 }
 
 export class AssignmentView extends React.Component<AssignmentViewProps, AssignmentViewState> {
@@ -31,13 +33,14 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
             open: false,
             newBenchmark: "",
             benchmarks: [],
+            allTestsState: "Run all tests",
             maxScore: this.renderTotalScore(this.props.assignment.getGradingbenchmarksList()),
         }
     }
 
     public render() {
         const headerDiv = <div className="row"><h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3></div>;
-        const noReviewersDiv = <div className="alert alert-info">This assignment is not for manual grading</div>;
+        const noReviewersDiv = <div className="row alert alert-info">This assignment is not for manual grading {this.testAllButton()}</div>;
         const topDiv = <div className="row top-div"><div className="assignment-p">Reviewers: {this.props.assignment.getReviewers()}</div>
                 <div className="score-p">Max points: {this.state.maxScore}</div> {this.loadButton()} </div>;
         if (this.props.assignment.getReviewers() < 1) {
@@ -128,8 +131,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
             } else if (e.key === "Escape") {
                 this.toggleAdd();
             }
-        }}
-        />
+        }}/>
         </div>;
         return this.state.adding ? addingRow : addRow;
     }
@@ -177,6 +179,34 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
                 className="btn btn-default load-button"
                 onClick={() => this.loadCriteriaFromFile()}
         >Load from file</button>;
+    }
+
+    private testAllButton(): JSX.Element {
+        return <button type="button"
+                id="rebuild"
+                className="btn btn-default rebuild-btn"
+            onClick={ () => this.testAll()}
+        >{this.state.allTestsState}</button>;
+    }
+
+    private async testAll() {
+        if (confirm(
+            "Warning! This action will run tests for each submission delivered for this assignment. This can take a several minutes."
+        )) {
+            this.setState({
+                allTestsState: "Running tests...",
+            });
+            const ans = await this.props.runAllTests(this.props.assignment.getId(), this.props.assignment.getCourseid());
+            if (ans) {
+                this.setState({
+                    allTestsState: "Finished",
+                });
+            } else {
+                this.setState({
+                    allTestsState: "Failed",
+                });
+            }
+        }
     }
 
     private async loadCriteriaFromFile() {

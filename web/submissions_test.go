@@ -175,7 +175,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	ctx = withUserContext(context.Background(), admin)
 	haveSubmissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
 	if err == nil {
-		t.Error("Expected error: user ")
+		t.Error("Expected error: user not enrolled")
 	}
 	if len(haveSubmissions.GetSubmissions()) > 0 {
 		t.Errorf("Not enrolled admin should not see any submissions, got submissions: %v+ ", haveSubmissions.GetSubmissions())

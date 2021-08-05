@@ -1483,22 +1483,22 @@ export namespace CourseUserRequest {
   }
 }
 
-export class LoadCriteriaRequest extends jspb.Message {
+export class AssignmentRequest extends jspb.Message {
   getCourseid(): number;
-  setCourseid(value: number): LoadCriteriaRequest;
+  setCourseid(value: number): AssignmentRequest;
 
   getAssignmentid(): number;
-  setAssignmentid(value: number): LoadCriteriaRequest;
+  setAssignmentid(value: number): AssignmentRequest;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): LoadCriteriaRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: LoadCriteriaRequest): LoadCriteriaRequest.AsObject;
-  static serializeBinaryToWriter(message: LoadCriteriaRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): LoadCriteriaRequest;
-  static deserializeBinaryFromReader(message: LoadCriteriaRequest, reader: jspb.BinaryReader): LoadCriteriaRequest;
+  toObject(includeInstance?: boolean): AssignmentRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: AssignmentRequest): AssignmentRequest.AsObject;
+  static serializeBinaryToWriter(message: AssignmentRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): AssignmentRequest;
+  static deserializeBinaryFromReader(message: AssignmentRequest, reader: jspb.BinaryReader): AssignmentRequest;
 }
 
-export namespace LoadCriteriaRequest {
+export namespace AssignmentRequest {
   export type AsObject = {
     courseid: number,
     assignmentid: number,

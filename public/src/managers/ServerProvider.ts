@@ -1,6 +1,5 @@
 import {
     Assignment,
-    Benchmarks,
     Course,
     CourseSubmissions,
     Enrollment,
@@ -16,8 +15,7 @@ import {
     User,
 } from "../../proto/ag/ag_pb";
 
-import { BuildInfo, Score }from "../../proto/kit/score/score_pb";
-import * as jspb from "google-protobuf"
+import { BuildInfo }from "../../proto/kit/score/score_pb";
 
 import {
     IAllSubmissionsForEnrollment,
@@ -238,7 +236,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return [];
         }
         return this.toUILinks(result.data);
-
     }
 
     public async tryLogin(username: string, password: string): Promise<User | null> {
@@ -343,6 +340,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         return this.toISubmission(result.data);
     }
+    public async rebuildSubmissions(assignmentID: number, courseID: number): Promise<boolean> {
+        const result = await this.grpcHelper.rebuildSubmissions(assignmentID, courseID);
+        return this.responseCodeSuccess(result);
+    }
 
     public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
         const result = await this.grpcHelper.isEmptyRepo(courseID, userID, groupID);
@@ -417,7 +418,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
-        const result = await this.grpcHelper.updatesubmissions(assignmentID, courseID, score, release, approve);
+        const result = await this.grpcHelper.updateSubmissions(assignmentID, courseID, score, release, approve);
         return this.responseCodeSuccess(result);
     }
 

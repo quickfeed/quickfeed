@@ -442,6 +442,9 @@ export class TeacherPage extends ViewPage {
                 removeCriterion={(c: GradingCriterion) => {
                     return this.courseMan.deleteCriterion(c);
                 }}
+                runAllTests={(assignmentID: number, courseID: number) => {
+                    return this.courseMan.rebuildSubmissions(assignmentID, courseID);
+                }}
                 loadBenchmarks={async () => {
                     const ans = await this.courseMan.loadCriteria(a.getId(), course.getId());
                     if (ans.length > 0) {

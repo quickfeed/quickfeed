@@ -16,6 +16,7 @@ import * as grpcWeb from 'grpc-web';
 import * as kit_score_score_pb from '../kit/score/score_pb';
 
 import {
+  AssignmentRequest,
   Assignments,
   AuthorizationResponse,
   Benchmarks,
@@ -34,7 +35,6 @@ import {
   Group,
   GroupRequest,
   Groups,
-  LoadCriteriaRequest,
   OrgRequest,
   Organization,
   Providers,
@@ -1206,6 +1206,45 @@ export class AutograderServiceClient {
     this.methodInfoRebuildSubmission);
   }
 
+  methodInfoRebuildSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
+    Void,
+    (request: AssignmentRequest) => {
+      return request.serializeBinary();
+    },
+    Void.deserializeBinary
+  );
+
+  rebuildSubmissions(
+    request: AssignmentRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
+
+  rebuildSubmissions(
+    request: AssignmentRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
+
+  rebuildSubmissions(
+    request: AssignmentRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: Void) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        new URL('/ag.AutograderService/RebuildSubmissions', this.hostname_).toString(),
+        request,
+        metadata || {},
+        this.methodInfoRebuildSubmissions,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/ag.AutograderService/RebuildSubmissions',
+    request,
+    metadata || {},
+    this.methodInfoRebuildSubmissions);
+  }
+
   methodInfoCreateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(
     GradingBenchmark,
     (request: GradingBenchmark) => {
@@ -1559,24 +1598,24 @@ export class AutograderServiceClient {
 
   methodInfoLoadCriteria = new grpcWeb.AbstractClientBase.MethodInfo(
     Benchmarks,
-    (request: LoadCriteriaRequest) => {
+    (request: AssignmentRequest) => {
       return request.serializeBinary();
     },
     Benchmarks.deserializeBinary
   );
 
   loadCriteria(
-    request: LoadCriteriaRequest,
+    request: AssignmentRequest,
     metadata: grpcWeb.Metadata | null): Promise<Benchmarks>;
 
   loadCriteria(
-    request: LoadCriteriaRequest,
+    request: AssignmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Benchmarks) => void): grpcWeb.ClientReadableStream<Benchmarks>;
 
   loadCriteria(
-    request: LoadCriteriaRequest,
+    request: AssignmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
                response: Benchmarks) => void) {
