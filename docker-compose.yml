@@ -1,27 +1,30 @@
 version: '3.8'
 services:
-  proxy:
-    image: nginx-proxy
-    build: 
+  envoy:
+    container_name: envoy
+    build:
       context: ./
-      dockerfile: ./dev/proxy/Dockerfile
+      args:
+        ENVOY_CONFIG: ${ENVOY_CONFIG}
+      dockerfile: ./envoy/Dockerfile
     ports:
-      - "80:80"
+      - "8080:8080"
     networks:
-      - grpc_proxy
+      - quickfeed_net
 
   quickfeed:
+    container_name: quickfeed
     image: quickfeed
     build:
       context: ./
-      dockerfile: ./dev/quickfeed/Dockerfile
+      dockerfile: ./Dockerfile
     links:
-      - proxy
+      - envoy
     networks:
-      - grpc_proxy
+      - quickfeed_net
 
 networks:
-  grpc_proxy:
+  quickfeed_net:
     ipam:
       config:
       - subnet: 172.20.0.0/16
