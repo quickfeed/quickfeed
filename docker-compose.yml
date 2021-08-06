@@ -9,7 +9,8 @@ services:
       args:
         - ENVOY_CONFIG=${ENVOY_CONFIG}
     ports:
-      - "8080:8080"
+      - "8081:8081"
+      - "9090:9090"
     networks:
       - quickfeed_net
 
@@ -21,6 +22,8 @@ services:
       dockerfile: ./Dockerfile
     links:
       - envoy
+    ports:
+      - "8080:8080"
     networks:
       - quickfeed_net
 
