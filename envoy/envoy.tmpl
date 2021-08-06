@@ -1,3 +1,4 @@
+{{ define "envoy" -}}
 admin:
   access_log_path: /tmp/admin_access.log
   address:
@@ -56,7 +57,7 @@ static_resources:
             virtual_hosts:
             - name: local_service
               domains:
-                - "$DOMAIN"
+                - "{{ .Domain }}"
               routes:
               - match: { prefix: "/ag.AutograderService/"}
                 route: 
@@ -84,9 +85,9 @@ static_resources:
             # Replace certificate with your certificates
             tls_certificates:
               certificate_chain:
-                filename: /etc/letsencrypt/live/$DOMAIN/fullchain.pem
+                filename: /etc/letsencrypt/live/{{ .Domain }}/fullchain.pem
               private_key:
-                filename: /etc/letsencrypt/live/$DOMAIN/privkey.pem
+                filename: /etc/letsencrypt/live/{{ .Domain }}/privkey.pem
 
   clusters:
   - name: grpc_service
@@ -100,7 +101,7 @@ static_resources:
         - lb_endpoints:
           - endpoint:
               address:
-                socket_address: { address: localhost, port_value: $GRPC_PORT }
+                socket_address: { address: localhost, port_value: {{ .GRPCPort }} }
   - name: web_service
     connect_timeout: 15s
     type: strict_dns
@@ -112,4 +113,5 @@ static_resources:
         - lb_endpoints:
           - endpoint:
               address:
-                socket_address: { address: localhost, port_value: $HTTP_PORT }
+                socket_address: { address: localhost, port_value: {{ .HTTPPort }} }
+{{ end -}}

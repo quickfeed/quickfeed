@@ -21,6 +21,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v0.12.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.0 // indirect
+	github.com/joho/godotenv v1.3.0
 	github.com/labstack/echo-contrib v0.11.0
 	github.com/labstack/echo/v4 v4.5.0
 	github.com/markbates/goth v1.68.0
@@ -31,7 +32,6 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.30.0 // indirect
 	github.com/prometheus/procfs v0.7.1 // indirect
-	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/urfave/cli v1.22.4
 	github.com/xanzy/go-gitlab v0.50.1
 	go.uber.org/atomic v1.9.0 // indirect

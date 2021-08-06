@@ -131,8 +131,8 @@ envoy-config:
 ifeq ($(DOMAIN),)
 	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)."
 else
-	@echo "Generating Envoy configuration for '$$DOMAIN'."
-	@$(shell CONFIG='$$DOMAIN:$$GRPC_PORT:$$HTTP_PORT'; envsubst "$$CONFIG" < envoy/envoy.tmpl > $$ENVOY_CONFIG)
+	@echo "Generating Envoy configuration for '$$DOMAIN' at $$ENVOY_CONFIG."
+	@go run ./envoy/envoy.go --genconfig --path=$$ENVOY_CONFIG
 endif
 
 prometheus:

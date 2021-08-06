@@ -1,15 +1,105 @@
-package envoy
+package main
 
 import (
 	"context"
+	"embed"
+	"flag"
+	"fmt"
+	"log"
+	"os"
 	"os/exec"
-
-	"github.com/docker/docker/api/types/filters"
-	"go.uber.org/zap"
+	"path"
+	"path/filepath"
+	"runtime"
+	"text/template"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
+
+type EnvoyConfig struct {
+	Domain   string
+	GRPCPort string
+	HTTPPort string
+}
+
+func newEnvoyConfig(domain, GRPCPort, HTTPPort string) *EnvoyConfig {
+	return &EnvoyConfig{
+		Domain:   domain,
+		GRPCPort: GRPCPort,
+		HTTPPort: HTTPPort,
+	}
+}
+
+//go:embed envoy.tmpl
+var envoyTmpl embed.FS
+
+// createEnvoyConfig creates the envoy.yaml config file.
+func createEnvoyConfig(path string, data *EnvoyConfig) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+
+	tmpl, err := template.ParseFS(envoyTmpl, "envoy.tmpl")
+	if err != nil {
+		return err
+	}
+
+	if err = tmpl.ExecuteTemplate(f, "envoy", data); err != nil {
+		return err
+	}
+	return nil
+}
+
+var (
+	genConfig              bool
+	runEnvoy               bool
+	envoyConfigPath        string
+	_, pwd, _, _           = runtime.Caller(0)
+	codePath               = path.Join(path.Dir(pwd), "..")
+	env                    = filepath.Join(codePath, ".env")
+	defaultEnvoyConfigPath = filepath.Join(path.Dir(pwd), "envoy.yaml")
+)
+
+// loadConfigEnv loads the  envoy config from the environment variables.
+// It will not override a variable that already exists.
+// Consider the .env file to set development vars or defaults.
+func loadConfigEnv() (*EnvoyConfig, error) {
+	err := godotenv.Load(env)
+	if err != nil {
+		return nil, err
+	}
+	return newEnvoyConfig(os.Getenv("DOMAIN"), os.Getenv("GRPC_PORT"), os.Getenv("HTTP_PORT")), nil
+}
+
+func main() {
+	flag.BoolVar(&genConfig, "genconfig", false, "generate envoy config")
+	flag.StringVar(&envoyConfigPath, "path", defaultEnvoyConfigPath, "envoy config path")
+	flag.BoolVar(&runEnvoy, "run", false, "run envoy container")
+	flag.Parse()
+
+	config, err := loadConfigEnv()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	switch {
+	case genConfig:
+		err := createEnvoyConfig(envoyConfigPath, config)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("envoy config file created at", envoyConfigPath)
+	case runEnvoy:
+		// TODO: refactor startEnvoy
+	default:
+		fmt.Println("unknown command.")
+	}
+}
 
 // StartEnvoy creates a Docker API client. If an envoy container is not running,
 // it will be started from an image. If no image exists, it will pull an Envoy
@@ -46,7 +136,7 @@ func StartEnvoy(l *zap.Logger) {
 	if !hasEnvoyImage(ctx, l, cli) {
 		// if there is no active Envoy image, we build it
 		l.Info("building Envoy image...")
-		// TODO(meling) use docker api to build image: "docker build -t ag_envoy -f ./envoy/envoy.Dockerfile ."
+		// TODO(meling) use docker api to build image: "docker build -t ag_envoy -f ./envoy/Dockerfile ."
 		out, err := exec.Command("/bin/sh", "./envoy/envoy.sh", "build").Output()
 		if err != nil {
 			l.Fatal("failed to execute bash script", zap.Error(err))
