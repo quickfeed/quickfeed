@@ -1,11 +1,8 @@
 package ci
 
 import (
-	"bytes"
 	"fmt"
-	"path/filepath"
 	"strings"
-	"text/template"
 
 	pb "github.com/autograde/quickfeed/ag"
 )
@@ -41,22 +38,22 @@ func newAssignmentInfo(course *pb.Course, assignment *pb.Assignment, cloneURL, t
 // the commands of the job. The job is extracted from a script template file
 // provided as input along with assignment metadata for the template.
 func parseScriptTemplate(scriptPath string, info *AssignmentInfo) (*Job, error) {
-	tmplFile := filepath.Join(scriptPath, info.Script)
-	t, err := template.ParseFiles(tmplFile)
-	if err != nil {
-		return nil, err
-	}
-	buffer := new(bytes.Buffer)
-	if err := t.Execute(buffer, info); err != nil {
-		return nil, err
-	}
-	s := strings.Split(buffer.String(), "\n")
+	// tmplFile := filepath.Join(scriptPath, info.Script)
+	// t, err := template.ParseFiles(tmplFile)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// buffer := new(bytes.Buffer)
+	// if err := t.Execute(buffer, info); err != nil {
+	// 	return nil, err
+	// }
+	s := strings.Split(info.Script, "\n")
 	if len(s) < 2 {
-		return nil, fmt.Errorf("no script template in %s", tmplFile)
+		return nil, fmt.Errorf("no script template for assignment %s in %s", info.AssignmentName, info.TestURL)
 	}
 	parts := strings.Split(s[0], "#image/")
 	if len(parts) < 2 {
-		return nil, fmt.Errorf("no docker image specified in script template %s", tmplFile)
+		return nil, fmt.Errorf("no docker image specified in script template for assignment %s in %s", info.AssignmentName, info.TestURL)
 	}
 	return &Job{Image: parts[1], Commands: s[1:]}, nil
 }
