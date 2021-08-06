@@ -83,18 +83,18 @@ brew:
 
 envoy-build:
 	@echo "Building Autograder Envoy proxy"
-	@cd envoy; docker build -t ag_envoy -f envoy.Dockerfile .
+	@docker-compose build --force-rm envoy
 
 envoy-run:
 	@echo "Starting Autograder Envoy proxy"
-	@cd envoy; docker run --name=envoy -p 8080:8080 --net=host ag_envoy
+	@docker-compose up envoy
 
 # will stop envoy container, prune docker containers and remove envoy images
 # use before rebuilding envoy with changed configuration in envoy.yaml
 envoy-purge:
-	@docker kill envoy
+	@docker-compose rm -sv envoy
 	@docker container prune
-	@docker image rm envoyproxy/envoy ag_envoy
+	@docker rmi quickfeed/envoy
 
 # protoset is a file used as a server reflection to mock-testing of grpc methods via command line
 protoset:
