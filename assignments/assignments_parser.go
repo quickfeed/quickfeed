@@ -1,8 +1,10 @@
 package assignments
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,6 +18,8 @@ import (
 const (
 	target                       = "assignment.yml"
 	targetYaml                   = "assignment.yaml"
+	criteriaFile                 = "criteria.json"
+	scriptFile                   = "run.sh"
 	defaultAutoApproveScoreLimit = 80
 )
 
@@ -47,7 +51,8 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			filename := filepath.Base(path)
-			if filename == target || filename == targetYaml {
+			switch filename {
+			case target, targetYaml:
 				source, err := ioutil.ReadFile(path)
 				if err != nil {
 					return fmt.Errorf("could not to read %q file: %w", filename, err)
@@ -82,6 +87,34 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				}
 
 				assignments = append(assignments, assignment)
+			case criteriaFile:
+				// get name of the assignment == folder name
+				assignmentName := filepath.Base(filepath.Dir(filename))
+				log.Println("Got criteria.json in the assignment folder ", assignmentName)
+				// make sure assignment exists in the database (get by name/course ID)
+				criteriaString, err := ioutil.ReadFile(path)
+				if err != nil {
+					return fmt.Errorf("could not to read %q file: %w", filename, err)
+				}
+				var benchmarks []*pb.GradingBenchmark
+				if err := json.Unmarshal(criteriaString, &benchmarks); err != nil {
+					return err
+				}
+				log.Printf("Unmarshalled %d benchmarks for assignment %s\n", len(benchmarks), assignmentName)
+				found := false
+				for _, assignment := range assignments {
+					if assignment.Name == assignmentName {
+						found = true
+						assignment.GradingBenchmarks = benchmarks
+						log.Println("Found assignment, added benchmarks from a file")
+					}
+				}
+				if !found {
+					log.Printf("Found benchmarks, could not find assignment %s\n", assignmentName)
+				}
+
+			case scriptFile:
+				//
 			}
 		}
 		return nil
