@@ -20,6 +20,8 @@ const (
 	targetYaml                   = "assignment.yaml"
 	criteriaFile                 = "criteria.json"
 	scriptFile                   = "run.sh"
+	scriptFolder                 = "scripts"
+	dockerfile                   = "Dockerfile"
 	defaultAutoApproveScoreLimit = 80
 )
 
@@ -48,6 +50,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 	}
 
 	var assignments []*pb.Assignment
+	var defaultScript string
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			filename := filepath.Base(path)
@@ -92,12 +95,12 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				assignmentName := filepath.Base(filepath.Dir(filename))
 				log.Println("Got criteria.json in the assignment folder ", assignmentName)
 				// make sure assignment exists in the database (get by name/course ID)
-				criteriaString, err := ioutil.ReadFile(path)
+				criteria, err := ioutil.ReadFile(path)
 				if err != nil {
 					return fmt.Errorf("could not to read %q file: %w", filename, err)
 				}
 				var benchmarks []*pb.GradingBenchmark
-				if err := json.Unmarshal(criteriaString, &benchmarks); err != nil {
+				if err := json.Unmarshal(criteria, &benchmarks); err != nil {
 					return err
 				}
 				log.Printf("Unmarshalled %d benchmarks for assignment %s\n", len(benchmarks), assignmentName)
@@ -114,13 +117,43 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				}
 
 			case scriptFile:
-				//
+				// save per assignment, or for each assignment if in scripts/
+				script, err := ioutil.ReadFile(path)
+				if err != nil {
+					return fmt.Errorf("could not to read %q file: %w", filename, err)
+				}
+				scriptString := string(script)
+				location := filepath.Base(filepath.Dir(filename))
+				if location == scriptFolder {
+					defaultScript = scriptString
+				} else {
+					found := false
+					for _, assignment := range assignments {
+						if assignment.Name == location {
+							found = true
+							assignment.ScriptFile = scriptString
+							log.Println("Found assignment, added scriptfile contents")
+						}
+					}
+					if !found {
+						log.Printf("Found script, could not find assignment %s\n", location)
+					}
+				}
+			case dockerfile:
+				// build image
 			}
 		}
 		return nil
 	})
 	if err != nil {
 		return nil, err
+	}
+	if defaultScript != "" {
+		for _, assignment := range assignments {
+			if assignment.ScriptFile == "" {
+				assignment.ScriptFile = defaultScript
+			}
+		}
 	}
 	return assignments, nil
 }
