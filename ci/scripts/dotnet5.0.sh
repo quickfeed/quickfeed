@@ -28,13 +28,6 @@ if grep -r -e QUICKFEED_SESSION_SECRET * ; then
   exit
 fi
 
-# Remove student written tests to avoid interference
-# find . -name '*_test.go' -exec rm -rf {} \;
-# rm -f setup.sh
-
-# Copy tests into student assignments folder for running tests
-# cp -r $TESTS/* $ASSIGNMENTS/
-
 # Clear access token and the shell history to avoid leaking information to student test code.
 git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 history -c
