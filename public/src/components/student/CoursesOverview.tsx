@@ -3,6 +3,7 @@ import { CoursePanel, Row } from "../../components";
 import { NavigationManager } from "../../managers/NavigationManager";
 import { IAllSubmissionsForEnrollment } from "../../models";
 import { Enrollment } from "../../../proto/ag/ag_pb";
+import { sortSubmissionsByDeadline } from "../../componentHelper";
 
 interface ICourseOverviewProps {
     courseOverview: IAllSubmissionsForEnrollment[];
@@ -26,7 +27,7 @@ export class CoursesOverview extends React.Component<ICourseOverviewProps> {
             return <CoursePanel
                 key={key}
                 course={val.course}
-                labs={val.labs}
+                labs={sortSubmissionsByDeadline(val.labs)}
                 navMan={this.props.navMan} />;
         });
 

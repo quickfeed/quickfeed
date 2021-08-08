@@ -2,7 +2,7 @@ import * as React from "react";
 import { formatDate } from "../../helper";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
-import { gradedManually, submissionStatusToString } from "../../componentHelper";
+import { gradedManually, submissionStatusToString, sortSubmissionsByDeadline } from "../../componentHelper";
 
 interface ISingleCourseOverviewProps {
     courseAndLabs: IAllSubmissionsForEnrollment;
@@ -24,6 +24,8 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
             submissionArray = this.props.courseAndLabs.labs;
         }
 
+        submissionArray = sortSubmissionsByDeadline(submissionArray);
+
         const labs: JSX.Element[] = submissionArray.map((submissionLink, k) => {
             let submissionInfo = <div>No submissions</div>;
             if (submissionLink.submission) {
@@ -37,11 +39,10 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
                         <span className="text-danger"> Failed: {submissionLink.submission.failedTests} </span>
                     </div>
                     <div className="col-md-2 col-lg-2">
-                        <span > {this.setStatusString(submissionLink.submission, gradedManually(submissionLink.assignment))} </span>
+                        <span > {submissionStatusToString(submissionLink.submission.status)} </span>
                     </div>
                     <div className="col-md-2 col-lg-2">
-                        Deadline:
-                        <span style={{ display: "inline-block", verticalAlign: "top", paddingLeft: "10px" }}>
+                        <span className="deadline-date">
                             {formatDate(submissionLink.assignment.getDeadline())}
                         </span>
                     </div>
@@ -59,7 +60,7 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
                             return this.props.onGroupLabClick(courseId, assignmentId);
                         }
                     }}>
-                    <strong>{submissionLink.assignment.getName()}</strong>
+                    <strong>{submissionLink.assignment.getName()}</strong>{this.deadlineHeader(submissionLink.submission)}
                     {submissionInfo}
                 </li >);
         });
@@ -90,10 +91,8 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
         return labAndGrouplabs;
     }
 
-    private setStatusString(submission: ISubmission, manualReview: boolean): string {
-        if (manualReview) {
-            return submissionStatusToString(submission.status);
-        }
-        return submissionStatusToString(submission.status);
+    private deadlineHeader(submission: ISubmission | undefined): JSX.Element | null{
+        const header = <strong className="deadline-header">Deadline:</strong>;
+        return submission ? header : null;
     }
 }

@@ -10,8 +10,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/internal"
+	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/web"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/google/go-cmp/cmp"
@@ -28,17 +27,17 @@ import (
 )
 
 func TestGetSelf(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	const (
 		bufSize = 1024 * 1024
 	)
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 
-	adminUser := createFakeUser(t, db, 1)
-	student := createFakeUser(t, db, 56)
+	adminUser := qtest.CreateFakeUser(t, db, 1)
+	student := qtest.CreateFakeUser(t, db, 56)
 
 	store := sessions.NewCookieStore([]byte("secret"))
 	store.Options.HttpOnly = true
@@ -125,18 +124,18 @@ func TestGetSelf(t *testing.T) {
 }
 
 func TestGetUsers(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	unexpectedUsers, err := ags.GetUsers(context.Background(), &pb.Void{})
 	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
 		t.Fatalf("found unexpected users %+v", unexpectedUsers)
 	}
 
-	admin := createFakeUser(t, db, 1)
-	user2 := createFakeUser(t, db, 2)
+	admin := qtest.CreateFakeUser(t, db, 1)
+	user2 := qtest.CreateFakeUser(t, db, 2)
 	ctx := withUserContext(context.Background(), user2)
 	_, err = ags.GetUsers(ctx, &pb.Void{})
 	if err == nil {
@@ -174,12 +173,12 @@ var allUsers = []struct {
 }
 
 func TestGetEnrollmentsByCourse(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	var users []*pb.User
 	for _, u := range allUsers {
-		user := createFakeUser(t, db, u.remoteID)
+		user := qtest.CreateFakeUser(t, db, u.remoteID)
 		// remote identities should not be loaded.
 		user.RemoteIdentities = nil
 		users = append(users, user)
@@ -192,7 +191,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
@@ -262,17 +261,17 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 }
 
 func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	var users []*pb.User
 	for _, u := range allUsers {
-		user := createFakeUser(t, db, u.remoteID)
+		user := qtest.CreateFakeUser(t, db, u.remoteID)
 		users = append(users, user)
 	}
 	admin := users[0]
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
@@ -350,12 +349,12 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	firstAdminUser := createFakeUser(t, db, 1)
-	nonAdminUser := createFakeUser(t, db, 11)
+	firstAdminUser := qtest.CreateFakeUser(t, db, 1)
+	nonAdminUser := qtest.CreateFakeUser(t, db, 11)
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), firstAdminUser)
 
@@ -410,16 +409,16 @@ func TestUpdateUser(t *testing.T) {
 }
 
 func TestUpdateUserFailures(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	// user := &pb.User{Name: "Test User", StudentID: "11", Email: "test@email", AvatarURL: "url.com"}
-	adminUser := createFakeUser(t, db, 1)
-	createFakeUser(t, db, 11)
+	adminUser := qtest.CreateFakeUser(t, db, 1)
+	qtest.CreateFakeUser(t, db, 11)
 
-	_, scms := fakeProviderMap(t)
+	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
-	u := createFakeUser(t, db, 3)
+	u := qtest.CreateFakeUser(t, db, 3)
 	if u.IsAdmin {
 		t.Fatalf("expected user %v to be non-admin", u)
 	}
@@ -479,51 +478,5 @@ func TestUpdateUserFailures(t *testing.T) {
 
 	if !cmp.Equal(withName, wantUser, cmpopts.IgnoreUnexported(pb.User{}, pb.RemoteIdentity{})) {
 		t.Errorf("\nhave: %+v\nwant: %+v\n", withName, wantUser)
-	}
-}
-
-// createFakeUser is a test helper to create a user in the database
-// with the given remote id and the fake scm provider.
-func createFakeUser(t *testing.T, db database.Database, remoteID uint64) *pb.User {
-	t.Helper()
-	var user pb.User
-	err := db.CreateUserFromRemoteIdentity(&user,
-		&pb.RemoteIdentity{
-			Provider:    "fake",
-			RemoteID:    remoteID,
-			AccessToken: "token",
-		})
-	if err != nil {
-		t.Fatal(err)
-	}
-	return &user
-}
-
-func createNamedUser(t *testing.T, db database.Database, remoteID uint64, name string) *pb.User {
-	t.Helper()
-	user := &pb.User{Name: name}
-	err := db.CreateUserFromRemoteIdentity(user,
-		&pb.RemoteIdentity{
-			Provider:    "fake",
-			RemoteID:    remoteID,
-			AccessToken: "token",
-		})
-	if err != nil {
-		t.Fatal(err)
-	}
-	return user
-}
-
-func enrollStudent(t *testing.T, db database.Database, student *pb.User, course *pb.Course) {
-	t.Helper()
-	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&pb.Enrollment{
-		UserID:   student.ID,
-		CourseID: course.ID,
-		Status:   pb.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
 	}
 }

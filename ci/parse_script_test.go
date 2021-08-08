@@ -1,13 +1,12 @@
 package ci
 
 import (
-	"crypto/rand"
-	"crypto/sha1"
 	"fmt"
 	"os"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/internal/qtest"
 )
 
 // To run this test, please see instructions in the developer guide (dev.md).
@@ -21,11 +20,7 @@ func TestParseScript(t *testing.T) {
 		qfTestOrg      = "qf101"
 		githubUserName = "user"
 	)
-	randomness := make([]byte, 10)
-	if _, err := rand.Read(randomness); err != nil {
-		t.Fatal(err)
-	}
-	randomString := fmt.Sprintf("%x", sha1.Sum(randomness))
+	randomString := qtest.RandomString(t)
 
 	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	info := &AssignmentInfo{
