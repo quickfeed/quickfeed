@@ -21,9 +21,10 @@ message Score {
 message BuildInfo {
     uint64 ID = 1;
     uint64 SubmissionID = 2;
-    google.protobuf.Timestamp BuildDate = 3 [(go.field) = {tags: 'gorm:"foreignKey:Seconds"'}];
-    string BuildLog = 4;
-    int64 ExecTime = 5;
+    google.protobuf.Timestamp BuildDate = 3 [(go.field) = {tags: 'sql:"-"'}];
+    string dbBuildDate = 4;  // the build date as string to be stored in the database
+    string BuildLog = 5;
+    int64 ExecTime = 6;
 }
 
 // Results holds a map from test names to score objects and build info.

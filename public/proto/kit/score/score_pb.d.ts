@@ -60,6 +60,9 @@ export class BuildInfo extends jspb.Message {
   hasBuilddate(): boolean;
   clearBuilddate(): BuildInfo;
 
+  getDbbuilddate(): string;
+  setDbbuilddate(value: string): BuildInfo;
+
   getBuildlog(): string;
   setBuildlog(value: string): BuildInfo;
 
@@ -79,6 +82,7 @@ export namespace BuildInfo {
     id: number,
     submissionid: number,
     builddate?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+    dbbuilddate: string,
     buildlog: string,
     exectime: number,
   }
