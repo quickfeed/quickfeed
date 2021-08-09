@@ -1,15 +1,16 @@
 package web
 
 import (
-	"context"
+	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/gosimple/slug"
+	"golang.org/x/sync/errgroup"
 )
 
 // rebuildSubmission rebuilds the given assignment and submission.
-func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.RebuildRequest) (*pb.Submission, error) {
+func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.Submission, error) {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
 	if err != nil {
 		return nil, err
@@ -44,6 +45,32 @@ func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.R
 	}
 	ci.RunTests(s.logger, s.db, s.runner, runData)
 	return s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
+}
+
+func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) error {
+	s.logger.Debugf("Running tests for all submissions for assignment ID %d of course ID %d\n", request.GetAssignmentID(), request.GetCourseID())
+	start := time.Now()
+	if _, err := s.db.GetAssignment(&pb.Assignment{ID: request.AssignmentID}); err != nil {
+		return err
+	}
+	submissions, err := s.db.GetSubmissions(&pb.Submission{AssignmentID: request.AssignmentID})
+	if err != nil {
+		return err
+	}
+	rebuildRequest := &pb.RebuildRequest{AssignmentID: request.AssignmentID}
+
+	var errgrp errgroup.Group
+	for _, submission := range submissions {
+		rebuildRequest.SubmissionID = submission.ID
+		errgrp.Go(func() error {
+			_, err := s.rebuildSubmission(rebuildRequest)
+			return err
+		})
+	}
+	err = errgrp.Wait()
+	total := time.Since(start)
+	s.logger.Debug("Finished running all tests, took ", total)
+	return err
 }
 
 func (s *AutograderService) lookupName(submission *pb.Submission) string {

@@ -170,6 +170,11 @@ func (req *EnrollmentRequest) IsValid() bool {
 	return req.GetCourseID() > 0
 }
 
+// Isvalid ensures that course and assignment IDs are set.
+func (req *AssignmentRequest) IsValid() bool {
+	return req.CourseID > 0 && req.AssignmentID > 0
+}
+
 // IsValid ensures that provider string is one of implemented providers
 func (req *Provider) IsValid() bool {
 	provider := req.GetProvider()

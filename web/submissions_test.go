@@ -175,7 +175,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	ctx = withUserContext(context.Background(), admin)
 	haveSubmissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
 	if err == nil {
-		t.Error("Expected error: user ")
+		t.Error("Expected error: user not enrolled")
 	}
 	if len(haveSubmissions.GetSubmissions()) > 0 {
 		t.Errorf("Not enrolled admin should not see any submissions, got submissions: %v+ ", haveSubmissions.GetSubmissions())
@@ -429,12 +429,29 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	buildInfo1 := &score.BuildInfo{
+		ID:           1,
+		SubmissionID: 1,
+		DbBuildDate:  "2020-02-23T18:00:00",
+		BuildLog:     "runtime error",
+		ExecTime:     3,
+	}
+
+	buildInfo2 := &score.BuildInfo{
+		ID:           2,
+		SubmissionID: 2,
+		DbBuildDate:  "2020-02-23T18:00:00",
+		BuildLog:     "runtime error",
+		ExecTime:     3,
+	}
+
 	sub1 := &pb.Submission{
 		UserID:       student.ID,
 		AssignmentID: lab1c1.ID,
 		Score:        44,
 		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
+		BuildInfo:    buildInfo1,
 	}
 	sub2 := &pb.Submission{
 		UserID:       student.ID,
@@ -442,6 +459,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		Score:        66,
 		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
+		BuildInfo:    buildInfo2,
 	}
 	if err := db.CreateSubmission(sub1); err != nil {
 		t.Fatal(err)
@@ -479,7 +497,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	// check that all submissions were saved for the correct labs
-	labsForCourse1, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID, Type: pb.SubmissionsForCourseRequest_ALL})
+	labsForCourse1, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID, Type: pb.SubmissionsForCourseRequest_ALL, WithBuildInfo: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -495,7 +513,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		}
 	}
 
-	labsForCourse2, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course2.ID})
+	labsForCourse2, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course2.ID, WithBuildInfo: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -510,6 +528,34 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 			}
 		}
 	}
+
+	// check that buildInformation is not included when not requested
+	labsForCourse3, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID, WithBuildInfo: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, labLink := range labsForCourse3.GetLinks() {
+		for _, submission := range labLink.GetSubmissions() {
+			if submission.Submission.GetBuildInfo().GetBuildLog() != "" {
+				t.Errorf("Expected build log: \"\", got %+v", submission.GetSubmission().GetBuildInfo().GetBuildLog())
+			}
+		}
+	}
+
+	labsForCourse4, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course2.ID, WithBuildInfo: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, labLink := range labsForCourse4.GetLinks() {
+		for _, submission := range labLink.GetSubmissions() {
+			if submission.GetSubmission() != nil {
+				if submission.GetSubmission().GetBuildInfo().GetBuildLog() != "runtime error" {
+					t.Errorf("Expected build log: \"runtime error\", got %+v", submission.GetSubmission().GetBuildInfo().GetBuildLog())
+				}
+			}
+		}
+	}
+
 	// check that no submissions will be returned for a wrong course ID
 	if _, err = ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: 234}); err == nil {
 		t.Error("Expected 'no submissions found'")

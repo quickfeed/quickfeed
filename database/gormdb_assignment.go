@@ -101,17 +101,18 @@ func (db *GormDB) UpdateAssignments(assignments []*pb.Assignment) error {
 
 // GetAssignmentsWithSubmissions returns all course assignments
 // of requested type with preloaded submissions.
-func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error) {
+func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType pb.SubmissionsForCourseRequest_Type, withBuildInfo bool) ([]*pb.Assignment, error) {
 	var assignments []*pb.Assignment
 	// the 'order' field of pb.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
-	if err := db.conn.Preload("Submissions").
+	m := db.conn.Preload("Submissions").
 		Preload("Submissions.Reviews").
 		Preload("Submissions.Reviews.GradingBenchmarks").
 		Preload("Submissions.Reviews.GradingBenchmarks.Criteria").
-		Preload("Submissions.BuildInfo").
-		Preload("Submissions.BuildInfo.BuildDate").
-		Preload("Submissions.Scores").
-		Where(&pb.Assignment{CourseID: courseID}).
+		Preload("Submissions.Scores")
+	if withBuildInfo {
+		m.Preload("Submissions.BuildInfo")
+	}
+	if err := m.Where(&pb.Assignment{CourseID: courseID}).
 		Order("'order'").
 		Find(&assignments).Error; err != nil {
 		return nil, err
@@ -127,20 +128,6 @@ func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType 
 		}
 	}
 	return filteredAssignments, nil
-}
-
-// GetCourseAssignmentsWithSubmissionsNoBuildInfo
-// returns data required for results page (score and status)
-func (db *GormDB) GetCourseAssignmentsWithSubmissionsNoBuildInfo(courseID uint64, submissionType pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error) {
-	var assignments []*pb.Assignment
-	// the 'order' field of pb.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
-	if err := db.conn.Preload("Submissions").
-		Where(&pb.Assignment{CourseID: courseID}).
-		Order("'order'").
-		Find(&assignments).Error; err != nil {
-		return nil, err
-	}
-	return assignments, nil
 }
 
 // CreateBenchmark creates a new grading benchmark
