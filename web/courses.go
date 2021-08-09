@@ -7,7 +7,6 @@ import (
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/scm"
 )
 
@@ -142,15 +141,7 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
 func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
-	// TODO(meling) the NoBuildInfo variant is not in the database.Database interface; but we should avoid two methods for this anyway
-	// var getCourseSubFn func(uint64, pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error)
-	// if request.GetSkipBuildInfo() {
-	// 	getCourseSubFn = s.db.GetCourseAssignmentsWithSubmissionsNoBuildInfo
-	// } else {
-	// 	getCourseSubFn = s.db.GetAssignmentsWithSubmissions
-	// }
-	getCourseSubFn := s.db.GetAssignmentsWithSubmissions
-	assignments, err := getCourseSubFn(request.GetCourseID(), request.Type)
+	assignments, err := s.db.GetAssignmentsWithSubmissions(request.GetCourseID(), request.Type, request.GetWithBuildInfo())
 	if err != nil {
 		return nil, err
 	}
@@ -161,15 +152,6 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 	}
 
 	course.SetSlipDays()
-	for _, a := range assignments {
-		for _, sbm := range a.Submissions {
-			if request.GetSkipBuildInfo() {
-				// TODO(meling) Check if this is enough: @Oskar and @BK
-				sbm.BuildInfo = &score.BuildInfo{}
-				sbm.Scores = []*score.Score{}
-			}
-		}
-	}
 
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
 

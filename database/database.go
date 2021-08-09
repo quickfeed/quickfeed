@@ -106,7 +106,7 @@ type Database interface {
 	// GetSubmissions returns all submissions matching the query.
 	GetSubmissions(*pb.Submission) ([]*pb.Submission, error)
 	// GetAssignmentsWithSubmissions returns a list of assignments with the latest submissions for the given course.
-	GetAssignmentsWithSubmissions(courseID uint64, requestType pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error)
+	GetAssignmentsWithSubmissions(courseID uint64, requestType pb.SubmissionsForCourseRequest_Type, withBuildInfo bool) ([]*pb.Assignment, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(*pb.Submission) error
 	// UpdateSubmissions releases and/or approves all submissions with a certain score
