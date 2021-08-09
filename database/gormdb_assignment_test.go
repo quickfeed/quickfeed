@@ -164,7 +164,6 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 			{TestName: "TestDigNum", MaxScore: 100, Score: 70, Weight: 10},
 		},
 	}
-	t.Logf("B   wantStruct.bdate=%v", wantStruct.BuildInfo.BuildDate)
 	if err := db.CreateSubmission(wantStruct); err != nil {
 		t.Fatal(err)
 	}
@@ -172,10 +171,10 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	wantStruct.BuildInfo.DbBuildDate = ""
 	wantAssignment := (proto.Clone(assignment)).(*pb.Assignment)
 	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct)
-	t.Logf("assignments[0].bdate=%v", assignments[0].Submissions[0].BuildInfo.BuildDate)
-	t.Logf("A   wantStruct.bdate=%v", wantStruct.BuildInfo.BuildDate)
+	wantStruct.BuildInfo.DbBuildDate = ""
 	if diff := cmp.Diff(wantAssignment, assignments[0], protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
 	}
@@ -199,6 +198,8 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	}
 	wantAssignment = (proto.Clone(assignment)).(*pb.Assignment)
 	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct, wantLegacy)
+	wantStruct.BuildInfo.DbBuildDate = ""
+	wantLegacy.BuildInfo.DbBuildDate = ""
 	if diff := cmp.Diff(wantAssignment, assignments[0], protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
 	}

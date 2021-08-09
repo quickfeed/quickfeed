@@ -432,7 +432,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	buildInfo1 := &score.BuildInfo{
 		ID:           1,
 		SubmissionID: 1,
-		DbBuildDate:  "2020-02-23T18:00:00",
+		BuildDate:    qtest.Timestamp(t, "2020-02-23T18:00:00"),
 		BuildLog:     "runtime error",
 		ExecTime:     3,
 	}
@@ -440,7 +440,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	buildInfo2 := &score.BuildInfo{
 		ID:           2,
 		SubmissionID: 2,
-		DbBuildDate:  "2020-02-23T18:00:00",
+		BuildDate:    qtest.Timestamp(t, "2020-02-23T18:00:00"),
 		BuildLog:     "runtime error",
 		ExecTime:     3,
 	}
@@ -507,6 +507,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 			if len(labs) != 2 {
 				t.Fatalf("Expected 2 submission links for course 1, got %d", len(labs))
 			}
+			sub1.BuildInfo.DbBuildDate = ""
 			if diff := cmp.Diff(sub1, labs[0].Submission, protocmp.Transform()); diff != "" {
 				t.Errorf("TestGetCourseLabSubmissions() mismatch (-sub1 +labs[0]):\n%s", diff)
 			}
@@ -523,6 +524,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 			if len(labs) != 2 {
 				t.Fatalf("Expected 2 submission for course 1, got %d", len(labs))
 			}
+			sub2.BuildInfo.DbBuildDate = ""
 			if diff := cmp.Diff(sub2, labs[1].Submission, protocmp.Transform()); diff != "" {
 				t.Errorf("TestGetCourseLabSubmissions() mismatch (-sub2 +labs[1]):\n%s", diff)
 			}
