@@ -9,7 +9,7 @@ import "patch/go.proto";
 // Note on use of protopatch's go.field to translate to a database schema via GORM
 //
 // To define fields that should be ignored by the database, use this tag:
-//   [(go.field) = {tags: 'sql:"-"'}];
+//   [(go.field) = {tags: 'gorm:"-"'}];
 //
 // To define multiple database attributes (fields) that combine to form a unique identifier,
 // use the following tag, replacing the <id_name> with the specific unique database identifier;
@@ -76,7 +76,7 @@ message Course {
     uint64 organizationID = 8;
     string organizationPath = 9; // The organization's SCM name, e.g. uis-dat520-2020.
     uint32 slipDays = 10;
-    Enrollment.UserStatus enrolled = 11 [(go.field) = {tags: 'sql:"-"'}];
+    Enrollment.UserStatus enrolled = 11 [(go.field) = {tags: 'gorm:"-"'}];
 
     repeated Enrollment enrollments = 12;
     repeated Assignment assignments = 13;
@@ -128,7 +128,7 @@ message Enrollment {
     Group group = 8;
     UserStatus status = 9;
     DisplayState state = 10;
-    uint32 slipDaysRemaining = 11 [(go.field) = {tags: 'sql:"-"'}];
+    uint32 slipDaysRemaining = 11 [(go.field) = {tags: 'gorm:"-"'}];
     string lastActivityDate = 12;
     uint64 totalApproved = 13;
     repeated UsedSlipDays usedSlipDays = 14;
