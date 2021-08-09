@@ -1,11 +1,7 @@
 package database
 
 import (
-	"encoding/json"
-	"fmt"
-
 	pb "github.com/autograde/quickfeed/ag"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -70,9 +66,6 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	transform(submission)
 
 	if submission.BuildInfo != nil {
-		if err := marshalBuildDate(submission); err != nil {
-			return err
-		}
 		if err := db.conn.Save(submission.BuildInfo).Error; err != nil {
 			return err
 		}
@@ -94,9 +87,6 @@ func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	}
 	// TODO(meling) temporary transformation of submission data
 	transform(&submission)
-	if err := unmarshalBuildDate(&submission); err != nil {
-		return nil, err
-	}
 
 	return &submission, nil
 }
@@ -134,11 +124,6 @@ func (db *GormDB) GetSubmissions(query *pb.Submission) ([]*pb.Submission, error)
 	}
 	// TODO(meling) temporary transformation of submission data
 	transform(submissions...)
-	for _, submission := range submissions {
-		if err := unmarshalBuildDate(submission); err != nil {
-			return nil, err
-		}
-	}
 	return submissions, nil
 }
 
@@ -179,31 +164,4 @@ func (db *GormDB) UpdateReview(query *pb.Review) error {
 // DeleteReview removes all reviews matching the query
 func (db *GormDB) DeleteReview(query *pb.Review) error {
 	return db.conn.Delete(&pb.Review{}, &query).Error
-}
-
-// unmarshalBuildDate unmarshals string-based DbBuildDate into timestamppb.Timestamp-based BuildDate for database storage.
-func unmarshalBuildDate(submission *pb.Submission) error {
-	dbBuildDate := submission.GetBuildInfo().GetDbBuildDate()
-	if dbBuildDate == "" {
-		// ignore empty DbBuildDate fields; reviews doesn't have build date
-		return nil
-	}
-	buildDate := &timestamppb.Timestamp{}
-	if err := json.Unmarshal([]byte(dbBuildDate), buildDate); err != nil {
-		return fmt.Errorf("failed to unmarshal JSON DbBuildDate: (%v): %w", dbBuildDate, err)
-	}
-	submission.BuildInfo.BuildDate = buildDate
-	submission.BuildInfo.DbBuildDate = ""
-	return nil
-}
-
-// marshalBuildDate marshals timestamppb.Timestamp-based BuildDate into string-based DbBuildDate for database storage.
-func marshalBuildDate(submission *pb.Submission) error {
-	buildDate := submission.GetBuildInfo().GetBuildDate()
-	dbBuildDate, err := json.Marshal(buildDate)
-	if err != nil {
-		return fmt.Errorf("failed to marshal BuildDate: (%v): %w", buildDate, err)
-	}
-	submission.BuildInfo.DbBuildDate = string(dbBuildDate)
-	return nil
 }

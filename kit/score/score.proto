@@ -3,7 +3,6 @@ package score;
 option go_package = "github.com/autograde/quickfeed/kit/score";
 
 import "google/protobuf/timestamp.proto";
-import "patch/go.proto";
 
 // Score give the score for a single test named TestName.
 message Score {
@@ -21,16 +20,14 @@ message Score {
 message BuildInfo {
     uint64 ID = 1;
     uint64 SubmissionID = 2;
-    google.protobuf.Timestamp BuildDate = 3 [(go.field) = {tags: 'gorm:"-"'}];
-    string dbBuildDate = 4;  // the build date as string to be stored in the database
-    string BuildLog = 5;
-    int64 ExecTime = 6;
+    google.protobuf.Timestamp BuildDate = 3;
+    string BuildLog = 4;
+    int64 ExecTime = 5;
 }
 
 // Results holds a map from test names to score objects and build info.
-// TODO(meling) to be removed
+// Not to be stored in database.
 message Results {
-    uint64 ID = 1;
-    BuildInfo BuildInfo = 2 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];   // build info for tests
-    repeated Score Scores = 3 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}]; // list of scores for different tests
+    BuildInfo BuildInfo = 1;   // build info for tests
+    repeated Score Scores = 2; // list of scores for different tests
 }

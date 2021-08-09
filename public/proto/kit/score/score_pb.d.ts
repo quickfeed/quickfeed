@@ -60,9 +60,6 @@ export class BuildInfo extends jspb.Message {
   hasBuilddate(): boolean;
   clearBuilddate(): BuildInfo;
 
-  getDbbuilddate(): string;
-  setDbbuilddate(value: string): BuildInfo;
-
   getBuildlog(): string;
   setBuildlog(value: string): BuildInfo;
 
@@ -82,16 +79,12 @@ export namespace BuildInfo {
     id: number,
     submissionid: number,
     builddate?: google_protobuf_timestamp_pb.Timestamp.AsObject,
-    dbbuilddate: string,
     buildlog: string,
     exectime: number,
   }
 }
 
 export class Results extends jspb.Message {
-  getId(): number;
-  setId(value: number): Results;
-
   getBuildinfo(): BuildInfo | undefined;
   setBuildinfo(value?: BuildInfo): Results;
   hasBuildinfo(): boolean;
@@ -112,7 +105,6 @@ export class Results extends jspb.Message {
 
 export namespace Results {
   export type AsObject = {
-    id: number,
     buildinfo?: BuildInfo.AsObject,
     scoresList: Array<Score.AsObject>,
   }

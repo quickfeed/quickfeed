@@ -117,13 +117,6 @@ func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType 
 		Find(&assignments).Error; err != nil {
 		return nil, err
 	}
-	for _, assignment := range assignments {
-		for _, submission := range assignment.GetSubmissions() {
-			if err := unmarshalBuildDate(submission); err != nil {
-				return nil, err
-			}
-		}
-	}
 
 	if submissionType == pb.SubmissionsForCourseRequest_ALL {
 		return assignments, nil

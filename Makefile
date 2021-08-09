@@ -40,7 +40,13 @@ ui:
 	@echo Running webpack
 	@cd public; npm install; npm run webpack
 
-proto:
+hack-timestamp:
+	@echo "Hacking google.golang.org/protobuf/types/known/timestamppb to allow GORM to save timestamps"
+	@chmod +w `go list -m -f {{.Dir}} google.golang.org/protobuf`/types/known/timestamppb
+	@cp kit/timestamp/timestamp_gorm.go `go list -m -f {{.Dir}} google.golang.org/protobuf`/types/known/timestamppb
+	@$(sedi) 's/package timestamp/package timestamppb/' `go list -m -f {{.Dir}} google.golang.org/protobuf`/types/known/timestamppb/timestamp_gorm.go
+
+proto: hack-timestamp
 	@echo "Compiling QuickFeed's ag and kit/score proto definitions for Go and TypeScript"
 	@protoc \
 	-I . \

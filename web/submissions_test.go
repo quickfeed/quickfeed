@@ -507,7 +507,6 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 			if len(labs) != 2 {
 				t.Fatalf("Expected 2 submission links for course 1, got %d", len(labs))
 			}
-			sub1.BuildInfo.DbBuildDate = ""
 			if diff := cmp.Diff(sub1, labs[0].Submission, protocmp.Transform()); diff != "" {
 				t.Errorf("TestGetCourseLabSubmissions() mismatch (-sub1 +labs[0]):\n%s", diff)
 			}
@@ -524,7 +523,6 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 			if len(labs) != 2 {
 				t.Fatalf("Expected 2 submission for course 1, got %d", len(labs))
 			}
-			sub2.BuildInfo.DbBuildDate = ""
 			if diff := cmp.Diff(sub2, labs[1].Submission, protocmp.Transform()); diff != "" {
 				t.Errorf("TestGetCourseLabSubmissions() mismatch (-sub2 +labs[1]):\n%s", diff)
 			}
