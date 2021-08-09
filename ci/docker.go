@@ -11,6 +11,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -114,7 +115,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 		// if image not found locally, try to pull it
 		if err := d.pullImage(ctx, job.Image); err != nil {
 			d.logger.Errorf("Failed to pull image '%s' from docker.io: %v", job.Image, err)
-			if err := d.buildImage(ctx, job.Image); err != nil {
+			if err := d.buildImage(ctx, "", job.Image); err != nil {
 				return nil, err
 			}
 		}
@@ -170,20 +171,30 @@ func (d *Docker) pullImage(ctx context.Context, image string) error {
 }
 
 // buildImage builds and installs an image locally to be reused in a future run.
-func (d *Docker) buildImage(ctx context.Context, dockerfile string) error {
-	// tag := image[strings.Index(image, ":")+1:]
-	// dockerfile := filepath.Join("scripts", tag, "Dockerfile")
-	// d.logger.Infof("Building image: '%s' from %s", image, dockerfile)
+func (d *Docker) buildImage(ctx context.Context, dockerfile string, image string) error {
+	dockerbytes := []byte(dockerfile)
+	// Temporary (?): if there is no Dockerfile in Tests repository use the default one from the Quickfeed repository.
+	if dockerfile == "" {
+		if image == "" {
+			return fmt.Errorf("Error building docker image: missing dockerfile and image name")
+		}
 
-	// contents, err := ioutil.ReadFile(dockerfile)
-	// if err != nil {
-	// 	return err
-	// }
+		tag := image[strings.Index(image, ":")+1:]
+		dockerfile := filepath.Join("scripts", tag, "Dockerfile")
+		d.logger.Infof("Building image: '%s' from %s", image, dockerfile)
+
+		content, err := ioutil.ReadFile(dockerfile)
+		if err != nil {
+			return err
+		}
+		dockerbytes = content
+	}
+
 	log.Println("BUILDING IMAGE FROM SAVED DOCKERFILE")
 	header := &tar.Header{
 		Name:     "Dockerfile",
 		Mode:     0o777,
-		Size:     int64(len([]byte(dockerfile))),
+		Size:     int64(len(dockerbytes)),
 		Typeflag: tar.TypeReg,
 	}
 	var buf bytes.Buffer
@@ -191,7 +202,7 @@ func (d *Docker) buildImage(ctx context.Context, dockerfile string) error {
 	if err := tarWriter.WriteHeader(header); err != nil {
 		return err
 	}
-	if _, err := tarWriter.Write([]byte(dockerfile)); err != nil {
+	if _, err := tarWriter.Write(dockerbytes); err != nil {
 		return err
 	}
 	if err := tarWriter.Close(); err != nil {
@@ -202,7 +213,7 @@ func (d *Docker) buildImage(ctx context.Context, dockerfile string) error {
 	opts := types.ImageBuildOptions{
 		Context:    reader,
 		Dockerfile: "Dockerfile",
-		Tags:       []string{dockerfile},
+		Tags:       []string{image},
 	}
 	res, err := d.client.ImageBuild(ctx, reader, opts)
 	if err != nil {
