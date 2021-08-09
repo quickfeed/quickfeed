@@ -1,0 +1,26 @@
+version: '3'
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        VARIANT: 1.16
+        INSTALL_NODE: "true"
+        NODE_VERSION: "lts/*"
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    command: sleep infinity      
+    network_mode: service:envoy
+    volumes: 
+      - /var/run/docker.sock:/var/run/docker-host.sock 
+      - ..:/workspace:cached
+
+  envoy:
+    image: envoyproxy/envoy:v1.16-latest
+#    ports:
+#      - "8080:8080"
+    volumes:
+      - ../envoy/envoy-simple.yaml:/etc/envoy/envoy.yaml

@@ -163,7 +163,9 @@ export class AdminPage extends ViewPage {
         // if user has no teacher scopes, redirect to authorization page
         const authorized = await this.userMan.isAuthorizedTeacher();
         if (!authorized) {
-            window.location.href = "https://" + window.location.hostname + "/auth/github-teacher";
+            let loc = window.location;
+            window.location.href = `${loc.protocol}//${loc.hostname}:${loc.port}/auth/github-teacher`;
+            // window.location.href = "https://" + window.location.hostname + "/auth/github-teacher";
         }
         if (index === 0) {
             const links: ILink[] = [

@@ -300,10 +300,10 @@ async function main(): Promise<void> {
 
     let curRunning = DEBUG_SERVER;
 
-    if (window.location.host.match("localhost")
+    /*if (window.location.host.match("localhost")
         || localStorage.getItem("debug")) {
         curRunning = DEBUG_BROWSER;
-    }
+    }*/
 
     const tempData = new TempDataProvider();
 

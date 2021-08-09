@@ -141,6 +141,11 @@ export class StudentPage extends ViewPage {
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
+                    onSubmissionBuild={async (assignmentID: number) => {
+                        const ans = await this.courseMan.buildSubmission(assignmentID);
+                        this.navMan.refresh();
+                        return ans ? true : false;
+                    }}
                     onSubmissionStatusUpdate={async () => {
                         return false;
                     }}
@@ -169,6 +174,11 @@ export class StudentPage extends ViewPage {
                     student={curUser}
                     onSubmissionRebuild={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
+                        this.navMan.refresh();
+                        return ans ? true : false;
+                    }}
+                    onSubmissionBuild={async (assignmentID: number) => {
+                        const ans = await this.courseMan.buildSubmission(assignmentID);
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}

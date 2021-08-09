@@ -55,6 +55,7 @@ export interface ICourseProvider {
     updateAssignments(courseID: number): Promise<boolean>;
     updateSubmission(courseID: number, submission: ISubmission): Promise<boolean>;
     updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean>;
+    buildSubmission(assignmentID: number): Promise<ISubmission | null>;
     rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null>;
     rebuildSubmissions(assignmentID: number, courseID: number): Promise<boolean>;
     getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
@@ -288,6 +289,10 @@ export class CourseManager {
 
     public async getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>> {
         return this.courseProvider.getRepositories(courseID, types);
+    }
+
+    public async buildSubmission(assignmentID: number): Promise<ISubmission | null> {
+        return this.courseProvider.buildSubmission(assignmentID);
     }
 
     public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null> {

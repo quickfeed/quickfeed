@@ -60,6 +60,7 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                 slipdays={this.state.selectedSubmission.submission ? getSlipDays(this.props.allCourseSubmissions, this.state.selectedSubmission.submission, false) : 0}
                 onSubmissionRebuild={() => this.rebuildSubmission()}
                 onSubmissionStatusUpdate={(status: Submission.Status) => this.updateSubmissionStatus(status)}
+                onSubmissionBuild={async () => { return false; }}
             />;
         }
 

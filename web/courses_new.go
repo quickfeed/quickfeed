@@ -31,9 +31,9 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 	if err != nil {
 		return nil, err
 	}
-	if org.GetPaymentPlan() == FreeOrgPlan {
+	/*if org.GetPaymentPlan() == FreeOrgPlan {
 		return nil, ErrFreePlan
-	}
+	}*/
 	repos, err := sc.GetRepositories(ctx, org)
 	if err != nil {
 		return nil, err

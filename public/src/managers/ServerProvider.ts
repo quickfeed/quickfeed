@@ -332,6 +332,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const result = await this.grpcHelper.updateSubmission(courseID, submission);
         return this.responseCodeSuccess(result);
     }
+    public async buildSubmission(assignmentID: number): Promise<ISubmission | null> {
+        const result = await this.grpcHelper.buildSubmission(assignmentID);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return null;
+        }
+        return this.toISubmission(result.data);
+    }
 
     public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null> {
         const result = await this.grpcHelper.rebuildSubmission(assignmentID, submissionID);

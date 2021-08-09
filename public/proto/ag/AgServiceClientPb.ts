@@ -20,6 +20,7 @@ import {
   Assignments,
   AuthorizationResponse,
   Benchmarks,
+  BuildRequest,
   Course,
   CourseRequest,
   CourseSubmissions,
@@ -1165,6 +1166,45 @@ export class AutograderServiceClient {
     request,
     metadata || {},
     this.methodInfoUpdateSubmissions);
+  }
+
+  methodInfoBuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
+    Submission,
+    (request: BuildRequest) => {
+      return request.serializeBinary();
+    },
+    Submission.deserializeBinary
+  );
+
+  buildSubmission(
+    request: BuildRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Submission>;
+
+  buildSubmission(
+    request: BuildRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Submission) => void): grpcWeb.ClientReadableStream<Submission>;
+
+  buildSubmission(
+    request: BuildRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: Submission) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        new URL('/ag.AutograderService/BuildSubmission', this.hostname_).toString(),
+        request,
+        metadata || {},
+        this.methodInfoBuildSubmission,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/ag.AutograderService/BuildSubmission',
+    request,
+    metadata || {},
+    this.methodInfoBuildSubmission);
   }
 
   methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(

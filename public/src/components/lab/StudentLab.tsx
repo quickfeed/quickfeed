@@ -11,6 +11,7 @@ interface IStudentLabProps {
     teacherPageView: boolean;
     onSubmissionStatusUpdate: (status: Submission.Status) => void;
     onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<boolean>;
+    onSubmissionBuild: (assignmentID: number) => Promise<boolean>;
 }
 
 export class StudentLab extends React.Component<IStudentLabProps> {
@@ -23,6 +24,7 @@ export class StudentLab extends React.Component<IStudentLabProps> {
             onSubmissionStatusUpdate={this.props.onSubmissionStatusUpdate}
             onSubmissionRebuild={this.props.onSubmissionRebuild}
             teacherPageView={this.props.teacherPageView}
+            onSubmissionBuild={this.props.onSubmissionBuild}
             >
         </LabResultView>;
     }

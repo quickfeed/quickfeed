@@ -11,11 +11,13 @@ interface ILabInfoProps {
     teacherPageView: boolean;
     onSubmissionStatusUpdate: (status: Submission.Status) => void;
     onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<boolean>;
+    onSubmissionBuild: (assignmentID: number) => Promise<boolean>;
 }
 
 export class LabResultView extends React.Component<ILabInfoProps> {
 
     public render() {
+        console.log(this.props);
         if (this.props.submissionLink.submission) {
             const currentSubmission = this.props.submissionLink.submission;
             const buildLog = currentSubmission.buildInfo.getBuildlog().split("\n").map((x, i) => <span key={i} >{x}<br /></span>);
@@ -55,9 +57,17 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                 </div>
             );
         }
-        return <h1>No submissions yet</h1>;
+        return (
+            <div>
+                <h1>No submissions yet</h1>
+                <button type="button" className="btn btn-primary" onClick={() => {this.buildSubmission()}}>First build</button>
+            </div>
+        );
     }
 
+    private async buildSubmission() {
+        await this.props.onSubmissionBuild(this.props.submissionLink.assignment.getId())
+    }
 
     private reviewersForStudentPage(submission: ISubmission): User[] {
         const reviewers: User[] = [];

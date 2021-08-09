@@ -50,7 +50,9 @@ export class TeacherPage extends ViewPage {
         if (curUser?.getIsadmin() || this.userMan.isTeacher()) {
             this.userMan.isAuthorizedTeacher().then((answer) => {
                 if (!answer) {
-                    window.location.href = "https://" + window.location.hostname + "/auth/github-teacher";
+                    let loc = window.location;
+                    window.location.href = window.location.href = `${loc.protocol}//${loc.hostname}:${loc.port}/auth/github-teacher`;
+                    // window.location.href = "https://" + window.location.hostname + "/auth/github-teacher";
                 }
             });
             return true;

@@ -9,6 +9,45 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+func (s *AutograderService) buildSubmission(request *pb.BuildRequest, user *pb.User) (*pb.Submission, error) {
+	assignment, course, err := s.getAssignmentWithCourse(&pb.Assignment{ID: request.AssignmentID}, false)
+	if err != nil {
+		return nil, err
+	}
+	name := user.GetLogin()
+
+	var repo *pb.Repository
+	if assignment.IsGroupLab {
+		enrollemnt, err := s.db.GetEnrollmentByCourseAndUser(course.GetID(), user.ID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		s.logger.Debugf("Building assignment for group(%d): %s, assignment: %+v, repo: %s",
+			enrollemnt.GetGroupID(), name, assignment, repo.GetHTMLURL())
+		repo, err = s.getGroupRepo(course, enrollemnt.GetGroupID())
+	} else {
+		s.logger.Debugf("Building assignment for user(%d): %s, assignment: %+v, repo: %s",
+			user.GetID(), name, assignment, repo.GetHTMLURL())
+		repo, err = s.getUserRepo(course, user.GetID())
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	runData := &ci.RunData{
+		Course:     course,
+		Assignment: assignment,
+		Repo:       repo,
+		CommitID:   "",
+		JobOwner:   slug.Make(name),
+		Rebuild:    false,
+	}
+	ci.RunTests(s.logger, s.db, s.runner, runData)
+	return s.db.GetSubmission(&pb.Submission{ID: 0})
+}
+
 // rebuildSubmission rebuilds the given assignment and submission.
 func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.Submission, error) {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})

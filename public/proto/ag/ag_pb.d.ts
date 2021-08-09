@@ -1435,6 +1435,24 @@ export namespace SubmissionsForCourseRequest {
   }
 }
 
+export class BuildRequest extends jspb.Message {
+  getAssignmentid(): number;
+  setAssignmentid(value: number): BuildRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): BuildRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: BuildRequest): BuildRequest.AsObject;
+  static serializeBinaryToWriter(message: BuildRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): BuildRequest;
+  static deserializeBinaryFromReader(message: BuildRequest, reader: jspb.BinaryReader): BuildRequest;
+}
+
+export namespace BuildRequest {
+  export type AsObject = {
+    assignmentid: number,
+  }
+}
+
 export class RebuildRequest extends jspb.Message {
   getSubmissionid(): number;
   setSubmissionid(value: number): RebuildRequest;

@@ -575,6 +575,20 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 	return &pb.Void{}, err
 }
 
+func (s *AutograderService) BuildSubmission(ctx context.Context, in *pb.BuildRequest) (*pb.Submission, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("RebuildSubmissions failed: authentication error: %v", err)
+		return nil, ErrInvalidUserInfo
+	}
+	submission, err := s.buildSubmission(in, usr)
+	if err != nil {
+		s.logger.Errorf("RebuildSubmission failed: %v", err)
+		return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission")
+	}
+	return submission, nil
+}
+
 // RebuildSubmission rebuilds the submission with the given ID
 // Access policy: any user.
 func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.RebuildRequest) (*pb.Submission, error) {

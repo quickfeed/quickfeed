@@ -382,6 +382,10 @@ message SubmissionsForCourseRequest {
     bool skipBuildInfo = 3;
 }
 
+message BuildRequest {
+    uint64 assignmentID = 1;
+}
+
 message RebuildRequest {
     uint64 submissionID = 1;
     uint64 assignmentID = 2;
@@ -452,6 +456,7 @@ service AutograderService {
     rpc GetSubmissionsByCourse(SubmissionsForCourseRequest) returns (CourseSubmissions) {}
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
     rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
+    rpc BuildSubmission(BuildRequest) returns (Submission) {}
     rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
     rpc RebuildSubmissions(AssignmentRequest) returns (Void) {}
 

@@ -40,6 +40,7 @@ import {
     Users,
     Void,
     Reviewers,
+    BuildRequest,
 } from "../../proto/ag/ag_pb";
 import { AutograderServiceClient } from "../../proto/ag/AgServiceClientPb";
 import { UserManager } from "./UserManager";
@@ -56,7 +57,8 @@ export class GrpcManager {
     private userMan: UserManager;
 
     constructor() {
-        this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
+        let loc = window.location;
+        this.agService = new AutograderServiceClient(`${loc.protocol}//${loc.hostname}:${loc.port}`, null, null);
     }
 
     public setUserMan(man: UserManager) {
@@ -256,6 +258,12 @@ export class GrpcManager {
         request.setRelease(release);
         request.setApprove(approve);
         return this.grpcSend<Void>(this.agService.updateSubmissions, request);
+    }
+
+    public buildSubmission(assignmentID: number): Promise<IGrpcResponse<Submission>> {
+        const request = new BuildRequest();
+        request.setAssignmentid(assignmentID);
+        return this.grpcSend<Submission>(this.agService.buildSubmission, request);
     }
 
     public rebuildSubmission(assignmentID: number, submissionID: number): Promise<IGrpcResponse<Submission>> {
