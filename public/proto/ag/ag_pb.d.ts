@@ -1410,8 +1410,8 @@ export class SubmissionsForCourseRequest extends jspb.Message {
   getType(): SubmissionsForCourseRequest.Type;
   setType(value: SubmissionsForCourseRequest.Type): SubmissionsForCourseRequest;
 
-  getSkipbuildinfo(): boolean;
-  setSkipbuildinfo(value: boolean): SubmissionsForCourseRequest;
+  getWithbuildinfo(): boolean;
+  setWithbuildinfo(value: boolean): SubmissionsForCourseRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): SubmissionsForCourseRequest.AsObject;
@@ -1425,7 +1425,7 @@ export namespace SubmissionsForCourseRequest {
   export type AsObject = {
     courseid: number,
     type: SubmissionsForCourseRequest.Type,
-    skipbuildinfo: boolean,
+    withbuildinfo: boolean,
   }
 
   export enum Type { 

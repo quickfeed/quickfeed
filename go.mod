@@ -31,7 +31,6 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.30.0 // indirect
 	github.com/prometheus/procfs v0.7.1 // indirect
-	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/urfave/cli v1.22.4
 	github.com/xanzy/go-gitlab v0.50.1
 	go.uber.org/atomic v1.9.0 // indirect
