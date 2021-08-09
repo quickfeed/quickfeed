@@ -1,5 +1,7 @@
+import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb";
 import * as React from "react";
 import { Assignment, Course, Enrollment, Group, Review, User, Submission, GradingBenchmark, GradingCriterion } from "../proto/ag/ag_pb";
+import { formatDate } from "./helper";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "./models";
 
 export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {
@@ -35,7 +37,7 @@ export function sortEnrollmentsByActivity(enrols: Enrollment[]): Enrollment[] {
     enrols.forEach((enrol) => {
         if (enrol.getStatus() === Enrollment.UserStatus.TEACHER) {
             teachers.push(enrol);
-        } else if (enrol.getLastactivitydate() === "") {
+        } else if (enrol.getLastactivitydate() === undefined) {
             inactive.push(enrol);
         } else {
             active.push(enrol);
@@ -359,6 +361,15 @@ export function getDaysAfterDeadline(deadline: Date, delivered: Date): number {
     return after > 0 ? after : 0;
 }
 
+export function formatDelivered(deadline: Date, delivered: Date, showAfterDeadline: boolean): string {
+    const daysAfter = getDaysAfterDeadline(deadline, delivered);
+    const daysAfterString = daysAfter > 0 ? " (" + daysAfter + " days after deadline)" : "";
+    return formatDate(delivered) + (showAfterDeadline ? daysAfterString : "");
+}
+
+export function toDate(ts: Timestamp | undefined): Date {
+    return ts ? ts.toDate() : new Date();
+}
 
 export function legalIndex(i: number, len: number): boolean {
     return i >= 0 && i <= len - 1;

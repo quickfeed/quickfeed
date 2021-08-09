@@ -2,7 +2,7 @@ import * as React from "react";
 import { formatDate } from "../../helper";
 import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
-import { gradedManually, submissionStatusToString, sortSubmissionsByDeadline } from "../../componentHelper";
+import { submissionStatusToString, sortSubmissionsByDeadline, toDate } from "../../componentHelper";
 
 interface ISingleCourseOverviewProps {
     courseAndLabs: IAllSubmissionsForEnrollment;
@@ -43,7 +43,7 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
                     </div>
                     <div className="col-md-2 col-lg-2">
                         <span className="deadline-date">
-                            {formatDate(submissionLink.assignment.getDeadline())}
+                            {formatDate(toDate(submissionLink.assignment.getDeadline()))}
                         </span>
                     </div>
                 </div>;

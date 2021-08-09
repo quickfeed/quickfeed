@@ -3,7 +3,7 @@ import { Assignment, Submission } from "../../../proto/ag/ag_pb";
 import { Row } from "../../components";
 import { formatDate } from "../../helper";
 import { ISubmission } from "../../models";
-import { submissionStatusToString, getDaysAfterDeadline, gradedManually } from "../../componentHelper";
+import { submissionStatusToString, gradedManually, toDate, formatDelivered } from "../../componentHelper";
 
 interface ILastBuildInfoProps {
     submission: ISubmission;
@@ -29,6 +29,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
         const passedAllTests = this.props.submission.passedTests === alltests ? "passing" : "";
         const slipDaysRow = <tr><td key="5">Slip days</td><td key="desc5">{this.props.slipdays}</td></tr>;
         const approvedLine = <tr><td key="6">Approved</td><td key="desc6">{formatDate(this.props.submission.approvedDate)}</td></tr>
+        const deadline = toDate(this.props.assignment.getDeadline());
 
         return (
             <div>
@@ -40,7 +41,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
                                 <tr><td key="status">Status</td><td key="desc_0">{this.setStatusString()}</td></tr>
                                 <tr><td key="1">Delivered</td><td key="desc1">{this.getDeliveredTime()}</td></tr>
                                 {this.showApprovedLine() ? approvedLine : null}
-                                <tr><td key="2">Deadline</td><td key="desc2">{formatDate(this.props.assignment.getDeadline())}</td></tr>
+                                <tr><td key="2">Deadline</td><td key="desc2">{formatDate(deadline)}</td></tr>
                                 <tr><td key="3">Tests passed</td><td key="desc3"><div className={passedAllTests}>{this.props.submission.passedTests} / {alltests}</div></td></tr>
                                 <tr><td key="4">Execution time</td><td key="desc4">{this.formatTime(this.props.submission.buildInfo.getExectime())} seconds </td></tr>
                                 {this.props.assignment.getIsgrouplab() ? null : slipDaysRow}
@@ -57,20 +58,14 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
     }
 
     private getDeliveredTime(): JSX.Element {
-        const deadline = new Date(this.props.assignment.getDeadline());
+        const deadline = toDate(this.props.assignment.getDeadline());
         const delivered = this.props.submission.buildDate;
         const showAfterDeadline = this.props.teacherView && this.props.submission.status !== Submission.Status.APPROVED
         let classString = "";
         if (delivered >= deadline && showAfterDeadline) {
             classString = "past-deadline";
         }
-        return <div className={classString}>{this.formatDelivered(deadline, delivered, showAfterDeadline)}</div>;
-    }
-
-    private formatDelivered(deadline: Date, delivered: Date, showAfterDeadline: boolean): string {
-        const daysAfter = getDaysAfterDeadline(deadline, delivered);
-        const daysAfterString = daysAfter > 0 ? " (" + daysAfter + " days after deadline)" : "";
-        return formatDate(delivered) + (showAfterDeadline ? daysAfterString : "");
+        return <div className={classString}>{formatDelivered(deadline, delivered, showAfterDeadline)}</div>;
     }
 
     private formatTime(executionTime: number): number {

@@ -11,7 +11,7 @@ import { ActionType, UserView } from "./views/UserView";
 
 import { Assignment, Enrollment, User } from "../../proto/ag/ag_pb";
 import { formatDate } from "../helper";
-import { sortUsersByAdminStatus } from "../componentHelper";
+import { sortUsersByAdminStatus, toDate } from "../componentHelper";
 
 export class AdminPage extends ViewPage {
     private navMan: NavigationManager;
@@ -116,7 +116,7 @@ export class AdminPage extends ViewPage {
                         lab.getId().toString(),
                         lab.getName(),
                         lab.getIsgrouplab() ? "Group lab" : "Individual",
-                        formatDate(lab.getDeadline()),
+                        formatDate(toDate(lab.getDeadline())),
                     ]}>
                 </DynamicTable>
             </div>);

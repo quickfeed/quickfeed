@@ -4,7 +4,7 @@ import { DynamicTable } from "../../components";
 import { formatDate } from "../../helper";
 import { NavigationManager } from "../../managers/NavigationManager";
 import { ISubmissionLink } from "../../models";
-import { setScoreString } from "../../componentHelper";
+import { setScoreString, toDate } from "../../componentHelper";
 
 interface IPanelProps {
     course: Course;
@@ -36,7 +36,7 @@ export class CoursePanel extends React.Component<IPanelProps> {
                                 return [
                                     item.assignment.getName(),
                                     score,
-                                    formatDate(item.assignment.getDeadline()),
+                                    formatDate(toDate(item.assignment.getDeadline())),
                                 ];
                             }}
                             onRowClick={(lab: ISubmissionLink) => {

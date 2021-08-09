@@ -21,7 +21,6 @@ import {
     IAllSubmissionsForEnrollment,
     ISubmissionLink,
     ISubmission,
-    IUser,
 } from "../models";
 
 import { HttpHelper } from "../HttpHelper";
@@ -32,6 +31,7 @@ import {
     IUserProvider,
 } from "../managers";
 import { ILogger } from "./LogManager";
+import { toDate } from "../componentHelper";
 interface IEndpoints {
     user: string;
     auth: string;
@@ -423,14 +423,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     private toISubmission(sbm: Submission): ISubmission {
-        let buildInfo = sbm.getBuildinfo();
-        if (!buildInfo) {
-            // TODO(meling) This seems a bit useless. How to avoid?
-            buildInfo = new BuildInfo();
-            buildInfo.setBuilddate("2017-07-28");
-            buildInfo.setBuildlog("No automated tests for this assignment");
-            buildInfo.setExectime(1);
-        }
+        const bInfo = sbm.getBuildinfo()
+        const buildInfo = bInfo ? bInfo : new BuildInfo();
         const scores = sbm.getScoresList();
         // TODO(meling) This notion of passed vs failed tests is perhaps not what we want.
         // Should be added to the ag/Submission message and be controlled on server-side.
@@ -452,7 +446,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             passedTests: passed,
             failedTests: failed,
             score: sbm.getScore(),
-            buildDate: new Date(buildInfo.getBuilddate()),
+            buildDate: toDate(buildInfo.getBuilddate()),
             buildInfo,
             testCases: scores,
             reviews: sbm.getReviewsList(),

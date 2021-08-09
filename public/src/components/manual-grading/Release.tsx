@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from "../../../proto/ag/ag_pb";
-import { userSubmissionLink, setDivider, submissionStatusSelector, getDaysAfterDeadline, gradedManually, scoreFromReviews } from "../../componentHelper";
+import { userSubmissionLink, setDivider, submissionStatusSelector, gradedManually, scoreFromReviews, toDate, formatDelivered } from "../../componentHelper";
 import { ISubmission } from "../../models";
 import { formatDate } from "../../helper";
 import ReactTooltip from "react-tooltip";
@@ -86,16 +86,17 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private infoTable(): JSX.Element {
-        const afterDeadline = this.props.submission ? getDaysAfterDeadline(new Date(this.props.assignment.getDeadline()), this.props.submission.buildDate) : -1;
+        const deadline = toDate(this.props.assignment.getDeadline());
+        const delivered = this.props.submission ? formatDelivered(deadline, this.props.submission.buildDate, true) : "Not delivered";
         return <div className="row">
             <div className="col-md-6 release-info">
                 <ul className="list-group">
                     <li key="li0" className="list-group-item r-li">
                         <span className="r-table">Deadline: </span>
-                            {formatDate(this.props.assignment.getDeadline())}</li>
+                            {formatDate(deadline)}</li>
                     <li key="li1" className="list-group-item r-li">
                         <span className="r-table">Delivered: </span>
-                            {this.props.submission ? formatDate(this.props.submission.buildDate) + (afterDeadline > 0 ? "   (" + afterDeadline + " days after deadline)" : "") : "Not delivered"}</li>
+                            {delivered}</li>
                     <li key="li3" className="list-group-item r-li">
                         <span className="r-table">Repository: </span>
                         {userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL, "btn btn-default")}</li>
@@ -105,7 +106,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             <div className="col-md-6">
                 <table className="table">
                     <thead><tr key="it">
-                            <td key="itd1" >Reviewers:</td>
+                            <td key="itd1">Reviewers:</td>
                             <td key="itd3">Status:</td>
                             <td key="itd2">Score:</td>
                         </tr></thead>
