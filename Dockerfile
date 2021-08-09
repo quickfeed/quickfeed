@@ -14,5 +14,4 @@ ADD . /quickfeed
 WORKDIR /quickfeed
 RUN make devtools && make ui && make proto && make install
 
-EXPOSE 8080
 ENTRYPOINT ["quickfeed"]
