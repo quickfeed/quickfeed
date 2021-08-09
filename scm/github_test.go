@@ -2,7 +2,6 @@ package scm_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/autograde/quickfeed/scm"
@@ -10,51 +9,43 @@ import (
 )
 
 const (
-	serverURL       = "https://53c51fa9.ngrok.io"
-	gitHubTestOrg   = "autograder-test"
-	// gitHubTestOrgID = 30462712
-	secret          = "the-secret-autograder-test"
+	qf101Org   = "qf101"
+	qf101OrdID = 77283363
+	secret     = "the-secret-quickfeed-test"
 )
 
-// To enable this test, please see instructions in the developer guide (dev.md).
-// You will also need access to the autograder-test organization; you may request
-// access by sending your GitHub username to hein.meling at uis.no.
+// To run this test, please see instructions in the developer guide (dev.md).
 
 // These tests only test listing existing hooks and creating a new one.
 // They do not cover processing push events on a server.
 // See web/hooks package for tests involving processing push events.
 
 func TestGetOrganization(t *testing.T) {
-	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
-	if len(accessToken) < 1 {
-		t.Skip("This test requires a 'GITHUB_ACCESS_TOKEN' and access to the 'autograder-test' GitHub organization")
-	}
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
 
-	var s scm.SCM
 	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx := context.Background()
-	orgOpts := &scm.GetOrgOptions{
-		ID:       0,
-		Name:     "dat320-2020",
-		Username: "meling",
-	}
-	org, err := s.GetOrganization(ctx, orgOpts)
+	org, err := s.GetOrganization(context.Background(), &scm.GetOrgOptions{Name: qfTestOrg})
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("org: %v", org)
+	if qfTestOrg == qf101Org {
+		if org.ID != qf101OrdID {
+			t.Errorf("scm.GetOrganization('%s') = %d, expected %d", qfTestOrg, org.ID, qf101OrdID)
+		}
+	} else {
+		// Otherwise we just print the organization result
+		t.Logf("org: %v", org)
+	}
 }
 
 func TestListHooks(t *testing.T) {
-	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
-	if len(accessToken) < 1 {
-		t.Skip("This test requires a 'GITHUB_ACCESS_TOKEN' and access to the 'autograder-test' GitHub organization")
-	}
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
 
-	var s scm.SCM
 	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
@@ -62,18 +53,20 @@ func TestListHooks(t *testing.T) {
 
 	ctx := context.Background()
 
-	hooks, err := s.ListHooks(ctx, nil, gitHubTestOrg)
+	hooks, err := s.ListHooks(ctx, nil, qfTestOrg)
 	if err != nil {
 		t.Fatal(err)
 	}
+	// We don't actually test anything here since we don't know how which hooks might be registered
 	for _, hook := range hooks {
 		t.Logf("hook: %v", hook)
 	}
 
-	hooks, err = s.ListHooks(ctx, &scm.Repository{Owner: gitHubTestOrg, Path: "tests"}, "")
+	hooks, err = s.ListHooks(ctx, &scm.Repository{Owner: qfTestOrg, Path: "tests"}, "")
 	if err != nil {
 		t.Fatal(err)
 	}
+	// We don't actually test anything here since we don't know how which hooks might be registered
 	for _, hook := range hooks {
 		t.Logf("hook: %v", hook)
 	}
@@ -82,17 +75,19 @@ func TestListHooks(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error 'ListHooks: called with missing or incompatible arguments: ...'")
 	}
+	// We don't actually test anything here since we don't know how which hooks might be registered
 	t.Logf("%v %v", hooks, err)
 }
 
 func TestCreateHook(t *testing.T) {
-	t.Skip("Disabled for now; need to add new method DeleteHook() before enabling again")
-	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
-	if len(accessToken) < 1 {
-		t.Skip("This test requires a 'GITHUB_ACCESS_TOKEN' and access to the 'autograder-test' GitHub organization")
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
+	serverURL := scm.GetWebHookServer(t)
+	// Only enable this test to add a new webhook to your test course organization
+	if serverURL == "" {
+		t.Skip("Disabled pending support for deleting webhooks")
 	}
 
-	var s scm.SCM
 	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
@@ -103,7 +98,7 @@ func TestCreateHook(t *testing.T) {
 	opt := &scm.CreateHookOptions{
 		URL:        serverURL,
 		Secret:     secret,
-		Repository: &scm.Repository{Owner: gitHubTestOrg, Path: "tests"},
+		Repository: &scm.Repository{Owner: qfTestOrg, Path: "tests"},
 	}
 	err = s.CreateHook(ctx, opt)
 	if err != nil {
@@ -114,6 +109,7 @@ func TestCreateHook(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// We don't actually test anything here since we don't know how which hooks might be registered
 	for _, hook := range hooks {
 		t.Logf("hook: %v", hook)
 	}

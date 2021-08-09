@@ -1,6 +1,9 @@
 package ag
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // Default repository names.
 const (
@@ -13,6 +16,27 @@ const (
 // StudentRepoName returns the name of the given student's repository.
 func StudentRepoName(userName string) string {
 	return userName + StudentRepoSuffix
+}
+
+type RepoURL struct {
+	ProviderURL  string
+	Organization string
+}
+
+func (r RepoURL) InfoRepoURL() string {
+	return fmt.Sprintf("https://%s/%s/%s.git", r.ProviderURL, r.Organization, InfoRepo)
+}
+
+func (r RepoURL) AssignmentsRepoURL() string {
+	return fmt.Sprintf("https://%s/%s/%s.git", r.ProviderURL, r.Organization, AssignmentRepo)
+}
+
+func (r RepoURL) StudentRepoURL(userName string) string {
+	return fmt.Sprintf("https://%s/%s/%s.git", r.ProviderURL, r.Organization, StudentRepoName(userName))
+}
+
+func (r RepoURL) TestsRepoURL() string {
+	return fmt.Sprintf("https://%s/%s/%s.git", r.ProviderURL, r.Organization, TestsRepo)
 }
 
 // IsCourseRepo returns true if the repository is one of the course repo types.

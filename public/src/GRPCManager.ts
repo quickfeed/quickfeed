@@ -313,11 +313,11 @@ export class GrpcManager {
         return this.grpcSend<Review>(this.agService.createReview, request);
     }
 
-    public updateReview(r: Review, courseID: number): Promise<IGrpcResponse<Void>> {
+    public updateReview(r: Review, courseID: number): Promise<IGrpcResponse<Review>> {
         const request = new ReviewRequest();
         request.setReview(r);
         request.setCourseid(courseID);
-        return this.grpcSend<Void>(this.agService.updateReview, request);
+        return this.grpcSend<Review>(this.agService.updateReview, request);
     }
 
     public getReviewers(submissionID: number, courseID: number): Promise<IGrpcResponse<Reviewers>> {

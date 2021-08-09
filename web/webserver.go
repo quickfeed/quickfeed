@@ -28,10 +28,8 @@ var (
 	idleTimeout  = 5 * time.Minute
 )
 
-
-
 // New starts a new web server
-func New(ags *AutograderService, public, httpAddr, scriptPath string, fake bool) {
+func New(ags *AutograderService, public, httpAddr string, fake bool) {
 	entryPoint := filepath.Join(public, "index.html")
 	if _, err := os.Stat(entryPoint); os.IsNotExist(err) {
 		ags.logger.Fatalf("file not found %s", entryPoint)
@@ -39,25 +37,25 @@ func New(ags *AutograderService, public, httpAddr, scriptPath string, fake bool)
 
 	store := newStore([]byte("secret"))
 	gothic.Store = store
-	e := newServer(ags, ags.logger, store)
+	e := newServer(ags, store)
 
 	enabled := enableProviders(ags.logger, ags.bh.BaseURL, fake)
-	registerWebhooks(ags, e, enabled, scriptPath)
+	registerWebhooks(ags, e, enabled)
 	registerAuth(ags, e)
 
 	registerFrontend(e, entryPoint, public)
 	runWebServer(ags.logger, e, httpAddr)
 }
 
-func newServer(ags *AutograderService, l *zap.SugaredLogger, store sessions.Store) *echo.Echo {
+func newServer(ags *AutograderService, store sessions.Store) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(
 		middleware.Recover(),
-		Logger(l.Desugar()),
+		Logger(ags.logger.Desugar()),
 		middleware.Secure(),
 		session.Middleware(store),
-		auth.AccessControl(l.Desugar(), ags.db, ags.scms),
+		auth.AccessControl(ags.logger.Desugar(), ags.db, ags.scms),
 	)
 	return e
 }
@@ -115,7 +113,7 @@ func enableProviders(l *zap.SugaredLogger, baseURL string, fake bool) map[string
 	return enabled
 }
 
-func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]bool, scriptPath string) {
+func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]bool) {
 	if enabled["github"] {
 		ghHook := hooks.NewGitHubWebHook(ags.logger, ags.db, ags.runner, ags.bh.Secret)
 		e.POST("/hook/github/events", func(c echo.Context) error {
@@ -124,7 +122,7 @@ func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]b
 		})
 	}
 	if enabled["gitlab"] {
-		//TODO(meling) fix gitlab
+		// TODO(meling) fix gitlab
 		glHook := hooks.NewGitHubWebHook(ags.logger, ags.db, ags.runner, ags.bh.Secret)
 		e.POST("/hook/gitlab/events", func(c echo.Context) error {
 			glHook.Handle(c.Response(), c.Request())

@@ -26,16 +26,16 @@ import (
 //     there generate a new token. Copy this token to the GITHUB_ACCESS_TOKEN
 //     environment variable.
 //
-// Example usage if you have an organization on github called autograder-test:
-// % scm --provider github get repo -all -namespace autograder-test
+// Example usage if you have an organization on github called qf101:
+// % scm --provider github get repo -all -namespace qf101
 // OR
-// % scm get repo -all -namespace autograder-test
+// % scm get repo -all -namespace qf101
 //
 // Another example usage to delete all repos in organization on github
-// % scm delete repo -all -namespace autograder-test
+// % scm delete repo -all -namespace qf101
 //
 // Here is an example usage for creating a team with two members
-// % scm create team -namespace autograder-test -team teachers -users s111,meling
+// % scm create team -namespace qf101 -team teachers -users s111,meling
 //
 // Here is how to fetch the login name of a specific user id:
 // % scm get user -id 810999
@@ -191,6 +191,10 @@ func main() {
 						cli.StringFlag{
 							Name:  "repo",
 							Usage: "Repository name. [required by GitHub]",
+						},
+						cli.StringFlag{
+							Name:  "org",
+							Usage: "Github organization [for organization level hooks]",
 						},
 						cli.StringFlag{
 							Name:  "secret",
@@ -402,8 +406,9 @@ func createHook(client *scm.SCM) cli.ActionFunc {
 
 	return func(c *cli.Context) error {
 		return (*client).CreateHook(ctx, &scm.CreateHookOptions{
-			URL:    c.String("url"),
-			Secret: c.String("secret"),
+			URL:          c.String("url"),
+			Secret:       c.String("secret"),
+			Organization: c.String("org"),
 			Repository: &scm.Repository{
 				ID:    c.Uint64("id"),
 				Path:  c.String("repo"),

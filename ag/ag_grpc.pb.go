@@ -57,7 +57,7 @@ type AutograderServiceClient interface {
 	UpdateCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*Void, error)
 	DeleteCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*Void, error)
 	CreateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error)
-	UpdateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Void, error)
+	UpdateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error)
 	GetReviewers(ctx context.Context, in *SubmissionReviewersRequest, opts ...grpc.CallOption) (*Reviewers, error)
 	LoadCriteria(ctx context.Context, in *LoadCriteriaRequest, opts ...grpc.CallOption) (*Benchmarks, error)
 	GetProviders(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Providers, error)
@@ -398,8 +398,8 @@ func (c *autograderServiceClient) CreateReview(ctx context.Context, in *ReviewRe
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) UpdateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error) {
+	out := new(Review)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateReview", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -504,7 +504,7 @@ type AutograderServiceServer interface {
 	UpdateCriterion(context.Context, *GradingCriterion) (*Void, error)
 	DeleteCriterion(context.Context, *GradingCriterion) (*Void, error)
 	CreateReview(context.Context, *ReviewRequest) (*Review, error)
-	UpdateReview(context.Context, *ReviewRequest) (*Void, error)
+	UpdateReview(context.Context, *ReviewRequest) (*Review, error)
 	GetReviewers(context.Context, *SubmissionReviewersRequest) (*Reviewers, error)
 	LoadCriteria(context.Context, *LoadCriteriaRequest) (*Benchmarks, error)
 	GetProviders(context.Context, *Void) (*Providers, error)
@@ -626,7 +626,7 @@ func (UnimplementedAutograderServiceServer) DeleteCriterion(context.Context, *Gr
 func (UnimplementedAutograderServiceServer) CreateReview(context.Context, *ReviewRequest) (*Review, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateReview not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateReview(context.Context, *ReviewRequest) (*Void, error) {
+func (UnimplementedAutograderServiceServer) UpdateReview(context.Context, *ReviewRequest) (*Review, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateReview not implemented")
 }
 func (UnimplementedAutograderServiceServer) GetReviewers(context.Context, *SubmissionReviewersRequest) (*Reviewers, error) {

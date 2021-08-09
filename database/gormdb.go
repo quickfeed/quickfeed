@@ -44,8 +44,7 @@ type GormDB struct {
 // NewGormDB creates a new gorm database using the provided driver.
 func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 	conn, err := gorm.Open(sqlite.Open(path), &gorm.Config{
-		Logger:                                   NewGORMLogger(logger),
-		DisableForeignKeyConstraintWhenMigrating: true, // TODO(meling) remove when starting a new database
+		Logger: NewGORMLogger(logger),
 	})
 	if err != nil {
 		return nil, err

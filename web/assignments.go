@@ -12,7 +12,10 @@ import (
 	"github.com/autograde/quickfeed/scm"
 )
 
-var criteriaFile = "criteria.json"
+var (
+	criteriaFile = "criteria.json"
+	reviewLayout = "02 Jan 15:04"
+)
 
 // getAssignments lists the assignments for the provided course.
 func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, error) {
@@ -126,8 +129,8 @@ func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, reques
 	return benchmarks, nil
 }
 
-func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
-	submission, err := s.db.GetSubmission(&pb.Submission{ID: query.SubmissionID})
+func (s *AutograderService) createReview(review *pb.Review) (*pb.Review, error) {
+	submission, err := s.db.GetSubmission(&pb.Submission{ID: review.SubmissionID})
 	if err != nil {
 		return nil, err
 	}
@@ -139,19 +142,58 @@ func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
 		return nil, fmt.Errorf("Failed to create a new review for submission %d to assignment %s: all %d reviews already created",
 			submission.ID, assignment.Name, assignment.Reviewers)
 	}
-	query.Edited = time.Now().Format("02 Jan 15:04")
-	if err := s.db.CreateReview(query); err != nil {
+	review.Edited = time.Now().Format(reviewLayout)
+	review.ComputeScore()
+
+	for _, bm := range review.GradingBenchmarks {
+		bm.ID = 0
+		for _, c := range bm.Criteria {
+			c.ID = 0
+		}
+	}
+	if err := s.db.CreateReview(review); err != nil {
 		return nil, err
 	}
-	return query, nil
+
+	return review, nil
 }
 
-func (s *AutograderService) updateReview(query *pb.Review) error {
-	if query.ID == 0 {
-		return fmt.Errorf("Cannot update review with empty ID")
+func (s *AutograderService) updateReview(review *pb.Review) (*pb.Review, error) {
+	if review.ID == 0 {
+		return nil, fmt.Errorf("Cannot update review with empty ID")
 	}
-	query.Edited = time.Now().Format("02 Jan 15:04")
-	return s.db.UpdateReview(query)
+	submission, err := s.db.GetSubmission(&pb.Submission{ID: review.SubmissionID})
+	if err != nil {
+		return nil, err
+	}
+
+	review.Edited = time.Now().Format(reviewLayout)
+	review.ComputeScore()
+
+	if err := s.db.UpdateReview(review); err != nil {
+		return nil, err
+	}
+
+	for _, bm := range review.GradingBenchmarks {
+		if err := s.db.UpdateBenchmark(bm); err != nil {
+			return nil, err
+		}
+		for _, c := range bm.Criteria {
+			if err := s.db.UpdateCriterion(c); err != nil {
+				return nil, err
+			}
+		}
+	}
+	if submission.Released {
+		// Updated review will most probably have a new score. Update the submission score as well
+		// for submissions with released review.
+		submission.Score = review.Score
+		if err := s.db.UpdateSubmission(submission); err != nil {
+			return nil, err
+		}
+	}
+
+	return review, nil
 }
 
 func (s *AutograderService) removeOldCriteriaAndReviews(assignment *pb.Assignment) error {

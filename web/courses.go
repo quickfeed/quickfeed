@@ -137,12 +137,6 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 	if err != nil {
 		return nil, err
 	}
-	for _, sbm := range submissions {
-		err = sbm.MakeSubmissionReviews()
-		if err != nil {
-			return nil, err
-		}
-	}
 	return &pb.Submissions{Submissions: submissions}, nil
 }
 
@@ -150,12 +144,14 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
 func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
-	var getCourseSubFn func(uint64, pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error)
-	if request.GetSkipBuildInfo() {
-		getCourseSubFn = s.db.GetCourseAssignmentsWithSubmissionsNoBuildInfo
-	} else {
-		getCourseSubFn = s.db.GetAssignmentsWithSubmissions
-	}
+	// TODO(meling) the NoBuildInfo variant is not in the database.Database interface; but we should avoid two methods for this anyway
+	// var getCourseSubFn func(uint64, pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error)
+	// if request.GetSkipBuildInfo() {
+	// 	getCourseSubFn = s.db.GetCourseAssignmentsWithSubmissionsNoBuildInfo
+	// } else {
+	// 	getCourseSubFn = s.db.GetAssignmentsWithSubmissions
+	// }
+	getCourseSubFn := s.db.GetAssignmentsWithSubmissions
 	assignments, err := getCourseSubFn(request.GetCourseID(), request.Type)
 	if err != nil {
 		return nil, err
@@ -173,11 +169,6 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 				// TODO(meling) Check if this is enough: @Oskar and @BK
 				sbm.BuildInfo = &score.BuildInfo{}
 				sbm.Scores = []*score.Score{}
-			} else {
-				err = sbm.MakeSubmissionReviews()
-				if err != nil {
-					return nil, err
-				}
 			}
 		}
 	}
