@@ -49,8 +49,13 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 			logger.Debugf("Failed to update dockerfile for course %s: %s", course.Name, err)
 			return
 		}
+		job := ci.BuildImageJob{
+			Dockerfile: dockerfile,
+			CourseCode: course.Code,
+		}
 		for k := range images {
-			runner.BuildImage(context.Background(), k, dockerfile, course.Code)
+			job.ImageName = k
+			runner.BuildImage(context.Background(), job)
 		}
 
 	}

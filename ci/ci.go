@@ -14,9 +14,15 @@ type Job struct {
 	Commands []string
 }
 
+type BuildImageJob struct {
+	CourseCode string
+	Dockerfile string
+	ImageName  string
+}
+
 // Runner contains methods for running user provided code in isolation.
 type Runner interface {
 	// Run should synchronously execute the described job and return the output.
 	Run(context.Context, *Job) (string, error)
-	BuildImage(context.Context, string, string, string) error
+	BuildImage(context.Context, BuildImageJob) error
 }
