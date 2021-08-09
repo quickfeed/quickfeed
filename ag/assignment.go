@@ -6,7 +6,6 @@ import (
 
 const (
 	days = time.Duration(24 * time.Hour)
-	zero = time.Duration(0)
 )
 
 // SinceDeadline returns the duration since the deadline.
