@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
@@ -14,7 +15,7 @@ import (
 )
 
 // UpdateFromTestsRepo updates the database record for the course assignments.
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *pb.Repository, course *pb.Course) {
+func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db database.Database, repo *pb.Repository, course *pb.Course) {
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), pb.TestsRepo)
 	s, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
 	if err != nil {
@@ -26,20 +27,33 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
 		return
 	}
+	images := make(map[string]bool)
 	for _, assignment := range assignments {
 		logger.Debugf("Found assignment in '%s' repository: %v", pb.TestsRepo, assignment)
+		if assignment.ScriptFile == "" {
+			logger.Debugf("No scriptfile for assignment %s of course %s", assignment.Name, course.Code)
+			continue
+		}
+		s := strings.Split(assignment.ScriptFile, "\n")
+		parts := strings.Split(s[0], "#image/")
+		if len(parts) < 2 {
+			logger.Debugf("no docker image specified in script template for assignment %s of course %s", assignment.Name, course.Code)
+		}
+		images[parts[1]] = true
 	}
 
 	if dockerfile != "" {
-		logger.Debugf("Found Dockerfile for course %s", course.Name)
+		logger.Debugf("Fetched Dockerfile for course %s", course.Name)
 		course.Dockerfile = dockerfile
 		if err := db.UpdateCourse(course); err != nil {
 			logger.Debugf("Failed to update dockerfile for course %s: %s", course.Name, err)
 			return
 		}
-		// TODO(vera): build image
-	}
+		for k := range images {
+			runner.BuildImage(context.Background(), k, dockerfile, course.Code)
+		}
 
+	}
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)

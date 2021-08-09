@@ -100,6 +100,20 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	return stdout.String(), nil
 }
 
+func (d *Docker) BuildImage(ctx context.Context, image, dockerfile, course string) error {
+	d.logger.Debugf("Building docker image %s for course %s", image, course)
+	if d.client == nil {
+		return fmt.Errorf("error building image %s: docker client not initialized", image)
+	}
+	if err := d.pullImage(ctx, image); err != nil {
+		d.logger.Errorf("Failed to pull image '%s' from docker.io: %v", image, err)
+		if err := d.buildImage(ctx, dockerfile, image); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // createImage creates an image for the given job.
 func (d *Docker) createImage(ctx context.Context, job *Job) (*container.ContainerCreateCreatedBody, error) {
 	create := func() (container.ContainerCreateCreatedBody, error) {

@@ -70,6 +70,7 @@ func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse script template: %w", err)
 	}
+	fmt.Printf("Parsed scriptfile to a new Job: %+v\n", job)
 
 	job.Name = rData.String(info.RandomSecret[:6])
 	start := time.Now()

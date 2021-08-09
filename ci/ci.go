@@ -18,4 +18,5 @@ type Job struct {
 type Runner interface {
 	// Run should synchronously execute the described job and return the output.
 	Run(context.Context, *Job) (string, error)
+	BuildImage(context.Context, string, string, string) error
 }
