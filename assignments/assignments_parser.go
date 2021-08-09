@@ -114,12 +114,18 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 				}
 
 			case scriptFile:
+				log.Println("Reading scriptfile")
 				// save per assignment, or for each assignment if in scripts/
-				script, err := ioutil.ReadFile(path)
+				t, err := template.ParseFiles(path)
 				if err != nil {
-					return fmt.Errorf("could not to read %q file: %w", filename, err)
+					log.Printf("Error reading script file %s: %s", path, err.Error())
+					return err
 				}
-				scriptString := string(script)
+				buffer := new(bytes.Buffer)
+				if err := t.Execute(buffer, info); err != nil {
+					return err
+				}
+				scriptString := buffer.String()
 				location := filepath.Base(filepath.Dir(filename))
 				if location == scriptFolder {
 					defaultScript = scriptString
@@ -137,7 +143,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 					}
 				}
 			case dockerfile:
-				log.Println("Parsing dockerfile")
+				log.Println("Readung dockerfile")
 				// tmplFile := filepath.Join(scriptPath, info.Script)
 				t, err := template.ParseFiles(path)
 				if err != nil {
