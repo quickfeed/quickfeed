@@ -110,6 +110,15 @@ sudo service docker restart
 % make envoy-config
 ```
 
+Note that you may need to disable NGINX on Ubuntu:
+
+```sh
+# Temporarily stop running NGINX
+% sudo systemctl stop nginx
+# Permanently disable NGINX
+% sudo systemctl disable nginx
+```
+
 ### Running with Locally Installed Envoy (macOS homebrew)
 
 ```sh
