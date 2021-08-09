@@ -12,13 +12,8 @@ const (
 // SinceDeadline returns the duration since the deadline.
 // A positive duration means the deadline has passed, whereas
 // a negative duration means the deadline has not yet passed.
-func (a *Assignment) SinceDeadline(now time.Time) (time.Duration, error) {
-	deadline, err := time.ParseInLocation(TimeLayout, a.GetDeadline(), now.Location())
-	if err != nil {
-		// this should not happen if deadlines are parsed and recorded correctly
-		return zero, err
-	}
-	return now.Sub(deadline), nil
+func (a *Assignment) SinceDeadline(now time.Time) time.Duration {
+	return now.Sub(a.GetDeadline().AsTime())
 }
 
 // IsApproved returns an approved submission status if this assignment is already approved

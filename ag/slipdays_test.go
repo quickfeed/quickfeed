@@ -29,7 +29,7 @@ var (
 		return &pb.Assignment{
 			CourseID:   course.ID,
 			ScoreLimit: 60,
-			Deadline:   testNow.Add(time.Duration(daysFromNow) * days).Format(pb.TimeLayout),
+			Deadline:   timestamppb.New(testNow.Add(time.Duration(daysFromNow) * days)),
 		}
 	}
 )
@@ -204,38 +204,15 @@ func TestScoreLimitSlipDays(t *testing.T) {
 	}
 }
 
-func TestBadDeadlineFormat(t *testing.T) {
-	enrol := &pb.Enrollment{
-		Course:       course,
-		CourseID:     course.ID,
-		UsedSlipDays: make([]*pb.UsedSlipDays, 0),
-	}
-	// lab1's deadline is incorrectly formatted
-	lab1 := &pb.Assignment{
-		CourseID: course.ID,
-		Deadline: "14-Sep-2020",
-	}
-	lab1.ID = 1
-	submission := &pb.Submission{
-		AssignmentID: lab1.ID, Status: pb.Submission_NONE,
-		BuildInfo: &score.BuildInfo{BuildDate: timestamppb.New(testNow)},
-	}
-	err := enrol.UpdateSlipDays(lab1, submission)
-	if err == nil {
-		t.Errorf("expected parsing error due to incorrect deadline date format")
-	}
-}
-
 func TestMismatchingAssignmentID(t *testing.T) {
 	enrol := &pb.Enrollment{
 		Course:       course,
 		CourseID:     course.ID,
 		UsedSlipDays: make([]*pb.UsedSlipDays, 0),
 	}
-	// lab1's deadline is incorrectly formatted
 	lab1 := &pb.Assignment{
 		CourseID: course.ID,
-		Deadline: testNow.Add(time.Duration(2) * days).Format(pb.TimeLayout),
+		Deadline: timestamppb.New(testNow.Add(time.Duration(2) * days)),
 	}
 	lab1.ID = 1
 	submission := &pb.Submission{
@@ -254,10 +231,9 @@ func TestMismatchingCourseID(t *testing.T) {
 		CourseID:     course.ID,
 		UsedSlipDays: make([]*pb.UsedSlipDays, 0),
 	}
-	// lab1's deadline is incorrectly formatted
 	lab1 := &pb.Assignment{
 		CourseID: course.ID + 1,
-		Deadline: testNow.Add(time.Duration(2) * days).Format(pb.TimeLayout),
+		Deadline: timestamppb.New(testNow.Add(time.Duration(2) * days)),
 	}
 	lab1.ID = 1
 	submission := &pb.Submission{
@@ -309,10 +285,7 @@ func TestEnrollmentGetUsedSlipDays(t *testing.T) {
 func TestSlipDaysWGracePeriod(t *testing.T) {
 	lab := a(0)
 	lab.ID = 1
-	timeOfDeadline, err := time.Parse(pb.TimeLayout, lab.Deadline)
-	if err != nil {
-		t.Fatal(err)
-	}
+	timeOfDeadline := lab.GetDeadline().AsTime()
 	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab.ID}
 	submissionTimes := []struct {
 		delivered    time.Time

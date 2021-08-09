@@ -9,8 +9,9 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestParseWithInvalidDir(t *testing.T) {
@@ -79,7 +80,7 @@ func TestParse(t *testing.T) {
 	wantAssignment1 := &pb.Assignment{
 		Name:        "lab1",
 		ScriptFile:  "go.sh",
-		Deadline:    "2017-08-27T12:00:00",
+		Deadline:    qtest.Timestamp(t, "2017-08-27T12:00:00"),
 		AutoApprove: false,
 		Order:       1,
 		ScoreLimit:  80,
@@ -88,7 +89,7 @@ func TestParse(t *testing.T) {
 	wantAssignment2 := &pb.Assignment{
 		Name:        "lab2",
 		ScriptFile:  "java.sh",
-		Deadline:    "2018-08-27T12:00:00",
+		Deadline:    qtest.Timestamp(t, "2018-08-27T12:00:00"),
 		AutoApprove: false,
 		Order:       2,
 		ScoreLimit:  80,
@@ -101,10 +102,10 @@ func TestParse(t *testing.T) {
 	if len(assignments) != 2 {
 		t.Errorf("len(assignments) = %d, want %d", len(assignments), 2)
 	}
-	if diff := cmp.Diff(assignments[0], wantAssignment1, cmpopts.IgnoreUnexported(pb.Assignment{})); diff != "" {
+	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
 		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(assignments[1], wantAssignment2, cmpopts.IgnoreUnexported(pb.Assignment{})); diff != "" {
+	if diff := cmp.Diff(assignments[1], wantAssignment2, protocmp.Transform()); diff != "" {
 		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -137,7 +138,7 @@ func TestParseUnknownFields(t *testing.T) {
 	wantAssignment1 := &pb.Assignment{
 		Name:        "lab1",
 		ScriptFile:  "go.sh",
-		Deadline:    "2017-08-27T12:00:00",
+		Deadline:    qtest.Timestamp(t, "2017-08-27T12:00:00"),
 		AutoApprove: false,
 		Order:       1,
 		ScoreLimit:  80,
@@ -150,7 +151,7 @@ func TestParseUnknownFields(t *testing.T) {
 	if len(assignments) != 1 {
 		t.Errorf("len(assignments) = %d, want %d", len(assignments), 1)
 	}
-	if diff := cmp.Diff(assignments[0], wantAssignment1, cmpopts.IgnoreUnexported(pb.Assignment{})); diff != "" {
+	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
 		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -239,7 +240,12 @@ func TestFixDeadline(t *testing.T) {
 		{"1-12-2020 6:59:30pm", "2020-12-01T18:59:30"},
 	}
 	for _, c := range deadlineTests {
-		got := FixDeadline(c.in)
+		fixed, err := FixDeadline(c.in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// format deadline to match wanted layout
+		got := fixed.Format(pb.TimeLayout)
 		if got != c.want {
 			t.Errorf("FixDeadline(%q) == %q, want %q", c.in, got, c.want)
 		}

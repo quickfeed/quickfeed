@@ -99,7 +99,7 @@ func TestRecordResults(t *testing.T) {
 		CourseID:         course.ID,
 		Name:             "lab1",
 		ScriptFile:       "go.sh",
-		Deadline:         "2022-11-11T13:00:00",
+		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
 		AutoApprove:      true,
 		ScoreLimit:       70,
 		Order:            1,

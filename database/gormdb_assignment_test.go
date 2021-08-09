@@ -92,7 +92,7 @@ func TestUpdateAssignment(t *testing.T) {
 		CourseID:    course.ID,
 		Name:        "lab1",
 		ScriptFile:  "go.sh",
-		Deadline:    "11.11.2022",
+		Deadline:    qtest.Timestamp(t, "2017-08-27T12:00:00"),
 		AutoApprove: false,
 		Order:       1,
 		IsGroupLab:  false,
@@ -104,7 +104,7 @@ func TestUpdateAssignment(t *testing.T) {
 		CourseID:    course.ID,
 		Name:        "lab2",
 		ScriptFile:  "go.sh",
-		Deadline:    "11.11.2022",
+		Deadline:    qtest.Timestamp(t, "2017-08-27T12:00:00"),
 		AutoApprove: false,
 		Order:       2,
 		IsGroupLab:  true,
@@ -119,7 +119,7 @@ func TestUpdateAssignment(t *testing.T) {
 	wantAssignments := make([]*pb.Assignment, len(assignments))
 	for i, a := range assignments {
 		// test setting various zero-value entries to check that we can read back the same value
-		a.Deadline = ""
+		a.Deadline = &timestamppb.Timestamp{}
 		a.ScoreLimit = 0
 		a.Reviewers = 0
 		a.AutoApprove = !a.AutoApprove
@@ -246,7 +246,7 @@ func TestUpdateBenchmarks(t *testing.T) {
 		CourseID:    course.ID,
 		Name:        "Assignment 1",
 		ScriptFile:  "go.sh",
-		Deadline:    "12.12.2021",
+		Deadline:    qtest.Timestamp(t, "2017-08-27T12:00:00"),
 		AutoApprove: false,
 		Order:       1,
 		IsGroupLab:  false,

@@ -1,5 +1,6 @@
 import * as jspb from "google-protobuf"
 
+import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
 import * as kit_score_score_pb from '../kit/score/score_pb';
 
 export class User extends jspb.Message {
@@ -368,8 +369,10 @@ export class Enrollment extends jspb.Message {
   getSlipdaysremaining(): number;
   setSlipdaysremaining(value: number): Enrollment;
 
-  getLastactivitydate(): string;
-  setLastactivitydate(value: string): Enrollment;
+  getLastactivitydate(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setLastactivitydate(value?: google_protobuf_timestamp_pb.Timestamp): Enrollment;
+  hasLastactivitydate(): boolean;
+  clearLastactivitydate(): Enrollment;
 
   getTotalapproved(): number;
   setTotalapproved(value: number): Enrollment;
@@ -400,7 +403,7 @@ export namespace Enrollment {
     status: Enrollment.UserStatus,
     state: Enrollment.DisplayState,
     slipdaysremaining: number,
-    lastactivitydate: string,
+    lastactivitydate?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     totalapproved: number,
     usedslipdaysList: Array<UsedSlipDays.AsObject>,
   }
@@ -561,8 +564,10 @@ export class Assignment extends jspb.Message {
   getScriptfile(): string;
   setScriptfile(value: string): Assignment;
 
-  getDeadline(): string;
-  setDeadline(value: string): Assignment;
+  getDeadline(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setDeadline(value?: google_protobuf_timestamp_pb.Timestamp): Assignment;
+  hasDeadline(): boolean;
+  clearDeadline(): Assignment;
 
   getAutoapprove(): boolean;
   setAutoapprove(value: boolean): Assignment;
@@ -606,7 +611,7 @@ export namespace Assignment {
     courseid: number,
     name: string,
     scriptfile: string,
-    deadline: string,
+    deadline?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     autoapprove: boolean,
     order: number,
     isgrouplab: boolean,

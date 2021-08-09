@@ -9,6 +9,7 @@ import (
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"gopkg.in/yaml.v2"
 )
@@ -64,13 +65,17 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				if newAssignment.ScriptFile == "" && !newAssignment.SkipTests {
 					return fmt.Errorf("error unmarshalling assignment: missing field 'scriptfile'")
 				}
+				deadline, err := FixDeadline(newAssignment.Deadline)
+				if err != nil {
+					return fmt.Errorf("error unmarshalling assignment: malformed 'deadline' field")
+				}
 
 				// AssignmentID field from the parsed yaml is used to set Order, not assignment ID,
 				// or it will cause a database constraint violation (IDs must be unique)
 				// The Name field below is the folder name of the assignment.
 				assignment := &pb.Assignment{
 					CourseID:         courseID,
-					Deadline:         FixDeadline(newAssignment.Deadline),
+					Deadline:         timestamppb.New(deadline),
 					ScriptFile:       strings.ToLower(newAssignment.ScriptFile),
 					Name:             filepath.Base(filepath.Dir(path)),
 					Order:            uint32(newAssignment.AssignmentID),
@@ -92,8 +97,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 	return assignments, nil
 }
 
-func FixDeadline(in string) string {
-	wantLayout := pb.TimeLayout
+func FixDeadline(in string) (t time.Time, err error) {
 	acceptedLayouts := []string{
 		"2006-1-2T15:04:05",
 		"2006-1-2 15:04:05",
@@ -119,11 +123,11 @@ func FixDeadline(in string) string {
 		"2-1-2006 3:04:05pm",
 	}
 	for _, layout := range acceptedLayouts {
-		t, err := time.Parse(layout, in)
+		t, err = time.Parse(layout, in)
 		if err != nil {
 			continue
 		}
-		return t.Format(wantLayout)
+		return
 	}
-	return "Invalid date format: " + in
+	return
 }

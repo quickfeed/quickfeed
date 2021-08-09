@@ -15,6 +15,8 @@ var jspb = require('google-protobuf');
 var goog = jspb;
 var global = Function('return this')();
 
+var google_protobuf_timestamp_pb = require('google-protobuf/google/protobuf/timestamp_pb.js');
+goog.object.extend(proto, google_protobuf_timestamp_pb);
 var kit_score_score_pb = require('../kit/score/score_pb.js');
 goog.object.extend(proto, kit_score_score_pb);
 goog.exportSymbol('proto.ag.Assignment', null, global);
@@ -3594,7 +3596,7 @@ proto.ag.Enrollment.toObject = function(includeInstance, msg) {
     status: jspb.Message.getFieldWithDefault(msg, 9, 0),
     state: jspb.Message.getFieldWithDefault(msg, 10, 0),
     slipdaysremaining: jspb.Message.getFieldWithDefault(msg, 11, 0),
-    lastactivitydate: jspb.Message.getFieldWithDefault(msg, 12, ""),
+    lastactivitydate: (f = msg.getLastactivitydate()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
     totalapproved: jspb.Message.getFieldWithDefault(msg, 13, 0),
     usedslipdaysList: jspb.Message.toObjectList(msg.getUsedslipdaysList(),
     proto.ag.UsedSlipDays.toObject, includeInstance)
@@ -3682,7 +3684,8 @@ proto.ag.Enrollment.deserializeBinaryFromReader = function(msg, reader) {
       msg.setSlipdaysremaining(value);
       break;
     case 12:
-      var value = /** @type {string} */ (reader.readString());
+      var value = new google_protobuf_timestamp_pb.Timestamp;
+      reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
       msg.setLastactivitydate(value);
       break;
     case 13:
@@ -3804,10 +3807,11 @@ proto.ag.Enrollment.serializeBinaryToWriter = function(message, writer) {
     );
   }
   f = message.getLastactivitydate();
-  if (f.length > 0) {
-    writer.writeString(
+  if (f != null) {
+    writer.writeMessage(
       12,
-      f
+      f,
+      google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
   }
   f = message.getTotalapproved();
@@ -4104,20 +4108,39 @@ proto.ag.Enrollment.prototype.setSlipdaysremaining = function(value) {
 
 
 /**
- * optional string lastActivityDate = 12;
- * @return {string}
+ * optional google.protobuf.Timestamp lastActivityDate = 12;
+ * @return {?proto.google.protobuf.Timestamp}
  */
 proto.ag.Enrollment.prototype.getLastactivitydate = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 12, ""));
+  return /** @type{?proto.google.protobuf.Timestamp} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 12));
 };
 
 
 /**
- * @param {string} value
+ * @param {?proto.google.protobuf.Timestamp|undefined} value
+ * @return {!proto.ag.Enrollment} returns this
+*/
+proto.ag.Enrollment.prototype.setLastactivitydate = function(value) {
+  return jspb.Message.setWrapperField(this, 12, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
  * @return {!proto.ag.Enrollment} returns this
  */
-proto.ag.Enrollment.prototype.setLastactivitydate = function(value) {
-  return jspb.Message.setProto3StringField(this, 12, value);
+proto.ag.Enrollment.prototype.clearLastactivitydate = function() {
+  return this.setLastactivitydate(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.ag.Enrollment.prototype.hasLastactivitydate = function() {
+  return jspb.Message.getField(this, 12) != null;
 };
 
 
@@ -5224,7 +5247,7 @@ proto.ag.Assignment.toObject = function(includeInstance, msg) {
     courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     name: jspb.Message.getFieldWithDefault(msg, 3, ""),
     scriptfile: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    deadline: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    deadline: (f = msg.getDeadline()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
     autoapprove: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
     order: jspb.Message.getFieldWithDefault(msg, 7, 0),
     isgrouplab: jspb.Message.getBooleanFieldWithDefault(msg, 8, false),
@@ -5288,7 +5311,8 @@ proto.ag.Assignment.deserializeBinaryFromReader = function(msg, reader) {
       msg.setScriptfile(value);
       break;
     case 5:
-      var value = /** @type {string} */ (reader.readString());
+      var value = new google_protobuf_timestamp_pb.Timestamp;
+      reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
       msg.setDeadline(value);
       break;
     case 6:
@@ -5383,10 +5407,11 @@ proto.ag.Assignment.serializeBinaryToWriter = function(message, writer) {
     );
   }
   f = message.getDeadline();
-  if (f.length > 0) {
-    writer.writeString(
+  if (f != null) {
+    writer.writeMessage(
       5,
-      f
+      f,
+      google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
   }
   f = message.getAutoapprove();
@@ -5523,20 +5548,39 @@ proto.ag.Assignment.prototype.setScriptfile = function(value) {
 
 
 /**
- * optional string deadline = 5;
- * @return {string}
+ * optional google.protobuf.Timestamp deadline = 5;
+ * @return {?proto.google.protobuf.Timestamp}
  */
 proto.ag.Assignment.prototype.getDeadline = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+  return /** @type{?proto.google.protobuf.Timestamp} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 5));
 };
 
 
 /**
- * @param {string} value
+ * @param {?proto.google.protobuf.Timestamp|undefined} value
+ * @return {!proto.ag.Assignment} returns this
+*/
+proto.ag.Assignment.prototype.setDeadline = function(value) {
+  return jspb.Message.setWrapperField(this, 5, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
  * @return {!proto.ag.Assignment} returns this
  */
-proto.ag.Assignment.prototype.setDeadline = function(value) {
-  return jspb.Message.setProto3StringField(this, 5, value);
+proto.ag.Assignment.prototype.clearDeadline = function() {
+  return this.setDeadline(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.ag.Assignment.prototype.hasDeadline = function() {
+  return jspb.Message.getField(this, 5) != null;
 };
 
 

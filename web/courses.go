@@ -8,6 +8,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // getCourses returns all courses.
@@ -485,7 +486,7 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 				if submission.Status == pb.Submission_APPROVED {
 					totalApproved++
 				}
-				if enrol.LastActivityDate == "" {
+				if enrol.LastActivityDate == nil {
 					submissionDate, err = submission.NewestBuildDate(submissionDate)
 					if err != nil {
 						return nil, err
@@ -494,8 +495,8 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 			}
 		}
 		enrol.TotalApproved = totalApproved
-		if enrol.LastActivityDate == "" && !submissionDate.IsZero() {
-			enrol.LastActivityDate = submissionDate.Format("02 Jan")
+		if enrol.LastActivityDate == nil && !submissionDate.IsZero() {
+			enrol.LastActivityDate = timestamppb.New(submissionDate)
 		}
 		enrollmentsWithActivity = append(enrollmentsWithActivity, enrol)
 	}

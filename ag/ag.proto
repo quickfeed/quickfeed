@@ -3,6 +3,7 @@ package ag;
 option go_package = "github.com/autograde/quickfeed/ag";
 option swift_prefix="";
 
+import "google/protobuf/timestamp.proto";
 import "kit/score/score.proto";
 import "patch/go.proto";
 
@@ -129,7 +130,7 @@ message Enrollment {
     UserStatus status = 9;
     DisplayState state = 10;
     uint32 slipDaysRemaining = 11 [(go.field) = {tags: 'gorm:"-"'}];
-    string lastActivityDate = 12;
+    google.protobuf.Timestamp lastActivityDate = 12;
     uint64 totalApproved = 13;
     repeated UsedSlipDays usedSlipDays = 14;
 }
@@ -169,7 +170,7 @@ message Assignment {
     uint64 CourseID = 2; // foreign key
     string name = 3;
     string scriptFile = 4;
-    string deadline = 5; 
+    google.protobuf.Timestamp deadline = 5;
     bool autoApprove = 6;
     uint32 order = 7;
     bool isGroupLab = 8;

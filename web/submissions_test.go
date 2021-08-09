@@ -90,7 +90,7 @@ func TestSubmissionsAccess(t *testing.T) {
 		CourseID:    course.ID,
 		Name:        "lab1",
 		ScriptFile:  "go.sh",
-		Deadline:    "11.11.2022",
+		Deadline:    qtest.Timestamp(t, "2017-08-27T12:00:00"),
 		AutoApprove: false,
 		Order:       1,
 		IsGroupLab:  false,
@@ -102,7 +102,7 @@ func TestSubmissionsAccess(t *testing.T) {
 		CourseID:    course.ID,
 		Name:        "lab2",
 		ScriptFile:  "go.sh",
-		Deadline:    "11.11.2022",
+		Deadline:    qtest.Timestamp(t, "2017-08-27T12:00:00"),
 		AutoApprove: false,
 		Order:       2,
 		IsGroupLab:  true,
@@ -387,7 +387,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		CourseID:          course1.ID,
 		Name:              "lab 1",
 		ScriptFile:        "go.sh",
-		Deadline:          "2020-02-23T18:00:00",
+		Deadline:          qtest.Timestamp(t, "2020-02-23T18:00:00"),
 		Order:             1,
 		GradingBenchmarks: []*pb.GradingBenchmark{},
 	}
@@ -396,7 +396,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		CourseID:          course1.ID,
 		Name:              "lab 2",
 		ScriptFile:        "go.sh",
-		Deadline:          "2020-03-23T18:00:00",
+		Deadline:          qtest.Timestamp(t, "2020-03-23T18:00:00"),
 		Order:             2,
 		GradingBenchmarks: []*pb.GradingBenchmark{},
 	}
@@ -404,7 +404,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		CourseID:          course2.ID,
 		Name:              "lab 1",
 		ScriptFile:        "go.sh",
-		Deadline:          "2020-04-23T18:00:00",
+		Deadline:          qtest.Timestamp(t, "2020-04-23T18:00:00"),
 		Order:             1,
 		GradingBenchmarks: []*pb.GradingBenchmark{},
 	}
@@ -412,7 +412,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		CourseID:          course2.ID,
 		Name:              "lab 2",
 		ScriptFile:        "go.sh",
-		Deadline:          "2020-05-23T18:00:00",
+		Deadline:          qtest.Timestamp(t, "2020-05-23T18:00:00"),
 		Order:             2,
 		GradingBenchmarks: []*pb.GradingBenchmark{},
 	}
@@ -485,15 +485,15 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(wantAssignments1, haveAssignments1.GetAssignments()) {
-		t.Errorf("Expected assignments for course 1: %+v, got %+v", wantAssignments1, haveAssignments1.GetAssignments())
+	if diff := cmp.Diff(haveAssignments1.GetAssignments(), wantAssignments1, protocmp.Transform()); diff != "" {
+		t.Errorf("TestGetCourseLabSubmissions():course 1 mismatch (-have +want):\n%s", diff)
 	}
 	haveAssignments2, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course2.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(wantAssignments2, haveAssignments2.GetAssignments()) {
-		t.Errorf("Expected assignments for course 2: %+v, got %+v", wantAssignments1, haveAssignments1.GetAssignments())
+	if diff := cmp.Diff(haveAssignments2.GetAssignments(), wantAssignments2, protocmp.Transform()); diff != "" {
+		t.Errorf("TestGetCourseLabSubmissions():course 2 mismatch (-have +want):\n%s", diff)
 	}
 
 	// check that all submissions were saved for the correct labs
@@ -595,28 +595,28 @@ func TestCreateApproveList(t *testing.T) {
 			CourseID:   course.ID,
 			Name:       "lab 1",
 			ScriptFile: "go.sh",
-			Deadline:   "2020-02-23T18:00:00",
+			Deadline:   qtest.Timestamp(t, "2020-02-23T18:00:00"),
 			Order:      1,
 		},
 		{
 			CourseID:   course.ID,
 			Name:       "lab 2",
 			ScriptFile: "go.sh",
-			Deadline:   "2020-03-23T18:00:00",
+			Deadline:   qtest.Timestamp(t, "2020-03-23T18:00:00"),
 			Order:      2,
 		},
 		{
 			CourseID:   course.ID,
 			Name:       "lab 3",
 			ScriptFile: "go.sh",
-			Deadline:   "2020-04-23T18:00:00",
+			Deadline:   qtest.Timestamp(t, "2020-04-23T18:00:00"),
 			Order:      3,
 		},
 		{
 			CourseID:   course.ID,
 			Name:       "lab 4",
 			ScriptFile: "go.sh",
-			Deadline:   "2020-05-23T18:00:00",
+			Deadline:   qtest.Timestamp(t, "2020-05-23T18:00:00"),
 			Order:      4,
 		},
 	}

@@ -3,7 +3,6 @@ package hooks
 import (
 	"net/http"
 	"strings"
-	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/assignments"
@@ -203,9 +202,8 @@ func (wh GitHubWebHook) updateLastActivityDate(userID, courseID uint64) {
 	query := &pb.Enrollment{
 		UserID:           userID,
 		CourseID:         courseID,
-		LastActivityDate: time.Now().Format("02 Jan"),
+		LastActivityDate: timestamppb.Now(),
 	}
-
 	if err := wh.db.UpdateEnrollment(query); err != nil {
 		wh.logger.Errorf("Failed to update the last activity date for user %d: %v", userID, err)
 	}

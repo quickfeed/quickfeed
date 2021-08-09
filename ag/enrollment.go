@@ -19,10 +19,7 @@ func (m *Enrollment) UpdateSlipDays(assignment *Assignment, submission *Submissi
 		return fmt.Errorf("invariant violation (assignment.ID != submission.AssignmentID) (%d != %d)", assignment.ID, submission.AssignmentID)
 	}
 	buildTime := submission.GetBuildInfo().GetBuildDate().AsTime()
-	sinceDeadline, err := assignment.SinceDeadline(buildTime)
-	if err != nil {
-		return err
-	}
+	sinceDeadline := assignment.SinceDeadline(buildTime)
 	// if score is less than limit and it's not yet approved, update slip days if deadline has passed
 	if submission.Score < assignment.ScoreLimit && submission.Status != Submission_APPROVED && sinceDeadline > 0 {
 		// deadline exceeded; calculate used slipdays for this assignment
