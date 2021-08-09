@@ -2,6 +2,7 @@ package ci
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -47,6 +48,7 @@ func parseScriptTemplate(scriptPath string, info *AssignmentInfo) (*Job, error) 
 	// if err := t.Execute(buffer, info); err != nil {
 	// 	return nil, err
 	// }
+	log.Println("Parsing script: ", info.Script)
 	s := strings.Split(info.Script, "\n")
 	if len(s) < 2 {
 		return nil, fmt.Errorf("no script template for assignment %s in %s", info.AssignmentName, info.TestURL)

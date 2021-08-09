@@ -38,9 +38,15 @@ func (s *AutograderService) updateAssignments(ctx context.Context, sc scm.SCM, c
 	if err != nil {
 		return err
 	}
-	assignments, err := assignments.FetchAssignments(ctx, sc, course)
+	assignments, dockerfile, err := assignments.FetchAssignments(ctx, sc, course)
 	if err != nil {
 		return err
+	}
+	if dockerfile != course.Dockerfile {
+		course.Dockerfile = dockerfile
+		if err = s.db.UpdateCourse(course); err != nil {
+			return err
+		}
 	}
 	if err = s.db.UpdateAssignments(assignments); err != nil {
 		return err

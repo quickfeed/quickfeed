@@ -1,8 +1,10 @@
 package assignments
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"os"
@@ -41,14 +43,15 @@ type assignmentData struct {
 
 // ParseAssignments recursively walks the given directory and parses
 // any 'assignment.yml' files found and returns an array of assignments.
-func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
+func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, error) {
 	// check if directory exist
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		return nil, err
+		return nil, "", err
 	}
 
 	var assignments []*pb.Assignment
 	var defaultScript string
+	var courseDockerfile string
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			filename := filepath.Base(path)
@@ -134,13 +137,23 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					}
 				}
 			case dockerfile:
-				// build image
+				log.Println("Parsing dockerfile")
+				// tmplFile := filepath.Join(scriptPath, info.Script)
+				t, err := template.ParseFiles(path)
+				if err != nil {
+					return err
+				}
+				buffer := new(bytes.Buffer)
+				if err := t.Execute(buffer, info); err != nil {
+					return err
+				}
+				courseDockerfile = buffer.String()
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if defaultScript != "" {
 		for _, assignment := range assignments {
@@ -149,7 +162,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 			}
 		}
 	}
-	return assignments, nil
+	return assignments, courseDockerfile, nil
 }
 
 func FixDeadline(in string) string {

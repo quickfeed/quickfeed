@@ -21,13 +21,23 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
 	}
-	assignments, err := FetchAssignments(context.Background(), s, course)
+	assignments, dockerfile, err := FetchAssignments(context.Background(), s, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
 		return
 	}
 	for _, assignment := range assignments {
 		logger.Debugf("Found assignment in '%s' repository: %v", pb.TestsRepo, assignment)
+	}
+
+	if dockerfile != "" {
+		logger.Debugf("Found Dockerfile for course %s", course.Name)
+		course.Dockerfile = dockerfile
+		if err := db.UpdateCourse(course); err != nil {
+			logger.Debugf("Failed to update dockerfile for course %s: %s", course.Name, err)
+			return
+		}
+		// TODO(vera): build image
 	}
 
 	if err = db.UpdateAssignments(assignments); err != nil {
@@ -52,7 +62,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *
 // data from GitHub, processes the yml files and returns the assignments.
 // The TempDir() function ensures that cloning is done in distinct temp
 // directories, should there be concurrent calls to this function.
-func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, error) {
+func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
 	ctx, cancel := context.WithTimeout(c, pb.MaxWait)
 	defer cancel()
 
@@ -61,7 +71,7 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 	if course.OrganizationPath == "" {
 		org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID})
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		course.OrganizationPath = org.GetPath()
 	}
@@ -76,7 +86,7 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 
 	cloneDir, err := ioutil.TempDir("", pb.TestsRepo)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	defer os.RemoveAll(cloneDir)
 
@@ -93,7 +103,7 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 	runner := ci.Local{}
 	_, err = runner.Run(ctx, job)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	// parse assignments found in the cloned tests directory
