@@ -7498,7 +7498,7 @@ proto.ag.Review.toObject = function(includeInstance, msg) {
     score: jspb.Message.getFieldWithDefault(msg, 6, 0),
     gradingbenchmarksList: jspb.Message.toObjectList(msg.getGradingbenchmarksList(),
     proto.ag.GradingBenchmark.toObject, includeInstance),
-    edited: jspb.Message.getFieldWithDefault(msg, 8, "")
+    edited: (f = msg.getEdited()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -7565,7 +7565,8 @@ proto.ag.Review.deserializeBinaryFromReader = function(msg, reader) {
       msg.addGradingbenchmarks(value);
       break;
     case 8:
-      var value = /** @type {string} */ (reader.readString());
+      var value = new google_protobuf_timestamp_pb.Timestamp;
+      reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
       msg.setEdited(value);
       break;
     default:
@@ -7648,10 +7649,11 @@ proto.ag.Review.serializeBinaryToWriter = function(message, writer) {
     );
   }
   f = message.getEdited();
-  if (f.length > 0) {
-    writer.writeString(
+  if (f != null) {
+    writer.writeMessage(
       8,
-      f
+      f,
+      google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
   }
 };
@@ -7804,20 +7806,39 @@ proto.ag.Review.prototype.clearGradingbenchmarksList = function() {
 
 
 /**
- * optional string edited = 8;
- * @return {string}
+ * optional google.protobuf.Timestamp edited = 8;
+ * @return {?proto.google.protobuf.Timestamp}
  */
 proto.ag.Review.prototype.getEdited = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+  return /** @type{?proto.google.protobuf.Timestamp} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 8));
 };
 
 
 /**
- * @param {string} value
+ * @param {?proto.google.protobuf.Timestamp|undefined} value
+ * @return {!proto.ag.Review} returns this
+*/
+proto.ag.Review.prototype.setEdited = function(value) {
+  return jspb.Message.setWrapperField(this, 8, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
  * @return {!proto.ag.Review} returns this
  */
-proto.ag.Review.prototype.setEdited = function(value) {
-  return jspb.Message.setProto3StringField(this, 8, value);
+proto.ag.Review.prototype.clearEdited = function() {
+  return this.setEdited(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.ag.Review.prototype.hasEdited = function() {
+  return jspb.Message.getField(this, 8) != null;
 };
 
 

@@ -249,7 +249,7 @@ message Review {
     bool ready = 5;
     uint32 score = 6;
     repeated GradingBenchmark gradingBenchmarks = 7 [(go.field) = {tags: 'gorm:"foreignKey:ReviewID"'}];
-    string edited = 8;
+    google.protobuf.Timestamp edited = 8;
 }
 
 message Reviewers {

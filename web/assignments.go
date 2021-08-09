@@ -5,17 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
-	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/assignments"
 	"github.com/autograde/quickfeed/scm"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var (
-	criteriaFile = "criteria.json"
-	reviewLayout = "02 Jan 15:04"
-)
+var criteriaFile = "criteria.json"
 
 // getAssignments lists the assignments for the provided course.
 func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, error) {
@@ -136,7 +133,7 @@ func (s *AutograderService) createReview(review *pb.Review) (*pb.Review, error) 
 		return nil, fmt.Errorf("Failed to create a new review for submission %d to assignment %s: all %d reviews already created",
 			submission.ID, assignment.Name, assignment.Reviewers)
 	}
-	review.Edited = time.Now().Format(reviewLayout)
+	review.Edited = timestamppb.Now()
 	review.ComputeScore()
 
 	for _, bm := range review.GradingBenchmarks {
@@ -161,7 +158,7 @@ func (s *AutograderService) updateReview(review *pb.Review) (*pb.Review, error) 
 		return nil, err
 	}
 
-	review.Edited = time.Now().Format(reviewLayout)
+	review.Edited = timestamppb.Now()
 	review.ComputeScore()
 
 	if err := s.db.UpdateReview(review); err != nil {
