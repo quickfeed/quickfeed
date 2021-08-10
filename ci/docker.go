@@ -63,7 +63,9 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	}
 
 	if job.Dockerfile != "" {
-
+		if err := d.buildImage(ctx, job.Dockerfile, job.Image); err != nil {
+			return "", err
+		}
 	}
 
 	resp, err := d.createImage(ctx, job)

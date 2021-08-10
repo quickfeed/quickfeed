@@ -2,10 +2,10 @@ package assignments
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
-	"strings"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
@@ -27,19 +27,8 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
 		return
 	}
-	images := make(map[string]bool)
 	for _, assignment := range assignments {
 		logger.Debugf("Found assignment in '%s' repository: %v", pb.TestsRepo, assignment)
-		if assignment.ScriptFile == "" {
-			logger.Debugf("No scriptfile for assignment %s of course %s", assignment.Name, course.Code)
-			continue
-		}
-		s := strings.Split(assignment.ScriptFile, "\n")
-		parts := strings.Split(s[0], "#image/")
-		if len(parts) < 2 {
-			logger.Debugf("no docker image specified in script template for assignment %s of course %s", assignment.Name, course.Code)
-		}
-		images[parts[1]] = true
 	}
 
 	if dockerfile != "" {
@@ -51,11 +40,10 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 		}
 		job := &ci.Job{
 			Dockerfile: dockerfile,
-			Name:       course.Code,
+			Image:      course.Code + ":" + fmt.Sprint(course.Year),
 		}
-		for k := range images {
-			job.Image = k
-			runner.Run(context.Background(), job)
+		if _, err := runner.Run(context.Background(), job); err != nil {
+			logger.Errorf("Failed to build image from Dockerfile for course %s: %s", course.Code, err)
 		}
 	}
 	if err = db.UpdateAssignments(assignments); err != nil {
