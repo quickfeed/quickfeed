@@ -355,7 +355,7 @@ func main() {
 	flag.BoolVar(&runEnvoy, "run", false, "run envoy container")
 	flag.Parse()
 
-	// TODO: receive config
+	// TODO: cert config as parameter
 	config, err := loadConfigEnv(withTLS)
 	if err != nil {
 		log.Fatal(err)

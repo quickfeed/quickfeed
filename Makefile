@@ -132,7 +132,7 @@ ifeq ($(DOMAIN),)
 	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)." && false
 else
 	@echo "Generating Envoy configuration for '$$DOMAIN'."
-	@go run ./envoy/envoy.go --genconfig --withTLS
+	@go run ./envoy/envoy.go --genconfig
 endif
 
 prometheus:
