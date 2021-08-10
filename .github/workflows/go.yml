@@ -31,10 +31,10 @@ jobs:
 
     - name: Build
       run: |
+        make download
         echo Location of timestamppb: `go list -m -f {{.Dir}} google.golang.org/protobuf`/types/known/timestamppb
         ls -la ~/go/pkg/mod/google.golang.org/protobuf@v1.27.1
-        ls -la ~/go/pkg/mod/google.golang.org/protobuf@v1.27.1/types/known/timestamppb
-        # make hack-timestamp
+        make hack-timestamp
         go build -v ./...
 
     - name: Run Go tests
