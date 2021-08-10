@@ -314,7 +314,9 @@ async function main(): Promise<void> {
 
     if (curRunning === DEBUG_SERVER) {
         const httpHelper = new HttpHelper("/api/v1");
-        const grpcHelper = new GrpcManager();
+        // TODO: use process.env.QUICKFEED_PORT
+        // https://webpack.js.org/plugins/environment-plugin/
+        const grpcHelper = new GrpcManager("https://" + window.location.hostname + ":8080");
         const serverData = new ServerProvider(httpHelper, grpcHelper, logMan.createLogger("ServerProvider"));
         userMan = new UserManager(serverData, logMan.createLogger("UserManager"));
         grpcHelper.setUserMan(userMan);

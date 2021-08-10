@@ -7,13 +7,14 @@ services:
       context: ./
       dockerfile: ./envoy/Dockerfile
       args:
-        - ENVOY_CONFIG=${ENVOY_CONFIG}
+        - DOMAIN=${DOMAIN}
     ports:
-      - "9901:9901"
+      - "80:80"
       - "8080:8080"
-      - "8888:8888"
     networks:
       - quickfeed_net
+    volumes:
+      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml
 
   quickfeed:
     container_name: quickfeed

@@ -81,7 +81,7 @@ brew:
 	@echo "Installing homebrew packages needed for development and deployment"
 	@brew install go protobuf webpack npm node docker certbot envoy
 
-envoy-build:
+envoy-build: envoy-config
 	@echo "Building Autograder Envoy proxy"
 	@docker-compose build --force-rm envoy
 
@@ -129,10 +129,10 @@ runlocal:
 
 envoy-config:
 ifeq ($(DOMAIN),)
-	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)."
+	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)." && false
 else
-	@echo "Generating Envoy configuration for '$$DOMAIN' at $$ENVOY_CONFIG."
-	@go run ./envoy/envoy.go --genconfig --path=$$ENVOY_CONFIG
+	@echo "Generating Envoy configuration for '$$DOMAIN'."
+	@go run ./envoy/envoy.go --genconfig --withTLS
 endif
 
 prometheus:

@@ -12,7 +12,8 @@ layered_runtime:
 
 static_resources:
   listeners:
-    # Redirects all traffic coming from port 80 to port 443 for SSL
+{{- if .TLSEnabled }}
+  # Redirects all traffic coming from port 80 to port 443 for SSL
   - name: http_to_https_redirect
     address:
       socket_address: { address: 0.0.0.0, port_value: 80 }
@@ -29,7 +30,7 @@ static_resources:
             name: local_route
             virtual_hosts:
             - name: local_service
-              domains: 
+              domains:
                 - "*"
               routes:
               - match: { prefix: "/"}
@@ -39,7 +40,7 @@ static_resources:
           http_filters:
           - name: envoy.filters.http.router
 
-    # HTTPS Gateway for the frontend server 
+  # HTTPS Gateway for the frontend server
   - name: https_server_gateway
     address:
       socket_address: { address: 0.0.0.0, port_value: 443 }
@@ -66,8 +67,8 @@ static_resources:
                 route:
                   cluster: web_service
               - match: {prefix: "/auth/github/callback"}
-                route: { cluster: web_service }
-                
+                route:
+                  cluster: web_service
               cors:
                 allow_origin_string_match:
                   - prefix: "*"
@@ -85,10 +86,79 @@ static_resources:
             # Replace certificate with your certificates
             tls_certificates:
               certificate_chain:
-                filename: /etc/letsencrypt/live/{{ .Domain }}/fullchain.pem
+                filename: /etc/letsencrypt/live/{{ .Domain }}/{{ .CertConfig.CertFile }}
               private_key:
-                filename: /etc/letsencrypt/live/{{ .Domain }}/privkey.pem
+                filename: /etc/letsencrypt/live/{{ .Domain }}/{{ .CertConfig.KeyFile }}
+{{- else -}}
+  - name: http_server_gateway
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 80 }
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          use_remote_address: true
+          xff_num_trusted_hops: 0
+          codec_type: auto
+          stat_prefix: ingress_http
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: local_service
+              domains:
+              - "{{ .Domain }}"
+              routes:
+              - match: { prefix: "/"}
+                route:
+                  cluster: web_service
+              - match: {prefix: "/auth/github/callback"}
+                route:
+                  cluster: web_service
+              cors:
+                allow_origin_string_match:
+                  - prefix: "*"
+                allow_headers: access-control-allow-origin
+          http_filters:
+          - name: envoy.filters.http.cors
+          - name: envoy.filters.http.router
+          http_protocol_options: { accept_http_10: true}
 
+  - name: grpc_gateway
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 8080 }
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          codec_type: auto
+          stat_prefix: ingress_http
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: local_service
+              domains:
+                - "{{ .Domain }}"
+              routes:
+              - match: { prefix: "/" }
+                route:
+                  cluster: grpc_service
+                  max_stream_duration:
+                    grpc_timeout_header_max: 0s
+              cors:
+                allow_origin_string_match:
+                - prefix: "*"
+                allow_methods: GET, PUT, DELETE, POST, OPTIONS
+                allow_headers: access-control-allow-origin,user,keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,custom-header-1,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout
+                max_age: "1728000"
+                expose_headers: custom-header-1,grpc-status,grpc-message, user
+          http_filters:
+          - name: envoy.filters.http.grpc_web
+          - name: envoy.filters.http.cors
+          - name: envoy.filters.http.router
+          http_protocol_options: { accept_http_10: true}
+{{ end }}
   clusters:
   - name: grpc_service
     connect_timeout: 1500s

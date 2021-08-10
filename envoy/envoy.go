@@ -13,6 +13,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/fs"
 	"log"
 	"math/big"
 	"net"
@@ -58,17 +59,15 @@ func newEnvoyConfig(domain, GRPCPort, HTTPPort string, withTLS bool, certConfig 
 			config.CertConfig = certConfig
 			return config, nil
 		}
-		err := generateSelfSignedCert(path.Join(path.Dir(pwd), "certs"), "cert", certOptions{
-			org:   domain,
-			hosts: "localhost",
-			isCA:  true,
+		err := generateSelfSignedCert(path.Join(path.Dir(pwd), "certs"), certOptions{
+			hosts: fmt.Sprintf("%s,%s", "127.0.0.1", domain),
 		})
 		if err != nil {
 			return nil, err
 		}
 		config.CertConfig = &CertificateConfig{
-			CertFile: "cert.pem",
-			KeyFile:  "cert.key",
+			CertFile: "fullchain.pem",
+			KeyFile:  "privkey.pem",
 		}
 	}
 
@@ -100,6 +99,218 @@ func createEnvoyConfig(envoyPath string, data *EnvoyConfig) error {
 	if err = tmpl.ExecuteTemplate(f, "envoy", data); err != nil {
 		return err
 	}
+	return nil
+}
+
+func CARootTemplate(serialNumber *big.Int, subject *pkix.Name, notBefore, notAfter time.Time) *x509.Certificate {
+	return &x509.Certificate{
+		SerialNumber:          serialNumber,
+		Subject:               *subject,
+		NotBefore:             notBefore,
+		NotAfter:              notAfter,
+		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+	}
+}
+
+func newCertificateTemplate(privKey interface{}, hostList string, notBefore, notAfter time.Time, isCA bool) (*x509.Certificate, error) {
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	if err != nil {
+		return nil, fmt.Errorf("serial number generation failed: %v", err)
+	}
+
+	var template *x509.Certificate
+	if isCA {
+		caSubject := &pkix.Name{
+			Country:      []string{"NO"},
+			Organization: []string{"Example Co."},
+			CommonName:   "Example CA",
+		}
+		template = CARootTemplate(serialNumber, caSubject, notBefore, notAfter)
+	} else {
+		keyUsage := x509.KeyUsageDigitalSignature
+		// https://go-review.googlesource.com/c/go/+/214337/
+		// If is RSA set KeyEncipherment KeyUsage bits.
+		if _, isRSA := privKey.(*rsa.PrivateKey); isRSA {
+			keyUsage |= x509.KeyUsageKeyEncipherment
+		}
+
+		template = &x509.Certificate{
+			SerialNumber:   serialNumber,
+			NotBefore:      notBefore,
+			NotAfter:       notAfter,
+			KeyUsage:       keyUsage,
+			IsCA:           false,
+			MaxPathLenZero: true,
+			ExtKeyUsage:    []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		}
+	}
+
+	hosts := strings.Split(hostList, ",")
+	for _, h := range hosts {
+		if ip := net.ParseIP(h); ip != nil {
+			template.IPAddresses = append(template.IPAddresses, ip)
+		} else {
+			template.DNSNames = append(template.DNSNames, h)
+		}
+	}
+
+	return template, nil
+}
+
+func makeCertificate(template, parent *x509.Certificate, publicKey interface{}, privateKey interface{}) (*x509.Certificate, []byte, error) {
+	derCertBytes, err := x509.CreateCertificate(rand.Reader, template, parent, publicKey, privateKey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create certificate: %v", err)
+	}
+
+	cert, err := x509.ParseCertificate(derCertBytes)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to parse certificate: %v", err)
+	}
+	return cert, derCertBytes, nil
+}
+
+func savePEM(certPath, filename string, block *pem.Block, flag int, perm fs.FileMode) error {
+	out, err := os.OpenFile(path.Join(certPath, filename), flag, perm)
+	if err != nil {
+		return fmt.Errorf("failed to open %s for writing: %v", filename, err)
+	}
+
+	if err := pem.Encode(out, block); err != nil {
+		return fmt.Errorf("failed to write data to %s: %v", filename, err)
+	}
+
+	if err := out.Close(); err != nil {
+		return fmt.Errorf("error closing %s: %v", filename, err)
+	}
+	return nil
+}
+
+func publicKey(priv interface{}) interface{} {
+	switch k := priv.(type) {
+	case *rsa.PrivateKey:
+		return &k.PublicKey
+	case *ecdsa.PrivateKey:
+		return &k.PublicKey
+	default:
+		return nil
+	}
+}
+
+type certOptions struct {
+	hosts     string        // comma-separated hostnames and IPs to generate a certificate for.
+	validFrom time.Time     // creation date (default duration is 1 year: 365*24*time.Hour)
+	validFor  time.Duration // for how long the certificate is valid.
+	keyType   string
+}
+
+const defaultFileFlags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+
+// generateSelfSignedCert generates a self-signed X.509 certificate for testing purposes.
+// It supports ECDSA curve P256 or RSA 2048 bits to generate the key.
+// based on: https://golang.org/src/crypto/tls/generate_cert.go
+func generateSelfSignedCert(certsDir string, opts certOptions) (err error) {
+	if len(opts.hosts) == 0 {
+		return errors.New("at least one hostname must be specified")
+	}
+
+	err = os.MkdirAll(certsDir, 0755)
+	if err != nil {
+		return err
+	}
+
+	var caKey, serverKey interface{}
+	switch opts.keyType {
+	case "rsa":
+		caKey, err = rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			return err
+		}
+		serverKey, err = rsa.GenerateKey(rand.Reader, 2048)
+	default:
+		caKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		if err != nil {
+			return err
+		}
+		serverKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	}
+	if err != nil {
+		return err
+	}
+
+	var notBefore, notAfter time.Time
+	if opts.validFrom.IsZero() {
+		notBefore = time.Now()
+	} else {
+		notBefore = opts.validFrom
+	}
+
+	if opts.validFor == 0 {
+		notAfter = notBefore.Add(365 * 24 * time.Hour)
+	} else {
+		notAfter = notBefore.Add(opts.validFor)
+	}
+
+	if notBefore.After(notAfter) {
+		return errors.New("wrong certificate validity")
+	}
+
+	caTemplate, err := newCertificateTemplate(caKey, opts.hosts, notBefore, notAfter, true)
+	if err != nil {
+		return err
+	}
+
+	caCert, caCertBytes, err := makeCertificate(caTemplate, caTemplate, publicKey(caKey), caKey)
+	if err != nil {
+		return err
+	}
+
+	serverTemplate, err := newCertificateTemplate(serverKey, opts.hosts, notBefore, notAfter, false)
+	if err != nil {
+		return err
+	}
+
+	_, serverCertBytes, err := makeCertificate(serverTemplate, caCert, publicKey(serverKey), caKey)
+	if err != nil {
+		return err
+	}
+
+	// save ca certificate
+	err = savePEM(certsDir, "cacert.pem", &pem.Block{Type: "CERTIFICATE", Bytes: caCertBytes}, defaultFileFlags, 0600)
+	if err != nil {
+		return err
+	}
+
+	caKeyBytes, err := x509.MarshalPKCS8PrivateKey(caKey)
+	if err != nil {
+		return fmt.Errorf("unable to marshal ca private key: %v", err)
+	}
+	err = savePEM(certsDir, "cakey.pem", &pem.Block{Type: "PRIVATE KEY", Bytes: caKeyBytes}, defaultFileFlags, 0600)
+	if err != nil {
+		return err
+	}
+
+	// save server certificate
+	err = savePEM(certsDir, "servercert.pem", &pem.Block{Type: "CERTIFICATE", Bytes: serverCertBytes}, defaultFileFlags, 0600)
+	if err != nil {
+		return err
+	}
+
+	serverKeyByes, err := x509.MarshalPKCS8PrivateKey(serverKey)
+	if err != nil {
+		return fmt.Errorf("unable to marshal server private key: %v", err)
+	}
+
+	err = savePEM(certsDir, "serverkey.pem", &pem.Block{Type: "PRIVATE KEY", Bytes: serverKeyByes}, defaultFileFlags, 0600)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("certificates successfully generated at: %s", certsDir)
 	return nil
 }
 
@@ -150,152 +361,6 @@ func main() {
 	default:
 		fmt.Println("unknown command.")
 	}
-}
-
-func newCertificateTemplate(privKey interface{}, hostList, organization string, notBefore, notAfter time.Time, isCA bool) (*x509.Certificate, error) {
-	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
-	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
-	if err != nil {
-		return nil, fmt.Errorf("serial number generation failed: %v", err)
-	}
-
-	keyUsage := x509.KeyUsageDigitalSignature
-	// https://go-review.googlesource.com/c/go/+/214337/
-	// If is RSA set KeyEncipherment KeyUsage bits.
-	if _, isRSA := privKey.(*rsa.PrivateKey); isRSA {
-		keyUsage |= x509.KeyUsageKeyEncipherment
-	}
-
-	template := &x509.Certificate{
-		SerialNumber: serialNumber,
-		Subject: pkix.Name{
-			Organization: []string{organization},
-		},
-		NotBefore: notBefore,
-		NotAfter:  notAfter,
-
-		KeyUsage:              keyUsage,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		BasicConstraintsValid: true,
-	}
-
-	hosts := strings.Split(hostList, ",")
-	for _, h := range hosts {
-		if ip := net.ParseIP(h); ip != nil {
-			template.IPAddresses = append(template.IPAddresses, ip)
-		} else {
-			template.DNSNames = append(template.DNSNames, h)
-		}
-	}
-
-	if isCA {
-		template.IsCA = true
-		template.KeyUsage |= x509.KeyUsageCertSign
-	}
-
-	return template, nil
-}
-
-func publicKey(priv interface{}) interface{} {
-	switch k := priv.(type) {
-	case *rsa.PrivateKey:
-		return &k.PublicKey
-	case *ecdsa.PrivateKey:
-		return &k.PublicKey
-	default:
-		return nil
-	}
-}
-
-type certOptions struct {
-	org       string        // organization name.
-	hosts     string        // comma-separated hostnames and IPs to generate a certificate for.
-	validFrom time.Time     // creation date (default duration is 1 year: 365*24*time.Hour)
-	validFor  time.Duration // for how long the certificate is valid.
-	isCA      bool          // whether the certificate should be its own Certificate Authority
-	keyType   string
-}
-
-// generateSelfSignedCert generates a self-signed X.509 certificate for testing purposes.
-// It supports ECDSA curve P256 or RSA 2048 bits to generate the key.
-// based on: https://golang.org/src/crypto/tls/generate_cert.go
-func generateSelfSignedCert(certsDir string, certName string, opts certOptions) (err error) {
-	if len(opts.hosts) == 0 {
-		return errors.New("at least one hostname must be specified")
-	}
-
-	err = os.MkdirAll(certsDir, 0755)
-	if err != nil {
-		return err
-	}
-
-	var privKey interface{}
-	switch opts.keyType {
-	case "rsa":
-		privKey, err = rsa.GenerateKey(rand.Reader, 2048)
-	default:
-		privKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	}
-	if err != nil {
-		return fmt.Errorf("key generation failed: %v", err)
-	}
-
-	var notBefore, notAfter time.Time
-	if opts.validFrom.IsZero() {
-		notBefore = time.Now()
-	} else {
-		notBefore = opts.validFrom
-	}
-
-	if opts.validFor == 0 {
-		notAfter = notBefore.Add(365 * 24 * time.Hour)
-	} else {
-		notAfter = notBefore.Add(opts.validFor)
-	}
-
-	if notBefore.After(notAfter) {
-		return errors.New("wrong certificate validity")
-	}
-
-	template, err := newCertificateTemplate(privKey, opts.hosts, opts.org, notBefore, notAfter, opts.isCA)
-	if err != nil {
-		return err
-	}
-	derBytes, err := x509.CreateCertificate(rand.Reader, template, template, publicKey(privKey), privKey)
-	if err != nil {
-		return fmt.Errorf("failed to create certificate: %v", err)
-	}
-
-	certFile := fmt.Sprintf("%s.pem", certName)
-	certOut, err := os.Create(path.Join(certsDir, certFile))
-	if err != nil {
-		return fmt.Errorf("failed to open %s for writing: %v", certFile, err)
-	}
-	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
-		return fmt.Errorf("failed to write data to %s: %v", certFile, err)
-	}
-	if err := certOut.Close(); err != nil {
-		return fmt.Errorf("error closing %s: %v", certFile, err)
-	}
-
-	certKey := fmt.Sprintf("%s.key", certName)
-	keyOut, err := os.OpenFile(path.Join(certsDir, certKey), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		return fmt.Errorf("failed to open %s for writing: %v", certKey, err)
-	}
-	privBytes, err := x509.MarshalPKCS8PrivateKey(privKey)
-	if err != nil {
-		return fmt.Errorf("unable to marshal private key: %v", err)
-	}
-	if err := pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: privBytes}); err != nil {
-		return fmt.Errorf("failed to write data to %s: %v", certKey, err)
-	}
-	if err := keyOut.Close(); err != nil {
-		return fmt.Errorf("error closing %s: %v", certKey, err)
-	}
-
-	log.Printf("certificate: %s and key: %s successfully generated at: %s", certFile, certKey, certsDir)
-	return nil
 }
 
 // StartEnvoy creates a Docker API client. If an envoy container is not running,
