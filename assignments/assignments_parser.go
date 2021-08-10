@@ -87,11 +87,11 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 				}
 
 				assignments = append(assignments, assignment)
+
 			case criteriaFile:
 				// get name of the assignment == folder name
 				assignmentName := filepath.Base(filepath.Dir(filename))
-				log.Println("Got criteria.json in the assignment folder ", assignmentName)
-				// make sure assignment exists in the database (get by name/course ID)
+				log.Println("Found criteria.json in the assignment folder ", assignmentName)
 				criteria, err := ioutil.ReadFile(path)
 				if err != nil {
 					return fmt.Errorf("could not to read %q file: %w", filename, err)
@@ -101,21 +101,16 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 					return err
 				}
 				log.Printf("Unmarshalled %d benchmarks for assignment %s\n", len(benchmarks), assignmentName)
-				found := false
-				for _, assignment := range assignments {
-					if assignment.Name == assignmentName {
-						found = true
-						assignment.GradingBenchmarks = benchmarks
-						log.Println("Found assignment, added benchmarks from a file")
-					}
-				}
-				if !found {
+				assignment := findAssignmentByName(assignments, assignmentName)
+				if assignment == nil {
 					log.Printf("Found benchmarks, could not find assignment %s\n", assignmentName)
+				} else {
+					log.Println("Found assignment, added benchmarks from a file")
+					assignment.GradingBenchmarks = benchmarks
 				}
 
 			case scriptFile:
 				log.Println("Reading scriptfile")
-				// save per assignment, or for each assignment if in scripts/
 				t, err := template.ParseFiles(path)
 				if err != nil {
 					log.Printf("Error reading script file %s: %s", path, err.Error())
@@ -130,21 +125,16 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 				if location == scriptFolder {
 					defaultScript = scriptString
 				} else {
-					found := false
-					for _, assignment := range assignments {
-						if assignment.Name == location {
-							found = true
-							assignment.ScriptFile = scriptString
-							log.Println("Found assignment, added scriptfile contents")
-						}
-					}
-					if !found {
-						log.Printf("Found script, could not find assignment %s\n", location)
+					assignment := findAssignmentByName(assignments, location)
+					if assignment == nil {
+						log.Printf("Found run.sh script, could not find assignment %s\n", location)
+					} else {
+						log.Println("Found assignment, added scriptfile contents")
+						assignment.ScriptFile = scriptString
 					}
 				}
 			case dockerfile:
 				log.Println("Readung dockerfile")
-				// tmplFile := filepath.Join(scriptPath, info.Script)
 				t, err := template.ParseFiles(path)
 				if err != nil {
 					return err
@@ -205,4 +195,14 @@ func FixDeadline(in string) string {
 		return t.Format(wantLayout)
 	}
 	return "Invalid date format: " + in
+}
+
+func findAssignmentByName(assignments []*pb.Assignment, name string) *pb.Assignment {
+	var found *pb.Assignment
+	for _, assignment := range assignments {
+		if assignment.Name == name {
+			found = assignment
+		}
+	}
+	return found
 }
