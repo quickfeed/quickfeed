@@ -49,15 +49,14 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 			logger.Debugf("Failed to update dockerfile for course %s: %s", course.Name, err)
 			return
 		}
-		job := ci.BuildImageJob{
+		job := &ci.Job{
 			Dockerfile: dockerfile,
-			CourseCode: course.Code,
+			Name:       course.Code,
 		}
 		for k := range images {
-			job.ImageName = k
-			runner.BuildImage(context.Background(), job)
+			job.Image = k
+			runner.Run(context.Background(), job)
 		}
-
 	}
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
@@ -66,7 +65,6 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 		logger.Errorf("Failed to update assignments in database: %v", err)
 		return
 	}
-
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
 }
 
