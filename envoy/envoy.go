@@ -112,6 +112,7 @@ func CARootTemplate(serialNumber *big.Int, subject *pkix.Name, notBefore, notAft
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 		IsCA:                  true,
+		MaxPathLenZero:        true,
 	}
 }
 
@@ -139,13 +140,13 @@ func newCertificateTemplate(privKey interface{}, hostList string, notBefore, not
 		}
 
 		template = &x509.Certificate{
-			SerialNumber:   serialNumber,
-			NotBefore:      notBefore,
-			NotAfter:       notAfter,
-			KeyUsage:       keyUsage,
-			IsCA:           false,
-			MaxPathLenZero: true,
-			ExtKeyUsage:    []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+			SerialNumber:          serialNumber,
+			NotBefore:             notBefore,
+			NotAfter:              notAfter,
+			KeyUsage:              keyUsage,
+			IsCA:                  false,
+			BasicConstraintsValid: true,
+			ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		}
 	}
 
@@ -174,14 +175,16 @@ func makeCertificate(template, parent *x509.Certificate, publicKey interface{}, 
 	return cert, derCertBytes, nil
 }
 
-func savePEM(certPath, filename string, block *pem.Block, flag int, perm fs.FileMode) error {
+func savePEM(certPath, filename string, block []*pem.Block, flag int, perm fs.FileMode) error {
 	out, err := os.OpenFile(path.Join(certPath, filename), flag, perm)
 	if err != nil {
 		return fmt.Errorf("failed to open %s for writing: %v", filename, err)
 	}
 
-	if err := pem.Encode(out, block); err != nil {
-		return fmt.Errorf("failed to write data to %s: %v", filename, err)
+	for _, b := range block {
+		if err := pem.Encode(out, b); err != nil {
+			return fmt.Errorf("failed to write data to %s: %v", filename, err)
+		}
 	}
 
 	if err := out.Close(); err != nil {
@@ -280,7 +283,7 @@ func generateSelfSignedCert(certsDir string, opts certOptions) (err error) {
 	}
 
 	// save ca certificate
-	err = savePEM(certsDir, "cacert.pem", &pem.Block{Type: "CERTIFICATE", Bytes: caCertBytes}, defaultFileFlags, 0600)
+	err = savePEM(certsDir, "cacert.pem", []*pem.Block{{Type: "CERTIFICATE", Bytes: caCertBytes}}, defaultFileFlags, 0600)
 	if err != nil {
 		return err
 	}
@@ -289,13 +292,13 @@ func generateSelfSignedCert(certsDir string, opts certOptions) (err error) {
 	if err != nil {
 		return fmt.Errorf("unable to marshal ca private key: %v", err)
 	}
-	err = savePEM(certsDir, "cakey.pem", &pem.Block{Type: "PRIVATE KEY", Bytes: caKeyBytes}, defaultFileFlags, 0600)
+	err = savePEM(certsDir, "cakey.pem", []*pem.Block{{Type: "PRIVATE KEY", Bytes: caKeyBytes}}, defaultFileFlags, 0600)
 	if err != nil {
 		return err
 	}
 
 	// save server certificate
-	err = savePEM(certsDir, "servercert.pem", &pem.Block{Type: "CERTIFICATE", Bytes: serverCertBytes}, defaultFileFlags, 0600)
+	err = savePEM(certsDir, "servercert.pem", []*pem.Block{{Type: "CERTIFICATE", Bytes: serverCertBytes}}, defaultFileFlags, 0600)
 	if err != nil {
 		return err
 	}
@@ -305,7 +308,16 @@ func generateSelfSignedCert(certsDir string, opts certOptions) (err error) {
 		return fmt.Errorf("unable to marshal server private key: %v", err)
 	}
 
-	err = savePEM(certsDir, "serverkey.pem", &pem.Block{Type: "PRIVATE KEY", Bytes: serverKeyByes}, defaultFileFlags, 0600)
+	err = savePEM(certsDir, "serverkey.pem", []*pem.Block{{Type: "PRIVATE KEY", Bytes: serverKeyByes}}, defaultFileFlags, 0600)
+	if err != nil {
+		return err
+	}
+
+	// save fullchain
+	err = savePEM(certsDir, "fullchain.pem", []*pem.Block{
+		{Type: "CERTIFICATE", Bytes: caCertBytes},
+		{Type: "CERTIFICATE", Bytes: serverKeyByes},
+	}, defaultFileFlags, 0600)
 	if err != nil {
 		return err
 	}
