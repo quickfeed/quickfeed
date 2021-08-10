@@ -15,7 +15,7 @@ import (
 
 func TestParseWithInvalidDir(t *testing.T) {
 	const dir = "invalid/dir"
-	_, err := parseAssignments(dir, 0)
+	_, _, err := parseAssignments(dir, 0)
 	if err == nil {
 		t.Errorf("want no such file or directory error, got nil")
 	}
@@ -94,7 +94,7 @@ func TestParse(t *testing.T) {
 		ScoreLimit:  80,
 	}
 
-	assignments, err := parseAssignments(testsDir, 0)
+	assignments, _, err := parseAssignments(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +143,7 @@ func TestParseUnknownFields(t *testing.T) {
 		ScoreLimit:  80,
 	}
 
-	assignments, err := parseAssignments(testsDir, 0)
+	assignments, _, err := parseAssignments(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
