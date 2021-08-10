@@ -31,6 +31,7 @@ jobs:
 
     - name: Build
       run: |
+        echo Location of timestamppb: `go list -m -f {{.Dir}} google.golang.org/protobuf`/types/known/timestamppb
         make hack-timestamp
         go build -v ./...
 
