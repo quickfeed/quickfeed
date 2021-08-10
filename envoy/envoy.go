@@ -67,7 +67,7 @@ func newEnvoyConfig(domain, GRPCPort, HTTPPort string, withTLS bool, certConfig 
 		}
 		config.CertConfig = &CertificateConfig{
 			CertFile: "fullchain.pem",
-			KeyFile:  "privkey.pem",
+			KeyFile:  "key.pem",
 		}
 	}
 
@@ -298,7 +298,7 @@ func generateSelfSignedCert(certsDir string, opts certOptions) (err error) {
 	}
 
 	// save server certificate
-	err = savePEM(certsDir, "servercert.pem", []*pem.Block{{Type: "CERTIFICATE", Bytes: serverCertBytes}}, defaultFileFlags, 0600)
+	err = savePEM(certsDir, "cert.pem", []*pem.Block{{Type: "CERTIFICATE", Bytes: serverCertBytes}}, defaultFileFlags, 0600)
 	if err != nil {
 		return err
 	}
@@ -308,15 +308,15 @@ func generateSelfSignedCert(certsDir string, opts certOptions) (err error) {
 		return fmt.Errorf("unable to marshal server private key: %v", err)
 	}
 
-	err = savePEM(certsDir, "serverkey.pem", []*pem.Block{{Type: "PRIVATE KEY", Bytes: serverKeyByes}}, defaultFileFlags, 0600)
+	err = savePEM(certsDir, "key.pem", []*pem.Block{{Type: "PRIVATE KEY", Bytes: serverKeyByes}}, defaultFileFlags, 0600)
 	if err != nil {
 		return err
 	}
 
 	// save fullchain
 	err = savePEM(certsDir, "fullchain.pem", []*pem.Block{
+		{Type: "CERTIFICATE", Bytes: serverCertBytes},
 		{Type: "CERTIFICATE", Bytes: caCertBytes},
-		{Type: "CERTIFICATE", Bytes: serverKeyByes},
 	}, defaultFileFlags, 0600)
 	if err != nil {
 		return err
