@@ -73,9 +73,6 @@ func main() {
 		log.Fatalf("can't connect to database: %v\n", err)
 	}
 
-	// start envoy in a docker container; fetch envoy docker image if necessary
-	// go envoy.StartEnvoy(logger)
-
 	// holds references for activated providers for current user token
 	scms := auth.NewScms()
 	bh := web.BaseHookOptions{
