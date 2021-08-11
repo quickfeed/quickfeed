@@ -2,6 +2,7 @@ package assignments
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -108,21 +109,19 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 	if err != nil {
 		return nil, "", err
 	}
-	if dockerfile != "" {
-		log.Println("Building dockerfile")
+
+	// if a Dockerfile added/updated, build docker image locally
+	if dockerfile != "" && dockerfile != course.Dockerfile {
 		job.Commands = []string{
-			"cd " + cloneDir,
-			"pwd",
-			//fmt.Sprintf("echo Building image for %s", course.Code),
-			//fmt.Sprintf("docker build -t %s .", course.Code),
+			"cd " + cloneDir + "/tests/scripts",
+			fmt.Sprintf("docker build -t %s .", course.Code),
 		}
 
 		if out, err := runner.Run(context.Background(), job); err != nil {
 			log.Printf("Failed to build image from dockerfile for %s (%s): %s", course.Code, out, err)
 		} else {
-			log.Println("Successfully built image: ", out)
+			log.Println("Built new image from course Dockerfile for ", course.Code)
 		}
 	}
-
 	return assignments, dockerfile, nil
 }
