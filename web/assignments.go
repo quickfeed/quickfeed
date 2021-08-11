@@ -42,6 +42,8 @@ func (s *AutograderService) updateAssignments(ctx context.Context, sc scm.SCM, c
 	if err != nil {
 		return err
 	}
+
+	// If new or updated dockerfile, save to database
 	if dockerfile != course.Dockerfile {
 		course.Dockerfile = dockerfile
 		if err = s.db.UpdateCourse(course); err != nil {
