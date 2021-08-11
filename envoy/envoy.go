@@ -348,7 +348,6 @@ func main() {
 	flag.BoolVar(&genConfig, "genconfig", false, "generate envoy config")
 	flag.BoolVar(&withTLS, "withTLS", false, "enable TLS configuration")
 	flag.StringVar(&envoyConfigFilePath, "config", defaultEnvoyConfig, "filepath where the envoy configuration should be created")
-	flag.BoolVar(&runEnvoy, "run", false, "run envoy container")
 	flag.Parse()
 
 	// TODO: cert config as parameter
@@ -364,8 +363,6 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Println("envoy config file created at", envoyConfigFilePath)
-	case runEnvoy:
-		// TODO: refactor startEnvoy or delete it.
 	default:
 		fmt.Println("unknown command.")
 	}
