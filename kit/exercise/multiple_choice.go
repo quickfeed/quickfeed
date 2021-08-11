@@ -39,11 +39,11 @@ func parseMCAnswers(mdFile string) (map[string]string, error) {
 	return qaMap, nil
 }
 
-// MultipleChoiceWithDesc computes the score of a multiple choice exercise
+// MultipleChoice computes the score of a multiple choice exercise
 // with student providing answers in the mdFile, where the correct map is
 // expected to contain the correct answers. The function emits a JSON Score
 // object and a corresponding message for x/y test cases passed.
-func MultipleChoiceWithDesc(t *testing.T, mdFile string, correct map[int]string) {
+func MultipleChoice(t *testing.T, mdFile string, correct map[int]string) {
 	t.Helper()
 	sc := score.NewScoreMax(t, len(correct), 1)
 	defer sc.Print(t)

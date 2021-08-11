@@ -7,7 +7,7 @@ import (
 	"github.com/autograde/quickfeed/kit/exercise"
 )
 
-func TestMultipleChoiceWithDesc(t *testing.T) {
+func TestMultipleChoice(t *testing.T) {
 	tests := []struct {
 		name  string
 		file  string
@@ -37,7 +37,7 @@ func TestMultipleChoiceWithDesc(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			exercise.MultipleChoiceWithDesc(t, filepath.Join("..", "testdata", test.file), test.qaMap)
+			exercise.MultipleChoice(t, filepath.Join("..", "testdata", test.file), test.qaMap)
 		})
 	}
 }
