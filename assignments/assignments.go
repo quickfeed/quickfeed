@@ -28,17 +28,19 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 		return
 	}
 	for _, assignment := range assignments {
-		logger.Debugf("Found assignment in '%s' repository: %v", pb.TestsRepo, assignment)
-	}
+		logger.Debugf("Found assignment in '%s' repository: %s", pb.TestsRepo, assignment.Name)
 
+	}
 	if dockerfile != "" && dockerfile != course.Dockerfile {
-		logger.Debugf("Fetched Dockerfile for course %s", course.Name)
+		logger.Debugf("Saving Dockerfile for course %s", course.Name)
 		course.Dockerfile = dockerfile
 		if err := db.UpdateCourse(course); err != nil {
 			logger.Debugf("Failed to update dockerfile for course %s: %s", course.Name, err)
 			return
 		}
 	}
+	// TODO(vera): some of the fetched assignments will have grading info updated from the criteria.json file
+	// If criteria has changed, all the old criteria (and reviews based on those) must be removed from the database to avoid confusion
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)
@@ -111,6 +113,7 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 	}
 
 	// if a Dockerfile added/updated, build docker image locally
+	// tag the image with the course code
 	if dockerfile != "" && dockerfile != course.Dockerfile {
 		job.Commands = []string{
 			"cd " + cloneDir + "/tests/scripts",
