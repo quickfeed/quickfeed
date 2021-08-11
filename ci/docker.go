@@ -62,12 +62,6 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		return "", fmt.Errorf("cannot run job: %s; docker client not initialized", job.Name)
 	}
 
-	if job.Dockerfile != "" {
-		if err := d.buildImage(ctx, job.Dockerfile, job.Image); err != nil {
-			return "", err
-		}
-	}
-
 	resp, err := d.createImage(ctx, job)
 	if err != nil {
 		return "", err
