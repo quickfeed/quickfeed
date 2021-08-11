@@ -113,7 +113,7 @@ func parseAssignments(dir string, courseID uint64, courseCode string, scriptInfo
 
 			case scriptFile:
 				log.Println("Reading scriptfile")
-				currentAssignmentName := filepath.Base(filepath.Dir(filename))
+				currentAssignmentName := filepath.Base(filepath.Dir(path))
 				scriptInfo.AssignmentName = currentAssignmentName
 				t, err := template.ParseFiles(path)
 				if err != nil {
