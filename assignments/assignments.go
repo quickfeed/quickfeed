@@ -2,7 +2,6 @@ package assignments
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -31,19 +30,12 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 		logger.Debugf("Found assignment in '%s' repository: %v", pb.TestsRepo, assignment)
 	}
 
-	if dockerfile != "" {
+	if dockerfile != "" && dockerfile != course.Dockerfile {
 		logger.Debugf("Fetched Dockerfile for course %s", course.Name)
 		course.Dockerfile = dockerfile
 		if err := db.UpdateCourse(course); err != nil {
 			logger.Debugf("Failed to update dockerfile for course %s: %s", course.Name, err)
 			return
-		}
-		job := &ci.Job{
-			Dockerfile: dockerfile,
-			Image:      course.Code + ":" + fmt.Sprint(course.Year),
-		}
-		if _, err := runner.Run(context.Background(), job); err != nil {
-			logger.Errorf("Failed to build image from Dockerfile for course %s: %s", course.Code, err)
 		}
 	}
 	if err = db.UpdateAssignments(assignments); err != nil {
@@ -112,5 +104,25 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 	}
 
 	// parse assignments found in the cloned tests directory
-	return parseAssignments(cloneDir, course.ID, course.Code)
+	assignments, dockerfile, err := parseAssignments(cloneDir, course.ID)
+	if err != nil {
+		return nil, "", err
+	}
+	if dockerfile != "" {
+		log.Println("Building dockerfile")
+		job.Commands = []string{
+			"cd " + cloneDir,
+			"pwd",
+			//fmt.Sprintf("echo Building image for %s", course.Code),
+			//fmt.Sprintf("docker build -t %s .", course.Code),
+		}
+
+		if out, err := runner.Run(context.Background(), job); err != nil {
+			log.Printf("Failed to build image from dockerfile for %s (%s): %s", course.Code, out, err)
+		} else {
+			log.Println("Successfully built image: ", out)
+		}
+	}
+
+	return assignments, dockerfile, nil
 }

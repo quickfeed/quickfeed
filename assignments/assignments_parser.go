@@ -2,7 +2,6 @@ package assignments
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -13,7 +12,6 @@ import (
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/ci"
 
 	"gopkg.in/yaml.v2"
 )
@@ -45,7 +43,7 @@ type assignmentData struct {
 
 // ParseAssignments recursively walks the given directory and parses
 // any 'assignment.yml' files found and returns an array of assignments.
-func parseAssignments(dir string, courseID uint64, courseCode string) ([]*pb.Assignment, string, error) {
+func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, error) {
 	// check if directory exist
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		return nil, "", err
@@ -136,21 +134,10 @@ func parseAssignments(dir string, courseID uint64, courseCode string) ([]*pb.Ass
 					return err
 				}
 				buffer := new(bytes.Buffer)
-				if err := t.Execute(buffer, info); err != nil {
+				if err := t.Execute(buffer, ""); err != nil {
 					return err
 				}
 				courseDockerfile = buffer.String()
-				log.Println("Building dockerfile")
-				runner := ci.Local{}
-				job := &ci.Job{
-					Commands: []string{
-						fmt.Sprintf("echo Building image for %s", courseCode),
-						fmt.Sprintf("docker build -t %s .", courseCode),
-					},
-				}
-				if _, err := runner.Run(context.Background(), job); err != nil {
-					return err
-				}
 			}
 		}
 		return nil
