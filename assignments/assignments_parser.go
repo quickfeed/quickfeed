@@ -45,7 +45,7 @@ type assignmentData struct {
 
 // ParseAssignments recursively walks the given directory and parses
 // any 'assignment.yml' files found and returns an array of assignments.
-func parseAssignments(dir string, courseID uint64, courseCode string, scriptInfo *ci.AssignmentInfo) ([]*pb.Assignment, string, error) {
+func parseAssignments(dir string, courseID uint64, courseCode string) ([]*pb.Assignment, string, error) {
 	// check if directory exist
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		return nil, "", err
@@ -114,26 +114,19 @@ func parseAssignments(dir string, courseID uint64, courseCode string, scriptInfo
 			case scriptFile:
 				log.Println("Reading scriptfile")
 				currentAssignmentName := filepath.Base(filepath.Dir(path))
-				scriptInfo.AssignmentName = currentAssignmentName
-				t, err := template.ParseFiles(path)
+				content, err := ioutil.ReadFile(path)
 				if err != nil {
-					log.Printf("Error reading script file %s: %s", path, err.Error())
 					return err
 				}
-				buffer := new(bytes.Buffer)
-				if err := t.Execute(buffer, scriptInfo); err != nil {
-					return err
-				}
-				scriptString := buffer.String()
 				if currentAssignmentName == scriptFolder {
-					defaultScript = scriptString
+					defaultScript = string(content)
 				} else {
 					assignment := findAssignmentByName(assignments, currentAssignmentName)
 					if assignment == nil {
 						log.Printf("Found scriptfile in assignment folder, could not find assignment %s\n", currentAssignmentName)
 					} else {
 						log.Println("Found assignment, added scriptfile contents")
-						assignment.ScriptFile = scriptString
+						assignment.ScriptFile = string(content)
 					}
 				}
 			case dockerfile:

@@ -2,8 +2,6 @@ package assignments
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/sha1"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -112,26 +110,7 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 	if err != nil {
 		return nil, "", err
 	}
-	repoURL := pb.RepoURL{
-		ProviderURL:  "github",
-		Organization: course.OrganizationPath,
-	}
 
-	// Info will be used when parsing a scriptfile with templates
-	info := &ci.AssignmentInfo{
-		CreatorAccessToken: course.GetAccessToken(),
-		GetURL:             cloneURL,
-		TestURL:            repoURL.TestsRepoURL(),
-		RandomSecret:       randomSecret(),
-	}
 	// parse assignments found in the cloned tests directory
-	return parseAssignments(cloneDir, course.ID, course.Code, info)
-}
-
-func randomSecret() string {
-	randomness := make([]byte, 10)
-	if _, err := rand.Read(randomness); err != nil {
-		panic("couldn't generate randomness")
-	}
-	return fmt.Sprintf("%x", sha1.Sum(randomness))
+	return parseAssignments(cloneDir, course.ID, course.Code)
 }

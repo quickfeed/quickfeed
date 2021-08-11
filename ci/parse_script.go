@@ -1,9 +1,11 @@
 package ci
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"strings"
+	"text/template"
 
 	pb "github.com/autograde/quickfeed/ag"
 )
@@ -44,12 +46,17 @@ func parseScriptTemplate(scriptPath string, info *AssignmentInfo) (*Job, error) 
 	// if err != nil {
 	// 	return nil, err
 	// }
-	// buffer := new(bytes.Buffer)
-	// if err := t.Execute(buffer, info); err != nil {
-	// 	return nil, err
-	// }
-	log.Println("Parsing script: ", info.Script)
-	s := strings.Split(info.Script, "\n")
+
+	t, err := template.New("scriptfile").Parse(info.Script)
+	if err != nil {
+		return nil, err
+	}
+	buffer := new(bytes.Buffer)
+	if err := t.Execute(buffer, info); err != nil {
+		return nil, err
+	}
+	log.Println("Parsing script template for assignment: ", info.AssignmentName)
+	s := strings.Split(buffer.String(), "\n")
 	if len(s) < 2 {
 		return nil, fmt.Errorf("no script template for assignment %s in %s", info.AssignmentName, info.TestURL)
 	}
