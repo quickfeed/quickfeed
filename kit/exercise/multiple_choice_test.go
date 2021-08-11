@@ -5,34 +5,7 @@ import (
 	"testing"
 
 	"github.com/autograde/quickfeed/kit/exercise"
-	"github.com/autograde/quickfeed/kit/score"
 )
-
-var answers = exercise.Choices{
-	{1, 'C'},
-	{2, 'B'},
-	{3, 'C'},
-	{4, 'A'},
-	{5, 'B'},
-	{6, 'D'},
-	{7, 'D'},
-	{8, 'D'},
-}
-
-// var expectToFail = []int{
-// 	3, 4, 6, 8,
-// }
-
-func TestMultipleChoice(t *testing.T) {
-	// This test aims to emulate what students may write, which should result in test failure.
-	// Hence, we do not run this as part of the CI tests.
-	// Comment t.Skip to test that TestMultipleChoice fails, which is expected.
-	t.Skip("Skipping because it is expected to fail (see comment).")
-
-	oldStyleMC := filepath.Join("..", "testdata", "old-style-answers.md")
-	sc := score.NewScoreMax(t, len(answers), 1)
-	exercise.MultipleChoice(t, sc, oldStyleMC, answers)
-}
 
 func TestMultipleChoiceWithDesc(t *testing.T) {
 	tests := []struct {
