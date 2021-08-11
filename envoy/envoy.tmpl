@@ -60,9 +60,6 @@ static_resources:
               domains:
                 - "{{ .Domain }}"
               routes:
-              - match: { prefix: "/ag.AutograderService/"}
-                route: 
-                  cluster: grpc_service
               - match: { prefix: "/"}
                 route:
                   cluster: web_service
@@ -74,7 +71,6 @@ static_resources:
                   - prefix: "*"
                 allow_headers: access-control-allow-origin
           http_filters:
-          - name: envoy.filters.http.grpc_web
           - name: envoy.filters.http.cors
           - name: envoy.filters.http.router
           http_protocol_options: { accept_http_10: true}
@@ -89,7 +85,7 @@ static_resources:
                 filename: /etc/letsencrypt/live/{{ .Domain }}/{{ .CertConfig.CertFile }}
               private_key:
                 filename: /etc/letsencrypt/live/{{ .Domain }}/{{ .CertConfig.KeyFile }}
-{{- else -}}
+{{- else }}
   - name: http_server_gateway
     address:
       socket_address: { address: 0.0.0.0, port_value: 80 }
@@ -123,8 +119,10 @@ static_resources:
           - name: envoy.filters.http.cors
           - name: envoy.filters.http.router
           http_protocol_options: { accept_http_10: true}
-
+{{ end }}
+  # Gateway for the AutograderService gRPC server
   - name: grpc_gateway
+    # Replace 8080 with whichever port you want to be routed to the gRPC server
     address:
       socket_address: { address: 0.0.0.0, port_value: 8080 }
     filter_chains:
@@ -158,12 +156,25 @@ static_resources:
           - name: envoy.filters.http.cors
           - name: envoy.filters.http.router
           http_protocol_options: { accept_http_10: true}
+{{- if .TLSEnabled }}
+      transport_socket:
+        name: envoy.transport_socket.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+          common_tls_context:
+            # Replace certificate with your certificates
+            tls_certificates:
+              certificate_chain:
+                filename: /etc/letsencrypt/live/{{ .Domain }}/{{ .CertConfig.CertFile }}
+              private_key:
+                filename: /etc/letsencrypt/live/{{ .Domain }}/{{ .CertConfig.KeyFile }}
 {{ end }}
   clusters:
   - name: grpc_service
     connect_timeout: 1500s
     type: logical_dns
     http2_protocol_options: {}
+    upstream_connection_options: { tcp_keepalive: { keepalive_time: 300 }}
     lb_policy: round_robin
     load_assignment:
       cluster_name: cluster_0
@@ -171,7 +182,7 @@ static_resources:
         - lb_endpoints:
           - endpoint:
               address:
-                socket_address: { address: localhost, port_value: {{ .GRPCPort }} }
+                socket_address: { address: {{ .ServerHost }}, port_value: {{ .GRPCPort }} }
   - name: web_service
     connect_timeout: 15s
     type: strict_dns
@@ -183,5 +194,5 @@ static_resources:
         - lb_endpoints:
           - endpoint:
               address:
-                socket_address: { address: localhost, port_value: {{ .HTTPPort }} }
+                socket_address: { address: {{ .ServerHost }}, port_value: {{ .HTTPPort }} }
 {{ end -}}

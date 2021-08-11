@@ -10,7 +10,9 @@ services:
         - DOMAIN=${DOMAIN}
     ports:
       - "80:80"
+      - "443:443"
       - "8080:8080"
+      # - "9901:9901" # envoy admin endpoint.
     networks:
       - quickfeed_net
     volumes:
@@ -24,9 +26,10 @@ services:
       dockerfile: ./Dockerfile
     links:
       - envoy
-    ports:
-      - "8081:8081"
-      - "9090:9090"
+    # Uncomment to expose quickfeed ports for debugging on the host machine.
+    # ports:
+    #   - "8081:8081"
+    #   - "9090:9090"
     networks:
       - quickfeed_net
 

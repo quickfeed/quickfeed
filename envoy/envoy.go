@@ -40,15 +40,17 @@ type CertificateConfig struct {
 
 type EnvoyConfig struct {
 	Domain     string
+	ServerHost string
 	GRPCPort   string
 	HTTPPort   string
 	TLSEnabled bool
 	CertConfig *CertificateConfig
 }
 
-func newEnvoyConfig(domain, GRPCPort, HTTPPort string, withTLS bool, certConfig *CertificateConfig) (*EnvoyConfig, error) {
+func newEnvoyConfig(domain, serverHost, GRPCPort, HTTPPort string, withTLS bool, certConfig *CertificateConfig) (*EnvoyConfig, error) {
 	config := &EnvoyConfig{
 		Domain:     strings.Trim(domain, "\""),
+		ServerHost: serverHost,
 		GRPCPort:   GRPCPort,
 		HTTPPort:   HTTPPort,
 		TLSEnabled: withTLS,
@@ -60,7 +62,7 @@ func newEnvoyConfig(domain, GRPCPort, HTTPPort string, withTLS bool, certConfig 
 			return config, nil
 		}
 		err := generateSelfSignedCert(path.Join(path.Dir(pwd), "certs"), certOptions{
-			hosts: fmt.Sprintf("%s,%s", "127.0.0.1", domain),
+			hosts: fmt.Sprintf("%s,%s", "localhost", domain),
 		})
 		if err != nil {
 			return nil, err
@@ -345,7 +347,7 @@ func loadConfigEnv(withTLS bool) (*EnvoyConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newEnvoyConfig(os.Getenv("DOMAIN"), os.Getenv("GRPC_PORT"), os.Getenv("HTTP_PORT"), withTLS, nil)
+	return newEnvoyConfig(os.Getenv("DOMAIN"), os.Getenv("SERVER_HOST"), os.Getenv("GRPC_PORT"), os.Getenv("HTTP_PORT"), withTLS, nil)
 }
 
 func main() {

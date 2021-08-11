@@ -1,5 +1,4 @@
-# Quickfeed builder
-FROM golang:1.16-alpine AS builder
+FROM golang:1.16-alpine
 RUN apk update && apk add --no-cache \
         ca-certificates \
         build-base \
@@ -12,6 +11,10 @@ RUN apk update && apk add --no-cache \
         npm
 ADD . /quickfeed
 WORKDIR /quickfeed
-RUN make devtools && make ui && make proto && make install
+RUN make devtools
+RUN make proto
+RUN make ui
+RUN make install
 
+EXPOSE 8080 9091
 ENTRYPOINT ["quickfeed"]
