@@ -147,8 +147,13 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 			return
 		}
 		if len(savedAssignment.GetGradingBenchmarks()) > 0 {
-			if diff := cmp.Diff(assignment.GradingBenchmarks, resetIDs(savedAssignment.GradingBenchmarks), protocmp.Transform()); diff != "" {
-				logger.Debugf("Grading criteria updated for %s, removing all criteria. Diff is %s", assignment.Name, diff)
+			if diff := cmp.Diff(assignment.GradingBenchmarks, savedAssignment.GradingBenchmarks, cmp.Options{
+				protocmp.Transform(),
+				protocmp.IgnoreFields(&pb.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
+				protocmp.IgnoreFields(&pb.GradingCriterion{}, "ID", "BenchmarkID"),
+				protocmp.IgnoreEnums(),
+			}); diff != "" {
+				logger.Debugf("Grading criteria updated for %s, removing all criteria: Diff: \n%s", diff)
 				for _, bm := range savedAssignment.GradingBenchmarks {
 					for _, c := range bm.Criteria {
 						if err := db.DeleteCriterion(c); err != nil {
@@ -170,6 +175,7 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 					}
 				}
 			} else {
+				assignment.GradingBenchmarks = nil
 				logger.Debugf("Grading criteria did not change, skipping")
 			}
 		}
@@ -181,13 +187,4 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 			}
 		}
 	}
-}
-
-// resetIDs helps comparing grading criteria from criteria.json file (will have no IDs) with criteria in the database (have IDs)
-func resetIDs(benchmarks []*pb.GradingBenchmark) []*pb.GradingBenchmark {
-	var copy []*pb.GradingBenchmark
-	for _, bm := range benchmarks {
-		copy = append(copy, bm.CloneWithoutIDs())
-	}
-	return copy
 }

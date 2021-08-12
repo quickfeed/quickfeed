@@ -25,22 +25,3 @@ func (r *Review) ComputeScore() {
 		r.Score = uint32(scorePoints)
 	}
 }
-
-// CloneWithoutIDs copies the given grading benchmark without IDs
-func (bm *GradingBenchmark) CloneWithoutIDs() *GradingBenchmark {
-	var criteria []*GradingCriterion
-	newBenchmark := &GradingBenchmark{
-		Heading: bm.Heading,
-		Comment: bm.Comment,
-	}
-	for _, c := range bm.Criteria {
-		newCriterion := &GradingCriterion{
-			Points:      c.Points,
-			Description: c.Description,
-			Grade:       c.Grade,
-		}
-		criteria = append(criteria, newCriterion)
-	}
-	newBenchmark.Criteria = criteria
-	return newBenchmark
-}
