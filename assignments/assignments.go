@@ -11,7 +11,10 @@ import (
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/scm"
+	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/testing/protocmp"
+	"gorm.io/gorm"
 )
 
 // UpdateFromTestsRepo updates the database record for the course assignments.
@@ -29,18 +32,17 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 	}
 	for _, assignment := range assignments {
 		logger.Debugf("Found assignment in '%s' repository: %s", pb.TestsRepo, assignment.Name)
-
+		updateGradingCriteria(logger, db, assignment)
 	}
 	if dockerfile != "" && dockerfile != course.Dockerfile {
-		logger.Debugf("Saving Dockerfile for course %s", course.Name)
+		logger.Debugf("Saving Dockerfile for course %s", course.Code)
 		course.Dockerfile = dockerfile
 		if err := db.UpdateCourse(course); err != nil {
-			logger.Debugf("Failed to update dockerfile for course %s: %s", course.Name, err)
+			logger.Debugf("Failed to update dockerfile for course %s: %s", course.Code, err)
 			return
 		}
 	}
-	// TODO(vera): some of the fetched assignments will have grading info updated from the criteria.json file
-	// If criteria has changed, all the old criteria (and reviews based on those) must be removed from the database to avoid confusion
+
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)
@@ -127,4 +129,60 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 		}
 	}
 	return assignments, dockerfile, nil
+}
+
+// updateGradingCriteria will remove old grading criteria and related reviews when criteria.json gets updated
+func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment) {
+	if len(assignment.GetGradingBenchmarks()) > 0 {
+		savedAssignment, err := db.GetAssignment(&pb.Assignment{
+			CourseID: assignment.CourseID,
+			Name:     assignment.Name,
+		})
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				// a new assignment, no actions required
+				return
+			}
+			logger.Debugf("Failed to fetch assignment %s from database: %s", assignment.Name, err)
+			return
+		}
+		if len(savedAssignment.GetGradingBenchmarks()) > 0 {
+			if diff := cmp.Diff(assignment.GradingBenchmarks, savedAssignment.GradingBenchmarks, protocmp.Transform()); diff != "" {
+				for _, bm := range assignment.GradingBenchmarks {
+					for _, c := range bm.Criteria {
+						if err := db.DeleteCriterion(c); err != nil {
+							fmt.Printf("Failed to delete criteria %v: %s\n", c, err)
+						}
+					}
+					if err := db.DeleteBenchmark(bm); err != nil {
+						fmt.Printf("Failed to delete benchmark %v: %s\n", bm, err)
+					}
+				}
+				submissions, err := db.GetSubmissions(&pb.Submission{AssignmentID: assignment.GetID()})
+				if err != nil {
+					logger.Debugf("No submissions for assignment %s: %s", assignment.Name, err)
+					return
+				}
+				for _, submission := range submissions {
+					if err := db.DeleteReview(&pb.Review{SubmissionID: submission.ID}); err != nil {
+						logger.Debugf("Failed to delete reviews for submission %s to assignment %s: %s", submission.ID, assignment.Name, err)
+					}
+				}
+			}
+		}
+		for _, bm := range assignment.GradingBenchmarks {
+			bm.AssignmentID = assignment.ID
+			if err := db.CreateBenchmark(bm); err != nil {
+				logger.Errorf("Failed to save grading benchmark: %s", err)
+				return
+			}
+			for _, c := range bm.Criteria {
+				c.BenchmarkID = bm.ID
+				if err := db.CreateCriterion(c); err != nil {
+					logger.Errorf("Failed to save grading criterion: %s", err)
+					return
+				}
+			}
+		}
+	}
 }

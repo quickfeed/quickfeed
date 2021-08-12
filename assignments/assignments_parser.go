@@ -89,7 +89,6 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 				assignments = append(assignments, assignment)
 
 			case criteriaFile:
-				// get name of the assignment == folder name
 				assignmentName := filepath.Base(filepath.Dir(filename))
 				log.Println("Found criteria.json in the assignment folder ", assignmentName)
 				criteria, err := ioutil.ReadFile(path)
