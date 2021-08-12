@@ -117,13 +117,6 @@ type RepositoryOptions struct {
 	Owner string
 }
 
-// FileOptions used to fetch a file content from a repository.
-type FileOptions struct {
-	Path       string
-	Owner      string
-	Repository string
-}
-
 // Hook contains information about a webhook for a repository.
 type Hook struct {
 	ID     uint64

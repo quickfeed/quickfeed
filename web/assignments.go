@@ -11,7 +11,6 @@ import (
 )
 
 var (
-	criteriaFile = "criteria.json"
 	reviewLayout = "02 Jan 15:04"
 )
 
@@ -154,29 +153,6 @@ func (s *AutograderService) updateReview(review *pb.Review) (*pb.Review, error) 
 	}
 
 	return review, nil
-}
-
-func (s *AutograderService) removeOldCriteriaAndReviews(assignment *pb.Assignment) error {
-	for _, bm := range assignment.GradingBenchmarks {
-		for _, c := range bm.Criteria {
-			if err := s.db.DeleteCriterion(c); err != nil {
-				fmt.Printf("Failed to delete criteria %v: %s\n", c, err)
-			}
-		}
-		if err := s.db.DeleteBenchmark(bm); err != nil {
-			fmt.Printf("Failed to delete benchmark %v: %s\n", bm, err)
-		}
-	}
-	submissions, err := s.db.GetSubmissions(&pb.Submission{AssignmentID: assignment.GetID()})
-	if err != nil {
-		return err
-	}
-	for _, submission := range submissions {
-		if err := s.db.DeleteReview(&pb.Review{SubmissionID: submission.ID}); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (s *AutograderService) getAssignmentWithCourse(query *pb.Assignment, withCourseInfo bool) (*pb.Assignment, *pb.Course, error) {
