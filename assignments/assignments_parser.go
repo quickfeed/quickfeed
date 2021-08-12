@@ -89,7 +89,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 				assignments = append(assignments, assignment)
 
 			case criteriaFile:
-				assignmentName := filepath.Base(filepath.Dir(filename))
+				assignmentName := filepath.Base(filepath.Dir(path))
 				log.Println("Found criteria.json in the assignment folder ", assignmentName)
 				criteria, err := ioutil.ReadFile(path)
 				if err != nil {
@@ -99,7 +99,6 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 				if err := json.Unmarshal(criteria, &benchmarks); err != nil {
 					return err
 				}
-				log.Printf("Unmarshalled %d benchmarks for assignment %s\n", len(benchmarks), assignmentName)
 				assignment := findAssignmentByName(assignments, assignmentName)
 				if assignment == nil {
 					log.Printf("Found benchmarks, could not find assignment %s\n", assignmentName)

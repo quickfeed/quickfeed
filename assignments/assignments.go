@@ -125,7 +125,7 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 		if out, err := runner.Run(context.Background(), job); err != nil {
 			log.Printf("Failed to build image from dockerfile for %s (%s): %s", course.Code, out, err)
 		} else {
-			log.Println("Built new image from course Dockerfile for ", course.Code)
+			log.Println("Built new image from Dockerfile for ", course.Code)
 		}
 	}
 	return assignments, dockerfile, nil
@@ -147,8 +147,9 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 			return
 		}
 		if len(savedAssignment.GetGradingBenchmarks()) > 0 {
-			if diff := cmp.Diff(assignment.GradingBenchmarks, savedAssignment.GradingBenchmarks, protocmp.Transform()); diff != "" {
-				for _, bm := range assignment.GradingBenchmarks {
+			if diff := cmp.Diff(assignment.GradingBenchmarks, resetIDs(savedAssignment.GradingBenchmarks), protocmp.Transform()); diff != "" {
+				logger.Debugf("Grading criteria updated for %s, removing all criteria. Diff is %s", assignment.Name, diff)
+				for _, bm := range savedAssignment.GradingBenchmarks {
 					for _, c := range bm.Criteria {
 						if err := db.DeleteCriterion(c); err != nil {
 							fmt.Printf("Failed to delete criteria %v: %s\n", c, err)
@@ -168,21 +169,25 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 						logger.Debugf("Failed to delete reviews for submission %s to assignment %s: %s", submission.ID, assignment.Name, err)
 					}
 				}
+			} else {
+				logger.Debugf("Grading criteria did not change, skipping")
 			}
 		}
 		for _, bm := range assignment.GradingBenchmarks {
 			bm.AssignmentID = assignment.ID
 			if err := db.CreateBenchmark(bm); err != nil {
-				logger.Errorf("Failed to save grading benchmark: %s", err)
+				logger.Errorf("Failed to save grading benchmark %+v: %s", bm, err)
 				return
-			}
-			for _, c := range bm.Criteria {
-				c.BenchmarkID = bm.ID
-				if err := db.CreateCriterion(c); err != nil {
-					logger.Errorf("Failed to save grading criterion: %s", err)
-					return
-				}
 			}
 		}
 	}
+}
+
+// resetIDs helps comparing grading criteria from criteria.json file (will have no IDs) with criteria in the database (have IDs)
+func resetIDs(benchmarks []*pb.GradingBenchmark) []*pb.GradingBenchmark {
+	var copy []*pb.GradingBenchmark
+	for _, bm := range benchmarks {
+		copy = append(copy, bm.CloneWithoutIDs())
+	}
+	return copy
 }
