@@ -7,6 +7,9 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"testing"
+
+	"github.com/autograde/quickfeed/kit/score"
 )
 
 // compile regular expressions only once
@@ -69,4 +72,20 @@ func Print(questions []int, preLabel, afterLabel, sep string) string {
 		}
 	}
 	return b.String()
+}
+
+// MultipleChoice reads the answer file in markdown format and compare answers with the correct map.
+// The result is updated via the score object.
+func MultipleChoice(t *testing.T, sc *score.Score, answerFile string, correct map[int]string) {
+	t.Helper()
+	answers, err := ParseMarkdownAnswers(answerFile)
+	if err != nil {
+		sc.Fail()
+		t.Fatal(err)
+	}
+	_, incorrectAnswers := CheckMultipleChoice(answers, correct)
+	for _, incorrect := range incorrectAnswers {
+		t.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.TestName, incorrect)
+		sc.Dec()
+	}
 }
