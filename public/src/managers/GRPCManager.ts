@@ -319,13 +319,6 @@ export class GrpcManager {
         return this.grpcSend<Reviewers>(this.agService.getReviewers, request);
     }
 
-    public loadCriteria(assignmentID: number, courseID: number): Promise<IGrpcResponse<Benchmarks>> {
-        const request = new AssignmentRequest();
-        request.setAssignmentid(assignmentID);
-        request.setCourseid(courseID);
-        return this.grpcSend<Benchmarks>(this.agService.loadCriteria, request);
-    }
-
     // /* REPOSITORY */ //
 
     public getRepositories(courseID: number, types: Repository.Type[]): Promise<IGrpcResponse<Repositories>> {

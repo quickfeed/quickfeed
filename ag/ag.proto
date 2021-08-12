@@ -457,6 +457,7 @@ service AutograderService {
     rpc RebuildSubmissions(AssignmentRequest) returns (Void) {}
 
     // manual grading //
+    
     rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
     rpc UpdateBenchmark(GradingBenchmark) returns (Void) {}
     rpc DeleteBenchmark(GradingBenchmark) returns (Void) {}
@@ -468,8 +469,6 @@ service AutograderService {
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Review) {}
     rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers) {}
-
-    rpc LoadCriteria(AssignmentRequest) returns (Benchmarks) {}
 
     // misc //
     

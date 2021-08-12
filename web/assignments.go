@@ -2,9 +2,7 @@ package web
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -89,52 +87,6 @@ func (s *AutograderService) updateCriterion(query *pb.GradingCriterion) error {
 
 func (s *AutograderService) deleteCriterion(query *pb.GradingCriterion) error {
 	return s.db.DeleteCriterion(query)
-}
-
-// TODO(meling) The criteria.json can be loaded in assignments/FetchAssignments() which already clones the tests repo
-func (s *AutograderService) loadCriteria(ctx context.Context, sc scm.SCM, request *pb.AssignmentRequest) ([]*pb.GradingBenchmark, error) {
-	query := &pb.Assignment{ID: request.AssignmentID, CourseID: request.CourseID}
-	assignment, course, err := s.getAssignmentWithCourse(query, false)
-	if err != nil {
-		return nil, err
-	}
-
-	opts := &scm.FileOptions{
-		Path:       filepath.Join(assignment.GetName(), criteriaFile),
-		Owner:      course.OrganizationPath,
-		Repository: pb.TestsRepo,
-	}
-
-	criteriaString, err := sc.GetFileContent(ctx, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	var benchmarks []*pb.GradingBenchmark
-	if err := json.Unmarshal([]byte(criteriaString), &benchmarks); err != nil {
-		return nil, err
-	}
-
-	if len(assignment.GradingBenchmarks) > 0 {
-		if err := s.removeOldCriteriaAndReviews(assignment); err != nil {
-			return nil, err
-		}
-	}
-
-	for _, bm := range benchmarks {
-		bm.AssignmentID = assignment.ID
-		if err := s.db.CreateBenchmark(bm); err != nil {
-			return nil, err
-		}
-		for _, c := range bm.Criteria {
-			c.BenchmarkID = bm.ID
-			if err := s.db.CreateCriterion(c); err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	return benchmarks, nil
 }
 
 func (s *AutograderService) createReview(review *pb.Review) (*pb.Review, error) {

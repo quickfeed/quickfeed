@@ -103,7 +103,6 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 				if assignment == nil {
 					log.Printf("Found benchmarks, could not find assignment %s\n", assignmentName)
 				} else {
-					log.Println("Found assignment, added benchmarks from a file")
 					assignment.GradingBenchmarks = benchmarks
 				}
 

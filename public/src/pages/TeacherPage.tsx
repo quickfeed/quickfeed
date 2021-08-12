@@ -445,13 +445,6 @@ export class TeacherPage extends ViewPage {
                 runAllTests={(assignmentID: number, courseID: number) => {
                     return this.courseMan.rebuildSubmissions(assignmentID, courseID);
                 }}
-                loadBenchmarks={async () => {
-                    const ans = await this.courseMan.loadCriteria(a.getId(), course.getId());
-                    if (ans.length > 0) {
-                        a.setGradingbenchmarksList(ans);
-                    }
-                    return ans;
-                }}
             ></AssignmentView>)
         }</div>
     }
