@@ -81,7 +81,15 @@ brew:
 	@echo "Installing homebrew packages needed for development and deployment"
 	@brew install go protobuf webpack npm node docker certbot envoy
 
-envoy-build: envoy-config
+envoy-config:
+ifeq ($(DOMAIN),)
+	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)." && false
+else
+	@echo "Generating Envoy configuration for '$$DOMAIN'."
+	@go run ./envoy/envoy.go --genconfig
+endif
+
+envoy-build:
 	@echo "Building Autograder Envoy proxy"
 	@docker-compose build --force-rm envoy
 
@@ -126,14 +134,6 @@ run:
 
 runlocal:
 	@quickfeed -service.url 127.0.0.1
-
-envoy-config:
-ifeq ($(DOMAIN),)
-	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)." && false
-else
-	@echo "Generating Envoy configuration for '$$DOMAIN'."
-	@go run ./envoy/envoy.go --genconfig --withTLS
-endif
 
 prometheus:
 	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --storage.tsdb.retention.size=1024MB --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &

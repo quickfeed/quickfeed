@@ -51,11 +51,11 @@ func newEnvoyConfig(domain, serverHost, GRPCPort, HTTPPort string, withTLS bool,
 	}
 
 	if withTLS {
-		if certConfig != nil {
+		if certConfig.CertFile != "" && certConfig.KeyFile != "" {
 			config.CertConfig = certConfig
 			return config, nil
 		}
-		err := generateSelfSignedCert(path.Join(path.Dir(pwd), "certs"), certOptions{
+		err := generateSelfSignedCert(certOptions{
 			hosts: fmt.Sprintf("%s,%s", "localhost", domain),
 		})
 		if err != nil {
@@ -202,17 +202,30 @@ func publicKey(priv interface{}) interface{} {
 
 type certOptions struct {
 	hosts     string        // comma-separated hostnames and IPs to generate a certificate for.
-	validFrom time.Time     // creation date (default duration is 1 year: 365*24*time.Hour)
+	validFrom time.Time     // creation date (default duration is 1 year)
 	validFor  time.Duration // for how long the certificate is valid.
-	keyType   string
+	keyType   string        // default ECDSA curve P256
 }
 
 const defaultFileFlags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 
+var (
+	genConfig           bool
+	withTLS             bool
+	certFile            string
+	keyFile             string
+	envoyConfigFilePath string
+	_, pwd, _, _        = runtime.Caller(0)
+	codePath            = path.Join(path.Dir(pwd), "..")
+	env                 = filepath.Join(codePath, ".env")
+	certsDir            = path.Join(path.Dir(pwd), "certs")
+	defaultEnvoyConfig  = filepath.Join(path.Dir(pwd), "envoy.yaml")
+)
+
 // generateSelfSignedCert generates a self-signed X.509 certificate for testing purposes.
 // It supports ECDSA curve P256 or RSA 2048 bits to generate the key.
 // based on: https://golang.org/src/crypto/tls/generate_cert.go
-func generateSelfSignedCert(certsDir string, opts certOptions) (err error) {
+func generateSelfSignedCert(opts certOptions) (err error) {
 	if len(opts.hosts) == 0 {
 		return errors.New("at least one hostname must be specified")
 	}
@@ -322,36 +335,32 @@ func generateSelfSignedCert(certsDir string, opts certOptions) (err error) {
 	return nil
 }
 
-var (
-	genConfig           bool
-	withTLS             bool
-	runEnvoy            bool
-	envoyConfigFilePath string
-	_, pwd, _, _        = runtime.Caller(0)
-	codePath            = path.Join(path.Dir(pwd), "..")
-	env                 = filepath.Join(codePath, ".env")
-	defaultEnvoyConfig  = filepath.Join(path.Dir(pwd), "envoy.yaml")
-)
-
 // loadConfigEnv loads the  envoy config from the environment variables.
 // It will not override a variable that already exists.
 // Consider the .env file to set development vars or defaults.
-func loadConfigEnv(withTLS bool) (*EnvoyConfig, error) {
+func loadConfigEnv(withTLS bool, config *CertificateConfig) (*EnvoyConfig, error) {
 	err := godotenv.Load(env)
 	if err != nil {
 		return nil, err
 	}
-	return newEnvoyConfig(os.Getenv("DOMAIN"), os.Getenv("SERVER_HOST"), os.Getenv("GRPC_PORT"), os.Getenv("HTTP_PORT"), withTLS, nil)
+
+	return newEnvoyConfig(os.Getenv("DOMAIN"), os.Getenv("SERVER_HOST"), os.Getenv("GRPC_PORT"), os.Getenv("HTTP_PORT"), withTLS, config)
 }
 
+// TODO: improve parameter handling when generating certificates (keyType, etc).
+// TODO: save certs at: /etc/ssl/certs and private keys at: /etc/ssl/private by default.
 func main() {
 	flag.BoolVar(&genConfig, "genconfig", false, "generate envoy config")
 	flag.BoolVar(&withTLS, "withTLS", false, "enable TLS configuration")
+	flag.StringVar(&certFile, "certFile", "", "certificate file")
+	flag.StringVar(&keyFile, "keyFile", "", "private key file")
 	flag.StringVar(&envoyConfigFilePath, "config", defaultEnvoyConfig, "filepath where the envoy configuration should be created")
 	flag.Parse()
 
-	// TODO: cert config as parameter
-	config, err := loadConfigEnv(withTLS)
+	config, err := loadConfigEnv(withTLS, &CertificateConfig{
+		CertFile: certFile,
+		KeyFile:  keyFile,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
