@@ -68,18 +68,6 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 	ctx, cancel := context.WithTimeout(c, pb.MaxWait)
 	defer cancel()
 
-	// ensuring compatibility with the old database:
-	// TODO(meling) Check if this is still needed with the new database?
-	if course.OrganizationPath == "" {
-		org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID})
-		if err != nil {
-			return nil, "", err
-		}
-		course.OrganizationPath = org.GetPath()
-	}
-
-	log.Printf("org %s\n", course.GetOrganizationPath())
-
 	cloneURL := sc.CreateCloneURL(&scm.URLPathOptions{
 		Organization: course.OrganizationPath,
 		Repository:   pb.TestsRepo,
