@@ -1,6 +1,14 @@
 # Preparing a new Release of QuickFeed's kit Module
 
-Below are the steps to prepare a new release of QuickFeed's kit Module.
+## Testing the kit module before a release
+
+Before releasing the kit module, you may wish to test it locally on a course that uses the various APIs; to do this, use go mod's `replace` directive:
+
+```shell
+% go mod edit -replace=github.com/autograde/quickfeed/kit=../../quickfeed/kit
+```
+
+## Install tools needed for release
 
 To cut a release you will need additional tools:
 
@@ -8,6 +16,10 @@ To cut a release you will need additional tools:
 % go install golang.org/x/exp/cmd/gorelease@latest
 % brew install gh
 ```
+
+## Steps necessary to cut a release
+
+Below are the steps needed to prepare a new release of QuickFeed's kit module.
 
 1. Run `gorelease` to suggested new version number, e.g.:
 
@@ -57,6 +69,8 @@ To cut a release you will need additional tools:
 5. From your course that depend on new features of the kit module:
 
    ```shell
+   # if you have used a replace directive
+   % go mod edit -dropreplace=github.com/autograde/quickfeed/kit
    % go get -u github.com/autograde/quickfeed/kit
    % go mod tidy
    % git add go.mod go.sum
