@@ -1,9 +1,24 @@
 # Quickfeed Deployments
 
 ## Table of Contents
-
-- [Docker deployment](#docker-deployment)
-- [Bare metal deployment](#bare-metal-deployment)
+- [Preparing the Environment](#preparing-the-environment)
+  - [Configuring Docker](#configuring-docker)
+  - [Setup Environment Variables](#setup-environment-variables)
+  - [Generate Envoy Configuration File](#generate-envoy-configuration-file)
+  - [Configure GitHub OAuth Application for QuickFeed](#configure-github-oauth-application-for-quickfeed)
+- [Docker Deployment](#docker-deployment)
+- [Bare Metal Deployment](#bare-metal-deployment)
+  - [Deployment with Domain Name and Let's Encrypt Certificates](#deployment-with-domain-name-and-lets-encrypt-certificates)
+  - [Configure Fixed IP and Router](#configure-fixed-ip-and-router)
+  - [Install Tools for Deployment](#install-tools-for-deployment)
+  - [Install Tools for Development](#install-tools-for-development)
+  - [Generate Certbot Private Key and Certificate](#generate-certbot-private-key-and-certificate)
+  - [Run Envoy](#run-envoy)
+  - [Build and Run QuickFeed Server](#build-and-run-quickfeed-server)
+    - [Troubleshooting](#troubleshooting)
+  - [Running the QuickFeed Server Details](#running-the-quickfeed-server-details)
+    - [Flags](#flags)
+    - [Custom Docker Image for a Course](#custom-docker-image-for-a-course)
 
 ## Preparing the Environment
 
