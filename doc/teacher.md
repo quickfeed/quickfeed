@@ -51,10 +51,10 @@ Each course in QuickFeed is based on a separate GitHub organization.
 
 - You can also [apply for an Educator discount](https://education.github.com/discount_requests/new) on GitHub.
 
-For teachers, GitHub is happy to upgrade your organization to serve private repositories
+For teachers, GitHub is happy to upgrade your organization to serve private repositories.
 
-- There should not be any course repositories in your organization before the course creation, as QuickFeed will create repositories with GitHub webhook events automatically.
-  Course repositories are repositories with names `assignments`, `tests` or `course-info`.
+- There should not be any repositories in your organization before the course creation, as QuickFeed will create repositories with GitHub webhook events automatically.
+  Course repositories are named `assignments`, `tests`, and `info`.
   If you already have such repositories in your organization, you will have to remove (or temporarily rename) them in order to be able to create a new course.
 
 ### Notifications
@@ -77,7 +77,7 @@ These will be created automatically when a course is created.
 
 | Repository name | Description                                                                    | Access                         |
 |-----------------|--------------------------------------------------------------------------------|--------------------------------|
-| course-info     | Holds information about the course.                                            | Public                         |
+| info            | Holds information about the course.                                            | Public                         |
 | assignments     | Contains a separate folder for each assignment.                                | Students, Teachers, QuickFeed  |
 | username-labs   | Created for each student username in QuickFeed                                 | Student, Teachers, QuickFeed   |
 | tests           | Contains a separate folder for each assignment with tests for that assignment. | Teachers, QuickFeed            |
@@ -94,8 +94,8 @@ Each `assignment` folder in the tests repository contains one or more test file 
 The format of this file will describe various aspects of an assignment, such as submission deadline, approve: manual or automatic, which script file to run to test the assignment, etc.
 See below for an example.
 
-We recommend that course-info and source templates for assignments, tests and solution code are kept in a separate organization and repository that can be maintained over multiple years.
-Then a member of the teaching staff can copy course-info, the code template for assignments and tests to the corresponding repositories in the present-year's organization, either manually or with scripts.
+We recommend that course information in the `info` repository and source templates for assignments, tests and solution code are kept in a separate organization/repository that can be maintained over multiple years.
+A member of the teaching staff can then copy course `info`, the code template for assignments and tests to the corresponding repositories in the present-year's organization, either manually or with scripts.
 
 That is, these repositories should not be cloned or forked from an old version of the course.
 This approach prevents accidentally revealing commit history from old course instances.

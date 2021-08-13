@@ -169,7 +169,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 
 	switch state {
 	case pb.Enrollment_STUDENT:
-		// give access to course-info and assignments repositories
+		// give access to the course's info and assignments repositories
 		if err := grantAccessToCourseRepos(ctx, sc, org.GetPath(), login); err != nil {
 			return nil, err
 		}
@@ -238,7 +238,6 @@ func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *p
 
 // remove user from teachers team, set organization status from owner to regular member
 func revokeTeacherStatus(ctx context.Context, sc scm.SCM, org, userName string) error {
-
 	teamOpts := &scm.TeamMembershipOptions{
 		Organization: org,
 		TeamName:     scm.TeachersTeam,
