@@ -70,8 +70,6 @@ func runTests(runner Runner, info *AssignmentInfo, rData *RunData) (*execData, e
 
 	// TODO(vera): check potential problems:
 	// - missing dockerfile
-	// - course image exists but scriptfile has another image in the header
-	// - assignment specific and default scriptfiles executed for correct assignments
 
 	job.Name = rData.String(info.RandomSecret[:6])
 	start := time.Now()
