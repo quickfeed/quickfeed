@@ -24,13 +24,11 @@ func TestParseWithInvalidDir(t *testing.T) {
 const (
 	y1 = `assignmentid: 1
 name: "For loops"
-scriptfile: "go.sh"
 deadline: "27-08-2017 12:00"
 autoapprove: false
 `
 	y2 = `assignmentid: 2
 name: "Nested loops"
-scriptfile: "java.sh"
 deadline: "27-08-2018 12:00"
 autoapprove: false
 `
@@ -38,12 +36,15 @@ autoapprove: false
 	yUnknownFields = `assignmentid: 1
 subject: "Go Programming for Fun and Profit"
 name: "For loops"
-scriptfile: "go.sh"
 deadline: "27-08-2017 12:00"
 grading: "Pass/Fail"
 expected_effort: "10 hours"
 autoapprove: false
 `
+
+	script  = `Default script`
+	script1 = `Script for Lab1`
+	df      = `A dockerfile in training`
 )
 
 func TestParse(t *testing.T) {
@@ -58,6 +59,7 @@ func TestParse(t *testing.T) {
 			"cd " + testsDir,
 			"mkdir lab1",
 			"mkdir lab2",
+			"mkdir scripts",
 		},
 	}
 	runner := ci.Local{}
@@ -73,13 +75,25 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	err = ioutil.WriteFile(filepath.Join(testsDir, "scripts", "run.sh"), []byte(script), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = ioutil.WriteFile(filepath.Join(testsDir, "lab1", "run.sh"), []byte(script1), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = ioutil.WriteFile(filepath.Join(testsDir, "scripts", "Dockerfile"), []byte(df), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// We expect assignment names to be set based on
 	// assignment folder names.
 	wantAssignment1 := &pb.Assignment{
 		Name:        "lab1",
-		ScriptFile:  "go.sh",
 		Deadline:    "2017-08-27T12:00:00",
+		ScriptFile:  "Script for Lab1",
 		AutoApprove: false,
 		Order:       1,
 		ScoreLimit:  80,
@@ -87,19 +101,22 @@ func TestParse(t *testing.T) {
 
 	wantAssignment2 := &pb.Assignment{
 		Name:        "lab2",
-		ScriptFile:  "java.sh",
 		Deadline:    "2018-08-27T12:00:00",
+		ScriptFile:  "Default script",
 		AutoApprove: false,
 		Order:       2,
 		ScoreLimit:  80,
 	}
 
-	assignments, _, err := parseAssignments(testsDir, 0)
+	assignments, dockerfile, err := parseAssignments(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(assignments) != 2 {
 		t.Errorf("len(assignments) = %d, want %d", len(assignments), 2)
+	}
+	if dockerfile != df {
+		t.Errorf("Incorrect dockerfile\n Want: %s\n Got: %s\n", df, dockerfile)
 	}
 	if diff := cmp.Diff(assignments[0], wantAssignment1, cmpopts.IgnoreUnexported(pb.Assignment{})); diff != "" {
 		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
@@ -136,7 +153,6 @@ func TestParseUnknownFields(t *testing.T) {
 	// assignment folder names.
 	wantAssignment1 := &pb.Assignment{
 		Name:        "lab1",
-		ScriptFile:  "go.sh",
 		Deadline:    "2017-08-27T12:00:00",
 		AutoApprove: false,
 		Order:       1,
