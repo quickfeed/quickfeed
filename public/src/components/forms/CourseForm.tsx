@@ -120,11 +120,11 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                     target="_blank">Create an organization for your course</a>.
                   The course organization must allow private repositories. </p>
 
-                <p>Autograder will create a following repository structure for you:</p>
+                <p>Autograder will create a following repositories for you:</p>
 
                 <div>
                     <ul>
-                        <li>course-info</li>
+                        <li>info</li>
                         <li>assignments</li>
                         <li>tests</li>
                     </ul>
