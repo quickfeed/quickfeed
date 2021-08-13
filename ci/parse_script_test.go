@@ -25,13 +25,13 @@ func TestParseScript(t *testing.T) {
 	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	info := &AssignmentInfo{
 		AssignmentName:     "lab2",
-		Script:             "go.sh",
+		Script:             "#image/qf101\n A script",
 		CreatorAccessToken: "secret",
 		GetURL:             repo.StudentRepoURL(githubUserName),
 		TestURL:            repo.TestsRepoURL(),
 		RandomSecret:       randomString,
 	}
-	j, err := parseScriptTemplate("scripts", info)
+	j, err := parseScriptTemplate(info)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,24 +42,6 @@ func TestParseScript(t *testing.T) {
 	}
 	if os.Getenv("TEST_IMAGE") != "" {
 		fmt.Println(j.Image)
-	}
-
-	info.Script = "python361.sh"
-	_, err = parseScriptTemplate("scripts", info)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	info.Script = "java8.sh"
-	_, err = parseScriptTemplate("scripts", info)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	info.Script = "python-dat550.sh"
-	j, err = parseScriptTemplate("scripts", info)
-	if err != nil {
-		t.Fatal(err)
 	}
 	if os.Getenv("TEST_TMPL") != "" {
 		for _, cmd := range j.Commands {

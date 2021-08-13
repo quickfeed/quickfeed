@@ -35,7 +35,7 @@ func newAssignmentInfo(course *pb.Course, assignment *pb.Assignment, cloneURL, t
 // parseScriptTemplate returns a job describing the docker image to use and
 // the commands of the job. The job is extracted from a script template file
 // provided as input along with assignment metadata for the template.
-func parseScriptTemplate(scriptPath string, info *AssignmentInfo) (*Job, error) {
+func parseScriptTemplate(info *AssignmentInfo) (*Job, error) {
 	t, err := template.New("scriptfile").Parse(info.Script)
 	if err != nil {
 		return nil, err
