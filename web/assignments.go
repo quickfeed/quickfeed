@@ -39,8 +39,6 @@ func (s *AutograderService) updateAssignments(ctx context.Context, sc scm.SCM, c
 	if err != nil {
 		return err
 	}
-
-	// If new or updated dockerfile, save to database
 	if dockerfile != course.Dockerfile {
 		course.Dockerfile = dockerfile
 		if err = s.db.UpdateCourse(course); err != nil {
@@ -151,7 +149,6 @@ func (s *AutograderService) updateReview(review *pb.Review) (*pb.Review, error) 
 			return nil, err
 		}
 	}
-
 	return review, nil
 }
 
@@ -160,7 +157,6 @@ func (s *AutograderService) getAssignmentWithCourse(query *pb.Assignment, withCo
 	if err != nil {
 		return nil, nil, err
 	}
-
 	course, err := s.db.GetCourse(assignment.CourseID, withCourseInfo)
 	if err != nil {
 		return nil, nil, err

@@ -22,14 +22,9 @@ type AssignmentInfo struct {
 }
 
 func newAssignmentInfo(course *pb.Course, assignment *pb.Assignment, cloneURL, testURL string) *AssignmentInfo {
-	script := assignment.GetScriptFile()
-	if strings.Count(script, ".") < 1 {
-		script = script + ".sh"
-	}
-
 	return &AssignmentInfo{
 		AssignmentName:     assignment.GetName(),
-		Script:             script,
+		Script:             assignment.ScriptFile,
 		CreatorAccessToken: course.GetAccessToken(),
 		GetURL:             cloneURL,
 		TestURL:            testURL,
@@ -41,12 +36,6 @@ func newAssignmentInfo(course *pb.Course, assignment *pb.Assignment, cloneURL, t
 // the commands of the job. The job is extracted from a script template file
 // provided as input along with assignment metadata for the template.
 func parseScriptTemplate(scriptPath string, info *AssignmentInfo) (*Job, error) {
-	// tmplFile := filepath.Join(scriptPath, info.Script)
-	// t, err := template.ParseFiles(tmplFile)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	t, err := template.New("scriptfile").Parse(info.Script)
 	if err != nil {
 		return nil, err
