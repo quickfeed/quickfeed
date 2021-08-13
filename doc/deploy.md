@@ -261,6 +261,16 @@ Then run and retry `go install`:
 % go install
 ```
 
+If you already have NGINX configured it may conflict with the default envoy configuration.
+To disable NGINX run:
+
+```sh
+# Temporarily stop running NGINX
+% sudo systemctl stop nginx
+# Permanently disable NGINX
+% sudo systemctl disable nginx
+```
+
 ### Running the QuickFeed Server Details
 
 The following provides additional details for running QuickFeed.

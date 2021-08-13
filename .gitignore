@@ -29,3 +29,4 @@ envoy/envoy-cyclone.yaml
 envoy/envoy-ag2.yaml
 envoy/envoy-xini.yaml
 .env
+.env-localhost
