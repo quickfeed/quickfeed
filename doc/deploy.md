@@ -42,7 +42,7 @@ sudo service docker restart
 
 ### Generate Envoy Configuration File
 
-The default envoy configuration for testing can be generated using the following role in the Makefile:
+The default envoy configuration for testing can be generated using the existent rules in the Makefile:
 ```sh
 % make envoy-config
 ```
@@ -53,7 +53,7 @@ This configuration does not use TLS. To enable TLS but generate certificates for
 % go run ./envoy/envoy.go --genconfig --withTLS
 ```
 
-If you already has certificates that you would like to use you can specify them during the creation of the envoy configuration, running the command below:
+If you already have certificates that you would like to use you can specify them during the creation of the envoy configuration, running the command below.
 
 ```sh
 % go run ./envoy/envoy.go --genconfig --withTLS --certFile="fullchain.pem" --keyFile="key.pem"
@@ -61,7 +61,7 @@ If you already has certificates that you would like to use you can specify them 
 
 The envoy config will be generate at `$QUICKFEED/envoy/envoy.yaml`.
 
-_The script sets the certificate and key at the following path: `/etc/letsencrypt/live/YOUR_DOMAIN_NAME/(CERTIFICATE | KEY).pem`. Please note that, when running envoy in your host machine, you need to ensure that the certificates and necessary keys are stored in the same path specified in the envoy config._
+_The script sets the certificate and key at the following path: `/etc/letsencrypt/live/YOUR_DOMAIN_NAME/(CERTIFICATE | KEY).pem`. Please note that, when running envoy in your host machine, you need to ensure that certificates and necessary keys are stored in the same path specified in the envoy config._
 
 
 ### Configure GitHub OAuth Application for QuickFeed
@@ -86,7 +86,7 @@ Then, to build and run the containers, run:
 % docker-compose up --build
 ```
 
-If you would like to run envoy in a container but quickfeed locally in the host machine, please run envoy as described in the section [Run Envoy](#run-envoy) item 3. Then run quickfeed as described in section [Build Quickfeed](#build-and-run-quickfeed-server).
+If you would like to run envoy in a container but quickfeed locally in the host machine, please run envoy as described in the section [Run Envoy](#run-envoy) sub-section 3. Then run quickfeed as described in section [Build Quickfeed](#build-and-run-quickfeed-server).
 
 
 ## Bare Metal Deployment
