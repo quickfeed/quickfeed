@@ -97,7 +97,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 				}
 				var benchmarks []*pb.GradingBenchmark
 				if err := json.Unmarshal(criteria, &benchmarks); err != nil {
-					return err
+					return fmt.Errorf("error unmarshalling criteria.json: %s", err)
 				}
 				assignment := findAssignmentByName(assignments, assignmentName)
 				if assignment == nil {

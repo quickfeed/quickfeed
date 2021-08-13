@@ -11,6 +11,7 @@ import (
 	"github.com/autograde/quickfeed/ci"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestParseWithInvalidDir(t *testing.T) {
@@ -42,9 +43,34 @@ expected_effort: "10 hours"
 autoapprove: false
 `
 
-	script  = `Default script`
-	script1 = `Script for Lab1`
-	df      = `A dockerfile in training`
+	script   = `Default script`
+	script1  = `Script for Lab1`
+	df       = `A dockerfile in training`
+	criteria = `
+	[
+		{
+			"heading": "First benchmark",
+			"criteria": [
+				{
+					"description": "Test 1",
+					"points": 5
+				},
+				{
+					"description": "Test 2",
+					"points": 10
+				}
+			]
+		},
+		{
+			"heading": "Second benchmark",
+			"criteria": [
+				{
+					"description": "Test 3",
+					"points": 5
+				}
+			]
+		}
+	]`
 )
 
 func TestParse(t *testing.T) {
@@ -87,6 +113,34 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	err = ioutil.WriteFile(filepath.Join(testsDir, "lab2", "criteria.json"), []byte(criteria), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wantCriteria := []*pb.GradingBenchmark{{
+		Heading: "First benchmark",
+		Criteria: []*pb.GradingCriterion{
+			{
+				Description: "Test 1",
+				Points:      5,
+			},
+			{
+				Description: "Test 2",
+				Points:      10,
+			},
+		},
+	},
+		{
+			Heading: "Second benchmark",
+			Criteria: []*pb.GradingCriterion{
+				{
+					Description: "Test 3",
+					Points:      5,
+				},
+			},
+		},
+	}
 
 	// We expect assignment names to be set based on
 	// assignment folder names.
@@ -100,12 +154,13 @@ func TestParse(t *testing.T) {
 	}
 
 	wantAssignment2 := &pb.Assignment{
-		Name:        "lab2",
-		Deadline:    "2018-08-27T12:00:00",
-		ScriptFile:  "Default script",
-		AutoApprove: false,
-		Order:       2,
-		ScoreLimit:  80,
+		Name:              "lab2",
+		Deadline:          "2018-08-27T12:00:00",
+		ScriptFile:        "Default script",
+		AutoApprove:       false,
+		Order:             2,
+		ScoreLimit:        80,
+		GradingBenchmarks: wantCriteria,
 	}
 
 	assignments, dockerfile, err := parseAssignments(testsDir, 0)
@@ -121,8 +176,11 @@ func TestParse(t *testing.T) {
 	if diff := cmp.Diff(assignments[0], wantAssignment1, cmpopts.IgnoreUnexported(pb.Assignment{})); diff != "" {
 		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(assignments[1], wantAssignment2, cmpopts.IgnoreUnexported(pb.Assignment{})); diff != "" {
+	if diff := cmp.Diff(assignments[1], wantAssignment2, cmpopts.IgnoreUnexported(pb.Assignment{}), protocmp.Transform()); diff != "" {
 		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(assignments[1].GradingBenchmarks, wantCriteria, protocmp.Transform()); diff != "" {
+		t.Errorf("parseAssignments() mismatch when parsing criteria (-want +got):\n%s", diff)
 	}
 }
 
