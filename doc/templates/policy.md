@@ -4,7 +4,7 @@ All lab assignments must be completed to satisfaction (passed) in order to sit f
 
 ## Lab Approval Process
 
-Some of the assignments will be automatically approved by Autograder when sufficiently many tests pass; these does not require any manual approval.
+Some of the assignments will be automatically approved by QuickFeed when sufficiently many tests pass; these does not require any manual approval.
 
 For assignments that require manual approval, *you must* present your solution to a member of the teaching staff.
 This should be done during lab hours, and can be done remotely via Discord.
@@ -14,8 +14,8 @@ When you are ready to show your solution, follow the instructions on Discord to 
 Do not send messages directly to the teaching staff on Discord.
 
 It is expected that you can explain your code and show how it works.
-The results from Autograder will also be taken into consideration when approving a lab.
-At least 90% of the Autograder tests should pass for the lab to be approved.
+The results from QuickFeed will also be taken into consideration when approving a lab.
+At least 90% of the QuickFeed tests should pass for the lab to be approved.
 
 Note that, while we prefer that you get approval for each lab on time, it is ok to make arrangements to get approval at a later date, as long as the handin is submitted to GitHub on time.
 Please contact the teaching staff to make arrangements.
@@ -44,7 +44,7 @@ You may discuss the assignments with others, but you may not copy answers or cod
 
 ### Group Assignments
 
-For group assignments we expect students to form groups on Autograder and work together.
+For group assignments we expect students to form groups on QuickFeed and work together.
 Group members must contribute equally to code, written handins, and oral presentations, e.g. for approval.
 
 Groups cannot be composed of members whose commitment to contribute to the group work is disproportionately different.

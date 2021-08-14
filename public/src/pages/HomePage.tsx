@@ -57,7 +57,7 @@ export class HomePage extends ViewPage {
                         On due date of an assignment, the most recent version
                         of each student's code is available through GitHub.
                         Easily accessible for the teachers.
-                        Together with latest build log, this makes grading easier and more fair.
+                        Together with latest build log, this makes grading easier and fair.
                     </p>
                     <p>
                         <a className="btn btn-default" href="#grading" role="button">View details »</a>
@@ -69,17 +69,17 @@ export class HomePage extends ViewPage {
                 <div key="row1" className="row featurette">
                     <div key="c1r1" className="col-md-7">
                         <h2 className="featurette-heading">
-                            Autograder: <span className="text-muted">Automated student feedback</span>
+                            QuickFeed: <span className="text-muted">Instant Feedback on Programming Assignments</span>
                         </h2>
                         <p className="lead">
-                            Autograder aims to provide students with fast
+                            QuickFeed aims to provide students with instant
                             feedback on their lab assignments, and is designed
                             to help students learn about state-of-the-art tools
                             used in the industry.
-                            Autograder builds upon version control systems and
+                            QuickFeed builds upon version control systems and
                             continuous integration.
                             When students upload code to their repositories,
-                            Autograder automatically builds their code and
+                            QuickFeed automatically builds their code and
                             provides feedback based on tests supplied by the
                             teaching staff.
                             When grading assignments, teaching staff can access
@@ -113,8 +113,8 @@ export class HomePage extends ViewPage {
                         <p className="lead">
                             A course is an organization on GitHub.
                             Students get access to their own private GitHub repository.
-                            Uploading their code for review or grading, students can
-                             learn to use git for version control.
+                            Uploading their code for review or grading, students will
+                            learn to use git for version control.
                         </p>
                     </div>
                 </div>
@@ -126,10 +126,10 @@ export class HomePage extends ViewPage {
                 <div key="row3" className="row featurette">
                     <div key="c1r3" className="col-md-7">
                         <h2 className="featurette-heading">
-                            Continuous Integration: <span className="text-muted">builds and tests student code. </span>
+                            Continuous Integration: <span className="text-muted">builds and tests student code.</span>
                         </h2>
                         <p className="lead">
-                            As code gets pushed up to GitHub, an automatic build process
+                            As code gets pushed to GitHub, an automatic build process
                             defined by the teacher, generates feedback to students.
                             When the build process is completed, student gets immediate
                             access to this feedback on their personal course page.
@@ -183,11 +183,10 @@ export class HomePage extends ViewPage {
                 <div key="cblock" className="centerblock container">
                     <h1>Automated student feedback</h1>
                     <p>
-                        <strong>Autograder </strong>
-                        provides instantaneous feedback to students on
+                        <strong>QuickFeed</strong>
+                        provides rapid feedback to students on
                         their programming assignments. It is also a
-                        valuable tool for teachers when grading lab
-                        assignments.
+                        valuable tool for teachers when grading lab assignments.
                     </p>
                     <p>
                         <a className="btn btn-primary btn-lg" href="#autograder" role="button">Learn more »</a>

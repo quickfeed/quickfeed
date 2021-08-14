@@ -15,7 +15,7 @@ var (
 	repoNames = fmt.Sprintf("(%s, %s, %s)",
 		pb.InfoRepo, pb.AssignmentRepo, pb.TestsRepo)
 
-	// ErrAlreadyExists indicates that one or more Autograder repositories
+	// ErrAlreadyExists indicates that one or more QuickFeed repositories
 	// already exists for the directory (or GitHub organization).
 	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
 	// ErrFreePlan indicates that payment plan for given organization does not allow provate

@@ -27,7 +27,7 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 			return err
 		}
 	case !repo.RepoType.IsCourseRepo():
-		// both user and group unset, then repository type must be an autograder repo type
+		// both user and group unset, then repository type must be an QuickFeed repo type
 		return ErrCreateRepo
 	}
 

@@ -7,7 +7,7 @@ package main.java.autograder;
 //Secret read from the output steam need to correspond to the course identifier
 //given on the teachers panel. All other output will be ignored.
 //
-//With the formula in the Autograder CI the score percentage is calculated
+//With the formula in the QuickFeed CI the score percentage is calculated
 //automatically. Give any max score, then pass on a given score the student
 //gets for passed sub test within this the max score. Finally, set a weight
 //it should have on the total. The weight does not need to within 100 or a
@@ -26,7 +26,7 @@ public class Score {
 	private int MaxScore;
 	private int Weight;
 	
-	// GolbalSecret represents the unique course identifier that will be used in
+	// GlobalSecret represents the unique course identifier that will be used in
 	// the Score struct constructors. Users of this package should set this
 	// variable appropriately before using any exported
 	// function in this package.
