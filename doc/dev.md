@@ -168,7 +168,7 @@ When the client is supposed to show error message to the user, error from the se
 
 ### Backend
 
-Errors are being logged at `Autograder Service` level. All other methods called from there (including database and scm methods) will just wrap and return all error messages directly. Introduce logging on layers deeper than `Autograder Service` only if necessary.
+Errors are being logged at `QuickFeed Service` level. All other methods called from there (including database and scm methods) will just wrap and return all error messages directly. Introduce logging on layers deeper than `QuickFeed Service` only if necessary.
 
 Errors returned to user interface must be few and informative, yet should not provide too many information about server routines. User must only be informed about details he or she can do something about.
 
