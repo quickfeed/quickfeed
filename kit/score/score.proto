@@ -19,7 +19,7 @@ message Score {
 // BuildInfo holds build data for an assignment's test execution.
 message BuildInfo {
     uint64 ID = 1;
-    uint64 SubmissionID = 2;
+    uint64 SubmissionID = 2 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
     string BuildDate = 3;
     string BuildLog = 4;
     int64 ExecTime = 5;
