@@ -131,12 +131,12 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 			return
 		}
 		if len(savedAssignment.GetGradingBenchmarks()) > 0 {
-			if diff := cmp.Diff(assignment.GradingBenchmarks, savedAssignment.GradingBenchmarks, cmp.Options{
+			if !cmp.Equal(assignment.GradingBenchmarks, savedAssignment.GradingBenchmarks, cmp.Options{
 				protocmp.Transform(),
 				protocmp.IgnoreFields(&pb.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
 				protocmp.IgnoreFields(&pb.GradingCriterion{}, "ID", "BenchmarkID"),
 				protocmp.IgnoreEnums(),
-			}); diff != "" {
+			}) {
 				for _, bm := range savedAssignment.GradingBenchmarks {
 					for _, c := range bm.Criteria {
 						if err := db.DeleteCriterion(c); err != nil {
