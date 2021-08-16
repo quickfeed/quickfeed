@@ -48,13 +48,13 @@ const Results = () => {
                     {TableAssignmentsHead}
                 </thead>
                 <tbody>
-                {UserResults}
+                    {UserResults}
                 </tbody>
             </table>
             </div>
-            <div className="col">
+            <div className="col reviewLab">
                 {state.activeSubmission ?
-                <Lab teacherSubmission={state.activeSubmission} /> : null
+                    <Lab teacherSubmission={state.activeSubmission} /> : null
                 }  
             </div>
         </div>
