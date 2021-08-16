@@ -170,11 +170,10 @@ func (d *Docker) pullImage(ctx context.Context, image string) error {
 
 // buildImage builds and installs an image locally to be reused in a future run.
 func (d *Docker) buildImage(ctx context.Context, dockerfile string, image string) error {
-	dockerbytes := []byte(dockerfile)
-	// Temporary (?): if there is no Dockerfile in Tests repository use the default one from the Quickfeed repository.
 	if dockerfile == "" || image == "" {
 		return fmt.Errorf("Failed to build image %s: missing Dockerfile in Tests/scripts/ or image name in run.sh", image)
 	}
+	dockerbytes := []byte(dockerfile)
 	header := &tar.Header{
 		Name:     "Dockerfile",
 		Mode:     0o777,

@@ -1,7 +1,6 @@
 package hooks
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -80,7 +79,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	case repo.IsTestsRepo():
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		assignments.UpdateFromTestsRepo(wh.logger, wh.runner, wh.db, repo, course)
+		assignments.UpdateFromTestsRepo(wh.logger, wh.db, repo, course)
 
 	case repo.IsUserRepo():
 		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
@@ -161,9 +160,6 @@ func extractChanges(changes []string, modifiedAssignments map[string]bool) {
 
 // runAssignmentTests runs the tests for the given assignment pushed to repo.
 func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.Repository, course *pb.Course, payload *github.PushEvent) {
-	fmt.Printf("Running tests for assignment %s/n", assignment.Name)
-	fmt.Println("Dockerfile for the course: ", course.Dockerfile)
-	fmt.Println("Script for the assignment: ", assignment.ScriptFile)
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,

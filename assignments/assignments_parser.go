@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -90,24 +89,22 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 
 			case criteriaFile:
 				assignmentName := filepath.Base(filepath.Dir(path))
-				log.Println("Found criteria.json in the assignment folder ", assignmentName)
 				criteria, err := ioutil.ReadFile(path)
 				if err != nil {
-					return fmt.Errorf("could not to read %q file: %w", filename, err)
+					return fmt.Errorf("Could not to read %q file: %w", filename, err)
 				}
 				var benchmarks []*pb.GradingBenchmark
 				if err := json.Unmarshal(criteria, &benchmarks); err != nil {
-					return fmt.Errorf("error unmarshalling criteria.json: %s", err)
+					return fmt.Errorf("Error unmarshalling criteria.json: %s", err)
 				}
 				assignment := findAssignmentByName(assignments, assignmentName)
 				if assignment == nil {
-					log.Printf("Found benchmarks, could not find assignment %s\n", assignmentName)
+					return fmt.Errorf("Found benchmarks for assignment %s, could not find the assignment\n", assignmentName)
 				} else {
 					assignment.GradingBenchmarks = benchmarks
 				}
 
 			case scriptFile:
-				log.Println("Reading scriptfile")
 				currentAssignmentName := filepath.Base(filepath.Dir(path))
 				content, err := ioutil.ReadFile(path)
 				if err != nil {
@@ -118,14 +115,11 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 				} else {
 					assignment := findAssignmentByName(assignments, currentAssignmentName)
 					if assignment == nil {
-						log.Printf("Found scriptfile in assignment folder, could not find assignment %s\n", currentAssignmentName)
-					} else {
-						log.Println("Found assignment, added scriptfile contents")
-						assignment.ScriptFile = string(content)
+						return fmt.Errorf("Found scriptfile in assignment %s folder, could not find thr assignment\n", currentAssignmentName)
 					}
+					assignment.ScriptFile = string(content)
 				}
 			case dockerfile:
-				log.Println("Reading dockerfile")
 				t, err := template.ParseFiles(path)
 				if err != nil {
 					return err

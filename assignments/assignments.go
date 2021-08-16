@@ -18,7 +18,7 @@ import (
 )
 
 // UpdateFromTestsRepo updates the database record for the course assignments.
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db database.Database, repo *pb.Repository, course *pb.Course) {
+func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *pb.Repository, course *pb.Course) {
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), pb.TestsRepo)
 	s, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
 	if err != nil {
@@ -31,18 +31,15 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 		return
 	}
 	for _, assignment := range assignments {
-		logger.Debugf("Found assignment in '%s' repository: %s", pb.TestsRepo, assignment.Name)
 		updateGradingCriteria(logger, db, assignment)
 	}
 	if dockerfile != "" && dockerfile != course.Dockerfile {
-		logger.Debugf("Saving Dockerfile for course %s", course.Code)
 		course.Dockerfile = dockerfile
 		if err := db.UpdateCourse(course); err != nil {
-			logger.Debugf("Failed to update dockerfile for course %s: %s", course.Code, err)
+			logger.Debugf("Failed to update Dockerfile for course %s: %s", course.Code, err)
 			return
 		}
 	}
-
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)
@@ -55,7 +52,8 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, runner ci.Runner, db databas
 
 // FetchAssignments returns a list of assignments for the given course, by
 // cloning the 'tests' repo for the given course and extracting the assignments
-// from the 'assignment.yml' files, one for each assignment.
+// from the 'assignment.yml' files, one for each assignment. If there is a Dockerfile
+// in 'tests/script' will also return its contents.
 //
 // Note: This will typically be called on a push event to the 'tests' repo,
 // which should happen infrequently. It may also be called manually by a
@@ -112,8 +110,6 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 
 		if out, err := runner.Run(context.Background(), job); err != nil {
 			log.Printf("Failed to build image from dockerfile for %s (%s): %s", course.Code, out, err)
-		} else {
-			log.Println("Built new image from Dockerfile for ", course.Code)
 		}
 	}
 	return assignments, dockerfile, nil
@@ -141,30 +137,28 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 				protocmp.IgnoreFields(&pb.GradingCriterion{}, "ID", "BenchmarkID"),
 				protocmp.IgnoreEnums(),
 			}); diff != "" {
-				logger.Debugf("Grading criteria updated for %s, removing all criteria: Diff: \n%s", diff)
 				for _, bm := range savedAssignment.GradingBenchmarks {
 					for _, c := range bm.Criteria {
 						if err := db.DeleteCriterion(c); err != nil {
-							fmt.Printf("Failed to delete criteria %v: %s\n", c, err)
+							logger.Errorf("Failed to delete criteria %v: %s\n", c, err)
 						}
 					}
 					if err := db.DeleteBenchmark(bm); err != nil {
-						fmt.Printf("Failed to delete benchmark %v: %s\n", bm, err)
+						logger.Errorf("Failed to delete benchmark %v: %s\n", bm, err)
 					}
 				}
 				submissions, err := db.GetSubmissions(&pb.Submission{AssignmentID: assignment.GetID()})
 				if err != nil {
-					logger.Debugf("No submissions for assignment %s: %s", assignment.Name, err)
+					// No submissions for this assignment, nothing to update
 					return
 				}
 				for _, submission := range submissions {
 					if err := db.DeleteReview(&pb.Review{SubmissionID: submission.ID}); err != nil {
-						logger.Debugf("Failed to delete reviews for submission %s to assignment %s: %s", submission.ID, assignment.Name, err)
+						logger.Errorf("Failed to delete reviews for submission %s to assignment %s: %s", submission.ID, assignment.Name, err)
 					}
 				}
 			} else {
 				assignment.GradingBenchmarks = nil
-				logger.Debugf("Grading criteria did not change, skipping")
 			}
 		}
 		for _, bm := range assignment.GradingBenchmarks {

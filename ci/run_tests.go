@@ -66,10 +66,6 @@ func runTests(runner Runner, info *AssignmentInfo, rData *RunData) (*execData, e
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse script template: %w", err)
 	}
-	fmt.Printf("Parsed scriptfile to a new Job: %+v\n", job)
-
-	// TODO(vera): check potential problems:
-	// - missing dockerfile
 
 	job.Name = rData.String(info.RandomSecret[:6])
 	start := time.Now()
