@@ -234,12 +234,6 @@ If you want to run envoy using the existing docker-compose configuration you nee
 % docker-compose up --build --remove-orphans envoy
 ```
 
-Or use the makefile:
-```sh
-% make envoy-build
-% make envoy-run
-```
-
 ### Build and Run QuickFeed Server
 
 After editing files in the `public` folder, run the following command.
