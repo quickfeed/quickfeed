@@ -2,7 +2,7 @@ import { json } from "overmind"
 import React from "react"
 import { Assignment, Submission } from "../../proto/ag/ag_pb"
 import { Score } from "../../proto/kit/score/score_pb"
-import { getPassedTestsCount, SubmissionStatus } from "../Helpers"
+import { getPassedTestsCount, isManuallyGraded, SubmissionStatus } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { ProgressBar } from "./ProgressBar"
 
@@ -65,10 +65,14 @@ const LabResultTable = ({submission, assignment}: lab) => {
                             <th colSpan={2}>Deadline</th>
                             <td>{assignment.getDeadline()}</td>
                         </tr>
+                        
+                        {!isManuallyGraded(assignment) ?
                         <tr>
-                        <th colSpan={2}>Tests Passed</th>
-                            <td>{getPassedTestsCount(json(submission).getScoresList())}</td>
+                            <th colSpan={2}>Tests Passed</th>
+                                <td>{getPassedTestsCount(json(submission).getScoresList())}</td>
                         </tr>
+                        : null
+                        }
                         <tr>
                             <th colSpan={2}>Slip days</th>
                             <td>{state.enrollmentsByCourseId[assignment.getCourseid()].getSlipdaysremaining()}</td>
@@ -79,7 +83,7 @@ const LabResultTable = ({submission, assignment}: lab) => {
                             <th colSpan={1}>Weight</th>
                         
                         </tr>
-                        {submission.getScoresList().map((score, index) => 
+                        {json(submission).getScoresList().map((score, index) => 
                             <ScoreObject key={index} score={score} />
                         )}
                         
