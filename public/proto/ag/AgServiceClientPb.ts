@@ -13,18 +13,58 @@
 
 import * as grpcWeb from 'grpc-web';
 
-import * as ag_ag_pb from '../ag/ag_pb';
+import * as kit_score_score_pb from '../kit/score/score_pb';
 
+import {
+  AssignmentRequest,
+  Assignments,
+  AuthorizationResponse,
+  Benchmarks,
+  Course,
+  CourseRequest,
+  CourseSubmissions,
+  CourseUserRequest,
+  Courses,
+  Enrollment,
+  EnrollmentRequest,
+  EnrollmentStatusRequest,
+  Enrollments,
+  GetGroupRequest,
+  GradingBenchmark,
+  GradingCriterion,
+  Group,
+  GroupRequest,
+  Groups,
+  OrgRequest,
+  Organization,
+  Providers,
+  RebuildRequest,
+  Repositories,
+  RepositoryRequest,
+  Review,
+  ReviewRequest,
+  Reviewers,
+  Submission,
+  SubmissionRequest,
+  SubmissionReviewersRequest,
+  Submissions,
+  SubmissionsForCourseRequest,
+  URLRequest,
+  UpdateSubmissionRequest,
+  UpdateSubmissionsRequest,
+  User,
+  Users,
+  Void} from './ag_pb';
 
 export class AutograderServiceClient {
   client_: grpcWeb.AbstractClientBase;
   hostname_: string;
   credentials_: null | { [index: string]: string; };
-  options_: null | { [index: string]: any; };
+  options_: null | { [index: string]: string; };
 
   constructor (hostname: string,
                credentials?: null | { [index: string]: string; },
-               options?: null | { [index: string]: any; }) {
+               options?: null | { [index: string]: string; }) {
     if (!options) options = {};
     if (!credentials) credentials = {};
     options['format'] = 'text';
@@ -36,32 +76,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetUser = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.User,
-    (request: ag_ag_pb.Void) => {
+    User,
+    (request: Void) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.User.deserializeBinary
+    User.deserializeBinary
   );
 
   getUser(
-    request: ag_ag_pb.Void,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.User>;
+    request: Void,
+    metadata: grpcWeb.Metadata | null): Promise<User>;
 
   getUser(
-    request: ag_ag_pb.Void,
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.User) => void): grpcWeb.ClientReadableStream<ag_ag_pb.User>;
+               response: User) => void): grpcWeb.ClientReadableStream<User>;
 
   getUser(
-    request: ag_ag_pb.Void,
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.User) => void) {
+               response: User) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetUser',
+        new URL('/ag.AutograderService/GetUser', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetUser,
@@ -76,32 +115,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetUsers = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Users,
-    (request: ag_ag_pb.Void) => {
+    Users,
+    (request: Void) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Users.deserializeBinary
+    Users.deserializeBinary
   );
 
   getUsers(
-    request: ag_ag_pb.Void,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Users>;
+    request: Void,
+    metadata: grpcWeb.Metadata | null): Promise<Users>;
 
   getUsers(
-    request: ag_ag_pb.Void,
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Users) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Users>;
+               response: Users) => void): grpcWeb.ClientReadableStream<Users>;
 
   getUsers(
-    request: ag_ag_pb.Void,
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Users) => void) {
+               response: Users) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetUsers',
+        new URL('/ag.AutograderService/GetUsers', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetUsers,
@@ -116,32 +154,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetUserByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.User,
-    (request: ag_ag_pb.CourseUserRequest) => {
+    User,
+    (request: CourseUserRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.User.deserializeBinary
+    User.deserializeBinary
   );
 
   getUserByCourse(
-    request: ag_ag_pb.CourseUserRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.User>;
+    request: CourseUserRequest,
+    metadata: grpcWeb.Metadata | null): Promise<User>;
 
   getUserByCourse(
-    request: ag_ag_pb.CourseUserRequest,
+    request: CourseUserRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.User) => void): grpcWeb.ClientReadableStream<ag_ag_pb.User>;
+               response: User) => void): grpcWeb.ClientReadableStream<User>;
 
   getUserByCourse(
-    request: ag_ag_pb.CourseUserRequest,
+    request: CourseUserRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.User) => void) {
+               response: User) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetUserByCourse',
+        new URL('/ag.AutograderService/GetUserByCourse', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetUserByCourse,
@@ -156,32 +193,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateUser = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.User) => {
+    Void,
+    (request: User) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateUser(
-    request: ag_ag_pb.User,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: User,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   updateUser(
-    request: ag_ag_pb.User,
+    request: User,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   updateUser(
-    request: ag_ag_pb.User,
+    request: User,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateUser',
+        new URL('/ag.AutograderService/UpdateUser', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoUpdateUser,
@@ -196,32 +232,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoIsAuthorizedTeacher = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.AuthorizationResponse,
-    (request: ag_ag_pb.Void) => {
+    AuthorizationResponse,
+    (request: Void) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.AuthorizationResponse.deserializeBinary
+    AuthorizationResponse.deserializeBinary
   );
 
   isAuthorizedTeacher(
-    request: ag_ag_pb.Void,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.AuthorizationResponse>;
+    request: Void,
+    metadata: grpcWeb.Metadata | null): Promise<AuthorizationResponse>;
 
   isAuthorizedTeacher(
-    request: ag_ag_pb.Void,
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.AuthorizationResponse) => void): grpcWeb.ClientReadableStream<ag_ag_pb.AuthorizationResponse>;
+               response: AuthorizationResponse) => void): grpcWeb.ClientReadableStream<AuthorizationResponse>;
 
   isAuthorizedTeacher(
-    request: ag_ag_pb.Void,
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.AuthorizationResponse) => void) {
+               response: AuthorizationResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/IsAuthorizedTeacher',
+        new URL('/ag.AutograderService/IsAuthorizedTeacher', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoIsAuthorizedTeacher,
@@ -236,32 +271,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetGroup = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Group,
-    (request: ag_ag_pb.GetGroupRequest) => {
+    Group,
+    (request: GetGroupRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Group.deserializeBinary
+    Group.deserializeBinary
   );
 
   getGroup(
-    request: ag_ag_pb.GetGroupRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Group>;
+    request: GetGroupRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Group>;
 
   getGroup(
-    request: ag_ag_pb.GetGroupRequest,
+    request: GetGroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Group) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Group>;
+               response: Group) => void): grpcWeb.ClientReadableStream<Group>;
 
   getGroup(
-    request: ag_ag_pb.GetGroupRequest,
+    request: GetGroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Group) => void) {
+               response: Group) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetGroup',
+        new URL('/ag.AutograderService/GetGroup', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetGroup,
@@ -276,32 +310,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetGroupByUserAndCourse = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Group,
-    (request: ag_ag_pb.GroupRequest) => {
+    Group,
+    (request: GroupRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Group.deserializeBinary
+    Group.deserializeBinary
   );
 
   getGroupByUserAndCourse(
-    request: ag_ag_pb.GroupRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Group>;
+    request: GroupRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Group>;
 
   getGroupByUserAndCourse(
-    request: ag_ag_pb.GroupRequest,
+    request: GroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Group) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Group>;
+               response: Group) => void): grpcWeb.ClientReadableStream<Group>;
 
   getGroupByUserAndCourse(
-    request: ag_ag_pb.GroupRequest,
+    request: GroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Group) => void) {
+               response: Group) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetGroupByUserAndCourse',
+        new URL('/ag.AutograderService/GetGroupByUserAndCourse', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetGroupByUserAndCourse,
@@ -316,32 +349,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetGroupsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Groups,
-    (request: ag_ag_pb.CourseRequest) => {
+    Groups,
+    (request: CourseRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Groups.deserializeBinary
+    Groups.deserializeBinary
   );
 
   getGroupsByCourse(
-    request: ag_ag_pb.CourseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Groups>;
+    request: CourseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Groups>;
 
   getGroupsByCourse(
-    request: ag_ag_pb.CourseRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Groups) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Groups>;
+               response: Groups) => void): grpcWeb.ClientReadableStream<Groups>;
 
   getGroupsByCourse(
-    request: ag_ag_pb.CourseRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Groups) => void) {
+               response: Groups) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetGroupsByCourse',
+        new URL('/ag.AutograderService/GetGroupsByCourse', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetGroupsByCourse,
@@ -356,32 +388,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoCreateGroup = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Group,
-    (request: ag_ag_pb.Group) => {
+    Group,
+    (request: Group) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Group.deserializeBinary
+    Group.deserializeBinary
   );
 
   createGroup(
-    request: ag_ag_pb.Group,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Group>;
+    request: Group,
+    metadata: grpcWeb.Metadata | null): Promise<Group>;
 
   createGroup(
-    request: ag_ag_pb.Group,
+    request: Group,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Group) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Group>;
+               response: Group) => void): grpcWeb.ClientReadableStream<Group>;
 
   createGroup(
-    request: ag_ag_pb.Group,
+    request: Group,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Group) => void) {
+               response: Group) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/CreateGroup',
+        new URL('/ag.AutograderService/CreateGroup', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoCreateGroup,
@@ -396,32 +427,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateGroup = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.Group) => {
+    Void,
+    (request: Group) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateGroup(
-    request: ag_ag_pb.Group,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: Group,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   updateGroup(
-    request: ag_ag_pb.Group,
+    request: Group,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   updateGroup(
-    request: ag_ag_pb.Group,
+    request: Group,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateGroup',
+        new URL('/ag.AutograderService/UpdateGroup', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoUpdateGroup,
@@ -436,32 +466,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoDeleteGroup = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.GroupRequest) => {
+    Void,
+    (request: GroupRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   deleteGroup(
-    request: ag_ag_pb.GroupRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: GroupRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   deleteGroup(
-    request: ag_ag_pb.GroupRequest,
+    request: GroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   deleteGroup(
-    request: ag_ag_pb.GroupRequest,
+    request: GroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/DeleteGroup',
+        new URL('/ag.AutograderService/DeleteGroup', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoDeleteGroup,
@@ -476,32 +505,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetCourse = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Course,
-    (request: ag_ag_pb.CourseRequest) => {
+    Course,
+    (request: CourseRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Course.deserializeBinary
+    Course.deserializeBinary
   );
 
   getCourse(
-    request: ag_ag_pb.CourseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Course>;
+    request: CourseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Course>;
 
   getCourse(
-    request: ag_ag_pb.CourseRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Course) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Course>;
+               response: Course) => void): grpcWeb.ClientReadableStream<Course>;
 
   getCourse(
-    request: ag_ag_pb.CourseRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Course) => void) {
+               response: Course) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetCourse',
+        new URL('/ag.AutograderService/GetCourse', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetCourse,
@@ -516,32 +544,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetCourses = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Courses,
-    (request: ag_ag_pb.Void) => {
+    Courses,
+    (request: Void) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Courses.deserializeBinary
+    Courses.deserializeBinary
   );
 
   getCourses(
-    request: ag_ag_pb.Void,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Courses>;
+    request: Void,
+    metadata: grpcWeb.Metadata | null): Promise<Courses>;
 
   getCourses(
-    request: ag_ag_pb.Void,
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Courses) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Courses>;
+               response: Courses) => void): grpcWeb.ClientReadableStream<Courses>;
 
   getCourses(
-    request: ag_ag_pb.Void,
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Courses) => void) {
+               response: Courses) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetCourses',
+        new URL('/ag.AutograderService/GetCourses', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetCourses,
@@ -556,32 +583,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetCoursesByUser = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Courses,
-    (request: ag_ag_pb.EnrollmentStatusRequest) => {
+    Courses,
+    (request: EnrollmentStatusRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Courses.deserializeBinary
+    Courses.deserializeBinary
   );
 
   getCoursesByUser(
-    request: ag_ag_pb.EnrollmentStatusRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Courses>;
+    request: EnrollmentStatusRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Courses>;
 
   getCoursesByUser(
-    request: ag_ag_pb.EnrollmentStatusRequest,
+    request: EnrollmentStatusRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Courses) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Courses>;
+               response: Courses) => void): grpcWeb.ClientReadableStream<Courses>;
 
   getCoursesByUser(
-    request: ag_ag_pb.EnrollmentStatusRequest,
+    request: EnrollmentStatusRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Courses) => void) {
+               response: Courses) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetCoursesByUser',
+        new URL('/ag.AutograderService/GetCoursesByUser', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetCoursesByUser,
@@ -596,32 +622,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoCreateCourse = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Course,
-    (request: ag_ag_pb.Course) => {
+    Course,
+    (request: Course) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Course.deserializeBinary
+    Course.deserializeBinary
   );
 
   createCourse(
-    request: ag_ag_pb.Course,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Course>;
+    request: Course,
+    metadata: grpcWeb.Metadata | null): Promise<Course>;
 
   createCourse(
-    request: ag_ag_pb.Course,
+    request: Course,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Course) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Course>;
+               response: Course) => void): grpcWeb.ClientReadableStream<Course>;
 
   createCourse(
-    request: ag_ag_pb.Course,
+    request: Course,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Course) => void) {
+               response: Course) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/CreateCourse',
+        new URL('/ag.AutograderService/CreateCourse', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoCreateCourse,
@@ -636,32 +661,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateCourse = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.Course) => {
+    Void,
+    (request: Course) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateCourse(
-    request: ag_ag_pb.Course,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: Course,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   updateCourse(
-    request: ag_ag_pb.Course,
+    request: Course,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   updateCourse(
-    request: ag_ag_pb.Course,
+    request: Course,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateCourse',
+        new URL('/ag.AutograderService/UpdateCourse', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoUpdateCourse,
@@ -676,32 +700,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateCourseVisibility = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.Enrollment) => {
+    Void,
+    (request: Enrollment) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateCourseVisibility(
-    request: ag_ag_pb.Enrollment,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: Enrollment,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   updateCourseVisibility(
-    request: ag_ag_pb.Enrollment,
+    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   updateCourseVisibility(
-    request: ag_ag_pb.Enrollment,
+    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateCourseVisibility',
+        new URL('/ag.AutograderService/UpdateCourseVisibility', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoUpdateCourseVisibility,
@@ -716,32 +739,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetAssignments = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Assignments,
-    (request: ag_ag_pb.CourseRequest) => {
+    Assignments,
+    (request: CourseRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Assignments.deserializeBinary
+    Assignments.deserializeBinary
   );
 
   getAssignments(
-    request: ag_ag_pb.CourseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Assignments>;
+    request: CourseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Assignments>;
 
   getAssignments(
-    request: ag_ag_pb.CourseRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Assignments) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Assignments>;
+               response: Assignments) => void): grpcWeb.ClientReadableStream<Assignments>;
 
   getAssignments(
-    request: ag_ag_pb.CourseRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Assignments) => void) {
+               response: Assignments) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetAssignments',
+        new URL('/ag.AutograderService/GetAssignments', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetAssignments,
@@ -756,32 +778,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateAssignments = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.CourseRequest) => {
+    Void,
+    (request: CourseRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateAssignments(
-    request: ag_ag_pb.CourseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: CourseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   updateAssignments(
-    request: ag_ag_pb.CourseRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   updateAssignments(
-    request: ag_ag_pb.CourseRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateAssignments',
+        new URL('/ag.AutograderService/UpdateAssignments', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoUpdateAssignments,
@@ -796,32 +817,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetEnrollmentsByUser = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Enrollments,
-    (request: ag_ag_pb.EnrollmentStatusRequest) => {
+    Enrollments,
+    (request: EnrollmentStatusRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Enrollments.deserializeBinary
+    Enrollments.deserializeBinary
   );
 
   getEnrollmentsByUser(
-    request: ag_ag_pb.EnrollmentStatusRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Enrollments>;
+    request: EnrollmentStatusRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Enrollments>;
 
   getEnrollmentsByUser(
-    request: ag_ag_pb.EnrollmentStatusRequest,
+    request: EnrollmentStatusRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Enrollments) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Enrollments>;
+               response: Enrollments) => void): grpcWeb.ClientReadableStream<Enrollments>;
 
   getEnrollmentsByUser(
-    request: ag_ag_pb.EnrollmentStatusRequest,
+    request: EnrollmentStatusRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Enrollments) => void) {
+               response: Enrollments) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetEnrollmentsByUser',
+        new URL('/ag.AutograderService/GetEnrollmentsByUser', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetEnrollmentsByUser,
@@ -836,32 +856,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetEnrollmentsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Enrollments,
-    (request: ag_ag_pb.EnrollmentRequest) => {
+    Enrollments,
+    (request: EnrollmentRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Enrollments.deserializeBinary
+    Enrollments.deserializeBinary
   );
 
   getEnrollmentsByCourse(
-    request: ag_ag_pb.EnrollmentRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Enrollments>;
+    request: EnrollmentRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Enrollments>;
 
   getEnrollmentsByCourse(
-    request: ag_ag_pb.EnrollmentRequest,
+    request: EnrollmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Enrollments) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Enrollments>;
+               response: Enrollments) => void): grpcWeb.ClientReadableStream<Enrollments>;
 
   getEnrollmentsByCourse(
-    request: ag_ag_pb.EnrollmentRequest,
+    request: EnrollmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Enrollments) => void) {
+               response: Enrollments) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetEnrollmentsByCourse',
+        new URL('/ag.AutograderService/GetEnrollmentsByCourse', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetEnrollmentsByCourse,
@@ -876,32 +895,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoCreateEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.Enrollment) => {
+    Void,
+    (request: Enrollment) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   createEnrollment(
-    request: ag_ag_pb.Enrollment,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: Enrollment,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   createEnrollment(
-    request: ag_ag_pb.Enrollment,
+    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   createEnrollment(
-    request: ag_ag_pb.Enrollment,
+    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/CreateEnrollment',
+        new URL('/ag.AutograderService/CreateEnrollment', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoCreateEnrollment,
@@ -916,32 +934,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.Enrollment) => {
+    Void,
+    (request: Enrollment) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateEnrollment(
-    request: ag_ag_pb.Enrollment,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: Enrollment,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   updateEnrollment(
-    request: ag_ag_pb.Enrollment,
+    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   updateEnrollment(
-    request: ag_ag_pb.Enrollment,
+    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateEnrollment',
+        new URL('/ag.AutograderService/UpdateEnrollment', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoUpdateEnrollment,
@@ -956,32 +973,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateEnrollments = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.CourseRequest) => {
+    Void,
+    (request: CourseRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateEnrollments(
-    request: ag_ag_pb.CourseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: CourseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   updateEnrollments(
-    request: ag_ag_pb.CourseRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   updateEnrollments(
-    request: ag_ag_pb.CourseRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateEnrollments',
+        new URL('/ag.AutograderService/UpdateEnrollments', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoUpdateEnrollments,
@@ -996,32 +1012,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Submissions,
-    (request: ag_ag_pb.SubmissionRequest) => {
+    Submissions,
+    (request: SubmissionRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Submissions.deserializeBinary
+    Submissions.deserializeBinary
   );
 
   getSubmissions(
-    request: ag_ag_pb.SubmissionRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Submissions>;
+    request: SubmissionRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Submissions>;
 
   getSubmissions(
-    request: ag_ag_pb.SubmissionRequest,
+    request: SubmissionRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Submissions) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Submissions>;
+               response: Submissions) => void): grpcWeb.ClientReadableStream<Submissions>;
 
   getSubmissions(
-    request: ag_ag_pb.SubmissionRequest,
+    request: SubmissionRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Submissions) => void) {
+               response: Submissions) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetSubmissions',
+        new URL('/ag.AutograderService/GetSubmissions', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetSubmissions,
@@ -1036,32 +1051,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetSubmissionsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.CourseSubmissions,
-    (request: ag_ag_pb.SubmissionsForCourseRequest) => {
+    CourseSubmissions,
+    (request: SubmissionsForCourseRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.CourseSubmissions.deserializeBinary
+    CourseSubmissions.deserializeBinary
   );
 
   getSubmissionsByCourse(
-    request: ag_ag_pb.SubmissionsForCourseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.CourseSubmissions>;
+    request: SubmissionsForCourseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<CourseSubmissions>;
 
   getSubmissionsByCourse(
-    request: ag_ag_pb.SubmissionsForCourseRequest,
+    request: SubmissionsForCourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.CourseSubmissions) => void): grpcWeb.ClientReadableStream<ag_ag_pb.CourseSubmissions>;
+               response: CourseSubmissions) => void): grpcWeb.ClientReadableStream<CourseSubmissions>;
 
   getSubmissionsByCourse(
-    request: ag_ag_pb.SubmissionsForCourseRequest,
+    request: SubmissionsForCourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.CourseSubmissions) => void) {
+               response: CourseSubmissions) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetSubmissionsByCourse',
+        new URL('/ag.AutograderService/GetSubmissionsByCourse', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetSubmissionsByCourse,
@@ -1076,32 +1090,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.UpdateSubmissionRequest) => {
+    Void,
+    (request: UpdateSubmissionRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateSubmission(
-    request: ag_ag_pb.UpdateSubmissionRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: UpdateSubmissionRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   updateSubmission(
-    request: ag_ag_pb.UpdateSubmissionRequest,
+    request: UpdateSubmissionRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   updateSubmission(
-    request: ag_ag_pb.UpdateSubmissionRequest,
+    request: UpdateSubmissionRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateSubmission',
+        new URL('/ag.AutograderService/UpdateSubmission', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoUpdateSubmission,
@@ -1116,32 +1129,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.UpdateSubmissionsRequest) => {
+    Void,
+    (request: UpdateSubmissionsRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateSubmissions(
-    request: ag_ag_pb.UpdateSubmissionsRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: UpdateSubmissionsRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   updateSubmissions(
-    request: ag_ag_pb.UpdateSubmissionsRequest,
+    request: UpdateSubmissionsRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   updateSubmissions(
-    request: ag_ag_pb.UpdateSubmissionsRequest,
+    request: UpdateSubmissionsRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateSubmissions',
+        new URL('/ag.AutograderService/UpdateSubmissions', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoUpdateSubmissions,
@@ -1156,32 +1168,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Submission,
-    (request: ag_ag_pb.RebuildRequest) => {
+    Submission,
+    (request: RebuildRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Submission.deserializeBinary
+    Submission.deserializeBinary
   );
 
   rebuildSubmission(
-    request: ag_ag_pb.RebuildRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Submission>;
+    request: RebuildRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Submission>;
 
   rebuildSubmission(
-    request: ag_ag_pb.RebuildRequest,
+    request: RebuildRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Submission) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Submission>;
+               response: Submission) => void): grpcWeb.ClientReadableStream<Submission>;
 
   rebuildSubmission(
-    request: ag_ag_pb.RebuildRequest,
+    request: RebuildRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Submission) => void) {
+               response: Submission) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/RebuildSubmission',
+        new URL('/ag.AutograderService/RebuildSubmission', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoRebuildSubmission,
@@ -1196,32 +1207,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoRebuildSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.AssignmentRequest) => {
+    Void,
+    (request: AssignmentRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   rebuildSubmissions(
-    request: ag_ag_pb.AssignmentRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: AssignmentRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   rebuildSubmissions(
-    request: ag_ag_pb.AssignmentRequest,
+    request: AssignmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   rebuildSubmissions(
-    request: ag_ag_pb.AssignmentRequest,
+    request: AssignmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/RebuildSubmissions',
+        new URL('/ag.AutograderService/RebuildSubmissions', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoRebuildSubmissions,
@@ -1236,32 +1246,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoCreateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.GradingBenchmark,
-    (request: ag_ag_pb.GradingBenchmark) => {
+    GradingBenchmark,
+    (request: GradingBenchmark) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.GradingBenchmark.deserializeBinary
+    GradingBenchmark.deserializeBinary
   );
 
   createBenchmark(
-    request: ag_ag_pb.GradingBenchmark,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.GradingBenchmark>;
+    request: GradingBenchmark,
+    metadata: grpcWeb.Metadata | null): Promise<GradingBenchmark>;
 
   createBenchmark(
-    request: ag_ag_pb.GradingBenchmark,
+    request: GradingBenchmark,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.GradingBenchmark) => void): grpcWeb.ClientReadableStream<ag_ag_pb.GradingBenchmark>;
+               response: GradingBenchmark) => void): grpcWeb.ClientReadableStream<GradingBenchmark>;
 
   createBenchmark(
-    request: ag_ag_pb.GradingBenchmark,
+    request: GradingBenchmark,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.GradingBenchmark) => void) {
+               response: GradingBenchmark) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/CreateBenchmark',
+        new URL('/ag.AutograderService/CreateBenchmark', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoCreateBenchmark,
@@ -1276,32 +1285,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.GradingBenchmark) => {
+    Void,
+    (request: GradingBenchmark) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateBenchmark(
-    request: ag_ag_pb.GradingBenchmark,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: GradingBenchmark,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   updateBenchmark(
-    request: ag_ag_pb.GradingBenchmark,
+    request: GradingBenchmark,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   updateBenchmark(
-    request: ag_ag_pb.GradingBenchmark,
+    request: GradingBenchmark,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateBenchmark',
+        new URL('/ag.AutograderService/UpdateBenchmark', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoUpdateBenchmark,
@@ -1316,32 +1324,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoDeleteBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.GradingBenchmark) => {
+    Void,
+    (request: GradingBenchmark) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   deleteBenchmark(
-    request: ag_ag_pb.GradingBenchmark,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: GradingBenchmark,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   deleteBenchmark(
-    request: ag_ag_pb.GradingBenchmark,
+    request: GradingBenchmark,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   deleteBenchmark(
-    request: ag_ag_pb.GradingBenchmark,
+    request: GradingBenchmark,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/DeleteBenchmark',
+        new URL('/ag.AutograderService/DeleteBenchmark', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoDeleteBenchmark,
@@ -1356,32 +1363,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoCreateCriterion = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.GradingCriterion,
-    (request: ag_ag_pb.GradingCriterion) => {
+    GradingCriterion,
+    (request: GradingCriterion) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.GradingCriterion.deserializeBinary
+    GradingCriterion.deserializeBinary
   );
 
   createCriterion(
-    request: ag_ag_pb.GradingCriterion,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.GradingCriterion>;
+    request: GradingCriterion,
+    metadata: grpcWeb.Metadata | null): Promise<GradingCriterion>;
 
   createCriterion(
-    request: ag_ag_pb.GradingCriterion,
+    request: GradingCriterion,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.GradingCriterion) => void): grpcWeb.ClientReadableStream<ag_ag_pb.GradingCriterion>;
+               response: GradingCriterion) => void): grpcWeb.ClientReadableStream<GradingCriterion>;
 
   createCriterion(
-    request: ag_ag_pb.GradingCriterion,
+    request: GradingCriterion,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.GradingCriterion) => void) {
+               response: GradingCriterion) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/CreateCriterion',
+        new URL('/ag.AutograderService/CreateCriterion', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoCreateCriterion,
@@ -1396,32 +1402,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateCriterion = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.GradingCriterion) => {
+    Void,
+    (request: GradingCriterion) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateCriterion(
-    request: ag_ag_pb.GradingCriterion,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: GradingCriterion,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   updateCriterion(
-    request: ag_ag_pb.GradingCriterion,
+    request: GradingCriterion,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   updateCriterion(
-    request: ag_ag_pb.GradingCriterion,
+    request: GradingCriterion,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateCriterion',
+        new URL('/ag.AutograderService/UpdateCriterion', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoUpdateCriterion,
@@ -1436,32 +1441,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoDeleteCriterion = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.GradingCriterion) => {
+    Void,
+    (request: GradingCriterion) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   deleteCriterion(
-    request: ag_ag_pb.GradingCriterion,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: GradingCriterion,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   deleteCriterion(
-    request: ag_ag_pb.GradingCriterion,
+    request: GradingCriterion,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   deleteCriterion(
-    request: ag_ag_pb.GradingCriterion,
+    request: GradingCriterion,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/DeleteCriterion',
+        new URL('/ag.AutograderService/DeleteCriterion', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoDeleteCriterion,
@@ -1476,32 +1480,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoCreateReview = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Review,
-    (request: ag_ag_pb.ReviewRequest) => {
+    Review,
+    (request: ReviewRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Review.deserializeBinary
+    Review.deserializeBinary
   );
 
   createReview(
-    request: ag_ag_pb.ReviewRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Review>;
+    request: ReviewRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Review>;
 
   createReview(
-    request: ag_ag_pb.ReviewRequest,
+    request: ReviewRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Review) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Review>;
+               response: Review) => void): grpcWeb.ClientReadableStream<Review>;
 
   createReview(
-    request: ag_ag_pb.ReviewRequest,
+    request: ReviewRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Review) => void) {
+               response: Review) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/CreateReview',
+        new URL('/ag.AutograderService/CreateReview', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoCreateReview,
@@ -1516,32 +1519,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateReview = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Review,
-    (request: ag_ag_pb.ReviewRequest) => {
+    Review,
+    (request: ReviewRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Review.deserializeBinary
+    Review.deserializeBinary
   );
 
   updateReview(
-    request: ag_ag_pb.ReviewRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Review>;
+    request: ReviewRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Review>;
 
   updateReview(
-    request: ag_ag_pb.ReviewRequest,
+    request: ReviewRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Review) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Review>;
+               response: Review) => void): grpcWeb.ClientReadableStream<Review>;
 
   updateReview(
-    request: ag_ag_pb.ReviewRequest,
+    request: ReviewRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Review) => void) {
+               response: Review) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateReview',
+        new URL('/ag.AutograderService/UpdateReview', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoUpdateReview,
@@ -1556,32 +1558,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetReviewers = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Reviewers,
-    (request: ag_ag_pb.SubmissionReviewersRequest) => {
+    Reviewers,
+    (request: SubmissionReviewersRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Reviewers.deserializeBinary
+    Reviewers.deserializeBinary
   );
 
   getReviewers(
-    request: ag_ag_pb.SubmissionReviewersRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Reviewers>;
+    request: SubmissionReviewersRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Reviewers>;
 
   getReviewers(
-    request: ag_ag_pb.SubmissionReviewersRequest,
+    request: SubmissionReviewersRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Reviewers) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Reviewers>;
+               response: Reviewers) => void): grpcWeb.ClientReadableStream<Reviewers>;
 
   getReviewers(
-    request: ag_ag_pb.SubmissionReviewersRequest,
+    request: SubmissionReviewersRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Reviewers) => void) {
+               response: Reviewers) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetReviewers',
+        new URL('/ag.AutograderService/GetReviewers', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetReviewers,
@@ -1596,32 +1597,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoLoadCriteria = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Benchmarks,
-    (request: ag_ag_pb.AssignmentRequest) => {
+    Benchmarks,
+    (request: AssignmentRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Benchmarks.deserializeBinary
+    Benchmarks.deserializeBinary
   );
 
   loadCriteria(
-    request: ag_ag_pb.AssignmentRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Benchmarks>;
+    request: AssignmentRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Benchmarks>;
 
   loadCriteria(
-    request: ag_ag_pb.AssignmentRequest,
+    request: AssignmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Benchmarks) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Benchmarks>;
+               response: Benchmarks) => void): grpcWeb.ClientReadableStream<Benchmarks>;
 
   loadCriteria(
-    request: ag_ag_pb.AssignmentRequest,
+    request: AssignmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Benchmarks) => void) {
+               response: Benchmarks) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/LoadCriteria',
+        new URL('/ag.AutograderService/LoadCriteria', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoLoadCriteria,
@@ -1636,32 +1636,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetProviders = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Providers,
-    (request: ag_ag_pb.Void) => {
+    Providers,
+    (request: Void) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Providers.deserializeBinary
+    Providers.deserializeBinary
   );
 
   getProviders(
-    request: ag_ag_pb.Void,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Providers>;
+    request: Void,
+    metadata: grpcWeb.Metadata | null): Promise<Providers>;
 
   getProviders(
-    request: ag_ag_pb.Void,
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Providers) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Providers>;
+               response: Providers) => void): grpcWeb.ClientReadableStream<Providers>;
 
   getProviders(
-    request: ag_ag_pb.Void,
+    request: Void,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Providers) => void) {
+               response: Providers) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetProviders',
+        new URL('/ag.AutograderService/GetProviders', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetProviders,
@@ -1676,32 +1675,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetOrganization = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Organization,
-    (request: ag_ag_pb.OrgRequest) => {
+    Organization,
+    (request: OrgRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Organization.deserializeBinary
+    Organization.deserializeBinary
   );
 
   getOrganization(
-    request: ag_ag_pb.OrgRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Organization>;
+    request: OrgRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Organization>;
 
   getOrganization(
-    request: ag_ag_pb.OrgRequest,
+    request: OrgRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Organization) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Organization>;
+               response: Organization) => void): grpcWeb.ClientReadableStream<Organization>;
 
   getOrganization(
-    request: ag_ag_pb.OrgRequest,
+    request: OrgRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Organization) => void) {
+               response: Organization) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetOrganization',
+        new URL('/ag.AutograderService/GetOrganization', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetOrganization,
@@ -1716,32 +1714,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetRepositories = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Repositories,
-    (request: ag_ag_pb.URLRequest) => {
+    Repositories,
+    (request: URLRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Repositories.deserializeBinary
+    Repositories.deserializeBinary
   );
 
   getRepositories(
-    request: ag_ag_pb.URLRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Repositories>;
+    request: URLRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Repositories>;
 
   getRepositories(
-    request: ag_ag_pb.URLRequest,
+    request: URLRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Repositories) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Repositories>;
+               response: Repositories) => void): grpcWeb.ClientReadableStream<Repositories>;
 
   getRepositories(
-    request: ag_ag_pb.URLRequest,
+    request: URLRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Repositories) => void) {
+               response: Repositories) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/GetRepositories',
+        new URL('/ag.AutograderService/GetRepositories', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoGetRepositories,
@@ -1756,32 +1753,31 @@ export class AutograderServiceClient {
   }
 
   methodInfoIsEmptyRepo = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.RepositoryRequest) => {
+    Void,
+    (request: RepositoryRequest) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    Void.deserializeBinary
   );
 
   isEmptyRepo(
-    request: ag_ag_pb.RepositoryRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    request: RepositoryRequest,
+    metadata: grpcWeb.Metadata | null): Promise<Void>;
 
   isEmptyRepo(
-    request: ag_ag_pb.RepositoryRequest,
+    request: RepositoryRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: Void) => void): grpcWeb.ClientReadableStream<Void>;
 
   isEmptyRepo(
-    request: ag_ag_pb.RepositoryRequest,
+    request: RepositoryRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Void) => void) {
+               response: Void) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/IsEmptyRepo',
+        new URL('/ag.AutograderService/IsEmptyRepo', this.hostname_).toString(),
         request,
         metadata || {},
         this.methodInfoIsEmptyRepo,

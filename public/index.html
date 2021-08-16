@@ -1,36 +1,85 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8"/>
-        <link rel="icon" href="/favicon.ico"/>
-        <link rel="apple-touch-icon" href="/logo192.png"/>
-        <link rel="manifest" href="/manifest.json"/>
-        <title>QuickFeed</title>
-          <!--React Javascript files Start-->
-        <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
-        <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
-        <!--React Javascript files end-->
+<!DOCTYPE html>
+<html>
 
-        <!-- Bootstrap Latest compiled and minified CSS -->
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">  
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>QuickFeed</title>
+    <!-- Disable React Dev Tools in production -->
+    <script>
+        if (window.location.hostname === "uis.itest.run" && typeof window.__REACT_DEVTOOLS_GLOBAL_HOOK__ === 'object') {
+            __REACT_DEVTOOLS_GLOBAL_HOOK__.inject = function() {};
+        }
+    </script>
 
-        <!-- Custom styles -->
-        <link type="text/css" rel="stylesheet" href="/static/styles/styles.css">
-        <!-- Font Awesome  -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!--React Javascript files Start-->
+    <script src="https://unpkg.com/react@16.4.1/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@16.4.1/umd/react-dom.development.js"></script>
 
-        <!-- Favicon -->
-        <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
-        <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
-        <link rel="manifest" href="/site.webmanifest">
-   </head>
-   <body>
-        <!--
-              https://github.com/autograde/quickfeed#we-accept-pull-requests
-        -->
-        <noscript>You need to enable JavaScript to run this app.</noscript>
-        <div id="root"></div>
-        <script src="/static/dist/bundle.js"></script>
-   </body>
+    <!--React Javascript files end-->
+
+    <!-- Bootstrap Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+
+    <!-- Bootstrap Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+        crossorigin="anonymous">
+
+    <!-- Custom styles -->
+    <link rel="stylesheet" type="text/css" href="/static/styles/style.css">
+
+    <!-- Font Awesome  -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+</head>
+
+<body>
+    <div id="root">
+    <div className="lds-ripple"><div></div><div></div></div>
+    <div id="overlay" class="overlay hidden">
+        <div class="correcter "></div>
+        <div>
+            <svg width="150" height="150" viewbox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" version="1.1">
+                <style>
+                    .fill {
+                        fill: white;
+                    }
+                </style>
+                <symbol id="part" viewbox="0 0 50 50">
+                    <!--<polygon points="40,10 40,25 25,40 10,40" style="fill: black;" />-->
+                    <path d="M 20,40 A 30,30 0,0,1 40,20" style="stroke: black; stroke-width: 6px; stroke-linecap: round; fill:none" />
+                </symbol>
+                <circle cx="50" cy="50" r="31.5" style="stroke: white; stroke-width: 6px; fill: none;" />
+                <use href="#part" width="50" height="50" />
+                <!--<use href="#part" width="50" height="50" transform="rotate(90 50 50)" />
+                <use href="#part" width="50" height="50" transform="rotate(270 50 50)" />
+                <use href="#part" width="50" height="50" transform="rotate(180 50 50)" />-->
+            </svg>
+        </div>
+        <div class="correcter"></div>
+    </div>
+    </div>
+
+
+    <!--Bootstrap javascript start-->
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+    <!--Bootstrap javascript end-->
+
+    <!--Promisejs -->
+    <!--<script src="https://www.promisejs.org/polyfills/promise-6.1.0.js"></script>-->
+    <!--Promisejs end-->
+
+    <!--Components-->
+    <script src="/static/dist/bundle.js"></script>
+</body>
+
 </html>

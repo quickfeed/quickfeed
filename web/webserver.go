@@ -145,6 +145,15 @@ func registerFrontend(e *echo.Echo, entryPoint, public string) {
 		return c.File(entryPoint)
 	}
 
+	// File for serving additional frontend
+	indev := func(c echo.Context) error {
+		return c.File(filepath.Join("dev", "index.html"))
+	}
+
+	// Routes for serving
+	e.GET("/test", indev)
+	e.Static("/dev", "dev")
+
 	e.GET("/", index)
 	e.GET("/*", index)
 	// TODO: Whitelisted files only.
