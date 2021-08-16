@@ -66,7 +66,7 @@ If you already have certificates that you would like to use you can specify them
 ```
 
 After run the script, the envoy config will be generate at `$QUICKFEED/envoy` directory and saved as `envoy-$DOMAIN.yaml`.
-If a file with same name already exists, it will be overwritten.
+It will overwrite the config file if it already exists.
 
 The script sets the certificate and key at the following path: `/etc/letsencrypt/live/$DOMAIN/(CERTIFICATE | KEY).pem`.
 
