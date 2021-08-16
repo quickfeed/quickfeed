@@ -1,7 +1,7 @@
-import { Overmind } from 'overmind'
+import { json, Overmind } from 'overmind'
 import { Context } from "./";
 import { IGrpcResponse } from "../GRPCManager";
-import {  User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group } from "../../proto/ag/ag_pb";
+import {  User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment } from "../../proto/ag/ag_pb";
 import { CourseGroup, ParsedCourseSubmissions } from "./state";
 import { AlertType } from "../Helpers";
 
@@ -72,8 +72,10 @@ export const getSubmissions = async ({state, effects}: Context, courseID: number
 export const getEnrollmentsByUser = async ({state, effects}: Context) => {
     const result = await effects.grpcMan.getEnrollmentsByUser(state.self.getId())
     if (result.data) {
-            const enrollments = result.data.getEnrollmentsList()
-            state.enrollments = enrollments
+            state.enrollments = result.data.getEnrollmentsList()
+            for (const enrollment of state.enrollments) {
+                state.status[enrollment.getCourseid()] = enrollment.getStatus()
+            }
             return true
         }
     return false
@@ -190,7 +192,6 @@ export const getRepositories = async ({state, effects}: Context) => {
     let success = true
     for (const enrollment of state.enrollments) {
         state.repositories[enrollment.getCourseid()] = {};
-
         const result = await effects.grpcMan.getRepositories(enrollment.getCourseid(), [Repository.Type.USER, Repository.Type.GROUP, Repository.Type.COURSEINFO, Repository.Type.ASSIGNMENTS])
         if (result.data) {
             const repoMap = result.data.toObject().urlsMap;
@@ -209,16 +210,6 @@ export const getRepositories = async ({state, effects}: Context) => {
 
 export const updateCourseGroup = ({state}: Context, cg: CourseGroup) => {
     state.courseGroup = cg
-};
-
-export const alertHandler = ({state}: Context, response: IGrpcResponse<any>) => {
-    if (response.status.getCode() >= 0) {
-        state.alerts.push({text: response.status.getError(), type: AlertType.DANGER})
-    }
-};
-
-export const alert = ({state}: Context, alert: {text: string, type: AlertType}) => {
-    state.alerts.push(alert)
 };
 
 export const getGroupByUserAndCourse = async ({state, effects}: Context, courseID: number) => {
@@ -268,12 +259,7 @@ export const createCourse = async ({state, actions, effects}: Context, value: {c
 
 export const editCourse = async ({effects}: Context, {course}: {course: Course} ) => {
     const response = await effects.grpcMan.updateCourse(course)
-    console.log(response.status, response.data)
 }
-
-export const loading = ({state}: Context) => {
-    state.isLoading = !state.isLoading
-};
 
 export const refreshSubmissions = async ({state, effects}: Context, input: {courseID: number, submissionID: number}) => {
     const result = await effects.grpcMan.getSubmissions(input.courseID, state.self.getId())
@@ -284,143 +270,64 @@ export const refreshSubmissions = async ({state, effects}: Context, input: {cour
             if (assignment) {
                 if (state.submissions[input.courseID][assignment.getOrder() - 1].getCommithash() !== submission.getCommithash()) {
                     state.submissions[input.courseID][assignment.getOrder() - 1] = submission
-                }
-                    
+                }    
             }
         })
     }
 };
 
 const convertCourseSubmission = (data: CourseSubmissions) => {
-    // TODO: {[index]: {Parsed}}
     const courseSubmissions: ParsedCourseSubmissions[] = []
     data.getLinksList().forEach((l, index) => {
-        l.getSubmissionsList().forEach(s => { s.getSubmission()?.getBuildinfo()})
         courseSubmissions.push({enrollment: l.getEnrollment(), submissions: l.getSubmissionsList(), user: l.getEnrollment()?.getUser()}) 
     })
     return courseSubmissions
 };
 
+/** Fetches and stores all submissions of a given course into state */
 export const getAllCourseSubmissions = async ({state, effects}: Context, courseID: number) => {
-    let success = false
-
     state.courseSubmissions[courseID] = []
     state.isLoading = true
     const result =  await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL)
     if (result.data) {
             state.courseSubmissions[courseID] = convertCourseSubmission(result.data)
-            state.isLoading = false
-            success = true
-            
+            state.isLoading = false    
     }
     state.isLoading = false
-    return false
 };
 
 export const getGroupsByCourse = async ({state, effects}: Context, courseID: number) => {
-    /** TODO:
-     *  An interesting interaction between gRPC and Overmind
-     *  It seems that as the server returns a Group that has no enrollments or users
-     *  that an empty array is not created until you try to retrieve it.
-     * 
-     *  This was experienced when a Group was returned and stored in the state.
-     *  When attempting to access Group.getEnrollmentsList for a Group that does not have any enrollments
-     *  we get an error implying that a third party is attempting to modify the state.
-     * 
-     *  Simply calling Group.getEnrollmentsList from an action before saving to the state enables
-     *  us to call Group.getEnrollmentsList from components without issue.
-     */
     state.groups[courseID] = []
     const res = await effects.grpcMan.getGroupsByCourse(courseID)
     if (res.data) {
-        res.data.getGroupsList().forEach(element => {
-            if (element.getEnrollmentsList() || element.getUsersList()) {
-                // TODO: This serves as a temporary fix for the issue described above.
-            }
-        });
         state.groups[courseID] = res.data.getGroupsList()
     }
 };
 
 export const getUserSubmissions = async ({state, effects}: Context, courseID: number) => {
     state.submissions[courseID] = []
-    const res = await effects.grpcMan.getSubmissions(courseID, state.self.getId())
-    if (res.data) {
-        state.assignments[courseID].forEach(assignment => {
-            let submission = res.data?.getSubmissionsList().find(s => s.getAssignmentid() === assignment.getId())
-            if (submission) {
-                state.submissions[courseID][assignment.getOrder() - 1] = submission
-            }
-            else {
-                state.submissions[courseID][assignment.getOrder() - 1] = new Submission()
-            }
-        })
+    const submissions = await effects.grpcMan.getSubmissions(courseID, state.self.getId())
+    if (submissions.data) {
+        for (const assignment of state.assignments[courseID]) {
+            let submission = submissions.data.getSubmissionsList().find(s => s.getAssignmentid() === assignment.getId())
+            state.submissions[courseID][assignment.getOrder() - 1] = submission ? submission : new Submission()
+        }
         return true
     }
     return false
 };
 
 export const getGroupSubmissions = async ({state, effects}: Context, courseID: number) => {
-    const res = await effects.grpcMan.getAllSubmissions(courseID, state.self.getId(), state.enrollmentsByCourseId[courseID].getGroupid())
-    console.log("GRP: ", state.enrollmentsByCourseId[courseID].getGroupid())
-    if (res.data) {
-        console.log(res.data)
-        state.assignments[courseID].forEach(assignment => {
-            if (assignment.getIsgrouplab()) {
-                const submission = res.data?.getSubmissionsList().find(s => s.getAssignmentid() == assignment.getId())
-                if (submission && submission.getBuildinfo()) {
-                    console.log(submission)
-                    state.submissions[courseID][assignment.getOrder() - 1] = submission
-                }
+    const enrollment = state.enrollmentsByCourseId[courseID]
+    if (enrollment.hasGroup()) {
+        const submissions = await effects.grpcMan.getGroupSubmissions(enrollment.getCourseid(), enrollment.getGroupid())
+        for (const assignment of state.assignments[enrollment.getCourseid()]) {
+            const submission = submissions.data?.getSubmissionsList().find(submission => submission.getAssignmentid() === assignment.getId())
+            if (submission && assignment.getIsgrouplab()) {
+                state.submissions[enrollment.getCourseid()][assignment.getOrder() - 1] = submission
             }
-        })
-    }
-};
-
-// Attempt at getting all submissions at once
-export const getCourseSubmissions = async ({state, effects}: Context, courseID: number) => {
-    let userSubmissions: Submission[] = []
-    let groupSubmissions: Submission[] = []
-
-    const groupID: number = state.enrollmentsByCourseId[courseID].getGroupid()
-    //const groupID: number | undefined = state.enrollments.find(enrollment => enrollment.getCourseid() == courseID)?.getGroupid()
-
-    const groupResult = await effects.grpcMan.getGroupSubmissions(courseID, 0) 
-    if (groupResult.status.getCode() > 0 || !groupResult.data) {
-        groupSubmissions = []
-    }
-    else {
-        groupSubmissions = groupResult.data.getSubmissionsList()
-    }
-
-    const userResult = await effects.grpcMan.getSubmissions(courseID, state.self.getId())
-    if (userResult.data) {
-        userSubmissions = userResult.data.getSubmissionsList()
-    }
-    console.log(userResult.status.getCode(), groupResult.status.getCode())
-    if (groupResult.status.getCode() > 0 || userResult.status.getCode() > 0) {
-        return false
-    }
-    console.log(userSubmissions, groupSubmissions, courseID)
-    state.submissions[courseID] = []
-    state.assignments[courseID].forEach(assignment => {
-        let submission: Submission | undefined = undefined
-        if (assignment.getIsgrouplab()) {
-            submission = groupSubmissions.find(submission => submission.getAssignmentid() == assignment.getId())
         }
-        else {
-            submission = userSubmissions.find(submission => submission.getAssignmentid() == assignment.getId())
-        }
-        if(submission) {
-            console.log("Sub")
-            state.submissions[courseID][assignment.getOrder() - 1] = submission
-        }
-        if(submission == undefined){
-            submission = new Submission()
-            state.submissions[courseID][assignment.getOrder() - 1] = submission
-        }
-    })
-    return true
+    }
 };
 
 export const setActiveCourse = ({state}: Context, courseID: number) => {
@@ -431,9 +338,44 @@ export const setActiveLab = ({state}: Context, assignmentID: number) => {
     state.activeLab = assignmentID
 };
 
+/** Enrolls a user (self) in a course given by courseID. Refreshes enrollments in state if enroll is sucessful. */
 export const enroll = async ({state, effects}: Context, courseID: number) => {
     const res = await effects.grpcMan.createEnrollment(courseID, state.self.getId())
+
+    if (res.status.getCode() == 0) {
+        const enrollments = await effects.grpcMan.getEnrollmentsByUser(state.self.getId())
+        if (enrollments.data) {
+            state.enrollments = enrollments.data.getEnrollmentsList()
+        }
+    }
 };
+
+export const updateGroupStatus = async ({effects}: Context, {group, status}: {group: Group, status: Group.GroupStatus}) => {
+    group.setStatus(status)
+    const response = await effects.grpcMan.updateGroup(json(group))
+    if (response.status.getCode() != 0) {
+        group.setStatus(status == 1 ? 0 : 1)
+    }
+}
+
+export const deleteGroup = async ({state, effects}: Context, group: Group) => {
+    const response = await effects.grpcMan.deleteGroup(group.getCourseid(), group.getId())
+    if (response.status.getCode() == 0) {
+        state.groups[group.getCourseid()] = state.groups[group.getCourseid()].filter(g => g.getId() !== group.getId())
+    }
+}
+
+export const updateGroup = async ({effects}: Context, group: Group) => {
+    const response = await effects.grpcMan.updateGroup(group)
+}
+
+export const createCriterion = async ({state, effects}: Context, {criterion, assignment}: {criterion: GradingCriterion, assignment: Assignment}) => {
+    for (const bm of assignment.getGradingbenchmarksList()) {
+        if (bm.getId() === criterion.getBenchmarkid()) {
+            bm.getCriteriaList().push(criterion)
+        }
+    }
+}
 
 export const logout = ({state}: Context) => {
     state.self = new User()
@@ -447,8 +389,7 @@ export const fetchUserData = async ({state, actions}: Context) =>  {
         success = await actions.getEnrollmentsByUser()
         success = await actions.getAssignments()
         for (const enrollment of state.enrollments) {
-            if (enrollment.getStatus() === Enrollment.UserStatus.STUDENT) {
-                //success = await actions.getCourseSubmissions(enrollment.getCourseid())
+            if (enrollment.getStatus() >= Enrollment.UserStatus.STUDENT) {
                 success = await actions.getUserSubmissions(enrollment.getCourseid())
                 await actions.getGroupSubmissions(enrollment.getCourseid())
             }
@@ -465,19 +406,25 @@ export const fetchUserData = async ({state, actions}: Context) =>  {
     return success
 };
 
-/* START UTILITY ACTIONS */
-/** Tries to get saved theme setting from localStorage, else sets theme to Light by default */
-export const setTheme = ({state}: Context) => {
-    let theme = window.localStorage.getItem("theme")
-    state.theme = (theme === null) ? "light" : theme
-    document.body.className = state.theme
-};
+/** Switches between teacher and student view. */
+export const changeView = async ({state, effects}: Context, courseID: number) => {
+    const status = state.enrollmentsByCourseId[courseID].getStatus()
+    if (status === Enrollment.UserStatus.STUDENT) {
+        const status = await effects.grpcMan.getEnrollmentsByUser(state.self.getId(), [Enrollment.UserStatus.TEACHER])
+        if (status.data?.getEnrollmentsList().find(enrollment => enrollment.getCourseid() == courseID)) {
+            state.enrollmentsByCourseId[courseID].setStatus(Enrollment.UserStatus.TEACHER)
+        }
+    }
+    if (status === Enrollment.UserStatus.TEACHER) {
+        state.enrollmentsByCourseId[courseID].setStatus(Enrollment.UserStatus.STUDENT)
+    }
+    
+}
 
-/** Changes between Light and Dark theme */
-export const changeTheme = ({state}: Context) => {
-    state.theme = (state.theme === "light") ? "dark" : "light"
-    document.body.className = state.theme
-    window.localStorage.setItem("theme", state.theme)
+/* START UTILITY ACTIONS */
+
+export const loading = ({state}: Context) => {
+    state.isLoading = !state.isLoading
 };
 
 /** Sets the time to now. */
@@ -485,6 +432,7 @@ export const setTimeNow = ({state}: Context) =>{
     state.timeNow = new Date()
 };
 
+/** Sets a query string in state. */
 export const setQuery = ({state}: Context, query: string) => {
     state.query = query
 };
@@ -496,3 +444,19 @@ export const enableRedirect = ({state}: Context, bool: boolean) => {
 export const setActiveSubmission = ({state}: Context, submission: Submission | undefined) => {
     state.activeSubmission = submission
 }
+
+export const isAuthorizedTeacher = async ({state, effects}: Context) => {
+    const response = await effects.grpcMan.isAuthorizedTeacher()
+    if (response.data) { return response.data.getIsauthorized() }
+    return false
+}
+
+export const alertHandler = ({state}: Context, response: IGrpcResponse<any>) => {
+    if (response.status.getCode() >= 0) {
+        state.alerts.push({text: response.status.getError(), type: AlertType.DANGER})
+    }
+};
+
+export const alert = ({state}: Context, alert: {text: string, type: AlertType}) => {
+    state.alerts.push(alert)
+};
