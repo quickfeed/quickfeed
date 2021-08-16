@@ -15,7 +15,7 @@ grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ve
 grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 testorg				:= ag-test-course
-envoy-gen := ./cmd/envoy/gen_envoy_config.go
+envoy-config-gen := ./cmd/envoy/envoy_config_gen.go
 
 # necessary when target is not tied to a file
 .PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm
@@ -89,7 +89,7 @@ ifeq ($(DOMAIN),)
 	@echo "You must set required environment variables before configuring Envoy (see .env-template)." && false
 else
 	@echo "Generating Envoy configuration for $(DOMAIN)."
-	@go run $(envoy-gen) --tls
+	@go run $(envoy-config-gen) --tls
 endif
 
 # protoset is a file used as a server reflection to mock-testing of grpc methods via command line
