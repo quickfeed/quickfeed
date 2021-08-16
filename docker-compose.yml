@@ -4,8 +4,8 @@ services:
     container_name: envoy
     image: quickfeed/envoy
     build:
-      context: ./
-      dockerfile: ./envoy/Dockerfile
+      context: ./ci/docker/envoy
+      dockerfile: ./Dockerfile
       args:
         - ENVOY_CONFIG=${ENVOY_CONFIG}
         - DOMAIN=${DOMAIN}
@@ -21,7 +21,7 @@ services:
     image: quickfeed/quickfeed
     build:
       context: ./
-      dockerfile: ./Dockerfile
+      dockerfile: ./ci/docker/quickfeed/Dockerfile
       args:
         - GRPC_PORT=${GRPC_PORT}
         - HTTP_PORT=${HTTP_PORT}

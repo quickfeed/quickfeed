@@ -27,5 +27,5 @@ quickfeed-env.sh
 .env
 .env-localhost
 envoy.log
-envoy/*.yaml
-envoy/certs
+ci/docker/envoy/*.yaml
+ci/docker/envoy/certs

@@ -65,8 +65,11 @@ If you already have certificates that you would like to use you can specify them
 % go run ./envoy/gen_envoy_config.go --tls --cert="fullchain.pem" --key="key.pem"
 ```
 
-After run the script, the envoy config will be generate at `$QUICKFEED/envoy` directory and saved as `envoy-$DOMAIN.yaml`.
-It will overwrite the config file if it already exists.
+After run the script, the envoy configuration will be generate at `$QUICKFEED/ci/docker/envoy` and saved as `envoy-$DOMAIN.yaml`.
+It will overwrite the configuration file if it already exists.
+
+The certificates are generated under the directory `$QUICKFEED/ci/docker/envoy/certs`.
+If you want to use your own set of certificates to build the docker image, you need to move your certificates to that directory.
 
 The script sets the certificate and key at the following path: `/etc/letsencrypt/live/$DOMAIN/(CERTIFICATE | KEY).pem`.
 
@@ -117,7 +120,7 @@ A Record     cyclone       92.221.105.172       5 min
 ```
 
 Set up port forwarding on your router.
-External ports 80/443/8080 maps to internal ports 80/443/8080 for TCP.
+External ports 80/443 maps to internal ports 80/443 for TCP.
 
 ### Install Tools for Deployment
 

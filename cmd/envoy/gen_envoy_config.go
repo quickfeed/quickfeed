@@ -27,6 +27,19 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const defaultFileFlags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+
+var (
+	withTLS         bool
+	certFile        string
+	keyFile         string
+	_, pwd, _, _    = runtime.Caller(0)
+	codePath        = path.Join(path.Dir(pwd), "../..")
+	env             = filepath.Join(codePath, ".env")
+	envoyDockerRoot = filepath.Join(codePath, "ci/docker/envoy")
+	certsDir        = path.Join(envoyDockerRoot, "/certs")
+)
+
 // CertificateConfig holds certificate information
 type CertificateConfig struct {
 	CertFile string // The certificate file name.
@@ -78,7 +91,7 @@ var envoyTmpl embed.FS
 
 // createEnvoyConfigFile creates the envoy.yaml config file.
 func createEnvoyConfigFile(config *EnvoyConfig) error {
-	envoyConfigFile := path.Join(path.Dir(pwd), fmt.Sprintf("envoy-%s.yaml", config.Domain))
+	envoyConfigFile := path.Join(envoyDockerRoot, fmt.Sprintf("envoy-%s.yaml", config.Domain))
 
 	err := os.MkdirAll(path.Dir(envoyConfigFile), 0755)
 	if err != nil {
@@ -210,18 +223,6 @@ type certOptions struct {
 	validFor  time.Duration // for how long the certificate is valid.
 	keyType   string        // default ECDSA curve P256
 }
-
-const defaultFileFlags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
-
-var (
-	withTLS      bool
-	certFile     string
-	keyFile      string
-	_, pwd, _, _ = runtime.Caller(0)
-	codePath     = path.Join(path.Dir(pwd), "..")
-	env          = filepath.Join(codePath, ".env")
-	certsDir     = path.Join(path.Dir(pwd), "certs")
-)
 
 // generateSelfSignedCert generates a self-signed X.509 certificate for testing purposes.
 // It supports ECDSA curve P256 or RSA 2048 bits to generate the key.
