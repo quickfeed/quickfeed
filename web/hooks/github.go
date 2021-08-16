@@ -23,14 +23,14 @@ type GitHubWebHook struct {
 	secret string
 }
 
-// NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the Autograder server.
+// NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the QuickFeed server.
 func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runner, secret string) *GitHubWebHook {
 	return &GitHubWebHook{logger: logger, db: db, runner: runner, secret: secret}
 }
 
 // Handle take POST requests from GitHub, representing Push events
 // associated with course repositories, which then triggers various
-// actions on the Autograder backend.
+// actions on the QuickFeed backend.
 func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 	payload, err := github.ValidatePayload(r, []byte(wh.secret))
 	if err != nil {
@@ -63,7 +63,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 
 	repo, err := wh.db.GetRepositoryByRemoteID(uint64(payload.GetRepo().GetID()))
 	if err != nil {
-		wh.logger.Errorf("Failed to get repository from database: %v", err)
+		wh.logger.Errorf("Failed to get repository by remote ID %d from database: %v", payload.GetRepo().GetID(), err)
 		return
 	}
 	wh.logger.Debugf("Received push event for repository %v", repo)

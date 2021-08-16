@@ -17,7 +17,7 @@ import {
     Group,
     GroupRequest,
     Groups,
-    LoadCriteriaRequest,
+    AssignmentRequest,
     Organization,
     OrgRequest,
     Providers,
@@ -234,17 +234,10 @@ export class GrpcManager {
     public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
         const request = new SubmissionsForCourseRequest();
         // TODO: Make this an argument?
-        request.setSkipbuildinfo(false)
+        request.setWithbuildinfo(true)
         request.setCourseid(courseID);
         request.setType(type);
         return this.grpcSend<CourseSubmissions>(this.agService.getSubmissionsByCourse, request);
-    }
-
-    public rebuildSubmission(assignmentID: number, submissionID: number): Promise<IGrpcResponse<Submission>> {
-        const request = new RebuildRequest();
-        request.setAssignmentid(assignmentID);
-        request.setSubmissionid(submissionID);
-        return this.grpcSend<Submission>(this.agService.rebuildSubmission, request);
     }
 
     public updateSubmission(courseID: number, s: Submission): Promise<IGrpcResponse<Void>> {
@@ -257,7 +250,7 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateSubmission, request);
     }
 
-    public updatesubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean) {
+    public updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean) {
         const request = new UpdateSubmissionsRequest();
         request.setAssignmentid(assignmentID);
         request.setCourseid(courseID);
@@ -267,6 +260,19 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateSubmissions, request);
     }
 
+    public rebuildSubmission(assignmentID: number, submissionID: number): Promise<IGrpcResponse<Submission>> {
+        const request = new RebuildRequest();
+        request.setAssignmentid(assignmentID);
+        request.setSubmissionid(submissionID);
+        return this.grpcSend<Submission>(this.agService.rebuildSubmission, request);
+    }
+
+    public rebuildSubmissions(assignmentID: number, courseID: number): Promise<IGrpcResponse<Void>> {
+        const request = new AssignmentRequest()
+        request.setAssignmentid(assignmentID);
+        request.setCourseid(courseID);
+        return this.grpcSend<Void>(this.agService.rebuildSubmissions, request);
+    }
 
     // /* MANUAL GRADING */ //
 
@@ -316,7 +322,7 @@ export class GrpcManager {
     }
 
     public loadCriteria(assignmentID: number, courseID: number): Promise<IGrpcResponse<Benchmarks>> {
-        const request = new LoadCriteriaRequest();
+        const request = new AssignmentRequest();
         request.setAssignmentid(assignmentID);
         request.setCourseid(courseID);
         return this.grpcSend<Benchmarks>(this.agService.loadCriteria, request);

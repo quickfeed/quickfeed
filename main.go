@@ -62,7 +62,6 @@ func main() {
 		public   = flag.String("http.public", "public", "path to content to serve")
 		httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
 		grpcAddr = flag.String("grpc.addr", ":9090", "gRPC listen address")
-		fake     = flag.Bool("provider.fake", false, "enable fake provider")
 	)
 	flag.Parse()
 
@@ -91,7 +90,7 @@ func main() {
 	defer runner.Close()
 
 	agService := web.NewAutograderService(logger, db, scms, bh, runner)
-	go web.New(agService, *public, *httpAddr, *fake)
+	go web.New(agService, *public, *httpAddr)
 
 	lis, err := net.Listen("tcp", *grpcAddr)
 	if err != nil {

@@ -3,7 +3,8 @@
         "path": "/usr/local/bin/protoc",
         "options": [
             "--proto_path=${workspaceRoot}/ag",
-            "--proto_path=${env.HOME}/go/pkg/mod/github.com/gogo/protobuf@v1.3.1"
+            "--proto_path=${workspaceRoot}/ag/kit/score",
+            "--proto_path=${env.HOME}/go/pkg/mod/google.golang.org/protobuf@v1.27.1"
         ]
     },
     "go.lintTool": "golangci-lint",
@@ -58,6 +59,8 @@
         "coverprofile",
         "dateext",
         "dhparams",
+        "dockerd",
+        "envoyproxy",
         "errcheck",
         "excelize",
         "extendee",
@@ -83,6 +86,7 @@
         "keyout",
         "killall",
         "letsencrypt",
+        "linuxbrew",
         "logq",
         "logrotate",
         "longsleep",
@@ -106,6 +110,7 @@
         "protobuf",
         "protoc",
         "protoimpl",
+        "qtest",
         "quickfeed",
         "repotoken",
         "run",
@@ -126,6 +131,7 @@
         "unmarshalling",
         "unmarshalls",
         "urfave",
+        "usermod",
         "webpack's",
         "xanzy",
         "xargs",

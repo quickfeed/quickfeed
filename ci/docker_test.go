@@ -3,8 +3,6 @@ package ci_test
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
-	"crypto/sha1"
 	"errors"
 	"fmt"
 	"os"
@@ -13,6 +11,7 @@ import (
 	"time"
 
 	"github.com/autograde/quickfeed/ci"
+	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/log"
 	"github.com/docker/docker/client"
 )
@@ -49,7 +48,7 @@ func TestDocker(t *testing.T) {
 	defer docker.Close()
 
 	out, err := docker.Run(context.Background(), &ci.Job{
-		Name:     "TestDocker-" + randomString(t),
+		Name:     "TestDocker-" + qtest.RandomString(t),
 		Image:    "golang:latest",
 		Commands: []string{script},
 	})
@@ -86,7 +85,7 @@ func TestDockerBuild(t *testing.T) {
 	defer docker.Close()
 
 	out, err := docker.Run(context.Background(), &ci.Job{
-		Name:     "TestDockerBuild-" + randomString(t),
+		Name:     "TestDockerBuild-" + qtest.RandomString(t),
 		Image:    "quickfeed:go",
 		Commands: []string{script},
 	})
@@ -122,7 +121,7 @@ func TestDockerTimeout(t *testing.T) {
 	defer docker.Close()
 
 	out, err := docker.Run(ctx, &ci.Job{
-		Name:     "TestDockerTimeout-" + randomString(t),
+		Name:     "TestDockerTimeout-" + qtest.RandomString(t),
 		Image:    "golang:latest",
 		Commands: []string{script},
 	})
@@ -158,7 +157,7 @@ func TestDockerOpenFileDescriptors(t *testing.T) {
 	errCh := make(chan error, numContainers)
 	for i := 0; i < numContainers; i++ {
 		go func(j int) {
-			name := fmt.Sprintf("TestDockerOpenFileDescritors-%d-%s", j, randomString(t))
+			name := fmt.Sprintf("TestDockerOpenFileDescritors-%d-%s", j, qtest.RandomString(t))
 			out, err := docker.Run(context.Background(), &ci.Job{
 				Name:     name,
 				Image:    "golang:latest",
@@ -195,14 +194,4 @@ func countOpenFiles(t *testing.T) int {
 		t.Fatal(err)
 	}
 	return bytes.Count(out, []byte("\n"))
-}
-
-func randomString(t *testing.T) string {
-	t.Helper()
-	randomness := make([]byte, 10)
-	_, err := rand.Read(randomness)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return fmt.Sprintf("%x", sha1.Sum(randomness))[:6]
 }

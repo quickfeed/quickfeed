@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/internal"
+	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
@@ -85,7 +85,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	authHandler := auth.OAuth2Login(zap.NewNop(), db)
@@ -107,7 +107,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	authHandler := auth.OAuth2Callback(zap.NewNop(), db)
@@ -162,7 +162,7 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 		}
 	}
 
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	if existingUser {
@@ -230,7 +230,7 @@ func TestOAuth2LoginAuthenticated(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	authHandler := auth.OAuth2Login(zap.NewNop(), db)
@@ -293,7 +293,7 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 		}
 	}
 
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	if existingUser {
@@ -337,7 +337,7 @@ func TestAccessControl(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	// Create a new user.

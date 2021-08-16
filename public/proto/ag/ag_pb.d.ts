@@ -1,6 +1,7 @@
-import * as jspb from "google-protobuf"
+import * as jspb from 'google-protobuf'
 
 import * as kit_score_score_pb from '../kit/score/score_pb';
+
 
 export class User extends jspb.Message {
   getId(): number;
@@ -1410,8 +1411,8 @@ export class SubmissionsForCourseRequest extends jspb.Message {
   getType(): SubmissionsForCourseRequest.Type;
   setType(value: SubmissionsForCourseRequest.Type): SubmissionsForCourseRequest;
 
-  getSkipbuildinfo(): boolean;
-  setSkipbuildinfo(value: boolean): SubmissionsForCourseRequest;
+  getWithbuildinfo(): boolean;
+  setWithbuildinfo(value: boolean): SubmissionsForCourseRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): SubmissionsForCourseRequest.AsObject;
@@ -1425,7 +1426,7 @@ export namespace SubmissionsForCourseRequest {
   export type AsObject = {
     courseid: number,
     type: SubmissionsForCourseRequest.Type,
-    skipbuildinfo: boolean,
+    withbuildinfo: boolean,
   }
 
   export enum Type { 
@@ -1483,22 +1484,22 @@ export namespace CourseUserRequest {
   }
 }
 
-export class LoadCriteriaRequest extends jspb.Message {
+export class AssignmentRequest extends jspb.Message {
   getCourseid(): number;
-  setCourseid(value: number): LoadCriteriaRequest;
+  setCourseid(value: number): AssignmentRequest;
 
   getAssignmentid(): number;
-  setAssignmentid(value: number): LoadCriteriaRequest;
+  setAssignmentid(value: number): AssignmentRequest;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): LoadCriteriaRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: LoadCriteriaRequest): LoadCriteriaRequest.AsObject;
-  static serializeBinaryToWriter(message: LoadCriteriaRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): LoadCriteriaRequest;
-  static deserializeBinaryFromReader(message: LoadCriteriaRequest, reader: jspb.BinaryReader): LoadCriteriaRequest;
+  toObject(includeInstance?: boolean): AssignmentRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: AssignmentRequest): AssignmentRequest.AsObject;
+  static serializeBinaryToWriter(message: AssignmentRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): AssignmentRequest;
+  static deserializeBinaryFromReader(message: AssignmentRequest, reader: jspb.BinaryReader): AssignmentRequest;
 }
 
-export namespace LoadCriteriaRequest {
+export namespace AssignmentRequest {
   export type AsObject = {
     courseid: number,
     assignmentid: number,

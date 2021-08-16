@@ -7,7 +7,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/internal"
+	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
@@ -18,12 +18,12 @@ import (
 )
 
 func TestSubmissionsAccess(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := createFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db, 1)
 
-	teacher := createFakeUser(t, db, 2)
+	teacher := qtest.CreateFakeUser(t, db, 2)
 	err := db.UpdateUser(&pb.User{ID: teacher.ID, IsAdmin: true})
 	if err != nil {
 		t.Fatal(err)
@@ -37,7 +37,7 @@ func TestSubmissionsAccess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	student1 := createFakeUser(t, db, 3)
+	student1 := qtest.CreateFakeUser(t, db, 3)
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student1.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestSubmissionsAccess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	student2 := createFakeUser(t, db, 4)
+	student2 := qtest.CreateFakeUser(t, db, 4)
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student2.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
@@ -61,12 +61,12 @@ func TestSubmissionsAccess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	student3 := createFakeUser(t, db, 5)
+	student3 := qtest.CreateFakeUser(t, db, 5)
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student3.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), teacher)
 
@@ -175,7 +175,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	ctx = withUserContext(context.Background(), admin)
 	haveSubmissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
 	if err == nil {
-		t.Error("Expected error: user ")
+		t.Error("Expected error: user not enrolled")
 	}
 	if len(haveSubmissions.GetSubmissions()) > 0 {
 		t.Errorf("Not enrolled admin should not see any submissions, got submissions: %v+ ", haveSubmissions.GetSubmissions())
@@ -257,10 +257,10 @@ func TestSubmissionsAccess(t *testing.T) {
 }
 
 func TestApproveSubmission(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := createFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db, 1)
 
 	course := allCourses[0]
 	err := db.CreateCourse(admin.ID, course)
@@ -268,7 +268,7 @@ func TestApproveSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	student := createFakeUser(t, db, 2)
+	student := qtest.CreateFakeUser(t, db, 2)
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
@@ -299,7 +299,7 @@ func TestApproveSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
@@ -346,10 +346,10 @@ func TestApproveSubmission(t *testing.T) {
 }
 
 func TestGetCourseLabSubmissions(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := createFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db, 1)
 
 	course1 := allCourses[2]
 	course2 := allCourses[3]
@@ -360,7 +360,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	student := createFakeUser(t, db, 2)
+	student := qtest.CreateFakeUser(t, db, 2)
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course1.ID}); err != nil {
 		t.Fatal(err)
 	}
@@ -429,12 +429,29 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	buildInfo1 := &score.BuildInfo{
+		ID:           1,
+		SubmissionID: 1,
+		BuildDate:    "2020-02-23T18:00:00",
+		BuildLog:     "runtime error",
+		ExecTime:     3,
+	}
+
+	buildInfo2 := &score.BuildInfo{
+		ID:           2,
+		SubmissionID: 2,
+		BuildDate:    "2020-02-23T18:00:00",
+		BuildLog:     "runtime error",
+		ExecTime:     3,
+	}
+
 	sub1 := &pb.Submission{
 		UserID:       student.ID,
 		AssignmentID: lab1c1.ID,
 		Score:        44,
 		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
+		BuildInfo:    buildInfo1,
 	}
 	sub2 := &pb.Submission{
 		UserID:       student.ID,
@@ -442,6 +459,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		Score:        66,
 		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
+		BuildInfo:    buildInfo2,
 	}
 	if err := db.CreateSubmission(sub1); err != nil {
 		t.Fatal(err)
@@ -450,7 +468,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 
@@ -479,7 +497,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	// check that all submissions were saved for the correct labs
-	labsForCourse1, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID, Type: pb.SubmissionsForCourseRequest_ALL})
+	labsForCourse1, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID, Type: pb.SubmissionsForCourseRequest_ALL, WithBuildInfo: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -495,7 +513,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		}
 	}
 
-	labsForCourse2, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course2.ID})
+	labsForCourse2, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course2.ID, WithBuildInfo: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -510,6 +528,34 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 			}
 		}
 	}
+
+	// check that buildInformation is not included when not requested
+	labsForCourse3, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID, WithBuildInfo: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, labLink := range labsForCourse3.GetLinks() {
+		for _, submission := range labLink.GetSubmissions() {
+			if submission.Submission.GetBuildInfo().GetBuildLog() != "" {
+				t.Errorf("Expected build log: \"\", got %+v", submission.GetSubmission().GetBuildInfo().GetBuildLog())
+			}
+		}
+	}
+
+	labsForCourse4, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course2.ID, WithBuildInfo: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, labLink := range labsForCourse4.GetLinks() {
+		for _, submission := range labLink.GetSubmissions() {
+			if submission.GetSubmission() != nil {
+				if submission.GetSubmission().GetBuildInfo().GetBuildLog() != "runtime error" {
+					t.Errorf("Expected build log: \"runtime error\", got %+v", submission.GetSubmission().GetBuildInfo().GetBuildLog())
+				}
+			}
+		}
+	}
+
 	// check that no submissions will be returned for a wrong course ID
 	if _, err = ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: 234}); err == nil {
 		t.Error("Expected 'no submissions found'")
@@ -528,21 +574,21 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 }
 
 func TestCreateApproveList(t *testing.T) {
-	db, cleanup := internal.TestDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := createFakeUser(t, db, 1)
+	admin := qtest.CreateFakeUser(t, db, 1)
 
 	course := allCourses[2]
 	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Fatal(err)
 	}
-	student1 := createNamedUser(t, db, 2, "Leslie Lamport")
-	student2 := createNamedUser(t, db, 3, "Hein Meling")
-	student3 := createNamedUser(t, db, 4, "John Doe")
-	enrollStudent(t, db, student1, course)
-	enrollStudent(t, db, student2, course)
-	enrollStudent(t, db, student3, course)
+	student1 := qtest.CreateNamedUser(t, db, 2, "Leslie Lamport")
+	student2 := qtest.CreateNamedUser(t, db, 3, "Hein Meling")
+	student3 := qtest.CreateNamedUser(t, db, 4, "John Doe")
+	qtest.EnrollStudent(t, db, student1, course)
+	qtest.EnrollStudent(t, db, student2, course)
+	qtest.EnrollStudent(t, db, student3, course)
 
 	assignments := []*pb.Assignment{
 		{
@@ -638,7 +684,7 @@ func TestCreateApproveList(t *testing.T) {
 		}
 	}
 
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), admin)
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})

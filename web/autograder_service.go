@@ -576,16 +576,37 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 }
 
 // RebuildSubmission rebuilds the submission with the given ID
+// Access policy: any user.
 func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.RebuildRequest) (*pb.Submission, error) {
 	if !s.isValidSubmission(in.GetSubmissionID()) {
 		s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
 		return nil, status.Error(codes.PermissionDenied, "submitter has no course access")
 	}
-	submission, err := s.rebuildSubmission(ctx, in)
+	submission, err := s.rebuildSubmission(in)
 	if err != nil {
-		return nil, err
+		s.logger.Errorf("RebuildSubmission failed: %v", err)
+		return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission")
 	}
 	return submission, nil
+}
+
+// RebuildSubmissions runs tests for all submissions for the given assignment ID.
+// Access policy: Teacher of CourseID.
+func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.AssignmentRequest) (*pb.Void, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("RebuildSubmissions failed: authentication error: %v", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if !s.isTeacher(usr.ID, in.GetCourseID()) {
+		s.logger.Error("RebuildSubmissions failed: user is not teacher")
+		return nil, status.Error(codes.PermissionDenied, "only teachers can rebuild all submissions")
+	}
+	if err := s.rebuildSubmissions(in); err != nil {
+		s.logger.Errorf("RebuildSubmissions failed: %v", err)
+		return nil, status.Error(codes.InvalidArgument, "failed to rebuild submissions")
+	}
+	return &pb.Void{}, nil
 }
 
 // CreateBenchmark adds a new grading benchmark for an assignment
@@ -656,7 +677,7 @@ func (s *AutograderService) DeleteCriterion(ctx context.Context, in *pb.GradingC
 
 // LoadCriteria loads grading criteria for an assignment from a json file
 // Access policy: Teacher of CourseID
-func (s *AutograderService) LoadCriteria(ctx context.Context, in *pb.LoadCriteriaRequest) (*pb.Benchmarks, error) {
+func (s *AutograderService) LoadCriteria(ctx context.Context, in *pb.AssignmentRequest) (*pb.Benchmarks, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("LoadCriteria failed: scm authentication error: %v", err)
