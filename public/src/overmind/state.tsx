@@ -46,8 +46,11 @@ type State = {
         [courseid: number]: Group
     },
     submissions:{
-        [courseid:number]:Submission[]
+        [courseid: number]:Submission[]
     },
+    status: {
+        [courseid: number]: Enrollment.UserStatus
+    }
 
     /* Public Data */
     users: Enrollment[],
@@ -102,37 +105,19 @@ export const state: State = {
     allUsers: [],
     enrollments: [],
     enrollmentsByCourseId: derived((state: State) => {
-        // 
         let obj: EnrollmentsByCourse = {}
-        state.enrollments.forEach(enrollment => {
+        for (const enrollment of state.enrollments) {
             obj[enrollment.getCourseid()] = enrollment
-        });
+        }
         return obj
     }),
+    status: [],
     courses: [],
     userCourses: {},
     userGroup: {},
     submissions: {},
     courseSubmissions: {},
     activeSubmission: undefined,
-    /*cSubs: derived((state: State) => {
-        let obj: {[id: number]: CourseSubmissions[]} = {}
-        state.courses.forEach(course => {
-            if (state.courseSubmissions[course.getId()]) {
-                obj[course.getId()] = []
-                state.courseSubmissions[course.getId()].forEach(element => {
-                    if (element.getEnrollment()){
-                    obj[course.getId()].push({
-                        enrollment: element.getEnrollment(),
-                        user: element.getEnrollment()?.getUser(),
-                        submissions: []
-                    })
-                }
-            });
-            }
-        });
-        return obj
-    }),*/
     courseGroupSubmissions: {},
     assignments: {},
     repositories: {},
