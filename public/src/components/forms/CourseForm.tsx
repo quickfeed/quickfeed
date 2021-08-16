@@ -113,18 +113,18 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
     private renderInfo(): JSX.Element {
         const gitMsg: JSX.Element =
             <div>
-                <p>For each new semester of a course, Autograder requires a new GitHub organization.
+                <p>For each new semester of a course, QuickFeed requires a new GitHub organization.
             This is to keep the student roster for the different runs of the course separate.</p>
 
                 <p><a href="https://github.com/account/organizations/new"
                     target="_blank">Create an organization for your course</a>.
                   The course organization must allow private repositories. </p>
 
-                <p>Autograder will create a following repository structure for you:</p>
+                <p>QuickFeed will create a following repositories for you:</p>
 
                 <div>
                     <ul>
-                        <li>course-info</li>
+                        <li>info</li>
                         <li>assignments</li>
                         <li>tests</li>
                     </ul>

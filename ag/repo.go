@@ -7,7 +7,7 @@ import (
 
 // Default repository names.
 const (
-	InfoRepo          = "course-info"
+	InfoRepo          = "info"
 	AssignmentRepo    = "assignments"
 	TestsRepo         = "tests"
 	StudentRepoSuffix = "-labs"

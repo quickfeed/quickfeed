@@ -24,14 +24,14 @@ type GitHubWebHook struct {
 	secret string
 }
 
-// NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the Autograder server.
+// NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the QuickFeed server.
 func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runner, secret string) *GitHubWebHook {
 	return &GitHubWebHook{logger: logger, db: db, runner: runner, secret: secret}
 }
 
 // Handle take POST requests from GitHub, representing Push events
 // associated with course repositories, which then triggers various
-// actions on the Autograder backend.
+// actions on the QuickFeed backend.
 func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 	payload, err := github.ValidatePayload(r, []byte(wh.secret))
 	if err != nil {
