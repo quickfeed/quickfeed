@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import { Route, Switch, useHistory } from "react-router"
 import { getCourseID } from "../Helpers"
 import { useAppState } from "../overmind"
@@ -10,6 +10,7 @@ import RedirectButton from "../components/RedirectButton"
 import Results from "../components/Results"
 import Review from "../components/Review"
 import StatisticsView from "../components/Statistics"
+import Assignments from "../components/teacher/Assignments"
 
 /* */
 const TeacherPage = () => {
@@ -22,7 +23,20 @@ const TeacherPage = () => {
     const results = {title: "View results", text: "View results for all students in the course.", buttonText: "Results", to: `${root}/results`}
     const groups = {title: "Manage Groups", text: "View, edit or delete course groups.", buttonText: "Groups", to: `${root}/groups`}
     const statistics = {title: "Statistics", text: "See statistics for the course.", buttonText: "Statistics", to: `${root}/statistics`}
+    const assignments = {title: "Manage Assignments", text: "View and edit assignments.", buttonText: "Assignments", to: `${root}/assignments`}
   
+
+    useEffect(() => {
+        /*if (state.enrollmentsByCourseId[courseID].getStatus() === Enrollment.UserStatus.TEACHER || state.self.getIsadmin()) {
+            actions.isAuthorizedTeacher().then(authorized => {
+                console.log(authorized)
+                if (!authorized) {
+                    window.location.href = "https://" + window.location.hostname + "/auth/github-teacher";
+                }
+            })
+        }*/
+    }, [])
+
 
     return (
         <div className="box">
@@ -34,6 +48,7 @@ const TeacherPage = () => {
                 <Card title={groups.title} text={groups.text} buttonText={groups.buttonText} to={groups.to}></Card>
                 <Card title={members.title} text={members.text} buttonText={members.buttonText} to={members.to}></Card>
                 <Card title={statistics.title} text={statistics.text} buttonText={statistics.buttonText} to={statistics.to}></Card>
+                <Card title={assignments.title} text={assignments.text} buttonText={assignments.buttonText} to={assignments.to}></Card>
             </div>
             <Switch>
                 <Route path={`/course/:id/groups`} exact component={GroupPage}></Route>
@@ -41,6 +56,7 @@ const TeacherPage = () => {
                 <Route path={"/course/:id/review"} component={Review}></Route>
                 <Route path={"/course/:id/results"} component={Results}></Route>
                 <Route path={"/course/:id/statistics"} component={StatisticsView}></Route>
+                <Route path={"/course/:id/assignments"} component={Assignments}></Route>
             </Switch>
         </div>
     )
