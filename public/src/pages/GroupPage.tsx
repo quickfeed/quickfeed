@@ -1,9 +1,9 @@
 import React, { useEffect } from "react"
 import { useActions, useAppState } from "../overmind"
-import CreateGroup from "../components/group/CreateGroup"
 import { getCourseID, isTeacher } from "../Helpers"
 import Groups from "../components/Groups"
 import GroupComponent from "../components/group/Group"
+import GroupForm from "../components/group/GroupForm"
 
 
 export const GroupPage = () => {
@@ -22,7 +22,7 @@ export const GroupPage = () => {
     }
 
     if (!state.userGroup[courseID]) {
-        return <CreateGroup />    
+        return <GroupForm />    
     }
     return <GroupComponent />
     
