@@ -9,18 +9,7 @@ const RedirectButton = ({to}: {to: string}) => {
     const hide = history.location.pathname == to ? true : false
     
     useEffect(() => {
-        const handleKeyPress = (e: KeyboardEvent) => {
-            if (e.key == "Backspace" && !hide && state.enableRedirect) {
-                history.push(to)
-            }
-        }
 
-        document.addEventListener('keydown', handleKeyPress)
-
-        const cleanup = () => {
-            document.removeEventListener('keydown', handleKeyPress);
-        }
-        return cleanup
     }, [])
 
     return (
