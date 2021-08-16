@@ -2,7 +2,6 @@ package database_test
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -983,11 +982,8 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []*pb.Submission{&submission2, &submission3}
-	if !reflect.DeepEqual(submissions, want) {
-		for _, s := range submissions {
-			fmt.Printf("%+v\n", s)
-		}
-		t.Errorf("have %#v want %#v", submissions, want)
+	if diff := cmp.Diff(submissions, want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
+		t.Errorf("Expected same submissions, but got (-sub +want):\n%s", diff)
 	}
 	data, err := db.GetLastSubmissions(course.ID, &pb.Submission{GroupID: group.ID})
 	if err != nil {
