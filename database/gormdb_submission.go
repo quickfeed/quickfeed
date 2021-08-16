@@ -2,6 +2,7 @@ package database
 
 import (
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/kit/score"
 	"gorm.io/gorm"
 )
 
@@ -65,13 +66,20 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	// TODO(meling) temporary transformation of submission data
 	transform(submission)
 
-	if submission.BuildInfo != nil {
-		if err := db.conn.Save(submission.BuildInfo).Error; err != nil {
+	// A submission will have a build info without any ID, using save will create a duplicate build info
+	// in case the submission already exists in the database. We have to update build info explicitly.
+	// There should be a less hacky way to do it.
+	if submission.BuildInfo != nil && submission.ID != 0 {
+		if err := db.conn.Where(&score.BuildInfo{SubmissionID: submission.ID}).Updates(&submission.BuildInfo).Error; err != nil {
 			return err
 		}
+		var buildinfo score.BuildInfo
+		if err := db.conn.Where(&score.BuildInfo{SubmissionID: submission.ID}).Last(&buildinfo).Error; err != nil {
+			return err
+		}
+		submission.BuildInfo.ID = buildinfo.ID
 	}
-	// Save a submission record for the given assignment and student/group.
-	return db.conn.Where(query).Save(submission).Error
+	return db.conn.Save(submission).Error
 }
 
 // GetSubmission fetches a submission record.
