@@ -180,6 +180,7 @@ export class GrpcManager {
         const request = new Group();
         request.setId(groupID);
         request.setStatus(status);
+        console.log(request.serializeBinary(), request)
         return this.grpcSend<Void>(this.agService.updateGroup, request);
     }
 
@@ -267,18 +268,6 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateSubmissions, request);
     }
 
-    /* 
-        Returns the commit hash of the given submission.
-        Used to ping the server for changes to a submission
-    */
-    /*
-    public getSubmissionCommitHash(submissionID: number) {
-        const request = new CommitHashRequest();
-        request.setSubmissionid(submissionID)
-        return this.grpcSend<CommitHashResponse>(this.agService.getSubmissionCommitHash, request)
-    }
-    */
-    /*
 
     // /* MANUAL GRADING */ //
 
