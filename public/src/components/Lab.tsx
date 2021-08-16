@@ -1,9 +1,9 @@
 import { json } from 'overmind'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useParams } from 'react-router'
 import { Assignment, Submission } from '../../proto/ag/ag_pb'
 import { BuildInfo } from '../../proto/kit/score/score_pb'
-import { getBuildInfo, isManuallyGraded } from '../Helpers'
+import { isManuallyGraded } from '../Helpers'
 import { useAppState, useActions } from '../overmind'
 import CourseUtilityLinks from './CourseUtilityLinks'
 import LabResultTable from './LabResultTable'
@@ -63,10 +63,11 @@ const Lab = ({teacherSubmission}: {teacherSubmission?: Submission}) => {
         // Confirm both assignment and submission exists before attempting to render
         if (assignment && submission) {
             const review = json(submission).getReviewsList()
-            let buildLog: JSX.Element[] = []
-            const buildInfo = submission.getBuildinfo()?.getBuildlog()
-            if (buildInfo){
-                buildLog = buildInfo.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
+            let buildLogElement: JSX.Element[] = []
+            
+            const buildLog = submission.hasBuildinfo() ? (submission.getBuildinfo() as BuildInfo).getBuildlog() : null
+            if (buildLog){
+                buildLogElement = buildLog.split("\\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
             }
 
             return (
@@ -77,7 +78,7 @@ const Lab = ({teacherSubmission}: {teacherSubmission?: Submission}) => {
                     {isManuallyGraded(assignment) ? <ReviewResult review={review}/> : null}
 
                     <div className="card bg-light">
-                        <code className="card-body" style={{color: "#c7254e"}}>{buildLog}</code>
+                        <code className="card-body" style={{color: "#c7254e"}}>{buildLogElement}</code>
                     </div>
                 </div>
             )
