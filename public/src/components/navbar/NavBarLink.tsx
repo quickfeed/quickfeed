@@ -1,9 +1,11 @@
 import React from "react"
-import { Link } from "react-router-dom"
+import { Link, useHistory } from "react-router-dom"
 import { NavLink } from "../../Helpers"
 
 
 const NavBarLink = (props: NavLink) => {
+    const history = useHistory()
+
     const icons: JSX.Element[] = []
     if (props.icons) {
         props.icons.forEach((icon, index) => {
@@ -15,7 +17,7 @@ const NavBarLink = (props: NavLink) => {
         })
     }
     return (
-        <li className="activeLabs">
+        <li className="activeLabs" onClick={() => history.push(props.link.to)}>
             {icons}
             <div id="title">
                 <Link to={props.link.to}>{props.link.text}</Link>
