@@ -10,8 +10,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -174,23 +172,9 @@ func (d *Docker) pullImage(ctx context.Context, image string) error {
 func (d *Docker) buildImage(ctx context.Context, dockerfile string, image string) error {
 	dockerbytes := []byte(dockerfile)
 	// Temporary (?): if there is no Dockerfile in Tests repository use the default one from the Quickfeed repository.
-	if dockerfile == "" {
-		if image == "" {
-			return fmt.Errorf("Error building docker image: missing dockerfile and image name")
-		}
-
-		tag := image[strings.Index(image, ":")+1:]
-		dockerfile := filepath.Join("scripts", tag, "Dockerfile")
-		d.logger.Infof("Building image: '%s' from %s", image, dockerfile)
-
-		content, err := ioutil.ReadFile(dockerfile)
-		if err != nil {
-			return err
-		}
-		dockerbytes = content
+	if dockerfile == "" || image == "" {
+		return fmt.Errorf("Failed to build image %s: missing Dockerfile in Tests/scripts/ or image name in run.sh", image)
 	}
-
-	log.Println("BUILDING IMAGE FROM SAVED DOCKERFILE")
 	header := &tar.Header{
 		Name:     "Dockerfile",
 		Mode:     0o777,
