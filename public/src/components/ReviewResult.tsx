@@ -1,45 +1,37 @@
-import React from "react"
+import React, { useState } from "react"
 import { GradingCriterion, Review } from "../../proto/ag/ag_pb"
 
+const ReviewResult = ({review}: {review: Review[]}) => {
 
-interface submission {
-    review: Review[]
-}
+    // TODO: Figure out what to do in cases of two reviews.
+    const [selectedReview, setSelectedReview] = useState<Review>(review[0])
 
-const ReviewResult = ({review}: submission) => {
-    const Result: Function = (): JSX.Element[] => {
-        let b: JSX.Element[] = []
+    const Criteria = ({criteria}: {criteria: GradingCriterion}) => {
+        const passed = criteria.getGrade() == GradingCriterion.Grade.PASSED
+        const boxShadow = passed ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 5px 0 0 red inset"
+        const icon = passed ? "fa fa-check" : "fa fa-exclamation-circle"
+        return (
+            <tr>
+                <th style={{boxShadow: boxShadow}}>{criteria.getDescription()} {criteria.getComment()}</th>
+                <th><i className={icon}></i></th>
+                <th>{criteria.getComment()}</th>
+            </tr>
+        )
+    }
 
-        review.forEach(r => {
-            try {
-                
-
-        
-            r.getBenchmarksList().map(benchmark => {
-                b.push(
+    const Result = selectedReview?.getGradingbenchmarksList().map(benchmark => {
+            return (
+                <>
                 <tr className="table-info">
                     <th colSpan={2}>{benchmark.getHeading()}</th>
                     <th>{benchmark.getComment()}</th>
-                </tr>)
-                benchmark.getCriteriaList().map(criteria => {
-                    const passed = criteria.getGrade() == GradingCriterion.Grade.PASSED
-                    const boxShadow = passed ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 5px 0 0 red inset"
-                    const icon = passed ? "fa fa-check" : "fa fa-exclamation-circle"
-                    b.push(
-                        <tr>
-                            <th style={{boxShadow: boxShadow}}>{criteria.getDescription()} {criteria.getComment()}</th>
-                            <th><i className={icon}></i></th>
-                            <th>{criteria.getComment()}</th>
-                        </tr>)
-                })
-            })
-        
-            }catch (error) {
-                console.log(error)
-            }
-        })
-        return b
-    }
+                </tr>
+                {benchmark.getCriteriaList().map(criteria => <Criteria criteria={criteria} />)}
+                </>
+            )
+    })
+
+    
 
     return (
         <div className="container">
@@ -59,7 +51,7 @@ const ReviewResult = ({review}: submission) => {
                         <th scope="col">Comment</th>
                     </tr>
                 </thead>
-                <Result />
+                {Result}
             </table>    
 
         </div>
