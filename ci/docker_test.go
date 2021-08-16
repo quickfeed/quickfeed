@@ -78,7 +78,10 @@ func TestDockerBuild(t *testing.T) {
 	const (
 		script     = `echo -n "hello world"`
 		wantOut    = "hello world"
-		dockerfile = "FROM golang:1.17beta1-alpine\n WORKDIR /quickfeed"
+		dockerfile = `FROM golang:1.17beta1-alpine
+		RUN apk update && apk add --no-cache git bash build-base
+		RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.41.1		
+		WORKDIR /quickfeed`
 	)
 
 	docker, err := ci.NewDockerCI(log.Zap(true))
