@@ -105,17 +105,17 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 				}
 
 			case scriptFile:
-				currentAssignmentName := filepath.Base(filepath.Dir(path))
+				assignmentName := filepath.Base(filepath.Dir(path))
 				content, err := ioutil.ReadFile(path)
 				if err != nil {
 					return err
 				}
-				if currentAssignmentName == scriptFolder {
+				if assignmentName == scriptFolder {
 					defaultScript = string(content)
 				} else {
-					assignment := findAssignmentByName(assignments, currentAssignmentName)
+					assignment := findAssignmentByName(assignments, assignmentName)
 					if assignment == nil {
-						return fmt.Errorf("Found scriptfile in assignment %s folder, could not find thr assignment\n", currentAssignmentName)
+						return fmt.Errorf("Found scriptfile in assignment %s folder, could not find thr assignment\n", assignmentName)
 					}
 					assignment.ScriptFile = string(content)
 				}
