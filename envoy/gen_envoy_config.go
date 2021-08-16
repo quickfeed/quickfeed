@@ -351,9 +351,9 @@ func loadConfigEnv(withTLS bool, config *CertificateConfig) (*EnvoyConfig, error
 // TODO: improve parameter handling when generating certificates (keyType, etc).
 // TODO: save certs at: /etc/ssl/certs and private keys at: /etc/ssl/private by default.
 func main() {
-	flag.BoolVar(&withTLS, "withTLS", false, "enable TLS configuration")
-	flag.StringVar(&certFile, "certFile", "", "certificate file")
-	flag.StringVar(&keyFile, "keyFile", "", "private key file")
+	flag.BoolVar(&withTLS, "tls", false, "enable TLS configuration")
+	flag.StringVar(&certFile, "cert", "", "certificate file")
+	flag.StringVar(&keyFile, "key", "", "private key file")
 	flag.Parse()
 
 	config, err := loadConfigEnv(withTLS, &CertificateConfig{
