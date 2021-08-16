@@ -37,8 +37,14 @@ sudo service docker restart
 ```sh
 % cd $QUICKFEED
 % cp .env-template .env
-# Edit .env according to your domain and exposed ports
+# Edit .env according to your domain and quickfeed ports
 ```
+
+The `$DOMAIN` should be set to your public landing page for QuickFeed, e.g., `www.my-quickfeed.com`.
+
+The `$SERVER_HOST` should be set to the ip, hostname or container name where the quickfeed service will run.
+
+The authorization callback URL is unique for each instance of QuickFeed, e.g., `https://www.my-quickfeed.com/auth/github/callback`.
 
 ### Generate Envoy Configuration File
 
@@ -50,31 +56,28 @@ The default envoy configuration for testing can be generated using the existent 
 This configuration does not use TLS. To enable TLS but generate certificates for testing purposes, you can run:
 
 ```sh
-% go run ./envoy/envoy.go --genconfig --withTLS
+% go run ./envoy/gen_envoy_config.go --tls
 ```
 
 If you already have certificates that you would like to use you can specify them during the creation of the envoy configuration, running the command below.
 
 ```sh
-% go run ./envoy/envoy.go --genconfig --withTLS --certFile="fullchain.pem" --keyFile="key.pem"
+% go run ./envoy/gen_envoy_config.go --tls --cert="fullchain.pem" --key="key.pem"
 ```
 
-The envoy config will be generate at `$QUICKFEED/envoy/envoy.yaml`.
+After run the script, the envoy config will be generate at `$QUICKFEED/envoy` directory and saved as `envoy-$DOMAIN.yaml`.
+If a file with same name already exists, it will be overwritten.
 
-_The script sets the certificate and key at the following path: `/etc/letsencrypt/live/YOUR_DOMAIN_NAME/(CERTIFICATE | KEY).pem`. Please note that, when running envoy in your host machine, you need to ensure that certificates and necessary keys are stored in the same path specified in the envoy config._
+The script sets the certificate and key at the following path: `/etc/letsencrypt/live/$DOMAIN/(CERTIFICATE | KEY).pem`.
 
+The generated configuration expose by defaults the ports 80 and 443 and redirect the traffic to the quickfeed service depending on the requests.
+
+_Note that, when running envoy in your host machine, you need to ensure that certificates and necessary keys are stored at the same location as specified in the envoy config._
 
 ### Configure GitHub OAuth Application for QuickFeed
 
 To deploy QuickFeed, you need to configure a GitHub account for communicating with QuickFeed.
 See the instructions for configuring a [GitHub OAuth2 application](./github.md).
-
-For this tutorial, we use the following:
-
-```text
-Homepage URL: https://YOUR_DOMAIN_NAME
-Authorization callback URL: https://YOUR_DOMAIN_NAME/auth/github/callback
-```
 
 ## Docker Deployment
 
@@ -88,13 +91,21 @@ Then, to build and run the containers, run:
 
 If you would like to run envoy in a container but quickfeed locally in the host machine, please run envoy as described in the section [Run Envoy](#run-envoy) sub-section 3. Then run quickfeed as described in section [Build Quickfeed](#build-and-run-quickfeed-server).
 
+Note that the `--build` forces the re-build of the docker images, if you don't want to rebuild unchanged images, just run the previous command without that option, e.g.: `docker-compose up`.
 
 ## Bare Metal Deployment
 
 ### Deployment with Domain Name and Let's Encrypt Certificates
 
-The following instructions assume a fixed IP and domain name for the server to be `YOUR_DOMAIN_NAME`.
+The following instructions assume a fixed IP and domain name for the server to be `$DOMAIN`.
 Replace the relevant IP address and domain name with your own.
+
+For this tutorial, we use the following domain:
+
+```text
+Homepage URL: https://www.my-quickfeed.com
+Authorization callback URL: https://www.my-quickfeed.com/auth/github/callback
+```
 
 ### Configure Fixed IP and Router
 
@@ -117,11 +128,6 @@ For systems without homebrew, the make target should list well-known packages av
 % make brew
 ```
 
-```sh
-% brew install tmux overmind
-% Procfile
-```
-
 ### Install Tools for Development
 
 The development tools are only needed for development, and can be skipped for deployment only.
@@ -135,39 +141,43 @@ The `devtools` make target will download and install various Protobuf compiler p
 
 ### Generate Certbot Private Key and Certificate
 
+Generating certificates with certbot:
+
 ```terminal
 % sudo certbot certonly --standalone
 Saving debug log to /var/log/letsencrypt/letsencrypt.log
 Plugins selected: Authenticator standalone, Installer None
 Please enter in your domain name(s) (comma and/or space separated)  (Enter 'c'
-to cancel): YOUR_DOMAIN_NAME
-Requesting a certificate for YOUR_DOMAIN_NAME
+to cancel): www.my-quickfeed.com
+Requesting a certificate for www.my-quickfeed.com
 Performing the following challenges:
-http-01 challenge for YOUR_DOMAIN_NAME
+http-01 challenge for www.my-quickfeed.com
 Waiting for verification...
 Cleaning up challenges
 
 IMPORTANT NOTES:
  - Congratulations! Your certificate and chain have been saved at:
-   /etc/letsencrypt/live/YOUR_DOMAIN_NAME/fullchain.pem
+   /etc/letsencrypt/live/www.my-quickfeed.com/fullchain.pem
    Your key file has been saved at:
-   /etc/letsencrypt/live/YOUR_DOMAIN_NAME/privkey.pem
+   /etc/letsencrypt/live/www.my-quickfeed.com/privkey.pem
    Your certificate will expire on 2021-09-11. To obtain a new or
    tweaked version of this certificate in the future, simply run
    certbot again. To non-interactively renew *all* of your
    certificates, run "certbot renew"
 ```
 
+Renewing certificates:
+
 ```terminal
 % sudo certbot certonly --standalone
 Saving debug log to /var/log/letsencrypt/letsencrypt.log
 Please enter the domain name(s) you would like on your certificate (comma and/or
-space separated) (Enter 'c' to cancel): ag2.ux.uis.no
-Renewing an existing certificate for ag2.ux.uis.no
+space separated) (Enter 'c' to cancel): www.my-quickfeed.com
+Renewing an existing certificate for www.my-quickfeed.com
 
 Successfully received certificate.
-Certificate is saved at: /etc/letsencrypt/live/ag2.ux.uis.no/fullchain.pem
-Key is saved at:         /etc/letsencrypt/live/ag2.ux.uis.no/privkey.pem
+Certificate is saved at: /etc/letsencrypt/live/www.my-quickfeed.com/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/www.my-quickfeed.com/privkey.pem
 This certificate expires on 2021-10-28.
 These files will be updated when the certificate renews.
 Certbot has set up a scheduled task to automatically renew this certificate in the background.
@@ -183,16 +193,16 @@ If you like Certbot, please consider supporting our work by:
 
 Please choose one of the options below to run envoy in your system:
 
-1. Running with Locally Installed Envoy (macOS homebrew)
+1. Running with locally installed Envoy (macOS homebrew)
 
 ```sh
-% sudo envoy -c $QUICKFEED/envoy/envoy.yaml &
+% sudo envoy -c $ENVOY_CONFIG &
 ```
 
 With additional logging:
 
 ```sh
-% sudo envoy -c $QUICKFEED/envoy/envoy.yaml --log-path envoy.log --enable-fine-grain-logging -l debug &
+% sudo envoy -c $ENVOY_CONFIG --log-path envoy.log --enable-fine-grain-logging -l debug &
 ```
 
 2. Running with func-e (Linux)
@@ -213,12 +223,12 @@ Alternatively, install via linuxbrew instead:
 Run with:
 
 ```sh
-% sudo func-e run -c $QUICKFEED/envoy/envoy.yaml &
+% sudo func-e run -c $ENVOY_CONFIG &
 ```
 
 3. Running Envoy using docker-compose
 
-If you want to run envoy using the existent docker-compose configuration you need to copy your certificates to `$QUICKFEED/certs` and run:
+If you want to run envoy using the existing docker-compose configuration you need to copy your certificates to `$QUICKFEED/certs` and run:
 
 ```sh
 % docker-compose up --build --remove-orphans envoy

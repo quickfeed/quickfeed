@@ -1,4 +1,4 @@
-# This trick allow us to source the environment variables defined in .env file in the Makefile (vide gnu makefile `include` for more details).
+# This trick allow us to source the environment variables defined in .env file in the Makefile (see include directive in GNU make for more details).
 # It ignores errors in case the .env file does not exists.
 # It may be necessary to skip variables that uses special makefile caracters, like $.
 -include .env
