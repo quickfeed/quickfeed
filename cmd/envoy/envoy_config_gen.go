@@ -37,7 +37,7 @@ var (
 	codePath        = path.Join(path.Dir(pwd), "../..")
 	env             = filepath.Join(codePath, ".env")
 	envoyDockerRoot = filepath.Join(codePath, "ci/docker/envoy")
-	certsDir        = path.Join(envoyDockerRoot, "/certs")
+	certsDir        = path.Join(envoyDockerRoot, "certs")
 )
 
 // CertificateConfig holds certificate information

@@ -56,13 +56,13 @@ The default envoy configuration for testing can be generated using the existent 
 This configuration does not use TLS. To enable TLS but generate certificates for testing purposes, you can run:
 
 ```sh
-% go run ./envoy/gen_envoy_config.go --tls
+% go run ./cmd/envoy/envoy_config_gen.go --tls
 ```
 
 If you already have certificates that you would like to use you can specify them during the creation of the envoy configuration, running the command below.
 
 ```sh
-% go run ./envoy/gen_envoy_config.go --tls --cert="fullchain.pem" --key="key.pem"
+% go run ./cmd/envoy/envoy_config_gen.go --tls --cert="fullchain.pem" --key="key.pem"
 ```
 
 After run the script, the envoy configuration will be generate at `$QUICKFEED/ci/docker/envoy` and saved as `envoy-$DOMAIN.yaml`.
@@ -231,7 +231,7 @@ Run with:
 
 3. Running Envoy using docker-compose
 
-If you want to run envoy using the existing docker-compose configuration you need to copy your certificates to `$QUICKFEED/certs` and run:
+If you want to run envoy using the existing docker-compose configuration you need to copy your certificates to `$QUICKFEED/ci/docker/envoy/certs` and run:
 
 ```sh
 % docker-compose up --build --remove-orphans envoy
