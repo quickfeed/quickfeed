@@ -1,15 +1,17 @@
 import React, { useState } from "react"
 import { useEffect } from "react"
-import { Redirect, RouteComponentProps } from "react-router-dom"
-import { EnrollmentStatus, sortByField } from "../Helpers"
+import { Redirect } from "react-router-dom"
+import { EnrollmentStatus, getCourseID, isTeacher, sortByField } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment } from "../../proto/ag/ag_pb"
 
 
-export const Members = (props: RouteComponentProps<{id?: string | undefined}>) => {
+// TODO: Clean up 
+
+export const Members = () => {
     const state = useAppState()
     const actions = useActions()
-    let courseID = Number(props.match.params.id)
+    let courseID = getCourseID()
 
     const [func, setFunc] = useState("STATUS")
     const [descending, setDescending] = useState(true)
@@ -29,13 +31,16 @@ export const Members = (props: RouteComponentProps<{id?: string | undefined}>) =
 
     }
 
-    if (courseID && state.enrollmentsByCourseId[courseID].getStatus() === Enrollment.UserStatus.TEACHER) {
-        const pending = state.courseEnrollments[courseID].filter(enrollment => enrollment.getStatus() === Enrollment.UserStatus.PENDING)
+    if (!isTeacher(state.enrollmentsByCourseId[courseID])) {
+        return <Redirect to="/" />
+    }
+
+    const pending = state.courseEnrollments[courseID].filter(enrollment => enrollment.getStatus() === Enrollment.UserStatus.PENDING)
         
-        return (
-            <div className='row '>
+    return (
+        <div className='row '>
                 {pending.length > 0 ?
-                <div className="card well  col-md-offset-2">
+                <div className="col col-sm-4">
                     <div className="card-header" style={{textAlign: "center"}}>Pending</div>
                         <ul className="list-group list-group-flush">
   
@@ -43,7 +48,7 @@ export const Members = (props: RouteComponentProps<{id?: string | undefined}>) =
                             if (user.getStatus() === Enrollment.UserStatus.PENDING) {
                                 return (
                                     <li key={user.getUserid()} className={"list-group-item" }>{user.getUser()?.getName()} 
-                                        <span className={"badge badge-primary"} onClick={() => actions.updateEnrollment({enrollment: user, status: Enrollment.UserStatus.STUDENT})}>
+                                        <span className={"badge badge-primary float-right"} onClick={() => actions.updateEnrollment({enrollment: user, status: Enrollment.UserStatus.STUDENT})}>
                                             Approve
                                         </span>
                                     </li>
@@ -60,16 +65,17 @@ export const Members = (props: RouteComponentProps<{id?: string | undefined}>) =
                         <option selected value="STATUS">Status</option>
                         <option value="ID">ID</option>
                     </select>
-                    Descending<input type={"checkbox"} checked={descending} onChange={(e) => setDescending(e.target.checked)}></input>
+                    <label htmlFor={"descending"}>Descending</label>
+                    <input type={"checkbox"} name="descending" checked={descending} onChange={(e) => setDescending(e.target.checked)}></input>
                         <div className="card-header" style={{textAlign: "center"}}>Members</div>
                             <ul className="list-group list-group-flush">
-                                {sortByField(state.courseEnrollments[courseID], [], sort(), descending).map((user: Enrollment) => {
+                                {sortByField(state.courseEnrollments[courseID], [], sort(), descending).map((enrollment: Enrollment) => {
                                 return (
-                                    <li key={user.getUserid()} className={"list-group-item" }>
-                                        {user.getUser()?.getName()} ({user.getUser()?.getStudentid()})
+                                    <li key={enrollment.getUserid()} className={"list-group-item" }>
+                                        {enrollment.getUser()?.getName()} ({enrollment.getUser()?.getStudentid()})
                                         <i style={{float: "right"}} 
-                                            className={"badge badge-" + (user.getStatus() === 2 ? "primary" : user.getStatus() === 3 ? "danger" : "info")}>
-                                                {EnrollmentStatus[user.getStatus()]}
+                                            className={"badge badge-" + (enrollment.getStatus() === 2 ? "primary" : enrollment.getStatus() === 3 ? "danger" : "info")}>
+                                                {EnrollmentStatus[enrollment.getStatus()]}
                                         </i>
                                     </li>
                                 )
@@ -80,7 +86,6 @@ export const Members = (props: RouteComponentProps<{id?: string | undefined}>) =
             </div>
         )
     }
-    return (<Redirect to="/" />)
-}
+
 
 export default Members
