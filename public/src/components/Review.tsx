@@ -5,6 +5,8 @@ import Lab from "./Lab"
 import { getCourseID } from "../Helpers"
 import Search from "./Search"
 import { json } from "overmind"
+import SubmissionApproval from "./SubmissionApproval"
+import ReviewForm from "./forms/ReviewForm"
 
 
 const Review = () => {
@@ -15,6 +17,7 @@ const Review = () => {
 
     const [selected, setSelected] = useState<number>(0)
     const [hideApproved, setHideApproved] = useState<boolean>(false)
+    const [selectedSubLink, setSelectedSubLink] = useState<SubmissionLink>()
 
     useEffect(() => {
         if (courseID && !state.courseSubmissions[courseID]) {
@@ -23,24 +26,24 @@ const Review = () => {
 
     }, [])
 
-    const updateStatus = (status: Submission.Status) => {
-        if (state.activeSubmission) {
-            actions.updateSubmission({courseID: courseID, submission: state.activeSubmission, status: status})
-        }
-    }
+    const ReviewSubmissionsListItem = ({submissionLink, userIndex}: { submissionLink: SubmissionLink, userIndex: number}) => {
+        const submission = json(submissionLink.getSubmission())
+        const assignment = json(submissionLink.getAssignment())
 
-    const ReviewSubmissionsListItem = (props: { submissionLink: SubmissionLink, userIndex: number}) => {
+        let reviews: JSX.Element | null = null
+
+        if (assignment) { 
+            reviews = assignment.getReviewers() > 0 ? <span className="float-right">{submission ? submission.getReviewsList().length : 0}/{assignment.getReviewers()}</span> : null
+        }
         return (
-                <li className="list-group-item" onClick={() => { actions.setActiveSubmission(json(props.submissionLink.getSubmission()))}} hidden={selected !== props.submissionLink.getAssignment()?.getId() && selected !== 0 || hideApproved && props.submissionLink.getSubmission()?.getStatus() == Submission.Status.APPROVED}>
+                <li className="list-group-item" 
+                    onClick={() => { actions.setActiveSubmission(json(submission)); setSelectedSubLink(submissionLink)}} 
+                    hidden={selected !== assignment?.getId() && selected !== 0 || hideApproved && submission?.getStatus() == Submission.Status.APPROVED}
+                >
                     <span>
-                        {props.submissionLink.getAssignment()?.getName()} - {props.submissionLink.getSubmission()?.getScore()} / 100
+                        {assignment?.getName()} - {submission?.getScore()} / 100
                     </span>
-                    <button style={{float: "right"}} onClick={() => {updateStatus(Submission.Status.REJECTED)}}>
-                        Reject
-                    </button>
-                    <button style={{float: "right"}} onClick={() => updateStatus(Submission.Status.APPROVED)}>
-                        Approve
-                    </button>
+                    {reviews}
                 </li>
         )
     }
@@ -49,6 +52,7 @@ const Review = () => {
     if (state.courseSubmissions[courseID]) {
         const ReviewSubmissionsTable = state.courseSubmissions[courseID].map((user, userIndex) => {
             if (user.enrollment && user.submissions) {
+                
                 return (
                     <div className="card well" style={{width: "400px", marginBottom: "5px"}} hidden={!user.user?.getName().toLowerCase().includes(state.query)}>
                         <div key={"header"} className="card-header">
@@ -82,12 +86,15 @@ const Review = () => {
                     <div className="reviewTable">
                         {ReviewSubmissionsTable}
                     </div>
-
+                    { selectedSubLink ? 
+                        <ReviewForm submissionLink={selectedSubLink} setSelected={setSelectedSubLink} /> : null
+                    }
                     
                     { // If submission & assignment is set by clicking an entry in ReviewSubmissionsListItem, the Lab will be displayed next to it
                     state.activeSubmission ? (
                     
                         <div className="reviewLab">
+                            <SubmissionApproval />
                             <Lab teacherSubmission={state.activeSubmission} />
                         </div> )
 
