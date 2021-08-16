@@ -56,7 +56,7 @@ func newEnvoyConfig(domain, serverHost, GRPCPort, HTTPPort string, withTLS bool,
 			return config, nil
 		}
 		err := generateSelfSignedCert(certOptions{
-			hosts: fmt.Sprintf("%s,%s", "localhost", domain),
+			hosts: fmt.Sprintf("%s,%s", config.ServerHost, domain),
 		})
 		if err != nil {
 			return nil, err

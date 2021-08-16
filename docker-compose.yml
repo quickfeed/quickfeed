@@ -11,7 +11,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"
       # - "9901:9901" # envoy admin endpoint.
     networks:
       - quickfeed_net
@@ -24,6 +23,9 @@ services:
     build:
       context: ./
       dockerfile: ./Dockerfile
+      args:
+        - GRPC_PORT=${GRPC_PORT}
+        - HTTP_PORT=${HTTP_PORT}
     links:
       - envoy
     # Uncomment to expose quickfeed ports for debugging on the host machine.
