@@ -14,7 +14,7 @@ const NavBarLabs = () => {
     }
 
     const Links: Function = (): JSX.Element[] => { 
-        if(state.assignments[state.activeCourse]) {
+        if(state.assignments[state.activeCourse] && state.submissions[state.activeCourse]) {
             const links = state.assignments[state.activeCourse]?.map((assignment, index) => {
                 // Class name to determine background color
                 const active = state.activeLab === assignment.getId() && state.activeCourse === assignment.getCourseid() ? "active" : ""
