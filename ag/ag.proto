@@ -398,8 +398,6 @@ message AssignmentRequest {
     uint64 assignmentID = 2;
 }
 
-
-
 // Void contains no fields. A server response with a Void still contains a gRPC status code,
 // which can be checked for success or failure. Status code 0 indicates that the requested action was successful,
 // whereas any other status code indicates some failure. As such, the status code can be used as a boolean result from the server.
