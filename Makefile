@@ -1,5 +1,7 @@
-include .env
-export $(shell sed 's/=.*//' .env)
+# This trick allow us to source the environment variables defined in .env in the Makefile (vide gnu makefile `include` for more details).
+# It ignores errors in case the .env file does not exists.
+# It may be necessary to skip variables that uses special makefile caracters, like $.
+-include .env
 
 OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
@@ -75,34 +77,19 @@ proto-swift:
 	ag/ag.proto
 
 brew:
-    ifeq (, $(shell which brew))
-		$(error "No brew command in $$PATH")
-    endif
+ifeq (, $(shell which brew))
+	$(error "No brew command in $(PATH)")
+endif
 	@echo "Installing homebrew packages needed for development and deployment"
 	@brew install go protobuf webpack npm node docker certbot envoy
 
 envoy-config:
 ifeq ($(DOMAIN),)
-	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)." && false
+	@echo "You must set required environment variables before configuring Envoy (see .env-template)." && false
 else
-	@echo "Generating Envoy configuration for '$$DOMAIN'."
+	@echo "Generating Envoy configuration for $(DOMAIN)."
 	@go run ./envoy/envoy.go --genconfig
 endif
-
-envoy-build:
-	@echo "Building Autograder Envoy proxy"
-	@docker-compose build --force-rm envoy
-
-envoy-run:
-	@echo "Starting Autograder Envoy proxy"
-	@docker-compose up envoy
-
-# will stop envoy container, prune docker containers and remove envoy images
-# use before rebuilding envoy with changed configuration in envoy.yaml
-envoy-purge:
-	@docker-compose rm -sv envoy
-	@docker container prune
-	@docker rmi quickfeed/envoy
 
 # protoset is a file used as a server reflection to mock-testing of grpc methods via command line
 protoset:
