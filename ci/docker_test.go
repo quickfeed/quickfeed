@@ -76,8 +76,9 @@ func TestDockerBuild(t *testing.T) {
 	t.Log(string(dockerOut))
 
 	const (
-		script  = `echo -n "hello world"`
-		wantOut = "hello world"
+		script     = `echo -n "hello world"`
+		wantOut    = "hello world"
+		dockerfile = "FROM golang:1.17beta1-alpine\n WORKDIR /quickfeed"
 	)
 
 	docker, err := ci.NewDockerCI(log.Zap(true))
@@ -89,7 +90,7 @@ func TestDockerBuild(t *testing.T) {
 	out, err := docker.Run(context.Background(), &ci.Job{
 		Name:       "TestDockerBuild-" + qtest.RandomString(t),
 		Image:      "quickfeed:go",
-		Dockerfile: "FROM golang:1.17beta1-alpine\n WORKDIR /quickfeed",
+		Dockerfile: dockerfile,
 		Commands:   []string{script},
 	})
 	if err != nil {

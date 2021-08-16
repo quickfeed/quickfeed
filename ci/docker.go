@@ -113,7 +113,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 		// if image not found locally, try to pull it
 		if err := d.pullImage(ctx, job.Image); err != nil {
 			d.logger.Errorf("Failed to pull image '%s' from docker.io: %v", job.Image, err)
-			if err := d.buildImage(ctx, "", job.Image); err != nil {
+			if err := d.buildImage(ctx, job.Dockerfile, job.Image); err != nil {
 				return nil, err
 			}
 		}
