@@ -1,4 +1,4 @@
-# This trick allow us to source the environment variables defined in .env in the Makefile (vide gnu makefile `include` for more details).
+# This trick allow us to source the environment variables defined in .env file in the Makefile (vide gnu makefile `include` for more details).
 # It ignores errors in case the .env file does not exists.
 # It may be necessary to skip variables that uses special makefile caracters, like $.
 -include .env
@@ -88,7 +88,7 @@ ifeq ($(DOMAIN),)
 	@echo "You must set required environment variables before configuring Envoy (see .env-template)." && false
 else
 	@echo "Generating Envoy configuration for $(DOMAIN)."
-	@go run ./envoy/envoy.go --genconfig
+	@go run ./envoy/gen_envoy_config.go
 endif
 
 # protoset is a file used as a server reflection to mock-testing of grpc methods via command line

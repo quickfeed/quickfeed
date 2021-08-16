@@ -27,18 +27,21 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// CertificateConfig holds certificate information
 type CertificateConfig struct {
-	CertFile string
-	KeyFile  string
+	CertFile string // The certificate file name.
+	KeyFile  string // The key file name.
 }
 
+// EnvoyConfig defines the required configurations used by the template when generating
+// the envoy config file.
 type EnvoyConfig struct {
-	Domain     string
-	ServerHost string
-	GRPCPort   string
-	HTTPPort   string
-	TLSEnabled bool
-	CertConfig *CertificateConfig
+	Domain     string             // The domain name where envoy will be served.
+	ServerHost string             // The container name, ip or domain name where quickfeed will run.
+	GRPCPort   string             // The grpc port listened by quickfeed.
+	HTTPPort   string             // The http port listened by quickfeed.
+	TLSEnabled bool               // Whether TLS should be configured.
+	CertConfig *CertificateConfig // The certificate to be used when using TLS.
 }
 
 func newEnvoyConfig(domain, serverHost, GRPCPort, HTTPPort string, withTLS bool, certConfig *CertificateConfig) (*EnvoyConfig, error) {
@@ -73,16 +76,16 @@ func newEnvoyConfig(domain, serverHost, GRPCPort, HTTPPort string, withTLS bool,
 //go:embed envoy.tmpl
 var envoyTmpl embed.FS
 
-// createEnvoyConfig creates the envoy.yaml config file.
-func createEnvoyConfig(envoyPath string, data *EnvoyConfig) error {
-	sanitizedPath := strings.Trim(envoyPath, "\"")
+// createEnvoyConfigFile creates the envoy.yaml config file.
+func createEnvoyConfigFile(config *EnvoyConfig) error {
+	envoyConfigFile := path.Join(path.Dir(pwd), fmt.Sprintf("envoy-%s.yaml", config.Domain))
 
-	err := os.MkdirAll(path.Dir(sanitizedPath), 0755)
+	err := os.MkdirAll(path.Dir(envoyConfigFile), 0755)
 	if err != nil {
 		return err
 	}
 
-	f, err := os.Create(sanitizedPath)
+	f, err := os.Create(envoyConfigFile)
 	if err != nil {
 		return err
 	}
@@ -92,9 +95,10 @@ func createEnvoyConfig(envoyPath string, data *EnvoyConfig) error {
 		return err
 	}
 
-	if err = tmpl.ExecuteTemplate(f, "envoy", data); err != nil {
+	if err = tmpl.ExecuteTemplate(f, "envoy", config); err != nil {
 		return err
 	}
+	log.Println("envoy config file created at:", envoyConfigFile)
 	return nil
 }
 
@@ -210,16 +214,13 @@ type certOptions struct {
 const defaultFileFlags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 
 var (
-	genConfig           bool
-	withTLS             bool
-	certFile            string
-	keyFile             string
-	envoyConfigFilePath string
-	_, pwd, _, _        = runtime.Caller(0)
-	codePath            = path.Join(path.Dir(pwd), "..")
-	env                 = filepath.Join(codePath, ".env")
-	certsDir            = path.Join(path.Dir(pwd), "certs")
-	defaultEnvoyConfig  = filepath.Join(path.Dir(pwd), "envoy.yaml")
+	withTLS      bool
+	certFile     string
+	keyFile      string
+	_, pwd, _, _ = runtime.Caller(0)
+	codePath     = path.Join(path.Dir(pwd), "..")
+	env          = filepath.Join(codePath, ".env")
+	certsDir     = path.Join(path.Dir(pwd), "certs")
 )
 
 // generateSelfSignedCert generates a self-signed X.509 certificate for testing purposes.
@@ -350,11 +351,9 @@ func loadConfigEnv(withTLS bool, config *CertificateConfig) (*EnvoyConfig, error
 // TODO: improve parameter handling when generating certificates (keyType, etc).
 // TODO: save certs at: /etc/ssl/certs and private keys at: /etc/ssl/private by default.
 func main() {
-	flag.BoolVar(&genConfig, "genconfig", false, "generate envoy config")
 	flag.BoolVar(&withTLS, "withTLS", false, "enable TLS configuration")
 	flag.StringVar(&certFile, "certFile", "", "certificate file")
 	flag.StringVar(&keyFile, "keyFile", "", "private key file")
-	flag.StringVar(&envoyConfigFilePath, "config", defaultEnvoyConfig, "filepath where the envoy configuration should be created")
 	flag.Parse()
 
 	config, err := loadConfigEnv(withTLS, &CertificateConfig{
@@ -365,14 +364,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	switch {
-	case genConfig:
-		err := createEnvoyConfig(envoyConfigFilePath, config)
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Println("envoy config file created at", envoyConfigFilePath)
-	default:
-		fmt.Println("unknown command.")
+	err = createEnvoyConfigFile(config)
+	if err != nil {
+		log.Fatal(err)
 	}
 }

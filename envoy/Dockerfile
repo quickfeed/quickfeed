@@ -1,8 +1,11 @@
 FROM envoyproxy/envoy-alpine:v1.19-latest
 
-ADD ./envoy/envoy.yaml /etc/envoy/envoy.yaml
+ARG ENVOY_CONFIG
+ENV ENVOY_CONFIG=${ENVOY_CONFIG:-./envoy/envoy-localhost.yaml}
+ADD ${ENVOY_CONFIG} /etc/envoy/envoy.yaml
 
 ARG DOMAIN
+ENV DOMAIN=${DOMAIN:-localhost}
 COPY ./envoy/certs /etc/letsencrypt/live/${DOMAIN}
 RUN chmod 644 /etc/letsencrypt/live/${DOMAIN}/*.pem
 

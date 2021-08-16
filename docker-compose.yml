@@ -7,6 +7,7 @@ services:
       context: ./
       dockerfile: ./envoy/Dockerfile
       args:
+        - ENVOY_CONFIG=${ENVOY_CONFIG}
         - DOMAIN=${DOMAIN}
     ports:
       - "80:80"
@@ -14,8 +15,6 @@ services:
       # - "9901:9901" # envoy admin endpoint.
     networks:
       - quickfeed_net
-    volumes:
-      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml
 
   quickfeed:
     container_name: quickfeed
@@ -40,4 +39,3 @@ networks:
     ipam:
       config:
       - subnet: 172.20.0.0/16
-
