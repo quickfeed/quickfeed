@@ -5,8 +5,8 @@ import Lab from "./Lab"
 import { getCourseID } from "../Helpers"
 import Search from "./Search"
 import { json } from "overmind"
-import SubmissionApproval from "./SubmissionApproval"
 import ReviewForm from "./forms/ReviewForm"
+import ManageSubmissionStatus from "./ManageSubmissionStatus"
 
 
 const Review = () => {
@@ -94,7 +94,7 @@ const Review = () => {
                     state.activeSubmission ? (
                     
                         <div className="reviewLab">
-                            <SubmissionApproval />
+                            <ManageSubmissionStatus />
                             <Lab teacherSubmission={state.activeSubmission} />
                         </div> )
 

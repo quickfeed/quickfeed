@@ -180,7 +180,6 @@ export class GrpcManager {
         const request = new Group();
         request.setId(groupID);
         request.setStatus(status);
-        console.log(request.serializeBinary(), request)
         return this.grpcSend<Void>(this.agService.updateGroup, request);
     }
 
