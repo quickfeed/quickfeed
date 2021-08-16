@@ -19,7 +19,7 @@ const ResultItem = ({enrollment, submissionsLink}: {enrollment: Enrollment | und
         } else {
             return (
                 <td onClick={() => actions.setActiveSubmission(undefined)}>
-                    0%
+                    N/A
                 </td>
             )
         }
@@ -30,7 +30,9 @@ const ResultItem = ({enrollment, submissionsLink}: {enrollment: Enrollment | und
     return (
         <tr hidden={!hidden}>
             <td className="font-weight-bold">
+                <a href={`https://github.com/${enrollment?.getUser()?.getLogin()}`}>
                 {enrollment?.getUser()?.getName()}
+                </a>
             </td>
             <td>
                 {enrollment?.getGroup()?.getName()}
