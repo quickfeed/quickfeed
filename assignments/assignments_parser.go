@@ -38,6 +38,8 @@ type assignmentData struct {
 	SkipTests        bool   `yaml:"skiptests"`
 }
 
+// TODO(meling) this func should be renamed now that it does more than parseAssignments
+
 // ParseAssignments recursively walks the given directory and parses
 // any 'assignment.yml' files found and returns an array of assignments.
 func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, error) {
@@ -53,31 +55,38 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 		assignmentName := filepath.Base(filepath.Dir(path))
 		if !info.IsDir() {
 			filename := filepath.Base(path)
+			var contents []byte
+			switch filename {
+			case target, targetYaml, criteriaFile, scriptFile, dockerfile:
+				contents, err = ioutil.ReadFile(path)
+				if err != nil {
+					return err
+				}
+			default:
+				// no need to parse this file
+				return nil
+			}
 			switch filename {
 			case target, targetYaml:
-				assignment, err := readAssignmentFile(path, filename, courseID)
+				assignment, err := readAssignmentFile(contents, assignmentName, courseID)
 				if err != nil {
 					return err
 				}
 				assignments = append(assignments, assignment)
 
 			case criteriaFile:
-				if err := updateCriteriaFromFile(path, filename, assignmentName, assignments); err != nil {
+				if err := updateCriteriaFromFile(contents, assignmentName, assignments); err != nil {
 					return err
 				}
 
 			case scriptFile:
-				script, err := readScriptFile(path, filename, assignmentName, assignments)
+				script, err := readScriptFile(contents, assignmentName, assignments)
 				if err != nil {
 					return err
 				}
 				defaultScript = script
 
 			case dockerfile:
-				contents, err := ioutil.ReadFile(path)
-				if err != nil {
-					return err
-				}
 				courseDockerfile = string(contents)
 			}
 		}
@@ -135,11 +144,7 @@ func FixDeadline(in string) string {
 	return "Invalid date format: " + in
 }
 
-func updateCriteriaFromFile(path, filename, assignmentName string, assignments []*pb.Assignment) error {
-	criteria, err := ioutil.ReadFile(path)
-	if err != nil {
-		return fmt.Errorf("could not to read file %q: %w", filename, err)
-	}
+func updateCriteriaFromFile(criteria []byte, assignmentName string, assignments []*pb.Assignment) error {
 	var benchmarks []*pb.GradingBenchmark
 	if err := json.Unmarshal(criteria, &benchmarks); err != nil {
 		return fmt.Errorf("could not unmarshal criteria.json: %s", err)
@@ -152,11 +157,7 @@ func updateCriteriaFromFile(path, filename, assignmentName string, assignments [
 	return nil
 }
 
-func readScriptFile(path, filename, assignmentName string, assignments []*pb.Assignment) (string, error) {
-	contents, err := ioutil.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
+func readScriptFile(contents []byte, assignmentName string, assignments []*pb.Assignment) (string, error) {
 	if assignmentName != scriptFolder {
 		assignment := findAssignmentByName(assignments, assignmentName)
 		if assignment == nil {
@@ -168,13 +169,9 @@ func readScriptFile(path, filename, assignmentName string, assignments []*pb.Ass
 	return string(contents), nil
 }
 
-func readAssignmentFile(path, filename string, courseID uint64) (*pb.Assignment, error) {
-	source, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("could not to read file %q: %w", filename, err)
-	}
+func readAssignmentFile(contents []byte, assignmentName string, courseID uint64) (*pb.Assignment, error) {
 	var newAssignment assignmentData
-	err = yaml.Unmarshal(source, &newAssignment)
+	err := yaml.Unmarshal(contents, &newAssignment)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling assignment: %w", err)
 	}
@@ -189,7 +186,7 @@ func readAssignmentFile(path, filename string, courseID uint64) (*pb.Assignment,
 	assignment := &pb.Assignment{
 		CourseID:         courseID,
 		Deadline:         FixDeadline(newAssignment.Deadline),
-		Name:             filepath.Base(filepath.Dir(path)),
+		Name:             assignmentName,
 		Order:            uint32(newAssignment.AssignmentID),
 		AutoApprove:      newAssignment.AutoApprove,
 		ScoreLimit:       uint32(newAssignment.ScoreLimit),
