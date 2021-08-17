@@ -52,6 +52,10 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 	var defaultScript string
 	var courseDockerfile string
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			// Walk unable to read path; stop walking the tree
+			return err
+		}
 		assignmentName := filepath.Base(filepath.Dir(path))
 		if !info.IsDir() {
 			filename := filepath.Base(path)
