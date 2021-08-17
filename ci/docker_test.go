@@ -79,7 +79,7 @@ func TestDockerBuild(t *testing.T) {
 		script     = `echo -n "hello world"`
 		wantOut    = "hello world"
 		dockerfile = `FROM golang:latest
-		RUN apk update && apk add --no-cache git bash build-base
+		RUN apt update && apt install -y git bash build-base && rm -rf /var/lib/apt/lists/*
 		RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.41.1		
 		WORKDIR /quickfeed`
 	)
