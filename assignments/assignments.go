@@ -18,7 +18,7 @@ import (
 )
 
 // UpdateFromTestsRepo updates the database record for the course assignments.
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *pb.Repository, course *pb.Course) {
+func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course *pb.Course) {
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), pb.TestsRepo)
 	s, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
 	if err != nil {
@@ -36,7 +36,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *
 	if dockerfile != "" && dockerfile != course.Dockerfile {
 		course.Dockerfile = dockerfile
 		if err := db.UpdateCourse(course); err != nil {
-			logger.Debugf("Failed to update Dockerfile for course %s: %s", course.Code, err)
+			logger.Debugf("Failed to update Dockerfile for course %s: %s", course.GetCode(), err)
 			return
 		}
 	}
