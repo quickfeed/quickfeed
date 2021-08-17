@@ -70,14 +70,14 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	// in case the submission already exists in the database. We have to update build info explicitly.
 	// There should be a less hacky way to do it.
 	if submission.BuildInfo != nil && submission.ID != 0 {
-		if err := db.conn.Where(&score.BuildInfo{SubmissionID: submission.ID}).Updates(&submission.BuildInfo).Error; err != nil {
+		var buildInfo score.BuildInfo
+		if err := db.conn.Where("submission_id = ?", submission.ID).Last(&buildInfo).Error; err != nil {
 			return err
 		}
-		var buildinfo score.BuildInfo
-		if err := db.conn.Where(&score.BuildInfo{SubmissionID: submission.ID}).Last(&buildinfo).Error; err != nil {
+		submission.BuildInfo.ID = buildInfo.ID
+		if err := db.conn.Save(submission.BuildInfo).Error; err != nil {
 			return err
 		}
-		submission.BuildInfo.ID = buildinfo.ID
 	}
 	return db.conn.Save(submission).Error
 }
