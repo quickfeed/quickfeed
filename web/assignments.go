@@ -8,9 +8,7 @@ import (
 	"github.com/autograde/quickfeed/assignments"
 )
 
-var (
-	reviewLayout = "02 Jan 15:04"
-)
+const reviewLayout = "02 Jan 15:04"
 
 // getAssignments lists the assignments for the provided course.
 func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, error) {
@@ -81,7 +79,7 @@ func (s *AutograderService) createReview(review *pb.Review) (*pb.Review, error) 
 		return nil, err
 	}
 	if len(submission.Reviews) >= int(assignment.Reviewers) {
-		return nil, fmt.Errorf("Failed to create a new review for submission %d to assignment %s: all %d reviews already created",
+		return nil, fmt.Errorf("failed to create a new review for submission %d to assignment %s: all %d reviews already created",
 			submission.ID, assignment.Name, assignment.Reviewers)
 	}
 	review.Edited = time.Now().Format(reviewLayout)
@@ -102,7 +100,7 @@ func (s *AutograderService) createReview(review *pb.Review) (*pb.Review, error) 
 
 func (s *AutograderService) updateReview(review *pb.Review) (*pb.Review, error) {
 	if review.ID == 0 {
-		return nil, fmt.Errorf("Cannot update review with empty ID")
+		return nil, fmt.Errorf("cannot update review with empty ID")
 	}
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: review.SubmissionID})
 	if err != nil {
