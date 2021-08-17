@@ -48,7 +48,7 @@ export interface ICourseProvider {
 
     getSubmissionsByUser(courseID: number, userID: number): Promise<ISubmission[]>;
     getSubmissionsByGroup(courseID: number, groupID: number): Promise<ISubmission[]>;
-    getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]>;
+    getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IAllSubmissionsForEnrollment[]>;
     getEnrollmentsForUser(userID: number, statuses?: Enrollment.UserStatus[]): Promise<Enrollment[]>;
     getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
@@ -164,8 +164,8 @@ export class CourseManager {
      * Retrives all course enrollments with the latest
      * lab submissions for all individual course assignments
      */
-    public async getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
-        return this.courseProvider.getSubmissionsByCourse(courseID, type);
+    public async getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IAllSubmissionsForEnrollment[]> {
+        return this.courseProvider.getSubmissionsByCourse(courseID, type, withBuildInfo);
     }
 
     /**

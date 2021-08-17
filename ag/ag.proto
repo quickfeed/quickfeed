@@ -77,7 +77,7 @@ message Course {
     string organizationPath = 9; // The organization's SCM name, e.g. uis-dat520-2020.
     uint32 slipDays = 10;
     string dockerfile = 11;
-    Enrollment.UserStatus enrolled = 12 [(go.field) = {tags: 'sql:\"-\"'}];
+    Enrollment.UserStatus enrolled = 12 [(go.field) = {tags: 'gorm:"-"'}];
 
     repeated Enrollment enrollments = 13;
     repeated Assignment assignments = 14;
@@ -129,7 +129,7 @@ message Enrollment {
     Group group = 8;
     UserStatus status = 9;
     DisplayState state = 10;
-    uint32 slipDaysRemaining = 11 [(go.field) = {tags: 'sql:"-"'}];
+    uint32 slipDaysRemaining = 11 [(go.field) = {tags: 'gorm:"-"'}];
     string lastActivityDate = 12;
     uint64 totalApproved = 13;
     repeated UsedSlipDays usedSlipDays = 14;

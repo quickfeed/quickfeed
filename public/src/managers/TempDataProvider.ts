@@ -238,7 +238,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return [];
     }
 
-    public async getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
+    public async getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IAllSubmissionsForEnrollment[]> {
         return [];
     }
 

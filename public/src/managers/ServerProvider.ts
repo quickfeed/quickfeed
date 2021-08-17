@@ -230,8 +230,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return isubmissions;
     }
 
-    public async getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
-        const result = await this.grpcHelper.getSubmissionsByCourse(courseID, type);
+    public async getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IAllSubmissionsForEnrollment[]> {
+        const result = await this.grpcHelper.getSubmissionsByCourse(courseID, type, withBuildInfo);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
