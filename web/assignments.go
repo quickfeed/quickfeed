@@ -1,13 +1,11 @@
 package web
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/assignments"
-	"github.com/autograde/quickfeed/scm"
 )
 
 var (
@@ -30,25 +28,12 @@ func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, er
 }
 
 // updateAssignments updates the assignments for the given course.
-func (s *AutograderService) updateAssignments(ctx context.Context, sc scm.SCM, courseID uint64) error {
+func (s *AutograderService) updateAssignments(courseID uint64) {
 	course, err := s.db.GetCourse(courseID, false)
 	if err != nil {
-		return err
+		s.logger.Errorf("Could not find course ID %d", courseID)
 	}
-	assignments, dockerfile, err := assignments.FetchAssignments(ctx, sc, course)
-	if err != nil {
-		return err
-	}
-	if dockerfile != course.Dockerfile {
-		course.Dockerfile = dockerfile
-		if err = s.db.UpdateCourse(course); err != nil {
-			return err
-		}
-	}
-	if err = s.db.UpdateAssignments(assignments); err != nil {
-		return err
-	}
-	return nil
+	assignments.UpdateFromTestsRepo(s.logger, s.db, course)
 }
 
 func (s *AutograderService) createBenchmark(query *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {

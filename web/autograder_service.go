@@ -781,7 +781,7 @@ func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.CourseReq
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.CourseRequest) (*pb.Void, error) {
 	courseID := in.GetCourseID()
-	usr, scm, err := s.getUserAndSCMForCourse(ctx, courseID)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: scm authentication error: %v", err)
 		return nil, err
@@ -790,17 +790,7 @@ func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.Course
 		s.logger.Error("UpdateAssignments failed: user is not teacher")
 		return nil, status.Error(codes.PermissionDenied, "only teachers can update course assignments")
 	}
-	err = s.updateAssignments(ctx, scm, courseID)
-	if err != nil {
-		s.logger.Errorf("UpdateAssignments failed: %v", err)
-		if contextCanceled(ctx) {
-			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
-		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
-		}
-		return nil, status.Error(codes.InvalidArgument, "failed to update course assignments")
-	}
+	s.updateAssignments(courseID)
 	return &pb.Void{}, nil
 }
 

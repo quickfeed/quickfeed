@@ -86,6 +86,9 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 	if err != nil {
 		return nil, "", err
 	}
+
+	// if there is a script in `scripts` folder, save it for every assignment
+	// that's missing the assignment specific script
 	if defaultScript != "" {
 		for _, assignment := range assignments {
 			if assignment.ScriptFile == "" {
