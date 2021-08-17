@@ -1,28 +1,41 @@
 version: '3.8'
 services:
-  proxy:
-    image: nginx-proxy
-    build: 
-      context: ./
-      dockerfile: ./dev/proxy/Dockerfile
+  envoy:
+    container_name: envoy
+    image: quickfeed/envoy
+    build:
+      context: ./ci/docker/envoy
+      dockerfile: ./Dockerfile
+      args:
+        - ENVOY_CONFIG=${ENVOY_CONFIG}
+        - DOMAIN=${DOMAIN}
     ports:
       - "80:80"
+      - "443:443"
+      # - "9901:9901" # envoy admin endpoint.
     networks:
-      - grpc_proxy
+      - quickfeed_net
 
   quickfeed:
-    image: quickfeed
+    container_name: quickfeed
+    image: quickfeed/quickfeed
     build:
       context: ./
-      dockerfile: ./dev/quickfeed/Dockerfile
+      dockerfile: ./ci/docker/quickfeed/Dockerfile
+      args:
+        - GRPC_PORT=${GRPC_PORT}
+        - HTTP_PORT=${HTTP_PORT}
     links:
-      - proxy
+      - envoy
+    # Uncomment to expose quickfeed ports for debugging on the host machine.
+    # ports:
+    #   - "8081:8081"
+    #   - "9090:9090"
     networks:
-      - grpc_proxy
+      - quickfeed_net
 
 networks:
-  grpc_proxy:
+  quickfeed_net:
     ipam:
       config:
       - subnet: 172.20.0.0/16
-

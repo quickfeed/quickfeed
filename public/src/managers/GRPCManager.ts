@@ -55,8 +55,8 @@ export class GrpcManager {
     private agService: AutograderServiceClient;
     private userMan: UserManager;
 
-    constructor() {
-        this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
+    constructor(serviceURL: string) {
+        this.agService = new AutograderServiceClient(serviceURL, null, null);
     }
 
     public setUserMan(man: UserManager) {
