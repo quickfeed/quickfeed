@@ -26,12 +26,13 @@ func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, er
 }
 
 // updateAssignments updates the assignments for the given course.
-func (s *AutograderService) updateAssignments(courseID uint64) {
+func (s *AutograderService) updateAssignments(courseID uint64) error {
 	course, err := s.db.GetCourse(courseID, false)
 	if err != nil {
-		s.logger.Errorf("Could not find course ID %d", courseID)
+		return fmt.Errorf("could not find course ID %d", courseID)
 	}
 	assignments.UpdateFromTestsRepo(s.logger, s.db, course)
+	return nil
 }
 
 func (s *AutograderService) createBenchmark(query *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
