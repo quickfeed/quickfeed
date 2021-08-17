@@ -1,3 +1,8 @@
+# This trick allow us to source the environment variables defined in .env file in the Makefile (see include directive in GNU make for more details).
+# It ignores errors in case the .env file does not exists.
+# It may be necessary to skip variables that uses special makefile caracters, like $.
+-include .env
+
 OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
 tmpdir				:= tmp
@@ -10,6 +15,7 @@ grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ve
 grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 testorg				:= ag-test-course
+envoy-config-gen := ./cmd/envoy/envoy_config_gen.go
 
 # necessary when target is not tied to a file
 .PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm
@@ -72,26 +78,19 @@ proto-swift:
 	ag/ag.proto
 
 brew:
-    ifeq (, $(shell which brew))
-		$(error "No brew command in $$PATH")
-    endif
+ifeq (, $(shell which brew))
+	$(error "No brew command in $(PATH)")
+endif
 	@echo "Installing homebrew packages needed for development and deployment"
 	@brew install go protobuf webpack npm node docker certbot envoy
 
-envoy-build:
-	@echo "Building Autograder Envoy proxy"
-	@cd envoy; docker build -t ag_envoy -f envoy.Dockerfile .
-
-envoy-run:
-	@echo "Starting Autograder Envoy proxy"
-	@cd envoy; docker run --name=envoy -p 8080:8080 --net=host ag_envoy
-
-# will stop envoy container, prune docker containers and remove envoy images
-# use before rebuilding envoy with changed configuration in envoy.yaml
-envoy-purge:
-	@docker kill envoy
-	@docker container prune
-	@docker image rm envoyproxy/envoy ag_envoy
+envoy-config:
+ifeq ($(DOMAIN),)
+	@echo "You must set required environment variables before configuring Envoy (see .env-template)." && false
+else
+	@echo "Generating Envoy configuration for $(DOMAIN)."
+	@go run $(envoy-config-gen) --tls
+endif
 
 # protoset is a file used as a server reflection to mock-testing of grpc methods via command line
 protoset:
@@ -123,14 +122,6 @@ run:
 
 runlocal:
 	@quickfeed -service.url 127.0.0.1
-
-envoy-config:
-ifeq ($(DOMAIN),)
-	@echo "You must set required environment variables before configuring Envoy (see doc/scripts/envs.sh)."
-else
-	@echo "Generating Envoy configuration for '$$DOMAIN'."
-	@$(shell CONFIG='$$DOMAIN:$$GRPC_PORT:$$HTTP_PORT'; envsubst "$$CONFIG" < envoy/envoy.tmpl > $$ENVOY_CONFIG)
-endif
 
 prometheus:
 	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --storage.tsdb.retention.size=1024MB --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &
