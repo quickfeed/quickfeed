@@ -1,6 +1,7 @@
 # Quickfeed Deployments
 
 ## Table of Contents
+
 - [Preparing the Environment](#preparing-the-environment)
   - [Configuring Docker](#configuring-docker)
   - [Setup Environment Variables](#setup-environment-variables)
@@ -49,6 +50,7 @@ The authorization callback URL is unique for each instance of QuickFeed, e.g., `
 ### Generate Envoy Configuration File
 
 The default envoy configuration for testing can be generated using the existent rules in the Makefile:
+
 ```sh
 % make envoy-config
 ```
@@ -198,44 +200,44 @@ Please choose one of the options below to run envoy in your system:
 
 1. Running with locally installed Envoy (macOS homebrew)
 
-```sh
-% sudo envoy -c $ENVOY_CONFIG &
-```
+   ```sh
+   % sudo envoy -c $ENVOY_CONFIG &
+   ```
 
-With additional logging:
+   With additional logging:
 
-```sh
-% sudo envoy -c $ENVOY_CONFIG --log-path envoy.log --enable-fine-grain-logging -l debug &
-```
+   ```sh
+   % sudo envoy -c $ENVOY_CONFIG --log-path envoy.log --enable-fine-grain-logging -l debug &
+   ```
 
 2. Running with func-e (Linux)
 
-Install the `func-e` command in `/usr/local/bin` with:
+   Install the `func-e` command in `/usr/local/bin` with:
 
-```sh
-% curl https://func-e.io/install.sh | sudo bash -s -- -b /usr/local/bin
-```
+   ```sh
+   % curl https://func-e.io/install.sh | sudo bash -s -- -b /usr/local/bin
+   ```
 
-Alternatively, install via linuxbrew instead:
+   Alternatively, install via linuxbrew instead:
 
-```sh
-% brew install func-e
-% sudo ln -s /home/linuxbrew/.linuxbrew/bin/func-e /usr/local/bin
-```
+   ```sh
+   % brew install func-e
+   % sudo ln -s /home/linuxbrew/.linuxbrew/bin/func-e /usr/local/bin
+   ```
 
-Run with:
+   Run with:
 
-```sh
-% sudo func-e run -c $ENVOY_CONFIG &
-```
+   ```sh
+   % sudo func-e run -c $ENVOY_CONFIG &
+   ```
 
 3. Running Envoy using docker-compose
 
-If you want to run envoy using the existing docker-compose configuration you need to copy your certificates to `$QUICKFEED/ci/docker/envoy/certs` and run:
+   If you want to run envoy using the existing docker-compose configuration you need to copy your certificates to `$QUICKFEED/ci/docker/envoy/certs` and run:
 
-```sh
-% docker-compose up --build --remove-orphans envoy
-```
+   ```sh
+   % docker-compose up --build --remove-orphans envoy
+   ```
 
 ### Build and Run QuickFeed Server
 
