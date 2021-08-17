@@ -164,7 +164,8 @@ This is the purpose of the `tests` repository.
 The file system layout of the `tests` repository must match that of the `assignments` repository, as shown below.
 The `assignment.yml` files contains the [assignment information](#assignment-information).
 In addition, each assignment folder should also contain test code for the corresponding assignment.
-The `scripts` folder must contain a `run.sh` script file with commands to be executed when running assignment tests. This script will be used for every course assignment unless there is an assignment-specific `run.sh` script in the assignment folder. This script will only be used when running tests for this specific assignment.
+The scripts folder may contain a `run.sh` script with commands to be executed when running assignment tests.
+An assignment-specific `run.sh` script will only be used when running tests for the specific assignment.
 If `scripts` folder contains a Dockerfile, a Docker image tagged with the course code will be built locally and used when running tests for the assignment.
 
 ```text
@@ -235,7 +236,7 @@ Comments can be left to every criterion checkpoint or to the whole group of grad
 
 It is also possible to mass approve submissions or mass release reviews for an assignment by choosing a minimal score and then pressing `Approve all` or `Release all` correspondingly. Every submission with a score equal or above the set minimal score will be approved or reviews to such submissions will be released.
 
-Grading criteria will be loaded from a `criteria.json` file if it is added to the corresponding assignment folder inside the `Tests` repository.
+Grading criteria will be loaded from a `criteria.json` file if it is added to the corresponding assignment folder inside the `tests` repository.
 
 JSON format:
 

@@ -35,6 +35,7 @@ func newAssignmentInfo(course *pb.Course, assignment *pb.Assignment, cloneURL, t
 // the commands of the job. The job is extracted from a script template file
 // provided as input along with assignment metadata for the template.
 func parseScriptTemplate(info *AssignmentInfo) (*Job, error) {
+	// info.Script is the saved contents of the script, not the file name
 	t, err := template.New("scriptfile").Parse(info.Script)
 	if err != nil {
 		return nil, err

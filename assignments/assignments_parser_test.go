@@ -176,7 +176,7 @@ func TestParse(t *testing.T) {
 	if diff := cmp.Diff(assignments[0], wantAssignment1, cmpopts.IgnoreUnexported(pb.Assignment{})); diff != "" {
 		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(assignments[1], wantAssignment2, cmpopts.IgnoreUnexported(pb.Assignment{}), protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(assignments[1], wantAssignment2, protocmp.Transform()); diff != "" {
 		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
 	}
 	if diff := cmp.Diff(assignments[1].GradingBenchmarks, wantCriteria, protocmp.Transform()); diff != "" {

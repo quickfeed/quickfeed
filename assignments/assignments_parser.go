@@ -1,10 +1,8 @@
 package assignments
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -52,83 +50,35 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 	var defaultScript string
 	var courseDockerfile string
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		assignmentName := filepath.Base(filepath.Dir(path))
 		if !info.IsDir() {
 			filename := filepath.Base(path)
 			switch filename {
 			case target, targetYaml:
-				source, err := ioutil.ReadFile(path)
+				assignment, err := readAssignmentFile(path, filename, courseID)
 				if err != nil {
-					return fmt.Errorf("could not to read %q file: %w", filename, err)
+					return err
 				}
-				var newAssignment assignmentData
-				err = yaml.Unmarshal(source, &newAssignment)
-				if err != nil {
-					return fmt.Errorf("error unmarshalling assignment: %w", err)
-				}
-				// if no auto approve score limit is defined; use the default
-				if newAssignment.ScoreLimit < 1 {
-					newAssignment.ScoreLimit = defaultAutoApproveScoreLimit
-				}
-
-				// AssignmentID field from the parsed yaml is used to set Order, not assignment ID,
-				// or it will cause a database constraint violation (IDs must be unique)
-				// The Name field below is the folder name of the assignment.
-				assignment := &pb.Assignment{
-					CourseID:         courseID,
-					Deadline:         FixDeadline(newAssignment.Deadline),
-					Name:             filepath.Base(filepath.Dir(path)),
-					Order:            uint32(newAssignment.AssignmentID),
-					AutoApprove:      newAssignment.AutoApprove,
-					ScoreLimit:       uint32(newAssignment.ScoreLimit),
-					IsGroupLab:       newAssignment.IsGroupLab,
-					Reviewers:        uint32(newAssignment.Reviewers),
-					ContainerTimeout: uint32(newAssignment.ContainerTimeout),
-				}
-
 				assignments = append(assignments, assignment)
 
 			case criteriaFile:
-				assignmentName := filepath.Base(filepath.Dir(path))
-				criteria, err := ioutil.ReadFile(path)
-				if err != nil {
-					return fmt.Errorf("Could not to read %q file: %w", filename, err)
-				}
-				var benchmarks []*pb.GradingBenchmark
-				if err := json.Unmarshal(criteria, &benchmarks); err != nil {
-					return fmt.Errorf("Error unmarshalling criteria.json: %s", err)
-				}
-				assignment := findAssignmentByName(assignments, assignmentName)
-				if assignment == nil {
-					return fmt.Errorf("Found benchmarks for assignment %s, could not find the assignment\n", assignmentName)
-				} else {
-					assignment.GradingBenchmarks = benchmarks
+				if err := updateCriteriaFromFile(path, filename, assignmentName, assignments); err != nil {
+					return err
 				}
 
 			case scriptFile:
-				assignmentName := filepath.Base(filepath.Dir(path))
-				content, err := ioutil.ReadFile(path)
+				script, err := readScriptFile(path, filename, assignmentName, assignments)
 				if err != nil {
 					return err
 				}
-				if assignmentName == scriptFolder {
-					defaultScript = string(content)
-				} else {
-					assignment := findAssignmentByName(assignments, assignmentName)
-					if assignment == nil {
-						return fmt.Errorf("Found scriptfile in assignment %s folder, could not find thr assignment\n", assignmentName)
-					}
-					assignment.ScriptFile = string(content)
-				}
+				defaultScript = script
+
 			case dockerfile:
-				t, err := template.ParseFiles(path)
+				contents, err := ioutil.ReadFile(path)
 				if err != nil {
 					return err
 				}
-				buffer := new(bytes.Buffer)
-				if err := t.Execute(buffer, ""); err != nil {
-					return err
-				}
-				courseDockerfile = buffer.String()
+				courseDockerfile = string(contents)
 			}
 		}
 		return nil
@@ -180,6 +130,71 @@ func FixDeadline(in string) string {
 		return t.Format(wantLayout)
 	}
 	return "Invalid date format: " + in
+}
+
+func updateCriteriaFromFile(path, filename, assignmentName string, assignments []*pb.Assignment) error {
+	criteria, err := ioutil.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("could not to read file %q: %w", filename, err)
+	}
+	var benchmarks []*pb.GradingBenchmark
+	if err := json.Unmarshal(criteria, &benchmarks); err != nil {
+		return fmt.Errorf("could not unmarshal criteria.json: %s", err)
+	}
+	assignment := findAssignmentByName(assignments, assignmentName)
+	if assignment == nil {
+		return fmt.Errorf("could not find assignment %s for benchmark in %q", assignmentName, criteriaFile)
+	}
+	assignment.GradingBenchmarks = benchmarks
+	return nil
+}
+
+func readScriptFile(path, filename, assignmentName string, assignments []*pb.Assignment) (string, error) {
+	contents, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	if assignmentName != scriptFolder {
+		assignment := findAssignmentByName(assignments, assignmentName)
+		if assignment == nil {
+			return "", fmt.Errorf("could not find assignment %s for script file", assignmentName)
+		}
+		assignment.ScriptFile = string(contents)
+		return "", nil
+	}
+	return string(contents), nil
+}
+
+func readAssignmentFile(path, filename string, courseID uint64) (*pb.Assignment, error) {
+	source, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("could not to read file %q: %w", filename, err)
+	}
+	var newAssignment assignmentData
+	err = yaml.Unmarshal(source, &newAssignment)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling assignment: %w", err)
+	}
+	// if no auto approve score limit is defined; use the default
+	if newAssignment.ScoreLimit < 1 {
+		newAssignment.ScoreLimit = defaultAutoApproveScoreLimit
+	}
+
+	// AssignmentID field from the parsed yaml is used to set Order, not assignment ID,
+	// or it will cause a database constraint violation (IDs must be unique)
+	// The Name field below is the folder name of the assignment.
+	assignment := &pb.Assignment{
+		CourseID:         courseID,
+		Deadline:         FixDeadline(newAssignment.Deadline),
+		Name:             filepath.Base(filepath.Dir(path)),
+		Order:            uint32(newAssignment.AssignmentID),
+		AutoApprove:      newAssignment.AutoApprove,
+		ScoreLimit:       uint32(newAssignment.ScoreLimit),
+		IsGroupLab:       newAssignment.IsGroupLab,
+		Reviewers:        uint32(newAssignment.Reviewers),
+		ContainerTimeout: uint32(newAssignment.ContainerTimeout),
+	}
+	return assignment, nil
 }
 
 func findAssignmentByName(assignments []*pb.Assignment, name string) *pb.Assignment {

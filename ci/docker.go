@@ -171,13 +171,13 @@ func (d *Docker) pullImage(ctx context.Context, image string) error {
 // buildImage builds and installs an image locally to be reused in a future run.
 func (d *Docker) buildImage(ctx context.Context, dockerfile string, image string) error {
 	if dockerfile == "" || image == "" {
-		return fmt.Errorf("Failed to build image %s: missing Dockerfile in Tests/scripts/ or image name in run.sh", image)
+		return fmt.Errorf("failed to build image %s: missing Dockerfile in Tests/scripts/ or image name in run.sh", image)
 	}
-	dockerbytes := []byte(dockerfile)
+	dockerFileContents := []byte(dockerfile)
 	header := &tar.Header{
 		Name:     "Dockerfile",
 		Mode:     0o777,
-		Size:     int64(len(dockerbytes)),
+		Size:     int64(len(dockerFileContents)),
 		Typeflag: tar.TypeReg,
 	}
 	var buf bytes.Buffer
@@ -185,7 +185,7 @@ func (d *Docker) buildImage(ctx context.Context, dockerfile string, image string
 	if err := tarWriter.WriteHeader(header); err != nil {
 		return err
 	}
-	if _, err := tarWriter.Write(dockerbytes); err != nil {
+	if _, err := tarWriter.Write(dockerFileContents); err != nil {
 		return err
 	}
 	if err := tarWriter.Close(); err != nil {
