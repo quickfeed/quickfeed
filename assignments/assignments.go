@@ -140,10 +140,12 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 					for _, c := range bm.Criteria {
 						if err := db.DeleteCriterion(c); err != nil {
 							logger.Errorf("Failed to delete criteria %v: %s\n", c, err)
+							return
 						}
 					}
 					if err := db.DeleteBenchmark(bm); err != nil {
 						logger.Errorf("Failed to delete benchmark %v: %s\n", bm, err)
+						return
 					}
 				}
 				submissions, err := db.GetSubmissions(&pb.Submission{AssignmentID: assignment.GetID()})
@@ -154,6 +156,7 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 				for _, submission := range submissions {
 					if err := db.DeleteReview(&pb.Review{SubmissionID: submission.ID}); err != nil {
 						logger.Errorf("Failed to delete reviews for submission %s to assignment %s: %s", submission.ID, assignment.Name, err)
+						return
 					}
 				}
 			} else {
