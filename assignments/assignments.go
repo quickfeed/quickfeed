@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
@@ -24,7 +25,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
 	}
-	assignments, dockerfile, err := FetchAssignments(context.Background(), logger, s, course)
+	assignments, dockerfile, err := fetchAssignments(context.Background(), logger, s, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
 		return
@@ -49,7 +50,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
 }
 
-// FetchAssignments returns a list of assignments for the given course, by
+// fetchAssignments returns a list of assignments for the given course, by
 // cloning the 'tests' repo for the given course and extracting the assignments
 // from the 'assignment.yml' files, one for each assignment. If there is a Dockerfile
 // in 'tests/script' will also return its contents.
@@ -61,7 +62,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 // data from GitHub, processes the yml files and returns the assignments.
 // The TempDir() function ensures that cloning is done in distinct temp
 // directories, should there be concurrent calls to this function.
-func FetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
+func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
 	ctx, cancel := context.WithTimeout(c, pb.MaxWait)
 	defer cancel()
 
@@ -103,12 +104,12 @@ func FetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 	// tag the image with the course code
 	if dockerfile != "" && dockerfile != course.Dockerfile {
 		job.Commands = []string{
-			"cd " + cloneDir + "/tests/scripts",
-			fmt.Sprintf("docker build -t %s .", course.Code),
+			"cd " + filepath.Join(cloneDir, pb.TestsRepo, scriptFolder),
+			fmt.Sprintf("docker build -t %s .", course.GetCode()),
 		}
 
 		if out, err := runner.Run(context.Background(), job); err != nil {
-			logger.Errorf("Failed to build image from dockerfile for %s (%s): %s", course.Code, out, err)
+			logger.Errorf("Failed to build image from %s's Dockerfile (%s): %s", course.GetCode(), out, err)
 		}
 	}
 	return assignments, dockerfile, nil
