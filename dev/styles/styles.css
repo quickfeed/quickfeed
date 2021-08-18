@@ -320,3 +320,13 @@ input{
     top: 50px;
     transform: translateX(-70px);
 }
+
+.result-approved {
+    background-color: #CCFFCC;
+    cursor: pointer;
+}
+
+.result-pending {
+    background-color: #FFCCCC;
+    cursor: pointer;
+}

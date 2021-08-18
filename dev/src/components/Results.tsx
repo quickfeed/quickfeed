@@ -1,10 +1,11 @@
+import { json } from "overmind"
 import React, { useEffect } from "react"
-import { Enrollment } from "../../proto/ag/ag_pb"
-import { getCourseID } from "../Helpers"
+import { Group, Submission, SubmissionLink } from "../../proto/ag/ag_pb"
+import { getCourseID, isTeacher } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
+import DynamicTable, { CellElement } from "./DynamicTable"
 import Lab from "./Lab"
 import Search from "./Search"
-import ResultItem from "./teacher/ResultItem"
 
 
 const Results = () => {
@@ -20,20 +21,42 @@ const Results = () => {
         return actions.setActiveSubmission(undefined)
     }, [state.courseSubmissions])
 
+    const Header: (string | JSX.Element)[] = ["Name", "Group"]
 
-    const TableAssignmentsHead = state.assignments[courseID].map(assignment => {
-        return <td>{assignment.getName()}</td>
-    })
+    const AssignmentsHeader = (state.assignments[courseID].map(assignment => {
+        return assignment.getName()
+    }))
 
-    // TODO: Allow admin to view
-    if (!state.courseSubmissions[courseID] || state.enrollmentsByCourseId[courseID].getStatus() !== Enrollment.UserStatus.TEACHER) {
+    if (!state.courseSubmissions[courseID] || !isTeacher(state.enrollmentsByCourseId[courseID])) {
         return <h1>Nothing</h1>
     }
 
-    const UserResults = state.courseSubmissions[courseID].map(user => {
-        if (user.enrollment && user.submissions) {
-            return <ResultItem enrollment={user.enrollment} submissionsLink={user.submissions} />
+    const getSubmissionCell = (submissionLink: SubmissionLink) => {
+        if (submissionLink.hasSubmission() && submissionLink.hasAssignment()) {
+            return ({   
+                value: `${submissionLink.getSubmission()?.getScore()}%`, 
+                className: submissionLink.getSubmission()?.getStatus() === Submission.Status.APPROVED ? "result-approved" : "result-pending",
+                onClick: () => actions.setActiveSubmission(json(submissionLink.getSubmission()))
+            })
         }
+        else {
+            return ({
+                value: "N/A", 
+                onClick: () => actions.setActiveSubmission(undefined)
+            })
+        }
+    } 
+
+    const results = state.courseSubmissions[courseID].map(link => {
+        const data: (string | JSX.Element | CellElement)[] = []
+        data.push(link.user ? {value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}`} : "")
+        data.push(link.enrollment && link.enrollment.hasGroup() ? (link.enrollment.getGroup() as Group)?.getName() : "")
+        if (link.submissions) {
+            for (const submissionLink of link.submissions) {
+                data.push(getSubmissionCell(submissionLink))
+            }
+        }
+        return data
     })
 
     return (
@@ -41,16 +64,7 @@ const Results = () => {
         <Search />
         <div className="row">
             <div className="col">
-            <table className="table table-curved table-striped">
-                <thead className="thead-dark">
-                    <td>Name</td>
-                    <td>Group</td>
-                    {TableAssignmentsHead}
-                </thead>
-                <tbody>
-                    {UserResults}
-                </tbody>
-            </table>
+            <DynamicTable header={Header.concat(AssignmentsHeader)} data={results} />
             </div>
             <div className="col reviewLab">
                 {state.activeSubmission ?
