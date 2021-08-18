@@ -66,17 +66,35 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	// TODO(meling) temporary transformation of submission data
 	transform(submission)
 
-	// A submission will have a build info without any ID, using save will create a duplicate build info
-	// in case the submission already exists in the database. We have to update build info explicitly.
-	// There should be a less hacky way to do it.
-	if submission.BuildInfo != nil && submission.ID != 0 {
-		var buildInfo score.BuildInfo
-		if err := db.conn.Where("submission_id = ?", submission.ID).Last(&buildInfo).Error; err != nil {
-			return err
+	if submission.ID != 0 {
+		// A submission will have a build info without any ID, using save will create a duplicate build info
+		// in case the submission already exists in the database. We have to update build info explicitly.
+		// There should be a less hacky way to do it.
+		if submission.BuildInfo != nil {
+			var buildInfo score.BuildInfo
+			if err := db.conn.Where("submission_id = ?", submission.ID).Last(&buildInfo).Error; err != nil {
+				return err
+			}
+			submission.BuildInfo.ID = buildInfo.ID
+			if err := db.conn.Save(submission.BuildInfo).Error; err != nil {
+				return err
+			}
 		}
-		submission.BuildInfo.ID = buildInfo.ID
-		if err := db.conn.Save(submission.BuildInfo).Error; err != nil {
-			return err
+		for _, newScore := range submission.Scores {
+			var oldScore score.Score
+			query := &score.Score{
+				SubmissionID: submission.ID,
+				TestName:     newScore.TestName,
+				MaxScore:     newScore.MaxScore,
+				Weight:       newScore.Weight,
+			}
+			if err := db.conn.Where(query).Last(&oldScore).Error; err != nil {
+				return err
+			}
+			newScore.ID = oldScore.ID
+			if err := db.conn.Save(newScore).Error; err != nil {
+				return err
+			}
 		}
 	}
 	return db.conn.Save(submission).Error

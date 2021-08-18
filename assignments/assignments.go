@@ -103,6 +103,7 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 	// if a Dockerfile added/updated, build docker image locally
 	// tag the image with the course code
 	if dockerfile != "" && dockerfile != course.Dockerfile {
+		logger.Debugf("Found Dockerfile for %s, building image", course.GetCode())
 		job.Commands = []string{
 			"cd " + filepath.Join(cloneDir, pb.TestsRepo, scriptFolder),
 			fmt.Sprintf("docker build -t %s .", course.GetCode()),
