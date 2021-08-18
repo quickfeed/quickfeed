@@ -238,7 +238,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return [];
     }
 
-    public async getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
+    public async getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IAllSubmissionsForEnrollment[]> {
         return [];
     }
 
@@ -317,13 +317,11 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async deleteBenchmark(bm: GradingBenchmark): Promise<boolean> {
         return true;
     }
+
     public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
         return true;
     }
 
-    public async loadCriteria(assignmentID: number, courseID: number): Promise<GradingBenchmark[]> {
-        return [];
-    }
     public async addReview(r: Review): Promise<Review | null> {
         return r;
     }

@@ -25,7 +25,7 @@ func TestFetchAssignments(t *testing.T) {
 		OrganizationPath: qfTestOrg,
 	}
 
-	assignments, err := FetchAssignments(context.Background(), s, course)
+	assignments, _, err := fetchAssignments(context.Background(), zap.NewNop().Sugar(), s, course)
 	if err != nil {
 		t.Fatal(err)
 	}

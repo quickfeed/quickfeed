@@ -76,11 +76,12 @@ message Course {
     uint64 organizationID = 8;
     string organizationPath = 9; // The organization's SCM name, e.g. uis-dat520-2020.
     uint32 slipDays = 10;
-    Enrollment.UserStatus enrolled = 11 [(go.field) = {tags: 'sql:\"-\"'}];
+    string dockerfile = 11;
+    Enrollment.UserStatus enrolled = 12 [(go.field) = {tags: 'gorm:"-"'}];
 
-    repeated Enrollment enrollments = 12;
-    repeated Assignment assignments = 13;
-    repeated Group groups = 14;
+    repeated Enrollment enrollments = 13;
+    repeated Assignment assignments = 14;
+    repeated Group groups = 15;
 }
 
 message Courses {
@@ -128,7 +129,7 @@ message Enrollment {
     Group group = 8;
     UserStatus status = 9;
     DisplayState state = 10;
-    uint32 slipDaysRemaining = 11 [(go.field) = {tags: 'sql:"-"'}];
+    uint32 slipDaysRemaining = 11 [(go.field) = {tags: 'gorm:"-"'}];
     string lastActivityDate = 12;
     uint64 totalApproved = 13;
     repeated UsedSlipDays usedSlipDays = 14;
@@ -456,6 +457,7 @@ service AutograderService {
     rpc RebuildSubmissions(AssignmentRequest) returns (Void) {}
 
     // manual grading //
+    
     rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
     rpc UpdateBenchmark(GradingBenchmark) returns (Void) {}
     rpc DeleteBenchmark(GradingBenchmark) returns (Void) {}
@@ -467,8 +469,6 @@ service AutograderService {
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Review) {}
     rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers) {}
-
-    rpc LoadCriteria(AssignmentRequest) returns (Benchmarks) {}
 
     // misc //
     

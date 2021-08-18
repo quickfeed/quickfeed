@@ -15,10 +15,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	scriptPath = "ci/scripts"
-)
-
 // RunData stores CI data
 type RunData struct {
 	Course     *pb.Course
@@ -38,7 +34,7 @@ func (r RunData) String(secret string) string {
 func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rData *RunData) {
 	info := newAssignmentInfo(rData.Course, rData.Assignment, rData.Repo.GetHTMLURL(), rData.Repo.GetTestURL())
 	logger.Debugf("Running tests for %s", rData.JobOwner)
-	ed, err := runTests(scriptPath, runner, info, rData)
+	ed, err := runTests(runner, info, rData)
 	if err != nil {
 		logger.Errorf("Failed to run tests: %v", err)
 		if ed == nil {
@@ -65,8 +61,8 @@ type execData struct {
 // runTests returns execData struct.
 // An error is returned if the execution fails, or times out.
 // If a timeout is the cause of the error, we also return an output string to the user.
-func runTests(path string, runner Runner, info *AssignmentInfo, rData *RunData) (*execData, error) {
-	job, err := parseScriptTemplate(path, info)
+func runTests(runner Runner, info *AssignmentInfo, rData *RunData) (*execData, error) {
+	job, err := parseScriptTemplate(info)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse script template: %w", err)
 	}

@@ -163,22 +163,31 @@ This is the purpose of the `tests` repository.
 
 The file system layout of the `tests` repository must match that of the `assignments` repository, as shown below.
 The `assignment.yml` files contains the [assignment information](#assignment-information).
-In addition, each folder should also contain test code for the corresponding assignment.
+In addition, each assignment folder should also contain test code for the corresponding assignment.
+The scripts folder may contain a `run.sh` script with commands to be executed when running assignment tests.
+An assignment-specific `run.sh` script will only be used when running tests for the specific assignment.
+If `scripts` folder contains a Dockerfile, a Docker image tagged with the course code will be built locally and used when running tests for the assignment.
 
 ```text
 tests┐
+     ├── scripts
+     │   └── Dockerfile
+     │   └── run.sh
      ├── lab1
      │   └── assignment.yml
+     │   └── run.sh
      ├── lab2
      │   └── assignment.yml
+     │   └── run.sh
      ├── lab3
      │   └── assignment.yml
+     │   └── run.sh
      ├── lab4
      │   └── assignment.yml
      ├── lab5
      │   └── assignment.yml
-     └── lab6
-         └── assignment.yml
+     │   └── criteria.json
+
 ```
 
 ### Assignment Information
@@ -191,7 +200,6 @@ An example is shown below for `lab1`.
 assignmentid: 1
 name: "lab1"
 title: "Introduction to Unix"
-scriptfile: "go.sh"
 deadline: "2020-08-30T23:59:00"
 autoapprove: true
 scorelimit: 90
@@ -228,7 +236,7 @@ Comments can be left to every criterion checkpoint or to the whole group of grad
 
 It is also possible to mass approve submissions or mass release reviews for an assignment by choosing a minimal score and then pressing `Approve all` or `Release all` correspondingly. Every submission with a score equal or above the set minimal score will be approved or reviews to such submissions will be released.
 
-Grading criteria can be loaded from a file `criteria.json` in a corresponding assignment folder inside the `Tests` repository.
+Grading criteria will be loaded from a `criteria.json` file if it is added to the corresponding assignment folder inside the `tests` repository.
 
 JSON format:
 

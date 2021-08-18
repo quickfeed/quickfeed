@@ -11,7 +11,6 @@ interface AssignmentViewProps {
     updateCriterion: (c: GradingCriterion) => Promise<boolean>;
     addCriterion: (c: GradingCriterion) => Promise<GradingCriterion | null>;
     removeCriterion: (c: GradingCriterion) => Promise<boolean>;
-    loadBenchmarks: () => Promise<GradingBenchmark[]>;
     runAllTests: (assignmentID: number, courseID: number) => Promise<boolean>;
 }
 
@@ -42,7 +41,7 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
         const headerDiv = <div className="row"><h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3></div>;
         const noReviewersDiv = <div className="row alert alert-info">This assignment is not for manual grading {this.testAllButton()}</div>;
         const topDiv = <div className="row top-div"><div className="assignment-p">Reviewers: {this.props.assignment.getReviewers()}</div>
-                <div className="score-p">Max points: {this.state.maxScore}</div> {this.loadButton()} </div>;
+                <div className="score-p">Max points: {this.state.maxScore}</div></div>;
         if (this.props.assignment.getReviewers() < 1) {
             return <div className="a-element">
                 {headerDiv}
@@ -173,14 +172,6 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
         })
     }
 
-    private loadButton(): JSX.Element {
-        return <button type="button"
-                id="load"
-                className="btn btn-default load-button"
-                onClick={() => this.loadCriteriaFromFile()}
-        >Load from file</button>;
-    }
-
     private testAllButton(): JSX.Element {
         return <button type="button"
                 id="rebuild"
@@ -206,25 +197,6 @@ export class AssignmentView extends React.Component<AssignmentViewProps, Assignm
                     allTestsState: "Failed",
                 });
             }
-        }
-    }
-
-    private async loadCriteriaFromFile() {
-        if (confirm(
-            `Warning! This action will replace all assignment grading criteria with criteria from the file.
-        All existing reviews for the assignment will also be removed. Proceed?`,
-        )) {
-            const newBenchmarks = await this.props.loadBenchmarks();
-            if (newBenchmarks.length > 0) {
-                this.setState({
-                    benchmarks: newBenchmarks,
-                    maxScore: this.renderTotalScore(newBenchmarks),
-                    open: false,
-                });
-            }
-            this.setState({
-                open: true,
-            })
         }
     }
 }

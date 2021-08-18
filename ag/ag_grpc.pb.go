@@ -50,7 +50,6 @@ type AutograderServiceClient interface {
 	UpdateSubmissions(ctx context.Context, in *UpdateSubmissionsRequest, opts ...grpc.CallOption) (*Void, error)
 	RebuildSubmission(ctx context.Context, in *RebuildRequest, opts ...grpc.CallOption) (*Submission, error)
 	RebuildSubmissions(ctx context.Context, in *AssignmentRequest, opts ...grpc.CallOption) (*Void, error)
-	// manual grading //
 	CreateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*GradingBenchmark, error)
 	UpdateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*Void, error)
 	DeleteBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*Void, error)
@@ -60,7 +59,6 @@ type AutograderServiceClient interface {
 	CreateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error)
 	UpdateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error)
 	GetReviewers(ctx context.Context, in *SubmissionReviewersRequest, opts ...grpc.CallOption) (*Reviewers, error)
-	LoadCriteria(ctx context.Context, in *AssignmentRequest, opts ...grpc.CallOption) (*Benchmarks, error)
 	GetProviders(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Providers, error)
 	GetOrganization(ctx context.Context, in *OrgRequest, opts ...grpc.CallOption) (*Organization, error)
 	GetRepositories(ctx context.Context, in *URLRequest, opts ...grpc.CallOption) (*Repositories, error)
@@ -426,15 +424,6 @@ func (c *autograderServiceClient) GetReviewers(ctx context.Context, in *Submissi
 	return out, nil
 }
 
-func (c *autograderServiceClient) LoadCriteria(ctx context.Context, in *AssignmentRequest, opts ...grpc.CallOption) (*Benchmarks, error) {
-	out := new(Benchmarks)
-	err := c.cc.Invoke(ctx, "/ag.AutograderService/LoadCriteria", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *autograderServiceClient) GetProviders(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Providers, error) {
 	out := new(Providers)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetProviders", in, out, opts...)
@@ -507,7 +496,6 @@ type AutograderServiceServer interface {
 	UpdateSubmissions(context.Context, *UpdateSubmissionsRequest) (*Void, error)
 	RebuildSubmission(context.Context, *RebuildRequest) (*Submission, error)
 	RebuildSubmissions(context.Context, *AssignmentRequest) (*Void, error)
-	// manual grading //
 	CreateBenchmark(context.Context, *GradingBenchmark) (*GradingBenchmark, error)
 	UpdateBenchmark(context.Context, *GradingBenchmark) (*Void, error)
 	DeleteBenchmark(context.Context, *GradingBenchmark) (*Void, error)
@@ -517,7 +505,6 @@ type AutograderServiceServer interface {
 	CreateReview(context.Context, *ReviewRequest) (*Review, error)
 	UpdateReview(context.Context, *ReviewRequest) (*Review, error)
 	GetReviewers(context.Context, *SubmissionReviewersRequest) (*Reviewers, error)
-	LoadCriteria(context.Context, *AssignmentRequest) (*Benchmarks, error)
 	GetProviders(context.Context, *Void) (*Providers, error)
 	GetOrganization(context.Context, *OrgRequest) (*Organization, error)
 	GetRepositories(context.Context, *URLRequest) (*Repositories, error)
@@ -645,9 +632,6 @@ func (UnimplementedAutograderServiceServer) UpdateReview(context.Context, *Revie
 }
 func (UnimplementedAutograderServiceServer) GetReviewers(context.Context, *SubmissionReviewersRequest) (*Reviewers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReviewers not implemented")
-}
-func (UnimplementedAutograderServiceServer) LoadCriteria(context.Context, *AssignmentRequest) (*Benchmarks, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LoadCriteria not implemented")
 }
 func (UnimplementedAutograderServiceServer) GetProviders(context.Context, *Void) (*Providers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProviders not implemented")
@@ -1376,24 +1360,6 @@ func _AutograderService_GetReviewers_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AutograderService_LoadCriteria_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AssignmentRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AutograderServiceServer).LoadCriteria(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/ag.AutograderService/LoadCriteria",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).LoadCriteria(ctx, req.(*AssignmentRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _AutograderService_GetProviders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Void)
 	if err := dec(in); err != nil {
@@ -1628,10 +1594,6 @@ var AutograderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReviewers",
 			Handler:    _AutograderService_GetReviewers_Handler,
-		},
-		{
-			MethodName: "LoadCriteria",
-			Handler:    _AutograderService_LoadCriteria_Handler,
 		},
 		{
 			MethodName: "GetProviders",

@@ -19,7 +19,6 @@ import {
   AssignmentRequest,
   Assignments,
   AuthorizationResponse,
-  Benchmarks,
   Course,
   CourseRequest,
   CourseSubmissions,
@@ -1594,45 +1593,6 @@ export class AutograderServiceClient {
     request,
     metadata || {},
     this.methodInfoGetReviewers);
-  }
-
-  methodInfoLoadCriteria = new grpcWeb.AbstractClientBase.MethodInfo(
-    Benchmarks,
-    (request: AssignmentRequest) => {
-      return request.serializeBinary();
-    },
-    Benchmarks.deserializeBinary
-  );
-
-  loadCriteria(
-    request: AssignmentRequest,
-    metadata: grpcWeb.Metadata | null): Promise<Benchmarks>;
-
-  loadCriteria(
-    request: AssignmentRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: Benchmarks) => void): grpcWeb.ClientReadableStream<Benchmarks>;
-
-  loadCriteria(
-    request: AssignmentRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: Benchmarks) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        new URL('/ag.AutograderService/LoadCriteria', this.hostname_).toString(),
-        request,
-        metadata || {},
-        this.methodInfoLoadCriteria,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/ag.AutograderService/LoadCriteria',
-    request,
-    metadata || {},
-    this.methodInfoLoadCriteria);
   }
 
   methodInfoGetProviders = new grpcWeb.AbstractClientBase.MethodInfo(

@@ -231,10 +231,11 @@ export class GrpcManager {
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request);
     }
 
-    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
+    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IGrpcResponse<CourseSubmissions>> {
         const request = new SubmissionsForCourseRequest();
         request.setCourseid(courseID);
         request.setType(type);
+        request.setWithbuildinfo(withBuildInfo);
         return this.grpcSend<CourseSubmissions>(this.agService.getSubmissionsByCourse, request);
     }
 
@@ -317,13 +318,6 @@ export class GrpcManager {
         request.setSubmissionid(submissionID);
         request.setCourseid(courseID);
         return this.grpcSend<Reviewers>(this.agService.getReviewers, request);
-    }
-
-    public loadCriteria(assignmentID: number, courseID: number): Promise<IGrpcResponse<Benchmarks>> {
-        const request = new AssignmentRequest();
-        request.setAssignmentid(assignmentID);
-        request.setCourseid(courseID);
-        return this.grpcSend<Benchmarks>(this.agService.loadCriteria, request);
     }
 
     // /* REPOSITORY */ //

@@ -62,8 +62,6 @@ type SCM interface {
 	RemoveMember(context.Context, *OrgMembershipOptions) error
 	// Lists all authorizations for authenticated user.
 	GetUserScopes(context.Context) *Authorization
-	// GetFileContent returns the content of a single file in the given repository.
-	GetFileContent(context.Context, *FileOptions) (string, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -117,13 +115,6 @@ type RepositoryOptions struct {
 	ID    uint64
 	Path  string
 	Owner string
-}
-
-// FileOptions used to fetch a file content from a repository.
-type FileOptions struct {
-	Path       string
-	Owner      string
-	Repository string
 }
 
 // Hook contains information about a webhook for a repository.
