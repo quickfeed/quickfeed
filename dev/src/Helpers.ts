@@ -222,3 +222,14 @@ export const getCourseID = () => {
     const route = useParams<{id?: string}>()
     return Number(route.id)
 }
+
+export const isHidden = (value: string, query: string) => {
+    return !value.toLowerCase().includes(query) && query.length > 0
+}
+
+export const EnrollmentStatusBadge = {
+    0 : "",
+    1 : "badge badge-info",
+    2 : "badge badge-primary",
+    3 : "badge badge-danger",
+}
