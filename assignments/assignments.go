@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -25,7 +24,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
 	}
-	assignments, dockerfile, err := FetchAssignments(context.Background(), s, course)
+	assignments, dockerfile, err := FetchAssignments(context.Background(), logger, s, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
 		return
@@ -62,7 +61,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 // data from GitHub, processes the yml files and returns the assignments.
 // The TempDir() function ensures that cloning is done in distinct temp
 // directories, should there be concurrent calls to this function.
-func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
+func FetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
 	ctx, cancel := context.WithTimeout(c, pb.MaxWait)
 	defer cancel()
 
@@ -70,7 +69,7 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 		Organization: course.OrganizationPath,
 		Repository:   pb.TestsRepo,
 	})
-	log.Printf("cloneURL %v\n", cloneURL)
+	logger.Debugf("cloneURL %v\n", cloneURL)
 
 	cloneDir, err := ioutil.TempDir("", pb.TestsRepo)
 	if err != nil {
@@ -85,8 +84,8 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 			"git clone " + cloneURL,
 		},
 	}
-	log.Printf("cd %v\n", cloneDir)
-	log.Printf("git clone %v\n", cloneURL)
+	logger.Debugf("cd %v\n", cloneDir)
+	logger.Debugf("git clone %v\n", cloneURL)
 
 	runner := ci.Local{}
 	_, err = runner.Run(ctx, job)
@@ -109,7 +108,7 @@ func FetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 		}
 
 		if out, err := runner.Run(context.Background(), job); err != nil {
-			log.Printf("Failed to build image from dockerfile for %s (%s): %s", course.Code, out, err)
+			logger.Errorf("Failed to build image from dockerfile for %s (%s): %s", course.Code, out, err)
 		}
 	}
 	return assignments, dockerfile, nil
