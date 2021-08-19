@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 import { Route, Switch, useHistory } from "react-router"
-import { getCourseID } from "../Helpers"
-import { useAppState } from "../overmind"
+import { getCourseID, isTeacher } from "../Helpers"
+import { useActions, useAppState } from "../overmind"
 import Card from "../components/Card"
 import CourseBanner from "../components/CourseBanner"
 import GroupPage from "./GroupPage"
@@ -16,6 +16,7 @@ import Assignments from "../components/teacher/Assignments"
 const TeacherPage = () => {
     const state = useAppState()
     const courseID = getCourseID()
+    const isAuthorizedTeacher = useActions().isAuthorizedTeacher
     const history = useHistory()
     const root = `/course/${courseID}`
 
@@ -27,14 +28,14 @@ const TeacherPage = () => {
   
 
     useEffect(() => {
-        /*if (state.enrollmentsByCourseId[courseID].getStatus() === Enrollment.UserStatus.TEACHER || state.self.getIsadmin()) {
-            actions.isAuthorizedTeacher().then(authorized => {
-                console.log(authorized)
+        // Redirect to OAuth authorization if user is teacher but not authorized
+        if (isTeacher(state.enrollmentsByCourseId[courseID])) {
+            isAuthorizedTeacher().then(authorized => {
                 if (!authorized) {
-                    window.location.href = "https://" + window.location.hostname + "/auth/github-teacher";
+                    window.location.assign("auth/github-teacher")
                 }
             })
-        }*/
+        }
     }, [])
 
 
