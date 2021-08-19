@@ -16,7 +16,7 @@ export const Members = () => {
     const courseID = getCourseID()
 
     const [func, setFunc] = useState("STATUS")
-    const [descending, setDescending] = useState(true)
+    const [descending, setDescending] = useState(false)
     const [edit, setEditing] = useState<boolean>(false)
     useEffect(() => {
 
@@ -45,34 +45,6 @@ export const Members = () => {
     }
 
     const pending = state.courseEnrollments[courseID].filter(enrollment => enrollment.getStatus() === Enrollment.UserStatus.PENDING)
-
-    const pendingMembers = pending.map(enrollment => {
-        const data: (string | JSX.Element)[] = []
-        data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getName() : "")
-        data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getEmail() : "")
-        data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getStudentid() : "")
-        data.push(
-            <div>
-                <button 
-                    className="btn btn-primary" 
-                    onClick={() => actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.STUDENT})}
-                >
-                    Accept
-                </button>
-                <button 
-                    className="btn btn-danger" 
-                    onClick={() => {
-                        if (confirm("WARNNG! Rejecting a student is irreversible. Are you sure?"))
-                            actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.NONE}) 
-                        }}
-                >
-                    Reject
-                </button>
-            </div>
-        )
-        return data
-    })
-
     
     const members = sortByField(state.courseEnrollments[courseID], [], sort(), descending).map((enrollment: Enrollment) => {
         const demoteText = `Warning! ${enrollment.getUser()?.getName()} is a teacher. Are sure you want to demote?`
@@ -84,38 +56,60 @@ export const Members = () => {
         data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getStudentid() : "")
         data.push(enrollment.getLastactivitydate())
         data.push(enrollment.getTotalapproved().toString())
-        data.push(edit ? (<div>
-            <button 
-                className="btn btn-primary" 
-                onClick={() => confirm(isTeacher(enrollment) ? demoteText : promoteText) ? actions.updateEnrollment({enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER}) : null}
-            >
-                {isTeacher(enrollment) ? "Demote" : "Promote"}
-            </button>
-            <button 
-                className="btn btn-danger" 
-                onClick={() => {
-                    if (confirm("WARNNG! Rejecting a student is irreversible. Are you sure?"))
-                        actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.NONE}) 
-                    }}
-            >
-                Reject
-            </button>
-        </div>) :
-            <i className={EnrollmentStatusBadge[enrollment.getStatus()]}>
-                {EnrollmentStatus[enrollment.getStatus()]}
-            </i>
-        )
+        if (enrollment.getStatus() === Enrollment.UserStatus.PENDING) {
+            data.push(
+                <div>
+                    <i className="badge badge-primary" style={{cursor: "pointer"}} onClick={() => actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.STUDENT})}>
+                        Accept
+                    </i>
+                    <i 
+                        className="badge badge-danger"
+                        style={{cursor: "pointer"}} 
+                        onClick={() => {
+                            if (confirm("WARNNG! Rejecting a student is irreversible. Are you sure?"))
+                                actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.NONE}) 
+                            }}
+                    >
+                        Reject
+                    </i>
+                </div>)
+        }
+        else {
+            data.push(edit ? (
+                <div>
+                    <button 
+                        className="btn btn-primary" 
+                        onClick={() => confirm(isTeacher(enrollment) ? demoteText : promoteText) ? actions.updateEnrollment({enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER}) : null}
+                    >
+                        {isTeacher(enrollment) ? "Demote" : "Promote"}
+                    </button>
+                    <button 
+                        className="btn btn-danger" 
+                        onClick={() => {
+                            if (confirm("WARNNG! Rejecting a student is irreversible. Are you sure?"))
+                                actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.NONE}) 
+                            }}
+                    >
+                        Reject
+                    </button>
+                </div>) :
+                <i className={EnrollmentStatusBadge[enrollment.getStatus()]}>
+                    {EnrollmentStatus[enrollment.getStatus()]}
+                </i>
+            )
+        }
         return data
     })
 
     return (
         <div className='container'>
-            <Search />
-            <div className="btn btn-success" onClick={() => setEditing(!edit)}>{edit ? "Cancel" : "Edit"}</div>
-            <div>
-                {pending.length > 0 ? <h3>Pending Members<button className="btn btn-success float-right" onClick={() => approveAll()}>Approve All</button></h3>  : null}
-                <DynamicTable header={["Name", "Email", "Student ID", "Role"]} data={pendingMembers} />
+            
+            
+            <div className="float-right">
+                <div className={edit ? "btn btn-danger" : "btn btn-primary"} onClick={() => setEditing(!edit)}>{edit ? "Cancel" : "Edit"}</div>
+                {pending.length > 0 ? <button className="btn btn-success float-right" onClick={() => approveAll()}>Approve All</button>  : null}
             </div>
+            <Search />
             <div>
                 <DynamicTable header={["Name", "Email", {value: "Student ID", onClick: () => {setFunc("ID"); setDescending(!descending)}}, "Activity", "Approved", {value: "Role", onClick: () => {setFunc("STATUS"); setDescending(!descending)}}]} data={members} />
             </div>
