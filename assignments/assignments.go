@@ -70,8 +70,6 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 		Organization: course.OrganizationPath,
 		Repository:   pb.TestsRepo,
 	})
-	logger.Debugf("cloneURL %v\n", cloneURL)
-
 	cloneDir, err := ioutil.TempDir("", pb.TestsRepo)
 	if err != nil {
 		return nil, "", err
@@ -85,8 +83,8 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 			"git clone " + cloneURL,
 		},
 	}
-	logger.Debugf("cd %v\n", cloneDir)
-	logger.Debugf("git clone %v\n", cloneURL)
+	logger.Debugf("cd %v", cloneDir)
+	logger.Debugf("git clone %v", cloneURL)
 
 	runner := ci.Local{}
 	_, err = runner.Run(ctx, job)
@@ -103,10 +101,14 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 	// if a Dockerfile added/updated, build docker image locally
 	// tag the image with the course code
 	if dockerfile != "" && dockerfile != course.Dockerfile {
+		buildDir := filepath.Join(cloneDir, pb.TestsRepo, scriptFolder)
+		buildCmd := fmt.Sprintf("docker build -t %s .", course.GetCode())
 		job.Commands = []string{
-			"cd " + filepath.Join(cloneDir, pb.TestsRepo, scriptFolder),
-			fmt.Sprintf("docker build -t %s .", course.GetCode()),
+			"cd " + buildDir,
+			buildCmd,
 		}
+		logger.Debugf("cd %v", buildDir)
+		logger.Debugf(buildCmd)
 
 		if out, err := runner.Run(context.Background(), job); err != nil {
 			logger.Errorf("Failed to build image from %s's Dockerfile (%s): %s", course.GetCode(), out, err)
