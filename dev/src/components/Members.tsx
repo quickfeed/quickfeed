@@ -44,22 +44,6 @@ export const Members = () => {
         return <Redirect to="/" />
     }
 
-    const Sort = () => {
-        return (
-        <div className="input-group">
-            <select defaultValue="STATUS" className="form-control" onChange={(e) => setFunc(e.target.value)}>
-                <option value="NAME">Name</option>
-                <option value="STATUS">Status</option>
-                <option value="ID">ID</option>
-            </select>
-            <div className="form-check form-check-inline">
-                <input className="form-check-input" type={"checkbox"} name="descending" checked={descending} onChange={(e) => setDescending(e.target.checked)}></input>
-                <label className="form-check-label" htmlFor={"descending"}>Descending</label>
-            </div>
-        </div>
-        )
-    }
-
     const pending = state.courseEnrollments[courseID].filter(enrollment => enrollment.getStatus() === Enrollment.UserStatus.PENDING)
 
     const pendingMembers = pending.map(enrollment => {
@@ -133,8 +117,7 @@ export const Members = () => {
                 <DynamicTable header={["Name", "Email", "Student ID", "Role"]} data={pendingMembers} />
             </div>
             <div>
-                <Sort />
-                <DynamicTable header={["Name", "Email", "Student ID", "Activity", "Approved", "Role"]} data={members} />
+                <DynamicTable header={["Name", "Email", {value: "Student ID", onClick: () => {setFunc("ID"); setDescending(!descending)}}, "Activity", "Approved", {value: "Role", onClick: () => {setFunc("STATUS"); setDescending(!descending)}}]} data={members} />
             </div>
         </div>
         )
