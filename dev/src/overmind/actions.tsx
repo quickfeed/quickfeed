@@ -252,6 +252,7 @@ export const createCourse = async ({state, actions, effects}: Context, value: {c
         const response =  await effects.grpcMan.createCourse(course)
         if (response.data) {
             state.courses.push(response.data)
+            actions.getEnrollmentsByUser()
         }
         actions.alertHandler(response)
     }
