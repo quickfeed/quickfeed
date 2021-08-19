@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
@@ -102,7 +103,7 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 	// tag the image with the course code
 	if dockerfile != "" && dockerfile != course.Dockerfile {
 		buildDir := filepath.Join(cloneDir, pb.TestsRepo, scriptFolder)
-		buildCmd := fmt.Sprintf("docker build -t %s .", course.GetCode())
+		buildCmd := fmt.Sprintf("docker build -t %s .", strings.ToLower(course.GetCode()))
 		job.Commands = []string{
 			"cd " + buildDir,
 			buildCmd,
