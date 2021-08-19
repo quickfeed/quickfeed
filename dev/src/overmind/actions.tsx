@@ -150,19 +150,20 @@ export const updateSubmission = async ({state, actions, effects}: Context, value
     }
 };
 
-export const updateEnrollment = ({actions, effects}: Context, update: {enrollment: Enrollment, status: Enrollment.UserStatus}) => {
+export const updateEnrollment = async ({actions, effects}: Context, {enrollment, status}: {enrollment: Enrollment, status: Enrollment.UserStatus}) => {
     let e = new Enrollment()
-    e.setId(update.enrollment.getId())
-    e.setStatus(update.status)
-    e.setUserid(update.enrollment.getUserid())
-    e.setCourseid(update.enrollment.getCourseid())
-
-    effects.grpcMan.updateEnrollment(e).then(res => {
-        if (res.data) {
-            // Good
-        }
-        actions.alertHandler(res)
-    })
+    e.setId(enrollment.getId())
+    e.setStatus(status)
+    e.setUserid(enrollment.getUserid())
+    e.setCourseid(enrollment.getCourseid())
+    console.log(status)
+    const response = await effects.grpcMan.updateEnrollment(e)
+    if (response.status.getCode() === 0) {
+        enrollment.setStatus(status)
+    }
+    else {
+        actions.alertHandler(response)
+    }
 };
 
 export const getAssignments = async ({ state, effects }: Context) => {
