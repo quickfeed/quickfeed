@@ -64,7 +64,7 @@ export const Members = () => {
                     </i>
                     <i 
                         className="badge badge-danger"
-                        style={{cursor: "pointer"}} 
+                        style={{cursor: "pointer", marginLeft: "5px"}} 
                         onClick={() => {
                             if (confirm("WARNNG! Rejecting a student is irreversible. Are you sure?"))
                                 actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.NONE}) 
