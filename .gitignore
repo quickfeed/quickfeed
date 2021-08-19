@@ -1,31 +1,24 @@
 node_modules
-vendor
 .vs
-!public/.vscode/tasks.json
 .idea
 debug
+!public/.vscode/tasks.json
 public/dist/bundle.js
 public/dist/bundle.js.map
-tunnel.1.sh
 ./quickfeed
-ag-setup.sh
-ag.db
-meling.sh
-cyclone.sh
-docs
-ag.logs
-ag.log*
-startag.sh
 backups
-misc/ag-env.sh
-tmp.db
-ag-test.db
-empty.db
-qf.db
-quickfeed.log
+
+# Environment and shell scripts
+cyclone.sh
+start.sh
 quickfeed-env.sh
-.env
-.env-localhost
-envoy.log
+.env*
+!.env-template
+
+# Configuration files
 ci/docker/envoy/*.yaml
 ci/docker/envoy/certs
+
+# Database and Log files
+*.db
+*.log
