@@ -13,10 +13,11 @@ import DynamicTable from "./DynamicTable"
 export const Members = () => {
     const state = useAppState()
     const actions = useActions()
-    let courseID = getCourseID()
+    const courseID = getCourseID()
 
     const [func, setFunc] = useState("STATUS")
     const [descending, setDescending] = useState(true)
+    const [edit, setEditing] = useState<boolean>(false)
     useEffect(() => {
 
     }, [func, setFunc])
@@ -88,14 +89,34 @@ export const Members = () => {
         return data
     })
 
+    
     const members = sortByField(state.courseEnrollments[courseID], [], sort(), descending).map((enrollment: Enrollment) => {
+        const demoteText = `Warning! ${enrollment.getUser()?.getName()} is a teacher. Are sure you want to demote?`
+        const promoteText = `Are you sure you want to promote ${enrollment.getUser()?.getName()} to teacher status?`
+        
         const data: (string | JSX.Element)[] = []
         data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getName() : "")
         data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getEmail() : "")
         data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getStudentid() : "")
         data.push(enrollment.getLastactivitydate())
         data.push(enrollment.getTotalapproved().toString())
-        data.push(
+        data.push(edit ? (<div>
+            <button 
+                className="btn btn-primary" 
+                onClick={() => confirm(isTeacher(enrollment) ? demoteText : promoteText) ? actions.updateEnrollment({enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER}) : null}
+            >
+                {isTeacher(enrollment) ? "Demote" : "Promote"}
+            </button>
+            <button 
+                className="btn btn-danger" 
+                onClick={() => {
+                    if (confirm("WARNNG! Rejecting a student is irreversible. Are you sure?"))
+                        actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.NONE}) 
+                    }}
+            >
+                Reject
+            </button>
+        </div>) :
             <i className={EnrollmentStatusBadge[enrollment.getStatus()]}>
                 {EnrollmentStatus[enrollment.getStatus()]}
             </i>
@@ -106,6 +127,7 @@ export const Members = () => {
     return (
         <div className='container'>
             <Search />
+            <div className="btn btn-success" onClick={() => setEditing(!edit)}>{edit ? "Cancel" : "Edit"}</div>
             <div>
                 {pending.length > 0 ? <h3>Pending Members<button className="btn btn-success float-right" onClick={() => approveAll()}>Approve All</button></h3>  : null}
                 <DynamicTable header={["Name", "Email", "Student ID", "Role"]} data={pendingMembers} />
