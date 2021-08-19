@@ -1,8 +1,9 @@
 import React, { useEffect } from "react"
 import { Link, useHistory } from "react-router-dom"
 import { useAppState } from "../../overmind"
-import { Submission } from "../../../proto/ag/ag_pb"
+import { Assignment, Submission } from "../../../proto/ag/ag_pb"
 import { ProgressBar } from "../ProgressBar"
+import NavBarLink, { NavLink } from "./NavBarLink"
 
 
 const NavBarLabs = () => {
@@ -13,41 +14,39 @@ const NavBarLabs = () => {
         history.push(`/course/${state.activeCourse}/${assignmentID}`)
     }
 
-    const Links: Function = (): JSX.Element[] => { 
+    const submissionIcon = (assignment: Assignment) => {
+        const submission = state.submissions[state.activeCourse][assignment.getOrder() - 1]
+        return (
+            <div>
+                <i className={assignment.getIsgrouplab() ? "fa fa-users" : "fa fa-user"} title={assignment.getIsgrouplab() ? "Group Lab" : "Individual Lab"} />
+                {submission?.getStatus() === Submission.Status.APPROVED && <i className="fa fa-check" style={{marginLeft: "10px"}} />}
+            </div>
+        )
+    }
+
+    const getLinkClass = (assignment: Assignment) => {
+        return state.activeLab === assignment.getId() && state.activeCourse === assignment.getCourseid() ? "active" : ""
+    }
+
+    const LabLinks: Function = (): JSX.Element[] => { 
         if(state.assignments[state.activeCourse] && state.submissions[state.activeCourse]) {
             const links = state.assignments[state.activeCourse]?.map((assignment, index) => {
-                // Class name to determine background color
-                const active = state.activeLab === assignment.getId() && state.activeCourse === assignment.getCourseid() ? "active" : ""
-
+                const link: NavLink = {link: {text: assignment.getName(), to: `/course/${state.activeCourse}/${assignment.getId()}`}, jsx: submissionIcon(assignment)}
                 return (
-                    <li style={{position: "relative", height: "50px"}} className={active} key={assignment.getId()} onClick={() => {redirectToLab(assignment.getId())}}>
-                        <div id="icon">
-                            <i className={assignment.getIsgrouplab() ? "fa fa-users" : "fa fa-user"} title={assignment.getIsgrouplab() ? "Group Lab" : "Individual Lab"}>
-                            </i>
-                        </div>
-                        <div id="title">
-                            <Link to={`/course/${state.activeCourse}/${assignment.getId()}`}>
-                                {assignment.getName()}
-                            </Link>
-                        </div> 
-                        {state.submissions[state.activeCourse][assignment.getOrder() - 1]?.getStatus() === Submission.Status.APPROVED && 
-                            <i className="fa fa-check" style={{marginLeft: "10px"}}></i>
-                        }
+                    <div className={getLinkClass(assignment)} style={{position: "relative"}} key={assignment.getId()} onClick={() => {redirectToLab(assignment.getId())}}>
+                        <NavBarLink link={link.link} jsx={link.jsx}/>
                         <ProgressBar courseID={state.activeCourse} assignmentIndex={index} type="navbar" />
-
-                    </li>
+                    </div>
                 )
             })
             return links
         }
         return []
-
     }
 
-    // Render
     return (
         <React.Fragment>
-            <Links />
+            <LabLinks />
         </React.Fragment>
     )
 }

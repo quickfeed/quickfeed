@@ -1,8 +1,7 @@
 import React from "react"
 import { useAppState } from "../../overmind"
 import { Enrollment } from "../../../proto/ag/ag_pb"
-import { NavLink } from "../../Helpers"
-import NavBarLink from "./NavBarLink"
+import NavBarLink, { NavLink } from "./NavBarLink"
 
 
 

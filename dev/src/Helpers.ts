@@ -44,18 +44,6 @@ export interface IScoreObjects {
     Weight: number;
 }
 
-export interface NavLink {
-    icons?: { 
-        text: string | number, 
-        classname: string
-        }[], 
-    link: {
-        text: string, 
-        to: string
-    }
-}
-
-
 export const getScoreObjects = (scoreString: string) => {
     let scoreObjects: IScoreObjects[] = []
     if (scoreString.length > 0) {

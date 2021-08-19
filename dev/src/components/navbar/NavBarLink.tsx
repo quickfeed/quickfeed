@@ -1,7 +1,10 @@
 import React from "react"
 import { Link, useHistory } from "react-router-dom"
-import { NavLink } from "../../Helpers"
-
+export interface NavLink {
+    link: {text: string, to: string}
+    icons?: { text: string | number, classname: string }[], 
+    jsx?: JSX.Element
+}
 
 const NavBarLink = (props: NavLink) => {
     const history = useHistory()
@@ -18,9 +21,13 @@ const NavBarLink = (props: NavLink) => {
     }
     return (
         <li className="activeLabs" onClick={() => history.push(props.link.to)}>
-            {icons}
-            <div id="title">
+            
+            <div className="col" id="title">
                 <Link to={props.link.to}>{props.link.text}</Link>
+            </div>
+            <div className="col">
+            {icons ? icons : null}
+            {props.jsx ? props.jsx : null}
             </div>
         </li>
     )
