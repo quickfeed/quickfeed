@@ -42,46 +42,65 @@ export const CourseForm = ({editCourse}: {editCourse?: Course}) => {
         }
     }
 
-    return (
-        <div className="box">
-            <div hidden={editCourse ? true : false}>Organization Name
-            <div><input onKeyUp={e => setOrgName(e.currentTarget.value)}></input><div className="btn btn-primary" onClick={() => actions.getOrganization(orgName)}>Check</div></div>
+    const CourseInput = ({prepend, name, placeholder, defaultValue}: {prepend: string, name: string, placeholder: string, defaultValue: string | undefined}) => {
+        return (
+            <div className="col input-group mb-3">
+                <div className="input-group-prepend">
+                    <div className="input-group-text">{prepend}</div>
+                </div>
+                <input  className="form-control" 
+                        name={name} 
+                        type="text" 
+                        placeholder={placeholder} 
+                        defaultValue={defaultValue}
+                        onChange={e => handleChange(e)}
+                />
             </div>
-            <form className="form-group well" style={{width: "400px"}} onSubmit={e => {e.preventDefault(), submitHandler()}}>
-                <label htmlFor={"name"}>Course Name</label>
-                <input  className="form-control" 
-                        name="courseName" 
-                        type="text" 
-                        placeholder={"Course Name"} 
-                        defaultValue={editCourse?.getName()} 
-                        onChange={e => handleChange(e)}/>
+        )
+    }
 
-                <label htmlFor={"email"}>Course Code</label>
-                <input  className="form-control" 
-                        name="courseCode" 
-                        type="text" 
-                        placeholder={"Tag (ex. DAT320)"} 
-                        defaultValue={editCourse?.getCode()} 
-                        onChange={e => handleChange(e)} />
-               
-                <label htmlFor={"email"}>Course Tag</label>
-                <input  className="form-control" 
-                        name="courseTag" 
-                        type="text" 
-                        placeholder={"Tag (ex. Fall / Spring)"} 
-                        defaultValue={editCourse?.getTag()} 
-                        onChange={e => handleChange(e)} />
-                
-                <label htmlFor={"studentid"}>Slip Days</label>
-                <input  className="form-control" 
-                        name="slipDays" 
-                        type="number" 
-                        placeholder={"Days (ex. 7)"} 
-                        defaultValue={editCourse?.getSlipdays()} 
-                        onChange={e => handleChange(e)}  />
-                        
-                <label htmlFor={"studentid"}>Year</label>
-                <input className="form-control" name="courseYear" type="number" placeholder={"Year (ex. 2021)"} defaultValue={editCourse?.getYear()} onChange={e => handleChange(e)}  />
+    return (
+        <div className="container">
+            <div className="row" hidden={editCourse ? true : false}>
+                <div className="col input-group mb-3">
+                    <div className="input-group-prepend">
+                        <div className="input-group-text">Organization</div>
+                    </div>
+                    <input className="form-control" onKeyUp={e => setOrgName(e.currentTarget.value)}></input>
+                    <span className="btn btn-primary" onClick={() => actions.getOrganization(orgName)}>Find</span>
+                </div>
+            </div>
+            <form className="form-group" onSubmit={e => {e.preventDefault(), submitHandler()}}>
+                <div className="row">
+                    <CourseInput  prepend="Name"
+                            name="courseName" 
+                            placeholder={"Course Name"} 
+                            defaultValue={editCourse?.getName()} 
+                    />
+                </div>
+                <div className="row">
+                    <CourseInput
+                            prepend="Code"
+                            name="courseCode" 
+                            placeholder={"(ex. DAT320)"} 
+                            defaultValue={editCourse?.getCode()} 
+                    />
+                    <CourseInput
+                            prepend="Tag"
+                            name="courseTag" 
+                            placeholder={"(ex. Fall / Spring)"} 
+                            defaultValue={editCourse?.getTag()} 
+                    />
+                </div>
+                <div className="row">
+                    <CourseInput
+                            prepend="Slip days"
+                            name="slipDays" 
+                            placeholder={"(ex. 7)"} 
+                            defaultValue={editCourse?.getSlipdays().toString()} 
+                    />
+                    <CourseInput prepend="Year" name="courseYear" placeholder={"(ex. 2021)"} defaultValue={editCourse?.getYear().toString()}/>
+                </div>
                 <input className="btn btn-primary" type="submit" value={editCourse ? "Edit Course" : "Create Course"} style={{marginTop:"20px"}}/>
             </form>
         </div>
