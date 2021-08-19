@@ -61,17 +61,17 @@ const Results = () => {
 
     return (
         <div className="box">
-        <Search />
-        <div className="row">
-            <div className="col">
-            <DynamicTable header={Header.concat(AssignmentsHeader)} data={results} />
+            <div className="row">
+                <div className="col">
+                    <Search />
+                    <DynamicTable header={Header.concat(AssignmentsHeader)} data={results} />
+                </div>
+                <div className="col reviewLab">
+                    {state.activeSubmission ?
+                        <Lab teacherSubmission={state.activeSubmission} /> : null
+                    }  
+                </div>
             </div>
-            <div className="col reviewLab">
-                {state.activeSubmission ?
-                    <Lab teacherSubmission={state.activeSubmission} /> : null
-                }  
-            </div>
-        </div>
         </div>
 
     )

@@ -295,7 +295,6 @@ input{
 
 .reviewLab {
     padding-left: 10px;
-    flex: 80;
     position: sticky;
     top: 50px; 
     height: 800px;
