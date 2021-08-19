@@ -1,47 +1,31 @@
 import React, { useEffect, useState } from "react"
-import { useHistory } from "react-router"
 import { Course } from "../../../proto/ag/ag_pb"
 import { useAppState } from "../../overmind"
+import DynamicTable, { CellElement } from "../DynamicTable"
 import CourseForm from "../forms/CourseForm"
 
-/** TODO:  */
 const EditCourse = () => {
     const state  = useAppState()
-    const history = useHistory()
     const [course, setCourse] = useState<Course>()
     useEffect(() => {
     }, [course, setCourse])
 
 
-    const courses = state.courses.map(course => {
-        return (
-            <tr>
-                <th colSpan={2}>{course.getName()}</th>
-                <td>{course.getCode()}</td>
-                <td>{course.getTag()}</td>
-                <td>{course.getYear()}</td>
-                <td>{course.getSlipdays()}</td>
-                <td><div className={"btn btn-primary"} onClick={() => setCourse(course)}>Edit</div></td>
-            </tr>
-        )
+    const courses = state.courses.map(c => {
+        const selected = course?.getId() === c.getId()
+        const data: (string | CellElement)[] = []
+        data.push(c.getName())
+        data.push(c.getCode())
+        data.push(c.getTag())
+        data.push(c.getYear().toString())
+        data.push(c.getSlipdays().toString())
+        data.push({value: selected ? "Cancel" : "Edit", className: selected ? "btn btn-danger" : "btn btn-primary", onClick: selected ? () => setCourse(undefined) : () => setCourse(c)})
+        return data
     })
 
     return (
         <div className={"box"}>
-            <table className="table table-curved table-striped">
-                <thead className={"thead-dark"}>
-                <th colSpan={2}>Course</th>
-                <th>Code</th>
-                <th>Tag</th>
-                <th>Year</th>
-                <th>Slipdays</th>
-                <th>Edit</th>
-                </thead>
-                <tbody>
-                {courses}
-                </tbody>
-
-            </table>
+            <DynamicTable header={["Course", "Code", "Tag", "Year", "Slipdays", "Edit"]} data={courses} />
             {course ? <CourseForm editCourse={course} /> : null}
         </div>
     )
