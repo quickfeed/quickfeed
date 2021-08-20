@@ -39,7 +39,6 @@ func (a *Assignment) CloneWithoutSubmissions() *Assignment {
 		ID:                a.ID,
 		CourseID:          a.CourseID,
 		Name:              a.Name,
-		ScriptFile:        a.ScriptFile,
 		Deadline:          a.Deadline,
 		AutoApprove:       a.AutoApprove,
 		Order:             a.Order,

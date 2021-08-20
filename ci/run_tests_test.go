@@ -59,7 +59,7 @@ func TestRunTests(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer runner.Close()
-	ed, err := runTests("scripts", runner, info, runData)
+	ed, err := runTests(runner, info, runData)
 	if err != nil {
 		t.Fatal(err)
 	}

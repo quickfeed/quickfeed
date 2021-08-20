@@ -112,11 +112,6 @@ func (opt RepositoryOptions) valid() bool {
 	return opt.ID > 0 || (opt.Path != "" && opt.Owner != "")
 }
 
-func (opt FileOptions) valid() bool {
-	return opt.Owner != "" &&
-		opt.Path != "" && opt.Repository != ""
-}
-
 // Errors //
 
 // ErrNotSupported is returned when the source code management solution used

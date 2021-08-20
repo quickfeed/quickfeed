@@ -675,27 +675,6 @@ func (s *AutograderService) DeleteCriterion(ctx context.Context, in *pb.GradingC
 	return &pb.Void{}, err
 }
 
-// LoadCriteria loads grading criteria for an assignment from a json file
-// Access policy: Teacher of CourseID
-func (s *AutograderService) LoadCriteria(ctx context.Context, in *pb.AssignmentRequest) (*pb.Benchmarks, error) {
-	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
-	if err != nil {
-		s.logger.Errorf("LoadCriteria failed: scm authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
-	}
-	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
-		s.logger.Error("LoadCriteria failed: user is not teacher")
-		return nil, status.Error(codes.PermissionDenied, "only teachers can load grading criteria")
-	}
-
-	benchmarks, err := s.loadCriteria(ctx, scm, in)
-	if err != nil {
-		s.logger.Errorf("LoadCriteria failed for course %d and assignment %d: %v", in.CourseID, in.AssignmentID, err)
-		return nil, status.Error(codes.InvalidArgument, "failed to load grading criteria for assignment")
-	}
-	return &pb.Benchmarks{Benchmarks: benchmarks}, nil
-}
-
 // CreateReview adds a new submission review
 // Access policy: Teacher of CourseID
 func (s *AutograderService) CreateReview(ctx context.Context, in *pb.ReviewRequest) (*pb.Review, error) {
@@ -801,26 +780,20 @@ func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.CourseReq
 // by fetching assignment information from the course's test repository.
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.CourseRequest) (*pb.Void, error) {
-	courseID := in.GetCourseID()
-	usr, scm, err := s.getUserAndSCMForCourse(ctx, courseID)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: scm authentication error: %v", err)
 		return nil, err
 	}
+	courseID := in.GetCourseID()
 	if !s.isTeacher(usr.ID, courseID) {
 		s.logger.Error("UpdateAssignments failed: user is not teacher")
 		return nil, status.Error(codes.PermissionDenied, "only teachers can update course assignments")
 	}
-	err = s.updateAssignments(ctx, scm, courseID)
+	err = s.updateAssignments(courseID)
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: %v", err)
-		if contextCanceled(ctx) {
-			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
-		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
-		}
-		return nil, status.Error(codes.InvalidArgument, "failed to update course assignments")
+		return nil, status.Error(codes.NotFound, "course not found")
 	}
 	return &pb.Void{}, nil
 }

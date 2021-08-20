@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -114,7 +113,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 		// if image not found locally, try to pull it
 		if err := d.pullImage(ctx, job.Image); err != nil {
 			d.logger.Errorf("Failed to pull image '%s' from docker.io: %v", job.Image, err)
-			if err := d.buildImage(ctx, job.Image); err != nil {
+			if err := d.buildImage(ctx, job.Dockerfile, job.Image); err != nil {
 				return nil, err
 			}
 		}
@@ -170,30 +169,26 @@ func (d *Docker) pullImage(ctx context.Context, image string) error {
 }
 
 // buildImage builds and installs an image locally to be reused in a future run.
-func (d *Docker) buildImage(ctx context.Context, image string) error {
-	tag := image[strings.Index(image, ":")+1:]
-	dockerfile := filepath.Join("scripts", tag, "Dockerfile")
-	d.logger.Infof("Building image: '%s' from %s", image, dockerfile)
-
-	contents, err := ioutil.ReadFile(dockerfile)
-	if err != nil {
-		return err
+func (d *Docker) buildImage(ctx context.Context, dockerfile string, image string) error {
+	if dockerfile == "" || image == "" {
+		return fmt.Errorf("failed to build image %s: missing Dockerfile in Tests/scripts/ or image name in run.sh", image)
 	}
+	dockerFileContents := []byte(dockerfile)
 	header := &tar.Header{
 		Name:     "Dockerfile",
 		Mode:     0o777,
-		Size:     int64(len(contents)),
+		Size:     int64(len(dockerFileContents)),
 		Typeflag: tar.TypeReg,
 	}
 	var buf bytes.Buffer
 	tarWriter := tar.NewWriter(&buf)
-	if err = tarWriter.WriteHeader(header); err != nil {
+	if err := tarWriter.WriteHeader(header); err != nil {
 		return err
 	}
-	if _, err = tarWriter.Write(contents); err != nil {
+	if _, err := tarWriter.Write(dockerFileContents); err != nil {
 		return err
 	}
-	if err = tarWriter.Close(); err != nil {
+	if err := tarWriter.Close(); err != nil {
 		return err
 	}
 

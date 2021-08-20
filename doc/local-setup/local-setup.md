@@ -359,4 +359,3 @@ Example:
 ```
 
 Note: For a local dev server using a port is no issue, and should work with no additional steps needed than described above. To access the gRPC server externally through gRPC-web, however, the port you choose in the Envoy config file (and set gRPC to in GRPCManager.tsx) has to be opened.
-

@@ -3,7 +3,6 @@ package ci
 import (
 	"bytes"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -22,14 +21,9 @@ type AssignmentInfo struct {
 }
 
 func newAssignmentInfo(course *pb.Course, assignment *pb.Assignment, cloneURL, testURL string) *AssignmentInfo {
-	script := assignment.GetScriptFile()
-	if strings.Count(script, ".") < 1 {
-		script = script + ".sh"
-	}
-
 	return &AssignmentInfo{
 		AssignmentName:     assignment.GetName(),
-		Script:             script,
+		Script:             assignment.ScriptFile,
 		CreatorAccessToken: course.GetAccessToken(),
 		GetURL:             cloneURL,
 		TestURL:            testURL,
@@ -40,9 +34,9 @@ func newAssignmentInfo(course *pb.Course, assignment *pb.Assignment, cloneURL, t
 // parseScriptTemplate returns a job describing the docker image to use and
 // the commands of the job. The job is extracted from a script template file
 // provided as input along with assignment metadata for the template.
-func parseScriptTemplate(scriptPath string, info *AssignmentInfo) (*Job, error) {
-	tmplFile := filepath.Join(scriptPath, info.Script)
-	t, err := template.ParseFiles(tmplFile)
+func parseScriptTemplate(info *AssignmentInfo) (*Job, error) {
+	// info.Script is the saved contents of the script, not the file name
+	t, err := template.New("scriptfile").Parse(info.Script)
 	if err != nil {
 		return nil, err
 	}
@@ -52,11 +46,11 @@ func parseScriptTemplate(scriptPath string, info *AssignmentInfo) (*Job, error) 
 	}
 	s := strings.Split(buffer.String(), "\n")
 	if len(s) < 2 {
-		return nil, fmt.Errorf("no script template in %s", tmplFile)
+		return nil, fmt.Errorf("no script template for assignment %s in %s", info.AssignmentName, info.TestURL)
 	}
 	parts := strings.Split(s[0], "#image/")
 	if len(parts) < 2 {
-		return nil, fmt.Errorf("no docker image specified in script template %s", tmplFile)
+		return nil, fmt.Errorf("no docker image specified in script template for assignment %s in %s", info.AssignmentName, info.TestURL)
 	}
 	return &Job{Image: parts[1], Commands: s[1:]}, nil
 }

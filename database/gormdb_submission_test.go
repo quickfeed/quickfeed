@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )
 
@@ -127,7 +127,6 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	// instead of creating an extra record
 	// check that it is still approved after using create method
 
-	// create another submission for the assignment; now it should succeed
 	if err := db.CreateSubmission(&pb.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
@@ -143,6 +142,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if len(submissions) != 1 {
 		t.Fatalf("have %d submissions want %d", len(submissions), 1)
 	}
+
 	want := &pb.Submission{
 		ID:           submissions[0].ID,
 		AssignmentID: assignment.ID,
@@ -151,7 +151,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
 	}
-	if diff := cmp.Diff(submissions[0], want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
+	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 
@@ -168,6 +168,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if submissions[0].GetStatus() != pb.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
@@ -224,7 +225,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// confirm that the submission is in the database
+	// confirm that the submission and its build info is in the database
 	submissions, err := db.GetLastSubmissions(course.ID, &pb.Submission{UserID: user.ID})
 	if err != nil {
 		t.Fatal(err)
@@ -340,16 +341,8 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []*pb.Submission{&submission2, &submission3}
-	if !reflect.DeepEqual(submissions, want) {
-		fmt.Println("Submissions in the database:")
-		for _, s := range submissions {
-			fmt.Printf("%+v\n", s)
-		}
-		fmt.Println("Expected submissions:")
-		for _, s := range want {
-			fmt.Printf("%+v\n", s)
-		}
-		t.Errorf("have %#v want %#v", submissions, want)
+	if diff := cmp.Diff(submissions, want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
+		t.Errorf("Expected same submissions, but got (-sub +want):\n%s", diff)
 	}
 	data, err := db.GetLastSubmissions(c1.ID, &pb.Submission{UserID: user.ID})
 	if err != nil {
@@ -363,5 +356,64 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	} else if len(data) != 0 {
 		t.Errorf("Expected '%v' elements in the array, got '%v'", 0, len(data))
+	}
+}
+
+func TestGormDBCreateUpdateWithBuilInfo(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	user, course, assignment := setupCourseAssignment(t, db)
+
+	// create a new submission, ensure that build info is saved as well
+	buildInfo := &score.BuildInfo{
+		BuildDate: "2022-11-10T13:00:00",
+		BuildLog:  "Testing",
+		ExecTime:  33333,
+	}
+	if err := db.CreateSubmission(&pb.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+		BuildInfo:    buildInfo,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	submissions, err := db.GetLastSubmissions(course.ID, &pb.Submission{UserID: user.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(submissions) != 1 {
+		t.Fatalf("have %d submissions want %d", len(submissions), 1)
+	}
+
+	buildInfo.SubmissionID = submissions[0].ID
+	buildInfo.ID = 1
+	if diff := cmp.Diff(submissions[0].BuildInfo, buildInfo, protocmp.Transform()); diff != "" {
+		t.Errorf("Expected same build info, but got (-sub +want):\n%s", diff)
+	}
+
+	// buildInfo record must be updated (have the same ID as before) instead
+	// of saving a duplicate
+	oldSubmissionID := submissions[0].ID
+	updatedBuildInfo := &score.BuildInfo{
+		BuildDate: "2022-11-10T15:00:00",
+		BuildLog:  "Updated",
+		ExecTime:  12345,
+	}
+	submissions[0].BuildInfo = updatedBuildInfo
+	if err := db.CreateSubmission(submissions[0]); err != nil {
+		t.Fatal(err)
+	}
+	submissions, err = db.GetLastSubmissions(course.ID, &pb.Submission{UserID: user.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(submissions) != 1 {
+		t.Fatalf("have %d submissions want %d", len(submissions), 1)
+	}
+
+	updatedBuildInfo.ID = submissions[0].BuildInfo.ID
+	updatedBuildInfo.SubmissionID = oldSubmissionID
+	if diff := cmp.Diff(submissions[0].BuildInfo, updatedBuildInfo, protocmp.Transform()); diff != "" {
+		t.Errorf("Expected updated build info, but got (-sub +want):\n%s", diff)
 	}
 }

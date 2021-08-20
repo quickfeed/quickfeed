@@ -2472,7 +2472,7 @@ proto.ag.Groups.prototype.clearGroupsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.ag.Course.repeatedFields_ = [12,13,14];
+proto.ag.Course.repeatedFields_ = [13,14,15];
 
 
 
@@ -2515,7 +2515,8 @@ proto.ag.Course.toObject = function(includeInstance, msg) {
     organizationid: jspb.Message.getFieldWithDefault(msg, 8, 0),
     organizationpath: jspb.Message.getFieldWithDefault(msg, 9, ""),
     slipdays: jspb.Message.getFieldWithDefault(msg, 10, 0),
-    enrolled: jspb.Message.getFieldWithDefault(msg, 11, 0),
+    dockerfile: jspb.Message.getFieldWithDefault(msg, 11, ""),
+    enrolled: jspb.Message.getFieldWithDefault(msg, 12, 0),
     enrollmentsList: jspb.Message.toObjectList(msg.getEnrollmentsList(),
     proto.ag.Enrollment.toObject, includeInstance),
     assignmentsList: jspb.Message.toObjectList(msg.getAssignmentsList(),
@@ -2599,20 +2600,24 @@ proto.ag.Course.deserializeBinaryFromReader = function(msg, reader) {
       msg.setSlipdays(value);
       break;
     case 11:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setDockerfile(value);
+      break;
+    case 12:
       var value = /** @type {!proto.ag.Enrollment.UserStatus} */ (reader.readEnum());
       msg.setEnrolled(value);
       break;
-    case 12:
+    case 13:
       var value = new proto.ag.Enrollment;
       reader.readMessage(value,proto.ag.Enrollment.deserializeBinaryFromReader);
       msg.addEnrollments(value);
       break;
-    case 13:
+    case 14:
       var value = new proto.ag.Assignment;
       reader.readMessage(value,proto.ag.Assignment.deserializeBinaryFromReader);
       msg.addAssignments(value);
       break;
-    case 14:
+    case 15:
       var value = new proto.ag.Group;
       reader.readMessage(value,proto.ag.Group.deserializeBinaryFromReader);
       msg.addGroups(value);
@@ -2716,17 +2721,24 @@ proto.ag.Course.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getDockerfile();
+  if (f.length > 0) {
+    writer.writeString(
+      11,
+      f
+    );
+  }
   f = message.getEnrolled();
   if (f !== 0.0) {
     writer.writeEnum(
-      11,
+      12,
       f
     );
   }
   f = message.getEnrollmentsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      12,
+      13,
       f,
       proto.ag.Enrollment.serializeBinaryToWriter
     );
@@ -2734,7 +2746,7 @@ proto.ag.Course.serializeBinaryToWriter = function(message, writer) {
   f = message.getAssignmentsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      13,
+      14,
       f,
       proto.ag.Assignment.serializeBinaryToWriter
     );
@@ -2742,7 +2754,7 @@ proto.ag.Course.serializeBinaryToWriter = function(message, writer) {
   f = message.getGroupsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      14,
+      15,
       f,
       proto.ag.Group.serializeBinaryToWriter
     );
@@ -2931,11 +2943,29 @@ proto.ag.Course.prototype.setSlipdays = function(value) {
 
 
 /**
- * optional Enrollment.UserStatus enrolled = 11;
+ * optional string dockerfile = 11;
+ * @return {string}
+ */
+proto.ag.Course.prototype.getDockerfile = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 11, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.ag.Course} returns this
+ */
+proto.ag.Course.prototype.setDockerfile = function(value) {
+  return jspb.Message.setProto3StringField(this, 11, value);
+};
+
+
+/**
+ * optional Enrollment.UserStatus enrolled = 12;
  * @return {!proto.ag.Enrollment.UserStatus}
  */
 proto.ag.Course.prototype.getEnrolled = function() {
-  return /** @type {!proto.ag.Enrollment.UserStatus} */ (jspb.Message.getFieldWithDefault(this, 11, 0));
+  return /** @type {!proto.ag.Enrollment.UserStatus} */ (jspb.Message.getFieldWithDefault(this, 12, 0));
 };
 
 
@@ -2944,17 +2974,17 @@ proto.ag.Course.prototype.getEnrolled = function() {
  * @return {!proto.ag.Course} returns this
  */
 proto.ag.Course.prototype.setEnrolled = function(value) {
-  return jspb.Message.setProto3EnumField(this, 11, value);
+  return jspb.Message.setProto3EnumField(this, 12, value);
 };
 
 
 /**
- * repeated Enrollment enrollments = 12;
+ * repeated Enrollment enrollments = 13;
  * @return {!Array<!proto.ag.Enrollment>}
  */
 proto.ag.Course.prototype.getEnrollmentsList = function() {
   return /** @type{!Array<!proto.ag.Enrollment>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.ag.Enrollment, 12));
+    jspb.Message.getRepeatedWrapperField(this, proto.ag.Enrollment, 13));
 };
 
 
@@ -2963,7 +2993,7 @@ proto.ag.Course.prototype.getEnrollmentsList = function() {
  * @return {!proto.ag.Course} returns this
 */
 proto.ag.Course.prototype.setEnrollmentsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 12, value);
+  return jspb.Message.setRepeatedWrapperField(this, 13, value);
 };
 
 
@@ -2973,7 +3003,7 @@ proto.ag.Course.prototype.setEnrollmentsList = function(value) {
  * @return {!proto.ag.Enrollment}
  */
 proto.ag.Course.prototype.addEnrollments = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 12, opt_value, proto.ag.Enrollment, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 13, opt_value, proto.ag.Enrollment, opt_index);
 };
 
 
@@ -2987,12 +3017,12 @@ proto.ag.Course.prototype.clearEnrollmentsList = function() {
 
 
 /**
- * repeated Assignment assignments = 13;
+ * repeated Assignment assignments = 14;
  * @return {!Array<!proto.ag.Assignment>}
  */
 proto.ag.Course.prototype.getAssignmentsList = function() {
   return /** @type{!Array<!proto.ag.Assignment>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.ag.Assignment, 13));
+    jspb.Message.getRepeatedWrapperField(this, proto.ag.Assignment, 14));
 };
 
 
@@ -3001,7 +3031,7 @@ proto.ag.Course.prototype.getAssignmentsList = function() {
  * @return {!proto.ag.Course} returns this
 */
 proto.ag.Course.prototype.setAssignmentsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 13, value);
+  return jspb.Message.setRepeatedWrapperField(this, 14, value);
 };
 
 
@@ -3011,7 +3041,7 @@ proto.ag.Course.prototype.setAssignmentsList = function(value) {
  * @return {!proto.ag.Assignment}
  */
 proto.ag.Course.prototype.addAssignments = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 13, opt_value, proto.ag.Assignment, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 14, opt_value, proto.ag.Assignment, opt_index);
 };
 
 
@@ -3025,12 +3055,12 @@ proto.ag.Course.prototype.clearAssignmentsList = function() {
 
 
 /**
- * repeated Group groups = 14;
+ * repeated Group groups = 15;
  * @return {!Array<!proto.ag.Group>}
  */
 proto.ag.Course.prototype.getGroupsList = function() {
   return /** @type{!Array<!proto.ag.Group>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.ag.Group, 14));
+    jspb.Message.getRepeatedWrapperField(this, proto.ag.Group, 15));
 };
 
 
@@ -3039,7 +3069,7 @@ proto.ag.Course.prototype.getGroupsList = function() {
  * @return {!proto.ag.Course} returns this
 */
 proto.ag.Course.prototype.setGroupsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 14, value);
+  return jspb.Message.setRepeatedWrapperField(this, 15, value);
 };
 
 
@@ -3049,7 +3079,7 @@ proto.ag.Course.prototype.setGroupsList = function(value) {
  * @return {!proto.ag.Group}
  */
 proto.ag.Course.prototype.addGroups = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 14, opt_value, proto.ag.Group, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 15, opt_value, proto.ag.Group, opt_index);
 };
 
 

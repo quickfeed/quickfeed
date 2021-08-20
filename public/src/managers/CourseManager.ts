@@ -48,7 +48,7 @@ export interface ICourseProvider {
 
     getSubmissionsByUser(courseID: number, userID: number): Promise<ISubmission[]>;
     getSubmissionsByGroup(courseID: number, groupID: number): Promise<ISubmission[]>;
-    getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]>;
+    getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IAllSubmissionsForEnrollment[]>;
     getEnrollmentsForUser(userID: number, statuses?: Enrollment.UserStatus[]): Promise<Enrollment[]>;
     getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
@@ -65,7 +65,6 @@ export interface ICourseProvider {
     updateCriterion(c: GradingCriterion): Promise<boolean>;
     deleteBenchmark(bm: GradingBenchmark): Promise<boolean>;
     deleteCriterion(c: GradingCriterion): Promise<boolean>;
-    loadCriteria(assignmentID: number, courseID: number): Promise<GradingBenchmark[]>;
     addReview(r: Review, courseID: number): Promise<Review | null>;
     editReview(r: Review, courseID: number): Promise<Review | null>;
     getReviewers(submissionID: number, courseID: number): Promise<User[]>
@@ -165,8 +164,8 @@ export class CourseManager {
      * Retrives all course enrollments with the latest
      * lab submissions for all individual course assignments
      */
-    public async getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
-        return this.courseProvider.getSubmissionsByCourse(courseID, type);
+    public async getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IAllSubmissionsForEnrollment[]> {
+        return this.courseProvider.getSubmissionsByCourse(courseID, type, withBuildInfo);
     }
 
     /**
@@ -327,10 +326,6 @@ export class CourseManager {
     }
     public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
         return this.courseProvider.deleteCriterion(c);
-    }
-
-    public async loadCriteria(assignmentID: number, courseID: number): Promise<GradingBenchmark[]> {
-        return this.courseProvider.loadCriteria(assignmentID, courseID);
     }
 
     public async addReview(r: Review, courseID: number): Promise<Review | null> {
