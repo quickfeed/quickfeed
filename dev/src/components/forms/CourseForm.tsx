@@ -2,11 +2,12 @@ import React, { useState } from "react"
 import { useActions } from "../../overmind"
 import { Course } from "../../../proto/ag/ag_pb"
 import { json } from "overmind"
+import FormInput from "./FormInput"
 
 
 
 
-export const CourseForm = ({editCourse}: {editCourse?: Course}) => {
+export const CourseForm = ({editCourse}: {editCourse?: Course}): JSX.Element => {
     const actions = useActions()
     const [orgName, setOrgName] = useState("")
     const [course, setCourse] = useState(editCourse ? json(editCourse) : new Course)
@@ -42,23 +43,6 @@ export const CourseForm = ({editCourse}: {editCourse?: Course}) => {
         }
     }
 
-    const CourseInput = ({prepend, name, placeholder, defaultValue}: {prepend: string, name: string, placeholder: string, defaultValue: string | undefined}) => {
-        return (
-            <div className="col input-group mb-3">
-                <div className="input-group-prepend">
-                    <div className="input-group-text">{prepend}</div>
-                </div>
-                <input  className="form-control" 
-                        name={name} 
-                        type="text" 
-                        placeholder={placeholder} 
-                        defaultValue={defaultValue}
-                        onChange={e => handleChange(e)}
-                />
-            </div>
-        )
-    }
-
     return (
         <div className="container">
             <div className="row" hidden={editCourse ? true : false}>
@@ -72,34 +56,38 @@ export const CourseForm = ({editCourse}: {editCourse?: Course}) => {
             </div>
             <form className="form-group" onSubmit={e => {e.preventDefault(), submitHandler()}}>
                 <div className="row">
-                    <CourseInput  prepend="Name"
+                    <FormInput  prepend="Name"
                             name="courseName" 
                             placeholder={"Course Name"} 
-                            defaultValue={editCourse?.getName()} 
+                            defaultValue={editCourse?.getName()}
+                            onChange={handleChange} 
                     />
                 </div>
                 <div className="row">
-                    <CourseInput
+                    <FormInput
                             prepend="Code"
                             name="courseCode" 
                             placeholder={"(ex. DAT320)"} 
                             defaultValue={editCourse?.getCode()} 
+                            onChange={handleChange} 
                     />
-                    <CourseInput
+                    <FormInput
                             prepend="Tag"
                             name="courseTag" 
                             placeholder={"(ex. Fall / Spring)"} 
                             defaultValue={editCourse?.getTag()} 
+                            onChange={handleChange} 
                     />
                 </div>
                 <div className="row">
-                    <CourseInput
+                    <FormInput
                             prepend="Slip days"
                             name="slipDays" 
                             placeholder={"(ex. 7)"} 
                             defaultValue={editCourse?.getSlipdays().toString()} 
+                            onChange={handleChange} 
                     />
-                    <CourseInput prepend="Year" name="courseYear" placeholder={"(ex. 2021)"} defaultValue={editCourse?.getYear().toString()}/>
+                    <FormInput prepend="Year" name="courseYear" placeholder={"(ex. 2021)"} defaultValue={editCourse?.getYear().toString()}/>
                 </div>
                 <input className="btn btn-primary" type="submit" value={editCourse ? "Edit Course" : "Create Course"} style={{marginTop:"20px"}}/>
             </form>

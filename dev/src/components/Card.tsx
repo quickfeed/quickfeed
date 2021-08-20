@@ -6,7 +6,7 @@ const Card = (props: {title: string, text: string, buttonText: string, to: strin
     const history = useHistory()
 
     return (
-        <div className="col-sm-6">
+        <div className="col-sm-6" style={{marginBottom: "10px"}}>
             <div className="card">
                 <div className="card-body">
                     <h5 className="card-title">
