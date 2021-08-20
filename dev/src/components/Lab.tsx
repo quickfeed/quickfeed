@@ -89,7 +89,7 @@ const Lab = ({teacherSubmission}: {teacherSubmission?: Submission}): JSX.Element
     }
 
     return (
-        <div className="box row">
+        <div className={teacherSubmission ? "box" : "box row"}>
             <div className={teacherSubmission ? "" : "col-md-9"}>
                 <Lab />
             </div>

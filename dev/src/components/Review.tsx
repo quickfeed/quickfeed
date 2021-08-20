@@ -54,7 +54,7 @@ const Review = (): JSX.Element => {
             if (user.enrollment && user.submissions) {
                 
                 return (
-                    <div className="card well" style={{width: "400px", marginBottom: "5px"}} hidden={!user.user?.getName().toLowerCase().includes(state.query)}>
+                    <div key={user.enrollment.getId()} className="card well" style={{marginBottom: "5px"}} hidden={!user.user?.getName().toLowerCase().includes(state.query)}>
                         <div key={"header"} className="card-header">
                             {user.user?.getName()}
                         </div>
@@ -79,21 +79,22 @@ const Review = (): JSX.Element => {
                     {Options}
                 </select>
                 <input type={"checkbox"} checked={hideApproved} onChange={(e) => setHideApproved(e.target.checked)}></input>
-                <Search placeholder={"Search by name ..."} />
+
                 <button onClick={() => actions.getAllCourseSubmissions(courseID)}>Refresh ... </button>
-                <div className="review">
+                <div className="row">
                     
-                    <div className="reviewTable">
+                    <div className="col-md-6">
+                        <Search placeholder={"Search by name ..."} />
                         {ReviewSubmissionsTable}
                     </div>
-                    { selectedSubLink ? 
-                        <ReviewForm submissionLink={selectedSubLink} setSelected={setSelectedSubLink} /> : null
+                    { //selectedSubLink ? 
+                      //  <ReviewForm submissionLink={selectedSubLink} setSelected={setSelectedSubLink} /> : null
                     }
                     
                     { // If submission & assignment is set by clicking an entry in ReviewSubmissionsListItem, the Lab will be displayed next to it
                     state.activeSubmission ? (
                     
-                        <div className="reviewLab">
+                        <div className="reviewLab col">
                             <ManageSubmissionStatus />
                             <Lab teacherSubmission={state.activeSubmission} />
                         </div> )

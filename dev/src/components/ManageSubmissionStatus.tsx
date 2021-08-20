@@ -16,20 +16,19 @@ const ManageSubmissionStatus = (): JSX.Element => {
         }
     }
     return (
-        <>
-            <button className={"btn btn-primary"} onClick={() => updateStatus(Submission.Status.APPROVED)}>
+        <div className="container">
+            <div className="row m-auto">
+            <div className="col btn btn-primary mr-2" onClick={() => updateStatus(Submission.Status.APPROVED)}>
                 Approve
-            </button>
-
-            <button className={"btn btn-warning"} onClick={() => { updateStatus(Submission.Status.REVISION) } }>
+            </div>
+            <div className="col btn btn-warning mr-2" onClick={() => { updateStatus(Submission.Status.REVISION) } }>
                 Revision
-            </button>
-
-            <button className={"btn btn-danger"} onClick={() => { updateStatus(Submission.Status.REJECTED) } }>
+            </div>
+            <div className="col btn btn-danger mr-2" onClick={() => { updateStatus(Submission.Status.REJECTED) } }>
                 Reject
-            </button>
-
-        </>
+            </div>
+            </div>
+        </div>
     )
 }
 

@@ -5,6 +5,7 @@ import { getCourseID, isTeacher } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import DynamicTable, { CellElement } from "./DynamicTable"
 import Lab from "./Lab"
+import ManageSubmissionStatus from "./ManageSubmissionStatus"
 import Search from "./Search"
 
 
@@ -66,10 +67,13 @@ const Results = (): JSX.Element => {
                     <Search />
                     <DynamicTable header={Header.concat(AssignmentsHeader)} data={results} />
                 </div>
-                <div className="col reviewLab">
+                <div className="col">
                     {state.activeSubmission ?
-                        <Lab teacherSubmission={state.activeSubmission} /> : null
-                    }  
+                    <div className="reviewLab">
+                        <ManageSubmissionStatus />
+                        <Lab teacherSubmission={state.activeSubmission} />
+                    </div>
+                    : null}  
                 </div>
             </div>
         </div>
