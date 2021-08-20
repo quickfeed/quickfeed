@@ -213,6 +213,9 @@ export class Course extends jspb.Message {
   getSlipdays(): number;
   setSlipdays(value: number): Course;
 
+  getDockerfile(): string;
+  setDockerfile(value: string): Course;
+
   getEnrolled(): Enrollment.UserStatus;
   setEnrolled(value: Enrollment.UserStatus): Course;
 
@@ -251,6 +254,7 @@ export namespace Course {
     organizationid: number,
     organizationpath: string,
     slipdays: number,
+    dockerfile: string,
     enrolled: Enrollment.UserStatus,
     enrollmentsList: Array<Enrollment.AsObject>,
     assignmentsList: Array<Assignment.AsObject>,

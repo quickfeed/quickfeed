@@ -130,9 +130,6 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetReviewers = new grpcWeb.AbstractClientBase.MethodInfo(ag_ag_pb.Reviewers, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Reviewers.deserializeBinary);
-        this.methodInfoLoadCriteria = new grpcWeb.AbstractClientBase.MethodInfo(ag_ag_pb.Benchmarks, function (request) {
-            return request.serializeBinary();
-        }, ag_ag_pb.Benchmarks.deserializeBinary);
         this.methodInfoGetProviders = new grpcWeb.AbstractClientBase.MethodInfo(ag_ag_pb.Providers, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Providers.deserializeBinary);
@@ -466,14 +463,6 @@ var AutograderServiceClient = /** @class */ (function () {
         }
         return this.client_.unaryCall(this.hostname_ +
             '/ag.AutograderService/GetReviewers', request, metadata || {}, this.methodInfoGetReviewers);
-    };
-    AutograderServiceClient.prototype.loadCriteria = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/ag.AutograderService/LoadCriteria', request, metadata || {}, this.methodInfoLoadCriteria, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/LoadCriteria', request, metadata || {}, this.methodInfoLoadCriteria);
     };
     AutograderServiceClient.prototype.getProviders = function (request, metadata, callback) {
         if (callback !== undefined) {

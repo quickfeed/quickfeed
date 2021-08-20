@@ -1595,46 +1595,6 @@ export class AutograderServiceClient {
     this.methodInfoGetReviewers);
   }
 
-  methodInfoLoadCriteria = new grpcWeb.AbstractClientBase.MethodInfo(
-    ag_ag_pb.Benchmarks,
-    (request: ag_ag_pb.AssignmentRequest) => {
-      return request.serializeBinary();
-    },
-    ag_ag_pb.Benchmarks.deserializeBinary
-  );
-
-  loadCriteria(
-    request: ag_ag_pb.AssignmentRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Benchmarks>;
-
-  loadCriteria(
-    request: ag_ag_pb.AssignmentRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: ag_ag_pb.Benchmarks) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Benchmarks>;
-
-  loadCriteria(
-    request: ag_ag_pb.AssignmentRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: ag_ag_pb.Benchmarks) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/LoadCriteria',
-        request,
-        metadata || {},
-        this.methodInfoLoadCriteria,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/ag.AutograderService/LoadCriteria',
-    request,
-    metadata || {},
-    this.methodInfoLoadCriteria);
-  }
-
   methodInfoGetProviders = new grpcWeb.AbstractClientBase.MethodInfo(
     ag_ag_pb.Providers,
     (request: ag_ag_pb.Void) => {
