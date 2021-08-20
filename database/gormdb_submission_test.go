@@ -449,4 +449,10 @@ func TestGormDBCreateUpdateWithBuilInfoAndScores(t *testing.T) {
 	if diff := cmp.Diff(submissions[0].Scores, scores, protocmp.Transform()); diff != "" {
 		t.Errorf("Incorrect scores after update (-want, +got):\n%s", diff)
 	}
+
+	// attempting to update build info and scores with wrong submission ID must return an error
+	submissions[0].ID = 123
+	if err := db.CreateSubmission(submissions[0]); err == nil {
+		t.Fatal("expected error: record not found")
+	}
 }
