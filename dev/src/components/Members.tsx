@@ -1,8 +1,7 @@
 import React, { useState } from "react"
-import { useEffect } from "react"
 import { Redirect } from "react-router-dom"
 import { EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isTeacher, sortByField } from "../Helpers"
-import { useAppState, useActions, useGrpc } from "../overmind"
+import { useAppState, useActions } from "../overmind"
 import { Enrollment, User } from "../../proto/ag/ag_pb"
 import Search from "./Search"
 import DynamicTable from "./DynamicTable"
@@ -10,7 +9,7 @@ import DynamicTable from "./DynamicTable"
 
 // TODO: Clean up 
 
-export const Members = () => {
+export const Members = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
@@ -18,11 +17,8 @@ export const Members = () => {
     const [func, setFunc] = useState("STATUS")
     const [descending, setDescending] = useState(false)
     const [edit, setEditing] = useState<boolean>(false)
-    useEffect(() => {
 
-    }, [func, setFunc])
-
-    const sort = (): Function => {
+    const sort = () => {
         switch (func) {
             case "STATUS":
                 return Enrollment.prototype.getStatus
@@ -103,13 +99,17 @@ export const Members = () => {
 
     return (
         <div className='container'>
-            
-            
-            <div className="float-right">
-                <div className={edit ? "btn btn-danger" : "btn btn-primary"} onClick={() => setEditing(!edit)}>{edit ? "Cancel" : "Edit"}</div>
-                {pending.length > 0 ? <button className="btn btn-success float-right" onClick={() => approveAll()}>Approve All</button>  : null}
+            <div className="row no-gutters">
+                <div className="col-md-6">
+                    <Search />
+                </div>
+                <div className="ml-auto">
+                    <div className={edit ? "btn btn-danger" : "btn btn-primary"} onClick={() => setEditing(!edit)}>{edit ? "Cancel" : "Edit"}</div>
+                </div>
+                {pending.length > 0 ? <div style={{marginLeft: "10px"}}><button className="btn btn-success float-right" onClick={() => approveAll()}>Approve All</button></div>  : null}
+                
             </div>
-            <Search />
+            
             <div>
                 <DynamicTable header={["Name", "Email", {value: "Student ID", onClick: () => {setFunc("ID"); setDescending(!descending)}}, "Activity", "Approved", {value: "Role", onClick: () => {setFunc("STATUS"); setDescending(!descending)}}]} data={members} />
             </div>
