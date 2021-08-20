@@ -9,7 +9,7 @@ import "patch/go.proto";
 // Note on use of protopatch's go.field to translate to a database schema via GORM
 //
 // To define fields that should be ignored by the database, use this tag:
-//   [(go.field) = {tags: 'sql:\"-\"'}];
+//   [(go.field) = {tags: 'gorm:"-"'}];
 //
 // To define multiple database attributes (fields) that combine to form a unique identifier,
 // use the following tag, replacing the <id_name> with the specific unique database identifier;
@@ -197,15 +197,13 @@ message Submission {
     uint64 userID = 3;
     uint64 groupID = 4;
     uint32 score = 5;
-    string commitHash = 8;
-    string scoreObjects = 6; // deprecated: do not use
-    string oldBuildInfo = 7; // deprecated: do not use
-    bool released = 9;       // true => feedback is visible to the student or group members
-    Status status = 10;
-    string approvedDate = 11;
-    repeated Review reviews = 12;     // reviews produced for this submission
-    score.BuildInfo BuildInfo = 13;   // build info for tests
-    repeated score.Score Scores = 14; // list of scores for different tests
+    string commitHash = 6;
+    bool released = 7;       // true => feedback is visible to the student or group members
+    Status status = 8;
+    string approvedDate = 9;
+    repeated Review reviews = 10;     // reviews produced for this submission
+    score.BuildInfo BuildInfo = 11;   // build info for tests
+    repeated score.Score Scores = 12; // list of scores for different tests
 }
 
 message Submissions {

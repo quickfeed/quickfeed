@@ -146,7 +146,7 @@ func TestRecordResults(t *testing.T) {
 	if submission.Status == pb.Submission_APPROVED {
 		t.Error("Submission must not be auto approved")
 	}
-	if diff := cmp.Diff(testScores, submission.Scores, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(testScores, submission.Scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
 		t.Errorf("Incorrect submission scores. Want: %+v, got %+v", testScores, submission.Scores)
 	}
 	if diff := cmp.Diff(buildInfo.BuildDate, submission.BuildInfo.BuildDate); diff != "" {

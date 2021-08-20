@@ -176,28 +176,6 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
 	}
 
-	// Legacy Submission struct with ScoreObjects and BuildInfo as string:
-	wantLegacy := &pb.Submission{
-		AssignmentID: assignment.ID,
-		UserID:       user.ID,
-		Score:        42,
-		ScoreObjects: `[{"Secret":"hidden","TestName":"TestLintAG","Score":3,"MaxScore":3,"Weight":5},{"Secret":"hidden","TestName":"TestSchedulersAG/FIFO/No_jobs","Score":0,"MaxScore":0,"Weight":2}]`,
-		OldBuildInfo: `{"BuildID":1,"BuildDate":"xya","BuildLog":"log data","ExecTime":50}`,
-		Reviews:      []*pb.Review{},
-	}
-	if err := db.CreateSubmission(wantLegacy); err != nil {
-		t.Fatal(err)
-	}
-	assignments, err = db.GetAssignmentsWithSubmissions(course.ID, pb.SubmissionsForCourseRequest_ALL, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantAssignment = (proto.Clone(assignment)).(*pb.Assignment)
-	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct, wantLegacy)
-	if diff := cmp.Diff(wantAssignment, assignments[0], protocmp.Transform()); diff != "" {
-		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
-	}
-
 	// Submission with Review
 	wantReview := &pb.Submission{
 		AssignmentID: assignment.ID,
@@ -225,7 +203,7 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantAssignment = (proto.Clone(assignment)).(*pb.Assignment)
-	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct, wantLegacy, wantReview)
+	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct, wantReview)
 	if diff := cmp.Diff(wantAssignment, assignments[0], protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
 	}
