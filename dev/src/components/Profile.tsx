@@ -17,7 +17,7 @@ const Profile = () => {
     const ProfileInfo = () => {
         return (
             <div className="box">
-                    <div className="card well" style={{width: "400px"}}>
+                    <div className="card well">
                     <div className="card-header">Your Information</div>
                         <ul className="list-group list-group-flush">
                             <li className="list-group-item">Name: {state.self.getName()}</li>
@@ -40,7 +40,9 @@ const Profile = () => {
                     You can edit your user information here.
                     </div>
                 </div>
+                <div className="container">
                 {editing ? <UserProfileForm setEditing={setEditing} /> : <ProfileInfo />}
+                </div>
             </div>
             )
     }

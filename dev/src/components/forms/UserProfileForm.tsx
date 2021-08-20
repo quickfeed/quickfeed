@@ -2,8 +2,9 @@ import React, { Dispatch, SetStateAction, useState } from "react"
 import { useActions, useAppState } from "../../overmind"
 import { User } from "../../../proto/ag/ag_pb"
 import { json } from "overmind"
+import FormInput from "./FormInput"
 
-export const UserProfileForm = ({setEditing}: {setEditing: Dispatch<SetStateAction<boolean>>;}) => {
+export const UserProfileForm = ({setEditing}: {setEditing: Dispatch<SetStateAction<boolean>>}) : JSX.Element => {
     const state = useAppState()
     const actions = useActions()
 
@@ -36,15 +37,10 @@ export const UserProfileForm = ({setEditing}: {setEditing: Dispatch<SetStateActi
 
     return ( 
         <div className="box">
-            <form className="form-group well" style={{width: "400px"}} onSubmit={e => {e.preventDefault(); submitHandler()}}>
-                <label htmlFor={"name"}>Name</label>
-                <input className="form-control" name="name" type="text" defaultValue={user.getName()} onChange={handleChange} />
-                
-                <label htmlFor={"email"}>Email</label>
-                <input className="form-control" name="email" type="text" defaultValue={user.getEmail()} onChange={handleChange} />
-                
-                <label htmlFor={"studentid"}>Student ID</label>
-                <input className="form-control" name="studentid" type="text" defaultValue={user.getStudentid()} onChange={handleChange} />
+            <form className="form-group" onSubmit={e => {e.preventDefault(); submitHandler()}}>
+                <FormInput prepend="Name" name="name" defaultValue={user.getName()} onChange={handleChange} />
+                <FormInput prepend="Email" name="email" defaultValue={user.getEmail()} onChange={handleChange} />
+                <FormInput prepend="Student ID" name="studentid" defaultValue={user.getStudentid()} onChange={handleChange} />
                 
                 <input className="btn btn-primary" type="submit" value="Save" style={{marginTop:"20px"}}/>
             </form>
