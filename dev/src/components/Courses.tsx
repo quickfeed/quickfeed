@@ -3,23 +3,12 @@ import { useActions, useAppState } from "../overmind"
 import { Enrollment } from "../../proto/ag/ag_pb"
 import CourseCard from "./CourseCard"
 import { AlertType } from "../Helpers"
-
-
-
-
-const EnrollmentStatus = {
-    0: "None",
-    1: "Pending",
-    2: "Enrolled",
-    3: "Teacher"
-}
-
 interface overview {
     home: boolean
 }
 
 /** This component should list user courses, and available courses and allow enrollment */
-const Courses = (overview: overview) => {
+const Courses = (overview: overview): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
 
@@ -40,7 +29,7 @@ const Courses = (overview: overview) => {
         const crsArr:     JSX.Element[] = []
         const enrolArr = state.enrollments
         state.courses.map(course => {       
-            let enrol = enrolArr.find(enrol => course.getId() == enrol.getCourseid())
+            const enrol = enrolArr.find(enrol => course.getId() == enrol.getCourseid())
             if (enrol){
                 if (enrol.getState() == Enrollment.DisplayState.FAVORITE){
                     // add to favorite list.
@@ -129,12 +118,7 @@ const Courses = (overview: overview) => {
                         </div>
                     </div>
                 }
-                {(student.length == 0 && teacher.length == 0 && pending.length == 0 && favorite.length == 0) &&
-                    <div className="container-fluid">
-                        <h1>Seems Like you aren't enrolled in any courses </h1>
-                        <h1>Find you course in the list below Maybe make this into an alert?</h1>
-                    </div>
-                }
+                
                 {crsArr.length > 0 &&
                     <React.Fragment>
                     <h2>Available Courses</h2>
