@@ -8,7 +8,8 @@ import NavBarFooter from "./navbar/NavBarFooter";
 import { Status } from "../consts";
 
 
-
+//TODO Review the NavBar behaviour. 
+//! Source of a key error
 const NavBar = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
@@ -31,42 +32,26 @@ const NavBar = (): JSX.Element => {
         actions.setActiveCourse(enrollment.getCourseid())
     }
 
-    // Generates dropdown items related to Courses
-    const CourseItems = (): JSX.Element[] => {
+    const CourseItems = (): JSX.Element[] | null => {
         const links: JSX.Element[] = []
         if (state.self.getId() <= 0) {
-            return links
+            return null
         }
         const favorites = state.enrollments.filter(enrollment => enrollment.getStatus() >= Enrollment.UserStatus.STUDENT && enrollment.getState() == Enrollment.DisplayState.FAVORITE)
-        links.push(
-            <div>
-                <li onClick={() => { setShowCourses(!showCourses); actions.setActiveCourse(-1)}}>
-                    <div id="title">
-                            Courses &nbsp;&nbsp;
-                        <i className={showCourses ? "icon fa fa-caret-down fa-lg" : "icon fa fa-caret-down fa-rotate-90 fa-lg"}></i>
-                    </div>
-                </li>
-                <li className={showCourses ? Status.Active : Status.Inactive}>
-                    <Link to="/courses" className="Sidebar-items-link">
-                        View all courses
-                    </Link>
-                </li>
-            </div>
-        )
 
         favorites.map((enrollment) =>{
                 links.push(
-                    <React.Fragment key={enrollment.getId()}>
-                        <li className={showCourses || active === enrollment.getCourseid() ? Status.Active : Status.Inactive}  onClick={() => {onCourseClick(enrollment)}}>
+                    <>
+                        <li key={`code-${enrollment.getId()}`} className={showCourses || active === enrollment.getCourseid() ? Status.Active : Status.Inactive}  onClick={() => {onCourseClick(enrollment)}}>
                             <div>
                                 {enrollment.getCourse()?.getCode()}
                             </div> 
                         </li>
-                        <div className={ state.activeCourse === enrollment.getCourseid()  ? Status.ActiveLab : Status.Inactive}>
-                            {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? <NavBarLabs /> : null}
-                            {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.TEACHER ? <NavBarTeacher  courseID={enrollment.getCourseid()}/> : null}
+                        <div key={`links-${enrollment.getId()}`} className={ state.activeCourse === enrollment.getCourseid()  ? Status.ActiveLab : Status.Inactive}>
+                            {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? <NavBarLabs key={`labs-${enrollment.getId()}`} /> : null}
+                            {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.TEACHER ? <NavBarTeacher key={`teacher-${enrollment.getId()}`}  courseID={enrollment.getCourseid()}/> : null}
                         </div>
-                    </React.Fragment>
+                    </>
                     )
                 })
 
@@ -75,15 +60,28 @@ const NavBar = (): JSX.Element => {
     }
     return (
         <nav className="navigator">
-            <ul className="SidebarList">
+            <ul key="list" className="SidebarList">
                 <li key="logo" className="logo">
                     <Link to="/">
                         QuickFeed
                     </Link>
                 </li>
+
+                <li key="courses" onClick={() => { setShowCourses(!showCourses); actions.setActiveCourse(-1)}}>
+                    <div id="title">
+                            Courses &nbsp;&nbsp;
+                        <i className={showCourses ? "icon fa fa-caret-down fa-lg" : "icon fa fa-caret-down fa-rotate-90 fa-lg"}></i>
+                    </div>
+                </li>
+                <li key="all" className={showCourses ? Status.Active : Status.Inactive}>
+                    <Link to="/courses" className="Sidebar-items-link">
+                        View all courses
+                    </Link>
+                </li>
+                
                 
                 {CourseItems()}
-                <NavBarFooter />
+                <NavBarFooter key="foot" />
             </ul>
         </nav>
     )

@@ -46,7 +46,6 @@ const DynamicTable = ({header, data}: {header: (string | JSX.Element | CellEleme
 
     const generateHeaderRow = (cell: string | JSX.Element | CellElement, index: number) => {
         if (isCellElement(cell)) {
-
             const element = cell.link ? <a href={cell.link}>{cell.value}</a> : cell.value
             return <th key={index} className={cell.className} style={cell.onClick ? {"cursor": "pointer"} : undefined} onClick={cell.onClick}>{element}</th>
         }

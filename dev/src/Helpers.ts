@@ -221,3 +221,20 @@ export const EnrollmentStatusBadge = {
     2 : "badge badge-primary",
     3 : "badge badge-danger",
 }
+
+/**
+ * const test = data.sort((a, b) => {
+        const x = isCellElement(a[index])
+        const y = isCellElement(b[index])
+        if (x && y) {
+           return (a as CellElement[])[index].value.localeCompare((b as CellElement[])[index].value)
+        }
+        if (y && !x) {
+            return (a[index] as string).localeCompare((b as CellElement[])[index].value)
+        }
+        if (x && !y) {
+            return ((a as CellElement[])[index].value).localeCompare(b[index] as string)
+        }
+        return (a[index] as string).localeCompare((b[index] as string))
+    })
+ */
