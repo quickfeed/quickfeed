@@ -1,7 +1,7 @@
 import  React from 'react'
 
 
-const AboutPage = () => {
+const AboutPage = (): JSX.Element => {
     return (
         <div>
             <div key="jb" id="0" className="jumbotron">

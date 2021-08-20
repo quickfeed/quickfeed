@@ -1,7 +1,7 @@
 import React from "react"
 
 
-const Loading = () => {
+const Loading = (): JSX.Element => {
     return (
         <div className="centered">
             <i className="fa fa-refresh fa-spin fa-3x fa-fw"></i>

@@ -1,16 +1,14 @@
-import { json } from "overmind"
 import React, { useEffect, useState } from "react"
 import { Group } from "../../proto/ag/ag_pb"
 import { getCourseID } from "../Helpers"
-import { useActions, useAppState, useGrpc } from "../overmind"
+import { useActions, useAppState } from "../overmind"
 import GroupForm from "./group/GroupForm"
 import Search from "./Search"
 
 /* Lists all groups for a given course. */
-export const Groups = () => {
+export const Groups = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
-    const grpc = useGrpc()
     const courseID = getCourseID()
 
 
@@ -88,11 +86,11 @@ export const Groups = () => {
 
     // Generates JSX.Element array containing all groups for the course
     const PendingGroups = state.groups[courseID]?.filter(g => g.getStatus() == Group.GroupStatus.PENDING).map(group => {
-        return <GroupList group={group} />
+        return <GroupList key={group.getId()} group={group} />
     })
 
     const ApprovedGroups = state.groups[courseID]?.filter(g => g.getStatus() == Group.GroupStatus.APPROVED).map(group => {
-        return <GroupList group={group} />
+        return <GroupList key={group.getId()} group={group} />
     })
 
     if (editing) {

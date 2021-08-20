@@ -1,12 +1,12 @@
-import React, { useEffect } from "react"
-import { Link, useHistory } from "react-router-dom"
+import React from "react"
+import { useHistory } from "react-router-dom"
 import { useAppState } from "../../overmind"
 import { Assignment, Submission } from "../../../proto/ag/ag_pb"
 import { ProgressBar } from "../ProgressBar"
 import NavBarLink, { NavLink } from "./NavBarLink"
 
 
-const NavBarLabs = () => {
+const NavBarLabs = (): JSX.Element => {
     const state = useAppState()
     const history  = useHistory()
     
@@ -28,7 +28,7 @@ const NavBarLabs = () => {
         return state.activeLab === assignment.getId() && state.activeCourse === assignment.getCourseid() ? "active" : ""
     }
 
-    const LabLinks: Function = (): JSX.Element[] => { 
+    const LabLinks = (): JSX.Element[] => { 
         if(state.assignments[state.activeCourse] && state.submissions[state.activeCourse]) {
             const links = state.assignments[state.activeCourse]?.map((assignment, index) => {
                 const link: NavLink = {link: {text: assignment.getName(), to: `/course/${state.activeCourse}/${assignment.getId()}`}, jsx: submissionIcon(assignment)}
@@ -46,7 +46,7 @@ const NavBarLabs = () => {
 
     return (
         <React.Fragment>
-            <LabLinks />
+            {LabLinks()}
         </React.Fragment>
     )
 }

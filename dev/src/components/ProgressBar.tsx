@@ -1,11 +1,11 @@
 import React from "react"
-import { useAppState, useActions } from "../overmind"
+import { useAppState } from "../overmind"
 import { Submission } from "../../proto/ag/ag_pb"
 import { getPassedTestsCount } from "../Helpers"
 import { json } from "overmind"
 
 
-export const ProgressBar = (props: {courseID: number, assignmentIndex: number, submission?: Submission, type: string}) => {
+export const ProgressBar = (props: {courseID: number, assignmentIndex: number, submission?: Submission, type: string}): JSX.Element => {
     const state = useAppState()
 
     const submission = props.submission ? props.submission : state.submissions[props.courseID][props.assignmentIndex]

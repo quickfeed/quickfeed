@@ -6,7 +6,7 @@ export interface NavLink {
     jsx?: JSX.Element
 }
 
-const NavBarLink = (props: NavLink) => {
+const NavBarLink = (props: NavLink): JSX.Element => {
     const history = useHistory()
 
     const icons: JSX.Element[] = []

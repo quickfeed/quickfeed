@@ -6,7 +6,7 @@ import StudentPage from "./StudentPage"
 import TeacherPage from "./TeacherPage"
 
 /** This component is mainly used to determine which view (Student or Teacher) to render, based on enrollment status. */
-const CoursePage = () => {
+const CoursePage = (): JSX.Element => {
     const state = useAppState()
     const setActiveCourse = useActions().setActiveCourse
     

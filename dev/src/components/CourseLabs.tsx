@@ -5,7 +5,7 @@ import { Submission } from "../../proto/ag/ag_pb"
 import { ProgressBar } from "./ProgressBar"
 import React from "react"
 
-export const CourseLabs = ({courseID}: {courseID: number}) =>  {
+export const CourseLabs = ({courseID}: {courseID: number}): JSX.Element =>  {
     const state = useAppState()
     const history  = useHistory()
     
@@ -13,8 +13,8 @@ export const CourseLabs = ({courseID}: {courseID: number}) =>  {
         history.push(`/course/${courseID}/${assignmentID}`)
     }
 
-    const Labs: Function = (): JSX.Element[] => {
-        let labs :JSX.Element[] = []
+    const Labs = (): JSX.Element[] => {
+        const labs :JSX.Element[] = []
         let submission: Submission = new Submission()
         
         if (state.assignments[courseID] && state.submissions[courseID]) {
@@ -54,7 +54,7 @@ export const CourseLabs = ({courseID}: {courseID: number}) =>  {
     }
     return (
         <ul className="list-group">
-            <Labs />
+            {Labs()}
         </ul>
     )
 }

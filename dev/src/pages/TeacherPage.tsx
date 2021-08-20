@@ -13,7 +13,7 @@ import StatisticsView from "../components/Statistics"
 import Assignments from "../components/teacher/Assignments"
 
 /* */
-const TeacherPage = () => {
+const TeacherPage = (): JSX.Element => {
     const state = useAppState()
     const courseID = getCourseID()
     const isAuthorizedTeacher = useActions().isAuthorizedTeacher

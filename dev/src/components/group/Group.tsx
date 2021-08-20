@@ -4,7 +4,7 @@ import { getCourseID } from "../../Helpers"
 import { useAppState } from "../../overmind"
 import SubmissionsTable from "../SubmissionsTable"
 
-const GroupComponent = () => {
+const GroupComponent = (): JSX.Element => {
     const state = useAppState()
     const courseID = getCourseID()
 

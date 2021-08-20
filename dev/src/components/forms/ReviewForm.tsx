@@ -5,7 +5,7 @@ import { useAppState } from "../../overmind"
 
 // TODO: Ensure all criteria are graded before setting ready
 
-const ReviewForm = ({submissionLink, setSelected}: {submissionLink: SubmissionLink, setSelected: Function}) => {
+const ReviewForm = ({submissionLink, setSelected}: {submissionLink: SubmissionLink, setSelected: React.Dispatch<React.SetStateAction<SubmissionLink | undefined>>}): JSX.Element => {
 
     const state = useAppState()
 
@@ -42,16 +42,16 @@ const ReviewForm = ({submissionLink, setSelected}: {submissionLink: SubmissionLi
     const Benchmarks = () => {
         if (selectedReview) {
             return selectedReview.getGradingbenchmarksList().map(bm => {
-                return <li>{bm.getHeading()}</li>
+                return <li key={bm.getId()}>{bm.getHeading()}</li>
             })
         }
-        return <li>"No selected reviews"</li>
+        return <li>No selected review</li>
     }
 
     const Reviews = () => {
         if (submissionLink.hasSubmission()) {
             return (submissionLink.getSubmission() as Submission).getReviewsList().map(rw => {
-                return <li onClick={() => setSelectedReview(rw)}>{rw.getReviewerid()}</li>
+                return <li key={rw.getId()} onClick={() => setSelectedReview(rw)}>{rw.getReviewerid()}</li>
             })
         }
     }

@@ -9,16 +9,11 @@ export type CellElement = {
     link?: string
 }
 
-const isCellElement = (obj: any): obj is CellElement => {
+const isCellElement = (obj: unknown): obj is CellElement => {
     return (obj as CellElement).value !== undefined
 }
 
-const recursiveElement = (obj: any): obj is (string | JSX.Element | CellElement)[] => {
-    return (obj as (string | JSX.Element | CellElement)[]).length > 0
-}
-
-
-const DynamicTable = ({header, data}: {header: (string | JSX.Element | CellElement)[], data: (string | JSX.Element | CellElement)[][]}) => {
+const DynamicTable = ({header, data}: {header: (string | JSX.Element | CellElement)[], data: (string | JSX.Element | CellElement)[][]}): JSX.Element | null => {
 
     if (data.length === 0) {
         return null

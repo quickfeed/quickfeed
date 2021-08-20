@@ -1,8 +1,7 @@
 import React, { useEffect } from "react"
-import { Void } from "../../proto/ag/ag_pb"
 import { useActions } from "../overmind"
 
-export const Search = ({placeholder, setQuery}: {placeholder?: string, setQuery?: Function}) => {
+export const Search = ({placeholder, setQuery}: {placeholder?: string, setQuery?: (e: unknown) => void}): JSX.Element => {
     const actions = useActions()
 
     useEffect(() => {

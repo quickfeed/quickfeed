@@ -16,7 +16,7 @@ import AboutPage from './pages/AboutPage';
 
 
 
-const App = () => {
+const App = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const [loggedIn, setLoggedIn] = useState(false)
@@ -32,15 +32,12 @@ const App = () => {
 
     // This is just to Update the Time object in state, every 20 minutes (after mount, it mounts with a new dateobject)
     useEffect(()=> {
-        let updateDateNow = setInterval(()=>{
+        const updateDateNow = setInterval(()=>{
             actions.setTimeNow()
         },1200000)
         return() => clearInterval(updateDateNow)
     },[])
 
-
-    // General
-    
     return  (
         <div> 
             <NavBar />

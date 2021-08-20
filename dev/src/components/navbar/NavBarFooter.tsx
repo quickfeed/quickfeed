@@ -3,7 +3,7 @@ import { Link, useHistory } from "react-router-dom"
 import { useActions, useAppState } from "../../overmind"
 
 
-const NavBarFooter = () => {
+const NavBarFooter = (): JSX.Element => {
     const logout = useActions().logout
     const self = useAppState((state) => state.self)
 

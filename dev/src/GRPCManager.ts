@@ -250,7 +250,7 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateSubmission, request);
     }
 
-    public updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean) {
+    public updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<IGrpcResponse<Void>> {
         const request = new UpdateSubmissionsRequest();
         request.setAssignmentid(assignmentID);
         request.setCourseid(courseID);

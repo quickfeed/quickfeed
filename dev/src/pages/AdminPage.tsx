@@ -9,11 +9,9 @@ import RedirectButton from "../components/RedirectButton"
 
 
 
-export const AdminPage = () => {
-    
+export const AdminPage = (): JSX.Element => {
     const state = useAppState()
     const history  = useHistory()
-    // Ideas: Statistics, Create Course, Promote Users
     
     const manageUsers = {title: "Manage Users", text: "View and manage all users.", buttonText: "Manage Users", to: "/admin/manage"}
     const createCourse = {title: "Create Course", text: "Create a new course.", buttonText: "Create Course", to: "/admin/create"}

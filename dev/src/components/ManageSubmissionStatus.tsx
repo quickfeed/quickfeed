@@ -4,7 +4,7 @@ import { getCourseID } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 
 
-const ManageSubmissionStatus = () => {
+const ManageSubmissionStatus = (): JSX.Element => {
 
     const actions = useActions()
     const state = useAppState()

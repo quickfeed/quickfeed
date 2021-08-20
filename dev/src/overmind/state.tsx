@@ -105,7 +105,7 @@ export const state: State = {
     allUsers: [],
     enrollments: [],
     enrollmentsByCourseId: derived((state: State) => {
-        let obj: EnrollmentsByCourse = {}
+        const obj: EnrollmentsByCourse = {}
         for (const enrollment of state.enrollments) {
             obj[enrollment.getCourseid()] = enrollment
         }

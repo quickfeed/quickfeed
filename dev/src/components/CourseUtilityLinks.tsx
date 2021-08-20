@@ -5,7 +5,7 @@ import { useAppState } from "../overmind"
 
 
 
-const CourseUtilityLinks = ({courseID}: {courseID: number}) => {
+const CourseUtilityLinks = ({courseID}: {courseID: number}): JSX.Element => {
 
     const state = useAppState()
 

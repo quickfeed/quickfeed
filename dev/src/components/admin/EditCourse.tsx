@@ -1,15 +1,12 @@
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { Course } from "../../../proto/ag/ag_pb"
 import { useAppState } from "../../overmind"
 import DynamicTable, { CellElement } from "../DynamicTable"
 import CourseForm from "../forms/CourseForm"
 
-const EditCourse = () => {
+const EditCourse = (): JSX.Element => {
     const state  = useAppState()
     const [course, setCourse] = useState<Course>()
-    useEffect(() => {
-    }, [course, setCourse])
-
 
     const courses = state.courses.map(c => {
         const selected = course?.getId() === c.getId()

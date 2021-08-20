@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useHistory } from "react-router";
-import { getFormattedTime, layoutTime, SubmissionStatus, timeFormatter } from "../Helpers";
+import { getFormattedTime, SubmissionStatus, timeFormatter } from "../Helpers";
 import { useAppState } from "../overmind";
 import { Submission } from "../../proto/ag/ag_pb";
 
@@ -11,7 +11,7 @@ interface course {
 
 //** This component takes a courseID (number) to render a table containing lab information
 /* Giving a courseID of zero (0) makes it display ALL labs for all courses, whereas providing a courseID displays labs for ONLY ONE course */
-const LandingPageLabTable = (crs: course) => {
+const LandingPageLabTable = (crs: course): JSX.Element => {
     const state = useAppState()
     const history  = useHistory()
     
@@ -20,12 +20,12 @@ const LandingPageLabTable = (crs: course) => {
     }
 
     const MakeLabTable = (): JSX.Element[] => {
-        let table: JSX.Element[] = []
+        const table: JSX.Element[] = []
         let submission: Submission = new Submission()
             for (const courseID in state.assignments) {
                 // Use the index provided by the for loop if courseID provided == 0, else select the given course
-                let key = crs.courseID > 0 ? crs.courseID : Number(courseID)
-                let course = state.courses.find(course => course.getId() == key)  
+                const key = crs.courseID > 0 ? crs.courseID : Number(courseID)
+                const course = state.courses.find(course => course.getId() == key)  
                 state.assignments[key]?.forEach(assignment => {
                     if(state.submissions[key]) {
                         // Submissions are indexed by the assignment order.
@@ -34,7 +34,7 @@ const LandingPageLabTable = (crs: course) => {
                             submission = new Submission()
                         }
                         if (submission.getStatus() !== Submission.Status.APPROVED){
-                            let time2Deadline = timeFormatter(assignment.getDeadline(),state.timeNow)
+                            const time2Deadline = timeFormatter(assignment.getDeadline(),state.timeNow)
                             if(time2Deadline[3] >3 && (submission.getScore() >= assignment.getScorelimit() &&(submission.getStatus()<1))){
                                 time2Deadline[1]= "table-success"
                             }

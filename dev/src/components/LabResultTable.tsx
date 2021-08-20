@@ -3,7 +3,7 @@ import React from "react"
 import { Assignment, Submission } from "../../proto/ag/ag_pb"
 import { Score } from "../../proto/kit/score/score_pb"
 import { getPassedTestsCount, isManuallyGraded, SubmissionStatus } from "../Helpers"
-import { useAppState, useActions } from "../overmind"
+import { useAppState } from "../overmind"
 import { ProgressBar } from "./ProgressBar"
 
 interface lab {
@@ -11,9 +11,8 @@ interface lab {
     assignment: Assignment
 }
 
-const LabResultTable = ({submission, assignment}: lab) => {
+const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
     const state = useAppState()
-    const actions = useActions()
 
     const ScoreObject = ({ score }: {score: Score}) => {
         const boxShadow = (score.getScore() === score.getMaxscore()) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 8px 0 0 red inset"

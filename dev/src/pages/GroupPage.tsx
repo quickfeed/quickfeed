@@ -6,7 +6,7 @@ import GroupComponent from "../components/group/Group"
 import GroupForm from "../components/group/GroupForm"
 
 
-export const GroupPage = () => {
+export const GroupPage = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()

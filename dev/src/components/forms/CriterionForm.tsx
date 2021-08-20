@@ -1,11 +1,10 @@
-import { json } from "overmind/lib/utils";
 import React from "react";
 import { Assignment, GradingCriterion } from "../../../proto/ag/ag_pb";
 import { useActions, useGrpc } from "../../overmind";
 
 
 
-const CriterionForm = ({criterion, benchmarkID, assignment, setEditing}: {criterion?: GradingCriterion, benchmarkID?: number, assignment?: Assignment, setEditing: Function}) => {
+const CriterionForm = ({criterion, benchmarkID, assignment, setEditing}: {criterion?: GradingCriterion, benchmarkID?: number, assignment?: Assignment, setEditing: React.Dispatch<React.SetStateAction<number>>}): JSX.Element => {
     
     const grpc = useGrpc().grpcMan
     const actions = useActions()

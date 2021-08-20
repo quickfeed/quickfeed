@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { GradingCriterion, Review } from "../../proto/ag/ag_pb"
 
-const ReviewResult = ({review}: {review: Review[]}) => {
+const ReviewResult = ({review}: {review: Review[]}): JSX.Element => {
 
     // TODO: Figure out what to do in cases of two reviews.
     const [selectedReview, setSelectedReview] = useState<Review>(review[0])
@@ -26,13 +26,13 @@ const ReviewResult = ({review}: {review: Review[]}) => {
                     <th colSpan={2}>{benchmark.getHeading()}</th>
                     <th>{benchmark.getComment()}</th>
                 </tr>
-                {benchmark.getCriteriaList().map(criteria => <Criteria criteria={criteria} />)}
+                {benchmark.getCriteriaList().map(criteria => <Criteria key={criteria.getId()} criteria={criteria} />)}
                 </>
             )
     })
 
     
-
+    // TODO: DynamicTable
     return (
         <div className="container">
             <table className="table"> 

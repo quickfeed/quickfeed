@@ -10,7 +10,7 @@ import Lab from "../components/Lab"
 import RedirectButton from "../components/RedirectButton"
 
 /* */
-const StudentPage = () => {
+const StudentPage = (): JSX.Element => {
     const state = useAppState()
     const courseID = getCourseID()
     const history = useHistory()

@@ -9,7 +9,7 @@ import ReviewForm from "./forms/ReviewForm"
 import ManageSubmissionStatus from "./ManageSubmissionStatus"
 
 
-const Review = () => {
+const Review = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
 
@@ -26,7 +26,7 @@ const Review = () => {
 
     }, [])
 
-    const ReviewSubmissionsListItem = ({submissionLink, userIndex}: { submissionLink: SubmissionLink, userIndex: number}) => {
+    const ReviewSubmissionsListItem = ({submissionLink}: { submissionLink: SubmissionLink }) => {
         const submission = json(submissionLink.getSubmission())
         const assignment = json(submissionLink.getAssignment())
 
@@ -50,7 +50,7 @@ const Review = () => {
     
 
     if (state.courseSubmissions[courseID]) {
-        const ReviewSubmissionsTable = state.courseSubmissions[courseID].map((user, userIndex) => {
+        const ReviewSubmissionsTable = state.courseSubmissions[courseID].map(user => {
             if (user.enrollment && user.submissions) {
                 
                 return (
@@ -60,7 +60,7 @@ const Review = () => {
                         </div>
                         <ul key={"list"} className="list-group list-group-flush">
                             {user.submissions.map((submissionLink, index) => 
-                                <ReviewSubmissionsListItem key={index} submissionLink={submissionLink} userIndex={userIndex} />
+                                <ReviewSubmissionsListItem key={index} submissionLink={submissionLink} />
                             )}
                         </ul>
                     </div>
@@ -69,7 +69,7 @@ const Review = () => {
         })
     
         const Options = state.assignments[courseID].map(assignment => {
-            return <option value={assignment.getId()}>{assignment.getName()}</option>
+            return <option key={`assignment-${assignment.getId()}`} value={assignment.getId()}>{assignment.getName()}</option>
         })
 
         return (

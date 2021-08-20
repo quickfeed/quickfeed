@@ -1,7 +1,7 @@
 /* eslint-disable quotes */
 
 import { useParams } from "react-router"
-import { Assignment, Course, Enrollment, EnrollmentLink, Enrollments, Group, Groups, Submission, Submissions, User } from "../proto/ag/ag_pb"
+import { Assignment, Enrollment, EnrollmentLink, User } from "../proto/ag/ag_pb"
 import { Score } from "../proto/kit/score/score_pb"
 
 export interface IBuildInfo {
@@ -11,7 +11,7 @@ export interface IBuildInfo {
     execTime: number
 }
 
-export const getBuildInfo = (buildString: string) => {
+export const getBuildInfo = (buildString: string): IBuildInfo => {
     let buildinfo: IBuildInfo
     if (buildString.length === 0) {
         buildinfo = {builddate: "", buildid: 0, buildlog: "", execTime: 0}
@@ -44,8 +44,8 @@ export interface IScoreObjects {
     Weight: number;
 }
 
-export const getScoreObjects = (scoreString: string) => {
-    let scoreObjects: IScoreObjects[] = []
+export const getScoreObjects = (scoreString: string): IScoreObjects[] => {
+    const scoreObjects: IScoreObjects[] = []
     if (scoreString.length > 0) {
         const parsedScoreObjects = JSON.parse(scoreString)
         for (const scoreObject in parsedScoreObjects) {
@@ -58,20 +58,20 @@ export const getScoreObjects = (scoreString: string) => {
 
 
 /** Returns a string with a prettier format for a deadline */
-export const getFormattedTime = (deadline_string: string) => {
+export const getFormattedTime = (deadline_string: string): string => {
     const months = ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December']
-    let deadline = new Date(deadline_string)
+    const deadline = new Date(deadline_string)
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} at ${deadline.getHours()}:${deadline.getMinutes() < 10 ? '0' + deadline.getMinutes() : deadline.getMinutes()}`
 }
 
 /** Utility function for LandingpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
-export const timeFormatter = (deadline:string , now: Date) => {
+export const timeFormatter = (deadline:string , now: Date): (string | number | boolean)[] => {
     const timeOfDeadline = new Date(deadline)
     const timeToDeadline =  timeOfDeadline.getTime() - now.getTime()
-    let days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
-    let hours = Math.floor(timeToDeadline / (1000 * 3600))
-    let minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000*60))
+    const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
+    const hours = Math.floor(timeToDeadline / (1000 * 3600))
+    const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000*60))
     
     if (days<14){
         if(days<7){
@@ -158,7 +158,7 @@ export const SubmissionStatus = {
     3: "Revision",
 }
 
-export const getPassedTestsCount = (score: Score[]) => {
+export const getPassedTestsCount = (score: Score[]): string => {
     let totalTests = 0
     let passedTests = 0
     score.forEach(score => {
@@ -171,7 +171,7 @@ export const getPassedTestsCount = (score: Score[]) => {
 }
 
 
-export const isValid = (element: any) => {
+export const isValid = (element: any): boolean => {
     if (element instanceof User){
         if (element.getName().length === 0 || element.getEmail().length === 0 || element.getStudentid().length === 0) {
             return false
@@ -185,7 +185,7 @@ export const isValid = (element: any) => {
     return true
 }
 
-export const hasEnrollment = (enrollments: Enrollment[]) => {
+export const hasEnrollment = (enrollments: Enrollment[]): boolean => {
     for (const enrollment of enrollments) {
         if (enrollment.getStatus() > Enrollment.UserStatus.PENDING) {
             return true
@@ -194,24 +194,24 @@ export const hasEnrollment = (enrollments: Enrollment[]) => {
     return false
 }
 
-export const isTeacher = (enrollment: Enrollment) => {
+export const isTeacher = (enrollment: Enrollment): boolean => {
     return enrollment.getStatus() >= Enrollment.UserStatus.TEACHER
 }
 
-export const isEnrolled = (enrollment: Enrollment) => {
+export const isEnrolled = (enrollment: Enrollment): boolean => {
     return enrollment.getStatus() >= Enrollment.UserStatus.STUDENT
 }
 
-export const isManuallyGraded = (assignment: Assignment) => {
+export const isManuallyGraded = (assignment: Assignment): boolean => {
     return assignment.getReviewers() > 0
 }
 
-export const getCourseID = () => {
+export const getCourseID = (): number => {
     const route = useParams<{id?: string}>()
     return Number(route.id)
 }
 
-export const isHidden = (value: string, query: string) => {
+export const isHidden = (value: string, query: string): boolean => {
     return !value.toLowerCase().includes(query) && query.length > 0
 }
 

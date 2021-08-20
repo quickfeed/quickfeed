@@ -8,7 +8,7 @@ import Lab from "./Lab"
 import Search from "./Search"
 
 
-const Results = () => {
+const Results = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const { getAllCourseSubmissions } = useActions()

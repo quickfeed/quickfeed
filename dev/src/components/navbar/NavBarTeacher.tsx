@@ -5,7 +5,7 @@ import NavBarLink, { NavLink } from "./NavBarLink"
 
 
 
-export const NavBarTeacher = (props: {courseID: number}) => {
+export const NavBarTeacher = (props: {courseID: number}): JSX.Element => {
 
     const state = useAppState()
 

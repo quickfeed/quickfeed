@@ -7,7 +7,7 @@ import LandingPageLabTable from "./LandingPageLabTable";
 
 
 /* Dashboard for a signed in user. */
-const Dashboard = () => {
+const Dashboard = (): JSX.Element => {
     const state = useAppState()
 
     // New users logging in are redirected to courses to ease enrollment

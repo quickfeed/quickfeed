@@ -20,7 +20,7 @@ interface MatchProps {
  *  
  *  If used to display a lab for grading purposes, pass in a TeacherLab object
  */
-const Lab = ({teacherSubmission}: {teacherSubmission?: Submission}) => {
+const Lab = ({teacherSubmission}: {teacherSubmission?: Submission}): JSX.Element => {
     
     const state = useAppState()
     const actions = useActions()

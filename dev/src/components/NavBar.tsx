@@ -9,7 +9,7 @@ import { Status } from "../consts";
 
 
 
-const NavBar = () => {
+const NavBar = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const history = useHistory()
@@ -32,7 +32,7 @@ const NavBar = () => {
     }
 
     // Generates dropdown items related to Courses
-    const CourseItems: Function = (): JSX.Element[] => {
+    const CourseItems = (): JSX.Element[] => {
         const links: JSX.Element[] = []
         if (state.self.getId() <= 0) {
             return links
@@ -82,7 +82,7 @@ const NavBar = () => {
                     </Link>
                 </li>
                 
-                <CourseItems />
+                {CourseItems()}
                 <NavBarFooter />
             </ul>
         </nav>

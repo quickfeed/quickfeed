@@ -8,7 +8,7 @@ import Search from "../Search"
 
 
 
-const GroupForm = ({editGroup, setGroup}: {editGroup?: Group, setGroup?: Function}) => {
+const GroupForm = ({editGroup, setGroup}: {editGroup?: Group, setGroup?: React.Dispatch<React.SetStateAction<Group | undefined>>}): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const [users, setUsers] = useState<number[]>([])
@@ -129,8 +129,8 @@ const GroupForm = ({editGroup, setGroup}: {editGroup?: Group, setGroup?: Functio
                     <Search placeholder={"Search"} setQuery={setQuery} />
 
                     <ul className="list-group list-group-flush">
-                        {sortedEnrollments.map(enrollment => {
-                            return <FreeUser enrollment={enrollment} />
+                        {sortedEnrollments.map((enrollment, index) => {
+                            return <FreeUser key={index} enrollment={enrollment} />
                         })} 
                     </ul>
                 </div>
@@ -139,8 +139,8 @@ const GroupForm = ({editGroup, setGroup}: {editGroup?: Group, setGroup?: Functio
                     <div className="card well col-md-offset-2" >
                         {GroupNameBanner}
                         {GroupNameInput}
-                        {state.courseEnrollments[courseID].map(enrollment => {
-                                return <GroupMember enrollment={enrollment} />
+                        {state.courseEnrollments[courseID].map((enrollment, index) => {
+                                return <GroupMember key={index} enrollment={enrollment} />
                         })}
                         {group && setGroup ? 
                             <>

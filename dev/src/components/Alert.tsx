@@ -1,9 +1,9 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { AlertType } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 
 /* This component displays all alerts found in state.alerts */
-export const Alert = () => {
+export const Alert = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const alerts = state.alerts.map((alert, index) => {
