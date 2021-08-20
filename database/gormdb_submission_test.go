@@ -411,7 +411,7 @@ func TestGormDBCreateUpdateWithBuilInfoAndScores(t *testing.T) {
 		submissions[0].Scores,
 		scores,
 		protocmp.Transform(),
-		protocmp.IgnoreFields(&score.Score{}, "ID", "SubmissionID")); diff != "" {
+		protocmp.IgnoreFields(&score.Score{}, "ID", "SubmissionID", "Secret")); diff != "" {
 		t.Errorf("Incorrect scores after first save (-want, +got):\n%s", diff)
 	}
 
@@ -446,7 +446,7 @@ func TestGormDBCreateUpdateWithBuilInfoAndScores(t *testing.T) {
 	if diff := cmp.Diff(submissions[0].BuildInfo, updatedBuildInfo, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected updated build info, but got (-sub +want):\n%s", diff)
 	}
-	if diff := cmp.Diff(submissions[0].Scores, scores, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(submissions[0].Scores, scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
 		t.Errorf("Incorrect scores after update (-want, +got):\n%s", diff)
 	}
 

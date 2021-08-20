@@ -8,7 +8,7 @@ import "patch/go.proto";
 message Score {
     uint64 ID = 1;
     uint64 SubmissionID = 2;
-    string Secret = 3;       // the unique identifier for a scoring session
+    string Secret = 3 [(go.field) = {tags: 'gorm:"-"'}]; // the unique identifier for a scoring session
     string TestName = 4;     // name of the test
     int32 Score = 5;         // the score obtained
     int32 MaxScore = 6;      // max score possible to get on this specific test

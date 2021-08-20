@@ -63,8 +63,6 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	if err := db.conn.Last(query, query).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return err
 	}
-	// TODO(meling) temporary transformation of submission data
-	transform(submission)
 
 	if submission.ID != 0 {
 		// A submission will have a build info without any ID, using save will create a duplicate build info
@@ -111,8 +109,6 @@ func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 		Where(query).Last(&submission).Error; err != nil {
 		return nil, err
 	}
-	// TODO(meling) temporary transformation of submission data
-	transform(&submission)
 
 	return &submission, nil
 }
@@ -137,8 +133,6 @@ func (db *GormDB) GetLastSubmissions(courseID uint64, query *pb.Submission) ([]*
 		}
 		latestSubs = append(latestSubs, temp)
 	}
-	// TODO(meling) temporary transformation of submission data
-	transform(latestSubs...)
 	return latestSubs, nil
 }
 
@@ -148,8 +142,6 @@ func (db *GormDB) GetSubmissions(query *pb.Submission) ([]*pb.Submission, error)
 	if err := db.conn.Find(&submissions, &query).Error; err != nil {
 		return nil, err
 	}
-	// TODO(meling) temporary transformation of submission data
-	transform(submissions...)
 	return submissions, nil
 }
 

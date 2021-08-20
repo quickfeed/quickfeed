@@ -5920,7 +5920,7 @@ proto.ag.Assignments.prototype.clearAssignmentsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.ag.Submission.repeatedFields_ = [12,14];
+proto.ag.Submission.repeatedFields_ = [10,12];
 
 
 
@@ -5958,12 +5958,10 @@ proto.ag.Submission.toObject = function(includeInstance, msg) {
     userid: jspb.Message.getFieldWithDefault(msg, 3, 0),
     groupid: jspb.Message.getFieldWithDefault(msg, 4, 0),
     score: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    commithash: jspb.Message.getFieldWithDefault(msg, 8, ""),
-    scoreobjects: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    oldbuildinfo: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    released: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
-    status: jspb.Message.getFieldWithDefault(msg, 10, 0),
-    approveddate: jspb.Message.getFieldWithDefault(msg, 11, ""),
+    commithash: jspb.Message.getFieldWithDefault(msg, 6, ""),
+    released: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
+    status: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    approveddate: jspb.Message.getFieldWithDefault(msg, 9, ""),
     reviewsList: jspb.Message.toObjectList(msg.getReviewsList(),
     proto.ag.Review.toObject, includeInstance),
     buildinfo: (f = msg.getBuildinfo()) && kit_score_score_pb.BuildInfo.toObject(includeInstance, f),
@@ -6025,41 +6023,33 @@ proto.ag.Submission.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {number} */ (reader.readUint32());
       msg.setScore(value);
       break;
-    case 8:
+    case 6:
       var value = /** @type {string} */ (reader.readString());
       msg.setCommithash(value);
       break;
-    case 6:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setScoreobjects(value);
-      break;
     case 7:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setOldbuildinfo(value);
-      break;
-    case 9:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setReleased(value);
       break;
-    case 10:
+    case 8:
       var value = /** @type {!proto.ag.Submission.Status} */ (reader.readEnum());
       msg.setStatus(value);
       break;
-    case 11:
+    case 9:
       var value = /** @type {string} */ (reader.readString());
       msg.setApproveddate(value);
       break;
-    case 12:
+    case 10:
       var value = new proto.ag.Review;
       reader.readMessage(value,proto.ag.Review.deserializeBinaryFromReader);
       msg.addReviews(value);
       break;
-    case 13:
+    case 11:
       var value = new kit_score_score_pb.BuildInfo;
       reader.readMessage(value,kit_score_score_pb.BuildInfo.deserializeBinaryFromReader);
       msg.setBuildinfo(value);
       break;
-    case 14:
+    case 12:
       var value = new kit_score_score_pb.Score;
       reader.readMessage(value,kit_score_score_pb.Score.deserializeBinaryFromReader);
       msg.addScores(value);
@@ -6131,49 +6121,35 @@ proto.ag.Submission.serializeBinaryToWriter = function(message, writer) {
   f = message.getCommithash();
   if (f.length > 0) {
     writer.writeString(
-      8,
-      f
-    );
-  }
-  f = message.getScoreobjects();
-  if (f.length > 0) {
-    writer.writeString(
       6,
-      f
-    );
-  }
-  f = message.getOldbuildinfo();
-  if (f.length > 0) {
-    writer.writeString(
-      7,
       f
     );
   }
   f = message.getReleased();
   if (f) {
     writer.writeBool(
-      9,
+      7,
       f
     );
   }
   f = message.getStatus();
   if (f !== 0.0) {
     writer.writeEnum(
-      10,
+      8,
       f
     );
   }
   f = message.getApproveddate();
   if (f.length > 0) {
     writer.writeString(
-      11,
+      9,
       f
     );
   }
   f = message.getReviewsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      12,
+      10,
       f,
       proto.ag.Review.serializeBinaryToWriter
     );
@@ -6181,7 +6157,7 @@ proto.ag.Submission.serializeBinaryToWriter = function(message, writer) {
   f = message.getBuildinfo();
   if (f != null) {
     writer.writeMessage(
-      13,
+      11,
       f,
       kit_score_score_pb.BuildInfo.serializeBinaryToWriter
     );
@@ -6189,7 +6165,7 @@ proto.ag.Submission.serializeBinaryToWriter = function(message, writer) {
   f = message.getScoresList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      14,
+      12,
       f,
       kit_score_score_pb.Score.serializeBinaryToWriter
     );
@@ -6298,28 +6274,10 @@ proto.ag.Submission.prototype.setScore = function(value) {
 
 
 /**
- * optional string commitHash = 8;
+ * optional string commitHash = 6;
  * @return {string}
  */
 proto.ag.Submission.prototype.getCommithash = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.ag.Submission} returns this
- */
-proto.ag.Submission.prototype.setCommithash = function(value) {
-  return jspb.Message.setProto3StringField(this, 8, value);
-};
-
-
-/**
- * optional string scoreObjects = 6;
- * @return {string}
- */
-proto.ag.Submission.prototype.getScoreobjects = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
 };
 
@@ -6328,35 +6286,17 @@ proto.ag.Submission.prototype.getScoreobjects = function() {
  * @param {string} value
  * @return {!proto.ag.Submission} returns this
  */
-proto.ag.Submission.prototype.setScoreobjects = function(value) {
+proto.ag.Submission.prototype.setCommithash = function(value) {
   return jspb.Message.setProto3StringField(this, 6, value);
 };
 
 
 /**
- * optional string oldBuildInfo = 7;
- * @return {string}
- */
-proto.ag.Submission.prototype.getOldbuildinfo = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.ag.Submission} returns this
- */
-proto.ag.Submission.prototype.setOldbuildinfo = function(value) {
-  return jspb.Message.setProto3StringField(this, 7, value);
-};
-
-
-/**
- * optional bool released = 9;
+ * optional bool released = 7;
  * @return {boolean}
  */
 proto.ag.Submission.prototype.getReleased = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 9, false));
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 7, false));
 };
 
 
@@ -6365,16 +6305,16 @@ proto.ag.Submission.prototype.getReleased = function() {
  * @return {!proto.ag.Submission} returns this
  */
 proto.ag.Submission.prototype.setReleased = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 9, value);
+  return jspb.Message.setProto3BooleanField(this, 7, value);
 };
 
 
 /**
- * optional Status status = 10;
+ * optional Status status = 8;
  * @return {!proto.ag.Submission.Status}
  */
 proto.ag.Submission.prototype.getStatus = function() {
-  return /** @type {!proto.ag.Submission.Status} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
+  return /** @type {!proto.ag.Submission.Status} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
 };
 
 
@@ -6383,16 +6323,16 @@ proto.ag.Submission.prototype.getStatus = function() {
  * @return {!proto.ag.Submission} returns this
  */
 proto.ag.Submission.prototype.setStatus = function(value) {
-  return jspb.Message.setProto3EnumField(this, 10, value);
+  return jspb.Message.setProto3EnumField(this, 8, value);
 };
 
 
 /**
- * optional string approvedDate = 11;
+ * optional string approvedDate = 9;
  * @return {string}
  */
 proto.ag.Submission.prototype.getApproveddate = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 11, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
 };
 
 
@@ -6401,17 +6341,17 @@ proto.ag.Submission.prototype.getApproveddate = function() {
  * @return {!proto.ag.Submission} returns this
  */
 proto.ag.Submission.prototype.setApproveddate = function(value) {
-  return jspb.Message.setProto3StringField(this, 11, value);
+  return jspb.Message.setProto3StringField(this, 9, value);
 };
 
 
 /**
- * repeated Review reviews = 12;
+ * repeated Review reviews = 10;
  * @return {!Array<!proto.ag.Review>}
  */
 proto.ag.Submission.prototype.getReviewsList = function() {
   return /** @type{!Array<!proto.ag.Review>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.ag.Review, 12));
+    jspb.Message.getRepeatedWrapperField(this, proto.ag.Review, 10));
 };
 
 
@@ -6420,7 +6360,7 @@ proto.ag.Submission.prototype.getReviewsList = function() {
  * @return {!proto.ag.Submission} returns this
 */
 proto.ag.Submission.prototype.setReviewsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 12, value);
+  return jspb.Message.setRepeatedWrapperField(this, 10, value);
 };
 
 
@@ -6430,7 +6370,7 @@ proto.ag.Submission.prototype.setReviewsList = function(value) {
  * @return {!proto.ag.Review}
  */
 proto.ag.Submission.prototype.addReviews = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 12, opt_value, proto.ag.Review, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 10, opt_value, proto.ag.Review, opt_index);
 };
 
 
@@ -6444,12 +6384,12 @@ proto.ag.Submission.prototype.clearReviewsList = function() {
 
 
 /**
- * optional score.BuildInfo BuildInfo = 13;
+ * optional score.BuildInfo BuildInfo = 11;
  * @return {?proto.score.BuildInfo}
  */
 proto.ag.Submission.prototype.getBuildinfo = function() {
   return /** @type{?proto.score.BuildInfo} */ (
-    jspb.Message.getWrapperField(this, kit_score_score_pb.BuildInfo, 13));
+    jspb.Message.getWrapperField(this, kit_score_score_pb.BuildInfo, 11));
 };
 
 
@@ -6458,7 +6398,7 @@ proto.ag.Submission.prototype.getBuildinfo = function() {
  * @return {!proto.ag.Submission} returns this
 */
 proto.ag.Submission.prototype.setBuildinfo = function(value) {
-  return jspb.Message.setWrapperField(this, 13, value);
+  return jspb.Message.setWrapperField(this, 11, value);
 };
 
 
@@ -6476,17 +6416,17 @@ proto.ag.Submission.prototype.clearBuildinfo = function() {
  * @return {boolean}
  */
 proto.ag.Submission.prototype.hasBuildinfo = function() {
-  return jspb.Message.getField(this, 13) != null;
+  return jspb.Message.getField(this, 11) != null;
 };
 
 
 /**
- * repeated score.Score Scores = 14;
+ * repeated score.Score Scores = 12;
  * @return {!Array<!proto.score.Score>}
  */
 proto.ag.Submission.prototype.getScoresList = function() {
   return /** @type{!Array<!proto.score.Score>} */ (
-    jspb.Message.getRepeatedWrapperField(this, kit_score_score_pb.Score, 14));
+    jspb.Message.getRepeatedWrapperField(this, kit_score_score_pb.Score, 12));
 };
 
 
@@ -6495,7 +6435,7 @@ proto.ag.Submission.prototype.getScoresList = function() {
  * @return {!proto.ag.Submission} returns this
 */
 proto.ag.Submission.prototype.setScoresList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 14, value);
+  return jspb.Message.setRepeatedWrapperField(this, 12, value);
 };
 
 
@@ -6505,7 +6445,7 @@ proto.ag.Submission.prototype.setScoresList = function(value) {
  * @return {!proto.score.Score}
  */
 proto.ag.Submission.prototype.addScores = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 14, opt_value, proto.score.Score, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 12, opt_value, proto.score.Score, opt_index);
 };
 
 
