@@ -329,3 +329,10 @@ input{
     background-color: #FFCCCC;
     cursor: pointer;
 }
+
+.course-button {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    margin: 1.25rem;
+}
