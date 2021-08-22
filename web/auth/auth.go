@@ -220,7 +220,6 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 				logger.Debug("failed to get logged in user from session; logout")
 				return OAuth2Logout(logger)(c)
 			}
-
 			// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 			us := i.(*UserSession)
 			// Associate user with remote identity.
@@ -298,7 +297,6 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 		if token := extractSessionCookie(w); len(token) > 0 {
 			Add(token, us.ID)
 		}
-
 		return c.Redirect(http.StatusFound, redirect)
 	}
 }
@@ -318,7 +316,7 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 					logger.Error(err.Error())
 					return err
 				}
-				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+				return next(c)
 			}
 
 			i, ok := sess.Values[UserKey]
