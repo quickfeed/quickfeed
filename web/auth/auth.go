@@ -61,7 +61,7 @@ var cookieStore = make(map[string]uint64)
 // Add adds cookie for userID, replacing userID's current cookie, if any.
 func Add(cookie string, userID uint64) {
 	for currentCookie, id := range cookieStore {
-		if id == userID && currentCookie != cookie {
+		if id != userID || (id == userID && currentCookie != cookie) {
 			delete(cookieStore, currentCookie)
 		}
 	}
