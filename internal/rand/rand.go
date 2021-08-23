@@ -1,15 +1,15 @@
-package qutil
+package rand
 
 import (
 	"crypto/rand"
-	"crypto/sha1"
+	"crypto/sha256"
 	"fmt"
 )
 
-func RandomString() string {
+func String() string {
 	randomness := make([]byte, 10)
 	if _, err := rand.Read(randomness); err != nil {
 		panic("couldn't generate randomness")
 	}
-	return fmt.Sprintf("%x", sha1.Sum(randomness))
+	return fmt.Sprintf("%x", sha256.Sum256(randomness))
 }

@@ -7,7 +7,7 @@ import (
 	"text/template"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/internal/qutil"
+	"github.com/autograde/quickfeed/internal/rand"
 )
 
 // AssignmentInfo holds metadata needed to fetch student code
@@ -28,7 +28,7 @@ func newAssignmentInfo(course *pb.Course, assignment *pb.Assignment, cloneURL, t
 		CreatorAccessToken: course.GetAccessToken(),
 		GetURL:             cloneURL,
 		TestURL:            testURL,
-		RandomSecret:       qutil.RandomString(),
+		RandomSecret:       rand.String(),
 	}
 }
 
