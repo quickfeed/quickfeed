@@ -273,7 +273,6 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database) echo.Handle
 				logger.Debug("failed to get logged in user from session; logout")
 				return OAuth2Logout(logger)(c)
 			}
-
 			// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 			us := i.(*UserSession)
 			logger.Debug(us)
@@ -355,28 +354,21 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database) echo.Handle
 		us := newUserSession(user.ID)
 		us.enableProvider(provider)
 		sess.Values[UserKey] = us
-		logger.Debugf("New: %s", us)
-		// sess.Save(...) saves the session to a store in addition to adding an outgoing ('set-cookie') session cookie to the response.
+		logger.Debugf("New Session: %s", us)
+		// save the session to a store in addition to adding an outgoing ('set-cookie') session cookie to the response.
 		if err := sess.Save(r, w); err != nil {
 			logger.Error(err.Error())
 			return err
 		}
 		logger.Debugf("Session.Save: %v", sess)
 
-		// Enable gRPC requests for session
+		// Register session and associated user ID to enable gRPC requests for this session.
 		if token := extractSessionCookie(w); len(token) > 0 {
 			logger.Debugf("extractSessionCookie: %v", token)
 			Add(token, us.ID)
 		} else {
-			logger.Debugf("no session cookie found in w: %v", w)
+			logger.Debugf("No session cookie found in w: %v", w)
 		}
-
-		// TODO similar code repeated above also...
-		// Register session and associated user ID to enable gRPC calls for the session.
-		// if token := extractSessionCookie(w); len(token) > 0 {
-		// 	Add(token, us.ID)
-		// }
-
 		return c.Redirect(http.StatusFound, redirect)
 	}
 }
@@ -396,7 +388,7 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, scms *Scms) 
 					logger.Error(err.Error())
 					return err
 				}
-				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+				return next(c)
 			}
 			logger.Debugf("%s", sessionData(sess))
 

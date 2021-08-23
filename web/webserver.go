@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/autograde/quickfeed/internal/rand"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/autograde/quickfeed/web/hooks"
 	"github.com/gorilla/sessions"
@@ -35,7 +36,8 @@ func New(ags *AutograderService, public, httpAddr string) {
 		ags.logger.Fatalf("file not found %s", entryPoint)
 	}
 
-	store := newStore([]byte("secret"))
+	secret := rand.String()
+	store := newStore([]byte(secret))
 	gothic.Store = store
 	e := newServer(ags, store)
 
