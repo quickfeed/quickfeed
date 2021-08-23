@@ -218,7 +218,7 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database) echo.HandlerFu
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
-func OAuth2Callback(logger *zap.SugaredLogger, db database.Database) echo.HandlerFunc {
+func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		logger.Debug("OAuth2Callback: started")
 		w := c.Response()
@@ -292,6 +292,15 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database) echo.Handle
 				logger.Error(err.Error())
 				return err
 			}
+
+			if user, err := db.GetUser(us.ID); err != nil {
+				// handle
+			} else {
+				if ok := updateScm(user, c, scms, logger); !ok {
+					logger.Debugf("Failed to update SCM for User: %v", user)
+				}
+			}
+
 			logger.Debugf("enableProvider: %v, r=%v, w=%v", provider, r, w)
 			// Enable gRPC requests for session
 			if token := extractSessionCookie(w); len(token) > 0 {
@@ -362,6 +371,10 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database) echo.Handle
 		}
 		logger.Debugf("Session.Save: %v", sess)
 
+		if ok := updateScm(user, c, scms, logger); !ok {
+			logger.Debugf("Failed to update SCM for User: %v", user)
+		}
+
 		// Register session and associated user ID to enable gRPC requests for this session.
 		if token := extractSessionCookie(w); len(token) > 0 {
 			logger.Debugf("extractSessionCookie: %v", token)
@@ -414,21 +427,6 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, scms *Scms) 
 			}
 			c.Set(UserKey, user)
 
-			foundSCMProvider := false
-			for _, remoteID := range user.RemoteIdentities {
-				scm, err := scms.GetOrCreateSCMEntry(logger.Desugar(), remoteID.GetProvider(), remoteID.GetAccessToken())
-				if err != nil {
-					logger.Error("unknown SCM provider", zap.Error(err))
-					continue
-				}
-				foundSCMProvider = true
-				c.Set(remoteID.Provider, scm)
-			}
-			if !foundSCMProvider {
-				logger.Info("no SCM providers found for", zap.String("user", user.String()))
-				return echo.NewHTTPError(http.StatusBadRequest, err)
-			}
-
 			// TODO: Add access control list.
 			// - Extract endpoint.
 			// - Verify whether the user has sufficient rights. This
@@ -439,6 +437,24 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, scms *Scms) 
 			return next(c)
 		}
 	}
+}
+
+func updateScm(user *pb.User, ctx echo.Context, scms *Scms, logger *zap.SugaredLogger) bool {
+	foundSCMProvider := false
+	for _, remoteID := range user.RemoteIdentities {
+		scm, err := scms.GetOrCreateSCMEntry(logger.Desugar(), remoteID.GetProvider(), remoteID.GetAccessToken())
+		if err != nil {
+			logger.Error("unknown SCM provider", zap.Error(err))
+			continue
+		}
+		foundSCMProvider = true
+		ctx.Set(remoteID.Provider, scm)
+	}
+	if !foundSCMProvider {
+		logger.Info("no SCM providers found for", zap.String("user", user.String()))
+		return false
+	}
+	return true
 }
 
 func extractRedirectURL(r *http.Request, key string) string {
