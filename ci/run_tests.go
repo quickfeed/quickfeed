@@ -88,6 +88,12 @@ func runTests(runner Runner, info *AssignmentInfo, rData *RunData) (*execData, e
 
 // recordResults for the assignment given by the run data structure.
 func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunData, result *score.Results) {
+	// Sanity check of the result object
+	if result == nil || result.BuildInfo == nil {
+		logger.Errorf("No build info found; faulty Results object received: %v", result)
+		return
+	}
+
 	assignment := rData.Assignment
 	logger.Debugf("Fetching most recent submission for assignment %d", assignment.GetID())
 	submissionQuery := &pb.Submission{
@@ -103,7 +109,13 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 
 	// Keep the original submission's delivery date (obtained from the database (newest)) if this is a manual rebuild.
 	if rData.Rebuild {
-		result.BuildInfo.BuildDate = newest.BuildInfo.BuildDate
+		if newest != nil && newest.BuildInfo != nil {
+			// Only update the build date if we found a previous submission
+			result.BuildInfo.BuildDate = newest.BuildInfo.BuildDate
+		} else {
+			// Can happen if a previous submission failed to store to the database
+			logger.Debug("Rebuild with no previous submission stored in database")
+		}
 	}
 
 	score := result.Sum()
