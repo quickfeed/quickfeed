@@ -119,7 +119,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Callback(logger(t), db, &auth.Scms{})
+	authHandler := auth.OAuth2Callback(logger(t), db, auth.NewScms())
 	withSession := session.Middleware(store)(authHandler)
 	err := withSession(c)
 	httpErr, ok := err.(*echo.HTTPError)
@@ -315,7 +315,7 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 		}
 	}
 
-	authHandler := auth.OAuth2Callback(logger(t), db, &auth.Scms{})
+	authHandler := auth.OAuth2Callback(logger(t), db, auth.NewScms())
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
