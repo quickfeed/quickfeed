@@ -94,7 +94,7 @@ func OAuth2Logout(logger *zap.SugaredLogger) echo.HandlerFunc {
 			logger.Error(err.Error())
 			return sess.Save(r, w)
 		}
-		logger.Debugf("%s", sessionData(sess))
+		logger.Debug(sessionData(sess))
 
 		if i, ok := sess.Values[UserKey]; ok {
 			// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
@@ -107,7 +107,7 @@ func OAuth2Logout(logger *zap.SugaredLogger) echo.HandlerFunc {
 					logger.Error(err.Error())
 					return err
 				}
-				logger.Debugf("%s", sessionData(sess))
+				logger.Debug(sessionData(sess))
 
 				sess.Options.MaxAge = -1
 				sess.Values = make(map[interface{}]interface{})
@@ -140,7 +140,7 @@ func PreAuth(logger *zap.SugaredLogger, db database.Database) echo.MiddlewareFun
 				}
 				return next(c)
 			}
-			logger.Debugf("%s", sessionData(sess))
+			logger.Debug(sessionData(sess))
 
 			if i, ok := sess.Values[UserKey]; ok {
 				// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
@@ -188,31 +188,28 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database) echo.HandlerFu
 			logger.Error(err.Error())
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
-		logger.Debugf("Provider: %v", provider)
-
 		var teacher int
 		if strings.HasSuffix(provider, TeacherSuffix) {
 			teacher = 1
 		}
-		logger.Debugf("Teacher: %v", teacher)
+		logger.Debugf("Provider: %v ; Teacher: %v", provider, teacher)
 
 		qv := r.URL.Query()
+		logger.Debugf("qv: %v", qv)
 		redirect := extractRedirectURL(r, Redirect)
-		logger.Debugf("qv: %v\tredirect: %v", qv, redirect)
+		logger.Debugf("redirect: %v", redirect)
 		// TODO: Add a random string to protect against CSRF.
 		qv.Set(State, strconv.Itoa(teacher)+redirect)
-		logger.Debugf("State=: %v", strconv.Itoa(teacher)+redirect)
+		logger.Debugf("State: %v", strconv.Itoa(teacher)+redirect)
 		r.URL.RawQuery = qv.Encode()
-		logger.Debugf("RawQuery=: %v", r.URL.RawQuery)
+		logger.Debugf("RawQuery: %v", r.URL.RawQuery)
 
 		url, err := gothic.GetAuthURL(w, r)
 		if err != nil {
 			logger.Error(err.Error())
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
-		logger.Debugf("URL=: %v", url)
-
-		// Redirect to provider to perform authentication.
+		logger.Debugf("Redirecting to %s to perform authentication; AuthURL: %v", provider, url)
 		return c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
@@ -225,9 +222,9 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 		r := c.Request()
 
 		qv := r.URL.Query()
+		logger.Debugf("qv: %v", qv)
 		redirect, teacher := extractState(r, State)
-		logger.Debugf("qv: %v\tredirect: %v", qv, redirect)
-		logger.Debugf("Teacher: %v", teacher)
+		logger.Debugf("Redirect: %v ; Teacher: %t", redirect, teacher)
 
 		provider, err := gothic.GetProviderName(r)
 		if err != nil {
@@ -240,7 +237,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 			logger.Debugf("Set('provider') = %v", provider+TeacherSuffix)
 		}
 		r.URL.RawQuery = qv.Encode()
-		logger.Debugf("RawQuery=: %v", r.URL.RawQuery)
+		logger.Debugf("RawQuery: %v", r.URL.RawQuery)
 
 		// Complete authentication.
 		externalUser, err := gothic.CompleteUserAuth(w, r)
@@ -248,14 +245,14 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 			logger.Error("failed to complete user authentication", zap.Error(err))
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
-		logger.Debugf("externalUser=: %v", lg.IndentJson(externalUser))
+		logger.Debugf("externalUser: %v", lg.IndentJson(externalUser))
 
 		remoteID, err := strconv.ParseUint(externalUser.UserID, 10, 64)
 		if err != nil {
 			logger.Error(err.Error())
 			return err
 		}
-		logger.Debugf("remoteID=: %v", remoteID)
+		logger.Debugf("remoteID: %v", remoteID)
 
 		// session.Get(name, context) returns an existing session, or a new session if the context does not have an existing session
 		sess, err := session.Get(SessionKey, c)
@@ -292,16 +289,17 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 				logger.Error(err.Error())
 				return err
 			}
+			logger.Debugf("enableProvider: %v, r=%v, w=%v", provider, r, w)
 
 			if user, err := db.GetUser(us.ID); err != nil {
 				// handle
+				logger.Errorf("Failed to get user: %v", err)
 			} else {
-				if ok := updateScm(user, c, scms, logger); !ok {
+				if ok := updateScm(c, logger, scms, user); !ok {
 					logger.Debugf("Failed to update SCM for User: %v", user)
 				}
 			}
 
-			logger.Debugf("enableProvider: %v, r=%v, w=%v", provider, r, w)
 			// Enable gRPC requests for session
 			if token := extractSessionCookie(w); len(token) > 0 {
 				logger.Debugf("extractSessionCookie: %v", token)
@@ -309,6 +307,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 			} else {
 				logger.Debugf("no session cookie found in w: %v", w)
 			}
+			logger.Debugf("Redirecting: %s", redirect)
 			return c.Redirect(http.StatusFound, redirect)
 		}
 
@@ -371,7 +370,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 		}
 		logger.Debugf("Session.Save: %v", sess)
 
-		if ok := updateScm(user, c, scms, logger); !ok {
+		if ok := updateScm(c, logger, scms, user); !ok {
 			logger.Debugf("Failed to update SCM for User: %v", user)
 		}
 
@@ -382,6 +381,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 		} else {
 			logger.Debugf("No session cookie found in w: %v", w)
 		}
+		logger.Debugf("Redirecting: %s", redirect)
 		return c.Redirect(http.StatusFound, redirect)
 	}
 }
@@ -403,7 +403,7 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, scms *Scms) 
 				}
 				return next(c)
 			}
-			logger.Debugf("%s", sessionData(sess))
+			logger.Debug(sessionData(sess))
 
 			i, ok := sess.Values[UserKey]
 			if !ok {
@@ -439,22 +439,21 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, scms *Scms) 
 	}
 }
 
-func updateScm(user *pb.User, ctx echo.Context, scms *Scms, logger *zap.SugaredLogger) bool {
+func updateScm(ctx echo.Context, logger *zap.SugaredLogger, scms *Scms, user *pb.User) bool {
 	foundSCMProvider := false
 	for _, remoteID := range user.RemoteIdentities {
 		scm, err := scms.GetOrCreateSCMEntry(logger.Desugar(), remoteID.GetProvider(), remoteID.GetAccessToken())
 		if err != nil {
-			logger.Error("unknown SCM provider", zap.Error(err))
+			logger.Errorf("Unknown SCM provider: %v", err)
 			continue
 		}
 		foundSCMProvider = true
 		ctx.Set(remoteID.Provider, scm)
 	}
 	if !foundSCMProvider {
-		logger.Info("no SCM providers found for", zap.String("user", user.String()))
-		return false
+		logger.Debugf("No SCM provider found for user %v", user)
 	}
-	return true
+	return foundSCMProvider
 }
 
 func extractRedirectURL(r *http.Request, key string) string {
