@@ -10,6 +10,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
+	lg "github.com/autograde/quickfeed/log"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -247,7 +248,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database) echo.Handle
 			logger.Error("failed to complete user authentication", zap.Error(err))
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
-		logger.Debugf("externalUser=: %v", externalUser)
+		logger.Debugf("externalUser=: %v", lg.IndentJson(externalUser))
 
 		remoteID, err := strconv.ParseUint(externalUser.UserID, 10, 64)
 		if err != nil {
