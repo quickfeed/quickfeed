@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/autograde/quickfeed/internal/rand"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/autograde/quickfeed/web/hooks"
 	"github.com/gorilla/sessions"
@@ -35,7 +36,8 @@ func New(ags *AutograderService, public, httpAddr string) {
 		ags.logger.Fatalf("file not found %s", entryPoint)
 	}
 
-	store := newStore([]byte("secret"))
+	secret := rand.String()
+	store := newStore([]byte(secret))
 	gothic.Store = store
 	e := newServer(ags, store)
 
@@ -55,7 +57,7 @@ func newServer(ags *AutograderService, store sessions.Store) *echo.Echo {
 		Logger(ags.logger.Desugar()),
 		middleware.Secure(),
 		session.Middleware(store),
-		auth.AccessControl(ags.logger.Desugar(), ags.db, ags.scms),
+		auth.AccessControl(ags.logger, ags.db, ags.scms),
 	)
 	return e
 }
@@ -122,7 +124,6 @@ func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]b
 }
 
 func registerAuth(ags *AutograderService, e *echo.Echo) {
-	logger := ags.logger.Desugar()
 	// makes the oauth2 provider available in the request query so that
 	// markbates/goth/gothic.GetProviderName can find it.
 	withProvider := func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -134,10 +135,10 @@ func registerAuth(ags *AutograderService, e *echo.Echo) {
 		}
 	}
 
-	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(logger, ags.db))
-	oauth2.GET("", auth.OAuth2Login(logger, ags.db))
-	oauth2.GET("/callback", auth.OAuth2Callback(logger, ags.db))
-	e.GET("/logout", auth.OAuth2Logout(logger))
+	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(ags.logger, ags.db))
+	oauth2.GET("", auth.OAuth2Login(ags.logger, ags.db))
+	oauth2.GET("/callback", auth.OAuth2Callback(ags.logger, ags.db, ags.scms))
+	e.GET("/logout", auth.OAuth2Logout(ags.logger))
 }
 
 func registerFrontend(e *echo.Echo, entryPoint, public string) {

@@ -34,6 +34,15 @@ func init() {
 	})
 }
 
+func logger(t *testing.T) *zap.SugaredLogger {
+	t.Helper()
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return logger.Sugar()
+}
+
 func TestOAuth2Logout(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, logoutURL, nil)
 	w := httptest.NewRecorder()
@@ -61,7 +70,7 @@ func TestOAuth2Logout(t *testing.T) {
 		t.Errorf("have %d sessions want %d", ns, 2)
 	}
 
-	authHandler := auth.OAuth2Logout(zap.NewNop())
+	authHandler := auth.OAuth2Logout(logger(t))
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -88,7 +97,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Login(zap.NewNop(), db)
+	authHandler := auth.OAuth2Login(logger(t), db)
 	withSession := session.Middleware(store)(authHandler)
 	if err := withSession(c); err != nil {
 		t.Error(err)
@@ -110,7 +119,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Callback(zap.NewNop(), db)
+	authHandler := auth.OAuth2Callback(logger(t), db, auth.NewScms())
 	withSession := session.Middleware(store)(authHandler)
 	err := withSession(c)
 	httpErr, ok := err.(*echo.HTTPError)
@@ -177,7 +186,7 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 		c.SetParamValues(newProvider)
 	}
 
-	authHandler := auth.PreAuth(zap.NewNop(), db)(func(c echo.Context) error { return nil })
+	authHandler := auth.PreAuth(logger(t), db)(func(c echo.Context) error { return nil })
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -233,7 +242,7 @@ func TestOAuth2LoginAuthenticated(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Login(zap.NewNop(), db)
+	authHandler := auth.OAuth2Login(logger(t), db)
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -306,7 +315,7 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 		}
 	}
 
-	authHandler := auth.OAuth2Callback(zap.NewNop(), db)
+	authHandler := auth.OAuth2Callback(logger(t), db, auth.NewScms())
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -349,7 +358,7 @@ func TestAccessControl(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	m := auth.AccessControl(zap.NewNop(), db, auth.NewScms())
+	m := auth.AccessControl(logger(t), db, auth.NewScms())
 	protected := session.Middleware(store)(m(func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	}))

@@ -2,8 +2,6 @@ package ci
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/sha1"
 	"fmt"
 	"time"
 
@@ -139,14 +137,6 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 	if !rData.Rebuild {
 		updateSlipDays(logger, db, rData.Assignment, newSubmission)
 	}
-}
-
-func randomSecret() string {
-	randomness := make([]byte, 10)
-	if _, err := rand.Read(randomness); err != nil {
-		panic("couldn't generate randomness")
-	}
-	return fmt.Sprintf("%x", sha1.Sum(randomness))
 }
 
 func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission) {
