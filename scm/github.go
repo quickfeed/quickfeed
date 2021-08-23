@@ -115,26 +115,30 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 		}
 	}
 
-	// first make sure that repo does not already exist for this user or group
+	// check that repo does not already exist for this user or group
 	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization.Path, slug.Make(opt.Path))
-	if err != nil {
-		// in most cases the repo will not exist and "not found" error will be returned
-		s.logger.Debugf("CreateRepository got expected error when checking for %s repository: %s", opt.Path, err)
+	if repo != nil {
+		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Path, repo)
+		return toRepository(repo), nil
 	}
+	// error expected to be 404 Not Found; logging here in case it's a different error
+	s.logger.Debugf("CreateRepository: check for repository %s: %s", opt.Path, err)
 
-	if repo == nil {
-		repo, _, err = s.client.Repositories.Create(ctx, opt.Organization.Path, &github.Repository{
-			Name:    &opt.Path,
-			Private: &opt.Private,
-		})
-		if err != nil {
-			return nil, ErrFailedSCM{
-				Method:   "CreateRepository",
-				Message:  fmt.Sprintf("failed to create repository %s, make sure it does not already exist", opt.Path),
-				GitError: err,
-			}
+	// repo does not exist, create it
+	s.logger.Debugf("CreateRepository: creating %s", opt.Path)
+	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization.Path, &github.Repository{
+		Name:    &opt.Path,
+		Private: &opt.Private,
+	})
+	if err != nil {
+		return nil, ErrFailedSCM{
+			Method:   "CreateRepository",
+			Message:  fmt.Sprintf("failed to create repository %s, make sure it does not already exist", opt.Path),
+			GitError: err,
 		}
 	}
+	s.logger.Debugf("CreateRepository: done creating %s", opt.Path)
+
 	return toRepository(repo), nil
 }
 
