@@ -107,8 +107,8 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 	}
 
 	// add push access to student repo
-	if err = sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: repo.Owner, Path: repo.Path}, student, scm.RepoPush); err != nil {
-		return nil, err
+	if err = sc.UpdateRepoAccess(ctx, repo, student, scm.RepoPush); err != nil {
+		return nil, fmt.Errorf("createStudentRepo: failed to update repo push access: %w", err)
 	}
 	return repo, nil
 }
