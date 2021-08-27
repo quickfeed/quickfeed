@@ -106,13 +106,16 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 		buildCmd := fmt.Sprintf("docker build -t %s .", strings.ToLower(course.GetCode()))
 		job.Commands = []string{
 			"cd " + buildDir,
+			"ls -la",
+			"cat Dockerfile",
 			buildCmd,
 		}
 		logger.Debugf("cd %v", buildDir)
 		logger.Debugf(buildCmd)
 
 		if out, err := runner.Run(context.Background(), job); err != nil {
-			logger.Errorf("Failed to build image from %s's Dockerfile (%s): %s", course.GetCode(), out, err)
+			logger.Errorf("Failed to build image from %s's Dockerfile: %s", course.GetCode(), err)
+			logger.Debug(out)
 		}
 	}
 	return assignments, dockerfile, nil
