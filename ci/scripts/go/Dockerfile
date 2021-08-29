@@ -1,4 +1,4 @@
-FROM golang:1.17beta1-alpine
+FROM golang:1.17-alpine
 
 # Install bash and git (and build-base to get gcc)
 # (this is required when building FROM: golang:alpine)
