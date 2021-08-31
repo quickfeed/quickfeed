@@ -314,7 +314,6 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission2 := pb.Submission{
-		ID:           1,
 		UserID:       user.ID,
 		AssignmentID: assignment1.ID,
 		Reviews:      []*pb.Review{},
@@ -324,7 +323,6 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission3 := pb.Submission{
-		ID:           2,
 		UserID:       user.ID,
 		AssignmentID: assignment2.ID,
 		Reviews:      []*pb.Review{},
