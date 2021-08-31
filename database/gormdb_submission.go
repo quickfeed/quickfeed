@@ -21,42 +21,8 @@ var (
 // The submissionQuery must always specify the assignment, and may specify the ID of
 // either an individual student or a group, but not both.
 func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
-	// Foreign key must be greater than 0.
-	if submission.AssignmentID < 1 {
-		return ErrInvalidAssignmentID
-	}
-
-	// Either user or group id must be set, but not both.
-	var m *gorm.DB
-	switch {
-	case submission.UserID > 0 && submission.GroupID > 0:
-		return ErrInvalidSubmission
-	case submission.UserID > 0:
-		m = db.conn.First(&pb.User{ID: submission.UserID})
-	case submission.GroupID > 0:
-		m = db.conn.First(&pb.Group{ID: submission.GroupID})
-	default:
-		// neither UserID nor GroupID are not set
-		return ErrInvalidSubmission
-	}
-
-	// Check that user/group with given ID exists.
-	var group int64
-	if err := m.Count(&group).Error; err != nil {
-		return fmt.Errorf("submission not found: %+v: %w", submission, err)
-	}
-
-	// Checks that the assignment exists.
-	var assignment int64
-	if err := db.conn.Model(&pb.Assignment{}).Where(&pb.Assignment{
-		ID: submission.AssignmentID,
-	}).Count(&assignment).Error; err != nil {
-		return fmt.Errorf("assignment %d not found: %w", submission.AssignmentID, err)
-	}
-
-	if assignment+group != 2 {
-		// Exactly one assignment and user/group must exist together.
-		return fmt.Errorf("inconsistent database state: %w", gorm.ErrRecordNotFound)
+	if err := db.checkSubmission(submission); err != nil {
+		return err
 	}
 
 	// Make a new submission struct for the database query to check
@@ -98,6 +64,48 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 		}
 		return nil // will commit transaction
 	})
+}
+
+// checkSubmission returns an error if the submission query is invalid; otherwise nil is returned.
+func (db *GormDB) checkSubmission(submission *pb.Submission) error {
+	// Foreign key must be greater than 0.
+	if submission.AssignmentID < 1 {
+		return ErrInvalidAssignmentID
+	}
+
+	// Either user or group id must be set, but not both.
+	var m *gorm.DB
+	switch {
+	case submission.UserID > 0 && submission.GroupID > 0:
+		return ErrInvalidSubmission
+	case submission.UserID > 0:
+		m = db.conn.First(&pb.User{ID: submission.UserID})
+	case submission.GroupID > 0:
+		m = db.conn.First(&pb.Group{ID: submission.GroupID})
+	default:
+		// neither UserID nor GroupID are not set
+		return ErrInvalidSubmission
+	}
+
+	// Check that user/group with given ID exists.
+	var idCount int64
+	if err := m.Count(&idCount).Error; err != nil {
+		return fmt.Errorf("submission not found: %+v: %w", submission, err)
+	}
+
+	// Checks that the assignment exists.
+	var assignment int64
+	if err := db.conn.Model(&pb.Assignment{}).Where(&pb.Assignment{
+		ID: submission.AssignmentID,
+	}).Count(&assignment).Error; err != nil {
+		return fmt.Errorf("assignment %d not found: %w", submission.AssignmentID, err)
+	}
+
+	// Exactly one assignment and user/group must exist together.
+	if assignment+idCount != 2 {
+		return fmt.Errorf("inconsistent database state: %w", gorm.ErrRecordNotFound)
+	}
+	return nil
 }
 
 // GetSubmission fetches a submission record.
