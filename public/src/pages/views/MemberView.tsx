@@ -240,7 +240,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     }
 
     private editButtonString(): string {
-        return this.state.editing ? "Cancel" : "Edit";
+        return this.state.editing ? "Done" : "Edit";
     }
 
     private generateUserButtons(enrollment: Enrollment): ILink[] {

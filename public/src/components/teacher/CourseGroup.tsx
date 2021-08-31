@@ -263,7 +263,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     }
 
     private editButtonString(): string {
-        return this.state.editing ? "Cancel" : "Edit";
+        return this.state.editing ? "Done" : "Edit";
     }
 
     private generateErrorMessage(status: Status) {
