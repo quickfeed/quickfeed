@@ -1,9 +1,19 @@
 package database
 
 import (
+	"errors"
+	"fmt"
+
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/kit/score"
 	"gorm.io/gorm"
+)
+
+var (
+	// ErrInvalidSubmission is returned if the submission specify both UserID and GroupID or neither.
+	ErrInvalidSubmission = errors.New("submission must specify exactly one of UserID or GroupID")
+	// ErrInvalidAssignmentID is returned if assignment is not specified.
+	ErrInvalidAssignmentID = errors.New("cannot create submission without an associated assignment")
 )
 
 // CreateSubmission creates a new submission record or updates the most
@@ -11,28 +21,29 @@ import (
 // The submissionQuery must always specify the assignment, and may specify the ID of
 // either an individual student or a group, but not both.
 func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
-	// Primary key must be greater than 0.
+	// Foreign key must be greater than 0.
 	if submission.AssignmentID < 1 {
-		return gorm.ErrRecordNotFound
+		return ErrInvalidAssignmentID
 	}
 
 	// Either user or group id must be set, but not both.
 	var m *gorm.DB
 	switch {
 	case submission.UserID > 0 && submission.GroupID > 0:
-		return gorm.ErrRecordNotFound
+		return ErrInvalidSubmission
 	case submission.UserID > 0:
 		m = db.conn.First(&pb.User{ID: submission.UserID})
 	case submission.GroupID > 0:
 		m = db.conn.First(&pb.Group{ID: submission.GroupID})
 	default:
-		return gorm.ErrRecordNotFound
+		// neither UserID nor GroupID are not set
+		return ErrInvalidSubmission
 	}
 
 	// Check that user/group with given ID exists.
 	var group int64
 	if err := m.Count(&group).Error; err != nil {
-		return err
+		return fmt.Errorf("submission not found: %+v: %w", submission, err)
 	}
 
 	// Checks that the assignment exists.
@@ -40,11 +51,12 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	if err := db.conn.Model(&pb.Assignment{}).Where(&pb.Assignment{
 		ID: submission.AssignmentID,
 	}).Count(&assignment).Error; err != nil {
-		return err
+		return fmt.Errorf("assignment %d not found: %w", submission.AssignmentID, err)
 	}
 
 	if assignment+group != 2 {
-		return gorm.ErrRecordNotFound
+		// Exactly one assignment and user/group must exist together.
+		return fmt.Errorf("inconsistent database state: %w", gorm.ErrRecordNotFound)
 	}
 
 	// Make a new submission struct for the database query to check
@@ -64,18 +76,22 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 		return err
 	}
 
+	// TODO(meling) Rewrite this into a transaction.
+
 	if submission.ID != 0 {
 		// A submission will have a build info without any ID, using save will create a duplicate build info
 		// in case the submission already exists in the database. We have to update build info explicitly.
 		// There should be a less hacky way to do it.
 		if submission.BuildInfo != nil {
 			var buildInfo score.BuildInfo
+			// TODO(meling); this query should probably do `err != nil && err != gorm.ErrRecordNotFound`
+			// But add tests to ensure that this path is taken.
 			if err := db.conn.Where("submission_id = ?", submission.ID).Last(&buildInfo).Error; err != nil {
-				return err
+				return fmt.Errorf("could not find old build info for submission %d: %w", submission.ID, err)
 			}
 			submission.BuildInfo.ID = buildInfo.ID
 			if err := db.conn.Save(submission.BuildInfo).Error; err != nil {
-				return err
+				return fmt.Errorf("failed to save build info %+v: %w", submission.BuildInfo, err)
 			}
 		}
 		for _, newScore := range submission.Scores {
@@ -86,16 +102,22 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 				MaxScore:     newScore.MaxScore,
 				Weight:       newScore.Weight,
 			}
+			// TODO(meling); this query should probably do `err != nil && err != gorm.ErrRecordNotFound`
+			// But add tests to ensure that this path is taken.
 			if err := db.conn.Where(query).Last(&oldScore).Error; err != nil {
-				return err
+				return fmt.Errorf("could not find old score for %+v: %w", query, err)
 			}
 			newScore.ID = oldScore.ID
 			if err := db.conn.Save(newScore).Error; err != nil {
-				return err
+				return fmt.Errorf("failed to save score %+v: %w", newScore, err)
 			}
 		}
 	}
-	return db.conn.Save(submission).Error
+	err := db.conn.Save(submission).Error
+	if err != nil {
+		return fmt.Errorf("failed to save submission %+v: %w", submission, err)
+	}
+	return nil
 }
 
 // GetSubmission fetches a submission record.
