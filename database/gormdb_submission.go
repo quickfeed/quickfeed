@@ -60,18 +60,23 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 
 	// We want the last record as there can be multiple submissions
 	// for the same student/group and lab in the database.
-	if err := db.conn.Last(query, query).Error; err != nil && err != gorm.ErrRecordNotFound {
+	tx := db.conn.Begin()
+	if err := tx.Last(query, query).Error; err != nil && err != gorm.ErrRecordNotFound {
+		tx.Rollback()
 		return err
 	}
 
 	if submission.ID != 0 {
-		if err := db.conn.First(&pb.Submission{}, &pb.Submission{ID: submission.ID}).Error; err != nil {
+		if err := tx.First(&pb.Submission{}, &pb.Submission{ID: submission.ID}).Error; err != nil {
+			tx.Rollback()
 			return err
 		}
-		if err := db.conn.Where("submission_id = ?", submission.ID).Delete(&score.Score{}).Error; err != nil {
+		if err := tx.Where("submission_id = ?", submission.ID).Delete(&score.Score{}).Error; err != nil {
+			tx.Rollback()
 			return err
 		}
-		if err := db.conn.Where("submission_id = ?", submission.ID).Delete(&score.BuildInfo{}).Error; err != nil {
+		if err := tx.Where("submission_id = ?", submission.ID).Delete(&score.BuildInfo{}).Error; err != nil {
+			tx.Rollback()
 			return err
 		}
 		if submission.BuildInfo != nil {
@@ -81,7 +86,11 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 			sc.SubmissionID = submission.ID
 		}
 	}
-	return db.conn.Save(submission).Error
+	if err := tx.Save(submission).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }
 
 // GetSubmission fetches a submission record.

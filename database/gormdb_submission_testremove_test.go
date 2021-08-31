@@ -81,12 +81,6 @@ func TestGormDBRemoveTest(t *testing.T) {
 	if len(submissions) != 1 {
 		t.Fatalf("have %d submissions want %d", len(submissions), 1)
 	}
-	// TODO(meling) temporary output for debugging; remove when test passes
-	for i, s := range submissions {
-		for j, score := range s.Scores {
-			t.Logf("submissions[%d].Score[%d]: %+v\n", i, j, score)
-		}
-	}
 
 	updatedBuildInfo.ID = submissions[0].BuildInfo.ID
 	updatedBuildInfo.SubmissionID = oldSubmissionID
