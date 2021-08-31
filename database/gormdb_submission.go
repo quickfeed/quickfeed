@@ -58,39 +58,34 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 		GroupID:      submission.GetGroupID(),
 	}
 
-	// We want the last record as there can be multiple submissions
-	// for the same student/group and lab in the database.
-	tx := db.conn.Begin()
-	if err := tx.Last(query, query).Error; err != nil && err != gorm.ErrRecordNotFound {
-		tx.Rollback()
-		return err
-	}
-
-	if submission.ID != 0 {
-		if err := tx.First(&pb.Submission{}, &pb.Submission{ID: submission.ID}).Error; err != nil {
-			tx.Rollback()
-			return err
+	return db.conn.Transaction(func(tx *gorm.DB) error {
+		// We want the last record as there can be multiple submissions
+		// for the same student/group and lab in the database.
+		if err := tx.Last(query, query).Error; err != nil && err != gorm.ErrRecordNotFound {
+			return err // will rollback transaction
 		}
-		if err := tx.Where("submission_id = ?", submission.ID).Delete(&score.Score{}).Error; err != nil {
-			tx.Rollback()
-			return err
+		if submission.ID != 0 {
+			if err := tx.First(&pb.Submission{}, &pb.Submission{ID: submission.ID}).Error; err != nil {
+				return err // will rollback transaction
+			}
+			if err := tx.Where("submission_id = ?", submission.ID).Delete(&score.Score{}).Error; err != nil {
+				return err // will rollback transaction
+			}
+			if err := tx.Where("submission_id = ?", submission.ID).Delete(&score.BuildInfo{}).Error; err != nil {
+				return err // will rollback transaction
+			}
+			if submission.BuildInfo != nil {
+				submission.BuildInfo.SubmissionID = submission.ID
+			}
+			for _, sc := range submission.Scores {
+				sc.SubmissionID = submission.ID
+			}
 		}
-		if err := tx.Where("submission_id = ?", submission.ID).Delete(&score.BuildInfo{}).Error; err != nil {
-			tx.Rollback()
-			return err
+		if err := tx.Save(submission).Error; err != nil {
+			return err // will rollback transaction
 		}
-		if submission.BuildInfo != nil {
-			submission.BuildInfo.SubmissionID = submission.ID
-		}
-		for _, sc := range submission.Scores {
-			sc.SubmissionID = submission.ID
-		}
-	}
-	if err := tx.Save(submission).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	return tx.Commit().Error
+		return nil // will commit transaction
+	})
 }
 
 // GetSubmission fetches a submission record.
