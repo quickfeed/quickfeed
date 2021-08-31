@@ -1,6 +1,7 @@
 package database_test
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -202,7 +203,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(&pb.Submission{
 		AssignmentID: 1,
 		UserID:       1,
-	}); err != gorm.ErrRecordNotFound {
+	}); !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Fatal(err)
 	}
 
@@ -213,7 +214,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(&pb.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       3,
-	}); err != gorm.ErrRecordNotFound {
+	}); !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Fatal(err)
 	}
 

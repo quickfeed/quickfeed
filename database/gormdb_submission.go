@@ -1,9 +1,19 @@
 package database
 
 import (
+	"errors"
+	"fmt"
+
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/kit/score"
 	"gorm.io/gorm"
+)
+
+var (
+	// ErrInvalidSubmission is returned if the submission specify both UserID and GroupID or neither.
+	ErrInvalidSubmission = errors.New("submission must specify exactly one of UserID or GroupID")
+	// ErrInvalidAssignmentID is returned if assignment is not specified.
+	ErrInvalidAssignmentID = errors.New("cannot create submission without an associated assignment")
 )
 
 // CreateSubmission creates a new submission record or updates the most
@@ -11,28 +21,29 @@ import (
 // The submissionQuery must always specify the assignment, and may specify the ID of
 // either an individual student or a group, but not both.
 func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
-	// Primary key must be greater than 0.
+	// Foreign key must be greater than 0.
 	if submission.AssignmentID < 1 {
-		return gorm.ErrRecordNotFound
+		return ErrInvalidAssignmentID
 	}
 
 	// Either user or group id must be set, but not both.
 	var m *gorm.DB
 	switch {
 	case submission.UserID > 0 && submission.GroupID > 0:
-		return gorm.ErrRecordNotFound
+		return ErrInvalidSubmission
 	case submission.UserID > 0:
 		m = db.conn.First(&pb.User{ID: submission.UserID})
 	case submission.GroupID > 0:
 		m = db.conn.First(&pb.Group{ID: submission.GroupID})
 	default:
-		return gorm.ErrRecordNotFound
+		// neither UserID nor GroupID are not set
+		return ErrInvalidSubmission
 	}
 
 	// Check that user/group with given ID exists.
 	var group int64
 	if err := m.Count(&group).Error; err != nil {
-		return err
+		return fmt.Errorf("submission not found: %+v: %w", submission, err)
 	}
 
 	// Checks that the assignment exists.
@@ -40,11 +51,12 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	if err := db.conn.Model(&pb.Assignment{}).Where(&pb.Assignment{
 		ID: submission.AssignmentID,
 	}).Count(&assignment).Error; err != nil {
-		return err
+		return fmt.Errorf("assignment %d not found: %w", submission.AssignmentID, err)
 	}
 
 	if assignment+group != 2 {
-		return gorm.ErrRecordNotFound
+		// Exactly one assignment and user/group must exist together.
+		return fmt.Errorf("inconsistent database state: %w", gorm.ErrRecordNotFound)
 	}
 
 	// Make a new submission struct for the database query to check
