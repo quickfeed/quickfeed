@@ -21,7 +21,7 @@ var (
 // The submissionQuery must always specify the assignment, and may specify the ID of
 // either an individual student or a group, but not both.
 func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
-	if err := db.checkSubmission(submission); err != nil {
+	if err := db.check(submission); err != nil {
 		return err
 	}
 
@@ -66,8 +66,8 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	})
 }
 
-// checkSubmission returns an error if the submission query is invalid; otherwise nil is returned.
-func (db *GormDB) checkSubmission(submission *pb.Submission) error {
+// check returns an error if the submission query is invalid; otherwise nil is returned.
+func (db *GormDB) check(submission *pb.Submission) error {
 	// Foreign key must be greater than 0.
 	if submission.AssignmentID < 1 {
 		return ErrInvalidAssignmentID
