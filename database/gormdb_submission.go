@@ -90,7 +90,11 @@ func (db *GormDB) checkSubmission(submission *pb.Submission) error {
 	// Check that user/group with given ID exists.
 	var idCount int64
 	if err := m.Count(&idCount).Error; err != nil {
-		return fmt.Errorf("submission not found: %+v: %w", submission, err)
+		if submission.UserID > 0 {
+			return fmt.Errorf("user %d not found for submission: %+v: %w", submission.UserID, submission, err)
+		} else {
+			return fmt.Errorf("group %d not found for submission: %+v: %w", submission.GroupID, submission, err)
+		}
 	}
 
 	// Checks that the assignment exists.
