@@ -1,6 +1,7 @@
 package database_test
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -202,7 +203,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(&pb.Submission{
 		AssignmentID: 1,
 		UserID:       1,
-	}); err != gorm.ErrRecordNotFound {
+	}); !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Fatal(err)
 	}
 
@@ -213,7 +214,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(&pb.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       3,
-	}); err != gorm.ErrRecordNotFound {
+	}); !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Fatal(err)
 	}
 
@@ -242,6 +243,49 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	}
 	if !reflect.DeepEqual(submissions[0], want) {
 		t.Errorf("have %#v want %#v", submissions[0], want)
+	}
+}
+
+func TestGormDBInsertBadSubmissions(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	// expected to fail
+	if err := db.CreateSubmission(&pb.Submission{}); !errors.Is(err, database.ErrInvalidAssignmentID) {
+		t.Fatal(err)
+	}
+	// expected to fail
+	if err := db.CreateSubmission(&pb.Submission{AssignmentID: 1}); !errors.Is(err, database.ErrInvalidSubmission) {
+		t.Fatal(err)
+	}
+	// expected to fail
+	if err := db.CreateSubmission(&pb.Submission{UserID: 1}); !errors.Is(err, database.ErrInvalidAssignmentID) {
+		t.Fatal(err)
+	}
+	// expected to fail with record not found
+	if err := db.CreateSubmission(&pb.Submission{AssignmentID: 1, UserID: 1}); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatal(err)
+	}
+	// expected to fail with record not found
+	if err := db.CreateSubmission(&pb.Submission{AssignmentID: 1, GroupID: 6}); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatal(err)
+	}
+
+	// create teacher, course, user (student) and assignment
+	user, _, assignment := setupCourseAssignment(t, db)
+
+	// create a submission for the assignment for non-existing user; should fail
+	if err := db.CreateSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: 3}); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatal(err)
+	}
+	// create a submission for the assignment for non-existing user; should fail
+	if err := db.CreateSubmission(&pb.Submission{AssignmentID: assignment.ID, GroupID: 9}); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatal(err)
+	}
+
+	// create another submission for the assignment; now it should succeed
+	if err := db.CreateSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: user.ID}); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -314,7 +358,6 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission2 := pb.Submission{
-		ID:           1,
 		UserID:       user.ID,
 		AssignmentID: assignment1.ID,
 		Reviews:      []*pb.Review{},
@@ -324,7 +367,6 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission3 := pb.Submission{
-		ID:           2,
 		UserID:       user.ID,
 		AssignmentID: assignment2.ID,
 		Reviews:      []*pb.Review{},
