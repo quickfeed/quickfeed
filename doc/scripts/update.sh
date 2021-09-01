@@ -9,8 +9,22 @@ if sysctl -q -n net.ipv4.ip_forward | grep -q '0'; then
 	exit 1
 fi
 
-AG_BIN="/home/autograder/go/bin"
-AG_ROOT="/home/autograder/quickfeed"
+QUICKFEED=$HOME/quickfeed
+GOBIN=$HOME/go/bin
+DATABASE=qf.db
+LOGFILE=quickfeed.log
+BACKUP=$QUICKFEED/backups
+
+cd $QUICKFEED
+
+echo "Backing up executables"
+cp $GOBIN/quickfeed $BACKUP/quickfeed.$(date +"%m-%d-%y").bak
+
+echo "Backing up the database file"
+cp $QUICKFEED/$DATABASE $BACKUP/$DATABASE.$(date +"%m-%d-%y").bak
+
+echo "Backing up the $LOGFILE file"
+cp $HOME/logs/$LOGFILE $BACKUP/$LOGFILE.$(date +"%m-%d-%y").bak
 
 # if a branch name provided, switch to the branch
 if [ "$1" != "" ]; then
@@ -27,7 +41,6 @@ if ! git diff-index --quiet HEAD --; then
 	exit 1
 fi
 
-# git fetch and pull
 echo "Fetching changes"
 git fetch
 
@@ -37,38 +50,35 @@ if ! git pull; then
 	exit 1
 fi
 
-# remove old exec backup, then backup the actual one
-echo "Backing up executables"
-cp $AG_BIN/quickfeed $AG_BIN/quickfeed.bak
-
-# recompile: go and ts
-echo "Compiling changes"
-cd $AG_ROOT/public
+echo "Running webpack"
+cd $QUICKFEED/public
 if ! webpack; then
 	echo "Failed to compile the client"
 	exit 1
 fi
-cd $AG_ROOT
+
+echo "Running go install"
+cd $QUICKFEED
 if ! go install; then
 	echo "Failed to compile the server"
 	exit 1
 fi
 
-# stop the server
-echo "Bringing the server down"
-if ! killall quickfeed; then
-	echo "Failed to stop the server"
-	exit 1
+if pgrep quickfeed &> /dev/null; then
+	echo "Server running; shutting down server..."
+	if ! killall quickfeed; then
+		echo "Failed to stop the server; trying to restart..."
+	fi
 fi
 
-# backup the database
-echo "Backing up the database"
-cp ag.db ./backups/ag.db.$(date +"%m-%d-%y").bak
+echo "Starting the QuickFeed server"
+source quickfeed-env.sh
+quickfeed -service.url uis.itest.run &> $HOME/logs/$LOGFILE &
 
-# start the server
-echo "Starting the server"
-source ag-env.sh
-quickfeed -service.url uis.itest.run -database.file ./ag.db -http.addr :3005 &> ag.log &
+if ! pgrep quickfeed &> /dev/null; then
+    echo "Failed to start the server"
+    exit 1
+fi
 
-# done
-echo "All done. Server restarted and running"
+echo "All done. QuickFeed server restarted and running"
+exit 0
