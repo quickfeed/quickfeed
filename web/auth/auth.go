@@ -504,13 +504,15 @@ func UserVerifier() grpc.UnaryServerInterceptor {
 		if err != nil {
 			return nil, err
 		}
+		// create new context with user id instead of cookie for use internally
 		newCtx := metadata.NewIncomingContext(ctx, newMeta)
 		resp, err := handler(newCtx, req)
 		return resp, err
 	}
 }
 
-// userValidation returns modified metadata containing a valid user. An error is returned if the user is not authenticated.
+// userValidation returns modified metadata containing a valid user.
+// An error is returned if the user is not authenticated.
 func userValidation(meta metadata.MD) (metadata.MD, error) {
 	for _, cookie := range meta.Get(Cookie) {
 		if user := Get(cookie); user > 0 {
