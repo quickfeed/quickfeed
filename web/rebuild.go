@@ -57,11 +57,13 @@ func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) er
 	if err != nil {
 		return err
 	}
-	rebuildRequest := &pb.RebuildRequest{AssignmentID: request.AssignmentID}
 
 	var errgrp errgroup.Group
 	for _, submission := range submissions {
-		rebuildRequest.SubmissionID = submission.ID
+		rebuildRequest := &pb.RebuildRequest{
+			AssignmentID: request.AssignmentID,
+			SubmissionID: submission.ID}
+
 		errgrp.Go(func() error {
 			_, err := s.rebuildSubmission(rebuildRequest)
 			return err
