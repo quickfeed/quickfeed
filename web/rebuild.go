@@ -9,6 +9,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+var maxContainers = 10
+
 // rebuildSubmission rebuilds the given assignment and submission.
 func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.Submission, error) {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
@@ -58,18 +60,28 @@ func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) er
 		return err
 	}
 
-	var errgrp errgroup.Group
-	for _, submission := range submissions {
-		rebuildRequest := &pb.RebuildRequest{
-			AssignmentID: request.AssignmentID,
-			SubmissionID: submission.ID}
+	limit := maxContainers
+	for i := 0; i < len(submissions); i += maxContainers {
+		var errgrp errgroup.Group
 
-		errgrp.Go(func() error {
-			_, err := s.rebuildSubmission(rebuildRequest)
+		if i+maxContainers > len(submissions) {
+			limit = len(submissions) - i
+		}
+		for j := 0; j < limit; j++ {
+			submission := submissions[i+j]
+			rebuildRequest := &pb.RebuildRequest{
+				AssignmentID: request.AssignmentID,
+				SubmissionID: submission.ID}
+			errgrp.Go(func() error {
+				_, err := s.rebuildSubmission(rebuildRequest)
+				return err
+			})
+		}
+		err = errgrp.Wait()
+		if err != nil {
 			return err
-		})
+		}
 	}
-	err = errgrp.Wait()
 	total := time.Since(start)
 	s.logger.Debug("Finished running all tests, took ", total)
 	return err
