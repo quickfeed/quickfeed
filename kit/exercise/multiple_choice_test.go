@@ -60,6 +60,14 @@ var tests = []struct {
 		wantCorrect:   []int{1, 2, 3, 4, 5, 6, 7},
 		wantIncorrect: []int{},
 	},
+	{
+		name:          "AllAnswersSomeMultipleChecked",
+		file:          "c-prog-questions-multiple-checked.md",
+		answers:       map[int]string{3: "c", 4: "a", 6: "b", 7: "d"},
+		correct:       map[int]string{1: "a", 2: "b", 3: "c", 4: "a", 5: "b", 6: "b", 7: "d"},
+		wantCorrect:   []int{3, 4, 6, 7},
+		wantIncorrect: []int{1, 2, 5},
+	},
 }
 
 func TestParseMarkdownAnswers(t *testing.T) {
