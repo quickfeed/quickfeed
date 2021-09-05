@@ -76,10 +76,11 @@ func (s *Score) RelativeScore() string {
 // If a test panics, the score will be set to zero, and a panic message will be emitted.
 // Note that, if subtests are used, each subtest must defer call the PanicHandler method
 // to ensure that panics are caught and handled appropriately.
-func (s *Score) Print(t *testing.T) {
+// The msg parameter is optional, and will be printed in case of a panic.
+func (s *Score) Print(t *testing.T, msg ...string) {
 	if r := recover(); r != nil {
 		s.fail(t)
-		printPanicMessage(s.TestName, r)
+		printPanicMessage(s.TestName, msg[0], r)
 	}
 	// print JSON score object: {"Secret":"my secret code","TestName": ...}
 	fmt.Println(s.json())
@@ -94,10 +95,11 @@ func (s *Score) Print(t *testing.T) {
 // within a t.Run() function:
 //   defer s.PanicHandler(t)
 //
-func (s *Score) PanicHandler(t *testing.T) {
+// The msg parameter is optional, and will be printed in case of a panic.
+func (s *Score) PanicHandler(t *testing.T, msg ...string) {
 	if r := recover(); r != nil {
 		s.fail(t)
-		printPanicMessage(s.TestName, r)
+		printPanicMessage(t.Name(), msg[0], r)
 	}
 }
 
@@ -118,12 +120,16 @@ func (s *Score) json() string {
 	return string(b)
 }
 
-func printPanicMessage(testName string, recoverVal interface{}) {
+func printPanicMessage(testName, msg string, recoverVal interface{}) {
 	var s strings.Builder
 	s.WriteString("******************\n")
 	s.WriteString(testName)
 	s.WriteString(" panicked: ")
 	s.WriteString(fmt.Sprintf("%v", recoverVal))
+	if msg != "" {
+		s.WriteString("\n\nMessage:\n")
+		s.WriteString(msg)
+	}
 	s.WriteString("\n\nStack trace from panic:\n")
 	s.WriteString(string(debug.Stack()))
 	s.WriteString("******************\n")
