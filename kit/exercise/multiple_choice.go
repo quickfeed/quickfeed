@@ -19,6 +19,7 @@ var (
 )
 
 // ParseMarkdownAnswers returns a map of the answers found in the given answer file.
+// Only a single answer is allowed per question
 func ParseMarkdownAnswers(answerFile string) (map[int]string, error) {
 	md, err := ioutil.ReadFile(answerFile)
 	if err != nil {
@@ -36,6 +37,7 @@ func ParseMarkdownAnswers(answerFile string) (map[int]string, error) {
 			currentQ, _ = strconv.Atoi(qNum)
 		}
 		if !multipleAnswers[currentQ] && currentQ != -1 && selectionRegExp.MatchString(line) {
+			// if found is true, multiple answers are given for the same question
 			if _, found := answerMap[currentQ]; found {
 				delete(answerMap, currentQ)
 				multipleAnswers[currentQ] = true
