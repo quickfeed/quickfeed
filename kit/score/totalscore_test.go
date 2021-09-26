@@ -27,7 +27,7 @@ var scoreGrades = []struct {
 			{TestName: "B", Score: 05, MaxScore: 05, Weight: 1},
 			{TestName: "C", Score: 20, MaxScore: 40, Weight: 1},
 		},
-		out:       66,
+		out:       67,
 		wantGrade: "C",
 	},
 	{
