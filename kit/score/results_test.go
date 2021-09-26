@@ -142,7 +142,53 @@ func TestScoresSum(t *testing.T) {
 	got := results.Sum()
 	const want = 100
 	if got != want {
-		t.Errorf("Sum() = '%d', want '%d'", got, want)
+		t.Errorf("Sum() = %d, want %d", got, want)
+	}
+}
+
+// RegExp to extract from JSON output: \{\W+"Secret": "hidden",\W+"(\w+)"(:.*)\W+"(\w+)"(:.*)\W+"(\w+)"(:.*)\W+"(\w+)"(:\W+\d+)
+
+var score100 = []*score.Score{
+	{TestName: "TestVetCheckAG", Score: 1, MaxScore: 1, Weight: 5},
+	{TestName: "TestFormattingAG", Score: 1, MaxScore: 1, Weight: 5},
+	{TestName: "TestTODOItemsAG", Score: 1, MaxScore: 1, Weight: 5},
+	{TestName: "TestLintAG", Score: 1, MaxScore: 1, Weight: 5},
+	{TestName: "TestAverageMetrics/fifo/book_schedule1", Score: 4, MaxScore: 4, Weight: 4},
+	{TestName: "TestAverageMetrics/fifo/book_schedule2", Score: 4, MaxScore: 4, Weight: 4},
+	{TestName: "TestAverageMetrics/fifo/book_schedule3", Score: 4, MaxScore: 4, Weight: 4},
+	{TestName: "TestAverageMetrics/rr/book_schedule1/q=1ms", Score: 4, MaxScore: 4, Weight: 4},
+	{TestName: "TestRoundRobin", Score: 169, MaxScore: 169, Weight: 30},
+	{TestName: "TestSingleJobMetrics/rr/book_schedule3/q=1ms", Score: 2, MaxScore: 2, Weight: 2},
+	{TestName: "TestAverageMetrics/rr/book_schedule2/q=1ms", Score: 4, MaxScore: 4, Weight: 4},
+	{TestName: "TestAverageMetrics/rr/book_schedule3/q=1ms", Score: 4, MaxScore: 4, Weight: 4},
+	{TestName: "TestShortestJobFirst", Score: 163, MaxScore: 163, Weight: 20},
+	{TestName: "TestStride", Score: 248, MaxScore: 248, Weight: 30},
+	{TestName: "TestMinPass", Score: 5, MaxScore: 5, Weight: 5},
+	{TestName: "TestStrideNewJob", Score: 2, MaxScore: 2, Weight: 2},
+	{TestName: "TestSingleJobMetrics/fifo/book_schedule1", Score: 2, MaxScore: 2, Weight: 2},
+	{TestName: "TestSingleJobMetrics/fifo/book_schedule2", Score: 2, MaxScore: 2, Weight: 2},
+	{TestName: "TestSingleJobMetrics/fifo/book_schedule3", Score: 2, MaxScore: 2, Weight: 2},
+	{TestName: "TestSingleJobMetrics/rr/book_schedule1/q=1ms", Score: 2, MaxScore: 2, Weight: 2},
+	{TestName: "TestSingleJobMetrics/rr/book_schedule2/q=1ms", Score: 2, MaxScore: 2, Weight: 2},
+}
+
+func TestScore100(t *testing.T) {
+	const want = 100
+	scoreTable := score.NewResults()
+	for _, sc := range score100 {
+		scoreTable.AddScore(sc)
+		if sc.Score != sc.MaxScore {
+			// sanity check; all scores must be max
+			t.Errorf("%s Score=%d, expected %d", sc.TestName, sc.Score, sc.MaxScore)
+		}
+	}
+	results := &score.Results{Scores: scoreTable.ToScoreSlice()}
+	if err := results.Validate(""); err != nil {
+		t.Error(err)
+	}
+	got := results.Sum()
+	if got != want {
+		t.Errorf("Sum() = %d, want %d", got, want)
 	}
 }
 

@@ -1,6 +1,7 @@
 package score
 
 import (
+	"math"
 	"strings"
 	"time"
 )
@@ -95,20 +96,20 @@ func (r *Results) Validate(secret string) error {
 // The total is a grade in the range 0-100.
 // This method must only be called after Validate has returned nil.
 func (r *Results) Sum() uint32 {
-	totalWeight := float32(0)
-	var max, score, weight []float32
+	totalWeight := float64(0)
+	var max, score, weight []float64
 	for _, ts := range r.GetScores() {
-		totalWeight += float32(ts.Weight)
-		weight = append(weight, float32(ts.Weight))
-		score = append(score, float32(ts.Score))
-		max = append(max, float32(ts.MaxScore))
+		totalWeight += float64(ts.Weight)
+		weight = append(weight, float64(ts.Weight))
+		score = append(score, float64(ts.Score))
+		max = append(max, float64(ts.MaxScore))
 	}
-	total := float32(0)
+	total := float64(0)
 	for i := 0; i < len(score); i++ {
 		if score[i] > max[i] {
 			score[i] = max[i]
 		}
-		total += ((score[i] / max[i]) * (weight[i] / totalWeight))
+		total += (score[i] / max[i]) * (weight[i] / totalWeight)
 	}
-	return uint32(total * 100)
+	return uint32(math.Round(total * 100))
 }
