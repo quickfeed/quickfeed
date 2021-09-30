@@ -12,7 +12,7 @@ The main goal of this enhancement is to add support for the students so that the
 Also, students can review each other's pull requests and can add their reviews on other students' pull requests. After the review of PR from students and Teachers, they can merge their PR into the main branch.
 As more details are mention in  this issue [this issue #416](https://github.com/autograde/quickfeed/issues/416)
 
-####Below are the enhancement's that will be implemented.
+#### Below are the enhancement's that will be implemented.
 
 1. Creation of student repositories.
 2. Creation of GitHub issues for the Assignment.
@@ -34,7 +34,7 @@ As more details are mention in  this issue [this issue #416](https://github.com/
 1. Each assignment will consist of multiple tasks, and for each task Quick Feed will create an issue on a student GitHub Repository. The students should create a PR for every issue created on their repository.
 
    
-##### Challenges:
+#### Challenges:
 If there are several tasks in an assignment, it will create individual issues for each task. All students will create pull request for each issue which will lead to creation of multiple pull requests which has to be reviewed by the teacher/ teacher assistant.
 
 Scenario: If an assignment has 4 tasks, and there are 10 students. There will be 40 pull requests to be reviewed.
@@ -44,7 +44,7 @@ Scenario: If an assignment has 4 tasks, and there are 10 students. There will be
 2. Another approach, Quick Feed will create only one issue on student repository for all the tasks in an assignment. Therefore, student must create only one pull request per assignment.
 
 
-##### Challenges:
+#### Challenges:
 
 If there are multiple tasks, the pull request will be long as it contains the solution for all the tasks and is also difficult for the reviewer to review the code.
 Also, it will be difficult to differentiate the implementation of each task in the pull request.
@@ -61,17 +61,17 @@ Also, it will be difficult to differentiate the implementation of each task in t
 
 1.	 To close an issue, the student should create a PR. After the deadline, the Quick Feed should select the pull request which has to be evaluated.
 
-##### Challenges:
+#### Challenges:
 
 If a student creates multiple PR on their repository, it is not possible for the QuickFeed to know which is the final PR of the student.
 
-##### Solution:
+#### Solution:
 
 •	We must specify a naming convention for the final branch the student wants to do a PR (ex: studentname_assignment1).
 •	The student must add a specific commit message (ex: final submission) to the PR that must be considered.
 •	We can also make it mandatory for the students to add the link of the issue in the PR.
 
-#### Reviews on PR
+### Reviews on PR
 
 1. After the deadline and maximum slip days of the assignment, Quick Feed will automatically and randomly add reviewers for each PR. The number of reviewers to be added will depend on the specified policy of the course.
 2. One reviewer should always be a Teacher/ TA.
@@ -84,7 +84,7 @@ We need to make sure that the student is not assigned as a reviewer for his own 
 
 ![img_3.png](local-setup/figures/github_enhancement_img_3.png)
 
-####Challenges:
+#### Challenges
 
 If only few students have passed the test cases, they will end up reviewing PRs for a large number of students.
 
@@ -94,12 +94,12 @@ Scenario: If only 2 students have passed out of 20 students. Each of the 2 stude
 1. We can set some branch rules for merging pull request like required number of reviewers etc
 
 2. We will only add student as a collaborator in their Repositories.
-3. 
-4. If the PR has been reviewed and approved by all the reviewers assigned, either the student or the TA will be able to merge the PR into the main branch.
 
-5. The PR should be approved only if all the test cases are passed.
+3. If the PR has been reviewed and approved by all the reviewers assigned, either the student or the TA will be able to merge the PR into the main branch.
 
-6. Once the PR is merged, the issue will be closed.
+4. The PR should be approved only if all the test cases are passed.
+
+5. Once the PR is merged, the issue will be closed.
 
 ![img_2.png](local-setup/figures/github_enhancement_img_2.png)
 
