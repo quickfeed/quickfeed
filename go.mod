@@ -6,7 +6,7 @@ require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/alta/protopatch v0.3.4
-	github.com/autograde/quickfeed/kit v0.1.0
+	github.com/autograde/quickfeed/kit v0.5.2
 	github.com/containerd/containerd v1.5.5 // indirect
 	github.com/docker/docker v20.10.7+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
