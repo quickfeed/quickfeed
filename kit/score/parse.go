@@ -17,9 +17,6 @@ var (
 	ErrSuppressedSecret = errors.New("Error suppressed to avoid revealing secret")
 )
 
-// hiddenSecret is used to replace the global secret when parsing.
-const hiddenSecret = "hidden"
-
 // Parse returns a score object for the provided JSON string s
 // which contains secret.
 func Parse(s, secret string) (*Score, error) {
@@ -44,7 +41,7 @@ func Parse(s, secret string) (*Score, error) {
 // IsValid returns an error if the score object is invalid.
 // Otherwise, nil is returned.
 // If the given secret matches the score's secret value,
-// the Secret field is overwritten with the string "hidden".
+// the Secret field is redacted with the empty string "".
 func (sc *Score) IsValid(secret string) error {
 	tName := sc.GetTestName()
 	if tName == "" {
@@ -62,7 +59,7 @@ func (sc *Score) IsValid(secret string) error {
 	if sc.Secret != secret {
 		return errMsg(tName, ErrSecret.Error())
 	}
-	sc.Secret = hiddenSecret // overwrite secret
+	sc.Secret = "" // redact the secret session key
 	return nil
 }
 

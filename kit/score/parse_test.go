@@ -135,7 +135,8 @@ var scoreValidTests = []struct {
 func TestScoreIsValid(t *testing.T) {
 	for _, test := range scoreValidTests {
 		t.Run(test.name, func(t *testing.T) {
-			for _, sc := range test.in {
+			// clone the test.in scores to allow repeatable tests
+			for _, sc := range clone(test.in) {
 				err := sc.IsValid(theSecret)
 				if err != nil {
 					if !strings.Contains(err.Error(), test.want.Error()) {
@@ -147,4 +148,24 @@ func TestScoreIsValid(t *testing.T) {
 			}
 		})
 	}
+}
+
+// clone returns a copy of the src slice pointing to different score objects.
+// This only necessary for testing purposes, when we want to run tests repeatedly
+// with the -count argument to check for non-deterministic behavior.
+func clone(src []*score.Score) []*score.Score {
+	dst := make([]*score.Score, len(src))
+	for i, sc := range src {
+		if sc == nil {
+			continue
+		}
+		dst[i] = &score.Score{
+			Secret:   sc.Secret,
+			TestName: sc.TestName,
+			Score:    sc.Score,
+			MaxScore: sc.MaxScore,
+			Weight:   sc.Weight,
+		}
+	}
+	return dst
 }
