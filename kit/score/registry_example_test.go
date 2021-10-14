@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/autograde/quickfeed/kit/score"
@@ -71,7 +72,16 @@ func TestFibonacciMax(t *testing.T) {
 	}
 }
 
+var (
+	once sync.Once
+	ran  bool
+)
+
 func TestFibonacciMin(t *testing.T) {
+	if ran {
+		// This test cannot be run more than once
+		t.SkipNow()
+	}
 	sc := scoreRegistry.Min()
 	for _, ft := range fibonacciTests {
 		out := fibonacci(ft.in)
@@ -85,6 +95,7 @@ func TestFibonacciMin(t *testing.T) {
 	if sc.TestName != t.Name() {
 		t.Errorf("TestName=%s, expected %s", sc.TestName, t.Name())
 	}
+	once.Do(func() { ran = true })
 }
 
 func TestFibonacciSubTest(t *testing.T) {

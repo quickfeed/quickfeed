@@ -2,6 +2,7 @@ package score_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -125,18 +126,19 @@ func TestScoresSum(t *testing.T) {
 		}
 	}
 	s := score.NewResults()
-	const hiddenSecret = "hidden"
+	const secret = "hidden"
 	for _, sc := range scores {
 		// The scoreObjects was extracted when we allowed Weight=0
 		// We now return an error for when Weight=0.
 		// Hence, we only add scores with non-zero weights.
-		if err := sc.IsValid(hiddenSecret); err == nil {
+		if err := sc.IsValid(secret); err == nil {
 			s.AddScore(sc)
 		}
 	}
 	results := &score.Results{Scores: s.ToScoreSlice()}
-	err := results.Validate(hiddenSecret)
-	if err != nil {
+	// IsValid above redacts the Secret field with the empty string.
+	// Hence, we call Validate with the empty string.
+	if err := results.Validate(""); err != nil {
 		t.Errorf("Validate() = %v, expected <nil>", err)
 	}
 	got := results.Sum()
@@ -146,7 +148,12 @@ func TestScoresSum(t *testing.T) {
 	}
 }
 
-// RegExp to extract from JSON output: \{\W+"Secret": "hidden",\W+"(\w+)"(:.*)\W+"(\w+)"(:.*)\W+"(\w+)"(:.*)\W+"(\w+)"(:\W+\d+)
+// RegExp patterns to use to extract from JSON output.
+//    Search: \{\W+"Secret": "hidden",\W+"(\w+)"(:.*)\W+"(\w+)"(:.*)\W+"(\w+)"(:.*)\W+"(\w+)"(:\W+\d+)\n(.*)
+//   Replace: {$1$2$3$4$5$6$7$8$9
+// To use, copy the JSON string start on the line after: "Scores": [
+// And stop on the line before the corresponding ].
+// You will need to add the final comma for the last element.
 
 var score100 = []*score.Score{
 	{TestName: "TestVetCheckAG", Score: 1, MaxScore: 1, Weight: 5},
@@ -172,23 +179,46 @@ var score100 = []*score.Score{
 	{TestName: "TestSingleJobMetrics/rr/book_schedule2/q=1ms", Score: 2, MaxScore: 2, Weight: 2},
 }
 
+var score100v2 = []*score.Score{
+	{TestName: "TestTODOItemsAG", Score: 1, MaxScore: 1, Weight: 5},
+	{TestName: "TestAllocAG", Score: 14, MaxScore: 14, Weight: 20},
+	{TestName: "TestAllocMultipleAG", Score: 63, MaxScore: 63, Weight: 10},
+	{TestName: "TestFreeAG", Score: 40, MaxScore: 40, Weight: 20},
+	{TestName: "TestPTLookupAG", Score: 12, MaxScore: 12, Weight: 10},
+	{TestName: "TestNewMMUAG", Score: 12, MaxScore: 12, Weight: 10},
+	{TestName: "TestReadAG", Score: 13, MaxScore: 13, Weight: 30},
+	{TestName: "TestPTAppendAG", Score: 4, MaxScore: 4, Weight: 10},
+	{TestName: "TestFormattingAG", Score: 1, MaxScore: 1, Weight: 5},
+	{TestName: "TestLintAG", Score: 1, MaxScore: 1, Weight: 5},
+	{TestName: "TestVetCheckAG", Score: 1, MaxScore: 1, Weight: 5},
+	{TestName: "TestExtractAG", Score: 20, MaxScore: 20, Weight: 10},
+	{TestName: "TestWriteAG", Score: 48, MaxScore: 48, Weight: 10},
+	{TestName: "TestSequencesAG", Score: 16, MaxScore: 16, Weight: 40},
+	{TestName: "TestMemoryManagementMultipleChoiceAG", Score: 3, MaxScore: 3, Weight: 5},
+	{TestName: "TestPTFreeAG", Score: 18, MaxScore: 18, Weight: 10},
+}
+
 func TestScore100(t *testing.T) {
 	const want = 100
-	scoreTable := score.NewResults()
-	for _, sc := range score100 {
-		scoreTable.AddScore(sc)
-		if sc.Score != sc.MaxScore {
-			// sanity check; all scores must be max
-			t.Errorf("%s Score=%d, expected %d", sc.TestName, sc.Score, sc.MaxScore)
-		}
-	}
-	results := &score.Results{Scores: scoreTable.ToScoreSlice()}
-	if err := results.Validate(""); err != nil {
-		t.Error(err)
-	}
-	got := results.Sum()
-	if got != want {
-		t.Errorf("Sum() = %d, want %d", got, want)
+	for i, sc100 := range [][]*score.Score{score100, score100v2} {
+		t.Run(fmt.Sprintf("Sample%d", i), func(t *testing.T) {
+			scoreTable := score.NewResults()
+			for _, sc := range sc100 {
+				scoreTable.AddScore(sc)
+				if sc.Score != sc.MaxScore {
+					// sanity check; all scores must be max
+					t.Errorf("%s Score=%d, expected %d", sc.TestName, sc.Score, sc.MaxScore)
+				}
+			}
+			results := &score.Results{Scores: scoreTable.ToScoreSlice()}
+			if err := results.Validate(""); err != nil {
+				t.Error(err)
+			}
+			got := results.Sum()
+			if got != want {
+				t.Errorf("Sum() = %d, want %d", got, want)
+			}
+		})
 	}
 }
 
