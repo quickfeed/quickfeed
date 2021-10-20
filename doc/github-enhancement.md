@@ -14,7 +14,7 @@ Each Student has a Separate replica `[student-name-labs repository]` of the assi
 2. Submitted PR is tested and scored by QuickFeed.
 3. Reviewers review the PR, which must be approved before QuickFeed records it as approved.
 
-####Below are the enhancement's that will be implemented.
+#### Below are the enhancement's that will be implemented.
 
 1. Creation of student repositories.
 2. Creation of GitHub issues for the Assignment.
@@ -91,7 +91,7 @@ We will make sure that the student is not assigned as a reviewer for his own PR.
 
 ![img_3.png](local-setup/figures/github_enhancement_img_3.png)
 
-####Challenges:
+#### Challenges:
 
 How to grant access to student reviewers without giving full access to reviewee's full codebase.
 
