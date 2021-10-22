@@ -362,7 +362,7 @@ export class GrpcManager {
                 userID = currentUser.getId().toString();
             }
             method.call(this.agService, request, {},
-                (err: grpcWeb.Error, response: T) => {
+                (err: grpcWeb.RpcError, response: T) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {
                             const code = new Status();
