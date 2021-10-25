@@ -1,6 +1,7 @@
 package score
 
 import (
+	"fmt"
 	"math"
 	"strings"
 	"time"
@@ -33,16 +34,25 @@ func (r *results) ToScoreSlice() []*Score {
 	return scores
 }
 
+// Results contains the score objects, build info, and errors.
+type Results struct {
+	BuildInfo *BuildInfo // build info for tests
+	Scores    []*Score   // list of scores for different tests
+	Errors    []error    // errors encountered during test execution
+}
+
 // ExtractResults returns the results from a test execution extracted from the given out string.
-func ExtractResults(out, secret string, execTime time.Duration) (*Results, error) {
+func ExtractResults(out, secret string, execTime time.Duration) *Results {
 	var filteredLog []string
+	errs := make([]error, 0)
 	results := NewResults()
 	for _, line := range strings.Split(out, "\n") {
 		// check if line has expected JSON score string
 		if HasPrefix(line) {
 			sc, err := Parse(line, secret)
 			if err != nil {
-				return nil, err
+				errs = append(errs, fmt.Errorf("failed to parse score: %s: %v", line, err))
+				continue
 			}
 			results.AddScore(sc)
 		} else if line != "" { // include only non-empty lines
@@ -57,7 +67,8 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 			ExecTime:  execTime.Milliseconds(),
 		},
 		Scores: results.ToScoreSlice(),
-	}, nil
+		Errors: errs,
+	}
 }
 
 // AddScore adds the given score to the set of scores.
@@ -84,7 +95,7 @@ func (r *results) AddScore(sc *Score) {
 // Validate returns an error if one of the recorded score objects are invalid.
 // Otherwise, nil is returned.
 func (r *Results) Validate(secret string) error {
-	for _, sc := range r.GetScores() {
+	for _, sc := range r.Scores {
 		if err := sc.IsValid(secret); err != nil {
 			return err
 		}
@@ -98,7 +109,7 @@ func (r *Results) Validate(secret string) error {
 func (r *Results) Sum() uint32 {
 	totalWeight := float64(0)
 	var max, score, weight []float64
-	for _, ts := range r.GetScores() {
+	for _, ts := range r.Scores {
 		totalWeight += float64(ts.Weight)
 		weight = append(weight, float64(ts.Weight))
 		score = append(score, float64(ts.Score))

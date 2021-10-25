@@ -132,6 +132,10 @@ var valScores = []struct {
 		err: nil,
 	},
 	{
+		in:  nil,
+		err: nil,
+	},
+	{
 		in:  []*score.Score{},
 		err: nil,
 	},
