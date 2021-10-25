@@ -24,11 +24,3 @@ message BuildInfo {
     string BuildLog = 4;
     int64 ExecTime = 5;
 }
-
-// Results holds a map from test names to score objects and build info.
-// TODO(meling) to be removed
-message Results {
-    uint64 ID = 1;
-    BuildInfo BuildInfo = 2 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];   // build info for tests
-    repeated Score Scores = 3 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}]; // list of scores for different tests
-}

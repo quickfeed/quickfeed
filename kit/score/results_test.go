@@ -21,9 +21,9 @@ func TestExtractResult(t *testing.T) {
 Here are some more logs for the student.
 `
 
-	res, err := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
-	if err != nil {
-		t.Fatal(err)
+	res := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	if len(res.Errors) > 0 {
+		t.Fatal(res.Errors[0])
 	}
 	if strings.Contains(res.BuildInfo.BuildLog, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73") {
 		t.Fatal("build log contains secret")
@@ -39,9 +39,9 @@ func TestExtractResultWithWhitespace(t *testing.T) {
 Here are some more logs for the student.
 `
 
-	res, err := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
-	if err != nil {
-		t.Fatal(err)
+	res := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	if len(res.Errors) > 0 {
+		t.Fatal(res.Errors[0])
 	}
 	if strings.Contains(res.BuildInfo.BuildLog, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73") {
 		t.Fatal("build log contains secret")
@@ -62,9 +62,9 @@ Here are some more logs for the student.
 Here are some more logs for the student.
 `
 
-	res, err := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
-	if err != nil {
-		t.Fatal(err)
+	res := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	if len(res.Errors) > 0 {
+		t.Fatal(res.Errors[0])
 	}
 	if len(res.Scores) != 2 {
 		t.Fatalf("ExtractResult() expected 2 Score entries, got %d: %+v", len(res.Scores), res.Scores)
@@ -85,9 +85,9 @@ func TestExtractResultWithPanicedAndMaliciousScoreLines(t *testing.T) {
 	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"MaliciousTest","Score":100,"MaxScore":100,"Weight":1}
 `
 
-	res, err := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
-	if err != nil {
-		t.Fatal(err)
+	res := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	if len(res.Errors) > 0 {
+		t.Fatal(res.Errors[0])
 	}
 	const expectedTests = 6
 	if len(res.Scores) != expectedTests {
@@ -222,6 +222,15 @@ func TestScore100(t *testing.T) {
 	}
 }
 
+func TestScoreNil(t *testing.T) {
+	const want = 0
+	results := &score.Results{Scores: nil}
+	got := results.Sum()
+	if got != want {
+		t.Errorf("Sum() = %d, want %d", got, want)
+	}
+}
+
 func TestExecTime(t *testing.T) {
 	tests := []struct {
 		id   string
@@ -236,9 +245,9 @@ func TestExecTime(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run("ExecTime#"+tt.id, func(t *testing.T) {
-			res, err := score.ExtractResults("", "", tt.in)
-			if err != nil {
-				t.Fatal(err)
+			res := score.ExtractResults("", "", tt.in)
+			if len(res.Errors) > 0 {
+				t.Fatal(res.Errors[0])
 			}
 			got := res.BuildInfo.ExecTime
 			if got != tt.want {
@@ -336,6 +345,14 @@ var scoreTests = []struct {
 			Scores: []*score.Score{
 				{TestName: "A", Secret: theSecret, Weight: 10, MaxScore: 100, Score: -1},
 			},
+		},
+	},
+	{
+		name: "nil scores",
+		desc: "nil score slice",
+		in:   nil,
+		want: &score.Results{
+			Scores: []*score.Score{},
 		},
 	},
 }
