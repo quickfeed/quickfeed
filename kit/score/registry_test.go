@@ -13,8 +13,8 @@ func fib() {}
 func TestTestNamePanic(t *testing.T) {
 	const (
 		notFunc     = "not a function: "
-		notTestFunc = "not a test function: "
-		missingT    = "test function missing *testing.T argument: "
+		notTestFunc = "not a test or benchmark function: "
+		missingT    = "function missing *testing.T or *testing.B argument: "
 	)
 	tests := []struct {
 		typ    string

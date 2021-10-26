@@ -107,13 +107,19 @@ func testName(testFn interface{}) string {
 	}
 	name := runtime.FuncForPC(reflect.ValueOf(testFn).Pointer()).Name()
 	name = lastElem(name)
-	if typ.NumIn() != 1 || typ.NumOut() > 0 || !strings.HasPrefix(name, "Test") {
-		panic(errMsg(name, "not a test function"))
+	if typ.NumIn() != 1 || typ.NumOut() > 0 || !hasTBPrefix(name) {
+		panic(errMsg(name, "not a test or benchmark function"))
 	}
-	if !typ.In(0).AssignableTo(reflect.TypeOf(&testing.T{})) {
-		panic(errMsg(name, "test function missing *testing.T argument"))
+	for _, ttyp := range []interface{}{&testing.T{}, &testing.B{}} {
+		if typ.In(0).AssignableTo(reflect.TypeOf(ttyp)) {
+			return name
+		}
 	}
-	return name
+	panic(errMsg(name, "function missing *testing.T or *testing.B argument"))
+}
+
+func hasTBPrefix(name string) bool {
+	return strings.HasPrefix(name, "Test") || strings.HasPrefix(name, "Benchmark")
 }
 
 func callerTestName() string {
