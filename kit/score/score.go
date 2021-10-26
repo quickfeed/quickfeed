@@ -77,7 +77,7 @@ func (s *Score) RelativeScore() string {
 // Note that, if subtests are used, each subtest must defer call the PanicHandler method
 // to ensure that panics are caught and handled appropriately.
 // The msg parameter is optional, and will be printed in case of a panic.
-func (s *Score) Print(t *testing.T, msg ...string) {
+func (s *Score) Print(t testing.TB, msg ...string) {
 	if r := recover(); r != nil {
 		s.fail(t)
 		printPanicMessage(s.TestName, msg[0], r)
@@ -96,7 +96,7 @@ func (s *Score) Print(t *testing.T, msg ...string) {
 //   defer s.PanicHandler(t)
 //
 // The msg parameter is optional, and will be printed in case of a panic.
-func (s *Score) PanicHandler(t *testing.T, msg ...string) {
+func (s *Score) PanicHandler(t testing.TB, msg ...string) {
 	if r := recover(); r != nil {
 		s.fail(t)
 		printPanicMessage(t.Name(), msg[0], r)
@@ -104,7 +104,7 @@ func (s *Score) PanicHandler(t *testing.T, msg ...string) {
 }
 
 // fail resets the score to zero and fails the provided test.
-func (s *Score) fail(t *testing.T) {
+func (s *Score) fail(t testing.TB) {
 	// reset score for panicked test functions
 	s.Score = 0
 	// fail the test
