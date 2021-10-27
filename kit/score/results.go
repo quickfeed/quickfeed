@@ -82,7 +82,7 @@ func (r *results) AddScore(sc *Score) {
 			sc.Score = -1
 		}
 	} else {
-		// New test: record in TestNames
+		// New test: record in r.testNames
 		r.testNames = append(r.testNames, testName)
 	}
 
