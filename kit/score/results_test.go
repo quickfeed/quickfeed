@@ -125,17 +125,18 @@ func TestScoresSum(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	s := score.NewResults()
 	const secret = "hidden"
+	filteredScores := make([]*score.Score, 0)
 	for _, sc := range scores {
 		// The scoreObjects was extracted when we allowed Weight=0
 		// We now return an error for when Weight=0.
 		// Hence, we only add scores with non-zero weights.
 		if err := sc.IsValid(secret); err == nil {
-			s.AddScore(sc)
+			// only keep valid scores
+			filteredScores = append(filteredScores, sc)
 		}
 	}
-	results := &score.Results{Scores: s.ToScoreSlice()}
+	results := score.NewResults(filteredScores...)
 	// IsValid above redacts the Secret field with the empty string.
 	// Hence, we call Validate with the empty string.
 	if err := results.Validate(""); err != nil {
@@ -202,15 +203,13 @@ func TestScore100(t *testing.T) {
 	const want = 100
 	for i, sc100 := range [][]*score.Score{score100, score100v2} {
 		t.Run(fmt.Sprintf("Sample%d", i), func(t *testing.T) {
-			scoreTable := score.NewResults()
 			for _, sc := range sc100 {
-				scoreTable.AddScore(sc)
 				if sc.Score != sc.MaxScore {
 					// sanity check; all scores must be max
 					t.Errorf("%s Score=%d, expected %d", sc.TestName, sc.Score, sc.MaxScore)
 				}
 			}
-			results := &score.Results{Scores: scoreTable.ToScoreSlice()}
+			results := score.NewResults(sc100...)
 			if err := results.Validate(""); err != nil {
 				t.Error(err)
 			}
@@ -360,11 +359,7 @@ var scoreTests = []struct {
 func TestAddScore(t *testing.T) {
 	for _, test := range scoreTests {
 		t.Run(test.name, func(t *testing.T) {
-			scores := score.NewResults()
-			for _, sc := range test.in {
-				scores.AddScore(sc)
-			}
-			results := &score.Results{Scores: scores.ToScoreSlice()}
+			results := score.NewResults(test.in...)
 			if diff := cmp.Diff(test.want, results, cmpopts.IgnoreUnexported(score.Results{})); diff != "" {
 				t.Errorf("\nDescription: %s\nScores are different (-want +got):\n%s", test.desc, diff)
 			}

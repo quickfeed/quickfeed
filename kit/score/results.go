@@ -11,22 +11,20 @@ const (
 	layout = "2006-01-02T15:04:05"
 )
 
-// TODO(meling) make most methods herein private; only ExtractResults is really needed, I think?
-
-type results struct {
-	testNames []string
-	scores    map[string]*Score
-}
-
-func NewResults() *results {
-	return &results{
+func NewResults(scores ...*Score) *Results {
+	r := &Results{
 		testNames: make([]string, 0),
 		scores:    make(map[string]*Score),
 	}
+	for _, sc := range scores {
+		r.addScore(sc)
+	}
+	r.Scores = r.toScoreSlice()
+	return r
 }
 
-// ToScoreSlice returns a slice of score objects for the proto file.
-func (r *results) ToScoreSlice() []*Score {
+// toScoreSlice returns a slice of score objects for the proto file.
+func (r *Results) toScoreSlice() []*Score {
 	scores := make([]*Score, len(r.testNames))
 	for i, name := range r.testNames {
 		scores[i] = r.scores[name]
@@ -39,6 +37,8 @@ type Results struct {
 	BuildInfo *BuildInfo // build info for tests
 	Scores    []*Score   // list of scores for different tests
 	Errors    []error    // errors encountered during test execution
+	testNames []string   // defines the order
+	scores    map[string]*Score
 }
 
 // ExtractResults returns the results from a test execution extracted from the given out string.
@@ -54,7 +54,7 @@ func ExtractResults(out, secret string, execTime time.Duration) *Results {
 				errs = append(errs, fmt.Errorf("failed to parse score: %s: %v", line, err))
 				continue
 			}
-			results.AddScore(sc)
+			results.addScore(sc)
 		} else if line != "" { // include only non-empty lines
 			// the filtered log without JSON score strings
 			filteredLog = append(filteredLog, line)
@@ -66,14 +66,14 @@ func ExtractResults(out, secret string, execTime time.Duration) *Results {
 			BuildLog:  strings.Join(filteredLog, "\n"),
 			ExecTime:  execTime.Milliseconds(),
 		},
-		Scores: results.ToScoreSlice(),
+		Scores: results.toScoreSlice(),
 		Errors: errs,
 	}
 }
 
-// AddScore adds the given score to the set of scores.
+// addScore adds the given score to the set of scores.
 // This method assumes that the provided score object is valid.
-func (r *results) AddScore(sc *Score) {
+func (r *Results) addScore(sc *Score) {
 	testName := sc.GetTestName()
 	if current, found := r.scores[testName]; found {
 		if current.GetScore() != 0 {

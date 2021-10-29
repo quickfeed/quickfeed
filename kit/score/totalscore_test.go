@@ -67,11 +67,7 @@ func TestSumGrade(t *testing.T) {
 	}
 
 	for _, s := range scoreGrades {
-		scoreTable := score.NewResults()
-		for _, sc := range s.in {
-			scoreTable.AddScore(sc)
-		}
-		results := &score.Results{Scores: scoreTable.ToScoreSlice()}
+		results := score.NewResults(s.in...)
 		if err := results.Validate(""); err != nil {
 			t.Error(err)
 		}
@@ -229,11 +225,7 @@ var valScores = []struct {
 
 func TestValidate(t *testing.T) {
 	for _, s := range valScores {
-		scoreTable := score.NewResults()
-		for _, sc := range s.in {
-			scoreTable.AddScore(sc)
-		}
-		results := &score.Results{Scores: scoreTable.ToScoreSlice()}
+		results := score.NewResults(s.in...)
 		if err := results.Validate(""); err != s.err {
 			var e, se string
 			if err != nil {
