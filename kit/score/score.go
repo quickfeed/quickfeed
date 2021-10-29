@@ -82,6 +82,9 @@ func (s *Score) Print(t *testing.T, msg ...string) {
 		s.fail(t)
 		printPanicMessage(s.TestName, msg[0], r)
 	}
+	// We rely on JSON score objects to start on a new line, since otherwise
+	// scanning long student generated output lines can be costly.
+	fmt.Println()
 	// print JSON score object: {"Secret":"my secret code","TestName": ...}
 	fmt.Println(s.json())
 }
