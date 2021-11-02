@@ -2,6 +2,7 @@ package web
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -62,6 +63,7 @@ func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) er
 
 	// counting semaphore: limit concurrent rebuilding to maxContainers
 	sem := make(chan struct{}, maxContainers)
+	errCnt := int32(0)
 	var wg sync.WaitGroup
 	wg.Add(len(submissions))
 	for _, submission := range submissions {
@@ -74,6 +76,7 @@ func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) er
 			sem <- struct{}{} // acquire semaphore
 			_, err := s.rebuildSubmission(rebuildReq)
 			if err != nil {
+				atomic.AddInt32(&errCnt, 1)
 				s.logger.Errorf("Failed to rebuild submission ID %d: %v\n", rebuildReq.GetSubmissionID(), err)
 			}
 			<-sem // release semaphore
@@ -84,8 +87,9 @@ func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) er
 	wg.Wait()
 	close(sem)
 
-	s.logger.Debug("Finished rebuilding submissions in", time.Since(start))
-	return err
+	s.logger.Debugf("Rebuilt %d submissions in %v (failed: %d)",
+		len(submissions), time.Since(start), errCnt)
+	return nil
 }
 
 func (s *AutograderService) lookupName(submission *pb.Submission) string {
