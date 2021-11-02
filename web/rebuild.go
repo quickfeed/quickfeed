@@ -1,15 +1,15 @@
 package web
 
 import (
+	"sync"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/gosimple/slug"
-	"golang.org/x/sync/errgroup"
 )
 
-var maxContainers = 10
+const maxContainers = 10
 
 // rebuildSubmission rebuilds the given assignment and submission.
 func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.Submission, error) {
@@ -50,8 +50,6 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 }
 
 func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) error {
-	s.logger.Debugf("Running tests for all submissions for assignment ID %d of course ID %d\n", request.GetAssignmentID(), request.GetCourseID())
-	start := time.Now()
 	if _, err := s.db.GetAssignment(&pb.Assignment{ID: request.AssignmentID}); err != nil {
 		return err
 	}
@@ -59,31 +57,34 @@ func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) er
 	if err != nil {
 		return err
 	}
+	s.logger.Debugf("Rebuilding all submissions for assignment %d for course %d\n", request.GetAssignmentID(), request.GetCourseID())
+	start := time.Now()
 
-	limit := maxContainers
-	for i := 0; i < len(submissions); i += maxContainers {
-		var errgrp errgroup.Group
-
-		if i+maxContainers > len(submissions) {
-			limit = len(submissions) - i
+	// counting semaphore: limit concurrent rebuilding to maxContainers
+	sem := make(chan struct{}, maxContainers)
+	var wg sync.WaitGroup
+	wg.Add(len(submissions))
+	for _, submission := range submissions {
+		rebuildReq := &pb.RebuildRequest{
+			AssignmentID: request.AssignmentID,
+			SubmissionID: submission.ID,
 		}
-		for j := 0; j < limit; j++ {
-			submission := submissions[i+j]
-			rebuildRequest := &pb.RebuildRequest{
-				AssignmentID: request.AssignmentID,
-				SubmissionID: submission.ID}
-			errgrp.Go(func() error {
-				_, err := s.rebuildSubmission(rebuildRequest)
-				return err
-			})
-		}
-		err = errgrp.Wait()
-		if err != nil {
-			return err
-		}
+		// the counting semaphore limits concurrency to maxContainers
+		go func() {
+			sem <- struct{}{} // acquire semaphore
+			_, err := s.rebuildSubmission(rebuildReq)
+			if err != nil {
+				s.logger.Errorf("Failed to rebuild submission ID %d: %v\n", rebuildReq.GetSubmissionID(), err)
+			}
+			<-sem // release semaphore
+			wg.Done()
+		}()
 	}
-	total := time.Since(start)
-	s.logger.Debug("Finished running all tests, took ", total)
+	// wait for all submissions to finish rebuilding
+	wg.Wait()
+	close(sem)
+
+	s.logger.Debug("Finished rebuilding submissions in", time.Since(start))
 	return err
 }
 
