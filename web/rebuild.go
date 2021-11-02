@@ -77,7 +77,7 @@ func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) er
 			_, err := s.rebuildSubmission(rebuildReq)
 			if err != nil {
 				atomic.AddInt32(&errCnt, 1)
-				s.logger.Errorf("Failed to rebuild submission ID %d: %v\n", rebuildReq.GetSubmissionID(), err)
+				s.logger.Errorf("Failed to rebuild submission %d: %v\n", rebuildReq.GetSubmissionID(), err)
 			}
 			<-sem // release semaphore
 			wg.Done()
