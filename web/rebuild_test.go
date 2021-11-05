@@ -2,6 +2,10 @@ package web_test
 
 import (
 	"context"
+	"fmt"
+	"math"
+	"sync"
+	"sync/atomic"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -11,6 +15,48 @@ import (
 	"github.com/autograde/quickfeed/web"
 	"go.uber.org/zap"
 )
+
+func TestSimulatedRebuildWorkpoolWithErrCount(t *testing.T) {
+	// this tests the workpool logic used in rebuildSubmissions
+	for _, maxContainers := range []int{3, 5, 6, 8, 10} {
+		for _, errRate := range []int{2, 3, 4, 5, 6} {
+			for _, numSubs := range []int{10, 15, 20, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 150, 500} {
+				t.Run(fmt.Sprintf("containers=%d/errRate=%d/submissions=%d", maxContainers, errRate, numSubs), func(t *testing.T) {
+					submissions := make([]int, numSubs)
+					for i := range submissions {
+						submissions[i] = i
+					}
+					sem := make(chan struct{}, maxContainers)
+					errCnt := int32(0)
+					var wg sync.WaitGroup
+					wg.Add(len(submissions))
+					for _, submission := range submissions {
+						submission := submission
+						// the counting semaphore limits concurrency to maxContainers
+						go func() {
+							sem <- struct{}{} // acquire semaphore
+							// here we are rebuilding submission
+							if submission%errRate == 0 { // simulate error every errRate submission
+								// count the error
+								atomic.AddInt32(&errCnt, 1)
+							}
+							<-sem // release semaphore
+							wg.Done()
+						}()
+					}
+					// wait for all submissions to finish rebuilding
+					wg.Wait()
+					close(sem)
+
+					expectedErrCnt := int32(math.Ceil(float64(len(submissions)) / float64(errRate)))
+					if errCnt != expectedErrCnt {
+						t.Errorf("errCnt != expectedErrCnt ==> %d != %d == (%d/%d)", errCnt, expectedErrCnt, len(submissions), errRate)
+					}
+				})
+			}
+		}
+	}
+}
 
 func TestRebuildSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
