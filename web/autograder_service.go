@@ -552,7 +552,9 @@ func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.S
 		case pb.Enrollment_STUDENT:
 			return usr.IsAdmin
 		}
-		return false
+		// TODO(meling) This is a hack to give access to cmd/approvelist via the root usr admin
+		// Normally, the root admin should not have access to submissions for all courses.
+		return usr.IsAdmin
 	}) {
 		s.logger.Errorf("GetSubmissionsByCourse failed: user %s is not teacher or submission author", usr.GetLogin())
 		return nil, status.Error(codes.PermissionDenied, "only teachers can get all lab submissions")
