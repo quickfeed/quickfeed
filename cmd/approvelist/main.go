@@ -31,25 +31,20 @@ var ignoredStudents = map[string]bool{
 	"Hans Erik Frøyland":       true,
 }
 
-func main() {
-	var (
-		passLimit  = flag.Int("limit", 5, "number of assignments required to pass")
-		ignorePass = flag.Bool("ignore", false, "ignore assignments that pass; only insert failed")
-	)
-	flag.Parse()
+type QuickFeed struct {
+	cc *grpc.ClientConn
+	pb.AutograderServiceClient
+	md metadata.MD
+}
 
-	studentMap := loadApproveSheet(srcFile, sheetName)
-	currentUserID := os.Getenv("QUICKFEED_USER")
-	if currentUserID == "" {
-		log.Fatal("Requires a 'QUICKFEED_USER' environmental variable with a valid ID of a registered user")
-	}
-	convertedID := strings.TrimSpace(currentUserID)
-	requestMetadata := metadata.New(map[string]string{"user": convertedID})
-	reqCtx := metadata.NewOutgoingContext(context.Background(), requestMetadata)
+func (s *QuickFeed) Close() {
+	s.cc.Close()
+}
 
+func NewQuickFeed(authToken string) (*QuickFeed, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(ctx, ":9090",
+	cc, err := grpc.DialContext(ctx, "uis.itest.run:9090",
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
 		grpc.WithDefaultCallOptions(
@@ -58,33 +53,65 @@ func main() {
 		),
 	)
 	if err != nil {
-		log.Fatalf("Connection failed, make sure server is running on :9090: %v", err)
+		return nil, err
 	}
-	defer conn.Close()
+	return &QuickFeed{
+		cc:                      cc,
+		AutograderServiceClient: pb.NewAutograderServiceClient(cc),
+		md:                      metadata.New(map[string]string{"cookie": authToken}),
+	}, nil
+}
 
-	client := pb.NewAutograderServiceClient(conn)
+func main() {
+	var (
+		passLimit  = flag.Int("limit", 2, "number of assignments required to pass")
+		ignorePass = flag.Bool("ignore", false, "ignore assignments that pass; only insert failed")
+	)
+	flag.Parse()
 
+	studentMap := loadApproveSheet(srcFile, sheetName)
+
+	authToken := os.Getenv("QUICKFEED_AUTH_TOKEN")
+	if authToken == "" {
+		log.Fatalln("QUICKFEED_AUTH_TOKEN is not set")
+	}
+
+	client, err := NewQuickFeed(authToken)
+	if err != nil {
+		log.Fatalln("Failed to connect to quickfeed server:", err)
+	}
+	defer client.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	ctx = metadata.NewOutgoingContext(ctx, client.md)
+
+	// ERROR   web/autograder_service.go:541   GetSubmissionsByCourse failed: user quickfeed-uis is not teacher or submission author
+	// TODO get current year instead of hard coding year.
+	// is the userlogin used? (Re the error above)
 	request := &pb.CourseUserRequest{
 		CourseCode: "DAT320",
-		CourseYear: 2020,
+		CourseYear: 2021,
 		UserLogin:  "meling",
 	}
-	userInfo, err := client.GetUserByCourse(reqCtx, request)
+	userInfo, err := client.GetUserByCourse(ctx, request)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("user: %v", userInfo)
 
-	courses, err := client.GetCoursesByUser(reqCtx, &pb.EnrollmentStatusRequest{UserID: userInfo.GetID()})
+	courses, err := client.GetCoursesByUser(ctx, &pb.EnrollmentStatusRequest{UserID: userInfo.GetID()})
 	if err != nil {
 		log.Fatal(err)
 	}
 	var courseID uint64
 	for _, c := range courses.GetCourses() {
 		courseID = c.GetID()
+		log.Printf("course: %v", c)
 	}
 
 	gotSubmissions, err := client.GetSubmissionsByCourse(
-		reqCtx,
+		ctx,
 		&pb.SubmissionsForCourseRequest{CourseID: courseID, Type: pb.SubmissionsForCourseRequest_ALL},
 	)
 	if err != nil {
