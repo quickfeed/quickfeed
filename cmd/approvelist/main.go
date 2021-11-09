@@ -16,11 +16,10 @@ import (
 )
 
 const (
-	srcFile      = "dat320-original.xlsx"
-	approvedFile = "dat320-approve-list.xlsx"
-	sheetName    = "DAT320 Operativsystemer og syst"
-	pass         = "Godkjent"
-	fail         = "Ikke godkjent"
+	srcSuffix = "-original.xlsx"
+	dstSuffix = "-approve-list.xlsx"
+	pass      = "Godkjent"
+	fail      = "Ikke godkjent"
 )
 
 var ignoredStudents = map[string]bool{
@@ -64,12 +63,15 @@ func NewQuickFeed(authToken string) (*QuickFeed, error) {
 
 func main() {
 	var (
-		passLimit  = flag.Int("limit", 2, "number of assignments required to pass")
+		passLimit  = flag.Int("limit", 6, "number of assignments required to pass")
 		ignorePass = flag.Bool("ignore", false, "ignore assignments that pass; only insert failed")
+		courseCode = flag.String("course", "DAT320", "course code to query (case sensitive)")
+		userName   = flag.String("user", "meling", "user name to request courses for")
+		year       = flag.Int("year", time.Now().Year(), "year of course to fetch from QuickFeed")
 	)
 	flag.Parse()
 
-	studentMap := loadApproveSheet(srcFile, sheetName)
+	studentMap, sheetName := loadApproveSheet(*courseCode)
 
 	authToken := os.Getenv("QUICKFEED_AUTH_TOKEN")
 	if authToken == "" {
@@ -82,23 +84,20 @@ func main() {
 	}
 	defer client.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	ctx = metadata.NewOutgoingContext(ctx, client.md)
 
 	// ERROR   web/autograder_service.go:541   GetSubmissionsByCourse failed: user quickfeed-uis is not teacher or submission author
-	// TODO get current year instead of hard coding year.
-	// is the userlogin used? (Re the error above)
 	request := &pb.CourseUserRequest{
-		CourseCode: "DAT320",
-		CourseYear: 2021,
-		UserLogin:  "meling",
+		CourseCode: *courseCode,
+		CourseYear: uint32(*year),
+		UserLogin:  *userName,
 	}
 	userInfo, err := client.GetUserByCourse(ctx, request)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("user: %v", userInfo)
 
 	courses, err := client.GetCoursesByUser(ctx, &pb.EnrollmentStatusRequest{UserID: userInfo.GetID()})
 	if err != nil {
@@ -106,13 +105,21 @@ func main() {
 	}
 	var courseID uint64
 	for _, c := range courses.GetCourses() {
-		courseID = c.GetID()
-		log.Printf("course: %v", c)
+		if c.GetCode() == *courseCode {
+			courseID = c.GetID()
+			fmt.Printf("Found course ID for %s: %d\n", c.GetCode(), courseID)
+		}
+	}
+	if courseID == 0 {
+		log.Fatalf("Could not find course: %s", *courseCode)
 	}
 
 	gotSubmissions, err := client.GetSubmissionsByCourse(
 		ctx,
-		&pb.SubmissionsForCourseRequest{CourseID: courseID, Type: pb.SubmissionsForCourseRequest_ALL},
+		&pb.SubmissionsForCourseRequest{
+			CourseID: courseID,
+			Type:     pb.SubmissionsForCourseRequest_ALL,
+		},
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -121,6 +128,7 @@ func main() {
 	agStudents := make(map[string]int)
 	numPass, numIgnored := 0, 0
 	for _, el := range gotSubmissions.GetLinks() {
+		fmt.Printf("st: %s\n", el.Enrollment.User.Name)
 		if el.Enrollment.User.IsAdmin || el.Enrollment.IsTeacher() {
 			// log.Printf("%s: admin: %t, teacher: %t\n", el.Enrollment.GetUser().GetName(), el.Enrollment.User.IsAdmin, el.Enrollment.IsTeacher())
 			continue
@@ -162,7 +170,7 @@ func main() {
 		}
 	}
 	fmt.Printf("Total: %d, passed: %d, fail: %d\n", len(approvedMap)+numIgnored, numPass, len(approvedMap)+numIgnored-numPass)
-	saveApproveSheet(srcFile, approvedFile, sheetName, approvedMap)
+	saveApproveSheet(*courseCode, sheetName, approvedMap)
 }
 
 func lookup(name string, studentMap map[string]int) (int, error) {
@@ -210,29 +218,39 @@ func isApproved(requirements int, approved []bool) bool {
 	return requirements <= 0
 }
 
-func loadApproveSheet(file, sheetName string) map[string]int {
-	f, err := excelize.OpenFile(file)
+func fileName(courseCode, suffix string) string {
+	return strings.ToLower(courseCode) + suffix
+}
+
+func loadApproveSheet(courseCode string) (approveMap map[string]int, sheetName string) {
+	f, err := excelize.OpenFile(fileName(courseCode, srcSuffix))
 	if err != nil {
 		log.Fatal(err)
 	}
-	approveMap := make(map[string]int)
+	if f.SheetCount != 1 {
+		log.Fatalf("Unexpected number of sheets: %d; only single-sheet files supported", f.SheetCount)
+	}
+	// we expect only a single sheet; assume that is the active sheet
+	sheetName = f.GetSheetName(f.GetActiveSheetIndex())
+	fmt.Println("Found sheet in file:", sheetName)
+	approveMap = make(map[string]int)
 	for i, row := range f.GetRows(sheetName) {
 		if i > 0 && row[0] != "" {
 			approveMap[row[0]] = i + 1
 		}
 	}
-	return approveMap
+	return approveMap, sheetName
 }
 
-func saveApproveSheet(srcFile, dstFile, sheetName string, approveMap map[string]string) {
-	f, err := excelize.OpenFile(srcFile)
+func saveApproveSheet(courseCode, sheetName string, approveMap map[string]string) {
+	f, err := excelize.OpenFile(fileName(courseCode, srcSuffix))
 	if err != nil {
 		log.Fatal(err)
 	}
 	for cell, approved := range approveMap {
 		f.SetCellValue(sheetName, cell, approved)
 	}
-	if err := f.SaveAs(dstFile); err != nil {
+	if err := f.SaveAs(fileName(courseCode, dstSuffix)); err != nil {
 		log.Fatal(err)
 	}
 }
