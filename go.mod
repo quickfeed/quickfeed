@@ -21,7 +21,6 @@ require (
 	github.com/xanzy/go-gitlab v0.50.3
 	go.uber.org/zap v1.19.1
 	golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.41.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.27.1
