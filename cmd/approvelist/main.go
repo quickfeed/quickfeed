@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
@@ -24,6 +25,7 @@ const (
 
 var ignoredStudents = map[string]bool{
 	"Hein Meling Student":      true,
+	"Meling Student":           true,
 	"Eivind Stavnes (student)": true,
 	"John Ingve Olsen Test":    true,
 	"Hein Meling Stud5":        true,
@@ -65,14 +67,75 @@ func main() {
 	var (
 		passLimit  = flag.Int("limit", 6, "number of assignments required to pass")
 		ignorePass = flag.Bool("ignore", false, "ignore assignments that pass; only insert failed")
+		showAll    = flag.Bool("all", false, "show all students")
 		courseCode = flag.String("course", "DAT320", "course code to query (case sensitive)")
 		userName   = flag.String("user", "meling", "user name to request courses for")
 		year       = flag.Int("year", time.Now().Year(), "year of course to fetch from QuickFeed")
 	)
 	flag.Parse()
 
-	studentMap, sheetName := loadApproveSheet(*courseCode)
+	studentRowMap, sheetName := loadApproveSheet(*courseCode)
 
+	submissions := getSubmissions(*courseCode, *year, *userName)
+
+	tw := tabwriter.NewWriter(os.Stdout, 2, 8, 2, ' ', 0)
+	fmt.Fprint(tw, "Student\tFS\tRow#\tQuickFeed\t#Approved\n")
+
+	// map of students found in QuickFeed; the int value is ignored (set to 1),
+	// but used to allow use of the lookupRow() function.
+	quickfeedStudents := make(map[string]int)
+	approvedMap := make(map[string]string)
+	numPass, numIgnored := 0, 0
+	for _, el := range submissions.GetLinks() {
+		student := el.Enrollment.User.Name
+		if ignoredStudents[student] || el.Enrollment.User.IsAdmin || el.Enrollment.IsTeacher() {
+			continue
+		}
+		approved := make([]bool, len(el.Submissions))
+		for i, s := range el.Submissions {
+			approved[i] = s.GetSubmission().IsApproved()
+		}
+		quickfeedStudents[student] = 1
+
+		approvedValue := fail
+		if isApproved(*passLimit, approved) {
+			approvedValue = pass
+			numPass++
+			if *ignorePass {
+				numIgnored++
+				continue
+			}
+		}
+		rowNum, err := lookupRow(student, studentRowMap)
+		if err != nil {
+			// not found in FS database, but has approved assignments
+			fmt.Fprintf(tw, "%s\t-\t\t✓\t%d\n", student, numApproved(approved))
+			continue
+		}
+		cell := fmt.Sprintf("B%d", rowNum)
+		approvedMap[cell] = approvedValue
+		if *showAll {
+			fmt.Fprintf(tw, "%s\t✓\t%d\t✓\t%d\n", student, rowNum, numApproved(approved))
+		}
+	}
+
+	// find students signed up to course, but not found in QuickFeed
+	for student, rowNum := range studentRowMap {
+		_, err := lookupRow(student, quickfeedStudents)
+		if err != nil {
+			// not found in QuickFeed, but is signed up in FS
+			fmt.Fprintf(tw, "%s\t✓\t%d\t-\t\n", student, rowNum)
+			cell := fmt.Sprintf("B%d", rowNum)
+			approvedMap[cell] = fail
+		}
+	}
+	tw.Flush()
+	fmt.Println("----------")
+	fmt.Printf("Total: %d, passed: %d, fail: %d\n", len(approvedMap)+numIgnored, numPass, len(approvedMap)+numIgnored-numPass)
+	saveApproveSheet(*courseCode, sheetName, approvedMap)
+}
+
+func getSubmissions(courseCode string, year int, userName string) *pb.CourseSubmissions {
 	authToken := os.Getenv("QUICKFEED_AUTH_TOKEN")
 	if authToken == "" {
 		log.Fatalln("QUICKFEED_AUTH_TOKEN is not set")
@@ -88,11 +151,10 @@ func main() {
 	defer cancel()
 	ctx = metadata.NewOutgoingContext(ctx, client.md)
 
-	// ERROR   web/autograder_service.go:541   GetSubmissionsByCourse failed: user quickfeed-uis is not teacher or submission author
 	request := &pb.CourseUserRequest{
-		CourseCode: *courseCode,
-		CourseYear: uint32(*year),
-		UserLogin:  *userName,
+		CourseCode: courseCode,
+		CourseYear: uint32(year),
+		UserLogin:  userName,
 	}
 	userInfo, err := client.GetUserByCourse(ctx, request)
 	if err != nil {
@@ -105,16 +167,18 @@ func main() {
 	}
 	var courseID uint64
 	for _, c := range courses.GetCourses() {
-		if c.GetCode() == *courseCode {
+		if c.GetCode() == courseCode {
 			courseID = c.GetID()
-			fmt.Printf("Found course ID for %s: %d\n", c.GetCode(), courseID)
 		}
 	}
 	if courseID == 0 {
-		log.Fatalf("Could not find course: %s", *courseCode)
+		log.Fatalf("Could not find course: %s", courseCode)
 	}
 
-	gotSubmissions, err := client.GetSubmissionsByCourse(
+	// TODO(meling) Access control is currently limited for this method, resulting in a message like the one below
+	// Access control should be fixed on QuickFeed to avoid the hack currently used.
+	// ERROR   web/autograder_service.go:541   GetSubmissionsByCourse failed: user quickfeed-uis is not teacher or submission author
+	submissions, err := client.GetSubmissionsByCourse(
 		ctx,
 		&pb.SubmissionsForCourseRequest{
 			CourseID: courseID,
@@ -124,56 +188,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	approvedMap := make(map[string]string)
-	agStudents := make(map[string]int)
-	numPass, numIgnored := 0, 0
-	for _, el := range gotSubmissions.GetLinks() {
-		fmt.Printf("st: %s\n", el.Enrollment.User.Name)
-		if el.Enrollment.User.IsAdmin || el.Enrollment.IsTeacher() {
-			// log.Printf("%s: admin: %t, teacher: %t\n", el.Enrollment.GetUser().GetName(), el.Enrollment.User.IsAdmin, el.Enrollment.IsTeacher())
-			continue
-		}
-		if ignoredStudents[el.Enrollment.User.Name] {
-			continue
-		}
-		approved := make([]bool, len(el.Submissions))
-		for i, s := range el.Submissions {
-			approved[i] = s.GetSubmission().IsApproved()
-		}
-		agStudents[el.Enrollment.User.Name] = 1
-
-		rowNum, err := lookup(el.Enrollment.User.Name, studentMap)
-		if err != nil {
-			fmt.Printf("%v in FS database; but has QuickFeed account\n", err)
-			continue
-		}
-		approvedValue := fail
-		if isApproved(*passLimit, approved) {
-			approvedValue = pass
-			numPass++
-			if *ignorePass {
-				numIgnored++
-				continue
-			}
-		}
-		cell := fmt.Sprintf("B%d", rowNum)
-		approvedMap[cell] = approvedValue
-	}
-
-	// find students signed up to course, but not found in QuickFeed
-	for student, rowNum := range studentMap {
-		_, err := lookup(student, agStudents)
-		if err != nil {
-			fmt.Printf("%v in QuickFeed database; is signed up at row %d\n", err, rowNum)
-			cell := fmt.Sprintf("B%d", rowNum)
-			approvedMap[cell] = fail
-		}
-	}
-	fmt.Printf("Total: %d, passed: %d, fail: %d\n", len(approvedMap)+numIgnored, numPass, len(approvedMap)+numIgnored-numPass)
-	saveApproveSheet(*courseCode, sheetName, approvedMap)
+	return submissions
 }
 
-func lookup(name string, studentMap map[string]int) (int, error) {
+func lookupRow(name string, studentMap map[string]int) (int, error) {
 	if rowNum, ok := studentMap[name]; ok {
 		return rowNum, nil
 	} else {
@@ -218,6 +236,15 @@ func isApproved(requirements int, approved []bool) bool {
 	return requirements <= 0
 }
 
+func numApproved(approved []bool) (numApproved int) {
+	for _, a := range approved {
+		if a {
+			numApproved++
+		}
+	}
+	return
+}
+
 func fileName(courseCode, suffix string) string {
 	return strings.ToLower(courseCode) + suffix
 }
@@ -232,7 +259,6 @@ func loadApproveSheet(courseCode string) (approveMap map[string]int, sheetName s
 	}
 	// we expect only a single sheet; assume that is the active sheet
 	sheetName = f.GetSheetName(f.GetActiveSheetIndex())
-	fmt.Println("Found sheet in file:", sheetName)
 	approveMap = make(map[string]int)
 	for i, row := range f.GetRows(sheetName) {
 		if i > 0 && row[0] != "" {
