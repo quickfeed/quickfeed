@@ -32,7 +32,7 @@ func init() {
 //
 // Not clear how to make further progress on this at the moment.
 // Seems like the best approach is to shell out a go test -bench command and parse the benchmark results
-// 
+//
 
 func BenchmarkFibonacci(b *testing.B) {
 	sc := scoreRegistry.Max()
