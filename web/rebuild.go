@@ -1,13 +1,16 @@
 package web
 
 import (
+	"sync"
+	"sync/atomic"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/gosimple/slug"
-	"golang.org/x/sync/errgroup"
 )
+
+const maxContainers = 10
 
 // rebuildSubmission rebuilds the given assignment and submission.
 func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.Submission, error) {
@@ -48,8 +51,6 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 }
 
 func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) error {
-	s.logger.Debugf("Running tests for all submissions for assignment ID %d of course ID %d\n", request.GetAssignmentID(), request.GetCourseID())
-	start := time.Now()
 	if _, err := s.db.GetAssignment(&pb.Assignment{ID: request.AssignmentID}); err != nil {
 		return err
 	}
@@ -57,20 +58,38 @@ func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) er
 	if err != nil {
 		return err
 	}
-	rebuildRequest := &pb.RebuildRequest{AssignmentID: request.AssignmentID}
+	s.logger.Debugf("Rebuilding all submissions for assignment %d for course %d\n", request.GetAssignmentID(), request.GetCourseID())
+	start := time.Now()
 
-	var errgrp errgroup.Group
+	// counting semaphore: limit concurrent rebuilding to maxContainers
+	sem := make(chan struct{}, maxContainers)
+	errCnt := int32(0)
+	var wg sync.WaitGroup
+	wg.Add(len(submissions))
 	for _, submission := range submissions {
-		rebuildRequest.SubmissionID = submission.ID
-		errgrp.Go(func() error {
-			_, err := s.rebuildSubmission(rebuildRequest)
-			return err
-		})
+		rebuildReq := &pb.RebuildRequest{
+			AssignmentID: request.AssignmentID,
+			SubmissionID: submission.ID,
+		}
+		// the counting semaphore limits concurrency to maxContainers
+		go func() {
+			sem <- struct{}{} // acquire semaphore
+			_, err := s.rebuildSubmission(rebuildReq)
+			if err != nil {
+				atomic.AddInt32(&errCnt, 1)
+				s.logger.Errorf("Failed to rebuild submission %d: %v\n", rebuildReq.GetSubmissionID(), err)
+			}
+			<-sem // release semaphore
+			wg.Done()
+		}()
 	}
-	err = errgrp.Wait()
-	total := time.Since(start)
-	s.logger.Debug("Finished running all tests, took ", total)
-	return err
+	// wait for all submissions to finish rebuilding
+	wg.Wait()
+	close(sem)
+
+	s.logger.Debugf("Rebuilt %d submissions in %v (failed: %d)",
+		len(submissions), time.Since(start), errCnt)
+	return nil
 }
 
 func (s *AutograderService) lookupName(submission *pb.Submission) string {

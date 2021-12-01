@@ -95,31 +95,20 @@ func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID uint64
 
 // creates {username}-labs repository and provides pull/push access to it for the given student
 func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, path string, student string) (*scm.Repository, error) {
-	// we have to check that repository for given user has not already been created on github
+	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
-	repo, err := sc.GetRepository(ctx, &scm.RepositoryOptions{
-		Path:  path,
-		Owner: org.GetPath(),
+	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
+		Organization: org,
+		Path:         path,
+		Private:      true,
 	})
 	if err != nil {
-		fmt.Println("createStudentRepo: repo not found (as expected). Error: ", err.Error())
-	}
-
-	// if no github repository found, create it
-	if repo == nil {
-		repo, err = sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-			Organization: org,
-			Path:         path,
-			Private:      true,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("createStudentRepo: failed to create repo: %w", err)
-		}
+		return nil, fmt.Errorf("createStudentRepo: failed to create repo: %w", err)
 	}
 
 	// add push access to student repo
-	if err = sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: repo.Owner, Path: repo.Path}, student, scm.RepoPush); err != nil {
-		return nil, err
+	if err = sc.UpdateRepoAccess(ctx, repo, student, scm.RepoPush); err != nil {
+		return nil, fmt.Errorf("createStudentRepo: failed to update repo push access: %w", err)
 	}
 	return repo, nil
 }

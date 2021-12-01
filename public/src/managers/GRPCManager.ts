@@ -2,7 +2,6 @@ import * as grpcWeb from "grpc-web";
 import {
     Assignments,
     AuthorizationResponse,
-    Benchmarks,
     Course,
     CourseRequest,
     CourseSubmissions,
@@ -349,20 +348,10 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.isEmptyRepo, request);
     }
 
-    // /* UTILITY */ //
-
     private grpcSend<T>(method: any, request: any): Promise<IGrpcResponse<T>> {
         const grpcPromise = new Promise<IGrpcResponse<T>>((resolve) => {
-            let userID = "";
-            // currentUser reference is created on authorization with a provider and stores a User object.
-            // This object can be used for user validation. This implementation sends user ID to simplify
-            // and standardize different server checks.
-            const currentUser = this.userMan.getCurrentUser();
-            if (currentUser != null) {
-                userID = currentUser.getId().toString();
-            }
             method.call(this.agService, request, {},
-                (err: grpcWeb.Error, response: T) => {
+                (err: grpcWeb.RpcError, response: T) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {
                             const code = new Status();

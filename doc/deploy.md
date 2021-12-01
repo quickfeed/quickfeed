@@ -2,6 +2,7 @@
 
 ## Table of Contents
 
+- [Technology Stack](#technology-stack)
 - [Preparing the Environment](#preparing-the-environment)
   - [Configuring Docker](#configuring-docker)
   - [Setup Environment Variables](#setup-environment-variables)
@@ -20,6 +21,17 @@
   - [Running the QuickFeed Server Details](#running-the-quickfeed-server-details)
     - [Flags](#flags)
     - [Custom Docker Image for a Course](#custom-docker-image-for-a-course)
+
+## Technology Stack
+
+QuickFeed depends on these technologies.
+
+- [Go](https://golang.org/doc/code.html)
+- [TypeScript](https://www.typescriptlang.org/)
+- [gRPC](https://grpc.io/)
+- [Protocol Buffers](https://developers.google.com/protocol-buffers/docs/proto3)
+- [gRPC-Web](https://github.com/grpc/grpc-web)
+- [Envoy](https://www.envoyproxy.io/)
 
 ## Preparing the Environment
 
@@ -48,6 +60,9 @@ The `$SERVER_HOST` should be set to the ip, hostname or container name where the
 The authorization callback URL is unique for each instance of QuickFeed, e.g., `https://www.my-quickfeed.com/auth/github/callback`.
 
 ### Generate Envoy Configuration File
+
+Envoy is mainly used as a reverse proxy to facilitate gRPC invocations on the server-side.
+It also serves to mediate OAuth traffic from GitHub.
 
 The default envoy configuration for testing can be generated using the existent rules in the Makefile:
 

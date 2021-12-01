@@ -2,8 +2,6 @@ package ci
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/sha1"
 	"fmt"
 	"time"
 
@@ -42,15 +40,14 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 		}
 		// we only get here if err was a timeout, so that we can log 'out' to the user
 	}
-	result, err := score.ExtractResults(ed.out, info.RandomSecret, ed.execTime)
-	if err != nil {
-		logger.Errorf("Failed to extract results from log: %v", err)
-		return
+	results := score.ExtractResults(ed.out, info.RandomSecret, ed.execTime)
+	if len(results.Errors) > 0 {
+		for _, err := range results.Errors {
+			logger.Errorf("Failed to extract results: %v", err)
+		}
 	}
-	logger.Debug("ci.ExtractResults",
-		zap.Any("results", log.IndentJson(result)),
-	)
-	recordResults(logger, db, rData, result)
+	logger.Debug("ci.RunTests", zap.Any("Results", log.IndentJson(results)))
+	recordResults(logger, db, rData, results)
 }
 
 type execData struct {
@@ -88,6 +85,12 @@ func runTests(runner Runner, info *AssignmentInfo, rData *RunData) (*execData, e
 
 // recordResults for the assignment given by the run data structure.
 func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunData, result *score.Results) {
+	// Sanity check of the result object
+	if result == nil || result.BuildInfo == nil {
+		logger.Errorf("No build info found; faulty Results object received: %v", result)
+		return
+	}
+
 	assignment := rData.Assignment
 	logger.Debugf("Fetching most recent submission for assignment %d", assignment.GetID())
 	submissionQuery := &pb.Submission{
@@ -103,7 +106,13 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 
 	// Keep the original submission's delivery date (obtained from the database (newest)) if this is a manual rebuild.
 	if rData.Rebuild {
-		result.BuildInfo.BuildDate = newest.BuildInfo.BuildDate
+		if newest != nil && newest.BuildInfo != nil {
+			// Only update the build date if we found a previous submission
+			result.BuildInfo.BuildDate = newest.BuildInfo.BuildDate
+		} else {
+			// Can happen if a previous submission failed to store to the database
+			logger.Debug("Rebuild with no previous submission stored in database")
+		}
 	}
 
 	score := result.Sum()
@@ -127,14 +136,6 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 	if !rData.Rebuild {
 		updateSlipDays(logger, db, rData.Assignment, newSubmission)
 	}
-}
-
-func randomSecret() string {
-	randomness := make([]byte, 10)
-	if _, err := rand.Read(randomness); err != nil {
-		panic("couldn't generate randomness")
-	}
-	return fmt.Sprintf("%x", sha1.Sum(randomness))
 }
 
 func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission) {

@@ -1,9 +1,19 @@
 package database
 
 import (
+	"errors"
+	"fmt"
+
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/kit/score"
 	"gorm.io/gorm"
+)
+
+var (
+	// ErrInvalidSubmission is returned if the submission specify both UserID and GroupID or neither.
+	ErrInvalidSubmission = errors.New("submission must specify exactly one of UserID or GroupID")
+	// ErrInvalidAssignmentID is returned if assignment is not specified.
+	ErrInvalidAssignmentID = errors.New("cannot create submission without an associated assignment")
 )
 
 // CreateSubmission creates a new submission record or updates the most
@@ -11,40 +21,8 @@ import (
 // The submissionQuery must always specify the assignment, and may specify the ID of
 // either an individual student or a group, but not both.
 func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
-	// Primary key must be greater than 0.
-	if submission.AssignmentID < 1 {
-		return gorm.ErrRecordNotFound
-	}
-
-	// Either user or group id must be set, but not both.
-	var m *gorm.DB
-	switch {
-	case submission.UserID > 0 && submission.GroupID > 0:
-		return gorm.ErrRecordNotFound
-	case submission.UserID > 0:
-		m = db.conn.First(&pb.User{ID: submission.UserID})
-	case submission.GroupID > 0:
-		m = db.conn.First(&pb.Group{ID: submission.GroupID})
-	default:
-		return gorm.ErrRecordNotFound
-	}
-
-	// Check that user/group with given ID exists.
-	var group int64
-	if err := m.Count(&group).Error; err != nil {
+	if err := db.check(submission); err != nil {
 		return err
-	}
-
-	// Checks that the assignment exists.
-	var assignment int64
-	if err := db.conn.Model(&pb.Assignment{}).Where(&pb.Assignment{
-		ID: submission.AssignmentID,
-	}).Count(&assignment).Error; err != nil {
-		return err
-	}
-
-	if assignment+group != 2 {
-		return gorm.ErrRecordNotFound
 	}
 
 	// Make a new submission struct for the database query to check
@@ -58,28 +36,80 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 		GroupID:      submission.GetGroupID(),
 	}
 
-	// We want the last record as there can be multiple submissions
-	// for the same student/group and lab in the database.
-	if err := db.conn.Last(query, query).Error; err != nil && err != gorm.ErrRecordNotFound {
-		return err
-	}
-	// TODO(meling) temporary transformation of submission data
-	transform(submission)
+	return db.conn.Transaction(func(tx *gorm.DB) error {
+		// We want the last record as there can be multiple submissions
+		// for the same student/group and lab in the database.
+		if err := tx.Last(query, query).Error; err != nil && err != gorm.ErrRecordNotFound {
+			return err // will rollback transaction
+		}
+		if submission.ID != 0 {
+			if err := tx.First(&pb.Submission{}, &pb.Submission{ID: submission.ID}).Error; err != nil {
+				return err // will rollback transaction
+			}
+			if err := tx.Where("submission_id = ?", submission.ID).Delete(&score.Score{}).Error; err != nil {
+				return err // will rollback transaction
+			}
+			if err := tx.Where("submission_id = ?", submission.ID).Delete(&score.BuildInfo{}).Error; err != nil {
+				return err // will rollback transaction
+			}
+			if submission.BuildInfo != nil {
+				submission.BuildInfo.SubmissionID = submission.ID
+			}
+			for _, sc := range submission.Scores {
+				sc.SubmissionID = submission.ID
+			}
+		}
+		if err := tx.Save(submission).Error; err != nil {
+			return err // will rollback transaction
+		}
+		return nil // will commit transaction
+	})
+}
 
-	// A submission will have a build info without any ID, using save will create a duplicate build info
-	// in case the submission already exists in the database. We have to update build info explicitly.
-	// There should be a less hacky way to do it.
-	if submission.BuildInfo != nil && submission.ID != 0 {
-		var buildInfo score.BuildInfo
-		if err := db.conn.Where("submission_id = ?", submission.ID).Last(&buildInfo).Error; err != nil {
-			return err
-		}
-		submission.BuildInfo.ID = buildInfo.ID
-		if err := db.conn.Save(submission.BuildInfo).Error; err != nil {
-			return err
+// check returns an error if the submission query is invalid; otherwise nil is returned.
+func (db *GormDB) check(submission *pb.Submission) error {
+	// Foreign key must be greater than 0.
+	if submission.AssignmentID < 1 {
+		return ErrInvalidAssignmentID
+	}
+
+	// Either user or group id must be set, but not both.
+	var m *gorm.DB
+	switch {
+	case submission.UserID > 0 && submission.GroupID > 0:
+		return ErrInvalidSubmission
+	case submission.UserID > 0:
+		m = db.conn.First(&pb.User{ID: submission.UserID})
+	case submission.GroupID > 0:
+		m = db.conn.First(&pb.Group{ID: submission.GroupID})
+	default:
+		// neither UserID nor GroupID are not set
+		return ErrInvalidSubmission
+	}
+
+	// Check that user/group with given ID exists.
+	var idCount int64
+	if err := m.Count(&idCount).Error; err != nil {
+		if submission.UserID > 0 {
+			return fmt.Errorf("user %d not found for submission: %+v: %w", submission.UserID, submission, err)
+		} else {
+			return fmt.Errorf("group %d not found for submission: %+v: %w", submission.GroupID, submission, err)
 		}
 	}
-	return db.conn.Save(submission).Error
+
+	// Checks that the assignment exists.
+	var assignment int64
+	if err := db.conn.Model(&pb.Assignment{}).Where(&pb.Assignment{
+		ID: submission.AssignmentID,
+	}).Count(&assignment).Error; err != nil {
+		return fmt.Errorf("assignment %d not found: %w", submission.AssignmentID, err)
+	}
+
+	// Exactly one assignment and user/group must exist together.
+	if assignment+idCount != 2 {
+		return fmt.Errorf("inconsistent database state: %w", gorm.ErrRecordNotFound)
+	}
+	return nil
 }
 
 // GetSubmission fetches a submission record.
@@ -93,8 +123,6 @@ func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 		Where(query).Last(&submission).Error; err != nil {
 		return nil, err
 	}
-	// TODO(meling) temporary transformation of submission data
-	transform(&submission)
 
 	return &submission, nil
 }
@@ -119,8 +147,6 @@ func (db *GormDB) GetLastSubmissions(courseID uint64, query *pb.Submission) ([]*
 		}
 		latestSubs = append(latestSubs, temp)
 	}
-	// TODO(meling) temporary transformation of submission data
-	transform(latestSubs...)
 	return latestSubs, nil
 }
 
@@ -130,8 +156,6 @@ func (db *GormDB) GetSubmissions(query *pb.Submission) ([]*pb.Submission, error)
 	if err := db.conn.Find(&submissions, &query).Error; err != nil {
 		return nil, err
 	}
-	// TODO(meling) temporary transformation of submission data
-	transform(submissions...)
 	return submissions, nil
 }
 

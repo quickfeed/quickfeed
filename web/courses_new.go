@@ -66,7 +66,6 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 
 	// create course repos and webhooks for each repo
 	for path, private := range RepoPaths {
-
 		repoOptions := &scm.CreateRepositoryOptions{
 			Path:         path,
 			Organization: org,

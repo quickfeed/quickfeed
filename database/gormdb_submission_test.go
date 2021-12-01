@@ -1,6 +1,7 @@
 package database_test
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -202,7 +203,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(&pb.Submission{
 		AssignmentID: 1,
 		UserID:       1,
-	}); err != gorm.ErrRecordNotFound {
+	}); !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Fatal(err)
 	}
 
@@ -213,7 +214,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(&pb.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       3,
-	}); err != gorm.ErrRecordNotFound {
+	}); !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Fatal(err)
 	}
 
@@ -242,6 +243,49 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	}
 	if !reflect.DeepEqual(submissions[0], want) {
 		t.Errorf("have %#v want %#v", submissions[0], want)
+	}
+}
+
+func TestGormDBInsertBadSubmissions(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	// expected to fail
+	if err := db.CreateSubmission(&pb.Submission{}); !errors.Is(err, database.ErrInvalidAssignmentID) {
+		t.Fatal(err)
+	}
+	// expected to fail
+	if err := db.CreateSubmission(&pb.Submission{AssignmentID: 1}); !errors.Is(err, database.ErrInvalidSubmission) {
+		t.Fatal(err)
+	}
+	// expected to fail
+	if err := db.CreateSubmission(&pb.Submission{UserID: 1}); !errors.Is(err, database.ErrInvalidAssignmentID) {
+		t.Fatal(err)
+	}
+	// expected to fail with record not found
+	if err := db.CreateSubmission(&pb.Submission{AssignmentID: 1, UserID: 1}); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatal(err)
+	}
+	// expected to fail with record not found
+	if err := db.CreateSubmission(&pb.Submission{AssignmentID: 1, GroupID: 6}); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatal(err)
+	}
+
+	// create teacher, course, user (student) and assignment
+	user, _, assignment := setupCourseAssignment(t, db)
+
+	// create a submission for the assignment for non-existing user; should fail
+	if err := db.CreateSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: 3}); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatal(err)
+	}
+	// create a submission for the assignment for non-existing user; should fail
+	if err := db.CreateSubmission(&pb.Submission{AssignmentID: assignment.ID, GroupID: 9}); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatal(err)
+	}
+
+	// create another submission for the assignment; now it should succeed
+	if err := db.CreateSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: user.ID}); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -314,7 +358,6 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission2 := pb.Submission{
-		ID:           1,
 		UserID:       user.ID,
 		AssignmentID: assignment1.ID,
 		Reviews:      []*pb.Review{},
@@ -324,7 +367,6 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission3 := pb.Submission{
-		ID:           2,
 		UserID:       user.ID,
 		AssignmentID: assignment2.ID,
 		Reviews:      []*pb.Review{},
@@ -359,21 +401,38 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	}
 }
 
-func TestGormDBCreateUpdateWithBuilInfo(t *testing.T) {
+func TestGormDBCreateUpdateWithBuilInfoAndScores(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	user, course, assignment := setupCourseAssignment(t, db)
 
-	// create a new submission, ensure that build info is saved as well
+	// create a new submission, ensure that build info and scores are saved as well
 	buildInfo := &score.BuildInfo{
 		BuildDate: "2022-11-10T13:00:00",
 		BuildLog:  "Testing",
 		ExecTime:  33333,
 	}
+	scores := []*score.Score{
+		{
+			Secret:   "secret",
+			TestName: "Test1",
+			Score:    10,
+			MaxScore: 15,
+			Weight:   1,
+		},
+		{
+			Secret:   "secret",
+			TestName: "Test2",
+			Score:    0,
+			MaxScore: 5,
+			Weight:   1,
+		},
+	}
 	if err := db.CreateSubmission(&pb.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		BuildInfo:    buildInfo,
+		Scores:       scores,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -387,8 +446,15 @@ func TestGormDBCreateUpdateWithBuilInfo(t *testing.T) {
 
 	buildInfo.SubmissionID = submissions[0].ID
 	buildInfo.ID = 1
-	if diff := cmp.Diff(submissions[0].BuildInfo, buildInfo, protocmp.Transform()); diff != "" {
-		t.Errorf("Expected same build info, but got (-sub +want):\n%s", diff)
+	if diff := cmp.Diff(buildInfo, submissions[0].BuildInfo, protocmp.Transform()); diff != "" {
+		t.Errorf("Expected same build info, but got (-got +want):\n%s", diff)
+	}
+	if diff := cmp.Diff(
+		submissions[0].Scores,
+		scores,
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&score.Score{}, "ID", "SubmissionID", "Secret")); diff != "" {
+		t.Errorf("Incorrect scores after first save (-want, +got):\n%s", diff)
 	}
 
 	// buildInfo record must be updated (have the same ID as before) instead
@@ -399,7 +465,13 @@ func TestGormDBCreateUpdateWithBuilInfo(t *testing.T) {
 		BuildLog:  "Updated",
 		ExecTime:  12345,
 	}
+	scores[1].Score = 5
+	for _, sc := range scores {
+		sc.ID = 0
+		sc.SubmissionID = 0
+	}
 	submissions[0].BuildInfo = updatedBuildInfo
+	submissions[0].Scores = scores
 	if err := db.CreateSubmission(submissions[0]); err != nil {
 		t.Fatal(err)
 	}
@@ -415,5 +487,14 @@ func TestGormDBCreateUpdateWithBuilInfo(t *testing.T) {
 	updatedBuildInfo.SubmissionID = oldSubmissionID
 	if diff := cmp.Diff(submissions[0].BuildInfo, updatedBuildInfo, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected updated build info, but got (-sub +want):\n%s", diff)
+	}
+	if diff := cmp.Diff(submissions[0].Scores, scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
+		t.Errorf("Incorrect scores after update (-want, +got):\n%s", diff)
+	}
+
+	// attempting to update build info and scores with wrong submission ID must return an error
+	submissions[0].ID = 123
+	if err := db.CreateSubmission(submissions[0]); err == nil {
+		t.Fatal("expected error: record not found")
 	}
 }

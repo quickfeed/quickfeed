@@ -7,8 +7,8 @@ import "patch/go.proto";
 // Score give the score for a single test named TestName.
 message Score {
     uint64 ID = 1;
-    uint64 SubmissionID = 2;
-    string Secret = 3;       // the unique identifier for a scoring session
+    uint64 SubmissionID = 2 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
+    string Secret = 3 [(go.field) = {tags: 'gorm:"-"'}]; // the unique identifier for a scoring session
     string TestName = 4;     // name of the test
     int32 Score = 5;         // the score obtained
     int32 MaxScore = 6;      // max score possible to get on this specific test
@@ -23,12 +23,4 @@ message BuildInfo {
     string BuildDate = 3;
     string BuildLog = 4;
     int64 ExecTime = 5;
-}
-
-// Results holds a map from test names to score objects and build info.
-// TODO(meling) to be removed
-message Results {
-    uint64 ID = 1;
-    BuildInfo BuildInfo = 2 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];   // build info for tests
-    repeated Score Scores = 3 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}]; // list of scores for different tests
 }

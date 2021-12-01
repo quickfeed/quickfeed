@@ -5,17 +5,22 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"sort"
 	"strings"
 	"testing"
 )
 
+// registry keeps a map of score objects and a slice of test names,
+// in registration order, which is used to preserve deterministic iteration order.
 type registry struct {
-	scores map[string]*Score
+	testNames []string          // testNames in registration order
+	scores    map[string]*Score // map from TestName to score object
 }
 
 func NewRegistry() *registry {
 	return &registry{
-		scores: make(map[string]*Score),
+		testNames: make([]string, 0),
+		scores:    make(map[string]*Score),
 	}
 }
 
@@ -31,15 +36,24 @@ func (s *registry) Validate() error {
 	return nil
 }
 
-// PrintTestInfo prints JSON representation of all registered tests.
+// PrintTestInfo prints a JSON representation of all registered tests
+// in the order they were registered, or if sorted is true the test names
+// will be sorted before printing.
+//
 // This should be called after test registration has been completed,
 // but before test execution. This can be done in TestMain.
 //
 // Will panic if called from a non-test function.
-func (s *registry) PrintTestInfo() {
+func (s *registry) PrintTestInfo(sorted ...bool) {
 	callFrame()
-	for _, s := range s.scores {
-		fmt.Println(s.json())
+	if len(sorted) == 1 && sorted[0] {
+		sort.Strings(s.testNames)
+	}
+	// iterate over the test names in registration or sorted order
+	for _, name := range s.testNames {
+		if sc, ok := s.scores[name]; ok {
+			fmt.Println(sc.json())
+		}
 	}
 }
 
@@ -161,6 +175,8 @@ func (s *registry) add(testName string, max, weight int) {
 		MaxScore: int32(max),
 		Weight:   int32(weight),
 	}
+	// record the TestName in separate slice to preserve registration order
+	s.testNames = append(s.testNames, testName)
 	s.scores[testName] = sc
 }
 

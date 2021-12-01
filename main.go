@@ -86,6 +86,14 @@ func main() {
 	}
 	defer runner.Close()
 
+	// Add application token for external applications (to allow invoking gRPC methods)
+	// TODO(meling): this is a temporary solution, and we should find a better way to do this
+	token := os.Getenv("QUICKFEED_AUTH_TOKEN")
+	if len(token) > 16 {
+		auth.Add(token, 1)
+		log.Println("Added application token")
+	}
+
 	agService := web.NewAutograderService(logger, db, scms, bh, runner)
 	go web.New(agService, *public, *httpAddr)
 

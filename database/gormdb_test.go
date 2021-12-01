@@ -945,7 +945,6 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission2 := pb.Submission{
-		ID:           1,
 		GroupID:      group.ID,
 		AssignmentID: assignment1.ID,
 		Reviews:      []*pb.Review{},
@@ -955,7 +954,6 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission3 := pb.Submission{
-		ID:           2,
 		GroupID:      group.ID,
 		AssignmentID: assignment2.ID,
 		Reviews:      []*pb.Review{},
@@ -965,7 +963,6 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission4 := pb.Submission{
-		ID:           3,
 		UserID:       users[0].ID,
 		AssignmentID: assignment3.ID,
 		Reviews:      []*pb.Review{},
