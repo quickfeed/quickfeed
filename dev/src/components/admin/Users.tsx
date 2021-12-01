@@ -34,13 +34,13 @@ const Users = (): JSX.Element => {
                     </span> 
                     : null
                 }
-                <PromoteButton user={user}></PromoteButton>
+                <PromoteButton user={user} />
             </li>
         )
     }
 
     const users = state.allUsers.map((user, index) => {
-        return <UserListElement user={user} key={index}></UserListElement>
+        return <UserListElement user={user} key={index} />
     })
 
     return (
