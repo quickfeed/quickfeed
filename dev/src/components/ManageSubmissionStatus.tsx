@@ -18,13 +18,14 @@ const ManageSubmissionStatus = (): JSX.Element => {
     }
 
     const buttons: {text: string, status: Submission.Status, style: string}[] = [
-        {text: "Approved", status: Submission.Status.APPROVED, style: "col btn btn-primary mr-2"}, 
-        {text: "Revision", status: Submission.Status.REVISION, style: "col btn btn-warning mr-2"},
-        {text: "Rejected", status: Submission.Status.REJECTED, style: "col btn btn-danger mr-2"}
+        {text: "Approve", status: Submission.Status.APPROVED, style: "primary"}, 
+        {text: "Revision", status: Submission.Status.REVISION, style: "warning"},
+        {text: "Reject", status: Submission.Status.REJECTED, style: "danger"}
     ]
 
     const StautusButtons = buttons.map((button, index) => {
-        const style = state.activeSubmission?.getStatus() === button.status ? button.style : "col btn border mr-2"
+        const style = state.activeSubmission?.getStatus() === button.status ? `col btn btn-${button.style} mr-2` : `col btn btn-outline-${button.style} mr-2`
+        // TODO: Perhaps refactor button into a separate general component to enable reuse
         return (
             <div key={index} className={style} onClick={() => updateStatus(button.status)}>
                 {button.text}
