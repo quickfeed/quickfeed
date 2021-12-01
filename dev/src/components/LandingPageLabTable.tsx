@@ -2,7 +2,7 @@ import React from "react";
 import { useHistory } from "react-router";
 import { getFormattedTime, SubmissionStatus, timeFormatter } from "../Helpers";
 import { useAppState } from "../overmind";
-import { Submission } from "../../proto/ag/ag_pb";
+import { Assignment, Submission } from "../../proto/ag/ag_pb";
 
 
 interface course {
@@ -11,64 +11,73 @@ interface course {
 
 //** This component takes a courseID (number) to render a table containing lab information
 /* Giving a courseID of zero (0) makes it display ALL labs for all courses, whereas providing a courseID displays labs for ONLY ONE course */
+
+// TODO: Refactor this
 const LandingPageLabTable = (crs: course): JSX.Element => {
     const state = useAppState()
     const history  = useHistory()
     
-    function redirectToLab(courseid:number,assignmentid:number){
+    const redirectToLab = (courseid: number, assignmentid: number) => {
         history.push(`/course/${courseid}/${assignmentid}`)
     }
 
     const MakeLabTable = (): JSX.Element[] => {
         const table: JSX.Element[] = []
         let submission: Submission = new Submission()
-            for (const courseID in state.assignments) {
-                // Use the index provided by the for loop if courseID provided == 0, else select the given course
-                const key = crs.courseID > 0 ? crs.courseID : Number(courseID)
-                const course = state.courses.find(course => course.getId() == key)  
-                state.assignments[key]?.forEach(assignment => {
-                    if(state.submissions[key]) {
-                        // Submissions are indexed by the assignment order.
-                        submission = state.submissions[key][assignment.getOrder() - 1]
-                        if (submission===undefined){
-                            submission = new Submission()
+        for (const id in state.assignments) {
+            // Use the index provided by the for loop if courseID provided == 0, else select the given course
+            const courseID = crs.courseID > 0 ? crs.courseID : Number(id)
+            const course = state.courses.find(course => course.getId() == courseID)  
+            state.assignments[courseID]?.forEach(assignment => {
+                if(state.submissions[courseID]) {
+                    // Submissions are indexed by the assignment order - 1.
+                    submission = state.submissions[courseID][assignment.getOrder() - 1]
+                    if (!submission){
+                        submission = new Submission()
+                    }
+                    if (submission.getStatus() > Submission.Status.APPROVED || submission.getStatus() < Submission.Status.APPROVED){
+                        const deadline = timeFormatter(assignment.getDeadline(), state.timeNow)
+                        if(deadline.daysUntil > 3 && submission.getScore() >= assignment.getScorelimit()) {
+                            deadline.className = "table-success"
                         }
-                        if (submission.getStatus() !== Submission.Status.APPROVED){
-                            const time2Deadline = timeFormatter(assignment.getDeadline(),state.timeNow)
-                            if(time2Deadline[3] >3 && (submission.getScore() >= assignment.getScorelimit() &&(submission.getStatus()<1))){
-                                time2Deadline[1]= "table-success"
-                            }
-                            if(time2Deadline[0]){
-                                table.push(
-                                    <tr key={assignment.getId()} className={"clickable-row " + time2Deadline[1]} onClick={()=>redirectToLab(assignment.getCourseid(),assignment.getId())}>
-                                        {crs.courseID==0 &&
-                                        <th scope="row">{course?.getCode()}</th>
-                                        }
-                                        <td>{assignment.getName()}</td>
-                                        <td>{submission.getScore()} / 100</td>
-                                        <td>{getFormattedTime(assignment.getDeadline())}</td>
-                                        <td>{time2Deadline[0] ? time2Deadline[2]: '--'}</td>
-                                        <td className={SubmissionStatus[submission.getStatus()]}>{(assignment.getAutoapprove()==false && submission.getScore()>= assignment.getScorelimit()) ? "Awating approval":(assignment.getAutoapprove()==true && submission.getScore()>= assignment.getScorelimit() && submission.getStatus()<1)? "Awaiting approval":(submission.getScore()>=assignment.getScorelimit()? SubmissionStatus[submission.getStatus()] :"Score not high enough")}</td>
-                                        <td>{assignment.getIsgrouplab() ? "Yes": "No"}</td>
-                                    </tr>
-                                )
-                            }
+                        if(deadline.message){
+                            table.push(
+                                <tr key={assignment.getId()} className={"clickable-row " + deadline.className} onClick={()=>redirectToLab(courseID, assignment.getId())}>
+                                    {crs.courseID == 0 && <th scope="row">{course?.getCode()}</th>}
+                                    <td>{assignment.getName()}</td>
+                                    <td>{submission.getScore()} / 100</td>
+                                    <td>{getFormattedTime(assignment.getDeadline())}</td>
+                                    <td>{deadline.message ? deadline.message : '--'}</td>
+                                    <td className={SubmissionStatus[submission.getStatus()]}>
+                                        {status(assignment, submission)}
+                                    </td>
+                                    <td>{assignment.getIsgrouplab() ? "Yes": "No"}</td>
+                                </tr>
+                            )
                         }
                     }
-                })
+                }
+            })
 
                 // Break out of the for loop on the first iteration if we are only rendering information for one course
-                if (crs.courseID > 0) {
-                    break
-                }
+            if (crs.courseID > 0) {
+                break
             }
-        
-        
-           
-        return table
-            
+        }  
+        return table   
     }
     
+    // Returns status for a given submission
+    const status = (assignment: Assignment, submission: Submission) => {
+        if (!assignment.getAutoapprove() && submission.getScore() >= assignment.getScorelimit()) {
+            return "Awating approval"
+        }
+        if (submission.getScore() < assignment.getScorelimit() && submission.getStatus() !== Submission.Status.APPROVED) {
+            return `Need ${assignment.getScorelimit()}% score for approval`
+        }
+        return SubmissionStatus[submission.getStatus()]
+    }
+
     return (
         <div>
             <table className="table rounded-lg table-bordered table-hover" id="LandingPageTable">

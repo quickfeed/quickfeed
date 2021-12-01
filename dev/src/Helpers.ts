@@ -65,30 +65,37 @@ export const getFormattedTime = (deadline_string: string): string => {
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} at ${deadline.getHours()}:${deadline.getMinutes() < 10 ? '0' + deadline.getMinutes() : deadline.getMinutes()}`
 }
 
+export interface Deadline {
+    className: string,
+    message: string,
+    daysUntil: number,
+}
+
 /** Utility function for LandingpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
-export const timeFormatter = (deadline:string , now: Date): (string | number | boolean)[] => {
+export const timeFormatter = (deadline: string , now: Date): Deadline => {
     const timeOfDeadline = new Date(deadline)
     const timeToDeadline =  timeOfDeadline.getTime() - now.getTime()
     const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     const hours = Math.floor(timeToDeadline / (1000 * 3600))
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000*60))
-    
-    if (days<14){
-        if(days<7){
-            if (days<3){
-                if (timeToDeadline<0){
-                    return [true,'table-danger', `deadline was ${-days > 0 ? -days+" days" : -hours+" hours"} ago`,0]
-                }
-                if (days==0){
-                    return [true,'table-danger', `${hours} hours and ${minutes} minutes to deadline!`,0]
-                }
 
-                return [true,'table-warning', `${days} day${days==1?'':'s'} to deadline`,days]
-            }
-        }
-        return[true,'table-primary',`${days} days until deadline`,days]
+    if (timeToDeadline < 0){
+        return {className: "table-danger", message: `deadline was ${-days > 0 ? -days+" days" : -hours+" hours"}`, daysUntil: 0}
     }
-    return [false,'','',days]
+
+    if (days == 0) {
+        return {className: "table-danger", message: `${hours} hours and ${minutes} minutes to deadline!`, daysUntil: 0}
+    }
+
+    if (days < 3){
+        return {className: "table-warning", message: `${days} day${days==1?'':'s'} to deadline`, daysUntil: days}
+    }
+    
+    if (days < 14){
+        return {className: "table-primary", message: `${days} days until deadline`, daysUntil: days}
+    }
+
+    return {className: "", message: "", daysUntil: days}
 }
 export const layoutTime = "2021-03-20T23:59:00"
 
@@ -171,7 +178,7 @@ export const getPassedTestsCount = (score: Score[]): string => {
 }
 
 
-export const isValid = (element: any): boolean => {
+export const isValid = (element: unknown): boolean => {
     if (element instanceof User){
         if (element.getName().length === 0 || element.getEmail().length === 0 || element.getStudentid().length === 0) {
             return false
