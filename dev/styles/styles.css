@@ -296,10 +296,14 @@ input{
 .reviewLab {
     position: sticky;
     top: 50px; 
+    min-width: 50%;
     height: 800px;
+}
+
+.reviewLabResult {
     overflow: scroll;
     overflow-y: scroll; 
-    min-width: 50%;
+    height: 800px;
 }
 
 #group-image {

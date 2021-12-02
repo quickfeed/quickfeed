@@ -1,6 +1,6 @@
 import { json } from "overmind"
 import React, { useEffect } from "react"
-import { Group, Submission, SubmissionLink } from "../../proto/ag/ag_pb"
+import { Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb"
 import { getCourseID, isTeacher } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import DynamicTable, { CellElement } from "./DynamicTable"
@@ -32,12 +32,15 @@ const Results = (): JSX.Element => {
         return <h1>Nothing</h1>
     }
 
-    const getSubmissionCell = (submissionLink: SubmissionLink) => {
+    const getSubmissionCell = (submissionLink: SubmissionLink, user: User) => {
         if (submissionLink.hasSubmission() && submissionLink.hasAssignment()) {
             return ({   
                 value: `${submissionLink.getSubmission()?.getScore()}%`, 
                 className: submissionLink.getSubmission()?.getStatus() === Submission.Status.APPROVED ? "result-approved" : "result-pending",
-                onClick: () => actions.setActiveSubmission(json(submissionLink.getSubmission()))
+                onClick: () => {
+                    actions.setActiveSubmission(json(submissionLink.getSubmission()))
+                    actions.setSelectedUser(json(user))
+                }
             })
         }
         else {
@@ -52,9 +55,9 @@ const Results = (): JSX.Element => {
         const data: (string | JSX.Element | CellElement)[] = []
         data.push(link.user ? {value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}`} : "")
         data.push(link.enrollment && link.enrollment.hasGroup() ? (link.enrollment.getGroup() as Group)?.getName() : "")
-        if (link.submissions) {
+        if (link.submissions && link.user) {
             for (const submissionLink of link.submissions) {
-                data.push(getSubmissionCell(submissionLink))
+                data.push(getSubmissionCell(submissionLink, link.user))
             }
         }
         return data
@@ -67,12 +70,14 @@ const Results = (): JSX.Element => {
                     <Search />
                     <DynamicTable header={Header.concat(AssignmentsHeader)} data={results} />
                 </div>
-                <div className="col">
+                <div className="col reviewLab">
                     {state.activeSubmission ?
-                    <div className="reviewLab">
-                        <ManageSubmissionStatus />
+                    <>
+                    <ManageSubmissionStatus />
+                    <div className="reviewLabResult">
                         <Lab teacherSubmission={state.activeSubmission} />
                     </div>
+                    </>
                     : null}  
                 </div>
             </div>
