@@ -8,7 +8,6 @@ import { AlertType } from "../Helpers";
 /** Fetches and stores an authenticated user in state */
 export const getSelf = async ({state, effects}: Context): Promise<boolean> => {
         const user = await effects.grpcMan.getUser()
-    
         if (user.data) {
             state.self = user.data
             return true
@@ -57,7 +56,7 @@ export const getCoursesByUser = async ({state, effects}: Context): Promise<boole
 };
 
 
-/** Gets all submission for the current user by Course ID and stores them in state */
+/** getSubmissions fetches all submission for the current user by Course ID and stores them in state */
 export const getSubmissions = async ({state, effects}: Context, courseID: number): Promise<boolean> => {
     const result = await effects.grpcMan.getSubmissions(courseID, state.self.getId())
     if (result.data) {
@@ -195,7 +194,7 @@ export const getRepositories = async ({state, effects}: Context): Promise<boolea
         state.repositories[enrollment.getCourseid()] = {};
         const result = await effects.grpcMan.getRepositories(enrollment.getCourseid(), [Repository.Type.USER, Repository.Type.GROUP, Repository.Type.COURSEINFO, Repository.Type.ASSIGNMENTS])
         if (result.data) {
-            const repoMap = result.data.toObject().urlsMap;
+            const repoMap = result.data.getUrlsMap();
             repoMap.forEach(repo => {
                     state.repositories[enrollment.getCourseid()][(Repository.Type as any)[repo[0]]] = repo[1];
             });
@@ -290,7 +289,7 @@ const convertCourseSubmission = (data: CourseSubmissions) => {
 export const getAllCourseSubmissions = async ({state, effects}: Context, courseID: number): Promise<void> => {
     state.courseSubmissions[courseID] = []
     state.isLoading = true
-    const result =  await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL)
+    const result =  await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL, true)
     if (result.data) {
             state.courseSubmissions[courseID] = convertCourseSubmission(result.data)
             state.isLoading = false    
@@ -367,14 +366,16 @@ export const deleteGroup = async ({state, effects}: Context, group: Group): Prom
     }
 }
 
-export const updateGroup = async ({effects}: Context, group: Group): Promise<void> => {
+export const updateGroup = async ({actions, effects}: Context, group: Group): Promise<void> => {
     const response = await effects.grpcMan.updateGroup(group)
+    actions.alertHandler(response)
 }
 
 export const createCriterion = async ({state, effects}: Context, {criterion, assignment}: {criterion: GradingCriterion, assignment: Assignment}): Promise<void> => {
     for (const bm of assignment.getGradingbenchmarksList()) {
         if (bm.getId() === criterion.getBenchmarkid()) {
             bm.getCriteriaList().push(criterion)
+            effects.grpcMan.createCriterion(criterion)
         }
     }
 }

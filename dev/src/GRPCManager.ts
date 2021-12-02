@@ -2,7 +2,6 @@ import * as grpcWeb from "grpc-web";
 import {
     Assignments,
     AuthorizationResponse,
-    Benchmarks,
     Course,
     CourseRequest,
     CourseSubmissions,
@@ -231,12 +230,11 @@ export class GrpcManager {
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request);
     }
 
-    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
+    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IGrpcResponse<CourseSubmissions>> {
         const request = new SubmissionsForCourseRequest();
-        // TODO: Make this an argument?
-        request.setWithbuildinfo(true)
         request.setCourseid(courseID);
         request.setType(type);
+        request.setWithbuildinfo(withBuildInfo)
         return this.grpcSend<CourseSubmissions>(this.agService.getSubmissionsByCourse, request);
     }
 
@@ -350,12 +348,10 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.isEmptyRepo, request);
     }
 
-    // /* UTILITY */ //
-
     private grpcSend<T>(method: any, request: any): Promise<IGrpcResponse<T>> {
         const grpcPromise = new Promise<IGrpcResponse<T>>((resolve) => {
             method.call(this.agService, request, {},
-                (err: grpcWeb.Error, response: T) => {
+                (err: grpcWeb.RpcError, response: T) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {
                             const code = new Status();
