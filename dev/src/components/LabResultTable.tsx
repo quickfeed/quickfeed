@@ -1,8 +1,8 @@
 import { json } from "overmind"
 import React from "react"
 import { Assignment, Submission } from "../../proto/ag/ag_pb"
-import { Score } from "../../proto/kit/score/score_pb"
-import { generateStatusText, getPassedTestsCount, isManuallyGraded, SubmissionStatus } from "../Helpers"
+import { BuildInfo, Score } from "../../proto/kit/score/score_pb"
+import { generateStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded, SubmissionStatus } from "../Helpers"
 import { useAppState } from "../overmind"
 import { Progress, ProgressBar } from "./ProgressBar"
 
@@ -34,6 +34,10 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
     const LabResult = (): JSX.Element => {
         if (submission && assignment) {
             const buildInfo = submission.getBuildinfo()
+
+            const delivered = buildInfo ? getFormattedTime(buildInfo.getBuilddate()) : "N/A"
+            const executionTime = buildInfo ? `${buildInfo.getExectime() / 1000} seconds` : ""
+
             const boxShadow = (submission.getStatus() === Submission.Status.APPROVED) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 8px 0 0 red inset"
             return (
                 <div className="container" style={{paddingBottom: "20px"}}>
@@ -54,7 +58,7 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
                         </tr>
                         <tr>
                             <th colSpan={2}>Delivered</th>
-                            <td>{buildInfo?.getBuilddate()}</td>
+                            <td>{delivered}</td>
                         </tr>
                         <tr>
                             <th colSpan={2}>Approved</th>
@@ -72,6 +76,10 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
                         </tr>
                         : null
                         }
+                        <tr>
+                            <th colSpan={2}>Execution time</th>
+                            <td>{executionTime}</td>
+                        </tr>
                         <tr>
                             <th colSpan={2}>Slip days</th>
                             <td>{state.enrollmentsByCourseId[assignment.getCourseid()].getSlipdaysremaining()}</td>
