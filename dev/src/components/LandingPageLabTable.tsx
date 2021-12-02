@@ -1,6 +1,6 @@
 import React from "react";
 import { useHistory } from "react-router";
-import { getFormattedTime, SubmissionStatus, timeFormatter } from "../Helpers";
+import { generateStatusText, getFormattedTime, SubmissionStatus, timeFormatter } from "../Helpers";
 import { useAppState } from "../overmind";
 import { Assignment, Submission } from "../../proto/ag/ag_pb";
 
@@ -49,7 +49,7 @@ const LandingPageLabTable = (crs: course): JSX.Element => {
                                     <td>{getFormattedTime(assignment.getDeadline())}</td>
                                     <td>{deadline.message ? deadline.message : '--'}</td>
                                     <td className={SubmissionStatus[submission.getStatus()]}>
-                                        {status(assignment, submission)}
+                                        {generateStatusText(assignment, submission)}
                                     </td>
                                     <td>{assignment.getIsgrouplab() ? "Yes": "No"}</td>
                                 </tr>
@@ -65,17 +65,6 @@ const LandingPageLabTable = (crs: course): JSX.Element => {
             }
         }  
         return table   
-    }
-    
-    // Returns status for a given submission
-    const status = (assignment: Assignment, submission: Submission) => {
-        if (!assignment.getAutoapprove() && submission.getScore() >= assignment.getScorelimit()) {
-            return "Awating approval"
-        }
-        if (submission.getScore() < assignment.getScorelimit() && submission.getStatus() !== Submission.Status.APPROVED) {
-            return `Need ${assignment.getScorelimit()}% score for approval`
-        }
-        return SubmissionStatus[submission.getStatus()]
     }
 
     return (

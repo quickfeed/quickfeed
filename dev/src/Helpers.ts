@@ -1,7 +1,7 @@
 /* eslint-disable quotes */
 
 import { useParams } from "react-router"
-import { Assignment, Enrollment, EnrollmentLink, User } from "../proto/ag/ag_pb"
+import { Assignment, Enrollment, EnrollmentLink, Submission, User } from "../proto/ag/ag_pb"
 import { Score } from "../proto/kit/score/score_pb"
 
 export interface IBuildInfo {
@@ -245,3 +245,13 @@ export const EnrollmentStatusBadge = {
         return (a[index] as string).localeCompare((b[index] as string))
     })
  */
+
+export const generateStatusText = (assignment: Assignment, submission: Submission) => {
+        if (!assignment.getAutoapprove() && submission.getScore() >= assignment.getScorelimit()) {
+            return "Awating approval"
+        }
+        if (submission.getScore() < assignment.getScorelimit() && submission.getStatus() !== Submission.Status.APPROVED) {
+            return `Need ${assignment.getScorelimit()}% score for approval`
+        }
+        return SubmissionStatus[submission.getStatus()]
+    }
