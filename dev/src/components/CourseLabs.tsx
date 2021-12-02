@@ -2,7 +2,7 @@ import { useHistory } from "react-router"
 import { getFormattedTime, SubmissionStatus } from "../Helpers"
 import { useAppState } from "../overmind"
 import { Submission } from "../../proto/ag/ag_pb"
-import { ProgressBar } from "./ProgressBar"
+import { Progress, ProgressBar } from "./ProgressBar"
 import React from "react"
 
 export const CourseLabs = ({courseID}: {courseID: number}): JSX.Element =>  {
@@ -37,7 +37,7 @@ export const CourseLabs = ({courseID}: {courseID: number}): JSX.Element =>  {
                         </div>
                         <div className="row" >
                             <div className="col-5">
-                                <ProgressBar courseID={courseID} assignmentIndex={assignment.getOrder() - 1} submission={submission} type="lab"/>
+                                <ProgressBar courseID={courseID} assignmentIndex={assignment.getOrder() - 1} submission={submission} type={Progress.LAB}/>
                             </div>
                             <div className="col-3 text-center">
                                 {(submission.getStatus() == 0 && submission.getScore() >= assignment.getScorelimit()) ? "Awaiting Approval" : SubmissionStatus[submission.getStatus()]}

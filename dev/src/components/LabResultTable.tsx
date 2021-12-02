@@ -4,7 +4,7 @@ import { Assignment, Submission } from "../../proto/ag/ag_pb"
 import { Score } from "../../proto/kit/score/score_pb"
 import { getPassedTestsCount, isManuallyGraded, SubmissionStatus } from "../Helpers"
 import { useAppState } from "../overmind"
-import { ProgressBar } from "./ProgressBar"
+import { Progress, ProgressBar } from "./ProgressBar"
 
 interface lab {
     submission: Submission
@@ -38,7 +38,7 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
             return (
                 <div className="container" style={{paddingBottom: "20px"}}>
                     <div style={{paddingBottom: "10px"}}>
-                        <ProgressBar key={"progress-bar"} courseID={assignment.getCourseid()} assignmentIndex={assignment.getOrder() - 1} submission={submission} type={"lab"} />
+                        <ProgressBar key={"progress-bar"} courseID={assignment.getCourseid()} assignmentIndex={assignment.getOrder() - 1} submission={submission} type={Progress.LAB} />
                     </div>
                     <table className="table table-curved table-striped">
                         <thead className={"thead-dark"}>

@@ -294,13 +294,11 @@ input{
 }
 
 .reviewLab {
-    padding-left: 10px;
     position: sticky;
     top: 50px; 
     height: 800px;
     overflow: scroll;
     overflow-y: scroll; 
-    max-width: 80%;
     min-width: 50%;
 }
 
@@ -335,4 +333,17 @@ input{
     bottom: 0;
     right: 0;
     margin: 1.25rem;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.alert {
+    z-index: 999;
+}
+
+.bg-secondary {
+    background: rgb(221, 223, 226) !important;
+    color: slategrey;
 }

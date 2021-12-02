@@ -4,17 +4,22 @@ import { Submission } from "../../proto/ag/ag_pb"
 import { getPassedTestsCount } from "../Helpers"
 import { json } from "overmind"
 
+export enum Progress {
+    NAV,
+    LAB
+}
 
-export const ProgressBar = (props: {courseID: number, assignmentIndex: number, submission?: Submission, type: string}): JSX.Element => {
+export const ProgressBar = (props: {courseID: number, assignmentIndex: number, submission?: Submission, type: Progress}): JSX.Element => {
     const state = useAppState()
 
     const submission = props.submission ? props.submission : state.submissions[props.courseID][props.assignmentIndex]
     const assignment = state.assignments[props.courseID][props.assignmentIndex]
     const passedTests =  getPassedTestsCount(json(submission).getScoresList())
 
+    const secondaryProgress = assignment.getScorelimit() - submission.getScore()
 
     // Returns a thin line to be used for labs in the NavBar
-    if(props.type === "navbar") {
+    if(props.type === Progress.NAV) {
         let percentage = 0
         let score = 0
         if (submission) {
@@ -35,16 +40,11 @@ export const ProgressBar = (props: {courseID: number, assignmentIndex: number, s
     }
 
     // Returns a regular size progress bar to be used for labs
-    if(props.type === "lab") {
+    if(props.type === Progress.LAB) {
         let color: string
         switch (submission.getStatus()) {
             case Submission.Status.NONE:
-                if(submission.getScore()>=state.assignments[props.courseID][props.assignmentIndex].getScorelimit()){
-                    color = "bg-primary"
-                }
-                else{
-                    color = "bg-secondary"
-                }
+                color = "bg-primary"
                 break
             case Submission.Status.APPROVED:
                 color = "bg-success"
@@ -66,7 +66,14 @@ export const ProgressBar = (props: {courseID: number, assignmentIndex: number, s
                     aria-valuenow={submission.getScore()} 
                     aria-valuemin={0} 
                     aria-valuemax={100}>
-                        {props.submission?.getScore()}% ({passedTests})
+                        {props.submission?.getScore()} %
+                </div>
+                <div 
+                    className={"progress-bar progressbar-secondary bg-secondary"} 
+                    role="progressbar" 
+                    style={{width: secondaryProgress + "%"}} 
+                    aria-valuemax={100}>
+                        {secondaryProgress} % ({passedTests}) to go
                 </div>
             </div>
         )

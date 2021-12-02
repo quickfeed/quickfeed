@@ -2,7 +2,7 @@ import React from "react"
 import { useHistory } from "react-router-dom"
 import { useAppState } from "../../overmind"
 import { Assignment, Submission } from "../../../proto/ag/ag_pb"
-import { ProgressBar } from "../ProgressBar"
+import { Progress, ProgressBar } from "../ProgressBar"
 import NavBarLink, { NavLink } from "./NavBarLink"
 
 
@@ -35,7 +35,7 @@ const NavBarLabs = (): JSX.Element => {
                 return (
                     <div className={getLinkClass(assignment)} style={{position: "relative"}} key={assignment.getId()} onClick={() => {redirectToLab(assignment.getId())}}>
                         <NavBarLink link={link.link} jsx={link.jsx}/>
-                        <ProgressBar courseID={state.activeCourse} assignmentIndex={index} type="navbar" />
+                        <ProgressBar courseID={state.activeCourse} assignmentIndex={index} type={Progress.NAV} />
                     </div>
                 )
             })
