@@ -1,7 +1,7 @@
 import { json } from 'overmind'
 import { Context } from "./";
 import { IGrpcResponse } from "../GRPCManager";
-import {  User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment } from "../../proto/ag/ag_pb";
+import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink } from "../../proto/ag/ag_pb";
 import { CourseGroup, ParsedCourseSubmissions } from "./state";
 import { AlertType } from "../Helpers";
 
@@ -339,6 +339,15 @@ export const setActiveLab = ({state}: Context, assignmentID: number): void => {
     state.activeLab = assignmentID
 };
 
+export const rebuildSubmission = async ({state, effects}: Context) => {
+    if (state.activeSubmission) {
+        const response = await effects.grpcMan.rebuildSubmission(state.activeSubmission?.getAssignmentid(), state.activeSubmission?.getId())
+        if (response.data) {
+            state.activeSubmission = response.data
+        }
+    }
+}
+
 /** Enrolls a user (self) in a course given by courseID. Refreshes enrollments in state if enroll is sucessful. */
 export const enroll = async ({state, effects}: Context, courseID: number): Promise<void> => {
     const res = await effects.grpcMan.createEnrollment(courseID, state.self.getId())
@@ -446,6 +455,11 @@ export const enableRedirect = ({state}: Context, bool: boolean): void => {
 
 export const setActiveSubmission = ({state}: Context, submission: Submission | undefined): void => {
     state.activeSubmission = submission
+    
+}
+
+export const setSelectedUser = ({state}: Context, user: User | undefined): void => {
+    state.activeUser = user
 }
 
 export const isAuthorizedTeacher = async ({effects}: Context): Promise<boolean> => {
