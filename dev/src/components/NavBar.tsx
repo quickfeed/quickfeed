@@ -1,11 +1,8 @@
 import React from "react";
-import { useActions, useAppState } from "../overmind";
-import { Link, useHistory } from 'react-router-dom'
+import { useAppState } from "../overmind";
+import { Link } from 'react-router-dom'
 import { Enrollment } from "../../proto/ag/ag_pb";
-import NavBarLabs from "./navbar/NavBarLabs";
-import NavBarTeacher from "./navbar/NavBarTeacher";
 import NavBarFooter from "./navbar/NavBarFooter";
-import { Status } from "../consts";
 import NavBarCourse from "./navbar/NavBarCourse";
 
 
