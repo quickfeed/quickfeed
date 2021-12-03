@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useActions, useAppState } from "../overmind";
 import { Link, useHistory } from 'react-router-dom'
 import { Enrollment } from "../../proto/ag/ag_pb";
@@ -14,22 +14,16 @@ const NavBar = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const history = useHistory()
-
-    const [active, setActive] = useState(0)
-    const [showCourses, setShowCourses] = useState(false)
-    
-    useEffect(() => {
-        if (state.activeCourse > 0) {
-            setActive(state.activeCourse)
-            setShowCourses(false)
-        }
-    }, [state.activeCourse])
-
     
     const onCourseClick = (enrollment: Enrollment) => {
-        history.push(`/course/` + enrollment.getCourseid())
-        setShowCourses(false)
-        actions.setActiveCourse(enrollment.getCourseid())
+        if (enrollment.getCourseid() === state.activeCourse) {
+            actions.setActiveCourse(0)
+            history.push("/")
+        }
+        else {
+            history.push(`/course/` + enrollment.getCourseid())
+            actions.setActiveCourse(enrollment.getCourseid())
+        }
     }
 
     const CourseItems = (): JSX.Element[] | null => {
@@ -40,12 +34,16 @@ const NavBar = (): JSX.Element => {
         const favorites = state.enrollments.filter(enrollment => enrollment.getStatus() >= Enrollment.UserStatus.STUDENT && enrollment.getState() == Enrollment.DisplayState.FAVORITE)
 
         favorites.map((enrollment) =>{
+            if (enrollment.getState() >= Enrollment.DisplayState.VISIBLE)
                 links.push(
                     <>
-                        <li key={`code-${enrollment.getId()}`} className={showCourses || active === enrollment.getCourseid() ? Status.Active : Status.Inactive}  onClick={() => {onCourseClick(enrollment)}}>
-                            <div>
+                        <li key={`code-${enrollment.getId()}`} className=""  onClick={() => {onCourseClick(enrollment)}}>
+                            <div className="col" id="title">
                                 {enrollment.getCourse()?.getCode()}
                             </div> 
+                            <div className="col" title="icon">
+                                <i className={state.activeCourse === enrollment.getCourseid() ? "icon fa fa-caret-down fa-lg float-right" : "icon fa fa-caret-down fa-rotate-90 fa-lg float-right"}></i>
+                            </div>
                         </li>
                         <div key={`links-${enrollment.getId()}`} className={ state.activeCourse === enrollment.getCourseid()  ? Status.ActiveLab : Status.Inactive}>
                             {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? <NavBarLabs key={`labs-${enrollment.getId()}`} /> : null}
@@ -67,20 +65,14 @@ const NavBar = (): JSX.Element => {
                     </Link>
                 </li>
 
-                <li key="courses" onClick={() => { setShowCourses(!showCourses); actions.setActiveCourse(-1)}}>
-                    <div id="title">
-                            Courses &nbsp;&nbsp;
-                        <i className={showCourses ? "icon fa fa-caret-down fa-lg" : "icon fa fa-caret-down fa-rotate-90 fa-lg"}></i>
-                    </div>
-                </li>
-                <li key="all" className={showCourses ? Status.Active : Status.Inactive}>
+                {CourseItems()}
+                <li key="all" className="">
                     <Link to="/courses" className="Sidebar-items-link">
                         View all courses
                     </Link>
                 </li>
                 
                 
-                {CourseItems()}
                 <NavBarFooter key="foot" />
             </ul>
         </nav>
