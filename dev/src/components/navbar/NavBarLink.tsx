@@ -2,7 +2,7 @@ import React from "react"
 import { Link, useHistory } from "react-router-dom"
 export interface NavLink {
     link: {text: string, to: string}
-    icons?: { text: string | number, classname: string }[], 
+    icons?: ({ text: string | number, classname: string } | null)[], 
     jsx?: JSX.Element
 }
 
@@ -12,11 +12,13 @@ const NavBarLink = (props: NavLink): JSX.Element => {
     const icons: JSX.Element[] = []
     if (props.icons) {
         props.icons.forEach((icon, index) => {
-            icons.push(
-                <div key={index} id="icon" className={icon.classname}>
-                    {icon.text}
-                </div>
-            )
+            if (icon) {
+                icons.push(
+                    <div key={index} id="icon" style={{marginRight: "5px"}} className={icon.classname}>
+                        {icon.text}
+                    </div>
+                )
+            }
         })
     }
     return (
