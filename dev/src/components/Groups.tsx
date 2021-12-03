@@ -55,21 +55,21 @@ export const Groups = (): JSX.Element => {
         if (group.getStatus() === Group.GroupStatus.PENDING) {
             return (
                 <li className="list-group-item">
-                        <span onClick={() => setEditing(group)}>EDIT</span>
-                        <span onClick={() => updateGroupStatus(group, Group.GroupStatus.APPROVED)} className="badge badge-primary float-right">Approve</span>
-                        <span onClick={() => deleteGroup(group)} className="badge badge-danger float-right">Delete</span>
+                        <span className="badge badge-info clickable" onClick={() => setEditing(group)}>Edit</span>
+                        <span onClick={() => updateGroupStatus(group, Group.GroupStatus.APPROVED)} className="badge badge-primary float-right clickable ml-2">Approve</span>
+                        <span onClick={() => deleteGroup(group)} className="badge badge-danger float-right clickable">Delete</span>
                 </li>
             )
         }
-        return <li className="list-group-item"><span onClick={() => setEditing(group)}>EDIT</span></li>
+        return <li className="list-group-item"><span className="badge badge-info clickable" onClick={() => setEditing(group)}>Edit</span></li>
     }
 
     const GroupList = ({group}: {group: Group}) => {
         const style = {width: "40px", borderRadius: "50%", marginRight: "10px"}
         const classname = group.getStatus() == Group.GroupStatus.APPROVED ? "list-group-item active" : "list-group-item list-group-item-warning"
             return (
-                <><ul key={group.getId()} hidden={groupSearch(group)} className="list-group list-group-flush">
-                    <li className={classname}>
+                <><ul hidden={groupSearch(group)} className="list-group list-group-flush">
+                    <li key={group.getId()} className={classname}>
                         {group.getName()}
                         <span className="float-right badge badge-warning">{group.getStatus() == Group.GroupStatus.PENDING ? "Pending" : null}</span>
                     </li>
