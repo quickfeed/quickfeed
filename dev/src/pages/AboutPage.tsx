@@ -8,7 +8,7 @@ const AboutPage = (): JSX.Element => {
                 <div key="cblock" className="centerblock container">
                     <h1>Automated student feedback</h1>
                     <p>
-                        <strong>Autograder </strong>
+                        <strong>QuickFeed </strong>
                             provides instantaneous feedback to students on
                             their programming assignments. It is also a
                             valuable tool for teachers when grading lab
@@ -79,17 +79,17 @@ const AboutPage = (): JSX.Element => {
                     <div key="row1" className="row featurette">
                         <div key="c1r1" className="col-md-7">
                             <h2 className="featurette-heading">
-                                Autograder: <span className="text-muted">Automated student feedback</span>
+                                QuickFeed: <span className="text-muted">Automated student feedback</span>
                             </h2>
                             <p className="lead">
-                                Autograder aims to provide students with fast
+                                QuickFeed aims to provide students with fast
                                 feedback on their lab assignments, and is designed
                                 to help students learn about state-of-the-art tools
                                 used in the industry.
-                                Autograder builds upon version control systems and
+                                QuickFeed builds upon version control systems and
                                 continuous integration.
                                 When students upload code to their repositories,
-                                Autograder automatically builds their code and
+                                QuickFeed automatically builds their code and
                                 provides feedback based on tests supplied by the
                                 teaching staff.
                                 When grading assignments, teaching staff can access
