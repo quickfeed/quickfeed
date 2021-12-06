@@ -96,7 +96,9 @@ const Review = (): JSX.Element => {
                     
                         <div className="reviewLab col">
                             <ManageSubmissionStatus />
+                            <div className="reviewLabResult">
                             <Lab teacherSubmission={state.activeSubmission} />
+                            </div>
                         </div> )
 
                     : null }
