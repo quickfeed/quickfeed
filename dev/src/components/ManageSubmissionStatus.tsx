@@ -21,7 +21,7 @@ const ManageSubmissionStatus = (): JSX.Element => {
         {text: "Approve", status: Submission.Status.APPROVED, style: "primary"}, 
         {text: "Revision", status: Submission.Status.REVISION, style: "warning"},
         {text: "Reject", status: Submission.Status.REJECTED, style: "danger"},
-        {text: "Rebuild", status: Submission.Status.REVISION, style: "primary", onClick: () => actions.rebuildSubmission()}
+        {text: "Rebuild", status: Submission.Status.NONE, style: "primary", onClick: () => actions.rebuildSubmission()}
     ]
 
     const StautusButtons = buttons.map((button, index) => {
