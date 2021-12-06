@@ -62,6 +62,7 @@ export const getFormattedTime = (deadline_string: string): string => {
     const months = ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December']
     const deadline = new Date(deadline_string)
+    console.log(deadline, deadline_string)
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? '0' + deadline.getMinutes() : deadline.getMinutes()}`
 }
 
@@ -80,7 +81,7 @@ export const timeFormatter = (deadline: string , now: Date): Deadline => {
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000*60))
 
     if (timeToDeadline < 0){
-        return {className: "table-danger", message: `deadline was ${-days > 0 ? -days+" days" : -hours+" hours"}`, daysUntil: 0}
+        return {className: "table-danger", message: `Expired ${-days > 0 ? -days + " days ago" : -hours+" hours"}`, daysUntil: 0}
     }
 
     if (days == 0) {
@@ -88,11 +89,11 @@ export const timeFormatter = (deadline: string , now: Date): Deadline => {
     }
 
     if (days < 3){
-        return {className: "table-warning", message: `${days} day${days==1?'':'s'} to deadline`, daysUntil: days}
+        return {className: "table-warning", message: `${days} day${days==1? ' ' : 's'} to deadline`, daysUntil: days}
     }
     
     if (days < 14){
-        return {className: "table-primary", message: `${days} days until deadline`, daysUntil: days}
+        return {className: "table-primary", message: `${days} days`, daysUntil: days}
     }
 
     return {className: "", message: "", daysUntil: days}
