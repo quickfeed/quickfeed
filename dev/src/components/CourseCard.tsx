@@ -40,7 +40,7 @@ const CourseCard = ({course, enrollment, status}: CardProps): JSX.Element => {
                 </div>
                 
                 <div className="card-body position-relative">
-                    <h5 className="card-title">{course.getName()} - {course.getYear()}/{course.getTag()}</h5>
+                    <h5 className="card-title">{course.getName()} - {course.getTag()}/{course.getYear()}</h5>
                     { status === Enrollment.UserStatus.NONE ? 
                         <div className="btn btn-primary course-button" onClick={() => actions.enroll(course.getId())}>Enroll</div>
                     : status === Enrollment.UserStatus.PENDING ?
