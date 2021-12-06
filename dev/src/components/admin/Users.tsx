@@ -1,6 +1,8 @@
 import React, { useEffect } from "react"
 import { User } from "../../../proto/ag/ag_pb"
+import { isHidden } from "../../Helpers"
 import { useAppState, useActions } from "../../overmind"
+import DynamicTable, { CellElement } from "../DynamicTable"
 import Search from "../Search"
 
 
@@ -24,31 +26,36 @@ const Users = (): JSX.Element => {
         )
     }
 
-    const UserListElement = ({user}: {user: User}) => {
+    const UserListElement = ({user, hidden}: {user: User, hidden: boolean}) => {
         return (
-            <li className={"list-group-item" } hidden={!user.getName().toLowerCase().includes(state.query)}>
+            <div>
                 {user.getName()} 
                 {user.getIsadmin() ? 
-                    <span className={"badge badge-primary"}>
+                    <span className={"badge badge-primary ml-2"}>
                         Admin
                     </span> 
                     : null
                 }
-                <PromoteButton user={user} />
-            </li>
+            </div>
         )
     }
 
+    const headers: string[] = ["Name", "Email", "Student ID", "Role"]
     const users = state.allUsers.map((user, index) => {
-        return <UserListElement user={user} key={index} />
+        const data: (string | JSX.Element | CellElement)[] = []
+        data.push(<UserListElement user={user} hidden={isHidden(user.getName(), state.query)} />)
+        data.push(user.getEmail())
+        data.push(user.getStudentid())
+        data.push(<PromoteButton user={user} />)
+        return data
     })
 
     return (
         <div className="box">
-        <ul>
-        <Search />
-            {users}
-        </ul>
+            <div className="pb-2">
+                <Search />
+            </div>
+            <DynamicTable header={headers} data={users} />
         </div>
     )
 }
