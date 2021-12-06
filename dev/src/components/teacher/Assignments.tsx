@@ -1,97 +1,72 @@
 import { json } from "overmind"
 import React, { useState } from "react"
 import { Assignment } from "../../../proto/ag/ag_pb"
-import { getCourseID } from "../../Helpers"
-import { useAppState, useGrpc } from "../../overmind"
+import { getCourseID, isManuallyGraded } from "../../Helpers"
+import { useAppState } from "../../overmind"
+import DynamicTable, { CellElement } from "../DynamicTable"
 import CriterionForm from "../forms/CriterionForm"
 
 
 // TODO: Implement benchmark adding
 
-const Assignments = () => {
+const Assignments = (): JSX.Element => {
     const courseID = getCourseID()
     const assignments = useAppState().assignments[courseID]
-
-    const grpc = useGrpc().grpcMan
 
     const [editing, setEditing] = useState<Assignment>()
     const [editBenchmarkID, setBenchmarkID] = useState<number>(0)
     const [addBenchmark, setAddBenchmark] = useState<boolean>(false)
-    const [editCriteriaID, setCriteriaID] = useState<number>()
+    const [editCriteriaID, setCriteriaID] = useState<number>(-1)
 
-    const assignmentslist = assignments.map(assignment => {
-        return (
-            <tr onClick={() => {setEditing(json(assignment))}}>
-                <th colSpan={2}>{assignment.getName()}</th>
-                <td>{assignment.getIsgrouplab() ? "V" : "X"}</td>
-                <td>{assignment.getReviewers()}</td>
-            </tr>
-            )
+    const assignmentsData = assignments.map(assignment => {
+        const data: (string | JSX.Element | CellElement)[] = []
+        data.push({className: "clickable", value: assignment.getName(), onClick: () => setEditing(assignment)})
+        data.push(assignment.getIsgrouplab() ? "V" : "X")
+        data.push(assignment.getReviewers().toString())
+        return data
     })
 
     const EditAssignment = () => {
-        return (
-        <>
-        <table className="table table-curved table-striped">
-            <thead className={"thead-dark"}>
-                <th colSpan={2}>{editing?.getName()}</th>
-                <th>Points</th>
-            </thead>
-            <tbody>
-            {editing?.getGradingbenchmarksList().map(bm => {
-                return (
-                    <>
-                    <tr className="table-info"> {bm}
-                        <th colSpan={3}>{bm.getHeading()}</th>
-                    </tr>
-                    {bm.getCriteriaList().map(c => {
-                        if (editCriteriaID == c.getId()) {
-                            return (
-                            <CriterionForm criterion={c} setEditing={setCriteriaID} />
-                            )
-                        }
-                        return (
-                        <tr onClick={() => setCriteriaID(c.getId())}>
-                            <th colSpan={2}>{c.getDescription()}</th>
-                            <td>{c.getPoints()}</td>
-                        </tr>
-                        )
-                    })}
-                    {editBenchmarkID !== bm.getId() ? 
-                        <button onClick={() => setBenchmarkID(bm.getId())}>Add Criterion</button> 
-                        :
-                        <CriterionForm benchmarkID={bm.getId()} assignment={editing} setEditing={setBenchmarkID} />
+        if (editing) { 
+            return editing.getGradingbenchmarksList().map(bm => {  
+                const data = bm.getCriteriaList().map(c => {
+                    const data: (string | JSX.Element | CellElement)[] = []
+                    if (editCriteriaID == c.getId()) {
+                        data.push(<CriterionForm criterion={c} setEditing={setCriteriaID} />)
                     }
-                    </>
-                )
-            })}
-            {!addBenchmark ?
-            <button onClick={() => setAddBenchmark(true)}>Add Benchmark</button> 
-            : <input type="text"></input>
-            }
-            </tbody>
-        </table>
-        </>)
+                    else {
+                        data.push({value: c.getDescription(), onClick: () => setCriteriaID(c.getId())})
+                        data.push(c.getPoints().toString())
+                    }
+                    return data
+                })
+                if (editBenchmarkID !== bm.getId()) {
+                        data.push([<div key={8}><button onClick={() => setBenchmarkID(bm.getId())}>Add Criterion</button> </div>])
+                } 
+                 else {
+                        data.push([<CriterionForm key={89} benchmarkID={bm.getId()} assignment={editing} setEditing={setBenchmarkID} />])
+                }
+                return <DynamicTable key={bm.getId()} data={data} header={[bm.getHeading(), "Points"]} />
+            })
+            
+        }
+        return []
     }
 
     return (
         <div className="box row">
             <div className="col">
-                <table className="table table-curved table-striped">
-                    <thead className={"thead-dark"}>
-                        <th colSpan={2}>Assignment</th>
-                        <th>Group</th>
-                        <th>Reviewers</th>
-                    </thead>
-                    <tbody>
-                    {assignmentslist.length > 0 ? assignmentslist : "This course has no assignments."}
-                    </tbody>
+                {assignmentsData.length > 0 ? 
+                    <DynamicTable header={["Assignment", "Group", "Reviewers"]} data={assignmentsData} /> 
+                    : 
+                    "This course has no assignments."
+                }
 
-                </table>
             </div>
-            <div className="col">
-                {editing && editing.getReviewers() === 0 ? `This assignment (${editing.getName()}) is not for manual grading.` : null}
-                {editing && editing.getReviewers() > 0 ? EditAssignment() : null}
+            <div className="col mb-5">
+                {editing && !isManuallyGraded(editing) ? `This assignment (${editing.getName()}) is not for manual grading.` : null}
+                {editing && isManuallyGraded(editing) ? EditAssignment() : null}
+                {(editing && isManuallyGraded(editing) && addBenchmark) ? null : <button onClick={() => setAddBenchmark(true)}>Add Benchmark</button>}
             </div>
         </div>
 
