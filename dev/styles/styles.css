@@ -185,7 +185,7 @@ input{
 }
 
 .box {
-    margin-top: 50px;
+    margin-top: 30px;
 }
 
 .logs {
@@ -350,4 +350,12 @@ input{
 .bg-secondary {
     background: rgb(221, 223, 226) !important;
     color: slategrey;
+}
+
+.table td {
+    padding: .5rem !important;
+}
+
+.table th {
+    padding: .5rem !important;
 }
