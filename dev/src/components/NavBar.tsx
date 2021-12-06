@@ -30,11 +30,12 @@ const NavBar = (): JSX.Element => {
                 </li>
 
                 {courses}
-                <li key="all" className="">
-                    <Link to="/courses" className="Sidebar-items-link">
-                        View all courses
-                    </Link>
-                </li>
+                { state.self.getId() > 0 &&
+                    <li key="all" className="">
+                        <Link to="/courses" className="Sidebar-items-link">
+                            View all courses
+                        </Link>
+                    </li> }
                 <NavBarFooter key="foot" />
             </ul>
         </nav>
