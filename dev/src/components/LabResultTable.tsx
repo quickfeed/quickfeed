@@ -1,8 +1,8 @@
 import { json } from "overmind"
 import React from "react"
 import { Assignment, Submission } from "../../proto/ag/ag_pb"
-import { BuildInfo, Score } from "../../proto/kit/score/score_pb"
-import { generateStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded, SubmissionStatus } from "../Helpers"
+import { Score } from "../../proto/kit/score/score_pb"
+import { generateStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded } from "../Helpers"
 import { useAppState } from "../overmind"
 import { Progress, ProgressBar } from "./ProgressBar"
 
@@ -60,13 +60,17 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
                             <th colSpan={2}>Delivered</th>
                             <td>{delivered}</td>
                         </tr>
-                        <tr>
-                            <th colSpan={2}>Approved</th>
-                            <td>{submission.getApproveddate()}</td>
-                        </tr>
+                        { // Only render row if submission has an approved date
+                        submission.getApproveddate() ?
+                            <tr>
+                                <th colSpan={2}>Approved</th>
+                                <td>{getFormattedTime(submission.getApproveddate())}</td>
+                            </tr>
+                        : null
+                        }
                         <tr>
                             <th colSpan={2}>Deadline</th>
-                            <td>{assignment.getDeadline()}</td>
+                            <td>{getFormattedTime(assignment.getDeadline())}</td>
                         </tr>
                         
                         {!isManuallyGraded(assignment) ?
