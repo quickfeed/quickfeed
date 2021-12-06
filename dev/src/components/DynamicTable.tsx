@@ -13,6 +13,10 @@ const isCellElement = (obj: unknown): obj is CellElement => {
     return (obj as CellElement).value !== undefined
 }
 
+const isJSXElement = (obj: unknown): obj is JSX.Element => {
+    return (obj as JSX.Element) !== undefined
+}
+
 const DynamicTable = ({header, data}: {header: (string | JSX.Element | CellElement)[], data: (string | JSX.Element | CellElement)[][]}): JSX.Element | null => {
 
     if (data.length === 0) {
@@ -31,6 +35,10 @@ const DynamicTable = ({header, data}: {header: (string | JSX.Element | CellEleme
             }
             if (isCellElement(cell) && !isHidden(cell.value, searchQuery)) {
                 return false
+            }
+            // To enable searching with JSX.Element, add a 'hidden: boolean' prop to the element
+            if (isJSXElement(cell) && (cell as JSX.Element).props !== undefined) {
+                return (cell as JSX.Element).props.hidden
             }
         }
         return true
