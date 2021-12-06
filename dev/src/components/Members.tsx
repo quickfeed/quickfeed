@@ -59,8 +59,7 @@ export const Members = (): JSX.Element => {
                         Accept
                     </i>
                     <i 
-                        className="badge badge-danger"
-                        style={{cursor: "pointer", marginLeft: "5px"}} 
+                        className="badge badge-danger clickable ml-1"
                         onClick={() => {
                             if (confirm("WARNNG! Rejecting a student is irreversible. Are you sure?"))
                                 actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.NONE}) 
@@ -73,21 +72,21 @@ export const Members = (): JSX.Element => {
         else {
             data.push(edit ? (
                 <div>
-                    <button 
-                        className="btn btn-primary" 
+                    <i 
+                        className="badge badge-primary clickable" 
                         onClick={() => confirm(isTeacher(enrollment) ? demoteText : promoteText) ? actions.updateEnrollment({enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER}) : null}
                     >
                         {isTeacher(enrollment) ? "Demote" : "Promote"}
-                    </button>
-                    <button 
-                        className="btn btn-danger" 
+                    </i>
+                    <i 
+                        className="badge badge-danger clickable ml-1" 
                         onClick={() => {
                             if (confirm("WARNNG! Rejecting a student is irreversible. Are you sure?"))
                                 actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.NONE}) 
                             }}
                     >
                         Reject
-                    </button>
+                    </i>
                 </div>) :
                 <i className={EnrollmentStatusBadge[enrollment.getStatus()]}>
                     {EnrollmentStatus[enrollment.getStatus()]}
