@@ -258,8 +258,11 @@ export const createCourse = async ({state, actions, effects}: Context, value: {c
     actions.alertHandler(result)
 };
 
-export const editCourse = async ({effects}: Context, {course}: {course: Course}): Promise<void> => {
-    await effects.grpcMan.updateCourse(course)
+export const editCourse = async ({actions, effects}: Context, {course}: {course: Course}): Promise<void> => {
+    const response = await effects.grpcMan.updateCourse(course)
+    if (response.status.getCode() == 0) {
+        actions.getCourses()
+    }
 }
 
 export const refreshSubmissions = async ({state, effects}: Context, input: {courseID: number, submissionID: number}): Promise<void> => {

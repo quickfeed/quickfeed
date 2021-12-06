@@ -2,7 +2,6 @@ import React from "react"
 import { Group } from "../../../proto/ag/ag_pb"
 import { getCourseID } from "../../Helpers"
 import { useAppState } from "../../overmind"
-import SubmissionsTable from "../SubmissionsTable"
 
 const GroupComponent = (): JSX.Element => {
     const state = useAppState()
@@ -24,8 +23,6 @@ const GroupComponent = (): JSX.Element => {
     return (
         <div className="box">
             {GroupList(state.userGroup[courseID]) }
-            <br />
-            <SubmissionsTable courseID={courseID} group={true} />
         </div>
     )
 }
