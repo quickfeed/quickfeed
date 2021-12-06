@@ -40,7 +40,7 @@ const TeacherPage = (): JSX.Element => {
 
 
     return (
-        <div className="box">
+        <div>
             <RedirectButton to={root}></RedirectButton>
             <CourseBanner enrollment={state.enrollmentsByCourseId[courseID]} />
             

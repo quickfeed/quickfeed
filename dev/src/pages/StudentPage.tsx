@@ -17,7 +17,7 @@ const StudentPage = (): JSX.Element => {
     const root = `/course/${courseID}`
 
     return (
-        <div className="box">
+        <div>
             <RedirectButton to={root}></RedirectButton>
             <CourseBanner enrollment={state.enrollmentsByCourseId[courseID]} />   
             <div className="row" hidden={history.location.pathname != root}>

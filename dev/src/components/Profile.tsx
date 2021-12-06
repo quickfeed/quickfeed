@@ -13,7 +13,7 @@ const Profile = (): JSX.Element => {
     // User is not logged in if self.getId() <= 0
     if (state.self.getId() > 0) {
         return (
-            <div className="box">
+            <div>
                 <div className="jumbotron">
                     <div className="centerblock container">
                     <h1>Hi, {state.self.getName()}</h1>
