@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Redirect } from 'react-router'
 import { useAppState } from '../overmind'
 import UserProfileForm from './forms/UserProfileForm'
+import ProfileInfo from './ProfileInfo'
 
 
 const Profile = (): JSX.Element => {
@@ -9,28 +10,7 @@ const Profile = (): JSX.Element => {
     // Holds a local state to check whether the user is editing their user information or not
     const [editing, setEditing] = useState(false)
 
-    // Flips between editable and uneditable view of user info
-    const editProfile = () => {
-        setEditing(!editing)
-    }
-
-    const ProfileInfo = () => {
-        return (
-            <div className="box">
-                    <div className="card well">
-                    <div className="card-header">Your Information</div>
-                        <ul className="list-group list-group-flush">
-                            <li className="list-group-item">Name: {state.self.getName()}</li>
-                            <li className="list-group-item">Email: {state.self.getEmail()}</li>
-                            <li className="list-group-item">Student ID: {state.self.getStudentid()}</li>
-                        </ul>
-                    </div>
-                <button className="btn btn-primary" onClick={() => editProfile()}>Edit Profile</button>
-            </div>
-            )
-    }
-
-
+    // User is not logged in if self.getId() <= 0
     if (state.self.getId() > 0) {
         return (
             <div className="box">
@@ -41,7 +21,7 @@ const Profile = (): JSX.Element => {
                     </div>
                 </div>
                 <div className="container">
-                {editing ? <UserProfileForm setEditing={setEditing} /> : <ProfileInfo />}
+                {editing ? <UserProfileForm setEditing={setEditing} /> : <ProfileInfo setEditing={setEditing} />}
                 </div>
             </div>
             )
