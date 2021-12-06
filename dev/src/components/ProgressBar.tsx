@@ -3,10 +3,12 @@ import { useAppState } from "../overmind"
 import { Submission } from "../../proto/ag/ag_pb"
 import { getPassedTestsCount } from "../Helpers"
 import { json } from "overmind"
+import { type } from "os"
 
 export enum Progress {
     NAV,
-    LAB
+    LAB,
+    OVERVIEW
 }
 
 export const ProgressBar = (props: {courseID: number, assignmentIndex: number, submission?: Submission, type: Progress}): JSX.Element => {
@@ -39,8 +41,15 @@ export const ProgressBar = (props: {courseID: number, assignmentIndex: number, s
         )
     }
 
+    
+    let text = ""
+    let secondaryText = ""
+    if (props.type === Progress.LAB) {
+        text = `${props.submission?.getScore()} %`
+        secondaryText = `${secondaryProgress} % (${passedTests}) to go`
+    }
     // Returns a regular size progress bar to be used for labs
-    if(props.type === Progress.LAB) {
+    if(props.type > Progress.NAV) {
         let color: string
         switch (submission.getStatus()) {
             case Submission.Status.NONE:
@@ -66,14 +75,14 @@ export const ProgressBar = (props: {courseID: number, assignmentIndex: number, s
                     aria-valuenow={submission.getScore()} 
                     aria-valuemin={0} 
                     aria-valuemax={100}>
-                        {props.submission?.getScore()} %
+                        {text}
                 </div>
                 <div 
                     className={"progress-bar progressbar-secondary bg-secondary"} 
                     role="progressbar" 
                     style={{width: secondaryProgress + "%"}} 
                     aria-valuemax={100}>
-                        {secondaryProgress} % ({passedTests}) to go
+                        {secondaryText}
                 </div>
             </div>
         )

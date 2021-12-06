@@ -3,6 +3,7 @@ import { useHistory } from "react-router";
 import { generateStatusText, getFormattedTime, SubmissionStatus, timeFormatter } from "../Helpers";
 import { useAppState } from "../overmind";
 import { Assignment, Submission } from "../../proto/ag/ag_pb";
+import { Progress, ProgressBar } from "./ProgressBar";
 
 
 //** This component takes a courseID (number) to render a table containing lab information
@@ -60,7 +61,7 @@ const LandingPageLabTable = (): JSX.Element => {
                     <tr key={assignment.getId()} className={"clickable-row " + deadline.className} onClick={()=>redirectToLab(Number(assignment.getCourseid()), assignment.getId())}>
                         <th scope="row">{course?.getCode()}</th>
                         <td>{assignment.getName()}</td>
-                        <td>{submission.getScore()} / 100</td>
+                        <td><ProgressBar assignmentIndex={assignment.getOrder() - 1} courseID={assignment.getCourseid()} submission={submission} type={Progress.OVERVIEW} /></td>
                         <td>{getFormattedTime(assignment.getDeadline())}</td>
                         <td>{deadline.message ? deadline.message : '--'}</td>
                         <td className={SubmissionStatus[submission.getStatus()]}>
