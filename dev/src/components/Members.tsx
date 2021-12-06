@@ -99,7 +99,7 @@ export const Members = (): JSX.Element => {
 
     return (
         <div className='container'>
-            <div className="row no-gutters">
+            <div className="row no-gutters pb-2">
                 <div className="col-md-6">
                     <Search />
                 </div>
