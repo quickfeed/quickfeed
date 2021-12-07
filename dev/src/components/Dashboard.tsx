@@ -20,7 +20,7 @@ const Dashboard = (): JSX.Element => {
             <div>
                 <h1>Welcome, {state.self.getName()}!</h1>
             </div>
-            <LandingPageLabTable courseID={0}/>
+            <LandingPageLabTable />
             <Courses home={true} />
         </div>
     )
