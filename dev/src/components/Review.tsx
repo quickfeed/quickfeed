@@ -6,6 +6,7 @@ import { getCourseID, isManuallyGraded } from "../Helpers"
 import Search from "./Search"
 import { json } from "overmind"
 import ManageSubmissionStatus from "./ManageSubmissionStatus"
+import ReviewForm from "./forms/ReviewForm"
 
 // TODO: Refactor & come up with better visuals
 const Review = (): JSX.Element => {
@@ -22,7 +23,7 @@ const Review = (): JSX.Element => {
         if (courseID && !state.courseSubmissions[courseID]) {
             actions.getAllCourseSubmissions(courseID)
         }
-
+        return actions.setActiveSubmission(undefined)
     }, [])
 
     const ReviewSubmissionsListItem = ({submissionLink}: { submissionLink: SubmissionLink }) => {
@@ -32,7 +33,7 @@ const Review = (): JSX.Element => {
         let reviews: JSX.Element | null = null
         let className = "list-group-item"
         if (assignment) { 
-            reviews = isManuallyGraded(assignment) ? <span className="float-right">{submission ? submission.getReviewsList().length : 0}/{assignment.getReviewers()}</span> : null
+            reviews = isManuallyGraded(assignment) ? <span className="float-right">Reviews {submission ? submission.getReviewsList().length : 0}/{assignment.getReviewers()}</span> : null
             className = !isManuallyGraded(assignment) ? className + " list-group-item-secondary" : className
         }
         return (
@@ -87,8 +88,8 @@ const Review = (): JSX.Element => {
                         <Search placeholder={"Search by name ..."} />
                         {ReviewSubmissionsTable}
                     </div>
-                    { //selectedSubLink ? 
-                      //  <ReviewForm submissionLink={selectedSubLink} setSelected={setSelectedSubLink} /> : null
+                    { selectedSubLink ? 
+                        <ReviewForm submissionLink={selectedSubLink} setSelected={setSelectedSubLink} /> : null
                     }
                     
                     { // If submission & assignment is set by clicking an entry in ReviewSubmissionsListItem, the Lab will be displayed next to it
