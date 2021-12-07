@@ -74,7 +74,7 @@ const Results = (): JSX.Element => {
                     {state.activeSubmission ?
                     <>
                     <ManageSubmissionStatus />
-                    <div className="reviewLabResult">
+                    <div className="reviewLabResult mt-2">
                         <Lab teacherSubmission={state.activeSubmission} />
                     </div>
                     </>
