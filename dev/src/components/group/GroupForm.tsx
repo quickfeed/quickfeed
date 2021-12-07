@@ -95,7 +95,7 @@ const GroupForm = ({editGroup, setGroup}: {editGroup?: Group, setGroup?: React.D
             return (
                 <li hidden={search(enrollment)} key={id} className="list-group-item">
                     {enrollment.getUser()?.getName()} 
-                    <i style={{float: "right", cursor:"pointer"}} onClick={() => updateGroupUsers(id)}>+</i>
+                    <i className="badge-pill badge-success ml-2" style={{float: "right", cursor:"pointer"}} onClick={() => updateGroupUsers(id)}>+</i>
                 </li>
             )
         }
@@ -109,7 +109,7 @@ const GroupForm = ({editGroup, setGroup}: {editGroup?: Group, setGroup?: React.D
                 <li key={id} className="list-group-item">
                     <img id="group-image" src={enrollment.getUser()?.getAvatarurl()}></img>
                         {enrollment.getUser()?.getName()} 
-                    <i style={{float: "right", cursor:"pointer"}} onClick={() => updateGroupUsers(id)}>-</i>
+                    <i className="badge-pill badge-danger rounded-circle" style={{float: "right", cursor:"pointer"}} onClick={() => updateGroupUsers(id)}>-</i>
                 </li>
             )
         }
@@ -120,7 +120,7 @@ const GroupForm = ({editGroup, setGroup}: {editGroup?: Group, setGroup?: React.D
     const GroupNameInput = group && group.getStatus() === Group.GroupStatus.APPROVED ? null : <input placeholder={"Group Name:"} onKeyUp={e => updateGroupName(e.currentTarget.value)}></input>
    
     return(
-        <div className="container box"> 
+        <div className="container"> 
             <div className="row">
                 <div className="card well col-md-offset-2">
                     <div className="card-header" style={{textAlign: "center"}}>
@@ -143,10 +143,10 @@ const GroupForm = ({editGroup, setGroup}: {editGroup?: Group, setGroup?: React.D
                                 return <GroupMember key={index} enrollment={enrollment} />
                         })}
                         {group && setGroup ? 
-                            <>
-                            <div className="btn btn-primary" onClick={() => actions.updateGroup(group)}> Update </div>
-                            <div className="btn btn-primary" onClick={() => setGroup(undefined)}> Cancel </div> 
-                            </>
+                            <div className="row justify-content-md-center">
+                                <div className="btn btn-primary ml-2" onClick={() => actions.updateGroup(group)}> Update </div>
+                                <div className="btn btn-danger ml-2" onClick={() => setGroup(undefined)}> Cancel </div> 
+                            </div>
                             : 
                             <div className="btn btn-primary" onClick={() => actions.createGroup({courseID: courseID, users: users, name: name})}> Create Group </div> 
                         }
