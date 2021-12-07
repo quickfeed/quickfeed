@@ -8,6 +8,8 @@ import App from './App'
 import { HashRouter } from 'react-router-dom'
 
 const overmind = createOvermind(config, {
+    // Enable devtools by setting the below to ex. 'devtools: "localhost:3301"'
+    // then run 'npx overmind-devtools@latest' to start the devtools
     devtools: false,
 })
 
