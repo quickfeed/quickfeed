@@ -44,7 +44,6 @@ export const Groups = (): JSX.Element => {
         if (confirm("Deleting a group is an irreversible action. Are you sure?")) {
             actions.deleteGroup(group)
         }
-
     }
 
     const updateGroupStatus = (group: Group, status: Group.GroupStatus) => {
@@ -54,34 +53,39 @@ export const Groups = (): JSX.Element => {
     const GroupButtons = ({group}: {group: Group}) => {
         if (group.getStatus() === Group.GroupStatus.PENDING) {
             return (
-                <li className="list-group-item">
-                        <span className="badge badge-info clickable" onClick={() => setEditing(group)}>Edit</span>
-                        <span onClick={() => updateGroupStatus(group, Group.GroupStatus.APPROVED)} className="badge badge-primary float-right clickable ml-2">Approve</span>
-                        <span onClick={() => deleteGroup(group)} className="badge badge-danger float-right clickable">Delete</span>
-                </li>
+                <td>
+                    <span onClick={() => updateGroupStatus(group, Group.GroupStatus.APPROVED)} className="badge badge-primary clickable">Approve</span>
+                    <span className="badge badge-info clickable ml-2" onClick={() => setEditing(group)}>Edit</span>
+                    <span onClick={() => deleteGroup(group)} className="badge badge-danger clickable ml-2">Delete</span>
+                </td>
             )
         }
-        return <li className="list-group-item"><span className="badge badge-info clickable" onClick={() => setEditing(group)}>Edit</span></li>
+        return <td><span className="badge badge-info clickable" onClick={() => setEditing(group)}>Edit</span></td>
     }
 
     const GroupList = ({group}: {group: Group}) => {
-        const style = {width: "40px", borderRadius: "50%", marginRight: "10px"}
-        const classname = group.getStatus() == Group.GroupStatus.APPROVED ? "list-group-item active" : "list-group-item list-group-item-warning"
             return (
-                <><ul hidden={groupSearch(group)} className="list-group list-group-flush">
-                    <li key={group.getId()} className={classname}>
-                        {group.getName()}
-                        <span className="float-right badge badge-warning">{group.getStatus() == Group.GroupStatus.PENDING ? "Pending" : null}</span>
-                    </li>
-                    {// Populates the unordered list with list elements for every user in the group
-                        group.getEnrollmentsList().map(enrol => 
-                        <li key={enrol.getId()} className="list-group-item">
-                            <img src={enrol.getUser()?.getAvatarurl()} style={style}></img>
-                            {enrol.getUser()?.getName()}
-                        </li>
-                        )}
-                    <GroupButtons group={group} />
-                </ul></>
+                <>
+                    <tr hidden={groupSearch(group)}>
+                        <th key={group.getId()}> 
+                            {group.getName()}
+                            <span className="badge badge-warning ml-2">{group.getStatus() == Group.GroupStatus.PENDING ? "Pending" : null}</span>
+                        </th>
+                        <td>
+                            <div>
+                            {// Populates the unordered list with list elements for every user in the group
+                                group.getEnrollmentsList().map((enrol, index) => 
+                                <span key={enrol.getId()} className="inline-block">
+                                    {/**<img src={enrol.getUser()?.getAvatarurl()} style={style}></img>*/}
+                                    <a href={`https://github.com/${enrol.getUser()?.getLogin()}`} target="_blank" rel="noreferrer">{enrol.getUser()?.getName()}</a>
+                                    {index >= group.getEnrollmentsList().length - 1 ? "" : ", "}
+                                </span> 
+                            )}
+                            </div>
+                        </td>
+                        <GroupButtons group={group} />
+                    </tr>
+                </>
             )
     }
 
@@ -95,20 +99,25 @@ export const Groups = (): JSX.Element => {
     })
 
     if (editing) {
-        return <div className="box"><GroupForm editGroup={editing} setGroup={setEditing} /></div>
+        return <GroupForm editGroup={editing} setGroup={setEditing} />
     }
 
     return (
         <div className="box">
-            <Search />
-            <div className="row">
-                <div className="col-sm-6">
-                    {ApprovedGroups}
-                </div>
-                <div className="col-sm-6">
-                    {PendingGroups}
-                </div>
+            <div className="pb-2">
+                <Search />
             </div>
+            <table className="table table-striped table-grp">
+                <thead className="thead-dark">
+                    <th>Name</th>
+                    <th>Members</th>
+                    <th>Manage</th>
+                </thead>
+                <tbody>
+                    {PendingGroups}
+                    {ApprovedGroups}
+                </tbody>
+            </table>
         </div>
     )
 }
