@@ -175,7 +175,10 @@ export const getPassedTestsCount = (score: Score[]): string => {
         } 
         totalTests++
     })
-    return `${passedTests}/${totalTests}`
+    if (totalTests === 0) {
+        return ""
+    }
+    return `(${passedTests}/${totalTests})`
 }
 
 

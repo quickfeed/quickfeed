@@ -3,7 +3,6 @@ import { useAppState } from "../overmind"
 import { Submission } from "../../proto/ag/ag_pb"
 import { getPassedTestsCount } from "../Helpers"
 import { json } from "overmind"
-import { type } from "os"
 
 export enum Progress {
     NAV,
@@ -46,7 +45,7 @@ export const ProgressBar = (props: {courseID: number, assignmentIndex: number, s
     let secondaryText = ""
     if (props.type === Progress.LAB) {
         text = `${props.submission?.getScore()} %`
-        secondaryText = `${secondaryProgress} % (${passedTests}) to go`
+        secondaryText = `${secondaryProgress} % ${passedTests} to go`
     }
     // Returns a regular size progress bar to be used for labs
     if(props.type > Progress.NAV) {
