@@ -117,13 +117,22 @@ export const setEnrollmentState = async ({effects}: Context, enrollment: Enrollm
     const response = await effects.grpcMan.updateCourseVisibility(json(enrollment))
 };
 
-export const updateSubmission = async ({actions, effects}: Context, value: {courseID: number, submission: Submission, status: Submission.Status}): Promise<void> => {
+// TODO: Maybe rewrite this
+/** Updates a given submission with a new status. This updates the given submission, as well as all other occurences of the given submission in state. */
+export const updateSubmission = async ({state, actions, effects}: Context, value: {courseID: number, submission: Submission, status: Submission.Status}): Promise<void> => {
     value.submission.setStatus(value.status)
     const result = await effects.grpcMan.updateSubmission(value.courseID, value.submission)
-    if (result.status.getCode() > 0) {
-        actions.alertHandler(result)
-    } else {
+    if (result.status.getCode() == 0) {
         value.submission.setStatus(value.status)
+        state.courseSubmissions[value.courseID].forEach(s => {
+            s.submissions?.forEach(s => {
+                if (s.getSubmission()?.getId() == value.submission.getId()) {
+                    s.getSubmission()?.setStatus(value.status)
+                }
+            })
+        })
+    } else {
+        actions.alertHandler(result)
     }
 };
 
