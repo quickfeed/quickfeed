@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { Assignment, Review, Submission, SubmissionLink } from "../../../proto/ag/ag_pb"
-import { useAppState } from "../../overmind"
+import { useActions, useAppState } from "../../overmind"
+import ReviewResult from "../ReviewResult"
 
 
 // TODO: Ensure all criteria are graded before setting ready
@@ -8,11 +9,12 @@ import { useAppState } from "../../overmind"
 const ReviewForm = ({submissionLink, setSelected}: {submissionLink: SubmissionLink, setSelected: React.Dispatch<React.SetStateAction<SubmissionLink | undefined>>}): JSX.Element => {
 
     const state = useAppState()
+    const actions = useActions()
 
     const [selectedReview, setSelectedReview] = useState<Review | undefined>(undefined)
 
     useEffect(() => {
-        return setSelectedReview(undefined)
+        return actions.setActiveReview(undefined)
     }, [submissionLink])
 
     const countReadyReviews = (submission: Submission) => {
@@ -40,8 +42,12 @@ const ReviewForm = ({submissionLink, setSelected}: {submissionLink: SubmissionLi
     }
 
     const Benchmarks = () => {
-        if (selectedReview) {
-            return selectedReview.getGradingbenchmarksList().map(bm => {
+        if (state.activeReview) {
+            return state.activeReview.getGradingbenchmarksList().map((bm, index) => {
+                const list: JSX.Element[] = []
+
+                const criteria = bm.getCriteriaList().map(gc => { return <li key={gc.getId()}>{gc.getDescription()}</li>})
+                
                 return <li key={bm.getId()}>{bm.getHeading()}</li>
             })
         }
@@ -51,7 +57,7 @@ const ReviewForm = ({submissionLink, setSelected}: {submissionLink: SubmissionLi
     const Reviews = () => {
         if (submissionLink.hasSubmission()) {
             return (submissionLink.getSubmission() as Submission).getReviewsList().map(rw => {
-                return <li key={rw.getId()} onClick={() => setSelectedReview(rw)}>{rw.getReviewerid()}</li>
+                return <li key={rw.getId()} onClick={() => actions.setActiveReview(rw)}>{rw.getReviewerid()}</li>
             })
         }
     }
@@ -61,10 +67,15 @@ const ReviewForm = ({submissionLink, setSelected}: {submissionLink: SubmissionLi
         return <div>This assignment is not for manual grading.</div>
     }
     return (
-        <ul>
-            {Reviews()}
-            {Benchmarks()}
-        </ul>
+        <div className="col">
+            <ul className="list-group">
+                {state.activeReview &&
+                    <ReviewResult rev={state.activeReview} />
+                }
+                {Reviews()}
+                {Benchmarks()}
+            </ul>
+        </div>
     )
 }
 
