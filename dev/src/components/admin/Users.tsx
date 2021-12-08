@@ -4,6 +4,7 @@ import { isHidden } from "../../Helpers"
 import { useAppState, useActions } from "../../overmind"
 import DynamicTable, { CellElement } from "../DynamicTable"
 import Search from "../Search"
+import UserElement from "./User"
 
 
 const Users = (): JSX.Element => {
@@ -26,24 +27,11 @@ const Users = (): JSX.Element => {
         )
     }
 
-    const UserListElement = ({user, hidden}: {user: User, hidden: boolean}) => {
-        return (
-            <div>
-                {user.getName()} 
-                {user.getIsadmin() ? 
-                    <span className={"badge badge-primary ml-2"}>
-                        Admin
-                    </span> 
-                    : null
-                }
-            </div>
-        )
-    }
 
     const headers: string[] = ["Name", "Email", "Student ID", "Role"]
     const users = state.allUsers.map((user, index) => {
         const data: (string | JSX.Element | CellElement)[] = []
-        data.push(<UserListElement user={user} hidden={isHidden(user.getName(), state.query)} />)
+        data.push(<UserElement user={user} hidden={isHidden(user.getName(), state.query)} />)
         data.push(user.getEmail())
         data.push(user.getStudentid())
         data.push(<PromoteButton user={user} />)
