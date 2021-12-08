@@ -1,6 +1,6 @@
 import { derived } from "overmind";
 
-import { Assignment, Course, Enrollment, EnrollmentLink, Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb";
+import { Assignment, Course, Enrollment, EnrollmentLink, Group, Review, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb";
 
 
 
@@ -88,6 +88,7 @@ type State = {
     isLoading: boolean,
     activeCourse: number,
     activeLab: number,
+    activeReview: Review | undefined
     timeNow: Date,
     // Used to create new group
     courseGroup: CourseGroup,
@@ -119,6 +120,7 @@ export const state: State = {
     submissions: {},
     courseSubmissions: {},
     activeSubmission: undefined,
+    activeReview: undefined,
     activeUser: undefined,
     courseGroupSubmissions: {},
     assignments: {},
