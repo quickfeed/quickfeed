@@ -394,9 +394,12 @@ export const fetchUserData = async ({state, actions}: Context): Promise<boolean>
                 success = await actions.getUserSubmissions(enrollment.getCourseid())
                 await actions.getGroupSubmissions(enrollment.getCourseid())
             }
-            if (enrollment.getStatus() >= 2) {
+            if (enrollment.getStatus() >= Enrollment.UserStatus.STUDENT) {
                 const statuses = enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER ] : []
                 success = await actions.getEnrollmentsByCourse({courseID: enrollment.getCourseid(), statuses: statuses})
+            }
+            if (enrollment.getStatus() == Enrollment.UserStatus.TEACHER) {
+                actions.getGroupsByCourse(enrollment.getCourseid())
             }
         }
         success = await actions.getRepositories()

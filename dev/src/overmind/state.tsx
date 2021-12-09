@@ -82,7 +82,7 @@ type State = {
     groups: {
         [courseid: number]: Group[]
     },
-
+    pendingGroups: Group[],
     /* Utility */
     theme: string,
     isLoading: boolean,
@@ -135,6 +135,7 @@ export const state: State = {
     activeLab: -1,
     courseEnrollments: {},
     groups: {},
+    pendingGroups: derived((state: State) => { return state.activeCourse > 0 ? state.groups[state.activeCourse].filter((group) => group.getStatus() === Group.GroupStatus.PENDING) : []}),
     query: "",
     enableRedirect: true
 };

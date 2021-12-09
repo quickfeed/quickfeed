@@ -15,10 +15,6 @@ export const Groups = (): JSX.Element => {
 
     const [editing, setEditing] = useState<Group>()
 
-    useEffect(() => {
-        actions.getGroupsByCourse(courseID)
-    }, [state.groups, state.query])
-
     const groupSearch = (group: Group) => {
         // Show all groups if query is empty
         if (state.query.length == 0) {
