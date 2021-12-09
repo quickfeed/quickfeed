@@ -12,6 +12,7 @@ import Review from "../components/Review"
 import StatisticsView from "../components/Statistics"
 import Assignments from "../components/teacher/Assignments"
 import Alert from "../components/Alert"
+import { Enrollment } from "../../proto/ag/ag_pb"
 
 /* */
 const TeacherPage = (): JSX.Element => {
@@ -21,7 +22,9 @@ const TeacherPage = (): JSX.Element => {
     const history = useHistory()
     const root = `/course/${courseID}`
 
-    const members = {title: "View Members", text: "View all students, and approve new enrollments.", buttonText: "Members", to: `${root}/members`}
+    const pendingMembers = state.courseEnrollments[courseID].filter(user => user.getStatus() === Enrollment.UserStatus.PENDING).length
+
+    const members = {title: "View Members", notification: pendingMembers ? {color: "warning", text: "Pending enrollments"} : undefined, text: "View all students, and approve new enrollments.", buttonText: "Members", to: `${root}/members`}
     const results = {title: "View results", text: "View results for all students in the course.", buttonText: "Results", to: `${root}/results`}
     const groups = {title: "Manage Groups", text: "View, edit or delete course groups.", buttonText: "Groups", to: `${root}/groups`}
     const statistics = {title: "Statistics", text: "See statistics for the course.", buttonText: "Statistics", to: `${root}/statistics`}
@@ -48,7 +51,7 @@ const TeacherPage = (): JSX.Element => {
             <div className="row" hidden={history.location.pathname != root}>
                 <Card title={results.title} text={results.text} buttonText={results.buttonText} to={results.to}></Card>
                 <Card title={groups.title} text={groups.text} buttonText={groups.buttonText} to={groups.to}></Card>
-                <Card title={members.title} text={members.text} buttonText={members.buttonText} to={members.to}></Card>
+                <Card title={members.title} notification={members.notification} text={members.text} buttonText={members.buttonText} to={members.to}></Card>
                 <Card title={statistics.title} text={statistics.text} buttonText={statistics.buttonText} to={statistics.to}></Card>
                 <Card title={assignments.title} text={assignments.text} buttonText={assignments.buttonText} to={assignments.to}></Card>
             </div>
