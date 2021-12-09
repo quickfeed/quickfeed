@@ -31,7 +31,7 @@ const Users = (): JSX.Element => {
     const headers: string[] = ["Name", "Email", "Student ID", "Role"]
     const users = state.allUsers.map((user, index) => {
         const data: (string | JSX.Element | CellElement)[] = []
-        data.push(<UserElement user={user} hidden={isHidden(user.getName(), state.query)} />)
+        data.push(<UserElement user={user} hidden={!isHidden(user.getName(), state.query)} />)
         data.push(user.getEmail())
         data.push(user.getStudentid())
         data.push(<PromoteButton user={user} />)
