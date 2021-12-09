@@ -64,6 +64,7 @@ type State = {
         [courseid:number]: ParsedCourseSubmissions[]
     },
     activeSubmission: Submission | undefined,
+    activeSubmissionLink: SubmissionLink | undefined,
     activeUser: User | undefined,
     /*cSubs: {
         [courseid:number]: ParsedCourseSubmissions[]
@@ -120,6 +121,7 @@ export const state: State = {
     submissions: {},
     courseSubmissions: {},
     activeSubmission: undefined,
+    activeSubmissionLink: undefined,
     activeReview: undefined,
     activeUser: undefined,
     courseGroupSubmissions: {},
