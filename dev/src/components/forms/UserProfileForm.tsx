@@ -30,7 +30,7 @@ export const UserProfileForm = ({setEditing}: {setEditing: Dispatch<SetStateActi
 
     // Sends off the edited (or not) information to the server. ((Could change actions.changeUser to take (username, email, studentid) as args and create the new user object in the action, not sure what's best))
     const submitHandler = () => {
-        actions.changeUser(user)
+        actions.updateUser(user)
         // Flip back to the uneditable view
         setEditing(false)
     }
