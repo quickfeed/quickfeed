@@ -11,6 +11,7 @@ import Results from "../components/Results"
 import Review from "../components/Review"
 import StatisticsView from "../components/Statistics"
 import Assignments from "../components/teacher/Assignments"
+import Alert from "../components/Alert"
 
 /* */
 const TeacherPage = (): JSX.Element => {
@@ -43,7 +44,7 @@ const TeacherPage = (): JSX.Element => {
         <div>
             <RedirectButton to={root}></RedirectButton>
             <CourseBanner enrollment={state.enrollmentsByCourseId[courseID]} />
-            
+            <Alert />
             <div className="row" hidden={history.location.pathname != root}>
                 <Card title={results.title} text={results.text} buttonText={results.buttonText} to={results.to}></Card>
                 <Card title={groups.title} text={groups.text} buttonText={groups.buttonText} to={groups.to}></Card>

@@ -43,7 +43,6 @@ const App = (): JSX.Element => {
             <NavBar />
             <div className={state.theme+" app wrapper"} >
                 <div id="content">
-                <Alert />
                     {state.isLoading ? ( // If state.isLoading
                         <Loading />
                         ) : ( // Else if, user logged in, but has not added their information redirect to Profile

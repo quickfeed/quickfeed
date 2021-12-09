@@ -8,6 +8,7 @@ import CourseUtilityLinks from "../components/CourseUtilityLinks"
 import GroupPage from "./GroupPage"
 import Lab from "../components/Lab"
 import RedirectButton from "../components/RedirectButton"
+import Alert from "../components/Alert"
 
 /* */
 const StudentPage = (): JSX.Element => {
@@ -19,7 +20,8 @@ const StudentPage = (): JSX.Element => {
     return (
         <div>
             <RedirectButton to={root}></RedirectButton>
-            <CourseBanner enrollment={state.enrollmentsByCourseId[courseID]} />   
+            <CourseBanner enrollment={state.enrollmentsByCourseId[courseID]} />
+            <Alert /> 
             <div className="row" hidden={history.location.pathname != root}>
                 <div className="col-md-9" >
                     <CourseLabs courseID={courseID}/>

@@ -6,6 +6,7 @@ import Users from "../components/admin/Users"
 import Card from "../components/Card"
 import CourseForm from "../components/forms/CourseForm"
 import RedirectButton from "../components/RedirectButton"
+import Alert from "../components/Alert"
 
 
 
@@ -22,6 +23,7 @@ export const AdminPage = (): JSX.Element => {
         return (
             <div className="box">
                 <RedirectButton to={root}></RedirectButton>
+                <Alert />
                 <div className="row" hidden={history.location.pathname != root}>
                     <Card title={createCourse.title} text={createCourse.text} buttonText={createCourse.buttonText} to={createCourse.to}></Card>
                     <Card title={editCourse.title} text={editCourse.text} buttonText={editCourse.buttonText} to={editCourse.to}></Card>
