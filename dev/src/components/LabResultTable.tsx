@@ -15,7 +15,7 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
     const state = useAppState()
 
     const ScoreObject = ({ score }: {score: Score}) => {
-        const boxShadow = (score.getScore() === score.getMaxscore()) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 8px 0 0 red inset"
+        const boxShadow = (score.getScore() === score.getMaxscore()) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 5px 0 0 red inset"
         return (
             <tr>
                 <th style={{boxShadow: boxShadow, paddingLeft: "15px"}}>
@@ -34,11 +34,11 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
     const LabResult = (): JSX.Element => {
         if (submission && assignment) {
             const buildInfo = submission.getBuildinfo()
-
+            console.log(submission.getBuildinfo()?.getBuildlog())
             const delivered = buildInfo ? getFormattedTime(buildInfo.getBuilddate()) : "N/A"
             const executionTime = buildInfo ? `${buildInfo.getExectime() / 1000} seconds` : ""
 
-            const boxShadow = (submission.getStatus() === Submission.Status.APPROVED) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 8px 0 0 red inset"
+            const boxShadow = (submission.getStatus() === Submission.Status.APPROVED) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 5px 0 0 red inset"
             return (
                 <div className="container" style={{paddingBottom: "20px"}}>
                     <div style={{paddingBottom: "10px"}}>
