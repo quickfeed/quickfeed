@@ -1,7 +1,7 @@
 /* eslint-disable quotes */
 
 import { useParams } from "react-router"
-import { Assignment, Enrollment, EnrollmentLink, Submission, User } from "../proto/ag/ag_pb"
+import { Assignment, Enrollment, EnrollmentLink, Repository, Submission, User } from "../proto/ag/ag_pb"
 import { Score } from "../proto/kit/score/score_pb"
 
 export interface IBuildInfo {
@@ -233,6 +233,15 @@ export const EnrollmentStatusBadge = {
     3 : "badge badge-danger",
 }
 
+// TODO: This ... should be done some other way
+export const Repo = {
+    "ASSIGNMENTS": "ASSIGNMENTS",
+    "COURSEINFO": "COURSEINFO",
+    "USER": "USER",
+    "GROUP": "GROUP",
+    "TEST": "TEST",
+    "NONE": "NONE"
+}
 /**
  * const test = data.sort((a, b) => {
         const x = isCellElement(a[index])
