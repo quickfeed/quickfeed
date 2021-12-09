@@ -40,12 +40,6 @@ export const Groups = (): JSX.Element => {
         return true
     }
 
-    const deleteGroup = (group: Group) => {
-        if (confirm("Deleting a group is an irreversible action. Are you sure?")) {
-            actions.deleteGroup(group)
-        }
-    }
-
     const updateGroupStatus = (group: Group, status: Group.GroupStatus) => {
         actions.updateGroupStatus({group, status})
     }
@@ -56,7 +50,7 @@ export const Groups = (): JSX.Element => {
                 <td>
                     <span onClick={() => updateGroupStatus(group, Group.GroupStatus.APPROVED)} className="badge badge-primary clickable">Approve</span>
                     <span className="badge badge-info clickable ml-2" onClick={() => setEditing(group)}>Edit</span>
-                    <span onClick={() => deleteGroup(group)} className="badge badge-danger clickable ml-2">Delete</span>
+                    <span onClick={() => actions.deleteGroup(group)} className="badge badge-danger clickable ml-2">Delete</span>
                 </td>
             )
         }

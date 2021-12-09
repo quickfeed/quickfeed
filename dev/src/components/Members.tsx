@@ -60,10 +60,7 @@ export const Members = (): JSX.Element => {
                     </i>
                     <i 
                         className="badge badge-danger clickable ml-1"
-                        onClick={() => {
-                            if (confirm("WARNNG! Rejecting a student is irreversible. Are you sure?"))
-                                actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.NONE}) 
-                            }}
+                        onClick={() => actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.NONE}) }
                     >
                         Reject
                     </i>
@@ -103,7 +100,7 @@ export const Members = (): JSX.Element => {
                     <Search />
                 </div>
                 <div className="ml-auto">
-                    <div className={edit ? "btn btn-danger" : "btn btn-primary"} onClick={() => setEditing(!edit)}>{edit ? "Cancel" : "Edit"}</div>
+                    <div className={edit ? "btn btn-sm btn-danger" : "btn btn-sm btn-primary"} onClick={() => setEditing(!edit)}>{edit ? "Cancel" : "Edit"}</div>
                 </div>
                 {pending.length > 0 ? <div style={{marginLeft: "10px"}}><button className="btn btn-success float-right" onClick={() => approveAll()}>Approve All</button></div>  : null}
                 

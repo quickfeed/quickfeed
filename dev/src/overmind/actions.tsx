@@ -91,12 +91,17 @@ export const updateUser = async ({actions, effects}: Context, user: User): Promi
 };
 
 
-export const updateAdmin = async ({ effects }: Context, user: User): Promise<void> => {
-    const u = json(user)
-    u.setIsadmin(!user.getIsadmin())
-    const result = await effects.grpcMan.updateUser(u) 
-    if (result.status.getCode() == 0) {
-        user.setIsadmin(u.getIsadmin())
+export const updateAdmin = async ({ state, effects }: Context, user: User): Promise<void> => {
+    if (confirm(`Are you sure you want to ${user.getIsadmin() ? "promote" : "demote"} ${user.getName()}?`)) {
+        const u = json(user)
+        u.setIsadmin(!user.getIsadmin())
+        const result = await effects.grpcMan.updateUser(u) 
+        if (result.status.getCode() == 0) {
+            const found = state.allUsers.findIndex(s => s.getId() == user.getId())
+            if (found) {
+                state.allUsers[found] = u
+            }
+        }
     }
 };
 
@@ -137,14 +142,16 @@ export const updateSubmission = async ({state, actions, effects}: Context, value
 };
 
 export const updateEnrollment = async ({actions, effects}: Context, {enrollment, status}: {enrollment: Enrollment, status: Enrollment.UserStatus}): Promise<void> => {
-    const e = json(enrollment)
-    e.setStatus(status)
-    const response = await effects.grpcMan.updateEnrollment(e)
-    if (response.status.getCode() === 0) {
-        enrollment.setStatus(status)
-    }
-    else {
-        actions.alertHandler(response)
+    if (status > 0 || status === Enrollment.UserStatus.NONE && confirm("WARNNG! Rejecting a student is irreversible. Are you sure?")) {
+        const e = json(enrollment)
+        e.setStatus(status)
+        const response = await effects.grpcMan.updateEnrollment(e)
+        if (response.status.getCode() === 0) {
+            enrollment.setStatus(status)
+        }
+        else {
+            actions.alertHandler(response)
+        }
     }
 };
 
@@ -349,9 +356,14 @@ export const updateGroupStatus = async ({effects}: Context, {group, status}: {gr
 }
 
 export const deleteGroup = async ({state, effects}: Context, group: Group): Promise<void> => {
-    const response = await effects.grpcMan.deleteGroup(group.getCourseid(), group.getId())
-    if (response.status.getCode() == 0) {
-        state.groups[group.getCourseid()] = state.groups[group.getCourseid()].filter(g => g.getId() !== group.getId())
+    if (confirm("Deleting a group is an irreversible action. Are you sure?")) {
+        const isRepoEmpty = await effects.grpcMan.isEmptyRepo(group.getCourseid(), 0, group.getId())
+        if (isRepoEmpty || confirm(`Warning! Group repository is not empty! Do you still want to delete group, github team and group repository?`)) {
+            const response = await effects.grpcMan.deleteGroup(group.getCourseid(), group.getId())
+            if (response.status.getCode() == 0) {
+                state.groups[group.getCourseid()] = state.groups[group.getCourseid()].filter(g => g.getId() !== group.getId())
+            }
+        }
     }
 }
 
