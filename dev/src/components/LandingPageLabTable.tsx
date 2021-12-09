@@ -60,14 +60,16 @@ const LandingPageLabTable = (): JSX.Element => {
                 table.push(
                     <tr key={assignment.getId()} className={"clickable-row " + deadline.className} onClick={()=>redirectToLab(Number(assignment.getCourseid()), assignment.getId())}>
                         <th scope="row">{course?.getCode()}</th>
-                        <td>{assignment.getName()}</td>
+                        <td>
+                            {assignment.getName()}
+                            {assignment.getIsgrouplab() ? <span className="badge ml-2 float-right"><i className="fa fa-users" title="Group Assignment"></i></span> : null}
+                        </td>
                         <td><ProgressBar assignmentIndex={assignment.getOrder() - 1} courseID={assignment.getCourseid()} submission={submission} type={Progress.OVERVIEW} /></td>
                         <td>{getFormattedTime(assignment.getDeadline())}</td>
                         <td>{deadline.message ? deadline.message : '--'}</td>
                         <td className={SubmissionStatus[submission.getStatus()]}>
                             {generateStatusText(assignment, submission)}
                         </td>
-                        <td>{assignment.getIsgrouplab() ? "Yes": "No"}</td>
                     </tr>
                 )
             }
@@ -86,7 +88,6 @@ const LandingPageLabTable = (): JSX.Element => {
                         <th scope="col">Deadline</th>
                         <th scope="col">Due in</th>
                         <th scope="col">Status</th>
-                        <th scope="col">Grouplab</th>
                     </tr>
                 </thead>
                 <tbody>
