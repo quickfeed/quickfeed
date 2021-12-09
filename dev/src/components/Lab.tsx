@@ -63,11 +63,11 @@ const Lab = ({teacherSubmission}: {teacherSubmission?: Submission}): JSX.Element
         // Confirm both assignment and submission exists before attempting to render
         if (assignment && submission) {
             const review = json(submission).getReviewsList()
-            let buildLogElement: JSX.Element[] = []
+            let buildLog: JSX.Element[] = []
             
-            const buildLog = submission.hasBuildinfo() ? (submission.getBuildinfo() as BuildInfo).getBuildlog() : null
-            if (buildLog){
-                buildLogElement = buildLog.split("\\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
+            const buildLogRaw = submission.hasBuildinfo() ? (submission.getBuildinfo() as BuildInfo).getBuildlog() : null
+            if (buildLogRaw){
+                buildLog = buildLogRaw.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
             }
 
             return (
@@ -78,7 +78,7 @@ const Lab = ({teacherSubmission}: {teacherSubmission?: Submission}): JSX.Element
                     {isManuallyGraded(assignment) ? <ReviewResult review={review}/> : null}
 
                     <div className="card bg-light">
-                        <code className="card-body" style={{color: "#c7254e"}}>{buildLogElement}</code>
+                        <code className="card-body" style={{color: "#c7254e"}}>{buildLog}</code>
                     </div>
                 </div>
             )
