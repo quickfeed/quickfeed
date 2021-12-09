@@ -74,7 +74,7 @@ type State = {
         [courseid: number]: EnrollmentLink[]
     },
     repositories: {
-        [courseid:number]: { [repoType: number]: string }
+        [courseid:number]: { [repo: string]: string }
     },
     courseEnrollments: {
         [courseid: number]: Enrollment[]

@@ -186,12 +186,12 @@ export const getRepositories = async ({state, effects}: Context): Promise<boolea
         const result = await effects.grpcMan.getRepositories(enrollment.getCourseid(), [Repository.Type.USER, Repository.Type.GROUP, Repository.Type.COURSEINFO, Repository.Type.ASSIGNMENTS])
         if (result.data) {
             const repoMap = result.data.getUrlsMap();
-            repoMap.forEach(repo => {
-                    state.repositories[enrollment.getCourseid()][(Repository.Type as any)[repo[0]]] = repo[1];
-            });
+            for (const [key, value] of repoMap.getEntryList()) {
+                state.repositories[enrollment.getCourseid()][key] = value
+            }
             success = true
         } else {
-        success = false
+            success = false
         }
     }
     return success
@@ -327,7 +327,7 @@ export const setActiveLab = ({state}: Context, assignmentID: number): void => {
 };
 
 /** Rebuilds the currently active submission */
-export const rebuildSubmission = async ({state, effects}: Context) => {
+export const rebuildSubmission = async ({state, effects}: Context): Promise<void> => {
     if (state.activeSubmission) {
         const response = await effects.grpcMan.rebuildSubmission(state.activeSubmission?.getAssignmentid(), state.activeSubmission?.getId())
         if (response.data) {
