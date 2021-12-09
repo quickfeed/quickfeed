@@ -514,12 +514,19 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 
 	// ensure that current user is teacher, enrolled admin, or the current user is owner of the submission request
 	if !s.hasCourseAccess(usr.GetID(), in.GetCourseID(), func(e *pb.Enrollment) bool {
-		return e.Status == pb.Enrollment_TEACHER || (usr.GetIsAdmin() && e.Status == pb.Enrollment_STUDENT) ||
-			(e.Status == pb.Enrollment_STUDENT && (usr.IsOwner(in.GetUserID()) || grp.Contains(usr)))
+		switch e.Status {
+		case pb.Enrollment_TEACHER:
+			return true
+		case pb.Enrollment_STUDENT:
+			return usr.IsAdmin || usr.IsOwner(in.GetUserID()) || grp.Contains(usr)
+		}
+		return false
 	}) {
-		s.logger.Error("GetSubmissions failed: user is not teacher or submission author")
+		s.logger.Errorf("GetSubmissions failed: user %s is not teacher or submission author", usr.GetLogin())
 		return nil, status.Error(codes.PermissionDenied, "only owner and teachers can get submissions")
 	}
+	s.logger.Debugf("GetSubmissions: %v", in)
+
 	submissions, err := s.getSubmissions(in)
 	if err != nil {
 		s.logger.Errorf("GetSubmissions failed: %v", err)
@@ -537,7 +544,16 @@ func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.S
 		s.logger.Errorf("GetSubmissionsByCourse failed: authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
-	if !(s.isTeacher(usr.GetID(), in.GetCourseID()) || usr.IsAdmin && s.isEnrolled(usr.GetID(), in.GetCourseID())) {
+	// ensure that current user is teacher or enrolled admin to process the submission request
+	if !s.hasCourseAccess(usr.GetID(), in.GetCourseID(), func(e *pb.Enrollment) bool {
+		switch e.Status {
+		case pb.Enrollment_TEACHER:
+			return true
+		case pb.Enrollment_STUDENT:
+			return usr.IsAdmin
+		}
+		return false
+	}) {
 		s.logger.Errorf("GetSubmissionsByCourse failed: user %s is not teacher or submission author", usr.GetLogin())
 		return nil, status.Error(codes.PermissionDenied, "only teachers can get all lab submissions")
 	}

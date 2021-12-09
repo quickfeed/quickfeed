@@ -562,6 +562,12 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		t.Error("Expected 'authorization failed. please try to logout and sign in again'")
 	}
 
+	// check that method fails for unenrolled student user
+	unenrolledStudent := qtest.CreateFakeUser(t, db, 3)
+	ctx = withUserContext(ctx, unenrolledStudent)
+	if _, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
+		t.Error("Expected 'only teachers can get all lab submissions'")
+	}
 	// check that method fails for non-teacher user
 	ctx = withUserContext(ctx, student)
 	if _, err = ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {

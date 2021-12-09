@@ -1,4 +1,5 @@
-import * as jspb from "google-protobuf"
+import * as jspb from 'google-protobuf'
+
 
 
 export class Score extends jspb.Message {
@@ -78,36 +79,6 @@ export namespace BuildInfo {
     builddate: string,
     buildlog: string,
     exectime: number,
-  }
-}
-
-export class Results extends jspb.Message {
-  getId(): number;
-  setId(value: number): Results;
-
-  getBuildinfo(): BuildInfo | undefined;
-  setBuildinfo(value?: BuildInfo): Results;
-  hasBuildinfo(): boolean;
-  clearBuildinfo(): Results;
-
-  getScoresList(): Array<Score>;
-  setScoresList(value: Array<Score>): Results;
-  clearScoresList(): Results;
-  addScores(value?: Score, index?: number): Score;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Results.AsObject;
-  static toObject(includeInstance: boolean, msg: Results): Results.AsObject;
-  static serializeBinaryToWriter(message: Results, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Results;
-  static deserializeBinaryFromReader(message: Results, reader: jspb.BinaryReader): Results;
-}
-
-export namespace Results {
-  export type AsObject = {
-    id: number,
-    buildinfo?: BuildInfo.AsObject,
-    scoresList: Array<Score.AsObject>,
   }
 }
 

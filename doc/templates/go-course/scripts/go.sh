@@ -29,7 +29,6 @@ fi
 
 # Remove student written tests to avoid interference
 find . -name '*_test.go' -exec rm -rf {} \;
-rm -f setup.sh
 
 # Copy tests into student assignments folder for running tests
 cp -r $TESTDIR/* $ASSIGNMENTS/
@@ -40,11 +39,6 @@ history -c
 
 # (ensure) Move to folder for assignment to test.
 cd $ASSIGNDIR
-
-# Perform lab specific setup
-if [ -f "setup.sh" ]; then
-    bash setup.sh
-fi
 
 printf "\n*** Finished Test Setup in $(( SECONDS - start )) seconds ***\n"
 

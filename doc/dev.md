@@ -1,16 +1,6 @@
 # QuickFeed Developer Guide
 
-This developer guide assumes that you have [installed and configured QuickFeed](./install.md) and its dependent components.
-
-## Technology stack
-
-- [Go](https://golang.org/doc/code.html)
-- [TypeScript](https://www.typescriptlang.org/)
-- [gRPC](https://grpc.io/)
-- [Protocol Buffers](https://developers.google.com/protocol-buffers/docs/proto3)
-- [gRPC-Web](https://github.com/grpc/grpc-web)
-- [Envoy](https://www.envoyproxy.io/)
-- [NGINX](https://www.nginx.com/resources/wiki/)
+This developer guide assumes that you have [installed and configured QuickFeed](./deploy.md) and its dependent components.
 
 ## GitHub Integration
 
@@ -45,34 +35,6 @@ To recompile a new `bundle.js` for the QuickFeed browser-based client, run:
 
 ```sh
 make ui
-```
-
-### Proxy
-
-Currently, QuickFeed depends on two different proxies.
-Envoy is used as a reverse proxy to facilitate gRPC invocations on the server-side.
-NGINX acts as a web server endpoint and
-
-<!-- TODO: Do we always want to purge before build? If so, merge the two targets in Makefile. -->
-To rebuild the Envoy docker container:
-
-```sh
-make envoy-purge
-make envoy-build
-```
-
-<!-- TODO: Do we need this target, since QuickFeed starts its own instance? -->
-The following should not be needed, since the QuickFeed server starts its own Envoy instance.
-However, you can also run the Envoy proxy manually:
-
-```sh
-make envoy-run
-```
-
-To reload NGINX after updating its configuration:
-
-```sh
-make nginx
 ```
 
 ### Testing
@@ -123,19 +85,11 @@ QF_WEBHOOK_SERVER=https://62b9b9c05ece.ngrok.io go test -v -run TestGitHubWebHoo
 
 ### Default setup
 
+TODO(meling) Update and improve this part. It is not correct anymore, I think.
+
 By default, the gRPC server will be started at port **:9090**.
-A docker container with Envoy proxy will listen on port **:8080** and redirect gRPC traffic to the gRPC server.
-Webserver is running on one of internal ports, and NGINX, serving the static content, is set up to redirect HTTP traffic to that port, and all gRPC traffic to the port **:8080** (same port Envoy proxy is listening on).
-NGINX and Envoy take care of all the relevant headers for gRPC traffic.
-
-## Envoy
-
-Envoy proxy allows making gRPC calls from a browser application.
-
-### Basic configuration
-
-[Default configuration from grpc-web repository](https://github.com/grpc/grpc-web/blob/master/net/grpc/gateway/examples/echo/envoy.yaml)
-The main difference in [our configuration](https://github.com/autograde/quickfeed/blob/grpc-web-merge/envoy/envoy.yaml) is `http_protocol_options: { accept_http_10: true }` line inside HTTP filters list, and an additional header name.
+Webserver is running on one of internal ports serving the static content, is set up to redirect HTTP traffic to that port, and all gRPC traffic to the port **:8080** (same port Envoy proxy is listening on).
+Envoy take care of all the relevant headers for gRPC traffic.
 
 ## Errors and logging
 

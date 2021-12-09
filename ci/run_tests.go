@@ -40,15 +40,14 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 		}
 		// we only get here if err was a timeout, so that we can log 'out' to the user
 	}
-	result, err := score.ExtractResults(ed.out, info.RandomSecret, ed.execTime)
-	if err != nil {
-		logger.Errorf("Failed to extract results from log: %v", err)
-		return
+	results := score.ExtractResults(ed.out, info.RandomSecret, ed.execTime)
+	if len(results.Errors) > 0 {
+		for _, err := range results.Errors {
+			logger.Errorf("Failed to extract results: %v", err)
+		}
 	}
-	logger.Debug("ci.ExtractResults",
-		zap.Any("results", log.IndentJson(result)),
-	)
-	recordResults(logger, db, rData, result)
+	logger.Debug("ci.RunTests", zap.Any("Results", log.IndentJson(results)))
+	recordResults(logger, db, rData, results)
 }
 
 type execData struct {
