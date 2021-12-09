@@ -20,6 +20,7 @@ const (
 	scriptFile                   = "run.sh"
 	scriptFolder                 = "scripts"
 	dockerfile                   = "Dockerfile"
+	taskFile                     = ".md"
 	defaultAutoApproveScoreLimit = 80
 )
 
@@ -60,9 +61,15 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 		if !info.IsDir() {
 			filename := filepath.Base(path)
 			var contents []byte
+			var taskContents []byte
 			switch filename {
 			case target, targetYaml, criteriaFile, scriptFile, dockerfile:
 				contents, err = ioutil.ReadFile(path)
+				if err != nil {
+					return err
+				}
+			case taskFile:
+				taskContents, err = ioutil.ReadFile(path)
 				if err != nil {
 					return err
 				}
@@ -80,6 +87,11 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 
 			case criteriaFile:
 				if err := updateCriteriaFromFile(contents, assignmentName, assignments); err != nil {
+					return err
+				}
+			case taskFile:
+				err := readTaskFile(taskContents, assignmentName, assignments)
+				if err != nil {
 					return err
 				}
 
@@ -171,6 +183,22 @@ func readScriptFile(contents []byte, assignmentName string, assignments []*pb.As
 		return "", nil
 	}
 	return string(contents), nil
+}
+
+func readTaskFile(contents []byte, assignmentName string, assignments []*pb.Assignment) error {
+	if assignmentName != taskFile {
+		assignment := findAssignmentByName(assignments, assignmentName)
+		if assignment == nil {
+			return fmt.Errorf("readTaskFile : could not find assignment %s for Task file", assignmentName)
+		}
+		var err error
+		assignment.Tasks, err = tasks_parser(contents)
+		if err != nil {
+			return fmt.Errorf("readTaskFile: could not find Tasks %s form Task file ", assignmentName)
+		}
+		return nil
+	}
+	return nil
 }
 
 func readAssignmentFile(contents []byte, assignmentName string, courseID uint64) (*pb.Assignment, error) {

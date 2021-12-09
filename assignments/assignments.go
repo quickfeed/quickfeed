@@ -34,6 +34,13 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	for _, assignment := range assignments {
 		updateGradingCriteria(logger, db, assignment)
 	}
+
+	err = SyncTasks(context.Background(), logger, s, course, assignments)
+	if err != nil{
+		logger.Errorf("Failed to Create tasks on '%s' repository: %v", pb.TestsRepo, err)
+		return
+	}
+
 	if dockerfile != "" && dockerfile != course.Dockerfile {
 		course.Dockerfile = dockerfile
 		if err := db.UpdateCourse(course); err != nil {

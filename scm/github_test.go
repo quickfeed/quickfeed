@@ -37,7 +37,7 @@ func TestGetOrganization(t *testing.T) {
 			t.Errorf("scm.GetOrganization('%s') = %d, expected %d", qfTestOrg, org.ID, qf101OrdID)
 		}
 	} else {
-		// Otherwise we just print the organization result
+		// Otherwise, we just print the organization result
 		t.Logf("org: %v", org)
 	}
 }
@@ -112,5 +112,125 @@ func TestCreateHook(t *testing.T) {
 	// We don't actually test anything here since we don't know how which hooks might be registered
 	for _, hook := range hooks {
 		t.Logf("hook: %v", hook)
+	}
+}
+
+// Test case for Creating new Issue on a git Repository
+func TestCreateIssue(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
+	// Replace with Repository name
+	repo := "Replace with Repository Name"
+	// Add Issue Title here
+	title := "Replace with  Issue Title"
+	// Add Issue body here
+	body := "Replace with Issue Body"
+	// Creating new Client
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+
+	opt := &scm.CreateIssueOptions{
+		Organization: qfTestOrg,
+		Repository:   repo,
+		Title:        title,
+		Body:         body,
+	}
+	_, err = s.CreateIssue(ctx, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetIssues(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
+	// Replace with Repository name
+	repo := "Replace with Repository Name"
+
+	// Creating new Client
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+
+	opt := &scm.IssueOptions{
+		Organization: qfTestOrg,
+		Repository:   repo,
+	}
+	_, err = s.GetRepoIssues(ctx, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetIssue(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
+	// Replace with Repository name
+	repo := "Replace with Repository Name"
+	// Replace 0 with Issue Number in Repository
+	issueNumber := 0
+
+	// Creating new Client
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+
+	opt := &scm.IssueOptions{
+		Organization: qfTestOrg,
+		Repository:   repo,
+		IssueNumber:  issueNumber,
+	}
+	_, err = s.GetRepoIssue(ctx, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Test case for Updating existing Issue in a git Repository
+func TestEditRepoIssue(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
+	// Replace with Repository name
+	repo := "Testing"
+	// Add Issue Title here
+	title := "Replace with new Issue Title"
+	// Add Issue body here
+	body := "Replace with new Issue Body"
+	// Add Issue Number here
+	issueNumber := 20
+	// Creating new Client
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+
+	opt1 := &scm.IssueOptions{
+		Organization: qfTestOrg,
+		Repository:   repo,
+		IssueNumber:  issueNumber,
+	}
+
+	opt2 := &scm.CreateIssueOptions{
+		Organization: qfTestOrg,
+		Repository:   repo,
+		Title:        title,
+		Body:         body,
+	}
+
+	_, err = s.EditRepoIssue(ctx, opt1, opt2)
+	if err != nil {
+		t.Fatal(err)
 	}
 }

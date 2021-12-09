@@ -62,6 +62,15 @@ type SCM interface {
 	RemoveMember(context.Context, *OrgMembershipOptions) error
 	// Lists all authorizations for authenticated user.
 	GetUserScopes(context.Context) *Authorization
+
+	// CreateIssue on a Repository
+	CreateIssue(context.Context, *CreateIssueOptions) (*Issue, error)
+	// GetRepoIssue a particular issue in a Repository
+	GetRepoIssue(context.Context, *IssueOptions) (*Issue, error)
+	// List all the issues in a Repository
+	GetRepoIssues(context.Context, *IssueOptions) ([]*Issue, error)
+	// Edit a particular issue in a Repository
+	EditRepoIssue(context.Context, *IssueOptions, *CreateIssueOptions) (*Issue, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -213,4 +222,43 @@ type Team struct {
 // Authorization stores information about user scopes
 type Authorization struct {
 	Scopes []string
+}
+
+// CreateNewIssueOptions contains information on how to create an Issue.
+//type NewIssue struct {
+//	Title string
+//	Body   *Repository
+//	Labels *[]string
+//	Assignee *string
+//	Assignees *[]string
+//}
+
+// Repository represents a git remote repository.
+type Issue struct {
+	ID         uint64
+	Title      string
+	Body       string
+	Repository string
+	Assignee   string
+	Status     string
+	//	Assignees string
+	IssueNumber int
+}
+
+// CreateIssueOptions contains information on how to create an Issue.
+type CreateIssueOptions struct {
+	Organization string
+	Repository   string
+	Title        string
+	Body         string
+	Labels       *[]string
+	Assignee     *string
+	Assignees    *[]string
+}
+
+// IssueOptions to get certain get issue
+type IssueOptions struct {
+	Organization string
+	Repository   string
+	IssueNumber  int
 }

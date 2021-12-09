@@ -112,6 +112,13 @@ func (opt RepositoryOptions) valid() bool {
 	return opt.ID > 0 || (opt.Path != "" && opt.Owner != "")
 }
 
+func (opt CreateIssueOptions) valid() bool {
+	return (opt.Organization != "" && opt.Repository != "" && opt.Title != "" && opt.Body != "")
+}
+
+func (opt IssueOptions) valid() bool {
+	return (opt.IssueNumber >= 0 && opt.Organization != "" && opt.Repository != "")
+}
 // Errors //
 
 // ErrNotSupported is returned when the source code management solution used

@@ -217,3 +217,39 @@ func (s *FakeSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// TODO no implementation provided yet
 	return nil
 }
+
+// CreateIssue implements the SCM interface
+func (s *FakeSCM) CreateIssue(ctx context.Context, opt *CreateIssueOptions ) (*Issue, error) {
+	// TODO no implementation provided yet
+	return nil, ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "CreateIssue",
+	}
+}
+
+// GetRepoIssue implements the SCM interface
+func (s *FakeSCM) GetRepoIssue(context.Context, *IssueOptions) (*Issue, error){
+	// TODO no implementation provided yet
+	return nil,ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "GetRepoIssue",
+	}
+}
+
+// GetRepoIssues implements the SCM interface
+func (s *FakeSCM) GetRepoIssues(context.Context, *IssueOptions) ([]*Issue,error){
+	// TODO no implementation provided yet
+	return nil, ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "GetRepoIssues",
+	}
+}
+
+// EditRepoIssue implements the SCM interface
+func (s *FakeSCM) EditRepoIssue(context.Context, *IssueOptions, *CreateIssueOptions) (*Issue,error){
+	// TODO no implementation provided yet
+	return nil,ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "EditRepoIssue",
+	}
+}
