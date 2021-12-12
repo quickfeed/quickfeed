@@ -92,7 +92,7 @@ export const updateUser = async ({actions, effects}: Context, user: User): Promi
 
 
 export const updateAdmin = async ({ state, effects }: Context, user: User): Promise<void> => {
-    if (confirm(`Are you sure you want to ${user.getIsadmin() ? "promote" : "demote"} ${user.getName()}?`)) {
+    if (confirm(`Are you sure you want to ${user.getIsadmin() ? "demote" : "promote"} ${user.getName()}?`)) {
         const u = json(user)
         u.setIsadmin(!user.getIsadmin())
         const result = await effects.grpcMan.updateUser(u) 
@@ -183,13 +183,13 @@ export const getRepositories = async ({state, effects}: Context): Promise<boolea
     let success = true
     for (const enrollment of state.enrollments) {
         state.repositories[enrollment.getCourseid()] = {};
-        const result = await effects.grpcMan.getRepositories(enrollment.getCourseid(), [Repository.Type.USER, Repository.Type.GROUP, Repository.Type.COURSEINFO, Repository.Type.ASSIGNMENTS])
+        
+        const result = await effects.grpcMan.getRepositories(enrollment.getCourseid(), generateRepositoryList(enrollment))
         if (result.data) {
-            const repoMap = result.data.getUrlsMap();
-            for (const [key, value] of repoMap.getEntryList()) {
-                state.repositories[enrollment.getCourseid()][key] = value
-            }
-            success = true
+            result.data.getUrlsMap().forEach((v, k) => {
+                state.repositories[enrollment.getCourseid()][(Repository.Type as unknown)[k]] = v
+                console.log(state.repositories)
+            })
         } else {
             success = false
         }
@@ -449,6 +449,10 @@ export const setActiveSubmission = ({state}: Context, submission: Submission | u
     state.activeSubmission = submission 
 };
 
+export const setActiveSubLink = ({state}: Context, subLink: SubmissionLink | undefined): void => {
+    state.activeSubmissionLink = subLink
+}
+
 export const setActiveReview = ({state}: Context, review: Review): void => {
     state.activeReview = json(review)
 };
@@ -480,3 +484,14 @@ export const popAlert = ({state}: Context, index: number): void => {
 export const logout = ({state}: Context): void => {
     state.self = new User()
 };
+
+export const generateRepositoryList = (enrollment: Enrollment): Repository.Type[] => {
+    switch (enrollment.getStatus()) {
+        case Enrollment.UserStatus.TEACHER:
+            return [Repository.Type.ASSIGNMENTS, Repository.Type.COURSEINFO, Repository.Type.GROUP, Repository.Type.TESTS, Repository.Type.USER]
+        case Enrollment.UserStatus.STUDENT:
+            return [Repository.Type.ASSIGNMENTS, Repository.Type.COURSEINFO, Repository.Type.GROUP, Repository.Type.USER]
+        default:
+            return [Repository.Type.NONE]
+    }
+}

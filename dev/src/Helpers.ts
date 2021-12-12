@@ -233,15 +233,6 @@ export const EnrollmentStatusBadge = {
     3 : "badge badge-danger",
 }
 
-// TODO: This ... should be done some other way
-export const Repo = {
-    "ASSIGNMENTS": "ASSIGNMENTS",
-    "COURSEINFO": "COURSEINFO",
-    "USER": "USER",
-    "GROUP": "GROUP",
-    "TEST": "TEST",
-    "NONE": "NONE"
-}
 /**
  * const test = data.sort((a, b) => {
         const x = isCellElement(a[index])
@@ -259,12 +250,12 @@ export const Repo = {
     })
  */
 
-export const generateStatusText = (assignment: Assignment, submission: Submission) => {
-        if (!assignment.getAutoapprove() && submission.getScore() >= assignment.getScorelimit()) {
-            return "Awating approval"
-        }
-        if (submission.getScore() < assignment.getScorelimit() && submission.getStatus() !== Submission.Status.APPROVED) {
-            return `Need ${assignment.getScorelimit()}% score for approval`
-        }
-        return SubmissionStatus[submission.getStatus()]
+export const generateStatusText = (assignment: Assignment, submission: Submission): string => {
+    if (!assignment.getAutoapprove() && submission.getScore() >= assignment.getScorelimit()) {
+        return "Awating approval"
     }
+    if (submission.getScore() < assignment.getScorelimit() && submission.getStatus() !== Submission.Status.APPROVED) {
+        return `Need ${assignment.getScorelimit()}% score for approval`
+    }
+    return SubmissionStatus[submission.getStatus()]
+}
