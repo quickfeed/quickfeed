@@ -12,7 +12,6 @@ import Review from "../components/Review"
 import StatisticsView from "../components/Statistics"
 import Assignments from "../components/teacher/Assignments"
 import Alert from "../components/Alert"
-import { Enrollment } from "../../proto/ag/ag_pb"
 
 /* */
 const TeacherPage = (): JSX.Element => {
@@ -22,9 +21,7 @@ const TeacherPage = (): JSX.Element => {
     const history = useHistory()
     const root = `/course/${courseID}`
 
-    const pendingMembers = state.courseEnrollments[courseID].filter(user => user.getStatus() === Enrollment.UserStatus.PENDING).length
-
-    const members = {title: "View Members", notification: pendingMembers ? {color: "warning", text: "Pending enrollments"} : undefined, text: "View all students, and approve new enrollments.", buttonText: "Members", to: `${root}/members`}
+    const members = {title: "View Members", notification: state.pendingEnrollments.length > 0 ? {color: "warning", text: "Pending enrollments"} : undefined, text: "View all students, and approve new enrollments.", buttonText: "Members", to: `${root}/members`}
     const results = {title: "View results", text: "View results for all students in the course.", buttonText: "Results", to: `${root}/results`}
     const groups = {title: "Manage Groups", notification: state.pendingGroups.length > 0 ? {color: "warning", text: "Pending groups"} : undefined, text: "View, edit or delete course groups.", buttonText: "Groups", to: `${root}/groups`}
     const statistics = {title: "Statistics", text: "See statistics for the course.", buttonText: "Statistics", to: `${root}/statistics`}

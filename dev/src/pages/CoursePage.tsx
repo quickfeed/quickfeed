@@ -9,7 +9,6 @@ import TeacherPage from "./TeacherPage"
 const CoursePage = (): JSX.Element => {
     const state = useAppState()
     const setActiveCourse = useActions().setActiveCourse
-    
     const courseID = getCourseID()
     const enrollment = state.enrollmentsByCourseId[courseID]
 
