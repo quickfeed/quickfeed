@@ -10,10 +10,8 @@ import (
 
 // Running this test case will create given task on all the repositories in side the organization
 func TestCreateTasks(t *testing.T) {
-	//qfTestOrg := scm.GetTestOrganization(t)
-	//accessToken := scm.GetAccessToken(t)
-	qfTestOrg := "QuickFeed-Dev"
-	accessToken := "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"
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
 
 	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
 	if err != nil {
