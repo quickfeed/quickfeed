@@ -20,7 +20,7 @@ const (
 	scriptFile                   = "run.sh"
 	scriptFolder                 = "scripts"
 	dockerfile                   = "Dockerfile"
-	taskFile                     = ".md"
+	taskFile                     = "_task.md"
 	defaultAutoApproveScoreLimit = 80
 )
 
@@ -37,6 +37,7 @@ type assignmentData struct {
 	Reviewers        uint   `yaml:"reviewers"`
 	ContainerTimeout uint   `yaml:"containertimeout"`
 	SkipTests        bool   `yaml:"skiptests"`
+	SingleTask       bool   `yaml:"singletask"`
 }
 
 // TODO(meling) this func should be renamed now that it does more than parseAssignments
@@ -58,10 +59,10 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 			return err
 		}
 		assignmentName := filepath.Base(filepath.Dir(path))
+		var taskContents []*pb.Task
 		if !info.IsDir() {
 			filename := filepath.Base(path)
 			var contents []byte
-			var taskContents []byte
 			switch filename {
 			case target, targetYaml, criteriaFile, scriptFile, dockerfile:
 				contents, err = ioutil.ReadFile(path)
@@ -69,10 +70,11 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 					return err
 				}
 			case taskFile:
-				taskContents, err = ioutil.ReadFile(path)
+				task, err := readTaskFiles(path)
 				if err != nil {
 					return err
 				}
+				taskContents = append(taskContents, task)
 			default:
 				// no need to parse this file
 				return nil
@@ -90,7 +92,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 					return err
 				}
 			case taskFile:
-				err := readTaskFile(taskContents, assignmentName, assignments)
+				err := addAssignmentTasks(taskContents, assignmentName, assignments)
 				if err != nil {
 					return err
 				}
@@ -185,18 +187,42 @@ func readScriptFile(contents []byte, assignmentName string, assignments []*pb.As
 	return string(contents), nil
 }
 
-func readTaskFile(contents []byte, assignmentName string, assignments []*pb.Assignment) error {
+// function will add all the tasks' markdown to assignment struct
+func addAssignmentTasks(taskContents []*pb.Task, assignmentName string, assignments []*pb.Assignment) error {
 	if assignmentName != taskFile {
 		assignment := findAssignmentByName(assignments, assignmentName)
 		if assignment == nil {
 			return fmt.Errorf("readTaskFile : could not find assignment %s for Task file", assignmentName)
 		}
-		var err error
-		assignment.Tasks, err = tasks_parser(contents)
-		if err != nil {
-			return fmt.Errorf("readTaskFile: could not find Tasks %s form Task file ", assignmentName)
+
+		if len(taskContents) == 0 {
+			return fmt.Errorf("readTaskFile : could not find assignment %s for Task file", assignmentName)
 		}
-		return nil
+		// SingleTask from the parsed yaml, is used to check either create multiple issue
+		//or a single issue on a repository.
+		//Assigning values according to the flag in assignment struct
+		if assignment.SingleTask {
+			var body string
+			title := assignment.Name
+			// combining all the task files' data for one Issue in GitHub
+			for _, task := range taskContents {
+				body += task.Title + "\n" + task.Body + "\n"
+			}
+			combineTask := make([]*pb.Task, 1)
+			combineTask = append(combineTask, &pb.Task{
+				Title:        title,
+				Body:         body,
+				AssignmentID: assignment.ID,
+			})
+			// assigning single task to assignment
+			assignment.Tasks = combineTask
+		} else {
+			for _, task := range taskContents {
+				task.AssignmentID = assignment.ID
+			}
+			// assigning multiple tasks to assignment
+			assignment.Tasks = taskContents
+		}
 	}
 	return nil
 }
@@ -223,6 +249,7 @@ func readAssignmentFile(contents []byte, assignmentName string, courseID uint64)
 		AutoApprove:      newAssignment.AutoApprove,
 		ScoreLimit:       uint32(newAssignment.ScoreLimit),
 		IsGroupLab:       newAssignment.IsGroupLab,
+		SingleTask:       newAssignment.SingleTask,
 		Reviewers:        uint32(newAssignment.Reviewers),
 		ContainerTimeout: uint32(newAssignment.ContainerTimeout),
 	}

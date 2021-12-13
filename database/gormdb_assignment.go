@@ -37,8 +37,10 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 			"auto_approve":      assignment.AutoApprove,
 			"score_limit":       assignment.ScoreLimit,
 			"is_group_lab":      assignment.IsGroupLab,
+			"SingleTask":        assignment.SingleTask,
 			"reviewers":         assignment.Reviewers,
 			"container_timeout": assignment.ContainerTimeout,
+			"Tasks":             assignment.Tasks,
 		}).FirstOrCreate(assignment).Error
 }
 

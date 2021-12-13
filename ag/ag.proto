@@ -179,6 +179,8 @@ message Assignment {
     repeated Submission submissions = 11;             // submissions produced for this assignment
     repeated GradingBenchmark gradingBenchmarks = 12; // grading benchmarks for this assignment
     uint32 containerTimeout = 13; // TODO(meling) Do we need this?
+    bool SingleTask = 14;
+    repeated Task Tasks= 15;
 }
 
 message Assignments {
@@ -210,6 +212,27 @@ message Submissions {
     repeated Submission submissions = 1;
 }
 
+// Task //
+message Task{
+    uint64 ID = 1;
+    uint64 AssignmentID = 2; // Foreign Key
+    string Title = 3;
+    string Body  = 4;
+    repeated Issue Issues = 5;
+}
+
+//message Tasks {
+//    repeated Task Tasks = 1;
+//}
+
+
+message Issue{
+    uint64 ID = 1;
+    uint64 gitIssueID = 2;
+    uint64 TaskID = 3; // foreign key
+    uint32 IssueNumber = 4;
+    string Status = 5;
+}
 //   MANUAL GRADING   //
 
 message GradingBenchmark {
