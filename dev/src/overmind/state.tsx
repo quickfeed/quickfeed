@@ -66,9 +66,7 @@ type State = {
     activeSubmission: Submission | undefined,
     activeSubmissionLink: SubmissionLink | undefined,
     activeUser: User | undefined,
-    /*cSubs: {
-        [courseid:number]: ParsedCourseSubmissions[]
-    },*/
+
 
     allUsers: User[],
     courseGroupSubmissions: {
@@ -84,6 +82,8 @@ type State = {
         [courseid: number]: Group[]
     },
     pendingGroups: Group[],
+    numPendingEnrollments: number,
+    numEnrolled: number,
     /* Utility */
     theme: string,
     isLoading: boolean,
@@ -137,7 +137,13 @@ export const state: State = {
     activeLab: -1,
     courseEnrollments: {},
     groups: {},
-    pendingGroups: derived((state: State) => { return state.activeCourse > 0 ? state.groups[state.activeCourse].filter((group) => group.getStatus() === Group.GroupStatus.PENDING) : []}),
+    pendingGroups: derived(({activeCourse, groups}: State) => { return activeCourse > 0 ? groups[activeCourse].filter((group) => group.getStatus() === Group.GroupStatus.PENDING) : []}),
+    numPendingEnrollments: derived(({activeCourse, courseEnrollments}: State) => { 
+        return activeCourse > 0 ? courseEnrollments[activeCourse].filter(enrollment => enrollment.getStatus() === Enrollment.UserStatus.PENDING).length : 0
+    }),
+    numEnrolled: derived(({activeCourse, courseEnrollments}: State) => { 
+        return activeCourse > 0 ? courseEnrollments[activeCourse].filter(enrollment => enrollment.getStatus() !== Enrollment.UserStatus.PENDING).length : 0
+    }),
     query: "",
     enableRedirect: true
 };

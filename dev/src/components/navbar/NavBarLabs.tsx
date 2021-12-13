@@ -10,6 +10,10 @@ const NavBarLabs = (): JSX.Element => {
     const state = useAppState()
     const history  = useHistory()
     
+    if (!state.assignments[state.activeCourse] || !state.submissions[state.activeCourse]) {
+        return
+    }
+
     const redirectToLab = (assignmentID: number) => {
         history.push(`/course/${state.activeCourse}/${assignmentID}`)
     }
@@ -28,26 +32,21 @@ const NavBarLabs = (): JSX.Element => {
         return state.activeLab === assignment.getId() && state.activeCourse === assignment.getCourseid() ? "active" : ""
     }
 
-    const LabLinks = (): JSX.Element[] => { 
-        if(state.assignments[state.activeCourse] && state.submissions[state.activeCourse]) {
-            const links = state.assignments[state.activeCourse]?.map((assignment, index) => {
-                const link: NavLink = {link: {text: assignment.getName(), to: `/course/${state.activeCourse}/${assignment.getId()}`}, jsx: submissionIcon(assignment)}
-                return (
-                    <div className={getLinkClass(assignment)} style={{position: "relative"}} key={assignment.getId()} onClick={() => {redirectToLab(assignment.getId())}}>
-                        <NavBarLink link={link.link} jsx={link.jsx}/>
-                        <ProgressBar courseID={state.activeCourse} assignmentIndex={index} type={Progress.NAV} />
-                    </div>
-                )
-            })
-            return links
-        }
-        return []
-    }
+    const labLinks = state.assignments[state.activeCourse]?.map((assignment, index) => {
+        const link: NavLink = {link: {text: assignment.getName(), to: `/course/${state.activeCourse}/${assignment.getId()}`}, jsx: submissionIcon(assignment)}
+        return (
+            <div className={getLinkClass(assignment)} style={{position: "relative"}} key={assignment.getId()} onClick={() => {redirectToLab(assignment.getId())}}>
+                <NavBarLink link={link.link} jsx={link.jsx}/>
+                <ProgressBar courseID={state.activeCourse} assignmentIndex={index} type={Progress.NAV} />
+            </div>
+        )
+    })
+    
 
     return (
-        <React.Fragment>
-            {LabLinks()}
-        </React.Fragment>
+        <>
+            {labLinks}
+        </>
     )
 }
 

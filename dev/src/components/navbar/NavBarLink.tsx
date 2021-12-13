@@ -1,5 +1,6 @@
 import React from "react"
 import { Link, useHistory } from "react-router-dom"
+
 export interface NavLink {
     link: {text: string, to: string}
     icons?: ({ text: string | number, classname: string } | null)[], 
@@ -14,7 +15,7 @@ const NavBarLink = (props: NavLink): JSX.Element => {
         props.icons.forEach((icon, index) => {
             if (icon) {
                 icons.push(
-                    <div key={index} id="icon" style={{marginRight: "5px"}} className={icon.classname}>
+                    <div key={index} id="icon" className={icon.classname + " ml-2"}>
                         {icon.text}
                     </div>
                 )
