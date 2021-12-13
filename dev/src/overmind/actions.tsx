@@ -1,5 +1,5 @@
 import { json } from 'overmind'
-import { Context } from "./";
+import { Context } from ".";
 import { IGrpcResponse } from "../GRPCManager";
 import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Review } from "../../proto/ag/ag_pb";
 import { CourseGroup, ParsedCourseSubmissions } from "./state";
@@ -124,15 +124,15 @@ export const setEnrollmentState = async ({effects}: Context, enrollment: Enrollm
 
 // TODO: Maybe rewrite this
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurences of the given submission in state. */
-export const updateSubmission = async ({state, actions, effects}: Context, value: {courseID: number, submission: Submission, status: Submission.Status}): Promise<void> => {
-    value.submission.setStatus(value.status)
-    const result = await effects.grpcMan.updateSubmission(value.courseID, value.submission)
+export const updateSubmission = async ({state, actions, effects}: Context, status: Submission.Status): Promise<void> => {
+    const submission = json(state.activeSubmission).setStatus(status)
+    const result = await effects.grpcMan.updateSubmission(state.activeCourse, submission)
     if (result.status.getCode() == 0) {
-        value.submission.setStatus(value.status)
-        state.courseSubmissions[value.courseID].forEach(s => {
+        state.activeSubmission = submission
+        state.courseSubmissions[state.activeCourse].forEach(s => {
             s.submissions?.forEach(s => {
-                if (s.getSubmission()?.getId() == value.submission.getId()) {
-                    s.getSubmission()?.setStatus(value.status)
+                if (s.getSubmission()?.getId() == state.activeSubmission.getId()) {
+                    s.getSubmission()?.setStatus(status)
                 }
             })
         })

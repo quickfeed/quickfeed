@@ -1,19 +1,16 @@
 import React from "react"
 import { Submission } from "../../proto/ag/ag_pb"
-import { getCourseID } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
-
 
 const ManageSubmissionStatus = (): JSX.Element => {
 
     const actions = useActions()
     const state = useAppState()
-    const courseID = getCourseID()
 
     // TODO: Add an "Are you sure you want to <Status> submission" prompt?
     const updateStatus = (status: Submission.Status) => {
         if (state.activeSubmission) {
-            actions.updateSubmission({courseID: courseID, submission: state.activeSubmission, status: status})
+            actions.updateSubmission(status)
         }
     }
 
