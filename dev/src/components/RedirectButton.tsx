@@ -5,10 +5,12 @@ import { useHistory } from "react-router"
 
 const RedirectButton = ({to}: {to: string}): JSX.Element => {
     const history = useHistory()
-    const hide = history.location.pathname == to ? true : false
+
+    // The button is hidden if user is currently at the location the button redirects to
+    const isHidden = history.location.pathname == to ? true : false
 
     return (
-        <div className={"btn btn-dark redirectButton"} onClick={() => history.push(to)} hidden={hide}>
+        <div className={"btn btn-dark redirectButton"} onClick={() => history.push(to)} hidden={isHidden}>
             <i className="fa fa-arrow-left"></i>
         </div>
     )
