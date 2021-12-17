@@ -12,7 +12,9 @@ export const CourseForm = ({editCourse}: {editCourse?: Course}): JSX.Element => 
     const actions = useActions()
     const [orgName, setOrgName] = useState("")
     const [course, setCourse] = useState(editCourse ? json(editCourse) : new Course)
-
+    const [orgFound, setOrgFound] = useState<boolean>(false)
+    /* Date object used to fill in certain default values for new courses */
+    const date = new Date(Date.now())
 
     const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
         const {name, value} = event.currentTarget
@@ -44,6 +46,10 @@ export const CourseForm = ({editCourse}: {editCourse?: Course}): JSX.Element => 
         }
     }
 
+    const getOrganization = async () => {
+        setOrgFound(await actions.getOrganization(orgName))
+    }
+
     return (
         <div className="container">
             {editCourse ? <></> : <CourseCreationInfo />}
@@ -53,9 +59,12 @@ export const CourseForm = ({editCourse}: {editCourse?: Course}): JSX.Element => 
                         <div className="input-group-text">Organization</div>
                     </div>
                     <input className="form-control" onKeyUp={e => setOrgName(e.currentTarget.value)}></input>
-                    <span className="btn btn-primary" onClick={() => actions.getOrganization(orgName)}>Find</span>
+                    <span className={orgFound ? "btn btn-success disabled" : "btn btn-primary"} onClick={!orgFound ? () => getOrganization() : () => {return}}>
+                        {orgFound ? <i className="fas fa-check"></i> :  "Find"}
+                    </span>
                 </div>
             </div>
+            {orgFound &&
             <form className="form-group" onSubmit={e => {e.preventDefault(), submitHandler()}}>
                 <div className="row">
                     <FormInput  prepend="Name"
@@ -77,7 +86,7 @@ export const CourseForm = ({editCourse}: {editCourse?: Course}): JSX.Element => 
                             prepend="Tag"
                             name="courseTag" 
                             placeholder={"(ex. Fall / Spring)"} 
-                            defaultValue={editCourse?.getTag()} 
+                            defaultValue={editCourse ? editCourse.getTag() : defaultTag(date)} 
                             onChange={handleChange} 
                     />
                 </div>
@@ -89,13 +98,22 @@ export const CourseForm = ({editCourse}: {editCourse?: Course}): JSX.Element => 
                             defaultValue={editCourse?.getSlipdays().toString()} 
                             onChange={handleChange} 
                     />
-                    <FormInput prepend="Year" name="courseYear" placeholder={"(ex. 2021)"} defaultValue={editCourse?.getYear().toString()}/>
+                    <FormInput prepend="Year" name="courseYear" placeholder={"(ex. 2021)"} defaultValue={editCourse ? editCourse.getYear().toString() : defaultYear(date)}/>
                 </div>
-                <input className="btn btn-primary" type="submit" value={editCourse ? "Edit Course" : "Create Course"} style={{marginTop:"20px"}}/>
+                <input className="btn btn-primary" type="submit" value={editCourse ? "Edit Course" : "Create Course"}/>
             </form>
+            }
         </div>
         
     )
 }
 
 export default CourseForm
+
+const defaultTag = (date: Date) => {
+    return date.getMonth() >= 10 && date.getMonth() < 4 ? "Spring" : "Fall"
+}
+
+const defaultYear = (date: Date) => {
+    return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1).toString() : date.getFullYear().toString()
+}
