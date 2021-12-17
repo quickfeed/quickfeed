@@ -3,7 +3,7 @@ import { Redirect } from "react-router";
 import { hasEnrollment } from "../Helpers";
 import { useAppState } from "../overmind";
 import Courses from "./Courses";
-import LandingPageLabTable from "./LandingPageLabTable";
+import SubmissionsTable from "./dashboard/SubmissionsTable"
 
 
 /* Dashboard for a signed in user. */
@@ -20,7 +20,7 @@ const Dashboard = (): JSX.Element => {
             <div>
                 <h1>Welcome, {state.self.getName()}!</h1>
             </div>
-            <LandingPageLabTable />
+            <SubmissionsTable />
             <Courses home={true} />
         </div>
     )
