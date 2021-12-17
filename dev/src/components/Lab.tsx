@@ -29,21 +29,10 @@ const Lab = ({teacherSubmission}: {teacherSubmission?: Submission}): JSX.Element
     const assignmentID = Number(lab)
 
     useEffect(() => {
-        // Do not start the commit hash fetch-loop for submissions that are not personal
         if (!teacherSubmission) {
             actions.setActiveLab(assignmentID)
-
-            // TODO: Implement SubmissionCommitHash
-            /*
-            const ping = setInterval(() => {  
-                actions.getSubmissionCommitHash({courseID: courseID, assignmentID: assignmentID})
-            }, 5000)
-
-            return () => {clearInterval(ping), actions.setActiveLab(-1)}
-            */
         }
     }, [lab])
-
     
     const Lab = () => {
         let submission: Submission | undefined
@@ -72,7 +61,6 @@ const Lab = ({teacherSubmission}: {teacherSubmission?: Submission}): JSX.Element
 
             return (
                 <div key={submission.getId()}>
-
                     <LabResultTable submission={submission} assignment={assignment} />
 
                     {isManuallyGraded(assignment) ? <ReviewResult review={review}/> : null}
