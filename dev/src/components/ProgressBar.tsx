@@ -10,7 +10,7 @@ export enum Progress {
     OVERVIEW
 }
 
-export const ProgressBar = (props: {courseID: number, assignmentIndex: number, submission?: Submission, type: Progress}): JSX.Element => {
+const ProgressBar = (props: {courseID: number, assignmentIndex: number, submission?: Submission, type: Progress}): JSX.Element => {
     const state = useAppState()
 
     const submission = props.submission ? props.submission : state.submissions[props.courseID][props.assignmentIndex]
@@ -48,8 +48,8 @@ export const ProgressBar = (props: {courseID: number, assignmentIndex: number, s
         secondaryText = `${secondaryProgress} % ${passedTests} to go`
     }
     // Returns a regular size progress bar to be used for labs
+    let color = ""
     if(props.type > Progress.NAV) {
-        let color: string
         switch (submission.getStatus()) {
             case Submission.Status.NONE:
                 color = "bg-primary"
@@ -64,31 +64,28 @@ export const ProgressBar = (props: {courseID: number, assignmentIndex: number, s
                 color = "bg-warning text-dark"
                 break
         }
-
-        return (
-            <div className="progress">
-                <div 
-                    className={"progress-bar "+color} 
-                    role="progressbar" 
-                    style={{width: props.submission?.getScore() + "%", transitionDelay: "0.5s"}} 
-                    aria-valuenow={submission.getScore()} 
-                    aria-valuemin={0} 
-                    aria-valuemax={100}>
-                        {text}
-                </div>
-                <div 
-                    className={"progress-bar progressbar-secondary bg-secondary"} 
-                    role="progressbar" 
-                    style={{width: secondaryProgress + "%"}} 
-                    aria-valuemax={100}>
-                        {secondaryText}
-                </div>
-            </div>
-        )
     }
+
     return (
-        <div>
-            
+        <div className="progress">
+            <div 
+                className={"progress-bar "+color} 
+                role="progressbar" 
+                style={{width: props.submission?.getScore() + "%", transitionDelay: "0.5s"}} 
+                aria-valuenow={submission.getScore()} 
+                aria-valuemin={0} 
+                aria-valuemax={100}>
+                    {text}
+            </div>
+            <div 
+                className={"progress-bar progressbar-secondary bg-secondary"} 
+                role="progressbar" 
+                style={{width: secondaryProgress + "%"}} 
+                aria-valuemax={100}>
+                    {secondaryText}
+            </div>
         </div>
     )
 }
+
+export default ProgressBar
