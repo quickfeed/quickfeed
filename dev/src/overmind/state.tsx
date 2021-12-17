@@ -1,6 +1,7 @@
 import { derived } from "overmind";
 
 import { Assignment, Course, Enrollment, EnrollmentLink, Group, Review, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb";
+import { isValid } from "../Helpers";
 
 
 
@@ -35,6 +36,7 @@ type State = {
 
     /* Data relating to self */
     self: User,
+    isLoggedIn: boolean,
     enrollments: Enrollment[],
     enrollmentsByCourseId: {
         [courseid: number]: Enrollment
@@ -82,7 +84,7 @@ type State = {
         [courseid: number]: Group[]
     },
     pendingGroups: Group[],
-    numPendingEnrollments: number,
+    pendingEnrollments: Enrollment[],
     numEnrolled: number,
     /* Utility */
     theme: string,
@@ -104,6 +106,9 @@ type State = {
 /* To add to state, extend the State type and initialize the variable below */
 export const state: State = {
     self: new User,
+    isLoggedIn: derived(({self}: State) => {
+        return self.getId() !== 0
+    }),
     users: [],
     allUsers: [],
     enrollments: [],
@@ -138,8 +143,8 @@ export const state: State = {
     courseEnrollments: {},
     groups: {},
     pendingGroups: derived(({activeCourse, groups}: State) => { return activeCourse > 0 ? groups[activeCourse].filter((group) => group.getStatus() === Group.GroupStatus.PENDING) : []}),
-    numPendingEnrollments: derived(({activeCourse, courseEnrollments}: State) => { 
-        return activeCourse > 0 ? courseEnrollments[activeCourse].filter(enrollment => enrollment.getStatus() === Enrollment.UserStatus.PENDING).length : 0
+    pendingEnrollments: derived(({activeCourse, courseEnrollments}: State) => { 
+        return activeCourse > 0 ? courseEnrollments[activeCourse].filter(enrollment => enrollment.getStatus() === Enrollment.UserStatus.PENDING) : []
     }),
     numEnrolled: derived(({activeCourse, courseEnrollments}: State) => { 
         return activeCourse > 0 ? courseEnrollments[activeCourse].filter(enrollment => enrollment.getStatus() !== Enrollment.UserStatus.PENDING).length : 0
