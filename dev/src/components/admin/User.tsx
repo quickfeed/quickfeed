@@ -1,7 +1,7 @@
 import React from "react"
-import { User } from "../../../proto/ag/ag_pb"
+import { User as user } from "../../../proto/ag/ag_pb"
 
-const UserElement = ({user, hidden}: {user: User, hidden: boolean}): JSX.Element => {
+const User = ({user, hidden}: {user: user, hidden: boolean}): JSX.Element => {
     return (
         <>
             {user.getName()} 
@@ -15,4 +15,4 @@ const UserElement = ({user, hidden}: {user: User, hidden: boolean}): JSX.Element
     )
 }
 
-export default UserElement
+export default User
