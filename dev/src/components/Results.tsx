@@ -22,7 +22,7 @@ const Results = (): JSX.Element => {
         return actions.setActiveSubmission(undefined)
     }, [state.courseSubmissions])
 
-    const Header: (string | JSX.Element)[] = ["Name", "Group"]
+    const Header: string[] = ["Name", "Group"]
 
     const AssignmentsHeader = (state.assignments[courseID].map(assignment => {
         return assignment.getName()
@@ -32,7 +32,7 @@ const Results = (): JSX.Element => {
         return <h1>Nothing</h1>
     }
 
-    const getSubmissionCell = (submissionLink: SubmissionLink, user: User) => {
+    const getSubmissionCell = (submissionLink: SubmissionLink, user: User): CellElement => {
         if (submissionLink.hasSubmission() && submissionLink.hasAssignment()) {
             return ({   
                 value: `${submissionLink.getSubmission()?.getScore()}%`, 
@@ -64,7 +64,7 @@ const Results = (): JSX.Element => {
     })
 
     return (
-        <div className="box">
+        <div>
             <div className="row">
                 <div className="col">
                     <Search />
