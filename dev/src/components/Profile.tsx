@@ -10,8 +10,7 @@ const Profile = (): JSX.Element => {
     // Holds a local state to check whether the user is editing their user information or not
     const [editing, setEditing] = useState(false)
 
-    // User is not logged in if self.getId() <= 0
-    if (state.self.getId() > 0) {
+    if (state.isLoggedIn) {
         return (
             <div>
                 <div className="jumbotron">

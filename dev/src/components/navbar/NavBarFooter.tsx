@@ -1,22 +1,23 @@
 import React, { useState } from "react"
 import { Link, useHistory } from "react-router-dom"
 import { useActions, useAppState } from "../../overmind"
+import { state } from "../../overmind/state"
 
 
 const NavBarFooter = (): JSX.Element => {
     const logout = useActions().logout
-    const self = useAppState((state) => state.self)
+    const {self, isLoggedIn} = useAppState()
 
     const history = useHistory()
 
     const [hidden, setHidden] = useState<boolean>(true)
 
     const LoginButton = () => {
-        if (self.getId() > 0) {
+        if (isLoggedIn) {
             return (
-            <li hidden={hidden}>
-                <a href="/logout" className="Sidebar-items-link" onClick={() => logout()}>Log out</a>
-            </li>
+                <li hidden={hidden}>
+                    <a href="/logout" className="Sidebar-items-link" onClick={() => logout()}>Log out</a>
+                </li>
             )
         }
         return (
@@ -29,7 +30,7 @@ const NavBarFooter = (): JSX.Element => {
     }
 
     const ProfileButton = () => {
-        if (self.getId() > 0) {
+        if (isLoggedIn) {
             return (
                 <li key="profile" onClick={() => history.push("/profile")} onMouseEnter={() => setHidden(false) }>
                     <div><img src={self.getAvatarurl()} id="avatar"></img></div>    

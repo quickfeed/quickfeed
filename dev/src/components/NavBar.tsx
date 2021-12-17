@@ -30,7 +30,7 @@ const NavBar = (): JSX.Element => {
                 </li>
 
                 {courses}
-                { state.self.getId() > 0 &&
+                { state.isLoggedIn &&
                     <li key="all" className="">
                         <Link to="/courses" className="Sidebar-items-link">
                             View all courses
