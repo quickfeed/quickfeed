@@ -1,21 +1,6 @@
 import { derived } from "overmind";
 
 import { Assignment, Course, Enrollment, EnrollmentLink, Group, Review, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb";
-import { isValid } from "../Helpers";
-
-
-
-// TODO Style for members of Self should be camelCase. The JSON from /api/v1/user does not return an object with camelCase. Rewrite return on backend to comply with camelCase
-export interface Self {
-    remoteID: number;
-    avatarurl: string;
-    email: string;
-    id: number;
-    isadmin: boolean;
-    name: string;
-    studentid: number;
-    Token: string;
-}
 
 export interface CourseGroup {
     courseID: number
