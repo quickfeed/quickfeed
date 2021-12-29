@@ -1,5 +1,5 @@
 import { json } from "overmind"
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { Group } from "../../proto/ag/ag_pb"
 import { getCourseID } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
@@ -97,7 +97,7 @@ export const Groups = (): JSX.Element => {
             <div className="pb-2">
                 <Search />
             </div>
-            <table className="table table-striped table-grp">
+            <table className="table table-striped table-grp table-hover">
                 <thead className="thead-dark">
                     <th>Name</th>
                     <th>Members</th>
