@@ -137,25 +137,6 @@ body {
     margin: 0px;
 }
 
-.dark {
-    background-color: rgb(46, 45, 45);
-    color: white;
-}
-
-.light {
-    background-color: white;
-    color: black;
-}
-
-.login {
-
-    padding: 15px;
-    text-decoration: none;
-    line-height: 20px;
-    display: block;
-    width: 200px;
-}
-
 a {
     color: #9d9d9d;
     font-weight: bold;
@@ -178,46 +159,8 @@ input{
     line-height: 20px;
 }
 
-.theme {
-    
-    display: block;
-    padding: 15px;
-}
-
 .box {
     margin-top: 30px;
-}
-
-.logs {
-    padding: 2px 4px;
-    background-color: #f9f2f4;
-}
-
-.Links {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    text-align: center;
-    width: 100%;
-    
-}
-
-.Links a {
-    background-color: #337ab7;
-    display: flex;
-    color: white;
-    align-items: center;
-    justify-content: center;
-    flex: 24%;
-    height: 50px;
-    text-align: center;
-    margin: 1%;
-
-    
-}
-
-.Links a:hover {
-    background-color: #296fac;
 }
 
 #LandingPageTable thead tr {
