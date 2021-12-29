@@ -1,8 +1,8 @@
 import { useHistory } from "react-router"
-import { generateStatusText, getFormattedTime, SubmissionStatus } from "../Helpers"
+import { generateStatusText, getFormattedTime } from "../Helpers"
 import { useAppState } from "../overmind"
 import { Submission } from "../../proto/ag/ag_pb"
-import { Progress, ProgressBar } from "./ProgressBar"
+import ProgressBar, { Progress } from "./ProgressBar"
 import React from "react"
 
 export const CourseLabs = ({courseID}: {courseID: number}): JSX.Element =>  {

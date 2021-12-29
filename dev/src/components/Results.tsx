@@ -1,6 +1,5 @@
-import { json } from "overmind"
 import React, { useEffect } from "react"
-import { Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb"
+import { Group, Submission, SubmissionLink } from "../../proto/ag/ag_pb"
 import { getCourseID, isTeacher } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import DynamicTable, { CellElement } from "./DynamicTable"
@@ -32,14 +31,15 @@ const Results = (): JSX.Element => {
         return <h1>Nothing</h1>
     }
 
-    const getSubmissionCell = (submissionLink: SubmissionLink, user: User): CellElement => {
+    const getSubmissionCell = (submissionLink: SubmissionLink, enrollmentId: number | undefined): CellElement => {
         if (submissionLink.hasSubmission() && submissionLink.hasAssignment()) {
             return ({   
                 value: `${submissionLink.getSubmission()?.getScore()}%`, 
                 className: submissionLink.getSubmission()?.getStatus() === Submission.Status.APPROVED ? "result-approved" : "result-pending",
                 onClick: () => {
-                    actions.setActiveSubmission(json(submissionLink.getSubmission()))
-                    actions.setSelectedUser(json(user))
+                    actions.setActiveSubmission(submissionLink.getSubmission()?.getId())
+                    actions.setSelectedEnrollment(enrollmentId)
+                    actions.setActiveSubmissionLink(submissionLink)
                 }
             })
         }
@@ -51,13 +51,13 @@ const Results = (): JSX.Element => {
         }
     } 
 
-    const results = state.courseSubmissions[courseID].map(link => {
+    const results = state.courseSubmissionsList[courseID].map(link => {
         const data: (string | JSX.Element | CellElement)[] = []
         data.push(link.user ? {value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}`} : "")
         data.push(link.enrollment && link.enrollment.hasGroup() ? (link.enrollment.getGroup() as Group)?.getName() : "")
         if (link.submissions && link.user) {
             for (const submissionLink of link.submissions) {
-                data.push(getSubmissionCell(submissionLink, link.user))
+                data.push(getSubmissionCell(submissionLink, link.enrollment?.getId()))
             }
         }
         return data
@@ -71,12 +71,12 @@ const Results = (): JSX.Element => {
                     <DynamicTable header={Header.concat(AssignmentsHeader)} data={results} />
                 </div>
                 <div className="col reviewLab">
-                    {state.activeSubmission ?
+                    {state.currentSubmission ?
                     <>
-                    <ManageSubmissionStatus />
-                    <div className="reviewLabResult mt-2">
-                        <Lab teacherSubmission={state.activeSubmission} />
-                    </div>
+                        <ManageSubmissionStatus />
+                        <div className="reviewLabResult mt-2">
+                            <Lab teacherSubmission={state.currentSubmission} />
+                        </div>
                     </>
                     : null}  
                 </div>
