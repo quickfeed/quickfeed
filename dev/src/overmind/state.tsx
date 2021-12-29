@@ -1,6 +1,5 @@
 import { derived } from "overmind";
-
-import { Assignment, Course, Enrollment, EnrollmentLink, Group, Review, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb";
+import { Assignment, Course, Enrollment, EnrollmentLink, Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb";
 
 export interface CourseGroup {
     courseID: number
@@ -40,7 +39,9 @@ type State = {
     }
 
     /* Public Data */
-    users: Enrollment[],
+    users: {
+        [userid: number]: User
+    },
     courses: Course[],
     assignments: {
         [courseid:number]:Assignment[]
@@ -48,10 +49,12 @@ type State = {
 
     /* Course Specific Data */
     courseSubmissions: {
-        [courseid:number]: ParsedCourseSubmissions[]
+        [courseid:number]: {[enrollmentId: number]: ParsedCourseSubmissions}
     },
-    activeSubmission: Submission | undefined,
-    activeSubmissionLink: SubmissionLink | undefined,
+    courseSubmissionsList: {
+        [courseid: number]: ParsedCourseSubmissions[]
+    }
+    activeSubmission: number,
     activeUser: User | undefined,
 
 
@@ -72,17 +75,19 @@ type State = {
     pendingEnrollments: Enrollment[],
     numEnrolled: number,
     /* Utility */
-    theme: string,
     isLoading: boolean,
     activeCourse: number,
     activeLab: number,
-    activeReview: Review | undefined
+    selectedAssignment: Assignment | undefined,
     timeNow: Date,
     // Used to create new group
     courseGroup: CourseGroup,
     alerts: {text: string, type: number}[],
     query: string,
-    enableRedirect: boolean
+    enableRedirect: boolean,
+    selectedEnrollment: number,
+    activeSubmissionLink: SubmissionLink | undefined,
+    currentSubmission: Submission | undefined,
 }
 
 
@@ -94,7 +99,7 @@ export const state: State = {
     isLoggedIn: derived(({self}: State) => {
         return self.getId() !== 0
     }),
-    users: [],
+    users: {},
     allUsers: [],
     enrollments: [],
     enrollmentsByCourseId: derived((state: State) => {
@@ -110,9 +115,22 @@ export const state: State = {
     userGroup: {},
     submissions: {},
     courseSubmissions: {},
-    activeSubmission: undefined,
+    courseSubmissionsList: derived(({courseSubmissions}: State) => {
+        const obj: {[courseid: number]: ParsedCourseSubmissions[]} = {}
+        for (const key of Object.keys(courseSubmissions)) {
+            obj[Number(key)] = Object.values(courseSubmissions[Number(key)])
+        }
+        return obj
+    }),
+    activeSubmission: -1,
     activeSubmissionLink: undefined,
-    activeReview: undefined,
+    currentSubmission: derived(({activeSubmissionLink}: State) => {
+        return activeSubmissionLink?.getSubmission()
+    }),
+    selectedAssignment: derived(({activeCourse, currentSubmission, assignments}: State) => {
+        return assignments[activeCourse]?.find(a => currentSubmission && a.getId() === currentSubmission?.getAssignmentid())
+    }),
+    selectedEnrollment: -1,
     activeUser: undefined,
     courseGroupSubmissions: {},
     assignments: {},
@@ -121,7 +139,6 @@ export const state: State = {
     courseGroup: {courseID: 0, enrollments: [], users: [], groupName: ""},
     timeNow : new Date(),
     alerts: [],
-    theme: "light",
     isLoading: true,
     activeCourse: -1,
     activeLab: -1,
