@@ -1,49 +1,58 @@
-import React, { useState } from "react"
-import { GradingCriterion, Review } from "../../proto/ag/ag_pb"
+import { json } from "overmind"
+import React from "react"
+import { GradingBenchmark, GradingCriterion, Review } from "../../proto/ag/ag_pb"
+import ManageCriteriaStatus from "./ManageCriteriaStatus"
 
-const ReviewResult = ({review}: {review: Review[]}): JSX.Element => {
+const ReviewResult = ({review, teacher}: {review?: Review, teacher?: boolean}): JSX.Element => {
 
-    // TODO: Figure out what to do in cases of two reviews.
-    const [selectedReview, setSelectedReview] = useState<Review>(review[0])
+    const Benchmark = ({children, bm}: {children: React.ReactNode, bm: GradingBenchmark}) => {
+        return (
+            <>
+                <tr className="table-info">
+                    <th colSpan={2}>{bm.getHeading()}</th>
+                    <th>{bm.getComment()}</th>
+                </tr>
+                {children}
+            </>
+        )
+    }
 
     const Criteria = ({criteria}: {criteria: GradingCriterion}) => {
         const passed = criteria.getGrade() == GradingCriterion.Grade.PASSED
         const boxShadow = passed ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 5px 0 0 red inset"
-        const icon = passed ? "fa fa-check" : "fa fa-exclamation-circle"
         return (
-            <tr>
-                <th style={{boxShadow: boxShadow}}>{criteria.getDescription()} {criteria.getComment()}</th>
-                <th><i className={icon}></i></th>
+            <tr className="align-items-center">
+                <th style={{boxShadow: boxShadow}}>{criteria.getDescription()}</th>
+                <th> { teacher ?
+                    <ManageCriteriaStatus criterion={criteria} /> : <i className={passed ? "fa fa-check" : "fa fa-exclamation-circle"}></i>
+                }
+                </th>
                 <th>{criteria.getComment()}</th>
             </tr>
         )
     }
 
-    const Result = selectedReview?.getGradingbenchmarksList().map(benchmark => {
-            return (
-                <>
-                <tr className="table-info">
-                    <th colSpan={2}>{benchmark.getHeading()}</th>
-                    <th>{benchmark.getComment()}</th>
-                </tr>
-                {benchmark.getCriteriaList().map(criteria => <Criteria key={criteria.getId()} criteria={criteria} />)}
-                </>
-            )
+    const result = json(review)?.getGradingbenchmarksList().map((benchmark, index) => {
+        return (
+            <Benchmark key={index} bm={benchmark}>
+                {benchmark.getCriteriaList().map((criteria, index) => <Criteria key={index} criteria={criteria} />)}
+            </Benchmark>
+        )
     })
 
-    
-    // TODO: DynamicTable
+
+    // TODO: DynamicTable ?
     return (
-        <div className="container">
+        <div>
+            { review &&
             <table className="table"> 
                 <thead className="thead-dark">
-                    {review.length > 0 ?
+                    {review &&
                     <tr className="table-primary">
-                        <th>{review[0].getFeedback()}</th>
-                        <th>{review[0].getScore()}%</th>
+                        <th>{review.getFeedback()}</th>
+                        <th>{review.getScore()}%</th>
                         <th></th>
                     </tr>
-                    : null
                     }  
                     <tr>
                         <th scope="col">Criteria</th>
@@ -51,8 +60,11 @@ const ReviewResult = ({review}: {review: Review[]}): JSX.Element => {
                         <th scope="col">Comment</th>
                     </tr>
                 </thead>
-                {Result}
+                <tbody>
+                {result}
+                </tbody>
             </table>    
+            }
 
         </div>
     )
