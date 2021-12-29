@@ -1,15 +1,12 @@
 import React, { useState } from "react"
 import { Link, useHistory } from "react-router-dom"
 import { useActions, useAppState } from "../../overmind"
-import { state } from "../../overmind/state"
-
 
 const NavBarFooter = (): JSX.Element => {
     const logout = useActions().logout
     const {self, isLoggedIn} = useAppState()
-
     const history = useHistory()
-
+    
     const [hidden, setHidden] = useState<boolean>(true)
 
     const LoginButton = () => {
@@ -32,7 +29,7 @@ const NavBarFooter = (): JSX.Element => {
     const ProfileButton = () => {
         if (isLoggedIn) {
             return (
-                <li key="profile" onClick={() => history.push("/profile")} onMouseEnter={() => setHidden(false) }>
+                <li onClick={() => history.push("/profile")} onMouseEnter={() => setHidden(false) }>
                     <div><img src={self.getAvatarurl()} id="avatar"></img></div>    
                 </li>
             )
@@ -53,7 +50,7 @@ const NavBarFooter = (): JSX.Element => {
     const AdminButton = () => {
         if (self.getIsadmin()) {
             return (           
-            <li key="admin" hidden={hidden}>
+            <li hidden={hidden}>
                 <Link to="/admin" className="Sidebar-items-link">
                     Admin
                 </Link>
@@ -65,7 +62,7 @@ const NavBarFooter = (): JSX.Element => {
     }
 
     return (
-        <div className="SidebarFooter" onMouseLeave={() => setHidden(true)}>            
+        <div className="SidebarFooter" onMouseLeave={() => setHidden(true)}>
             <AboutButton />
             <AdminButton />
             <LoginButton />

@@ -10,9 +10,12 @@ const NavBarCourse = ({enrollment}: {enrollment: Enrollment}): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const history = useHistory()
+    // If selected, used to show teacher / student navbar for that course
+    const selected = state.activeCourse === enrollment.getCourseid()
     
     const onCourseClick = (enrollment: Enrollment) => {
-        if (enrollment.getCourseid() === state.activeCourse) {
+        if (selected) {
+            // Unselect the active course
             actions.setActiveCourse(0)
             history.push("/")
         }
@@ -22,19 +25,20 @@ const NavBarCourse = ({enrollment}: {enrollment: Enrollment}): JSX.Element => {
         }
     }
 
+
     return (
         <>
-            <li key={`code-${enrollment.getId()}`} className=""  onClick={() => {onCourseClick(enrollment)}}>
+            <li onClick={() => {onCourseClick(enrollment)}}>
                 <div className="col" id="title">
                     {enrollment.getCourse()?.getCode()}
                 </div> 
                 <div className="col" title="icon">
-                    <i className={state.activeCourse === enrollment.getCourseid() ? "icon fa fa-caret-down fa-lg float-right" : "icon fa fa-caret-down fa-rotate-90 fa-lg float-right"}></i>
+                    <i className={selected ? "icon fa fa-caret-down fa-lg float-right" : "icon fa fa-caret-down fa-rotate-90 fa-lg float-right"}></i>
                 </div>
             </li>
-            <div key={`links-${enrollment.getId()}`} className={ state.activeCourse === enrollment.getCourseid()  ? Status.ActiveLab : Status.Inactive}>
-                {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? <NavBarLabs key={`labs-${enrollment.getId()}`} /> : null}
-                {state.activeCourse === enrollment.getCourseid() && enrollment.getStatus() === Enrollment.UserStatus.TEACHER ? <NavBarTeacher key={`teacher-${enrollment.getId()}`}  courseID={enrollment.getCourseid()}/> : null}
+            <div className={ selected ? Status.ActiveLab : Status.Inactive}>
+                {selected && enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? <NavBarLabs /> : null}
+                {selected && enrollment.getStatus() === Enrollment.UserStatus.TEACHER ? <NavBarTeacher /> : null}
             </div>
         </>
     )

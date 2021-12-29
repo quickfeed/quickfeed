@@ -2,7 +2,7 @@ import React from "react"
 import { useHistory } from "react-router-dom"
 import { useAppState } from "../../overmind"
 import { Assignment, Submission } from "../../../proto/ag/ag_pb"
-import { Progress, ProgressBar } from "../ProgressBar"
+import ProgressBar, { Progress } from "../ProgressBar"
 import NavBarLink, { NavLink } from "./NavBarLink"
 
 
@@ -11,7 +11,7 @@ const NavBarLabs = (): JSX.Element => {
     const history  = useHistory()
     
     if (!state.assignments[state.activeCourse] || !state.submissions[state.activeCourse]) {
-        return
+        return <></>
     }
 
     const redirectToLab = (assignmentID: number) => {
@@ -22,8 +22,8 @@ const NavBarLabs = (): JSX.Element => {
         const submission = state.submissions[state.activeCourse][assignment.getOrder() - 1]
         return (
             <div>
-                <i className={assignment.getIsgrouplab() ? "fa fa-users" : "fa fa-user"} title={assignment.getIsgrouplab() ? "Group Lab" : "Individual Lab"} />
-                {submission?.getStatus() === Submission.Status.APPROVED && <i className="fa fa-check" style={{marginLeft: "10px"}} />}
+                {assignment.getIsgrouplab() && <i className={"fa fa-users"} title={"Group Lab"} />}
+                {submission?.getStatus() === Submission.Status.APPROVED && <i className="fa fa-check ml-2"/>}
             </div>
         )
     }
