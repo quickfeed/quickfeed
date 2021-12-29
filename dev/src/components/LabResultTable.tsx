@@ -4,7 +4,7 @@ import { Assignment, Submission } from "../../proto/ag/ag_pb"
 import { Score } from "../../proto/kit/score/score_pb"
 import { generateStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded } from "../Helpers"
 import { useAppState } from "../overmind"
-import { Progress, ProgressBar } from "./ProgressBar"
+import ProgressBar, { Progress } from "./ProgressBar"
 
 interface lab {
     submission: Submission
@@ -40,7 +40,7 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
 
             const boxShadow = (submission.getStatus() === Submission.Status.APPROVED) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 5px 0 0 red inset"
             return (
-                <div className="container" style={{paddingBottom: "20px"}}>
+                <div className="pb-2">
                     <div style={{paddingBottom: "10px"}}>
                         <ProgressBar key={"progress-bar"} courseID={assignment.getCourseid()} assignmentIndex={assignment.getOrder() - 1} submission={submission} type={Progress.LAB} />
                     </div>
