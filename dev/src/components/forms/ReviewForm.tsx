@@ -1,21 +1,42 @@
-import React, { useEffect, useState } from "react"
-import { Assignment, Review, Submission, SubmissionLink } from "../../../proto/ag/ag_pb"
+import React, { useEffect } from "react"
+import { Assignment, Review, Submission } from "../../../proto/ag/ag_pb"
+import { getCourseID, isManuallyGraded } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
+import Button, { ButtonType, ComponentColor } from "../admin/Button"
+import ReviewInfo from "../ReviewInfo"
 import ReviewResult from "../ReviewResult"
 
 
 // TODO: Ensure all criteria are graded before setting ready
 
-const ReviewForm = ({submissionLink, setSelected}: {submissionLink: SubmissionLink, setSelected: React.Dispatch<React.SetStateAction<SubmissionLink | undefined>>}): JSX.Element => {
-
+const ReviewForm = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
+    const courseID = getCourseID()
 
-    const [selectedReview, setSelectedReview] = useState<Review | undefined>(undefined)
+    const selectReview = () => {
+        if (state.activeSubmission) {
+            const reviews = state.review.reviews[courseID][state.activeSubmission]
+            if (reviews) {
+                console.log(reviews)
+                actions.review.setSelectedReview(0)
+            }
+        }
+    }
 
     useEffect(() => {
-        return actions.setActiveReview(undefined)
-    }, [submissionLink])
+        if (state.activeSubmissionLink) {
+            selectReview()
+        }
+    }, [state.activeSubmissionLink, state.review.reviews])
+
+    if (!state.activeSubmissionLink) {
+        return <div>None</div>
+    }
+
+    if (!state.activeSubmissionLink.hasSubmission()  || !state.activeSubmissionLink.hasAssignment()) {
+        return <div>No Submission</div>
+    }
 
     const countReadyReviews = (submission: Submission) => {
         let total = 0
@@ -41,42 +62,25 @@ const ReviewForm = ({submissionLink, setSelected}: {submissionLink: SubmissionLi
         return false
     }
 
-    const Benchmarks = () => {
-        if (state.activeReview) {
-            return state.activeReview.getGradingbenchmarksList().map((bm, index) => {
-                const list: JSX.Element[] = []
+    const reviews = state.review.reviews[courseID][(state.activeSubmissionLink.getSubmission() as Submission).getId()]
 
-                const criteria = bm.getCriteriaList().map(gc => { return <li key={gc.getId()}>{gc.getDescription()}</li>})
-                
-                return <li key={bm.getId()}>{bm.getHeading()}</li>
-            })
-        }
-        return <li>No selected review</li>
-    }
-
-    const Reviews = () => {
-        if (submissionLink.hasSubmission()) {
-            return (submissionLink.getSubmission() as Submission).getReviewsList().map(rw => {
-                return <li key={rw.getId()} onClick={() => actions.setActiveReview(rw)}>{rw.getReviewerid()}</li>
-            })
-        }
-    }
-
-
-    if (submissionLink.hasAssignment() && submissionLink.getAssignment()?.getReviewers() == 0) {
+    if (!isManuallyGraded(state.activeSubmissionLink.getAssignment() as Assignment)) {
         return <div>This assignment is not for manual grading.</div>
-    }
-    return (
-        <div className="col">
-            <ul className="list-group">
-                {state.activeReview &&
-                    <ReviewResult rev={state.activeReview} />
+    } else {
+        return (
+            <div className="col reviewLab">
+                { reviews?.length == 0 &&
+                    <Button type={ButtonType.BUTTON} color={ComponentColor.GREEN} text="Create a new review" onclick={() => actions.review.makeNewReview()} />
                 }
-                {Reviews()}
-                {Benchmarks()}
-            </ul>
-        </div>
-    )
+                {state.review.currentReview ?
+                <>
+                    <ReviewInfo />
+                    <ReviewResult teacher={true} review={state.review.currentReview} />
+                </> : null
+                }
+            </div>
+        )
+    }
 }
 
 export default ReviewForm
