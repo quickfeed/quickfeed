@@ -20,6 +20,10 @@ const Courses = (overview: overview): JSX.Element => {
         actions.setActiveCourse(-1)
     }, [])
 
+    if (state.courses.length == 0) {
+        return <div>No courses available</div>
+    }
+
     // push to seperate arrays, for layout purposes. Favorite - Student - Teacher - Pending
     const upDateArrays = () => {
         const favorite:   JSX.Element[] = []
