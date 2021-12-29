@@ -53,7 +53,6 @@ const Lab = ({teacherSubmission}: {teacherSubmission?: Submission}): JSX.Element
         if (assignment && submission) {
             const review = json(submission).getReviewsList()
             let buildLog: JSX.Element[] = []
-            
             const buildLogRaw = submission.hasBuildinfo() ? (submission.getBuildinfo() as BuildInfo).getBuildlog() : null
             if (buildLogRaw){
                 buildLog = buildLogRaw.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
@@ -63,7 +62,7 @@ const Lab = ({teacherSubmission}: {teacherSubmission?: Submission}): JSX.Element
                 <div key={submission.getId()}>
                     <LabResultTable submission={submission} assignment={assignment} />
 
-                    {isManuallyGraded(assignment) ? <ReviewResult review={review}/> : null}
+                    {isManuallyGraded(assignment) ? <ReviewResult review={review[0]}/> : null}
 
                     <div className="card bg-light">
                         <code className="card-body" style={{color: "#c7254e"}}>{buildLog}</code>
