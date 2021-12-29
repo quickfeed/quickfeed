@@ -3,6 +3,9 @@ import { useActions, useAppState } from "../overmind"
 import { Enrollment } from "../../proto/ag/ag_pb"
 import CourseCard from "./CourseCard"
 import { AlertType } from "../Helpers"
+import Card from "./Card"
+import Button, { ButtonType, ComponentColor } from "./admin/Button"
+import { useHistory } from "react-router"
 interface overview {
     home: boolean
 }
@@ -11,6 +14,7 @@ interface overview {
 const Courses = (overview: overview): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
+    const history = useHistory()
 
     useEffect(() => {
         if (state.enrollments.filter(enrollment => 
@@ -21,7 +25,19 @@ const Courses = (overview: overview): JSX.Element => {
     }, [])
 
     if (state.courses.length == 0) {
-        return <div>No courses available</div>
+        return (
+            <div className="container centered">
+                <h3>There are currently no available courses.</h3>
+                {state.self.getIsadmin() ? 
+                    <>
+                        <div>
+                            <Button classname="mr-3" text="Go to course creation" color={ComponentColor.GREEN} type={ButtonType.BUTTON} onclick={() => history.push("/admin/create")} /> 
+                            <Button text="Manage users" color={ComponentColor.BLUE} type={ButtonType.BUTTON} onclick={() => history.push("/admin/manage")} /> 
+                        </div>
+                    </>
+                    : null}
+            </div>
+        )
     }
 
     // push to seperate arrays, for layout purposes. Favorite - Student - Teacher - Pending

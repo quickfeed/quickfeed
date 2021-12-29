@@ -17,10 +17,10 @@ export const ButtonType: ButtonType = {
     BUTTON: "btn btn"
 }
 
-const Button = ({text, onclick, color, type}: {text: string, onclick: () => void, color: string, type: string}): JSX.Element => {
+const Button = ({text, onclick, color, type, classname}: {text: string, onclick: () => void, color: string, type: string, classname?: string}): JSX.Element => {
     //const text = user.getIsadmin() ? "Demote" : "Promote"
     return (
-        <span className={`${type}-${color}` + " clickable"} onClick={onclick}>
+        <span className={`${type}-${color}` + " clickable " + classname} onClick={onclick}>
             {text}
         </span>
     )
