@@ -19,16 +19,15 @@ import AboutPage from './pages/AboutPage';
 const App = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
-    const [loggedIn, setLoggedIn] = useState(false)
+    
     useEffect( () => {
         async function setup() {
-            const result = await actions.fetchUserData()
-            setLoggedIn(result)
+            await actions.fetchUserData()
         }
-        if (!loggedIn) {
+        if (!state.isLoggedIn) {
             setup()
         }
-    }, [loggedIn,setLoggedIn])
+    }, [])
 
     // This is just to Update the Time object in state, every 20 minutes (after mount, it mounts with a new dateobject)
     useEffect(()=> {
@@ -41,16 +40,17 @@ const App = (): JSX.Element => {
     return  (
         <div> 
             <NavBar />
-            <div className={state.theme+" app wrapper"} >
+            <div className="app wrapper">
                 <div id="content">
                     {state.isLoading ? ( // If state.isLoading
                         <Loading />
                         ) : ( // Else if, user logged in, but has not added their information redirect to Profile
-                            !isValid(state.self) && loggedIn ? (
+                            !isValid(state.self) && state.isLoggedIn ? (
                                 <Switch>
                                     <Route path="/" component={Profile} />
+                                    <Route path="/profile" component={Profile} />
                                 </Switch>
-                        ) : (loggedIn ? ( // Else render page as expected for a logged in user
+                        ) : (state.isLoggedIn ? ( // Else render page as expected for a logged in user
                             <Switch>
                                 <Route path="/" exact component={Dashboard} />
                                 <Route path="/about" component={AboutPage} />

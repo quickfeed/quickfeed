@@ -1,8 +1,8 @@
 import { json } from 'overmind'
 import { Context } from ".";
 import { IGrpcResponse } from "../GRPCManager";
-import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Review } from "../../proto/ag/ag_pb";
-import { CourseGroup, ParsedCourseSubmissions, state } from "./state";
+import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink } from "../../proto/ag/ag_pb";
+import { CourseGroup } from "./state";
 import { AlertType } from "../Helpers";
 
 /** 
@@ -18,6 +18,12 @@ export const getSelf = async ({state, effects}: Context): Promise<boolean> => {
         } 
     return false
 };
+
+export const setSelf = ({state}: Context, user: User): void => {
+    state.self.setName(user.getName())
+    state.self.setEmail(user.getEmail())
+    state.self.setStudentid(user.getStudentid())
+}
 
 /** Fetches all users (requires admin priveleges) */
 export const getUsers = async ({state, effects}: Context): Promise<void> => {

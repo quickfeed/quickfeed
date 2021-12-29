@@ -2,7 +2,6 @@ import { createStateHook, createActionsHook, createEffectsHook } from 'overmind-
 import { state } from './state'
 import * as actions from './actions'
 import * as effects from './effects'
-import * as course from './namespaces/course'
 import * as review from './namespaces/review'
 import { IContext } from 'overmind'
 import { merge, namespaced } from 'overmind/config';

@@ -20,6 +20,7 @@ type State = {
 
     /* Data relating to self */
     self: User,
+    isValid: boolean,
     isLoggedIn: boolean,
     enrollments: Enrollment[],
     enrollmentsByCourseId: {
@@ -98,6 +99,9 @@ export const state: State = {
     self: new User,
     isLoggedIn: derived(({self}: State) => {
         return self.getId() !== 0
+    }),
+    isValid: derived(({self}: State) => {
+        return self.getName().length > 0 && self.getStudentid().length > 0 && self.getEmail().length > 0
     }),
     users: {},
     allUsers: [],

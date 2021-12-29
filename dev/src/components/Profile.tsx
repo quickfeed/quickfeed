@@ -1,14 +1,31 @@
-import React, { useState } from 'react'
-import { Redirect } from 'react-router'
+import React, { useEffect, useState } from 'react'
+import { Redirect, useHistory } from 'react-router'
 import { useAppState } from '../overmind'
-import UserProfileForm from './forms/UserProfileForm'
-import ProfileInfo from './ProfileInfo'
+import ProfileForm from './forms/ProfileForm'
+import ProfileCard from './profile/ProfileCard'
+import ProfileInfo from './profile/ProfileInfo'
+import SignupText from './profile/SignupText'
 
 
 const Profile = (): JSX.Element => {
     const state = useAppState()
+    const history = useHistory()
     // Holds a local state to check whether the user is editing their user information or not
     const [editing, setEditing] = useState(false)
+
+    // Redirect from "/" to "/profile" when user object is invalid
+    if (!state.isValid && history.location.pathname == "/") {
+        history.push("/profile")
+    }
+
+    // Default to edit mode if user object does not contain valid information
+    useEffect(() => {
+        if (!state.isValid) {
+            setEditing(true)
+        }
+    })
+
+    
 
     if (state.isLoggedIn) {
         return (
@@ -20,7 +37,14 @@ const Profile = (): JSX.Element => {
                     </div>
                 </div>
                 <div className="container">
-                {editing ? <UserProfileForm setEditing={setEditing} /> : <ProfileInfo setEditing={setEditing} />}
+                    <ProfileCard>
+                        {!editing ? 
+                        <ProfileInfo setEditing={setEditing} /> :
+                        <ProfileForm setEditing={setEditing} >
+                            {state.isValid ? null : <SignupText />}
+                        </ProfileForm>
+                        }
+                    </ProfileCard>
                 </div>
             </div>
             )
