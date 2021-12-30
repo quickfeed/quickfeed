@@ -165,3 +165,23 @@ func (db *GormDB) UpdateCriterion(query *pb.GradingCriterion) error {
 func (db *GormDB) DeleteCriterion(query *pb.GradingCriterion) error {
 	return db.conn.Delete(query).Error
 }
+
+// GetBenchmarks returns all benchmarks and associated criteria for a given assignment ID
+func (db *GormDB) GetBenchmarks(query *pb.Assignment) ([]*pb.GradingBenchmark, error) {
+	var benchmarks []*pb.GradingBenchmark
+	if err := db.conn.
+		Where("assignment_id = ?", query.ID).
+		Where("review_id = ?", 0).
+		Find(&benchmarks).Error; err != nil {
+		return nil, err
+	}
+
+	for _, b := range benchmarks {
+		var criteria []*pb.GradingCriterion
+		if err := db.conn.Where("benchmark_id = ?", b.ID).Find(&criteria).Error; err != nil {
+			return nil, err
+		}
+		b.Criteria = criteria
+	}
+	return benchmarks, nil
+}
