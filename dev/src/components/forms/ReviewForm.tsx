@@ -70,7 +70,7 @@ const ReviewForm = (): JSX.Element => {
         return (
             <div className="col reviewLab">
                 { reviews?.length == 0 &&
-                    <Button type={ButtonType.BUTTON} color={ComponentColor.GREEN} text="Create a new review" onclick={() => actions.review.makeNewReview()} />
+                    <Button type={ButtonType.BUTTON} color={ComponentColor.GREEN} text="Create a new review" onclick={() => actions.review.createReview()} />
                 }
                 {state.review.currentReview ?
                 <>

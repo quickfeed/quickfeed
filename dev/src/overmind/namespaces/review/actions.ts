@@ -16,22 +16,14 @@ export const updateReview = async ({state, effects}: Context): Promise<void> => 
 }
 
 export const createReview = async ({state, effects}: Context): Promise<void> => {
-    //effects.grpcMan.createReview()
-    return
-}
-
-export const makeNewReview = ({state}: Context): void => {
     const submission = state.activeSubmissionLink?.getSubmission()
-    const assignment = submission ? state.assignments[state.activeCourse].find(a => a.getId() == submission.getAssignmentid()) : undefined
-    if (submission && assignment && !state.review.currentReview) {
-        if (submission.getReviewsList().length >= assignment.getReviewers()) {
-            return
-        }
+    if (submission && !state.review.currentReview && state.activeCourse) {
         const review = new Review
         review.setReviewerid(state.self.getId())
         review.setSubmissionid(submission.getId())
-    
-        review.setGradingbenchmarksList(assignment.getGradingbenchmarksList())
-        state.review.reviews[state.activeCourse][submission.getId()].push(review)
+        const response = await effects.grpcMan.createReview(review, state.activeCourse)
+        if (response.data) {
+            state.review.reviews[state.activeCourse][submission.getId()].push(response.data)
+        }
     }
 }
