@@ -1,9 +1,14 @@
 import React from "react"
-import { GradingCriterion } from "../../proto/ag/ag_pb"
-import { useActions } from "../overmind"
+import { GradingCriterion } from "../../../proto/ag/ag_pb"
+import { useActions, useAppState } from "../../overmind"
 
 const ManageCriteriaStatus = ({criterion}: {criterion: GradingCriterion}): JSX.Element => {
     const {setGrade, review: {updateReview}} = useActions()
+    const {isTeacher} = useAppState()
+
+    if (!isTeacher) {
+        return <></>
+    }
 
     const buttons: {icon: string, status: GradingCriterion.Grade, style: string, onClick?: () => void}[] = [
         {icon: "fa fa-check", status: GradingCriterion.Grade.PASSED, style: "success", onClick: () => setGrade({criterion: criterion, grade: GradingCriterion.Grade.PASSED})}, 

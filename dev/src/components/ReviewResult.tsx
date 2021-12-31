@@ -1,36 +1,10 @@
 import { json } from "overmind"
 import React from "react"
-import { GradingBenchmark, GradingCriterion, Review } from "../../proto/ag/ag_pb"
-import ManageCriteriaStatus from "./ManageCriteriaStatus"
+import { Review } from "../../proto/ag/ag_pb"
+import Benchmark from "./manual-grading/Benchmark"
+import Criteria from "./manual-grading/Criterion"
 
-const ReviewResult = ({review, teacher}: {review?: Review, teacher?: boolean}): JSX.Element => {
-
-    const Benchmark = ({children, bm}: {children: React.ReactNode, bm: GradingBenchmark}) => {
-        return (
-            <>
-                <tr className="table-info">
-                    <th colSpan={2}>{bm.getHeading()}</th>
-                    <th>{bm.getComment()}</th>
-                </tr>
-                {children}
-            </>
-        )
-    }
-
-    const Criteria = ({criteria}: {criteria: GradingCriterion}) => {
-        const passed = criteria.getGrade() == GradingCriterion.Grade.PASSED
-        const boxShadow = passed ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 5px 0 0 red inset"
-        return (
-            <tr className="align-items-center">
-                <th style={{boxShadow: boxShadow}}>{criteria.getDescription()}</th>
-                <th> { teacher ?
-                    <ManageCriteriaStatus criterion={criteria} /> : <i className={passed ? "fa fa-check" : "fa fa-exclamation-circle"}></i>
-                }
-                </th>
-                <th>{criteria.getComment()}</th>
-            </tr>
-        )
-    }
+const ReviewResult = ({review}: {review?: Review}): JSX.Element => {
 
     const result = json(review)?.getGradingbenchmarksList().map((benchmark, index) => {
         return (
@@ -40,8 +14,6 @@ const ReviewResult = ({review, teacher}: {review?: Review, teacher?: boolean}): 
         )
     })
 
-
-    // TODO: DynamicTable ?
     return (
         <div>
             { review &&
@@ -50,7 +22,7 @@ const ReviewResult = ({review, teacher}: {review?: Review, teacher?: boolean}): 
                     {review &&
                     <tr className="table-primary">
                         <th>{review.getFeedback()}</th>
-                        <th>{review.getScore()}%</th>
+                        <th>{review.getScore()}</th>
                         <th></th>
                     </tr>
                     }  
@@ -61,7 +33,7 @@ const ReviewResult = ({review, teacher}: {review?: Review, teacher?: boolean}): 
                     </tr>
                 </thead>
                 <tbody>
-                {result}
+                    {result}
                 </tbody>
             </table>    
             }

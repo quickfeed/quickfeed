@@ -3,7 +3,7 @@ import { SubmissionStatus } from "../Helpers"
 import { useAppState } from "../overmind"
 
 const ReviewInfo = (): JSX.Element => {
-    const {review: {currentReview, reviewer}, activeSubmissionLink} = useAppState()
+    const {review: {currentReview, reviewer, graded, criteriaTotal}, activeSubmissionLink} = useAppState()
 
     const assignment = activeSubmissionLink?.getAssignment()
     const submission = activeSubmissionLink?.getSubmission()
@@ -33,6 +33,10 @@ const ReviewInfo = (): JSX.Element => {
                 <li className="list-group-item">
                     <span className="w-25 mr-5 float-left">Last Edited: </span>
                     {currentReview.getEdited()}
+                </li>
+                <li className="list-group-item">
+                    <span className="w-25 mr-5 float-left">Graded: </span>
+                    {graded}/{criteriaTotal}
                 </li>
             </ul>
         )

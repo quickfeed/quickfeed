@@ -89,6 +89,7 @@ type State = {
     selectedEnrollment: number,
     activeSubmissionLink: SubmissionLink | undefined,
     currentSubmission: Submission | undefined,
+    isTeacher: boolean
 }
 
 
@@ -113,6 +114,12 @@ export const state: State = {
         }
         return obj
     }),
+    isTeacher: derived((state: State) => {
+        if (state.activeCourse > 0 && state.enrollmentsByCourseId[state.activeCourse]) {
+            return state.enrollmentsByCourseId[state.activeCourse].getStatus() === Enrollment.UserStatus.TEACHER
+        }
+        return false
+    })
     status: [],
     courses: [],
     userCourses: {},

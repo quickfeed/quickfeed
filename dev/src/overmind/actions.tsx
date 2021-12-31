@@ -553,6 +553,6 @@ const generateRepositoryList = (enrollment: Enrollment): Repository.Type[] => {
 }
 
 /** Use this to verify that a gRPC request completed without an error code */
-const success = (response: IGrpcResponse<unknown>): boolean => {
+export const success = (response: IGrpcResponse<unknown>): boolean => {
     return response.status.getCode() === 0
 }

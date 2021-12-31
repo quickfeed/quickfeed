@@ -6,8 +6,8 @@ import Search from "./Search"
 import { json } from "overmind"
 import ReviewForm from "./forms/ReviewForm"
 import DynamicTable, { CellElement } from "./DynamicTable"
+import Loading from "./Loading"
 
-// TODO: This component is in dire need of some love
 const Review = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
@@ -20,7 +20,7 @@ const Review = (): JSX.Element => {
     })
 
     if (!state.courseSubmissionsList[courseID]) {
-        return <div>Loading</div>
+        return <Loading />
     }
 
     const generateReviewCell = (submissionLink: SubmissionLink, enrollmentIndex: number): CellElement => {
@@ -43,6 +43,8 @@ const Review = (): JSX.Element => {
             }
     }
 
+    const header = ["Name"].concat(state.assignments[courseID].map(assignment => assignment.getName()))
+    
     const data = state.courseSubmissionsList[courseID].map((link, index) => {
         const temp: (string | JSX.Element | CellElement)[] = []
         if (link) {
@@ -56,16 +58,12 @@ const Review = (): JSX.Element => {
         return temp
     })
 
-    const header = ["Name"]
-    const assignmentsHeader = (state.assignments[courseID].map(assignment => {
-        return assignment.getName()
-    }))
     return (
         <div>
             <div className="row">
                 <div className="col-md-6">
                     <Search placeholder={"Search by name ..."} />
-                    <DynamicTable header={header.concat(assignmentsHeader)} data={data} />
+                    <DynamicTable header={header} data={data} />
                 </div>
                 { state.activeSubmissionLink ? <ReviewForm /> : null }                
             </div>

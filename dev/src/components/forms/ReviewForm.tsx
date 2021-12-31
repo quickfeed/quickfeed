@@ -18,7 +18,6 @@ const ReviewForm = (): JSX.Element => {
         if (state.activeSubmission) {
             const reviews = state.review.reviews[courseID][state.activeSubmission]
             if (reviews) {
-                console.log(reviews)
                 actions.review.setSelectedReview(0)
             }
         }
@@ -75,7 +74,7 @@ const ReviewForm = (): JSX.Element => {
                 {state.review.currentReview ?
                 <>
                     <ReviewInfo />
-                    <ReviewResult teacher={true} review={state.review.currentReview} />
+                    <ReviewResult review={state.review.currentReview} />
                 </> : null
                 }
             </div>
