@@ -300,3 +300,15 @@ input{
 .table th {
     padding: .5rem !important;
 }
+
+.passed {
+    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, green 5px 0px 0px inset;
+}
+
+.failed {
+    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, red 5px 0px 0px inset;
+}
+
+.not-graded {
+    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, rgba(0, 0, 0, 0.2) 5px 0px 0px inset;
+}

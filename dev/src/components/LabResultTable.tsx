@@ -14,11 +14,11 @@ interface lab {
 const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
     const state = useAppState()
 
-    const ScoreObject = ({ score }: {score: Score}) => {
-        const boxShadow = (score.getScore() === score.getMaxscore()) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 5px 0 0 red inset"
+    const Score = ({ score }: {score: Score}) => {
+        const classname = (score.getScore() === score.getMaxscore()) ? "passed" : "failed"
         return (
             <tr>
-                <th style={{boxShadow: boxShadow, paddingLeft: "15px"}}>
+                <th className={classname + " pl-4"}>
                     {score.getTestname()}
                 </th>
                 <th>
@@ -34,14 +34,13 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
     const LabResult = (): JSX.Element => {
         if (submission && assignment) {
             const buildInfo = submission.getBuildinfo()
-            console.log(submission.getBuildinfo()?.getBuildlog())
             const delivered = buildInfo ? getFormattedTime(buildInfo.getBuilddate()) : "N/A"
             const executionTime = buildInfo ? `${buildInfo.getExectime() / 1000} seconds` : ""
 
-            const boxShadow = (submission.getStatus() === Submission.Status.APPROVED) ? "0 0px 0 #000 inset, 5px 0 0 green inset" : "0 0px 0 #000 inset, 5px 0 0 red inset"
+            const classname = (submission.getStatus() === Submission.Status.APPROVED) ? "passed" : "failed"
             return (
                 <div className="pb-2">
-                    <div style={{paddingBottom: "10px"}}>
+                    <div className="pb-2">
                         <ProgressBar key={"progress-bar"} courseID={assignment.getCourseid()} assignmentIndex={assignment.getOrder() - 1} submission={submission} type={Progress.LAB} />
                     </div>
                     <table className="table table-curved table-striped">
@@ -53,7 +52,7 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
                         </thead>
                         <tbody>
                         <tr>
-                            <th colSpan={2} style={{boxShadow: boxShadow}}>Status</th>
+                            <th colSpan={2} className={classname}>Status</th>
                             <td>{generateStatusText(assignment, submission)}</td>
                         </tr>
                         <tr>
@@ -95,7 +94,7 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
                         
                         </tr>
                         {json(submission).getScoresList().map((score, index) => 
-                            <ScoreObject key={index} score={score} />
+                            <Score key={index} score={score} />
                         )}
                         
                         </tbody>
