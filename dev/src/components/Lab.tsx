@@ -80,7 +80,7 @@ const Lab = ({teacherSubmission}: {teacherSubmission?: Submission}): JSX.Element
             <div className={teacherSubmission ? "" : "col-md-9"}>
                 <Lab />
             </div>
-            {teacherSubmission ? null : <CourseUtilityLinks courseID={courseID} />}
+            {teacherSubmission ? null : <CourseUtilityLinks />}
         </div>
     )
 }

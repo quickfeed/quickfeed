@@ -25,13 +25,13 @@ const StudentPage = (): JSX.Element => {
     return (
         <div>
             <RedirectButton to={root}></RedirectButton>
-            <CourseBanner enrollment={state.enrollmentsByCourseId[courseID]} />
+            <CourseBanner />
             <Alert /> 
             <div className="row" hidden={history.location.pathname != root}>
                 <div className="col-md-9" >
-                    <CourseLabs courseID={courseID}/>
+                    <CourseLabs />
                 </div>
-                <CourseUtilityLinks courseID={courseID} />
+                <CourseUtilityLinks />
             </div>
             <Switch>
                 <Route path="/course/:id/group" exact component={GroupPage} />

@@ -1,14 +1,16 @@
 import { useHistory } from "react-router"
-import { generateStatusText, getFormattedTime } from "../Helpers"
+import { generateStatusText, getCourseID, getFormattedTime } from "../Helpers"
 import { useAppState } from "../overmind"
 import { Submission } from "../../proto/ag/ag_pb"
 import ProgressBar, { Progress } from "./ProgressBar"
 import React from "react"
 
-export const CourseLabs = ({courseID}: {courseID: number}): JSX.Element =>  {
+export const CourseLabs = (): JSX.Element =>  {
     const state = useAppState()
     const history  = useHistory()
     
+    const courseID = getCourseID()
+
     const redirectToLab = (assignmentID: number) => {
         history.push(`/course/${courseID}/${assignmentID}`)
     }
@@ -26,7 +28,6 @@ export const CourseLabs = ({courseID}: {courseID: number}): JSX.Element =>  {
                 
                 labs.push(
                     <li key={assignment.getId()} className="list-group-item border"style={{marginBottom:"5px",cursor:"pointer"}} onClick={()=>redirectToLab(assignment.getId())}>
-                        
                         <div className="row" >
                             <div className="col-8">
                                 <strong>{assignment.getName()}</strong>

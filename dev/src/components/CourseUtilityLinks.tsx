@@ -1,14 +1,15 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { Repository } from "../../proto/ag/ag_pb"
+import { getCourseID } from "../Helpers"
 import { useAppState } from "../overmind"
 
 
 
-const CourseUtilityLinks = ({courseID}: {courseID: number}): JSX.Element => {
+const CourseUtilityLinks = (): JSX.Element => {
 
     const state = useAppState()
-
+    const courseID = getCourseID()
     return (
         <div className="col-sm-3" >           
             <div className="list-group">

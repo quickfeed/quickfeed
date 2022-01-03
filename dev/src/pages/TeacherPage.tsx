@@ -43,7 +43,7 @@ const TeacherPage = (): JSX.Element => {
     return (
         <div>
             <RedirectButton to={root}></RedirectButton>
-            <CourseBanner enrollment={state.enrollmentsByCourseId[courseID]} />
+            <CourseBanner />
             <Alert />
             <div className="row" hidden={history.location.pathname != root}>
                 <Card title={results.title} text={results.text} buttonText={results.buttonText} to={results.to}></Card>
