@@ -9,6 +9,11 @@ module.exports = {
     mode: "development",
     // watch enables webpacks Watch flag, which means it will run endlessly and recompile on saves
     watch: true,
+        
+    watchOptions: {
+        // Poll for file changes every 1000ms. Required for --watch to function in Docker containers
+        poll: 1000,
+    },
     // Enable sourcemaps for debugging webpack's output.
     devtool: "source-map",
 
