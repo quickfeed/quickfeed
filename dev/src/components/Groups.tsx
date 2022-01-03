@@ -53,7 +53,7 @@ export const Groups = (): JSX.Element => {
         return <td><span className="badge badge-info clickable" onClick={() => setEditing(group)}>Edit</span></td>
     }
 
-    const GroupList = ({group}: {group: Group}) => {
+    const GroupRow = ({group}: {group: Group}) => {
             return (
                 <>
                     <tr hidden={groupSearch(group)}>
@@ -66,7 +66,6 @@ export const Groups = (): JSX.Element => {
                             {// Populates the unordered list with list elements for every user in the group
                                 group.getEnrollmentsList().map((enrol, index) => 
                                 <span key={enrol.getId()} className="inline-block">
-                                    {/**<img src={enrol.getUser()?.getAvatarurl()} style={style}></img>*/}
                                     <a href={`https://github.com/${enrol.getUser()?.getLogin()}`} target="_blank" rel="noreferrer">{enrol.getUser()?.getName()}</a>
                                     {index >= group.getEnrollmentsList().length - 1 ? "" : ", "}
                                 </span> 
@@ -81,11 +80,11 @@ export const Groups = (): JSX.Element => {
 
     // Generates JSX.Element array containing all groups for the course
     const PendingGroups = state.groups[courseID]?.filter(g => g.getStatus() == Group.GroupStatus.PENDING).map(group => {
-        return <GroupList key={group.getId()} group={json(group)} />
+        return <GroupRow key={group.getId()} group={json(group)} />
     })
 
     const ApprovedGroups = state.groups[courseID]?.filter(g => g.getStatus() == Group.GroupStatus.APPROVED).map(group => {
-        return <GroupList key={group.getId()} group={json(group)} />
+        return <GroupRow key={group.getId()} group={json(group)} />
     })
 
     if (editing) {

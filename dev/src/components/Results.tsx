@@ -11,19 +11,16 @@ import Search from "./Search"
 const Results = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
-    const { getAllCourseSubmissions } = useActions()
     const courseID = getCourseID()
 
     useEffect(() => {
         if (courseID && !state.courseSubmissions[courseID]) {
-            getAllCourseSubmissions(courseID)
+            actions.getAllCourseSubmissions(courseID)
         }
         return actions.setActiveSubmission(undefined)
     }, [state.courseSubmissions])
 
-    const Header: string[] = ["Name", "Group"]
-
-    const AssignmentsHeader = (state.assignments[courseID].map(assignment => {
+    const header = ["Name", "Group"].concat(state.assignments[courseID].map(assignment => {
         return assignment.getName()
     }))
 
@@ -68,7 +65,7 @@ const Results = (): JSX.Element => {
             <div className="row">
                 <div className="col">
                     <Search />
-                    <DynamicTable header={Header.concat(AssignmentsHeader)} data={results} />
+                    <DynamicTable header={header} data={results} />
                 </div>
                 <div className="col reviewLab">
                     {state.currentSubmission ?

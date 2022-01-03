@@ -119,7 +119,7 @@ export const state: State = {
             return state.enrollmentsByCourseId[state.activeCourse].getStatus() === Enrollment.UserStatus.TEACHER
         }
         return false
-    })
+    }),
     status: [],
     courses: [],
     userCourses: {},

@@ -1,10 +1,10 @@
 /* eslint-disable quotes */
 
 import { useParams } from "react-router"
-import { Assignment, Enrollment, EnrollmentLink, Repository, Submission, User } from "../proto/ag/ag_pb"
+import { Assignment, Enrollment, EnrollmentLink, Submission, User } from "../proto/ag/ag_pb"
 import { Score } from "../proto/kit/score/score_pb"
 
-export interface IBuildInfo {
+export type IBuildInfo = {
     builddate: string;
     buildid: number;
     buildlog: string;
@@ -36,7 +36,7 @@ export enum Sort {
     ID
 }
 
-export interface IScoreObjects {
+export type IScoreObjects = {
     Secret: string;
     TestName: string;
     Score: number;
@@ -62,7 +62,6 @@ export const getFormattedTime = (deadline_string: string): string => {
     const months = ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December']
     const deadline = new Date(deadline_string)
-    console.log(deadline, deadline_string)
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? '0' + deadline.getMinutes() : deadline.getMinutes()}`
 }
 

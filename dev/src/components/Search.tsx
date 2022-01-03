@@ -29,3 +29,4 @@ export const Search = ({placeholder, setQuery}: {placeholder?: string, setQuery?
 }
 
 export default Search
+

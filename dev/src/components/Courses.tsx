@@ -24,6 +24,8 @@ const Courses = (overview: overview): JSX.Element => {
         actions.setActiveCourse(-1)
     }, [])
 
+    // Notify user if there are no courses (should only ever happen with a fresh database on backend)
+    // Display shortcut buttons for admins to create new course or managing (promoting) users
     if (state.courses.length == 0) {
         return (
             <div className="container centered">
@@ -47,9 +49,8 @@ const Courses = (overview: overview): JSX.Element => {
         const teacher:    JSX.Element[] = []
         const pending:    JSX.Element[] = []
         const crsArr:     JSX.Element[] = []
-        const enrolArr = state.enrollments
         state.courses.map(course => {       
-            const enrol = enrolArr.find(enrol => course.getId() == enrol.getCourseid())
+            const enrol = state.enrollmentsByCourseId[course.getId()]
             if (enrol){
                 if (enrol.getState() == Enrollment.DisplayState.FAVORITE){
                     // add to favorite list.
@@ -62,7 +63,7 @@ const Courses = (overview: overview): JSX.Element => {
                         case Enrollment.UserStatus.PENDING:
                             //color orange
                             pending.push(
-                                <CourseCard key={course.getId()} course= {course} enrollment={enrol} status={enrol.getStatus()}/>
+                                <CourseCard key={course.getId()} course={course} enrollment={enrol} status={enrol.getStatus()}/>
                             )
                             break
                               
@@ -70,14 +71,14 @@ const Courses = (overview: overview): JSX.Element => {
                             // Student
                             //color blue
                             student.push(
-                                <CourseCard key={course.getId()} course= {course} enrollment={enrol} status={enrol.getStatus()}/>
+                                <CourseCard key={course.getId()} course={course} enrollment={enrol} status={enrol.getStatus()}/>
                             )
                             break
                         case Enrollment.UserStatus.TEACHER:
                             // color green
                             // Teacher
                             teacher.push(
-                                <CourseCard key={course.getId()} course= {course} enrollment={enrol} status={enrol.getStatus()}/>
+                                <CourseCard key={course.getId()} course={course} enrollment={enrol} status={enrol.getStatus()}/>
                             )
                             break
                         default:
@@ -96,7 +97,7 @@ const Courses = (overview: overview): JSX.Element => {
         // If overview.home == true, only render favorited courses.
         if (overview.home) {
             return (
-                <React.Fragment>
+                <>
                 {favorite.length > 0 &&
                     <div className="container-fluid">       
                         <div className="card-deck course-card-row favorite-row">
@@ -104,7 +105,7 @@ const Courses = (overview: overview): JSX.Element => {
                         </div>
                     </div>
                 }
-                </React.Fragment>
+                </>
             )
         }
 
