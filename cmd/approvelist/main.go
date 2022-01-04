@@ -79,7 +79,7 @@ func main() {
 	submissions := getSubmissions(*courseCode, *year, *userName)
 
 	tw := tabwriter.NewWriter(os.Stdout, 2, 8, 2, ' ', 0)
-	fmt.Fprint(tw, "Student\tFS\tRow#\tQuickFeed\t#Approved\n")
+	fmt.Fprint(tw, "Student\tFS\tRow#\tQuickFeed\t#Approved\tApproved\n")
 
 	// map of students found in QuickFeed; the int value is ignored (set to 1),
 	// but used to allow use of the lookupRow() function.
@@ -109,13 +109,13 @@ func main() {
 		rowNum, err := lookupRow(student, studentRowMap)
 		if err != nil {
 			// not found in FS database, but has approved assignments
-			fmt.Fprintf(tw, "%s\t-\t\t✓\t%d\n", student, numApproved(approved))
+			fmt.Fprintf(tw, "%s\t-\t\t✓\t%d\t%s\n", student, numApproved(approved), approvedValue)
 			continue
 		}
 		cell := fmt.Sprintf("B%d", rowNum)
 		approvedMap[cell] = approvedValue
 		if *showAll {
-			fmt.Fprintf(tw, "%s\t✓\t%d\t✓\t%d\n", student, rowNum, numApproved(approved))
+			fmt.Fprintf(tw, "%s\t✓\t%d\t✓\t%d\t%s\n", student, rowNum, numApproved(approved), approvedValue)
 		}
 	}
 
@@ -124,7 +124,7 @@ func main() {
 		_, err := lookupRow(student, quickfeedStudents)
 		if err != nil {
 			// not found in QuickFeed, but is signed up in FS
-			fmt.Fprintf(tw, "%s\t✓\t%d\t-\t\n", student, rowNum)
+			fmt.Fprintf(tw, "%s\t✓\t%d\t-\t\t\n", student, rowNum)
 			cell := fmt.Sprintf("B%d", rowNum)
 			approvedMap[cell] = fail
 		}
