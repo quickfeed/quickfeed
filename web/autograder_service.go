@@ -544,6 +544,12 @@ func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.S
 		s.logger.Errorf("GetSubmissionsByCourse failed: authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
+	// TODO(meling) This is a hack to give access to cmd/approvelist via the root usr admin
+	// Normally, the root admin should not have access to submissions for all courses.
+	//	if usr.IsAdmin {
+	//		goto BYPASS
+	//	}
+
 	// ensure that current user is teacher or enrolled admin to process the submission request
 	if !s.hasCourseAccess(usr.GetID(), in.GetCourseID(), func(e *pb.Enrollment) bool {
 		switch e.Status {
@@ -557,6 +563,7 @@ func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.S
 		s.logger.Errorf("GetSubmissionsByCourse failed: user %s is not teacher or submission author", usr.GetLogin())
 		return nil, status.Error(codes.PermissionDenied, "only teachers can get all lab submissions")
 	}
+	//BYPASS:
 	s.logger.Debugf("GetSubmissionsByCourse: %v", in)
 
 	courseLinks, err := s.getAllCourseSubmissions(in)
