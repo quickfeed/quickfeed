@@ -36,7 +36,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	}
 
 	err = SyncTasks(context.Background(), logger, s, course, assignments)
-	if err != nil{
+	if err != nil {
 		logger.Errorf("Failed to Create tasks on '%s' repository: %v", pb.TestsRepo, err)
 		return
 	}
@@ -101,7 +101,8 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 	}
 
 	// parse assignments found in the cloned tests directory
-	assignments, dockerfile, err := parseAssignments(cloneDir, course.ID)
+	logger.Debugf("parseAssignments %v", cloneURL)
+	assignments, dockerfile, err := parseAssignments(cloneDir, course.ID, logger)
 	if err != nil {
 		return nil, "", err
 	}

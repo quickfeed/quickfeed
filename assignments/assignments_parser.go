@@ -3,9 +3,11 @@ package assignments
 import (
 	"encoding/json"
 	"fmt"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -44,7 +46,7 @@ type assignmentData struct {
 
 // ParseAssignments recursively walks the given directory and parses
 // any 'assignment.yml' files found and returns an array of assignments.
-func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, error) {
+func parseAssignments(dir string, courseID uint64, logger *zap.SugaredLogger) ([]*pb.Assignment, string, error) {
 	// check if directory exist
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		return nil, "", err
@@ -53,15 +55,22 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 	var assignments []*pb.Assignment
 	var defaultScript string
 	var courseDockerfile string
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	logger.Debugf("parseAssignments %v", dir)
+	taskContents, err := findTasksFiles(dir)
+	if err != nil {
+		logger.Debugf("Error in reading task file  %v", err)
+	}
+	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			// Walk unable to read path; stop walking the tree
 			return err
 		}
 		assignmentName := filepath.Base(filepath.Dir(path))
-		var taskContents []*pb.Task
 		if !info.IsDir() {
 			filename := filepath.Base(path)
+			if strings.HasSuffix(filename, taskFile) {
+				filename = taskFile
+			}
 			var contents []byte
 			switch filename {
 			case target, targetYaml, criteriaFile, scriptFile, dockerfile:
@@ -69,12 +78,6 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 				if err != nil {
 					return err
 				}
-			case taskFile:
-				task, err := readTaskFiles(path)
-				if err != nil {
-					return err
-				}
-				taskContents = append(taskContents, task)
 			default:
 				// no need to parse this file
 				return nil
@@ -85,15 +88,11 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, er
 				if err != nil {
 					return err
 				}
+				assignment.Tasks = taskContents
 				assignments = append(assignments, assignment)
 
 			case criteriaFile:
 				if err := updateCriteriaFromFile(contents, assignmentName, assignments); err != nil {
-					return err
-				}
-			case taskFile:
-				err := addAssignmentTasks(taskContents, assignmentName, assignments)
-				if err != nil {
 					return err
 				}
 
@@ -192,11 +191,11 @@ func addAssignmentTasks(taskContents []*pb.Task, assignmentName string, assignme
 	if assignmentName != taskFile {
 		assignment := findAssignmentByName(assignments, assignmentName)
 		if assignment == nil {
-			return fmt.Errorf("readTaskFile : could not find assignment %s for Task file", assignmentName)
+			return fmt.Errorf("#### Assignment not FOUND readTaskFile : could not find assignment %s for Task file", assignmentName)
 		}
 
 		if len(taskContents) == 0 {
-			return fmt.Errorf("readTaskFile : could not find assignment %s for Task file", assignmentName)
+			return fmt.Errorf(" readTaskFile : could not find assignment %s for Task file", assignmentName)
 		}
 		// SingleTask from the parsed yaml, is used to check either create multiple issue
 		//or a single issue on a repository.
