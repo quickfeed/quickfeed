@@ -18,78 +18,136 @@ type EnrollmentsByCourse = {[courseid: number]: Enrollment}
 
 type State = {
 
-    /* Data relating to self */
+    /***************************************************************************
+    *                   Data relating to the current user
+    ***************************************************************************/
+    
+    /* This is the user that is currently logged in */
     self: User,
+    
+    /* Indicates if the user has valid data */
+    // derived from self
     isValid: boolean,
+    
+    /* Indicates if the user is logged in */
+    // derived from self
     isLoggedIn: boolean,
+    
+    /* Contains all the courses the user is enrolled in */
     enrollments: Enrollment[],
-    enrollmentsByCourseId: {
-        [courseid: number]: Enrollment
-    },
-    userCourses: {
-        [courseid: number]: Course
-    },
-    userGroup: {
-        [courseid: number]: Group
-    },
-    submissions:{
-        [courseid: number]:Submission[]
-    },
-    status: {
-        [courseid: number]: Enrollment.UserStatus
-    }
+    
+    /* Contains all the courses the user is enrolled in, indexed by course ID */
+    // derived from enrollments
+    enrollmentsByCourseId: {[courseid: number]: Enrollment},
 
-    /* Public Data */
-    users: {
-        [userid: number]: User
-    },
-    courses: Course[],
-    assignments: {
-        [courseid:number]:Assignment[]
-    },
-
-    /* Course Specific Data */
-    courseSubmissions: {
-        [courseid:number]: {[enrollmentId: number]: ParsedCourseSubmissions}
-    },
-    courseSubmissionsList: {
-        [courseid: number]: ParsedCourseSubmissions[]
-    }
-    activeSubmission: number,
-    activeUser: User | undefined,
-
-
-    allUsers: User[],
-    courseGroupSubmissions: {
-        [courseid: number]: EnrollmentLink[]
-    },
-    repositories: {
-        [courseid:number]: { [repo: string]: string }
-    },
-    courseEnrollments: {
-        [courseid: number]: Enrollment[]
-    },
-    groups: {
-        [courseid: number]: Group[]
-    },
-    pendingGroups: Group[],
-    pendingEnrollments: Enrollment[],
-    numEnrolled: number,
-    /* Utility */
-    isLoading: boolean,
-    activeCourse: number,
-    activeLab: number,
-    selectedAssignment: Assignment | undefined,
-    timeNow: Date,
-    // Used to create new group
-    courseGroup: CourseGroup,
-    alerts: {text: string, type: number}[],
-    query: string,
-    enableRedirect: boolean,
-    selectedEnrollment: number,
-    activeSubmissionLink: SubmissionLink | undefined,
-    currentSubmission: Submission | undefined,
+    /* Contains all the groups the user is a member of, indexed by course ID */
+    userGroup: {[courseid: number]: Group},
+    
+    /* Contains all submissions for the user, indexed by course ID */
+    // The individual submissions for a given course are indexed by assignment order - 1
+    submissions:{[courseid: number]: Submission[]},
+    
+    /* Current enrollment status of the user for a given course */
+    status: {[courseid: number]: Enrollment.UserStatus}
+    
+    /* Indicates if the user is a teacher of the current course */
+    // derived from enollmentsByCourseId
     isTeacher: boolean
+    
+    /* Contains links to all repositories for a given course */
+    // Individual repository links are accessed by Reposiotry.Type
+    repositories: {[courseid:number]: { [repo: string]: string }},
+    
+    /***************************************************************************
+    *                              Public data
+    ***************************************************************************/
+
+    /* Contains all users of a given course */
+    // Requires the user to be admin to get from backend
+    users: {[userid: number]: User},
+    
+    /* Contains all courses */
+    courses: Course[],
+    
+    /* Contains all assignments for a given course */
+    assignments: {[courseid:number]:Assignment[]},
+
+
+    /***************************************************************************
+    *                         Course Specific Data 
+    ***************************************************************************/
+
+    /* Contains all submissions for a given course and enrollment */
+    courseSubmissions: {[courseid:number]: {[enrollmentId: number]: ParsedCourseSubmissions}},
+   
+    /* Contains all submissions for a given course */
+    // derived from courseSubmissions
+    courseSubmissionsList: {[courseid: number]: ParsedCourseSubmissions[]}
+   
+    /* Contains all enrollments for a given course */
+    courseEnrollments: {[courseid: number]: Enrollment[]},
+    
+    /* Contains all groups for a given course */
+    groups: {[courseid: number]: Group[]},
+     
+    /* Currently selected submission ID */
+    activeSubmission: number,
+    
+    /* Currently selected user */
+    activeUser: User | undefined,
+    
+    /* Number of enrolled users */
+    // derived from courseEnrollments
+    numEnrolled: number,
+
+    /* Contains all enrollments where the enrollment status is pending */
+    // derived from courseEnrollments
+    pendingEnrollments: Enrollment[],
+    
+    /* Contains all groups where the group status is pending */
+    // derived from groups
+    pendingGroups: Group[],
+
+    /* Contains all users sorted by admin status */
+    allUsers: User[],
+    
+    
+    /* Utility */
+
+    /* Indicates if the state is loading */
+    isLoading: boolean,
+
+    /* The current course ID */
+    activeCourse: number,
+
+    /* The current submission ID */
+    activeLab: number,
+
+    /* The current assignment */
+    selectedAssignment: Assignment | undefined,
+
+    // TODO: Figure out if it is needed to store and continuously update this, or if it could be fetched on demand
+    /* Current time */
+    timeNow: Date,
+
+    /* Contains a group in creation */
+    courseGroup: CourseGroup,
+
+    /* Contains alerts to be displayed to the user */
+    alerts: {text: string, type: number}[],
+
+    /* Current search query */
+    query: string,
+
+    /* Current enrollment ID */
+    selectedEnrollment: number,
+
+    /* Current submission link */
+    activeSubmissionLink: SubmissionLink | undefined,
+
+    /* Current submission */
+    currentSubmission: Submission | undefined,
+
 }
 
 
@@ -101,19 +159,22 @@ export const state: State = {
     isLoggedIn: derived(({self}: State) => {
         return self.getId() !== 0
     }),
+    
     isValid: derived(({self}: State) => {
         return self.getName().length > 0 && self.getStudentid().length > 0 && self.getEmail().length > 0
     }),
-    users: {},
-    allUsers: [],
+    
     enrollments: [],
     enrollmentsByCourseId: derived((state: State) => {
-        const obj: EnrollmentsByCourse = {}
+        const enrollmentsByCourseId: EnrollmentsByCourse = {}
         for (const enrollment of state.enrollments) {
-            obj[enrollment.getCourseid()] = enrollment
+            enrollmentsByCourseId[enrollment.getCourseid()] = enrollment
         }
-        return obj
+        return enrollmentsByCourseId
     }),
+    submissions: {},
+    userGroup: {},
+
     isTeacher: derived((state: State) => {
         if (state.activeCourse > 0 && state.enrollmentsByCourseId[state.activeCourse]) {
             return state.enrollmentsByCourseId[state.activeCourse].getStatus() === Enrollment.UserStatus.TEACHER
@@ -121,17 +182,17 @@ export const state: State = {
         return false
     }),
     status: [],
+
+    users: {},
+    allUsers: [],
     courses: [],
-    userCourses: {},
-    userGroup: {},
-    submissions: {},
     courseSubmissions: {},
     courseSubmissionsList: derived(({courseSubmissions}: State) => {
-        const obj: {[courseid: number]: ParsedCourseSubmissions[]} = {}
-        for (const key of Object.keys(courseSubmissions)) {
-            obj[Number(key)] = Object.values(courseSubmissions[Number(key)])
+        const courseSubmissionsList: {[courseid: number]: ParsedCourseSubmissions[]} = {}
+        for (const courseid of Object.keys(courseSubmissions)) {
+            courseSubmissionsList[Number(courseid)] = Object.values(courseSubmissions[Number(courseid)])
         }
-        return obj
+        return courseSubmissionsList
     }),
     activeSubmission: -1,
     activeSubmissionLink: undefined,
@@ -143,7 +204,6 @@ export const state: State = {
     }),
     selectedEnrollment: -1,
     activeUser: undefined,
-    courseGroupSubmissions: {},
     assignments: {},
     repositories: {},
 
@@ -163,5 +223,4 @@ export const state: State = {
         return activeCourse > 0 ? courseEnrollments[activeCourse].filter(enrollment => enrollment.getStatus() !== Enrollment.UserStatus.PENDING).length : 0
     }),
     query: "",
-    enableRedirect: true
 };

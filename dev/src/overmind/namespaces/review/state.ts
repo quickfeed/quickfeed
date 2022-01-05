@@ -3,25 +3,39 @@ import { Context } from "../.."
 import { GradingCriterion, Review, User } from "../../../../proto/ag/ag_pb"
 
 type State = {
+    /* The index of the selected review */
     selectedReview: number
+    
+    /* Contains all reviews for the different courses, indexed by the course id and submission id */
     reviews: { 
         [courseID: number]: {
             [submissionID: number]: Review[]
         }
     }
+
+    /* The current review */
+    // derived from reviews and selectedReview
     currentReview: Review | undefined
+    
+    /* The reviewer for the current review */
+    // derived from currentReview
     reviewer: User | undefined
+    
+    /* Indicates if the current review can be updated */
     canUpdate: boolean
 
-    // Amount of criteria that are gradable
+    /* The amount of criteria for the current review */
     criteriaTotal: number
-    // Number of graded criteria
+    
+    /* The amount of criteria that have been graded for the current review */
     graded: number
 }
 
 export const state: State = {
     selectedReview: -1,
+    
     reviews: {},
+    
     currentReview: derived(({reviews, selectedReview}: State, rootState: Context["state"]) => {
         if (!(rootState.activeCourse > 0 && rootState.activeSubmission > 0)) {
             return undefined
@@ -29,12 +43,14 @@ export const state: State = {
         const check = reviews[rootState.activeCourse][rootState.activeSubmission]
         return check ? check[selectedReview] : undefined
     }),
+    
     reviewer: derived(({currentReview}: State, rootState: Context["state"]) => {
         if (!currentReview) {
             return undefined
         }
         return rootState.users[currentReview.getReviewerid()]
     }),
+    
     canUpdate: derived(({currentReview}: State, rootState: Context["state"]) => {
         return currentReview != undefined && rootState.activeSubmission > 0 && rootState.activeCourse > 0
     }),
