@@ -7,9 +7,10 @@ module.exports = {
         path: __dirname + "/dist"
     },
     mode: "development",
-    // watch enables webpacks Watch flag, which means it will run endlessly and recompile on saves
-    watch: true,
-        
+    // watch enables webpack's Watch flag, which means it will run endlessly and recompile on saves
+    // use webpack --watch instead
+    watch: false,
+
     watchOptions: {
         // Poll for file changes every 1000ms. Required for --watch to function in Docker containers
         poll: 1000,
