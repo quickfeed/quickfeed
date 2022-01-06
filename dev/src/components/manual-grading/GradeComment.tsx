@@ -8,10 +8,12 @@ const GradeComment = ({grade, editing, setEditing}: {grade: GradingBenchmark | G
     const actions = useActions()
     const state = useAppState()
     
-    if (!state.isTeacher) {
+    /* Don't allow grading if user is not a teacher or editing is false */
+    if (!state.isTeacher || !editing) {
         return <></>
     }
 
+    /* Currently only triggers when user clicks outside of the textarea */
     const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
         const { value } = event.currentTarget
         setEditing(false)
@@ -23,16 +25,14 @@ const GradeComment = ({grade, editing, setEditing}: {grade: GradingBenchmark | G
         actions.review.updateReview()
     }
 
-    if (editing) {
-        return (
-            <tr>
-                <th colSpan={3}>
-                    <input autoFocus onBlur={(e) => handleChange(e)} defaultValue={grade.getComment()} className="form-control" type="text"></input>
-                </th>
-            </tr>
-        )
-    }
-    return <></>
+    return (
+        <tr>
+            <th colSpan={3}>
+                <input autoFocus onBlur={(e) => handleChange(e)} defaultValue={grade.getComment()} className="form-control" type="text"></input>
+            </th>
+        </tr>
+    )
+
 }
 
 export default GradeComment
