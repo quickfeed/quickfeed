@@ -45,8 +45,8 @@ install:
 	@go install
 
 ui:
-	@echo Running webpack for $(ui)
-	@cd $(ui); npm install; webpack
+	@echo Running npm ci and webpack for $(ui)
+	@cd $(ui); npm ci; webpack
 
 proto:
 	@echo "Compiling QuickFeed's ag and kit/score proto definitions for Go and TypeScript"
