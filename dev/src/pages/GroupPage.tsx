@@ -15,7 +15,7 @@ export const GroupPage = (): JSX.Element => {
         if (!isTeacher(state.enrollmentsByCourseId[courseID])) {
             actions.getGroupByUserAndCourse(courseID)
         }
-    })
+    }, [])
 
     if (isTeacher(state.enrollmentsByCourseId[courseID])) {
         return <Groups />
