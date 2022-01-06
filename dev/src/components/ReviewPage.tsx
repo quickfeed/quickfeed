@@ -8,7 +8,7 @@ import ReviewForm from "./forms/ReviewForm"
 import DynamicTable, { CellElement } from "./DynamicTable"
 import Loading from "./Loading"
 
-const Review = (): JSX.Element => {
+const ReviewPage = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
@@ -46,16 +46,14 @@ const Review = (): JSX.Element => {
     const header = ["Name"].concat(state.assignments[courseID].map(assignment => assignment.getName()))
     
     const data = state.courseSubmissionsList[courseID].map((link, index) => {
-        const temp: (string | JSX.Element | CellElement)[] = []
-        if (link) {
-            temp.push(link.user ? {value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}`} : "")
-            if (link.submissions && link.user) {
-                link.submissions.forEach(submission => {
-                    temp.push(generateReviewCell(submission, index))
-                })
-            }
+        const row: (string | JSX.Element | CellElement)[] = []
+        row.push(link.user ? {value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}`} : "")
+        if (link.submissions && link.user) {
+            link.submissions.forEach(submission => {
+                row.push(generateReviewCell(submission, index))
+            })
         }
-        return temp
+        return row
     })
 
     return (
@@ -71,4 +69,4 @@ const Review = (): JSX.Element => {
     )
 }
 
-export default Review
+export default ReviewPage
