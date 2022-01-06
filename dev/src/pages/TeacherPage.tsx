@@ -8,7 +8,7 @@ import GroupPage from "./GroupPage"
 import Members from "../components/Members"
 import RedirectButton from "../components/RedirectButton"
 import Results from "../components/Results"
-import Review from "../components/ReviewPage"
+import ReviewPage from "../components/ReviewPage"
 import StatisticsView from "../components/Statistics"
 import Assignments from "../components/teacher/Assignments"
 import Alert from "../components/Alert"
@@ -46,16 +46,16 @@ const TeacherPage = (): JSX.Element => {
             <CourseBanner />
             <Alert />
             <div className="row" hidden={history.location.pathname != root}>
-                <Card title={results.title} text={results.text} buttonText={results.buttonText} to={results.to}></Card>
-                <Card title={groups.title} notification={groups.notification} text={groups.text} buttonText={groups.buttonText} to={groups.to}></Card>
-                <Card title={members.title} notification={members.notification} text={members.text} buttonText={members.buttonText} to={members.to}></Card>
-                <Card title={statistics.title} text={statistics.text} buttonText={statistics.buttonText} to={statistics.to}></Card>
-                <Card title={assignments.title} text={assignments.text} buttonText={assignments.buttonText} to={assignments.to}></Card>
+                <Card {...results}></Card>
+                <Card {...groups}></Card>
+                <Card {...members}></Card>
+                <Card {...statistics}></Card>
+                <Card {...assignments}></Card>
             </div>
             <Switch>
                 <Route path={`/course/:id/groups`} exact component={GroupPage}></Route>
                 <Route path={"/course/:id/members"} component={Members}></Route>
-                <Route path={"/course/:id/review"} component={Review}></Route>
+                <Route path={"/course/:id/review"} component={ReviewPage}></Route>
                 <Route path={"/course/:id/results"} component={Results}></Route>
                 <Route path={"/course/:id/statistics"} component={StatisticsView}></Route>
                 <Route path={"/course/:id/assignments"} component={Assignments}></Route>

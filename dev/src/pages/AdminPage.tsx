@@ -9,36 +9,44 @@ import RedirectButton from "../components/RedirectButton"
 import Alert from "../components/Alert"
 
 
-
+// AdminPage is the page containing the admin-only components.
 export const AdminPage = (): JSX.Element => {
     const state = useAppState()
     const history  = useHistory()
     
+    // Objects containing props for the cards in the admin page.
+    // TODO: Perhaps make a Card prop type.
     const manageUsers = {title: "Manage Users", text: "View and manage all users.", buttonText: "Manage Users", to: "/admin/manage"}
     const createCourse = {title: "Create Course", text: "Create a new course.", buttonText: "Create Course", to: "/admin/create"}
     const editCourse = {title: "Edit Course", text: "Edit an existing course.", buttonText: "Edit Course", to: "/admin/edit"}
     
-    if (state.self.getIsadmin()) {
-        const root = "/admin"
-        return (
-            <div className="box">
-                <RedirectButton to={root}></RedirectButton>
-                <Alert />
-                <div className="row" hidden={history.location.pathname != root}>
-                    <Card title={createCourse.title} text={createCourse.text} buttonText={createCourse.buttonText} to={createCourse.to}></Card>
-                    <Card title={editCourse.title} text={editCourse.text} buttonText={editCourse.buttonText} to={editCourse.to}></Card>
-                    <Card title={manageUsers.title} text={manageUsers.text} buttonText={manageUsers.buttonText} to={manageUsers.to}></Card>
-                </div>
-                <Switch>
-                    <Route path={"/admin/manage"} component={Users}></Route>
-                    <Route path={"/admin/create"} component={CourseForm}></Route>
-                    <Route path={"/admin/edit"} component={EditCourse}></Route>
-                </Switch>
-            </div>
-        )
+    // If the user is not an admin, redirect to the home page.
+    if (!state.self.getIsadmin()) {
+        return <Redirect to={"/"} />
     }
+
+    const root = "/admin"
     return (
-        <Redirect to="/" />
+        <div className="box">
+            <RedirectButton to={root} />
+            <Alert />
+            <div className="row" hidden={history.location.pathname != root}>
+                <Card {...manageUsers}></Card>
+                <Card {...createCourse}></Card>
+                <Card {...editCourse}></Card>
+            </div>
+            <Switch>
+                <Route path={"/admin/manage"}>
+                    <Users />
+                </Route>
+                <Route path={"/admin/create"}>
+                    <CourseForm />
+                </Route>
+                <Route path={"/admin/edit"}>
+                    <EditCourse />
+                </Route>
+            </Switch>
+        </div>
     )
 }
 
