@@ -1,24 +1,27 @@
 import React from "react"
 
-type ColorKeys = "RED" | "BLUE" | "GREEN" | "YELLOW" | "GRAY"
-type Color = {[color in ColorKeys]: string}
-export const ComponentColor: Color = {
-    RED: "danger",
-    BLUE: "primary",
-    GREEN: "success",
-    YELLOW: "warning",
-    GRAY: "secondary"
+export enum Color {
+    RED = "danger",
+    BLUE = "primary",
+    GREEN = "success",
+    YELLOW = "warning",
+    GRAY = "secondary",
 }
 
-type TypeKeys = "BADGE" | "BUTTON"
-type ButtonType = {[type in TypeKeys]: string}
-export const ButtonType: ButtonType = {
-    BADGE: "badge badge",
-    BUTTON: "btn btn"
+export enum ButtonType {
+    BADGE = "badge badge",
+    BUTTON = "btn btn"
 }
 
-const Button = ({text, onclick, color, type, classname}: {text: string, onclick: () => void, color: string, type: string, classname?: string}): JSX.Element => {
-    //const text = user.getIsadmin() ? "Demote" : "Promote"
+export type ButtonProps = {
+    text: string,
+    onclick: () => void,
+    color: Color,
+    type: ButtonType,
+    classname?: string,
+}
+
+const Button = ({text, onclick, color, type, classname}: ButtonProps): JSX.Element => {
     return (
         <span className={`${type}-${color}` + " clickable " + classname} onClick={onclick}>
             {text}

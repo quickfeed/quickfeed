@@ -2,7 +2,7 @@ import React, { useEffect } from "react"
 import { Assignment, Review, Submission } from "../../../proto/ag/ag_pb"
 import { getCourseID, isManuallyGraded } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
-import Button, { ButtonType, ComponentColor } from "../admin/Button"
+import Button, { ButtonType, Color } from "../admin/Button"
 import ReviewInfo from "../ReviewInfo"
 import ReviewResult from "../ReviewResult"
 
@@ -69,7 +69,7 @@ const ReviewForm = (): JSX.Element => {
         return (
             <div className="col reviewLab">
                 { reviews?.length == 0 &&
-                    <Button type={ButtonType.BUTTON} color={ComponentColor.GREEN} text="Create a new review" onclick={() => actions.review.createReview()} />
+                    <Button type={ButtonType.BUTTON} color={Color.GREEN} text="Create a new review" onclick={() => actions.review.createReview()} />
                 }
                 {state.review.currentReview ?
                 <>

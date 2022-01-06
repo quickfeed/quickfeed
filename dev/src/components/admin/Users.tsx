@@ -1,9 +1,9 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { isHidden } from "../../Helpers"
 import { useAppState, useActions } from "../../overmind"
 import DynamicTable, { CellElement } from "../DynamicTable"
 import Search from "../Search"
-import Button, { ComponentColor, ButtonType } from "./Button"
+import Button, {ButtonType, Color } from "./Button"
 import User from "./User"
 
 
@@ -20,7 +20,7 @@ const Users = (): JSX.Element => {
         data.push(user.getStudentid())
         data.push(
             <Button 
-                    color={user.getIsadmin() ? ComponentColor.RED : ComponentColor.BLUE}
+                    color={user.getIsadmin() ? Color.RED : Color.BLUE}
                     type={ButtonType.BADGE}
                     text={user.getIsadmin() ? "Demote" : "Promote"} 
                     onclick={() => actions.updateAdmin(user)} 

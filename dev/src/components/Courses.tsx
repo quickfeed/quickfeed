@@ -2,9 +2,7 @@ import React, { useEffect } from "react"
 import { useActions, useAppState } from "../overmind"
 import { Enrollment } from "../../proto/ag/ag_pb"
 import CourseCard from "./CourseCard"
-import { AlertType } from "../Helpers"
-import Card from "./Card"
-import Button, { ButtonType, ComponentColor } from "./admin/Button"
+import Button, { ButtonType, Color } from "./admin/Button"
 import { useHistory } from "react-router"
 interface overview {
     home: boolean
@@ -29,8 +27,8 @@ const Courses = (overview: overview): JSX.Element => {
                 {state.self.getIsadmin() ? 
                     <>
                         <div>
-                            <Button classname="mr-3" text="Go to course creation" color={ComponentColor.GREEN} type={ButtonType.BUTTON} onclick={() => history.push("/admin/create")} /> 
-                            <Button text="Manage users" color={ComponentColor.BLUE} type={ButtonType.BUTTON} onclick={() => history.push("/admin/manage")} /> 
+                            <Button classname="mr-3" text="Go to course creation" color={Color.GREEN} type={ButtonType.BUTTON} onclick={() => history.push("/admin/create")} /> 
+                            <Button text="Manage users" color={Color.BLUE} type={ButtonType.BUTTON} onclick={() => history.push("/admin/manage")} /> 
                         </div>
                     </>
                     : null}
