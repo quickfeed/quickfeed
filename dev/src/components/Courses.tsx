@@ -17,10 +17,6 @@ const Courses = (overview: overview): JSX.Element => {
     const history = useHistory()
 
     useEffect(() => {
-        if (state.enrollments.filter(enrollment => 
-                enrollment.getState() == Enrollment.DisplayState.FAVORITE && 
-                enrollment.getStatus() >= Enrollment.UserStatus.STUDENT).length == 0) 
-            { actions.alert({text: "Favorite a course to make it appear on the dashboard and in the sidebar", type: AlertType.INFO}) }
         actions.setActiveCourse(-1)
     }, [])
 
