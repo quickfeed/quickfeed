@@ -4,25 +4,6 @@ import { useParams } from "react-router"
 import { Assignment, Enrollment, EnrollmentLink, Submission, User } from "../proto/ag/ag_pb"
 import { Score } from "../proto/kit/score/score_pb"
 
-export type IBuildInfo = {
-    builddate: string;
-    buildid: number;
-    buildlog: string;
-    execTime: number
-}
-
-export const getBuildInfo = (buildString: string): IBuildInfo => {
-    let buildinfo: IBuildInfo
-    if (buildString.length === 0) {
-        buildinfo = {builddate: "", buildid: 0, buildlog: "", execTime: 0}
-    }
-    else {
-        buildinfo = JSON.parse(buildString)
-    }
-    return buildinfo
-    
-}
-
 export enum AlertType {
     INFO,
     DANGER,
@@ -36,31 +17,9 @@ export enum Sort {
     ID
 }
 
-export type IScoreObjects = {
-    Secret: string;
-    TestName: string;
-    Score: number;
-    MaxScore: number;
-    Weight: number;
-}
-
-export const getScoreObjects = (scoreString: string): IScoreObjects[] => {
-    const scoreObjects: IScoreObjects[] = []
-    if (scoreString.length > 0) {
-        const parsedScoreObjects = JSON.parse(scoreString)
-        for (const scoreObject in parsedScoreObjects) {
-            scoreObjects.push(parsedScoreObjects[scoreObject])
-        }
-    }
-    return scoreObjects
-    
-}
-
-
 /** Returns a string with a prettier format for a deadline */
 export const getFormattedTime = (deadline_string: string): string => {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December']
+    const months = ['January', 'February', 'March', 'April', 'May', 'June','July', 'August', 'September', 'October', 'November', 'December']
     const deadline = new Date(deadline_string)
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? '0' + deadline.getMinutes() : deadline.getMinutes()}`
 }
@@ -158,13 +117,8 @@ export const sortByField = (arr: any[], funcs: Function[], by: Function, descend
     return sortedArray
 }
 
-export const SubmissionStatus = {
-    0: "None",
-    1: "Approved",
-    2: "Rejected",
-    3: "Revision",
-}
 
+/** getPassedTestCount returns a string with the number of passed tests and the total number of tests */
 export const getPassedTestsCount = (score: Score[]): string => {
     let totalTests = 0
     let passedTests = 0
@@ -177,7 +131,7 @@ export const getPassedTestsCount = (score: Score[]): string => {
     if (totalTests === 0) {
         return ""
     }
-    return `(${passedTests}/${totalTests})`
+    return `${passedTests}/${totalTests}`
 }
 
 
@@ -195,6 +149,7 @@ export const isValid = (element: unknown): boolean => {
     return true
 }
 
+/** hasEnrollment returns true if the user has any approved enrollments, false otherwise */
 export const hasEnrollment = (enrollments: Enrollment[]): boolean => {
     for (const enrollment of enrollments) {
         if (enrollment.getStatus() > Enrollment.UserStatus.PENDING) {
@@ -208,6 +163,7 @@ export const isTeacher = (enrollment: Enrollment): boolean => {
     return enrollment.getStatus() >= Enrollment.UserStatus.TEACHER
 }
 
+/** isEnrolled returns true if the user is enrolled in the course, false otherwise */
 export const isEnrolled = (enrollment: Enrollment): boolean => {
     return enrollment.getStatus() >= Enrollment.UserStatus.STUDENT
 }
@@ -216,6 +172,7 @@ export const isManuallyGraded = (assignment: Assignment): boolean => {
     return assignment.getReviewers() > 0
 }
 
+/** getCourseID returns the course ID determined by the current route */
 export const getCourseID = (): number => {
     const route = useParams<{id?: string}>()
     return Number(route.id)
@@ -232,29 +189,26 @@ export const EnrollmentStatusBadge = {
     3 : "badge badge-danger",
 }
 
-/**
- * const test = data.sort((a, b) => {
-        const x = isCellElement(a[index])
-        const y = isCellElement(b[index])
-        if (x && y) {
-           return (a as CellElement[])[index].value.localeCompare((b as CellElement[])[index].value)
-        }
-        if (y && !x) {
-            return (a[index] as string).localeCompare((b as CellElement[])[index].value)
-        }
-        if (x && !y) {
-            return ((a as CellElement[])[index].value).localeCompare(b[index] as string)
-        }
-        return (a[index] as string).localeCompare((b[index] as string))
-    })
- */
+/** SubmissionStatus returns a string with the status of the submission, given the status number, ex. Submission.Status.APPROVED -> "Approved" */
+export const SubmissionStatus = {
+    0: "None",
+    1: "Approved",
+    2: "Rejected",
+    3: "Revision",
+}
 
+/** generateStatusText returns a string that is used to tell the user what the status of their submission is */
 export const generateStatusText = (assignment: Assignment, submission: Submission): string => {
-    if (!assignment.getAutoapprove() && submission.getScore() >= assignment.getScorelimit()) {
-        return "Awating approval"
+    // If the submission is not graded, return a desciptive text
+    if (submission.getStatus() === Submission.Status.NONE) {
+        // If the assignment requires manual approval, and the score is above the threshold, return Await Approval
+        if (!assignment.getAutoapprove() && submission.getScore() >= assignment.getScorelimit()) {
+            return "Awating approval"
+        }
+        if (submission.getScore() < assignment.getScorelimit() && submission.getStatus() !== Submission.Status.APPROVED) {
+            return `Need ${assignment.getScorelimit()}% score for approval`
+        }
     }
-    if (submission.getScore() < assignment.getScorelimit() && submission.getStatus() !== Submission.Status.APPROVED) {
-        return `Need ${assignment.getScorelimit()}% score for approval`
-    }
+    // If the submission is graded, return the status
     return SubmissionStatus[submission.getStatus()]
 }
