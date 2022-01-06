@@ -7,7 +7,8 @@
 OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
 tmpdir				:= tmp
-proto-path			:= public/proto
+ui					:= dev
+proto-path			:= $(ui)/proto
 proto-swift-path	:= ../quickfeed-swiftui/Quickfeed/Proto
 grpcweb-ver			:= 1.3.0
 protoc-grpcweb		:= protoc-gen-grpc-web
@@ -16,7 +17,7 @@ grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ve
 grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 testorg				:= ag-test-course
-envoy-config-gen := ./cmd/envoy/envoy_config_gen.go
+envoy-config-gen	:= ./cmd/envoy/envoy_config_gen.go
 
 # necessary when target is not tied to a file
 .PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm
@@ -44,8 +45,8 @@ install:
 	@go install
 
 ui:
-	@echo Running webpack
-	@cd public; npm install; npm run webpack
+	@echo Running webpack for $(ui)
+	@cd $(ui); npm install; webpack
 
 proto:
 	@echo "Compiling QuickFeed's ag and kit/score proto definitions for Go and TypeScript"
@@ -66,7 +67,8 @@ proto:
 	$(proto-path)/ag/ag_pb.js \
 	$(proto-path)/ag/ag_pb.d.ts \
 	$(proto-path)/ag/AgServiceClientPb.ts
-	@cd public && npm run tsc -- proto/ag/AgServiceClientPb.ts
+	@echo "Compiling proto for $(ui)"
+	@cd $(ui) && npm run tsc -- proto/ag/AgServiceClientPb.ts
 
 proto-swift:
 	@echo "Compiling QuickFeed's proto definitions for Swift"
