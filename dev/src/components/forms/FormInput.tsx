@@ -2,7 +2,7 @@ import React from "react"
 
 
 
-const FormInput = ({prepend, name, placeholder, defaultValue, onChange}: {prepend: string, name: string, placeholder?: string, defaultValue: string | undefined, onChange?: (e: React.FormEvent<HTMLInputElement>) => void}): JSX.Element => {
+const FormInput = ({prepend, name, placeholder, defaultValue, onChange, type}: {prepend: string, name: string, placeholder?: string, defaultValue: string | undefined, onChange?: (e: React.FormEvent<HTMLInputElement>) => void, type?: string}): JSX.Element => {
     return (
         <div className="col input-group mb-3">
             <div className="input-group-prepend">
@@ -10,7 +10,7 @@ const FormInput = ({prepend, name, placeholder, defaultValue, onChange}: {prepen
             </div>
             <input  className="form-control" 
                     name={name} 
-                    type="text" 
+                    type={type ? type : "text"}
                     placeholder={placeholder} 
                     defaultValue={defaultValue}
                     onChange={onChange}
