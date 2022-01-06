@@ -1,18 +1,18 @@
-import React, { Dispatch, SetStateAction, useMemo, useState } from "react"
+import React, { Dispatch, SetStateAction, useMemo } from "react"
 import { useActions, useAppState } from "../../overmind"
-import { User } from "../../../proto/ag/ag_pb"
 import { json } from "overmind"
 import FormInput from "./FormInput"
-import { isValid } from "../../Helpers"
 
 export const ProfileForm = ({children, setEditing}: {children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>>}) : JSX.Element => {
     const state = useAppState()
     const actions = useActions()
-    const [user, setUser] = useState<User>(json(state.self))
 
-    const signup = useMemo(() => !isValid(user), [user] )
+    const signup = useMemo(() => !state.isValid, [state.isValid])
 
-    // Updates local user state on change in an input field
+    // Create a copy of the user object, so that we can modify it without affecting the original object.
+    const user = json(state.self)
+    
+    // Update the user object when user input changes, and update the state.
     const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
         const { name, value } = event.currentTarget
         switch (name) {
@@ -27,27 +27,25 @@ export const ProfileForm = ({children, setEditing}: {children: React.ReactNode, 
                 break
         }
         actions.setSelf(user)
-        setUser(user)
     }
     
 
-    // Sends off the edited (or not) information to the server. ((Could change actions.changeUser to take (username, email, studentid) as args and create the new user object in the action, not sure what's best))
+    // Sends the updated user object to the server on submit.
     const submitHandler = () => {
         actions.updateUser(user)
-        // Flip back to the uneditable view
+        // Disable editing after submission
         setEditing(false)
     }
 
     return ( 
         <div>
             {signup ? children : null}
-            
             <form className="form-group" onSubmit={e => {e.preventDefault(); submitHandler()}}>
                 <FormInput prepend="Name" name="name" defaultValue={user.getName()} onChange={handleChange} />
-                <FormInput prepend="Email" name="email" defaultValue={user.getEmail()} onChange={handleChange} />
-                <FormInput prepend="Student ID" name="studentid" defaultValue={user.getStudentid()} onChange={handleChange} />
+                <FormInput prepend="Email" name="email" defaultValue={user.getEmail()} onChange={handleChange} type="email" />
+                <FormInput prepend="Student ID" name="studentid" defaultValue={user.getStudentid()} onChange={handleChange} type="number" />
                 <div className="col input-group mb-3">
-                    <input className="btn btn-primary" type="submit" value="Save" style={{marginTop:"20px"}}/>
+                    <input className="btn btn-primary" disabled={!state.isValid} type="submit" value="Save" style={{marginTop:"20px"}}/>
                 </div>
             </form>
         </div>
