@@ -7,10 +7,12 @@ public/dist/bundle.js
 public/dist/bundle.js.map
 ./quickfeed
 backups
+scratchpad
 
 # Environment and shell scripts
 cyclone.sh
 start.sh
+update.sh
 quickfeed-env.sh
 .env*
 !.env-template
