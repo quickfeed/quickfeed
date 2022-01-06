@@ -1,6 +1,6 @@
 import  React from 'react'
 
-
+/* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users. */
 const AboutPage = (): JSX.Element => {
     return (
         <div>

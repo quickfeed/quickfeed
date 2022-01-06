@@ -5,14 +5,20 @@ import { json } from "overmind"
 import FormInput from "./FormInput"
 import CourseCreationInfo from "../admin/CourseCreationInfo"
 
-
-
-
+// CourseForm is used to create a new course or edit an existing course.
 export const CourseForm = ({editCourse}: {editCourse?: Course}): JSX.Element => {
     const actions = useActions()
+    
+    // TODO: This could go in go in a course-specific Overmind namespace rather than local state.
+    // Local state for organization name to be checked against the server
     const [orgName, setOrgName] = useState("")
+    
+    // Local state containing the course to be created or edited (if any)
     const [course, setCourse] = useState(editCourse ? json(editCourse) : new Course)
-    const [orgFound, setOrgFound] = useState<boolean>(false)
+    
+    // Local state containing a boolean indicating whether the organization is valid. Courses that are being edited do not need to be validated.
+    const [orgFound, setOrgFound] = useState<boolean>(editCourse ? true : false)
+    
     /* Date object used to fill in certain default values for new courses */
     const date = new Date(Date.now())
 
@@ -38,6 +44,7 @@ export const CourseForm = ({editCourse}: {editCourse?: Course}): JSX.Element => 
         setCourse(course)
     }
 
+    // Creates a new course if no course is being edited, otherwise updates the existing course
     const submitHandler = () => {
         if (editCourse) {
             actions.editCourse({ course: course })
@@ -46,7 +53,9 @@ export const CourseForm = ({editCourse}: {editCourse?: Course}): JSX.Element => 
         }
     }
 
+    // Trigger grpc call to check if org exists
     const getOrganization = async () => {
+        // TODO: Could modify getOrganization to return the organization object rather than a boolean, and avoid calling it once more in createCourse.
         setOrgFound(await actions.getOrganization(orgName))
     }
 
@@ -59,7 +68,7 @@ export const CourseForm = ({editCourse}: {editCourse?: Course}): JSX.Element => 
                         <div className="input-group-text">Organization</div>
                     </div>
                     <input className="form-control" onKeyUp={e => setOrgName(e.currentTarget.value)}></input>
-                    <span className={orgFound ? "btn btn-success disabled" : "btn btn-primary"} onClick={!orgFound ? () => getOrganization() : () => {return}}>
+                    <span className={orgFound ? "btn btn-success disabled" : "btn btn-primary"} onClick={!orgFound ? () => getOrganization() : () => { return }}>
                         {orgFound ? <i className="fas fa-check"></i> :  "Find"}
                     </span>
                 </div>
@@ -110,6 +119,7 @@ export const CourseForm = ({editCourse}: {editCourse?: Course}): JSX.Element => 
 
 export default CourseForm
 
+// Helper functions for default values for new courses
 const defaultTag = (date: Date) => {
     return date.getMonth() >= 10 && date.getMonth() < 4 ? "Spring" : "Fall"
 }

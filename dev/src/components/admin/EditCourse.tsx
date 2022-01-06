@@ -4,6 +4,7 @@ import { useAppState } from "../../overmind"
 import DynamicTable, { CellElement } from "../DynamicTable"
 import CourseForm from "../forms/CourseForm"
 
+
 const EditCourse = (): JSX.Element => {
     const state  = useAppState()
     const [course, setCourse] = useState<Course>()

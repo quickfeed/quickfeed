@@ -10,7 +10,7 @@ import SubmissionsTable from "./dashboard/SubmissionsTable"
 const Dashboard = (): JSX.Element => {
     const state = useAppState()
 
-    // New users logging in are redirected to courses to ease enrollment
+    // Users that are not enrolled in any courses are redirected to the course list.
     if (!hasEnrollment(state.enrollments)) {
         return <Redirect to={"/courses"}></Redirect>
     }

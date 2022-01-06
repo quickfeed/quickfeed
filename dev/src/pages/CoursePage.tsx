@@ -23,7 +23,7 @@ const CoursePage = (): JSX.Element => {
         return <StudentPage />      
     }
     else {
-        return <Redirect to={"/"}></Redirect>
+        return <Redirect to={"/"} />
     }
 }
 

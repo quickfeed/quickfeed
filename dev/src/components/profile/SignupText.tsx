@@ -1,6 +1,6 @@
 import React from "react"
 
-
+/** SignupText is used to display an error message if the user information is incomplete. */
 const SignupText = (): JSX.Element => {
     return (
         <blockquote className="blockquote card-body" style={{color: "red"}}>

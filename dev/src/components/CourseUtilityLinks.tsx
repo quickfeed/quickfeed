@@ -5,7 +5,7 @@ import { getCourseID } from "../Helpers"
 import { useAppState } from "../overmind"
 
 
-
+/** CourseUtilityLinks displays various repository links for the current course, in addition to links to take the user to the group page. */
 const CourseUtilityLinks = (): JSX.Element => {
 
     const state = useAppState()

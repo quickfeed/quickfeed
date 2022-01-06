@@ -23,7 +23,7 @@ const StudentPage = (): JSX.Element => {
     })
 
     return (
-        <div>
+        <>
             <RedirectButton to={root}></RedirectButton>
             <CourseBanner />
             <Alert /> 
@@ -37,7 +37,7 @@ const StudentPage = (): JSX.Element => {
                 <Route path="/course/:id/group" exact component={GroupPage} />
                 <Route path="/course/:id/:lab" exact component={Lab} />
             </Switch>
-        </div>
+        </>
     )
 }
 
