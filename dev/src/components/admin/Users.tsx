@@ -11,12 +11,6 @@ const Users = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
 
-    useEffect(() => {
-        if (state.allUsers.length == 0) {
-            actions.getUsers()
-        }
-    })
-
     const headers: string[] = ["Name", "Email", "Student ID", "Role"]
     const users = state.allUsers.map((user) => {
         const data: (string | JSX.Element | CellElement)[] = []
