@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 import { useActions } from "../overmind"
 
-//** Search */
+/** Search */
 /**
  *  This component updates either the supplied query state, or the query in Overmind state
  *  Used to determine if elements in the component it is in should be hidden or not.
@@ -19,8 +19,6 @@ export const Search = ({placeholder, setQuery}: {placeholder?: string, setQuery?
             <input  
                     type={"text"} 
                     className="form-control"
-                    onFocus={() => actions.enableRedirect(false)} 
-                    onBlur={() => actions.enableRedirect(true)} 
                     placeholder={placeholder ? placeholder : "Search"} 
                     onKeyUp={(e) => setQuery ? setQuery(e.currentTarget.value.toLowerCase()) : actions.setQuery(e.currentTarget.value.toLowerCase()) }>
             </input>
