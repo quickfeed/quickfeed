@@ -1,7 +1,7 @@
 import { json } from 'overmind'
 import { Context } from ".";
 import { IGrpcResponse } from "../GRPCManager";
-import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Organization } from "../../proto/ag/ag_pb";
+import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark } from "../../proto/ag/ag_pb";
 import { CourseGroup } from "./state";
 import { AlertType, SubmissionStatus } from "../Helpers";
 
@@ -170,13 +170,12 @@ export const updateEnrollment = async ({ actions, effects }: Context, { enrollme
     // If rejecing an enrollment, confirm that user really wants to do so. If approving, no confirmation is required.
     if (status > 0 || status === Enrollment.UserStatus.NONE && confirm("WARNNG! Rejecting a student is irreversible. Are you sure?")) {
         // Copy enrollment object and change status
-        const tempEnrollment = json(enrollment)
-        tempEnrollment.setStatus(status)
+        const temp = json(enrollment).setStatus(status)
         // Send updated enrollment to server
-        const response = await effects.grpcMan.updateEnrollment(tempEnrollment)
+        const response = await effects.grpcMan.updateEnrollment(temp)
         if (success(response)) {
             // If successful, update enrollment in state with new status
-            enrollment = tempEnrollment
+            enrollment.setStatus(status)
         }
         else {
             // If unsuccessful, alert user
@@ -411,6 +410,15 @@ export const rebuildSubmission = async ({ state, effects }: Context): Promise<vo
     }
 }
 
+/* rebuildAllSubmissions rebuilds all submissions for a given assignment */
+export const rebuildAllSubmissions = async ({ effects }: Context, { courseID, assignmentID }: { courseID: number, assignmentID: number }): Promise<boolean> => {
+    const response = await effects.grpcMan.rebuildSubmissions(assignmentID, courseID)
+    if (success(response)) {
+        return true
+    }
+    return false
+}
+
 /** Enrolls a user (self) in a course given by courseID. Refreshes enrollments in state if enroll is sucessful. */
 export const enroll = async ({ state, effects }: Context, courseID: number): Promise<void> => {
     const response = await effects.grpcMan.createEnrollment(courseID, state.self.getId())
@@ -453,6 +461,14 @@ export const createCriterion = async ({ effects }: Context, { criterion, assignm
             bm.getCriteriaList().push(criterion)
             effects.grpcMan.createCriterion(criterion)
         }
+    }
+}
+
+export const createBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
+    benchmark.setAssignmentid(assignment.getId())
+    const response = await effects.grpcMan.createBenchmark(benchmark)
+    if (success(response)) {
+        assignment.getGradingbenchmarksList().push(benchmark)
     }
 }
 
