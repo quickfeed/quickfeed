@@ -25,33 +25,31 @@ const Profile = (): JSX.Element => {
         }
     })
 
-    
-
     if (state.isLoggedIn) {
         return (
             <div>
                 <div className="jumbotron">
                     <div className="centerblock container">
-                    <h1>Hi, {state.self.getName()}</h1>
-                    You can edit your user information here.
+                        <h1>Hi, {state.self.getName()}</h1>
+                        You can edit your user information here.
                     </div>
                 </div>
                 <div className="container">
                     <ProfileCard>
-                        {!editing ? 
-                        <ProfileInfo setEditing={setEditing} /> :
-                        <ProfileForm setEditing={setEditing} >
-                            {state.isValid ? null : <SignupText />}
-                        </ProfileForm>
+                        {!editing ?
+                            <ProfileInfo setEditing={setEditing} /> :
+                            <ProfileForm setEditing={setEditing} >
+                                {state.isValid ? null : <SignupText />}
+                            </ProfileForm>
                         }
                     </ProfileCard>
                 </div>
             </div>
-            )
+        )
     }
     return <Redirect to="/" />
 
-    
+
 }
 
 export default Profile

@@ -9,15 +9,15 @@ import NavBarCourse from "./navbar/NavBarCourse";
 //TODO Review the NavBar behaviour. 
 const NavBar = (): JSX.Element => {
     const state = useAppState()
-    
+
     const favorites = state.enrollments.filter(enrollment => enrollment.getStatus() >= Enrollment.UserStatus.STUDENT && enrollment.getState() == Enrollment.DisplayState.FAVORITE)
 
-    const courses = favorites.map((enrollment) =>{
-            if (enrollment.getState() >= Enrollment.DisplayState.VISIBLE) {
-                return (
-                    <NavBarCourse key={enrollment.getId()} enrollment={enrollment} />
-                )
-            }
+    const courses = favorites.map((enrollment) => {
+        if (enrollment.getState() >= Enrollment.DisplayState.VISIBLE) {
+            return (
+                <NavBarCourse key={enrollment.getId()} enrollment={enrollment} />
+            )
+        }
     })
 
     return (
@@ -30,17 +30,17 @@ const NavBar = (): JSX.Element => {
                 </li>
 
                 {courses}
-                { state.isLoggedIn &&
+                {state.isLoggedIn &&
                     <li key="all" className="">
                         <Link to="/courses" className="Sidebar-items-link">
                             View all courses
                         </Link>
-                    </li> }
+                    </li>}
                 <NavBarFooter key="foot" />
             </ul>
         </nav>
     )
-    
+
 }
 
 export default NavBar

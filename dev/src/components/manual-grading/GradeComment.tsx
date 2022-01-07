@@ -4,10 +4,10 @@ import { GradingBenchmark, GradingCriterion } from "../../../proto/ag/ag_pb"
 import { useActions, useAppState } from "../../overmind"
 
 
-const GradeComment = ({grade, editing, setEditing}: {grade: GradingBenchmark | GradingCriterion, editing: boolean, setEditing: Dispatch<SetStateAction<boolean>>}): JSX.Element => {
+const GradeComment = ({ grade, editing, setEditing }: { grade: GradingBenchmark | GradingCriterion, editing: boolean, setEditing: Dispatch<SetStateAction<boolean>> }): JSX.Element => {
     const actions = useActions()
     const state = useAppState()
-    
+
     /* Don't allow grading if user is not a teacher or editing is false */
     if (!state.isTeacher || !editing) {
         return <></>

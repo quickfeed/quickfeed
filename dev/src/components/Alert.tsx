@@ -6,6 +6,8 @@ import { useAppState, useActions } from "../overmind"
 export const Alert = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
+
+    /* Index is used to remove the alert from the state.alerts array */
     const alerts = state.alerts.map((alert, index) => {
         return  <div
                     key={index} 

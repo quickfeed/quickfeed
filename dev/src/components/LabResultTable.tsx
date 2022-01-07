@@ -11,10 +11,10 @@ interface lab {
     assignment: Assignment
 }
 
-const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
+const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
     const state = useAppState()
 
-    const Score = ({ score }: {score: Score}) => {
+    const Score = ({ score }: { score: Score }) => {
         const classname = (score.getScore() === score.getMaxscore()) ? "passed" : "failed"
         return (
             <tr>
@@ -28,7 +28,7 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
                     {score.getWeight()}
                 </th>
             </tr>
-            )
+        )
     }
 
     const LabResult = (): JSX.Element => {
@@ -51,52 +51,52 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
                             </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <th colSpan={2} className={classname}>Status</th>
-                            <td>{generateStatusText(assignment, submission)}</td>
-                        </tr>
-                        <tr>
-                            <th colSpan={2}>Delivered</th>
-                            <td>{delivered}</td>
-                        </tr>
-                        { // Only render row if submission has an approved date
-                        submission.getApproveddate() ?
                             <tr>
-                                <th colSpan={2}>Approved</th>
-                                <td>{getFormattedTime(submission.getApproveddate())}</td>
+                                <th colSpan={2} className={classname}>Status</th>
+                                <td>{generateStatusText(assignment, submission)}</td>
                             </tr>
-                        : null
-                        }
-                        <tr>
-                            <th colSpan={2}>Deadline</th>
-                            <td>{getFormattedTime(assignment.getDeadline())}</td>
-                        </tr>
-                        
-                        {!isManuallyGraded(assignment) ?
-                        <tr>
-                            <th colSpan={2}>Tests Passed</th>
-                                <td>{getPassedTestsCount(json(submission).getScoresList())}</td>
-                        </tr>
-                        : null
-                        }
-                        <tr>
-                            <th colSpan={2}>Execution time</th>
-                            <td>{executionTime}</td>
-                        </tr>
-                        <tr>
-                            <th colSpan={2}>Slip days</th>
-                            <td>{state.enrollmentsByCourseId[assignment.getCourseid()].getSlipdaysremaining()}</td>
-                        </tr>
-                        <tr className={"thead-dark"}>
-                            <th colSpan={1}>Test Name</th>
-                            <th colSpan={1}>Score</th>
-                            <th colSpan={1}>Weight</th>
-                        
-                        </tr>
-                        {json(submission).getScoresList().map((score, index) => 
-                            <Score key={index} score={score} />
-                        )}
-                        
+                            <tr>
+                                <th colSpan={2}>Delivered</th>
+                                <td>{delivered}</td>
+                            </tr>
+                            { // Only render row if submission has an approved date
+                                submission.getApproveddate() ?
+                                    <tr>
+                                        <th colSpan={2}>Approved</th>
+                                        <td>{getFormattedTime(submission.getApproveddate())}</td>
+                                    </tr>
+                                    : null
+                            }
+                            <tr>
+                                <th colSpan={2}>Deadline</th>
+                                <td>{getFormattedTime(assignment.getDeadline())}</td>
+                            </tr>
+
+                            {!isManuallyGraded(assignment) ?
+                                <tr>
+                                    <th colSpan={2}>Tests Passed</th>
+                                    <td>{getPassedTestsCount(json(submission).getScoresList())}</td>
+                                </tr>
+                                : null
+                            }
+                            <tr>
+                                <th colSpan={2}>Execution time</th>
+                                <td>{executionTime}</td>
+                            </tr>
+                            <tr>
+                                <th colSpan={2}>Slip days</th>
+                                <td>{state.enrollmentsByCourseId[assignment.getCourseid()].getSlipdaysremaining()}</td>
+                            </tr>
+                            <tr className={"thead-dark"}>
+                                <th colSpan={1}>Test Name</th>
+                                <th colSpan={1}>Score</th>
+                                <th colSpan={1}>Weight</th>
+
+                            </tr>
+                            {json(submission).getScoresList().map((score, index) =>
+                                <Score key={index} score={score} />
+                            )}
+
                         </tbody>
                         <tfoot>
                             <tr>
@@ -113,9 +113,9 @@ const LabResultTable = ({submission, assignment}: lab): JSX.Element => {
     }
 
     return (
-    <div>
-        <LabResult />
-    </div>
+        <div>
+            <LabResult />
+        </div>
     )
 }
 

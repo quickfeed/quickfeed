@@ -6,7 +6,7 @@ import { useActions } from "../overmind"
  *  This component updates either the supplied query state, or the query in Overmind state
  *  Used to determine if elements in the component it is in should be hidden or not.
  */
-export const Search = ({placeholder, setQuery}: {placeholder?: string, setQuery?: (e: unknown) => void}): JSX.Element => {
+export const Search = ({ placeholder, setQuery }: { placeholder?: string, setQuery?: (e: unknown) => void }): JSX.Element => {
     const actions = useActions()
 
     useEffect(() => {
@@ -16,11 +16,11 @@ export const Search = ({placeholder, setQuery}: {placeholder?: string, setQuery?
 
     return (
         <div className="input-group">
-            <input  
-                    type={"text"} 
-                    className="form-control"
-                    placeholder={placeholder ? placeholder : "Search"} 
-                    onKeyUp={(e) => setQuery ? setQuery(e.currentTarget.value.toLowerCase()) : actions.setQuery(e.currentTarget.value.toLowerCase()) }>
+            <input
+                type={"text"}
+                className="form-control"
+                placeholder={placeholder ? placeholder : "Search"}
+                onKeyUp={(e) => setQuery ? setQuery(e.currentTarget.value.toLowerCase()) : actions.setQuery(e.currentTarget.value.toLowerCase())}>
             </input>
         </div>
     )

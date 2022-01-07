@@ -22,10 +22,10 @@ export const Groups = (): JSX.Element => {
         }
 
         // Show group if group name includes query
-        if (group.getName().toLowerCase().includes(state.query)) { 
+        if (group.getName().toLowerCase().includes(state.query)) {
             return false
         }
-        
+
         // Show group if any group user includes query
         for (const user of group.getUsersList()) {
             if (user.getName().toLowerCase().includes(state.query)) {
@@ -37,10 +37,10 @@ export const Groups = (): JSX.Element => {
     }
 
     const updateGroupStatus = (group: Group, status: Group.GroupStatus) => {
-        actions.updateGroupStatus({group, status})
+        actions.updateGroupStatus({ group, status })
     }
 
-    const GroupButtons = ({group}: {group: Group}) => {
+    const GroupButtons = ({ group }: { group: Group }) => {
         if (group.getStatus() === Group.GroupStatus.PENDING) {
             return (
                 <td>
@@ -53,29 +53,29 @@ export const Groups = (): JSX.Element => {
         return <td><span className="badge badge-info clickable" onClick={() => setEditing(group)}>Edit</span></td>
     }
 
-    const GroupRow = ({group}: {group: Group}) => {
-            return (
-                <>
-                    <tr hidden={groupSearch(group)}>
-                        <th key={group.getId()}> 
-                            {group.getName()}
-                            <span className="badge badge-warning ml-2">{group.getStatus() == Group.GroupStatus.PENDING ? "Pending" : null}</span>
-                        </th>
-                        <td>
-                            <div>
+    const GroupRow = ({ group }: { group: Group }) => {
+        return (
+            <>
+                <tr hidden={groupSearch(group)}>
+                    <th key={group.getId()}>
+                        {group.getName()}
+                        <span className="badge badge-warning ml-2">{group.getStatus() == Group.GroupStatus.PENDING ? "Pending" : null}</span>
+                    </th>
+                    <td>
+                        <div>
                             {// Populates the unordered list with list elements for every user in the group
-                                group.getEnrollmentsList().map((enrol, index) => 
-                                <span key={enrol.getId()} className="inline-block">
-                                    <a href={`https://github.com/${enrol.getUser()?.getLogin()}`} target="_blank" rel="noreferrer">{enrol.getUser()?.getName()}</a>
-                                    {index >= group.getEnrollmentsList().length - 1 ? "" : ", "}
-                                </span> 
-                            )}
-                            </div>
-                        </td>
-                        <GroupButtons group={group} />
-                    </tr>
-                </>
-            )
+                                group.getEnrollmentsList().map((enrol, index) =>
+                                    <span key={enrol.getId()} className="inline-block">
+                                        <a href={`https://github.com/${enrol.getUser()?.getLogin()}`} target="_blank" rel="noreferrer">{enrol.getUser()?.getName()}</a>
+                                        {index >= group.getEnrollmentsList().length - 1 ? "" : ", "}
+                                    </span>
+                                )}
+                        </div>
+                    </td>
+                    <GroupButtons group={group} />
+                </tr>
+            </>
+        )
     }
 
     // Generates JSX.Element array containing all groups for the course

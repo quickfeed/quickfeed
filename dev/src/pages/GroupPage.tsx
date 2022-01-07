@@ -22,10 +22,10 @@ export const GroupPage = (): JSX.Element => {
     }
 
     if (!state.userGroup[courseID]) {
-        return <GroupForm />    
+        return <GroupForm />
     }
     return <GroupComponent />
-    
+
 }
 
 export default GroupPage

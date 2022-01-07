@@ -26,7 +26,7 @@ const StudentPage = (): JSX.Element => {
         <>
             <RedirectButton to={root}></RedirectButton>
             <CourseBanner />
-            <Alert /> 
+            <Alert />
             <div className="row" hidden={history.location.pathname != root}>
                 <div className="col-md-9" >
                     <CourseLabs />

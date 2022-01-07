@@ -3,7 +3,7 @@ import { SubmissionStatus } from "../Helpers"
 import { useAppState } from "../overmind"
 
 const ReviewInfo = (): JSX.Element => {
-    const {review: {currentReview, reviewer, graded, criteriaTotal}, activeSubmissionLink} = useAppState()
+    const { review: { currentReview, reviewer, graded, criteriaTotal }, activeSubmissionLink } = useAppState()
 
     const assignment = activeSubmissionLink?.getAssignment()
     const submission = activeSubmissionLink?.getSubmission()

@@ -20,6 +20,7 @@ const Results = (): JSX.Element => {
         return actions.setActiveSubmission(undefined)
     }, [state.courseSubmissions])
 
+    
     const header = ["Name", "Group"].concat(state.assignments[courseID].map(assignment => {
         return assignment.getName()
     }))

@@ -15,7 +15,7 @@ const Dashboard = (): JSX.Element => {
         return <Redirect to={"/courses"}></Redirect>
     }
 
-    return(
+    return (
         <div className='box'>
             <div>
                 <h1>Welcome, {state.self.getName()}!</h1>

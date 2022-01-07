@@ -11,30 +11,30 @@ const CourseUtilityLinks = (): JSX.Element => {
     const state = useAppState()
     const courseID = getCourseID()
     return (
-        <div className="col-sm-3" >           
+        <div className="col-sm-3" >
             <div className="list-group">
                 <div className="list-group-item list-group-item-action active text-center"><h6><strong>Utility</strong></h6></div>
-                    <a href={state.repositories[courseID][Repository.Type.USER]} className="list-group-item list-group-item-action">
-                        User Repository
-                    </a>
+                <a href={state.repositories[courseID][Repository.Type.USER]} className="list-group-item list-group-item-action">
+                    User Repository
+                </a>
                 {state.repositories[courseID][Repository.Type.GROUP] !== "" ? (
-                    <a href={state.repositories[courseID][Repository.Type.GROUP]} className="list-group-item list-group-item-action overflow-ellipses" style={{textAlign:"left"}}>
+                    <a href={state.repositories[courseID][Repository.Type.GROUP]} className="list-group-item list-group-item-action overflow-ellipses" style={{ textAlign: "left" }}>
                         Group Repository ({state.enrollmentsByCourseId[courseID].getGroup()?.getName()})
                     </a>
-                ): null}
-                    <a href={state.repositories[courseID][Repository.Type.ASSIGNMENTS]} className="list-group-item list-group-item-action">
-                        Assignments
-                    </a>
+                ) : null}
+                <a href={state.repositories[courseID][Repository.Type.ASSIGNMENTS]} className="list-group-item list-group-item-action">
+                    Assignments
+                </a>
 
-                    <a href={state.repositories[courseID][Repository.Type.COURSEINFO]} className="list-group-item list-group-item-action">
-                        Course Info
-                    </a>
+                <a href={state.repositories[courseID][Repository.Type.COURSEINFO]} className="list-group-item list-group-item-action">
+                    Course Info
+                </a>
 
-                {state.enrollmentsByCourseId[courseID].hasGroup() ? 
+                {state.enrollmentsByCourseId[courseID].hasGroup() ?
                     <Link to={"/course/" + courseID + "/group"} className="list-group-item list-group-item-action">
                         View Group
                     </Link>
-                :   <Link to={"/course/" + courseID + "/group"} className="list-group-item list-group-item-action list-group-item-success">
+                    : <Link to={"/course/" + courseID + "/group"} className="list-group-item list-group-item-action list-group-item-success">
                         Create a Group
                     </Link>}
             </div>

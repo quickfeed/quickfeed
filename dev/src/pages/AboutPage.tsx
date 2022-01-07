@@ -1,4 +1,4 @@
-import  React from 'react'
+import React from 'react'
 
 /* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users. */
 const AboutPage = (): JSX.Element => {
@@ -9,11 +9,11 @@ const AboutPage = (): JSX.Element => {
                     <h1>Automated student feedback</h1>
                     <p>
                         <strong>QuickFeed </strong>
-                            provides instantaneous feedback to students on
-                            their programming assignments. It is also a
-                            valuable tool for teachers when grading lab
-                            assignments.
-                        </p>
+                        provides instantaneous feedback to students on
+                        their programming assignments. It is also a
+                        valuable tool for teachers when grading lab
+                        assignments.
+                    </p>
                     <p>
                         <a className="btn btn-primary btn-lg" href="#autograder" role="button">Learn more »</a>
                     </p>
@@ -33,7 +33,7 @@ const AboutPage = (): JSX.Element => {
                             Each student gets their own repository.
                             Teachers get separate repositories for publishing assignments and information to students.
                             All taken care of automatically.
-                    </p>
+                        </p>
                         <p>
                             <a className="btn btn-default" href="#versioncontrol" role="button">View details »</a>
                         </p>
@@ -50,11 +50,11 @@ const AboutPage = (): JSX.Element => {
                             Instantaneous feedback to students on how well their code performs.
                             Students can quickly identify what they need to focus on to improve.
                             All customizable for the teaching staff.
-                    </p>
+                        </p>
                         <p>
                             <a className="btn btn-default" href="#ci" role="button">
                                 View details »
-                        </a>
+                            </a>
                         </p>
                     </div>
                     <div key="grade" className="col-lg-4">
@@ -68,7 +68,7 @@ const AboutPage = (): JSX.Element => {
                             of each student's code is available through GitHub.
                             Easily accessible for the teachers.
                             Together with latest build log, this makes grading easier and more fair.
-                    </p>
+                        </p>
                         <p>
                             <a className="btn btn-default" href="#grading" role="button">View details »</a>
                         </p>
@@ -95,7 +95,7 @@ const AboutPage = (): JSX.Element => {
                                 When grading assignments, teaching staff can access
                                 the results of test execution and have a valuable
                                 tool in the grading process.
-                        </p>
+                            </p>
                         </div>
                         <div key="c2r1" className="col-md-5">
                             <img
@@ -125,7 +125,7 @@ const AboutPage = (): JSX.Element => {
                                 Students get access to their own private GitHub repository.
                                 Uploading their code for review or grading, students can
                                 learn to use git for version control.
-                        </p>
+                            </p>
                         </div>
                     </div>
                 </section>
@@ -145,7 +145,7 @@ const AboutPage = (): JSX.Element => {
                                 access to this feedback on their personal course page.
                                 Tests defined by either teachers or students will be processed
                                 and tell students about their progress on the assignments.
-                        </p>
+                            </p>
                         </div>
                         <div key="c2r3" className="col-md-5">
                             <img
@@ -175,7 +175,7 @@ const AboutPage = (): JSX.Element => {
                                 use this as a tool in the grading process.
                                 The teaching staff will immediately know which of their
                                 tests passed, and how much of the code is covered by the tests.
-                        </p>
+                            </p>
                         </div>
                     </div>
                 </section>
@@ -186,7 +186,7 @@ const AboutPage = (): JSX.Element => {
                 </footer>
             </div>
         </div>
-        
+
     )
 }
 

@@ -13,8 +13,8 @@ const GroupComponent = (): JSX.Element => {
         for (const user of group.getUsersList()) {
             elements.push(
                 <li key={user.getId()} className="list-group-item">
-                    <img src={user.getAvatarurl()} style={{width: "23px", marginRight: "10px", borderRadius: "50%"}}></img>
-                    {user.getName()} 
+                    <img src={user.getAvatarurl()} style={{ width: "23px", marginRight: "10px", borderRadius: "50%" }}></img>
+                    {user.getName()}
                 </li>)
         }
         return elements
@@ -22,7 +22,7 @@ const GroupComponent = (): JSX.Element => {
 
     return (
         <div className="box">
-            {GroupList(state.userGroup[courseID]) }
+            {GroupList(state.userGroup[courseID])}
         </div>
     )
 }

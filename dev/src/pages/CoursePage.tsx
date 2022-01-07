@@ -16,11 +16,11 @@ const CoursePage = (): JSX.Element => {
         setActiveCourse(courseID)
     }, [courseID])
 
-    if (state.enrollmentsByCourseId[courseID] && isEnrolled(enrollment)){
+    if (state.enrollmentsByCourseId[courseID] && isEnrolled(enrollment)) {
         if (isTeacher(enrollment)) {
             return <TeacherPage />
         }
-        return <StudentPage />      
+        return <StudentPage />
     }
     else {
         return <Redirect to={"/"} />
