@@ -6,24 +6,26 @@ import FormInput from "./FormInput"
 import CourseCreationInfo from "../admin/CourseCreationInfo"
 
 // CourseForm is used to create a new course or edit an existing course.
-export const CourseForm = ({editCourse}: {editCourse?: Course}): JSX.Element => {
+export const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element => {
     const actions = useActions()
-    
+
     // TODO: This could go in go in a course-specific Overmind namespace rather than local state.
     // Local state for organization name to be checked against the server
     const [orgName, setOrgName] = useState("")
-    
+
     // Local state containing the course to be created or edited (if any)
     const [course, setCourse] = useState(editCourse ? json(editCourse) : new Course)
-    
+
     // Local state containing a boolean indicating whether the organization is valid. Courses that are being edited do not need to be validated.
     const [orgFound, setOrgFound] = useState<boolean>(editCourse ? true : false)
-    
+
     /* Date object used to fill in certain default values for new courses */
     const date = new Date(Date.now())
+    course.setYear(defaultYear(date))
+    course.setTag(defaultTag(date))
 
     const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
-        const {name, value} = event.currentTarget
+        const { name, value } = event.currentTarget
         switch (name) {
             case "courseName":
                 course.setName(value)
@@ -67,53 +69,60 @@ export const CourseForm = ({editCourse}: {editCourse?: Course}): JSX.Element => 
                     <div className="input-group-prepend">
                         <div className="input-group-text">Organization</div>
                     </div>
-                    <input className="form-control" onKeyUp={e => setOrgName(e.currentTarget.value)}></input>
+                    <input className="form-control" disabled={orgFound ? true : false} onKeyUp={e => setOrgName(e.currentTarget.value)}></input>
                     <span className={orgFound ? "btn btn-success disabled" : "btn btn-primary"} onClick={!orgFound ? () => getOrganization() : () => { return }}>
-                        {orgFound ? <i className="fas fa-check"></i> :  "Find"}
+                        {orgFound ? <i className="fa fa-check"></i> : "Find"}
                     </span>
                 </div>
             </div>
             {orgFound &&
-            <form className="form-group" onSubmit={e => {e.preventDefault(), submitHandler()}}>
-                <div className="row">
-                    <FormInput  prepend="Name"
-                            name="courseName" 
-                            placeholder={"Course Name"} 
+                <form className="form-group" onSubmit={e => { e.preventDefault(), submitHandler() }}>
+                    <div className="row">
+                        <FormInput prepend="Name"
+                            name="courseName"
+                            placeholder={"Course Name"}
                             defaultValue={editCourse?.getName()}
-                            onChange={handleChange} 
-                    />
-                </div>
-                <div className="row">
-                    <FormInput
+                            onChange={handleChange}
+                        />
+                    </div>
+                    <div className="row">
+                        <FormInput
                             prepend="Code"
-                            name="courseCode" 
-                            placeholder={"(ex. DAT320)"} 
-                            defaultValue={editCourse?.getCode()} 
-                            onChange={handleChange} 
-                    />
-                    <FormInput
+                            name="courseCode"
+                            placeholder={"(ex. DAT320)"}
+                            defaultValue={editCourse?.getCode()}
+                            onChange={handleChange}
+                        />
+                        <FormInput
                             prepend="Tag"
-                            name="courseTag" 
-                            placeholder={"(ex. Fall / Spring)"} 
-                            defaultValue={editCourse ? editCourse.getTag() : defaultTag(date)} 
-                            onChange={handleChange} 
-                    />
-                </div>
-                <div className="row">
-                    <FormInput
+                            name="courseTag"
+                            placeholder={"(ex. Fall / Spring)"}
+                            defaultValue={editCourse ? editCourse.getTag() : defaultTag(date)}
+                            onChange={handleChange}
+                        />
+                    </div>
+                    <div className="row">
+                        <FormInput
                             prepend="Slip days"
-                            name="slipDays" 
-                            placeholder={"(ex. 7)"} 
-                            defaultValue={editCourse?.getSlipdays().toString()} 
-                            onChange={handleChange} 
-                    />
-                    <FormInput prepend="Year" name="courseYear" placeholder={"(ex. 2021)"} defaultValue={editCourse ? editCourse.getYear().toString() : defaultYear(date)}/>
-                </div>
-                <input className="btn btn-primary" type="submit" value={editCourse ? "Edit Course" : "Create Course"}/>
-            </form>
+                            name="slipDays"
+                            placeholder={"(ex. 7)"}
+                            defaultValue={editCourse?.getSlipdays().toString()}
+                            onChange={handleChange}
+                            type="number"
+                        />
+                        <FormInput
+                            prepend="Year"
+                            name="courseYear"
+                            placeholder={"(ex. 2021)"}
+                            defaultValue={editCourse ? editCourse.getYear().toString() : defaultYear(date).toString()}
+                            type="number"
+                        />
+                    </div>
+                    <input className="btn btn-primary" type="submit" value={editCourse ? "Edit Course" : "Create Course"} />
+                </form>
             }
         </div>
-        
+
     )
 }
 
@@ -121,9 +130,9 @@ export default CourseForm
 
 // Helper functions for default values for new courses
 const defaultTag = (date: Date) => {
-    return date.getMonth() >= 10 && date.getMonth() < 4 ? "Spring" : "Fall"
+    return date.getMonth() >= 10 || date.getMonth() < 4 ? "Spring" : "Fall"
 }
 
 const defaultYear = (date: Date) => {
-    return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1).toString() : date.getFullYear().toString()
+    return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
 }
