@@ -6,13 +6,13 @@ import { useActions, useAppState } from "../../overmind";
 import NavBarLabs from "./NavBarLabs";
 import NavBarTeacher from "./NavBarTeacher";
 
-const NavBarCourse = ({enrollment}: {enrollment: Enrollment}): JSX.Element => {
+const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const history = useHistory()
     // If selected, used to show teacher / student navbar for that course
     const selected = state.activeCourse === enrollment.getCourseid()
-    
+
     const onCourseClick = (enrollment: Enrollment) => {
         if (selected) {
             // Unselect the active course
@@ -28,15 +28,15 @@ const NavBarCourse = ({enrollment}: {enrollment: Enrollment}): JSX.Element => {
 
     return (
         <>
-            <li onClick={() => {onCourseClick(enrollment)}}>
+            <li onClick={() => { onCourseClick(enrollment) }}>
                 <div className="col" id="title">
                     {enrollment.getCourse()?.getCode()}
-                </div> 
+                </div>
                 <div className="col" title="icon">
                     <i className={selected ? "icon fa fa-caret-down fa-lg float-right" : "icon fa fa-caret-down fa-rotate-90 fa-lg float-right"}></i>
                 </div>
             </li>
-            <div className={ selected ? Status.ActiveLab : Status.Inactive}>
+            <div className={selected ? Status.ActiveLab : Status.Inactive}>
                 {selected && enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? <NavBarLabs /> : null}
                 {selected && enrollment.getStatus() === Enrollment.UserStatus.TEACHER ? <NavBarTeacher /> : null}
             </div>

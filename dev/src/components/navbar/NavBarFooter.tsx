@@ -4,9 +4,9 @@ import { useActions, useAppState } from "../../overmind"
 
 const NavBarFooter = (): JSX.Element => {
     const logout = useActions().logout
-    const {self, isLoggedIn} = useAppState()
+    const { self, isLoggedIn } = useAppState()
     const history = useHistory()
-    
+
     const [hidden, setHidden] = useState<boolean>(true)
 
     const LoginButton = () => {
@@ -19,7 +19,7 @@ const NavBarFooter = (): JSX.Element => {
         }
         return (
             <li>
-                <a href="/auth/github" style={{textAlign:"center",paddingTop:"15px"}}>
+                <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px" }}>
                     <i className="fa fa-2x fa-github" id="github"></i>
                 </a>
             </li>
@@ -29,8 +29,8 @@ const NavBarFooter = (): JSX.Element => {
     const ProfileButton = () => {
         if (isLoggedIn) {
             return (
-                <li onClick={() => history.push("/profile")} onMouseEnter={() => setHidden(false) }>
-                    <div><img src={self.getAvatarurl()} id="avatar"></img></div>    
+                <li onClick={() => history.push("/profile")} onMouseEnter={() => setHidden(false)}>
+                    <div><img src={self.getAvatarurl()} id="avatar"></img></div>
                 </li>
             )
         }
@@ -49,16 +49,16 @@ const NavBarFooter = (): JSX.Element => {
 
     const AdminButton = () => {
         if (self.getIsadmin()) {
-            return (           
-            <li hidden={hidden}>
-                <Link to="/admin" className="Sidebar-items-link">
-                    Admin
-                </Link>
-            </li>
+            return (
+                <li hidden={hidden}>
+                    <Link to="/admin" className="Sidebar-items-link">
+                        Admin
+                    </Link>
+                </li>
             )
         }
         return null
-        
+
     }
 
     return (

@@ -2,8 +2,8 @@ import React from "react"
 import { Link, useHistory } from "react-router-dom"
 
 export interface NavLink {
-    link: {text: string, to: string}
-    icons?: ({ text: string | number, classname: string } | null)[], 
+    link: { text: string, to: string }
+    icons?: ({ text: string | number, classname: string } | null)[],
     jsx?: JSX.Element
 }
 
@@ -24,13 +24,13 @@ const NavBarLink = (props: NavLink): JSX.Element => {
     }
     return (
         <li className="activeLabs" onClick={() => history.push(props.link.to)}>
-            
+
             <div className="col" id="title">
                 <Link to={props.link.to}>{props.link.text}</Link>
             </div>
             <div className="col">
-            {icons ? icons : null}
-            {props.jsx ? props.jsx : null}
+                {icons ? icons : null}
+                {props.jsx ? props.jsx : null}
             </div>
         </li>
     )
