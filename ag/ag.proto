@@ -454,7 +454,6 @@ service AutograderService {
     rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
     rpc RebuildSubmissions(AssignmentRequest) returns (Void) {}
 
-
     // manual grading //
     
     rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
