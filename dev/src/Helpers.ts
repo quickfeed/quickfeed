@@ -19,7 +19,7 @@ export enum Sort {
 
 /** Returns a string with a prettier format for a deadline */
 export const getFormattedTime = (deadline_string: string): string => {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June','July', 'August', 'September', 'October', 'November', 'December']
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     const deadline = new Date(deadline_string)
     return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? '0' + deadline.getMinutes() : deadline.getMinutes()}`
 }
@@ -31,39 +31,39 @@ export interface Deadline {
 }
 
 /** Utility function for LandingpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
-export const timeFormatter = (deadline: string , now: Date): Deadline => {
+export const timeFormatter = (deadline: string, now: Date): Deadline => {
     const timeOfDeadline = new Date(deadline)
-    const timeToDeadline =  timeOfDeadline.getTime() - now.getTime()
+    const timeToDeadline = timeOfDeadline.getTime() - now.getTime()
     const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     const hours = Math.floor(timeToDeadline / (1000 * 3600))
-    const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000*60))
+    const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
 
-    if (timeToDeadline < 0){
-        return {className: "table-danger", message: `Expired ${-days > 0 ? -days + " days ago" : -hours+" hours"}`, daysUntil: 0}
+    if (timeToDeadline < 0) {
+        return { className: "table-danger", message: `Expired ${-days > 0 ? -days + " days ago" : -hours + " hours"}`, daysUntil: 0 }
     }
 
     if (days == 0) {
-        return {className: "table-danger", message: `${hours} hours and ${minutes} minutes to deadline!`, daysUntil: 0}
+        return { className: "table-danger", message: `${hours} hours and ${minutes} minutes to deadline!`, daysUntil: 0 }
     }
 
-    if (days < 3){
-        return {className: "table-warning", message: `${days} day${days==1? ' ' : 's'} to deadline`, daysUntil: days}
-    }
-    
-    if (days < 14){
-        return {className: "table-primary", message: `${days} days`, daysUntil: days}
+    if (days < 3) {
+        return { className: "table-warning", message: `${days} day${days == 1 ? ' ' : 's'} to deadline`, daysUntil: days }
     }
 
-    return {className: "", message: "", daysUntil: days}
+    if (days < 14) {
+        return { className: "table-primary", message: `${days} days`, daysUntil: days }
+    }
+
+    return { className: "", message: "", daysUntil: days }
 }
 export const layoutTime = "2021-03-20T23:59:00"
 
 // Used for displaying enrollment status
 export const EnrollmentStatus = {
-    0 : "None",
-    1 : "Pending",
-    2 : "Student",
-    3 : "Teacher",
+    0: "None",
+    1: "Pending",
+    2: "Student",
+    3: "Teacher",
 }
 
 /* 
@@ -76,7 +76,7 @@ export const EnrollmentStatus = {
         (state.enrollmentsByCourseId[2], [Enrollment.prototype.getUser], User.prototype.getName)
 
     Returns an array of the same type as arr, sorted by the by-function
-*/ 
+*/
 export const sortByField = (arr: any[], funcs: Function[], by: Function, descending?: boolean) => {
     const unsortedArray = Object.assign([], arr)
     const sortedArray = unsortedArray.sort((a, b) => {
@@ -125,7 +125,7 @@ export const getPassedTestsCount = (score: Score[]): string => {
     score.forEach(score => {
         if (score.getScore() === score.getMaxscore()) {
             passedTests++
-        } 
+        }
         totalTests++
     })
     if (totalTests === 0) {
@@ -136,7 +136,7 @@ export const getPassedTestsCount = (score: Score[]): string => {
 
 
 export const isValid = (element: unknown): boolean => {
-    if (element instanceof User){
+    if (element instanceof User) {
         if (element.getName().length === 0 || element.getEmail().length === 0 || element.getStudentid().length === 0) {
             return false
         }
@@ -174,7 +174,7 @@ export const isManuallyGraded = (assignment: Assignment): boolean => {
 
 /** getCourseID returns the course ID determined by the current route */
 export const getCourseID = (): number => {
-    const route = useParams<{id?: string}>()
+    const route = useParams<{ id?: string }>()
     return Number(route.id)
 }
 
@@ -183,10 +183,10 @@ export const isHidden = (value: string, query: string): boolean => {
 }
 
 export const EnrollmentStatusBadge = {
-    0 : "",
-    1 : "badge badge-info",
-    2 : "badge badge-primary",
-    3 : "badge badge-danger",
+    0: "",
+    1: "badge badge-info",
+    2: "badge badge-primary",
+    3: "badge badge-danger",
 }
 
 /** SubmissionStatus returns a string with the status of the submission, given the status number, ex. Submission.Status.APPROVED -> "Approved" */
@@ -211,4 +211,10 @@ export const generateStatusText = (assignment: Assignment, submission: Submissio
     }
     // If the submission is graded, return the status
     return SubmissionStatus[submission.getStatus()]
+}
+
+/* Use this function to simulate a delay in the loading of data */
+/* Used in development to simulate a slow network connection */
+const delay = (ms: number) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
