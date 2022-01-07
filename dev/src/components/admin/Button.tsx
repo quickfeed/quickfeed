@@ -21,7 +21,7 @@ export type ButtonProps = {
     classname?: string,
 }
 
-const Button = ({text, onclick, color, type, classname}: ButtonProps): JSX.Element => {
+const Button = ({ text, onclick, color, type, classname }: ButtonProps): JSX.Element => {
     return (
         <span className={`${type}-${color}` + " clickable " + classname} onClick={onclick}>
             {text}

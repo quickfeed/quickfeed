@@ -6,7 +6,7 @@ import CourseForm from "../forms/CourseForm"
 
 
 const EditCourse = (): JSX.Element => {
-    const state  = useAppState()
+    const state = useAppState()
     const [course, setCourse] = useState<Course>()
 
     const courses = state.courses.map(c => {
@@ -17,10 +17,12 @@ const EditCourse = (): JSX.Element => {
         data.push(c.getTag())
         data.push(c.getYear().toString())
         data.push(c.getSlipdays().toString())
-        data.push(<span className={selected ? "badge badge-danger clickable" : "badge badge-primary clickable"} 
-                        onClick={() => {selected ? setCourse(undefined) : setCourse(c)}}>
-                    {selected ? "Cancel" : "Edit"}
-                  </span>)
+        data.push(
+            <span className={selected ? "badge badge-danger clickable" : "badge badge-primary clickable"}
+                onClick={() => { selected ? setCourse(undefined) : setCourse(c) }}>
+                {selected ? "Cancel" : "Edit"}
+            </span>
+        )
         return data
     })
 
