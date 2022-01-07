@@ -20,7 +20,7 @@ const Results = (): JSX.Element => {
         return actions.setActiveSubmission(undefined)
     }, [state.courseSubmissions])
 
-    
+
     const header = ["Name", "Group"].concat(state.assignments[courseID].map(assignment => {
         return assignment.getName()
     }))
@@ -31,8 +31,8 @@ const Results = (): JSX.Element => {
 
     const getSubmissionCell = (submissionLink: SubmissionLink, enrollmentId: number | undefined): CellElement => {
         if (submissionLink.hasSubmission() && submissionLink.hasAssignment()) {
-            return ({   
-                value: `${submissionLink.getSubmission()?.getScore()}%`, 
+            return ({
+                value: `${submissionLink.getSubmission()?.getScore()}%`,
                 className: submissionLink.getSubmission()?.getStatus() === Submission.Status.APPROVED ? "result-approved" : "result-pending",
                 onClick: () => {
                     actions.setActiveSubmission(submissionLink.getSubmission()?.getId())
@@ -43,15 +43,15 @@ const Results = (): JSX.Element => {
         }
         else {
             return ({
-                value: "N/A", 
+                value: "N/A",
                 onClick: () => actions.setActiveSubmission(undefined)
             })
         }
-    } 
+    }
 
     const results = state.courseSubmissionsList[courseID].map(link => {
         const data: (string | JSX.Element | CellElement)[] = []
-        data.push(link.user ? {value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}`} : "")
+        data.push(link.user ? { value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}` } : "")
         data.push(link.enrollment && link.enrollment.hasGroup() ? (link.enrollment.getGroup() as Group)?.getName() : "")
         if (link.submissions && link.user) {
             for (const submissionLink of link.submissions) {
@@ -70,13 +70,13 @@ const Results = (): JSX.Element => {
                 </div>
                 <div className="col reviewLab">
                     {state.currentSubmission ?
-                    <>
-                        <ManageSubmissionStatus />
-                        <div className="reviewLabResult mt-2">
-                            <Lab teacherSubmission={state.currentSubmission} />
-                        </div>
-                    </>
-                    : null}  
+                        <>
+                            <ManageSubmissionStatus />
+                            <div className="reviewLabResult mt-2">
+                                <Lab />
+                            </div>
+                        </>
+                        : null}
                 </div>
             </div>
         </div>

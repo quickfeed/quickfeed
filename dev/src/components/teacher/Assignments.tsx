@@ -2,72 +2,84 @@ import { json } from "overmind"
 import React, { useState } from "react"
 import { Assignment } from "../../../proto/ag/ag_pb"
 import { getCourseID, isManuallyGraded } from "../../Helpers"
-import { useAppState } from "../../overmind"
-import DynamicTable, { CellElement } from "../DynamicTable"
-import CriterionForm from "../forms/CriterionForm"
+import { useActions, useAppState } from "../../overmind"
+import Button, { ButtonType, Color } from "../admin/Button"
+import EditBenchmark from "./EditBenchmark"
+import EditCriterion from "./EditCriterion"
 
 
-// TODO: Implement benchmark adding
+// TODO: Needs some love. Currently a mess.
 
 const Assignments = (): JSX.Element => {
     const courseID = getCourseID()
+    const actions = useActions()
     const assignments = useAppState().assignments[courseID]
 
-    const [editing, setEditing] = useState<Assignment>()
-    const [editBenchmarkID, setBenchmarkID] = useState<number>(0)
-    const [addBenchmark, setAddBenchmark] = useState<boolean>(false)
-    const [editCriteriaID, setCriteriaID] = useState<number>(-1)
+    const assignmentElement = (assignment: Assignment): JSX.Element => {
+        const [hidden, setHidden] = useState<boolean>(false)
+        const [buttonText, setButtonText] = useState<string>("Rebuild all tests")
 
-    const assignmentsData = assignments.map(assignment => {
-        const data: (string | JSX.Element | CellElement)[] = []
-        data.push({className: "clickable", value: assignment.getName(), onClick: () => setEditing(assignment)})
-        data.push(assignment.getIsgrouplab() ? "V" : "X")
-        data.push(assignment.getReviewers().toString())
-        return data
-    })
-
-    const EditAssignment = () => {
-        if (editing) { 
-            return editing.getGradingbenchmarksList().map(bm => {  
-                const data = bm.getCriteriaList().map(c => {
-                    const data: (string | JSX.Element | CellElement)[] = []
-                    if (editCriteriaID == c.getId()) {
-                        data.push(<CriterionForm criterion={c} setEditing={setCriteriaID} />)
-                    }
-                    else {
-                        data.push({value: c.getDescription(), onClick: () => setCriteriaID(c.getId())})
-                        data.push(c.getPoints().toString())
-                    }
-                    return data
-                })
-                if (editBenchmarkID !== bm.getId()) {
-                        data.push([<div key={8}><button onClick={() => setBenchmarkID(bm.getId())}>Add Criterion</button> </div>])
-                } 
-                 else {
-                        data.push([<CriterionForm key={89} benchmarkID={bm.getId()} assignment={editing} setEditing={setBenchmarkID} />])
+        /* rebuild all tests for this assignment */
+        const rebuild = async () => {
+            if (confirm(`Warning! This will rebuild all submissions for ${assignment.getName()}. This may take several minutes. Are you sure you want to continue?`)) {
+                setButtonText("Rebuilding...")
+                const success = await actions.rebuildAllSubmissions({ assignmentID: assignment.getId(), courseID: courseID })
+                if (success) {
+                    setButtonText("Finished rebuilding")
+                } else {
+                    setButtonText("Failed to rebuild")
                 }
-                return <DynamicTable key={bm.getId()} data={data} header={[bm.getHeading(), "Points"]} />
-            })
-            
+            }
         }
-        return []
+
+        const generateForm = json(assignment).getGradingbenchmarksList()?.map((bm, index) => (
+            <EditBenchmark key={bm.getId()}
+                benchmark={bm}
+                assignment={assignment}
+            >
+                {/* Show all criteria for this benchmark */}
+                {bm.getCriteriaList().map((crit, index) => (
+                    <EditCriterion key={index}
+                        criterion={crit}
+                        assignment={assignment}
+                        benchmarkID={bm.getId()} />
+                ))}
+                {/* Always show one criterion form in case of benchmarks without any */}
+                <EditCriterion key={index}
+                    assignment={assignment}
+                    benchmarkID={bm.getId()}
+                />
+            </EditBenchmark>
+        ))
+
+
+        /* Only show the rebuild button if the assignment is not manually graded */
+        const rebuildButton = !isManuallyGraded(assignment) ? <Button text={buttonText} type={ButtonType.BUTTON} color={Color.BLUE} onclick={rebuild} /> : null
+        return (
+            <ul className="list-group">
+                <li className="list-group-item" onClick={() => setHidden(!hidden)}>
+                    {assignment.getName()}
+                </li>
+                {hidden && (
+                    <li className="list-group-item">
+                        {rebuildButton}
+                        {isManuallyGraded(assignment) && (
+                            <>
+                                {generateForm}
+                                <EditBenchmark assignment={assignment} />
+                            </>
+                        )}
+
+                    </li>
+                )}
+            </ul >
+        )
     }
 
+    const list = assignments.map(assignment => assignmentElement(assignment))
     return (
-        <div className="box row">
-            <div className="col">
-                {assignmentsData.length > 0 ? 
-                    <DynamicTable header={["Assignment", "Group", "Reviewers"]} data={assignmentsData} /> 
-                    : 
-                    "This course has no assignments."
-                }
-
-            </div>
-            <div className="col mb-5">
-                {editing && !isManuallyGraded(editing) ? `This assignment (${editing.getName()}) is not for manual grading.` : null}
-                {editing && isManuallyGraded(editing) ? EditAssignment() : null}
-                {(editing && isManuallyGraded(editing) && addBenchmark) ? null : <button onClick={() => setAddBenchmark(true)}>Add Benchmark</button>}
-            </div>
+        <div className="column">
+            {list}
         </div>
 
     )
