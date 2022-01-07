@@ -4,10 +4,12 @@ import { Course } from "../../../proto/ag/ag_pb"
 import { json } from "overmind"
 import FormInput from "./FormInput"
 import CourseCreationInfo from "../admin/CourseCreationInfo"
+import { useHistory } from "react-router"
 
 // CourseForm is used to create a new course or edit an existing course.
 export const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element => {
     const actions = useActions()
+    const history = useHistory()
 
     // TODO: This could go in go in a course-specific Overmind namespace rather than local state.
     // Local state for organization name to be checked against the server
@@ -47,11 +49,16 @@ export const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element
     }
 
     // Creates a new course if no course is being edited, otherwise updates the existing course
-    const submitHandler = () => {
+    const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
         if (editCourse) {
             actions.editCourse({ course: course })
         } else {
-            actions.createCourse({ course: course, orgName: orgName })
+            const success = await actions.createCourse({ course: course, orgName: orgName })
+            // If course creation was successful, redirect to the course page
+            if (success) {
+                history.push("/courses")
+            }
         }
     }
 
@@ -76,7 +83,7 @@ export const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element
                 </div>
             </div>
             {orgFound &&
-                <form className="form-group" onSubmit={e => { e.preventDefault(), submitHandler() }}>
+                <form className="form-group" onSubmit={async e => await submitHandler(e)}>
                     <div className="row">
                         <FormInput prepend="Name"
                             name="courseName"
