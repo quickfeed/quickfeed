@@ -1,11 +1,17 @@
 import { derived } from "overmind";
 import { Assignment, Course, Enrollment, EnrollmentLink, Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb";
+import { Color } from "../Helpers";
 
 export interface CourseGroup {
     courseID: number
     enrollments: number[]
     users: User[]
     groupName: string
+}
+
+export interface Alert {
+    text: string
+    color: Color
 }
 
 export interface ParsedCourseSubmissions {
@@ -134,7 +140,7 @@ type State = {
     courseGroup: CourseGroup,
 
     /* Contains alerts to be displayed to the user */
-    alerts: { text: string, type: number }[],
+    alerts: Alert[],
 
     /* Current search query */
     query: string,

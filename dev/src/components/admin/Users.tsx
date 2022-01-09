@@ -1,9 +1,9 @@
 import React from "react"
-import { isHidden } from "../../Helpers"
+import { isHidden, Color } from "../../Helpers"
 import { useAppState, useActions } from "../../overmind"
 import DynamicTable, { CellElement } from "../DynamicTable"
 import Search from "../Search"
-import Button, { ButtonType, Color } from "./Button"
+import Button, { ButtonType } from "./Button"
 import User from "./User"
 
 

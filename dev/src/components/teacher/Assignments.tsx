@@ -1,9 +1,9 @@
 import { json } from "overmind"
 import React, { useState } from "react"
 import { Assignment } from "../../../proto/ag/ag_pb"
-import { getCourseID, isManuallyGraded } from "../../Helpers"
+import { getCourseID, isManuallyGraded, Color } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
-import Button, { ButtonType, Color } from "../admin/Button"
+import Button, { ButtonType } from "../admin/Button"
 import EditBenchmark from "./EditBenchmark"
 import EditCriterion from "./EditCriterion"
 

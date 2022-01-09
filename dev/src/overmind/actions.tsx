@@ -2,8 +2,8 @@ import { json } from 'overmind'
 import { Context } from ".";
 import { IGrpcResponse } from "../GRPCManager";
 import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark } from "../../proto/ag/ag_pb";
-import { CourseGroup } from "./state";
-import { AlertType, SubmissionStatus } from "../Helpers";
+import { Alert, CourseGroup } from "./state";
+import { Color, SubmissionStatus } from "../Helpers";
 
 
 /** 
@@ -35,7 +35,6 @@ export const getEnrollmentsByUser = async ({ state, effects }: Context): Promise
         for (const enrollment of state.enrollments) {
             state.status[enrollment.getCourseid()] = enrollment.getStatus()
         }
-        console.log(state.enrollments)
         return true
     }
     return false
@@ -581,11 +580,11 @@ export const isAuthorizedTeacher = async ({ effects }: Context): Promise<boolean
 
 export const alertHandler = ({ state }: Context, response: IGrpcResponse<unknown>): void => {
     if (response.status.getCode() >= 0) {
-        state.alerts.push({ text: response.status.getError(), type: AlertType.DANGER })
+        state.alerts.push({ text: response.status.getError(), color: Color.RED })
     }
 };
 
-export const alert = ({ state }: Context, alert: { text: string, type: AlertType }): void => {
+export const alert = ({ state }: Context, alert: Alert): void => {
     state.alerts.push(alert)
 };
 

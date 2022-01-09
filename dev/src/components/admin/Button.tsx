@@ -1,12 +1,5 @@
 import React from "react"
-
-export enum Color {
-    RED = "danger",
-    BLUE = "primary",
-    GREEN = "success",
-    YELLOW = "warning",
-    GRAY = "secondary",
-}
+import { Color } from "../../Helpers"
 
 export enum ButtonType {
     BADGE = "badge badge",

@@ -1,8 +1,8 @@
 import React, { useEffect } from "react"
 import { Assignment, Review, Submission } from "../../../proto/ag/ag_pb"
-import { getCourseID, isManuallyGraded } from "../../Helpers"
+import { getCourseID, isManuallyGraded, Color } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
-import Button, { ButtonType, Color } from "../admin/Button"
+import Button, { ButtonType } from "../admin/Button"
 import ReviewInfo from "../ReviewInfo"
 import ReviewResult from "../ReviewResult"
 

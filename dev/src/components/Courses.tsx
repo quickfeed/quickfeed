@@ -2,8 +2,9 @@ import React, { useEffect } from "react"
 import { useActions, useAppState } from "../overmind"
 import { Enrollment } from "../../proto/ag/ag_pb"
 import CourseCard from "./CourseCard"
-import Button, { ButtonType, Color } from "./admin/Button"
+import Button, { ButtonType } from "./admin/Button"
 import { useHistory } from "react-router"
+import { Color } from "../Helpers"
 interface overview {
     home: boolean
 }
