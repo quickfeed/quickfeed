@@ -159,14 +159,28 @@ export const hasEnrollment = (enrollments: Enrollment[]): boolean => {
     return false
 }
 
-export const isTeacher = (enrollment: Enrollment): boolean => {
-    return enrollment.getStatus() >= Enrollment.UserStatus.TEACHER
+export const isStudent = (enrollment: Enrollment): boolean => { return hasStudent(enrollment.getStatus()) }
+export const isTeacher = (enrollment: Enrollment): boolean => { return hasTeacher(enrollment.getStatus()) }
+export const isPending = (enrollment: Enrollment): boolean => { return hasPending(enrollment.getStatus()) }
+
+/** isEnrolled returns true if the user is enrolled in the course, and is no longer pending. */
+export const isEnrolled = (enrollment: Enrollment): boolean => { return enrollment.getStatus() >= Enrollment.UserStatus.STUDENT }
+
+/** toggleUserStatus switches between teacher and student status. */
+export const toggleUserStatus = (enrollment: Enrollment): Enrollment.UserStatus => {
+    return isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER
 }
 
-/** isEnrolled returns true if the user is enrolled in the course, false otherwise */
-export const isEnrolled = (enrollment: Enrollment): boolean => {
-    return enrollment.getStatus() >= Enrollment.UserStatus.STUDENT
-}
+export const hasNone = (status: Enrollment.UserStatus): boolean => { return status === Enrollment.UserStatus.NONE }
+export const hasPending = (status: Enrollment.UserStatus): boolean => { return status === Enrollment.UserStatus.PENDING }
+export const hasStudent = (status: Enrollment.UserStatus): boolean => { return status === Enrollment.UserStatus.STUDENT }
+export const hasTeacher = (status: Enrollment.UserStatus): boolean => { return status === Enrollment.UserStatus.TEACHER }
+
+/** hasEnrolled returns true if user has enrolled in course, or is pending approval. */
+export const hasEnrolled = (status: Enrollment.UserStatus): boolean => { return status >= Enrollment.UserStatus.PENDING }
+
+export const isVisible = (enrollment: Enrollment): boolean => { return enrollment.getState() === Enrollment.DisplayState.VISIBLE }
+export const isFavorite = (enrollment: Enrollment): boolean => { return enrollment.getState() === Enrollment.DisplayState.FAVORITE }
 
 export const isManuallyGraded = (assignment: Assignment): boolean => {
     return assignment.getReviewers() > 0
