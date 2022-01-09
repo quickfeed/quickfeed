@@ -1,5 +1,3 @@
-/* eslint-disable quotes */
-
 import { useParams } from "react-router"
 import { Assignment, Enrollment, EnrollmentLink, Submission, User } from "../proto/ag/ag_pb"
 import { Score } from "../proto/kit/score/score_pb"
