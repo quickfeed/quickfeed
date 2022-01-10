@@ -210,13 +210,14 @@ export const SubmissionStatus = {
     3: "Revision",
 }
 
-/** generateStatusText returns a string that is used to tell the user what the status of their submission is */
-export const generateStatusText = (assignment: Assignment, submission: Submission): string => {
-    // If the submission is not graded, return a desciptive text
+// TODO: This could possibly be done on the server. Would need to add a field to the proto submission/score model.
+/** assignmentStatusText returns a string that is used to tell the user what the status of their submission is */
+export const assignmentStatusText = (assignment: Assignment, submission: Submission): string => {
+    // If the submission is not graded, return a descriptive text
     if (submission.getStatus() === Submission.Status.NONE) {
         // If the assignment requires manual approval, and the score is above the threshold, return Await Approval
         if (!assignment.getAutoapprove() && submission.getScore() >= assignment.getScorelimit()) {
-            return "Awating approval"
+            return "Awaiting approval"
         }
         if (submission.getScore() < assignment.getScorelimit() && submission.getStatus() !== Submission.Status.APPROVED) {
             return `Need ${assignment.getScorelimit()}% score for approval`
