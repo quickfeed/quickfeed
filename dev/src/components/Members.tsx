@@ -1,5 +1,4 @@
 import React, { useState } from "react"
-import { Redirect } from "react-router-dom"
 import { EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortByField } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment, User } from "../../proto/ag/ag_pb"

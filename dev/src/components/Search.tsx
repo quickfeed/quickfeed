@@ -1,17 +1,17 @@
 import React, { useEffect } from "react"
 import { useActions } from "../overmind"
 
-/** Search */
 /**
- *  This component updates either the supplied query state, or the query in Overmind state
- *  Used to determine if elements in the component it is in should be hidden or not.
+ *  Search is used to update the query in state when the user types in the search bar.
+ *  If setQuery is passed, it will modify the local state of a component instead of the global state.
+ *  
  */
 export const Search = ({ placeholder, setQuery }: { placeholder?: string, setQuery?: (e: unknown) => void }): JSX.Element => {
     const actions = useActions()
 
     useEffect(() => {
-        // Reset query in state when component loads
-        return actions.setQuery("")
+        // Reset query in state when component unmounts
+        return () => { actions.setQuery("") }
     }, [])
 
     return (

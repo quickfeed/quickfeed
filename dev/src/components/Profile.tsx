@@ -48,8 +48,6 @@ const Profile = (): JSX.Element => {
         )
     }
     return <Redirect to="/" />
-
-
 }
 
 export default Profile

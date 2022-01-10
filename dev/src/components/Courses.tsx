@@ -6,6 +6,8 @@ import Button, { ButtonType } from "./admin/Button"
 import { useHistory } from "react-router"
 import { Color, isFavorite } from "../Helpers"
 
+// If home is set to true, display only favorite courses. Otherwise, display all courses.
+// Can be used on dashboard to let the user choose which courses to display based on favorites.
 interface overview {
     home: boolean
 }
@@ -33,7 +35,7 @@ const Courses = (overview: overview): JSX.Element => {
         )
     }
 
-    // Push to separate arrays, for layout purposes. Favorite - Student - Teacher - Pending
+    // Push to separate arrays for layout purposes. Favorite - Student - Teacher - Pending
     const courses = () => {
         const favorite: JSX.Element[] = []
         const student: JSX.Element[] = []

@@ -1,5 +1,5 @@
 import { derived } from "overmind";
-import { Assignment, Course, Enrollment, EnrollmentLink, Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb";
+import { Assignment, Course, Enrollment, Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb";
 import { Color } from "../Helpers";
 
 export interface CourseGroup {

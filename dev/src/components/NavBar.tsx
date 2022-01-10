@@ -1,7 +1,6 @@
 import React from "react";
 import { useAppState } from "../overmind";
 import { Link } from 'react-router-dom'
-import { Enrollment } from "../../proto/ag/ag_pb";
 import NavBarFooter from "./navbar/NavBarFooter";
 import NavBarCourse from "./navbar/NavBarCourse";
 import { isEnrolled, isFavorite } from "../Helpers";
