@@ -1,6 +1,5 @@
 import React from "react";
-import { Enrollment } from "../../proto/ag/ag_pb";
-import { getCourseID, isVisible } from "../Helpers";
+import { getCourseID, hasTeacher, isTeacher, isVisible } from "../Helpers";
 import { useActions, useAppState } from "../overmind";
 
 
@@ -22,9 +21,9 @@ const CourseBanner = (): JSX.Element => {
                         </i>
                     </span>
                 </h1>
-                {state.status[enrollment.getCourseid()] === Enrollment.UserStatus.TEACHER &&
+                {hasTeacher(state.status[enrollment.getCourseid()]) &&
                     <span className="clickable" onClick={() => actions.changeView(enrollment.getCourseid())}>
-                        {enrollment.getStatus() === Enrollment.UserStatus.TEACHER ? "Switch to Student View" : "Switch to Teacher View"}
+                        {isTeacher(enrollment) ? "Switch to Student View" : "Switch to Teacher View"}
                     </span>
                 }
             </div>
