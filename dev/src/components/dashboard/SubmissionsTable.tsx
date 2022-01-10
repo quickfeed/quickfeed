@@ -1,6 +1,6 @@
 import React from "react";
 import { useHistory } from "react-router";
-import { generateStatusText, getFormattedTime, SubmissionStatus, timeFormatter } from "../../Helpers";
+import { assignmentStatusText, getFormattedTime, SubmissionStatus, timeFormatter } from "../../Helpers";
 import { useAppState } from "../../overmind";
 import { Assignment, Submission } from "../../../proto/ag/ag_pb";
 import ProgressBar, { Progress } from "../ProgressBar";
@@ -61,7 +61,7 @@ const SubmissionsTable = (): JSX.Element => {
                         <td>{getFormattedTime(assignment.getDeadline())}</td>
                         <td>{deadline.message ? deadline.message : '--'}</td>
                         <td className={SubmissionStatus[submission.getStatus()]}>
-                            {generateStatusText(assignment, submission)}
+                            {assignmentStatusText(assignment, submission)}
                         </td>
                     </tr>
                 )

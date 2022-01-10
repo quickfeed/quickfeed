@@ -2,7 +2,7 @@ import { json } from "overmind"
 import React from "react"
 import { Assignment, Submission } from "../../proto/ag/ag_pb"
 import { Score } from "../../proto/kit/score/score_pb"
-import { generateStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded } from "../Helpers"
+import { assignmentStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded } from "../Helpers"
 import { useAppState } from "../overmind"
 import ProgressBar, { Progress } from "./ProgressBar"
 
@@ -53,7 +53,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                         <tbody>
                             <tr>
                                 <th colSpan={2} className={classname}>Status</th>
-                                <td>{generateStatusText(assignment, submission)}</td>
+                                <td>{assignmentStatusText(assignment, submission)}</td>
                             </tr>
                             <tr>
                                 <th colSpan={2}>Delivered</th>
