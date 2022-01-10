@@ -1,15 +1,14 @@
 import * as React from 'react';
 import { useHistory } from 'react-router';
-import { EnrollmentStatus } from '../Helpers';
+import { EnrollmentStatus, hasEnrolled, hasNone, hasPending, isVisible } from '../Helpers';
 import { useActions } from '../overmind';
 import { Course, Enrollment } from '../../proto/ag/ag_pb';
 
 // TODO Should be exported to a seperate file 
 
 interface CardProps {
-    course : Course,
+    course: Course,
     enrollment: Enrollment
-    status: number 
 }
 
 const CardColor = [
@@ -19,39 +18,40 @@ const CardColor = [
     "success"
 ]
 
-const CourseCard = ({course, enrollment, status}: CardProps): JSX.Element => {
+const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
     const actions = useActions()
     const history = useHistory()
+    const status = enrollment.getStatus()
 
     return (
         <div className="col-sm-4">
-            <div className="card" style= {{maxWidth: "35rem", marginBottom:"10px",minHeight:"205px"}}>
-                <div className={"card-header bg-"+CardColor[status]+" text-white"}>
+            <div className="card" style={{ maxWidth: "35rem", marginBottom: "10px", minHeight: "205px" }}>
+                <div className={"card-header bg-" + CardColor[status] + " text-white"}>
                     {course.getCode()}
-                    {enrollment.getStatus() > Enrollment.UserStatus.NONE && 
-                    <>
-                        <span className="float-right">
-                            <i className={enrollment.getState() === Enrollment.DisplayState.VISIBLE ? 'fa fa-star-o' : "fa fa-star "} 
-                                onClick={() => actions.setEnrollmentState(enrollment)}></i>
-                        </span>
-                        <p className="float-sm-right mr-2">{enrollment ? EnrollmentStatus[enrollment?.getStatus()]  : ''}</p>
-                    </>
+                    {hasEnrolled(status) &&
+                        <>
+                            <span className="float-right">
+                                <i className={isVisible(enrollment) ? 'fa fa-star-o' : "fa fa-star "}
+                                    onClick={() => actions.setEnrollmentState(enrollment)}></i>
+                            </span>
+                            <p className="float-sm-right mr-2">{EnrollmentStatus[status]}</p>
+                        </>
                     }
                 </div>
-                
+
                 <div className="card-body position-relative">
                     <h5 className="card-title">{course.getName()} - {course.getTag()}/{course.getYear()}</h5>
-                    { status === Enrollment.UserStatus.NONE ? 
+                    {hasNone(status) ?
                         <div className="btn btn-primary course-button" onClick={() => actions.enroll(course.getId())}>Enroll</div>
-                    : status === Enrollment.UserStatus.PENDING ?
+                    : hasPending(status) ?
                         <div className="btn btn-secondary course-button disabled">Pending</div>
                     :
-                        <div className="btn btn-primary course-button" onClick={() => history.push("/course/"+enrollment.getCourseid())}>Go to Course</div>
+                        <div className="btn btn-primary course-button" onClick={() => history.push("/course/" + enrollment.getCourseid())}>Go to Course</div>
                     }
                 </div>
             </div>
         </div>
     )
-   
 }
+
 export default CourseCard
