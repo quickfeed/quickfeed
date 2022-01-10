@@ -3,7 +3,7 @@ import { Context } from ".";
 import { IGrpcResponse } from "../GRPCManager";
 import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark } from "../../proto/ag/ag_pb";
 import { Alert, CourseGroup } from "./state";
-import { Color, SubmissionStatus } from "../Helpers";
+import { Color, isPending, SubmissionStatus } from "../Helpers";
 
 
 /** 
@@ -165,9 +165,26 @@ export const updateSubmission = async ({ state, effects }: Context, status: Subm
 
 /** updateEnrollment updates an enrollment status with the given status */
 export const updateEnrollment = async ({ actions, effects }: Context, { enrollment, status }: { enrollment: Enrollment, status: Enrollment.UserStatus }): Promise<void> => {
+    // Confirm that user really wants to change enrollment status
+    let confirmed = false
+    switch (status) {
+        case Enrollment.UserStatus.NONE:
+            confirmed = confirm("WARNING! Rejecting a student is irreversible. Are you sure?")
+            break
+        case Enrollment.UserStatus.STUDENT:
+            // If the enrollment is pending, don't ask for confirmation
+            if (isPending(enrollment)) {
+                confirmed = true
+            } else {
+                confirmed = confirm(`Warning! ${enrollment.getUser()?.getName()} is a teacher. Are sure you want to demote?`)
+            }
+            break
+        case Enrollment.UserStatus.TEACHER:
+            confirmed = confirm(`Are you sure you want to promote ${enrollment.getUser()?.getName()} to teacher status?`)
+            break
+    }
 
-    // If rejecing an enrollment, confirm that user really wants to do so. If approving, no confirmation is required.
-    if (status > 0 || status === Enrollment.UserStatus.NONE && confirm("WARNNG! Rejecting a student is irreversible. Are you sure?")) {
+    if (confirmed) {
         // Copy enrollment object and change status
         const temp = json(enrollment).setStatus(status)
         // Send updated enrollment to server

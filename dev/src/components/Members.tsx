@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { Redirect } from "react-router-dom"
-import { EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isTeacher, sortByField } from "../Helpers"
+import { EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortByField } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment, User } from "../../proto/ag/ag_pb"
 import Search from "./Search"
@@ -27,61 +27,45 @@ export const Members = (): JSX.Element => {
             default:
                 return Enrollment.prototype.getStatus
         }
-
     }
 
     const approveAll = () => {
         for (const enrollment of pending) {
-            actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.STUDENT})
+            actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT })
         }
     }
 
-    if (!isTeacher(state.enrollmentsByCourseId[courseID])) {
-        return <Redirect to="/" />
-    }
+    const pending = state.courseEnrollments[courseID].filter(enrollment => isPending(enrollment))
 
-    const pending = state.courseEnrollments[courseID].filter(enrollment => enrollment.getStatus() === Enrollment.UserStatus.PENDING)
-    
     const members = sortByField(state.courseEnrollments[courseID], [], sort(), descending).map((enrollment: Enrollment) => {
-        const demoteText = `Warning! ${enrollment.getUser()?.getName()} is a teacher. Are sure you want to demote?`
-        const promoteText = `Are you sure you want to promote ${enrollment.getUser()?.getName()} to teacher status?`
-        
         const data: (string | JSX.Element)[] = []
         data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getName() : "")
         data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getEmail() : "")
         data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getStudentid() : "")
         data.push(enrollment.getLastactivitydate())
         data.push(enrollment.getTotalapproved().toString())
-        if (enrollment.getStatus() === Enrollment.UserStatus.PENDING) {
+
+        if (isPending(enrollment)) {
             data.push(
                 <div>
-                    <i className="badge badge-primary" style={{cursor: "pointer"}} onClick={() => actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.STUDENT})}>
+                    <i className="badge badge-primary" style={{ cursor: "pointer" }} 
+                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT })}>
                         Accept
                     </i>
-                    <i 
-                        className="badge badge-danger clickable ml-1"
-                        onClick={() => actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.NONE}) }
-                    >
+                    <i className="badge badge-danger clickable ml-1"
+                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.NONE })}>
                         Reject
                     </i>
                 </div>)
-        }
-        else {
+        } else {
             data.push(edit ? (
                 <div>
-                    <i 
-                        className="badge badge-primary clickable" 
-                        onClick={() => confirm(isTeacher(enrollment) ? demoteText : promoteText) ? actions.updateEnrollment({enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER}) : null}
-                    >
+                    <i className="badge badge-primary clickable"
+                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER })}>
                         {isTeacher(enrollment) ? "Demote" : "Promote"}
                     </i>
-                    <i 
-                        className="badge badge-danger clickable ml-1" 
-                        onClick={() => {
-                            if (confirm("WARNNG! Rejecting a student is irreversible. Are you sure?"))
-                                actions.updateEnrollment({enrollment: enrollment, status: Enrollment.UserStatus.NONE}) 
-                            }}
-                    >
+                    <i className="badge badge-danger clickable ml-1"
+                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.NONE })}>
                         Reject
                     </i>
                 </div>) :
@@ -100,18 +84,24 @@ export const Members = (): JSX.Element => {
                     <Search />
                 </div>
                 <div className="ml-auto">
-                    <div className={edit ? "btn btn-sm btn-danger" : "btn btn-sm btn-primary"} onClick={() => setEditing(!edit)}>{edit ? "Cancel" : "Edit"}</div>
+                    <div className={edit ? "btn btn-sm btn-danger" : "btn btn-sm btn-primary"} onClick={() => setEditing(!edit)}>
+                        {edit ? "Cancel" : "Edit"}
+                    </div>
                 </div>
-                {pending.length > 0 ? <div style={{marginLeft: "10px"}}><button className="btn btn-success float-right" onClick={() => approveAll()}>Approve All</button></div>  : null}
-                
+                {pending.length > 0 ? 
+                    <div style={{ marginLeft: "10px" }}>
+                        <button className="btn btn-success float-right" onClick={() => approveAll()}>
+                            Approve All
+                        </button>
+                    </div> : null}
             </div>
-            
+
             <div>
-                <DynamicTable header={["Name", "Email", {value: "Student ID", onClick: () => {setFunc("ID"); setDescending(!descending)}}, "Activity", "Approved", {value: "Role", onClick: () => {setFunc("STATUS"); setDescending(!descending)}}]} data={members} />
+                <DynamicTable header={["Name", "Email", { value: "Student ID", onClick: () => { setFunc("ID"); setDescending(!descending) } }, "Activity", "Approved", { value: "Role", onClick: () => { setFunc("STATUS"); setDescending(!descending) } }]} data={members} />
             </div>
         </div>
-        )
-    }
+    )
+}
 
 
 export default Members
