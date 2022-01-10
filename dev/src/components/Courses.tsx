@@ -1,18 +1,18 @@
-import React, { useEffect } from "react"
-import { useActions, useAppState } from "../overmind"
+import React from "react"
+import { useAppState } from "../overmind"
 import { Enrollment } from "../../proto/ag/ag_pb"
 import CourseCard from "./CourseCard"
 import Button, { ButtonType } from "./admin/Button"
 import { useHistory } from "react-router"
-import { Color } from "../Helpers"
+import { Color, isFavorite } from "../Helpers"
+
 interface overview {
     home: boolean
 }
 
-/** This component should list user courses, and available courses and allow enrollment */
+/** This component lists the user's courses and courses available for enrollment. */
 const Courses = (overview: overview): JSX.Element => {
     const state = useAppState()
-    const actions = useActions()
     const history = useHistory()
 
     // Notify user if there are no courses (should only ever happen with a fresh database on backend)
@@ -33,60 +33,41 @@ const Courses = (overview: overview): JSX.Element => {
         )
     }
 
-    // push to seperate arrays, for layout purposes. Favorite - Student - Teacher - Pending
+    // Push to separate arrays, for layout purposes. Favorite - Student - Teacher - Pending
     const courses = () => {
         const favorite: JSX.Element[] = []
         const student: JSX.Element[] = []
         const teacher: JSX.Element[] = []
         const pending: JSX.Element[] = []
-        const crsArr: JSX.Element[] = []
+        const availableCourses: JSX.Element[] = []
         state.courses.map(course => {
             const enrol = state.enrollmentsByCourseId[course.getId()]
             if (enrol) {
-                if (enrol.getState() == Enrollment.DisplayState.FAVORITE) {
-                    // add to favorite list.
-                    favorite.push(
-                        <CourseCard key={course.getId()} course={course} enrollment={enrol} status={enrol.getStatus()} />
-                    )
+                const courseCard = <CourseCard key={course.getId()} course={course} enrollment={enrol} />
+                if (isFavorite(enrol)) {
+                    favorite.push(courseCard)
                 } else {
                     switch (enrol.getStatus()) {
-                        //pending
                         case Enrollment.UserStatus.PENDING:
-                            //color orange
-                            pending.push(
-                                <CourseCard key={course.getId()} course={course} enrollment={enrol} status={enrol.getStatus()} />
-                            )
+                            pending.push(<CourseCard key={course.getId()} course={course} enrollment={enrol} />)
                             break
-
                         case Enrollment.UserStatus.STUDENT:
-                            // Student
-                            //color blue
-                            student.push(
-                                <CourseCard key={course.getId()} course={course} enrollment={enrol} status={enrol.getStatus()} />
-                            )
+                            student.push(<CourseCard key={course.getId()} course={course} enrollment={enrol} />)
                             break
                         case Enrollment.UserStatus.TEACHER:
-                            // color green
-                            // Teacher
-                            teacher.push(
-                                <CourseCard key={course.getId()} course={course} enrollment={enrol} status={enrol.getStatus()} />
-                            )
-                            break
-                        default:
-                            console.log("Something went wrong")
+                            teacher.push(<CourseCard key={course.getId()} course={course} enrollment={enrol} />)
                             break
                     }
                 }
-            }
-            else {
-                crsArr.push(
-                    <CourseCard key={course.getId()} course={course} enrollment={new Enrollment} status={Enrollment.UserStatus.NONE} />
+            } else {
+                availableCourses.push(
+                    <CourseCard key={course.getId()} course={course} enrollment={new Enrollment} />
                 )
             }
         })
 
-        // If overview.home == true, only render favorited courses.
         if (overview.home) {
+            // Render only favorited courses.
             return (
                 <>
                     {favorite.length > 0 &&
@@ -131,17 +112,15 @@ const Courses = (overview: overview): JSX.Element => {
                     </div>
                 }
 
-                {crsArr.length > 0 &&
-                    <React.Fragment>
+                {availableCourses.length > 0 &&
+                    <>
                         <h2>Available Courses</h2>
                         <div className="card-deck course-card-row">
-                            {crsArr}
+                            {availableCourses}
                         </div>
-                    </React.Fragment>
+                    </>
                 }
             </div>
-
-
         )
     }
     return courses()
