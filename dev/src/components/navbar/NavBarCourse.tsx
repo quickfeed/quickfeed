@@ -2,6 +2,7 @@ import React from "react";
 import { useHistory } from "react-router";
 import { Enrollment } from "../../../proto/ag/ag_pb";
 import { Status } from "../../consts";
+import { isStudent, isTeacher } from "../../Helpers";
 import { useActions, useAppState } from "../../overmind";
 import NavBarLabs from "./NavBarLabs";
 import NavBarTeacher from "./NavBarTeacher";
@@ -10,16 +11,15 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element =
     const state = useAppState()
     const actions = useActions()
     const history = useHistory()
-    // If selected, used to show teacher / student navbar for that course
-    const selected = state.activeCourse === enrollment.getCourseid()
+    // Determines if a dropdown should be shown for the course
+    const active = state.activeCourse === enrollment.getCourseid()
 
     const onCourseClick = (enrollment: Enrollment) => {
-        if (selected) {
-            // Unselect the active course
+        if (active) {
+            // Collapse the dropdown the active course
             actions.setActiveCourse(0)
             history.push("/")
-        }
-        else {
+        } else {
             history.push(`/course/` + enrollment.getCourseid())
             actions.setActiveCourse(enrollment.getCourseid())
         }
@@ -33,12 +33,12 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element =
                     {enrollment.getCourse()?.getCode()}
                 </div>
                 <div className="col" title="icon">
-                    <i className={selected ? "icon fa fa-caret-down fa-lg float-right" : "icon fa fa-caret-down fa-rotate-90 fa-lg float-right"}></i>
+                    <i className={active ? "icon fa fa-caret-down fa-lg float-right" : "icon fa fa-caret-down fa-rotate-90 fa-lg float-right"}></i>
                 </div>
             </li>
-            <div className={selected ? Status.ActiveLab : Status.Inactive}>
-                {selected && enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? <NavBarLabs /> : null}
-                {selected && enrollment.getStatus() === Enrollment.UserStatus.TEACHER ? <NavBarTeacher /> : null}
+            <div className={active ? Status.ActiveLab : Status.Inactive}>
+                {active && isStudent(enrollment) ? <NavBarLabs /> : null}
+                {active && isTeacher(enrollment) ? <NavBarTeacher /> : null}
             </div>
         </>
     )
