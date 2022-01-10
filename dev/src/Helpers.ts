@@ -30,9 +30,9 @@ export interface Deadline {
 }
 
 /** Utility function for LandingpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
+// layoutTime = "2021-03-20T23:59:00"
 export const timeFormatter = (deadline: string, now: Date): Deadline => {
-    const timeOfDeadline = new Date(deadline)
-    const timeToDeadline = timeOfDeadline.getTime() - now.getTime()
+    const timeToDeadline = new Date(deadline).getTime() - now.getTime()
     const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     const hours = Math.floor(timeToDeadline / (1000 * 3600))
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
@@ -55,7 +55,6 @@ export const timeFormatter = (deadline: string, now: Date): Deadline => {
 
     return { className: "", message: "", daysUntil: days }
 }
-export const layoutTime = "2021-03-20T23:59:00"
 
 // Used for displaying enrollment status
 export const EnrollmentStatus = {
@@ -86,19 +85,10 @@ export const sortByField = (arr: any[], funcs: Function[], by: Function, descend
         }
         if (funcs.length > 0) {
             funcs.forEach(func => {
-                if (!x) {
-                    x = func.call(a)
-                } else {
-                    x = func.call(x)
-                }
-                if (!y) {
-                    y = func.call(b)
-                } else {
-                    y = func.call(y)
-                }
+                x = x ?  func.call(x) : func.call(a)
+                y = y ? func.call(y) : func.call(b)
             })
-        }
-        else {
+        } else {
             x = a
             y = b
         }
@@ -116,7 +106,7 @@ export const sortByField = (arr: any[], funcs: Function[], by: Function, descend
     return sortedArray
 }
 
-
+// TODO: Could be computed on the backend (https://github.com/quickfeed/quickfeed/issues/420)
 /** getPassedTestCount returns a string with the number of passed tests and the total number of tests */
 export const getPassedTestsCount = (score: Score[]): string => {
     let totalTests = 0
@@ -134,21 +124,17 @@ export const getPassedTestsCount = (score: Score[]): string => {
 }
 
 
-export const isValid = (element: unknown): boolean => {
-    if (element instanceof User) {
-        if (element.getName().length === 0 || element.getEmail().length === 0 || element.getStudentid().length === 0) {
-            return false
-        }
+export const isValid = (elm: User | EnrollmentLink): boolean => {
+    if (elm instanceof User) {
+        return elm.getName().length > 0 && elm.getEmail().length > 0 && elm.getStudentid().length > 0
     }
-    if (element instanceof EnrollmentLink) {
-        if (!element.getEnrollment() && !element.getEnrollment()?.getUser() && element.getSubmissionsList().length === 0) {
-            return false
-        }
+    if (elm instanceof EnrollmentLink) {
+        return elm.getEnrollment()?.getUser() !== undefined && elm.getSubmissionsList().length > 0
     }
     return true
 }
 
-/** hasEnrollment returns true if the user has any approved enrollments, false otherwise */
+/** hasEnrollment returns true if any of the provided has been approved */
 export const hasEnrollment = (enrollments: Enrollment[]): boolean => {
     for (const enrollment of enrollments) {
         if (enrollment.getStatus() > Enrollment.UserStatus.PENDING) {
