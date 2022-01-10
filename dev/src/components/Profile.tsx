@@ -36,11 +36,11 @@ const Profile = (): JSX.Element => {
                 </div>
                 <div className="container">
                     <ProfileCard>
-                        {!editing ?
-                            <ProfileInfo setEditing={setEditing} /> :
+                        {editing ?
                             <ProfileForm setEditing={setEditing} >
                                 {state.isValid ? null : <SignupText />}
                             </ProfileForm>
+                            : <ProfileInfo setEditing={setEditing} /> 
                         }
                     </ProfileCard>
                 </div>
