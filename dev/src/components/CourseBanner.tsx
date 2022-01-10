@@ -1,6 +1,6 @@
 import React from "react";
 import { Enrollment } from "../../proto/ag/ag_pb";
-import { getCourseID } from "../Helpers";
+import { getCourseID, isVisible } from "../Helpers";
 import { useActions, useAppState } from "../overmind";
 
 
@@ -11,7 +11,7 @@ const CourseBanner = (): JSX.Element => {
     const actions = useActions()
 
     const enrollment = state.enrollmentsByCourseId[getCourseID()]
-    const style = enrollment.getState() === Enrollment.DisplayState.VISIBLE ? 'fa fa-star-o' : "fa fa-star "
+    const style = isVisible(enrollment) ? 'fa fa-star-o' : "fa fa-star "
     return (
         <div className="jumbotron">
             <div className="centerblock container">

@@ -58,7 +58,6 @@ const NavBarFooter = (): JSX.Element => {
             )
         }
         return null
-
     }
 
     return (
