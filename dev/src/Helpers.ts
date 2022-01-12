@@ -1,5 +1,6 @@
+import { json } from "overmind"
 import { useParams } from "react-router"
-import { Assignment, Enrollment, EnrollmentLink, Submission, User } from "../proto/ag/ag_pb"
+import { Assignment, Enrollment, EnrollmentLink, GradingBenchmark, Review, Submission, User } from "../proto/ag/ag_pb"
 import { Score } from "../proto/kit/score/score_pb"
 
 export enum Color {
@@ -170,6 +171,10 @@ export const isFavorite = (enrollment: Enrollment): boolean => { return enrollme
 export const isManuallyGraded = (assignment: Assignment): boolean => {
     return assignment.getReviewers() > 0
 }
+
+export const hasReviews = (submission: Submission): boolean => { return json(submission).getReviewsList().length > 0 }
+export const hasBenchmarks = (obj: Review | Assignment): boolean => { return json(obj).getGradingbenchmarksList().length > 0 }
+export const hasCriteria = (benchmark: GradingBenchmark): boolean => { return json(benchmark).getCriteriaList().length > 0 }
 
 /** getCourseID returns the course ID determined by the current route */
 export const getCourseID = (): number => {
