@@ -21,21 +21,21 @@ const CourseUtilityLinks = (): JSX.Element => {
                     </h6>
                 </div>
 
-                <a href={state.repositories[courseID][Repository.Type.USER]} className="list-group-item list-group-item-action">
+                <a href={repo[Repository.Type.USER]} className="list-group-item list-group-item-action">
                     User Repository
                 </a>
 
-                {repo[courseID][Repository.Type.GROUP] !== "" ? (
-                    <a href={repo[courseID][Repository.Type.GROUP]} className="list-group-item list-group-item-action overflow-ellipses" style={{ textAlign: "left" }}>
+                {repo[Repository.Type.GROUP] ? (
+                    <a href={repo[Repository.Type.GROUP]} className="list-group-item list-group-item-action overflow-ellipses" style={{ textAlign: "left" }}>
                         Group Repository ({enrollment.getGroup()?.getName()})
                     </a>
                 ) : null}
 
-                <a href={repo[courseID][Repository.Type.ASSIGNMENTS]} className="list-group-item list-group-item-action">
+                <a href={repo[Repository.Type.ASSIGNMENTS]} className="list-group-item list-group-item-action">
                     Assignments
                 </a>
 
-                <a href={repo[courseID][Repository.Type.COURSEINFO]} className="list-group-item list-group-item-action">
+                <a href={repo[Repository.Type.COURSEINFO]} className="list-group-item list-group-item-action">
                     Course Info
                 </a>
 
