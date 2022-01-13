@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { isHidden } from "../Helpers"
 import { useAppState } from "../overmind"
 
@@ -9,15 +9,18 @@ export type CellElement = {
     link?: string
 }
 
-const isCellElement = (obj: unknown): obj is CellElement => {
-    return (obj as CellElement).value !== undefined
+export type RowElement = (string | JSX.Element | CellElement)
+export type Row = RowElement[]
+
+const isCellElement = (element: RowElement): element is CellElement => {
+    return (element as CellElement).value !== undefined
 }
 
-const isJSXElement = (obj: unknown): obj is JSX.Element => {
-    return (obj as JSX.Element).type !== undefined
+const isJSXElement = (element: RowElement): element is JSX.Element => {
+    return (element as JSX.Element).type !== undefined
 }
 
-const DynamicTable = ({ header, data }: { header: (string | JSX.Element | CellElement)[], data: (string | JSX.Element | CellElement)[][] }): JSX.Element | null => {
+const DynamicTable = ({ header, data }: { header: Row, data: Row[] }): JSX.Element | null => {
     // If there is no data, don't render anything
     if (!data || data.length === 0) {
         return null
@@ -25,7 +28,7 @@ const DynamicTable = ({ header, data }: { header: (string | JSX.Element | CellEl
 
     const searchQuery = useAppState().query
 
-    const isRowHidden = (row: (string | JSX.Element | CellElement)[]) => {
+    const isRowHidden = (row: Row) => {
         if (searchQuery.length === 0) {
             return false
         }
@@ -46,7 +49,7 @@ const DynamicTable = ({ header, data }: { header: (string | JSX.Element | CellEl
         return true
     }
 
-    const generateRow = (cell: string | JSX.Element | CellElement | (string | JSX.Element | CellElement)[], index: number) => {
+    const rowCell = (cell: RowElement, index: number) => {
         if (isCellElement(cell)) {
             const element = cell.link ? <a href={cell.link}>{cell.value}</a> : cell.value
             return <td key={index} className={cell.className} onClick={cell.onClick}>{element}</td>
@@ -54,7 +57,7 @@ const DynamicTable = ({ header, data }: { header: (string | JSX.Element | CellEl
         return index == 0 ? <th key={index}>{cell}</th> : <td key={index}>{cell}</td>
     }
 
-    const generateHeaderRow = (cell: string | JSX.Element | CellElement, index: number) => {
+    const headerRowCell = (cell: RowElement, index: number) => {
         if (isCellElement(cell)) {
             const element = cell.link ? <a href={cell.link}>{cell.value}</a> : cell.value
             return <th key={index} className={cell.className} style={cell.onClick ? { "cursor": "pointer" } : undefined} onClick={cell.onClick}>{element}</th>
@@ -62,11 +65,11 @@ const DynamicTable = ({ header, data }: { header: (string | JSX.Element | CellEl
         return <th key={index}>{cell}</th>
     }
 
-    const head = header.map((cell, index) => { return generateHeaderRow(cell, index) })
+    const head = header.map((cell, index) => { return headerRowCell(cell, index) })
 
     const rows = data.map((row, index) => {
         const generatedRow = row.map((cell, index) => {
-            return generateRow(cell, index)
+            return rowCell(cell, index)
         })
         return <tr hidden={isRowHidden(row)} key={index}>{generatedRow}</tr>
     })
