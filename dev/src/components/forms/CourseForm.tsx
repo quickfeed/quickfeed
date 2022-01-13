@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { useActions } from "../../overmind"
-import { Course } from "../../../proto/ag/ag_pb"
+import { Course, Organization } from "../../../proto/ag/ag_pb"
 import { json } from "overmind"
 import FormInput from "./FormInput"
 import CourseCreationInfo from "../admin/CourseCreationInfo"
@@ -14,10 +14,11 @@ export const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element
     // TODO: This could go in go in a course-specific Overmind namespace rather than local state.
     // Local state for organization name to be checked against the server
     const [orgName, setOrgName] = useState("")
+    const [org, setOrg] = useState<Organization>()
 
     // Local state containing the course to be created or edited (if any)
     const [course, setCourse] = useState(editCourse ? json(editCourse) : new Course)
-
+    
     // Local state containing a boolean indicating whether the organization is valid. Courses that are being edited do not need to be validated.
     const [orgFound, setOrgFound] = useState<boolean>(editCourse ? true : false)
 
@@ -54,18 +55,27 @@ export const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element
         if (editCourse) {
             actions.editCourse({ course: course })
         } else {
-            const success = await actions.createCourse({ course: course, orgName: orgName })
-            // If course creation was successful, redirect to the course page
-            if (success) {
-                history.push("/courses")
+            if (org) {
+                const success = await actions.createCourse({ course: course, org: org })
+                // If course creation was successful, redirect to the course page
+                if (success) {
+                    history.push("/courses")
+                }
+            } else {
+                //org not found
             }
         }
     }
 
     // Trigger grpc call to check if org exists
     const getOrganization = async () => {
-        // TODO: Could modify getOrganization to return the organization object rather than a boolean, and avoid calling it once more in createCourse.
-        setOrgFound(await actions.getOrganization(orgName))
+        const org = (await actions.getOrganization(orgName)).data
+        if (org) {
+            setOrg(org)
+            setOrgFound(true)
+        } else {
+            setOrgFound(false)
+        }
     }
 
     return (
@@ -122,6 +132,7 @@ export const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element
                             name="courseYear"
                             placeholder={"(ex. 2021)"}
                             defaultValue={editCourse ? editCourse.getYear().toString() : defaultYear(date).toString()}
+                            onChange={handleChange}
                             type="number"
                         />
                     </div>
