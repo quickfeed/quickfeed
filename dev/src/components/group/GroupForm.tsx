@@ -1,7 +1,7 @@
 import { json } from "overmind/lib/utils"
 import React, { useEffect, useState } from "react"
 import { Enrollment, Group, User } from "../../../proto/ag/ag_pb"
-import { getCourseID, sortByField } from "../../Helpers"
+import { getCourseID, isHidden, isStudent, sortByField } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Search from "../Search"
 
@@ -20,7 +20,7 @@ const GroupForm = ({ editGroup, setGroup }: { editGroup?: Group, setGroup?: Reac
 
     useEffect(() => {
         // Add self to group if not teacher
-        if (!users.includes(state.self.getId()) && state.enrollmentsByCourseId[courseID].getStatus() != Enrollment.UserStatus.TEACHER) {
+        if (!users.includes(state.self.getId()) && isStudent(state.enrollmentsByCourseId[courseID])) {
             users.push(state.self.getId())
             setUsers([...users])
         }
@@ -39,7 +39,7 @@ const GroupForm = ({ editGroup, setGroup }: { editGroup?: Group, setGroup?: Reac
             return true
         }
         if (enrollment.getUser()) {
-            return !enrollment.getUser()?.getName().toLowerCase().includes(query)
+            return isHidden((enrollment.getUser() as User).getName(), query)
         }
         return false
     }
@@ -80,8 +80,7 @@ const GroupForm = ({ editGroup, setGroup }: { editGroup?: Group, setGroup?: Reac
     const updateGroupName = (input: string) => {
         if (group) {
             group.setName(input)
-        }
-        else {
+        } else {
             const name = input.length == 0 ? "Group Name" : input
             setName(name)
         }
@@ -95,7 +94,7 @@ const GroupForm = ({ editGroup, setGroup }: { editGroup?: Group, setGroup?: Reac
             return (
                 <li hidden={search(enrollment)} key={id} className="list-group-item">
                     {enrollment.getUser()?.getName()}
-                    <i className="badge-pill badge-success ml-2" style={{ float: "right", cursor: "pointer" }} onClick={() => updateGroupUsers(id)}>+</i>
+                    <i className="badge-pill badge-success ml-2 clickable float-right" onClick={() => updateGroupUsers(id)}>+</i>
                 </li>
             )
         }
@@ -109,7 +108,7 @@ const GroupForm = ({ editGroup, setGroup }: { editGroup?: Group, setGroup?: Reac
                 <li key={id} className="list-group-item">
                     <img id="group-image" src={enrollment.getUser()?.getAvatarurl()}></img>
                     {enrollment.getUser()?.getName()}
-                    <i className="badge-pill badge-danger rounded-circle" style={{ float: "right", cursor: "pointer" }} onClick={() => updateGroupUsers(id)}>-</i>
+                    <i className="badge-pill badge-danger rounded-circle clickable float-right" onClick={() => updateGroupUsers(id)}>-</i>
                 </li>
             )
         }

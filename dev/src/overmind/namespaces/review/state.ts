@@ -82,5 +82,4 @@ export const state: State = {
         })
         return total
     })
-
 }

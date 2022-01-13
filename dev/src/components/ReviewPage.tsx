@@ -5,7 +5,7 @@ import { getCourseID, isManuallyGraded } from "../Helpers"
 import Search from "./Search"
 import { json } from "overmind"
 import ReviewForm from "./forms/ReviewForm"
-import DynamicTable, { CellElement } from "./DynamicTable"
+import DynamicTable, { CellElement, Row } from "./DynamicTable"
 
 const ReviewPage = (): JSX.Element => {
     const state = useAppState()
@@ -41,7 +41,7 @@ const ReviewPage = (): JSX.Element => {
 
 
     const data = state.courseSubmissionsList[courseID]?.map((link) => {
-        const row: (string | JSX.Element | CellElement)[] = []
+        const row: Row = []
         row.push(link.user ? { value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}` } : "")
         if (link.submissions && link.user) {
             link.submissions.forEach(submission => {

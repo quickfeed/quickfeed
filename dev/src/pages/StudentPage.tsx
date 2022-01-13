@@ -1,7 +1,6 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { Route, Switch, useHistory } from "react-router"
 import { getCourseID } from "../Helpers"
-import { useActions, useAppState } from "../overmind"
 import CourseBanner from "../components/CourseBanner"
 import { CourseLabs } from "../components/CourseLabs"
 import CourseUtilityLinks from "../components/CourseUtilityLinks"
@@ -12,15 +11,9 @@ import Alert from "../components/Alert"
 
 /* */
 const StudentPage = (): JSX.Element => {
-    const state = useAppState()
-    const actions = useActions()
     const courseID = getCourseID()
     const history = useHistory()
     const root = `/course/${courseID}`
-
-    useEffect(() => {
-        actions.setSelectedEnrollment(state.self.getId())
-    })
 
     return (
         <>

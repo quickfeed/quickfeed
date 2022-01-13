@@ -3,7 +3,7 @@ import React, { useEffect } from 'react'
 import { useParams } from 'react-router'
 import { Assignment, Submission } from '../../proto/ag/ag_pb'
 import { BuildInfo } from '../../proto/kit/score/score_pb'
-import { isManuallyGraded, isTeacher } from '../Helpers'
+import { hasReviews, isManuallyGraded } from '../Helpers'
 import { useAppState, useActions } from '../overmind'
 import CourseUtilityLinks from './CourseUtilityLinks'
 import LabResultTable from './LabResultTable'
@@ -17,7 +17,7 @@ interface MatchProps {
 
 
 /** Displays a Lab submission based on the /course/:id/:lab route
- *  
+ *
  *  If used to display a lab for grading purposes, pass in a TeacherLab object
  */
 const Lab = (): JSX.Element => {
@@ -52,11 +52,11 @@ const Lab = (): JSX.Element => {
 
         // Confirm both assignment and submission exists before attempting to render
         if (assignment && submission) {
-            const review = json(submission).getReviewsList()
+            const review = hasReviews(submission) ? submission.getReviewsList() : []
             let buildLog: JSX.Element[] = []
             const buildLogRaw = submission.hasBuildinfo() ? (submission.getBuildinfo() as BuildInfo).getBuildlog() : null
             if (buildLogRaw) {
-                buildLog = buildLogRaw.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>);
+                buildLog = buildLogRaw.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>)
             }
 
             return (

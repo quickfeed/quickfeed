@@ -1,8 +1,8 @@
-import React from "react";
-import { Redirect } from "react-router";
-import { hasEnrollment } from "../Helpers";
-import { useAppState } from "../overmind";
-import Courses from "./Courses";
+import React from "react"
+import { Redirect } from "react-router"
+import { hasEnrollment } from "../Helpers"
+import { useAppState } from "../overmind"
+import Courses from "./Courses"
 import SubmissionsTable from "./dashboard/SubmissionsTable"
 
 

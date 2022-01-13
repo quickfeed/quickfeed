@@ -2,7 +2,7 @@ import React, { useEffect } from "react"
 import { Group, Submission, SubmissionLink } from "../../proto/ag/ag_pb"
 import { getCourseID, isTeacher } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
-import DynamicTable, { CellElement } from "./DynamicTable"
+import DynamicTable, { CellElement, Row } from "./DynamicTable"
 import Lab from "./Lab"
 import ManageSubmissionStatus from "./ManageSubmissionStatus"
 import Search from "./Search"
@@ -48,7 +48,7 @@ const Results = (): JSX.Element => {
     }
 
     const results = state.courseSubmissionsList[courseID].map(link => {
-        const data: (string | JSX.Element | CellElement)[] = []
+        const data: Row = []
         data.push(link.user ? { value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}` } : "")
         data.push(link.enrollment && link.enrollment.hasGroup() ? (link.enrollment.getGroup() as Group)?.getName() : "")
         if (link.submissions && link.user) {

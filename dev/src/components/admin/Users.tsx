@@ -1,7 +1,7 @@
 import React from "react"
 import { isHidden, Color } from "../../Helpers"
 import { useAppState, useActions } from "../../overmind"
-import DynamicTable, { CellElement } from "../DynamicTable"
+import DynamicTable, { Row } from "../DynamicTable"
 import Search from "../Search"
 import Button, { ButtonType } from "./Button"
 import User from "./User"
@@ -13,7 +13,7 @@ const Users = (): JSX.Element => {
 
     const headers: string[] = ["Name", "Email", "Student ID", "Role"]
     const users = state.allUsers.map((user) => {
-        const data: (string | JSX.Element | CellElement)[] = []
+        const data: Row = []
         data.push(<User user={user} hidden={!isHidden(user.getName(), state.query)} />)
         data.push(user.getEmail())
         data.push(user.getStudentid())

@@ -1,15 +1,15 @@
 import React, { useEffect } from 'react'
 import { useAppState, useActions } from './overmind'
-import NavBar from "./components/NavBar";
-import { Switch, Route } from 'react-router-dom';
-import Profile from "./components/Profile";
+import NavBar from "./components/NavBar"
+import { Switch, Route } from 'react-router-dom'
+import Profile from "./components/Profile"
 import CoursePage from "./pages/CoursePage"
-import Courses from "./components/Courses";
-import AdminPage from './pages/AdminPage';
-import Loading from './components/Loading';
-import Dashboard from './components/Dashboard';
-import AboutPage from './pages/AboutPage';
-import { isValid } from './Helpers';
+import Courses from "./components/Courses"
+import AdminPage from './pages/AdminPage'
+import Loading from './components/Loading'
+import Dashboard from './components/Dashboard'
+import AboutPage from './pages/AboutPage'
+import { isValid } from './Helpers'
 
 const App = (): JSX.Element => {
     const state = useAppState()
