@@ -1,12 +1,12 @@
 import { json } from 'overmind'
-import { Context } from ".";
-import { IGrpcResponse } from "../GRPCManager";
-import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark } from "../../proto/ag/ag_pb";
-import { Alert, CourseGroup } from "./state";
-import { Color, isPending, SubmissionStatus } from "../Helpers";
+import { Context } from "."
+import { IGrpcResponse } from "../GRPCManager"
+import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark } from "../../proto/ag/ag_pb"
+import { Alert, CourseGroup } from "./state"
+import { Color, isPending, isStudent, isTeacher, isVisible, SubmissionStatus } from "../Helpers"
 
 
-/** 
+/**
  *      START CURRENT USER ACTIONS
  */
 
@@ -18,7 +18,7 @@ export const getSelf = async ({ state, effects }: Context): Promise<boolean> => 
         return true
     }
     return false
-};
+}
 
 /** setSelf is used to update the state with modified user data */
 export const setSelf = ({ state }: Context, user: User): void => {
@@ -38,7 +38,7 @@ export const getEnrollmentsByUser = async ({ state, effects }: Context): Promise
         return true
     }
     return false
-};
+}
 
 /** Fetches all users (requires admin priveleges) */
 export const getUsers = async ({ state, effects }: Context): Promise<void> => {
@@ -54,7 +54,7 @@ export const getUsers = async ({ state, effects }: Context): Promise<void> => {
             return 0
         })
     }
-};
+}
 
 
 
@@ -66,10 +66,10 @@ export const updateUser = async ({ actions, effects }: Context, user: User): Pro
     if (result.status.getCode() == 0) {
         await actions.getSelf()
     }
-};
+}
 
 /**
- *      END CURRENT USER ACTIONS 
+ *      END CURRENT USER ACTIONS
  */
 
 /** Fetches all courses */
@@ -81,7 +81,7 @@ export const getCourses = async ({ state, effects }: Context): Promise<boolean> 
         return true
     }
     return false
-};
+}
 
 /** updateAdmin is used to update the admin priveleges of a user. Admin status toggles between true and false */
 export const updateAdmin = async ({ state, effects }: Context, user: User): Promise<void> => {
@@ -101,7 +101,7 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
             }
         }
     }
-};
+}
 
 
 export const getEnrollmentsByCourse = async ({ state, effects }: Context, value: { courseID: number, statuses: Enrollment.UserStatus[] }): Promise<boolean> => {
@@ -112,16 +112,16 @@ export const getEnrollmentsByCourse = async ({ state, effects }: Context, value:
         return true
     }
     return false
-};
+}
 
 /**  setEnrollmentState toggles the state of an enrollment between favorite and visible */
 export const setEnrollmentState = async ({ actions, effects }: Context, enrollment: Enrollment): Promise<void> => {
-    enrollment.setState(enrollment.getState() == Enrollment.DisplayState.VISIBLE ? Enrollment.DisplayState.FAVORITE : Enrollment.DisplayState.VISIBLE)
+    enrollment.setState(isVisible(enrollment) ? Enrollment.DisplayState.FAVORITE : Enrollment.DisplayState.VISIBLE)
     const response = await effects.grpcMan.updateCourseVisibility(json(enrollment))
     if (!success(response)) {
         actions.alertHandler(response)
     }
-};
+}
 
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurences of the given submission in state. */
 export const updateSubmission = async ({ state, effects }: Context, status: Submission.Status): Promise<void> => {
@@ -161,7 +161,7 @@ export const updateSubmission = async ({ state, effects }: Context, status: Subm
             }
         }
     }
-};
+}
 
 /** updateEnrollment updates an enrollment status with the given status */
 export const updateEnrollment = async ({ actions, effects }: Context, { enrollment, status }: { enrollment: Enrollment, status: Enrollment.UserStatus }): Promise<void> => {
@@ -192,13 +192,12 @@ export const updateEnrollment = async ({ actions, effects }: Context, { enrollme
         if (success(response)) {
             // If successful, update enrollment in state with new status
             enrollment.setStatus(status)
-        }
-        else {
+        } else {
             // If unsuccessful, alert user
             actions.alertHandler(response)
         }
     }
-};
+}
 
 /** Get assignments for all the courses the current user is enrolled in */
 export const getAssignments = async ({ state, effects }: Context): Promise<boolean> => {
@@ -215,7 +214,7 @@ export const getAssignments = async ({ state, effects }: Context): Promise<boole
     }
     //TODO: Might return true even if some assignment requests failed. Revisit this later.
     return success
-};
+}
 
 /** Get assignments for a single course, given by courseID */
 export const getAssignmentsByCourse = async ({ state, effects }: Context, courseID: number): Promise<boolean> => {
@@ -225,14 +224,14 @@ export const getAssignmentsByCourse = async ({ state, effects }: Context, course
         return true
     }
     return false
-};
+}
 
 
 type RepoKey = keyof typeof Repository.Type
 export const getRepositories = async ({ state, effects }: Context): Promise<boolean> => {
     let success = true
     for (const enrollment of state.enrollments) {
-        state.repositories[enrollment.getCourseid()] = {};
+        state.repositories[enrollment.getCourseid()] = {}
 
         const response = await effects.grpcMan.getRepositories(enrollment.getCourseid(), generateRepositoryList(enrollment))
         if (response.data) {
@@ -244,20 +243,20 @@ export const getRepositories = async ({ state, effects }: Context): Promise<bool
         }
     }
     return success
-};
+}
 
 
 
 export const updateCourseGroup = ({ state }: Context, cg: CourseGroup): void => {
     state.courseGroup = cg
-};
+}
 
 export const getGroupByUserAndCourse = async ({ state, effects }: Context, courseID: number): Promise<void> => {
     const response = await effects.grpcMan.getGroupByUserAndCourse(courseID, state.self.getId())
     if (response.data) {
         state.userGroup[courseID] = response.data
     }
-};
+}
 
 // TODO: Add group to state
 export const createGroup = async ({ actions, effects }: Context, group: { courseID: number, users: number[], name: string }): Promise<void> => {
@@ -265,46 +264,39 @@ export const createGroup = async ({ actions, effects }: Context, group: { course
     if (!success(response)) {
         actions.alertHandler(response)
     }
-};
+}
 
 
-/** getOrganization ask the server if orgName is a valid organization name. If so, it returns the organization object. */
-// TODO: Currently returns a boolean. 
-export const getOrganization = async ({ actions, effects }: Context, orgName: string): Promise<boolean> => {
+/** getOrganization returns the organization object for orgName retrieved from the server. */
+export const getOrganization = async ({ actions, effects }: Context, orgName: string): Promise<IGrpcResponse<Organization>> => {
     const response = await effects.grpcMan.getOrganization(orgName)
     if (!success(response)) {
         actions.alertHandler(response)
-        return false
+        return response
     }
-    return true
-};
+    return response
+}
 
 /* createCourse creates a new course */
-export const createCourse = async ({ state, actions, effects }: Context, value: { course: Course, orgName: string }): Promise<boolean> => {
+export const createCourse = async ({ state, actions, effects }: Context, value: { course: Course, org: Organization }): Promise<boolean> => {
     const course = json(value.course)
-
-    /* Check if the organization exists */
-    const orgResponse = await effects.grpcMan.getOrganization(value.orgName)
-    if (orgResponse.data) {
-        /* Fill in required fields */
-        course.setOrganizationid(orgResponse.data.getId())
-        course.setOrganizationpath(orgResponse.data.getPath())
-        course.setProvider("github")
-        course.setCoursecreatorid(state.self.getId())
-        /* Send the course to the server */
-        const response = await effects.grpcMan.createCourse(course)
-        if (response.data) {
-            /* If successful, add the course to the state */
-            state.courses.push(response.data)
-            /* User that created the course is automatically enrolled in the course. Refresh the enrollment list */
-            actions.getEnrollmentsByUser()
-            return true
-        }
-        actions.alertHandler(response)
+    /* Fill in required fields */
+    course.setOrganizationid(value.org.getId())
+    course.setOrganizationpath(value.org.getPath())
+    course.setProvider("github")
+    course.setCoursecreatorid(state.self.getId())
+    /* Send the course to the server */
+    const response = await effects.grpcMan.createCourse(course)
+    if (response.data) {
+        /* If successful, add the course to the state */
+        state.courses.push(response.data)
+        /* User that created the course is automatically enrolled in the course. Refresh the enrollment list */
+        actions.getEnrollmentsByUser()
+        return true
     }
-    actions.alertHandler(orgResponse)
+    actions.alertHandler(response)
     return false
-};
+}
 
 /** Updates a given course and refreshes courses in state if successful  */
 export const editCourse = async ({ actions, effects }: Context, { course }: { course: Course }): Promise<void> => {
@@ -316,7 +308,7 @@ export const editCourse = async ({ actions, effects }: Context, { course }: { co
 
 
 /** getSubmissions fetches all submission for the current user by Course ID and stores them in state */
-// TODO: Currently not used, see refreshSubmissions. 
+// TODO: Currently not used, see refreshSubmissions.
 export const getSubmissions = async ({ state, effects }: Context, courseID: number): Promise<boolean> => {
     const result = await effects.grpcMan.getSubmissions(courseID, state.self.getId())
     if (result.data) {
@@ -324,7 +316,7 @@ export const getSubmissions = async ({ state, effects }: Context, courseID: numb
         return true
     }
     return false
-};
+}
 
 // TODO: Currently not in use. Requires gRPC streaming to be implemented. Intended to be used to update submissions in state when a new commit is pushed to a repository.
 // TODO: A workaround to not use gRPC streaming is to ping the server at set intervals to check for new commits. This functionality was removed pending gRPC streaming implementation.
@@ -344,7 +336,7 @@ export const refreshSubmissions = async ({ state, effects }: Context, input: { c
             state.submissions[input.courseID][assignment.getOrder() - 1] = submission
         }
     }
-};
+}
 
 
 export const convertCourseSubmission = ({ state }: Context, { courseID, data }: { courseID: number, data: CourseSubmissions }): void => {
@@ -359,7 +351,7 @@ export const convertCourseSubmission = ({ state }: Context, { courseID, data }: 
             state.courseSubmissions[courseID][(link.getEnrollment() as Enrollment).getId()] = { enrollment: link.getEnrollment(), submissions: link.getSubmissionsList(), user: link.getEnrollment()?.getUser() }
         }
     }
-};
+}
 
 /** Fetches and stores all submissions of a given course into state */
 export const getAllCourseSubmissions = async ({ state, actions, effects }: Context, courseID: number): Promise<void> => {
@@ -371,7 +363,7 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
         state.isLoading = false
     }
     state.isLoading = false
-};
+}
 
 export const getGroupsByCourse = async ({ state, effects }: Context, courseID: number): Promise<void> => {
     state.groups[courseID] = []
@@ -379,7 +371,7 @@ export const getGroupsByCourse = async ({ state, effects }: Context, courseID: n
     if (res.data) {
         state.groups[courseID] = res.data.getGroupsList()
     }
-};
+}
 
 export const getUserSubmissions = async ({ state, effects }: Context, courseID: number): Promise<boolean> => {
     state.submissions[courseID] = []
@@ -393,7 +385,7 @@ export const getUserSubmissions = async ({ state, effects }: Context, courseID: 
         return true
     }
     return false
-};
+}
 
 export const getGroupSubmissions = async ({ state, effects }: Context, courseID: number): Promise<void> => {
     const enrollment = state.enrollmentsByCourseId[courseID]
@@ -406,15 +398,15 @@ export const getGroupSubmissions = async ({ state, effects }: Context, courseID:
             }
         }
     }
-};
+}
 
 export const setActiveCourse = ({ state }: Context, courseID: number): void => {
     state.activeCourse = courseID
-};
+}
 
 export const setActiveLab = ({ state }: Context, assignmentID: number): void => {
     state.activeLab = assignmentID
-};
+}
 
 /** Rebuilds the currently active submission */
 export const rebuildSubmission = async ({ state, effects }: Context): Promise<void> => {
@@ -444,7 +436,7 @@ export const enroll = async ({ state, effects }: Context, courseID: number): Pro
             state.enrollments = enrollments.data.getEnrollmentsList()
         }
     }
-};
+}
 
 export const updateGroupStatus = async ({ effects }: Context, { group, status }: { group: Group, status: Group.GroupStatus }): Promise<void> => {
     const grp = json(group).setStatus(status)
@@ -471,11 +463,19 @@ export const updateGroup = async ({ actions, effects }: Context, group: Group): 
     actions.alertHandler(response)
 }
 
-export const createCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion: GradingCriterion, assignment: Assignment }): Promise<void> => {
+export const createOrUpdateCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion: GradingCriterion, assignment: Assignment }): Promise<void> => {
     for (const bm of assignment.getGradingbenchmarksList()) {
         if (bm.getId() === criterion.getBenchmarkid()) {
-            bm.getCriteriaList().push(criterion)
-            effects.grpcMan.createCriterion(criterion)
+            // Existing criteria have a criteria id > 0, new criteria have a criteria id of 0
+            if (criterion.getId() && success(await effects.grpcMan.updateCriterion(criterion))) {
+                const index = bm.getCriteriaList().indexOf(criterion)
+                if (index > -1) {
+                    bm.getCriteriaList()[index] = criterion
+                }
+            } else {
+                bm.getCriteriaList().push(criterion)
+                effects.grpcMan.createCriterion(criterion)
+            }
         }
     }
 }
@@ -488,21 +488,20 @@ export const createBenchmark = async ({ effects }: Context, { benchmark, assignm
     }
 }
 
-export const setActiveSubmissionLink = ({ state }: Context, link: SubmissionLink): void => {
-    state.activeSubmissionLink = json(link)
-}
-
-export const setGrade = async ({ effects }: Context, { criterion, grade }: { criterion: GradingCriterion, grade: GradingCriterion.Grade }): Promise<void> => {
-    const oldGrade = criterion.getGrade()
-    criterion.setGrade(grade)
-    const response = await effects.grpcMan.updateCriterion(criterion)
-    if (!success(response)) {
-        criterion.setGrade(oldGrade)
+export const deleteCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion?: GradingCriterion, assignment: Assignment }): Promise<void> => {
+    for (const benchmark of assignment.getGradingbenchmarksList()) {
+        if (benchmark.getId() === criterion?.getBenchmarkid()) {
+            if (confirm("Do you really want to delete this criterion?")) {
+                const index = benchmark.getCriteriaList().indexOf(criterion)
+                benchmark.getCriteriaList().splice(index, 1)
+                await effects.grpcMan.deleteCriterion(criterion)
+            }
+        }
     }
 }
 
-export const setSelectedEnrollment = ({ state }: Context, enrollmentId: number): void => {
-    state.selectedEnrollment = enrollmentId
+export const setActiveSubmissionLink = ({ state }: Context, link: SubmissionLink): void => {
+    state.activeSubmissionLink = json(link)
 }
 
 /* fetchUserData is called when the user enters the app. It fetches all data that is needed for the user to be able to use the app. */
@@ -510,7 +509,7 @@ export const setSelectedEnrollment = ({ state }: Context, enrollmentId: number):
 export const fetchUserData = async ({ state, actions }: Context): Promise<boolean> => {
     let success = await actions.getSelf()
     // If getSelf returns false, the user is not logged in. Abort.
-    if (!success) { state.isLoading = false; return false; }
+    if (!success) { state.isLoading = false; return false }
 
     // Start fetching all data. Loading screen will be shown until all data is fetched, i.e state.isLoading is set to false.
     while (state.isLoading) {
@@ -521,12 +520,10 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
             if (enrollment.getStatus() >= Enrollment.UserStatus.STUDENT) {
                 success = await actions.getUserSubmissions(enrollment.getCourseid())
                 await actions.getGroupSubmissions(enrollment.getCourseid())
-            }
-            if (enrollment.getStatus() >= Enrollment.UserStatus.STUDENT) {
-                const statuses = enrollment.getStatus() === Enrollment.UserStatus.STUDENT ? [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER] : []
+                const statuses = isStudent(enrollment) ? [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER] : []
                 success = await actions.getEnrollmentsByCourse({ courseID: enrollment.getCourseid(), statuses: statuses })
             }
-            if (enrollment.getStatus() == Enrollment.UserStatus.TEACHER) {
+            if (isTeacher(enrollment)) {
                 actions.getGroupsByCourse(enrollment.getCourseid())
             }
         }
@@ -542,7 +539,7 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
     // The value of success is unreliable. The intention is to return true if the user is logged in and all data was fetched.
     // However, if one of the above calls fail, it could still be the case that success returns true.
     return success
-};
+}
 
 
 /* Utility Actions */
@@ -564,27 +561,21 @@ export const changeView = async ({ state, effects }: Context, courseID: number):
 
 export const loading = ({ state }: Context): void => {
     state.isLoading = !state.isLoading
-};
+}
 
 /** Sets the time to now. */
 export const setTimeNow = ({ state }: Context): void => {
     state.timeNow = new Date()
-};
+}
 
 /** Sets a query string in state. */
 export const setQuery = ({ state }: Context, query: string): void => {
     state.query = query
-};
-
-
-export const setActiveSubmission = ({ state }: Context, submission: number): void => {
-    state.activeSubmission = submission
-};
-
+}
 
 export const setSelectedUser = ({ state }: Context, user: User | undefined): void => {
     state.activeUser = user
-};
+}
 
 /** Returns whether or not the current user is an authorized teacher with teacher scopes */
 export const isAuthorizedTeacher = async ({ effects }: Context): Promise<boolean> => {
@@ -593,25 +584,25 @@ export const isAuthorizedTeacher = async ({ effects }: Context): Promise<boolean
         return response.data.getIsauthorized()
     }
     return false
-};
+}
 
 export const alertHandler = ({ state }: Context, response: IGrpcResponse<unknown>): void => {
     if (response.status.getCode() >= 0) {
         state.alerts.push({ text: response.status.getError(), color: Color.RED })
     }
-};
+}
 
 export const alert = ({ state }: Context, alert: Alert): void => {
     state.alerts.push(alert)
-};
+}
 
 export const popAlert = ({ state }: Context, index: number): void => {
     state.alerts = state.alerts.filter((_, i) => i != index)
-};
+}
 
 export const logout = ({ state }: Context): void => {
     state.self = new User()
-};
+}
 
 const generateRepositoryList = (enrollment: Enrollment): Repository.Type[] => {
     switch (enrollment.getStatus()) {
