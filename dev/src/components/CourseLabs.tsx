@@ -9,21 +9,21 @@ import React from "react"
 export const CourseLabs = (): JSX.Element => {
     const state = useAppState()
     const history = useHistory()
-
     const courseID = getCourseID()
-
     const labs: JSX.Element[] = []
-    let submission: Submission = new Submission()
+
+    const redirectTo = (assignmentID: number) => {
+        history.push(`/course/${courseID}/${assignmentID}`)
+    }
 
     if (state.assignments[courseID] && state.submissions[courseID]) {
         state.assignments[courseID].forEach(assignment => {
-            // Submissions are indexed by the assignment order.    
-            if (state.submissions[courseID][assignment.getOrder() - 1]) {
-                submission = state.submissions[courseID][assignment.getOrder() - 1]
-            }
+            const assignmentIndex = assignment.getOrder() - 1
+            // Submissions are indexed by the assignment order.
+            const submission = state.submissions[courseID][assignmentIndex] ?? new Submission()
 
             labs.push(
-                <li key={assignment.getId()} className="list-group-item border clickable mb-2" onClick={() => history.push(`/course/${courseID}/${assignment.getId()}`)}>
+                <li key={assignment.getId()} className="list-group-item border clickable mb-2" onClick={() => redirectTo(assignment.getId())}>
                     <div className="row" >
                         <div className="col-8">
                             <strong>{assignment.getName()}</strong>
@@ -34,7 +34,7 @@ export const CourseLabs = (): JSX.Element => {
                     </div>
                     <div className="row" >
                         <div className="col-5">
-                            <ProgressBar courseID={courseID} assignmentIndex={assignment.getOrder() - 1} submission={submission} type={Progress.LAB} />
+                            <ProgressBar courseID={courseID} assignmentIndex={assignmentIndex} submission={submission} type={Progress.LAB} />
                         </div>
                         <div className="col-3 text-center">
                             {assignmentStatusText(assignment, submission)}
