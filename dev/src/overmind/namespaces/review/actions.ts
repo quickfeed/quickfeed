@@ -1,6 +1,6 @@
-import { json } from 'overmind'
 import { Context } from '../../'
-import { Review } from '../../../../proto/ag/ag_pb'
+import { GradingBenchmark, GradingCriterion, Review, Void } from '../../../../proto/ag/ag_pb'
+import { IGrpcResponse } from '../../../GRPCManager'
 import { success } from '../../actions'
 
 /* Set the index of the selected review */
@@ -12,13 +12,37 @@ export const setSelectedReview = ({ state }: Context, index: number): void => {
 export const updateReview = async ({ state, actions, effects }: Context): Promise<void> => {
     // If canUpdate is false, the review cannot be updated
     if (state.review.canUpdate) {
-        const response = await effects.grpcMan.updateReview(json((state.review.currentReview as Review)), state.activeCourse)
+        const response = await effects.grpcMan.updateReview((state.review.currentReview as Review), state.activeCourse)
         if (success(response) && response.data) {
             // Updates the currently selected review with the new data from the server
-            state.review.reviews[state.activeCourse][state.activeSubmission][state.review.selectedReview] = response.data
+            state.review.currentReview = response.data
         } else {
             actions.alertHandler(response)
         }
+    }
+}
+
+export const updateComment = async ({ effects }: Context, { grade, comment }: { grade: GradingBenchmark | GradingCriterion, comment: string }): Promise<void> => {
+    let response: IGrpcResponse<Void> | undefined = undefined
+    const oldComment = grade.getComment()
+    grade.setComment(comment)
+    if (grade instanceof GradingBenchmark) {
+        response = await effects.grpcMan.updateBenchmark(grade)
+    }
+    if (grade instanceof GradingCriterion) {
+        response = await effects.grpcMan.updateCriterion(grade)
+    }
+    if (!response || !success(response)) {
+        grade.setComment(oldComment)
+    }
+}
+
+export const setGrade = async ({ effects }: Context, { criterion, grade }: { criterion: GradingCriterion, grade: GradingCriterion.Grade }): Promise<void> => {
+    const oldGrade = criterion.getGrade()
+    criterion.setGrade(grade)
+    const response = await effects.grpcMan.updateCriterion(criterion)
+    if (!success(response)) {
+        criterion.setGrade(oldGrade)
     }
 }
 

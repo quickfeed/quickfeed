@@ -16,24 +16,23 @@ const ReviewPage = (): JSX.Element => {
         if (!state.courseSubmissions[courseID]) {
             actions.getAllCourseSubmissions(courseID)
         }
-    })
+        return () => { actions.setActiveSubmissionLink(undefined) }
+    }, [])
 
-    const generateReviewCell = (submissionLink: SubmissionLink, enrollmentIndex: number): CellElement => {
+    const generateReviewCell = (submissionLink: SubmissionLink): CellElement => {
         if (submissionLink.hasSubmission() && submissionLink.hasAssignment() && isManuallyGraded(submissionLink.getAssignment() as Assignment)) {
             return ({
                 value: `${json(submissionLink.getSubmission())?.getReviewsList().length} / ${(submissionLink.getAssignment() as Assignment).getReviewers()}`,
                 className: submissionLink.getSubmission()?.getStatus() === Submission.Status.APPROVED ? "result-approved" : "result-pending",
                 onClick: () => {
-                    actions.setActiveSubmissionLink(submissionLink),
-                        actions.setActiveSubmission(submissionLink.getSubmission()?.getId())
-                    actions.setSelectedEnrollment(enrollmentIndex)
+                    actions.setActiveSubmissionLink(submissionLink)
                 }
             })
         }
         else {
             return ({
                 value: "N/A",
-                onClick: () => { actions.setActiveSubmission(undefined), actions.setActiveSubmissionLink(submissionLink) }
+                onClick: () => { actions.setActiveSubmissionLink(submissionLink) }
             })
         }
     }
@@ -41,12 +40,12 @@ const ReviewPage = (): JSX.Element => {
     const header = ["Name"].concat(state.assignments[courseID].map(assignment => assignment.getName()))
 
 
-    const data = state.courseSubmissionsList[courseID]?.map((link, index) => {
+    const data = state.courseSubmissionsList[courseID]?.map((link) => {
         const row: (string | JSX.Element | CellElement)[] = []
         row.push(link.user ? { value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}` } : "")
         if (link.submissions && link.user) {
             link.submissions.forEach(submission => {
-                row.push(generateReviewCell(submission, index))
+                row.push(generateReviewCell(submission))
             })
         }
         return row

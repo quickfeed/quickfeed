@@ -21,8 +21,7 @@ const GradeComment = ({ grade, editing, setEditing }: { grade: GradingBenchmark 
         if (value === grade.getComment()) {
             return
         }
-        grade.setComment(value)
-        actions.review.updateReview()
+        actions.review.updateComment({ grade: grade, comment: value })
     }
 
     return (

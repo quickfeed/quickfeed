@@ -1,6 +1,6 @@
 import { json } from "overmind"
 import { useParams } from "react-router"
-import { Assignment, Enrollment, EnrollmentLink, GradingBenchmark, Review, Submission, User } from "../proto/ag/ag_pb"
+import { Assignment, Enrollment, EnrollmentLink, GradingBenchmark, Group, Review, Submission, User } from "../proto/ag/ag_pb"
 import { Score } from "../proto/kit/score/score_pb"
 
 export enum Color {
@@ -65,8 +65,8 @@ export const EnrollmentStatus = {
     3: "Teacher",
 }
 
-/* 
-    arr: Any array, ex. Enrollment[], User[],    
+/*
+    arr: Any array, ex. Enrollment[], User[],
     funcs: an array of functions that will be applied in order to reach the field to sort on
     by: A function returning an element to sort on
 
@@ -86,7 +86,7 @@ export const sortByField = (arr: any[], funcs: Function[], by: Function, descend
         }
         if (funcs.length > 0) {
             funcs.forEach(func => {
-                x = x ?  func.call(x) : func.call(a)
+                x = x ? func.call(x) : func.call(a)
                 y = y ? func.call(y) : func.call(b)
             })
         } else {
@@ -175,6 +175,7 @@ export const isManuallyGraded = (assignment: Assignment): boolean => {
 export const hasReviews = (submission: Submission): boolean => { return json(submission).getReviewsList().length > 0 }
 export const hasBenchmarks = (obj: Review | Assignment): boolean => { return json(obj).getGradingbenchmarksList().length > 0 }
 export const hasCriteria = (benchmark: GradingBenchmark): boolean => { return json(benchmark).getCriteriaList().length > 0 }
+export const hasEnrollments = (obj: Group): boolean => { return json(obj).getEnrollmentsList().length > 0 }
 
 /** getCourseID returns the course ID determined by the current route */
 export const getCourseID = (): number => {
@@ -221,5 +222,5 @@ export const assignmentStatusText = (assignment: Assignment, submission: Submiss
 /* Use this function to simulate a delay in the loading of data */
 /* Used in development to simulate a slow network connection */
 const delay = (ms: number) => {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms))
 }

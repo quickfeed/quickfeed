@@ -17,7 +17,7 @@ const Results = (): JSX.Element => {
         if (courseID && !state.courseSubmissions[courseID]) {
             actions.getAllCourseSubmissions(courseID)
         }
-        return actions.setActiveSubmission(undefined)
+        return () => actions.setActiveSubmissionLink(undefined)
     }, [state.courseSubmissions])
 
 
@@ -29,14 +29,12 @@ const Results = (): JSX.Element => {
         return <h1>Nothing</h1>
     }
 
-    const getSubmissionCell = (submissionLink: SubmissionLink, enrollmentId: number | undefined): CellElement => {
+    const getSubmissionCell = (submissionLink: SubmissionLink): CellElement => {
         if (submissionLink.hasSubmission() && submissionLink.hasAssignment()) {
             return ({
                 value: `${submissionLink.getSubmission()?.getScore()}%`,
                 className: submissionLink.getSubmission()?.getStatus() === Submission.Status.APPROVED ? "result-approved" : "result-pending",
                 onClick: () => {
-                    actions.setActiveSubmission(submissionLink.getSubmission()?.getId())
-                    actions.setSelectedEnrollment(enrollmentId)
                     actions.setActiveSubmissionLink(submissionLink)
                 }
             })
@@ -44,7 +42,7 @@ const Results = (): JSX.Element => {
         else {
             return ({
                 value: "N/A",
-                onClick: () => actions.setActiveSubmission(undefined)
+                onClick: () => actions.setActiveSubmissionLink(undefined)
             })
         }
     }
@@ -55,7 +53,7 @@ const Results = (): JSX.Element => {
         data.push(link.enrollment && link.enrollment.hasGroup() ? (link.enrollment.getGroup() as Group)?.getName() : "")
         if (link.submissions && link.user) {
             for (const submissionLink of link.submissions) {
-                data.push(getSubmissionCell(submissionLink, link.enrollment?.getId()))
+                data.push(getSubmissionCell(submissionLink))
             }
         }
         return data

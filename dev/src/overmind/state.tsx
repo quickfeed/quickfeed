@@ -1,6 +1,6 @@
-import { derived } from "overmind";
-import { Assignment, Course, Enrollment, Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb";
-import { Color } from "../Helpers";
+import { derived } from "overmind"
+import { Assignment, Course, Enrollment, Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb"
+import { Color } from "../Helpers"
 
 export interface CourseGroup {
     courseID: number
@@ -80,7 +80,7 @@ type State = {
 
 
     /***************************************************************************
-    *                         Course Specific Data 
+    *                         Course Specific Data
     ***************************************************************************/
 
     /* Contains all submissions for a given course and enrollment */
@@ -145,9 +145,6 @@ type State = {
     /* Current search query */
     query: string,
 
-    /* Current enrollment ID */
-    selectedEnrollment: number,
-
     /* Current submission link */
     activeSubmissionLink: SubmissionLink | undefined,
 
@@ -200,7 +197,13 @@ export const state: State = {
         }
         return courseSubmissionsList
     }),
-    activeSubmission: -1,
+    activeSubmission: derived((state: State) => {
+        if (state.activeSubmissionLink) {
+            return state.activeSubmissionLink.hasSubmission() ? (state.activeSubmissionLink.getSubmission() as Submission).getId() : -1
+        }
+        return -1
+    }),
+
     activeSubmissionLink: undefined,
     currentSubmission: derived(({ activeSubmissionLink }: State) => {
         return activeSubmissionLink?.getSubmission()
@@ -208,7 +211,6 @@ export const state: State = {
     selectedAssignment: derived(({ activeCourse, currentSubmission, assignments }: State) => {
         return assignments[activeCourse]?.find(a => currentSubmission && a.getId() === currentSubmission?.getAssignmentid())
     }),
-    selectedEnrollment: -1,
     activeUser: undefined,
     assignments: {},
     repositories: {},
@@ -229,4 +231,4 @@ export const state: State = {
         return activeCourse > 0 ? courseEnrollments[activeCourse]?.filter(enrollment => enrollment.getStatus() !== Enrollment.UserStatus.PENDING).length : 0
     }),
     query: "",
-};
+}

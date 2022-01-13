@@ -27,13 +27,13 @@ const ReviewForm = (): JSX.Element => {
         if (state.activeSubmissionLink) {
             selectReview()
         }
-    }, [state.activeSubmissionLink, state.review.reviews])
+    }, [])
 
     if (!state.activeSubmissionLink) {
         return <div>None</div>
     }
 
-    if (!state.activeSubmissionLink.hasSubmission()  || !state.activeSubmissionLink.hasAssignment()) {
+    if (!state.activeSubmissionLink.hasSubmission() || !state.activeSubmissionLink.hasAssignment()) {
         return <div>No Submission</div>
     }
 
@@ -47,9 +47,9 @@ const ReviewForm = (): JSX.Element => {
 
     const canTakeOver = (submission: Submission, assignment: Assignment) => {
         if (submission.getStatus() === Submission.Status.REVISION || countReadyReviews(submission) < assignment.getReviewers()) {
-            return true;
+            return true
         }
-        return false;
+        return false
     }
 
     const isAuthor = (reviews: Review[]) => {
@@ -61,21 +61,21 @@ const ReviewForm = (): JSX.Element => {
         return false
     }
 
-    const reviews = state.review.reviews[courseID][(state.activeSubmissionLink.getSubmission() as Submission).getId()]
+    const reviews = state.review.reviews[courseID][state.activeSubmission]
 
     if (!isManuallyGraded(state.activeSubmissionLink.getAssignment() as Assignment)) {
         return <div>This assignment is not for manual grading.</div>
     } else {
         return (
             <div className="col reviewLab">
-                { reviews?.length == 0 &&
+                {reviews?.length == 0 &&
                     <Button type={ButtonType.BUTTON} color={Color.GREEN} text="Create a new review" onclick={() => actions.review.createReview()} />
                 }
                 {state.review.currentReview ?
-                <>
-                    <ReviewInfo />
-                    <ReviewResult review={state.review.currentReview} />
-                </> : null
+                    <>
+                        <ReviewInfo />
+                        <ReviewResult review={state.review.currentReview} />
+                    </> : null
                 }
             </div>
         )
