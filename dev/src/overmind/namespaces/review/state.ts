@@ -74,7 +74,6 @@ export const state: State = {
         let total = 0
         json(currentReview)?.getGradingbenchmarksList()?.forEach(bm => {
             json(bm).getCriteriaList().forEach((c) => {
-                console.log(c)
                 if (c.getGrade() > GradingCriterion.Grade.NONE) {
                     total++
                 }

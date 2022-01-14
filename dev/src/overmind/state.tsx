@@ -1,6 +1,6 @@
 import { derived } from "overmind"
 import { Assignment, Course, Enrollment, Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb"
-import { Color } from "../Helpers"
+import { Color, isPending, isPendingGroup, isTeacher } from "../Helpers"
 
 export interface CourseGroup {
     courseID: number
@@ -14,7 +14,7 @@ export interface Alert {
     color: Color
 }
 
-export interface ParsedCourseSubmissions {
+export interface UserCourseSubmissions {
     enrollment?: Enrollment
     user?: User
     submissions?: SubmissionLink[]
@@ -44,24 +44,24 @@ type State = {
 
     /* Contains all the courses the user is enrolled in, indexed by course ID */
     // derived from enrollments
-    enrollmentsByCourseId: { [courseid: number]: Enrollment },
+    enrollmentsByCourseID: { [courseID: number]: Enrollment },
 
     /* Contains all the groups the user is a member of, indexed by course ID */
-    userGroup: { [courseid: number]: Group },
+    userGroup: { [courseID: number]: Group },
 
     /* Contains all submissions for the user, indexed by course ID */
     // The individual submissions for a given course are indexed by assignment order - 1
-    submissions: { [courseid: number]: Submission[] },
+    submissions: { [courseID: number]: Submission[] },
 
     /* Current enrollment status of the user for a given course */
-    status: { [courseid: number]: Enrollment.UserStatus }
+    status: { [courseID: number]: Enrollment.UserStatus }
 
     /* Indicates if the user is a teacher of the current course */
-    // derived from enollmentsByCourseId
+    // derived from enrollmentsByCourseID
     isTeacher: boolean
 
     /* Contains links to all repositories for a given course */
-    // Individual repository links are accessed by Reposiotry.Type
+    // Individual repository links are accessed by Repository.Type
     repositories: { [courseid: number]: { [repo: string]: string } },
 
     /***************************************************************************
@@ -70,13 +70,13 @@ type State = {
 
     /* Contains all users of a given course */
     // Requires the user to be admin to get from backend
-    users: { [userid: number]: User },
+    users: { [userID: number]: User },
 
     /* Contains all courses */
     courses: Course[],
 
     /* Contains all assignments for a given course */
-    assignments: { [courseid: number]: Assignment[] },
+    assignments: { [courseID: number]: Assignment[] },
 
 
     /***************************************************************************
@@ -84,17 +84,13 @@ type State = {
     ***************************************************************************/
 
     /* Contains all submissions for a given course and enrollment */
-    courseSubmissions: { [courseid: number]: { [enrollmentId: number]: ParsedCourseSubmissions } },
-
-    /* Contains all submissions for a given course */
-    // derived from courseSubmissions
-    courseSubmissionsList: { [courseid: number]: ParsedCourseSubmissions[] }
+    courseSubmissions: { [courseID: number]: UserCourseSubmissions[] },
 
     /* Contains all enrollments for a given course */
-    courseEnrollments: { [courseid: number]: Enrollment[] },
+    courseEnrollments: { [courseID: number]: Enrollment[] },
 
     /* Contains all groups for a given course */
-    groups: { [courseid: number]: Group[] },
+    groups: { [courseID: number]: Group[] },
 
     /* Currently selected submission ID */
     activeSubmission: number,
@@ -114,11 +110,13 @@ type State = {
     // derived from groups
     pendingGroups: Group[],
 
-    /* Contains all users sorted by admin status */
+    /* Contains all users with admins sorted first */
     allUsers: User[],
 
 
-    /* Utility */
+    /***************************************************************************
+     *                             Frontend Activity State
+     ***************************************************************************/
 
     /* Indicates if the state is loading */
     isLoading: boolean,
@@ -126,15 +124,11 @@ type State = {
     /* The current course ID */
     activeCourse: number,
 
-    /* The current submission ID */
-    activeLab: number,
+    /* The current assignment ID */
+    activeAssignment: number,
 
     /* The current assignment */
     selectedAssignment: Assignment | undefined,
-
-    // TODO: Figure out if it is needed to store and continuously update this, or if it could be fetched on demand
-    /* Current time */
-    timeNow: Date,
 
     /* Contains a group in creation */
     courseGroup: CourseGroup,
@@ -150,7 +144,6 @@ type State = {
 
     /* Current submission */
     currentSubmission: Submission | undefined,
-
 }
 
 
@@ -168,19 +161,19 @@ export const state: State = {
     }),
 
     enrollments: [],
-    enrollmentsByCourseId: derived((state: State) => {
-        const enrollmentsByCourseId: EnrollmentsByCourse = {}
+    enrollmentsByCourseID: derived((state: State) => {
+        const enrollmentsByCourseID: EnrollmentsByCourse = {}
         for (const enrollment of state.enrollments) {
-            enrollmentsByCourseId[enrollment.getCourseid()] = enrollment
+            enrollmentsByCourseID[enrollment.getCourseid()] = enrollment
         }
-        return enrollmentsByCourseId
+        return enrollmentsByCourseID
     }),
     submissions: {},
     userGroup: {},
 
     isTeacher: derived((state: State) => {
-        if (state.activeCourse > 0 && state.enrollmentsByCourseId[state.activeCourse]) {
-            return state.enrollmentsByCourseId[state.activeCourse].getStatus() === Enrollment.UserStatus.TEACHER
+        if (state.activeCourse > 0 && state.enrollmentsByCourseID[state.activeCourse]) {
+            return isTeacher(state.enrollmentsByCourseID[state.activeCourse])
         }
         return false
     }),
@@ -189,14 +182,7 @@ export const state: State = {
     users: {},
     allUsers: [],
     courses: [],
-    courseSubmissions: {},
-    courseSubmissionsList: derived(({ courseSubmissions }: State) => {
-        const courseSubmissionsList: { [courseid: number]: ParsedCourseSubmissions[] } = {}
-        for (const courseid of Object.keys(courseSubmissions)) {
-            courseSubmissionsList[Number(courseid)] = Object.values(courseSubmissions[Number(courseid)])
-        }
-        return courseSubmissionsList
-    }),
+    courseSubmissions: [],
     activeSubmission: derived((state: State) => {
         if (state.activeSubmissionLink) {
             return state.activeSubmissionLink.hasSubmission() ? (state.activeSubmissionLink.getSubmission() as Submission).getId() : -1
@@ -209,26 +195,27 @@ export const state: State = {
         return activeSubmissionLink?.getSubmission()
     }),
     selectedAssignment: derived(({ activeCourse, currentSubmission, assignments }: State) => {
-        return assignments[activeCourse]?.find(a => currentSubmission && a.getId() === currentSubmission?.getAssignmentid())
+        return assignments[activeCourse]?.find(a => a.getId() === currentSubmission?.getAssignmentid())
     }),
     activeUser: undefined,
     assignments: {},
     repositories: {},
 
     courseGroup: { courseID: 0, enrollments: [], users: [], groupName: "" },
-    timeNow: new Date(),
     alerts: [],
     isLoading: true,
     activeCourse: -1,
-    activeLab: -1,
+    activeAssignment: -1,
     courseEnrollments: {},
     groups: {},
-    pendingGroups: derived(({ activeCourse, groups }: State) => { return activeCourse > 0 ? groups[activeCourse]?.filter((group) => group.getStatus() === Group.GroupStatus.PENDING) : [] }),
+    pendingGroups: derived(({ activeCourse, groups }: State) => {
+        return activeCourse > 0 ? groups[activeCourse]?.filter(group => isPendingGroup(group)) : []
+    }),
     pendingEnrollments: derived(({ activeCourse, courseEnrollments }: State) => {
-        return activeCourse > 0 ? courseEnrollments[activeCourse]?.filter(enrollment => enrollment.getStatus() === Enrollment.UserStatus.PENDING) : []
+        return activeCourse > 0 ? courseEnrollments[activeCourse]?.filter(enrollment => isPending(enrollment)) : []
     }),
     numEnrolled: derived(({ activeCourse, courseEnrollments }: State) => {
-        return activeCourse > 0 ? courseEnrollments[activeCourse]?.filter(enrollment => enrollment.getStatus() !== Enrollment.UserStatus.PENDING).length : 0
+        return activeCourse > 0 ? courseEnrollments[activeCourse]?.filter(enrollment => !isPending(enrollment)).length : 0
     }),
     query: "",
 }
