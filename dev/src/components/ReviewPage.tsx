@@ -1,10 +1,10 @@
 import React, { useEffect } from "react"
 import { useActions, useAppState } from "../overmind"
-import { Assignment, Submission, SubmissionLink } from "../../proto/ag/ag_pb"
+import { Submission, SubmissionLink } from "../../proto/ag/ag_pb"
 import { getCourseID, isManuallyGraded } from "../Helpers"
 import Search from "./Search"
 import { json } from "overmind"
-import ReviewForm from "./forms/ReviewForm"
+import ReviewForm from "./manual-grading/ReviewForm"
 import DynamicTable, { CellElement, Row } from "./DynamicTable"
 
 const ReviewPage = (): JSX.Element => {
