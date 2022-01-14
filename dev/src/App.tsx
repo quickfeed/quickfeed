@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { useAppState, useActions } from './overmind'
 import NavBar from "./components/NavBar"
 import { Switch, Route } from 'react-router-dom'
-import Profile from "./components/Profile"
+import Profile from "./components/profile/Profile"
 import CoursePage from "./pages/CoursePage"
 import Courses from "./components/Courses"
 import AdminPage from './pages/AdminPage'
@@ -23,15 +23,6 @@ const App = (): JSX.Element => {
         if (!state.isLoggedIn) {
             setup()
         }
-    }, [])
-
-    // Update the state's Time object every 20 seconds.
-    // After component mounts, it uses a new Time object
-    useEffect(() => {
-        const updateDateNow = setInterval(() => {
-            actions.setTimeNow()
-        }, 1200000)
-        return () => clearInterval(updateDateNow)
     }, [])
 
     const Main = () => {
@@ -78,9 +69,6 @@ const App = (): JSX.Element => {
             </div>
         </div>
     )
-
 }
-
-
 
 export default App
