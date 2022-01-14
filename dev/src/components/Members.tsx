@@ -6,9 +6,7 @@ import Search from "./Search"
 import DynamicTable from "./DynamicTable"
 
 
-// TODO: Clean up 
-
-export const Members = (): JSX.Element => {
+const Members = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
@@ -47,7 +45,7 @@ export const Members = (): JSX.Element => {
         if (isPending(enrollment)) {
             data.push(
                 <div>
-                    <i className="badge badge-primary" style={{ cursor: "pointer" }} 
+                    <i className="badge badge-primary" style={{ cursor: "pointer" }}
                         onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT })}>
                         Accept
                     </i>
@@ -87,7 +85,7 @@ export const Members = (): JSX.Element => {
                         {edit ? "Cancel" : "Edit"}
                     </div>
                 </div>
-                {pending.length > 0 ? 
+                {pending.length > 0 ?
                     <div style={{ marginLeft: "10px" }}>
                         <button className="btn btn-success float-right" onClick={() => approveAll()}>
                             Approve All

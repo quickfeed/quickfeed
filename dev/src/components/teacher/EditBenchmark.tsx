@@ -4,7 +4,6 @@ import { Assignment, GradingBenchmark } from "../../../proto/ag/ag_pb"
 import { useActions, useGrpc } from "../../overmind"
 
 
-
 const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark, assignment: Assignment }): JSX.Element => {
     const grpc = useGrpc().grpcMan
     const actions = useActions()

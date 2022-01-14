@@ -7,8 +7,9 @@ import EditBenchmark from "./EditBenchmark"
 import EditCriterion from "./EditCriterion"
 
 
-// TODO: Needs some love. Currently a mess.
-
+/** This component displays all assignments for the active course and:
+ *  for assignments that are not manually graded, allows teachers to rebuild all submissions.
+ *  for manually graded assignments, allows teachers to add or remove criteria and benchmarks for the assignment */
 const Assignments = (): JSX.Element => {
     const courseID = getCourseID()
     const actions = useActions()

@@ -16,8 +16,8 @@ const GroupForm = ({ editGroup, setGroup }: { editGroup?: Group, setGroup?: Reac
     const group = editGroup ? json(editGroup) : null
 
     useEffect(() => {
-        // Add self to group if not teacher
         if (!users.includes(state.self.getId()) && isStudent(state.enrollmentsByCourseID[courseID])) {
+            // Add self to group if not teacher
             users.push(state.self.getId())
             setUsers([...users])
         }

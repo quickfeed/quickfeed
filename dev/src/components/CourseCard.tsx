@@ -1,10 +1,9 @@
-import * as React from 'react';
-import { useHistory } from 'react-router';
-import { EnrollmentStatus, hasEnrolled, hasNone, hasPending, isVisible } from '../Helpers';
-import { useActions } from '../overmind';
-import { Course, Enrollment } from '../../proto/ag/ag_pb';
+import * as React from 'react'
+import { useHistory } from 'react-router'
+import { EnrollmentStatus, hasEnrolled, hasNone, hasPending, isVisible } from '../Helpers'
+import { useActions } from '../overmind'
+import { Course, Enrollment } from '../../proto/ag/ag_pb'
 
-// TODO Should be exported to a seperate file 
 
 interface CardProps {
     course: Course,
@@ -43,10 +42,10 @@ const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
                     <h5 className="card-title">{course.getName()} - {course.getTag()}/{course.getYear()}</h5>
                     {hasNone(status) ?
                         <div className="btn btn-primary course-button" onClick={() => actions.enroll(course.getId())}>Enroll</div>
-                    : hasPending(status) ?
-                        <div className="btn btn-secondary course-button disabled">Pending</div>
-                    :
-                        <div className="btn btn-primary course-button" onClick={() => history.push("/course/" + enrollment.getCourseid())}>Go to Course</div>
+                        : hasPending(status) ?
+                            <div className="btn btn-secondary course-button disabled">Pending</div>
+                            :
+                            <div className="btn btn-primary course-button" onClick={() => history.push("/course/" + enrollment.getCourseid())}>Go to Course</div>
                     }
                 </div>
             </div>
