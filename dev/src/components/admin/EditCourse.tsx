@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { Course } from "../../../proto/ag/ag_pb"
 import { useAppState } from "../../overmind"
-import DynamicTable, { CellElement } from "../DynamicTable"
+import DynamicTable, { Row } from "../DynamicTable"
 import CourseForm from "../forms/CourseForm"
 
 
@@ -11,7 +11,7 @@ const EditCourse = (): JSX.Element => {
 
     const courses = state.courses.map(c => {
         const selected = course?.getId() === c.getId()
-        const data: (string | CellElement | JSX.Element)[] = []
+        const data: Row = []
         data.push(c.getName())
         data.push(c.getCode())
         data.push(c.getTag())
