@@ -17,16 +17,12 @@ const ProgressBar = (props: { courseID: number, assignmentIndex: number, submiss
     const assignment = state.assignments[props.courseID][props.assignmentIndex]
     const passedTests = getPassedTestsCount(json(submission).getScoresList())
 
-    const secondaryProgress = assignment.getScorelimit() - submission.getScore()
+    const score = submission.getScore()
+    const secondaryProgress = assignment.getScorelimit() - score
 
     // Returns a thin line to be used for labs in the NavBar
     if (props.type === Progress.NAV) {
-        let percentage = 0
-        let score = 0
-        if (submission) {
-            percentage = 100 - submission.getScore()
-            score = submission.getScore()
-        }
+        const percentage = 100 - score
         return (
             <div style={{
                 position: "absolute",
@@ -45,7 +41,7 @@ const ProgressBar = (props: { courseID: number, assignmentIndex: number, submiss
     let text = ""
     let secondaryText = ""
     if (props.type === Progress.LAB) {
-        text = `${props.submission?.getScore()} %`
+        text = `${score} %`
         secondaryText = `${secondaryProgress} % ${passedTests} to go`
     }
     // Returns a regular size progress bar to be used for labs
@@ -72,8 +68,8 @@ const ProgressBar = (props: { courseID: number, assignmentIndex: number, submiss
             <div
                 className={"progress-bar " + color}
                 role="progressbar"
-                style={{ width: props.submission?.getScore() + "%", transitionDelay: "0.5s" }}
-                aria-valuenow={submission.getScore()}
+                style={{ width: score + "%", transitionDelay: "0.5s" }}
+                aria-valuenow={score}
                 aria-valuemin={0}
                 aria-valuemax={100}
             >
