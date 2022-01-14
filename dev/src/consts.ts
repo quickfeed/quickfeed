@@ -4,3 +4,5 @@ export const Status = {
     Inactive: "inactive",
     ActiveLab: "activelab"
 }
+
+export const NoSubmission = "No submission"
