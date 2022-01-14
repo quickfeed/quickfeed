@@ -1,11 +1,11 @@
-import React from "react";
-import { useHistory } from "react-router";
-import { Enrollment } from "../../../proto/ag/ag_pb";
-import { Status } from "../../consts";
-import { isStudent, isTeacher } from "../../Helpers";
-import { useActions, useAppState } from "../../overmind";
-import NavBarLabs from "./NavBarLabs";
-import NavBarTeacher from "./NavBarTeacher";
+import React from "react"
+import { useHistory } from "react-router"
+import { Enrollment } from "../../../proto/ag/ag_pb"
+import { Status } from "../../consts"
+import { isStudent, isTeacher } from "../../Helpers"
+import { useActions, useAppState } from "../../overmind"
+import NavBarLabs from "./NavBarLabs"
+import NavBarTeacher from "./NavBarTeacher"
 
 const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element => {
     const state = useAppState()
@@ -24,7 +24,6 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element =
             actions.setActiveCourse(enrollment.getCourseid())
         }
     }
-
 
     return (
         <>
