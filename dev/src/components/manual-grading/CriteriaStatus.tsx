@@ -2,6 +2,7 @@ import React from "react"
 import { GradingCriterion } from "../../../proto/ag/ag_pb"
 import { useActions, useAppState } from "../../overmind"
 
+
 const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion }): JSX.Element => {
     const { setGrade } = useActions().review
     const { isTeacher } = useAppState()

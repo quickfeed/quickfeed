@@ -4,7 +4,6 @@ import { useActions, useAppState } from "../overmind"
 
 
 // TODO: Maybe add route specific information, ex. if user is viewing a lab, show that in the banner. Could use state in components to display.
-
 const CourseBanner = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()

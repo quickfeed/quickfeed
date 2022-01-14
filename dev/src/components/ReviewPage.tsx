@@ -7,6 +7,7 @@ import { json } from "overmind"
 import ReviewForm from "./manual-grading/ReviewForm"
 import DynamicTable, { CellElement, Row } from "./DynamicTable"
 
+
 const ReviewPage = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()

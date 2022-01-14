@@ -3,6 +3,7 @@ import { Group } from "../../../proto/ag/ag_pb"
 import { getCourseID, isPendingGroup } from "../../Helpers"
 import { useAppState } from "../../overmind"
 
+
 const GroupComponent = (): JSX.Element => {
     const state = useAppState()
     const courseID = getCourseID()

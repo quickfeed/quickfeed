@@ -4,6 +4,7 @@ import { useAppState } from "../../overmind"
 import GradeComment from "./GradeComment"
 import CriteriaStatus from "./CriteriaStatus"
 
+
 /* Criteria component for the manual grading page */
 const Criteria = ({ criteria }: { criteria: GradingCriterion }): JSX.Element => {
 

@@ -6,7 +6,6 @@ import { Assignment, Submission } from "../../../proto/ag/ag_pb"
 import ProgressBar, { Progress } from "../ProgressBar"
 
 
-// TODO: Refactor this
 /* SubmissionsTable is a component that displays a table of assignments and their submissions for all courses. */
 const SubmissionsTable = (): JSX.Element => {
     const state = useAppState()

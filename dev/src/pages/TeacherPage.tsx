@@ -12,6 +12,7 @@ import ReviewPage from "../components/ReviewPage"
 import Assignments from "../components/teacher/Assignments"
 import Alert from "../components/Alert"
 
+
 /* TeacherPage enables routes to be accessed by the teacher only, and displays an overview of the different features available to the teacher. */
 const TeacherPage = (): JSX.Element => {
     const state = useAppState()

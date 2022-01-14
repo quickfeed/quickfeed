@@ -5,8 +5,9 @@ import { useActions, useAppState } from "../overmind"
 import GroupForm from "./group/GroupForm"
 import Search from "./Search"
 
+
 /* Lists all groups for a given course. */
-export const Groups = (): JSX.Element => {
+const Groups = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()

@@ -3,7 +3,8 @@ import { useActions, useAppState } from "../../overmind"
 import { json } from "overmind"
 import FormInput from "../forms/FormInput"
 
-export const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }): JSX.Element => {
+
+const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
 

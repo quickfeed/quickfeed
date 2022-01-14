@@ -7,6 +7,7 @@ import { useActions, useAppState } from "../../overmind"
 import NavBarLabs from "./NavBarLabs"
 import NavBarTeacher from "./NavBarTeacher"
 
+
 const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element => {
     const state = useAppState()
     const actions = useActions()

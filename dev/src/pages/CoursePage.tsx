@@ -5,9 +5,9 @@ import { useActions, useAppState } from "../overmind"
 import StudentPage from "./StudentPage"
 import TeacherPage from "./TeacherPage"
 
+
 /** The CoursePage component renders a Student or Teacher view
- *  depending on the active course and the user's enrollment status.
- */
+ *  depending on the active course and the user's enrollment status. */
 const CoursePage = (): JSX.Element => {
     const state = useAppState()
     const setActiveCourse = useActions().setActiveCourse

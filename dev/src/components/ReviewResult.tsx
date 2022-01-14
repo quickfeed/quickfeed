@@ -4,6 +4,7 @@ import { hasBenchmarks } from "../Helpers"
 import Benchmark from "./manual-grading/Benchmark"
 import Criteria from "./manual-grading/Criterion"
 
+
 const ReviewResult = ({ review }: { review?: Review }): JSX.Element => {
 
     if (!review) {

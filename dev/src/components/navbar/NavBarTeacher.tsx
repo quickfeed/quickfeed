@@ -3,7 +3,7 @@ import { useAppState } from "../../overmind"
 import NavBarLink, { NavLink } from "./NavBarLink"
 
 
-export const NavBarTeacher = (): JSX.Element => {
+const NavBarTeacher = (): JSX.Element => {
     const state = useAppState()
     const pending = state.pendingEnrollments.length > 0 ? { text: state.pendingEnrollments.length.toString(), classname: "badge badge-danger" } : null
     const enrolled = { text: state.numEnrolled.toString(), classname: "badge badge-primary" }

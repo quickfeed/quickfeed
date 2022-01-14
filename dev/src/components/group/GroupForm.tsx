@@ -5,6 +5,7 @@ import { getCourseID, isApprovedGroup, isHidden, isStudent, sortByField } from "
 import { useActions, useAppState } from "../../overmind"
 import Search from "../Search"
 
+
 const GroupForm = ({ editGroup, setGroup }: { editGroup?: Group, setGroup?: React.Dispatch<React.SetStateAction<Group | undefined>> }): JSX.Element => {
     const state = useAppState()
     const actions = useActions()

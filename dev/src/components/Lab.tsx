@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react'
 import { useParams } from 'react-router'
 import { Assignment, Submission } from '../../proto/ag/ag_pb'
-import { BuildInfo } from '../../proto/kit/score/score_pb'
 import { hasReviews, isManuallyGraded } from '../Helpers'
 import { useAppState, useActions } from '../overmind'
 import CourseUtilityLinks from './CourseUtilityLinks'
