@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Redirect, useHistory } from 'react-router'
 import { useAppState } from '../overmind'
-import ProfileForm from './forms/ProfileForm'
+import ProfileForm from './profile/ProfileForm'
 import ProfileCard from './profile/ProfileCard'
 import ProfileInfo from './profile/ProfileInfo'
 import SignupText from './profile/SignupText'
@@ -40,7 +40,7 @@ const Profile = (): JSX.Element => {
                             <ProfileForm setEditing={setEditing} >
                                 {state.isValid ? null : <SignupText />}
                             </ProfileForm>
-                            : <ProfileInfo setEditing={setEditing} /> 
+                            : <ProfileInfo setEditing={setEditing} />
                         }
                     </ProfileCard>
                 </div>
