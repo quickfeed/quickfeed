@@ -149,6 +149,9 @@ export const isStudent = (enrollment: Enrollment): boolean => { return hasStuden
 export const isTeacher = (enrollment: Enrollment): boolean => { return hasTeacher(enrollment.getStatus()) }
 export const isPending = (enrollment: Enrollment): boolean => { return hasPending(enrollment.getStatus()) }
 
+export const isPendingGroup = (group: Group): boolean => { return group.getStatus() === Group.GroupStatus.PENDING }
+export const isApprovedGroup = (group: Group): boolean => { return group.getStatus() === Group.GroupStatus.APPROVED }
+
 /** isEnrolled returns true if the user is enrolled in the course, and is no longer pending. */
 export const isEnrolled = (enrollment: Enrollment): boolean => { return enrollment.getStatus() >= Enrollment.UserStatus.STUDENT }
 
