@@ -32,8 +32,8 @@ export interface Deadline {
 
 /** Utility function for LandingpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
 // layoutTime = "2021-03-20T23:59:00"
-export const timeFormatter = (deadline: string, now: Date): Deadline => {
-    const timeToDeadline = new Date(deadline).getTime() - now.getTime()
+export const timeFormatter = (deadline: string): Deadline => {
+    const timeToDeadline = new Date(deadline).getTime() - new Date().getTime()
     const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     const hours = Math.floor(timeToDeadline / (1000 * 3600))
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))
@@ -217,6 +217,15 @@ export const assignmentStatusText = (assignment: Assignment, submission: Submiss
     }
     // If the submission is graded, return the status
     return SubmissionStatus[submission.getStatus()]
+}
+
+// Helper functions for default values for new courses
+export const defaultTag = (date: Date): string => {
+    return date.getMonth() >= 10 || date.getMonth() < 4 ? "Spring" : "Fall"
+}
+
+export const defaultYear = (date: Date): number => {
+    return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
 }
 
 /* Use this function to simulate a delay in the loading of data */
