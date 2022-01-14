@@ -21,15 +21,25 @@ const TeacherPage = (): JSX.Element => {
     const history = useHistory()
     const root = `/course/${courseID}`
 
-    const members = { title: "View Members", notification: state.pendingEnrollments.length > 0 ? { color: Color.YELLOW, text: "Pending enrollments" } : undefined, text: "View all students, and approve new enrollments.", buttonText: "Members", to: `${root}/members` }
+    const members = {
+        title: "View Members",
+        notification: state.pendingEnrollments.length > 0 ? { color: Color.YELLOW, text: "Pending enrollments" } : undefined,
+        text: "View all students, and approve new enrollments.",
+        buttonText: "Members", to: `${root}/members`
+    }
+    const groups = {
+        title: "Manage Groups",
+        notification: state.pendingGroups.length > 0 ? { color: Color.YELLOW, text: "Pending groups" } : undefined,
+        text: "View, edit or delete course groups.",
+        buttonText: "Groups", to: `${root}/groups`
+    }
     const results = { title: "View results", text: "View results for all students in the course.", buttonText: "Results", to: `${root}/results` }
-    const groups = { title: "Manage Groups", notification: state.pendingGroups.length > 0 ? { color: Color.YELLOW, text: "Pending groups" } : undefined, text: "View, edit or delete course groups.", buttonText: "Groups", to: `${root}/groups` }
     const assignments = { title: "Manage Assignments", text: "View and edit assignments.", buttonText: "Assignments", to: `${root}/assignments` }
     const updateAssignments = { title: "Update Course Assignments", text: "Fetch assignments from GitHub.", buttonText: "Update Assignments", onclick: () => grpc.updateAssignments(courseID) }
 
     useEffect(() => {
         // Redirect to OAuth authorization if user is teacher but not authorized
-        if (isTeacher(state.enrollmentsByCourseId[courseID])) {
+        if (isTeacher(state.enrollmentsByCourseID[courseID])) {
             isAuthorizedTeacher().then(authorized => {
                 if (!authorized) {
                     window.location.href = "https://" + window.location.hostname + "/auth/github-teacher"

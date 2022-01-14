@@ -10,7 +10,7 @@ import Alert from "../components/Alert"
 
 
 // AdminPage is the page containing the admin-only components.
-export const AdminPage = (): JSX.Element => {
+const AdminPage = (): JSX.Element => {
     const state = useAppState()
     const history = useHistory()
 
