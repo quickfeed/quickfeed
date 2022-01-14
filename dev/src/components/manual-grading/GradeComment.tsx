@@ -3,8 +3,13 @@ import { Dispatch, SetStateAction } from "react"
 import { GradingBenchmark, GradingCriterion } from "../../../proto/ag/ag_pb"
 import { useActions, useAppState } from "../../overmind"
 
+type GradeCommentProps = {
+    grade: GradingBenchmark | GradingCriterion,
+    editing: boolean,
+    setEditing: Dispatch<SetStateAction<boolean>>
+}
 
-const GradeComment = ({ grade, editing, setEditing }: { grade: GradingBenchmark | GradingCriterion, editing: boolean, setEditing: Dispatch<SetStateAction<boolean>> }): JSX.Element => {
+const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.Element => {
     const actions = useActions()
     const state = useAppState()
 
