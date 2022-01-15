@@ -2,8 +2,8 @@ import { json } from 'overmind'
 import { Context } from "."
 import { IGrpcResponse } from "../GRPCManager"
 import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark } from "../../proto/ag/ag_pb"
-import { Alert, CourseGroup } from "./state"
-import { Color, isPending, isStudent, isTeacher, isVisible, SubmissionStatus } from "../Helpers"
+import { Alert } from "./state"
+import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionStatus } from "../Helpers"
 
 
 /**
@@ -557,14 +557,14 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
 
 /** Switches between teacher and student view. */
 export const changeView = async ({ state, effects }: Context, courseID: number): Promise<void> => {
-    const enrollment = state.enrollmentsByCourseID[courseID]
-    if (isStudent(enrollment)) {
+    const enrollmentStatus = state.enrollmentsByCourseID[courseID].getStatus()
+    if (hasStudent(enrollmentStatus)) {
         const status = await effects.grpcMan.getEnrollmentsByUser(state.self.getId(), [Enrollment.UserStatus.TEACHER])
         if (status.data?.getEnrollmentsList().find(enrollment => enrollment.getCourseid() == courseID)) {
             state.enrollmentsByCourseID[courseID].setStatus(Enrollment.UserStatus.TEACHER)
         }
     }
-    if (isTeacher(enrollment)) {
+    if (hasTeacher(enrollmentStatus)) {
         state.enrollmentsByCourseID[courseID].setStatus(Enrollment.UserStatus.STUDENT)
     }
 
