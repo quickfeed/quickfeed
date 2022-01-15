@@ -222,12 +222,13 @@ type RepoKey = keyof typeof Repository.Type
 export const getRepositories = async ({ state, effects }: Context): Promise<boolean> => {
     let success = true
     for (const enrollment of state.enrollments) {
-        state.repositories[enrollment.getCourseid()] = {}
+        const courseID = enrollment.getCourseid()
+        state.repositories[courseID] = {}
 
-        const response = await effects.grpcMan.getRepositories(enrollment.getCourseid(), generateRepositoryList(enrollment))
+        const response = await effects.grpcMan.getRepositories(courseID, generateRepositoryList(enrollment))
         if (response.data) {
             response.data.getUrlsMap().forEach((entry, key) => {
-                state.repositories[enrollment.getCourseid()][Repository.Type[key as RepoKey]] = entry
+                state.repositories[courseID][Repository.Type[key as RepoKey]] = entry
             })
         } else {
             success = false
@@ -458,8 +459,10 @@ export const createOrUpdateCriterion = async ({ effects }: Context, { criterion,
                     bm.getCriteriaList()[index] = criterion
                 }
             } else {
-                bm.getCriteriaList().push(criterion)
-                effects.grpcMan.createCriterion(criterion)
+                const response = await effects.grpcMan.createCriterion(criterion)
+                if (success(response) && response.data) {
+                    bm.getCriteriaList().push(response.data)
+                }
             }
         }
     }
@@ -532,14 +535,14 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
 
 /** Switches between teacher and student view. */
 export const changeView = async ({ state, effects }: Context, courseID: number): Promise<void> => {
-    const status = state.enrollmentsByCourseID[courseID].getStatus()
-    if (status === Enrollment.UserStatus.STUDENT) {
+    const enrollment = state.enrollmentsByCourseID[courseID]
+    if (isStudent(enrollment)) {
         const status = await effects.grpcMan.getEnrollmentsByUser(state.self.getId(), [Enrollment.UserStatus.TEACHER])
         if (status.data?.getEnrollmentsList().find(enrollment => enrollment.getCourseid() == courseID)) {
             state.enrollmentsByCourseID[courseID].setStatus(Enrollment.UserStatus.TEACHER)
         }
     }
-    if (status === Enrollment.UserStatus.TEACHER) {
+    if (isTeacher(enrollment)) {
         state.enrollmentsByCourseID[courseID].setStatus(Enrollment.UserStatus.STUDENT)
     }
 
