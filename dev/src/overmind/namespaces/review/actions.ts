@@ -3,6 +3,7 @@ import { GradingBenchmark, GradingCriterion, Review, Void } from '../../../../pr
 import { IGrpcResponse } from '../../../GRPCManager'
 import { success } from '../../actions'
 
+
 /* Set the index of the selected review */
 export const setSelectedReview = ({ state }: Context, index: number): void => {
     state.review.selectedReview = index
@@ -15,10 +16,17 @@ export const updateReview = async ({ state, actions, effects }: Context): Promis
         const response = await effects.grpcMan.updateReview((state.review.currentReview as Review), state.activeCourse)
         if (success(response) && response.data) {
             // Updates the currently selected review with the new data from the server
-            state.review.currentReview = response.data
+            state.review.reviews[state.activeCourse][state.activeSubmission][state.review.selectedReview] = response.data
         } else {
             actions.alertHandler(response)
         }
+    }
+}
+
+export const updateReady = async ({ state, actions }: Context, ready: boolean): Promise<void> => {
+    if (state.review.currentReview) {
+        state.review.currentReview.setReady(ready)
+        await actions.review.updateReview()
     }
 }
 
