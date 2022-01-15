@@ -468,6 +468,20 @@ export const createOrUpdateCriterion = async ({ effects }: Context, { criterion,
     }
 }
 
+export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
+    if (benchmark.getId() && success(await effects.grpcMan.updateBenchmark(benchmark))) {
+        const index = assignment.getGradingbenchmarksList().indexOf(benchmark)
+        if (index > -1) {
+            assignment.getGradingbenchmarksList()[index] = benchmark
+        }
+    } else {
+        const response = await effects.grpcMan.createBenchmark(benchmark)
+        if (success(response) && response.data) {
+            assignment.getGradingbenchmarksList().push(response.data)
+        }
+    }
+}
+
 export const createBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
     benchmark.setAssignmentid(assignment.getId())
     const response = await effects.grpcMan.createBenchmark(benchmark)
@@ -485,6 +499,14 @@ export const deleteCriterion = async ({ effects }: Context, { criterion, assignm
                 await effects.grpcMan.deleteCriterion(criterion)
             }
         }
+    }
+}
+
+export const deleteBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark?: GradingBenchmark, assignment: Assignment }): Promise<void> => {
+    if (benchmark && confirm("Do you really want to delete this benchmark?")) {
+        const index = assignment.getGradingbenchmarksList().indexOf(benchmark)
+        assignment.getGradingbenchmarksList().splice(index, 1)
+        await effects.grpcMan.deleteBenchmark(benchmark)
     }
 }
 

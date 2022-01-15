@@ -1,3 +1,4 @@
+import { json } from "overmind"
 import React, { useState } from "react"
 import { Assignment } from "../../../proto/ag/ag_pb"
 import { getCourseID, isManuallyGraded, Color, hasBenchmarks, hasCriteria } from "../../Helpers"
@@ -46,7 +47,7 @@ const Assignments = (): JSX.Element => {
                     />
                 ))}
                 {/* Always show one criterion form in case of benchmarks without any */}
-                <EditCriterion key={"edit"}
+                <EditCriterion key={bm.getCriteriaList().length}
                     assignment={assignment}
                     benchmarkID={bm.getId()}
                 />
@@ -62,7 +63,7 @@ const Assignments = (): JSX.Element => {
                     <li key={"form"} className="list-group-item">
                         {/* Only show the rebuild button if the assignment is not manually graded */}
                         {isManuallyGraded(assignment)
-                            ? <> {assignmentForm} <EditBenchmark key={"eb"} assignment={assignment} /></>
+                            ? <> {assignmentForm} <EditBenchmark key={json(assignment).getGradingbenchmarksList().length} assignment={assignment} /></>
                             : <Button text={buttonText} type={ButtonType.BUTTON} color={Color.BLUE} onclick={rebuild} />
                         }
                     </li>
