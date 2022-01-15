@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"fmt"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -95,7 +94,7 @@ func updateSubmission(t *testing.T, db database.Database, wantReview *pb.Review)
 	var gotReview *pb.Review
 	for _, r := range sub.GetReviews() {
 		gotReview = r
-		fmt.Printf("sub %d: %+v, score: %d\n", sub.GetID(), r.GetReady(), r.GetScore())
+		// fmt.Printf("sub %d: %+v, score: %d\n", sub.GetID(), r.GetReady(), r.GetScore())
 	}
 	if diff := cmp.Diff(gotReview, wantReview, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same review, but got (-got +want):\n%s", diff)
