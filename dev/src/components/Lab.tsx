@@ -25,7 +25,7 @@ const Lab = (): JSX.Element => {
 
     useEffect(() => {
         if (!state.isTeacher) {
-            actions.setActiveLab(assignmentID)
+            actions.setActiveAssignment(assignmentID)
         }
     }, [lab])
 
