@@ -55,7 +55,6 @@ export const createReview = async ({ state, effects }: Context): Promise<void> =
         const review = new Review
         // Set the current user as the reviewer
         review.setReviewerid(state.self.getId())
-        // Set the submission id
         review.setSubmissionid(submission.getId())
         const response = await effects.grpcMan.createReview(review, state.activeCourse)
         if (response.data) {

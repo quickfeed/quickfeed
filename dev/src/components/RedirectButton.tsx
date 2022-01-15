@@ -2,7 +2,6 @@ import React from "react"
 import { useHistory } from "react-router"
 
 
-
 const RedirectButton = ({ to }: { to: string }): JSX.Element => {
     const history = useHistory()
 

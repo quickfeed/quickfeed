@@ -15,10 +15,10 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
     const state = useAppState()
 
     const Score = ({ score }: { score: Score }) => {
-        const classname = (score.getScore() === score.getMaxscore()) ? "passed" : "failed"
+        const className = (score.getScore() === score.getMaxscore()) ? "passed" : "failed"
         return (
             <tr>
-                <th className={classname + " pl-4"}>
+                <th className={className + " pl-4"}>
                     {score.getTestname()}
                 </th>
                 <th>
@@ -37,7 +37,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
             const delivered = buildInfo ? getFormattedTime(buildInfo.getBuilddate()) : "N/A"
             const executionTime = buildInfo ? `${buildInfo.getExectime() / 1000} seconds` : ""
 
-            const classname = (submission.getStatus() === Submission.Status.APPROVED) ? "passed" : "failed"
+            const className = (submission.getStatus() === Submission.Status.APPROVED) ? "passed" : "failed"
             return (
                 <div className="pb-2">
                     <div className="pb-2">
@@ -52,7 +52,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                         </thead>
                         <tbody>
                             <tr>
-                                <th colSpan={2} className={classname}>Status</th>
+                                <th colSpan={2} className={className}>Status</th>
                                 <td>{assignmentStatusText(assignment, submission)}</td>
                             </tr>
                             <tr>
@@ -85,7 +85,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                             </tr>
                             <tr>
                                 <th colSpan={2}>Slip days</th>
-                                <td>{state.enrollmentsByCourseId[assignment.getCourseid()].getSlipdaysremaining()}</td>
+                                <td>{state.enrollmentsByCourseID[assignment.getCourseid()].getSlipdaysremaining()}</td>
                             </tr>
                             <tr className={"thead-dark"}>
                                 <th colSpan={1}>Test Name</th>

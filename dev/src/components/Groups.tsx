@@ -1,12 +1,13 @@
 import React, { useState } from "react"
 import { Group } from "../../proto/ag/ag_pb"
-import { getCourseID, hasEnrollments } from "../Helpers"
+import { getCourseID, hasEnrollments, isApprovedGroup, isPendingGroup } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import GroupForm from "./group/GroupForm"
 import Search from "./Search"
 
+
 /* Lists all groups for a given course. */
-export const Groups = (): JSX.Element => {
+const Groups = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
@@ -40,7 +41,7 @@ export const Groups = (): JSX.Element => {
     }
 
     const GroupButtons = ({ group }: { group: Group }) => {
-        if (group.getStatus() === Group.GroupStatus.PENDING) {
+        if (isPendingGroup(group)) {
             return (
                 <td>
                     <span onClick={() => updateGroupStatus(group, Group.GroupStatus.APPROVED)} className="badge badge-primary clickable">Approve</span>
@@ -58,7 +59,7 @@ export const Groups = (): JSX.Element => {
                 <tr hidden={groupSearch(group)}>
                     <th key={group.getId()}>
                         {group.getName()}
-                        <span className="badge badge-warning ml-2">{group.getStatus() == Group.GroupStatus.PENDING ? "Pending" : null}</span>
+                        <span className="badge badge-warning ml-2">{isPendingGroup(group) ? "Pending" : null}</span>
                     </th>
                     <td>
                         <div>
@@ -78,11 +79,11 @@ export const Groups = (): JSX.Element => {
     }
 
     // Generates JSX.Element array containing all groups for the course
-    const PendingGroups = state.groups[courseID]?.filter(g => g.getStatus() == Group.GroupStatus.PENDING).map(group => {
+    const PendingGroups = state.groups[courseID]?.filter(group => isPendingGroup(group)).map(group => {
         return <GroupRow key={group.getId()} group={group} />
     })
 
-    const ApprovedGroups = state.groups[courseID]?.filter(g => g.getStatus() == Group.GroupStatus.APPROVED).map(group => {
+    const ApprovedGroups = state.groups[courseID]?.filter(group => isApprovedGroup(group)).map(group => {
         return <GroupRow key={group.getId()} group={group} />
     })
 

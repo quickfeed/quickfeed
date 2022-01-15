@@ -2,7 +2,8 @@ import React from "react"
 import { GradingCriterion } from "../../../proto/ag/ag_pb"
 import { useActions, useAppState } from "../../overmind"
 
-const ManageCriteriaStatus = ({ criterion }: { criterion: GradingCriterion }): JSX.Element => {
+
+const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion }): JSX.Element => {
     const { setGrade } = useActions().review
     const { isTeacher } = useAppState()
 
@@ -29,4 +30,4 @@ const ManageCriteriaStatus = ({ criterion }: { criterion: GradingCriterion }): J
     return <div className="btn-group">{StatusButtons}</div>
 }
 
-export default ManageCriteriaStatus
+export default CriteriaStatus

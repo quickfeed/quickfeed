@@ -1,12 +1,10 @@
 import React, { useEffect } from "react"
 import { useActions } from "../overmind"
 
-/**
- *  Search is used to update the query in state when the user types in the search bar.
- *  If setQuery is passed, it will modify the local state of a component instead of the global state.
- *  
- */
-export const Search = ({ placeholder, setQuery }: { placeholder?: string, setQuery?: (e: unknown) => void }): JSX.Element => {
+
+/** Search is used to update the query in state when the user types in the search bar.
+ *  If setQuery is passed, it will modify the local state of a component instead of the global state. */
+const Search = ({ placeholder, setQuery }: { placeholder?: string, setQuery?: (e: unknown) => void }): JSX.Element => {
     const actions = useActions()
 
     useEffect(() => {
@@ -27,4 +25,3 @@ export const Search = ({ placeholder, setQuery }: { placeholder?: string, setQue
 }
 
 export default Search
-

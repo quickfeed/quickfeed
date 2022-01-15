@@ -1,15 +1,14 @@
-import React from "react";
-import { getCourseID, hasTeacher, isTeacher, isVisible } from "../Helpers";
-import { useActions, useAppState } from "../overmind";
+import React from "react"
+import { getCourseID, hasTeacher, isTeacher, isVisible } from "../Helpers"
+import { useActions, useAppState } from "../overmind"
 
 
 // TODO: Maybe add route specific information, ex. if user is viewing a lab, show that in the banner. Could use state in components to display.
-
 const CourseBanner = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
 
-    const enrollment = state.enrollmentsByCourseId[getCourseID()]
+    const enrollment = state.enrollmentsByCourseID[getCourseID()]
     const style = isVisible(enrollment) ? 'fa fa-star-o' : "fa fa-star "
     return (
         <div className="jumbotron">

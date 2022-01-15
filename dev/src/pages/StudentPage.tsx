@@ -2,14 +2,14 @@ import React from "react"
 import { Route, Switch, useHistory } from "react-router"
 import { getCourseID } from "../Helpers"
 import CourseBanner from "../components/CourseBanner"
-import { CourseLabs } from "../components/CourseLabs"
+import CourseLabs from "../components/CourseLabs"
 import CourseUtilityLinks from "../components/CourseUtilityLinks"
 import GroupPage from "./GroupPage"
 import Lab from "../components/Lab"
 import RedirectButton from "../components/RedirectButton"
 import Alert from "../components/Alert"
 
-/* */
+
 const StudentPage = (): JSX.Element => {
     const courseID = getCourseID()
     const history = useHistory()

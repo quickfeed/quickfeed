@@ -21,8 +21,8 @@ const isJSXElement = (element: RowElement): element is JSX.Element => {
 }
 
 const DynamicTable = ({ header, data }: { header: Row, data: Row[] }): JSX.Element | null => {
-    // If there is no data, don't render anything
     if (!data || data.length === 0) {
+        // Nothing to render
         return null
     }
 

@@ -3,7 +3,7 @@ import { Assignment, Review, Submission } from "../../../proto/ag/ag_pb"
 import { getCourseID, isManuallyGraded, Color } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
-import ReviewInfo from "../ReviewInfo"
+import ReviewInfo from "./ReviewInfo"
 import ReviewResult from "../ReviewResult"
 
 

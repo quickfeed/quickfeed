@@ -1,6 +1,8 @@
 import React from "react"
-import { SubmissionStatus } from "../Helpers"
-import { useAppState } from "../overmind"
+import { NoSubmission } from "../../consts"
+import { SubmissionStatus } from "../../Helpers"
+import { useAppState } from "../../overmind"
+
 
 const ReviewInfo = (): JSX.Element => {
     const { review: { currentReview, reviewer, graded, criteriaTotal }, activeSubmissionLink } = useAppState()
@@ -20,7 +22,7 @@ const ReviewInfo = (): JSX.Element => {
                 </li>
                 <li className="list-group-item">
                     <span className="w-25 mr-5 float-left">Submission Status: </span>
-                    {submission ? SubmissionStatus[submission.getStatus()] : "None"}
+                    {submission ? SubmissionStatus[submission.getStatus()] : { NoSubmission }}
                 </li>
                 <li className="list-group-item">
                     <span className="w-25 mr-5 float-left">Review Status: </span>
@@ -31,7 +33,7 @@ const ReviewInfo = (): JSX.Element => {
                     {currentReview.getScore()}
                 </li>
                 <li className="list-group-item">
-                    <span className="w-25 mr-5 float-left">Last Edited: </span>
+                    <span className="w-25 mr-5 float-left">Updated: </span>
                     {currentReview.getEdited()}
                 </li>
                 <li className="list-group-item">

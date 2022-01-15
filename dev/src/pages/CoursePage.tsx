@@ -5,24 +5,25 @@ import { useActions, useAppState } from "../overmind"
 import StudentPage from "./StudentPage"
 import TeacherPage from "./TeacherPage"
 
-/** This component is mainly used to determine which view (Student or Teacher) to render, based on enrollment status. */
+
+/** The CoursePage component renders a Student or Teacher view
+ *  depending on the active course and the user's enrollment status. */
 const CoursePage = (): JSX.Element => {
     const state = useAppState()
     const setActiveCourse = useActions().setActiveCourse
     const courseID = getCourseID()
-    const enrollment = state.enrollmentsByCourseId[courseID]
+    const enrollment = state.enrollmentsByCourseID[courseID]
 
     useEffect(() => {
         setActiveCourse(courseID)
     }, [courseID])
 
-    if (state.enrollmentsByCourseId[courseID] && isEnrolled(enrollment)) {
+    if (state.enrollmentsByCourseID[courseID] && isEnrolled(enrollment)) {
         if (isTeacher(enrollment)) {
             return <TeacherPage />
         }
         return <StudentPage />
-    }
-    else {
+    } else {
         return <Redirect to={"/"} />
     }
 }

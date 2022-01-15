@@ -1,19 +1,20 @@
 import { json } from "overmind"
 import React, { useState } from "react"
 import { Assignment } from "../../../proto/ag/ag_pb"
-import { getCourseID, isManuallyGraded, Color } from "../../Helpers"
+import { getCourseID, isManuallyGraded, Color, hasBenchmarks, hasCriteria } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import EditBenchmark from "./EditBenchmark"
 import EditCriterion from "./EditCriterion"
 
 
-// TODO: Needs some love. Currently a mess.
-
+/** This component displays all assignments for the active course and:
+ *  for assignments that are not manually graded, allows teachers to rebuild all submissions.
+ *  for manually graded assignments, allows teachers to add or remove criteria and benchmarks for the assignment */
 const Assignments = (): JSX.Element => {
     const courseID = getCourseID()
     const actions = useActions()
-    const assignments = useAppState().assignments[courseID]
+    const state = useAppState()
 
     const assignmentElement = (assignment: Assignment): JSX.Element => {
         const [hidden, setHidden] = useState<boolean>(false)
@@ -32,58 +33,51 @@ const Assignments = (): JSX.Element => {
             }
         }
 
-        const generateForm = json(assignment).getGradingbenchmarksList()?.map((bm, index) => (
+        const assignmentForm = hasBenchmarks(assignment) ? assignment.getGradingbenchmarksList().map((bm) => (
             <EditBenchmark key={bm.getId()}
                 benchmark={bm}
                 assignment={assignment}
             >
                 {/* Show all criteria for this benchmark */}
-                {bm.getCriteriaList().map((crit, index) => (
-                    <EditCriterion key={index}
+                {hasCriteria(bm) && bm.getCriteriaList()?.map((crit) => (
+                    <EditCriterion key={crit.getId()}
                         criterion={crit}
                         assignment={assignment}
-                        benchmarkID={bm.getId()} />
+                        benchmarkID={bm.getId()}
+                    />
                 ))}
                 {/* Always show one criterion form in case of benchmarks without any */}
-                <EditCriterion key={index}
+                <EditCriterion key={bm.getCriteriaList().length}
                     assignment={assignment}
                     benchmarkID={bm.getId()}
                 />
             </EditBenchmark>
-        ))
+        )) : null
 
-
-        /* Only show the rebuild button if the assignment is not manually graded */
-        const rebuildButton = !isManuallyGraded(assignment) ? <Button text={buttonText} type={ButtonType.BUTTON} color={Color.BLUE} onclick={rebuild} /> : null
         return (
-            <ul className="list-group">
-                <li className="list-group-item" onClick={() => setHidden(!hidden)}>
+            <ul key={assignment.getId()} className="list-group">
+                <li key={"assignment"} className="list-group-item" onClick={() => setHidden(!hidden)}>
                     {assignment.getName()}
                 </li>
                 {hidden && (
-                    <li className="list-group-item">
-                        {rebuildButton}
-                        {isManuallyGraded(assignment) && (
-                            <>
-                                {generateForm}
-                                <EditBenchmark assignment={assignment} />
-                            </>
-                        )}
-
+                    <li key={"form"} className="list-group-item">
+                        {/* Only show the rebuild button if the assignment is not manually graded */}
+                        {isManuallyGraded(assignment)
+                            ? <> {assignmentForm} <EditBenchmark key={json(assignment).getGradingbenchmarksList().length} assignment={assignment} /></>
+                            : <Button text={buttonText} type={ButtonType.BUTTON} color={Color.BLUE} onclick={rebuild} />
+                        }
                     </li>
                 )}
             </ul >
         )
     }
 
-    const list = assignments.map(assignment => assignmentElement(assignment))
+    const list = state.assignments[courseID]?.map(assignment => assignmentElement(assignment))
     return (
         <div className="column">
             {list}
         </div>
-
     )
-
 }
 
 export default Assignments

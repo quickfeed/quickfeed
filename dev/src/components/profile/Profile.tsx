@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Redirect, useHistory } from 'react-router'
-import { useAppState } from '../overmind'
-import ProfileForm from './forms/ProfileForm'
-import ProfileCard from './profile/ProfileCard'
-import ProfileInfo from './profile/ProfileInfo'
-import SignupText from './profile/SignupText'
+import { useAppState } from '../../overmind'
+import ProfileForm from './ProfileForm'
+import ProfileCard from './ProfileCard'
+import ProfileInfo from './ProfileInfo'
+import SignupText from './SignupText'
 
 
 const Profile = (): JSX.Element => {
@@ -31,7 +31,8 @@ const Profile = (): JSX.Element => {
                 <div className="jumbotron">
                     <div className="centerblock container">
                         <h1>Hi, {state.self.getName()}</h1>
-                        You can edit your user information here.
+                        <p>You can edit your user information here.</p>
+                        <p><span className='font-weight-bold'>Use your real name as it appears on Canvas</span> to ensure that approvals are correctly attributed.</p>
                     </div>
                 </div>
                 <div className="container">
@@ -40,7 +41,7 @@ const Profile = (): JSX.Element => {
                             <ProfileForm setEditing={setEditing} >
                                 {state.isValid ? null : <SignupText />}
                             </ProfileForm>
-                            : <ProfileInfo setEditing={setEditing} /> 
+                            : <ProfileInfo setEditing={setEditing} />
                         }
                     </ProfileCard>
                 </div>

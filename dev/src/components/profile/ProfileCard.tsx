@@ -1,7 +1,8 @@
 import React from "react"
 import { useAppState } from "../../overmind"
 
-/** ProfileCard takes in children and displays them in a card. Used for displaying profile information. */
+
+/** ProfileCard displays the profile information of the provided children as a card. */
 const ProfileCard = ({ children }: { children: React.ReactNode }): JSX.Element => {
     const self = useAppState().self
 
@@ -15,7 +16,6 @@ const ProfileCard = ({ children }: { children: React.ReactNode }): JSX.Element =
             </div>
         </div>
     )
-
 }
 
 export default ProfileCard

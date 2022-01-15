@@ -4,6 +4,7 @@ import { Assignment, Submission } from "../../../proto/ag/ag_pb"
 import ProgressBar, { Progress } from "../ProgressBar"
 import NavBarLink, { NavLink } from "./NavBarLink"
 import { useHistory } from "react-router"
+import { Status } from "../../consts"
 
 
 const NavBarLabs = (): JSX.Element => {
@@ -25,7 +26,7 @@ const NavBarLabs = (): JSX.Element => {
     }
 
     const getLinkClass = (assignment: Assignment) => {
-        return state.activeLab === assignment.getId() && state.activeCourse === assignment.getCourseid() ? "active" : ""
+        return state.activeAssignment === assignment.getId() ? Status.Active : ""
     }
 
     const labLinks = state.assignments[state.activeCourse]?.map((assignment, index) => {

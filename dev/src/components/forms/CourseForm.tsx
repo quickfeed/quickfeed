@@ -5,9 +5,13 @@ import { json } from "overmind"
 import FormInput from "./FormInput"
 import CourseCreationInfo from "../admin/CourseCreationInfo"
 import { useHistory } from "react-router"
+import { defaultTag, defaultYear } from "../../Helpers"
 
-// CourseForm is used to create a new course or edit an existing course.
-export const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element => {
+
+/** CourseForm is used to create a new course or edit an existing course.
+ *  If `editCourse` is provided, the existing course will be modified.
+ *  If no course is provided, a new course will be created. */
+const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element => {
     const actions = useActions()
     const history = useHistory()
 
@@ -18,7 +22,7 @@ export const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element
 
     // Local state containing the course to be created or edited (if any)
     const [course, setCourse] = useState(editCourse ? json(editCourse) : new Course)
-    
+
     // Local state containing a boolean indicating whether the organization is valid. Courses that are being edited do not need to be validated.
     const [orgFound, setOrgFound] = useState<boolean>(editCourse ? true : false)
 
@@ -140,17 +144,7 @@ export const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element
                 </form>
             }
         </div>
-
     )
 }
 
 export default CourseForm
-
-// Helper functions for default values for new courses
-const defaultTag = (date: Date) => {
-    return date.getMonth() >= 10 || date.getMonth() < 4 ? "Spring" : "Fall"
-}
-
-const defaultYear = (date: Date) => {
-    return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
-}

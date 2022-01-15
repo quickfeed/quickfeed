@@ -43,7 +43,7 @@ const Courses = (overview: overview): JSX.Element => {
         const pending: JSX.Element[] = []
         const availableCourses: JSX.Element[] = []
         state.courses.map(course => {
-            const enrol = state.enrollmentsByCourseId[course.getId()]
+            const enrol = state.enrollmentsByCourseID[course.getId()]
             if (enrol) {
                 const courseCard = <CourseCard key={course.getId()} course={course} enrollment={enrol} />
                 if (isFavorite(enrol)) {
@@ -51,13 +51,13 @@ const Courses = (overview: overview): JSX.Element => {
                 } else {
                     switch (enrol.getStatus()) {
                         case Enrollment.UserStatus.PENDING:
-                            pending.push(<CourseCard key={course.getId()} course={course} enrollment={enrol} />)
+                            pending.push(courseCard)
                             break
                         case Enrollment.UserStatus.STUDENT:
-                            student.push(<CourseCard key={course.getId()} course={course} enrollment={enrol} />)
+                            student.push(courseCard)
                             break
                         case Enrollment.UserStatus.TEACHER:
-                            teacher.push(<CourseCard key={course.getId()} course={course} enrollment={enrol} />)
+                            teacher.push(courseCard)
                             break
                     }
                 }

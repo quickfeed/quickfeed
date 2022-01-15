@@ -9,7 +9,7 @@ import { useAppState } from "../overmind"
 const CourseUtilityLinks = (): JSX.Element => {
     const state = useAppState()
     const courseID = getCourseID()
-    const enrollment = state.enrollmentsByCourseId[courseID]
+    const enrollment = state.enrollmentsByCourseID[courseID]
     const repo = state.repositories[courseID]
 
     return (

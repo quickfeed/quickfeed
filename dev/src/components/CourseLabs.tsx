@@ -5,8 +5,9 @@ import { Submission } from "../../proto/ag/ag_pb"
 import ProgressBar, { Progress } from "./ProgressBar"
 import React from "react"
 
+
 /* Displays the a list of assignments and related submissions for a course */
-export const CourseLabs = (): JSX.Element => {
+const CourseLabs = (): JSX.Element => {
     const state = useAppState()
     const history = useHistory()
     const courseID = getCourseID()
@@ -53,3 +54,5 @@ export const CourseLabs = (): JSX.Element => {
         </ul>
     )
 }
+
+export default CourseLabs
