@@ -7,7 +7,7 @@ import ReviewInfo from "./ReviewInfo"
 import ReviewResult from "../ReviewResult"
 
 
-// TODO: Ensure all criteria are graded before setting ready
+// TODO: Figure out who to hide reviews from
 
 const ReviewForm = (): JSX.Element => {
     const state = useAppState()
@@ -17,7 +17,7 @@ const ReviewForm = (): JSX.Element => {
     const selectReview = () => {
         if (state.activeSubmission) {
             const reviews = state.review.reviews[courseID][state.activeSubmission]
-            if (reviews) {
+            if (reviews.length > 0) {
                 actions.review.setSelectedReview(0)
             }
         }
@@ -63,17 +63,33 @@ const ReviewForm = (): JSX.Element => {
 
     const reviews = state.review.reviews[courseID][state.activeSubmission]
 
+    const selectReviewButton: JSX.Element[] = []
+    for (let i = 0; i < (state.activeSubmissionLink.getAssignment()?.getReviewers() ?? 0); i++) {
+        if (reviews && reviews[i]) {
+            selectReviewButton.push(
+                <Button key={i} onclick={() => { actions.review.setSelectedReview(i) }}
+                    classname={`mr-1 ${state.review.selectedReview === i ? "active border border-dark" : ""}`}
+                    text={reviews[i].getReady() ? "Ready" : "In Progress"}
+                    color={reviews[i].getReady() ? Color.GREEN : Color.YELLOW}
+                    type={ButtonType.BUTTON}
+                />
+            )
+        } else {
+            selectReviewButton.push(<Button classname="mr-1" key={i} type={ButtonType.BUTTON} color={Color.BLUE} text="Create a new review" onclick={() => actions.review.setSelectedReview(i)} />)
+        }
+    }
+
     if (!isManuallyGraded(state.activeSubmissionLink.getAssignment() as Assignment)) {
         return <div>This assignment is not for manual grading.</div>
     } else {
         return (
             <div className="col reviewLab">
-                {reviews?.length == 0 &&
-                    <Button type={ButtonType.BUTTON} color={Color.GREEN} text="Create a new review" onclick={() => actions.review.createReview()} />
-                }
+                <div className="mb-1">
+                    {selectReviewButton}
+                </div>
                 {state.review.currentReview ?
                     <>
-                        <ReviewInfo />
+                        <ReviewInfo review={state.review.currentReview} />
                         <ReviewResult review={state.review.currentReview} />
                     </> : null
                 }
