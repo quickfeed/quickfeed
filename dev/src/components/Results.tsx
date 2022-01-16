@@ -1,8 +1,8 @@
-import React, { useEffect } from "react"
-import { Group, Submission, SubmissionLink } from "../../proto/ag/ag_pb"
-import { getCourseID } from "../Helpers"
+import React, { useEffect, useState } from "react"
+import { Submission, SubmissionLink } from "../../proto/ag/ag_pb"
+import { generateAssignmentsHeader, generateSubmissionRows, getCourseID } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
-import DynamicTable, { CellElement, Row } from "./DynamicTable"
+import DynamicTable, { CellElement } from "./DynamicTable"
 import Lab from "./Lab"
 import ManageSubmissionStatus from "./ManageSubmissionStatus"
 import Search from "./Search"
@@ -12,6 +12,7 @@ const Results = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
+    const [groupView, setGroupView] = useState<boolean>(false)
 
     useEffect(() => {
         if (!state.courseSubmissions[courseID]) {
@@ -23,11 +24,6 @@ const Results = (): JSX.Element => {
     if (!state.courseSubmissions[courseID]) {
         return <h1>Fetching Submissions...</h1>
     }
-
-    const header = ["Name", "Group"].concat(state.assignments[courseID].map(assignment => {
-        return assignment.getName()
-    }))
-
 
     const getSubmissionCell = (submissionLink: SubmissionLink): CellElement => {
         const submission = submissionLink.getSubmission()
@@ -47,25 +43,16 @@ const Results = (): JSX.Element => {
         }
     }
 
-    const results = state.courseSubmissions[courseID].map(link => {
-        const data: Row = []
-        if (link.user && link.enrollment) {
-            data.push({ value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}` })
-            data.push(link.enrollment.hasGroup() ? (link.enrollment.getGroup() as Group)?.getName() : "")
-            if (link.submissions) {
-                for (const submissionLink of link.submissions) {
-                    data.push(getSubmissionCell(submissionLink))
-                }
-            }
-        }
-        return data
-    })
+    const base = groupView ? ["Name"] : ["Name", "Group"]
+    const header = generateAssignmentsHeader(base, state.assignments[courseID], groupView)
+    const links = groupView ? state.courseGroupSubmissions[courseID] : state.courseSubmissions[courseID]
+    const results = generateSubmissionRows(links, getSubmissionCell, true)
 
     return (
         <div>
             <div className="row">
                 <div className="col">
-                    <Search />
+                    <Search /><span onClick={() => setGroupView(!groupView)}>Switch View</span>
                     <DynamicTable header={header} data={results} />
                 </div>
                 <div className="col reviewLab">

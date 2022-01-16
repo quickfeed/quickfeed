@@ -1,7 +1,9 @@
 import { json } from "overmind"
 import { useParams } from "react-router"
-import { Assignment, Enrollment, EnrollmentLink, GradingBenchmark, Group, Review, Submission, User } from "../proto/ag/ag_pb"
+import { Assignment, Enrollment, EnrollmentLink, GradingBenchmark, Group, Review, Submission, SubmissionLink, User } from "../proto/ag/ag_pb"
 import { Score } from "../proto/kit/score/score_pb"
+import { Row, RowElement } from "./components/DynamicTable"
+import { UserCourseSubmissions } from "./overmind/state"
 
 export enum Color {
     RED = "danger",
@@ -229,6 +231,36 @@ export const defaultTag = (date: Date): string => {
 
 export const defaultYear = (date: Date): number => {
     return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
+}
+
+export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGenerator: (s: SubmissionLink) => RowElement, groupName?: boolean): Row[] => {
+    return links?.map((link) => {
+        const row: Row = []
+        if (link.enrollment && link.user) {
+            row.push({ value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}` })
+            groupName && row.push(link.enrollment.getGroup()?.getName() ?? "")
+        } else if (link.group) {
+            row.push(link.group.getName())
+        }
+        if (link.submissions) {
+            for (const submissionLink of link.submissions) {
+                row.push(cellGenerator(submissionLink))
+            }
+        }
+        return row
+    })
+}
+
+export const generateAssignmentsHeader = (base: string[], assignments: Assignment[], group: boolean): Row => {
+    assignments.forEach(assignment => {
+        if (group && assignment.getIsgrouplab()) {
+            base.push(assignment.getName())
+        }
+        if (!group) {
+            base.push(assignment.getName())
+        }
+    })
+    return base
 }
 
 /* Use this function to simulate a delay in the loading of data */
