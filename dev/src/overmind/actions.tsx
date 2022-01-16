@@ -566,15 +566,14 @@ export const fetchUserData = async ({ state, actions, effects }: Context): Promi
             if (!response.data?.getIsauthorized()) {
                 window.location.href = "https://" + window.location.hostname + "/auth/github-teacher"
             }
-        }
-    }
-    // End loading screen.
-    state.isLoading = false
 
-}
-// The value of success is unreliable. The intention is to return true if the user is logged in and all data was fetched.
-// However, if one of the above calls fail, it could still be the case that success returns true.
-return success
+        }
+        // End loading screen.
+        state.isLoading = false
+    }
+    // The value of success is unreliable. The intention is to return true if the user is logged in and all data was fetched.
+    // However, if one of the above calls fail, it could still be the case that success returns true.
+    return success
 }
 
 
