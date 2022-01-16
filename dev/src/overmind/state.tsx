@@ -15,6 +15,7 @@ export interface Alert {
 }
 
 export interface UserCourseSubmissions {
+    group?: Group
     enrollment?: Enrollment
     user?: User
     submissions?: SubmissionLink[]
@@ -85,6 +86,8 @@ type State = {
 
     /* Contains all submissions for a given course and enrollment */
     courseSubmissions: { [courseID: number]: UserCourseSubmissions[] },
+
+    courseGroupSubmissions: { [courseID: number]: UserCourseSubmissions[] },
 
     /* Contains all enrollments for a given course */
     courseEnrollments: { [courseID: number]: Enrollment[] },
@@ -183,6 +186,8 @@ export const state: State = {
     allUsers: [],
     courses: [],
     courseSubmissions: [],
+    courseGroupSubmissions: {},
+
     activeSubmission: derived((state: State) => {
         if (state.activeSubmissionLink) {
             return state.activeSubmissionLink.hasSubmission() ? (state.activeSubmissionLink.getSubmission() as Submission).getId() : -1

@@ -2,7 +2,7 @@ import { json } from 'overmind'
 import { Context } from "."
 import { IGrpcResponse } from "../GRPCManager"
 import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark } from "../../proto/ag/ag_pb"
-import { Alert } from "./state"
+import { Alert, UserCourseSubmissions } from "./state"
 import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionStatus } from "../Helpers"
 
 
@@ -120,7 +120,7 @@ export const setEnrollmentState = async ({ actions, effects }: Context, enrollme
 }
 
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurrences of the given submission in state. */
-export const updateSubmission = async ({ state, effects }: Context, status: Submission.Status): Promise<void> => {
+export const updateSubmission = async ({ state, actions, effects }: Context, status: Submission.Status): Promise<void> => {
     /* Do not update if the status is already the same or if there is no selected submission */
     if (!state.currentSubmission || state.currentSubmission.getStatus() == status) {
         return
@@ -143,8 +143,15 @@ export const updateSubmission = async ({ state, effects }: Context, status: Subm
         return
     }
 
+    if (state.activeSubmissionLink?.getAssignment()?.getIsgrouplab()) {
+        actions.loopThroughAndUpdate({ links: state.courseGroupSubmissions[state.activeCourse], status: status })
+    }
+    actions.loopThroughAndUpdate({ links: state.courseSubmissions[state.activeCourse], status: status })
+}
+
+export const loopThroughAndUpdate = ({ state }: Context, { links, status }: { links: UserCourseSubmissions[], status: Submission.Status }): void => {
     /* Loop through all submissions for the current course and update the status if it matches the current submission ID */
-    for (const link of state.courseSubmissions[state.activeCourse]) {
+    for (const link of links) {
         if (!link.submissions) {
             continue
         }
@@ -349,7 +356,16 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
     const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL, true)
     if (result.data) {
         actions.convertCourseSubmission({ courseID: courseID, data: result.data })
-
+    }
+    const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.GROUP, true)
+    if (groups.data) {
+        state.courseGroupSubmissions[courseID] = []
+        groups.data.getLinksList().forEach(link => {
+            if (!link.getEnrollment()?.hasGroup()) {
+                return
+            }
+            state.courseGroupSubmissions[courseID].push({ group: link.getEnrollment()?.getGroup(), submissions: link.getSubmissionsList() })
+        })
     }
     state.isLoading = false
 }
