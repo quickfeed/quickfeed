@@ -56,7 +56,7 @@ const Lab = (): JSX.Element => {
                 <div key={submission.getId()}>
                     <LabResultTable submission={submission} assignment={assignment} />
 
-                    {isManuallyGraded(assignment) ? <ReviewResult review={review[0]} /> : null}
+                    {isManuallyGraded(assignment) && submission.getReleased() ? <ReviewResult review={review[0]} /> : null}
 
                     <div className="card bg-light">
                         <code className="card-body" style={{ color: "#c7254e" }}>{buildLog}</code>
