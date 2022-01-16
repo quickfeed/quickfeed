@@ -1,26 +1,35 @@
 import { Context } from '../../'
-import { GradingBenchmark, GradingCriterion, Review, Void } from '../../../../proto/ag/ag_pb'
-import { IGrpcResponse } from '../../../GRPCManager'
+import { GradingBenchmark, GradingCriterion, Review } from '../../../../proto/ag/ag_pb'
 import { success } from '../../actions'
 
 
 /* Set the index of the selected review */
-export const setSelectedReview = ({ state }: Context, index: number): void => {
+export const setSelectedReview = ({ state, actions }: Context, index: number): void => {
     state.review.selectedReview = index
+    if (state.review.currentReview) {
+        return
+    }
+    const reviews = state.review.reviews[state.activeCourse][state.activeSubmission]
+    const reviewers = state.activeSubmissionLink?.getAssignment()?.getReviewers() ?? -1
+    if (reviews.length < reviewers && !reviews.some(r => r.getReviewerid() === state.self.getId()) && confirm('Are you sure you want to review this submission?')) {
+        actions.review.createReview()
+    }
 }
 
 /* Update the selected review */
-export const updateReview = async ({ state, actions, effects }: Context): Promise<void> => {
+export const updateReview = async ({ state, actions, effects }: Context): Promise<boolean> => {
     // If canUpdate is false, the review cannot be updated
     if (state.review.canUpdate) {
         const response = await effects.grpcMan.updateReview((state.review.currentReview as Review), state.activeCourse)
         if (success(response) && response.data) {
             // Updates the currently selected review with the new data from the server
             state.review.reviews[state.activeCourse][state.activeSubmission][state.review.selectedReview] = response.data
+            return true
         } else {
             actions.alertHandler(response)
         }
     }
+    return false
 }
 
 export const updateReady = async ({ state, actions }: Context, ready: boolean): Promise<void> => {
@@ -30,26 +39,20 @@ export const updateReady = async ({ state, actions }: Context, ready: boolean): 
     }
 }
 
-export const updateComment = async ({ effects }: Context, { grade, comment }: { grade: GradingBenchmark | GradingCriterion, comment: string }): Promise<void> => {
-    let response: IGrpcResponse<Void> | undefined = undefined
+export const updateComment = async ({ actions }: Context, { grade, comment }: { grade: GradingBenchmark | GradingCriterion, comment: string }): Promise<void> => {
     const oldComment = grade.getComment()
     grade.setComment(comment)
-    if (grade instanceof GradingBenchmark) {
-        response = await effects.grpcMan.updateBenchmark(grade)
-    }
-    if (grade instanceof GradingCriterion) {
-        response = await effects.grpcMan.updateCriterion(grade)
-    }
-    if (!response || !success(response)) {
+    const success = await actions.review.updateReview()
+    if (!success) {
         grade.setComment(oldComment)
     }
 }
 
-export const setGrade = async ({ effects }: Context, { criterion, grade }: { criterion: GradingCriterion, grade: GradingCriterion.Grade }): Promise<void> => {
+export const setGrade = async ({ actions }: Context, { criterion, grade }: { criterion: GradingCriterion, grade: GradingCriterion.Grade }): Promise<void> => {
     const oldGrade = criterion.getGrade()
     criterion.setGrade(grade)
-    const response = await effects.grpcMan.updateCriterion(criterion)
-    if (!success(response)) {
+    const success = actions.review.updateReview()
+    if (!success) {
         criterion.setGrade(oldGrade)
     }
 }

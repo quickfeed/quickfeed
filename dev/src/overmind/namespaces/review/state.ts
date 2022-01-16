@@ -52,7 +52,7 @@ export const state: State = {
     }),
 
     canUpdate: derived(({ currentReview }: State, rootState: Context["state"]) => {
-        return currentReview != undefined && rootState.activeSubmission > 0 && rootState.activeCourse > 0
+        return currentReview != undefined && rootState.activeSubmission > 0 && rootState.activeCourse > 0 && currentReview.getId() > 0
     }),
 
     criteriaTotal: derived((state: State, rootState: Context["state"]) => {
