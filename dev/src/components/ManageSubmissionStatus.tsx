@@ -1,17 +1,22 @@
 import React from "react"
 import { Submission } from "../../proto/ag/ag_pb"
+import { isManuallyGraded } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 
 const ManageSubmissionStatus = (): JSX.Element => {
     const actions = useActions()
     const state = useAppState()
+    const assignment = state.activeSubmissionLink?.getAssignment()
 
     const buttons: { text: string, status: Submission.Status, style: string, onClick?: () => void }[] = [
         { text: "Approve", status: Submission.Status.APPROVED, style: "primary" },
         { text: "Revision", status: Submission.Status.REVISION, style: "warning" },
         { text: "Reject", status: Submission.Status.REJECTED, style: "danger" },
-        { text: "Rebuild", status: Submission.Status.NONE, style: "primary", onClick: () => actions.rebuildSubmission() }
     ]
+
+    if (assignment && !isManuallyGraded(assignment)) {
+        buttons.push({ text: "Rebuild", status: Submission.Status.NONE, style: "primary", onClick: () => actions.rebuildSubmission() })
+    }
 
     const StatusButtons = buttons.map((button, index) => {
         const style = state.currentSubmission?.getStatus() === button.status ? `col btn btn-${button.style} mr-2` : `col btn btn-outline-${button.style} mr-2`
