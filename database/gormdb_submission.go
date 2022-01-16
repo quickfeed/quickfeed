@@ -185,7 +185,7 @@ func (db *GormDB) CreateReview(query *pb.Review) error {
 // UpdateReview updates feedback text, review and ready status
 func (db *GormDB) UpdateReview(query *pb.Review) error {
 	// By default, Gorm will not update zero value fields; such as the Ready bool field.
-	// For additional context, see
+	// Therefore we use Select before the Updates call. For additional context, see
 	// https://github.com/quickfeed/quickfeed/issues/569#issuecomment-1013729572
 	return db.conn.Model(&query).Select("*").Updates(&pb.Review{
 		ID:           query.ID,
