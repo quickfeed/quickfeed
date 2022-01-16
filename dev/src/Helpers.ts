@@ -254,10 +254,10 @@ export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGener
 export const generateAssignmentsHeader = (base: string[], assignments: Assignment[], group: boolean): Row => {
     assignments.forEach(assignment => {
         if (group && assignment.getIsgrouplab()) {
-            base.push(assignment.getName())
+            base.push(`${assignment.getName()} (g)`)
         }
         if (!group) {
-            base.push(assignment.getName())
+            base.push(assignment.getIsgrouplab() ? `${assignment.getName()} (g)` : assignment.getName())
         }
     })
     return base
