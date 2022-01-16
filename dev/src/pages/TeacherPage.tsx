@@ -18,7 +18,6 @@ const TeacherPage = (): JSX.Element => {
     const state = useAppState()
     const courseID = getCourseID()
     const grpc = useGrpc().grpcMan
-    const isAuthorizedTeacher = useActions().isAuthorizedTeacher
     const history = useHistory()
     const root = `/course/${courseID}`
 
@@ -37,17 +36,6 @@ const TeacherPage = (): JSX.Element => {
     const results = { title: "View results", text: "View results for all students in the course.", buttonText: "Results", to: `${root}/results` }
     const assignments = { title: "Manage Assignments", text: "View and edit assignments.", buttonText: "Assignments", to: `${root}/assignments` }
     const updateAssignments = { title: "Update Course Assignments", text: "Fetch assignments from GitHub.", buttonText: "Update Assignments", onclick: () => grpc.updateAssignments(courseID) }
-
-    useEffect(() => {
-        // Redirect to OAuth authorization if user is teacher but not authorized
-        if (isTeacher(state.enrollmentsByCourseID[courseID])) {
-            isAuthorizedTeacher().then(authorized => {
-                if (!authorized) {
-                    window.location.href = "https://" + window.location.hostname + "/auth/github-teacher"
-                }
-            })
-        }
-    }, [])
 
     return (
         <div>

@@ -532,7 +532,7 @@ export const setActiveSubmissionLink = ({ state }: Context, link: SubmissionLink
 
 /* fetchUserData is called when the user enters the app. It fetches all data that is needed for the user to be able to use the app. */
 /* If the user is not logged in, i.e does not have a valid token, the process is aborted. */
-export const fetchUserData = async ({ state, actions }: Context): Promise<boolean> => {
+export const fetchUserData = async ({ state, actions, effects }: Context): Promise<boolean> => {
     let success = await actions.getSelf()
     // If getSelf returns false, the user is not logged in. Abort.
     if (!success) { state.isLoading = false; return false }
@@ -559,13 +559,22 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
         }
         success = await actions.getRepositories()
         success = await actions.getCourses()
-        // End loading screen.
-        state.isLoading = false
 
+        if (state.enrollments.some(enrollment => isTeacher(enrollment))) {
+            // Require teacher scopes if the user is a teacher.
+            const response = await effects.grpcMan.isAuthorizedTeacher()
+            if (!response.data?.getIsauthorized()) {
+                window.location.href = "https://" + window.location.hostname + "/auth/github-teacher"
+            }
+        }
     }
-    // The value of success is unreliable. The intention is to return true if the user is logged in and all data was fetched.
-    // However, if one of the above calls fail, it could still be the case that success returns true.
-    return success
+    // End loading screen.
+    state.isLoading = false
+
+}
+// The value of success is unreliable. The intention is to return true if the user is logged in and all data was fetched.
+// However, if one of the above calls fail, it could still be the case that success returns true.
+return success
 }
 
 
