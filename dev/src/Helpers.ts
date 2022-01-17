@@ -1,8 +1,9 @@
 import { json } from "overmind"
 import { useParams } from "react-router"
-import { Assignment, Enrollment, EnrollmentLink, GradingBenchmark, Group, Review, Submission, SubmissionLink, User } from "../proto/ag/ag_pb"
+import { Assignment, Course, Enrollment, EnrollmentLink, GradingBenchmark, Group, Review, Submission, SubmissionLink, User } from "../proto/ag/ag_pb"
 import { Score } from "../proto/kit/score/score_pb"
 import { Row, RowElement } from "./components/DynamicTable"
+import { useActions, useAppState } from "./overmind"
 import { UserCourseSubmissions } from "./overmind/state"
 
 export enum Color {
@@ -11,6 +12,8 @@ export enum Color {
     GREEN = "success",
     YELLOW = "warning",
     GRAY = "secondary",
+    WHITE = "light",
+    BLACK = "dark",
 }
 
 export enum Sort {
@@ -139,12 +142,7 @@ export const isValid = (elm: User | EnrollmentLink): boolean => {
 
 /** hasEnrollment returns true if any of the provided has been approved */
 export const hasEnrollment = (enrollments: Enrollment[]): boolean => {
-    for (const enrollment of enrollments) {
-        if (enrollment.getStatus() > Enrollment.UserStatus.PENDING) {
-            return true
-        }
-    }
-    return false
+    return enrollments.some(enrollment => enrollment.getStatus() > Enrollment.UserStatus.PENDING)
 }
 
 export const isStudent = (enrollment: Enrollment): boolean => { return hasStudent(enrollment.getStatus()) }
@@ -173,9 +171,16 @@ export const hasEnrolled = (status: Enrollment.UserStatus): boolean => { return 
 export const isVisible = (enrollment: Enrollment): boolean => { return enrollment.getState() === Enrollment.DisplayState.VISIBLE }
 export const isFavorite = (enrollment: Enrollment): boolean => { return enrollment.getState() === Enrollment.DisplayState.FAVORITE }
 
+export const isCourseCreator = (user: User, course: Course): boolean => { return user.getId() === course.getCoursecreatorid() }
+export const isAuthor = (user: User, review: Review): boolean => { return user.getId() === review.getReviewerid() }
+
 export const isManuallyGraded = (assignment: Assignment): boolean => {
     return assignment.getReviewers() > 0
 }
+
+export const isApproved = (submission: Submission): boolean => { return submission.getStatus() === Submission.Status.APPROVED }
+export const isRevision = (submission: Submission): boolean => { return submission.getStatus() === Submission.Status.REVISION }
+export const isRejected = (submission: Submission): boolean => { return submission.getStatus() === Submission.Status.REJECTED }
 
 export const hasReviews = (submission: Submission): boolean => { return json(submission).getReviewsList().length > 0 }
 export const hasBenchmarks = (obj: Review | Assignment): boolean => { return json(obj).getGradingbenchmarksList().length > 0 }
@@ -233,7 +238,8 @@ export const defaultYear = (date: Date): number => {
     return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
 }
 
-export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGenerator: (s: SubmissionLink) => RowElement, groupName?: boolean): Row[] => {
+export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGenerator: (s: SubmissionLink) => RowElement, groupName?: boolean, assignmentID?: number): Row[] => {
+    const state = useAppState()
     return links?.map((link) => {
         const row: Row = []
         if (link.enrollment && link.user) {
@@ -244,6 +250,9 @@ export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGener
         }
         if (link.submissions) {
             for (const submissionLink of link.submissions) {
+                if (state.review.assignmentID > 0 && submissionLink.getAssignment()?.getId() != state.review.assignmentID) {
+                    continue
+                }
                 row.push(cellGenerator(submissionLink))
             }
         }
@@ -251,15 +260,19 @@ export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGener
     })
 }
 
-export const generateAssignmentsHeader = (base: string[], assignments: Assignment[], group: boolean): Row => {
-    assignments.forEach(assignment => {
+export const generateAssignmentsHeader = (base: RowElement[], assignments: Assignment[], group: boolean, assignmentID?: number): Row => {
+    const actions = useActions()
+    for (const assignment of assignments) {
+        if (assignmentID && assignment.getId() !== assignmentID) {
+            continue
+        }
         if (group && assignment.getIsgrouplab()) {
-            base.push(`${assignment.getName()} (g)`)
+            base.push({ value: `${assignment.getName()} (g)`, onClick: () => actions.review.setAssignmentID(assignment.getId()) })
         }
         if (!group) {
-            base.push(assignment.getIsgrouplab() ? `${assignment.getName()} (g)` : assignment.getName())
+            base.push({ value: assignment.getIsgrouplab() ? `${assignment.getName()} (g)` : assignment.getName(), onClick: () => actions.review.setAssignmentID(assignment.getId()) })
         }
-    })
+    }
     return base
 }
 
