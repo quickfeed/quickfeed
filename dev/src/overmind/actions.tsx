@@ -144,12 +144,12 @@ export const updateSubmission = async ({ state, actions, effects }: Context, sta
     }
 
     if (state.activeSubmissionLink?.getAssignment()?.getIsgrouplab()) {
-        actions.loopThroughAndUpdate({ links: state.courseGroupSubmissions[state.activeCourse], status: status })
+        actions.updateCurrentSubmissionStatus({ links: state.courseGroupSubmissions[state.activeCourse], status: status })
     }
-    actions.loopThroughAndUpdate({ links: state.courseSubmissions[state.activeCourse], status: status })
+    actions.updateCurrentSubmissionStatus({ links: state.courseSubmissions[state.activeCourse], status: status })
 }
 
-export const loopThroughAndUpdate = ({ state }: Context, { links, status }: { links: UserCourseSubmissions[], status: Submission.Status }): void => {
+export const updateCurrentSubmissionStatus = ({ state }: Context, { links, status }: { links: UserCourseSubmissions[], status: Submission.Status }): void => {
     /* Loop through all submissions for the current course and update the status if it matches the current submission ID */
     for (const link of links) {
         if (!link.submissions) {
