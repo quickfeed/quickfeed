@@ -2,11 +2,14 @@ import React, { Dispatch, SetStateAction, useMemo } from "react"
 import { useActions, useAppState } from "../../overmind"
 import { json } from "overmind"
 import FormInput from "../forms/FormInput"
+import { hasEnrollment } from "../../Helpers"
+import { useHistory } from "react-router"
 
 
 const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
+    const history = useHistory()
 
     const signup = useMemo(() => !state.isValid, [state.isValid])
 
@@ -36,6 +39,9 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
         actions.updateUser(user)
         // Disable editing after submission
         setEditing(false)
+        if (!hasEnrollment(state.enrollments)) {
+            history.push("/courses")
+        }
     }
 
     return (
