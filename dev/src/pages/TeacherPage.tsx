@@ -1,6 +1,6 @@
 import React, { useEffect } from "react"
 import { Route, Switch, useHistory } from "react-router"
-import { Color, getCourseID, isTeacher } from "../Helpers"
+import { Color, getCourseID, isManuallyGraded, isTeacher } from "../Helpers"
 import { useActions, useAppState, useGrpc } from "../overmind"
 import Card from "../components/Card"
 import CourseBanner from "../components/CourseBanner"
@@ -11,6 +11,7 @@ import Results from "../components/Results"
 import ReviewPage from "../components/ReviewPage"
 import Assignments from "../components/teacher/Assignments"
 import Alert from "../components/Alert"
+import Release from "../components/Release"
 
 
 /* TeacherPage enables routes to be accessed by the teacher only, and displays an overview of the different features available to the teacher. */
@@ -20,6 +21,7 @@ const TeacherPage = (): JSX.Element => {
     const grpc = useGrpc().grpcMan
     const history = useHistory()
     const root = `/course/${courseID}`
+    const courseHasManualGrading = state.assignments[courseID].some(assignment => isManuallyGraded(assignment))
 
     const members = {
         title: "View Members",
@@ -36,6 +38,7 @@ const TeacherPage = (): JSX.Element => {
     const results = { title: "View results", text: "View results for all students in the course.", buttonText: "Results", to: `${root}/results` }
     const assignments = { title: "Manage Assignments", text: "View and edit assignments.", buttonText: "Assignments", to: `${root}/assignments` }
     const updateAssignments = { title: "Update Course Assignments", text: "Fetch assignments from GitHub.", buttonText: "Update Assignments", onclick: () => grpc.updateAssignments(courseID) }
+    const review = { title: "Review Assignments", text: "Review assignments for students.", buttonText: "Review", to: `${root}/review` } : undefined
 
     return (
         <div>
@@ -43,6 +46,7 @@ const TeacherPage = (): JSX.Element => {
             <CourseBanner />
             <Alert />
             <div className="row" hidden={history.location.pathname != root}>
+                {courseHasManualGrading && <Card {...review} />}
                 <Card {...results}></Card>
                 <Card {...groups}></Card>
                 <Card {...members}></Card>
