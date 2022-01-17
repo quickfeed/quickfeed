@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react"
-import { Submission, SubmissionLink } from "../../proto/ag/ag_pb"
-import { generateAssignmentsHeader, generateSubmissionRows, getCourseID } from "../Helpers"
+import { SubmissionLink } from "../../proto/ag/ag_pb"
+import { Color, generateAssignmentsHeader, generateSubmissionRows, getCourseID, isApproved, isRevision } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
+import Button, { ButtonType } from "./admin/Button"
 import DynamicTable, { CellElement } from "./DynamicTable"
 import Lab from "./Lab"
 import ManageSubmissionStatus from "./ManageSubmissionStatus"
@@ -30,7 +31,7 @@ const Results = (): JSX.Element => {
         if (submission) {
             return ({
                 value: `${submission.getScore()} %`,
-                className: submission.getStatus() === Submission.Status.APPROVED ? "result-approved" : "result-pending",
+                className: isApproved(submission) ? "result-approved" : isRevision(submission) ? "result-revision" : "result-pending",
                 onClick: () => {
                     actions.setActiveSubmissionLink(submissionLink)
                 }
@@ -44,15 +45,21 @@ const Results = (): JSX.Element => {
     }
 
     const base = groupView ? ["Name"] : ["Name", "Group"]
-    const header = generateAssignmentsHeader(base, state.assignments[courseID], groupView)
+    const assignments = state.assignments[courseID].filter(assignment => (state.review.assignmentID < 0) || assignment.getId() === state.review.assignmentID)
+    const header = generateAssignmentsHeader(base, assignments, groupView)
     const links = groupView ? state.courseGroupSubmissions[courseID] : state.courseSubmissions[courseID]
     const results = generateSubmissionRows(links, getSubmissionCell, true)
 
     return (
         <div>
             <div className="row">
-                <div className="col">
-                    <Search /><span onClick={() => setGroupView(!groupView)}>Switch View</span>
+                <div className={state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"}>
+                    <Search >
+                        <Button type={ButtonType.BUTTON}
+                            text={groupView ? "View by group" : "View by student"}
+                            onclick={() => { setGroupView(!groupView); actions.review.setAssignmentID(-1) }}
+                            color={groupView ? Color.BLUE : Color.GREEN} />
+                    </Search>
                     <DynamicTable header={header} data={results} />
                 </div>
                 <div className="col reviewLab">
