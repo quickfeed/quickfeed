@@ -1,314 +1,325 @@
-
 .wrapper {
-    display: flex;
-    width: 100%;
-    align-items: stretch;
+  display: flex;
+  width: 100%;
+  align-items: stretch;
 }
 
 .navigator {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 250px;
-    height: 100vh;
-    background-color: #222;
-    box-shadow: 0px 1px 1px 1px rgba(0, 0, 0, 0.4);
-    color: #d4d4d4;
-    font-weight: bold;
-    overflow-y: scroll;
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100vh;
+  background-color: #222;
+  box-shadow: 0px 1px 1px 1px rgba(0, 0, 0, 0.4);
+  color: #d4d4d4;
+  font-weight: bold;
+  overflow-y: scroll;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 /* Hide scrollbar for Chrome, Safari and Opera */
 .navigator::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
 .SidebarList {
-    width: 100%;
-    height: auto; 
-    padding: 0;
-    
+  width: 100%;
+  height: auto;
+  padding: 0;
 }
 
 .SidebarList li {
-    width: 100%;
-    height: 60px;
-    list-style-type: none;
-    margin: 0%;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
+  width: 100%;
+  height: 60px;
+  list-style-type: none;
+  margin: 0%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
 }
 
 .SidebarFooter {
-    position: absolute;
-    bottom: 0;
-    padding: 0;
-    width: 100%;
+  position: absolute;
+  bottom: 0;
+  padding: 0;
+  width: 100%;
 }
 
-.SidebarList li a { 
-    width: 100%;
-    height: 100%;
-    display: block; 
-    color: #d4d4d4;  
+.SidebarList li a {
+  width: 100%;
+  height: 100%;
+  display: block;
+  color: #d4d4d4;
 }
 
-.SidebarList li span { 
-    margin: 0px; 
-    display: inline-block; 
-    text-align: center;
-    width: 100%; 
-    height: 100%;
-    color: #d4d4d4;
-
+.SidebarList li span {
+  margin: 0px;
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  color: #d4d4d4;
 }
 
-.Sidebar-items-link{
-    text-align: center;
-    line-height: 60px;
+.Sidebar-items-link {
+  text-align: center;
+  line-height: 60px;
 }
 
 .SidebarList .inactive {
-    display: none;
+  display: none;
 }
 
-
 .SidebarList .activelab {
-    display: block;
-    background-color: rgb(50, 50, 50);
+  display: block;
+  background-color: rgb(50, 50, 50);
 }
 
 .SidebarList .active {
-    display: flex;
-    background-color: rgb(39, 39, 39);
+  display: flex;
+  background-color: rgb(39, 39, 39);
 }
 
 .SidebarList li img {
-    width: 30px;
-    border-radius: 50%;
+  width: 30px;
+  border-radius: 50%;
 }
 
 .SidebarList li:hover {
-    background-color: rgb(20, 20, 20);
+  background-color: rgb(20, 20, 20);
 }
 
 .SidebarList #avatar {
-    width: 30px;
-    display:block;
-    margin:auto;
+  width: 30px;
+  display: block;
+  margin: auto;
 }
 
 #title {
-    margin-left: 10px;
+  margin-left: 10px;
 }
-.card-body{
-    color: black;
+.card-body {
+  color: black;
 }
 .centered {
-    position: fixed;
-    top: 50%;
-    left: 60%;
-    transform: translate(-50%, -50%);
-    transform: -webkit-translate(-50%, -50%);
-    transform: -moz-translate(-50%, -50%);
-    transform: -ms-translate(-50%, -50%);
+  position: fixed;
+  top: 50%;
+  left: 60%;
+  transform: translate(-50%, -50%);
+  transform: -webkit-translate(-50%, -50%);
+  transform: -moz-translate(-50%, -50%);
+  transform: -ms-translate(-50%, -50%);
 }
 
 .logo {
-    text-decoration: none;
-    font-size: 24px;
-    text-align: center;
+  text-decoration: none;
+  font-size: 24px;
+  text-align: center;
 }
-.logo a{
-    padding-top: 10px;
+.logo a {
+  padding-top: 10px;
 }
 
 #content {
-    margin-left: 350px;
-    margin-right: 100px;
-    width: 100%;
+  margin-left: 350px;
+  margin-right: 100px;
+  width: 100%;
 }
 
 body {
-    margin: 0px;
+  margin: 0px;
 }
 
 a {
-    color: #9d9d9d;
-    font-weight: bold;
-    display: inline-block;
+  color: #9d9d9d;
+  font-weight: bold;
+  display: inline-block;
 }
 
 a:link {
-    text-decoration: none;
+  text-decoration: none;
 }
 
 a:hover {
-    color: #7a7a7a;
+  color: #7a7a7a;
 }
 
-input{
-    color: black;
+input {
+  color: black;
 }
 
 #github {
-    line-height: 20px;
+  line-height: 20px;
 }
 
 .box {
-    margin-top: 30px;
+  margin-top: 30px;
 }
 
 #LandingPageTable thead tr {
-    background-color: #343a40;
-    color: white;
+  background-color: #343a40;
+  color: white;
 }
 
 #LandingPageTable tbody .dark td {
-    border-bottom: 1px solid black ;
+  border-bottom: 1px solid black;
 }
 
 #LandingPageTable tbody .light:nth-child(even) {
-    background-color: #e0ebf1;
+  background-color: #e0ebf1;
 }
 
 #LandingPageTable tbody .dark:nth-child(even) {
-    background-color: #222;
+  background-color: #222;
 }
 
 #LandingPageTable tbody tr {
-    cursor: pointer;
+  cursor: pointer;
 }
 .jumbotron {
-    margin-right: -100px;
-    margin-left: -100px;
-
+  margin-right: -100px;
+  margin-left: -100px;
 }
 
-.course-card-row{
-    padding: 40px 0;
-    border-top: 1px solid #ccc;
+.course-card-row {
+  padding: 40px 0;
+  border-top: 1px solid #ccc;
 }
 
-.fa-star,.fa-star-o{
-    color: yellow;
-    text-shadow: 0 0 3px #000;
+.fa-star,
+.fa-star-o {
+  color: yellow;
+  text-shadow: 0 0 3px #000;
 }
 
 .centered {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    transform: -webkit-translate(-50%, -50%);
-    transform: -moz-translate(-50%, -50%);
-    transform: -ms-translate(-50%, -50%);
-}  
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transform: -webkit-translate(-50%, -50%);
+  transform: -moz-translate(-50%, -50%);
+  transform: -ms-translate(-50%, -50%);
+}
 
-.icon{
-    transition-duration: 0.5s;
+.icon {
+  transition-duration: 0.5s;
 }
 .float-down-left {
-    position:absolute;
-    bottom: 10px;
-    left: 20px;
+  position: absolute;
+  bottom: 10px;
+  left: 20px;
 }
 .overflow-ellipses {
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-    text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: center;
 }
 
 .review {
-    display: flex;
-    flex-direction: row;
-    position: absolute
+  display: flex;
+  flex-direction: row;
+  position: absolute;
 }
 
 .reviewTable {
-    flex: 20;
+  flex: 20;
 }
 
 .reviewLab {
-    position: sticky;
-    top: 50px; 
-    min-width: 50%;
-    height: 800px;
+  position: sticky;
+  top: 50px;
+  min-width: 50%;
+  height: 800px;
 }
 
 .reviewLabResult {
-    overflow: scroll;
-    overflow-y: scroll; 
-    height: 800px;
+  overflow: scroll;
+  overflow-y: scroll;
+  height: 800px;
 }
 
 #group-image {
-    width: 23px; 
-    margin-right: 10px;
-    border-radius: 50%;
+  width: 23px;
+  margin-right: 10px;
+  border-radius: 50%;
 }
 
 .about {
-    width: 100%;
+  width: 100%;
 }
 
 .redirectButton {
-    position: fixed;
-    top: 50px;
-    transform: translateX(-70px);
+  position: fixed;
+  top: 50px;
+  transform: translateX(-70px);
 }
 
 .result-approved {
-    background-color: #CCFFCC;
-    cursor: pointer;
+  background-color: #ccffcc;
+  cursor: pointer;
 }
 
 .result-pending {
-    background-color: #FFCCCC;
-    cursor: pointer;
+  background-color: #ffcccc;
+  cursor: pointer;
+}
+
+.result-revision {
+  background-color: #ffffcc;
+  cursor: pointer;
+}
+
+.selected {
+  background-color: #007bff;
+  color: white;
+}
+
+.release {
+  box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, green 5px 0px 0px inset;
 }
 
 .course-button {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    margin: 1.25rem;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  margin: 1.25rem;
 }
 
 .clickable {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .alert {
-    z-index: 999;
+  z-index: 999;
 }
 
 .bg-secondary {
-    background: rgb(221, 223, 226) !important;
-    color: slategrey;
+  background: rgb(221, 223, 226) !important;
+  color: slategrey;
 }
 
 .table td {
-    padding: .5rem !important;
+  padding: 0.5rem !important;
 }
 
 .table th {
-    padding: .5rem !important;
+  padding: 0.5rem !important;
 }
 
 .passed {
-    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, green 5px 0px 0px inset;
+  box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, green 5px 0px 0px inset;
 }
 
 .failed {
-    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, red 5px 0px 0px inset;
+  box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, red 5px 0px 0px inset;
 }
 
 .not-graded {
-    box-shadow: rgb(0, 0, 0) 0px 0px 0px inset, rgba(0, 0, 0, 0.2) 5px 0px 0px inset;
+  box-shadow: rgb(0, 0, 0) 0px 0px 0px inset,
+    rgba(0, 0, 0, 0.2) 5px 0px 0px inset;
 }
