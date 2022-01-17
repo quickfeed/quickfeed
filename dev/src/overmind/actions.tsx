@@ -591,7 +591,6 @@ export const changeView = async ({ state, effects }: Context, courseID: number):
     if (hasTeacher(enrollmentStatus)) {
         state.enrollmentsByCourseID[courseID].setStatus(Enrollment.UserStatus.STUDENT)
     }
-
 }
 
 export const loading = ({ state }: Context): void => {

@@ -1,7 +1,7 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { Route, Switch, useHistory } from "react-router"
-import { Color, getCourseID, isManuallyGraded, isTeacher } from "../Helpers"
-import { useActions, useAppState, useGrpc } from "../overmind"
+import { Color, getCourseID, isManuallyGraded } from "../Helpers"
+import { useAppState, useGrpc } from "../overmind"
 import Card from "../components/Card"
 import CourseBanner from "../components/CourseBanner"
 import GroupPage from "./GroupPage"
@@ -11,7 +11,6 @@ import Results from "../components/Results"
 import ReviewPage from "../components/ReviewPage"
 import Assignments from "../components/teacher/Assignments"
 import Alert from "../components/Alert"
-import Release from "../components/Release"
 
 
 /* TeacherPage enables routes to be accessed by the teacher only, and displays an overview of the different features available to the teacher. */
@@ -38,7 +37,7 @@ const TeacherPage = (): JSX.Element => {
     const results = { title: "View results", text: "View results for all students in the course.", buttonText: "Results", to: `${root}/results` }
     const assignments = { title: "Manage Assignments", text: "View and edit assignments.", buttonText: "Assignments", to: `${root}/assignments` }
     const updateAssignments = { title: "Update Course Assignments", text: "Fetch assignments from GitHub.", buttonText: "Update Assignments", onclick: () => grpc.updateAssignments(courseID) }
-    const review = { title: "Review Assignments", text: "Review assignments for students.", buttonText: "Review", to: `${root}/review` } : undefined
+    const review = { title: "Review Assignments", text: "Review assignments for students.", buttonText: "Review", to: `${root}/review` }
 
     return (
         <div>
