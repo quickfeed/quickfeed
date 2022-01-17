@@ -1,18 +1,17 @@
 import { Context } from '../../'
 import { GradingBenchmark, GradingCriterion, Review } from '../../../../proto/ag/ag_pb'
+import { Color, isAuthor, isCourseCreator } from '../../../Helpers'
 import { success } from '../../actions'
 
 
 /* Set the index of the selected review */
-export const setSelectedReview = ({ state, actions }: Context, index: number): void => {
-    state.review.selectedReview = index
-    if (state.review.currentReview) {
-        return
-    }
+export const setSelectedReview = ({ state }: Context, index: number): void => {
     const reviews = state.review.reviews[state.activeCourse][state.activeSubmission]
-    const reviewers = state.activeSubmissionLink?.getAssignment()?.getReviewers() ?? -1
-    if (reviews.length < reviewers && !reviews.some(r => r.getReviewerid() === state.self.getId()) && confirm('Are you sure you want to review this submission?')) {
-        actions.review.createReview()
+    if (index < 0) {
+        const idx = reviews?.findIndex(r => isAuthor(state.self, r) || isCourseCreator(state.self, state.courses[state.activeCourse]))
+        state.review.selectedReview = idx >= 0 ? idx : -1
+    } else {
+        state.review.selectedReview = index
     }
 }
 
@@ -58,11 +57,14 @@ export const setGrade = async ({ actions }: Context, { criterion, grade }: { cri
 }
 
 /* createReview creates a new review for the current submission and course */
-export const createReview = async ({ state, effects }: Context): Promise<void> => {
-    const submission = state.activeSubmissionLink?.getSubmission()
+export const createReview = async ({ state, actions, effects }: Context): Promise<void> => {
+    if (!confirm('Are you sure you want to create a new review?')) {
+        return
+    }
 
+    const submission = state.activeSubmissionLink?.getSubmission()
     // If there is no submission or active course, we cannot create a review
-    if (submission && !state.review.currentReview && state.activeCourse) {
+    if (submission && state.activeCourse) {
         const review = new Review
         // Set the current user as the reviewer
         review.setReviewerid(state.self.getId())
@@ -70,7 +72,53 @@ export const createReview = async ({ state, effects }: Context): Promise<void> =
         const response = await effects.grpcMan.createReview(review, state.activeCourse)
         if (response.data) {
             // Adds the new review to the reviews list if the server responded with a review
-            state.review.reviews[state.activeCourse][submission.getId()].push(response.data)
+            const length = state.review.reviews[state.activeCourse][submission.getId()].push(response.data)
+            actions.review.setSelectedReview(length - 1)
+        }
+    }
+}
+
+export const setAssignmentID = ({ state }: Context, aid: number): void => {
+    const id = state.review.assignmentID > 0 ? -1 : aid
+    state.review.assignmentID = id
+}
+
+export const setMinimumScore = ({ state }: Context, minimumScore: number): void => {
+    state.review.minimumScore = minimumScore
+}
+
+export const releaseAll = async ({ state, actions, effects }: Context, { release, approve }: { release: boolean, approve: boolean }): Promise<void> => {
+    const assignment = state.assignments[state.activeCourse].find(a => a.getId() === state.review.assignmentID)
+
+    const releaseString = release && approve ? 'release and approve'
+        : release ? 'release'
+            : approve ? "approve"
+                : ""
+    const confirmText = `Are you sure you want to ${releaseString} all reviews for ${assignment?.getName()} above ${state.review.minimumScore} score?`
+    const invalidMinimumScore = state.review.minimumScore < 0 || state.review.minimumScore > 100
+
+    if (invalidMinimumScore || !confirm(confirmText)) {
+        invalidMinimumScore && actions.alert({ text: 'Minimum score must be in range [0, 100]', color: Color.YELLOW })
+        return
+    }
+
+    const response = await effects.grpcMan.updateSubmissions(state.review.assignmentID, state.activeCourse, state.review.minimumScore, release, approve)
+    if (success(response)) {
+        // Refresh submissions in state for the active course
+        actions.getAllCourseSubmissions(state.activeCourse)
+    } else {
+        actions.alertHandler(response)
+    }
+}
+
+export const release = async ({ state, actions, effects }: Context, release: boolean): Promise<void> => {
+    const submission = state.activeSubmissionLink?.getSubmission()
+    if (submission) {
+        submission.setReleased(release)
+        const response = await effects.grpcMan.updateSubmission(state.activeCourse, submission)
+        if (!success(response)) {
+            submission.setReleased(!release)
+            actions.alertHandler(response)
         }
     }
 }

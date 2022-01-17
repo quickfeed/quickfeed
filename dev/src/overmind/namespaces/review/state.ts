@@ -29,6 +29,13 @@ type State = {
 
     /* The amount of criteria that have been graded for the current review */
     graded: number
+
+    /* The ID of the assignment selected. Used to determine which assignment to release */
+    assignmentID: number
+
+    /* The minimum score submissions must have to be released or approved */
+    /* Sent as argument to updateSubmissions */
+    minimumScore: number
 }
 
 export const state: State = {
@@ -80,5 +87,8 @@ export const state: State = {
             })
         })
         return total
-    })
+    }),
+
+    assignmentID: -1,
+    minimumScore: 0,
 }
