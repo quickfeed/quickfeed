@@ -132,27 +132,30 @@ func (db *GormDB) UpdateAccessToken(remote *pb.RemoteIdentity) error {
 		return err
 	}
 
-	// Update the access token.
 	if err := tx.Model(&remoteIdentity).Update("access_token", remote.AccessToken).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
-	return tx.Commit().Error
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	return db.updateTokenCacheForCourses(&remoteIdentity)
 }
 
-// updateAccessTokenCache updates the access token for the course
-// to allow easy access via the Course type.
-func (db *GormDB) updateAccessTokenCache(course *pb.Course) {
-	courseCreator, err := db.GetUser(course.GetCourseCreatorID())
+// Update the access token cache for courses, if user is teacher one or more courses.
+// The cache allows easy access to the access token via the Course type.
+func (db *GormDB) updateTokenCacheForCourses(remoteIdentity *pb.RemoteIdentity) error {
+	userID := remoteIdentity.GetUserID()
+	enrollments, err := db.GetEnrollmentsByUser(userID, pb.Enrollment_TEACHER)
 	if err != nil {
-		// failed to get course creator; ignore
-		return
+		return err
 	}
-	accessToken, err := courseCreator.GetAccessToken(course.GetProvider())
-	if err != nil {
-		// failed to get access token for course creator; ignore
-		return
+	for _, enrollment := range enrollments {
+		course := enrollment.GetCourse()
+		if course.GetCourseCreatorID() == userID {
+			pb.SetAccessToken(course.GetID(), remoteIdentity.AccessToken)
+		}
 	}
-	// update the access token cache
-	pb.SetAccessToken(course.GetID(), accessToken)
+	return nil
 }

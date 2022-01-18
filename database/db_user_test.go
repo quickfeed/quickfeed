@@ -157,6 +157,7 @@ func TestGormDBUpdateAccessTokenCourseTokenCache(t *testing.T) {
 	const (
 		stud           = "student1"
 		newAccessToken = "123"
+		anotherToken   = "456"
 		provider       = "fake"
 		remoteID       = 10
 		remoteID2      = 11
@@ -205,5 +206,23 @@ func TestGormDBUpdateAccessTokenCourseTokenCache(t *testing.T) {
 	cachedToken = cr.GetAccessToken()
 	if cachedToken != newAccessToken {
 		t.Errorf("cached token different from expected updated token: %s != %s", cachedToken, newAccessToken)
+	}
+
+	// Update the access token for the user again.
+	if err := db.UpdateAccessToken(&pb.RemoteIdentity{
+		Provider:    provider,
+		RemoteID:    remoteID,
+		AccessToken: anotherToken,
+	}); err != nil {
+		t.Error(err)
+	}
+
+	cr, err = db.GetCourse(1, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cachedToken = cr.GetAccessToken()
+	if cachedToken != anotherToken {
+		t.Errorf("cached token different from expected updated token: %s != %s", cachedToken, anotherToken)
 	}
 }

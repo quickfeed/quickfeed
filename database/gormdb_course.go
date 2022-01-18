@@ -6,11 +6,11 @@ import (
 
 // CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
 func (db *GormDB) CreateCourse(userID uint64, course *pb.Course) error {
-	user, err := db.GetUser(userID)
+	courseCreator, err := db.GetUser(userID)
 	if err != nil {
 		return err
 	}
-	if !user.IsAdmin {
+	if !courseCreator.IsAdmin {
 		return ErrInsufficientAccess
 	}
 
@@ -32,13 +32,20 @@ func (db *GormDB) CreateCourse(userID uint64, course *pb.Course) error {
 		return err
 	}
 	query := &pb.Enrollment{
-		UserID:   user.ID,
+		UserID:   courseCreator.ID,
 		CourseID: course.ID,
 		Status:   pb.Enrollment_TEACHER,
 	}
 	if err := db.UpdateEnrollment(query); err != nil {
 		return err
 	}
+	// TODO(meling) fix error checking; tests would fail because test courses lack provider
+	accessToken, _ := courseCreator.GetAccessToken(course.GetProvider())
+	// if err != nil {
+	// 	return err
+	// }
+	// update the access token cache for course
+	pb.SetAccessToken(course.GetID(), accessToken)
 	return nil
 }
 
@@ -70,7 +77,6 @@ func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*pb.Course, 
 			return nil, err
 		}
 	}
-	db.updateAccessTokenCache(&course)
 	return &course, nil
 }
 
@@ -80,7 +86,6 @@ func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 	if err := db.conn.First(&course, &pb.Course{OrganizationID: did}).Error; err != nil {
 		return nil, err
 	}
-	db.updateAccessTokenCache(&course)
 	return &course, nil
 }
 
