@@ -140,15 +140,9 @@ func (db *GormDB) UpdateAccessToken(remote *pb.RemoteIdentity) error {
 	return tx.Commit().Error
 }
 
-// updateAccessTokenCache caches the access token for the course
-// to allow easy access elsewhere.
+// updateAccessTokenCache updates the access token for the course
+// to allow easy access via the Course type.
 func (db *GormDB) updateAccessTokenCache(course *pb.Course) {
-	existingToken := course.GetAccessToken()
-	if existingToken != "" {
-		// no need to cache again
-		return
-	}
-	// only need to query db if not in cache
 	courseCreator, err := db.GetUser(course.GetCourseCreatorID())
 	if err != nil {
 		// failed to get course creator; ignore
