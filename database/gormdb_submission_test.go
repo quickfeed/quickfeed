@@ -401,7 +401,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	}
 }
 
-func TestGormDBCreateUpdateWithBuilInfoAndScores(t *testing.T) {
+func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	user, course, assignment := setupCourseAssignment(t, db)

@@ -103,7 +103,6 @@ func main() {
 	}
 	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), pb.Interceptor(logger))
 	grpcServer := grpc.NewServer(opt)
-
 	// Create a HTTP server for prometheus.
 	httpServer := &http.Server{
 		Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),

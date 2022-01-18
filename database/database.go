@@ -117,7 +117,8 @@ type Database interface {
 	UpdateReview(*pb.Review) error
 	// DeleteReview removes all review records matching the query.
 	DeleteReview(*pb.Review) error
-
+	// GetBenchmarks return all benchmarks and criteria for an assignmend
+	GetBenchmarks(*pb.Assignment) ([]*pb.GradingBenchmark, error)
 	// CreateRepository creates a new repository.
 	CreateRepository(repo *pb.Repository) error
 	// GetRepository returns the repository for the SCM provider's repository ID.

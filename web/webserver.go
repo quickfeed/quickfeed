@@ -145,11 +145,20 @@ func registerFrontend(e *echo.Echo, entryPoint, public string) {
 	index := func(c echo.Context) error {
 		return c.File(entryPoint)
 	}
-	e.GET("/app", index)
-	e.GET("/app/*", index)
 
+	// File for serving additional frontend
+	indev := func(c echo.Context) error {
+		return c.File(filepath.Join("dev", "index.html"))
+	}
+
+	// Routes for serving
+	e.GET("/test", indev)
+	e.Static("/dev", "dev")
+
+	e.GET("/", index)
+	e.GET("/*", index)
 	// TODO: Whitelisted files only.
-	e.Static("/", public)
+	e.Static("/static", public)
 }
 
 func runWebServer(l *zap.SugaredLogger, e *echo.Echo, httpAddr string) {
