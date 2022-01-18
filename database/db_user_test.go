@@ -178,9 +178,8 @@ func TestGormDBUpdateAccessTokenCourseTokenCache(t *testing.T) {
 		Provider:        provider,
 		Year:            2021,
 	}
-	if err := db.CreateCourse(admin.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
+
 	cr, err := db.GetCourse(1, false)
 	if err != nil {
 		t.Fatal(err)

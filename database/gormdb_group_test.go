@@ -125,11 +125,9 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			db, cleanup := qtest.TestDB(t)
 
-			teacher := qtest.CreateFakeUser(t, db, 10)
-			var course pb.Course
-			if err := db.CreateCourse(teacher.ID, &course); err != nil {
-				t.Fatal(err)
-			}
+			admin := qtest.CreateFakeUser(t, db, 10)
+			course := &pb.Course{}
+			qtest.CreateCourse(t, db, admin, course)
 
 			var uids []uint64
 			// create as many users as the desired number of enrollments
@@ -225,11 +223,10 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 10)
-	var course pb.Course
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 10)
+	course := &pb.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+
 	var users []*pb.User
 	enrollments := []pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_STUDENT}
 	// create as many users as the desired number of enrollments
@@ -281,11 +278,10 @@ func TestGetGroupsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 10)
-	var course pb.Course
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 10)
+	course := &pb.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+
 	var users []*pb.User
 	enrollments := []pb.Enrollment_UserStatus{
 		pb.Enrollment_STUDENT,

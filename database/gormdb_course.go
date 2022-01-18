@@ -39,11 +39,10 @@ func (db *GormDB) CreateCourse(userID uint64, course *pb.Course) error {
 	if err := db.UpdateEnrollment(query); err != nil {
 		return err
 	}
-	// TODO(meling) fix error checking; tests would fail because test courses lack provider
-	accessToken, _ := courseCreator.GetAccessToken(course.GetProvider())
-	// if err != nil {
-	// 	return err
-	// }
+	accessToken, err := courseCreator.GetAccessToken(course.GetProvider())
+	if err != nil {
+		return err
+	}
 	// update the access token cache for course
 	pb.SetAccessToken(course.GetID(), accessToken)
 	return nil

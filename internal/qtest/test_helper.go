@@ -60,6 +60,15 @@ func CreateFakeUser(t *testing.T, db database.Database, remoteID uint64) *pb.Use
 	return &user
 }
 
+func CreateUserFromRemoteIdentity(t *testing.T, db database.Database, remoteID *pb.RemoteIdentity) *pb.User {
+	t.Helper()
+	var user pb.User
+	if err := db.CreateUserFromRemoteIdentity(&user, remoteID); err != nil {
+		t.Fatal(err)
+	}
+	return &user
+}
+
 func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name string) *pb.User {
 	t.Helper()
 	user := &pb.User{Name: name}
@@ -87,6 +96,20 @@ func CreateUser(t *testing.T, db database.Database, remoteID uint64, user *pb.Us
 		t.Fatal(err)
 	}
 	return user
+}
+
+func CreateCourse(t *testing.T, db database.Database, user *pb.User, course *pb.Course) {
+	t.Helper()
+	if course.Provider == "" {
+		for _, rid := range user.RemoteIdentities {
+			if rid.Provider != "" {
+				course.Provider = rid.Provider
+			}
+		}
+	}
+	if err := db.CreateCourse(user.ID, course); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func EnrollStudent(t *testing.T, db database.Database, student *pb.User, course *pb.Course) {

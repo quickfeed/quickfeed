@@ -45,10 +45,8 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	user := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateCourse(user.ID, &pb.Course{}); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 10)
+	qtest.CreateCourse(t, db, admin, &pb.Course{})
 
 	assignment := pb.Assignment{
 		CourseID: 1,
@@ -83,9 +81,7 @@ func TestUpdateAssignment(t *testing.T) {
 
 	course := &pb.Course{}
 	admin := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateCourse(admin.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 
 	if err := db.CreateAssignment(&pb.Assignment{
 		CourseID:    course.ID,
@@ -215,9 +211,8 @@ func TestUpdateBenchmarks(t *testing.T) {
 
 	course := &pb.Course{}
 	admin := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateCourse(admin.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
+
 	assignment := &pb.Assignment{
 		CourseID:    course.ID,
 		Name:        "Assignment 1",
@@ -227,7 +222,6 @@ func TestUpdateBenchmarks(t *testing.T) {
 		Order:       1,
 		IsGroupLab:  false,
 	}
-
 	if err := db.CreateAssignment(assignment); err != nil {
 		t.Fatal(err)
 	}
