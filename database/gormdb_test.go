@@ -9,7 +9,6 @@ import (
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )
@@ -82,14 +81,14 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(admin, gotTeacher, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{})); diff != "" {
+	if diff := cmp.Diff(admin, gotTeacher, protocmp.Transform()); diff != "" {
 		t.Errorf("enrollment mismatch (-teacher +gotTeacher):\n%s", diff)
 	}
 	gotStudent, err := db.GetUserWithEnrollments(student.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(student, gotStudent, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{})); diff != "" {
+	if diff := cmp.Diff(student, gotStudent, protocmp.Transform()); diff != "" {
 		t.Errorf("enrollment mismatch (-student +gotStudent):\n%s", diff)
 	}
 }
@@ -946,7 +945,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []*pb.Submission{&submission2, &submission3}
-	if diff := cmp.Diff(submissions, want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
+	if diff := cmp.Diff(submissions, want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submissions, but got (-sub +want):\n%s", diff)
 	}
 	data, err := db.GetLastSubmissions(c1.ID, &pb.Submission{GroupID: group.ID})

@@ -11,7 +11,6 @@ import (
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )
@@ -86,7 +85,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		Reviews:      []*ag.Review{},
 		Scores:       []*score.Score{},
 	}
-	if diff := cmp.Diff(submissions[0], want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
+	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 
@@ -112,7 +111,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		Reviews:      []*ag.Review{},
 		Scores:       []*score.Score{},
 	}
-	if diff := cmp.Diff(submissions[0], want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
+	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 }
@@ -376,7 +375,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []*pb.Submission{&submission2, &submission3}
-	if diff := cmp.Diff(submissions, want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
+	if diff := cmp.Diff(submissions, want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submissions, but got (-sub +want):\n%s", diff)
 	}
 	data, err := db.GetLastSubmissions(c1.ID, &pb.Submission{UserID: user.ID})
