@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"fmt"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/kit/score"
@@ -140,12 +141,12 @@ func (db *GormDB) UpdateAccessToken(remote *pb.RemoteIdentity) error {
 		return err
 	}
 
-	return db.updateTokenCacheForCourses(&remoteIdentity)
+	return db.updateCourseAccessTokensIfCourseCreator(&remoteIdentity)
 }
 
-// Update the access token cache for courses, if user is teacher one or more courses.
+// Update the access token cache for courses for which the user is course creator.
 // The cache allows easy access to the access token via the Course type.
-func (db *GormDB) updateTokenCacheForCourses(remoteIdentity *pb.RemoteIdentity) error {
+func (db *GormDB) updateCourseAccessTokensIfCourseCreator(remoteIdentity *pb.RemoteIdentity) error {
 	userID := remoteIdentity.GetUserID()
 	enrollments, err := db.GetEnrollmentsByUser(userID, pb.Enrollment_TEACHER)
 	if err != nil {
@@ -157,5 +158,27 @@ func (db *GormDB) updateTokenCacheForCourses(remoteIdentity *pb.RemoteIdentity) 
 			pb.SetAccessToken(course.GetID(), remoteIdentity.AccessToken)
 		}
 	}
+	return nil
+}
+
+// updateCourseAccessTokenIfEmpty updates the access token cache for the course, if the course has no cached access token.
+// The cache allows easy access to the access token via the Course type.
+func (db *GormDB) updateCourseAccessTokenIfEmpty(course *pb.Course) error {
+	existingToken := course.GetAccessToken()
+	if existingToken != "" {
+		// already cached
+		return nil
+	}
+	// only need to query db if not in cache; will happen after restart of server
+	courseCreator, err := db.GetUser(course.GetCourseCreatorID())
+	if err != nil {
+		return fmt.Errorf("failed to get course creator '%d' for %s: %w", course.GetCourseCreatorID(), course, err)
+	}
+	accessToken, err := courseCreator.GetAccessToken(course.GetProvider())
+	if err != nil {
+		return fmt.Errorf("failed to get course creator's '%d' access token for %s: %w", course.GetCourseCreatorID(), course.GetProvider(), err)
+	}
+	// update the access token cache
+	pb.SetAccessToken(course.GetID(), accessToken)
 	return nil
 }
