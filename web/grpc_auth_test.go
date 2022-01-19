@@ -78,16 +78,14 @@ func fillDatabase(t *testing.T, db database.Database) {
 	if checkCookie != botUserID {
 		t.Errorf("Expected %v, got %v\n", botUserID, checkCookie)
 	}
-	admin := qtest.CreateUser(t, db, 1, &pb.User{Login: "admin"})
+	admin := qtest.CreateFakeUser(t, db, 1)
+	// admin := qtest.CreateUser(t, db, 1, &pb.User{Login: "admin"})
 	course := &pb.Course{
-		ID:              1,
-		CourseCreatorID: uint64(admin.ID),
-		Code:            "DAT320",
-		Name:            "Operating Systems and Systems Programming",
-		Year:            2021,
+		Code: "DAT320",
+		Name: "Operating Systems and Systems Programming",
+		Year: 2021,
 	}
-	err := db.CreateCourse(admin.ID, course)
-	check(t, err)
+	qtest.CreateCourse(t, db, admin, course)
 
 	user = qtest.CreateUser(t, db, 11, &pb.User{Login: userName})
 	qtest.EnrollStudent(t, db, user, course)

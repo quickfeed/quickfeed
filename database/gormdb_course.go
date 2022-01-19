@@ -5,12 +5,12 @@ import (
 )
 
 // CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
-func (db *GormDB) CreateCourse(userID uint64, course *pb.Course) error {
-	user, err := db.GetUser(userID)
+func (db *GormDB) CreateCourse(courseCreatorID uint64, course *pb.Course) error {
+	courseCreator, err := db.GetUser(courseCreatorID)
 	if err != nil {
 		return err
 	}
-	if !user.IsAdmin {
+	if !courseCreator.IsAdmin {
 		return ErrInsufficientAccess
 	}
 
@@ -24,22 +24,34 @@ func (db *GormDB) CreateCourse(userID uint64, course *pb.Course) error {
 		return ErrCourseExists
 	}
 
-	// TODO(meling) these db updates should be done as a transaction
-	if err := db.conn.Create(course).Error; err != nil {
+	course.CourseCreatorID = courseCreatorID
+
+	tx := db.conn.Begin()
+	if err := tx.Create(course).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
-	if err := db.CreateEnrollment(&pb.Enrollment{UserID: userID, CourseID: course.ID}); err != nil {
-		return err
-	}
-	query := &pb.Enrollment{
-		UserID:   user.ID,
+
+	// enroll course creator as teacher for course and mark as visible
+	if err := tx.Create(&pb.Enrollment{
+		UserID:   courseCreatorID,
 		CourseID: course.ID,
 		Status:   pb.Enrollment_TEACHER,
-	}
-	if err := db.UpdateEnrollment(query); err != nil {
+		State:    pb.Enrollment_VISIBLE,
+	}).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
-	return nil
+
+	// fetch course creator's access token
+	accessToken, err := courseCreator.GetAccessToken(course.GetProvider())
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	// update the access token cache for course
+	pb.SetAccessToken(course.GetID(), accessToken)
+	return tx.Commit().Error
 }
 
 // GetCourse fetches course by ID. If withInfo is true, preloads course
@@ -70,7 +82,6 @@ func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*pb.Course, 
 			return nil, err
 		}
 	}
-	db.updateAccessTokenCache(&course)
 	return &course, nil
 }
 
@@ -80,7 +91,6 @@ func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 	if err := db.conn.First(&course, &pb.Course{OrganizationID: did}).Error; err != nil {
 		return nil, err
 	}
-	db.updateAccessTokenCache(&course)
 	return &course, nil
 }
 

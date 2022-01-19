@@ -26,12 +26,10 @@ func TestGormDBGetSubmissionForUser(t *testing.T) {
 }
 
 func setupCourseAssignment(t *testing.T, db database.Database) (*pb.User, *pb.Course, *pb.Assignment) {
-	teacher := qtest.CreateFakeUser(t, db, 10)
 	// create a course and an assignment
+	admin := qtest.CreateFakeUser(t, db, 10)
 	course := &pb.Course{}
-	if err := db.CreateCourse(teacher.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 	assignment := &pb.Assignment{
 		CourseID: course.ID,
 		Order:    1,
@@ -293,16 +291,11 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 10)
-	// Create course c1 and c2
-	c1 := pb.Course{OrganizationID: 1}
-	if err := db.CreateCourse(teacher.ID, &c1); err != nil {
-		t.Fatal(err)
-	}
-	c2 := pb.Course{OrganizationID: 2}
-	if err := db.CreateCourse(teacher.ID, &c2); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 10)
+	c1 := &pb.Course{OrganizationID: 1}
+	c2 := &pb.Course{OrganizationID: 2}
+	qtest.CreateCourse(t, db, admin, c1)
+	qtest.CreateCourse(t, db, admin, c2)
 
 	// create user and enroll as student
 	user := qtest.CreateFakeUser(t, db, 11)
