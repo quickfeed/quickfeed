@@ -10,7 +10,6 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -173,7 +172,7 @@ func TestParse(t *testing.T) {
 	if dockerfile != df {
 		t.Errorf("Incorrect dockerfile\n Want: %s\n Got: %s\n", df, dockerfile)
 	}
-	if diff := cmp.Diff(assignments[0], wantAssignment1, cmpopts.IgnoreUnexported(pb.Assignment{})); diff != "" {
+	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
 		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
 	}
 	if diff := cmp.Diff(assignments[1], wantAssignment2, protocmp.Transform()); diff != "" {
@@ -224,7 +223,7 @@ func TestParseUnknownFields(t *testing.T) {
 	if len(assignments) != 1 {
 		t.Errorf("len(assignments) = %d, want %d", len(assignments), 1)
 	}
-	if diff := cmp.Diff(assignments[0], wantAssignment1, cmpopts.IgnoreUnexported(pb.Assignment{})); diff != "" {
+	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
 		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
 	}
 }

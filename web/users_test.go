@@ -151,7 +151,7 @@ func TestGetUsers(t *testing.T) {
 	wantUsers := make([]*pb.User, 0)
 	wantUsers = append(wantUsers, admin, user2)
 
-	if diff := cmp.Diff(foundUsers.Users, wantUsers, cmpopts.IgnoreUnexported(pb.User{}, pb.RemoteIdentity{})); diff != "" {
+	if diff := cmp.Diff(foundUsers.Users, wantUsers, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-Users +wantUsers):\n%s", diff)
 	}
 }

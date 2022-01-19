@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -211,7 +211,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 
 			have.RemoveRemoteID()
 			group.RemoveRemoteID()
-			if diff := cmp.Diff(group, have, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.Enrollment{})); diff != "" {
+			if diff := cmp.Diff(group, have, protocmp.Transform()); diff != "" {
 				t.Errorf("mismatch (-group +have):\n%s", diff)
 			}
 			cleanup()
@@ -340,11 +340,11 @@ func TestGetGroupsByCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantUsers, gotUsers := groups[0].GetUsers(), group.GetUsers()
-	if diff := cmp.Diff(wantUsers, gotUsers, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{}, pb.RemoteIdentity{})); diff != "" {
+	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
 		t.Errorf("group users mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
 	wantUsers, gotUsers = groups[1].GetUsers(), group2.GetUsers()
-	if diff := cmp.Diff(wantUsers, gotUsers, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{}, pb.RemoteIdentity{})); diff != "" {
+	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
 		t.Errorf("group users mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
 
