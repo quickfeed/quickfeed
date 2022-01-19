@@ -33,6 +33,18 @@ QuickFeed depends on these technologies.
 - [gRPC-Web](https://github.com/grpc/grpc-web)
 - [Envoy](https://www.envoyproxy.io/)
 
+### Recommended VSCode Plugins
+
+- Go
+- vscode-proto3
+- Code Spell Checker
+- TSLint
+- markdownlint
+- Better Comments
+- GitLens
+- Git History Diff
+- SQLite
+
 ## Preparing the Environment
 
 ### Configuring Docker
