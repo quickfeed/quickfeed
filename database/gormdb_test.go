@@ -379,10 +379,10 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	}
 
 	wantCourses := []*pb.Course{
-		{ID: c1.ID, OrganizationID: 1, Provider: "fake", Enrolled: pb.Enrollment_PENDING},
-		{ID: c2.ID, OrganizationID: 2, Provider: "fake", Enrolled: pb.Enrollment_NONE},
-		{ID: c3.ID, OrganizationID: 3, Provider: "fake", Enrolled: pb.Enrollment_STUDENT},
-		{ID: c4.ID, OrganizationID: 4, Provider: "fake", Enrolled: pb.Enrollment_NONE},
+		{ID: c1.ID, OrganizationID: 1, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_PENDING},
+		{ID: c2.ID, OrganizationID: 2, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_NONE},
+		{ID: c3.ID, OrganizationID: 3, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_STUDENT},
+		{ID: c4.ID, OrganizationID: 4, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_NONE},
 	}
 	if diff := cmp.Diff(wantCourses, courses, protocmp.Transform()); diff != "" {
 		t.Errorf("courses mismatch (-want +got):\n%s", diff)
@@ -716,7 +716,7 @@ func TestGormDBUpdateCourse(t *testing.T) {
 		Provider:       "github",
 		OrganizationID: 1234,
 	}
-	updates := &pb.Course{
+	wantCourse := &pb.Course{
 		Name:           "Test Course Edit",
 		Code:           "DAT100-1",
 		Year:           2018,
@@ -732,19 +732,20 @@ func TestGormDBUpdateCourse(t *testing.T) {
 	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
 	qtest.CreateCourse(t, db, admin, course)
 
-	updates.ID = course.ID
-	if err := db.UpdateCourse(updates); err != nil {
+	wantCourse.ID = course.ID
+	wantCourse.CourseCreatorID = admin.ID
+	if err := db.UpdateCourse(wantCourse); err != nil {
 		t.Fatal(err)
 	}
 
 	// Get the updated course.
-	updatedCourse, err := db.GetCourse(course.ID, false)
+	gotCourse, err := db.GetCourse(course.ID, false)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(updatedCourse, updates) {
-		t.Errorf("have course %+v want %+v", updatedCourse, course)
+	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
+		t.Errorf("course mismatch (-want +got):\n%s", diff)
 	}
 }
 
