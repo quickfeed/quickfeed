@@ -43,7 +43,7 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *pb.Course) error 
 		return err
 	}
 
-	// fetch course creator's access token
+	// fetch course creator's most recent access token
 	accessToken, err := courseCreator.GetAccessToken(course.GetProvider())
 	if err != nil {
 		tx.Rollback()
@@ -82,6 +82,9 @@ func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*pb.Course, 
 			return nil, err
 		}
 	}
+	if err := db.updateCourseAccessTokenIfEmpty(&course); err != nil {
+		return nil, err
+	}
 	return &course, nil
 }
 
@@ -89,6 +92,9 @@ func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*pb.Course, 
 func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 	var course pb.Course
 	if err := db.conn.First(&course, &pb.Course{OrganizationID: did}).Error; err != nil {
+		return nil, err
+	}
+	if err := db.updateCourseAccessTokenIfEmpty(&course); err != nil {
 		return nil, err
 	}
 	return &course, nil
@@ -104,6 +110,11 @@ func (db *GormDB) GetCourses(courseIDs ...uint64) ([]*pb.Course, error) {
 	var courses []*pb.Course
 	if err := m.Find(&courses).Error; err != nil {
 		return nil, err
+	}
+	for _, course := range courses {
+		if err := db.updateCourseAccessTokenIfEmpty(course); err != nil {
+			return nil, err
+		}
 	}
 	return courses, nil
 }
@@ -137,6 +148,9 @@ func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_User
 	}
 
 	for _, course := range courses {
+		if err := db.updateCourseAccessTokenIfEmpty(course); err != nil {
+			return nil, err
+		}
 		course.Enrolled = pb.Enrollment_NONE
 		if enrollment, ok := m[course.ID]; ok {
 			course.Enrolled = enrollment.Status
