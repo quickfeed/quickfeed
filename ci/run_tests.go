@@ -29,10 +29,10 @@ func (r RunData) String(secret string) string {
 }
 
 // RunTests runs the assignment specified in the provided RunData structure.
-func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rData *RunData) {
-	info := newAssignmentInfo(rData.Course, rData.Assignment, rData.Repo.GetHTMLURL(), rData.Repo.GetTestURL())
-	logger.Debugf("Running tests for %s", rData.JobOwner)
-	ed, err := runTests(runner, info, rData)
+func (r RunData) RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner) {
+	info := newAssignmentInfo(r.Course, r.Assignment, r.Repo.GetHTMLURL(), r.Repo.GetTestURL())
+	logger.Debugf("Running tests for %s", r.JobOwner)
+	ed, err := r.runTests(runner, info)
 	if err != nil {
 		logger.Errorf("Failed to run tests: %v", err)
 		if ed == nil {
@@ -47,7 +47,7 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 		}
 	}
 	logger.Debug("ci.RunTests", zap.Any("Results", log.IndentJson(results)))
-	recordResults(logger, db, rData, results)
+	r.recordResults(logger, db, results)
 }
 
 type execData struct {
@@ -58,17 +58,17 @@ type execData struct {
 // runTests returns execData struct.
 // An error is returned if the execution fails, or times out.
 // If a timeout is the cause of the error, we also return an output string to the user.
-func runTests(runner Runner, info *AssignmentInfo, rData *RunData) (*execData, error) {
+func (r RunData) runTests(runner Runner, info *AssignmentInfo) (*execData, error) {
 	job, err := parseScriptTemplate(info)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse script template: %w", err)
 	}
 
-	job.Name = rData.String(info.RandomSecret[:6])
+	job.Name = r.String(info.RandomSecret[:6])
 	start := time.Now()
 
 	timeout := containerTimeout
-	t := rData.Assignment.GetContainerTimeout()
+	t := r.Assignment.GetContainerTimeout()
 	if t > 0 {
 		timeout = time.Duration(t) * time.Minute
 	}
@@ -84,19 +84,19 @@ func runTests(runner Runner, info *AssignmentInfo, rData *RunData) (*execData, e
 }
 
 // recordResults for the assignment given by the run data structure.
-func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunData, result *score.Results) {
+func (r RunData) recordResults(logger *zap.SugaredLogger, db database.Database, result *score.Results) {
 	// Sanity check of the result object
 	if result == nil || result.BuildInfo == nil {
 		logger.Errorf("No build info found; faulty Results object received: %v", result)
 		return
 	}
 
-	assignment := rData.Assignment
+	assignment := r.Assignment
 	logger.Debugf("Fetching most recent submission for assignment %d", assignment.GetID())
 	submissionQuery := &pb.Submission{
 		AssignmentID: assignment.GetID(),
-		UserID:       rData.Repo.GetUserID(),
-		GroupID:      rData.Repo.GetGroupID(),
+		UserID:       r.Repo.GetUserID(),
+		GroupID:      r.Repo.GetGroupID(),
 	}
 	newest, err := db.GetSubmission(submissionQuery)
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -105,7 +105,7 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 	}
 
 	// Keep the original submission's delivery date (obtained from the database (newest)) if this is a manual rebuild.
-	if rData.Rebuild {
+	if r.Rebuild {
 		if newest != nil && newest.BuildInfo != nil {
 			// Only update the build date if we found a previous submission
 			result.BuildInfo.BuildDate = newest.BuildInfo.BuildDate
@@ -119,12 +119,12 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 	newSubmission := &pb.Submission{
 		ID:           newest.GetID(),
 		AssignmentID: assignment.GetID(),
-		CommitHash:   rData.CommitID,
+		CommitHash:   r.CommitID,
 		Score:        score,
 		BuildInfo:    result.BuildInfo,
 		Scores:       result.Scores,
-		UserID:       rData.Repo.GetUserID(),
-		GroupID:      rData.Repo.GetGroupID(),
+		UserID:       r.Repo.GetUserID(),
+		GroupID:      r.Repo.GetGroupID(),
 		Status:       assignment.IsApproved(newest, score),
 	}
 	err = db.CreateSubmission(newSubmission)
@@ -133,8 +133,8 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		return
 	}
 	logger.Debugf("Created submission for assignment '%s' with score %d, status %s", assignment.GetName(), score, newSubmission.GetStatus())
-	if !rData.Rebuild {
-		updateSlipDays(logger, db, rData.Assignment, newSubmission)
+	if !r.Rebuild {
+		updateSlipDays(logger, db, r.Assignment, newSubmission)
 	}
 }
 

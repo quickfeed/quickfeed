@@ -172,7 +172,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 		wh.recordSubmissionWithoutTests(runData)
 		return
 	}
-	ci.RunTests(wh.logger, wh.db, wh.runner, runData)
+	runData.RunTests(wh.logger, wh.db, wh.runner)
 }
 
 // recordSubmissionWithoutTests saves a new submission without running any tests

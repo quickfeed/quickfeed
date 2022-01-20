@@ -59,7 +59,7 @@ func TestRunTests(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer runner.Close()
-	ed, err := runTests(runner, info, runData)
+	ed, err := runData.runTests(runner, info)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +122,7 @@ func TestRecordResults(t *testing.T) {
 		JobOwner: "test",
 	}
 
-	recordResults(zap.NewNop().Sugar(), db, runData, results)
+	runData.recordResults(zap.NewNop().Sugar(), db, results)
 	submission, err := db.GetSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: admin.ID})
 	if err != nil {
 		t.Fatal(err)
@@ -140,7 +140,7 @@ func TestRecordResults(t *testing.T) {
 	// Updating submission after deadline: build info and slip days must be updated
 	newBuildDate := "2022-11-12T13:00:00"
 	results.BuildInfo.BuildDate = newBuildDate
-	recordResults(zap.NewNop().Sugar(), db, runData, results)
+	runData.recordResults(zap.NewNop().Sugar(), db, results)
 
 	enrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
 	if err != nil {
@@ -161,7 +161,7 @@ func TestRecordResults(t *testing.T) {
 	runData.Rebuild = true
 	results.BuildInfo.BuildDate = "2022-11-13T13:00:00"
 	slipDaysBeforeUpdate := enrollment.RemainingSlipDays(course)
-	recordResults(zap.NewNop().Sugar(), db, runData, results)
+	runData.recordResults(zap.NewNop().Sugar(), db, results)
 	updatedEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
 	if err != nil {
 		t.Fatal(err)
