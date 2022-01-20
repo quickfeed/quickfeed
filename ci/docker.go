@@ -69,11 +69,13 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		return "", err
 	}
 
+	d.logger.Infof("Waiting for container image '%s' for %s", job.Image, job.Name)
 	msg, err := d.waitForContainer(ctx, job, resp.ID)
 	if err != nil {
 		return msg, err
 	}
 
+	d.logger.Infof("Done waiting for container image '%s' for %s", job.Image, job.Name)
 	// extract the logs before removing the container below
 	logReader, err := d.client.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
 		ShowStdout: true,
@@ -82,6 +84,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		return "", err
 	}
 
+	d.logger.Infof("Removing container image '%s' for %s", job.Image, job.Name)
 	// remove the container when finished to prevent too many open files
 	err = d.client.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
 	if err != nil {
@@ -100,6 +103,11 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 
 // createImage creates an image for the given job.
 func (d *Docker) createImage(ctx context.Context, job *Job) (*container.ContainerCreateCreatedBody, error) {
+	if job.Image == "" {
+		// image name should be specified in a run.sh file in the tests repository
+		return nil, fmt.Errorf("no image name specified for '%s'", job.Name)
+	}
+
 	create := func() (container.ContainerCreateCreatedBody, error) {
 		return d.client.ContainerCreate(ctx, &container.Config{
 			Image: job.Image,
@@ -109,18 +117,21 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 
 	resp, err := create()
 	if err != nil {
-		d.logger.Errorf("Failed to create container image '%s' for %s: %v", job.Image, job.Name, err)
-		// if image not found locally, try to pull it
-		if err := d.pullImage(ctx, job.Image); err != nil {
-			d.logger.Errorf("Failed to pull image '%s' from docker.io: %v", job.Image, err)
-			if err := d.buildImage(ctx, job.Dockerfile, job.Image); err != nil {
+		d.logger.Infof("Image '%s' not yet available for '%s': %v", job.Image, job.Name, err)
+
+		if job.Dockerfile != "" {
+			d.logger.Infof("Trying to build image: '%s' from Dockerfile", job.Image)
+			if err := d.buildImage(ctx, job); err != nil {
+				return nil, err
+			}
+		} else {
+			d.logger.Infof("Trying to pulling image: '%s' from docker.io", job.Image)
+			if err := d.pullImage(ctx, job.Image); err != nil {
 				return nil, err
 			}
 		}
+		// try to create the container again
 		resp, err = create()
-		if err != nil {
-			return nil, err
-		}
 	}
 	return &resp, err
 }
@@ -157,7 +168,6 @@ func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) 
 // pullImage pulls an image from docker hub; this can be slow and should be
 // avoided if possible.
 func (d *Docker) pullImage(ctx context.Context, image string) error {
-	d.logger.Infof("Pulling Docker image: '%s' from docker.io", image)
 	progress, err := d.client.ImagePull(ctx, "docker.io/library/"+image, types.ImagePullOptions{})
 	if err != nil {
 		return err
@@ -169,11 +179,8 @@ func (d *Docker) pullImage(ctx context.Context, image string) error {
 }
 
 // buildImage builds and installs an image locally to be reused in a future run.
-func (d *Docker) buildImage(ctx context.Context, dockerfile string, image string) error {
-	if dockerfile == "" || image == "" {
-		return fmt.Errorf("failed to build image %s: missing Dockerfile in Tests/scripts/ or image name in run.sh", image)
-	}
-	dockerFileContents := []byte(dockerfile)
+func (d *Docker) buildImage(ctx context.Context, job *Job) error {
+	dockerFileContents := []byte(job.Dockerfile)
 	header := &tar.Header{
 		Name:     "Dockerfile",
 		Mode:     0o777,
@@ -196,7 +203,7 @@ func (d *Docker) buildImage(ctx context.Context, dockerfile string, image string
 	opts := types.ImageBuildOptions{
 		Context:    reader,
 		Dockerfile: "Dockerfile",
-		Tags:       []string{image},
+		Tags:       []string{job.Image},
 	}
 	res, err := d.client.ImageBuild(ctx, reader, opts)
 	if err != nil {
@@ -204,11 +211,7 @@ func (d *Docker) buildImage(ctx context.Context, dockerfile string, image string
 	}
 	defer res.Body.Close()
 
-	err = print(d.logger, res.Body)
-	if err != nil {
-		return err
-	}
-	return nil
+	return print(d.logger, res.Body)
 }
 
 func print(logger *zap.SugaredLogger, rd io.Reader) error {
@@ -221,10 +224,7 @@ func print(logger *zap.SugaredLogger, rd io.Reader) error {
 		}
 		logger.Info(out)
 	}
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-	return nil
+	return scanner.Err()
 }
 
 type dockerJSON struct {
