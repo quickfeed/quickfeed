@@ -2,6 +2,7 @@ package ci
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -16,8 +17,17 @@ import (
 
 // To run this test, please see instructions in the developer guide (dev.md).
 
-// This test uses a test course for experimenting with go.sh behavior.
+// This test uses a test course for experimenting with run.sh behavior.
 // The test below will run locally on the test machine, not on the QuickFeed machine.
+
+func loadRunScript(t *testing.T) string {
+	t.Helper()
+	b, err := os.ReadFile("testdata/run.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}
 
 func TestRunTests(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
@@ -38,7 +48,7 @@ func TestRunTests(t *testing.T) {
 	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	info := &AssignmentInfo{
 		AssignmentName:     "lab1",
-		Script:             "go.sh",
+		Script:             loadRunScript(t),
 		CreatorAccessToken: accessToken,
 		GetURL:             repo.StudentRepoURL(userName),
 		TestURL:            repo.TestsRepoURL(),
