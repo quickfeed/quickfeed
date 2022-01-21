@@ -31,6 +31,14 @@ func init() {
 	}
 }
 
+func dockerClient(t *testing.T) (*ci.Docker, func()) {
+	docker, err := ci.NewDockerCI(log.Zap(true))
+	if err != nil {
+		t.Fatalf("Failed to set up docker client: %v", err)
+	}
+	return docker, func() { _ = docker.Close() }
+}
+
 func TestDocker(t *testing.T) {
 	if !docker {
 		t.SkipNow()
@@ -39,18 +47,15 @@ func TestDocker(t *testing.T) {
 	const (
 		script     = `echo -n "hello world"`
 		wantOut    = "hello world"
+		image      = "golang:latest"
 		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed"
 	)
-
-	docker, err := ci.NewDockerCI(log.Zap(true))
-	if err != nil {
-		t.Fatalf("failed to set up docker client: %v", err)
-	}
-	defer docker.Close()
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
 
 	out, err := docker.Run(context.Background(), &ci.Job{
-		Name:       "TestDocker-" + qtest.RandomString(t),
-		Image:      "golang:latest",
+		Name:       t.Name() + "-" + qtest.RandomString(t),
+		Image:      image,
 		Dockerfile: dockerfile,
 		Commands:   []string{script},
 	})
@@ -68,33 +73,69 @@ func TestDockerBuild(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cmd := exec.Command("docker", "image", "rm", "--force", "quickfeed:go", "golang:latest")
+	const (
+		script     = `echo -n "hello world"`
+		wantOut    = "hello world"
+		image      = "quickfeed:go"
+		image2     = "golang:latest"
+		dockerfile = `FROM golang:latest
+		RUN apt update && apt install -y git bash build-essential && rm -rf /var/lib/apt/lists/*
+		RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.41.1
+		WORKDIR /quickfeed`
+	)
+	cmd := exec.Command("docker", "image", "rm", "--force", image, image2)
 	dockerOut, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(string(dockerOut))
 
-	const (
-		script     = `echo -n "hello world"`
-		wantOut    = "hello world"
-		dockerfile = `FROM golang:latest
-		RUN apt update && apt install -y git bash build-essential && rm -rf /var/lib/apt/lists/*
-		RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.41.1		
-		WORKDIR /quickfeed`
-	)
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
 
-	docker, err := ci.NewDockerCI(log.Zap(true))
-	if err != nil {
-		t.Fatalf("failed to set up docker client: %v", err)
-	}
-	defer docker.Close()
-
+	// To build an image, we need a job with both image name
+	// and Dockerfile content.
 	out, err := docker.Run(context.Background(), &ci.Job{
-		Name:       "TestDockerBuild-" + qtest.RandomString(t),
-		Image:      "quickfeed:go",
+		Name:       t.Name() + "-" + qtest.RandomString(t),
+		Image:      image,
 		Dockerfile: dockerfile,
 		Commands:   []string{script},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
+	}
+}
+
+func TestDockerPull(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	const (
+		script  = `python -c "print('Hello, world!')"`
+		wantOut = "Hello, world!\n"
+		image   = "python:latest"
+	)
+	cmd := exec.Command("docker", "image", "rm", "--force", image)
+	dockerOut, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(dockerOut))
+
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	// To pull an image, we need only a job with image name;
+	// no Dockerfile content should be provided when pulling.
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:     t.Name() + "-" + qtest.RandomString(t),
+		Image:    image,
+		Commands: []string{script},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -113,6 +154,7 @@ func TestDockerTimeout(t *testing.T) {
 	const (
 		script     = `echo -n "hello," && sleep 10`
 		wantOut    = `Container timeout. Please check for infinite loops or other slowness.`
+		image      = "golang:latest"
 		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed"
 	)
 
@@ -122,15 +164,12 @@ func TestDockerTimeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1000*time.Millisecond)
 	defer cancel()
 
-	docker, err := ci.NewDockerCI(log.Zap(true))
-	if err != nil {
-		t.Fatalf("failed to set up docker client: %v", err)
-	}
-	defer docker.Close()
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
 
 	out, err := docker.Run(ctx, &ci.Job{
-		Name:       "TestDockerTimeout-" + qtest.RandomString(t),
-		Image:      "golang:latest",
+		Name:       t.Name() + "-" + qtest.RandomString(t),
+		Image:      image,
 		Dockerfile: dockerfile,
 		Commands:   []string{script},
 	})
@@ -154,23 +193,20 @@ func TestDockerOpenFileDescriptors(t *testing.T) {
 	const (
 		script        = `echo -n "hello, " && sleep 2 && echo -n "world!"`
 		wantOut       = "hello, world!"
+		image         = "golang:latest"
 		numContainers = 5
 		dockerfile    = "FROM golang:latest\n WORKDIR /quickfeed"
 	)
-
-	docker, err := ci.NewDockerCI(log.Zap(true))
-	if err != nil {
-		t.Fatalf("failed to set up docker client: %v", err)
-	}
-	defer docker.Close()
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
 
 	errCh := make(chan error, numContainers)
 	for i := 0; i < numContainers; i++ {
 		go func(j int) {
-			name := fmt.Sprintf("TestDockerOpenFileDescritors-%d-%s", j, qtest.RandomString(t))
+			name := fmt.Sprintf(t.Name()+"-%d-%s", j, qtest.RandomString(t))
 			out, err := docker.Run(context.Background(), &ci.Job{
 				Name:       name,
-				Image:      "golang:latest",
+				Image:      image,
 				Dockerfile: dockerfile,
 				Commands:   []string{script},
 			})
