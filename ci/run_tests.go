@@ -67,12 +67,7 @@ func (r RunData) runTests(runner Runner, info *AssignmentInfo) (*execData, error
 	job.Name = r.String(info.RandomSecret[:6])
 	start := time.Now()
 
-	timeout := containerTimeout
-	t := r.Assignment.GetContainerTimeout()
-	if t > 0 {
-		timeout = time.Duration(t) * time.Minute
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := r.withTimeout(containerTimeout)
 	defer cancel()
 
 	out, err := runner.Run(ctx, job)
@@ -81,6 +76,14 @@ func (r RunData) runTests(runner Runner, info *AssignmentInfo) (*execData, error
 	}
 	// this may return a timeout error as well
 	return &execData{out: out, execTime: time.Since(start)}, err
+}
+
+func (r RunData) withTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
+	t := r.Assignment.GetContainerTimeout()
+	if t > 0 {
+		timeout = time.Duration(t) * time.Minute
+	}
+	return context.WithTimeout(context.Background(), timeout)
 }
 
 // recordResults for the assignment given by the run data structure.
