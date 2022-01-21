@@ -23,6 +23,11 @@ type RunData struct {
 	Rebuild    bool
 }
 
+type execData struct {
+	out      string
+	execTime time.Duration
+}
+
 // String returns a string representation of the run data structure
 func (r RunData) String(secret string) string {
 	return fmt.Sprintf("%s-%s-%s-%s", r.Course.GetCode(), r.Assignment.GetName(), r.JobOwner, secret)
@@ -48,11 +53,6 @@ func (r RunData) RunTests(logger *zap.SugaredLogger, db database.Database, runne
 	}
 	logger.Debug("ci.RunTests", zap.Any("Results", log.IndentJson(results)))
 	r.recordResults(logger, db, results)
-}
-
-type execData struct {
-	out      string
-	execTime time.Duration
 }
 
 // runTests returns execData struct.
@@ -84,11 +84,10 @@ func (r RunData) runTests(runner Runner, info *AssignmentInfo) (*execData, error
 }
 
 // recordResults for the assignment given by the run data structure.
-func (r RunData) recordResults(logger *zap.SugaredLogger, db database.Database, result *score.Results) {
+func (r RunData) recordResults(logger *zap.SugaredLogger, db database.Database, result *score.Results) error {
 	// Sanity check of the result object
 	if result == nil || result.BuildInfo == nil {
-		logger.Errorf("No build info found; faulty Results object received: %v", result)
-		return
+		return fmt.Errorf("no build info found in results object: %v", result)
 	}
 
 	assignment := r.Assignment
@@ -100,8 +99,7 @@ func (r RunData) recordResults(logger *zap.SugaredLogger, db database.Database, 
 	}
 	newest, err := db.GetSubmission(submissionQuery)
 	if err != nil && err != gorm.ErrRecordNotFound {
-		logger.Errorf("Failed to get submission data from database: %v", err)
-		return
+		return fmt.Errorf("failed to get newest submission: %w", err)
 	}
 
 	// Keep the original submission's delivery date (obtained from the database (newest)) if this is a manual rebuild.
@@ -129,48 +127,44 @@ func (r RunData) recordResults(logger *zap.SugaredLogger, db database.Database, 
 	}
 	err = db.CreateSubmission(newSubmission)
 	if err != nil {
-		logger.Errorf("Failed to add submission to database: %v", err)
-		return
+		return fmt.Errorf("failed to store submission %d: %w", newest.GetID(), err)
 	}
 	logger.Debugf("Created submission for assignment '%s' with score %d, status %s", assignment.GetName(), score, newSubmission.GetStatus())
 	if !r.Rebuild {
-		updateSlipDays(logger, db, r.Assignment, newSubmission)
+		return r.updateSlipDays(db, newSubmission)
 	}
+	return nil
 }
 
-func updateSlipDays(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, submission *pb.Submission) {
+func (r RunData) updateSlipDays(db database.Database, submission *pb.Submission) error {
 	buildDate := submission.GetBuildInfo().GetBuildDate()
 	buildTime, err := time.Parse(pb.TimeLayout, buildDate)
 	if err != nil {
-		logger.Errorf("Failed to parse time from build date (%s): %v", buildDate, err)
-		return
+		return fmt.Errorf("failed to parse time from build date (%s): %w", buildDate, err)
 	}
 
 	enrollments := make([]*pb.Enrollment, 0)
 	if submission.GroupID > 0 {
 		group, err := db.GetGroup(submission.GroupID)
 		if err != nil {
-			logger.Errorf("Failed to get group %d: %v", submission.GroupID, err)
-			return
+			return fmt.Errorf("failed to get group %d: %w", submission.GroupID, err)
 		}
 		enrollments = append(enrollments, group.Enrollments...)
 	} else {
-		enrol, err := db.GetEnrollmentByCourseAndUser(assignment.CourseID, submission.UserID)
+		enrol, err := db.GetEnrollmentByCourseAndUser(r.Assignment.CourseID, submission.UserID)
 		if err != nil {
-			logger.Errorf("Failed to get enrollment for user %d: %v", submission.UserID, err)
-			return
+			return fmt.Errorf("failed to get enrollment for user %d in course %d: %w", submission.UserID, r.Assignment.CourseID, err)
 		}
 		enrollments = append(enrollments, enrol)
 	}
 
 	for _, enrol := range enrollments {
-		if err := enrol.UpdateSlipDays(buildTime, assignment, submission); err != nil {
-			logger.Errorf("Failed to update slip days for submission %d: %v", submission.ID, err)
-			return
+		if err := enrol.UpdateSlipDays(buildTime, r.Assignment, submission); err != nil {
+			return fmt.Errorf("failed to update slip days for user %d in course %d: %w", enrol.UserID, r.Assignment.CourseID, err)
 		}
 		if err := db.UpdateSlipDays(enrol.UsedSlipDays); err != nil {
-			logger.Errorf("Failed to update slip days for enrollment %d: %v", enrol.ID, err)
-			return
+			return fmt.Errorf("failed to update slip days for enrollment %d (user %d) (course %d): %w", enrol.ID, enrol.UserID, enrol.CourseID, err)
 		}
 	}
+	return nil
 }
