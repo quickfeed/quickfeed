@@ -62,10 +62,10 @@ func (r RunData) withTimeout(timeout time.Duration) (context.Context, context.Ca
 }
 
 // RecordResults for the assignment given by the run data structure.
-func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, result *score.Results) error {
+func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, result *score.Results) (*pb.Submission, error) {
 	// Sanity check of the result object
 	if result == nil || result.BuildInfo == nil {
-		return fmt.Errorf("no build info found in results object: %v", result)
+		return nil, fmt.Errorf("no build info found in results object: %v", result)
 	}
 
 	assignment := r.Assignment
@@ -77,7 +77,7 @@ func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, 
 	}
 	newest, err := db.GetSubmission(submissionQuery)
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return fmt.Errorf("failed to get newest submission: %w", err)
+		return nil, fmt.Errorf("failed to get newest submission: %w", err)
 	}
 
 	// Keep the original submission's delivery date (obtained from the database (newest)) if this is a manual rebuild.
@@ -103,17 +103,17 @@ func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, 
 		GroupID:      r.Repo.GetGroupID(),
 		Status:       assignment.IsApproved(newest, score),
 	}
-	err = db.CreateSubmission(newSubmission)
-	if err != nil {
-		return fmt.Errorf("failed to store submission %d: %w", newest.GetID(), err)
+	if err = db.CreateSubmission(newSubmission); err != nil {
+		return nil, fmt.Errorf("failed to store new submission %d: %w", newest.GetID(), err)
 	}
-	logger.Debugf("Created submission for assignment '%s' with score %d, status %s", assignment.GetName(), score, newSubmission.GetStatus())
+	logger.Debugf("Recorded submission for assignment '%s' with score %d, status %s", assignment.GetName(), score, newSubmission.GetStatus())
 	if !r.Rebuild {
-		return r.updateSlipDays(db, newSubmission)
+		if err := r.updateSlipDays(db, newSubmission); err != nil {
+			return nil, fmt.Errorf("failed to update slip days: %w", err)
+		}
+		logger.Debugf("Updated slip days for assignment '%s'", assignment.GetName())
 	}
-
-	// TODO(meling) return newSubmission
-	return nil
+	return newSubmission, nil
 }
 
 func (r RunData) updateSlipDays(db database.Database, submission *pb.Submission) error {

@@ -51,11 +51,11 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 	if err != nil {
 		return nil, err
 	}
-	err = runData.RecordResults(s.logger, s.db, results)
+	submission, err = runData.RecordResults(s.logger, s.db, results)
 	if err != nil {
 		return nil, fmt.Errorf("failed to record results for assignment %s for course %s: %w", assignment.Name, course.Name, err)
 	}
-	return s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
+	return submission, nil
 }
 
 func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) error {

@@ -11,7 +11,6 @@ import (
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/google/go-cmp/cmp"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -57,7 +56,7 @@ func TestRunTests(t *testing.T) {
 	accessToken := scm.GetAccessToken(t)
 
 	// Only used to fetch the user's GitHub login (user name)
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(qtest.Logger(t), "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +70,7 @@ func TestRunTests(t *testing.T) {
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
-	results, err := runData.RunTests(zap.NewNop().Sugar(), runner)
+	results, err := runData.RunTests(qtest.Logger(t), runner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,7 +83,7 @@ func TestRunTestsTimeout(t *testing.T) {
 	accessToken := scm.GetAccessToken(t)
 
 	// Only used to fetch the user's GitHub login (user name)
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(qtest.Logger(t), "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +98,7 @@ func TestRunTestsTimeout(t *testing.T) {
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
-	results, err := runData.RunTests(zap.NewNop().Sugar(), runner)
+	results, err := runData.RunTests(qtest.Logger(t), runner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -165,9 +164,8 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 		JobOwner: "test",
 	}
 
-	// TODO Get submission here from record results
-	runData.RecordResults(zap.NewNop().Sugar(), db, results)
-	submission, err := db.GetSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: admin.ID})
+	// Check that submission is recorded correctly
+	submission, err := runData.RecordResults(qtest.Logger(t), db, results)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -181,11 +179,13 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 		t.Errorf("Incorrect build date. Want: %s, got %s", buildInfo.BuildDate, submission.BuildInfo.BuildDate)
 	}
 
-	// Updating submission after deadline: build info and slip days must be updated
+	// When updating submission after deadline: build info and slip days must be updated
 	newBuildDate := "2022-11-12T13:00:00"
 	results.BuildInfo.BuildDate = newBuildDate
-	runData.RecordResults(zap.NewNop().Sugar(), db, results)
-
+	updatedSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
+	if err != nil {
+		t.Fatal(err)
+	}
 	enrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -193,19 +193,21 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	if enrollment.RemainingSlipDays(course) == int32(course.SlipDays) || len(enrollment.UsedSlipDays) < 1 {
 		t.Error("Student must have reduced slip days")
 	}
-	updatedSubmission, err := db.GetSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: admin.ID})
-	if err != nil {
-		t.Fatal(err)
-	}
 	if updatedSubmission.BuildInfo.BuildDate != newBuildDate {
 		t.Errorf("Incorrect build date: want %s, got %s", newBuildDate, updatedSubmission.BuildInfo.BuildDate)
 	}
 
-	// Rebuilding after deadline: delivery date and slip days must stay unchanged
+	// When rebuilding after deadline: delivery date and slip days must stay unchanged
 	runData.Rebuild = true
 	results.BuildInfo.BuildDate = "2022-11-13T13:00:00"
 	slipDaysBeforeUpdate := enrollment.RemainingSlipDays(course)
-	runData.RecordResults(zap.NewNop().Sugar(), db, results)
+	submission, err = runData.RecordResults(qtest.Logger(t), db, results)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if submission.BuildInfo.BuildDate != newBuildDate {
+		t.Errorf("Incorrect build date: want %s, got %s", newBuildDate, submission.BuildInfo.BuildDate)
+	}
 	updatedEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
 	if err != nil {
 		t.Fatal(err)

@@ -178,7 +178,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 	}
 
 	wh.logger.Debug("ci.RunTests", zap.Any("Results", log.IndentJson(results)))
-	err = runData.RecordResults(wh.logger, wh.db, results)
+	_, err = runData.RecordResults(wh.logger, wh.db, results)
 	if err != nil {
 		wh.logger.Errorf("Failed to record results for assignment %s for course %s: %v", assignment.Name, course.Name, err)
 	}
