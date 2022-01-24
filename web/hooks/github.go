@@ -13,6 +13,7 @@ import (
 	"github.com/autograde/quickfeed/log"
 	"github.com/google/go-github/v35/github"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // GitHubWebHook holds references and data for handling webhook events.
@@ -177,23 +178,35 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 
 // recordSubmissionWithoutTests saves a new submission without running any tests
 // for a manually graded assignment.
-func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
+func (wh GitHubWebHook) recordSubmissionWithoutTests(rData *ci.RunData) {
+	submissionQuery := &pb.Submission{
+		AssignmentID: rData.Assignment.GetID(),
+		UserID:       rData.Repo.GetUserID(),
+		GroupID:      rData.Repo.GetGroupID(),
+	}
+	newest, err := wh.db.GetSubmission(submissionQuery)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		wh.logger.Errorf("Failed to get submission data from database: %v", err)
+		return
+	}
 	newSubmission := &pb.Submission{
-		AssignmentID: data.Assignment.ID,
+		AssignmentID: rData.Assignment.ID,
 		BuildInfo: &score.BuildInfo{
 			BuildDate: time.Now().Format(pb.TimeLayout),
 			BuildLog:  "No automated tests for this assignment",
 			ExecTime:  1,
 		},
-		CommitHash: data.CommitID,
-		UserID:     data.Repo.UserID,
-		GroupID:    data.Repo.GroupID,
+		Score:      newest.GetScore(),
+		CommitHash: rData.CommitID,
+		UserID:     rData.Repo.UserID,
+		GroupID:    rData.Repo.GroupID,
+		Status:     rData.Assignment.IsApproved(newest, newest.GetScore()),
 	}
 	if err := wh.db.CreateSubmission(newSubmission); err != nil {
-		wh.logger.Errorf("Failed to save submission for user %s, assignment %d: %v", data.JobOwner, data.Assignment.ID, err)
+		wh.logger.Errorf("Failed to save submission for user %s, assignment %d: %v", rData.JobOwner, rData.Assignment.ID, err)
 		return
 	}
-	wh.logger.Debugf("Saved manual review submission for user %s for assignment %d", data.JobOwner, data.Assignment.ID)
+	wh.logger.Debugf("Saved manual review submission for user %s for assignment %d", rData.JobOwner, rData.Assignment.ID)
 }
 
 // updateLastActivityDate sets a current date as a last activity date of the student
