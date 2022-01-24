@@ -173,6 +173,7 @@ func TestDockerTimeout(t *testing.T) {
 		Dockerfile: dockerfile,
 		Commands:   []string{script},
 	})
+	t.Log("Expecting ERROR line above; not test failure")
 	if out != wantOut {
 		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
 	}
