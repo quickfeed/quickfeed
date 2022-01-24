@@ -1,54 +1,96 @@
 package ci
 
 import (
-	"fmt"
-	"os"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/internal/qtest"
+	"github.com/autograde/quickfeed/internal/rand"
 )
 
-// To run this test, please see instructions in the developer guide (dev.md).
+// Testdata copied from run_tests_test.go (since they are in different packages)
+func testRunData(qfTestOrg string, userName, accessToken, scriptTemplate string) *RunData {
+	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
+	courseID := uint64(1)
+	pb.SetAccessToken(courseID, accessToken)
+	runData := &RunData{
+		Course: &pb.Course{
+			ID:   courseID,
+			Code: "DAT320",
+		},
+		Assignment: &pb.Assignment{
+			Name:             "lab1",
+			ScriptFile:       scriptTemplate,
+			ContainerTimeout: 1,
+		},
+		Repo: &pb.Repository{
+			HTMLURL:  repo.StudentRepoURL(userName),
+			RepoType: pb.Repository_USER,
+		},
+		JobOwner: "muggles",
+	}
+	return runData
+}
 
-// This test is meant for debugging template parsing of script files, such as go.sh and python.sh.
-// We don't actually test anything here since the output is expected to be unstable; must be inspected manually.
-
-func TestParseScript(t *testing.T) {
+func TestParseScriptTemplate(t *testing.T) {
 	const (
 		// these are only used in text; no access to qf101 organization or user is needed
 		qfTestOrg      = "qf101"
+		image          = "quickfeed:go"
+		scriptTemplate = `#image/quickfeed:go
+AssignmentName: {{ .AssignmentName }}
+RandomSecret: {{ .RandomSecret }}
+`
 		githubUserName = "user"
+		accessToken    = "open sesame"
 	)
-	randomString := qtest.RandomString(t)
+	randomSecret := rand.String()
 
-	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
-	info := &AssignmentInfo{
-		AssignmentName:     "lab2",
-		Script:             "#image/qf101\n A script",
-		CreatorAccessToken: "secret",
-		GetURL:             repo.StudentRepoURL(githubUserName),
-		TestURL:            repo.TestsRepoURL(),
-		RandomSecret:       randomString,
-	}
-	j, err := parseScriptTemplate(info)
+	runData := testRunData(qfTestOrg, githubUserName, "access_token", scriptTemplate)
+	job, err := runData.parseScriptTemplate(randomSecret)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if os.Getenv("TEST_TMPL") != "" {
-		for _, cmd := range j.Commands {
-			fmt.Println(cmd)
-		}
+	if job.Image != image {
+		t.Errorf("job.Image = %s, want %s", job.Image, image)
 	}
-	if os.Getenv("TEST_IMAGE") != "" {
-		fmt.Println(j.Image)
+	if job.Commands[0] != "AssignmentName: lab1" {
+		t.Errorf("job.Commands[0] = %s, want %s", job.Commands[0], "AssignmentName: lab1")
 	}
-	if os.Getenv("TEST_TMPL") != "" {
-		for _, cmd := range j.Commands {
-			fmt.Println(cmd)
-		}
+	if job.Commands[1] != "RandomSecret: "+randomSecret {
+		t.Errorf("job.Commands[1] = %s, want %s", job.Commands[1], "RandomSecret: "+randomSecret)
 	}
-	if os.Getenv("TEST_IMAGE") != "" {
-		fmt.Println(j.Image)
+	if job.Name != "DAT320-lab1-muggles-"+randomSecret[:6] {
+		t.Errorf("job.Name = %s, want %s", job.Name, "DAT320-lab1-muggles-"+randomSecret[:6])
+	}
+}
+
+func TestParseBadScriptTemplate(t *testing.T) {
+	const (
+		// these are only used in text; no access to qf101 organization or user is needed
+		qfTestOrg      = "qf101"
+		image          = "quickfeed:go"
+		githubUserName = "user"
+		accessToken    = "open sesame"
+	)
+	randomSecret := rand.String()
+
+	const scriptTemplate = `#image/quickfeed:go`
+	runData := testRunData(qfTestOrg, githubUserName, "access_token", scriptTemplate)
+	_, err := runData.parseScriptTemplate(randomSecret)
+	const wantMsg = "no script template for assignment lab1 in https://github.com/qf101/tests"
+	if err.Error() != wantMsg {
+		t.Errorf("err = '%s', want '%s'", err, wantMsg)
+	}
+
+	const scriptTemplate2 = `
+start=$SECONDS
+printf "*** Preparing for Test Execution ***\n"
+
+`
+	runData = testRunData(qfTestOrg, githubUserName, "access_token", scriptTemplate2)
+	_, err = runData.parseScriptTemplate(randomSecret)
+	const wantMsg2 = "no docker image specified in script template for assignment lab1 in https://github.com/qf101/tests"
+	if err.Error() != wantMsg2 {
+		t.Errorf("err = '%s', want '%s'", err, wantMsg2)
 	}
 }

@@ -36,22 +36,37 @@ func (r *Results) toScoreSlice() []*Score {
 type Results struct {
 	BuildInfo *BuildInfo // build info for tests
 	Scores    []*Score   // list of scores for different tests
-	Errors    []error    // errors encountered during test execution
 	testNames []string   // defines the order
 	scores    map[string]*Score
 }
 
+// parseErrors encountered during test execution.
+type parseErrors []error
+
+// Error prints a newline separated list of errors that occurred during parsing.
+func (pe parseErrors) Error() string {
+	if len(pe) == 0 {
+		return ""
+	}
+	sErr := make([]string, 0, len(pe)+1)
+	sErr = append(sErr, fmt.Sprintf("failed to parse score; %d occurrences", len(pe)))
+	for _, err := range pe {
+		sErr = append(sErr, err.Error())
+	}
+	return strings.Join(sErr, "\n")
+}
+
 // ExtractResults returns the results from a test execution extracted from the given out string.
-func ExtractResults(out, secret string, execTime time.Duration) *Results {
+func ExtractResults(out, secret string, execTime time.Duration) (*Results, error) {
 	var filteredLog []string
-	errs := make([]error, 0)
+	errs := make(parseErrors, 0)
 	results := NewResults()
 	for _, line := range strings.Split(out, "\n") {
 		// check if line has expected JSON score string
 		if HasPrefix(line) {
 			sc, err := Parse(line, secret)
 			if err != nil {
-				errs = append(errs, fmt.Errorf("failed to parse score: %s: %v", line, err))
+				errs = append(errs, fmt.Errorf("failed on line '%s': %v", line, err))
 				continue
 			}
 			results.addScore(sc)
@@ -60,15 +75,18 @@ func ExtractResults(out, secret string, execTime time.Duration) *Results {
 			filteredLog = append(filteredLog, line)
 		}
 	}
-	return &Results{
+	res := &Results{
 		BuildInfo: &BuildInfo{
 			BuildDate: time.Now().Format(layout),
 			BuildLog:  strings.Join(filteredLog, "\n"),
 			ExecTime:  execTime.Milliseconds(),
 		},
 		Scores: results.toScoreSlice(),
-		Errors: errs,
 	}
+	if len(errs) > 0 {
+		return res, errs
+	}
+	return res, nil
 }
 
 // addScore adds the given score to the set of scores.

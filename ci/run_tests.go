@@ -7,8 +7,8 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/internal/rand"
 	"github.com/autograde/quickfeed/kit/score"
-	"github.com/autograde/quickfeed/log"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -23,59 +23,34 @@ type RunData struct {
 	Rebuild    bool
 }
 
-type execData struct {
-	out      string
-	execTime time.Duration
-}
-
 // String returns a string representation of the run data structure
 func (r RunData) String(secret string) string {
 	return fmt.Sprintf("%s-%s-%s-%s", r.Course.GetCode(), r.Assignment.GetName(), r.JobOwner, secret)
 }
 
 // RunTests runs the assignment specified in the provided RunData structure.
-func (r RunData) RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner) {
-	info := newAssignmentInfo(r.Course, r.Assignment, r.Repo.GetHTMLURL(), r.Repo.GetTestURL())
+func (r RunData) RunTests(logger *zap.SugaredLogger, runner Runner) (*score.Results, error) {
 	logger.Debugf("Running tests for %s", r.JobOwner)
-	ed, err := r.runTests(runner, info)
-	if err != nil {
-		logger.Errorf("Failed to run tests: %v", err)
-		if ed == nil {
-			return
-		}
-		// we only get here if err was a timeout, so that we can log 'out' to the user
-	}
-	results := score.ExtractResults(ed.out, info.RandomSecret, ed.execTime)
-	if len(results.Errors) > 0 {
-		for _, err := range results.Errors {
-			logger.Errorf("Failed to extract results: %v", err)
-		}
-	}
-	logger.Debug("ci.RunTests", zap.Any("Results", log.IndentJson(results)))
-	r.recordResults(logger, db, results)
-}
 
-// runTests returns execData struct.
-// An error is returned if the execution fails, or times out.
-// If a timeout is the cause of the error, we also return an output string to the user.
-func (r RunData) runTests(runner Runner, info *AssignmentInfo) (*execData, error) {
-	job, err := parseScriptTemplate(info)
+	randomSecret := rand.String()
+	job, err := r.parseScriptTemplate(randomSecret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse script template: %w", err)
 	}
 
-	job.Name = r.String(info.RandomSecret[:6])
 	start := time.Now()
-
 	ctx, cancel := r.withTimeout(containerTimeout)
 	defer cancel()
-
 	out, err := runner.Run(ctx, job)
 	if err != nil && out == "" {
-		return nil, fmt.Errorf("test execution failed: %w", err)
+		return nil, fmt.Errorf("test execution failed without output: %w", err)
 	}
-	// this may return a timeout error as well
-	return &execData{out: out, execTime: time.Since(start)}, err
+	if err != nil {
+		// we may reach here with a timeout error and a non-empty output
+		logger.Errorf("test execution failed with output: %v\n%v", err, out)
+	}
+	// return the extracted score and filtered log output
+	return score.ExtractResults(out, randomSecret, time.Since(start))
 }
 
 func (r RunData) withTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
@@ -86,8 +61,8 @@ func (r RunData) withTimeout(timeout time.Duration) (context.Context, context.Ca
 	return context.WithTimeout(context.Background(), timeout)
 }
 
-// recordResults for the assignment given by the run data structure.
-func (r RunData) recordResults(logger *zap.SugaredLogger, db database.Database, result *score.Results) error {
+// RecordResults for the assignment given by the run data structure.
+func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, result *score.Results) error {
 	// Sanity check of the result object
 	if result == nil || result.BuildInfo == nil {
 		return fmt.Errorf("no build info found in results object: %v", result)
@@ -136,6 +111,8 @@ func (r RunData) recordResults(logger *zap.SugaredLogger, db database.Database, 
 	if !r.Rebuild {
 		return r.updateSlipDays(db, newSubmission)
 	}
+
+	// TODO(meling) return newSubmission
 	return nil
 }
 

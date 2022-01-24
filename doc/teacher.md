@@ -75,12 +75,12 @@ However, it appears there is no per-organization approach to turn off notificati
 QuickFeed uses the following repository structure.
 These will be created automatically when a course is created.
 
-| Repository name | Description                                                                    | Access                         |
-|-----------------|--------------------------------------------------------------------------------|--------------------------------|
-| info            | Holds information about the course.                                            | Public                         |
-| assignments     | Contains a separate folder for each assignment.                                | Students, Teachers, QuickFeed  |
-| username-labs   | Created for each student username in QuickFeed                                 | Student, Teachers, QuickFeed   |
-| tests           | Contains a separate folder for each assignment with tests for that assignment. | Teachers, QuickFeed            |
+| Repository name | Description                                                                    | Access                        |
+|-----------------|--------------------------------------------------------------------------------|-------------------------------|
+| info            | Holds information about the course.                                            | Public                        |
+| assignments     | Contains a separate folder for each assignment.                                | Students, Teachers, QuickFeed |
+| username-labs   | Created for each student username in QuickFeed                                 | Student, Teachers, QuickFeed  |
+| tests           | Contains a separate folder for each assignment with tests for that assignment. | Teachers, QuickFeed           |
 
 *In QuickFeed, Teacher means any teaching staff, including teaching assistants and professors alike.*
 
@@ -198,7 +198,6 @@ An example is shown below for `lab1`.
 
 ```yml
 assignmentid: 1
-name: "lab1"
 title: "Introduction to Unix"
 deadline: "2020-08-30T23:59:00"
 autoapprove: true
@@ -210,17 +209,16 @@ reviewers: 2
 containertimeout: 10
 ```
 
-| Field              | Description                                                                                           |
-|--------------------|-------------------------------------------------------------------------------------------------------|
-| `assignmentid`     | TBD                                                                                                   |
-| `name`             | Name of assignment folder                                                                             |
-| `scriptfile`       | Script to use for running tests.                                                                      |
-| `deadline`         | Submission deadline for the assignment.                                                               |
-| `autoapprove`      | Automatically approve the assignment when `scorelimit` is achieved.                                   |
-| `scorelimit`       | Minimal score needed for approval. Default is 80 %.                                                   |
-| `isgrouplab`       | Assignment is considered a group assignment if true; otherwise it is an individual assignment.        |
-| `reviewers`        | Number of teachers that must review a student submission for approval.                                |
-| `containertimeout` | Timeout for CI container to finish building and testing student submitted code. Default is 10 minutes.|
+| Field              | Description                                                                                            |
+|--------------------|--------------------------------------------------------------------------------------------------------|
+| `assignmentid`     | TBD                                                                                                    |
+| `title`            | The assignment's title                                                                                 |
+| `deadline`         | Submission deadline for the assignment.                                                                |
+| `autoapprove`      | Automatically approve the assignment when `scorelimit` is achieved.                                    |
+| `scorelimit`       | Minimal score needed for approval. Default is 80 %.                                                    |
+| `isgrouplab`       | Assignment is considered a group assignment if true; otherwise it is an individual assignment.         |
+| `reviewers`        | Number of teachers that must review a student submission for approval.                                 |
+| `containertimeout` | Timeout for CI container to finish building and testing student submitted code. Default is 10 minutes. |
 
 ## Reviewing student submissions
 

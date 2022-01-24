@@ -172,7 +172,16 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 		wh.recordSubmissionWithoutTests(runData)
 		return
 	}
-	runData.RunTests(wh.logger, wh.db, wh.runner)
+	results, err := runData.RunTests(wh.logger, wh.runner)
+	if err != nil {
+		wh.logger.Errorf("Failed to run tests for assignment %s for course %s: %v", assignment.Name, course.Name, err)
+	}
+
+	wh.logger.Debug("ci.RunTests", zap.Any("Results", log.IndentJson(results)))
+	err = runData.RecordResults(wh.logger, wh.db, results)
+	if err != nil {
+		wh.logger.Errorf("Failed to record results for assignment %s for course %s: %v", assignment.Name, course.Name, err)
+	}
 }
 
 // recordSubmissionWithoutTests saves a new submission without running any tests

@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -46,7 +47,14 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 		JobOwner:   slug.Make(name),
 		Rebuild:    true,
 	}
-	runData.RunTests(s.logger, s.db, s.runner)
+	results, err := runData.RunTests(s.logger, s.runner)
+	if err != nil {
+		return nil, err
+	}
+	err = runData.RecordResults(s.logger, s.db, results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to record results for assignment %s for course %s: %w", assignment.Name, course.Name, err)
+	}
 	return s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
 }
 

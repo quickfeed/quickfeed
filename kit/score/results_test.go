@@ -21,9 +21,10 @@ func TestExtractResult(t *testing.T) {
 Here are some more logs for the student.
 `
 
-	res := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
-	if len(res.Errors) > 0 {
-		t.Fatal(res.Errors[0])
+	res, err := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	if err != nil {
+		// err may contain multiple errors
+		t.Fatal(err)
 	}
 	if strings.Contains(res.BuildInfo.BuildLog, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73") {
 		t.Fatal("build log contains secret")
@@ -39,9 +40,10 @@ func TestExtractResultWithWhitespace(t *testing.T) {
 Here are some more logs for the student.
 `
 
-	res := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
-	if len(res.Errors) > 0 {
-		t.Fatal(res.Errors[0])
+	res, err := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	if err != nil {
+		// err may contain multiple errors
+		t.Fatal(err)
 	}
 	if strings.Contains(res.BuildInfo.BuildLog, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73") {
 		t.Fatal("build log contains secret")
@@ -62,9 +64,10 @@ Here are some more logs for the student.
 Here are some more logs for the student.
 `
 
-	res := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
-	if len(res.Errors) > 0 {
-		t.Fatal(res.Errors[0])
+	res, err := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	if err != nil {
+		// err may contain multiple errors
+		t.Fatal(err)
 	}
 	if len(res.Scores) != 2 {
 		t.Fatalf("ExtractResult() expected 2 Score entries, got %d: %+v", len(res.Scores), res.Scores)
@@ -85,9 +88,10 @@ func TestExtractResultWithPanicedAndMaliciousScoreLines(t *testing.T) {
 	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"MaliciousTest","Score":100,"MaxScore":100,"Weight":1}
 `
 
-	res := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
-	if len(res.Errors) > 0 {
-		t.Fatal(res.Errors[0])
+	res, err := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	if err != nil {
+		// err may contain multiple errors
+		t.Fatal(err)
 	}
 	const expectedTests = 6
 	if len(res.Scores) != expectedTests {
@@ -244,9 +248,10 @@ func TestExecTime(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run("ExecTime#"+tt.id, func(t *testing.T) {
-			res := score.ExtractResults("", "", tt.in)
-			if len(res.Errors) > 0 {
-				t.Fatal(res.Errors[0])
+			res, err := score.ExtractResults("", "", tt.in)
+			if err != nil {
+				// err may contain multiple errors
+				t.Fatal(err)
 			}
 			got := res.BuildInfo.ExecTime
 			if got != tt.want {

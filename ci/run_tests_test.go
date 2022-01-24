@@ -1,4 +1,4 @@
-package ci
+package ci_test
 
 import (
 	"context"
@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/kit/score"
-	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
@@ -29,6 +29,29 @@ func loadRunScript(t *testing.T) string {
 	return string(b)
 }
 
+func testRunData(qfTestOrg string, userName, accessToken, scriptTemplate string) *ci.RunData {
+	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
+	courseID := uint64(1)
+	pb.SetAccessToken(courseID, accessToken)
+	runData := &ci.RunData{
+		Course: &pb.Course{
+			ID:   courseID,
+			Code: "DAT320",
+		},
+		Assignment: &pb.Assignment{
+			Name:             "lab1",
+			ScriptFile:       scriptTemplate,
+			ContainerTimeout: 1,
+		},
+		Repo: &pb.Repository{
+			HTMLURL:  repo.StudentRepoURL(userName),
+			RepoType: pb.Repository_USER,
+		},
+		JobOwner: "muggles",
+	}
+	return runData
+}
+
 func TestRunTests(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
@@ -43,38 +66,45 @@ func TestRunTests(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	randomString := qtest.RandomString(t)
+	scriptTemplate := loadRunScript(t)
+	runData := testRunData(qfTestOrg, userName, accessToken, scriptTemplate)
 
-	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
-	info := &AssignmentInfo{
-		AssignmentName:     "lab1",
-		Script:             loadRunScript(t),
-		CreatorAccessToken: accessToken,
-		GetURL:             repo.StudentRepoURL(userName),
-		TestURL:            repo.TestsRepoURL(),
-		RandomSecret:       randomString,
-	}
-	runData := &RunData{
-		Course: &pb.Course{Code: "DAT320"},
-		Assignment: &pb.Assignment{
-			Name:             info.AssignmentName,
-			ContainerTimeout: 1,
-		},
-		Repo:     &pb.Repository{},
-		JobOwner: "muggles",
-	}
-
-	runner, err := NewDockerCI(log.Zap(true))
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer runner.Close()
-	ed, err := runData.runTests(runner, info)
+	runner, closeFn := dockerClient(t)
+	defer closeFn()
+	results, err := runData.RunTests(zap.NewNop().Sugar(), runner)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
-	t.Logf("\n%s\nExecTime: %v\nSecret: %v\n", ed.out, ed.execTime, info.RandomSecret)
+	t.Logf("%+v\n", results)
+}
+
+func TestRunTestsTimeout(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
+
+	// Only used to fetch the user's GitHub login (user name)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userName, err := s.GetUserName(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// TODO(meling) fix this so that it actually times out
+	scriptTemplate := loadRunScript(t)
+	runData := testRunData(qfTestOrg, userName, accessToken, scriptTemplate)
+
+	runner, closeFn := dockerClient(t)
+	defer closeFn()
+	results, err := runData.RunTests(zap.NewNop().Sugar(), runner)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
+	t.Logf("%+v\n", results)
 }
 
 func TestRecordResults(t *testing.T) {
@@ -90,9 +120,12 @@ func TestRecordResults(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	assignment := &pb.Assignment{
-		CourseID:         course.ID,
-		Name:             "lab1",
-		ScriptFile:       "go.sh",
+		CourseID: course.ID,
+		Name:     "lab1",
+		ScriptFile: `#image/quickfeed:go
+printf "AssignmentName: {{ .AssignmentName }}\n"
+printf "RandomSecret: {{ .RandomSecret }}\n"
+`,
 		Deadline:         "2022-11-11T13:00:00",
 		AutoApprove:      true,
 		ScoreLimit:       70,
@@ -123,7 +156,7 @@ func TestRecordResults(t *testing.T) {
 		BuildInfo: buildInfo,
 		Scores:    testScores,
 	}
-	runData := &RunData{
+	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
 		Repo: &pb.Repository{
@@ -132,7 +165,8 @@ func TestRecordResults(t *testing.T) {
 		JobOwner: "test",
 	}
 
-	runData.recordResults(zap.NewNop().Sugar(), db, results)
+	// TODO Get submission here from record results
+	runData.RecordResults(zap.NewNop().Sugar(), db, results)
 	submission, err := db.GetSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: admin.ID})
 	if err != nil {
 		t.Fatal(err)
@@ -150,7 +184,7 @@ func TestRecordResults(t *testing.T) {
 	// Updating submission after deadline: build info and slip days must be updated
 	newBuildDate := "2022-11-12T13:00:00"
 	results.BuildInfo.BuildDate = newBuildDate
-	runData.recordResults(zap.NewNop().Sugar(), db, results)
+	runData.RecordResults(zap.NewNop().Sugar(), db, results)
 
 	enrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
 	if err != nil {
@@ -171,7 +205,7 @@ func TestRecordResults(t *testing.T) {
 	runData.Rebuild = true
 	results.BuildInfo.BuildDate = "2022-11-13T13:00:00"
 	slipDaysBeforeUpdate := enrollment.RemainingSlipDays(course)
-	runData.recordResults(zap.NewNop().Sugar(), db, results)
+	runData.RecordResults(zap.NewNop().Sugar(), db, results)
 	updatedEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
 	if err != nil {
 		t.Fatal(err)
