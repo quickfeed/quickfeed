@@ -2,7 +2,6 @@ package database_test
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 
 	"github.com/autograde/quickfeed/ag"
@@ -234,15 +233,17 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	if len(submissions) != 1 {
 		t.Fatalf("have %d submissions want %d", len(submissions), 1)
 	}
-	want := &pb.Submission{
-		ID:           submissions[0].ID,
+	gotSubmission := submissions[0]
+	wantSubmission := &pb.Submission{
+		ID:           gotSubmission.ID,
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
 	}
-	if !reflect.DeepEqual(submissions[0], want) {
-		t.Errorf("have %#v want %#v", submissions[0], want)
+
+	if diff := cmp.Diff(wantSubmission, gotSubmission, protocmp.Transform()); diff != "" {
+		t.Errorf("GetLastSubmissions() mismatch (-wantSubmission, +gotSubmission):n%s", diff)
 	}
 }
 

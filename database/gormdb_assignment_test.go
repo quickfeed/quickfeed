@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"reflect"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -50,12 +49,12 @@ func TestGormDBCreateAssignment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assignment := pb.Assignment{
+	gotAssignment := pb.Assignment{
 		CourseID: 1,
 		Order:    1,
 	}
 
-	if err := db.CreateAssignment(&assignment); err != nil {
+	if err := db.CreateAssignment(&gotAssignment); err != nil {
 		t.Fatal(err)
 	}
 
@@ -63,13 +62,14 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	wantAssignment := assignments[0]
 
 	if len(assignments) != 1 {
 		t.Fatalf("have size %v wanted %v", len(assignments), 1)
 	}
 
-	if !reflect.DeepEqual(assignments[0], &assignment) {
-		t.Fatalf("want %v have %v", assignments[0], &assignment)
+	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
+		t.Errorf("CreateAssignment() or GetAssignmentsByCourse() mismatch (-wantAssignment, +gotAssignment):n%s", diff)
 	}
 
 	if _, err = db.GetAssignment(&pb.Assignment{ID: 1}); err != nil {
