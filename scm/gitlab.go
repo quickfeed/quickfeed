@@ -50,7 +50,7 @@ func (s *GitlabSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOpt
 
 // GetOrganization implements the SCM interface.
 func (s *GitlabSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*pb.Organization, error) {
-	group, _, err := s.client.Groups.GetGroup(strconv.FormatUint(opt.ID, 10), gitlab.WithContext(ctx))
+	group, _, err := s.client.Groups.GetGroup(strconv.FormatUint(opt.ID, 10), &gitlab.GetGroupOptions{}, gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 const (
@@ -285,7 +285,7 @@ func TestEnrollmentGetUsedSlipDays(t *testing.T) {
 			UsedSlipDays: 2,
 		},
 	}
-	if diff := cmp.Diff(wantUsedSlipDays, usedSlipDays, cmpopts.IgnoreUnexported(pb.UsedSlipDays{})); diff != "" {
+	if diff := cmp.Diff(wantUsedSlipDays, usedSlipDays, protocmp.Transform()); diff != "" {
 		t.Errorf("GetUsedSlipDays() mismatch (-want +got):\n%s", diff)
 	}
 }

@@ -10,16 +10,80 @@
 
 - Teachers that wants to use QuickFeed may wish to review the [User Manual](doc/teacher.md).
 - Teachers may also want to copy the [sign up instructions](doc/templates/signup.md) and [lab submission instructions](doc/templates/lab-submission.md), and make the necessary adjustments for your course.
-- For detailed instructions on installation of QuickFeed for a production environment, please see our [Server Installation and Configuration](doc/install.md).
+- [Installation instructions for QuickFeed](doc/deploy.md).
 
-## Development
+## Contributing
+
+The following instructions assume you have installed the [GitHub CLI](https://github.com/cli/cli).
+See here for [installation instructions](https://github.com/cli/cli#installation) for your platform.
+
+On systems with homebrew:
+
+```shell
+% brew install gh
+% gh help
+```
+
+### Create Issue First
+
+Before you implement some feature or bug fix, you should open an issue first.
+This issue should then be linked in the corresponding pull request.
+
+### Create Pull Request
+
+To create a pull request on the main repository follow these steps.
+
+```shell
+% gh repo clone quickfeed/quickfeed
+% cd quickfeed
+# Create and switch to your new feature branch
+% git switch -C <feature-branch>
+# Edit and stage files
+% git add <files>
+% git commit
+# When done and ready to share
+% gh pr create --title "Short description of the feature or fix"
+# Alternatively: Use --draft if you want to share your code, but want to continue developing
+% gh pr create --draft --title "Short description of the feature or fix"
+```
+
+To continue development on a pull request (same branch as before):
+
+```shell
+# Only necessary if you previously switched away from the feature-branch
+% git switch <feature-branch>
+# Edit and stage files
+% git add <files>
+% git commit
+% git push
+```
+
+To fetch an existing pull request to your local machine.
+
+```shell
+% gh pr checkout <PR#>
+```
+
+For additional details on the `gh pr` and `gh pr create` commands:
+
+```shell
+% gh help pr
+% gh help pr create
+```
+
+### GitHub Issues and Pull Requests
+
+When creating a pull request, it is always nice to connect it to a GitHub issue describing the feature or problem you are fixing.
+If there is an issue that is fixed by your pull request please remember to add one of the following lines at the end of the pull request description.
+
+```text
+Closes <Issue#>.
+Fixes <Issue#>.
+Resolves <Issue#>.
+```
+
 
 For detailed instructions on configuring QuickFeed for development, please see our [Developer Guide](doc/dev.md).
-
-### We Accept Pull Requests
-
-We are happy to accept pull requests from anyone that want to help out in our effort to implement our QuickFeed platform.
-To avoid wasted work and duplication of efforts, feel free to first open an issue to discuss the feature or bug you want to fix.
 
 ### Style Guidelines
 

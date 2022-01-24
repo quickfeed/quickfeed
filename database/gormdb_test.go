@@ -2,14 +2,12 @@ package database_test
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )
@@ -36,11 +34,9 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 11)
-	var course pb.Course
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 11)
+	course := &pb.Course{}
+	qtest.CreateCourse(t, db, admin, course)
 
 	student := qtest.CreateFakeUser(t, db, 13)
 	if err := db.CreateEnrollment(&pb.Enrollment{
@@ -60,15 +56,15 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 
 	// user entries from the database will have to be enrolled as
 	// teacher and student respectively
-	teacher.Enrollments = append(teacher.Enrollments, &pb.Enrollment{
+	admin.Enrollments = append(admin.Enrollments, &pb.Enrollment{
 		ID:           1,
 		CourseID:     course.ID,
-		UserID:       teacher.ID,
+		UserID:       admin.ID,
 		Status:       pb.Enrollment_TEACHER,
 		State:        pb.Enrollment_VISIBLE,
 		UsedSlipDays: []*pb.UsedSlipDays{},
 	})
-	teacher.RemoteIdentities = nil
+	admin.RemoteIdentities = nil
 
 	student.Enrollments = append(student.Enrollments, &pb.Enrollment{
 		ID:           2,
@@ -80,18 +76,18 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 	})
 	student.RemoteIdentities = nil
 
-	gotTeacher, err := db.GetUserWithEnrollments(teacher.ID)
+	gotTeacher, err := db.GetUserWithEnrollments(admin.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(teacher, gotTeacher, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{})); diff != "" {
+	if diff := cmp.Diff(admin, gotTeacher, protocmp.Transform()); diff != "" {
 		t.Errorf("enrollment mismatch (-teacher +gotTeacher):\n%s", diff)
 	}
 	gotStudent, err := db.GetUserWithEnrollments(student.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(student, gotStudent, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{})); diff != "" {
+	if diff := cmp.Diff(student, gotStudent, protocmp.Transform()); diff != "" {
 		t.Errorf("enrollment mismatch (-student +gotStudent):\n%s", diff)
 	}
 }
@@ -180,27 +176,19 @@ func TestGormDBGetCourses(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	user := qtest.CreateFakeUser(t, db, 10)
-	c1 := pb.Course{OrganizationID: 1}
-	if err := db.CreateCourse(user.ID, &c1); err != nil {
-		t.Fatal(err)
-	}
-
-	c2 := pb.Course{OrganizationID: 2}
-	if err := db.CreateCourse(user.ID, &c2); err != nil {
-		t.Fatal(err)
-	}
-
-	c3 := pb.Course{OrganizationID: 3}
-	if err := db.CreateCourse(user.ID, &c3); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 10)
+	c1 := &pb.Course{OrganizationID: 1}
+	c2 := &pb.Course{OrganizationID: 2}
+	c3 := &pb.Course{OrganizationID: 3}
+	qtest.CreateCourse(t, db, admin, c1)
+	qtest.CreateCourse(t, db, admin, c2)
+	qtest.CreateCourse(t, db, admin, c3)
 
 	gotCourses, err := db.GetCourses()
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantCourses := []*pb.Course{&c1, &c2, &c3}
+	wantCourses := []*pb.Course{c1, c2, c3}
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCourses() mismatch (-wantUser, +gotUser):n%s", diff)
 	}
@@ -219,7 +207,7 @@ func TestGormDBGetCourses(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantCourse := []*pb.Course{&c1}
+	wantCourse := []*pb.Course{c1}
 	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCourses() mismatch (-wantUser, +gotUser):n%s", diff)
 	}
@@ -228,7 +216,7 @@ func TestGormDBGetCourses(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantCourse = []*pb.Course{&c1, &c2}
+	wantCourse = []*pb.Course{c1, c2}
 	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCourses() mismatch (-wantUser, +gotUser):n%s", diff)
 	}
@@ -256,11 +244,9 @@ func TestGormDBCreateEnrollment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 1)
-	var course pb.Course
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 1)
+	course := &pb.Course{}
+	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 10)
 	if err := db.CreateEnrollment(&pb.Enrollment{
@@ -282,11 +268,9 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 1)
-	var course pb.Course
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 1)
+	course := &pb.Course{}
+	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 10)
 	if err := db.CreateEnrollment(&pb.Enrollment{
@@ -348,26 +332,15 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 1)
-	c1 := pb.Course{OrganizationID: 1}
-	if err := db.CreateCourse(teacher.ID, &c1); err != nil {
-		t.Fatal(err)
-	}
-
-	c2 := pb.Course{OrganizationID: 2}
-	if err := db.CreateCourse(teacher.ID, &c2); err != nil {
-		t.Fatal(err)
-	}
-
-	c3 := pb.Course{OrganizationID: 3}
-	if err := db.CreateCourse(teacher.ID, &c3); err != nil {
-		t.Fatal(err)
-	}
-
-	c4 := pb.Course{OrganizationID: 4}
-	if err := db.CreateCourse(teacher.ID, &c4); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 1)
+	c1 := &pb.Course{OrganizationID: 1}
+	c2 := &pb.Course{OrganizationID: 2}
+	c3 := &pb.Course{OrganizationID: 3}
+	c4 := &pb.Course{OrganizationID: 4}
+	qtest.CreateCourse(t, db, admin, c1)
+	qtest.CreateCourse(t, db, admin, c2)
+	qtest.CreateCourse(t, db, admin, c3)
+	qtest.CreateCourse(t, db, admin, c4)
 
 	user := qtest.CreateFakeUser(t, db, 10)
 	if err := db.CreateEnrollment(&pb.Enrollment{
@@ -406,10 +379,10 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	}
 
 	wantCourses := []*pb.Course{
-		{ID: c1.ID, OrganizationID: 1, Enrolled: pb.Enrollment_PENDING},
-		{ID: c2.ID, OrganizationID: 2, Enrolled: pb.Enrollment_NONE},
-		{ID: c3.ID, OrganizationID: 3, Enrolled: pb.Enrollment_STUDENT},
-		{ID: c4.ID, OrganizationID: 4, Enrolled: pb.Enrollment_NONE},
+		{ID: c1.ID, OrganizationID: 1, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_PENDING},
+		{ID: c2.ID, OrganizationID: 2, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_NONE},
+		{ID: c3.ID, OrganizationID: 3, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_STUDENT},
+		{ID: c4.ID, OrganizationID: 4, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_NONE},
 	}
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCoursesByUser() mismatch (-wantUser, +gotUser):n%s", diff)
@@ -602,20 +575,18 @@ func TestGormDBCreateCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	course := pb.Course{
-		Name: "name",
-		Code: "code",
-		Year: 2017,
-		Tag:  "tag",
-
+	course := &pb.Course{
+		Name:           "name",
+		Code:           "code",
+		Year:           2017,
+		Tag:            "tag",
 		Provider:       "github",
 		OrganizationID: 1,
 	}
 
-	admin := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateCourse(admin.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
+	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	qtest.CreateCourse(t, db, admin, course)
 	if course.ID == 0 {
 		t.Error("expected id to be set")
 	}
@@ -664,9 +635,8 @@ func TestGormDBCreateCourseNonAdmin(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateCourse(admin.ID, &pb.Course{}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, &pb.Course{})
+
 	nonAdmin := qtest.CreateFakeUser(t, db, 11)
 	// the following should fail to create a course
 	if err := db.CreateCourse(nonAdmin.ID, &pb.Course{}); err == nil {
@@ -687,10 +657,9 @@ func TestGormDBGetCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	user := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateCourse(user.ID, wantCourse); err != nil {
-		t.Fatal(err)
-	}
+	remoteID := &pb.RemoteIdentity{Provider: wantCourse.Provider, RemoteID: 10, AccessToken: "token"}
+	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	// Get the created course.
 	gotCourse, err := db.GetCourse(wantCourse.ID, false)
@@ -716,10 +685,9 @@ func TestGormDBGetCourseByOrganization(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	user := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateCourse(user.ID, wantCourse); err != nil {
-		t.Fatal(err)
-	}
+	remoteID := &pb.RemoteIdentity{Provider: wantCourse.Provider, RemoteID: 10, AccessToken: "token"}
+	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	// Get the created course.
 	gotCourse, err := db.GetCourseByOrganizationID(wantCourse.OrganizationID)
@@ -750,7 +718,7 @@ func TestGormDBUpdateCourse(t *testing.T) {
 		Provider:       "github",
 		OrganizationID: 1234,
 	}
-	updates := &pb.Course{
+	wantCourse := &pb.Course{
 		Name:           "Test Course Edit",
 		Code:           "DAT100-1",
 		Year:           2018,
@@ -762,24 +730,24 @@ func TestGormDBUpdateCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateCourse(admin.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
+	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	qtest.CreateCourse(t, db, admin, course)
 
-	updates.ID = course.ID
-	if err := db.UpdateCourse(updates); err != nil {
+	wantCourse.ID = course.ID
+	wantCourse.CourseCreatorID = admin.ID
+	if err := db.UpdateCourse(wantCourse); err != nil {
 		t.Fatal(err)
 	}
 
 	// Get the updated course.
-	updatedCourse, err := db.GetCourse(course.ID, false)
+	gotCourse, err := db.GetCourse(course.ID, false)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(updatedCourse, updates) {
-		t.Errorf("have course %+v want %+v", updatedCourse, course)
+	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
+		t.Errorf("course mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -860,15 +828,11 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 10)
-	course := pb.Course{OrganizationID: 1}
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
-	courseTwo := pb.Course{OrganizationID: 2}
-	if err := db.CreateCourse(teacher.ID, &courseTwo); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 10)
+	c1 := &pb.Course{OrganizationID: 1}
+	c2 := &pb.Course{OrganizationID: 2}
+	qtest.CreateCourse(t, db, admin, c1)
+	qtest.CreateCourse(t, db, admin, c2)
 
 	var users []*pb.User
 	enrollments := []pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_STUDENT}
@@ -883,7 +847,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 			continue
 		}
 		if err := db.CreateEnrollment(&pb.Enrollment{
-			CourseID: course.ID,
+			CourseID: c1.ID,
 			UserID:   users[i].ID,
 		}); err != nil {
 			t.Fatal(err)
@@ -893,7 +857,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		case pb.Enrollment_STUDENT:
 			query := &pb.Enrollment{
 				UserID:   users[i].ID,
-				CourseID: course.ID,
+				CourseID: c1.ID,
 				Status:   pb.Enrollment_STUDENT,
 			}
 			err = db.UpdateEnrollment(query)
@@ -906,7 +870,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	// Creating Group
 	group := &pb.Group{
 		Name:     "SameNameGroup",
-		CourseID: course.ID,
+		CourseID: c1.ID,
 		Users:    users,
 	}
 	if err := db.CreateGroup(group); err != nil {
@@ -916,7 +880,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	// Create Assignments
 	assignment1 := pb.Assignment{
 		Order:      1,
-		CourseID:   course.ID,
+		CourseID:   c1.ID,
 		IsGroupLab: true,
 	}
 	if err := db.CreateAssignment(&assignment1); err != nil {
@@ -924,7 +888,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	}
 	assignment2 := pb.Assignment{
 		Order:      2,
-		CourseID:   course.ID,
+		CourseID:   c1.ID,
 		IsGroupLab: true,
 	}
 	if err := db.CreateAssignment(&assignment2); err != nil {
@@ -932,7 +896,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	}
 	assignment3 := pb.Assignment{
 		Order:      1,
-		CourseID:   courseTwo.ID,
+		CourseID:   c2.ID,
 		IsGroupLab: false,
 	}
 	if err := db.CreateAssignment(&assignment3); err != nil {
@@ -979,22 +943,22 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 
 	// Even if there is three submission, only the latest for each assignment should be returned
 
-	submissions, err := db.GetLastSubmissions(course.ID, &pb.Submission{GroupID: group.ID})
+	submissions, err := db.GetLastSubmissions(c1.ID, &pb.Submission{GroupID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := []*pb.Submission{&submission2, &submission3}
-	if diff := cmp.Diff(submissions, want, cmpopts.IgnoreUnexported(pb.Submission{})); diff != "" {
+	if diff := cmp.Diff(submissions, want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submissions, but got (-sub +want):\n%s", diff)
 	}
-	data, err := db.GetLastSubmissions(course.ID, &pb.Submission{GroupID: group.ID})
+	data, err := db.GetLastSubmissions(c1.ID, &pb.Submission{GroupID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 2 {
 		t.Errorf("Expected '%v' elements in the array, got '%v'", 2, len(data))
 	}
 	// Since there is no submissions, but the course and user exist, an empty array should be returned
-	data, err = db.GetLastSubmissions(courseTwo.ID, &pb.Submission{GroupID: group.ID})
+	data, err = db.GetLastSubmissions(c2.ID, &pb.Submission{GroupID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 0 {
@@ -1014,11 +978,9 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 		Provider:       "github",
 		OrganizationID: 1234,
 	}
-
-	teacher := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateCourse(teacher.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
+	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 11)
 
@@ -1062,11 +1024,10 @@ func TestDeleteGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 10)
-	var course pb.Course
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 10)
+	course := &pb.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+
 	var users []*pb.User
 	enrollments := []pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_STUDENT}
 	// create as many users as the desired number of enrollments
@@ -1132,13 +1093,11 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 		Tag:            "Spring",
 		Provider:       "github",
 		OrganizationID: 1234,
-		ID:             1,
 	}
 
-	teacher := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateCourse(teacher.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
+	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 11)
 
@@ -1196,10 +1155,9 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 		OrganizationID: 120,
 	}
 
-	teacher := qtest.CreateFakeUser(t, db, 1)
-	if err := db.CreateCourse(teacher.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
+	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 10)
 	userTwo := qtest.CreateFakeUser(t, db, 11)
@@ -1274,7 +1232,6 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	defer cleanup()
 
 	course := &pb.Course{
-		ID:             1234,
 		Name:           "Test Course",
 		Code:           "DAT100",
 		Year:           2017,
@@ -1283,10 +1240,10 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 		OrganizationID: 120,
 	}
 
-	teacher := qtest.CreateFakeUser(t, db, 1)
-	if err := db.CreateCourse(teacher.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 1, AccessToken: "token"}
+	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+	qtest.CreateCourse(t, db, admin, course)
+
 	user := qtest.CreateFakeUser(t, db, 10)
 	userTwo := qtest.CreateFakeUser(t, db, 11)
 

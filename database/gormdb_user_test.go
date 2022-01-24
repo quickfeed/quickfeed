@@ -20,9 +20,7 @@ func TestGetUserByCourse(t *testing.T) {
 		Name:            "Operating Systems and Systems Programming",
 		Year:            2021,
 	}
-	if err := db.CreateCourse(admin.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateUser(t, db, 2, &pb.User{Login: username})
 	qtest.EnrollStudent(t, db, user, course)

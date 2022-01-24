@@ -9,12 +9,12 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/markbates/goth"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/scm"
@@ -214,7 +214,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	// can't use: wantEnrollment.User.RemoveRemoteID()
 	wantEnrollment.User.RemoteIdentities = nil
-	if diff := cmp.Diff(pendingEnrollment, wantEnrollment, cmpopts.IgnoreUnexported(pb.Enrollment{}, pb.User{}, pb.Course{})); diff != "" {
+	if diff := cmp.Diff(pendingEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-pendingEnrollment +wantEnrollment):\n%s", diff)
 	}
 
@@ -229,7 +229,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantEnrollment.Status = pb.Enrollment_STUDENT
-	if diff := cmp.Diff(acceptedEnrollment, wantEnrollment, cmpopts.IgnoreUnexported(pb.Enrollment{}, pb.User{}, pb.Course{})); diff != "" {
+	if diff := cmp.Diff(acceptedEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-acceptedEnrollment +wantEnrollment):\n%s", diff)
 	}
 
@@ -254,7 +254,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	wantEnrollment.UserID = stud2.ID
 	wantEnrollment.User = stud2
 	wantEnrollment.User.RemoteIdentities = nil
-	if diff := cmp.Diff(acceptedEnrollment, wantEnrollment, cmpopts.IgnoreUnexported(pb.Enrollment{}, pb.User{}, pb.Course{})); diff != "" {
+	if diff := cmp.Diff(acceptedEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-acceptedEnrollment +wantEnrollment):\n%s", diff)
 	}
 
@@ -271,7 +271,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	wantEnrollment.ID = acceptedEnrollment.ID
 	wantEnrollment.Status = pb.Enrollment_TEACHER
-	if diff := cmp.Diff(acceptedEnrollment, wantEnrollment, cmpopts.IgnoreUnexported(pb.Enrollment{}, pb.User{}, pb.Course{})); diff != "" {
+	if diff := cmp.Diff(acceptedEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-acceptedEnrollment +wantEnrollment):\n%s", diff)
 	}
 }
@@ -407,7 +407,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(courses.Courses, wantCourses, cmpopts.IgnoreUnexported(pb.Course{})); diff != "" {
+	if diff := cmp.Diff(courses.Courses, wantCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-Courses +wantCourses):\n%s", diff)
 	}
 }
@@ -430,7 +430,7 @@ func TestGetCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if diff := cmp.Diff(foundCourse, course, cmpopts.IgnoreUnexported(pb.Course{})); diff != "" {
+	if diff := cmp.Diff(foundCourse, course, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-foundCourse +course):\n%s", diff)
 	}
 }

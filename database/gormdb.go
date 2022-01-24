@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"fmt"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/kit/score"
@@ -132,33 +133,52 @@ func (db *GormDB) UpdateAccessToken(remote *pb.RemoteIdentity) error {
 		return err
 	}
 
-	// Update the access token.
 	if err := tx.Model(&remoteIdentity).Update("access_token", remote.AccessToken).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
-	return tx.Commit().Error
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	return db.updateCourseAccessTokensIfCourseCreator(&remoteIdentity)
 }
 
-// updateAccessTokenCache caches the access token for the course
-// to allow easy access elsewhere.
-func (db *GormDB) updateAccessTokenCache(course *pb.Course) {
+// Update the access token cache for courses for which the user is course creator.
+// The cache allows easy access to the access token via the Course type.
+func (db *GormDB) updateCourseAccessTokensIfCourseCreator(remoteIdentity *pb.RemoteIdentity) error {
+	userID := remoteIdentity.GetUserID()
+	enrollments, err := db.GetEnrollmentsByUser(userID, pb.Enrollment_TEACHER)
+	if err != nil {
+		return err
+	}
+	for _, enrollment := range enrollments {
+		course := enrollment.GetCourse()
+		if course.GetCourseCreatorID() == userID {
+			pb.SetAccessToken(course.GetID(), remoteIdentity.AccessToken)
+		}
+	}
+	return nil
+}
+
+// updateCourseAccessTokenIfEmpty updates the access token cache for the course, if the course has no cached access token.
+// The cache allows easy access to the access token via the Course type.
+func (db *GormDB) updateCourseAccessTokenIfEmpty(course *pb.Course) error {
 	existingToken := course.GetAccessToken()
 	if existingToken != "" {
-		// no need to cache again
-		return
+		// already cached
+		return nil
 	}
-	// only need to query db if not in cache
+	// only need to query db if not in cache; will happen after restart of server
 	courseCreator, err := db.GetUser(course.GetCourseCreatorID())
 	if err != nil {
-		// failed to get course creator; ignore
-		return
+		return fmt.Errorf("failed to get course creator '%d' for %s: %w", course.GetCourseCreatorID(), course, err)
 	}
 	accessToken, err := courseCreator.GetAccessToken(course.GetProvider())
 	if err != nil {
-		// failed to get access token for course creator; ignore
-		return
+		return fmt.Errorf("failed to get course creator's '%d' access token for %s: %w", course.GetCourseCreatorID(), course.GetProvider(), err)
 	}
 	// update the access token cache
 	pb.SetAccessToken(course.GetID(), accessToken)
+	return nil
 }

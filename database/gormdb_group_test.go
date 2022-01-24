@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -125,11 +125,9 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			db, cleanup := qtest.TestDB(t)
 
-			teacher := qtest.CreateFakeUser(t, db, 10)
-			var course pb.Course
-			if err := db.CreateCourse(teacher.ID, &course); err != nil {
-				t.Fatal(err)
-			}
+			admin := qtest.CreateFakeUser(t, db, 10)
+			course := &pb.Course{}
+			qtest.CreateCourse(t, db, admin, course)
 
 			var uids []uint64
 			// create as many users as the desired number of enrollments
@@ -213,7 +211,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 
 			have.RemoveRemoteID()
 			group.RemoveRemoteID()
-			if diff := cmp.Diff(group, have, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.Enrollment{})); diff != "" {
+			if diff := cmp.Diff(group, have, protocmp.Transform()); diff != "" {
 				t.Errorf("mismatch (-group +have):\n%s", diff)
 			}
 			cleanup()
@@ -225,11 +223,10 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 10)
-	var course pb.Course
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 10)
+	course := &pb.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+
 	var users []*pb.User
 	enrollments := []pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_STUDENT}
 	// create as many users as the desired number of enrollments
@@ -281,11 +278,10 @@ func TestGetGroupsByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 10)
-	var course pb.Course
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 10)
+	course := &pb.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+
 	var users []*pb.User
 	enrollments := []pb.Enrollment_UserStatus{
 		pb.Enrollment_STUDENT,
@@ -344,11 +340,11 @@ func TestGetGroupsByCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantUsers, gotUsers := groups[0].GetUsers(), group.GetUsers()
-	if diff := cmp.Diff(wantUsers, gotUsers, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{}, pb.RemoteIdentity{})); diff != "" {
+	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
 		t.Errorf("group users mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
 	wantUsers, gotUsers = groups[1].GetUsers(), group2.GetUsers()
-	if diff := cmp.Diff(wantUsers, gotUsers, cmpopts.IgnoreUnexported(pb.User{}, pb.Enrollment{}, pb.RemoteIdentity{})); diff != "" {
+	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
 		t.Errorf("group users mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
 
