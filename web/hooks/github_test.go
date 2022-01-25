@@ -6,11 +6,14 @@ import (
 	"net/http"
 	"testing"
 
+	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/internal/qtest"
 	logq "github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 const (
@@ -97,5 +100,69 @@ func TestExtractChanges(t *testing.T) {
 	extractChanges(modifiedFiles, got)
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("content mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestRecordResultsForManualReview(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	logger := logq.Zap(true).Sugar()
+	defer func() { _ = logger.Sync() }()
+	var runner ci.Runner
+	testhook := NewGitHubWebHook(logger, db, runner, secret)
+
+	course := &pb.Course{
+		Name:           "Test",
+		OrganizationID: 1,
+		SlipDays:       5,
+	}
+	admin := qtest.CreateFakeUser(t, db, 1)
+	qtest.CreateCourse(t, db, admin, course)
+
+	assignment := &pb.Assignment{
+		Order:      1,
+		CourseID:   course.ID,
+		Name:       "assignment-1",
+		Deadline:   "2022-11-11T13:00:00",
+		IsGroupLab: false,
+		Reviewers:  1,
+	}
+	if err := db.CreateAssignment(assignment); err != nil {
+		t.Fatal(err)
+	}
+
+	initialSubmission := &pb.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       admin.ID,
+		Score:        80,
+		Status:       pb.Submission_APPROVED,
+		Released:     true,
+	}
+	if err := db.CreateSubmission(initialSubmission); err != nil {
+		t.Fatal(err)
+	}
+
+	runData := &ci.RunData{
+		Course:     course,
+		Assignment: assignment,
+		Repo: &pb.Repository{
+			UserID: 1,
+		},
+		JobOwner: "test",
+	}
+
+	testhook.recordSubmissionWithoutTests(runData)
+	query := &pb.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       admin.ID,
+	}
+	updatedSubmission, err := db.GetSubmission(query)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// submission must stay approved, released, with score = 80
+	if diff := cmp.Diff(initialSubmission, updatedSubmission, protocmp.Transform(), protocmp.IgnoreFields(&pb.Submission{}, "BuildInfo", "Scores")); diff != "" {
+		t.Errorf("Incorrect submission after update. Want: %+v, got %+v", initialSubmission, updatedSubmission)
 	}
 }

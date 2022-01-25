@@ -190,6 +190,7 @@ func (wh GitHubWebHook) recordSubmissionWithoutTests(rData *ci.RunData) {
 		return
 	}
 	newSubmission := &pb.Submission{
+		ID:           newest.ID,
 		AssignmentID: rData.Assignment.ID,
 		BuildInfo: &score.BuildInfo{
 			BuildDate: time.Now().Format(pb.TimeLayout),
@@ -200,7 +201,8 @@ func (wh GitHubWebHook) recordSubmissionWithoutTests(rData *ci.RunData) {
 		CommitHash: rData.CommitID,
 		UserID:     rData.Repo.UserID,
 		GroupID:    rData.Repo.GroupID,
-		Status:     rData.Assignment.IsApproved(newest, newest.GetScore()),
+		Status:     newest.GetStatus(),
+		Released:   newest.GetReleased(),
 	}
 	if err := wh.db.CreateSubmission(newSubmission); err != nil {
 		wh.logger.Errorf("Failed to save submission for user %s, assignment %d: %v", rData.JobOwner, rData.Assignment.ID, err)
