@@ -182,3 +182,11 @@ func (db *GormDB) updateCourseAccessTokenIfEmpty(course *pb.Course) error {
 	pb.SetAccessToken(course.GetID(), accessToken)
 	return nil
 }
+
+func (db *GormDB) Close() error {
+	sqlDB, err := db.conn.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Close()
+}
