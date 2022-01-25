@@ -31,11 +31,25 @@ This issue should then be linked in the corresponding pull request.
 
 ### Create Pull Request
 
-To create a pull request on the main repository follow these steps.
+Before starting a new pull request, either clone the repo:
 
 ```shell
 % gh repo clone quickfeed/quickfeed
 % cd quickfeed
+```
+
+Or if you have already cloned, make sure to start from an up-to-date master branch:
+
+```shell
+# Make sure to start from master branch
+% git checkout master
+# Make sure your master branch is up-to-date
+% git pull
+```
+
+To create a pull request on the main repository follow these steps.
+
+```shell
 # Create and switch to your new feature branch
 % git switch -C <feature-branch>
 # Edit and stage files
