@@ -77,7 +77,7 @@ func enableProviders(l *zap.SugaredLogger, baseURL string) map[string]bool {
 		KeyEnv:        "GITHUB_KEY",
 		SecretEnv:     "GITHUB_SECRET",
 		CallbackURL:   auth.GetCallbackURL(baseURL, "github"),
-		StudentScopes: []string{},
+		StudentScopes: []string{"repo:invite"},
 		TeacherScopes: []string{"user", "repo", "delete_repo", "admin:org", "admin:org_hook"},
 	}, func(key, secret, callback string, scopes ...string) goth.Provider {
 		return github.New(key, secret, callback, scopes...)
