@@ -37,6 +37,9 @@ func TestDB(t *testing.T) (database.Database, func()) {
 	}
 
 	return db, func() {
+		if err := db.Close(); err != nil {
+			t.Error(err)
+		}
 		if err := os.Remove(f.Name()); err != nil {
 			t.Error(err)
 		}
