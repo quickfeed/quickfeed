@@ -8,7 +8,7 @@ import (
 )
 
 // Testdata copied from run_tests_test.go (since they are in different packages)
-func testRunData(qfTestOrg string, userName, accessToken, scriptTemplate string) *RunData {
+func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *RunData {
 	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
 	pb.SetAccessToken(courseID, accessToken)

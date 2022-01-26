@@ -28,7 +28,7 @@ func loadRunScript(t *testing.T) string {
 	return string(b)
 }
 
-func testRunData(qfTestOrg string, userName, accessToken, scriptTemplate string) *ci.RunData {
+func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *ci.RunData {
 	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
 	pb.SetAccessToken(courseID, accessToken)
