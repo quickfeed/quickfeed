@@ -14,7 +14,7 @@ const (
 func NewResults(scores ...*Score) *Results {
 	r := &Results{
 		testNames: make([]string, 0),
-		scores:    make(map[string]*Score),
+		scoreMap:  make(map[string]*Score),
 	}
 	for _, sc := range scores {
 		r.addScore(sc)
@@ -27,7 +27,7 @@ func NewResults(scores ...*Score) *Results {
 func (r *Results) toScoreSlice() []*Score {
 	scores := make([]*Score, len(r.testNames))
 	for i, name := range r.testNames {
-		scores[i] = r.scores[name]
+		scores[i] = r.scoreMap[name]
 	}
 	return scores
 }
@@ -37,7 +37,7 @@ type Results struct {
 	BuildInfo *BuildInfo // build info for tests
 	Scores    []*Score   // list of scores for different tests
 	testNames []string   // defines the order
-	scores    map[string]*Score
+	scoreMap  map[string]*Score
 }
 
 // parseErrors encountered during test execution.
@@ -93,7 +93,7 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 // This method assumes that the provided score object is valid.
 func (r *Results) addScore(sc *Score) {
 	testName := sc.GetTestName()
-	if current, found := r.scores[testName]; found {
+	if current, found := r.scoreMap[testName]; found {
 		if current.GetScore() != 0 {
 			// We reach here only if a second non-zero score is found
 			// Mark it as faulty with -1.
@@ -107,7 +107,7 @@ func (r *Results) addScore(sc *Score) {
 	// Record score object if:
 	// - current score is nil or zero, or
 	// - the first score was zero.
-	r.scores[testName] = sc
+	r.scoreMap[testName] = sc
 }
 
 // Validate returns an error if one of the recorded score objects are invalid.
