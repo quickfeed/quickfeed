@@ -14,7 +14,7 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
-          skip-go-installation: true
+          # skip-go-installation: true
           skip-pkg-cache: true
           skip-build-cache: true
           args: --disable errcheck --timeout 5m
