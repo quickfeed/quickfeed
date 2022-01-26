@@ -14,15 +14,15 @@ git clone {{ .GetURL }} $ASSIGNMENTS
 git clone {{ .TestURL }} $TESTDIR
 
 if [ ! -d "$ASSIGNDIR" ]; then
-  printf "Folder $ASSIGNDIR not found in {{ .GetURL }}"
+  printf "Folder %s not found in {{ .GetURL }}" "$ASSIGNDIR"
   exit
 fi
 
 # Move to folder for assignment to test.
-cd $ASSIGNDIR
+cd "$ASSIGNDIR"
 
 # Fail student code that attempts to access secret
-if grep -r -e QUICKFEED_SESSION_SECRET * ; then
+if grep -r -e QUICKFEED_SESSION_SECRET ./* ; then
   printf "\n=== Misbehavior Detected: Failed ===\n"
   exit
 fi
@@ -38,11 +38,11 @@ git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https:/
 history -c
 
 # (ensure) Move to folder for assignment to test.
-cd $ASSIGNDIR
+cd "$ASSIGNDIR"
 
-printf "\n*** Finished Test Setup in $(( SECONDS - start )) seconds ***\n"
+printf "\n*** Finished Test Setup in %s seconds ***\n" "$(( SECONDS - start ))"
 
 start=$SECONDS
 printf "\n*** Running Tests ***\n\n"
 QUICKFEED_SESSION_SECRET={{ .RandomSecret }} go test -v -timeout 30s ./... 2>&1
-printf "\n*** Finished Running Tests in $(( SECONDS - start )) seconds ***\n"
+printf "\n*** Finished Running Tests in %s seconds ***\n" "$(( SECONDS - start ))"
