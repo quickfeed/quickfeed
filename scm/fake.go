@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/google/go-github/v35/github"
 )
 
 // FakeSCM implements the SCM interface.
@@ -215,18 +214,6 @@ func (s *FakeSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) e
 
 // GetUserScopes implements the SCM interface
 func (s *FakeSCM) GetUserScopes(ctx context.Context) *Authorization {
-	// TODO no implementation provided yet
-	return nil
-}
-
-// GetRepositoryInvites implements the SCM interface
-func (s *FakeSCM) GetRepositoryInvites(ctx context.Context, org *RepositoryOptions) ([]*github.RepositoryInvitation, error) {
-	// TODO no implementation provided yet
-	return nil, nil
-}
-
-// AcceptRepositoryInvite implements the SCM interface
-func (s *FakeSCM) AcceptRepositoryInvite(ctx context.Context, opt *RepositoryInvitationOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }

@@ -442,36 +442,6 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		if err := s.db.CreateRepository(&userRepo); err != nil {
 			return err
 		}
-
-		// TODO: We can get invites for assignments and info repositories here as well.
-		// TODO: The invites returned for those repositories could include invitees other than the student to be enrolled
-		// TODO: We could either get all invites, filter them by the student being enrolled - then accept those
-		// TODO: Or we could store invites in the database and send them to the student to accept in the frontend
-		// TODO: Or some alternate method I haven't thought of yet.
-		// NOTE: Unsure if we need the SCM of the course creator to get invites
-		invites, err := sc.GetRepositoryInvites(ctx, &scm.RepositoryOptions{ID: repo.ID, Owner: course.GetOrganizationPath(), Path: repo.Path})
-		if err != nil {
-			return err
-		}
-		if len(invites) > 0 {
-			user, err := s.db.GetUser(user.ID)
-			if err != nil {
-				s.logger.Errorf("Failed to get user %d: %v", user.ID, err)
-			}
-			accessToken, err := user.GetAccessToken("github")
-			if err != nil {
-				s.logger.Errorf("Failed to get access token for user %s: %v", user.Login, err)
-			}
-			if sc, ok := s.scms.GetSCM(accessToken); ok {
-				for _, invite := range invites {
-					if err := sc.AcceptRepositoryInvite(ctx, &scm.RepositoryInvitationOptions{InvitationID: uint64(*invite.ID)}); err != nil {
-						s.logger.Errorf("Failed to accept repository invite for user %s: %v", user.Login, err)
-					} else {
-						s.logger.Debug("Accepted repository invite for user ", user.Login)
-					}
-				}
-			}
-		}
 	}
 
 	return s.db.UpdateEnrollment(userEnrolQuery)

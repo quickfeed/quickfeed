@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/google/go-github/v35/github"
 	gitlab "github.com/xanzy/go-gitlab"
 )
 
@@ -280,22 +279,4 @@ func (s *GitlabSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions)
 func (s *GitlabSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// TODO no implementation provided yet
 	return nil
-}
-
-// GetRepositoryInvites implements the SCM interface
-func (s *GitlabSCM) GetRepositoryInvites(ctx context.Context, opt *RepositoryOptions) ([]*github.RepositoryInvitation, error) {
-	// TODO no implementation provided yet
-	return nil, ErrNotSupported{
-		SCM:    "gitlab",
-		Method: "GetRepositoryInvites",
-	}
-}
-
-// AcceptRepositoryInvite implements the SCM interface
-func (s *GitlabSCM) AcceptRepositoryInvite(ctx context.Context, opt *RepositoryInvitationOptions) error {
-	// TODO no implementation provided yet
-	return ErrNotSupported{
-		SCM:    "gitlab",
-		Method: "AcceptRepositoryInvite",
-	}
 }
