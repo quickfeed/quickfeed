@@ -4,13 +4,13 @@ import { Color, getCourseID, isManuallyGraded } from "../Helpers"
 import { useAppState, useGrpc } from "../overmind"
 import Card from "../components/Card"
 import CourseBanner from "../components/CourseBanner"
-import GroupPage from "./GroupPage"
 import Members from "../components/Members"
 import RedirectButton from "../components/RedirectButton"
 import Results from "../components/Results"
 import ReviewPage from "../components/ReviewPage"
 import Assignments from "../components/teacher/Assignments"
 import Alert from "../components/Alert"
+import Groups from "../components/Groups"
 
 
 /* TeacherPage enables routes to be accessed by the teacher only, and displays an overview of the different features available to the teacher. */
@@ -53,7 +53,7 @@ const TeacherPage = (): JSX.Element => {
                 <Card {...updateAssignments}></Card>
             </div>
             <Switch>
-                <Route path={`/course/:id/groups`} exact component={GroupPage}></Route>
+                <Route path={`/course/:id/groups`} exact component={Groups}></Route>
                 <Route path={"/course/:id/members"} component={Members}></Route>
                 <Route path={"/course/:id/review"} component={ReviewPage}></Route>
                 <Route path={"/course/:id/results"} component={Results}></Route>

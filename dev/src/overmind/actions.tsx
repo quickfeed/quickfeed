@@ -251,15 +251,6 @@ export const getGroupByUserAndCourse = async ({ state, effects }: Context, cours
     }
 }
 
-// TODO: Add group to state
-export const createGroup = async ({ actions, effects }: Context, group: { courseID: number, users: number[], name: string }): Promise<void> => {
-    const response = await effects.grpcMan.createGroup(group.courseID, group.name, group.users)
-    if (!success(response)) {
-        actions.alertHandler(response)
-    }
-}
-
-
 /** getOrganization returns the organization object for orgName retrieved from the server. */
 export const getOrganization = async ({ actions, effects }: Context, orgName: string): Promise<IGrpcResponse<Organization>> => {
     const response = await effects.grpcMan.getOrganization(orgName)
@@ -440,29 +431,28 @@ export const enroll = async ({ state, effects }: Context, courseID: number): Pro
     }
 }
 
-export const updateGroupStatus = async ({ effects }: Context, { group, status }: { group: Group, status: Group.GroupStatus }): Promise<void> => {
-    const grp = json(group).setStatus(status)
+export const updateGroupStatus = async ({ actions, effects }: Context, { group, status }: { group: Group, status: Group.GroupStatus }): Promise<void> => {
+    const grp = json(group).clone().setStatus(status)
     const response = await effects.grpcMan.updateGroup(grp)
     if (success(response)) {
-        group = grp
+        Object.assign(group, grp)
+    } else {
+        actions.alertHandler(response)
     }
 }
 
-export const deleteGroup = async ({ state, effects }: Context, group: Group): Promise<void> => {
+export const deleteGroup = async ({ state, actions, effects }: Context, group: Group): Promise<void> => {
     if (confirm("Deleting a group is an irreversible action. Are you sure?")) {
         const isRepoEmpty = await effects.grpcMan.isEmptyRepo(group.getCourseid(), 0, group.getId())
         if (isRepoEmpty || confirm(`Warning! Group repository is not empty! Do you still want to delete group, github team and group repository?`)) {
             const response = await effects.grpcMan.deleteGroup(group.getCourseid(), group.getId())
             if (success(response)) {
                 state.groups[group.getCourseid()] = state.groups[group.getCourseid()].filter(g => g.getId() !== group.getId())
+            } else {
+                actions.alertHandler(response)
             }
         }
     }
-}
-
-export const updateGroup = async ({ actions, effects }: Context, group: Group): Promise<void> => {
-    const response = await effects.grpcMan.updateGroup(group)
-    actions.alertHandler(response)
 }
 
 export const createOrUpdateCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion: GradingCriterion, assignment: Assignment }): Promise<void> => {
@@ -549,6 +539,7 @@ export const fetchUserData = async ({ state, actions, effects }: Context): Promi
                 await actions.getGroupSubmissions(courseID)
                 const statuses = isStudent(enrollment) ? [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER] : []
                 success = await actions.getEnrollmentsByCourse({ courseID: courseID, statuses: statuses })
+                await actions.getGroupByUserAndCourse(courseID)
             }
             if (isTeacher(enrollment)) {
                 actions.getGroupsByCourse(courseID)

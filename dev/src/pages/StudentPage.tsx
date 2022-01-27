@@ -4,10 +4,11 @@ import { getCourseID } from "../Helpers"
 import CourseBanner from "../components/CourseBanner"
 import CourseLabs from "../components/CourseLabs"
 import CourseUtilityLinks from "../components/CourseUtilityLinks"
-import GroupPage from "./GroupPage"
 import Lab from "../components/Lab"
 import RedirectButton from "../components/RedirectButton"
 import Alert from "../components/Alert"
+import GroupForm from "../components/group/GroupForm"
+import GroupComponent from "../components/group/Group"
 
 
 const StudentPage = (): JSX.Element => {
@@ -27,7 +28,8 @@ const StudentPage = (): JSX.Element => {
                 <CourseUtilityLinks />
             </div>
             <Switch>
-                <Route path="/course/:id/group" exact component={GroupPage} />
+                <Route path="/course/:id/group" exact component={GroupComponent} />
+                <Route path="/course/:id/group/create" exact component={GroupForm} />
                 <Route path="/course/:id/:lab" exact component={Lab} />
             </Switch>
         </>

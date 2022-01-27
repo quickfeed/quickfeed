@@ -276,6 +276,9 @@ export const generateAssignmentsHeader = (base: RowElement[], assignments: Assig
     return base
 }
 
+export const userLink = (user: User): string => {
+    return `https://github.com/${user.getLogin()}`
+}
 /* Use this function to simulate a delay in the loading of data */
 /* Used in development to simulate a slow network connection */
 const delay = (ms: number) => {

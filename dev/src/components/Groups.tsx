@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { Group } from "../../proto/ag/ag_pb"
-import { getCourseID, hasEnrollments, isApprovedGroup, isPendingGroup } from "../Helpers"
+import { getCourseID, hasEnrollments, isApprovedGroup, isPendingGroup, userLink } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import GroupForm from "./group/GroupForm"
 import Search from "./Search"
@@ -11,9 +11,6 @@ const Groups = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
-
-
-    const [editing, setEditing] = useState<Group>()
 
     const groupSearch = (group: Group) => {
         // Show all groups if query is empty
@@ -45,12 +42,17 @@ const Groups = (): JSX.Element => {
             return (
                 <td>
                     <span onClick={() => updateGroupStatus(group, Group.GroupStatus.APPROVED)} className="badge badge-primary clickable">Approve</span>
-                    <span className="badge badge-info clickable ml-2" onClick={() => setEditing(group)}>Edit</span>
+                    <span className="badge badge-info clickable ml-2" onClick={() => actions.group.setGroup(group)}>Edit</span>
                     <span onClick={() => actions.deleteGroup(group)} className="badge badge-danger clickable ml-2">Delete</span>
                 </td>
             )
         }
-        return <td><span className="badge badge-info clickable" onClick={() => setEditing(group)}>Edit</span></td>
+        return (
+            <td>
+                <span className="badge badge-info clickable" onClick={() => actions.group.setGroup(group)}>Edit</span>
+                <span onClick={() => actions.deleteGroup(group)} className="badge badge-danger clickable ml-2">Delete</span>
+            </td>
+        )
     }
 
     const GroupRow = ({ group }: { group: Group }) => {
@@ -64,9 +66,9 @@ const Groups = (): JSX.Element => {
                     <td>
                         <div>
                             {// Populates the unordered list with list elements for every user in the group
-                                hasEnrollments(group) && group.getEnrollmentsList().map((enrol, index) =>
-                                    <span key={enrol.getId()} className="inline-block">
-                                        <a href={`https://github.com/${enrol.getUser()?.getLogin()}`} target="_blank" rel="noreferrer">{enrol.getUser()?.getName()}</a>
+                                hasEnrollments(group) && group.getUsersList().map((user, index) =>
+                                    <span key={user.getId()} className="inline-block">
+                                        <a href={userLink(user)} target="_blank" rel="noreferrer">{user.getName()}</a>
                                         {index >= group.getEnrollmentsList().length - 1 ? "" : ", "}
                                     </span>
                                 )}
@@ -87,8 +89,8 @@ const Groups = (): JSX.Element => {
         return <GroupRow key={group.getId()} group={group} />
     })
 
-    if (editing) {
-        return <GroupForm editGroup={editing} setGroup={setEditing} />
+    if (state.group.group.getId() != 0) {
+        return <GroupForm />
     }
 
     return (

@@ -3,8 +3,9 @@ import { state } from './state'
 import * as actions from './actions'
 import * as effects from './effects'
 import * as review from './namespaces/review'
+import * as group from './namespaces/group'
 import { IContext } from 'overmind'
-import { merge, namespaced } from 'overmind/config';
+import { merge, namespaced } from 'overmind/config'
 
 /* This is the main overmind configuration. */
 
@@ -16,16 +17,17 @@ export const config = merge(
         effects,
     },
     namespaced({
-        review
+        review,
+        group
     })
 )
 
 
 export type Context = IContext<{
-    state: typeof config.state;
-    actions: typeof config.actions;
-    effects: typeof config.effects;
-}>;
+    state: typeof config.state
+    actions: typeof config.actions
+    effects: typeof config.effects
+}>
 
 /* These are the overmind state hooks, which are used in components to access and modify the state. */
 export const useAppState = createStateHook<Context>()

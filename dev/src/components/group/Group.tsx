@@ -1,4 +1,5 @@
 import React from "react"
+import { Redirect } from "react-router"
 import { Group } from "../../../proto/ag/ag_pb"
 import { getCourseID, isPendingGroup } from "../../Helpers"
 import { useAppState } from "../../overmind"
@@ -11,7 +12,7 @@ const GroupComponent = (): JSX.Element => {
     const GroupList = (group: Group) => {
         const elements: JSX.Element[] = []
         const pendingIcon = isPendingGroup(group) ? <span className="badge badge-warning ml-2">Pending</span> : null
-        elements.push(<li className="list-group-item active">{state.userGroup[courseID].getName()}{pendingIcon}</li>)
+        elements.push(<li className="list-group-item active">{group.getName()}{pendingIcon}</li>)
         for (const user of group.getUsersList()) {
             elements.push(
                 <li key={user.getId()} className="list-group-item">
@@ -20,6 +21,10 @@ const GroupComponent = (): JSX.Element => {
                 </li>)
         }
         return elements
+    }
+
+    if (!state.userGroup[courseID]) {
+        return <Redirect to={`/course/${courseID}/group/create`} />
     }
 
     return (
