@@ -172,7 +172,9 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 		wh.recordSubmissionWithoutTests(runData)
 		return
 	}
-	results, err := runData.RunTests(wh.logger, wh.runner)
+	ctx, cancel := assignment.WithTimeout(ci.ContainerTimeout)
+	defer cancel()
+	results, err := runData.RunTests(ctx, wh.logger, wh.runner)
 	if err != nil {
 		wh.logger.Errorf("Failed to run tests for assignment %s for course %s: %v", assignment.Name, course.Name, err)
 	}

@@ -29,7 +29,7 @@ func (r RunData) String(secret string) string {
 }
 
 // RunTests runs the assignment specified in the provided RunData structure.
-func (r RunData) RunTests(logger *zap.SugaredLogger, runner Runner) (*score.Results, error) {
+func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, runner Runner) (*score.Results, error) {
 	logger.Debugf("Running tests for %s", r.JobOwner)
 
 	randomSecret := rand.String()
@@ -39,8 +39,6 @@ func (r RunData) RunTests(logger *zap.SugaredLogger, runner Runner) (*score.Resu
 	}
 
 	start := time.Now()
-	ctx, cancel := r.withTimeout(containerTimeout)
-	defer cancel()
 	out, err := runner.Run(ctx, job)
 	if err != nil && out == "" {
 		return nil, fmt.Errorf("test execution failed without output: %w", err)
@@ -51,14 +49,6 @@ func (r RunData) RunTests(logger *zap.SugaredLogger, runner Runner) (*score.Resu
 	}
 	// return the extracted score and filtered log output
 	return score.ExtractResults(out, randomSecret, time.Since(start))
-}
-
-func (r RunData) withTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
-	t := r.Assignment.GetContainerTimeout()
-	if t > 0 {
-		timeout = time.Duration(t) * time.Minute
-	}
-	return context.WithTimeout(context.Background(), timeout)
 }
 
 // RecordResults for the assignment given by the run data structure.

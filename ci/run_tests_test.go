@@ -3,7 +3,9 @@ package ci_test
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
@@ -40,7 +42,7 @@ func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *ci.Ru
 		Assignment: &pb.Assignment{
 			Name:             "lab1",
 			ScriptFile:       scriptTemplate,
-			ContainerTimeout: 1,
+			ContainerTimeout: 1, // minutes
 		},
 		Repo: &pb.Repository{
 			HTMLURL:  repo.StudentRepoURL(userName),
@@ -70,7 +72,9 @@ func TestRunTests(t *testing.T) {
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
-	results, err := runData.RunTests(qtest.Logger(t), runner)
+	ctx, cancel := runData.Assignment.WithTimeout(2 * time.Minute)
+	defer cancel()
+	results, err := runData.RunTests(ctx, qtest.Logger(t), runner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,18 +96,23 @@ func TestRunTestsTimeout(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// TODO(meling) fix this so that it actually times out
 	scriptTemplate := loadRunScript(t)
 	runData := testRunData(qfTestOrg, userName, accessToken, scriptTemplate)
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
-	results, err := runData.RunTests(qtest.Logger(t), runner)
+	ctx, cancel := context.WithTimeout(context.Background(), 1000*time.Millisecond)
+	defer cancel()
+	results, err := runData.RunTests(ctx, qtest.Logger(t), runner)
 	if err != nil {
 		t.Fatal(err)
 	}
+	const wantOut = `Container timeout. Please check for infinite loops or other slowness.`
+	if results.BuildInfo != nil && !strings.HasPrefix(results.BuildInfo.BuildLog, wantOut) {
+		t.Errorf("RunTests(1s timeout) = '%s', got '%s'", wantOut, results.BuildInfo.BuildLog)
+	}
 	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
-	t.Logf("%+v\n", results)
+	// t.Logf("%+v\n", results)
 }
 
 func TestRecordResults(t *testing.T) {

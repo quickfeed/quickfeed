@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	containerTimeout = time.Duration(10 * time.Minute)
+	ContainerTimeout = time.Duration(10 * time.Minute)
 	maxToScan        = 1_000_000 // bytes
 	maxLogSize       = 30_000    // bytes
 	lastSegmentSize  = 1_000     // bytes
