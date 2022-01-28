@@ -33,6 +33,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
 
     const LabResult = (): JSX.Element => {
         if (submission && assignment) {
+            const enrollment = state.activeEnrollment ?? state.enrollmentsByCourseID[assignment.getCourseid()]
             const buildInfo = submission.getBuildinfo()
             const delivered = buildInfo ? getFormattedTime(buildInfo.getBuilddate()) : "N/A"
             const executionTime = buildInfo ? `${buildInfo.getExectime() / 1000} seconds` : ""
@@ -85,7 +86,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                             </tr>
                             <tr>
                                 <th colSpan={2}>Slip days</th>
-                                <td>{state.enrollmentsByCourseID[assignment.getCourseid()].getSlipdaysremaining()}</td>
+                                <td>{enrollment.getSlipdaysremaining()}</td>
                             </tr>
                             <tr className={"thead-dark"}>
                                 <th colSpan={1}>Test Name</th>

@@ -145,6 +145,9 @@ type State = {
     /* Current submission link */
     activeSubmissionLink: SubmissionLink | undefined,
 
+    /* Current enrollment */
+    activeEnrollment: Enrollment | undefined,
+
     /* Current submission */
     currentSubmission: Submission | undefined,
 }
@@ -194,7 +197,7 @@ export const state: State = {
         }
         return -1
     }),
-
+    activeEnrollment: undefined,
     activeSubmissionLink: undefined,
     currentSubmission: derived(({ activeSubmissionLink }: State) => {
         return activeSubmissionLink?.getSubmission()

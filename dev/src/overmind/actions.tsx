@@ -540,6 +540,10 @@ export const setActiveSubmissionLink = ({ state }: Context, link: SubmissionLink
     state.activeSubmissionLink = json(link)
 }
 
+export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment): void => {
+    state.activeEnrollment = json(enrollment)
+}
+
 /* fetchUserData is called when the user enters the app. It fetches all data that is needed for the user to be able to use the app. */
 /* If the user is not logged in, i.e does not have a valid token, the process is aborted. */
 export const fetchUserData = async ({ state, actions, effects }: Context): Promise<boolean> => {

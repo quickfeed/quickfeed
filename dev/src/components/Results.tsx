@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useHistory } from "react-router"
+import { Enrollment, SubmissionLink } from "../../proto/ag/ag_pb"
+import { Color, generateAssignmentsHeader, generateSubmissionRows, getCourseID, isApproved, isRevision, sortCourseSubmissions, SubmissionSort } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import DynamicTable, { CellElement } from "./DynamicTable"
@@ -24,13 +26,17 @@ const Results = (): JSX.Element => {
                 }
             }))
         }
+        return () => {
+            actions.setActiveSubmissionLink(undefined)
+            actions.setActiveEnrollment(undefined)
+        }
     }, [])
 
     if (!state.courseSubmissions[courseID]) {
         return <h1>Fetching Submissions...</h1>
     }
 
-    const getSubmissionCell = (submissionLink: SubmissionLink): CellElement => {
+    const getSubmissionCell = (submissionLink: SubmissionLink, enrollment: Enrollment): CellElement => {
         const submission = submissionLink.getSubmission()
         if (submission) {
             return ({
@@ -38,12 +44,16 @@ const Results = (): JSX.Element => {
                 className: isApproved(submission) ? "result-approved" : isRevision(submission) ? "result-revision" : "result-pending",
                 onClick: () => {
                     actions.setActiveSubmissionLink(submissionLink)
+                    actions.setActiveEnrollment(enrollment)
                 }
             })
         } else {
             return ({
                 value: "N/A",
-                onClick: () => actions.setActiveSubmissionLink(undefined)
+                onClick: () => {
+                    actions.setActiveSubmissionLink(undefined)
+                    actions.setActiveEnrollment(undefined)
+                }
             })
         }
     }
