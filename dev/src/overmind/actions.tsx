@@ -4,6 +4,7 @@ import { IGrpcResponse } from "../GRPCManager"
 import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark } from "../../proto/ag/ag_pb"
 import { Alert, UserCourseSubmissions } from "./state"
 import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionStatus } from "../Helpers"
+import { StatusCode } from 'grpc-web'
 
 
 /**
@@ -649,7 +650,10 @@ export const isAuthorizedTeacher = async ({ effects }: Context): Promise<boolean
 }
 
 export const alertHandler = ({ state }: Context, response: IGrpcResponse<unknown>): void => {
-    if (response.status.getCode() >= 0) {
+    if (response.status.getCode() === StatusCode.UNAUTHENTICATED) {
+        // The user is not logged in.
+        state.alerts.push({ text: "Your session is not valid. Please refresh this page and log in to continue.", color: Color.RED })
+    } else if (response.status.getCode() >= 0) {
         state.alerts.push({ text: response.status.getError(), color: Color.RED })
     }
 }
