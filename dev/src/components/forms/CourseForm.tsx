@@ -21,7 +21,7 @@ const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element => {
     const [org, setOrg] = useState<Organization>()
 
     // Local state containing the course to be created or edited (if any)
-    const [course, setCourse] = useState(editCourse ? json(editCourse) : new Course)
+    const [course, setCourse] = useState(editCourse ? json(editCourse).clone() : new Course)
 
     // Local state containing a boolean indicating whether the organization is valid. Courses that are being edited do not need to be validated.
     const [orgFound, setOrgFound] = useState<boolean>(editCourse ? true : false)
