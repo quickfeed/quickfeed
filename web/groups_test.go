@@ -382,16 +382,11 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	// set teacher ID in context
 	ctx = withUserContext(context.Background(), teacher)
-	_, err = ags.UpdateGroup(ctx, updateGroupReq)
+	haveGroup, err := ags.UpdateGroup(ctx, updateGroupReq)
 	if err != nil {
 		t.Error(err)
 	}
 
-	// check that the group have changed group membership
-	haveGroup, err := db.GetGroup(group.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
 	userIDs := make([]uint64, 0)
 	for _, usr := range haveGroup.Users {
 		userIDs = append(userIDs, usr.ID)
@@ -424,15 +419,12 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	// set teacher ID in context
 	ctx = withUserContext(context.Background(), teacher)
-	_, err = ags.UpdateGroup(ctx, updateGroupReq1)
+	haveGroup, err = ags.UpdateGroup(ctx, updateGroupReq1)
 	if err != nil {
 		t.Error(err)
 	}
+
 	// check that the group have changed group membership
-	haveGroup, err = db.GetGroup(group.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
 	userIDs = make([]uint64, 0)
 	for _, usr := range updateGroupReq1.Users {
 		userIDs = append(userIDs, usr.ID)
@@ -661,16 +653,12 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	prePatchGroup.Status = pb.Group_APPROVED
-	_, err = ags.UpdateGroup(ctx, prePatchGroup)
+	haveGroup, err := ags.UpdateGroup(ctx, prePatchGroup)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// check that the group didn't change
-	haveGroup, err := db.GetGroup(group.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
 	if diff := cmp.Diff(prePatchGroup, haveGroup, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-prePatchGroup +haveGroup):\n%s", diff)
 	}

@@ -38,8 +38,8 @@ message Users {
 
 message RemoteIdentity {
     uint64 ID = 1;
-    string provider = 2 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_provider_remote_id"'}]; 
-    uint64 remoteID = 3 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_provider_remote_id"'}]; 
+    string provider = 2 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_provider_remote_id"'}];
+    uint64 remoteID = 3 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_provider_remote_id"'}];
     string accessToken = 4;
     uint64 userID = 5;
 }
@@ -51,7 +51,7 @@ message Group {
     }
     uint64 ID = 1;
     string name = 2 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_group_name"'}];
-    uint64 courseID = 3 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_group_name"'}]; 
+    uint64 courseID = 3 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_group_name"'}];
     uint64 teamID = 4;
     GroupStatus status = 5;
 
@@ -121,7 +121,7 @@ message Enrollment {
     }
     uint64 ID = 1;
     uint64 courseID = 2 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_enrollment"'}];
-    uint64 userID = 3 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_enrollment"'}]; 
+    uint64 userID = 3 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_enrollment"'}];
     uint64 groupID = 4;
     bool hasTeacherScopes = 5;
     User user = 6;
@@ -144,7 +144,7 @@ message UsedSlipDays {
 
 message Enrollments {
     repeated Enrollment enrollments = 1;
-} 
+}
 
 //   UI structures, never saved in the database   //
 
@@ -170,12 +170,12 @@ message Assignment {
     uint64 CourseID = 2; // foreign key
     string name = 3;
     string scriptFile = 4;
-    string deadline = 5; 
+    string deadline = 5;
     bool autoApprove = 6;
     uint32 order = 7;
     bool isGroupLab = 8;
     uint32 scoreLimit = 9;                            // minimal score limit for auto approval
-    uint32 reviewers = 10;                            // number of reviewers that will review submissions for this assignment 
+    uint32 reviewers = 10;                            // number of reviewers that will review submissions for this assignment
     repeated Submission submissions = 11;             // submissions produced for this assignment
     repeated GradingBenchmark gradingBenchmarks = 12; // grading benchmarks for this assignment
     uint32 containerTimeout = 13; // TODO(meling) Do we need this?
@@ -299,7 +299,7 @@ message Organizations {
 }
 
 // EnrollmentRequest is a request for enrolled users of a given course,
-// whose enrollment status match those provided in the request. To ignore group members 
+// whose enrollment status match those provided in the request. To ignore group members
 // that otherwise match the enrollment request, set ignoreGroupMembers to true.
 message EnrollmentRequest {
     uint64 courseID = 1;
@@ -410,28 +410,28 @@ service AutograderService {
     rpc GetUsers(Void) returns (Users) {}
     rpc GetUserByCourse(CourseUserRequest) returns (User) {}
     rpc UpdateUser(User) returns (Void) {}
-    rpc IsAuthorizedTeacher(Void) returns (AuthorizationResponse) {}  
+    rpc IsAuthorizedTeacher(Void) returns (AuthorizationResponse) {}
 
     // groups //
 
     rpc GetGroup(GetGroupRequest) returns (Group) {}
-    rpc GetGroupByUserAndCourse(GroupRequest) returns (Group) {} 
-    rpc GetGroupsByCourse(CourseRequest) returns (Groups) {} 
-    rpc CreateGroup(Group) returns (Group) {} 
-    rpc UpdateGroup(Group) returns (Void) {}
+    rpc GetGroupByUserAndCourse(GroupRequest) returns (Group) {}
+    rpc GetGroupsByCourse(CourseRequest) returns (Groups) {}
+    rpc CreateGroup(Group) returns (Group) {}
+    rpc UpdateGroup(Group) returns (Group) {}
     rpc DeleteGroup(GroupRequest) returns (Void) {}
 
     // courses //
 
-    rpc GetCourse(CourseRequest) returns (Course) {} 
-    rpc GetCourses(Void) returns (Courses) {} 
+    rpc GetCourse(CourseRequest) returns (Course) {}
+    rpc GetCourses(Void) returns (Courses) {}
     rpc GetCoursesByUser(EnrollmentStatusRequest) returns (Courses) {}
     rpc CreateCourse(Course) returns (Course) {}
     rpc UpdateCourse(Course) returns (Void) {}
     rpc UpdateCourseVisibility(Enrollment) returns (Void) {}
- 
+
     // assignments //
-    
+
     rpc GetAssignments(CourseRequest) returns (Assignments) {}
     rpc UpdateAssignments(CourseRequest) returns (Void) {}
 
@@ -439,8 +439,8 @@ service AutograderService {
 
     rpc GetEnrollmentsByUser(EnrollmentStatusRequest) returns (Enrollments) {}
     rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
-    rpc CreateEnrollment(Enrollment) returns (Void) {} 
-    rpc UpdateEnrollment(Enrollment) returns (Void) {} 
+    rpc CreateEnrollment(Enrollment) returns (Void) {}
+    rpc UpdateEnrollment(Enrollment) returns (Void) {}
     rpc UpdateEnrollments(CourseRequest) returns (Void) {}
 
     // submissions //
@@ -455,7 +455,7 @@ service AutograderService {
     rpc RebuildSubmissions(AssignmentRequest) returns (Void) {}
 
     // manual grading //
-    
+
     rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
     rpc UpdateBenchmark(GradingBenchmark) returns (Void) {}
     rpc DeleteBenchmark(GradingBenchmark) returns (Void) {}
@@ -469,7 +469,7 @@ service AutograderService {
     rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers) {}
 
     // misc //
-    
+
     rpc GetProviders(Void) returns (Providers) {}
     rpc GetOrganization(OrgRequest) returns (Organization) {}
     rpc GetRepositories(URLRequest) returns (Repositories) {}

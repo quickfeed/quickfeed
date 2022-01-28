@@ -442,7 +442,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 
 // UpdateGroup updates group information.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
+func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: scm authentication error: %v", err)
@@ -463,7 +463,11 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 		}
 		return nil, status.Error(codes.InvalidArgument, "failed to update group")
 	}
-	return &pb.Void{}, nil
+	group, err := s.getGroup(&pb.GetGroupRequest{GroupID: in.GetID()})
+	if err != nil {
+		return nil, err
+	}
+	return group, nil
 }
 
 // DeleteGroup removes group record from the database.
