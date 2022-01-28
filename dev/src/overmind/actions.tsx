@@ -167,7 +167,7 @@ export const updateCurrentSubmissionStatus = ({ state }: Context, { links, statu
 }
 
 /** updateEnrollment updates an enrollment status with the given status */
-export const updateEnrollment = async ({ actions, effects }: Context, { enrollment, status }: { enrollment: Enrollment, status: Enrollment.UserStatus }): Promise<void> => {
+export const updateEnrollment = async ({ state, actions, effects }: Context, { enrollment, status }: { enrollment: Enrollment, status: Enrollment.UserStatus }): Promise<void> => {
     // Confirm that user really wants to change enrollment status
     let confirmed = false
     switch (status) {
@@ -185,12 +185,17 @@ export const updateEnrollment = async ({ actions, effects }: Context, { enrollme
 
     if (confirmed) {
         // Copy enrollment object and change status
-        const temp = json(enrollment).setStatus(status)
+        const temp = json(enrollment).clone().setStatus(status)
         // Send updated enrollment to server
         const response = await effects.grpcMan.updateEnrollment(temp)
         if (success(response)) {
             // If successful, update enrollment in state with new status
-            enrollment.setStatus(status)
+            if (status == Enrollment.UserStatus.NONE) {
+                // If the enrollment is rejected, remove it from state
+                state.courseEnrollments[state.activeCourse] = state.courseEnrollments[state.activeCourse]?.filter(s => s.getId() != enrollment.getId())
+            } else {
+                enrollment.setStatus(status)
+            }
         } else {
             // If unsuccessful, alert user
             actions.alertHandler(response)
