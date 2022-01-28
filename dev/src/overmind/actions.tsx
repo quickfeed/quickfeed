@@ -351,13 +351,22 @@ export const convertCourseSubmission = ({ state }: Context, { courseID, data }: 
 }
 
 /** Fetches and stores all submissions of a given course into state */
-export const getAllCourseSubmissions = async ({ state, actions, effects }: Context, courseID: number): Promise<void> => {
+export const getAllCourseSubmissions = async ({ state, actions, effects }: Context, courseID: number): Promise<boolean> => {
     state.isLoading = true
+
+    // None of these should fail independently.
     const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL, true)
+    const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.GROUP, true)
+    if (!success(result) || !success(groups)) {
+        const failed = !success(result) ? result : groups
+        actions.alertHandler(failed)
+        state.isLoading = false
+        return false
+    }
+
     if (result.data) {
         actions.convertCourseSubmission({ courseID: courseID, data: result.data })
     }
-    const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.GROUP, true)
     if (groups.data) {
         state.courseGroupSubmissions[courseID] = []
         groups.data.getLinksList().forEach(link => {
@@ -368,6 +377,7 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
         })
     }
     state.isLoading = false
+    return true
 }
 
 export const getGroupsByCourse = async ({ state, effects }: Context, courseID: number): Promise<void> => {
