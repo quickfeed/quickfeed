@@ -33,7 +33,7 @@ const SummaryFeedback = ({ review }: { review: Review }) => {
             {editing &&
                 <tr>
                     <th colSpan={3}>
-                        <input autoFocus onBlur={(e) => handleChange(e)} defaultValue={review.getFeedback()} className="form-control" type="text"></input>
+                        <input autoFocus onBlur={handleChange} defaultValue={review.getFeedback()} className="form-control" type="text" />
                     </th>
                 </tr>
             }
