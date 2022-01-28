@@ -1,9 +1,10 @@
 import React, { useState } from "react"
-import { EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortByField } from "../Helpers"
+import { Color, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortByField } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment, User } from "../../proto/ag/ag_pb"
 import Search from "./Search"
-import DynamicTable from "./DynamicTable"
+import DynamicButton from "./DynamicButton"
+import { ButtonType } from "./admin/Button"
 
 
 const Members = (): JSX.Element => {
