@@ -2,6 +2,7 @@ import React from "react"
 import { Redirect } from "react-router"
 import { hasEnrollment } from "../Helpers"
 import { useAppState } from "../overmind"
+import Alert from "./Alert"
 import Courses from "./Courses"
 import SubmissionsTable from "./dashboard/SubmissionsTable"
 
@@ -17,6 +18,7 @@ const Dashboard = (): JSX.Element => {
 
     return (
         <div className='box'>
+            <Alert />
             <div>
                 <h1>Welcome, {state.self.getName()}!</h1>
             </div>
