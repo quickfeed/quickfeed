@@ -313,6 +313,8 @@ export const editCourse = async ({ actions, effects }: Context, { course }: { co
     const response = await effects.grpcMan.updateCourse(course)
     if (success(response)) {
         actions.getCourses()
+    } else {
+        actions.alertHandler(response)
     }
 }
 
