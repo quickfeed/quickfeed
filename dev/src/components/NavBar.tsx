@@ -24,6 +24,13 @@ const NavBar = (): JSX.Element => {
                         QuickFeed
                     </Link>
                 </li>
+                {!state.isLoggedIn &&
+                    <li>
+                        <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px" }}>
+                            Sign in with <i className="fa fa-2x fa-github align-middle ml-2" id="github"></i>
+                        </a>
+                    </li>
+                }
 
                 {courses}
                 {state.isLoggedIn &&

@@ -10,19 +10,10 @@ const NavBarFooter = (): JSX.Element => {
 
     const [hidden, setHidden] = useState<boolean>(true)
 
-    const LoginButton = () => {
-        if (isLoggedIn) {
-            return (
-                <li hidden={hidden}>
-                    <a href="/logout" className="Sidebar-items-link" onClick={() => logout()}>Log out</a>
-                </li>
-            )
-        }
+    const LogoutButton = () => {
         return (
-            <li>
-                <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px" }}>
-                    <i className="fa fa-2x fa-github" id="github"></i>
-                </a>
+            <li hidden={hidden}>
+                <a href="/logout" className="Sidebar-items-link" onClick={() => logout()}>Log out</a>
             </li>
         )
     }
@@ -65,7 +56,7 @@ const NavBarFooter = (): JSX.Element => {
         <div className="SidebarFooter" onMouseLeave={() => setHidden(true)}>
             <AboutButton />
             <AdminButton />
-            <LoginButton />
+            <LogoutButton />
             <ProfileButton />
         </div>
     )
