@@ -49,6 +49,7 @@ func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *ci.Ru
 			RepoType: pb.Repository_USER,
 		},
 		JobOwner: "muggles",
+		CommitID: "deadbeef",
 	}
 	return runData
 }
@@ -111,8 +112,6 @@ func TestRunTestsTimeout(t *testing.T) {
 	if results.BuildInfo != nil && !strings.HasPrefix(results.BuildInfo.BuildLog, wantOut) {
 		t.Errorf("RunTests(1s timeout) = '%s', got '%s'", wantOut, results.BuildInfo.BuildLog)
 	}
-	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
-	// t.Logf("%+v\n", results)
 }
 
 func TestRecordResults(t *testing.T) {
@@ -121,6 +120,7 @@ func TestRecordResults(t *testing.T) {
 
 	course := &pb.Course{
 		Name:           "Test",
+		Code:           "DAT320",
 		OrganizationID: 1,
 		SlipDays:       5,
 	}
@@ -171,6 +171,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 			UserID: 1,
 		},
 		JobOwner: "test",
+		CommitID: "deadbeef",
 	}
 
 	// Check that submission is recorded correctly

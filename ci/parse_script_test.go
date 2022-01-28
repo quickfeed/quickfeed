@@ -27,6 +27,7 @@ func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *RunDa
 			RepoType: pb.Repository_USER,
 		},
 		JobOwner: "muggles",
+		CommitID: "deadbeef",
 	}
 	return runData
 }
@@ -59,8 +60,8 @@ RandomSecret: {{ .RandomSecret }}
 	if job.Commands[1] != "RandomSecret: "+randomSecret {
 		t.Errorf("job.Commands[1] = %s, want %s", job.Commands[1], "RandomSecret: "+randomSecret)
 	}
-	if job.Name != "DAT320-lab1-muggles-"+randomSecret[:6] {
-		t.Errorf("job.Name = %s, want %s", job.Name, "DAT320-lab1-muggles-"+randomSecret[:6])
+	if job.Name != "dat320-lab1-muggles-"+runData.CommitID[:6] {
+		t.Errorf("job.Name = %s, want %s", job.Name, "dat320-lab1-muggles-"+runData.CommitID[:6])
 	}
 }
 

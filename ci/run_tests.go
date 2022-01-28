@@ -3,6 +3,7 @@ package ci
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -23,14 +24,18 @@ type RunData struct {
 	Rebuild    bool
 }
 
-// String returns a string representation of the run data structure
-func (r RunData) String(secret string) string {
-	return fmt.Sprintf("%s-%s-%s-%s", r.Course.GetCode(), r.Assignment.GetName(), r.JobOwner, secret)
+// String returns a string representation of the run data structure.
+func (r RunData) String() string {
+	commitID := r.CommitID
+	if len(commitID) > 7 {
+		commitID = r.CommitID[:6]
+	}
+	return fmt.Sprintf("%s-%s-%s-%s", strings.ToLower(r.Course.GetCode()), r.Assignment.GetName(), r.JobOwner, commitID)
 }
 
 // RunTests runs the assignment specified in the provided RunData structure.
 func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, runner Runner) (*score.Results, error) {
-	logger.Debugf("Running tests for %s", r.JobOwner)
+	logger.Debugf("Running tests for %s", r)
 
 	randomSecret := rand.String()
 	job, err := r.parseScriptTemplate(randomSecret)
@@ -51,59 +56,86 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, runner
 	return score.ExtractResults(out, randomSecret, time.Since(start))
 }
 
-// RecordResults for the assignment given by the run data structure.
-func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, result *score.Results) (*pb.Submission, error) {
-	// Sanity check of the result object
-	if result == nil || result.BuildInfo == nil {
-		return nil, fmt.Errorf("no build info found in results object: %v", result)
-	}
-
-	assignment := r.Assignment
-	logger.Debugf("Fetching most recent submission for assignment %d", assignment.GetID())
-	submissionQuery := &pb.Submission{
-		AssignmentID: assignment.GetID(),
-		UserID:       r.Repo.GetUserID(),
-		GroupID:      r.Repo.GetGroupID(),
-	}
-	newest, err := db.GetSubmission(submissionQuery)
+// RecordResults for the course and assignment given by the run data structure.
+// If the results argument is nil, then the submission is considered to be a manual review.
+func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, results *score.Results) (*pb.Submission, error) {
+	logger.Debugf("Fetching (if any) previous submission for %s", r)
+	previous, err := r.previousSubmission(db)
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, fmt.Errorf("failed to get newest submission: %w", err)
+		return nil, fmt.Errorf("failed to get previous submission: %w", err)
+	}
+	if previous == nil {
+		logger.Debugf("Recording new submission for %s", r)
+	} else {
+		logger.Debugf("Updating submission %d for %s", previous.GetID(), r)
 	}
 
-	// Keep the original submission's delivery date (obtained from the database (newest)) if this is a manual rebuild.
-	if r.Rebuild {
-		if newest != nil && newest.BuildInfo != nil {
-			// Only update the build date if we found a previous submission
-			result.BuildInfo.BuildDate = newest.BuildInfo.BuildDate
-		} else {
-			// Can happen if a previous submission failed to store to the database
-			logger.Debug("Rebuild with no previous submission stored in database")
-		}
-	}
-
-	score := result.Sum()
-	newSubmission := &pb.Submission{
-		ID:           newest.GetID(),
-		AssignmentID: assignment.GetID(),
-		CommitHash:   r.CommitID,
-		Score:        score,
-		BuildInfo:    result.BuildInfo,
-		Scores:       result.Scores,
-		UserID:       r.Repo.GetUserID(),
-		GroupID:      r.Repo.GetGroupID(),
-		Status:       assignment.IsApproved(newest, score),
-	}
+	resType, newSubmission := r.newSubmission(previous, results)
 	if err = db.CreateSubmission(newSubmission); err != nil {
-		return nil, fmt.Errorf("failed to store new submission %d: %w", newest.GetID(), err)
+		return nil, fmt.Errorf("failed to record submission %d for %s: %w", previous.GetID(), r, err)
 	}
-	logger.Debugf("Recorded submission for assignment '%s' with score %d, status %s", assignment.GetName(), score, newSubmission.GetStatus())
+	logger.Debugf("Recorded %s for %s with status %s and score %d", resType, r, newSubmission.GetStatus(), newSubmission.GetScore())
+
 	if !r.Rebuild {
 		if err := r.updateSlipDays(db, newSubmission); err != nil {
-			return nil, fmt.Errorf("failed to update slip days: %w", err)
+			return nil, fmt.Errorf("failed to update slip days for %s: %w", r, err)
 		}
-		logger.Debugf("Updated slip days for assignment '%s'", assignment.GetName())
+		logger.Debugf("Updated slip days for %s", r)
 	}
 	return newSubmission, nil
+}
+
+func (r RunData) previousSubmission(db database.Database) (*pb.Submission, error) {
+	submissionQuery := &pb.Submission{
+		AssignmentID: r.Assignment.GetID(),
+		UserID:       r.Repo.GetUserID(),
+		GroupID:      r.Repo.GetGroupID(),
+	}
+	return db.GetSubmission(submissionQuery)
+}
+
+func (r RunData) newSubmission(previous *pb.Submission, results *score.Results) (string, *pb.Submission) {
+	if results != nil {
+		return "test execution", r.newTestRunSubmission(previous, results)
+	}
+	return "manual review", r.newManualReviewSubmission(previous)
+}
+
+func (r RunData) newManualReviewSubmission(previous *pb.Submission) *pb.Submission {
+	return &pb.Submission{
+		ID:           previous.GetID(),
+		AssignmentID: r.Assignment.GetID(),
+		UserID:       r.Repo.GetUserID(),
+		GroupID:      r.Repo.GetGroupID(),
+		CommitHash:   r.CommitID,
+		Score:        previous.GetScore(),
+		Status:       previous.GetStatus(),
+		Released:     previous.GetReleased(),
+		BuildInfo: &score.BuildInfo{
+			BuildDate: time.Now().Format(pb.TimeLayout),
+			BuildLog:  "No automated tests for this assignment",
+			ExecTime:  1,
+		},
+	}
+}
+
+func (r RunData) newTestRunSubmission(previous *pb.Submission, results *score.Results) *pb.Submission {
+	if r.Rebuild && previous != nil && previous.BuildInfo != nil {
+		// Keep previous submission's delivery date if this is a rebuild.
+		results.BuildInfo.BuildDate = previous.BuildInfo.BuildDate
+	}
+	score := results.Sum()
+	return &pb.Submission{
+		ID:           previous.GetID(),
+		AssignmentID: r.Assignment.GetID(),
+		UserID:       r.Repo.GetUserID(),
+		GroupID:      r.Repo.GetGroupID(),
+		CommitHash:   r.CommitID,
+		Score:        score,
+		Status:       r.Assignment.IsApproved(previous, score),
+		BuildInfo:    results.BuildInfo,
+		Scores:       results.Scores,
+	}
 }
 
 func (r RunData) updateSlipDays(db database.Database, submission *pb.Submission) error {

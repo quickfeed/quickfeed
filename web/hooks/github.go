@@ -9,7 +9,6 @@ import (
 	"github.com/autograde/quickfeed/assignments"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/log"
 	"github.com/google/go-github/v35/github"
 	"go.uber.org/zap"
@@ -169,7 +168,9 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 	}
 	if assignment.GradedManually() {
 		wh.logger.Debugf("Assignment %s for course %s is manually reviewed", assignment.Name, course.Name)
-		wh.recordSubmissionWithoutTests(runData)
+		if _, err := runData.RecordResults(wh.logger, wh.db, nil); err != nil {
+			wh.logger.Error(err)
+		}
 		return
 	}
 	ctx, cancel := assignment.WithTimeout(ci.ContainerTimeout)
@@ -178,33 +179,10 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 	if err != nil {
 		wh.logger.Errorf("Failed to run tests for assignment %s for course %s: %v", assignment.Name, course.Name, err)
 	}
-
 	wh.logger.Debug("ci.RunTests", zap.Any("Results", log.IndentJson(results)))
-	_, err = runData.RecordResults(wh.logger, wh.db, results)
-	if err != nil {
-		wh.logger.Errorf("Failed to record results for assignment %s for course %s: %v", assignment.Name, course.Name, err)
+	if _, err = runData.RecordResults(wh.logger, wh.db, results); err != nil {
+		wh.logger.Error(err)
 	}
-}
-
-// recordSubmissionWithoutTests saves a new submission without running any tests
-// for a manually graded assignment.
-func (wh GitHubWebHook) recordSubmissionWithoutTests(data *ci.RunData) {
-	newSubmission := &pb.Submission{
-		AssignmentID: data.Assignment.ID,
-		BuildInfo: &score.BuildInfo{
-			BuildDate: time.Now().Format(pb.TimeLayout),
-			BuildLog:  "No automated tests for this assignment",
-			ExecTime:  1,
-		},
-		CommitHash: data.CommitID,
-		UserID:     data.Repo.UserID,
-		GroupID:    data.Repo.GroupID,
-	}
-	if err := wh.db.CreateSubmission(newSubmission); err != nil {
-		wh.logger.Errorf("Failed to save submission for user %s, assignment %d: %v", data.JobOwner, data.Assignment.ID, err)
-		return
-	}
-	wh.logger.Debugf("Saved manual review submission for user %s for assignment %d", data.JobOwner, data.Assignment.ID)
 }
 
 // updateLastActivityDate sets a current date as a last activity date of the student

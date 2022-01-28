@@ -48,5 +48,5 @@ func (r RunData) parseScriptTemplate(secret string) (*Job, error) {
 	if len(parts) < 2 {
 		return nil, fmt.Errorf("no docker image specified in script template for assignment %s in %s", info.AssignmentName, info.TestURL)
 	}
-	return &Job{Name: r.String(info.RandomSecret[:6]), Image: parts[1], Commands: s[1:]}, nil
+	return &Job{Name: r.String(), Image: parts[1], Commands: s[1:]}, nil
 }
