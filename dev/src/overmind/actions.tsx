@@ -198,6 +198,18 @@ export const updateEnrollment = async ({ actions, effects }: Context, { enrollme
     }
 }
 
+export const updateEnrollments = async ({ state, actions, effects }: Context, courseID: number): Promise<void> => {
+    if (confirm("Do you really want to approve all students?")) {
+        const response = await effects.grpcMan.updateEnrollments(courseID)
+        if (success(response)) {
+            for (const enrollment of state.pendingEnrollments) {
+                enrollment.setStatus(Enrollment.UserStatus.STUDENT)
+            }
+        } else {
+            actions.alertHandler(response)
+        }
+    }
+}
 /** Get assignments for all the courses the current user is enrolled in */
 export const getAssignments = async ({ state, effects }: Context): Promise<boolean> => {
     let success = true
