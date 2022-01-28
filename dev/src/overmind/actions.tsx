@@ -112,7 +112,7 @@ export const getEnrollmentsByCourse = async ({ state, effects }: Context, value:
 
 /**  setEnrollmentState toggles the state of an enrollment between favorite and visible */
 export const setEnrollmentState = async ({ actions, effects }: Context, enrollment: Enrollment): Promise<void> => {
-    enrollment.setState(isVisible(enrollment) ? Enrollment.DisplayState.FAVORITE : Enrollment.DisplayState.VISIBLE)
+    enrollment.setState(isVisible(enrollment) ? Enrollment.DisplayState.HIDDEN : Enrollment.DisplayState.VISIBLE)
     const response = await effects.grpcMan.updateCourseVisibility(json(enrollment))
     if (!success(response)) {
         actions.alertHandler(response)

@@ -4,7 +4,7 @@ import { Enrollment } from "../../proto/ag/ag_pb"
 import CourseCard from "./CourseCard"
 import Button, { ButtonType } from "./admin/Button"
 import { useHistory } from "react-router"
-import { Color, isFavorite } from "../Helpers"
+import { Color, isVisible } from "../Helpers"
 
 // If home is set to true, display only favorite courses. Otherwise, display all courses.
 // Can be used on dashboard to let the user choose which courses to display based on favorites.
@@ -46,7 +46,7 @@ const Courses = (overview: overview): JSX.Element => {
             const enrol = state.enrollmentsByCourseID[course.getId()]
             if (enrol) {
                 const courseCard = <CourseCard key={course.getId()} course={course} enrollment={enrol} />
-                if (isFavorite(enrol)) {
+                if (isVisible(enrol)) {
                     favorite.push(courseCard)
                 } else {
                     switch (enrol.getStatus()) {

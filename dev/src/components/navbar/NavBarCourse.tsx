@@ -28,7 +28,7 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element =
 
     return (
         <>
-            <li onClick={() => { onCourseClick(enrollment) }}>
+            <li onClick={() => onCourseClick(enrollment)}>
                 <div className="col" id="title">
                     {enrollment.getCourse()?.getCode()}
                 </div>

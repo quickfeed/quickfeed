@@ -1,5 +1,5 @@
 import React from "react"
-import { getCourseID, hasTeacher, isTeacher, isVisible } from "../Helpers"
+import { getCourseID, hasTeacher, isHidden, isTeacher, isVisible } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 
 
@@ -9,7 +9,7 @@ const CourseBanner = (): JSX.Element => {
     const actions = useActions()
 
     const enrollment = state.enrollmentsByCourseID[getCourseID()]
-    const style = isVisible(enrollment) ? 'fa fa-star-o' : "fa fa-star "
+    const style = isVisible(enrollment) ? 'fa fa-star' : "fa fa-star-o"
     return (
         <div className="jumbotron">
             <div className="centerblock container">
