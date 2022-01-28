@@ -279,6 +279,32 @@ export const generateAssignmentsHeader = (base: RowElement[], assignments: Assig
     return base
 }
 
+const slugify = (str: string): string => {
+    str = str.replace(/^\s+|\s+$/g, "").toLowerCase()
+
+    // Remove accents, swap ñ for n, etc
+    const from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆaæ·/,:;&"
+    const to = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaa-cccdeeeeeeeeiiiinnooooo-orrstuuuuuyyzbBDdBAa-------"
+    for (let i = 0; i < from.length; i++) {
+        str = str.replace(new RegExp(from.charAt(i), "g"), to.charAt(i))
+    }
+
+    // Remove invalid chars, replace whitespace by dashes, collapse dashes
+    return str.replace(/[^a-z0-9 -_]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-")
+}
+
+export const userLink = (user: User): string => {
+    return `https://github.com/${user.getLogin()}`
+}
+
+export const userRepoLink = (course: Course, user: User): string => {
+    return `https://github.com/${course.getOrganizationpath()}/${user.getLogin()}-labs`
+}
+
+export const groupRepoLink = (course: Course, group: Group): string => {
+    course.getOrganizationpath()
+    return `https://github.com/${course.getOrganizationpath()}/${slugify(group.getName())}`
+}
 /* Use this function to simulate a delay in the loading of data */
 /* Used in development to simulate a slow network connection */
 const delay = (ms: number) => {
