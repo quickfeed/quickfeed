@@ -21,21 +21,21 @@ const CourseUtilityLinks = (): JSX.Element => {
                     </h6>
                 </div>
 
-                <a href={repo[Repository.Type.USER]} className="list-group-item list-group-item-action">
+                <a href={repo[Repository.Type.USER]} target={"_blank"} rel="noopener noreferrer" className="list-group-item list-group-item-action">
                     User Repository
                 </a>
 
                 {repo[Repository.Type.GROUP] ? (
-                    <a href={repo[Repository.Type.GROUP]} className="list-group-item list-group-item-action overflow-ellipses" style={{ textAlign: "left" }}>
+                    <a href={repo[Repository.Type.GROUP]} target={"_blank"} rel="noopener noreferrer" className="list-group-item list-group-item-action overflow-ellipses" style={{ textAlign: "left" }}>
                         Group Repository ({enrollment.getGroup()?.getName()})
                     </a>
                 ) : null}
 
-                <a href={repo[Repository.Type.ASSIGNMENTS]} className="list-group-item list-group-item-action">
+                <a href={repo[Repository.Type.ASSIGNMENTS]} target={"_blank"} rel="noopener noreferrer" className="list-group-item list-group-item-action">
                     Assignments
                 </a>
 
-                <a href={repo[Repository.Type.COURSEINFO]} className="list-group-item list-group-item-action">
+                <a href={repo[Repository.Type.COURSEINFO]} target={"_blank"} rel="noopener noreferrer" className="list-group-item list-group-item-action">
                     Course Info
                 </a>
 
@@ -43,7 +43,7 @@ const CourseUtilityLinks = (): JSX.Element => {
                     <Link to={"/course/" + courseID + "/group"} className="list-group-item list-group-item-action">
                         View Group
                     </Link>
-                    : <Link to={"/course/" + courseID + "/group"} className="list-group-item list-group-item-action list-group-item-success">
+                    : <Link to={"/course/" + courseID + "/group/create"} className="list-group-item list-group-item-action list-group-item-success">
                         Create a Group
                     </Link>}
             </div>

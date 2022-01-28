@@ -238,22 +238,25 @@ export const defaultYear = (date: Date): number => {
     return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
 }
 
-export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGenerator: (s: SubmissionLink) => RowElement, groupName?: boolean, assignmentID?: number): Row[] => {
+export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGenerator: (s: SubmissionLink, e?: Enrollment) => RowElement, groupName?: boolean, assignmentID?: number): Row[] => {
     const state = useAppState()
+    const course = state.courses.find(c => c.getId() === state.activeCourse)
     return links?.map((link) => {
         const row: Row = []
         if (link.enrollment && link.user) {
-            row.push({ value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}` })
+            const url = course ? userRepoLink(course, link.user) : userLink(link.user)
+            row.push({ value: link.user.getName(), link: url })
             groupName && row.push(link.enrollment.getGroup()?.getName() ?? "")
         } else if (link.group) {
-            row.push(link.group.getName())
+            const data: RowElement = course ? { value: link.group.getName(), link: groupRepoLink(course, link.group) } : link.group.getName()
+            row.push(data)
         }
         if (link.submissions) {
             for (const submissionLink of link.submissions) {
                 if (state.review.assignmentID > 0 && submissionLink.getAssignment()?.getId() != state.review.assignmentID) {
                     continue
                 }
-                row.push(cellGenerator(submissionLink))
+                row.push(cellGenerator(submissionLink, link.enrollment))
             }
         }
         return row
