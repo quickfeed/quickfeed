@@ -42,7 +42,7 @@ const ProgressBar = (props: { courseID: number, assignmentIndex: number, submiss
     let secondaryText = ""
     if (props.type === Progress.LAB) {
         text = `${score} %`
-        secondaryText = `${secondaryProgress} % ${passedTests} to go`
+        secondaryText = `${secondaryProgress} %`
     }
     // Returns a regular size progress bar to be used for labs
     let color = ""
@@ -75,14 +75,16 @@ const ProgressBar = (props: { courseID: number, assignmentIndex: number, submiss
             >
                 {text}
             </div>
-            <div
-                className={"progress-bar progressbar-secondary bg-secondary"}
-                role="progressbar"
-                style={{ width: secondaryProgress + "%" }}
-                aria-valuemax={100}
-            >
-                {secondaryText}
-            </div>
+            {secondaryProgress > 0 &&
+                <div
+                    className={"progress-bar progressbar-secondary bg-secondary"}
+                    role="progressbar"
+                    style={{ width: secondaryProgress + "%" }}
+                    aria-valuemax={100}
+                >
+                    {secondaryText}
+                </div>
+            }
         </div>
     )
 }
