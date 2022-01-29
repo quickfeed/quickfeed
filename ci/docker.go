@@ -21,10 +21,10 @@ import (
 )
 
 var (
-	ContainerTimeout = time.Duration(10 * time.Minute)
-	maxToScan        = 1_000_000 // bytes
-	maxLogSize       = 30_000    // bytes
-	lastSegmentSize  = 1_000     // bytes
+	DefaultContainerTimeout = time.Duration(10 * time.Minute)
+	maxToScan               = 1_000_000 // bytes
+	maxLogSize              = 30_000    // bytes
+	lastSegmentSize         = 1_000     // bytes
 )
 
 // Docker is an implementation of the CI interface using Docker.

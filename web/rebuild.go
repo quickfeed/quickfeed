@@ -47,7 +47,7 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 		JobOwner:   slug.Make(name),
 		Rebuild:    true,
 	}
-	ctx, cancel := assignment.WithTimeout(ci.ContainerTimeout)
+	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
 	results, err := runData.RunTests(ctx, s.logger, s.runner)
 	if err != nil {

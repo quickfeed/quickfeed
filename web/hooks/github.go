@@ -173,7 +173,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 		}
 		return
 	}
-	ctx, cancel := assignment.WithTimeout(ci.ContainerTimeout)
+	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
 	results, err := runData.RunTests(ctx, wh.logger, wh.runner)
 	if err != nil {
