@@ -1,6 +1,5 @@
 # Quickfeed Support for Feedback via Pull Requests and Issues
 
-
 ## Existing Solution
 
 In the current implementation of QF, each organization (subject) has one `assignment's repository` for each course maintained by the Teacher.
@@ -29,7 +28,7 @@ Each Student has a Separate replica `[student-name-labs repository]` of the assi
 
 1. For each course, teacher will maintain one Assignments Repository. Each student will also have to create a student repository for them to work on the assignment.
 
-![img.png](local-setup/figures/github_enhancement_img.png)
+![img.png](figures/github_enhancement_img.png)
 
 #### Creation of GitHub issues for the Assignment.
 
@@ -62,7 +61,7 @@ NOTE : QF will give both the choices, but the teacher has to choose one of the c
 
 1. When a student “push” a new branch to their repository, the Quick Feed will pull the branch and run the test cases. It will also show the result of the test cases on the branch.
 
-![img_1.png](local-setup/figures/github_enhancement_img_1.png)
+![img_1.png](figures/github_enhancement_img_1.png)
 
 #### Selecting Pull Request
 
@@ -89,7 +88,7 @@ A student who is not able to pass the test case will not be allowed to review an
 
 We will make sure that the student is not assigned as a reviewer for his own PR.
 
-![img_3.png](local-setup/figures/github_enhancement_img_3.png)
+![img_3.png](figures/github_enhancement_img_3.png)
 
 #### Challenges:
 
@@ -99,6 +98,7 @@ How to grant access to student reviewers without giving full access to reviewee'
 Solution : create a new repository for each assignment
 
 #### Merging PR
+
 1. We can set some branch rules for merging pull request like required number of reviewers etc
 
 2. We will only add student as a collaborator in their Repositories.
@@ -109,14 +109,11 @@ Solution : create a new repository for each assignment
 
 5. Once the PR is merged, the issue will be closed.
 
-![img_2.png](local-setup/figures/github_enhancement_img_2.png)
+![img_2.png](figures/github_enhancement_img_2.png)
 
 
 ## Architecture
 
 Existing architecture of QuickFeed
 
-![img_4.png](local-setup/figures/github_enhancement_img_4.png)
-
-
-
+![img_4.png](figures/github_enhancement_img_4.png)
