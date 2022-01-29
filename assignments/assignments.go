@@ -102,7 +102,7 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 
 	// parse assignments found in the cloned tests directory
 	logger.Debugf("parseAssignments %v", cloneURL)
-	assignments, dockerfile, err := parseAssignments(cloneDir, course.ID, logger)
+	assignments, dockerfile, err := parseAssignments(cloneDir, course.ID)
 	if err != nil {
 		return nil, "", err
 	}

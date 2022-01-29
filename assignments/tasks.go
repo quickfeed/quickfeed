@@ -3,12 +3,13 @@ package assignments
 import (
 	"bufio"
 	"context"
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/scm"
-	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 	"strings"
+
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/scm"
+	"go.uber.org/zap"
 )
 
 func readTaskFiles(path string) (*pb.Task, error) {
@@ -132,7 +133,7 @@ func SyncTasks(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course 
 	}
 
 	for _, repo := range repos {
-		//checking if it's a course info repository
+		// checking if it's a course info repository
 		if !strings.HasSuffix(repo.Path, "-labs") {
 			logger.Debugf("SyncTasks: Skippig these repositories in task creation : %s", repo.Path)
 			// not adding issues on course info repository
@@ -174,7 +175,6 @@ func SyncTasks(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course 
 				}
 			}
 		}
-
 	}
 	return nil
 }

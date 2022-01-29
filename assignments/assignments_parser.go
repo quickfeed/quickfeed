@@ -3,11 +3,8 @@ package assignments
 import (
 	"encoding/json"
 	"fmt"
-	"go.uber.org/zap"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -16,15 +13,19 @@ import (
 )
 
 const (
-	target                       = "assignment.yml"
-	targetYaml                   = "assignment.yaml"
-	criteriaFile                 = "criteria.json"
-	scriptFile                   = "run.sh"
-	scriptFolder                 = "scripts"
-	dockerfile                   = "Dockerfile"
-	taskFile                     = "_task.md"
-	defaultAutoApproveScoreLimit = 80
+	assignmentFile     = "assignment.yml"
+	assignmentFileYaml = "assignment.yaml"
+	criteriaFile       = "criteria.json"
+	scriptTemplateFile = "run.sh"
+	scriptFolder       = "scripts"
+	dockerfile         = "Dockerfile"
+	taskFile           = "_task.md"
+	taskFilePattern    = "task-*.md"
 )
+
+const defaultAutoApproveScoreLimit = 80
+
+// TODO(meling) Rename assignmentid field to just 'order' or 'number'
 
 // assignmentData holds information about a single assignment.
 // This is only used for parsing the 'assignment.yml' file.
@@ -42,11 +43,39 @@ type assignmentData struct {
 	SingleTask       bool   `yaml:"singletask"`
 }
 
-// TODO(meling) this func should be renamed now that it does more than parseAssignments
+var patterns = []string{
+	assignmentFile,
+	assignmentFileYaml,
+	criteriaFile,
+	scriptTemplateFile,
+	dockerfile,
+	taskFilePattern,
+}
 
-// ParseAssignments recursively walks the given directory and parses
+// matchAll returns true if filename matches one of the target patterns.
+func matchAll(filename string) bool {
+	for _, pattern := range patterns {
+		if ok, _ := filepath.Match(pattern, filename); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// match returns true if filename matches the given pattern.
+func match(filename, pattern string) bool {
+	if ok, _ := filepath.Match(pattern, filename); ok {
+		return true
+	}
+	return false
+}
+
+// TODO(meling) this func should be renamed now that it does more than parseAssignments
+// parseTestsRepositoryContent
+
+// parseAssignments recursively walks the given directory and parses
 // any 'assignment.yml' files found and returns an array of assignments.
-func parseAssignments(dir string, courseID uint64, logger *zap.SugaredLogger) ([]*pb.Assignment, string, error) {
+func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, string, error) {
 	// check if directory exist
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		return nil, "", err
@@ -55,12 +84,14 @@ func parseAssignments(dir string, courseID uint64, logger *zap.SugaredLogger) ([
 	var assignments []*pb.Assignment
 	var defaultScript string
 	var courseDockerfile string
-	logger.Debugf("parseAssignments %v", dir)
-	taskContents, err := findTasksFiles(dir)
-	if err != nil {
-		logger.Debugf("Error in reading task file  %v", err)
-	}
-	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	// logger.Debugf("parseAssignments %v", dir)
+	// taskContents, err := findTasksFiles(dir)
+	// if err != nil {
+	// return nil, "", err
+	// logger.Debugf("Error in reading task file  %v", err)
+	// }
+	// tasks := make(map[string]*pb.Issue)
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			// Walk unable to read path; stop walking the tree
 			return err
@@ -68,13 +99,10 @@ func parseAssignments(dir string, courseID uint64, logger *zap.SugaredLogger) ([
 		assignmentName := filepath.Base(filepath.Dir(path))
 		if !info.IsDir() {
 			filename := filepath.Base(path)
-			if strings.HasSuffix(filename, taskFile) {
-				filename = taskFile
-			}
 			var contents []byte
-			switch filename {
-			case target, targetYaml, criteriaFile, scriptFile, dockerfile:
-				contents, err = ioutil.ReadFile(path)
+			switch {
+			case matchAll(filename):
+				contents, err = os.ReadFile(path)
 				if err != nil {
 					return err
 				}
@@ -82,13 +110,14 @@ func parseAssignments(dir string, courseID uint64, logger *zap.SugaredLogger) ([
 				// no need to parse this file
 				return nil
 			}
+
 			switch filename {
-			case target, targetYaml:
+			case assignmentFile, assignmentFileYaml:
 				assignment, err := readAssignmentFile(contents, assignmentName, courseID)
 				if err != nil {
 					return err
 				}
-				assignment.Tasks = taskContents
+				// assignment.Tasks = taskContents
 				assignments = append(assignments, assignment)
 
 			case criteriaFile:
@@ -96,7 +125,7 @@ func parseAssignments(dir string, courseID uint64, logger *zap.SugaredLogger) ([
 					return err
 				}
 
-			case scriptFile:
+			case scriptTemplateFile:
 				script, err := readScriptFile(contents, assignmentName, assignments)
 				if err != nil {
 					return err
@@ -105,6 +134,14 @@ func parseAssignments(dir string, courseID uint64, logger *zap.SugaredLogger) ([
 
 			case dockerfile:
 				courseDockerfile = string(contents)
+			}
+
+			if match(filename, taskFilePattern) {
+				// issue, err := readIssueFile(contents, assignmentName, assignments)
+				// if err != nil {
+				// return err
+				// }
+				// issues[assignmentName] = issue
 			}
 		}
 		return nil
@@ -198,8 +235,8 @@ func addAssignmentTasks(taskContents []*pb.Task, assignmentName string, assignme
 			return fmt.Errorf(" readTaskFile : could not find assignment %s for Task file", assignmentName)
 		}
 		// SingleTask from the parsed yaml, is used to check either create multiple issue
-		//or a single issue on a repository.
-		//Assigning values according to the flag in assignment struct
+		// or a single issue on a repository.
+		// Assigning values according to the flag in assignment struct
 		if assignment.SingleTask {
 			var body string
 			title := assignment.Name
