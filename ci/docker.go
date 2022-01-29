@@ -125,7 +125,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 				return nil, err
 			}
 		} else {
-			d.logger.Infof("Trying to pulling image: '%s' from docker.io", job.Image)
+			d.logger.Infof("Trying to pull image: '%s' from docker.io", job.Image)
 			if err := d.pullImage(ctx, job.Image); err != nil {
 				return nil, err
 			}
@@ -165,8 +165,8 @@ func (d *Docker) waitForContainer(ctx context.Context, job *Job, respID string) 
 	return "", nil
 }
 
-// pullImage pulls an image from docker hub; this can be slow and should be
-// avoided if possible.
+// pullImage pulls an image from docker hub.
+// This can be slow and should be avoided if possible.
 func (d *Docker) pullImage(ctx context.Context, image string) error {
 	progress, err := d.client.ImagePull(ctx, "docker.io/library/"+image, types.ImagePullOptions{})
 	if err != nil {
