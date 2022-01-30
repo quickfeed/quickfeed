@@ -119,6 +119,7 @@ func (opt CreateIssueOptions) valid() bool {
 func (opt IssueOptions) valid() bool {
 	return (opt.IssueNumber >= 0 && opt.Organization != "" && opt.Repository != "")
 }
+
 // Errors //
 
 // ErrNotSupported is returned when the source code management solution used
