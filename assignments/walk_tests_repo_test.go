@@ -1,6 +1,12 @@
 package assignments
 
-import "testing"
+import (
+	"testing"
+
+	pb "github.com/autograde/quickfeed/ag"
+	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
+)
 
 const testsFolder = "testdata/tests"
 
@@ -12,6 +18,7 @@ func TestWalkTestsRepository(t *testing.T) {
 		"testdata/tests/scripts/Dockerfile":        {},
 		"testdata/tests/scripts/run.sh":            {},
 		"testdata/tests/lab1/assignment.yml":       {},
+		"testdata/tests/lab1/run.sh":               {},
 		"testdata/tests/lab2/assignment.yml":       {},
 		"testdata/tests/lab3/assignment.yml":       {},
 	}
@@ -27,35 +34,61 @@ func TestWalkTestsRepository(t *testing.T) {
 }
 
 func TestReadTestsRepositoryContent(t *testing.T) {
-	wantScriptTemplate := map[string]string{
-		"lab1": `#image/quickfeed:go
+	wantDockerfile := `FROM golang:1.17-alpine
+RUN apk update && apk add --no-cache git bash build-base
+WORKDIR /quickfeed
+`
+
+	wantAssignments := []*pb.Assignment{
+		{
+			Name:       "lab1",
+			CourseID:   1,
+			Order:      1,
+			ScoreLimit: 80,
+			Deadline:   "2019-01-24T14:00:00",
+			ScriptFile: `#image/quickfeed:go
 
 printf "Custom lab1 script\n"
 `,
-		"lab2": `#image/quickfeed:go
+		},
+		{
+			Name:       "lab2",
+			CourseID:   1,
+			Order:      2,
+			ScoreLimit: 80,
+			Deadline:   "2019-01-31T16:00:00",
+			ScriptFile: `#image/quickfeed:go
 
 printf "Default script\n"
 `,
-		"lab3": `#image/quickfeed:go
+		},
+		{
+			Name:       "lab3",
+			CourseID:   1,
+			Order:      3,
+			ScoreLimit: 80,
+			Deadline:   "2019-02-14T23:00:00",
+			IsGroupLab: true,
+			ScriptFile: `#image/quickfeed:go
 
 printf "Default script\n"
 `,
+			Tasks: []*pb.Task{
+				{Title: "Exercises from Tour of Go"},
+				{Title: "Go Exercises"},
+				{Title: "Multiple Choice Questions about Go Programming"},
+			},
+		},
 	}
 
-	assignments, _, err := readTestsRepositoryContent(testsFolder, 1)
+	gotAssignments, gotDockerfile, err := readTestsRepositoryContent(testsFolder, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, assignment := range assignments {
-		if scriptTemplate, ok := wantScriptTemplate[assignment.Name]; ok {
-			if scriptTemplate != assignment.ScriptFile {
-				t.Errorf("assignment %q script template is %q, want %q", assignment.Name, assignment.ScriptFile, scriptTemplate)
-			}
-		}
-		t.Logf("%+v", assignment.Name)
-		for _, task := range assignment.GetTasks() {
-			t.Logf("%s", task.GetTitle())
-		}
+	if gotDockerfile != wantDockerfile {
+		t.Errorf("got Dockerfile %q, want %q", gotDockerfile, wantDockerfile)
 	}
-	// t.Logf("%s", dockerfile)
+	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&pb.Task{}, "Body")); diff != "" {
+		t.Errorf("readTestsRepositoryContent() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
+	}
 }

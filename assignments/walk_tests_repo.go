@@ -119,6 +119,9 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*pb.Assignment, 
 	assignments := make([]*pb.Assignment, 0)
 	for _, assignment := range assignmentsMap {
 		assignments = append(assignments, assignment)
+		sort.Slice(assignment.Tasks, func(i, j int) bool {
+			return assignment.Tasks[i].Title < assignment.Tasks[j].Title
+		})
 	}
 	sort.Slice(assignments, func(i, j int) bool {
 		return assignments[i].Order < assignments[j].Order
