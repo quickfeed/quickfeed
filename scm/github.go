@@ -709,7 +709,7 @@ func (s *GithubSCM) CreateIssue(ctx context.Context, opt *CreateIssueOptions) (*
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "CreateIssue",
-			Message:  fmt.Sprintf("failed to create Issue %s, make sure all the details are coreect ", opt.Title),
+			Message:  fmt.Sprintf("failed to create Issue %s, make sure all the details are correct ", opt.Title),
 			GitError: err,
 		}
 	}
@@ -731,7 +731,7 @@ func (s *GithubSCM) GetRepoIssue(ctx context.Context, opt *IssueOptions) (*Issue
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "GetRepoIssue",
-			Message:  fmt.Sprintf("Failed to get Issue %v, make sure all the details are coreect ", opt.IssueNumber),
+			Message:  fmt.Sprintf("Failed to get Issue %v, make sure all the details are correct ", opt.IssueNumber),
 			GitError: err,
 		}
 	}
@@ -750,7 +750,7 @@ func (s *GithubSCM) GetRepoIssues(ctx context.Context, opt *IssueOptions) ([]*Is
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "GetRepoIssues",
-			Message:  fmt.Sprintf("Failed to get Issues from repo %s make sure all the details are coreect ", opt.Repository),
+			Message:  fmt.Sprintf("Failed to get Issues from repo %s make sure all the details are correct ", opt.Repository),
 			GitError: err,
 		}
 	}
@@ -782,7 +782,7 @@ func (s *GithubSCM) EditRepoIssue(ctx context.Context, opt *IssueOptions, isu *C
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "CreateIssue",
-			Message:  fmt.Sprintf("failed to Edit Issue %v, make sure all the details are coreect ", opt.IssueNumber),
+			Message:  fmt.Sprintf("failed to Edit Issue %v, make sure all the details are correct ", opt.IssueNumber),
 			GitError: err,
 		}
 	}
