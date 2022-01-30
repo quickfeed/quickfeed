@@ -71,29 +71,13 @@ func TestRecordResults(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	var user pb.User
-	if err := db.CreateUserFromRemoteIdentity(&user,
-		&pb.RemoteIdentity{
-			Provider:    "fake",
-			RemoteID:    1,
-			AccessToken: "token",
-		}); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := db.UpdateUser(&pb.User{ID: user.ID, IsAdmin: true}); err != nil {
-		t.Fatal(err)
-	}
-
 	course := &pb.Course{
-		Name:            "Test",
-		OrganizationID:  1,
-		CourseCreatorID: user.ID,
-		SlipDays:        5,
+		Name:           "Test",
+		OrganizationID: 1,
+		SlipDays:       5,
 	}
-	if err := db.CreateCourse(user.ID, course); err != nil {
-		t.Fatal(err)
-	}
+	admin := qtest.CreateFakeUser(t, db, 1)
+	qtest.CreateCourse(t, db, admin, course)
 
 	assignment := &pb.Assignment{
 		CourseID:         course.ID,
@@ -139,7 +123,7 @@ func TestRecordResults(t *testing.T) {
 	}
 
 	recordResults(zap.NewNop().Sugar(), db, runData, results)
-	submission, err := db.GetSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: user.ID})
+	submission, err := db.GetSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: admin.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,14 +142,14 @@ func TestRecordResults(t *testing.T) {
 	results.BuildInfo.BuildDate = newBuildDate
 	recordResults(zap.NewNop().Sugar(), db, runData, results)
 
-	enrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
+	enrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if enrollment.RemainingSlipDays(course) == int32(course.SlipDays) || len(enrollment.UsedSlipDays) < 1 {
 		t.Error("Student must have reduced slip days")
 	}
-	updatedSubmission, err := db.GetSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: user.ID})
+	updatedSubmission, err := db.GetSubmission(&pb.Submission{AssignmentID: assignment.ID, UserID: admin.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -178,7 +162,7 @@ func TestRecordResults(t *testing.T) {
 	results.BuildInfo.BuildDate = "2022-11-13T13:00:00"
 	slipDaysBeforeUpdate := enrollment.RemainingSlipDays(course)
 	recordResults(zap.NewNop().Sugar(), db, runData, results)
-	updatedEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
+	updatedEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
 	if err != nil {
 		t.Fatal(err)
 	}

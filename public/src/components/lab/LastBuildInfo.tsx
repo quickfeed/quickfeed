@@ -80,10 +80,16 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
     private setStatusString(): JSX.Element {
         const approved = this.props.submission.status === Submission.Status.APPROVED
         const className = approved ? "greentext" : "";
+       
+        let statusText = submissionStatusToString(this.props.submission.status)
         if (gradedManually(this.props.assignment)) {
-            return approved ? <div className="greentext">Approved</div> : <div>{submissionStatusToString(this.props.submission.status)}</div>
+            return approved ? <div className="greentext">Approved</div> : <div>{statusText}</div>
         }
-        return <div className={className}>{submissionStatusToString(this.props.submission.status)}</div>;
+
+        if (this.props.submission.status === Submission.Status.NONE) {
+            statusText = this.props.submission.score >= this.props.assignment.getScorelimit() ? "Approval is needed" : "Score too low"
+        }
+        return <div className={className}>{statusText}</div>;
     }
 
 }

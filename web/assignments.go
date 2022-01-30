@@ -86,6 +86,12 @@ func (s *AutograderService) createReview(review *pb.Review) (*pb.Review, error) 
 	review.Edited = time.Now().Format(reviewLayout)
 	review.ComputeScore()
 
+	benchmarks, err := s.db.GetBenchmarks(&pb.Assignment{ID: submission.AssignmentID})
+	if err != nil {
+		return nil, err
+	}
+
+	review.GradingBenchmarks = benchmarks
 	for _, bm := range review.GradingBenchmarks {
 		bm.ID = 0
 		for _, c := range bm.Criteria {

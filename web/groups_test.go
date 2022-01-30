@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/testing/protocmp"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
@@ -65,7 +65,7 @@ func TestNewGroup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(respGroup, group, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+	if diff := cmp.Diff(respGroup, group, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-respGroup +group):\n%s", diff)
 	}
 }
@@ -205,7 +205,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	// JSON marshalling removes the enrollment field from respGroup,
 	// so we remove group.Enrollments obtained from the database before comparing.
 	// group.Enrollments = nil
-	if diff := cmp.Diff(respGroup, group, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+	if diff := cmp.Diff(respGroup, group, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-respGroup +group):\n%s", diff)
 	}
 }
@@ -365,7 +365,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	// JSON marshalling removes the enrollment field from respGroup,
 	// so we remove group.Enrollments obtained from the database before comparing.
 	// group.Enrollments = nil
-	if diff := cmp.Diff(respGroup, group, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+	if diff := cmp.Diff(respGroup, group, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-respGroup +group):\n%s", diff)
 	}
 
@@ -410,7 +410,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	wantGroup.Status = pb.Group_APPROVED
 	haveGroup.Enrollments = nil
 	wantGroup.Enrollments = nil
-	if diff := cmp.Diff(haveGroup, wantGroup, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+	if diff := cmp.Diff(haveGroup, wantGroup, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-haveGroup +wantGroup):\n%s", diff)
 	}
 
@@ -453,7 +453,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	wantGroup.Status = pb.Group_APPROVED
 	haveGroup.Enrollments = nil
 	wantGroup.Enrollments = nil
-	if diff := cmp.Diff(haveGroup, wantGroup, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+	if diff := cmp.Diff(haveGroup, wantGroup, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-haveGroup +wantGroup):\n%s", diff)
 	}
 }
@@ -563,7 +563,7 @@ func TestGetGroup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(respGroup, gotGroup, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+	if diff := cmp.Diff(respGroup, gotGroup, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-respGroup +gotGroup):\n%s", diff)
 	}
 }
@@ -671,7 +671,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(prePatchGroup, haveGroup, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+	if diff := cmp.Diff(prePatchGroup, haveGroup, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-prePatchGroup +haveGroup):\n%s", diff)
 	}
 }
@@ -749,7 +749,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if diff := cmp.Diff(respGroup, dbGroup, cmpopts.IgnoreUnexported(pb.Group{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+	if diff := cmp.Diff(respGroup, dbGroup, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-respGroup +dbGroup):\n%s", diff)
 	}
 }
@@ -863,10 +863,10 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	enr2.GroupID = 0
 
 	// then check that new enrollments have group IDs nullified automatically
-	if diff := cmp.Diff(enr1, newEnr1, cmpopts.IgnoreUnexported(pb.Enrollment{}, pb.User{}, pb.Course{})); diff != "" {
+	if diff := cmp.Diff(enr1, newEnr1, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-enr1 +newEnr1):\n%s", diff)
 	}
-	if diff := cmp.Diff(enr2, newEnr2, cmpopts.IgnoreUnexported(pb.Enrollment{}, pb.User{}, pb.Course{})); diff != "" {
+	if diff := cmp.Diff(enr2, newEnr2, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-enr2 +newEnr2):\n%s", diff)
 	}
 }
@@ -941,7 +941,7 @@ func TestGetGroups(t *testing.T) {
 	}
 
 	// check that the method returns expected groups
-	if diff := cmp.Diff(wantGroups, gotGroups, cmpopts.IgnoreUnexported(pb.Group{}, pb.Groups{}, pb.User{}, pb.RemoteIdentity{}, pb.Enrollment{})); diff != "" {
+	if diff := cmp.Diff(wantGroups, gotGroups, protocmp.Transform()); diff != "" {
 		t.Errorf("mismatch (-wantGroups +gotGroups):\n%s", diff)
 	}
 }

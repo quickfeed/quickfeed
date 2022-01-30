@@ -14,7 +14,7 @@ export class HomePage extends ViewPage {
                 <div key="gh" className="col-lg-4">
                     <img
                         className="img-circle"
-                        src="/img/GitHub-Mark-120px-plus.png"
+                        src="/static/img/GitHub-Mark-120px-plus.png"
                         alt="GitHub logo" style={{ width: "140px", height: "140px" }} />
                     <h2>GitHub Integration</h2>
                     <p>
@@ -31,7 +31,7 @@ export class HomePage extends ViewPage {
 
                     <img
                         className="img-circle"
-                        src="/img/overlapping-arrows.png"
+                        src="/static/img/overlapping-arrows.png"
                         alt=""
                         style={{ width: "140px", height: "140px" }}
                     />
@@ -50,7 +50,7 @@ export class HomePage extends ViewPage {
                 <div key="grade" className="col-lg-4">
                     <img
                         className="img-circle"
-                        src="/img/Aplus2.png"
+                        src="/static/img/Aplus2.png"
                         alt="A+ image" style={{ width: "140px", height: "140px" }} />
                     <h2>Fair Grading</h2>
                     <p>
@@ -90,7 +90,7 @@ export class HomePage extends ViewPage {
                     <div key="c2r1" className="col-md-5">
                         <img
                             className="featurette-image img-responsive"
-                            src="/img/intro1.png"
+                            src="/static/img/intro1.png"
                             alt="Generic placeholder image" />
                     </div>
                 </div>
@@ -103,7 +103,7 @@ export class HomePage extends ViewPage {
                     <div key="c1r2" className="col-md-5">
                         <img
                             className="featurette-image img-responsive"
-                            src="/img/intro3.png"
+                            src="/static/img/intro3.png"
                             alt="Generic placeholder image" />
                     </div>
                     <div key="c2r2" className="col-md-7">
@@ -140,7 +140,7 @@ export class HomePage extends ViewPage {
                     <div key="c2r3" className="col-md-5">
                         <img
                             className="featurette-image img-responsive"
-                            src="/img/intro4.png"
+                            src="/static/img/intro4.png"
                             alt="Generic placeholder image" />
                     </div>
                 </div>
@@ -153,7 +153,7 @@ export class HomePage extends ViewPage {
                     <div key="c1r4" className="col-md-5">
                         <img
                             className="featurette-image img-responsive"
-                            src="/img/intro2.png"
+                            src="/static/img/intro2.png"
                             alt="Generic placeholder image" />
                     </div>
                     <div key="c2r4" className="col-md-7">

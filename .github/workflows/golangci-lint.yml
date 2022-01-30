@@ -13,7 +13,10 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.35
+          version: latest
+          skip-go-installation: true
+          skip-pkg-cache: true
+          skip-build-cache: true
           args: --disable errcheck --timeout 5m
           # Optional: show only new issues if it's a pull request. The default value is `false`.
-          # only-new-issues: true
+          only-new-issues: true
