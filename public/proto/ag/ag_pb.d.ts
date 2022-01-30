@@ -584,18 +584,23 @@ export class Assignment extends jspb.Message {
   getReviewers(): number;
   setReviewers(value: number): Assignment;
 
+  getContainertimeout(): number;
+  setContainertimeout(value: number): Assignment;
+
   getSubmissionsList(): Array<Submission>;
   setSubmissionsList(value: Array<Submission>): Assignment;
   clearSubmissionsList(): Assignment;
   addSubmissions(value?: Submission, index?: number): Submission;
 
+  getTasksList(): Array<Task>;
+  setTasksList(value: Array<Task>): Assignment;
+  clearTasksList(): Assignment;
+  addTasks(value?: Task, index?: number): Task;
+
   getGradingbenchmarksList(): Array<GradingBenchmark>;
   setGradingbenchmarksList(value: Array<GradingBenchmark>): Assignment;
   clearGradingbenchmarksList(): Assignment;
   addGradingbenchmarks(value?: GradingBenchmark, index?: number): GradingBenchmark;
-
-  getContainertimeout(): number;
-  setContainertimeout(value: number): Assignment;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Assignment.AsObject;
@@ -617,9 +622,52 @@ export namespace Assignment {
     isgrouplab: boolean,
     scorelimit: number,
     reviewers: number,
-    submissionsList: Array<Submission.AsObject>,
-    gradingbenchmarksList: Array<GradingBenchmark.AsObject>,
     containertimeout: number,
+    submissionsList: Array<Submission.AsObject>,
+    tasksList: Array<Task.AsObject>,
+    gradingbenchmarksList: Array<GradingBenchmark.AsObject>,
+  }
+}
+
+export class Task extends jspb.Message {
+  getId(): number;
+  setId(value: number): Task;
+
+  getAssignmentid(): number;
+  setAssignmentid(value: number): Task;
+
+  getTitle(): string;
+  setTitle(value: string): Task;
+
+  getBody(): string;
+  setBody(value: string): Task;
+
+  getGitissueid(): number;
+  setGitissueid(value: number): Task;
+
+  getIssuenumber(): number;
+  setIssuenumber(value: number): Task;
+
+  getStatus(): string;
+  setStatus(value: string): Task;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Task.AsObject;
+  static toObject(includeInstance: boolean, msg: Task): Task.AsObject;
+  static serializeBinaryToWriter(message: Task, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Task;
+  static deserializeBinaryFromReader(message: Task, reader: jspb.BinaryReader): Task;
+}
+
+export namespace Task {
+  export type AsObject = {
+    id: number,
+    assignmentid: number,
+    title: string,
+    body: string,
+    gitissueid: number,
+    issuenumber: number,
+    status: string,
   }
 }
 

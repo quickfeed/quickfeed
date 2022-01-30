@@ -1,7 +1,7 @@
 syntax = "proto3";
 package ag;
-option go_package = "github.com/autograde/quickfeed/ag";
-option swift_prefix="";
+option go_package   = "github.com/autograde/quickfeed/ag";
+option swift_prefix = "";
 
 import "kit/score/score.proto";
 import "patch/go.proto";
@@ -16,20 +16,19 @@ import "patch/go.proto";
 // this will set the SQL UNIQUE constraint for the database:
 //   [(go.field) = {tags: 'gorm:"uniqueIndex:<id_name>"'}];
 
-
 // USERS AND USERGROUPS //
 
 message User {
-    uint64 ID = 1;
-    bool isAdmin = 2;
-    string name = 3;
+    uint64 ID        = 1;
+    bool isAdmin     = 2;
+    string name      = 3;
     string studentID = 4;
-    string email = 5;
+    string email     = 5;
     string avatarURL = 6;
-    string login = 7;
+    string login     = 7;
 
     repeated RemoteIdentity remoteIdentities = 8;
-    repeated Enrollment enrollments = 9;
+    repeated Enrollment enrollments          = 9;
 }
 
 message Users {
@@ -37,25 +36,25 @@ message Users {
 }
 
 message RemoteIdentity {
-    uint64 ID = 1;
-    string provider = 2 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_provider_remote_id"'}]; 
-    uint64 remoteID = 3 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_provider_remote_id"'}]; 
+    uint64 ID          = 1;
+    string provider    = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:uid_provider_remote_id"' }];
+    uint64 remoteID    = 3 [(go.field) = { tags: 'gorm:"uniqueIndex:uid_provider_remote_id"' }];
     string accessToken = 4;
-    uint64 userID = 5;
+    uint64 userID      = 5;
 }
 
 message Group {
     enum GroupStatus {
-        PENDING = 0;
+        PENDING  = 0;
         APPROVED = 1;
     }
-    uint64 ID = 1;
-    string name = 2 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_group_name"'}];
-    uint64 courseID = 3 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_group_name"'}]; 
-    uint64 teamID = 4;
+    uint64 ID          = 1;
+    string name        = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_group_name"' }];
+    uint64 courseID    = 3 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_group_name"' }];
+    uint64 teamID      = 4;
     GroupStatus status = 5;
 
-    repeated User users = 6 [(go.field) = {tags: 'gorm:"many2many:group_users;"'}];
+    repeated User users             = 6 [(go.field) = { tags: 'gorm:"many2many:group_users;"' }];
     repeated Enrollment enrollments = 7;
 }
 
@@ -66,22 +65,22 @@ message Groups {
 //   COURSES   //
 
 message Course {
-    uint64 ID = 1;
-    uint64 courseCreatorID = 2;
-    string name = 3;
-    string code = 4;
-    uint32 year = 5;
-    string tag = 6;
-    string provider = 7;
-    uint64 organizationID = 8;
-    string organizationPath = 9; // The organization's SCM name, e.g. uis-dat520-2020.
-    uint32 slipDays = 10;
-    string dockerfile = 11;
-    Enrollment.UserStatus enrolled = 12 [(go.field) = {tags: 'gorm:"-"'}];
+    uint64 ID                      = 1;
+    uint64 courseCreatorID         = 2;
+    string name                    = 3;
+    string code                    = 4;
+    uint32 year                    = 5;
+    string tag                     = 6;
+    string provider                = 7;
+    uint64 organizationID          = 8;
+    string organizationPath        = 9;  // The organization's SCM name, e.g. uis-dat520-2020.
+    uint32 slipDays                = 10;
+    string dockerfile              = 11;
+    Enrollment.UserStatus enrolled = 12 [(go.field) = { tags: 'gorm:"-"' }];
 
     repeated Enrollment enrollments = 13;
     repeated Assignment assignments = 14;
-    repeated Group groups = 15;
+    repeated Group groups           = 15;
 }
 
 message Courses {
@@ -90,53 +89,53 @@ message Courses {
 
 message Repository {
     enum Type {
-        NONE = 0;
-        COURSEINFO = 1;
+        NONE        = 0;
+        COURSEINFO  = 1;
         ASSIGNMENTS = 2;
-        TESTS = 3;
-        USER = 4;
-        GROUP = 5;
+        TESTS       = 3;
+        USER        = 4;
+        GROUP       = 5;
     }
-    uint64 ID = 1;
-    uint64 organizationID = 2 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_gid_org_type"'}];
-    uint64 repositoryID = 3; // ID of a github repository
-    uint64 userID = 4 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_gid_org_type"'}];
-    uint64 groupID = 5 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_gid_org_type"'}];
-    string HTMLURL = 6;
-    Type repoType = 7 [(go.field) = {tags: 'gorm:"uniqueIndex:uid_gid_org_type"'}];
+    uint64 ID             = 1;
+    uint64 organizationID = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:uid_gid_org_type"' }];
+    uint64 repositoryID   = 3;  // ID of a github repository
+    uint64 userID         = 4 [(go.field) = { tags: 'gorm:"uniqueIndex:uid_gid_org_type"' }];
+    uint64 groupID        = 5 [(go.field) = { tags: 'gorm:"uniqueIndex:uid_gid_org_type"' }];
+    string HTMLURL        = 6;
+    Type repoType         = 7 [(go.field) = { tags: 'gorm:"uniqueIndex:uid_gid_org_type"' }];
 }
 
 message Enrollment {
     enum UserStatus {
-        NONE = 0;
+        NONE    = 0;
         PENDING = 1;
         STUDENT = 2;
         TEACHER = 3;
     }
     enum DisplayState {
-        UNSET = 0;
-        HIDDEN = 1;
-        VISIBLE = 2;
+        UNSET    = 0;
+        HIDDEN   = 1;
+        VISIBLE  = 2;
         FAVORITE = 3;
     }
-    uint64 ID = 1;
-    uint64 courseID = 2 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_enrollment"'}];
-    uint64 userID = 3 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_enrollment"'}]; 
-    uint64 groupID = 4;
-    bool hasTeacherScopes = 5;
-    User user = 6;
-    Course course = 7;
-    Group group = 8;
-    UserStatus status = 9;
-    DisplayState state = 10;
-    uint32 slipDaysRemaining = 11 [(go.field) = {tags: 'gorm:"-"'}];
-    string lastActivityDate = 12;
-    uint64 totalApproved = 13;
+    uint64 ID                          = 1;
+    uint64 courseID                    = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_enrollment"' }];
+    uint64 userID                      = 3 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_enrollment"' }];
+    uint64 groupID                     = 4;
+    bool hasTeacherScopes              = 5;
+    User user                          = 6;
+    Course course                      = 7;
+    Group group                        = 8;
+    UserStatus status                  = 9;
+    DisplayState state                 = 10;
+    uint32 slipDaysRemaining           = 11 [(go.field) = { tags: 'gorm:"-"' }];
+    string lastActivityDate            = 12;
+    uint64 totalApproved               = 13;
     repeated UsedSlipDays usedSlipDays = 14;
 }
 
 message UsedSlipDays {
-    uint64 ID = 1;
+    uint64 ID           = 1;
     uint64 enrollmentID = 2;
     uint64 assignmentID = 3;
     uint32 usedSlipDays = 4;
@@ -144,7 +143,7 @@ message UsedSlipDays {
 
 message Enrollments {
     repeated Enrollment enrollments = 1;
-} 
+}
 
 //   UI structures, never saved in the database   //
 
@@ -154,33 +153,42 @@ message SubmissionLink {
 }
 
 message EnrollmentLink {
-    Enrollment enrollment = 2; // must have course and user/group preloaded
+    Enrollment enrollment               = 2;  // must have course and user/group preloaded
     repeated SubmissionLink submissions = 3;
 }
 
 message CourseSubmissions {
-    Course course = 1; // preloaded assignments
+    Course course                 = 1;  // preloaded assignments
     repeated EnrollmentLink links = 2;
 }
 
 //   LABS    //
 
 message Assignment {
-    uint64 ID = 1;
-    uint64 CourseID = 2; // foreign key
-    string name = 3;
-    string scriptFile = 4;
-    string deadline = 5; 
-    bool autoApprove = 6;
-    uint32 order = 7;
-    bool isGroupLab = 8;
-    uint32 scoreLimit = 9;                            // minimal score limit for auto approval
-    uint32 reviewers = 10;                            // number of reviewers that will review submissions for this assignment 
-    repeated Submission submissions = 11;             // submissions produced for this assignment
-    repeated GradingBenchmark gradingBenchmarks = 12; // grading benchmarks for this assignment
-    uint32 containerTimeout = 13; // TODO(meling) Do we need this?
-    bool SingleTask = 14;
-    repeated Task Tasks= 15;
+    uint64 ID                       = 1;
+    uint64 CourseID                 = 2;  // foreign key
+    string name                     = 3;
+    string scriptFile               = 4;
+    string deadline                 = 5;
+    bool autoApprove                = 6;
+    uint32 order                    = 7;
+    bool isGroupLab                 = 8;
+    uint32 scoreLimit               = 9;   // minimal score limit for auto approval
+    uint32 reviewers                = 10;  // number of reviewers that will review submissions for this assignment
+    uint32 containerTimeout         = 11;  // container timeout for this assignment
+    repeated Submission submissions = 12;  // submissions produced for this assignment
+    repeated Task Tasks             = 13;  // tasks associated with this assignment
+    repeated GradingBenchmark gradingBenchmarks = 14;  // grading benchmarks for this assignment
+}
+
+message Task {
+    uint64 ID           = 1;
+    uint64 AssignmentID = 2;  // foreign key
+    string Title        = 3;
+    string Body         = 4;
+    uint64 gitIssueID   = 5;
+    uint32 IssueNumber  = 6;
+    string Status       = 7;
 }
 
 message Assignments {
@@ -189,59 +197,38 @@ message Assignments {
 
 message Submission {
     enum Status {
-        NONE = 0;
+        NONE     = 0;
         APPROVED = 1;
         REJECTED = 2;
         REVISION = 3;
     }
-    uint64 ID = 1;
-    uint64 AssignmentID = 2; // foreign key
-    uint64 userID = 3;
-    uint64 groupID = 4;
-    uint32 score = 5;
-    string commitHash = 6;
-    bool released = 7;       // true => feedback is visible to the student or group members
-    Status status = 8;
-    string approvedDate = 9;
-    repeated Review reviews = 10;     // reviews produced for this submission
-    score.BuildInfo BuildInfo = 11;   // build info for tests
-    repeated score.Score Scores = 12; // list of scores for different tests
+    uint64 ID                   = 1;
+    uint64 AssignmentID         = 2;  // foreign key
+    uint64 userID               = 3;
+    uint64 groupID              = 4;
+    uint32 score                = 5;
+    string commitHash           = 6;
+    bool released               = 7;  // true => feedback is visible to the student or group members
+    Status status               = 8;
+    string approvedDate         = 9;
+    repeated Review reviews     = 10;  // reviews produced for this submission
+    score.BuildInfo BuildInfo   = 11;  // build info for tests
+    repeated score.Score Scores = 12;  // list of scores for different tests
 }
 
 message Submissions {
     repeated Submission submissions = 1;
 }
 
-// Task //
-message Task{
-    uint64 ID = 1;
-    uint64 AssignmentID = 2; // Foreign Key
-    string Title = 3;
-    string Body  = 4;
-    repeated Issue Issues = 5;
-}
-
-//message Tasks {
-//    repeated Task Tasks = 1;
-//}
-
-
-message Issue{
-    uint64 ID = 1;
-    uint64 gitIssueID = 2;
-    uint64 TaskID = 3; // foreign key
-    uint32 IssueNumber = 4;
-    string Status = 5;
-}
 //   MANUAL GRADING   //
 
 message GradingBenchmark {
-    uint64 ID = 1;
-    uint64 AssignmentID = 2; // foreign key
-    uint64 ReviewID = 3; // foreign key
-    string heading = 4;
-    string comment = 5;
-    repeated GradingCriterion criteria = 6 [(go.field) = {tags: 'gorm:"foreignKey:BenchmarkID"'}];
+    uint64 ID                          = 1;
+    uint64 AssignmentID                = 2;  // foreign key
+    uint64 ReviewID                    = 3;  // foreign key
+    string heading                     = 4;
+    string comment                     = 5;
+    repeated GradingCriterion criteria = 6 [(go.field) = { tags: 'gorm:"foreignKey:BenchmarkID"' }];
 }
 
 message Benchmarks {
@@ -250,27 +237,27 @@ message Benchmarks {
 
 message GradingCriterion {
     enum Grade {
-        NONE = 0;
+        NONE   = 0;
         FAILED = 1;
         PASSED = 2;
     }
-    uint64 ID = 1;
-    uint64 BenchmarkID = 2; // foreign key
-    uint64 points = 3;
+    uint64 ID          = 1;
+    uint64 BenchmarkID = 2;  // foreign key
+    uint64 points      = 3;
     string description = 4;
-    Grade grade = 5;
-    string comment = 6;
+    Grade grade        = 5;
+    string comment     = 6;
 }
 
 message Review {
-    uint64 ID = 1;
-    uint64 SubmissionID = 2; // foreign key
-    uint64 ReviewerID = 3;   // UserID of the reviewer
-    string feedback = 4;
-    bool ready = 5;
-    uint32 score = 6;
-    repeated GradingBenchmark gradingBenchmarks = 7 [(go.field) = {tags: 'gorm:"foreignKey:ReviewID"'}];
-    string edited = 8;
+    uint64 ID                                   = 1;
+    uint64 SubmissionID                         = 2;  // foreign key
+    uint64 ReviewerID                           = 3;  // UserID of the reviewer
+    string feedback                             = 4;
+    bool ready                                  = 5;
+    uint32 score                                = 6;
+    repeated GradingBenchmark gradingBenchmarks = 7 [(go.field) = { tags: 'gorm:"foreignKey:ReviewID"' }];
+    string edited                               = 8;
 }
 
 message Reviewers {
@@ -281,7 +268,7 @@ message Reviewers {
 
 message ReviewRequest {
     uint64 courseID = 1;
-    Review review = 2;
+    Review review   = 2;
 }
 
 message CourseRequest {
@@ -297,8 +284,8 @@ message GetGroupRequest {
 }
 
 message GroupRequest {
-    uint64 userID = 1;
-    uint64 groupID = 2;
+    uint64 userID   = 1;
+    uint64 groupID  = 2;
     uint64 courseID = 3;
 }
 
@@ -311,9 +298,9 @@ message OrgRequest {
 }
 
 message Organization {
-    uint64 ID = 1;
-    string path = 2;
-    string avatar = 3;
+    uint64 ID          = 1;
+    string path        = 2;
+    string avatar      = 3;
     string paymentPlan = 4;
 }
 
@@ -322,46 +309,46 @@ message Organizations {
 }
 
 // EnrollmentRequest is a request for enrolled users of a given course,
-// whose enrollment status match those provided in the request. To ignore group members 
+// whose enrollment status match those provided in the request. To ignore group members
 // that otherwise match the enrollment request, set ignoreGroupMembers to true.
 message EnrollmentRequest {
-    uint64 courseID = 1;
-    bool ignoreGroupMembers = 2;
-    bool withActivity = 3;
+    uint64 courseID                         = 1;
+    bool ignoreGroupMembers                 = 2;
+    bool withActivity                       = 3;
     repeated Enrollment.UserStatus statuses = 4;
 }
 
 // EnrollmentStatusRequest is a request for a given user, with a specific enrollment status.
 message EnrollmentStatusRequest {
-    uint64 userID = 1;
+    uint64 userID                           = 1;
     repeated Enrollment.UserStatus statuses = 2;
 }
 
 message SubmissionRequest {
-    uint64 userID = 1;
-    uint64 groupID = 2;
+    uint64 userID   = 1;
+    uint64 groupID  = 2;
     uint64 courseID = 3;
 }
 
 message UpdateSubmissionRequest {
-    uint64 submissionID = 1;
-    uint64 courseID = 2;
-    uint32 score = 3;
-    bool released = 4;
+    uint64 submissionID      = 1;
+    uint64 courseID          = 2;
+    uint32 score             = 3;
+    bool released            = 4;
     Submission.Status status = 5;
 }
 
 message UpdateSubmissionsRequest {
-    uint64 courseID = 1;
+    uint64 courseID     = 1;
     uint64 assignmentID = 2;
-    uint32 scoreLimit = 3;
-    bool release = 4;
-    bool approve = 5;
+    uint32 scoreLimit   = 3;
+    bool release        = 4;
+    bool approve        = 5;
 }
 
 message SubmissionReviewersRequest {
     uint64 submissionID = 1;
-    uint64 courseID = 2;
+    uint64 courseID     = 2;
 }
 
 message Providers {
@@ -369,14 +356,14 @@ message Providers {
 }
 
 message URLRequest {
-    uint64 courseID = 1;
+    uint64 courseID                    = 1;
     repeated Repository.Type repoTypes = 2;
 }
 
 // used to check whether student/group submission repo is empty
 message RepositoryRequest {
-    uint64 userID = 1;
-    uint64 groupID = 2;
+    uint64 userID   = 1;
+    uint64 groupID  = 2;
     uint64 courseID = 3;
 }
 
@@ -389,18 +376,18 @@ message AuthorizationResponse {
 }
 
 message Status {
-    uint64 Code = 1;
+    uint64 Code  = 1;
     string Error = 2;
 }
 
 message SubmissionsForCourseRequest {
     enum Type {
-        ALL = 0;
+        ALL        = 0;
         INDIVIDUAL = 1;
-        GROUP = 2;
+        GROUP      = 2;
     }
-    uint64 courseID = 1;
-    Type type = 2;
+    uint64 courseID    = 1;
+    Type type          = 2;
     bool withBuildInfo = 3;
 }
 
@@ -412,49 +399,49 @@ message RebuildRequest {
 message CourseUserRequest {
     string courseCode = 1;
     uint32 courseYear = 2;
-    string userLogin = 3;
+    string userLogin  = 3;
 }
 
 message AssignmentRequest {
-    uint64 courseID = 1;
+    uint64 courseID     = 1;
     uint64 assignmentID = 2;
 }
 
 // Void contains no fields. A server response with a Void still contains a gRPC status code,
 // which can be checked for success or failure. Status code 0 indicates that the requested action was successful,
-// whereas any other status code indicates some failure. As such, the status code can be used as a boolean result from the server.
+// whereas any other status code indicates some failure. As such, the status code can be used as a boolean result from
+// the server.
 message Void {}
 
 service AutograderService {
-
     // users //
 
     rpc GetUser(Void) returns (User) {}
     rpc GetUsers(Void) returns (Users) {}
     rpc GetUserByCourse(CourseUserRequest) returns (User) {}
     rpc UpdateUser(User) returns (Void) {}
-    rpc IsAuthorizedTeacher(Void) returns (AuthorizationResponse) {}  
+    rpc IsAuthorizedTeacher(Void) returns (AuthorizationResponse) {}
 
     // groups //
 
     rpc GetGroup(GetGroupRequest) returns (Group) {}
-    rpc GetGroupByUserAndCourse(GroupRequest) returns (Group) {} 
-    rpc GetGroupsByCourse(CourseRequest) returns (Groups) {} 
-    rpc CreateGroup(Group) returns (Group) {} 
+    rpc GetGroupByUserAndCourse(GroupRequest) returns (Group) {}
+    rpc GetGroupsByCourse(CourseRequest) returns (Groups) {}
+    rpc CreateGroup(Group) returns (Group) {}
     rpc UpdateGroup(Group) returns (Void) {}
     rpc DeleteGroup(GroupRequest) returns (Void) {}
 
     // courses //
 
-    rpc GetCourse(CourseRequest) returns (Course) {} 
-    rpc GetCourses(Void) returns (Courses) {} 
+    rpc GetCourse(CourseRequest) returns (Course) {}
+    rpc GetCourses(Void) returns (Courses) {}
     rpc GetCoursesByUser(EnrollmentStatusRequest) returns (Courses) {}
     rpc CreateCourse(Course) returns (Course) {}
     rpc UpdateCourse(Course) returns (Void) {}
     rpc UpdateCourseVisibility(Enrollment) returns (Void) {}
- 
+
     // assignments //
-    
+
     rpc GetAssignments(CourseRequest) returns (Assignments) {}
     rpc UpdateAssignments(CourseRequest) returns (Void) {}
 
@@ -462,8 +449,8 @@ service AutograderService {
 
     rpc GetEnrollmentsByUser(EnrollmentStatusRequest) returns (Enrollments) {}
     rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
-    rpc CreateEnrollment(Enrollment) returns (Void) {} 
-    rpc UpdateEnrollment(Enrollment) returns (Void) {} 
+    rpc CreateEnrollment(Enrollment) returns (Void) {}
+    rpc UpdateEnrollment(Enrollment) returns (Void) {}
     rpc UpdateEnrollments(CourseRequest) returns (Void) {}
 
     // submissions //
@@ -478,7 +465,7 @@ service AutograderService {
     rpc RebuildSubmissions(AssignmentRequest) returns (Void) {}
 
     // manual grading //
-    
+
     rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
     rpc UpdateBenchmark(GradingBenchmark) returns (Void) {}
     rpc DeleteBenchmark(GradingBenchmark) returns (Void) {}
@@ -492,7 +479,7 @@ service AutograderService {
     rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers) {}
 
     // misc //
-    
+
     rpc GetProviders(Void) returns (Providers) {}
     rpc GetOrganization(OrgRequest) returns (Organization) {}
     rpc GetRepositories(URLRequest) returns (Repositories) {}
