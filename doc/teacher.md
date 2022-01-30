@@ -75,12 +75,12 @@ However, it appears there is no per-organization approach to turn off notificati
 QuickFeed uses the following repository structure.
 These will be created automatically when a course is created.
 
-| Repository name | Description                                                                    | Access                         |
-|-----------------|--------------------------------------------------------------------------------|--------------------------------|
-| info            | Holds information about the course.                                            | Public                         |
-| assignments     | Contains a separate folder for each assignment.                                | Students, Teachers, QuickFeed  |
-| username-labs   | Created for each student username in QuickFeed                                 | Student, Teachers, QuickFeed   |
-| tests           | Contains a separate folder for each assignment with tests for that assignment. | Teachers, QuickFeed            |
+| Repository name | Description                                                                    | Access                        |
+|-----------------|--------------------------------------------------------------------------------|-------------------------------|
+| info            | Holds information about the course.                                            | Public                        |
+| assignments     | Contains a separate folder for each assignment.                                | Students, Teachers, QuickFeed |
+| username-labs   | Created for each student username in QuickFeed                                 | Student, Teachers, QuickFeed  |
+| tests           | Contains a separate folder for each assignment with tests for that assignment. | Teachers, QuickFeed           |
 
 *In QuickFeed, Teacher means any teaching staff, including teaching assistants and professors alike.*
 
@@ -194,33 +194,32 @@ tests┐
 
 As mentioned above, the `tests` repository must contain one `assignment.yml` file for each assignment.
 This file provide assignment information used by QuickFeed.
-An example is shown below for `lab1`.
+An example is shown below.
 
 ```yml
-assignmentid: 1
-name: "lab1"
+order: 1
 title: "Introduction to Unix"
 deadline: "2020-08-30T23:59:00"
+effort: "8-10 hours"
+isgrouplab: false
 autoapprove: true
 scorelimit: 90
-isgrouplab: false
-hoursmin: 6
-hoursmax: 7
 reviewers: 2
 containertimeout: 10
 ```
 
-| Field              | Description                                                                                           |
-|--------------------|-------------------------------------------------------------------------------------------------------|
-| `assignmentid`     | TBD                                                                                                   |
-| `name`             | Name of assignment folder                                                                             |
-| `scriptfile`       | Script to use for running tests.                                                                      |
-| `deadline`         | Submission deadline for the assignment.                                                               |
-| `autoapprove`      | Automatically approve the assignment when `scorelimit` is achieved.                                   |
-| `scorelimit`       | Minimal score needed for approval. Default is 80 %.                                                   |
-| `isgrouplab`       | Assignment is considered a group assignment if true; otherwise it is an individual assignment.        |
-| `reviewers`        | Number of teachers that must review a student submission for approval.                                |
-| `containertimeout` | Timeout for CI container to finish building and testing student submitted code. Default is 10 minutes.|
+QuickFeed only use the fields in the table below.
+The `title` and `effort` are used by other tooling to create a README.md file for an assignment.
+
+| Field              | Description                                                                                    |
+|--------------------|------------------------------------------------------------------------------------------------|
+| `order`            | Assignment's sequence number; used to order the assignments.                                   |
+| `deadline`         | Submission deadline for the assignment.                                                        |
+| `isgrouplab`       | Assignment is considered a group assignment if true; otherwise it is an individual assignment. |
+| `autoapprove`      | Automatically approve the assignment when `scorelimit` is achieved.                            |
+| `scorelimit`       | Minimal score needed for approval. Default is 80 %.                                            |
+| `reviewers`        | Number of teachers that must review a student submission for manual approval. Default is 1.    |
+| `containertimeout` | Timeout for CI container to finish building and testing submitted code. Default is 10 minutes. |
 
 ## Reviewing student submissions
 

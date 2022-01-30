@@ -61,7 +61,7 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*pb.Assignment, 
 		assignmentName := filepath.Base(filepath.Dir(path))
 		switch filepath.Base(path) {
 		case assignmentFile, assignmentFileYaml:
-			assignment, err := readAssignmentFile(contents, assignmentName, courseID)
+			assignment, err := newAssignmentFromFile(contents, assignmentName, courseID)
 			if err != nil {
 				return nil, "", err
 			}
