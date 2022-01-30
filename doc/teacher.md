@@ -164,28 +164,36 @@ This is the purpose of the `tests` repository.
 The file system layout of the `tests` repository must match that of the `assignments` repository, as shown below.
 The `assignment.yml` files contains the [assignment information](#assignment-information).
 In addition, each assignment folder should also contain test code for the corresponding assignment.
-The scripts folder may contain a `run.sh` script with commands to be executed when running assignment tests.
+The `scripts` folder may contain a `run.sh` script with commands to be executed when running assignment tests.
 An assignment-specific `run.sh` script will only be used when running tests for the specific assignment.
-If `scripts` folder contains a Dockerfile, a Docker image tagged with the course code will be built locally and used when running tests for the assignment.
+If the `scripts` folder contains a Dockerfile, a Docker image tagged with the course code will be built locally and used when running tests for the assignment.
+
+In addition, an assignment folder may contain one or more `task-*.md` files with exercise task descriptions.
+These task files must contain markdown content with a title specified on the first line.
+That is, the first line must start with `# ` followed by the title.
+The title must then be followed by a blank line before the task description body text.
+
+Tasks will be used to create issues on the repositories of students and groups.
+Tasks are sorted within an assignment grouping by their title.
+Henceforth, if a particular ordering is desired, the teacher may prefix the title with `Task 1:` and so on.
 
 ```text
 tests┐
      ├── scripts
-     │   └── Dockerfile
+     │   ├── Dockerfile
      │   └── run.sh
      ├── lab1
-     │   └── assignment.yml
+     │   ├── assignment.yml
      │   └── run.sh
      ├── lab2
      │   └── assignment.yml
-     │   └── run.sh
      ├── lab3
-     │   └── assignment.yml
-     │   └── run.sh
+     │   ├── assignment.yml
+     │   ├── task-go-questions.md
+     │   ├── task-learn-go.md
+     │   └── task-tour-of-go.md
      ├── lab4
-     │   └── assignment.yml
-     ├── lab5
-     │   └── assignment.yml
+     │   ├── assignment.yml
      │   └── criteria.json
 
 ```
