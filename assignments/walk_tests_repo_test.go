@@ -27,12 +27,32 @@ func TestWalkTestsRepository(t *testing.T) {
 }
 
 func TestReadTestsRepositoryContent(t *testing.T) {
+	wantScriptTemplate := map[string]string{
+		"lab1": `#image/quickfeed:go
+
+printf "Custom lab1 script\n"
+`,
+		"lab2": `#image/quickfeed:go
+
+printf "Default script\n"
+`,
+		"lab3": `#image/quickfeed:go
+
+printf "Default script\n"
+`,
+	}
+
 	assignments, _, err := readTestsRepositoryContent(testsFolder, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, assignment := range assignments {
-		t.Logf("%+v", assignment.GetName())
+		if scriptTemplate, ok := wantScriptTemplate[assignment.Name]; ok {
+			if scriptTemplate != assignment.ScriptFile {
+				t.Errorf("assignment %q script template is %q, want %q", assignment.Name, assignment.ScriptFile, scriptTemplate)
+			}
+		}
+		t.Logf("%+v", assignment.Name)
 		for _, task := range assignment.GetTasks() {
 			t.Logf("%s", task.GetTitle())
 		}
