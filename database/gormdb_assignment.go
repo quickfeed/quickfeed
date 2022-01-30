@@ -37,10 +37,9 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 			"auto_approve":      assignment.AutoApprove,
 			"score_limit":       assignment.ScoreLimit,
 			"is_group_lab":      assignment.IsGroupLab,
-			"SingleTask":        assignment.SingleTask,
 			"reviewers":         assignment.Reviewers,
 			"container_timeout": assignment.ContainerTimeout,
-			"Tasks":             assignment.Tasks,
+			"tasks":             assignment.Tasks,
 		}).FirstOrCreate(assignment).Error
 }
 
@@ -139,10 +138,12 @@ func (db *GormDB) UpdateBenchmark(query *pb.GradingBenchmark) error {
 		Where(&pb.GradingBenchmark{
 			ID:           query.ID,
 			AssignmentID: query.AssignmentID,
-			ReviewID:     query.ReviewID}).
+			ReviewID:     query.ReviewID,
+		}).
 		Updates(&pb.GradingBenchmark{
 			Heading: query.Heading,
-			Comment: query.Comment}).Error
+			Comment: query.Comment,
+		}).Error
 }
 
 // DeleteBenchmark removes the given benchmark

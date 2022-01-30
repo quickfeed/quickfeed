@@ -1,10 +1,9 @@
 package assignments
 
 import (
-	"bufio"
+	"bytes"
 	"context"
-	"os"
-	"path/filepath"
+	"fmt"
 	"strings"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -12,87 +11,47 @@ import (
 	"go.uber.org/zap"
 )
 
-func readTaskFiles(path string) (*pb.Task, error) {
-	f, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
-	if err != nil {
-		return nil, err
+// newTask returns a task from markdown contents and associates it with the given assignment.
+// The provided markdown contents must contain a title specified on the first line,
+// starting with the "# " character sequence, followed by two new line characters.
+func newTask(contents []byte, assignment *pb.Assignment) (*pb.Task, error) {
+	if !bytes.HasPrefix(contents, []byte("# ")) {
+		return nil, fmt.Errorf("task for assignment %s does not start with a # title marker", assignment.Name)
 	}
-
-	defer f.Close()
-
-	task := &pb.Task{}
-
-	sc := bufio.NewScanner(f)
-	title_flag := true
-	for sc.Scan() {
-		line := sc.Text() // GET the line string
-		if strings.HasPrefix(line, "#") && title_flag {
-			task.Title = line
-			title_flag = false
-		} else {
-			task.Body = task.Body + "\n" + line
-		}
+	bodyIndex := bytes.Index(contents, []byte("\n\n"))
+	if bodyIndex == -1 {
+		return nil, fmt.Errorf("failed to find task body in %s", assignment.Name)
 	}
-	if err := sc.Err(); err != nil {
-		return nil, err
-	}
-	return task, nil
+	return &pb.Task{
+		AssignmentID: assignment.ID,
+		Title:        string(contents[2:bodyIndex]),
+		Body:         string(contents[bodyIndex+2:]),
+	}, nil
 }
 
-func isExists(gitIssues []*scm.Issue, task *pb.Task) (gitIssue *scm.Issue, taskIssue *pb.Issue) {
-	for _, taskIssue = range task.Issues {
-		for _, gitIssue = range gitIssues {
-			if taskIssue.GitIssueID == gitIssue.ID {
-				return gitIssue, taskIssue
-			}
+// TODO(meling) consider to move this as method on pb.Task??
+func isExists(gitIssues []*scm.Issue, task *pb.Task) (gitIssue *scm.Issue) {
+	for _, gitIssue := range gitIssues {
+		if gitIssue.ID == task.GitIssueID {
+			return gitIssue
 		}
 	}
-	return nil, nil
+	return nil
 }
 
-func findTasksFiles(dir string) ([]*pb.Task, error) {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		return nil, err
-	}
-	var taskContents []*pb.Task
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			// Walk unable to read path; stop walking the tree
-			return err
-		}
-		if !info.IsDir() {
-			filename := filepath.Base(path)
-			if strings.HasSuffix(filename, taskFile) {
-				task, err := readTaskFiles(path)
-				if err != nil {
-					return err
-				}
-				taskContents = append(taskContents, task)
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return taskContents, nil
-}
-
-func UpdateIssue(c context.Context, sc scm.SCM, course *pb.Course, repo *scm.Repository, task *pb.Task, gitIssue *scm.Issue, taskIssue *pb.Issue) (issue *scm.Issue, err error) {
+func UpdateIssue(c context.Context, sc scm.SCM, course *pb.Course, repo *scm.Repository, task *pb.Task, gitIssue *scm.Issue) (issue *scm.Issue, err error) {
 	newIssue := &scm.CreateIssueOptions{
 		Organization: course.Name,
 		Repository:   repo.Path,
 		Title:        task.Title,
 		Body:         task.Body,
 	}
-
 	updateIssue := &scm.IssueOptions{
 		Organization: course.Name,
 		Repository:   repo.Path,
 		IssueNumber:  int(gitIssue.IssueNumber),
 	}
-	Issue, err := sc.EditRepoIssue(c, updateIssue, newIssue)
-	return Issue, err
+	return sc.EditRepoIssue(c, updateIssue, newIssue)
 }
 
 func CreateIssue(c context.Context, sc scm.SCM, course *pb.Course, repo *scm.Repository, task *pb.Task) (issue *scm.Issue, err error) {
@@ -106,13 +65,10 @@ func CreateIssue(c context.Context, sc scm.SCM, course *pb.Course, repo *scm.Rep
 	if err != nil {
 		return nil, err
 	}
-	taskIssue := &pb.Issue{
-		GitIssueID:  issue.ID,
-		TaskID:      task.ID,
-		IssueNumber: uint32(issue.IssueNumber),
-		Status:      issue.Status,
-	}
-	task.Issues = append(task.Issues, taskIssue)
+	// TODO(meling) maybe these need to be recorded in the database; in which case, maybe this should be done outside this function?
+	task.GitIssueID = issue.ID
+	task.IssueNumber = uint32(issue.IssueNumber)
+	task.Status = issue.Status
 	return issue, nil
 }
 
@@ -155,13 +111,13 @@ func SyncTasks(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course 
 			for _, task := range assignment.Tasks {
 				// Checking if issue already exist
 				logger.Debugf("SyncTasks: assignment.Tasks: %s", assignment.Tasks)
-				gitIssue, taskIssue := isExists(gitIssues, task)
+				gitIssue := isExists(gitIssues, task)
 				logger.Debugf("SyncTasks: gitIssue: %s", gitIssue)
-				logger.Debugf("SyncTasks: taskIssue: %s", taskIssue)
-				if gitIssue != nil && taskIssue != nil {
+				logger.Debugf("SyncTasks: task: %s", task)
+				if gitIssue != nil {
 					// issue already exist
 					logger.Debugf("SyncTasks: updating Task on Repository: %s", repo.Path)
-					_, err := UpdateIssue(c, sc, course, repo, task, gitIssue, taskIssue)
+					_, err := UpdateIssue(c, sc, course, repo, task, gitIssue)
 					if err != nil {
 						logger.Errorf("SyncTasks: failed to update task %s on repo %s for course %s : %s", task.Title, repo.Path, course.Name, err)
 					}
