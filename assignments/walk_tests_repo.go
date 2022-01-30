@@ -30,8 +30,8 @@ var patterns = []string{
 	taskFilePattern,
 }
 
-// matchAll returns true if filename matches one of the target patterns.
-func matchAll(filename string) bool {
+// matchAny returns true if filename matches one of the target patterns.
+func matchAny(filename string) bool {
 	for _, pattern := range patterns {
 		if ok, _ := filepath.Match(pattern, filename); ok {
 			return true
@@ -138,7 +138,7 @@ func walkTestsRepository(dir string) (map[string][]byte, error) {
 			// Walk unable to read path; stop walking the tree
 			return err
 		}
-		if !info.IsDir() && matchAll(info.Name()) {
+		if !info.IsDir() && matchAny(info.Name()) {
 			if files[path], err = os.ReadFile(path); err != nil {
 				return err
 			}
