@@ -23,18 +23,18 @@ func TestParseWithInvalidDir(t *testing.T) {
 }
 
 const (
-	y1 = `assignmentid: 1
+	y1 = `order: 1
 name: "For loops"
 deadline: "27-08-2017 12:00"
 autoapprove: false
 `
-	y2 = `assignmentid: 2
+	y2 = `order: 2
 name: "Nested loops"
 deadline: "27-08-2018 12:00"
 autoapprove: false
 `
 
-	yUnknownFields = `assignmentid: 1
+	yUnknownFields = `order: 1
 subject: "Go Programming for Fun and Profit"
 name: "For loops"
 deadline: "27-08-2017 12:00"
