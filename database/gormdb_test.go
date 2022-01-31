@@ -218,7 +218,7 @@ func TestGormDBGetCourses(t *testing.T) {
 	}
 	wantCourses = []*pb.Course{c1, c2}
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
-		t.Errorf("GetCourses() mismatch (-wantUser, +gotUser):\n%s", diff)
+		t.Errorf("GetCourses() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
 
 }
