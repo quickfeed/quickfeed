@@ -226,3 +226,72 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 		t.Errorf("Incorrect number of slip days: expected %d, got %d", slipDaysBeforeUpdate, updatedEnrollment.RemainingSlipDays(course))
 	}
 }
+
+func TestRecordResultsForManualReview(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	course := &pb.Course{
+		Name:           "Test",
+		OrganizationID: 1,
+		SlipDays:       5,
+	}
+	admin := qtest.CreateFakeUser(t, db, 1)
+	qtest.CreateCourse(t, db, admin, course)
+
+	assignment := &pb.Assignment{
+		Order:      1,
+		CourseID:   course.ID,
+		Name:       "assignment-1",
+		Deadline:   "2022-11-11T13:00:00",
+		IsGroupLab: false,
+		Reviewers:  1,
+	}
+	if err := db.CreateAssignment(assignment); err != nil {
+		t.Fatal(err)
+	}
+
+	initialSubmission := &pb.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       admin.ID,
+		Score:        80,
+		Status:       pb.Submission_APPROVED,
+		Released:     true,
+	}
+	if err := db.CreateSubmission(initialSubmission); err != nil {
+		t.Fatal(err)
+	}
+
+	runData := &ci.RunData{
+		Course:     course,
+		Assignment: assignment,
+		Repo: &pb.Repository{
+			UserID: 1,
+		},
+		JobOwner: "test",
+	}
+
+	submission, err := runData.RecordResults(qtest.Logger(t), db, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// make sure all fields were saved correctly in the database
+	query := &pb.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       admin.ID,
+	}
+	updatedSubmission, err := db.GetSubmission(query)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if diff := cmp.Diff(updatedSubmission, submission, protocmp.Transform()); diff != "" {
+		t.Errorf("Incorrect submission fields in the database. Want: %+v, got %+v", initialSubmission, updatedSubmission)
+	}
+
+	// submission must stay approved, released, with score = 80
+	if diff := cmp.Diff(initialSubmission, updatedSubmission, protocmp.Transform(), protocmp.IgnoreFields(&pb.Submission{}, "BuildInfo", "Scores")); diff != "" {
+		t.Errorf("Incorrect submission after update. Want: %+v, got %+v", initialSubmission, updatedSubmission)
+	}
+}
