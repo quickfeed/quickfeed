@@ -240,7 +240,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(wantSubmission, gotSubmission, protocmp.Transform()); diff != "" {
-		t.Errorf("GetLastSubmissions() mismatch (-wantSubmission, +gotSubmission):n%s", diff)
+		t.Errorf("GetLastSubmissions() mismatch (-wantSubmission, +gotSubmission):\n%s", diff)
 	}
 }
 

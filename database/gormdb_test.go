@@ -153,7 +153,7 @@ func TestGormDBUpdateUser(t *testing.T) {
 	}
 	gotUser.Enrollments = nil
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):n%s", diff)
+		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 
 	// check that admin role can be revoked
@@ -168,7 +168,7 @@ func TestGormDBUpdateUser(t *testing.T) {
 	}
 	gotUser.Enrollments = nil
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):n%s", diff)
+		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 }
 
@@ -190,7 +190,7 @@ func TestGormDBGetCourses(t *testing.T) {
 	}
 	wantCourses := []*pb.Course{c1, c2, c3}
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
-		t.Errorf("GetCourses() mismatch (-wantUser, +gotUser):n%s", diff)
+		t.Errorf("GetCourses() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
 
 	// An empty list should return the same as no argument, it makes no
@@ -200,25 +200,25 @@ func TestGormDBGetCourses(t *testing.T) {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
-		t.Errorf("GetCourses() mismatch (-wantUser, +gotUser):n%s", diff)
+		t.Errorf("GetCourses() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
 
-	gotCourse, err := db.GetCourses(c1.ID)
+	gotCourses, err = db.GetCourses(c1.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantCourse := []*pb.Course{c1}
-	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
-		t.Errorf("GetCourses() mismatch (-wantUser, +gotUser):n%s", diff)
+	wantCourses = []*pb.Course{c1}
+	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourses() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
 
-	gotCourse, err = db.GetCourses(c1.ID, c2.ID)
+	gotCourses, err = db.GetCourses(c1.ID, c2.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantCourse = []*pb.Course{c1, c2}
-	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
-		t.Errorf("GetCourses() mismatch (-wantUser, +gotUser):n%s", diff)
+	wantCourses = []*pb.Course{c1, c2}
+	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourses() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 
 }
@@ -385,7 +385,7 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 		{ID: c4.ID, OrganizationID: 4, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_NONE},
 	}
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
-		t.Errorf("GetCoursesByUser() mismatch (-wantUser, +gotUser):n%s", diff)
+		t.Errorf("GetCoursesByUser() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
 }
 
@@ -467,9 +467,9 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var gotUser1 pb.User
+	gotUser1 := &pb.User{}
 	if err := db.CreateUserFromRemoteIdentity(
-		&gotUser1,
+		gotUser1,
 		&pb.RemoteIdentity{
 			Provider:    provider1,
 			RemoteID:    remoteID1,
@@ -480,7 +480,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(wantUser1, gotUser1, protocmp.Transform()); diff != "" {
-		t.Errorf("CreateUserFromRemoteIdentity() mismatch (-wantUser, +gotUser):n%s", diff)
+		t.Errorf("CreateUserFromRemoteIdentity() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 
 	if err := db.AssociateUserWithRemoteIdentity(gotUser1.ID, provider2, remoteID2, secret2); err != nil {
@@ -494,7 +494,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	gotUser2.Enrollments = nil
 
 	if diff := cmp.Diff(wantUser2, gotUser2, protocmp.Transform()); diff != "" {
-		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):n%s", diff)
+		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 
 	if err := db.AssociateUserWithRemoteIdentity(gotUser1.ID, provider2, remoteID2, secret3); err != nil {
@@ -509,7 +509,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	wantUser2.RemoteIdentities[1].AccessToken = secret3
 
 	if diff := cmp.Diff(wantUser2, gotUser3, protocmp.Transform()); diff != "" {
-		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):n%s", diff)
+		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 }
 
@@ -668,7 +668,7 @@ func TestGormDBGetCourse(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
-		t.Errorf("GetCourse() mismatch (-wantCourse, +gotCourse):n%s", diff)
+		t.Errorf("GetCourse() mismatch (-wantCourse, +gotCourse):\n%s", diff)
 	}
 }
 
@@ -696,7 +696,7 @@ func TestGormDBGetCourseByOrganization(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
-		t.Errorf("GetCourse() mismatch (-wantCourse, +gotCourse):n%s", diff)
+		t.Errorf("GetCourse() mismatch (-wantCourse, +gotCourse):\n%s", diff)
 	}
 }
 
@@ -1016,7 +1016,7 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(wantRepo, gotRepo, protocmp.Transform()); diff != "" {
-		t.Errorf("GetRepositories() mismatch (-wantRepo, +gotRepo):n%s", diff)
+		t.Errorf("GetRepositories() mismatch (-wantRepo, +gotRepo):\n%s", diff)
 	}
 }
 
@@ -1137,7 +1137,7 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(wantRepo, gotRepo, protocmp.Transform()); diff != "" {
-		t.Errorf("GetRepositories() mismatch (-wantRepo, +gotRepo):n%s", diff)
+		t.Errorf("GetRepositories() mismatch (-wantRepo, +gotRepo):\n%s", diff)
 	}
 }
 
@@ -1223,7 +1223,7 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(wantRepo, gotRepo, protocmp.Transform()); diff != "" {
-		t.Errorf("GetRepositories() mismatch (-wantRepo, +gotRepo):n%s", diff)
+		t.Errorf("GetRepositories() mismatch (-wantRepo, +gotRepo):\n%s", diff)
 	}
 }
 
@@ -1308,6 +1308,6 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(wantRepo, gotRepo, protocmp.Transform()); diff != "" {
-		t.Errorf("GetRepositories() mismatch (-wantRepo, +gotRepo):n%s", diff)
+		t.Errorf("GetRepositories() mismatch (-wantRepo, +gotRepo):\n%s", diff)
 	}
 }

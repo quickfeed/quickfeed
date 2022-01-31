@@ -62,7 +62,7 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	}
 	gotUser.Enrollments = nil
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):n%s", diff)
+		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 
 	// do another update
@@ -77,7 +77,7 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	}
 	gotUser.Enrollments = nil
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):n%s", diff)
+		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 }
 

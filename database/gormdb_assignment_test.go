@@ -47,12 +47,12 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 10)
 	qtest.CreateCourse(t, db, admin, &pb.Course{})
 
-	gotAssignment := pb.Assignment{
+	gotAssignment := &pb.Assignment{
 		CourseID: 1,
 		Order:    1,
 	}
 
-	if err := db.CreateAssignment(&gotAssignment); err != nil {
+	if err := db.CreateAssignment(gotAssignment); err != nil {
 		t.Fatal(err)
 	}
 
@@ -67,7 +67,7 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
-		t.Errorf("CreateAssignment() or GetAssignmentsByCourse() mismatch (-wantAssignment, +gotAssignment):n%s", diff)
+		t.Errorf("CreateAssignment() mismatch (-wantAssignment, +gotAssignment):\n%s", diff)
 	}
 
 	if _, err = db.GetAssignment(&pb.Assignment{ID: 1}); err != nil {
