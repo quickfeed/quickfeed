@@ -480,7 +480,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(wantUser1, gotUser1, protocmp.Transform()); diff != "" {
-		t.Errorf("CreateUserFromRemoteIdentity() mismatch (-wantUser, +gotUser):\n%s", diff)
+		t.Errorf("CreateUserFromRemoteIdentity() mismatch (-wantUser1, +gotUser1):\n%s", diff)
 	}
 
 	if err := db.AssociateUserWithRemoteIdentity(gotUser1.ID, provider2, remoteID2, secret2); err != nil {
@@ -494,7 +494,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	gotUser2.Enrollments = nil
 
 	if diff := cmp.Diff(wantUser2, gotUser2, protocmp.Transform()); diff != "" {
-		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
+		t.Errorf("GetUser() mismatch (-wantUser2, +gotUser2):\n%s", diff)
 	}
 
 	if err := db.AssociateUserWithRemoteIdentity(gotUser1.ID, provider2, remoteID2, secret3); err != nil {
@@ -509,7 +509,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	wantUser2.RemoteIdentities[1].AccessToken = secret3
 
 	if diff := cmp.Diff(wantUser2, gotUser3, protocmp.Transform()); diff != "" {
-		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
+		t.Errorf("GetUser() mismatch (-wantUser2, +gotUser3):\n%s", diff)
 	}
 }
 
