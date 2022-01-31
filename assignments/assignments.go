@@ -124,7 +124,7 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 // updateGradingCriteria will remove old grading criteria and related reviews when criteria.json gets updated
 func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment) {
 	if len(assignment.GetGradingBenchmarks()) > 0 {
-		savedAssignment, err := db.GetAssignment(&pb.Assignment{
+		gradingBenchmarks, err := db.GetBenchmarks(&pb.Assignment{
 			CourseID: assignment.CourseID,
 			Name:     assignment.Name,
 		})
@@ -136,14 +136,14 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 			logger.Debugf("Failed to fetch assignment %s from database: %s", assignment.Name, err)
 			return
 		}
-		if len(savedAssignment.GetGradingBenchmarks()) > 0 {
-			if !cmp.Equal(assignment.GradingBenchmarks, savedAssignment.GradingBenchmarks, cmp.Options{
+		if len(gradingBenchmarks) > 0 {
+			if !cmp.Equal(assignment.GradingBenchmarks, gradingBenchmarks, cmp.Options{
 				protocmp.Transform(),
 				protocmp.IgnoreFields(&pb.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
 				protocmp.IgnoreFields(&pb.GradingCriterion{}, "ID", "BenchmarkID"),
 				protocmp.IgnoreEnums(),
 			}) {
-				for _, bm := range savedAssignment.GradingBenchmarks {
+				for _, bm := range gradingBenchmarks {
 					for _, c := range bm.Criteria {
 						if err := db.DeleteCriterion(c); err != nil {
 							logger.Errorf("Failed to delete criteria %v: %s\n", c, err)
