@@ -182,8 +182,8 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateGroup, request);
     }
 
-    public updateGroup(group: Group): Promise<IGrpcResponse<Void>> {
-        return this.grpcSend<Void>(this.agService.updateGroup, group);
+    public updateGroup(group: Group): Promise<IGrpcResponse<Group>> {
+        return this.grpcSend<Group>(this.agService.updateGroup, group)
     }
 
     public deleteGroup(courseID: number, groupID: number): Promise<IGrpcResponse<Void>> {
@@ -193,18 +193,8 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.deleteGroup, request);
     }
 
-    public createGroup(courseID: number, name: string, users: number[]): Promise<IGrpcResponse<Group>> {
-        const request = new Group();
-        request.setName(name);
-        request.setCourseid(courseID);
-        const groupUsers: User[] = [];
-        users.forEach((ele) => {
-            const usr = new User();
-            usr.setId(ele);
-            groupUsers.push(usr);
-        });
-        request.setUsersList(groupUsers);
-        return this.grpcSend<Group>(this.agService.createGroup, request);
+    public createGroup(group: Group): Promise<IGrpcResponse<Group>> {
+        return this.grpcSend<Group>(this.agService.createGroup, group)
     }
 
     // /* SUBMISSIONS */ //
