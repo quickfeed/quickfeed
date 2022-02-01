@@ -3,6 +3,7 @@ import { Review } from "../../proto/ag/ag_pb"
 import { hasBenchmarks } from "../Helpers"
 import Benchmark from "./manual-grading/Benchmark"
 import Criteria from "./manual-grading/Criterion"
+import SummaryFeedback from "./manual-grading/SummaryFeedback"
 
 
 const ReviewResult = ({ review }: { review?: Review }): JSX.Element => {
@@ -23,7 +24,7 @@ const ReviewResult = ({ review }: { review?: Review }): JSX.Element => {
         <table className="table">
             <thead className="thead-dark">
                 <tr className="table-primary">
-                    <th>{review.getFeedback()}</th>
+                    <th>Score:</th>
                     <th>{review.getScore()}</th>
                     <th></th>
                 </tr>
@@ -36,6 +37,9 @@ const ReviewResult = ({ review }: { review?: Review }): JSX.Element => {
             <tbody>
                 {result}
             </tbody>
+            <tfoot>
+                <SummaryFeedback review={review} />
+            </tfoot>
         </table>
     )
 
