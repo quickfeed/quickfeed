@@ -1,6 +1,7 @@
 package ag
 
 import (
+	context "context"
 	"time"
 )
 
@@ -19,6 +20,17 @@ func (a *Assignment) SinceDeadline(now time.Time) (time.Duration, error) {
 		return zero, err
 	}
 	return now.Sub(deadline), nil
+}
+
+// WithTimeout returns a context with an execution timeout set to the assignment's specified
+// container timeout. If the assignment has no container timeout, the provided timeout value
+// is used instead.
+func (a *Assignment) WithTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
+	t := a.GetContainerTimeout()
+	if t > 0 {
+		timeout = time.Duration(t) * time.Minute
+	}
+	return context.WithTimeout(context.Background(), timeout)
 }
 
 // IsApproved returns an approved submission status if this assignment is already approved

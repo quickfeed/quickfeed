@@ -122,9 +122,12 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	assignment := &pb.Assignment{
-		CourseID:         course.ID,
-		Name:             "lab1",
-		ScriptFile:       "go.sh",
+		CourseID: course.ID,
+		Name:     "lab1",
+		ScriptFile: `#image/quickfeed:go
+printf "AssignmentName: {{ .AssignmentName }}\n"
+printf "RandomSecret: {{ .RandomSecret }}\n"
+`,
 		Deadline:         "2022-11-11T13:00:00",
 		AutoApprove:      true,
 		ScoreLimit:       70,
@@ -149,15 +152,17 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// rebuild a single submission
-	var rebuildRequest pb.RebuildRequest
-	rebuildRequest.AssignmentID = assignment.ID
-	rebuildRequest.SubmissionID = 123
-	if _, err := ags.RebuildSubmission(ctx, &rebuildRequest); err == nil {
+	// try to rebuild non-existing submission
+	rebuildRequest := &pb.RebuildRequest{
+		AssignmentID: assignment.ID,
+		SubmissionID: 123,
+	}
+	if _, err := ags.RebuildSubmission(ctx, rebuildRequest); err == nil {
 		t.Errorf("Expected error: record not found")
 	}
+	// rebuild existing submission
 	rebuildRequest.SubmissionID = 1
-	if _, err := ags.RebuildSubmission(ctx, &rebuildRequest); err != nil {
+	if _, err := ags.RebuildSubmission(ctx, rebuildRequest); err != nil {
 		t.Fatalf("Failed to rebuild submission: %s", err)
 	}
 	submissions, err := db.GetSubmissions(&pb.Submission{AssignmentID: assignment.ID})

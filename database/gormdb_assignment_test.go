@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"reflect"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -48,12 +47,12 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 10)
 	qtest.CreateCourse(t, db, admin, &pb.Course{})
 
-	assignment := pb.Assignment{
+	gotAssignment := &pb.Assignment{
 		CourseID: 1,
 		Order:    1,
 	}
 
-	if err := db.CreateAssignment(&assignment); err != nil {
+	if err := db.CreateAssignment(gotAssignment); err != nil {
 		t.Fatal(err)
 	}
 
@@ -61,13 +60,14 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	wantAssignment := assignments[0]
 
 	if len(assignments) != 1 {
 		t.Fatalf("have size %v wanted %v", len(assignments), 1)
 	}
 
-	if !reflect.DeepEqual(assignments[0], &assignment) {
-		t.Fatalf("want %v have %v", assignments[0], &assignment)
+	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
+		t.Errorf("CreateAssignment() mismatch (-wantAssignment, +gotAssignment):\n%s", diff)
 	}
 
 	if _, err = db.GetAssignment(&pb.Assignment{ID: 1}); err != nil {
@@ -300,5 +300,118 @@ func TestUpdateBenchmarks(t *testing.T) {
 		if diff := cmp.Diff(assignment, gotAssignments[i], protocmp.Transform()); diff != "" {
 			t.Errorf("UpdateAssignments() mismatch (-want +got):\n%s", diff)
 		}
+	}
+}
+
+func TestEqualGradingBenchmarks(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	course := &pb.Course{}
+	admin := qtest.CreateFakeUser(t, db, 10)
+	user := qtest.CreateFakeUser(t, db, 20)
+	qtest.CreateCourse(t, db, admin, course)
+
+	assignment := &pb.Assignment{
+		CourseID:    course.ID,
+		Name:        "Assignment 1",
+		ScriptFile:  "go.sh",
+		Deadline:    "12.12.2021",
+		AutoApprove: false,
+		Order:       1,
+		IsGroupLab:  false,
+	}
+	if err := db.CreateAssignment(assignment); err != nil {
+		t.Fatal(err)
+	}
+
+	benchmarks := []*pb.GradingBenchmark{
+		{
+			ID:           1,
+			AssignmentID: assignment.ID,
+			Heading:      "Test benchmark 1",
+			Criteria: []*pb.GradingCriterion{
+				{
+					ID:          1,
+					Description: "Criterion 1",
+					BenchmarkID: 1,
+					Points:      5,
+				},
+				{
+					ID:          2,
+					Description: "Criterion 2",
+					BenchmarkID: 1,
+					Points:      10,
+				},
+			},
+		},
+		{
+			ID:           2,
+			AssignmentID: assignment.ID,
+			Heading:      "Test benchmark 2",
+			Criteria: []*pb.GradingCriterion{
+				{
+					ID:          3,
+					Description: "Criterion 3",
+					BenchmarkID: 2,
+					Points:      1,
+				},
+			},
+		},
+	}
+
+	for _, bm := range benchmarks {
+		if err := db.CreateBenchmark(bm); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	assignment.GradingBenchmarks = benchmarks
+
+	submission := &pb.Submission{
+		AssignmentID: assignment.ID,
+		UserID:       user.ID,
+	}
+
+	if err := db.CreateSubmission(submission); err != nil {
+		t.Fatal(err)
+	}
+
+	review := &pb.Review{
+		ReviewerID:   admin.ID,
+		SubmissionID: submission.ID,
+		GradingBenchmarks: []*pb.GradingBenchmark{
+			{
+				AssignmentID: assignment.ID,
+				Heading:      "Test benchmark 2",
+				Comment:      "This is a comment",
+				Criteria: []*pb.GradingCriterion{
+					{
+						Description: "Criterion 3",
+						Comment:     "This is a comment",
+						Grade:       pb.GradingCriterion_PASSED,
+						BenchmarkID: 2,
+						Points:      1,
+					},
+				},
+			},
+		},
+	}
+	if err := db.CreateReview(review); err != nil {
+		t.Fatal(err)
+	}
+
+	benchmarks, err := db.GetBenchmarks(&pb.Assignment{ID: assignment.ID, CourseID: course.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if diff := cmp.Diff(assignment.GradingBenchmarks, benchmarks, cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&pb.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
+		protocmp.IgnoreFields(&pb.GradingCriterion{}, "ID", "BenchmarkID"),
+		protocmp.IgnoreEnums(),
+	}); diff != "" {
+		t.Errorf("GetBenchmarks() mismatch (-want +got):\n%s", diff)
 	}
 }

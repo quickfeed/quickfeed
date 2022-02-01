@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"reflect"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -57,13 +56,13 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	if err := db.UpdateAccessToken(updateAccessToken); err != nil {
 		t.Error(err)
 	}
-	updatedUser, err := db.GetUser(user.ID)
+	gotUser, err := db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	updatedUser.Enrollments = nil
-	if !reflect.DeepEqual(updatedUser, wantUser) {
-		t.Errorf("have user %+v want %+v", updatedUser, wantUser)
+	gotUser.Enrollments = nil
+	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 
 	// do another update
@@ -72,13 +71,13 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	if err := db.UpdateAccessToken(updateAccessToken); err != nil {
 		t.Error(err)
 	}
-	updatedUser, err = db.GetUser(user.ID)
+	gotUser, err = db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	updatedUser.Enrollments = nil
-	if !reflect.DeepEqual(updatedUser, wantUser) {
-		t.Errorf("have user %+v want %+v", updatedUser, wantUser)
+	gotUser.Enrollments = nil
+	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 }
 
