@@ -111,6 +111,8 @@ type Database interface {
 	UpdateSubmission(*pb.Submission) error
 	// UpdateSubmissions releases and/or approves all submissions with a certain score
 	UpdateSubmissions(uint64, *pb.Submission) error
+	// GetReview returns a single review matching the given query.
+	GetReview(query *pb.Review) (*pb.Review, error)
 	// CreateReview adds a new submission review.
 	CreateReview(*pb.Review) error
 	// UpdateReview updates the given review.
