@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useHistory } from "react-router"
 import { Enrollment, SubmissionLink } from "../../proto/ag/ag_pb"
-import { Color, generateAssignmentsHeader, generateSubmissionRows, getCourseID, isApproved, isRevision, sortCourseSubmissions, SubmissionSort } from "../Helpers"
+import { Color, generateAssignmentsHeader, generateSubmissionRows, getCourseID, isApproved, isRevision } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
 import DynamicTable, { CellElement } from "./DynamicTable"
