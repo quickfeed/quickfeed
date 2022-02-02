@@ -213,13 +213,13 @@ func TestUpdateCriteria(t *testing.T) {
 	db.UpdateAssignments([]*pb.Assignment{assignment, assignment2})
 
 	for _, wantReview := range []*pb.Review{review, review2} {
-		if gotReview, err := db.GetReview(&pb.Review{ID: wantReview.ID}); err != nil {
+		gotReview, err := db.GetReview(&pb.Review{ID: wantReview.ID})
+		if err != nil {
 			t.Fatal(err)
-		} else {
-			// Review should not have changed
-			if diff := cmp.Diff(wantReview, gotReview, protocmp.Transform()); diff != "" {
-				t.Fatalf("GetReview() mismatch (-want +got):\n%s", diff)
-			}
+		}
+		// Review should not have changed
+		if diff := cmp.Diff(wantReview, gotReview, protocmp.Transform()); diff != "" {
+			t.Fatalf("GetReview() mismatch (-want +got):\n%s", diff)
 		}
 	}
 
@@ -257,13 +257,13 @@ func TestUpdateCriteria(t *testing.T) {
 	// This should delete the old benchmarks and criteria existing in the database, and return the new benchmarks
 	updateGradingCriteria(zap.NewNop().Sugar(), db, assignment)
 
-	if gotBenchmarks, err := db.GetBenchmarks(&pb.Assignment{ID: assignment.ID, CourseID: course.ID}); err != nil {
+	gotBenchmarks, err = db.GetBenchmarks(&pb.Assignment{ID: assignment.ID, CourseID: course.ID})
+	if err != nil {
 		t.Fatal(err)
-	} else {
-		// updateGradingCriteria should have deleted the old benchmarks and criteria
-		if len(gotBenchmarks) > 0 {
-			t.Fatalf("Expected no benchmarks, got %v", gotBenchmarks)
-		}
+	}
+	// updateGradingCriteria should have deleted the old benchmarks and criteria
+	if len(gotBenchmarks) > 0 {
+		t.Fatalf("Expected no benchmarks, got %v", gotBenchmarks)
 	}
 
 	// Assignment has been modified, expect benchmarks to not be nil
@@ -275,23 +275,24 @@ func TestUpdateCriteria(t *testing.T) {
 	db.UpdateAssignments([]*pb.Assignment{assignment, assignment2})
 
 	// Benchmarks should have been updated to reflect the removal of a benchmark and a criterion
-	if gotBenchmarks, err := db.GetBenchmarks(&pb.Assignment{ID: assignment.ID, CourseID: course.ID}); err != nil {
+	gotBenchmarks, err = db.GetBenchmarks(&pb.Assignment{ID: assignment.ID, CourseID: course.ID})
+	if err != nil {
 		t.Fatal(err)
-	} else {
-		if diff := cmp.Diff(updatedBenchmarks, gotBenchmarks, protocmp.Transform()); diff != "" {
-			t.Errorf("GetBenchmarks() mismatch (-want +got):\n%s", diff)
-		}
+	}
+
+	if diff := cmp.Diff(updatedBenchmarks, gotBenchmarks, protocmp.Transform()); diff != "" {
+		t.Errorf("GetBenchmarks() mismatch (-want +got):\n%s", diff)
 	}
 
 	// Finally check that reviews are unaffected
 	for _, wantReview := range []*pb.Review{review, review2} {
-		if gotReview, err := db.GetReview(&pb.Review{ID: wantReview.ID}); err != nil {
+		gotReview, err := db.GetReview(&pb.Review{ID: wantReview.ID})
+		if err != nil {
 			t.Fatal(err)
-		} else {
-			// Review should not have changed
-			if diff := cmp.Diff(wantReview, gotReview, protocmp.Transform()); diff != "" {
-				t.Fatalf("GetReview() mismatch (-want +got):\n%s", diff)
-			}
+		}
+		// Review should not have changed
+		if diff := cmp.Diff(wantReview, gotReview, protocmp.Transform()); diff != "" {
+			t.Fatalf("GetReview() mismatch (-want +got):\n%s", diff)
 		}
 	}
 }
