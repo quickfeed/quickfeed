@@ -15,7 +15,6 @@ const ReviewPage = (): JSX.Element => {
     const actions = useActions()
     const courseID = getCourseID()
     const history = useHistory()
-    const isCourseCreator = state.courses[courseID].getCoursecreatorid() === state.self.getId()
     const [groupView, setGroupView] = useState<boolean>(false)
 
     useEffect(() => {
@@ -67,7 +66,7 @@ const ReviewPage = (): JSX.Element => {
 
     return (
         <div>
-            {isCourseCreator && <Release />}
+            {state.isCourseCreator && <Release />}
             <div className="row">
                 <div className={state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"}>
                     <Search placeholder={"Search by name ..."} >

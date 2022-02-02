@@ -17,8 +17,6 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element => {
 
     const assignment = state.activeSubmissionLink?.getAssignment()
     const submission = state.activeSubmissionLink?.getSubmission()
-
-    const isTeacher = isCourseCreator(state.self, state.courses[getCourseID()])
     const ready = review.getReady()
     const allCriteriaGraded = state.review.graded === state.review.criteriaTotal
 
@@ -33,8 +31,8 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element => {
 
     const setReadyOrGradeButton = ready ? <ManageSubmissionStatus /> : markReadyButton
     const releaseButton = (
-        <Button onclick={() => { isTeacher && actions.review.release(!submission?.getReleased()) }}
-            classname={`float-right ${!isTeacher && "disabled"} `}
+        <Button onclick={() => { state.isCourseCreator && actions.review.release(!submission?.getReleased()) }}
+            classname={`float-right ${!state.isCourseCreator && "disabled"} `}
             text={submission?.getReleased() ? "Released" : "Release"}
             color={submission?.getReleased() ? Color.WHITE : Color.YELLOW}
             type={ButtonType.BUTTON} />

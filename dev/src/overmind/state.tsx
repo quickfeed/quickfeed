@@ -61,6 +61,10 @@ type State = {
     // derived from enrollmentsByCourseID
     isTeacher: boolean
 
+    /* Indicates if the user is the course creator of the current course */
+    // derived from courses
+    isCourseCreator: boolean
+
     /* Contains links to all repositories for a given course */
     // Individual repository links are accessed by Repository.Type
     repositories: { [courseid: number]: { [repo: string]: string } },
@@ -180,6 +184,13 @@ export const state: State = {
     isTeacher: derived((state: State) => {
         if (state.activeCourse > 0 && state.enrollmentsByCourseID[state.activeCourse]) {
             return isTeacher(state.enrollmentsByCourseID[state.activeCourse])
+        }
+        return false
+    }),
+    isCourseCreator: derived((state: State) => {
+        const course = state.courses.find(course => course.getId() === state.activeCourse)
+        if (course && course.getCoursecreatorid() === state.self.getId()) {
+            return true
         }
         return false
     }),
