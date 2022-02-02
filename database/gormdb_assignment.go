@@ -23,7 +23,6 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 	if course != 1 {
 		return gorm.ErrRecordNotFound
 	}
-
 	return db.conn.
 		Where(pb.Assignment{
 			CourseID: assignment.CourseID,
@@ -169,8 +168,14 @@ func (db *GormDB) DeleteCriterion(query *pb.GradingCriterion) error {
 // GetBenchmarks returns all benchmarks and associated criteria for a given assignment ID
 func (db *GormDB) GetBenchmarks(query *pb.Assignment) ([]*pb.GradingBenchmark, error) {
 	var benchmarks []*pb.GradingBenchmark
+
+	var assignment pb.Assignment
+	if err := db.conn.Where(query).
+		First(&assignment).Error; err != nil {
+		return nil, err
+	}
 	if err := db.conn.
-		Where("assignment_id = ?", query.ID).
+		Where("assignment_id = ?", assignment.ID).
 		Where("review_id = ?", 0).
 		Find(&benchmarks).Error; err != nil {
 		return nil, err
