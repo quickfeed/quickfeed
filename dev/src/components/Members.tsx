@@ -5,6 +5,7 @@ import { Enrollment, User } from "../../proto/ag/ag_pb"
 import Search from "./Search"
 import DynamicButton from "./DynamicButton"
 import { ButtonType } from "./admin/Button"
+import DynamicTable from "./DynamicTable"
 
 
 const Members = (): JSX.Element => {
