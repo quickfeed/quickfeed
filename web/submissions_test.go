@@ -162,23 +162,23 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	// teacher must be able to access all of the latest course submissions
-	gotSubmissions, err := ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
+	submissions, err := ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if diff := cmp.Diff(gotSubmissions.GetSubmissions(), latestSubmissions, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(submissions.GetSubmissions(), latestSubmissions, protocmp.Transform()); diff != "" {
 		t.Errorf("TestSubmissionsAccess() mismatch (-gotSubmission.GetSubmissions(), +latestSubmissions):\n%s", diff)
 	}
 
 	// admin not enrolled in the course must not be able to access any course submissions
 	ctx = withUserContext(context.Background(), admin)
-	gotSubmissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
+	submissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
 	if err == nil {
 		t.Error("Expected error: user not enrolled")
 	}
-	if len(gotSubmissions.GetSubmissions()) > 0 {
-		t.Errorf("Not enrolled admin should not see any submissions, got submissions: %v+ ", gotSubmissions.GetSubmissions())
+	if len(submissions.GetSubmissions()) > 0 {
+		t.Errorf("Not enrolled admin should not see any submissions, got submissions: %v+ ", submissions.GetSubmissions())
 	}
 
 	// enroll admin as course student
@@ -193,13 +193,14 @@ func TestSubmissionsAccess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotSubmissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
+	submissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	// enrolled as student, admin must be able to access all course submissions
-	if diff := cmp.Diff(gotSubmissions.GetSubmissions(), latestSubmissions, protocmp.Transform()); diff != "" {
-		t.Errorf("TestSubmissionsAccess() mismatch (-gotSubmission.GetSubmissions(), +latestSubmissions):\n%s", diff)
+	gotSubmissions := submissions.GetSubmissions()
+	if diff := cmp.Diff(gotSubmissions, latestSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetSubmissions() mismatch (-gotSubmissions, +latestSubmissions):\n%s", diff)
 	}
 
 	// the first student must be able to access own submissions as well as submissions made by group he has membership in
@@ -341,7 +342,7 @@ func TestApproveSubmission(t *testing.T) {
 	}
 	wantSubmission.Status = pb.Submission_REJECTED
 
-	if diff := cmp.Diff(updatedSubmission.GetStatus(), wantSubmission.GetStatus()); diff != "" {
+	if diff := cmp.Diff(updatedSubmission.GetStatus(), wantSubmission.GetStatus(), protocmp.Transform()); diff != "" {
 		t.Errorf("TestApproveSubmission() mismatch (-updatedSubmission.GetStatus(), +wantSubmissions.GetStatus():\n%s", diff)
 	}
 }
