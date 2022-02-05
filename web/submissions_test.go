@@ -2,7 +2,6 @@ package web_test
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -155,7 +154,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	allSubmissions := []*pb.Submission{submission1, submission2, submission3}
-	latestSubmissions := []*pb.Submission{submission2, submission3}
+	wantLatestSubmissions := []*pb.Submission{submission2, submission3}
 
 	// there must be exactly three submissions for given course and assignment in the database
 	if len(allSubmissions) != 3 {
@@ -163,22 +162,23 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	// teacher must be able to access all of the latest course submissions
-	haveSubmissions, err := ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
+	submissions, err := ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(latestSubmissions, haveSubmissions.GetSubmissions()) {
-		t.Errorf("Teacher got submissions %+v, expected submissions: %+v", haveSubmissions.GetSubmissions(), latestSubmissions)
+	gotSubmissions := submissions.GetSubmissions()
+	if diff := cmp.Diff(wantLatestSubmissions, gotSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetSubmissions() mismatch (-wantLatestSubmissions, +gotSubmissions):\n%s", diff)
 	}
 
 	// admin not enrolled in the course must not be able to access any course submissions
 	ctx = withUserContext(context.Background(), admin)
-	haveSubmissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
+	submissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
 	if err == nil {
 		t.Error("Expected error: user not enrolled")
 	}
-	if len(haveSubmissions.GetSubmissions()) > 0 {
-		t.Errorf("Not enrolled admin should not see any submissions, got submissions: %v+ ", haveSubmissions.GetSubmissions())
+	if len(submissions.GetSubmissions()) > 0 {
+		t.Errorf("Not enrolled admin should not see any submissions, got submissions: %v+ ", submissions.GetSubmissions())
 	}
 
 	// enroll admin as course student
@@ -193,13 +193,14 @@ func TestSubmissionsAccess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	haveSubmissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
+	submissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	// enrolled as student, admin must be able to access all course submissions
-	if !reflect.DeepEqual(latestSubmissions, haveSubmissions.GetSubmissions()) {
-		t.Errorf("Admin got submissions %+v, expected submissions: %+v", haveSubmissions.GetSubmissions(), latestSubmissions)
+	gotSubmissions = submissions.GetSubmissions()
+	if diff := cmp.Diff(wantLatestSubmissions, gotSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetSubmissions() mismatch (-wantLatestSubmissions, +gotSubmissions):\n%s", diff)
 	}
 
 	// the first student must be able to access own submissions as well as submissions made by group he has membership in
@@ -221,9 +222,10 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	wantSubmissions := []*pb.Submission{submission1, submission3}
-	student1Submissions := []*pb.Submission{personalSubmission.GetSubmissions()[0], groupSubmission.GetSubmissions()[0]}
-	if !reflect.DeepEqual(wantSubmissions, student1Submissions) {
-		t.Errorf("Student 1 got submissions %+v, expected submissions: %+v", haveSubmissions.GetSubmissions(), wantSubmissions)
+	gotStudent1Submissions := []*pb.Submission{personalSubmission.GetSubmissions()[0], groupSubmission.GetSubmissions()[0]}
+
+	if diff := cmp.Diff(wantSubmissions, gotStudent1Submissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetSubmissions() mismatch (-wantSubmissions, +gotStudent1Submissions):\n%s", diff)
 	}
 
 	// the second student should not be able to access the submission by student1
@@ -316,14 +318,15 @@ func TestApproveSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	updatedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
+	gotApprovedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantSubmission.Status = pb.Submission_APPROVED
+	wantSubmission.ApprovedDate = gotApprovedSubmission.ApprovedDate
 
-	if !reflect.DeepEqual(wantSubmission.GetStatus(), updatedSubmission.GetStatus()) {
-		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetStatus().String(), updatedSubmission.GetStatus().String())
+	if diff := cmp.Diff(wantSubmission, gotApprovedSubmission, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateSubmission(approve) mismatch (-wantSubmission, +gotApprovedSubmission):\n%s", diff)
 	}
 
 	if _, err = ags.UpdateSubmission(ctx, &pb.UpdateSubmissionRequest{
@@ -334,14 +337,15 @@ func TestApproveSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	updatedSubmission, err = db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
+	gotRejectedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantSubmission.Status = pb.Submission_REJECTED
+	// Note that the approved date is not set when the submission is rejected
 
-	if !reflect.DeepEqual(wantSubmission.GetStatus(), updatedSubmission.GetStatus()) {
-		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetStatus().String(), updatedSubmission.GetStatus().String())
+	if diff := cmp.Diff(wantSubmission, gotRejectedSubmission, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateSubmission(reject) mismatch (-wantSubmission, +gotRejectedSubmission):\n%s", diff)
 	}
 }
 
@@ -441,7 +445,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		ExecTime:  3,
 	}
 
-	sub1 := &pb.Submission{
+	wantSubmission1 := &pb.Submission{
 		UserID:       student.ID,
 		AssignmentID: lab1c1.ID,
 		Score:        44,
@@ -449,7 +453,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		Scores:       []*score.Score{},
 		BuildInfo:    buildInfo1,
 	}
-	sub2 := &pb.Submission{
+	wantSubmission2 := &pb.Submission{
 		UserID:       student.ID,
 		AssignmentID: lab2c2.ID,
 		Score:        66,
@@ -457,10 +461,10 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		Scores:       []*score.Score{},
 		BuildInfo:    buildInfo2,
 	}
-	if err := db.CreateSubmission(sub1); err != nil {
+	if err := db.CreateSubmission(wantSubmission1); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateSubmission(sub2); err != nil {
+	if err := db.CreateSubmission(wantSubmission2); err != nil {
 		t.Fatal(err)
 	}
 
@@ -477,19 +481,22 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	wantAssignments1 := []*pb.Assignment{lab1c1, lab2c1}
 	wantAssignments2 := []*pb.Assignment{lab1c2, lab2c2}
 
-	haveAssignments1, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course1.ID})
+	assignments1, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course1.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(wantAssignments1, haveAssignments1.GetAssignments()) {
-		t.Errorf("Expected assignments for course 1: %+v, got %+v", wantAssignments1, haveAssignments1.GetAssignments())
+	gotAssignments1 := assignments1.GetAssignments()
+	if diff := cmp.Diff(wantAssignments1, gotAssignments1, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetAssignments() mismatch (-wantAssignments1, +gotAssignments1):\n%s", diff)
 	}
-	haveAssignments2, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course2.ID})
+
+	assignments2, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course2.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(wantAssignments2, haveAssignments2.GetAssignments()) {
-		t.Errorf("Expected assignments for course 2: %+v, got %+v", wantAssignments1, haveAssignments1.GetAssignments())
+	gotAssignments2 := assignments2.GetAssignments()
+	if diff := cmp.Diff(wantAssignments2, gotAssignments2, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetAssignments() mismatch (-wantAssignments2, +gotAssignments2):\n%s", diff)
 	}
 
 	// check that all submissions were saved for the correct labs
@@ -497,14 +504,16 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	for _, enrolLink := range labsForCourse1.GetLinks() {
 		if enrolLink.GetEnrollment().GetUserID() == student.ID {
 			labs := enrolLink.GetSubmissions()
 			if len(labs) != 2 {
 				t.Fatalf("Expected 2 submission links for course 1, got %d", len(labs))
 			}
-			if diff := cmp.Diff(sub1, labs[0].Submission, protocmp.Transform()); diff != "" {
-				t.Errorf("TestGetCourseLabSubmissions() mismatch (-sub1 +labs[0]):\n%s", diff)
+			gotSubmission1 := labs[0].GetSubmission()
+			if diff := cmp.Diff(wantSubmission1, gotSubmission1, protocmp.Transform()); diff != "" {
+				t.Errorf("ags.GetSubmissionsByCourse() mismatch (-wantSubmission1 +gotSubmission1):\n%s", diff)
 			}
 		}
 	}
@@ -519,8 +528,9 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 			if len(labs) != 2 {
 				t.Fatalf("Expected 2 submission for course 1, got %d", len(labs))
 			}
-			if diff := cmp.Diff(sub2, labs[1].Submission, protocmp.Transform()); diff != "" {
-				t.Errorf("TestGetCourseLabSubmissions() mismatch (-sub2 +labs[1]):\n%s", diff)
+			gotSubmission2 := labs[1].GetSubmission()
+			if diff := cmp.Diff(wantSubmission2, gotSubmission2, protocmp.Transform()); diff != "" {
+				t.Errorf("ags.GetSubmissionsByCourse() mismatch (-wantSubmission2 +gotSubmission2):\n%s", diff)
 			}
 		}
 	}

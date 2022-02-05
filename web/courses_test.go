@@ -2,14 +2,12 @@ package web_test
 
 import (
 	"context"
-	"reflect"
 	"strconv"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/google/go-cmp/cmp"
-	"github.com/markbates/goth"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -19,7 +17,6 @@ import (
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web"
-	"github.com/autograde/quickfeed/web/auth"
 )
 
 var allCourses = []*pb.Course{
@@ -69,24 +66,22 @@ func TestGetCourses(t *testing.T) {
 	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
-	var testCourses []*pb.Course
+	var wantCourses []*pb.Course
 	for _, course := range allCourses {
 		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
 		}
-		testCourses = append(testCourses, course)
+		wantCourses = append(wantCourses, course)
 	}
 
 	foundCourses, err := ags.GetCourses(context.Background(), &pb.Void{})
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	for i, course := range foundCourses.Courses {
-		if !reflect.DeepEqual(course, testCourses[i]) {
-			t.Errorf("have course %+v want %+v", course, testCourses[i])
-		}
+	gotCourses := foundCourses.Courses
+	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetCourses() mismatch (-wantCourses +gotCourses):\n%s", diff)
 	}
 }
 
@@ -98,50 +93,38 @@ func withUserContext(ctx context.Context, user *pb.User) context.Context {
 	return metadata.NewIncomingContext(ctx, meta)
 }
 
-func fakeGothProvider() {
-	baseURL := "fake"
-	goth.UseProviders(&auth.FakeProvider{
-		Callback: auth.GetCallbackURL(baseURL, "fake"),
-	})
-	goth.UseProviders(&auth.FakeProvider{
-		Callback: auth.GetCallbackURL(baseURL, "fake-teacher"),
-	})
-}
-
 func TestNewCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	// set up fake goth provider (only needs to be done once)
-	fakeGothProvider()
 	admin := qtest.CreateFakeUser(t, db, 10)
 	ctx := withUserContext(context.Background(), admin)
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
-	for _, testCourse := range allCourses {
+	for _, wantCourse := range allCourses {
 		// each course needs a separate directory
 		_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		respCourse, err := ags.CreateCourse(ctx, testCourse)
+		gotCourse, err := ags.CreateCourse(ctx, wantCourse)
 		if err != nil {
 			t.Fatal(err)
 		}
+		wantCourse.ID = gotCourse.ID
+		if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
+			t.Errorf("ags.CreateCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
+		}
 
-		course, err := db.GetCourse(respCourse.ID, false)
+		// check that the database also has the course
+		gotCourse, err = db.GetCourse(wantCourse.ID, false)
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		testCourse.ID = respCourse.ID
-		if !reflect.DeepEqual(course, testCourse) {
-			t.Errorf("have database course\n %+v want\n %+v", course, testCourse)
-		}
-		if !reflect.DeepEqual(respCourse, course) {
-			t.Errorf("have response course\n %+v want\n %+v", respCourse, course)
+		if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
+			t.Errorf("db.GetCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
 		}
 	}
 }
@@ -214,8 +197,8 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	// can't use: wantEnrollment.User.RemoveRemoteID()
 	wantEnrollment.User.RemoteIdentities = nil
-	if diff := cmp.Diff(pendingEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-pendingEnrollment +wantEnrollment):\n%s", diff)
+	if diff := cmp.Diff(wantEnrollment, pendingEnrollment, protocmp.Transform()); diff != "" {
+		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +pendingEnrollment):\n%s", diff)
 	}
 
 	enrollStud1.Status = pb.Enrollment_STUDENT
@@ -224,13 +207,13 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 
 	// verify that the enrollment was updated to student status.
-	acceptedEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, stud1.ID)
+	gotEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, stud1.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantEnrollment.Status = pb.Enrollment_STUDENT
-	if diff := cmp.Diff(acceptedEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-acceptedEnrollment +wantEnrollment):\n%s", diff)
+	if diff := cmp.Diff(wantEnrollment, gotEnrollment, protocmp.Transform()); diff != "" {
+		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +gotEnrollment):\n%s", diff)
 	}
 
 	// create another user and enroll as student
@@ -245,17 +228,17 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	// verify that the stud2 was enrolled with student status.
-	acceptedEnrollment, err = db.GetEnrollmentByCourseAndUser(course.ID, stud2.ID)
+	gotEnrollment, err = db.GetEnrollmentByCourseAndUser(course.ID, stud2.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantEnrollment.ID = acceptedEnrollment.ID
+	wantEnrollment.ID = gotEnrollment.ID
 	wantEnrollment.Status = pb.Enrollment_STUDENT
 	wantEnrollment.UserID = stud2.ID
 	wantEnrollment.User = stud2
 	wantEnrollment.User.RemoteIdentities = nil
-	if diff := cmp.Diff(acceptedEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-acceptedEnrollment +wantEnrollment):\n%s", diff)
+	if diff := cmp.Diff(wantEnrollment, gotEnrollment, protocmp.Transform()); diff != "" {
+		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +gotEnrollment):\n%s", diff)
 	}
 
 	// promote stud2 to teaching assistant
@@ -265,14 +248,14 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	// verify that the stud2 was promoted to teacher status.
-	acceptedEnrollment, err = db.GetEnrollmentByCourseAndUser(course.ID, stud2.ID)
+	gotEnrollment, err = db.GetEnrollmentByCourseAndUser(course.ID, stud2.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantEnrollment.ID = acceptedEnrollment.ID
+	wantEnrollment.ID = gotEnrollment.ID
 	wantEnrollment.Status = pb.Enrollment_TEACHER
-	if diff := cmp.Diff(acceptedEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-acceptedEnrollment +wantEnrollment):\n%s", diff)
+	if diff := cmp.Diff(wantEnrollment, gotEnrollment, protocmp.Transform()); diff != "" {
+		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +gotEnrollment):\n%s", diff)
 	}
 }
 
@@ -407,8 +390,9 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(courses.Courses, wantCourses, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-Courses +wantCourses):\n%s", diff)
+	gotCourses := courses.Courses
+	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCoursesByUser() mismatch (-wantCourses +gotCourses):\n%s", diff)
 	}
 }
 
@@ -417,29 +401,27 @@ func TestGetCourse(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := allCourses[0]
-	err := db.CreateCourse(admin.ID, course)
+	wantCourse := allCourses[0]
+	err := db.CreateCourse(admin.ID, wantCourse)
 	if err != nil {
 		t.Fatal(err)
 	}
 	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
-	foundCourse, err := ags.GetCourse(context.Background(), &pb.CourseRequest{CourseID: course.ID})
+	gotCourse, err := ags.GetCourse(context.Background(), &pb.CourseRequest{CourseID: wantCourse.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if diff := cmp.Diff(foundCourse, course, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-foundCourse +course):\n%s", diff)
+	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
 	}
 }
 
 func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-
-	fakeGothProvider()
 
 	teacher := qtest.CreateFakeUser(t, db, 10)
 	student1 := qtest.CreateFakeUser(t, db, 11)
