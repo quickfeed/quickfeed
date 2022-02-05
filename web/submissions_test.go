@@ -166,9 +166,9 @@ func TestSubmissionsAccess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if diff := cmp.Diff(submissions.GetSubmissions(), latestSubmissions, protocmp.Transform()); diff != "" {
-		t.Errorf("TestSubmissionsAccess() mismatch (-gotSubmission.GetSubmissions(), +latestSubmissions):\n%s", diff)
+	gotSubmissions := submissions.GetSubmissions()
+	if diff := cmp.Diff(gotSubmissions, latestSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetSubmissions() mismatch (-gotSubmissions, +latestSubmissions):\n%s", diff)
 	}
 
 	// admin not enrolled in the course must not be able to access any course submissions
@@ -198,7 +198,7 @@ func TestSubmissionsAccess(t *testing.T) {
 		t.Fatal(err)
 	}
 	// enrolled as student, admin must be able to access all course submissions
-	gotSubmissions := submissions.GetSubmissions()
+	gotSubmissions = submissions.GetSubmissions()
 	if diff := cmp.Diff(gotSubmissions, latestSubmissions, protocmp.Transform()); diff != "" {
 		t.Errorf("ags.GetSubmissions() mismatch (-gotSubmissions, +latestSubmissions):\n%s", diff)
 	}
@@ -225,7 +225,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	student1Submissions := []*pb.Submission{personalSubmission.GetSubmissions()[0], groupSubmission.GetSubmissions()[0]}
 
 	if diff := cmp.Diff(student1Submissions, wantSubmissions, protocmp.Transform()); diff != "" {
-		t.Errorf("TestSubmissionsAccess() mismatch (-student1Submissions, +wantSubmissions):\n%s", diff)
+		t.Errorf("SubmissionsAccess mismatch (-student1Submissions, +wantSubmissions):\n%s", diff)
 	}
 
 	// the second student should not be able to access the submission by student1
@@ -318,14 +318,15 @@ func TestApproveSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	updatedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
+	approvedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantSubmission.Status = pb.Submission_APPROVED
+	wantSubmission.ApprovedDate = approvedSubmission.ApprovedDate
 
-	if diff := cmp.Diff(updatedSubmission.GetStatus(), wantSubmission.GetStatus()); diff != "" {
-		t.Errorf("TestApproveSubmission() mismatch (-updatedSubmission.GetStatus(), +wantSubmissions.GetStatus()):\n%s", diff)
+	if diff := cmp.Diff(approvedSubmission, wantSubmission, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateSubmission(approve) mismatch (-approvedSubmission, +wantSubmissions):\n%s", diff)
 	}
 
 	if _, err = ags.UpdateSubmission(ctx, &pb.UpdateSubmissionRequest{
@@ -336,14 +337,15 @@ func TestApproveSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	updatedSubmission, err = db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
+	rejectedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantSubmission.Status = pb.Submission_REJECTED
+	// Note that the approved date is not set when the submission is rejected
 
-	if diff := cmp.Diff(updatedSubmission.GetStatus(), wantSubmission.GetStatus(), protocmp.Transform()); diff != "" {
-		t.Errorf("TestApproveSubmission() mismatch (-updatedSubmission.GetStatus(), +wantSubmissions.GetStatus():\n%s", diff)
+	if diff := cmp.Diff(rejectedSubmission, wantSubmission, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateSubmission(reject) mismatch (-rejectedSubmission, +wantSubmissions):\n%s", diff)
 	}
 }
 
@@ -479,22 +481,22 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	wantAssignments1 := []*pb.Assignment{lab1c1, lab2c1}
 	wantAssignments2 := []*pb.Assignment{lab1c2, lab2c2}
 
-	gotAssignments1, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course1.ID})
+	assignments1, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course1.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if diff := cmp.Diff(gotAssignments1.GetAssignments(), wantAssignments1, protocmp.Transform()); diff != "" {
-		t.Errorf("TestGetCourseLabSubmissions() mismatch (-gotAssignments1.GetAssignments(), +wantAssignments1):\n%s", diff)
+	gotAssignments1 := assignments1.GetAssignments()
+	if diff := cmp.Diff(gotAssignments1, wantAssignments1, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetAssignments() mismatch (-gotAssignments1, +wantAssignments1):\n%s", diff)
 	}
 
-	gotAssignments2, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course2.ID})
+	assignments2, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course2.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if diff := cmp.Diff(gotAssignments2.GetAssignments(), wantAssignments2, protocmp.Transform()); diff != "" {
-		t.Errorf("TestGetCourseLabSubmissions() mismatch (-gotAssignments2.GetAssignments(), +wantAssignments2):\n%s", diff)
+	gotAssignments2 := assignments2.GetAssignments()
+	if diff := cmp.Diff(gotAssignments2, wantAssignments2, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetAssignments() mismatch (-gotAssignments2, +wantAssignments2):\n%s", diff)
 	}
 
 	// check that all submissions were saved for the correct labs
@@ -502,6 +504,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	for _, enrolLink := range labsForCourse1.GetLinks() {
 		if enrolLink.GetEnrollment().GetUserID() == student.ID {
 			labs := enrolLink.GetSubmissions()
@@ -509,7 +512,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 				t.Fatalf("Expected 2 submission links for course 1, got %d", len(labs))
 			}
 			if diff := cmp.Diff(sub1, labs[0].Submission, protocmp.Transform()); diff != "" {
-				t.Errorf("TestGetCourseLabSubmissions() mismatch (-sub1 +labs[0]):\n%s", diff)
+				t.Errorf("ags.GetSubmissionsByCourse() mismatch (-sub1 +labs[0]):\n%s", diff)
 			}
 		}
 	}
@@ -525,7 +528,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 				t.Fatalf("Expected 2 submission for course 1, got %d", len(labs))
 			}
 			if diff := cmp.Diff(sub2, labs[1].Submission, protocmp.Transform()); diff != "" {
-				t.Errorf("TestGetCourseLabSubmissions() mismatch (-sub2 +labs[1]):\n%s", diff)
+				t.Errorf("ags.GetSubmissionsByCourse() mismatch (-sub2 +labs[1]):\n%s", diff)
 			}
 		}
 	}
