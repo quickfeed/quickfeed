@@ -8,7 +8,6 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/markbates/goth"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -215,7 +214,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	// can't use: wantEnrollment.User.RemoveRemoteID()
 	wantEnrollment.User.RemoteIdentities = nil
 	if diff := cmp.Diff(pendingEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
-		t.Errorf("EnrollmentProcess() mismatch (-pendingEnrollment +wantEnrollment):\n%s", diff)
+		t.Errorf("EnrollmentProcess mismatch (-pendingEnrollment +wantEnrollment):\n%s", diff)
 	}
 
 	enrollStud1.Status = pb.Enrollment_STUDENT
@@ -229,8 +228,8 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantEnrollment.Status = pb.Enrollment_STUDENT
-	if diff := cmp.Diff(gotEnrollment, wantEnrollment, cmpopts.IgnoreUnexported(pb.Enrollment{}, pb.User{}, pb.Course{})); diff != "" {
-		t.Errorf("TestEnrollmentProcess() mismatch (-gotEnrollment +wantEnrollment):\n%s", diff)
+	if diff := cmp.Diff(gotEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
+		t.Errorf("EnrollmentProcess mismatch (-gotEnrollment +wantEnrollment):\n%s", diff)
 	}
 
 	// create another user and enroll as student
@@ -254,8 +253,8 @@ func TestEnrollmentProcess(t *testing.T) {
 	wantEnrollment.UserID = stud2.ID
 	wantEnrollment.User = stud2
 	wantEnrollment.User.RemoteIdentities = nil
-	if diff := cmp.Diff(gotEnrollment, wantEnrollment, cmpopts.IgnoreUnexported(pb.Enrollment{}, pb.User{}, pb.Course{})); diff != "" {
-		t.Errorf("mismatch (-gotEnrollment +wantEnrollment):\n%s", diff)
+	if diff := cmp.Diff(gotEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
+		t.Errorf("EnrollmentProcess mismatch (-gotEnrollment +wantEnrollment):\n%s", diff)
 	}
 
 	// promote stud2 to teaching assistant
@@ -271,8 +270,8 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	wantEnrollment.ID = gotEnrollment.ID
 	wantEnrollment.Status = pb.Enrollment_TEACHER
-	if diff := cmp.Diff(gotEnrollment, wantEnrollment, cmpopts.IgnoreUnexported(pb.Enrollment{}, pb.User{}, pb.Course{})); diff != "" {
-		t.Errorf("TestEnrollmentProcess() mismatch (-gotEnrollment +wantEnrollment):\n%s", diff)
+	if diff := cmp.Diff(gotEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
+		t.Errorf("EnrollmentProcess mismatch (-gotEnrollment +wantEnrollment):\n%s", diff)
 	}
 }
 
@@ -408,8 +407,8 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 		t.Fatal(err)
 	}
 	gotCourses := courses.Courses
-	if diff := cmp.Diff(gotCourses, wantCourses, cmpopts.IgnoreUnexported(pb.Course{})); diff != "" {
-		t.Errorf("mismatch (-gotCourses +wantCourses):\n%s", diff)
+	if diff := cmp.Diff(gotCourses, wantCourses, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCoursesByUser() mismatch (-gotCourses +wantCourses):\n%s", diff)
 	}
 }
 
@@ -418,21 +417,21 @@ func TestGetCourse(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := allCourses[0]
-	err := db.CreateCourse(admin.ID, course)
+	wantCourse := allCourses[0]
+	err := db.CreateCourse(admin.ID, wantCourse)
 	if err != nil {
 		t.Fatal(err)
 	}
 	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
-	gotCourse, err := ags.GetCourse(context.Background(), &pb.CourseRequest{CourseID: course.ID})
+	gotCourse, err := ags.GetCourse(context.Background(), &pb.CourseRequest{CourseID: wantCourse.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if diff := cmp.Diff(gotCourse, course, cmpopts.IgnoreUnexported(pb.Course{})); diff != "" {
-		t.Errorf("mismatch (-gotCourse +course):\n%s", diff)
+	if diff := cmp.Diff(gotCourse, wantCourse, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourse() mismatch (-gotCourse +wantCourse):\n%s", diff)
 	}
 }
 
