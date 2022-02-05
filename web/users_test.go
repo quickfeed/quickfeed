@@ -118,7 +118,8 @@ func TestGetSelf(t *testing.T) {
 			// ignore comparing remote identity
 			user.wantUser.RemoteIdentities = nil
 		}
-		if diff := cmp.Diff(user.wantUser, gotUser, protocmp.Transform()); diff != "" {
+		wantUser := user.wantUser
+		if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 			t.Errorf("GetSelf() mismatch (-wantUser +gotUser):\n%s", diff)
 		}
 	}
@@ -151,9 +152,9 @@ func TestGetUsers(t *testing.T) {
 
 	wantUsers := make([]*pb.User, 0)
 	wantUsers = append(wantUsers, admin, user2)
-
-	if diff := cmp.Diff(foundUsers.Users, wantUsers, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-Users +wantUsers):\n%s", diff)
+	gotUsers := foundUsers.GetUsers()
+	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetUsers() mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
 }
 
