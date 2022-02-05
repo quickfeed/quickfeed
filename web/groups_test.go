@@ -271,8 +271,6 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	// set up fake goth provider (only needs to be done once)
-	fakeGothProvider()
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	_, err := fakeProvider.CreateOrganization(context.Background(),
@@ -471,24 +469,22 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// create user and enroll as student
-	user := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&pb.Enrollment{UserID: user.ID, CourseID: testCourse.ID}); err != nil {
+	ctx := withUserContext(context.Background(), admin)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
+	ags := web.NewAutograderService(qtest.Logger(t).Desugar(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollment(&pb.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourse.ID,
-		Status:   pb.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	// create teacher and enroll as teacher
+
+	// create user and enroll as pending (teacher)
 	teacher := qtest.CreateFakeUser(t, db, 3)
-	if err := db.CreateEnrollment(&pb.Enrollment{UserID: teacher.ID, CourseID: testCourse.ID}); err != nil {
+	ctx = withUserContext(context.Background(), teacher)
+	if _, err := ags.CreateEnrollment(ctx, &pb.Enrollment{UserID: teacher.ID, CourseID: testCourse.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollment(&pb.Enrollment{
+	// update enrollment to teacher; must be done by admin
+	ctx = withUserContext(context.Background(), admin)
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
 		UserID:   teacher.ID,
 		CourseID: testCourse.ID,
 		Status:   pb.Enrollment_TEACHER,
@@ -496,17 +492,31 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// create user and enroll as pending (student)
+	user := qtest.CreateFakeUser(t, db, 2)
+	ctx = withUserContext(context.Background(), user)
+	if _, err := ags.CreateEnrollment(ctx, &pb.Enrollment{UserID: user.ID, CourseID: testCourse.ID}); err != nil {
+		t.Fatal(err)
+	}
+	// update pending enrollment to student; must be done by teacher
+	ctx = withUserContext(context.Background(), teacher)
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: testCourse.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// create group as student user
 	group := &pb.Group{Name: "Test Delete Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
-
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-
-	ctx := withUserContext(context.Background(), user)
+	ctx = withUserContext(context.Background(), user)
 	respGroup, err := ags.CreateGroup(ctx, group)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	// delete group as teacher
 	ctx = withUserContext(context.Background(), teacher)
 	_, err = ags.DeleteGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID, CourseID: testCourse.ID})
 	if err != nil {

@@ -8,7 +8,6 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/google/go-cmp/cmp"
-	"github.com/markbates/goth"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -18,7 +17,6 @@ import (
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web"
-	"github.com/autograde/quickfeed/web/auth"
 )
 
 var allCourses = []*pb.Course{
@@ -95,22 +93,10 @@ func withUserContext(ctx context.Context, user *pb.User) context.Context {
 	return metadata.NewIncomingContext(ctx, meta)
 }
 
-func fakeGothProvider() {
-	baseURL := "fake"
-	goth.UseProviders(&auth.FakeProvider{
-		Callback: auth.GetCallbackURL(baseURL, "fake"),
-	})
-	goth.UseProviders(&auth.FakeProvider{
-		Callback: auth.GetCallbackURL(baseURL, "fake-teacher"),
-	})
-}
-
 func TestNewCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	// set up fake goth provider (only needs to be done once)
-	fakeGothProvider()
 	admin := qtest.CreateFakeUser(t, db, 10)
 	ctx := withUserContext(context.Background(), admin)
 	fakeProvider, scms := qtest.FakeProviderMap(t)
@@ -436,8 +422,6 @@ func TestGetCourse(t *testing.T) {
 func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-
-	fakeGothProvider()
 
 	teacher := qtest.CreateFakeUser(t, db, 10)
 	student1 := qtest.CreateFakeUser(t, db, 11)
