@@ -83,7 +83,7 @@ func TestGetCourses(t *testing.T) {
 	}
 	gotCourses := foundCourses.Courses
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
-		t.Errorf("GetCourses() mismatch (-wantCourses +gotCourses):\n%s", diff)
+		t.Errorf("ags.GetCourses() mismatch (-wantCourses +gotCourses):\n%s", diff)
 	}
 }
 
@@ -123,24 +123,22 @@ func TestNewCourse(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		respCourse, err := ags.CreateCourse(ctx, wantCourse)
+		gotCourse, err := ags.CreateCourse(ctx, wantCourse)
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		gotCourse, err := db.GetCourse(respCourse.ID, false)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		wantCourse.ID = respCourse.ID
-
+		wantCourse.ID = gotCourse.ID
 		if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
-			t.Errorf("NewCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
+			t.Errorf("ags.CreateCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
 		}
 
-		if diff := cmp.Diff(gotCourse, respCourse, protocmp.Transform()); diff != "" {
-			t.Errorf("NewCourse() mismatch (-gotCourse +respCourse):\n%s", diff)
+		// check that the database also has the course
+		gotCourse, err = db.GetCourse(wantCourse.ID, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
+			t.Errorf("db.GetCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
 		}
 	}
 }
@@ -213,8 +211,8 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	// can't use: wantEnrollment.User.RemoveRemoteID()
 	wantEnrollment.User.RemoteIdentities = nil
-	if diff := cmp.Diff(pendingEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
-		t.Errorf("EnrollmentProcess mismatch (-pendingEnrollment +wantEnrollment):\n%s", diff)
+	if diff := cmp.Diff(wantEnrollment, pendingEnrollment, protocmp.Transform()); diff != "" {
+		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +pendingEnrollment):\n%s", diff)
 	}
 
 	enrollStud1.Status = pb.Enrollment_STUDENT
@@ -228,8 +226,8 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantEnrollment.Status = pb.Enrollment_STUDENT
-	if diff := cmp.Diff(gotEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
-		t.Errorf("EnrollmentProcess mismatch (-gotEnrollment +wantEnrollment):\n%s", diff)
+	if diff := cmp.Diff(wantEnrollment, gotEnrollment, protocmp.Transform()); diff != "" {
+		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +gotEnrollment):\n%s", diff)
 	}
 
 	// create another user and enroll as student
@@ -253,8 +251,8 @@ func TestEnrollmentProcess(t *testing.T) {
 	wantEnrollment.UserID = stud2.ID
 	wantEnrollment.User = stud2
 	wantEnrollment.User.RemoteIdentities = nil
-	if diff := cmp.Diff(gotEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
-		t.Errorf("EnrollmentProcess mismatch (-gotEnrollment +wantEnrollment):\n%s", diff)
+	if diff := cmp.Diff(wantEnrollment, gotEnrollment, protocmp.Transform()); diff != "" {
+		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +gotEnrollment):\n%s", diff)
 	}
 
 	// promote stud2 to teaching assistant
@@ -270,8 +268,8 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	wantEnrollment.ID = gotEnrollment.ID
 	wantEnrollment.Status = pb.Enrollment_TEACHER
-	if diff := cmp.Diff(gotEnrollment, wantEnrollment, protocmp.Transform()); diff != "" {
-		t.Errorf("EnrollmentProcess mismatch (-gotEnrollment +wantEnrollment):\n%s", diff)
+	if diff := cmp.Diff(wantEnrollment, gotEnrollment, protocmp.Transform()); diff != "" {
+		t.Errorf("EnrollmentProcess mismatch (-wantEnrollment +gotEnrollment):\n%s", diff)
 	}
 }
 
@@ -407,8 +405,8 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 		t.Fatal(err)
 	}
 	gotCourses := courses.Courses
-	if diff := cmp.Diff(gotCourses, wantCourses, protocmp.Transform()); diff != "" {
-		t.Errorf("GetCoursesByUser() mismatch (-gotCourses +wantCourses):\n%s", diff)
+	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCoursesByUser() mismatch (-wantCourses +gotCourses):\n%s", diff)
 	}
 }
 
@@ -430,8 +428,8 @@ func TestGetCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if diff := cmp.Diff(gotCourse, wantCourse, protocmp.Transform()); diff != "" {
-		t.Errorf("GetCourse() mismatch (-gotCourse +wantCourse):\n%s", diff)
+	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetCourse() mismatch (-wantCourse +gotCourse):\n%s", diff)
 	}
 }
 
