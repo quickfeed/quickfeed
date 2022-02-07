@@ -13,7 +13,6 @@ import (
 	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web/auth"
-	"go.uber.org/zap"
 )
 
 // TestDB returns a test database and close function.
@@ -133,7 +132,7 @@ func EnrollStudent(t *testing.T, db database.Database, student *pb.User, course 
 func FakeProviderMap(t *testing.T) (scm.SCM, *auth.Scms) {
 	t.Helper()
 	scms := auth.NewScms()
-	scm, err := scms.GetOrCreateSCMEntry(zap.NewNop(), "fake", "token")
+	scm, err := scms.GetOrCreateSCMEntry(Logger(t).Desugar(), "fake", "token")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -52,21 +52,20 @@ func TestNewGroup(t *testing.T) {
 
 	users := make([]*pb.User, 0)
 	users = append(users, &pb.User{ID: user.ID})
-	group_req := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
+	createGroupRequest := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
 
 	// current user (in context) must be in group being created
 	ctx = withUserContext(context.Background(), user)
-	respGroup, err := ags.CreateGroup(ctx, group_req)
+	wantGroup, err := ags.CreateGroup(ctx, createGroupRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	group, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: respGroup.ID})
+	gotGroup, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: wantGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(respGroup, group, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-respGroup +group):\n%s", diff)
+	if diff := cmp.Diff(wantGroup, gotGroup, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.CreateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
 
@@ -176,37 +175,34 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 
 	users := make([]*pb.User, 0)
 	users = append(users, &pb.User{ID: user.ID})
-	group_req := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
+	createGroupRequest := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
 
 	ctx := withUserContext(context.Background(), user)
-	respGroup, err := ags.CreateGroup(ctx, group_req)
+	wantGroup, err := ags.CreateGroup(ctx, createGroupRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// check that group member can access group
-	group, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: respGroup.ID})
+	// check that gotGroup member can access gotGroup
+	gotGroup, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: wantGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	// check that teacher can access group
 	ctx = withUserContext(context.Background(), teacher)
-	_, err = ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: respGroup.ID})
+	_, err = ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: wantGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	// check that admin can access group
 	ctx = withUserContext(context.Background(), admin)
-	_, err = ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: respGroup.ID})
+	_, err = ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: wantGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// JSON marshalling removes the enrollment field from respGroup,
-	// so we remove group.Enrollments obtained from the database before comparing.
-	// group.Enrollments = nil
-	if diff := cmp.Diff(respGroup, group, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-respGroup +group):\n%s", diff)
+	if diff := cmp.Diff(wantGroup, gotGroup, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.CreateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
 
@@ -275,8 +271,6 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	// set up fake goth provider (only needs to be done once)
-	fakeGothProvider()
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	_, err := fakeProvider.CreateOrganization(context.Background(),
@@ -342,31 +336,28 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	users := make([]*pb.User, 0)
 	users = append(users, user1)
 	users = append(users, user2)
-	newGroupReq := &pb.Group{Name: "Hein's two member Group", CourseID: course.ID, Users: users}
+	createGroupRequest := &pb.Group{Name: "Hein's two member Group", CourseID: course.ID, Users: users}
 
 	// set ID of user3 to context, user3 is not member of group (should fail)
 	ctx := withUserContext(context.Background(), user3)
-	if _, err := ags.CreateGroup(ctx, newGroupReq); err == nil {
+	if _, err := ags.CreateGroup(ctx, createGroupRequest); err == nil {
 		t.Error("expected error 'student must be member of new group'")
 	}
 
 	// set ID of user1, which is group member
 	ctx = withUserContext(context.Background(), user1)
-	respGroup, err := ags.CreateGroup(ctx, newGroupReq)
+	wantGroup, err := ags.CreateGroup(ctx, createGroupRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	group, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: respGroup.ID})
+	gotGroup, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: wantGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// JSON marshalling removes the enrollment field from respGroup,
-	// so we remove group.Enrollments obtained from the database before comparing.
-	// group.Enrollments = nil
-	if diff := cmp.Diff(respGroup, group, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-respGroup +group):\n%s", diff)
+	if diff := cmp.Diff(wantGroup, gotGroup, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.CreateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 
 	// ******************* Teacher UpdateGroup *******************
@@ -378,22 +369,22 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	users1 = append(users1, user2)
 	users1 = append(users1, user3)
 
-	updateGroupReq := &pb.Group{ID: group.ID, Name: "Hein's three member Group", CourseID: course.ID, Users: users1}
+	updateGroupRequest := &pb.Group{ID: gotGroup.ID, Name: "Hein's three member Group", CourseID: course.ID, Users: users1}
 
 	// set teacher ID in context
 	ctx = withUserContext(context.Background(), teacher)
-	_, err = ags.UpdateGroup(ctx, updateGroupReq)
+	_, err = ags.UpdateGroup(ctx, updateGroupRequest)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// check that the group have changed group membership
-	haveGroup, err := db.GetGroup(group.ID)
+	gotChangedGroup, err := db.GetGroup(gotGroup.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	userIDs := make([]uint64, 0)
-	for _, usr := range haveGroup.Users {
+	for _, usr := range gotChangedGroup.Users {
 		userIDs = append(userIDs, usr.ID)
 	}
 
@@ -402,16 +393,18 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantGroup := group
-	wantGroup.Name = updateGroupReq.Name
+	wantGroup = gotGroup
+	wantGroup.Name = updateGroupRequest.Name
 	wantGroup.Users = grpUsers
 	wantGroup.TeamID = 1
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Status = pb.Group_APPROVED
-	haveGroup.Enrollments = nil
+	// Ignore enrollments in check
+	gotChangedGroup.Enrollments = nil
 	wantGroup.Enrollments = nil
-	if diff := cmp.Diff(haveGroup, wantGroup, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-haveGroup +wantGroup):\n%s", diff)
+
+	if diff := cmp.Diff(wantGroup, gotChangedGroup, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateGroup() mismatch (-wantGroup +gotChangedGroup):\n%s", diff)
 	}
 
 	// ******************* Teacher UpdateGroup *******************
@@ -420,21 +413,21 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	users2 := make([]*pb.User, 0)
 	users2 = append(users2, user1)
 	// name must not update because group team and repo already exist
-	updateGroupReq1 := &pb.Group{ID: group.ID, Name: "Hein's single member Group", CourseID: course.ID, Users: users2}
+	updateGroupReqest1 := &pb.Group{ID: gotGroup.ID, Name: "Hein's single member Group", CourseID: course.ID, Users: users2}
 
 	// set teacher ID in context
 	ctx = withUserContext(context.Background(), teacher)
-	_, err = ags.UpdateGroup(ctx, updateGroupReq1)
+	_, err = ags.UpdateGroup(ctx, updateGroupReqest1)
 	if err != nil {
 		t.Error(err)
 	}
 	// check that the group have changed group membership
-	haveGroup, err = db.GetGroup(group.ID)
+	gotChangedGroup, err = db.GetGroup(gotGroup.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	userIDs = make([]uint64, 0)
-	for _, usr := range updateGroupReq1.Users {
+	for _, usr := range updateGroupReqest1.Users {
 		userIDs = append(userIDs, usr.ID)
 	}
 
@@ -442,19 +435,19 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if len(haveGroup.Users) != 1 {
+	if len(gotChangedGroup.Users) != 1 {
 		t.Fatal("expected only single member group")
 	}
-	wantGroup = updateGroupReq
+	wantGroup = updateGroupRequest
 	wantGroup.Users = grpUsers
 	wantGroup.TeamID = 1
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Status = pb.Group_APPROVED
-	haveGroup.Enrollments = nil
+	gotChangedGroup.Enrollments = nil
 	wantGroup.Enrollments = nil
-	if diff := cmp.Diff(haveGroup, wantGroup, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-haveGroup +wantGroup):\n%s", diff)
+
+	if diff := cmp.Diff(wantGroup, gotChangedGroup, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateGroup() mismatch (-wantGroup +gotChangedGroup):\n%s", diff)
 	}
 }
 
@@ -476,24 +469,22 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// create user and enroll as student
-	user := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&pb.Enrollment{UserID: user.ID, CourseID: testCourse.ID}); err != nil {
+	ctx := withUserContext(context.Background(), admin)
+	fakeProvider, scms := qtest.FakeProviderMap(t)
+	ags := web.NewAutograderService(qtest.Logger(t).Desugar(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollment(&pb.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourse.ID,
-		Status:   pb.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	// create teacher and enroll as teacher
+
+	// create user and enroll as pending (teacher)
 	teacher := qtest.CreateFakeUser(t, db, 3)
-	if err := db.CreateEnrollment(&pb.Enrollment{UserID: teacher.ID, CourseID: testCourse.ID}); err != nil {
+	ctx = withUserContext(context.Background(), teacher)
+	if _, err := ags.CreateEnrollment(ctx, &pb.Enrollment{UserID: teacher.ID, CourseID: testCourse.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollment(&pb.Enrollment{
+	// update enrollment to teacher; must be done by admin
+	ctx = withUserContext(context.Background(), admin)
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
 		UserID:   teacher.ID,
 		CourseID: testCourse.ID,
 		Status:   pb.Enrollment_TEACHER,
@@ -501,17 +492,31 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// create user and enroll as pending (student)
+	user := qtest.CreateFakeUser(t, db, 2)
+	ctx = withUserContext(context.Background(), user)
+	if _, err := ags.CreateEnrollment(ctx, &pb.Enrollment{UserID: user.ID, CourseID: testCourse.ID}); err != nil {
+		t.Fatal(err)
+	}
+	// update pending enrollment to student; must be done by teacher
+	ctx = withUserContext(context.Background(), teacher)
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: testCourse.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// create group as student user
 	group := &pb.Group{Name: "Test Delete Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
-
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-
-	ctx := withUserContext(context.Background(), user)
+	ctx = withUserContext(context.Background(), user)
 	respGroup, err := ags.CreateGroup(ctx, group)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	// delete group as teacher
 	ctx = withUserContext(context.Background(), teacher)
 	_, err = ags.DeleteGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID, CourseID: testCourse.ID})
 	if err != nil {
@@ -554,17 +559,17 @@ func TestGetGroup(t *testing.T) {
 	ctx := withUserContext(context.Background(), user)
 
 	group := &pb.Group{Name: "Test Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
-	respGroup, err := ags.CreateGroup(ctx, group)
+	wantGroup, err := ags.CreateGroup(ctx, group)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	gotGroup, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: respGroup.ID})
+	gotGroup, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: wantGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(respGroup, gotGroup, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-respGroup +gotGroup):\n%s", diff)
+	if diff := cmp.Diff(wantGroup, gotGroup, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.CreateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
 
@@ -655,24 +660,24 @@ func TestPatchGroupStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 	// get the group as stored in db with enrollments
-	prePatchGroup, err := db.GetGroup(group.ID)
+	wantGroup, err := db.GetGroup(group.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	prePatchGroup.Status = pb.Group_APPROVED
-	_, err = ags.UpdateGroup(ctx, prePatchGroup)
+	wantGroup.Status = pb.Group_APPROVED
+	_, err = ags.UpdateGroup(ctx, wantGroup)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// check that the group didn't change
-	haveGroup, err := db.GetGroup(group.ID)
+	gotGroup, err := db.GetGroup(group.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(prePatchGroup, haveGroup, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-prePatchGroup +haveGroup):\n%s", diff)
+	if diff := cmp.Diff(wantGroup, gotGroup, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
 
@@ -739,18 +744,16 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	respGroup, err := ags.GetGroupByUserAndCourse(ctx, &pb.GroupRequest{UserID: user1.ID, CourseID: course.ID})
+	wantGroup, err := ags.GetGroupByUserAndCourse(ctx, &pb.GroupRequest{UserID: user1.ID, CourseID: course.ID})
 	if err != nil {
 		t.Error(err)
 	}
-
-	dbGroup, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: group.ID})
+	gotGroup, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if diff := cmp.Diff(respGroup, dbGroup, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-respGroup +dbGroup):\n%s", diff)
+	if diff := cmp.Diff(wantGroup, gotGroup, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetGroupByUserAndCourse() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
 
@@ -834,11 +837,11 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	}
 
 	// then get user enrollments with group ID
-	enr1, err := db.GetEnrollmentByCourseAndUser(course.ID, user1.ID)
+	wantEnrollment1, err := db.GetEnrollmentByCourseAndUser(course.ID, user1.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	enr2, err := db.GetEnrollmentByCourseAndUser(course.ID, user2.ID)
+	wantEnrollment2, err := db.GetEnrollmentByCourseAndUser(course.ID, user2.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -849,25 +852,25 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	}
 
 	// get updated enrollments of group members
-	newEnr1, err := db.GetEnrollmentByCourseAndUser(course.ID, user1.ID)
+	gotEnrollment1, err := db.GetEnrollmentByCourseAndUser(course.ID, user1.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	newEnr2, err := db.GetEnrollmentByCourseAndUser(course.ID, user2.ID)
+	gotEnrollment2, err := db.GetEnrollmentByCourseAndUser(course.ID, user2.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// now nullify manually group ID for original enrollments
-	enr1.GroupID = 0
-	enr2.GroupID = 0
+	wantEnrollment1.GroupID = 0
+	wantEnrollment2.GroupID = 0
 
 	// then check that new enrollments have group IDs nullified automatically
-	if diff := cmp.Diff(enr1, newEnr1, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-enr1 +newEnr1):\n%s", diff)
+	if diff := cmp.Diff(wantEnrollment1, gotEnrollment1, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.DeleteGroup() mismatch (-wantEnrollment1 +gotEnrollment1):\n%s", diff)
 	}
-	if diff := cmp.Diff(enr2, newEnr2, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-enr2 +newEnr2):\n%s", diff)
+	if diff := cmp.Diff(wantEnrollment2, gotEnrollment2, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.DeleteGroup() mismatch (-wantEnrollment2 +gotEnrollment2):\n%s", diff)
 	}
 }
 
@@ -942,6 +945,6 @@ func TestGetGroups(t *testing.T) {
 
 	// check that the method returns expected groups
 	if diff := cmp.Diff(wantGroups, gotGroups, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-wantGroups +gotGroups):\n%s", diff)
+		t.Errorf("ags.GetGroupsByCourse() mismatch (-wantGroups +gotGroups):\n%s", diff)
 	}
 }
