@@ -24,9 +24,9 @@ export enum Sort {
 
 /** Returns a string with a prettier format for a deadline */
 export const getFormattedTime = (deadline_string: string): string => {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     const deadline = new Date(deadline_string)
-    return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? '0' + deadline.getMinutes() : deadline.getMinutes()}`
+    return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? "0" + deadline.getMinutes() : deadline.getMinutes()}`
 }
 
 export interface Deadline {
@@ -52,7 +52,7 @@ export const timeFormatter = (deadline: string): Deadline => {
     }
 
     if (days < 3) {
-        return { className: "table-warning", message: `${days} day${days == 1 ? ' ' : 's'} to deadline`, daysUntil: days }
+        return { className: "table-warning", message: `${days} day${days == 1 ? " " : "s"} to deadline`, daysUntil: days }
     }
 
     if (days < 14) {
@@ -128,7 +128,6 @@ export const getPassedTestsCount = (score: Score[]): string => {
     }
     return `${passedTests}/${totalTests}`
 }
-
 
 export const isValid = (elm: User | EnrollmentLink): boolean => {
     if (elm instanceof User) {
@@ -238,6 +237,19 @@ export const defaultYear = (date: Date): number => {
     return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
 }
 
+export const userLink = (user: User): string => {
+    return `https://github.com/${user.getLogin()}`
+}
+
+export const userRepoLink = (course: Course, user: User): string => {
+    return `https://github.com/${course.getOrganizationpath()}/${user.getLogin()}-labs`
+}
+
+export const groupRepoLink = (course: Course, group: Group): string => {
+    course.getOrganizationpath()
+    return `https://github.com/${course.getOrganizationpath()}/${slugify(group.getName())}`
+}
+
 export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGenerator: (s: SubmissionLink, e?: Enrollment) => RowElement, groupName?: boolean, assignmentID?: number): Row[] => {
     const state = useAppState()
     const course = state.courses.find(c => c.getId() === state.activeCourse)
@@ -293,18 +305,6 @@ const slugify = (str: string): string => {
     return str.replace(/[^a-z0-9 -_]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-")
 }
 
-export const userLink = (user: User): string => {
-    return `https://github.com/${user.getLogin()}`
-}
-
-export const userRepoLink = (course: Course, user: User): string => {
-    return `https://github.com/${course.getOrganizationpath()}/${user.getLogin()}-labs`
-}
-
-export const groupRepoLink = (course: Course, group: Group): string => {
-    course.getOrganizationpath()
-    return `https://github.com/${course.getOrganizationpath()}/${slugify(group.getName())}`
-}
 /* Use this function to simulate a delay in the loading of data */
 /* Used in development to simulate a slow network connection */
 const delay = (ms: number) => {
