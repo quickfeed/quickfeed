@@ -1,5 +1,4 @@
-import React from "react"
-import { useState } from "react"
+import React, { useState } from "react"
 import { Color } from "../Helpers"
 import { ButtonType } from "./admin/Button"
 
@@ -24,13 +23,13 @@ const DynamicButton = ({ text, onClick, color, type, className }: DynamicButtonP
 
     const buttonClass = isPending ? `${type}-${Color.GRAY} ${className ?? ""}` : `${type}-${color} ${className ?? ""}`
     const content = isPending
-        ? <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        ? <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
         : text
 
     return (
-        <button disabled={isPending} className={buttonClass} onClick={handleClick} >
+        <button type="button" disabled={isPending} className={buttonClass} onClick={handleClick}>
             {content}
-        </button >
+        </button>
     )
 }
 

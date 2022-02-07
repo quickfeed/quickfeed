@@ -1,9 +1,9 @@
 import React from "react"
 import { useAppState } from "../overmind"
-import { Link } from 'react-router-dom'
+import { Link } from "react-router-dom"
 import NavBarFooter from "./navbar/NavBarFooter"
 import NavBarCourse from "./navbar/NavBarCourse"
-import { isEnrolled, isFavorite, isVisible } from "../Helpers"
+import { isEnrolled, isVisible } from "../Helpers"
 
 
 //TODO Review the NavBar behaviour.
@@ -27,7 +27,7 @@ const NavBar = (): JSX.Element => {
                 {!state.isLoggedIn &&
                     <li>
                         <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px" }}>
-                            Sign in with <i className="fa fa-2x fa-github align-middle ml-2" id="github"></i>
+                            Sign in with <i className="fa fa-2x fa-github align-middle ml-2" id="github" />
                         </a>
                     </li>
                 }

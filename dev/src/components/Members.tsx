@@ -28,12 +28,6 @@ const Members = (): JSX.Element => {
         }
     }
 
-    const approveAll = () => {
-        for (const enrollment of pending) {
-            actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT })
-        }
-    }
-
     const pending = state.courseEnrollments[courseID].filter(enrollment => isPending(enrollment))
 
     const members = sortByField(state.courseEnrollments[courseID], [], sort(), descending).map((enrollment: Enrollment) => {
@@ -99,6 +93,5 @@ const Members = (): JSX.Element => {
         </div>
     )
 }
-
 
 export default Members
