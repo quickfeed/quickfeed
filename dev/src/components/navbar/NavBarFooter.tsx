@@ -49,8 +49,8 @@ const NavBarFooter = (): JSX.Element => {
         <div className="SidebarFooter" onMouseLeave={() => setHidden(true)}>
             {aboutButton}
             {adminButton}
-            {profileButton}
             {logoutButton}
+            {profileButton}
         </div>
     )
 }
