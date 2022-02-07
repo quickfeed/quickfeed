@@ -7,24 +7,17 @@ import ReviewForm from "./manual-grading/ReviewForm"
 import DynamicTable, { RowElement } from "./DynamicTable"
 import Button, { ButtonType } from "./admin/Button"
 import Release from "./Release"
-import { useHistory } from "react-router"
 
 
 const ReviewPage = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
-    const history = useHistory()
     const [groupView, setGroupView] = useState<boolean>(false)
 
     useEffect(() => {
         if (!state.courseSubmissions[courseID]) {
-            // Redirect to home if the call to get all submissions fails
-            actions.getAllCourseSubmissions(courseID).then((success => {
-                if (!success) {
-                    history.push("/")
-                }
-            }))
+            actions.getAllCourseSubmissions(courseID)
         }
         return () => {
             actions.setActiveSubmissionLink(undefined)
