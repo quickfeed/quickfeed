@@ -1,11 +1,28 @@
-import { json } from 'overmind'
+import { StatusCode } from "grpc-web"
+import { json } from "overmind"
 import { Context } from "."
 import { IGrpcResponse } from "../GRPCManager"
-import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark } from "../../proto/ag/ag_pb"
+import {
+    User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions,
+    Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark,
+} from "../../proto/ag/ag_pb"
 import { Alert, UserCourseSubmissions } from "./state"
-import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionStatus } from "../Helpers"
-import { StatusCode } from 'grpc-web'
+import {
+    Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionStatus
+} from "../Helpers"
 
+
+/** Use this to verify that a gRPC request completed without an error code */
+export const success = (response: IGrpcResponse<unknown>): boolean => response.status.getCode() === 0
+
+export const onInitializeOvermind = async ({ actions }: Context): Promise<void> => {
+    // Currently this only alerts the user if they are not logged in after a page refresh
+    const alert = localStorage.getItem("alert")
+    if (alert) {
+        actions.alert({ text: alert, color: Color.RED })
+        localStorage.removeItem("alert")
+    }
+}
 
 /**
  *      START CURRENT USER ACTIONS
@@ -60,7 +77,7 @@ export const getUsers = async ({ state, effects }: Context): Promise<void> => {
 /** Changes user information server-side */
 export const updateUser = async ({ actions, effects }: Context, user: User): Promise<void> => {
     const result = await effects.grpcMan.updateUser(user)
-    if (result.status.getCode() == 0) {
+    if (result.status.getCode() === 0) {
         await actions.getSelf()
     }
 }
@@ -99,7 +116,6 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
         }
     }
 }
-
 
 export const getEnrollmentsByCourse = async ({ state, effects }: Context, value: { courseID: number, statuses: Enrollment.UserStatus[] }): Promise<boolean> => {
     state.courseEnrollments[value.courseID] = []
@@ -205,7 +221,7 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
 }
 
 export const updateEnrollments = async ({ state, actions, effects }: Context, courseID: number): Promise<void> => {
-    if (confirm("Do you really want to approve all students?")) {
+    if (confirm("Please confirm that you want to approve all students")) {
         const response = await effects.grpcMan.updateEnrollments(courseID)
         if (success(response)) {
             for (const enrollment of state.pendingEnrollments) {
@@ -241,7 +257,6 @@ export const getAssignmentsByCourse = async ({ state, effects }: Context, course
     return false
 }
 
-
 type RepoKey = keyof typeof Repository.Type
 
 export const getRepositories = async ({ state, effects }: Context): Promise<boolean> => {
@@ -276,7 +291,6 @@ export const createGroup = async ({ actions, effects }: Context, group: { course
         actions.alertHandler(response)
     }
 }
-
 
 /** getOrganization returns the organization object for orgName retrieved from the server. */
 export const getOrganization = async ({ actions, effects }: Context, orgName: string): Promise<IGrpcResponse<Organization>> => {
@@ -319,7 +333,6 @@ export const editCourse = async ({ actions, effects }: Context, { course }: { co
     }
 }
 
-
 /** getSubmissions fetches all submission for the current user by Course ID and stores them in state */
 // TODO: Currently not used, see refreshSubmissions.
 export const getSubmissions = async ({ state, effects }: Context, courseID: number): Promise<boolean> => {
@@ -350,7 +363,6 @@ export const refreshSubmissions = async ({ state, effects }: Context, input: { c
         }
     }
 }
-
 
 export const convertCourseSubmission = ({ state }: Context, { courseID, data }: { courseID: number, data: CourseSubmissions }): void => {
     state.review.reviews[courseID] = {}
@@ -610,7 +622,6 @@ export const fetchUserData = async ({ state, actions, effects }: Context): Promi
     return success
 }
 
-
 /* Utility Actions */
 
 /** Switches between teacher and student view. */
@@ -651,8 +662,10 @@ export const isAuthorizedTeacher = async ({ effects }: Context): Promise<boolean
 
 export const alertHandler = ({ state }: Context, response: IGrpcResponse<unknown>): void => {
     if (response.status.getCode() === StatusCode.UNAUTHENTICATED) {
-        // The user is not logged in.
-        state.alerts.push({ text: "Your session is not valid. Please refresh this page and log in to continue.", color: Color.RED })
+        // If we end up here, the user session has expired.
+        // Store an alert message in localStorage that will be displayed after reloading the page.
+        localStorage.setItem("alert", "Your session has expired. Please log in again.")
+        window.location.reload()
     } else if (response.status.getCode() >= 0) {
         state.alerts.push({ text: response.status.getError(), color: Color.RED })
     }
@@ -663,7 +676,7 @@ export const alert = ({ state }: Context, alert: Alert): void => {
 }
 
 export const popAlert = ({ state }: Context, index: number): void => {
-    state.alerts = state.alerts.filter((_, i) => i != index)
+    state.alerts = state.alerts.filter((_, i) => i !== index)
 }
 
 export const logout = ({ state }: Context): void => {
@@ -679,9 +692,4 @@ const generateRepositoryList = (enrollment: Enrollment): Repository.Type[] => {
         default:
             return [Repository.Type.NONE]
     }
-}
-
-/** Use this to verify that a gRPC request completed without an error code */
-export const success = (response: IGrpcResponse<unknown>): boolean => {
-    return response.status.getCode() === 0
 }

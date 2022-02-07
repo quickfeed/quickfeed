@@ -1,4 +1,5 @@
 import React from 'react'
+import Alert from '../components/Alert'
 
 
 /* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users. */
@@ -20,6 +21,7 @@ const AboutPage = (): JSX.Element => {
                     </p>
                 </div>
             </div>
+            <Alert />
             <div key="container" className="container">
 
                 <div key="rowheader" className="row marketing">
