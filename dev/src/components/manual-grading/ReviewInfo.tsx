@@ -1,7 +1,7 @@
 import React from "react"
 import { Review } from "../../../proto/ag/ag_pb"
 import { NoSubmission } from "../../consts"
-import { Color, getCourseID, isCourseCreator, SubmissionStatus } from "../../Helpers"
+import { Color, SubmissionStatus } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
@@ -39,7 +39,7 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element => {
     )
     return (
         <ul className="list-group">
-            <li className={`list-group-item active`}>
+            <li className="list-group-item active">
                 <span className="align-middle">
                     <span style={{ display: "inline-block" }} className="w-25 mr-5 p-3">{assignment?.getName()}</span>
                     {releaseButton}

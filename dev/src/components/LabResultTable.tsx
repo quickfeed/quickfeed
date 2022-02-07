@@ -76,8 +76,8 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                             <th colSpan={1}>Weight</th>
 
                         </tr>
-                        {json(submission).getScoresList().map((score, index) =>
-                            <SubmissionScore key={index} score={score} />
+                        {json(submission).getScoresList().map(score =>
+                            <SubmissionScore key={score.getId()} score={score} />
                         )}
 
                     </tbody>
