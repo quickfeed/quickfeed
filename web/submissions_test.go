@@ -67,7 +67,7 @@ func TestSubmissionsAccess(t *testing.T) {
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), teacher)
+	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
@@ -172,7 +172,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	// admin not enrolled in the course must not be able to access any course submissions
-	ctx = withUserContext(context.Background(), admin)
+	ctx = qtest.WithUserContext(context.Background(), admin)
 	submissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
 	if err == nil {
 		t.Error("Expected error: user not enrolled")
@@ -204,7 +204,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	// the first student must be able to access own submissions as well as submissions made by group he has membership in
-	ctx = withUserContext(context.Background(), student1)
+	ctx = qtest.WithUserContext(context.Background(), student1)
 
 	personalSubmission, err := ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID, UserID: student1.ID})
 	if err != nil {
@@ -229,7 +229,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	// the second student should not be able to access the submission by student1
-	ctx = withUserContext(context.Background(), student2)
+	ctx = qtest.WithUserContext(context.Background(), student2)
 	personalSubmission, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID, UserID: student1.ID})
 	if err == nil || personalSubmission != nil {
 		t.Error("Expected error: only owner and teachers can get submissions")
@@ -251,7 +251,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	// the third student (not enrolled in the course) should not be able to access submission even if it belongs to that student
-	ctx = withUserContext(context.Background(), student3)
+	ctx = qtest.WithUserContext(context.Background(), student3)
 	personalSubmission, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID, UserID: student3.ID})
 	if err == nil || personalSubmission != nil {
 		t.Error("Expected error: only owner and teachers can get submissions")
@@ -303,7 +303,7 @@ func TestApproveSubmission(t *testing.T) {
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
@@ -470,7 +470,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
@@ -574,12 +574,12 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 
 	// check that method fails for unenrolled student user
 	unenrolledStudent := qtest.CreateFakeUser(t, db, 3)
-	ctx = withUserContext(ctx, unenrolledStudent)
+	ctx = qtest.WithUserContext(ctx, unenrolledStudent)
 	if _, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
 		t.Error("Expected 'only teachers can get all lab submissions'")
 	}
 	// check that method fails for non-teacher user
-	ctx = withUserContext(ctx, student)
+	ctx = qtest.WithUserContext(ctx, student)
 	if _, err = ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
 		t.Error("Expected 'only teachers can get all lab submissions'")
 	}
@@ -698,7 +698,7 @@ func TestCreateApproveList(t *testing.T) {
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)

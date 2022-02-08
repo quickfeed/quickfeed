@@ -2,23 +2,13 @@ package web
 
 import (
 	"context"
-	"strconv"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/metadata"
 )
-
-// withUserContext is a test helper function to create metadata for the
-// given user mimicking the context coming from the browser.
-func withUserContext(ctx context.Context, user *pb.User) context.Context {
-	userID := strconv.Itoa(int(user.GetID()))
-	meta := metadata.New(map[string]string{"user": userID})
-	return metadata.NewIncomingContext(ctx, meta)
-}
 
 func TestBadGroupNames(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
@@ -47,7 +37,7 @@ func TestBadGroupNames(t *testing.T) {
 		Users:    []*pb.User{user1, user2},
 	}
 	// current user1 (in context) must be in group being created
-	ctx := withUserContext(context.Background(), user1)
+	ctx := qtest.WithUserContext(context.Background(), user1)
 	gotGroup, err := ags.CreateGroup(ctx, group)
 	if err != nil {
 		t.Fatal(err)

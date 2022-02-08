@@ -39,7 +39,7 @@ func TestNewGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
@@ -55,7 +55,7 @@ func TestNewGroup(t *testing.T) {
 	createGroupRequest := &pb.Group{Name: "Heins-Group", CourseID: course.ID, Users: users}
 
 	// current user (in context) must be in group being created
-	ctx = withUserContext(context.Background(), user)
+	ctx = qtest.WithUserContext(context.Background(), user)
 	wantGroup, err := ags.CreateGroup(ctx, createGroupRequest)
 	if err != nil {
 		t.Fatal(err)
@@ -93,7 +93,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
@@ -111,7 +111,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	group_wo_users := &pb.Group{Name: "Hein's Group", CourseID: course.ID}
 
 	// current user (in context) must be in group being created
-	ctx = withUserContext(context.Background(), user)
+	ctx = qtest.WithUserContext(context.Background(), user)
 	_, err = ags.CreateGroup(ctx, group_wo_course_id)
 	if err == nil {
 		t.Fatal("expected CreateGroup to fail without a course ID")
@@ -177,7 +177,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	users = append(users, &pb.User{ID: user.ID})
 	createGroupRequest := &pb.Group{Name: "HeinsGroup", CourseID: course.ID, Users: users}
 
-	ctx := withUserContext(context.Background(), user)
+	ctx := qtest.WithUserContext(context.Background(), user)
 	wantGroup, err := ags.CreateGroup(ctx, createGroupRequest)
 	if err != nil {
 		t.Fatal(err)
@@ -189,13 +189,13 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 		t.Fatal(err)
 	}
 	// check that teacher can access group
-	ctx = withUserContext(context.Background(), teacher)
+	ctx = qtest.WithUserContext(context.Background(), teacher)
 	_, err = ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: wantGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	// check that admin can access group
-	ctx = withUserContext(context.Background(), admin)
+	ctx = qtest.WithUserContext(context.Background(), admin)
 	_, err = ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: wantGroup.ID})
 	if err != nil {
 		t.Fatal(err)
@@ -244,7 +244,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	}
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ctx := withUserContext(context.Background(), user)
+	ctx := qtest.WithUserContext(context.Background(), user)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	_, err := fakeProvider.CreateOrganization(ctx,
@@ -339,13 +339,13 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	createGroupRequest := &pb.Group{Name: "HeinsTwoMemberGroup", CourseID: course.ID, Users: users}
 
 	// set ID of user3 to context, user3 is not member of group (should fail)
-	ctx := withUserContext(context.Background(), user3)
+	ctx := qtest.WithUserContext(context.Background(), user3)
 	if _, err := ags.CreateGroup(ctx, createGroupRequest); err == nil {
 		t.Error("expected error 'student must be member of new group'")
 	}
 
 	// set ID of user1, which is group member
-	ctx = withUserContext(context.Background(), user1)
+	ctx = qtest.WithUserContext(context.Background(), user1)
 	wantGroup, err := ags.CreateGroup(ctx, createGroupRequest)
 	if err != nil {
 		t.Fatal(err)
@@ -372,7 +372,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	updateGroupRequest := &pb.Group{ID: gotGroup.ID, Name: "Heins3MemberGroup", CourseID: course.ID, Users: users1}
 
 	// set teacher ID in context
-	ctx = withUserContext(context.Background(), teacher)
+	ctx = qtest.WithUserContext(context.Background(), teacher)
 	_, err = ags.UpdateGroup(ctx, updateGroupRequest)
 	if err != nil {
 		t.Error(err)
@@ -416,7 +416,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	updateGroupReqest1 := &pb.Group{ID: gotGroup.ID, Name: "Hein's single member Group", CourseID: course.ID, Users: users2}
 
 	// set teacher ID in context
-	ctx = withUserContext(context.Background(), teacher)
+	ctx = qtest.WithUserContext(context.Background(), teacher)
 	_, err = ags.UpdateGroup(ctx, updateGroupReqest1)
 	if err != nil {
 		t.Error(err)
@@ -469,7 +469,7 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(qtest.Logger(t).Desugar(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
@@ -478,12 +478,12 @@ func TestDeleteGroup(t *testing.T) {
 
 	// create user and enroll as pending (teacher)
 	teacher := qtest.CreateFakeUser(t, db, 3)
-	ctx = withUserContext(context.Background(), teacher)
+	ctx = qtest.WithUserContext(context.Background(), teacher)
 	if _, err := ags.CreateEnrollment(ctx, &pb.Enrollment{UserID: teacher.ID, CourseID: testCourse.ID}); err != nil {
 		t.Fatal(err)
 	}
 	// update enrollment to teacher; must be done by admin
-	ctx = withUserContext(context.Background(), admin)
+	ctx = qtest.WithUserContext(context.Background(), admin)
 	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
 		UserID:   teacher.ID,
 		CourseID: testCourse.ID,
@@ -494,12 +494,12 @@ func TestDeleteGroup(t *testing.T) {
 
 	// create user and enroll as pending (student)
 	user := qtest.CreateFakeUser(t, db, 2)
-	ctx = withUserContext(context.Background(), user)
+	ctx = qtest.WithUserContext(context.Background(), user)
 	if _, err := ags.CreateEnrollment(ctx, &pb.Enrollment{UserID: user.ID, CourseID: testCourse.ID}); err != nil {
 		t.Fatal(err)
 	}
 	// update pending enrollment to student; must be done by teacher
-	ctx = withUserContext(context.Background(), teacher)
+	ctx = qtest.WithUserContext(context.Background(), teacher)
 	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourse.ID,
@@ -510,14 +510,14 @@ func TestDeleteGroup(t *testing.T) {
 
 	// create group as student user
 	group := &pb.Group{Name: "TestDeleteGroup", CourseID: testCourse.ID, Users: []*pb.User{user}}
-	ctx = withUserContext(context.Background(), user)
+	ctx = qtest.WithUserContext(context.Background(), user)
 	respGroup, err := ags.CreateGroup(ctx, group)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// delete group as teacher
-	ctx = withUserContext(context.Background(), teacher)
+	ctx = qtest.WithUserContext(context.Background(), teacher)
 	_, err = ags.DeleteGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID, CourseID: testCourse.ID})
 	if err != nil {
 		t.Fatal(err)
@@ -556,7 +556,7 @@ func TestGetGroup(t *testing.T) {
 
 	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), user)
+	ctx := qtest.WithUserContext(context.Background(), user)
 
 	group := &pb.Group{Name: "TestGroup", CourseID: testCourse.ID, Users: []*pb.User{user}}
 	wantGroup, err := ags.CreateGroup(ctx, group)
@@ -610,7 +610,7 @@ func TestPatchGroupStatus(t *testing.T) {
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), teacher)
+	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{
 		Name: course.Code,
@@ -703,7 +703,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 
 	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	user1 := qtest.CreateFakeUser(t, db, 2)
 	user2 := qtest.CreateFakeUser(t, db, 3)
@@ -770,7 +770,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{
 		Name: course.Code,
@@ -822,7 +822,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 		Users:    []*pb.User{user1, user2},
 	}
 	// current user1 (in context) must be in group being created
-	ctx = withUserContext(context.Background(), user1)
+	ctx = qtest.WithUserContext(context.Background(), user1)
 	createdGroup, err := ags.CreateGroup(ctx, group)
 	if err != nil {
 		t.Fatal(err)
@@ -831,7 +831,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	// first approve the group
 	createdGroup.Status = pb.Group_APPROVED
 	// current user (in context) must be teacher for the course
-	ctx = withUserContext(context.Background(), admin)
+	ctx = qtest.WithUserContext(context.Background(), admin)
 	if _, err = ags.UpdateGroup(ctx, createdGroup); err != nil {
 		t.Fatal(err)
 	}
@@ -888,7 +888,7 @@ func TestGetGroups(t *testing.T) {
 	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	// admin will be enrolled as teacher because of course creation below
-	withUserContext(context.Background(), admin)
+	qtest.WithUserContext(context.Background(), admin)
 
 	course := allCourses[1]
 	err := db.CreateCourse(admin.ID, course)
@@ -913,12 +913,12 @@ func TestGetGroups(t *testing.T) {
 	}
 	// place some students in groups
 	// current user (in context) must be in group being created
-	ctx := withUserContext(context.Background(), users[2])
+	ctx := qtest.WithUserContext(context.Background(), users[2])
 	group1, err := ags.CreateGroup(ctx, &pb.Group{Name: "Group1", CourseID: course.ID, Users: []*pb.User{users[1], users[2]}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx = withUserContext(context.Background(), users[5])
+	ctx = qtest.WithUserContext(context.Background(), users[5])
 	group2, err := ags.CreateGroup(ctx, &pb.Group{Name: "Group2", CourseID: course.ID, Users: []*pb.User{users[4], users[5]}})
 	if err != nil {
 		t.Fatal(err)
@@ -937,7 +937,7 @@ func TestGetGroups(t *testing.T) {
 	}
 
 	// get groups from the database; admin is in ctx, which is also teacher
-	ctx = withUserContext(context.Background(), admin)
+	ctx = qtest.WithUserContext(context.Background(), admin)
 	gotGroups, err := ags.GetGroupsByCourse(ctx, &pb.CourseRequest{CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
