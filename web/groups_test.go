@@ -52,7 +52,7 @@ func TestNewGroup(t *testing.T) {
 
 	users := make([]*pb.User, 0)
 	users = append(users, &pb.User{ID: user.ID})
-	createGroupRequest := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
+	createGroupRequest := &pb.Group{Name: "Heins-Group", CourseID: course.ID, Users: users}
 
 	// current user (in context) must be in group being created
 	ctx = withUserContext(context.Background(), user)
@@ -175,7 +175,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 
 	users := make([]*pb.User, 0)
 	users = append(users, &pb.User{ID: user.ID})
-	createGroupRequest := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
+	createGroupRequest := &pb.Group{Name: "HeinsGroup", CourseID: course.ID, Users: users}
 
 	ctx := withUserContext(context.Background(), user)
 	wantGroup, err := ags.CreateGroup(ctx, createGroupRequest)
@@ -257,7 +257,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	users := make([]*pb.User, 0)
 	users = append(users, &pb.User{ID: user.ID})
 	users = append(users, &pb.User{ID: teacher.ID})
-	group_req := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
+	group_req := &pb.Group{Name: "HeinsGroup", CourseID: course.ID, Users: users}
 
 	_, err = ags.CreateGroup(ctx, group_req)
 	if err != nil {
@@ -336,7 +336,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	users := make([]*pb.User, 0)
 	users = append(users, user1)
 	users = append(users, user2)
-	createGroupRequest := &pb.Group{Name: "Hein's two member Group", CourseID: course.ID, Users: users}
+	createGroupRequest := &pb.Group{Name: "HeinsTwoMemberGroup", CourseID: course.ID, Users: users}
 
 	// set ID of user3 to context, user3 is not member of group (should fail)
 	ctx := withUserContext(context.Background(), user3)
@@ -369,7 +369,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	users1 = append(users1, user2)
 	users1 = append(users1, user3)
 
-	updateGroupRequest := &pb.Group{ID: gotGroup.ID, Name: "Hein's three member Group", CourseID: course.ID, Users: users1}
+	updateGroupRequest := &pb.Group{ID: gotGroup.ID, Name: "Heins3MemberGroup", CourseID: course.ID, Users: users1}
 
 	// set teacher ID in context
 	ctx = withUserContext(context.Background(), teacher)
@@ -509,7 +509,7 @@ func TestDeleteGroup(t *testing.T) {
 	}
 
 	// create group as student user
-	group := &pb.Group{Name: "Test Delete Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
+	group := &pb.Group{Name: "TestDeleteGroup", CourseID: testCourse.ID, Users: []*pb.User{user}}
 	ctx = withUserContext(context.Background(), user)
 	respGroup, err := ags.CreateGroup(ctx, group)
 	if err != nil {
@@ -558,7 +558,7 @@ func TestGetGroup(t *testing.T) {
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := withUserContext(context.Background(), user)
 
-	group := &pb.Group{Name: "Test Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
+	group := &pb.Group{Name: "TestGroup", CourseID: testCourse.ID, Users: []*pb.User{user}}
 	wantGroup, err := ags.CreateGroup(ctx, group)
 	if err != nil {
 		t.Fatal(err)
@@ -818,7 +818,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	group := &pb.Group{
 		ID:       1,
 		CourseID: course.ID,
-		Name:     "Test Group",
+		Name:     "TestGroup",
 		Users:    []*pb.User{user1, user2},
 	}
 	// current user1 (in context) must be in group being created
@@ -914,12 +914,12 @@ func TestGetGroups(t *testing.T) {
 	// place some students in groups
 	// current user (in context) must be in group being created
 	ctx := withUserContext(context.Background(), users[2])
-	group1, err := ags.CreateGroup(ctx, &pb.Group{Name: "Group 1", CourseID: course.ID, Users: []*pb.User{users[1], users[2]}})
+	group1, err := ags.CreateGroup(ctx, &pb.Group{Name: "Group1", CourseID: course.ID, Users: []*pb.User{users[1], users[2]}})
 	if err != nil {
 		t.Fatal(err)
 	}
 	ctx = withUserContext(context.Background(), users[5])
-	group2, err := ags.CreateGroup(ctx, &pb.Group{Name: "Group 2", CourseID: course.ID, Users: []*pb.User{users[4], users[5]}})
+	group2, err := ags.CreateGroup(ctx, &pb.Group{Name: "Group2", CourseID: course.ID, Users: []*pb.User{users[4], users[5]}})
 	if err != nil {
 		t.Fatal(err)
 	}

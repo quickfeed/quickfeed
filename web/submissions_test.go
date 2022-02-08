@@ -75,7 +75,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	users := []*pb.User{student1, student2}
-	group_req := &pb.Group{Name: "Test group", CourseID: course.ID, Users: users}
+	group_req := &pb.Group{Name: "TestGroup", CourseID: course.ID, Users: users}
 
 	_, err = ags.CreateGroup(ctx, group_req)
 	if err != nil {
