@@ -137,13 +137,13 @@ func TestGetUsers(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user2 := qtest.CreateFakeUser(t, db, 2)
-	ctx := withUserContext(context.Background(), user2)
+	ctx := qtest.WithUserContext(context.Background(), user2)
 	_, err = ags.GetUsers(ctx, &pb.Void{})
 	if err == nil {
 		t.Fatal("expected 'rpc error: code = PermissionDenied desc = only admin can access other users'")
 	}
 	// now switch to use admin as the user; this should pass
-	ctx = withUserContext(context.Background(), admin)
+	ctx = qtest.WithUserContext(context.Background(), admin)
 	foundUsers, err := ags.GetUsers(ctx, &pb.Void{})
 	if err != nil {
 		t.Fatal(err)
@@ -194,7 +194,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 
 	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	// users to enroll in course DAT520 Distributed Systems
 	// (excluding admin because admin is enrolled on creation)
@@ -264,7 +264,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 
 	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	course := allCourses[1]
 	err := db.CreateCourse(admin.ID, course)
@@ -341,7 +341,7 @@ func TestUpdateUser(t *testing.T) {
 
 	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), firstAdminUser)
+	ctx := qtest.WithUserContext(context.Background(), firstAdminUser)
 
 	// we want to update nonAdminUser to become admin
 	nonAdminUser.IsAdmin = true
@@ -404,7 +404,7 @@ func TestUpdateUserFailures(t *testing.T) {
 		t.Fatalf("expected user %v to be non-admin", u)
 	}
 	// context with user u (non-admin user); can only change its own name etc
-	ctx := withUserContext(context.Background(), u)
+	ctx := qtest.WithUserContext(context.Background(), u)
 
 	// trying to demote current adminUser by setting IsAdmin to false
 	nameChangeRequest := &pb.User{

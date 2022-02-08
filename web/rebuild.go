@@ -8,7 +8,6 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
-	"github.com/gosimple/slug"
 )
 
 const maxContainers = 10
@@ -44,7 +43,7 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 		Assignment: assignment,
 		Repo:       repo,
 		CommitID:   submission.GetCommitHash(),
-		JobOwner:   slug.Make(name),
+		JobOwner:   name,
 		Rebuild:    true,
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
