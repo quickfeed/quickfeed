@@ -26,12 +26,11 @@ const ReviewForm = (): JSX.Element => {
     }
 
     const reviewers = state.activeSubmissionLink?.getAssignment()?.getReviewers() ?? 0
-    const isCourseCreator = state.courses[courseID].getCoursecreatorid() === state.self.getId()
     const reviews = state.review.reviews[courseID][state.activeSubmission] ?? []
     const selectReviewButton: JSX.Element[] = []
 
     reviews.forEach((review, index) => {
-        if (isCourseCreator || isAuthor(review)) {
+        if (state.isCourseCreator || isAuthor(review)) {
             // Teaching assistants can only select their own reviews, and course creators can select any review
             selectReviewButton.push(
                 <Button key={review.getId()} onclick={() => { actions.review.setSelectedReview(index) }}

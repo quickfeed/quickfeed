@@ -30,7 +30,7 @@ const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
                     {hasEnrolled(status) &&
                         <>
                             <span className="float-right">
-                                <i className={isVisible(enrollment) ? 'fa fa-star-o' : "fa fa-star "}
+                                <i className={isVisible(enrollment) ? 'fa fa-star' : "fa fa-star-o"}
                                     onClick={() => actions.setEnrollmentState(enrollment)}></i>
                             </span>
                             <p className="float-sm-right mr-2">{EnrollmentStatus[status]}</p>
