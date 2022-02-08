@@ -115,7 +115,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	}
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), teacher)
+	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
@@ -197,7 +197,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	}
 
 	// check access control
-	ctx = withUserContext(ctx, student1)
+	ctx = qtest.WithUserContext(ctx, student1)
 	if _, err = ags.RebuildSubmissions(ctx, &request); err == nil {
 		t.Fatal("Expected error: authentication failed")
 	}

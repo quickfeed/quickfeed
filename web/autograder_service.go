@@ -401,7 +401,7 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 	}
 	group, err := s.getGroupByUserAndCourse(in)
 	if err != nil {
-		if err != ErrUserNotInGroup {
+		if err != errUserNotInGroup {
 			s.logger.Errorf("GetGroupByUserAndCourse failed: %v", err)
 		}
 		return nil, status.Error(codes.NotFound, "failed to get group for given user and course")
@@ -431,10 +431,12 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	}
 	group, err := s.createGroup(in)
 	if err != nil {
-		if err == ErrGroupNameDuplicate {
+		s.logger.Errorf("CreateGroup failed: %v", err)
+		if _, ok := status.FromError(err); ok {
+			// err was already a status error; return it to client.
 			return nil, err
 		}
-		s.logger.Errorf("CreateGroup failed: %v", err)
+		// err was not a status error; return a generic error to client.
 		return nil, status.Error(codes.InvalidArgument, "failed to create group")
 	}
 	return group, nil
@@ -461,6 +463,11 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
+		if _, ok := status.FromError(err); ok {
+			// err was already a status error; return it to client.
+			return nil, err
+		}
+		// err was not a status error; return a generic error to client.
 		return nil, status.Error(codes.InvalidArgument, "failed to update group")
 	}
 	return &pb.Void{}, nil
@@ -563,7 +570,7 @@ func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.S
 		s.logger.Errorf("GetSubmissionsByCourse failed: user %s is not teacher or submission author", usr.GetLogin())
 		return nil, status.Error(codes.PermissionDenied, "only teachers can get all lab submissions")
 	}
-	//BYPASS:
+	// BYPASS:
 	s.logger.Debugf("GetSubmissionsByCourse: %v", in)
 
 	courseLinks, err := s.getAllCourseSubmissions(in)
