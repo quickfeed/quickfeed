@@ -3,7 +3,7 @@ import { Context } from "."
 import { IGrpcResponse } from "../GRPCManager"
 import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark } from "../../proto/ag/ag_pb"
 import { Alert, UserCourseSubmissions } from "./state"
-import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionStatus } from "../Helpers"
+import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
 
 
 /**
@@ -102,7 +102,7 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
 
 export const getEnrollmentsByCourse = async ({ state, effects }: Context, value: { courseID: number, statuses: Enrollment.UserStatus[] }): Promise<boolean> => {
     state.courseEnrollments[value.courseID] = []
-    const result = await effects.grpcMan.getEnrollmentsByCourse(value.courseID, undefined, undefined, value.statuses)
+    const result = await effects.grpcMan.getEnrollmentsByCourse(value.courseID, undefined, true, value.statuses)
     if (result.data) {
         state.courseEnrollments[value.courseID] = result.data.getEnrollmentsList()
         return true
@@ -644,6 +644,21 @@ const generateRepositoryList = (enrollment: Enrollment): Repository.Type[] => {
     }
 }
 
+export const setAscending = ({ state }: Context, ascending: boolean): void => {
+    state.sortAscending = ascending
+}
+
+export const setSubmissionSort = ({ state }: Context, sort: SubmissionSort): void => {
+    state.sortSubmissionsBy = sort
+}
+
+export const setSubmissionFilter = ({ state }: Context, filter: string): void => {
+    if (state.submissionFilters.includes(filter)) {
+        state.submissionFilters = state.submissionFilters.filter(f => f != filter)
+    } else {
+        state.submissionFilters.push(filter)
+    }
+}
 /** Use this to verify that a gRPC request completed without an error code */
 export const success = (response: IGrpcResponse<unknown>): boolean => {
     return response.status.getCode() === 0

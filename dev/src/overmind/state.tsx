@@ -1,6 +1,6 @@
 import { derived } from "overmind"
 import { Assignment, Course, Enrollment, Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb"
-import { Color, isPending, isPendingGroup, isTeacher } from "../Helpers"
+import { Color, isPending, isPendingGroup, isTeacher, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: number
@@ -147,6 +147,15 @@ type State = {
 
     /* Current submission */
     currentSubmission: Submission | undefined,
+
+    /* The value to sort submissions by */
+    sortSubmissionsBy: SubmissionSort,
+
+    /* Whether to sort by ascending or descending */
+    sortAscending: boolean,
+
+    /* Submission filters */
+    submissionFilters: string[],
 }
 
 
@@ -223,4 +232,7 @@ export const state: State = {
         return activeCourse > 0 ? courseEnrollments[activeCourse]?.filter(enrollment => !isPending(enrollment)).length : 0
     }),
     query: "",
+    sortSubmissionsBy: SubmissionSort.Approved,
+    sortAscending: true,
+    submissionFilters: [],
 }

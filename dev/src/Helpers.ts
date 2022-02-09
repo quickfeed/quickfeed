@@ -281,3 +281,102 @@ export const generateAssignmentsHeader = (base: RowElement[], assignments: Assig
 const delay = (ms: number) => {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
+
+
+export enum EnrollmentSort {
+    Name,
+    Status,
+    Email,
+    Activity,
+    Slipdays,
+    Approved,
+    StudentID
+}
+
+export enum SubmissionSort {
+    Name,
+    Status,
+    Score,
+    Approved
+}
+
+/** Sorting */
+const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort, descending: boolean): number => {
+    const m = descending ? -1 : 1
+    switch (sortBy) {
+        case EnrollmentSort.Name:
+            const nameA = a.getUser()?.getName() ?? ""
+            const nameB = b.getUser()?.getName() ?? ""
+            return m * (nameA.localeCompare(nameB))
+        case EnrollmentSort.Status:
+            return m * (a.getStatus() - b.getStatus())
+        case EnrollmentSort.Email:
+            const emailA = a.getUser()?.getEmail() ?? ""
+            const emailB = b.getUser()?.getEmail() ?? ""
+            return m * (emailA.localeCompare(emailB))
+        case EnrollmentSort.Activity:
+            return m * (new Date(a.getLastactivitydate()).getTime() - new Date(b.getLastactivitydate()).getTime())
+        case EnrollmentSort.Slipdays:
+            return m * (a.getSlipdaysremaining() - b.getSlipdaysremaining())
+        case EnrollmentSort.Approved:
+            return m * (a.getTotalapproved() - b.getTotalapproved())
+        case EnrollmentSort.StudentID:
+            const aID = a.getUser()?.getId() ?? 0
+            const bID = b.getUser()?.getId() ?? 0
+            return m * (aID - bID)
+        default:
+            return 0
+    }
+}
+
+export const sortEnrollments = (enrollments: Enrollment[], sortBy: EnrollmentSort, descending: boolean): Enrollment[] => {
+    return enrollments.sort((a, b) => {
+        return enrollmentCompare(a, b, sortBy, descending)
+    })
+}
+
+
+export const sortSubmissions = (courseSubmissions: UserCourseSubmissions[], sortBy: SubmissionSort | EnrollmentSort, descending: boolean): UserCourseSubmissions[] => {
+    const m = descending ? -1 : 1
+    return courseSubmissions?.sort((a, b) => {
+        switch (sortBy) {
+            case SubmissionSort.Score:
+                const aSubs = a.submissions?.reduce((acc, cur) => { return acc + (cur.hasSubmission() ? (cur.getSubmission() as Submission).getScore() : 0) }, 0) ?? 0
+                const bSubs = b.submissions?.reduce((acc, cur) => { return acc + (cur.hasSubmission() ? (cur.getSubmission() as Submission).getScore() : 0) }, 0) ?? 0
+                return m * (aSubs - bSubs)
+            case SubmissionSort.Approved:
+                const aApproved = a.submissions?.reduce((acc, cur) => { return acc + ((cur.hasSubmission() && isApproved(cur.getSubmission() as Submission)) ? 1 : 0) }, 0) ?? 0
+                const bApproved = b.submissions?.reduce((acc, cur) => { return acc + ((cur.hasSubmission() && isApproved(cur.getSubmission() as Submission)) ? 1 : 0) }, 0) ?? 0
+                return m * (aApproved - bApproved)
+            case SubmissionSort.Name:
+                const nameA = a.user?.getName() ?? ""
+                const nameB = b.user?.getName() ?? ""
+                return m * (nameA.localeCompare(nameB))
+            default:
+                return 0
+        }
+    })
+}
+
+export const filterSubmissions = (courseSubmissions: UserCourseSubmissions[], filters: string[]): UserCourseSubmissions[] => {
+    if (!filters || filters.length === 0) {
+        return courseSubmissions
+    }
+
+    let filtered = courseSubmissions
+    for (const filter of filters) {
+        switch (filter) {
+            case "teachers":
+                filtered = filtered.filter(s => s.enrollment ? !isTeacher(s.enrollment) : false)
+                break
+            case "approved":
+                // approved filters all entries where all assignments have been approved
+                const { activeCourse, assignments } = useAppState()
+                let numAssignments = assignments[activeCourse]?.length ?? 0
+                filtered = filtered.filter(s => (s.submissions?.reduce((acc, cur) => { return acc + ((cur.hasSubmission() && isApproved(cur.getSubmission() as Submission)) ? 1 : 0) }, 0) ?? 0) > numAssignments)
+            default:
+                break
+        }
+    }
+    return filtered
+}
