@@ -1,10 +1,12 @@
 import React, { useState } from "react"
-import { EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortByField, sortEnrollments, SubmissionSort } from "../Helpers"
+import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortEnrollments } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment, User } from "../../proto/ag/ag_pb"
 import Search from "./Search"
 import DynamicTable, { Row } from "./DynamicTable"
 import { json } from "overmind"
+import DynamicButton from "./DynamicButton"
+import { ButtonType } from "./admin/Button"
 
 
 const Members = (): JSX.Element => {
@@ -94,9 +96,7 @@ const Members = (): JSX.Element => {
                 </div>
                 {pending.length > 0 ?
                     <div style={{ marginLeft: "10px" }}>
-                        <button className="btn btn-success float-right" onClick={() => approveAll()}>
-                            Approve All
-                        </button>
+                        <DynamicButton color={Color.GREEN} type={ButtonType.BUTTON} text="Approve All" onClick={() => actions.updateEnrollments(courseID)} />
                     </div> : null}
             </div>
 
@@ -106,6 +106,5 @@ const Members = (): JSX.Element => {
         </div>
     )
 }
-
 
 export default Members

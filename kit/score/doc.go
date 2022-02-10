@@ -20,55 +20,55 @@
 // This is done via the score.Add() method or the score.AddSub() method as shown below.
 // Add() is used for regular tests, and AddSub() is used for subtests with individual scores.
 //
-// func init() {
-//     max, weight := len(fibonacciTests), 20
-//     score.Add(TestFibonacciMax, max, weight)
-//     score.Add(TestFibonacciMin, max, weight)
-//     for _, ft := range fibonacciTests {
-//         score.AddSub(TestFibonacciSubTest, subTestName("Max", ft.in), 1, 1)
-//     }
-//     for _, ft := range fibonacciTests {
-//         score.AddSub(TestFibonacciSubTest, subTestName("Min", ft.in), 1, 1)
-//     }
-// }
+//   func init() {
+//       max, weight := len(fibonacciTests), 20
+//       score.Add(TestFibonacciMax, max, weight)
+//       score.Add(TestFibonacciMin, max, weight)
+//       for _, ft := range fibonacciTests {
+//           score.AddSub(TestFibonacciSubTest, subTestName("Max", ft.in), 1, 1)
+//       }
+//       for _, ft := range fibonacciTests {
+//           score.AddSub(TestFibonacciSubTest, subTestName("Min", ft.in), 1, 1)
+//       }
+//   }
 //
 // In addition, TestMain() should call score.PrintTestInfo() before running the tests
 // to ensure that all tests are registered and will be picked up by QuickFeed.
 //
-// func TestMain(m *testing.M) {
-//     score.PrintTestInfo()
-//     os.Exit(m.Run())
-// }
+//   func TestMain(m *testing.M) {
+//       score.PrintTestInfo()
+//       os.Exit(m.Run())
+//   }
 //
 // To implement a test with scoring, you may use score.Max() to obtain a score object
 // with Score equals to MaxScore, which may be decremented for each test failure.
 // Note that sc.Print(t) should be called with a defer to ensure that it gets executed
 // even if the test panics.
 //
-// func TestFibonacciMax(t *testing.T) {
-//     sc := score.Max()
-//     defer sc.Print(t)
-//     for _, ft := range fibonacciTests {
-//         out := fibonacci(ft.in)
-//         if out != ft.want {
-//             sc.Dec()
-//         }
-//     }
-// }
+//   func TestFibonacciMax(t *testing.T) {
+//       sc := score.Max()
+//       defer sc.Print(t)
+//       for _, ft := range fibonacciTests {
+//           out := fibonacci(ft.in)
+//           if out != ft.want {
+//               sc.Dec()
+//           }
+//       }
+//   }
 //
 // Similarly, it is also possible to use score.Min() to obtain a score object with
 // Score equals to zero, which may be incremented for each test success.
 //
-// func TestFibonacciMin(t *testing.T) {
-//     sc := score.Min()
-//     defer sc.Print(t)
-//     for _, ft := range fibonacciTests {
-//         out := fibonacci(ft.in)
-//         if out == ft.want {
-//             sc.Inc()
-//         }
-//     }
-// }
+//   func TestFibonacciMin(t *testing.T) {
+//       sc := score.Min()
+//       defer sc.Print(t)
+//       for _, ft := range fibonacciTests {
+//           out := fibonacci(ft.in)
+//           if out == ft.want {
+//               sc.Inc()
+//           }
+//       }
+//   }
 //
 // Please see package score/testdata/sequence for other usage examples.
 //

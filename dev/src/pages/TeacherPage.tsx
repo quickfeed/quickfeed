@@ -20,7 +20,7 @@ const TeacherPage = (): JSX.Element => {
     const grpc = useGrpc().grpcMan
     const history = useHistory()
     const root = `/course/${courseID}`
-    const courseHasManualGrading = state.assignments[courseID].some(assignment => isManuallyGraded(assignment))
+    const courseHasManualGrading = state.assignments[courseID]?.some(assignment => isManuallyGraded(assignment))
 
     const members = {
         title: "View Members",

@@ -21,14 +21,14 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment }): JSX.Element =
             actions.setActiveCourse(0)
             history.push("/")
         } else {
-            history.push(`/course/` + enrollment.getCourseid())
+            history.push("/course/" + enrollment.getCourseid())
             actions.setActiveCourse(enrollment.getCourseid())
         }
     }
 
     return (
         <>
-            <li onClick={() => { onCourseClick(enrollment) }}>
+            <li role={"button"} onClick={() => onCourseClick(enrollment)}>
                 <div className="col" id="title">
                     {enrollment.getCourse()?.getCode()}
                 </div>

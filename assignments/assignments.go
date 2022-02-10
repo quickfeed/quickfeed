@@ -126,7 +126,7 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 	if len(assignment.GetGradingBenchmarks()) > 0 {
 		gradingBenchmarks, err := db.GetBenchmarks(&pb.Assignment{
 			CourseID: assignment.CourseID,
-			Name:     assignment.Name,
+			Order:    assignment.Order,
 		})
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
@@ -155,26 +155,8 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 						return
 					}
 				}
-				submissions, err := db.GetSubmissions(&pb.Submission{AssignmentID: assignment.GetID()})
-				if err != nil {
-					// No submissions for this assignment, nothing to update
-					return
-				}
-				for _, submission := range submissions {
-					if err := db.DeleteReview(&pb.Review{SubmissionID: submission.ID}); err != nil {
-						logger.Errorf("Failed to delete reviews for submission %s to assignment %s: %s", submission.ID, assignment.Name, err)
-						return
-					}
-				}
 			} else {
 				assignment.GradingBenchmarks = nil
-			}
-		}
-		for _, bm := range assignment.GradingBenchmarks {
-			bm.AssignmentID = assignment.ID
-			if err := db.CreateBenchmark(bm); err != nil {
-				logger.Errorf("Failed to save grading benchmark %+v: %s", bm, err)
-				return
 			}
 		}
 	}

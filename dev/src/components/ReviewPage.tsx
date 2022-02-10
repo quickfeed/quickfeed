@@ -14,7 +14,6 @@ const ReviewPage = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
-    const isCourseCreator = state.courses[courseID].getCoursecreatorid() === state.self.getId()
 
     useEffect(() => {
         if (!state.courseSubmissions[courseID]) {
@@ -63,7 +62,7 @@ const ReviewPage = (): JSX.Element => {
 
     return (
         <div>
-            {isCourseCreator && <Release />}
+            {state.isCourseCreator && <Release />}
             <div className="row">
                 <div className={state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"}>
                     <Search placeholder={"Search by name ..."} >

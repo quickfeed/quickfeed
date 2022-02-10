@@ -51,7 +51,7 @@ const DynamicTable = ({ header, data }: { header: Row, data: Row[] }): JSX.Eleme
 
     const rowCell = (cell: RowElement, index: number) => {
         if (isCellElement(cell)) {
-            const element = cell.link ? <a href={cell.link}>{cell.value}</a> : cell.value
+            const element = cell.link ? <a href={cell.link} target={"_blank"} rel="noopener noreferrer">{cell.value}</a> : cell.value
             return <td key={index} className={cell.className} onClick={cell.onClick}>{element}</td>
         }
         return index == 0 ? <th key={index}>{cell}</th> : <td key={index}>{cell}</td>

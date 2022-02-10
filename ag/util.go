@@ -87,3 +87,9 @@ func (l *CourseSubmissions) RemoveRemoteID() {
 		link.RemoveRemoteID()
 	}
 }
+
+func (r *Reviewers) RemoveRemoteID() {
+	for _, user := range r.Reviewers {
+		user.RemoveRemoteID()
+	}
+}
