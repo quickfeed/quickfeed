@@ -13,13 +13,15 @@ const Results = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
-    const [groupView, setGroupView] = useState<boolean>(false)
 
     useEffect(() => {
         if (!state.courseSubmissions[courseID]) {
             actions.getAllCourseSubmissions(courseID)
         }
-        return () => actions.setActiveSubmissionLink(undefined)
+        return () => {
+            actions.setActiveSubmissionLink(undefined)
+            actions.setGroupView(false)
+        }
     }, [state.courseSubmissions])
 
     if (!state.courseSubmissions[courseID]) {
@@ -44,7 +46,7 @@ const Results = (): JSX.Element => {
         }
     }
 
-    const base = groupView ? ["Name"] : ["Name", "Group"]
+    const groupView = state.groupView
     const assignments = state.assignments[courseID].filter(assignment => (state.review.assignmentID < 0) || assignment.getId() === state.review.assignmentID)
     const header = generateAssignmentsHeader(base, assignments, groupView)
     const links = groupView ? state.courseGroupSubmissions[courseID] : state.courseSubmissions[courseID]

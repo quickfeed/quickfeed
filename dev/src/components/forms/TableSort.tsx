@@ -20,6 +20,7 @@ const TableSort = () => {
             // Reset sort state to default when component is unmounted
             actions.setSubmissionSort(SubmissionSort.Approved)
             actions.setAscending(true)
+            actions.clearSubmissionFilter()
         }
     }, [])
 

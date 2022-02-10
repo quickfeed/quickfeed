@@ -14,7 +14,6 @@ const ReviewPage = (): JSX.Element => {
     const actions = useActions()
     const courseID = getCourseID()
     const isCourseCreator = state.courses[courseID].getCoursecreatorid() === state.self.getId()
-    const [groupView, setGroupView] = useState<boolean>(false)
 
     useEffect(() => {
         if (!state.courseSubmissions[courseID]) {
@@ -23,6 +22,7 @@ const ReviewPage = (): JSX.Element => {
         return () => {
             actions.setActiveSubmissionLink(undefined)
             actions.review.setAssignmentID(-1)
+            actions.setGroupView(false)
         }
     }, [])
 
@@ -52,6 +52,7 @@ const ReviewPage = (): JSX.Element => {
             })
         }
     }
+    const groupView = state.groupView
 
     const links = groupView ? state.courseGroupSubmissions[courseID] : state.courseSubmissions[courseID]
     const rows = generateSubmissionRows(links, generateReviewCell)
