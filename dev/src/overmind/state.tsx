@@ -89,6 +89,12 @@ type State = {
 
     courseGroupSubmissions: { [courseID: number]: UserCourseSubmissions[] },
 
+    /** Contains all submissions for the current course.
+     *  Derived from either courseSubmissions or courseGroupSubmissions based on groupView.
+     *  The submissions are filtered and sorted based on the current
+     *  values of sortSubmissionsBy, sortAscending, and submissionFilters */
+    sortedAndFilteredSubmissions: UserCourseSubmissions[]
+
     /* Contains all enrollments for a given course */
     courseEnrollments: { [courseID: number]: Enrollment[] },
 
@@ -196,7 +202,96 @@ export const state: State = {
     courses: [],
     courseSubmissions: [],
     courseGroupSubmissions: {},
+    sortedAndFilteredSubmissions: derived((state: State, rootState: Context["state"]) => {
+        // Filter and sort submissions based on the current state
+        if (!state.activeCourse || !state.courseSubmissions[state.activeCourse]) {
+            return []
+        }
+        let submissions = state.groupView
+            ? state.courseGroupSubmissions[state.activeCourse]
+            : state.courseSubmissions[state.activeCourse]
 
+        if (!submissions) {
+            return []
+        }
+
+        // If a specific assignment is selected, filter by that assignment
+        const numAssignments = rootState.review.assignmentID > 0
+            ? 1
+            : state.assignments[state.activeCourse].length ?? 0
+
+        let filteredSubmissions = submissions
+        for (const filter of state.submissionFilters) {
+            switch (filter) {
+                case "teachers":
+                    filteredSubmissions = filteredSubmissions.filter(submission => {
+                        return submission.enrollment ? !isTeacher(submission.enrollment) : false
+                    })
+                    break
+                case "approved":
+                    // approved filters all entries where all assignments have been approved
+                    filteredSubmissions = filteredSubmissions.filter(submission => {
+                        if (rootState.review.assignmentID > 0) {
+                            // If a specific assignment is selected, filter by that assignment
+                            const sub = submission.submissions?.find(submission => submission.getAssignment()?.getId() === rootState.review.assignmentID)?.getSubmission()
+                            return sub && isApproved(sub)
+                        }
+                        const numApproved = submission.submissions?.reduce((acc, cur) => {
+                            return acc + ((cur.hasSubmission() &&
+                                isApproved(cur.getSubmission() as Submission)) ? 1 : 0)
+                        }, 0) ?? 0
+                        return numApproved < numAssignments
+                    })
+                    break
+                default:
+                    break
+            }
+        }
+
+        const m = state.sortAscending ? -1 : 1
+        const sortedSubmissions = Object.values(filteredSubmissions).sort((a, b) => {
+            let subA: Submission | undefined
+            let subB: Submission | undefined
+            if (rootState.review.assignmentID > 0) {
+                // If a specific assignment is selected, sort by that assignment
+                subA = a.submissions?.find(submission => submission.getAssignment()?.getId() === rootState.review.assignmentID)?.getSubmission()
+                subB = b.submissions?.find(submission => submission.getAssignment()?.getId() === rootState.review.assignmentID)?.getSubmission()
+            }
+
+            switch (state.sortSubmissionsBy) {
+                case SubmissionSort.Score:
+                    if (rootState.review.assignmentID > 0) {
+                        const sA = subA?.getScore()
+                        const sB = subB?.getScore()
+                        if (sA !== undefined && sB !== undefined) {
+                            return m * (sB - sA)
+                        } else if (sA !== undefined) {
+                            return -m
+                        }
+                        return m
+                    }
+                    const aSubs = a.submissions?.reduce((acc, cur) => { return acc + (cur.hasSubmission() ? (cur.getSubmission() as Submission).getScore() : 0) }, 0) ?? 0
+                    const bSubs = b.submissions?.reduce((acc, cur) => { return acc + (cur.hasSubmission() ? (cur.getSubmission() as Submission).getScore() : 0) }, 0) ?? 0
+                    return m * (aSubs - bSubs)
+                case SubmissionSort.Approved:
+                    if (rootState.review.assignmentID > 0) {
+                        const sA = subA && isApproved(subA) ? 1 : 0
+                        const sB = subB && isApproved(subB) ? 1 : 0
+                        return m * (sA - sB)
+                    }
+                    const aApproved = a.submissions?.reduce((acc, cur) => { return acc + ((cur.hasSubmission() && isApproved(cur.getSubmission() as Submission)) ? 1 : 0) }, 0) ?? 0
+                    const bApproved = b.submissions?.reduce((acc, cur) => { return acc + ((cur.hasSubmission() && isApproved(cur.getSubmission() as Submission)) ? 1 : 0) }, 0) ?? 0
+                    return m * (aApproved - bApproved)
+                case SubmissionSort.Name:
+                    const nameA = a.user?.getName() ?? ""
+                    const nameB = b.user?.getName() ?? ""
+                    return m * (nameA.localeCompare(nameB))
+                default:
+                    return 0
+            }
+        })
+        return sortedSubmissions
+    }),
     activeSubmission: derived((state: State) => {
         if (state.activeSubmissionLink) {
             return state.activeSubmissionLink.hasSubmission() ? (state.activeSubmissionLink.getSubmission() as Submission).getId() : -1
