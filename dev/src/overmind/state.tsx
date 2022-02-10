@@ -1,6 +1,7 @@
 import { derived } from "overmind"
+import { Context } from "."
 import { Assignment, Course, Enrollment, Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb"
-import { Color, isPending, isPendingGroup, isTeacher, SubmissionSort } from "../Helpers"
+import { Color, isApproved, isPending, isPendingGroup, isTeacher, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: number
@@ -82,9 +83,9 @@ type State = {
 
     /***************************************************************************
     *                         Course Specific Data
-    ***************************************************************************/
+     ***************************************************************************/
 
-    /* Contains all submissions for a given course and enrollment */
+    /* Contains all submissions for a given course */
     courseSubmissions: { [courseID: number]: UserCourseSubmissions[] },
 
     courseGroupSubmissions: { [courseID: number]: UserCourseSubmissions[] },
@@ -162,6 +163,10 @@ type State = {
 
     /* Submission filters */
     submissionFilters: string[],
+
+    /* Determine if all submissions should be displayed, or only group submissions */
+    groupView: boolean,
+
 }
 
 
@@ -330,4 +335,5 @@ export const state: State = {
     sortSubmissionsBy: SubmissionSort.Approved,
     sortAscending: true,
     submissionFilters: [],
+    groupView: false
 }
