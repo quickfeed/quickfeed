@@ -3,7 +3,7 @@ import { Context } from "."
 import { IGrpcResponse } from "../GRPCManager"
 import { User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions, Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark } from "../../proto/ag/ag_pb"
 import { Alert, UserCourseSubmissions } from "./state"
-import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
+import { Color, EnrollmentSort, hasStudent, hasTeacher, isApproved, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
 
 
 /**
@@ -649,7 +649,15 @@ export const setAscending = ({ state }: Context, ascending: boolean): void => {
 }
 
 export const setSubmissionSort = ({ state }: Context, sort: SubmissionSort): void => {
-    state.sortSubmissionsBy = sort
+    if (state.sortSubmissionsBy != sort) {
+        state.sortSubmissionsBy = sort
+    } else {
+        state.sortAscending = !state.sortAscending
+    }
+}
+
+export const clearSubmissionFilter = ({ state }: Context): void => {
+    state.submissionFilters = []
 }
 
 export const setSubmissionFilter = ({ state }: Context, filter: string): void => {
@@ -659,6 +667,11 @@ export const setSubmissionFilter = ({ state }: Context, filter: string): void =>
         state.submissionFilters.push(filter)
     }
 }
+
+export const setGroupView = ({ state }: Context, groupView: boolean): void => {
+    state.groupView = groupView
+}
+
 /** Use this to verify that a gRPC request completed without an error code */
 export const success = (response: IGrpcResponse<unknown>): boolean => {
     return response.status.getCode() === 0
