@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect } from "react"
 import { useActions, useAppState } from "../overmind"
 import { SubmissionLink } from "../../proto/ag/ag_pb"
-import { Color, generateAssignmentsHeader, generateSubmissionRows, getCourseID, isApproved, isManuallyGraded, isPending, isRevision } from "../Helpers"
+import { Color, generateAssignmentsHeader, generateSubmissionRows, getCourseID, isApproved, isManuallyGraded, isRevision, SubmissionSort } from "../Helpers"
 import Search from "./Search"
 import ReviewForm from "./manual-grading/ReviewForm"
-import DynamicTable, { RowElement } from "./DynamicTable"
+import DynamicTable, { Row, RowElement } from "./DynamicTable"
 import Button, { ButtonType } from "./admin/Button"
 import Release from "./Release"
+import TableSort from "./forms/TableSort"
 
 
 const ReviewPage = (): JSX.Element => {
@@ -53,11 +54,12 @@ const ReviewPage = (): JSX.Element => {
         }
     }
     const groupView = state.groupView
-
-    const links = groupView ? state.courseGroupSubmissions[courseID] : state.courseSubmissions[courseID]
-    const rows = generateSubmissionRows(links, generateReviewCell)
     const assignments = state.assignments[courseID].filter(assignment => (state.review.assignmentID < 0) || assignment.getId() === state.review.assignmentID)
-    const header = generateAssignmentsHeader(["Name"], assignments, groupView)
+    const base: Row = [{ value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }]
+    const header = generateAssignmentsHeader(base, assignments, groupView)
+
+    const links = state.sortedAndFilteredSubmissions
+    const rows = generateSubmissionRows(links, generateReviewCell)
 
     return (
         <div>
@@ -66,10 +68,11 @@ const ReviewPage = (): JSX.Element => {
                 <div className={state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"}>
                     <Search placeholder={"Search by name ..."} >
                         <Button type={ButtonType.BUTTON}
-                            text={groupView ? "View by group" : "View by student"}
-                            onclick={() => { setGroupView(!groupView); actions.review.setAssignmentID(-1) }}
+                            text={groupView ? "View by student" : "View by group"}
+                            onclick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(-1) }}
                             color={groupView ? Color.BLUE : Color.GREEN} />
                     </Search>
+                    <TableSort />
                     <DynamicTable header={header} data={rows} />
                 </div>
                 {state.activeSubmissionLink ? <ReviewForm /> : null}
