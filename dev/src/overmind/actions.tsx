@@ -7,9 +7,7 @@ import {
     Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark,
 } from "../../proto/ag/ag_pb"
 import { Alert, UserCourseSubmissions } from "./state"
-import {
-    Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionStatus
-} from "../Helpers"
+import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
 
 
 /** Use this to verify that a gRPC request completed without an error code */
@@ -119,7 +117,7 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
 
 export const getEnrollmentsByCourse = async ({ state, effects }: Context, value: { courseID: number, statuses: Enrollment.UserStatus[] }): Promise<boolean> => {
     state.courseEnrollments[value.courseID] = []
-    const result = await effects.grpcMan.getEnrollmentsByCourse(value.courseID, undefined, undefined, value.statuses)
+    const result = await effects.grpcMan.getEnrollmentsByCourse(value.courseID, undefined, true, value.statuses)
     if (result.data) {
         state.courseEnrollments[value.courseID] = result.data.getEnrollmentsList()
         return true
@@ -692,4 +690,32 @@ const generateRepositoryList = (enrollment: Enrollment): Repository.Type[] => {
         default:
             return [Repository.Type.NONE]
     }
+}
+
+export const setAscending = ({ state }: Context, ascending: boolean): void => {
+    state.sortAscending = ascending
+}
+
+export const setSubmissionSort = ({ state }: Context, sort: SubmissionSort): void => {
+    if (state.sortSubmissionsBy != sort) {
+        state.sortSubmissionsBy = sort
+    } else {
+        state.sortAscending = !state.sortAscending
+    }
+}
+
+export const clearSubmissionFilter = ({ state }: Context): void => {
+    state.submissionFilters = []
+}
+
+export const setSubmissionFilter = ({ state }: Context, filter: string): void => {
+    if (state.submissionFilters.includes(filter)) {
+        state.submissionFilters = state.submissionFilters.filter(f => f != filter)
+    } else {
+        state.submissionFilters.push(filter)
+    }
+}
+
+export const setGroupView = ({ state }: Context, groupView: boolean): void => {
+    state.groupView = groupView
 }

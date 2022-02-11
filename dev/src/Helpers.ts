@@ -196,6 +196,36 @@ export const isHidden = (value: string, query: string): boolean => {
     return !value.toLowerCase().includes(query) && query.length > 0
 }
 
+/** getSubmissionsScore calculates the total score of all submissions in a SubmissionLink[] */
+export const getSubmissionsScore = (submissions: SubmissionLink[]): number => {
+    let score = 0
+    submissions.forEach(submission => {
+        if (!submission.hasSubmission()) {
+            return
+        }
+        score += (submission.getSubmission() as Submission).getScore()
+    })
+    return score
+}
+
+/** getNumApproved returns the number of approved submissions in a SubmissionLink[] */
+export const getNumApproved = (submissions: SubmissionLink[]): number => {
+    let num = 0
+    submissions.forEach(submission => {
+        if (!submission.hasSubmission()) {
+            return
+        }
+        if (isApproved(submission.getSubmission() as Submission)) {
+            num++
+        }
+    })
+    return num
+}
+
+export const getSubmissionByAssignmentID = (submissions: SubmissionLink[] | undefined, assignmentID: number): Submission | undefined => {
+    return submissions?.find(submission => submission.getAssignment()?.getId() === assignmentID)?.getSubmission()
+}
+
 export const EnrollmentStatusBadge = {
     0: "",
     1: "badge badge-info",
@@ -248,6 +278,19 @@ export const userRepoLink = (course: Course, user: User): string => {
 export const groupRepoLink = (course: Course, group: Group): string => {
     course.getOrganizationpath()
     return `https://github.com/${course.getOrganizationpath()}/${slugify(group.getName())}`
+}
+
+export const getSubmissionCellColor = (submission: Submission): string => {
+    if (isApproved(submission)) {
+        return "result-approved"
+    }
+    if (isRevision(submission)) {
+        return "result-revision"
+    }
+    if (isRejected(submission)) {
+        return "result-rejected"
+    }
+    return "clickable"
 }
 
 export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGenerator: (s: SubmissionLink, e?: Enrollment) => RowElement, groupName?: boolean, assignmentID?: number): Row[] => {
@@ -309,4 +352,57 @@ const slugify = (str: string): string => {
 /* Used in development to simulate a slow network connection */
 const delay = (ms: number) => {
     return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+
+export enum EnrollmentSort {
+    Name,
+    Status,
+    Email,
+    Activity,
+    Slipdays,
+    Approved,
+    StudentID
+}
+
+export enum SubmissionSort {
+    Name,
+    Status,
+    Score,
+    Approved
+}
+
+/** Sorting */
+const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort, descending: boolean): number => {
+    const m = descending ? -1 : 1
+    switch (sortBy) {
+        case EnrollmentSort.Name:
+            const nameA = a.getUser()?.getName() ?? ""
+            const nameB = b.getUser()?.getName() ?? ""
+            return m * (nameA.localeCompare(nameB))
+        case EnrollmentSort.Status:
+            return m * (a.getStatus() - b.getStatus())
+        case EnrollmentSort.Email:
+            const emailA = a.getUser()?.getEmail() ?? ""
+            const emailB = b.getUser()?.getEmail() ?? ""
+            return m * (emailA.localeCompare(emailB))
+        case EnrollmentSort.Activity:
+            return m * (new Date(a.getLastactivitydate()).getTime() - new Date(b.getLastactivitydate()).getTime())
+        case EnrollmentSort.Slipdays:
+            return m * (a.getSlipdaysremaining() - b.getSlipdaysremaining())
+        case EnrollmentSort.Approved:
+            return m * (a.getTotalapproved() - b.getTotalapproved())
+        case EnrollmentSort.StudentID:
+            const aID = a.getUser()?.getId() ?? 0
+            const bID = b.getUser()?.getId() ?? 0
+            return m * (aID - bID)
+        default:
+            return 0
+    }
+}
+
+export const sortEnrollments = (enrollments: Enrollment[], sortBy: EnrollmentSort, descending: boolean): Enrollment[] => {
+    return enrollments.sort((a, b) => {
+        return enrollmentCompare(a, b, sortBy, descending)
+    })
 }
