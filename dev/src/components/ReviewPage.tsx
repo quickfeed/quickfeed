@@ -67,7 +67,7 @@ const ReviewPage = (): JSX.Element => {
                 <div className={state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"}>
                     <Search placeholder={"Search by name ..."} >
                         <Button type={ButtonType.BUTTON}
-                            text={groupView ? "View by student" : "View by group"}
+                            text={`View by ${groupView ? "student" : "group"}`}
                             onclick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(-1) }}
                             color={groupView ? Color.BLUE : Color.GREEN} />
                     </Search>
