@@ -260,7 +260,7 @@ export const getSubmissionCellColor = (submission: Submission): string => {
     if (isRejected(submission)) {
         return "result-rejected"
     }
-    return ""
+    return "clickable"
 }
 
 export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGenerator: (s: SubmissionLink, e?: Enrollment) => RowElement, groupName?: boolean, assignmentID?: number): Row[] => {
