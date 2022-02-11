@@ -1,7 +1,7 @@
 import { derived } from "overmind"
 import { Context } from "."
 import { Assignment, Course, Enrollment, Group, Submission, SubmissionLink, User } from "../../proto/ag/ag_pb"
-import { Color, isApproved, isPending, isPendingGroup, isTeacher, SubmissionSort } from "../Helpers"
+import { Color, getNumApproved, getSubmissionByAssignmentID, getSubmissionsScore, isApproved, isPending, isPendingGroup, isTeacher, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: number
@@ -252,8 +252,7 @@ export const state: State = {
                     filteredSubmissions = filteredSubmissions.filter(submission => {
                         if (rootState.review.assignmentID > 0) {
                             // If a specific assignment is selected, filter by that assignment
-                            const sub = submission.submissions?.find(submission => submission.getAssignment()?.getId() === rootState.review.assignmentID)?.getSubmission()
-                            return sub && !isApproved(sub)
+                            const sub = getSubmissionByAssignmentID(link.submissions, rootState.review.assignmentID)
                         }
                         const numApproved = submission.submissions?.reduce((acc, cur) => {
                             return acc + ((cur.hasSubmission() &&
@@ -273,8 +272,8 @@ export const state: State = {
             let subB: Submission | undefined
             if (rootState.review.assignmentID > 0) {
                 // If a specific assignment is selected, sort by that assignment
-                subA = a.submissions?.find(submission => submission.getAssignment()?.getId() === rootState.review.assignmentID)?.getSubmission()
-                subB = b.submissions?.find(submission => submission.getAssignment()?.getId() === rootState.review.assignmentID)?.getSubmission()
+                subA = getSubmissionByAssignmentID(a.submissions, rootState.review.assignmentID)
+                subB = getSubmissionByAssignmentID(b.submissions, rootState.review.assignmentID)
             }
 
             switch (state.sortSubmissionsBy) {
@@ -289,8 +288,8 @@ export const state: State = {
                         }
                         return m
                     }
-                    const aSubs = a.submissions?.reduce((acc, cur) => { return acc + (cur.hasSubmission() ? (cur.getSubmission() as Submission).getScore() : 0) }, 0) ?? 0
-                    const bSubs = b.submissions?.reduce((acc, cur) => { return acc + (cur.hasSubmission() ? (cur.getSubmission() as Submission).getScore() : 0) }, 0) ?? 0
+                    const aSubs = a.submissions ? getSubmissionsScore(a.submissions) : 0
+                    const bSubs = b.submissions ? getSubmissionsScore(b.submissions) : 0
                     return m * (aSubs - bSubs)
                 case SubmissionSort.Approved:
                     if (rootState.review.assignmentID > 0) {
@@ -298,8 +297,8 @@ export const state: State = {
                         const sB = subB && isApproved(subB) ? 1 : 0
                         return m * (sA - sB)
                     }
-                    const aApproved = a.submissions?.reduce((acc, cur) => { return acc + ((cur.hasSubmission() && isApproved(cur.getSubmission() as Submission)) ? 1 : 0) }, 0) ?? 0
-                    const bApproved = b.submissions?.reduce((acc, cur) => { return acc + ((cur.hasSubmission() && isApproved(cur.getSubmission() as Submission)) ? 1 : 0) }, 0) ?? 0
+                    const aApproved = a.submissions ? getNumApproved(a.submissions) : 0
+                    const bApproved = b.submissions ? getNumApproved(b.submissions) : 0
                     return m * (aApproved - bApproved)
                 case SubmissionSort.Name:
                     const nameA = a.user?.getName() ?? ""

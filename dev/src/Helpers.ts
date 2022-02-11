@@ -196,6 +196,36 @@ export const isHidden = (value: string, query: string): boolean => {
     return !value.toLowerCase().includes(query) && query.length > 0
 }
 
+/** getSubmissionsScore calculates the total score of all submissions in a SubmissionLink[] */
+export const getSubmissionsScore = (submissions: SubmissionLink[]): number => {
+    let score = 0
+    submissions.forEach(submission => {
+        if (!submission.hasSubmission()) {
+            return
+        }
+        score += (submission.getSubmission() as Submission).getScore()
+    })
+    return score
+}
+
+/** getNumApproved returns the number of approved submissions in a SubmissionLink[] */
+export const getNumApproved = (submissions: SubmissionLink[]): number => {
+    let num = 0
+    submissions.forEach(submission => {
+        if (!submission.hasSubmission()) {
+            return
+        }
+        if (isApproved(submission.getSubmission() as Submission)) {
+            num++
+        }
+    })
+    return num
+}
+
+export const getSubmissionByAssignmentID = (submissions: SubmissionLink[] | undefined, assignmentID: number): Submission | undefined => {
+    return submissions?.find(submission => submission.getAssignment()?.getId() === assignmentID)?.getSubmission()
+}
+
 export const EnrollmentStatusBadge = {
     0: "",
     1: "badge badge-info",
