@@ -249,12 +249,13 @@ export const state: State = {
                     break
                 case "approved":
                     // approved filters all entries where all assignments have been approved
-                    filteredSubmissions = filteredSubmissions.filter(submission => {
+                    filteredSubmissions = filteredSubmissions.filter(link => {
                         if (rootState.review.assignmentID > 0) {
                             // If a specific assignment is selected, filter by that assignment
                             const sub = getSubmissionByAssignmentID(link.submissions, rootState.review.assignmentID)
+                            return sub !== undefined && !isApproved(sub)
                         }
-                        const numApproved = submission.submissions?.reduce((acc, cur) => {
+                        const numApproved = link.submissions?.reduce((acc, cur) => {
                             return acc + ((cur.hasSubmission() &&
                                 isApproved(cur.getSubmission() as Submission)) ? 1 : 0)
                         }, 0) ?? 0
