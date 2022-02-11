@@ -253,7 +253,7 @@ export const state: State = {
                         if (rootState.review.assignmentID > 0) {
                             // If a specific assignment is selected, filter by that assignment
                             const sub = submission.submissions?.find(submission => submission.getAssignment()?.getId() === rootState.review.assignmentID)?.getSubmission()
-                            return sub && isApproved(sub)
+                            return sub && !isApproved(sub)
                         }
                         const numApproved = submission.submissions?.reduce((acc, cur) => {
                             return acc + ((cur.hasSubmission() &&
