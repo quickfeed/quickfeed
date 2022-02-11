@@ -264,7 +264,7 @@ input {
   cursor: pointer;
 }
 
-.result-pending {
+.result-rejected {
   background-color: #ffcccc;
   cursor: pointer;
 }

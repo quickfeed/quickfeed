@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 import { useActions, useAppState } from "../overmind"
 import { SubmissionLink } from "../../proto/ag/ag_pb"
-import { Color, generateAssignmentsHeader, generateSubmissionRows, getCourseID, isApproved, isManuallyGraded, isRevision, SubmissionSort } from "../Helpers"
+import { Color, generateAssignmentsHeader, generateSubmissionRows, getCourseID, getSubmissionCellColor, isApproved, isManuallyGraded, isRevision, SubmissionSort } from "../Helpers"
 import Search from "./Search"
 import ReviewForm from "./manual-grading/ReviewForm"
 import DynamicTable, { Row, RowElement } from "./DynamicTable"
@@ -37,7 +37,7 @@ const ReviewPage = (): JSX.Element => {
             return ({
                 // TODO: Figure out a better way to visualize released submissions than '(r)'
                 value: `${reviews.length}/${assignment.getReviewers()} ${submission.getReleased() ? "(r)" : ""}`,
-                className: `${isApproved(submission) ? "result-approved" : isRevision(submission) ? "result-revision" : "result-pending"} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""}`,
+                className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""}`,
                 onClick: () => {
                     actions.setActiveSubmissionLink(submissionLink)
                     actions.review.setSelectedReview(-1)

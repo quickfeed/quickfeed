@@ -250,6 +250,19 @@ export const groupRepoLink = (course: Course, group: Group): string => {
     return `https://github.com/${course.getOrganizationpath()}/${slugify(group.getName())}`
 }
 
+export const getSubmissionCellColor = (submission: Submission): string => {
+    if (isApproved(submission)) {
+        return "result-approved"
+    }
+    if (isRevision(submission)) {
+        return "result-revision"
+    }
+    if (isRejected(submission)) {
+        return "result-rejected"
+    }
+    return ""
+}
+
 export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGenerator: (s: SubmissionLink, e?: Enrollment) => RowElement, groupName?: boolean, assignmentID?: number): Row[] => {
     const state = useAppState()
     const course = state.courses.find(c => c.getId() === state.activeCourse)
