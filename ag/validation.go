@@ -3,10 +3,8 @@ package ag
 import (
 	"context"
 	"reflect"
-	"strings"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -24,45 +22,43 @@ type idCleaner interface {
 	RemoveRemoteID()
 }
 
-// Interceptor returns a new unary server interceptor that validates requests
+// ValidationInterceptor returns a new unary server interceptor that validates requests
 // that implements the validator interface.
 // Invalid requests are rejected without logging and before it reaches any
 // user-level code and returns an illegal argument to the client.
 // In addition, the interceptor also implements a cancel mechanism.
-func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
+func ValidationInterceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		methodName := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
-		AgMethodSuccessRateMetric.WithLabelValues(methodName, "total").Inc()
-		responseTimer := prometheus.NewTimer(prometheus.ObserverFunc(
-			AgResponseTimeByMethodsMetric.WithLabelValues(methodName).Set),
-		)
-		defer responseTimer.ObserveDuration().Milliseconds()
-
-		if v, ok := req.(validator); ok {
-			if !v.IsValid() {
-				return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
-			}
-		} else {
-			// just logging, but still handling the call
-			logger.Sugar().Debugf("message type '%s' does not implement validator interface",
-				reflect.TypeOf(req).String())
+		if err := validate(logger, req); err != nil {
+			return nil, err
 		}
 		ctx, cancel := context.WithTimeout(ctx, MaxWait)
 		defer cancel()
-
 		// if response has information on remote ID, it will be removed
 		resp, err := handler(ctx, req)
-		if resp != nil {
-			AgMethodSuccessRateMetric.WithLabelValues(methodName, "success").Inc()
-			if v, ok := resp.(idCleaner); ok {
-				v.RemoveRemoteID()
-			}
-		}
-		if err != nil {
-			AgFailedMethodsMetric.WithLabelValues(methodName).Inc()
-			AgMethodSuccessRateMetric.WithLabelValues(methodName, "error").Inc()
-		}
+		clean(resp)
 		return resp, err
+	}
+}
+
+func validate(logger *zap.Logger, req interface{}) error {
+	if v, ok := req.(validator); ok {
+		if !v.IsValid() {
+			return status.Errorf(codes.InvalidArgument, "invalid payload")
+		}
+	} else {
+		// just logging, but still handling the call
+		logger.Sugar().Debugf("message type '%s' does not implement validator interface",
+			reflect.TypeOf(req).String())
+	}
+	return nil
+}
+
+func clean(resp interface{}) {
+	if resp != nil {
+		if v, ok := resp.(idCleaner); ok {
+			v.RemoveRemoteID()
+		}
 	}
 }
 
