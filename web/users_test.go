@@ -50,7 +50,7 @@ func TestGetSelf(t *testing.T) {
 	}
 
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier())
+	opt := grpc.ChainUnaryInterceptor(auth.UnaryUserVerifier())
 	s := grpc.NewServer(opt)
 	pb.RegisterAutograderServiceServer(s, ags)
 

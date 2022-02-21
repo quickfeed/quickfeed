@@ -102,7 +102,7 @@ func startGrpcAuthServer(t *testing.T, db database.Database) {
 	check(t, err)
 
 	opt := grpc.ChainUnaryInterceptor(
-		auth.UserVerifier(),
+		auth.UnaryUserVerifier(),
 	)
 	grpcServer := grpc.NewServer(opt)
 
