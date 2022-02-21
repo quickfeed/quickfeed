@@ -129,6 +129,8 @@ type Database interface {
 	GetRepositories(query *pb.Repository) ([]*pb.Repository, error)
 	// DeleteRepository deletes repository by the given provider's ID
 	DeleteRepositoryByRemoteID(uint64) error
+	// UpdateRepositoryIssues updates the issues of the repository
+	UpdateRepositoryIssues(repo *pb.Repository, issues []*pb.Issue) error
 
 	// UpdateSlipDays updates used slipdays for the given course enrollment
 	UpdateSlipDays([]*pb.UsedSlipDays) error

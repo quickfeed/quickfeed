@@ -35,7 +35,10 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		updateGradingCriteria(logger, db, assignment)
 	}
 
-	err = SyncTasks(context.Background(), logger, s, course, assignments)
+	// Oje - Review this
+	// err = SyncTasks(context.Background(), logger, s, course, assignments)
+
+	err = HandleTasks(context.Background(), logger, db, s, course, assignments)
 	if err != nil {
 		logger.Errorf("Failed to Create tasks on '%s' repository: %v", pb.TestsRepo, err)
 		return
@@ -168,4 +171,10 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 			}
 		}
 	}
+}
+
+// Following is Oje code (placement might be temporary):
+
+func UpdateAssignmentWithIssues(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, issues []*scm.Issue) {
+	// First convert
 }

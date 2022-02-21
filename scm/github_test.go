@@ -122,7 +122,7 @@ func TestCreateIssue(t *testing.T) {
 	// Replace with Repository name
 	repo := "Replace with Repository Name"
 	// Add Issue Title here
-	title := "Replace with  Issue Title"
+	title := "Replace with Issue Title"
 	// Add Issue body here
 	body := "Replace with Issue Body"
 	// Creating new Client

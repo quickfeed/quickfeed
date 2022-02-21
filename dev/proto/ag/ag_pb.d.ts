@@ -304,6 +304,11 @@ export class Repository extends jspb.Message {
   getRepotype(): Repository.Type;
   setRepotype(value: Repository.Type): Repository;
 
+  getIssuesList(): Array<Issue>;
+  setIssuesList(value: Array<Issue>): Repository;
+  clearIssuesList(): Repository;
+  addIssues(value?: Issue, index?: number): Issue;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Repository.AsObject;
   static toObject(includeInstance: boolean, msg: Repository): Repository.AsObject;
@@ -321,6 +326,7 @@ export namespace Repository {
     groupid: number,
     htmlurl: string,
     repotype: Repository.Type,
+    issuesList: Array<Issue.AsObject>,
   }
 
   export enum Type { 
@@ -651,6 +657,9 @@ export class Task extends jspb.Message {
   getStatus(): string;
   setStatus(value: string): Task;
 
+  getName(): string;
+  setName(value: string): Task;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Task.AsObject;
   static toObject(includeInstance: boolean, msg: Task): Task.AsObject;
@@ -668,6 +677,41 @@ export namespace Task {
     gitissueid: number,
     issuenumber: number,
     status: string,
+    name: string,
+  }
+}
+
+export class Issue extends jspb.Message {
+  getRepositoryid(): number;
+  setRepositoryid(value: number): Issue;
+
+  getGithubrepositoryid(): number;
+  setGithubrepositoryid(value: number): Issue;
+
+  getName(): string;
+  setName(value: string): Issue;
+
+  getTitle(): string;
+  setTitle(value: string): Issue;
+
+  getBody(): string;
+  setBody(value: string): Issue;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Issue.AsObject;
+  static toObject(includeInstance: boolean, msg: Issue): Issue.AsObject;
+  static serializeBinaryToWriter(message: Issue, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Issue;
+  static deserializeBinaryFromReader(message: Issue, reader: jspb.BinaryReader): Issue;
+}
+
+export namespace Issue {
+  export type AsObject = {
+    repositoryid: number,
+    githubrepositoryid: number,
+    name: string,
+    title: string,
+    body: string,
   }
 }
 

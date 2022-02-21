@@ -12,7 +12,6 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 		// both organization and repository must be non-zero
 		return ErrCreateRepo
 	}
-
 	switch {
 	case repo.UserID > 0:
 		// check that user exists before creating repo in database
@@ -59,4 +58,9 @@ func (db *GormDB) DeleteRepositoryByRemoteID(rid uint64) error {
 		return err
 	}
 	return db.conn.Delete(repo).Error
+}
+
+// UpdateRepositoryIssues updates repository issues
+func (db *GormDB) UpdateRepositoryIssues(repo *pb.Repository, issues []*pb.Issue) error {
+	return db.conn.Model(repo).Update("issues", issues).Error
 }

@@ -103,6 +103,7 @@ message Repository {
     uint64 groupID        = 5 [(go.field) = { tags: 'gorm:"uniqueIndex:uid_gid_org_type"' }];
     string HTMLURL        = 6;
     Type repoType         = 7 [(go.field) = { tags: 'gorm:"uniqueIndex:uid_gid_org_type"' }];
+    repeated Issue issues = 8;  // Issues associated with this repository
 }
 
 message Enrollment {
@@ -189,8 +190,17 @@ message Task {
     uint64 gitIssueID   = 5;
     uint32 IssueNumber  = 6;
     string Status       = 7;
+    string Name         = 8;
 }
 
+message Issue {
+    uint64 repositoryID         = 1; // Represents the internal ID of a repository 
+    uint64 githubRepositoryID   = 2; // Represents the ID of a repository given by github
+    string name                 = 3; // Name of associated task/issue, e.g. "task-1"
+    string title                = 4;
+    string body                 = 5;
+}
+            
 message Assignments {
     repeated Assignment assignments = 1;
 }
