@@ -112,6 +112,10 @@ func (opt RepositoryOptions) valid() bool {
 	return opt.ID > 0 || (opt.Path != "" && opt.Owner != "")
 }
 
+func (opt RepositoryInvitationOptions) valid() bool {
+	return opt.InvitationID > 0
+}
+
 // Errors //
 
 // ErrNotSupported is returned when the source code management solution used
