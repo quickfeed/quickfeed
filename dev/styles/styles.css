@@ -323,3 +323,27 @@ input {
   box-shadow: rgb(0, 0, 0) 0px 0px 0px inset,
     rgba(0, 0, 0, 0.2) 5px 0px 0px inset;
 }
+.togglebtn {
+  color: #d4d4d4 !important;
+  background-color: "pink" !important;
+  
+}
+
+.dropdown-menu-center {
+  right: auto;
+  left: 50%;
+  -webkit-transform: translate(-50%, 0);
+  -o-transform: translate(-50%, 0);
+  transform: translate(-50%, 0);
+  
+}
+
+
+/* ============ desktop view ============ */
+@media all and (min-width: 992px) {
+    .navbar .nav-item .dropdown-menu{ display: none; }
+    .navbar .nav-item:hover .nav-link{   }
+    .navbar .nav-item:hover .dropdown-menu{ display: block; }
+    .navbar .nav-item .dropdown-menu{ margin-top:0; }
+}    
+/* ============ desktop view .end// ============ */
