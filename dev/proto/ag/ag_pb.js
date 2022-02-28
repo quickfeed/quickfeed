@@ -5088,11 +5088,12 @@ proto.ag.Issue.prototype.toObject = function(opt_includeInstance) {
  */
 proto.ag.Issue.toObject = function(includeInstance, msg) {
   var f, obj = {
-    repositoryid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    githubrepositoryid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    name: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    title: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    body: jspb.Message.getFieldWithDefault(msg, 5, "")
+    id: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    repositoryid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    githubrepositoryid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    name: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    title: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    body: jspb.Message.getFieldWithDefault(msg, 6, "")
   };
 
   if (includeInstance) {
@@ -5131,21 +5132,25 @@ proto.ag.Issue.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setRepositoryid(value);
+      msg.setId(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setGithubrepositoryid(value);
+      msg.setRepositoryid(value);
       break;
     case 3:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setName(value);
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setGithubrepositoryid(value);
       break;
     case 4:
       var value = /** @type {string} */ (reader.readString());
-      msg.setTitle(value);
+      msg.setName(value);
       break;
     case 5:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setTitle(value);
+      break;
+    case 6:
       var value = /** @type {string} */ (reader.readString());
       msg.setBody(value);
       break;
@@ -5178,38 +5183,45 @@ proto.ag.Issue.prototype.serializeBinary = function() {
  */
 proto.ag.Issue.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRepositoryid();
+  f = message.getId();
   if (f !== 0) {
     writer.writeUint64(
       1,
       f
     );
   }
-  f = message.getGithubrepositoryid();
+  f = message.getRepositoryid();
   if (f !== 0) {
     writer.writeUint64(
       2,
       f
     );
   }
-  f = message.getName();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getGithubrepositoryid();
+  if (f !== 0) {
+    writer.writeUint64(
       3,
       f
     );
   }
-  f = message.getTitle();
+  f = message.getName();
   if (f.length > 0) {
     writer.writeString(
       4,
       f
     );
   }
-  f = message.getBody();
+  f = message.getTitle();
   if (f.length > 0) {
     writer.writeString(
       5,
+      f
+    );
+  }
+  f = message.getBody();
+  if (f.length > 0) {
+    writer.writeString(
+      6,
       f
     );
   }
@@ -5217,77 +5229,92 @@ proto.ag.Issue.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional uint64 repositoryID = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
-proto.ag.Issue.prototype.getRepositoryid = function() {
+proto.ag.Issue.prototype.getId = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
 
 /** @param {number} value */
-proto.ag.Issue.prototype.setRepositoryid = function(value) {
+proto.ag.Issue.prototype.setId = function(value) {
   jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional uint64 githubRepositoryID = 2;
+ * optional uint64 repositoryID = 2;
  * @return {number}
  */
-proto.ag.Issue.prototype.getGithubrepositoryid = function() {
+proto.ag.Issue.prototype.getRepositoryid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
 /** @param {number} value */
-proto.ag.Issue.prototype.setGithubrepositoryid = function(value) {
+proto.ag.Issue.prototype.setRepositoryid = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional string name = 3;
- * @return {string}
+ * optional uint64 githubRepositoryID = 3;
+ * @return {number}
  */
-proto.ag.Issue.prototype.getName = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+proto.ag.Issue.prototype.getGithubrepositoryid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
-/** @param {string} value */
-proto.ag.Issue.prototype.setName = function(value) {
-  jspb.Message.setProto3StringField(this, 3, value);
+/** @param {number} value */
+proto.ag.Issue.prototype.setGithubrepositoryid = function(value) {
+  jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional string title = 4;
+ * optional string name = 4;
  * @return {string}
  */
-proto.ag.Issue.prototype.getTitle = function() {
+proto.ag.Issue.prototype.getName = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
 
 /** @param {string} value */
-proto.ag.Issue.prototype.setTitle = function(value) {
+proto.ag.Issue.prototype.setName = function(value) {
   jspb.Message.setProto3StringField(this, 4, value);
 };
 
 
 /**
- * optional string body = 5;
+ * optional string title = 5;
  * @return {string}
  */
-proto.ag.Issue.prototype.getBody = function() {
+proto.ag.Issue.prototype.getTitle = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
 
 /** @param {string} value */
-proto.ag.Issue.prototype.setBody = function(value) {
+proto.ag.Issue.prototype.setTitle = function(value) {
   jspb.Message.setProto3StringField(this, 5, value);
+};
+
+
+/**
+ * optional string body = 6;
+ * @return {string}
+ */
+proto.ag.Issue.prototype.getBody = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
+};
+
+
+/** @param {string} value */
+proto.ag.Issue.prototype.setBody = function(value) {
+  jspb.Message.setProto3StringField(this, 6, value);
 };
 
 

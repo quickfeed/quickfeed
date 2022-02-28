@@ -62,5 +62,14 @@ func (db *GormDB) DeleteRepositoryByRemoteID(rid uint64) error {
 
 // UpdateRepositoryIssues updates repository issues
 func (db *GormDB) UpdateRepositoryIssues(repo *pb.Repository, issues []*pb.Issue) error {
-	return db.conn.Model(repo).Update("issues", issues).Error
+	return db.conn.Model(repo).Update("Issues", issues).Error
+}
+
+// GetRepositoriesWithIssues gets repositories with issues
+func (db *GormDB) GetRepositoriesWithIssues(query *pb.Repository) ([]*pb.Repository, error) {
+	var repos []*pb.Repository
+	if err := db.conn.Preload("Issues").Find(&repos, query).Error; err != nil {
+		return nil, err
+	}
+	return repos, nil
 }

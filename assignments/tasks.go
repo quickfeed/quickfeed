@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strings"
+	"path/filepath"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/scm"
-	"go.uber.org/zap"
 )
 
 // newTask returns a task from markdown contents and associates it with the given assignment.
@@ -31,16 +30,6 @@ func newTask(contents []byte, assignment *pb.Assignment, name string) (*pb.Task,
 	}, nil
 }
 
-// TODO(meling) consider to move this as method on pb.Task??
-func isExists(gitIssues []*scm.Issue, task *pb.Task) (gitIssue *scm.Issue) {
-	for _, gitIssue := range gitIssues {
-		if gitIssue.ID == task.GitIssueID {
-			return gitIssue
-		}
-	}
-	return nil
-}
-
 func UpdateIssue(c context.Context, sc scm.SCM, course *pb.Course, repo *scm.Repository, task *pb.Task, gitIssue *scm.Issue) (issue *scm.Issue, err error) {
 	newIssue := &scm.CreateIssueOptions{
 		Organization: course.Name,
@@ -56,94 +45,31 @@ func UpdateIssue(c context.Context, sc scm.SCM, course *pb.Course, repo *scm.Rep
 	return sc.EditRepoIssue(c, updateIssue, newIssue)
 }
 
-// Creates an issue on specified repository. Also creates and returns a dbIssue
-func CreateIssue(c context.Context, sc scm.SCM, course *pb.Course, db database.Database, scmRepo *scm.Repository, dbRepo *pb.Repository, task *pb.Task) (*scm.Issue, *pb.Issue, error) {
+// Creates an issue on specified repository.
+func CreateScmIssue(c context.Context, sc scm.SCM, course *pb.Course, repo *pb.Repository, task *pb.Task) (*scm.Issue, error) {
 	newIssue := &scm.CreateIssueOptions{
 		Organization: course.Name,
-		Repository:   scmRepo.Path,
+		Repository:   filepath.Base(repo.GetHTMLURL()), // Needs to be of type "tests", not "https://github.com/qf101/tests". This is a very hacky solution. pb.Repository should probably have a field "Name" that is set upon creation.
 		Title:        task.Title,
 		Body:         task.Body,
 	}
-	scmIssue, err := sc.CreateIssue(c, newIssue)
+	issue, err := sc.CreateIssue(c, newIssue)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
+	return issue, nil
+}
 
-	dbIssue := &pb.Issue{
-		RepositoryID:       dbRepo.ID,
-		GithubRepositoryID: scmRepo.ID,
+// This is more of a converter function, and cannot currently return an error. Should probably be renamed or something.
+func CreateDbIssue(c context.Context, repo *pb.Repository, task *pb.Task) (*pb.Issue, error) {
+	issue := &pb.Issue{
+		RepositoryID:       repo.ID,
+		GithubRepositoryID: repo.RepositoryID,
 		Name:               task.Name,
 		Title:              task.Title,
 		Body:               task.Body,
 	}
-
-	// TODO(meling) maybe these need to be recorded in the database; in which case, maybe this should be done outside this function?
-	// task.GitIssueID = issue.ID
-	// task.IssueNumber = uint32(issue.IssueNumber)
-	// task.Status = issue.Status
-	return scmIssue, dbIssue, nil
-}
-
-// SyncTasks will create Issues in all the git repositories within an Organization
-// It will exclude only repository with suffix -info
-// It will also update all the existing issues within all the repositories
-func SyncTasks(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course *pb.Course, assignments []*pb.Assignment) error {
-	logger.Debugf("SyncTasks: Syncing tasks for all the assignments for Course: %s", course.Name)
-	org, err := sc.GetOrganization(c, &scm.GetOrgOptions{Name: course.Name})
-	if err != nil {
-		logger.Debugf("SyncTasks: Failed to Fetch Course %s due to ERROR : %s", course.Name, err)
-		return err
-	}
-	repos, err := sc.GetRepositories(c, org)
-	if err != nil {
-		logger.Errorf("SyncTasks: Failed to Fetch Repositories from Course %s due to ERROR: %s", course.Name, err)
-		return err
-	}
-
-	for _, repo := range repos {
-		// checking if it's a course info repository
-		if !strings.HasSuffix(repo.Path, "-labs") {
-			logger.Debugf("SyncTasks: Skipping repository: %s", repo.Path)
-			continue
-		}
-		// check if issues already exist
-		gitIssues, err := sc.GetRepoIssues(c, &scm.IssueOptions{
-			Organization: course.Name,
-			Repository:   repo.Path,
-		})
-		if err != nil {
-			logger.Errorf("SyncTasks: Not able to fetch Issues from repository %s, Course %s ", repo.Path, course.Name)
-			continue
-		}
-		logger.Debugf("SyncTasks: Beggining task creation on repository: %s", repo.Path)
-		for _, assignment := range assignments {
-			logger.Debugf("SyncTasks: assignment Elements: %s", assignment)
-			logger.Debugf("SyncTasks: assignment TASKS: %s", assignment.Tasks)
-			for _, task := range assignment.Tasks {
-				// Checking if issue already exist
-				logger.Debugf("SyncTasks: assignment.Tasks: %s", assignment.Tasks)
-				gitIssue := isExists(gitIssues, task)
-				logger.Debugf("SyncTasks: gitIssue: %s", gitIssue)
-				logger.Debugf("SyncTasks: task: %s", task)
-				if gitIssue != nil {
-					// issue already exists
-					logger.Debugf("SyncTasks: updating Task on Repository: %s", repo.Path)
-					_, err := UpdateIssue(c, sc, course, repo, task, gitIssue)
-					if err != nil {
-						logger.Errorf("SyncTasks: failed to update task %s on repo %s for course %s : %s", task.Title, repo.Path, course.Name, err)
-					}
-				} else {
-					logger.Debugf("SyncTasks: Creating Task on Repository: %s", repo.Path)
-					// issue does not exist, creating new issue on current repository
-					// _, err := CreateIssue(c, sc, course, repo, task)
-					if err != nil {
-						logger.Errorf("SyncTasks: failed to create new task %s on repo %s for course %s : %s", task.Title, repo.Path, course.Name, err)
-					}
-				}
-			}
-		}
-	}
-	return nil
+	return issue, nil
 }
 
 // Oje - Imagined issue/PR management flow goes as follows:
@@ -161,12 +87,12 @@ func SyncTasks(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course 
 //		  issue.
 
 // Oje - Todo list:
-// - Should create a test that creates issues on repos, and then checks if these can be associated with existing tasks
-// - Make a function that converts from scm-repo to db-repo. Then CreateIssue can take both as argument
+// - Currently there is a db-record for tasks, it is however not used, but the struct is used. Since we now have a db-record for issues,
+// 	 we should not need the db-record for tasks, however the struct will be necessary. Therefore we need an equivalent
 
 // Following is Oje code (placement might be temporary):
 
-func HandleTasks(c context.Context, logger *zap.SugaredLogger, db database.Database, s scm.SCM, course *pb.Course, assignments []*pb.Assignment) error {
+func HandleTasks(c context.Context, db database.Database, s scm.SCM, course *pb.Course, assignments []*pb.Assignment) error {
 	if len(assignments) == 0 {
 		return nil
 	}
@@ -175,39 +101,70 @@ func HandleTasks(c context.Context, logger *zap.SugaredLogger, db database.Datab
 		return err
 	}
 
-	repos, err := s.GetRepositories(c, org)
+	repos, err := GetRepositoriesByOrgID(db, org.ID)
 	if err != nil {
 		return err
 	}
 
-	for _, scmRepo := range repos {
-		// Could maybe get DBRepo first, and then do this test
-		if !strings.HasSuffix(scmRepo.Path, "-labs") {
+	for _, repo := range repos {
+		if !repo.IsStudentRepo() {
 			continue
 		}
 
-		dbRepo, err := GetDbRepository(logger, db, scmRepo)
+		tasks := make(map[string]*pb.Task)
+		for _, assignment := range assignments {
+			for _, task := range assignment.Tasks {
+				tasks[task.Name] = task
+			}
+		}
+		err = HandleTasksForRepo(c, db, course, s, repo, tasks)
 		if err != nil {
 			return err
 		}
-
-		issues := []*pb.Issue{}
-		for _, assignment := range assignments {
-			for _, task := range assignment.Tasks {
-				_, issue, err := CreateIssue(c, s, course, db, scmRepo, dbRepo, task)
-				if err != nil {
-					return err
-				}
-				issues = append(issues, issue)
-			}
-		}
-		UpdateRepositoryIssues(logger, db, dbRepo, issues)
 	}
 
 	return nil
 }
 
-func UpdateRepositoryIssues(logger *zap.SugaredLogger, db database.Database, repo *pb.Repository, issues []*pb.Issue) error {
+func HandleTasksForRepo(c context.Context, db database.Database, course *pb.Course, s scm.SCM, repo *pb.Repository, tasks map[string]*pb.Task) error {
+	newOrAlteredIssues := []*pb.Issue{}
+	for _, issue := range repo.Issues {
+		task, ok := tasks[issue.Name]
+		if !ok {
+			// What should happen if task does not exist for issue?
+			continue
+		}
+		if !(task.Title == issue.Title && task.Body == issue.Body) {
+			// Issue needs to be updated here
+			issue.Title = task.Title
+			issue.Body = task.Body
+			newOrAlteredIssues = append(newOrAlteredIssues, issue)
+			// UpdateIssue(c, s, course, )
+			continue
+		}
+		delete(tasks, issue.Name)
+	}
+
+	// Only tasks that have no issue associated with them remain. There must be created an issue for them.
+	for _, task := range tasks {
+		// Creates the actual issue on a scm
+		_, err := CreateScmIssue(c, s, course, repo, task)
+		if err != nil {
+			return err
+		}
+		// Creates issue to be saved in db
+		issue, err := CreateDbIssue(c, repo, task)
+		if err != nil {
+			return err
+		}
+		newOrAlteredIssues = append(newOrAlteredIssues, issue)
+	}
+	// This creates new record instead of updating existing one. TBC
+	UpdateRepositoryIssues(db, repo, newOrAlteredIssues)
+	return nil
+}
+
+func UpdateRepositoryIssues(db database.Database, repo *pb.Repository, issues []*pb.Issue) error {
 	err := db.UpdateRepositoryIssues(repo, issues)
 	if err != nil {
 		return err
@@ -215,18 +172,14 @@ func UpdateRepositoryIssues(logger *zap.SugaredLogger, db database.Database, rep
 	return nil
 }
 
-// Gets dbRepo based on scmRepo
-func GetDbRepository(logger *zap.SugaredLogger, db database.Database, scmRepo *scm.Repository) (*pb.Repository, error) {
-	repositories, err := db.GetRepositories(&pb.Repository{
-		RepositoryID: scmRepo.ID,
+// Gets dbRepo based on orgID. Should maybe be moved to be a separate method in gormdb_repository.go of some kind
+func GetRepositoriesByOrgID(db database.Database, orgID uint64) ([]*pb.Repository, error) {
+	repositories, err := db.GetRepositoriesWithIssues(&pb.Repository{
+		OrganizationID: orgID,
 	})
 	if err != nil {
 		return nil, err
 	}
-	if len(repositories) > 1 {
-		// Should only get one repository. Should return a fitting error
-		return nil, nil
-	}
 
-	return repositories[0], nil
+	return repositories, nil
 }

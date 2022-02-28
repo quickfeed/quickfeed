@@ -705,6 +705,9 @@ func (s *GithubSCM) CreateIssue(ctx context.Context, opt *CreateIssueOptions) (*
 	}
 
 	s.logger.Debugf("CreateRepository: creating issue %s on %s Repository", opt.Title, opt.Repository)
+	// fmt.Printf("%s\n", opt.Organization)
+	// fmt.Printf("%s\n", opt.Repository)
+	// fmt.Printf("%v\n", &newIssue)
 	issue, _, err := s.client.Issues.Create(ctx, opt.Organization, opt.Repository, newIssue)
 	if err != nil {
 		return nil, ErrFailedSCM{

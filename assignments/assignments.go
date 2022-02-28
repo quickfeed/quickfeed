@@ -35,10 +35,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		updateGradingCriteria(logger, db, assignment)
 	}
 
-	// Oje - Review this
-	// err = SyncTasks(context.Background(), logger, s, course, assignments)
-
-	err = HandleTasks(context.Background(), logger, db, s, course, assignments)
+	err = HandleTasks(context.Background(), db, s, course, assignments)
 	if err != nil {
 		logger.Errorf("Failed to Create tasks on '%s' repository: %v", pb.TestsRepo, err)
 		return

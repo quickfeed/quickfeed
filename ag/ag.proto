@@ -194,11 +194,12 @@ message Task {
 }
 
 message Issue {
-    uint64 repositoryID         = 1; // Represents the internal ID of a repository 
-    uint64 githubRepositoryID   = 2; // Represents the ID of a repository given by github
-    string name                 = 3; // Name of associated task/issue, e.g. "task-1"
-    string title                = 4;
-    string body                 = 5;
+    uint64 ID                   = 1;
+    uint64 repositoryID         = 2; // Represents the internal ID of a repository 
+    uint64 githubRepositoryID   = 3; // Represents the ID of a repository given by github
+    string name                 = 4; // Name of associated task/issue, e.g. "task-1"
+    string title                = 5;
+    string body                 = 6;
 }
             
 message Assignments {

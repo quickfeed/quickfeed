@@ -682,6 +682,9 @@ export namespace Task {
 }
 
 export class Issue extends jspb.Message {
+  getId(): number;
+  setId(value: number): Issue;
+
   getRepositoryid(): number;
   setRepositoryid(value: number): Issue;
 
@@ -707,6 +710,7 @@ export class Issue extends jspb.Message {
 
 export namespace Issue {
   export type AsObject = {
+    id: number,
     repositoryid: number,
     githubrepositoryid: number,
     name: string,
