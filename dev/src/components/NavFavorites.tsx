@@ -3,7 +3,7 @@ import { useAppState,  useActions } from "../overmind";
 import { Link } from 'react-router-dom'
 import NavBarFooter from "./navbar/NavBarFooter";
 import NavBarCourse from "./navbar/NavBarCourse";
-import { isEnrolled, isFavorite } from "../Helpers";
+import { isEnrolled, isFavorite, isVisible } from "../Helpers";
 import { Statemachine } from "overmind";
 
 
@@ -17,8 +17,10 @@ const NavFavorites = ():JSX.Element  =>{
 
     const favorites = state.enrollments.filter(enrollment => isEnrolled(enrollment) && isFavorite(enrollment))
 
-    const courses = favorites.map((enrollment) => {
-            return <NavBarCourse key={enrollment.getId()} enrollment={enrollment} />
+    const visible = state.enrollments.filter(enrollment => isEnrolled(enrollment) && isVisible(enrollment))
+
+    const courses = visible.map((enrollment) => {
+        return <NavBarCourse key={enrollment.getId()} enrollment={enrollment} />
     })
 
     //var active = state.showFavorites

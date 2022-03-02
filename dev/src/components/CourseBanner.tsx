@@ -11,6 +11,7 @@ const CourseBanner = (): JSX.Element => {
     const enrollment = state.enrollmentsByCourseID[getCourseID()]
     const style = isVisible(enrollment) ? "fa fa-star" : "fa fa-star-o"
     return (
+        <div className="banner">
         <div className="jumbotron">
             <div className="centerblock container">
                 <h1>{enrollment.getCourse()?.getName()}
@@ -26,6 +27,7 @@ const CourseBanner = (): JSX.Element => {
                     </span>
                 }
             </div>
+        </div>
         </div>
     )
 }

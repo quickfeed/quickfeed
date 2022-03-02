@@ -338,6 +338,12 @@ input {
   
 }
 
+.banner{
+  margin-left: -350px;
+
+  background-color: purple;
+}
+
 
 /* ============ desktop view ============ */
 @media all and (min-width: 992px) {
