@@ -39,20 +39,13 @@ const NavFavorites = ():JSX.Element  =>{
     return (
         <nav className="navigator">
             <ul key="list" className="SidebarList">
-                <li key="logo" className="logo">
-                    <Link to="/">
+                <li key="logo" className="logo" style={{paddingLeft: "40px"}}>
+                    <Link to="/" >
                         QuickFeed 
                     </Link>
-                    <a onClick={() => { onCourseClick()}}>X</a>
+                    <a onClick={() => { onCourseClick()}}>✖</a>
                     
                 </li>
-                {!state.isLoggedIn &&
-                    <li>
-                        <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px" }}>
-                            Sign in with <i className="fa fa-2x fa-github align-middle ml-2" id="github" />
-                        </a>
-                    </li>
-                }
 
                 {courses}
                 {state.isLoggedIn &&
@@ -60,7 +53,9 @@ const NavFavorites = ():JSX.Element  =>{
                         <Link to="/courses" className="Sidebar-items-link">
                             View all courses
                         </Link>
-                    </li>}
+                    </li>
+                    
+                    }
             </ul>
         </nav>
     )

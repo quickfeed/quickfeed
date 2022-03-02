@@ -41,14 +41,17 @@ const NavBar = (): JSX.Element => {
             </a>
             }     
                     {!state.isLoggedIn &&
+                    <div className="collapse navbar-collapse ml-auto ">
                     <ul className="ms-auto ml-auto list-unstyled" >
                         <li className="nav-item">
                                     
-                            <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px" }}>
+                            <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px", color: "#d4d4d4"}}>
                                 Sign in with <i className="fa fa-2x fa-github align-middle ms-auto " id="github" />
                             </a>
                         </li>
-                    </ul>
+                    </ul>  
+                    </div>
+
                     }
                     
                 {state.isLoggedIn &&

@@ -23,10 +23,10 @@ const NavBarUser = ():JSX.Element =>{
     const AboutButton = () => {
         return (
             <li key="about">
-                <a className="dropdown-item bg-dark">
+                <a className="dropdown-item bg-dark" >
 
                 
-                <Link to="/about" className="Sidebar-items-link">
+                <Link to="/about" className="Sidebar-items-link" style={{color: "#d4d4d4"}}>
                     About
                 </Link>
                 </a>
@@ -38,8 +38,8 @@ const NavBarUser = ():JSX.Element =>{
         if (self.getIsadmin()) {
             return (
                 <li>
-                    <a className="dropdown-item bg-dark">
-                     <Link to="/admin" className="Sidebar-items-link">
+                    <a className="dropdown-item bg-dark" >
+                     <Link to="/admin" className="Sidebar-items-link" style={{color: "#d4d4d4"}}>
                         Admin
                     </Link>                       
                     </a>
@@ -54,7 +54,7 @@ const NavBarUser = ():JSX.Element =>{
             return (
                 <li>
                     <a className="dropdown-item bg-dark">
-                       <a href="/logout" className="Sidebar-items-link" onClick={() => logout()}>Log out</a> 
+                       <a href="/logout" className="Sidebar-items-link" style={{color: "#d4d4d4"}} onClick={() => logout()}>Log out</a> 
                     </a>
                     
                 </li>
@@ -75,12 +75,11 @@ const NavBarUser = ():JSX.Element =>{
             <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px" }}>
             <img className="mrounded-circle" src={self.getAvatarurl()} id="avatar" style={{ height: "40px", borderRadius: "50%" }}></img>
                 </a>
-                <ul className="dropdown-menu dropdown-menu-center bg-dark" >
-                <AboutButton></AboutButton>
-                <AdminButton></AdminButton>
-                <LoginButton></LoginButton>
-
-                </ul>
+                <ul className="dropdown-menu dropdown-menu-center bg-dark">
+                    <AboutButton></AboutButton>
+                    <AdminButton></AdminButton>
+                    <LoginButton></LoginButton>
+		        </ul>
             </li>
         </ul>
         </div> 
