@@ -36,7 +36,7 @@ const NavBar = (): JSX.Element => {
             {!state.showFavorites &&
             <a className="navbar-brand" style={{marginLeft: "30px", fontWeight: "bold"}}>
                 <Link to="/" style={{ fontWeight: "bold", fontSize: "30px", color: "#d4d4d4"}}>
-                    QuickFeed aaaaaaaa
+                    QuickFeed
                 </Link>
             </a>
             }     
