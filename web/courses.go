@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
+	"github.com/google/go-github/v35/github"
 )
 
 // getCourses returns all courses.
@@ -443,35 +445,9 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 			return err
 		}
 
-		// TODO: We can get invites for assignments and info repositories here as well.
-		// TODO: The invites returned for those repositories could include invitees other than the student to be enrolled
-		// TODO: We could either get all invites, filter them by the student being enrolled - then accept those
-		// TODO: Or we could store invites in the database and send them to the student to accept in the frontend
-		// TODO: Or some alternate method I haven't thought of yet.
-		// NOTE: Unsure if we need the SCM of the course creator to get invites
-		invites, err := sc.GetRepositoryInvites(ctx, &scm.RepositoryOptions{ID: repo.ID, Owner: course.GetOrganizationPath(), Path: repo.Path})
-		if err != nil {
-			return err
-		}
-		if len(invites) > 0 {
-			user, err := s.db.GetUser(user.ID)
-			if err != nil {
-				s.logger.Errorf("Failed to get user %d: %v", user.ID, err)
-			}
-			accessToken, err := user.GetAccessToken("github")
-			if err != nil {
-				s.logger.Errorf("Failed to get access token for user %s: %v", user.Login, err)
-			}
-			if sc, ok := s.scms.GetSCM(accessToken); ok {
-				for _, invite := range invites {
-					if err := sc.AcceptRepositoryInvite(ctx, &scm.RepositoryInvitationOptions{InvitationID: uint64(*invite.ID)}); err != nil {
-						s.logger.Errorf("Failed to accept repository invite for user %s: %v", user.Login, err)
-					} else {
-						s.logger.Debug("Accepted repository invite for user ", user.Login)
-					}
-				}
-			}
-		}
+		// repoTypes are the repositories we wish to accept invites for on behalf of the user
+		repoTypes := []pb.Repository_Type{pb.Repository_ASSIGNMENTS, pb.Repository_COURSEINFO, pb.Repository_USER}
+		s.acceptRepositoryInvites(ctx, sc, user, course, repoTypes)
 	}
 
 	return s.db.UpdateEnrollment(userEnrolQuery)
@@ -561,6 +537,61 @@ func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission,
 	}
 	query.UserID = submission.UserID
 	return s.db.UpdateEnrollment(query)
+}
+
+// acceptRepositoryInvites tries to accept repository invitations for the given repository types on behalf of the given user.
+func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, sc scm.SCM, user *pb.User, course *pb.Course, repoTypes []pb.Repository_Type) {
+	invites := []*github.RepositoryInvitation{}
+	for _, repoType := range repoTypes {
+		repo, err := s.db.GetRepositoryByType(user.ID, course.OrganizationID, repoType)
+		if err != nil {
+			s.logger.Error("Failed to get repo: %s", err)
+			continue
+		}
+		// TODO: pb.Repository should contain Path
+		path := strings.Split(repo.GetHTMLURL(), "/")
+
+		repoInvites, err := sc.GetRepositoryInvites(ctx, &scm.RepositoryOptions{ID: repo.RepositoryID, Owner: course.OrganizationPath, Path: path[len(path)-1]})
+		if err != nil {
+			s.logger.Errorf("Failed to get repository invites for %v: %s - %s", repo.RepoType, user.Login, err)
+			continue
+		}
+		for _, invite := range repoInvites {
+			// Some repositories contain more than one invite
+			// and we only want to accept the invite for the
+			// user we are enrolling.
+			if *invite.Invitee.Login != user.Login {
+				continue
+			}
+			invites = append(invites, invite)
+		}
+	}
+
+	if !(len(invites) > 0) {
+		return
+	}
+
+	user, err := s.db.GetUser(user.ID)
+	if err != nil {
+		s.logger.Errorf("Failed to get user %d: %v", user.ID, err)
+		return
+	}
+	// We need the user access token to accept invitations on their behalf
+	accessToken, err := user.GetAccessToken("github")
+	if err != nil {
+		fmt.Errorf("Failed to get access token for user %s: %v", user.Login, err)
+		return
+	}
+	sc, ok := s.scms.GetSCM(accessToken)
+	if !ok {
+		s.logger.Errorf("GetSCM failed: could not get SCM for user: %s", user.Login)
+		return
+	}
+	for _, invite := range invites {
+		if err := sc.AcceptRepositoryInvite(ctx, &scm.RepositoryInvitationOptions{InvitationID: uint64(*invite.ID)}); err != nil {
+			s.logger.Errorf("Failed to accept repository invite for user %s for repository %s: %v", user.Login, invite.Repo, err)
+		}
+	}
 }
 
 func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.SubmissionLink {
