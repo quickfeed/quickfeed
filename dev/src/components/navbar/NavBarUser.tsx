@@ -52,10 +52,10 @@ const NavBarUser = ():JSX.Element =>{
         )
     }
     return (
-        <div className="collapse navbar-collapse ml-auto " id="main_nav">
+        <div className="navbar-collapse ml-auto " id="main_nav">
             <ul className="navbar-nav ml-auto">
                 <li className="nav-item dropdown ml-auto " >
-                    <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px" }}>
+                    <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px", marginLeft: "40px" }}>
                         <img className="mrounded-circle" src={self.getAvatarurl()} id="avatar" style={{ height: "40px", borderRadius: "50%" }}></img>
                     </a>
                     <ul className="dropdown-menu dropdown-menu-center bg-dark">
