@@ -5,30 +5,15 @@ import { useActions, useAppState } from "../../overmind"
 const NavBarUser = ():JSX.Element =>{
     const logout = useActions().logout
     const { self, isLoggedIn } = useAppState()
-    const history = useHistory()
 
-    const [hidden, setHidden] = useState<boolean>(true)
-
-    const ProfileButton = () => {
-        if (isLoggedIn) {
-            return (
-                <li onClick={() => history.push("/profile")} onMouseEnter={() => setHidden(false)}>
-                    <div><img src={self.getAvatarurl()} id="avatar"></img></div>
-                </li>
-            )
-        }
-        return null
-    }
 
     const AboutButton = () => {
         return (
             <li key="about">
                 <a className="dropdown-item bg-dark" >
-
-                
-                <Link to="/about" className="Sidebar-items-link" style={{color: "#d4d4d4"}}>
-                    About
-                </Link>
+                    <Link to="/about" className="Sidebar-items-link" style={{color: "#d4d4d4"}}>
+                        About
+                    </Link>
                 </a>
             </li>
         )
@@ -39,11 +24,10 @@ const NavBarUser = ():JSX.Element =>{
             return (
                 <li>
                     <a className="dropdown-item bg-dark" >
-                     <Link to="/admin" className="Sidebar-items-link" style={{color: "#d4d4d4"}}>
-                        Admin
-                    </Link>                       
+                        <Link to="/admin" className="Sidebar-items-link" style={{color: "#d4d4d4"}}>
+                            Admin
+                        </Link>                       
                     </a>
-
                 </li>
             )
         }
@@ -56,7 +40,6 @@ const NavBarUser = ():JSX.Element =>{
                     <a className="dropdown-item bg-dark">
                        <a href="/logout" className="Sidebar-items-link" style={{color: "#d4d4d4"}} onClick={() => logout()}>Log out</a> 
                     </a>
-                    
                 </li>
             )
         }
@@ -70,18 +53,18 @@ const NavBarUser = ():JSX.Element =>{
     }
     return (
         <div className="collapse navbar-collapse ml-auto " id="main_nav">
-        <ul className="navbar-nav ml-auto">
-            <li className="nav-item dropdown ml-auto " >
-            <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px" }}>
-            <img className="mrounded-circle" src={self.getAvatarurl()} id="avatar" style={{ height: "40px", borderRadius: "50%" }}></img>
-                </a>
-                <ul className="dropdown-menu dropdown-menu-center bg-dark">
-                    <AboutButton></AboutButton>
-                    <AdminButton></AdminButton>
-                    <LoginButton></LoginButton>
-		        </ul>
-            </li>
-        </ul>
+            <ul className="navbar-nav ml-auto">
+                <li className="nav-item dropdown ml-auto " >
+                    <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px" }}>
+                        <img className="mrounded-circle" src={self.getAvatarurl()} id="avatar" style={{ height: "40px", borderRadius: "50%" }}></img>
+                    </a>
+                    <ul className="dropdown-menu dropdown-menu-center bg-dark">
+                        <AboutButton/>
+                        <AdminButton/>
+                        <LoginButton/>
+                    </ul>
+                </li>
+            </ul>
         </div> 
     )
 }

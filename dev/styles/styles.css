@@ -294,6 +294,10 @@ input {
   cursor: pointer;
 }
 
+.clickable:hover{
+  text-decoration: none;
+}
+
 .alert {
   z-index: 999;
 }
@@ -323,11 +327,7 @@ input {
   box-shadow: rgb(0, 0, 0) 0px 0px 0px inset,
     rgba(0, 0, 0, 0.2) 5px 0px 0px inset;
 }
-.togglebtn {
-  color: #d4d4d4 !important;
-  background-color: "pink" !important;
-  
-}
+
 
 .dropdown-menu-center {
   right: auto;
