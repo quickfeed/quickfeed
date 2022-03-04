@@ -255,8 +255,9 @@ input {
 
 .redirectButton {
   position: fixed;
-  top: 50px;
+  top: 120px;
   transform: translateX(-70px);
+  
 }
 
 .result-approved {
@@ -341,7 +342,6 @@ input {
 .banner{
   margin-left: -350px;
 
-  background-color: purple;
 }
 
 
