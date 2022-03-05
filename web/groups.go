@@ -55,7 +55,11 @@ func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*
 
 // DeleteGroup deletes group with the provided ID.
 func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request *pb.GroupRequest) error {
-	group, repos, _, err := s.getCourseGroupRepos(request)
+	course, group, err := s.getCourseGroup(request)
+	if err != nil {
+		return err
+	}
+	repos, err := s.getGroupRepos(course.GetOrganizationID(), group.GetID())
 	if err != nil {
 		return err
 	}
@@ -101,7 +105,7 @@ func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
 func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request *pb.Group) error {
-	group, repos, course, err := s.getCourseGroupRepos(&pb.GroupRequest{
+	course, group, err := s.getCourseGroup(&pb.GroupRequest{
 		CourseID: request.GetCourseID(),
 		GroupID:  request.GetID(),
 	})
@@ -135,6 +139,10 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 		Enrollments: group.Enrollments,
 	}
 
+	repos, err := s.getGroupRepos(course.GetOrganizationID(), group.GetID())
+	if err != nil {
+		return err
+	}
 	if len(repos) == 0 {
 		if request.Name != "" && newGroup.TeamID < 1 {
 			// update group name only if team not already created on SCM
@@ -231,26 +239,15 @@ func (s *AutograderService) checkGroupName(courseID uint64, groupName string) er
 	return nil
 }
 
-// getCourseGroupRepos returns the group, the group's repositories and the organization ID
-// for the given course and group specified in the GroupRequest.
-func (s *AutograderService) getCourseGroupRepos(request *pb.GroupRequest) (*pb.Group, []*pb.Repository, *pb.Course, error) {
+// getCourseGroup returns the course and group specified in the GroupRequest.
+func (s *AutograderService) getCourseGroup(request *pb.GroupRequest) (*pb.Course, *pb.Group, error) {
 	group, err := s.db.GetGroup(request.GetGroupID())
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	course, err := s.db.GetCourse(request.GetCourseID(), false)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
-
-	groupRepoQuery := &pb.Repository{
-		OrganizationID: course.OrganizationID,
-		GroupID:        group.GetID(),
-		RepoType:       pb.Repository_GROUP,
-	}
-	repos, err := s.db.GetRepositories(groupRepoQuery)
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, nil, nil, err
-	}
-	return group, repos, course, nil
+	return course, group, nil
 }

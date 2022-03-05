@@ -311,64 +311,13 @@ func (s *AutograderService) changeCourseVisibility(enrollment *pb.Enrollment) er
 	return s.db.UpdateEnrollment(enrollment)
 }
 
-// getRepositoryURL returns URL of a course repository of the given type.
-func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint64, repoType pb.Repository_Type) (string, error) {
-	course, err := s.db.GetCourse(courseID, false)
-	if err != nil {
-		return "", err
-	}
-	userRepoQuery := &pb.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		RepoType:       repoType,
-	}
-
-	switch repoType {
-	case pb.Repository_USER:
-		userRepoQuery.UserID = currentUser.GetID()
-	case pb.Repository_GROUP:
-		enrol, err := s.db.GetEnrollmentByCourseAndUser(courseID, currentUser.GetID())
-		if err != nil {
-			return "", err
-		}
-		if enrol.GetGroupID() > 0 {
-			userRepoQuery.GroupID = enrol.GroupID
-		}
-	}
-
-	repos, err := s.db.GetRepositories(userRepoQuery)
-	if err != nil {
-		return "", err
-	}
-	if len(repos) != 1 {
-		return "", fmt.Errorf("found %d repositories for query %+v", len(repos), userRepoQuery)
-	}
-	return repos[0].HTMLURL, nil
-}
-
-// isEmptyRepo returns nil if all repositories for the given course and student or group are empty,
-// returns an error otherwise.
-func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *pb.RepositoryRequest) error {
-	course, err := s.db.GetCourse(request.GetCourseID(), false)
-	if err != nil {
-		return err
-	}
-	repos, err := s.db.GetRepositories(&pb.Repository{OrganizationID: course.GetOrganizationID(), UserID: request.GetUserID(), GroupID: request.GetGroupID()})
-	if err != nil {
-		return err
-	}
-	if len(repos) < 1 {
-		return fmt.Errorf("no repositories found")
-	}
-	return isEmpty(ctx, sc, repos)
-}
-
 // rejectEnrollment rejects a student enrollment, if a student repo exists for the given course, removes it from the SCM and database.
 func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 	repos, err := s.db.GetRepositories(&pb.Repository{
-		UserID:         user.GetID(),
 		OrganizationID: course.GetOrganizationID(),
+		UserID:         user.GetID(),
 		RepoType:       pb.Repository_USER,
 	})
 	if err != nil {
@@ -380,7 +329,6 @@ func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, en
 		if err := removeUserFromCourse(ctx, sc, user.GetLogin(), repo); err != nil {
 			s.logger.Debug("updateEnrollment: rejectUserFromCourse failed (expected behavior): ", err)
 		}
-
 		if err := s.db.DeleteRepositoryByRemoteID(repo.GetRepositoryID()); err != nil {
 			return err
 		}
@@ -400,23 +348,22 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		UserID:         user.GetID(),
 		RepoType:       pb.Repository_USER,
 	}
-	userEnrolQuery := &pb.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   pb.Enrollment_STUDENT,
-	}
 	repos, err := s.db.GetRepositories(userRepoQuery)
 	if err != nil {
 		return err
 	}
 
+	userEnrolQuery := &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}
 	if enrolled.Status == pb.Enrollment_TEACHER {
 		err = revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
 		if err != nil {
 			s.logger.Errorf("Failed to revoke teacher status for user %s and course %s: %v", user.Login, course.Name, err)
 		}
 	} else {
-
 		s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repos: ", len(repos))
 		if len(repos) > 0 {
 			// repo already exist, update enrollment in database
