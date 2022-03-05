@@ -327,7 +327,7 @@ func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, en
 		// we do not care about errors here, even if the github repo does not exists,
 		// log the error and go on with deleting database entries
 		if err := removeUserFromCourse(ctx, sc, user.GetLogin(), repo); err != nil {
-			s.logger.Debug("updateEnrollment: rejectUserFromCourse failed (expected behavior): ", err)
+			s.logger.Debug("rejectEnrollment: failed to remove user from course (expected behavior): ", err)
 		}
 		if err := s.db.DeleteRepositoryByRemoteID(repo.GetRepositoryID()); err != nil {
 			return err
@@ -343,12 +343,11 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 
 	// check whether user repo already exists,
 	// which could happen if accepting a previously rejected student
-	userRepoQuery := &pb.Repository{
+	repos, err := s.db.GetRepositories(&pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		UserID:         user.GetID(),
 		RepoType:       pb.Repository_USER,
-	}
-	repos, err := s.db.GetRepositories(userRepoQuery)
+	})
 	if err != nil {
 		return err
 	}
