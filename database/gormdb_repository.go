@@ -4,8 +4,6 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 )
 
-/// Repositories ///
-
 // CreateRepository creates a new repository record.
 func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 	if repo.OrganizationID == 0 || repo.RepositoryID == 0 {
@@ -43,7 +41,7 @@ func (db *GormDB) GetRepositoryByRemoteID(remoteID uint64) (*pb.Repository, erro
 	return &repo, nil
 }
 
-// GetRepositories fetches all repositories satisfying the given query.
+// GetRepositories returns all repositories satisfying the given query.
 func (db *GormDB) GetRepositories(query *pb.Repository) ([]*pb.Repository, error) {
 	var repos []*pb.Repository
 	if err := db.conn.Find(&repos, query).Error; err != nil {
@@ -52,9 +50,9 @@ func (db *GormDB) GetRepositories(query *pb.Repository) ([]*pb.Repository, error
 	return repos, nil
 }
 
-// DeleteRepositoryByRemoteID deletes repository by provider's ID
-func (db *GormDB) DeleteRepositoryByRemoteID(rid uint64) error {
-	repo, err := db.GetRepositoryByRemoteID(rid)
+// DeleteRepository deletes repository for the given remote provider's ID.
+func (db *GormDB) DeleteRepository(remoteID uint64) error {
+	repo, err := db.GetRepositoryByRemoteID(remoteID)
 	if err != nil {
 		return err
 	}

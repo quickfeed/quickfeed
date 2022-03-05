@@ -329,7 +329,7 @@ func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, en
 		if err := removeUserFromCourse(ctx, sc, user.GetLogin(), repo); err != nil {
 			s.logger.Debug("rejectEnrollment: failed to remove user from course (expected behavior): ", err)
 		}
-		if err := s.db.DeleteRepositoryByRemoteID(repo.GetRepositoryID()); err != nil {
+		if err := s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
 			return err
 		}
 	}

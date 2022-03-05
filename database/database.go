@@ -127,8 +127,8 @@ type Database interface {
 	GetRepositoryByRemoteID(uint64) (*pb.Repository, error)
 	// GetRepositories returns repositories that match the given query.
 	GetRepositories(query *pb.Repository) ([]*pb.Repository, error)
-	// DeleteRepository deletes repository by the given provider's ID
-	DeleteRepositoryByRemoteID(uint64) error
+	// DeleteRepository deletes repository for the given remote provider's ID.
+	DeleteRepository(remoteID uint64) error
 
 	// UpdateSlipDays updates used slipdays for the given course enrollment
 	UpdateSlipDays([]*pb.UsedSlipDays) error
