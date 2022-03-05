@@ -66,12 +66,35 @@ func TestGormDBGetCourseRepoType(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotRepo, err := db.GetRepositories(&pb.Repository{RepositoryID: repo.RepositoryID})
+	gotRepos, err := db.GetRepositories(&pb.Repository{RepositoryID: repo.RepositoryID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !gotRepo[0].RepoType.IsCourseRepo() {
-		t.Fatalf("Expected course info repo (%v), but got: %v", pb.Repository_COURSEINFO, gotRepo[0].RepoType)
+	if !gotRepos[0].RepoType.IsCourseRepo() {
+		t.Fatalf("Expected course info repo (%v), but got: %v", pb.Repository_COURSEINFO, gotRepos[0].RepoType)
 	}
 }
 
+func TestGormDeleteRepo(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	repo := pb.Repository{
+		OrganizationID: 120,
+		RepositoryID:   100,
+		RepoType:       pb.Repository_COURSEINFO,
+	}
+	if err := db.CreateRepository(&repo); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.DeleteRepository(repo.RepositoryID); err != nil {
+		t.Fatal(err)
+	}
+	gotRepos, err := db.GetRepositories(&pb.Repository{RepositoryID: repo.RepositoryID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(gotRepos) != 0 {
+		t.Fatalf("Expected no repositories, but got: %v", gotRepos)
+	}
+}
