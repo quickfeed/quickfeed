@@ -220,7 +220,6 @@ func TestGormDBGetCourses(t *testing.T) {
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCourses() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
-
 }
 
 func TestGormDBCreateEnrollmentNoRecord(t *testing.T) {
@@ -748,69 +747,6 @@ func TestGormDBUpdateCourse(t *testing.T) {
 
 	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
 		t.Errorf("course mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestGormDBGetEmptyRepo(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-	if _, err := db.GetRepositoryByRemoteID(10); err != gorm.ErrRecordNotFound {
-		t.Fatal(err)
-	}
-}
-
-func TestGormDBGetSingleRepoWithUser(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	user := qtest.CreateFakeUser(t, db, 10)
-	repo := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		UserID:         user.ID,
-	}
-	if err := db.CreateRepository(&repo); err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err := db.GetRepositoryByRemoteID(repo.RepositoryID); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestGormDBCreateSingleRepoWithMissingUser(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	repo := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		UserID:         20,
-	}
-	if err := db.CreateRepository(&repo); err != gorm.ErrRecordNotFound {
-		t.Fatal(err)
-	}
-}
-
-func TestGormDBGetCourseRepoType(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	repo := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		RepoType:       pb.Repository_COURSEINFO,
-	}
-	if err := db.CreateRepository(&repo); err != nil {
-		t.Fatal(err)
-	}
-
-	gotRepo, err := db.GetRepositoryByRemoteID(repo.RepositoryID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !gotRepo.RepoType.IsCourseRepo() {
-		t.Fatalf("Expected course info repo (%v), but got: %v", pb.Repository_COURSEINFO, gotRepo.RepoType)
 	}
 }
 

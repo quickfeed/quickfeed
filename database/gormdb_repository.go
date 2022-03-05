@@ -14,14 +14,12 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 	switch {
 	case repo.UserID > 0:
 		// check that user exists before creating repo in database
-		err := db.conn.First(&pb.User{}, repo.UserID).Error
-		if err != nil {
+		if err := db.conn.First(&pb.User{}, repo.UserID).Error; err != nil {
 			return err
 		}
 	case repo.GroupID > 0:
 		// check that group exists before creating repo in database
-		err := db.conn.First(&pb.Group{}, repo.GroupID).Error
-		if err != nil {
+		if err := db.conn.First(&pb.Group{}, repo.GroupID).Error; err != nil {
 			return err
 		}
 	case !repo.RepoType.IsCourseRepo():
