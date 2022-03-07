@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strings"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
-	"github.com/google/go-github/v35/github"
 )
 
 // getCourses returns all courses.
@@ -445,9 +443,7 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 			return err
 		}
 
-		// repoTypes are the repositories we wish to accept invites for on behalf of the user
-		repoTypes := []pb.Repository_Type{pb.Repository_ASSIGNMENTS, pb.Repository_COURSEINFO, pb.Repository_USER}
-		s.acceptRepositoryInvites(ctx, sc, user, course, repoTypes)
+		s.acceptRepositoryInvites(ctx, user, course)
 	}
 
 	return s.db.UpdateEnrollment(userEnrolQuery)
@@ -540,56 +536,29 @@ func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission,
 }
 
 // acceptRepositoryInvites tries to accept repository invitations for the given repository types on behalf of the given user.
-func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, sc scm.SCM, user *pb.User, course *pb.Course, repoTypes []pb.Repository_Type) {
-	invites := []*github.RepositoryInvitation{}
-	for _, repoType := range repoTypes {
-		repo, err := s.db.GetRepositoryByType(user.ID, course.OrganizationID, repoType)
-		if err != nil {
-			s.logger.Error("Failed to get repo: %s", err)
-			continue
-		}
-		// TODO: pb.Repository should contain Path
-		path := strings.Split(repo.GetHTMLURL(), "/")
-
-		repoInvites, err := sc.GetRepositoryInvites(ctx, &scm.RepositoryOptions{ID: repo.RepositoryID, Owner: course.OrganizationPath, Path: path[len(path)-1]})
-		if err != nil {
-			s.logger.Errorf("Failed to get repository invites for %v: %s - %s", repo.RepoType, user.Login, err)
-			continue
-		}
-		for _, invite := range repoInvites {
-			// Some repositories contain more than one invite
-			// and we only want to accept the invite for the
-			// user we are enrolling.
-			if *invite.Invitee.Login != user.Login {
-				continue
-			}
-			invites = append(invites, invite)
-		}
-	}
-
-	if !(len(invites) > 0) {
-		return
-	}
-
+func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, user *pb.User, course *pb.Course) {
 	user, err := s.db.GetUser(user.ID)
 	if err != nil {
 		s.logger.Errorf("Failed to get user %d: %v", user.ID, err)
 		return
 	}
-	// We need the user access token to accept invitations on their behalf
-	accessToken, err := user.GetAccessToken("github")
+	userSCM, err := s.getSCM(ctx, user, "github")
 	if err != nil {
-		fmt.Errorf("Failed to get access token for user %s: %v", user.Login, err)
+		s.logger.Errorf("Failed to get SCM for user %d: %v", user.ID, err)
 		return
 	}
-	sc, ok := s.scms.GetSCM(accessToken)
-	if !ok {
-		s.logger.Errorf("GetSCM failed: could not get SCM for user: %s", user.Login)
+	opts := &scm.RepositoryInvitationOptions{
+		Login: user.Login,
+		Owner: course.GetOrganizationPath(),
+	}
+	invites, err := userSCM.GetRepositoryInvites(ctx, opts)
+	if err != nil {
+		s.logger.Errorf("Failed to get repository invites for %s: %s", user.Login, err)
 		return
 	}
 	for _, invite := range invites {
-		if err := sc.AcceptRepositoryInvite(ctx, &scm.RepositoryInvitationOptions{InvitationID: uint64(*invite.ID)}); err != nil {
-			s.logger.Errorf("Failed to accept repository invite for user %s for repository %s: %v", user.Login, invite.Repo, err)
+		if err := userSCM.AcceptRepositoryInvite(ctx, invite); err != nil {
+			s.logger.Errorf("Failed to invite user %s to repository %s: %v", user.Login, invite.Repo, err)
 		}
 	}
 }
