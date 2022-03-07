@@ -690,7 +690,7 @@ func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
 }
 
 // GetRepositoryInvites implements the SCM interface
-func (s *GithubSCM) GetRepositoryInvites(ctx context.Context, opt *RepositoryOptions) ([]*github.RepositoryInvitation, error) {
+func (s *GithubSCM) GetRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) ([]*RepositoryInvitation, error) {
 	if !opt.valid() {
 		return nil, ErrMissingFields{
 			Method:  "GetRepositoryInvites",
@@ -698,19 +698,32 @@ func (s *GithubSCM) GetRepositoryInvites(ctx context.Context, opt *RepositoryOpt
 		}
 	}
 
-	invites, _, err := s.client.Repositories.ListInvitations(ctx, opt.Owner, opt.Path, nil)
+	invites, _, err := s.client.Users.ListInvitations(ctx, &github.ListOptions{})
 	if err != nil {
 		return nil, ErrFailedSCM{
+			GitError: fmt.Errorf("failed to get GitHub repository invitations: %w", err),
 			Method:   "GetRepositoryInvites",
-			GitError: fmt.Errorf("failed to list repository invitations for organization %s and repository %s: %w", opt.Owner, opt.Path, err),
-			Message:  fmt.Sprintf("failed to list repository invitations for organization %s and repository %s", opt.Owner, opt.Path),
+			Message:  fmt.Sprintf("failed to get GitHub repository invitations"),
 		}
 	}
-	return invites, nil
+
+	scmInvites := make([]*RepositoryInvitation, 0)
+	for _, invite := range invites {
+		if invite.Repo.Owner.GetLogin() != opt.Owner || invite.Invitee.GetLogin() != opt.Login {
+			// Ignore unrelated invites
+			continue
+		}
+		scmInvite := &RepositoryInvitation{
+			ID:   invite.GetID(),
+			Repo: invite.GetRepo().GetName(),
+		}
+		scmInvites = append(scmInvites, scmInvite)
+	}
+	return scmInvites, nil
 }
 
 // AcceptRepositoryInvite implements the SCM interface
-func (s *GithubSCM) AcceptRepositoryInvite(ctx context.Context, opt *RepositoryInvitationOptions) error {
+func (s *GithubSCM) AcceptRepositoryInvite(ctx context.Context, opt *RepositoryInvitation) error {
 	if !opt.valid() {
 		return ErrMissingFields{
 			Method:  "AcceptRepositoryInvite",
@@ -718,12 +731,12 @@ func (s *GithubSCM) AcceptRepositoryInvite(ctx context.Context, opt *RepositoryI
 		}
 	}
 
-	_, err := s.client.Users.AcceptInvitation(ctx, int64(opt.InvitationID))
+	_, err := s.client.Users.AcceptInvitation(ctx, opt.ID)
 	if err != nil {
 		return ErrFailedSCM{
 			Method:   "AcceptRepositoryInvite",
-			GitError: fmt.Errorf("failed to accept repository invitation %d: %w", opt.InvitationID, err),
-			Message:  fmt.Sprintf("failed to accept repository invitation %d", opt.InvitationID),
+			GitError: fmt.Errorf("failed to accept repository invitation %d: %w", opt.ID, err),
+			Message:  fmt.Sprintf("failed to accept repository invitation %d", opt.ID),
 		}
 	}
 	return nil
