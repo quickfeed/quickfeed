@@ -124,9 +124,9 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 // updateGradingCriteria will remove old grading criteria and related reviews when criteria.json gets updated
 func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment) {
 	if len(assignment.GetGradingBenchmarks()) > 0 {
-		savedAssignment, err := db.GetAssignment(&pb.Assignment{
+		gradingBenchmarks, err := db.GetBenchmarks(&pb.Assignment{
 			CourseID: assignment.CourseID,
-			Name:     assignment.Name,
+			Order:    assignment.Order,
 		})
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
@@ -136,14 +136,14 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 			logger.Debugf("Failed to fetch assignment %s from database: %s", assignment.Name, err)
 			return
 		}
-		if len(savedAssignment.GetGradingBenchmarks()) > 0 {
-			if !cmp.Equal(assignment.GradingBenchmarks, savedAssignment.GradingBenchmarks, cmp.Options{
+		if len(gradingBenchmarks) > 0 {
+			if !cmp.Equal(assignment.GradingBenchmarks, gradingBenchmarks, cmp.Options{
 				protocmp.Transform(),
 				protocmp.IgnoreFields(&pb.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
 				protocmp.IgnoreFields(&pb.GradingCriterion{}, "ID", "BenchmarkID"),
 				protocmp.IgnoreEnums(),
 			}) {
-				for _, bm := range savedAssignment.GradingBenchmarks {
+				for _, bm := range gradingBenchmarks {
 					for _, c := range bm.Criteria {
 						if err := db.DeleteCriterion(c); err != nil {
 							logger.Errorf("Failed to delete criteria %v: %s\n", c, err)
@@ -155,26 +155,8 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 						return
 					}
 				}
-				submissions, err := db.GetSubmissions(&pb.Submission{AssignmentID: assignment.GetID()})
-				if err != nil {
-					// No submissions for this assignment, nothing to update
-					return
-				}
-				for _, submission := range submissions {
-					if err := db.DeleteReview(&pb.Review{SubmissionID: submission.ID}); err != nil {
-						logger.Errorf("Failed to delete reviews for submission %s to assignment %s: %s", submission.ID, assignment.Name, err)
-						return
-					}
-				}
 			} else {
 				assignment.GradingBenchmarks = nil
-			}
-		}
-		for _, bm := range assignment.GradingBenchmarks {
-			bm.AssignmentID = assignment.ID
-			if err := db.CreateBenchmark(bm); err != nil {
-				logger.Errorf("Failed to save grading benchmark %+v: %s", bm, err)
-				return
 			}
 		}
 	}

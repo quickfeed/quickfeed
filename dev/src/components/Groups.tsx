@@ -66,9 +66,9 @@ const Groups = (): JSX.Element => {
                     <td>
                         <div>
                             {// Populates the unordered list with list elements for every user in the group
-                                hasEnrollments(group) && group.getUsersList().map((user, index) =>
-                                    <span key={user.getId()} className="inline-block">
-                                        <a href={userLink(user)} target="_blank" rel="noreferrer">{user.getName()}</a>
+                                hasEnrollments(group) && group.getEnrollmentsList().map((enrol, index) =>
+                                    <span key={enrol.getId()} className="inline-block">
+                                        <a href={`https://github.com/${enrol.getUser()?.getLogin()}`} target="_blank" rel="noopener noreferrer">{enrol.getUser()?.getName()}</a>
                                         {index >= group.getEnrollmentsList().length - 1 ? "" : ", "}
                                     </span>
                                 )}

@@ -115,16 +115,19 @@ func TestRebuildSubmissions(t *testing.T) {
 	}
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), teacher)
+	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	assignment := &pb.Assignment{
-		CourseID:         course.ID,
-		Name:             "lab1",
-		ScriptFile:       "go.sh",
+		CourseID: course.ID,
+		Name:     "lab1",
+		ScriptFile: `#image/quickfeed:go
+printf "AssignmentName: {{ .AssignmentName }}\n"
+printf "RandomSecret: {{ .RandomSecret }}\n"
+`,
 		Deadline:         "2022-11-11T13:00:00",
 		AutoApprove:      true,
 		ScoreLimit:       70,
@@ -149,15 +152,17 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// rebuild a single submission
-	var rebuildRequest pb.RebuildRequest
-	rebuildRequest.AssignmentID = assignment.ID
-	rebuildRequest.SubmissionID = 123
-	if _, err := ags.RebuildSubmission(ctx, &rebuildRequest); err == nil {
+	// try to rebuild non-existing submission
+	rebuildRequest := &pb.RebuildRequest{
+		AssignmentID: assignment.ID,
+		SubmissionID: 123,
+	}
+	if _, err := ags.RebuildSubmission(ctx, rebuildRequest); err == nil {
 		t.Errorf("Expected error: record not found")
 	}
+	// rebuild existing submission
 	rebuildRequest.SubmissionID = 1
-	if _, err := ags.RebuildSubmission(ctx, &rebuildRequest); err != nil {
+	if _, err := ags.RebuildSubmission(ctx, rebuildRequest); err != nil {
 		t.Fatalf("Failed to rebuild submission: %s", err)
 	}
 	submissions, err := db.GetSubmissions(&pb.Submission{AssignmentID: assignment.ID})
@@ -192,7 +197,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	}
 
 	// check access control
-	ctx = withUserContext(ctx, student1)
+	ctx = qtest.WithUserContext(ctx, student1)
 	if _, err = ags.RebuildSubmissions(ctx, &request); err == nil {
 		t.Fatal("Expected error: authentication failed")
 	}

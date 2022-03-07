@@ -234,13 +234,13 @@ input {
   position: sticky;
   top: 50px;
   min-width: 50%;
-  height: 800px;
+  height: 90vh;
 }
 
 .reviewLabResult {
   overflow: scroll;
   overflow-y: scroll;
-  height: 800px;
+  height: 90vh;
 }
 
 #group-image {
@@ -264,7 +264,7 @@ input {
   cursor: pointer;
 }
 
-.result-pending {
+.result-rejected {
   background-color: #ffcccc;
   cursor: pointer;
 }

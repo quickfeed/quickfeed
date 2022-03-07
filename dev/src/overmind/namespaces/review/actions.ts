@@ -47,6 +47,16 @@ export const updateComment = async ({ actions }: Context, { grade, comment }: { 
     }
 }
 
+export const updateFeedback = async ({ state, actions }: Context, { feedback }: { feedback: string }): Promise<void> => {
+    if (state.review.currentReview) {
+        const oldFeedback = state.review.currentReview.getFeedback()
+        state.review.currentReview.setFeedback(feedback)
+        if (!await actions.review.updateReview()) {
+            state.review.currentReview.setFeedback(oldFeedback)
+        }
+    }
+}
+
 export const setGrade = async ({ actions }: Context, { criterion, grade }: { criterion: GradingCriterion, grade: GradingCriterion.Grade }): Promise<void> => {
     const oldGrade = criterion.getGrade()
     criterion.setGrade(grade)

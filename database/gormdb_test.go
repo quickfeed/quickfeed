@@ -2,7 +2,6 @@ package database_test
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -148,13 +147,13 @@ func TestGormDBUpdateUser(t *testing.T) {
 		t.Error(err)
 	}
 
-	updatedUser, err := db.GetUser(user.ID)
+	gotUser, err := db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	updatedUser.Enrollments = nil
-	if !reflect.DeepEqual(updatedUser, wantUser) {
-		t.Errorf("have user %+v want %+v", updatedUser, wantUser)
+	gotUser.Enrollments = nil
+	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 
 	// check that admin role can be revoked
@@ -163,13 +162,13 @@ func TestGormDBUpdateUser(t *testing.T) {
 	if err := db.UpdateUser(updates); err != nil {
 		t.Fatal(err)
 	}
-	updatedUser, err = db.GetUser(user.ID)
+	gotUser, err = db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	updatedUser.Enrollments = nil
-	if !reflect.DeepEqual(updatedUser, wantUser) {
-		t.Errorf("have user %+v want %+v", updatedUser, wantUser)
+	gotUser.Enrollments = nil
+	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 }
 
@@ -185,41 +184,43 @@ func TestGormDBGetCourses(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, c2)
 	qtest.CreateCourse(t, db, admin, c3)
 
-	courses, err := db.GetCourses()
+	gotCourses, err := db.GetCourses()
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantCourses := []*pb.Course{c1, c2, c3}
-	if !reflect.DeepEqual(courses, wantCourses) {
-		t.Errorf("have %v want %v", courses, wantCourses)
+	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourses() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
+
 	// An empty list should return the same as no argument, it makes no
 	// sense to ask the database to return no courses.
-	coursesNoArg, err := db.GetCourses([]uint64{}...)
+	gotCourses, err = db.GetCourses([]uint64{}...)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(coursesNoArg, wantCourses) {
-		t.Errorf("have %v want %v", coursesNoArg, wantCourses)
+	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourses() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
 
-	course1, err := db.GetCourses(c1.ID)
+	gotCourses, err = db.GetCourses(c1.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantCourse1 := []*pb.Course{c1}
-	if !reflect.DeepEqual(course1, wantCourse1) {
-		t.Errorf("have %v want %v", course1, wantCourse1)
+	wantCourses = []*pb.Course{c1}
+	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourses() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
 
-	course1and2, err := db.GetCourses(c1.ID, c2.ID)
+	gotCourses, err = db.GetCourses(c1.ID, c2.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantCourse1and2 := []*pb.Course{c1, c2}
-	if !reflect.DeepEqual(course1and2, wantCourse1and2) {
-		t.Errorf("have %v want %v", course1and2, wantCourse1and2)
+	wantCourses = []*pb.Course{c1, c2}
+	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourses() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
+
 }
 
 func TestGormDBCreateEnrollmentNoRecord(t *testing.T) {
@@ -372,7 +373,7 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	courses, err := db.GetCoursesByUser(user.ID)
+	gotCourses, err := db.GetCoursesByUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -383,8 +384,8 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 		{ID: c3.ID, OrganizationID: 3, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_STUDENT},
 		{ID: c4.ID, OrganizationID: 4, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_NONE},
 	}
-	if diff := cmp.Diff(wantCourses, courses, protocmp.Transform()); diff != "" {
-		t.Errorf("courses mismatch (-want +got):\n%s", diff)
+	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCoursesByUser() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
 }
 
@@ -466,9 +467,9 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var user1 pb.User
+	gotUser1 := &pb.User{}
 	if err := db.CreateUserFromRemoteIdentity(
-		&user1,
+		gotUser1,
 		&pb.RemoteIdentity{
 			Provider:    provider1,
 			RemoteID:    remoteID1,
@@ -478,35 +479,37 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(&user1, wantUser1) {
-		t.Errorf("have user %+v want %+v", &user1, wantUser1)
+	if diff := cmp.Diff(wantUser1, gotUser1, protocmp.Transform()); diff != "" {
+		t.Errorf("CreateUserFromRemoteIdentity() mismatch (-wantUser1, +gotUser1):\n%s", diff)
 	}
 
-	if err := db.AssociateUserWithRemoteIdentity(user1.ID, provider2, remoteID2, secret2); err != nil {
+	if err := db.AssociateUserWithRemoteIdentity(gotUser1.ID, provider2, remoteID2, secret2); err != nil {
 		t.Fatal(err)
 	}
 
-	user2, err := db.GetUser(uID)
+	gotUser2, err := db.GetUser(uID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	user2.Enrollments = nil
-	if !reflect.DeepEqual(user2, wantUser2) {
-		t.Errorf("have user %+v want %+v", user2, wantUser2)
+	gotUser2.Enrollments = nil
+
+	if diff := cmp.Diff(wantUser2, gotUser2, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUser() mismatch (-wantUser2, +gotUser2):\n%s", diff)
 	}
 
-	if err := db.AssociateUserWithRemoteIdentity(user1.ID, provider2, remoteID2, secret3); err != nil {
+	if err := db.AssociateUserWithRemoteIdentity(gotUser1.ID, provider2, remoteID2, secret3); err != nil {
 		t.Fatal(err)
 	}
 
-	user3, err := db.GetUser(uID)
+	gotUser3, err := db.GetUser(uID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	user3.Enrollments = nil
+	gotUser3.Enrollments = nil
 	wantUser2.RemoteIdentities[1].AccessToken = secret3
-	if !reflect.DeepEqual(user3, wantUser2) {
-		t.Errorf("have user %+v want %+v", user3, wantUser2)
+
+	if diff := cmp.Diff(wantUser2, gotUser3, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUser() mismatch (-wantUser2, +gotUser3):\n%s", diff)
 	}
 }
 
@@ -642,7 +645,7 @@ func TestGormDBCreateCourseNonAdmin(t *testing.T) {
 }
 
 func TestGormDBGetCourse(t *testing.T) {
-	course := &pb.Course{
+	wantCourse := &pb.Course{
 		Name:           "Test Course",
 		Code:           "DAT100",
 		Year:           2017,
@@ -654,23 +657,23 @@ func TestGormDBGetCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
+	remoteID := &pb.RemoteIdentity{Provider: wantCourse.Provider, RemoteID: 10, AccessToken: "token"}
 	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
-	qtest.CreateCourse(t, db, admin, course)
+	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	// Get the created course.
-	createdCourse, err := db.GetCourse(course.ID, false)
+	gotCourse, err := db.GetCourse(wantCourse.ID, false)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(createdCourse, course) {
-		t.Errorf("have course %+v want %+v", createdCourse, course)
+	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourse() mismatch (-wantCourse, +gotCourse):\n%s", diff)
 	}
 }
 
 func TestGormDBGetCourseByOrganization(t *testing.T) {
-	course := &pb.Course{
+	wantCourse := &pb.Course{
 		Name:           "Test Course",
 		Code:           "DAT100",
 		Year:           2017,
@@ -682,18 +685,18 @@ func TestGormDBGetCourseByOrganization(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
+	remoteID := &pb.RemoteIdentity{Provider: wantCourse.Provider, RemoteID: 10, AccessToken: "token"}
 	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
-	qtest.CreateCourse(t, db, admin, course)
+	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	// Get the created course.
-	createdCourse, err := db.GetCourseByOrganizationID(course.OrganizationID)
+	gotCourse, err := db.GetCourseByOrganizationID(wantCourse.OrganizationID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(createdCourse, course) {
-		t.Errorf("have course %+v want %+v", createdCourse, course)
+	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
+		t.Errorf("GetCourse() mismatch (-wantCourse, +gotCourse):\n%s", diff)
 	}
 }
 
@@ -1005,22 +1008,15 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := []*pb.Repository{&repoCourseInfo, &repoAssignment}
+	wantRepo := []*pb.Repository{&repoCourseInfo, &repoAssignment}
 
 	gotRepo, err := db.GetRepositories(&pb.Repository{OrganizationID: 120})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(gotRepo, want) {
-		for _, s := range gotRepo {
-			t.Logf("have %+v\n", s)
-		}
-		t.Log()
-		for _, s := range want {
-			t.Logf("want %+v\n", s)
-		}
-		t.Errorf("Failed")
+	if diff := cmp.Diff(wantRepo, gotRepo, protocmp.Transform()); diff != "" {
+		t.Errorf("GetRepositories() mismatch (-wantRepo, +gotRepo):\n%s", diff)
 	}
 }
 
@@ -1129,7 +1125,7 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := []*pb.Repository{&repoCourseInfo}
+	wantRepo := []*pb.Repository{&repoCourseInfo}
 
 	repoQuery := &pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
@@ -1140,8 +1136,8 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(gotRepo, want) {
-		t.Errorf("\nhave %+v\nwant %+v\n", gotRepo, want)
+	if diff := cmp.Diff(wantRepo, gotRepo, protocmp.Transform()); diff != "" {
+		t.Errorf("GetRepositories() mismatch (-wantRepo, +gotRepo):\n%s", diff)
 	}
 }
 
@@ -1214,7 +1210,7 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := []*pb.Repository{&repoUserTwo}
+	wantRepo := []*pb.Repository{&repoUserTwo}
 
 	repoQuery := &pb.Repository{
 		OrganizationID: course.OrganizationID,
@@ -1226,8 +1222,8 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(gotRepo, want) {
-		t.Errorf("\nhave %+v\nwant %+v\n", gotRepo, want)
+	if diff := cmp.Diff(wantRepo, gotRepo, protocmp.Transform()); diff != "" {
+		t.Errorf("GetRepositories() mismatch (-wantRepo, +gotRepo):\n%s", diff)
 	}
 }
 
@@ -1299,7 +1295,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := []*pb.Repository{&repoUserTwo}
+	wantRepo := []*pb.Repository{&repoUserTwo}
 
 	repoQuery := &pb.Repository{
 		OrganizationID: course.OrganizationID,
@@ -1311,7 +1307,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(gotRepo, want) {
-		t.Errorf("\nhave %+v\nwant %+v\n", gotRepo, want)
+	if diff := cmp.Diff(wantRepo, gotRepo, protocmp.Transform()); diff != "" {
+		t.Errorf("GetRepositories() mismatch (-wantRepo, +gotRepo):\n%s", diff)
 	}
 }

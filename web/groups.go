@@ -3,19 +3,22 @@ package web
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
-	"github.com/gosimple/slug"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
-// ErrGroupNameDuplicate indicates that another group with the same name already exists on this course
+const maxGroupNameLength = 20
+
 var (
-	ErrGroupNameDuplicate = status.Errorf(codes.AlreadyExists, "group with this name already exists. Please choose another name")
-	ErrUserNotInGroup     = status.Errorf(codes.NotFound, "user is not in group")
+	errGroupNameDuplicate = status.Errorf(codes.AlreadyExists, "group name already in use")
+	errGroupNameTooLong   = status.Errorf(codes.InvalidArgument, "group name is too long")
+	errGroupNameInvalid   = status.Errorf(codes.InvalidArgument, "group name contains invalid characters")
+	errUserNotInGroup     = status.Errorf(codes.NotFound, "user is not in group")
 )
 
 // getGroup returns the group for the given group ID.
@@ -45,7 +48,7 @@ func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*
 	enrollment.SetSlipDays(enrollment.Course)
 	grp, err := s.db.GetGroup(enrollment.GroupID)
 	if err != nil && err == gorm.ErrRecordNotFound {
-		err = ErrUserNotInGroup
+		err = errUserNotInGroup
 	}
 	return grp, err
 }
@@ -78,8 +81,8 @@ func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request
 // a group, which will later be (optionally) edited and approved
 // by a teacher of the course using the updateGroup function below.
 func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
-	if !s.isValidGroupName(request.GetCourseID(), request.GetName()) {
-		return nil, ErrGroupNameDuplicate
+	if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
+		return nil, err
 	}
 	// get users of group, check consistency of group request
 	if _, err := s.getGroupUsers(request); err != nil {
@@ -115,10 +118,9 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 	// allow changing the name of the group only if the group
 	// is not already approved and the new name is valid
 	if group.Name != request.Name && group.Status == pb.Group_PENDING {
-		// if the new name coincides with one of the existing groups,
-		// fail and inform the user
-		if !s.isValidGroupName(request.CourseID, request.Name) {
-			return ErrGroupNameDuplicate
+		// return error to user if group name is invalid
+		if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
+			return err
 		}
 		group.Name = request.Name
 	}
@@ -206,17 +208,27 @@ func (s *AutograderService) getGroupUsers(request *pb.Group) ([]*pb.User, error)
 	return users, nil
 }
 
-// isValidGroupName ensures that SCM team and repository names for the given group
-// will not coincide with one of the existing approved groups
-func (s *AutograderService) isValidGroupName(courseID uint64, groupName string) bool {
-	courseGroups, _ := s.db.GetGroupsByCourse(courseID)
+// only allow letters, numbers, dash and underscore.
+var regexpNonAuthorizedChars = regexp.MustCompile("[^a-zA-Z0-9-_]")
+
+// checkGroupName returns an error if the group name is invalid; otherwise nil is returned.
+func (s *AutograderService) checkGroupName(courseID uint64, groupName string) error {
+	if len(groupName) > maxGroupNameLength {
+		return errGroupNameTooLong
+	}
+	if regexpNonAuthorizedChars.MatchString(groupName) {
+		return errGroupNameInvalid
+	}
+	courseGroups, err := s.db.GetGroupsByCourse(courseID)
+	if err != nil {
+		return err
+	}
 	for _, group := range courseGroups {
-		if slug.Make(groupName) == slug.Make(group.GetName()) {
-			s.logger.Errorf("Failed to create group %s, another group % already exists, both names will result in %s on GitHub", groupName, group.Name, slug.Make(groupName))
-			return false
+		if group.GetName() == groupName {
+			return errGroupNameDuplicate
 		}
 	}
-	return true
+	return nil
 }
 
 // getCourseGroupRepos returns the group, the group's repositories and the organization ID

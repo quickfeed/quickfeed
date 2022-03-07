@@ -1,13 +1,13 @@
 package web
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
-	"github.com/gosimple/slug"
 )
 
 const maxContainers = 10
@@ -43,11 +43,20 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 		Assignment: assignment,
 		Repo:       repo,
 		CommitID:   submission.GetCommitHash(),
-		JobOwner:   slug.Make(name),
+		JobOwner:   name,
 		Rebuild:    true,
 	}
-	ci.RunTests(s.logger, s.db, s.runner, runData)
-	return s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
+	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
+	defer cancel()
+	results, err := runData.RunTests(ctx, s.logger, s.runner)
+	if err != nil {
+		return nil, err
+	}
+	submission, err = runData.RecordResults(s.logger, s.db, results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to record results for assignment %s for course %s: %w", assignment.Name, course.Name, err)
+	}
+	return submission, nil
 }
 
 func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) error {

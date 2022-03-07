@@ -14,7 +14,6 @@ import (
 	"github.com/autograde/quickfeed/web"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth/gothic"
 	"go.uber.org/zap"
@@ -118,7 +117,8 @@ func TestGetSelf(t *testing.T) {
 			// ignore comparing remote identity
 			user.wantUser.RemoteIdentities = nil
 		}
-		if diff := cmp.Diff(user.wantUser, gotUser, protocmp.Transform()); diff != "" {
+		wantUser := user.wantUser
+		if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 			t.Errorf("GetSelf() mismatch (-wantUser +gotUser):\n%s", diff)
 		}
 	}
@@ -137,13 +137,13 @@ func TestGetUsers(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user2 := qtest.CreateFakeUser(t, db, 2)
-	ctx := withUserContext(context.Background(), user2)
+	ctx := qtest.WithUserContext(context.Background(), user2)
 	_, err = ags.GetUsers(ctx, &pb.Void{})
 	if err == nil {
 		t.Fatal("expected 'rpc error: code = PermissionDenied desc = only admin can access other users'")
 	}
 	// now switch to use admin as the user; this should pass
-	ctx = withUserContext(context.Background(), admin)
+	ctx = qtest.WithUserContext(context.Background(), admin)
 	foundUsers, err := ags.GetUsers(ctx, &pb.Void{})
 	if err != nil {
 		t.Fatal(err)
@@ -151,9 +151,9 @@ func TestGetUsers(t *testing.T) {
 
 	wantUsers := make([]*pb.User, 0)
 	wantUsers = append(wantUsers, admin, user2)
-
-	if diff := cmp.Diff(foundUsers.Users, wantUsers, protocmp.Transform()); diff != "" {
-		t.Errorf("mismatch (-Users +wantUsers):\n%s", diff)
+	gotUsers := foundUsers.GetUsers()
+	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetUsers() mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
 }
 
@@ -194,7 +194,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 
 	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	// users to enroll in course DAT520 Distributed Systems
 	// (excluding admin because admin is enrolled on creation)
@@ -238,26 +238,16 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
-	foundEnrollments, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: allCourses[0].ID})
+	gotEnrollments, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: allCourses[0].ID})
 	if err != nil {
 		t.Error(err)
 	}
-
-	var foundUsers []*pb.User
-	for _, e := range foundEnrollments.Enrollments {
-		// remote identities should not be loaded.
-		e.User.RemoteIdentities = nil
-		foundUsers = append(foundUsers, e.User)
+	var gotUsers []*pb.User
+	for _, e := range gotEnrollments.Enrollments {
+		gotUsers = append(gotUsers, e.User)
 	}
-
-	if !cmp.Equal(foundUsers, wantUsers, cmpopts.IgnoreUnexported(pb.User{}, pb.RemoteIdentity{})) {
-		for _, u := range foundUsers {
-			t.Logf("user %+v", u)
-		}
-		for _, u := range wantUsers {
-			t.Logf("want %+v", u)
-		}
-		t.Errorf("have users %+v want %+v", foundUsers, wantUsers)
+	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetEnrollmentsByCourse() mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
 }
 
@@ -274,7 +264,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 
 	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	course := allCourses[1]
 	err := db.CreateCourse(admin.ID, course)
@@ -328,24 +318,18 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 		}
 	}
 
-	gotEnrollments, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: course.ID, IgnoreGroupMembers: true})
+	enrollments, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: course.ID, IgnoreGroupMembers: true})
 	if err != nil {
 		t.Fatal(err)
 	}
+	gotEnrollments := enrollments.GetEnrollments()
 	// set user references to nil as db methods populating the first list will not have them
-	for _, u := range gotEnrollments.Enrollments {
+	for _, u := range gotEnrollments {
 		u.User = nil
 		u.Course = nil
 	}
-
-	if !cmp.Equal(gotEnrollments.Enrollments, wantEnrollments, cmpopts.IgnoreUnexported(pb.Enrollment{})) {
-		for _, u := range gotEnrollments.Enrollments {
-			t.Logf("user %+v", u)
-		}
-		for _, u := range wantEnrollments {
-			t.Logf("want %+v", u)
-		}
-		t.Errorf("have users %+v want %+v", gotEnrollments, wantEnrollments)
+	if diff := cmp.Diff(wantEnrollments, gotEnrollments, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetEnrollmentsByCourse() mismatch (-wantEnrollments +gotEnrollments):\n%s", diff)
 	}
 }
 
@@ -357,7 +341,7 @@ func TestUpdateUser(t *testing.T) {
 
 	_, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), firstAdminUser)
+	ctx := qtest.WithUserContext(context.Background(), firstAdminUser)
 
 	// we want to update nonAdminUser to become admin
 	nonAdminUser.IsAdmin = true
@@ -388,14 +372,12 @@ func TestUpdateUser(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	withName, err := db.GetUser(nonAdminUser.ID)
+	gotUser, err := db.GetUser(nonAdminUser.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	withName.Enrollments = nil
-	// withName.Enrollments = make([]*pb.Enrollment, 0)
 	wantUser := &pb.User{
-		ID:               withName.ID,
+		ID:               gotUser.ID,
 		Name:             "Scrooge McDuck",
 		IsAdmin:          true,
 		StudentID:        "99",
@@ -403,17 +385,15 @@ func TestUpdateUser(t *testing.T) {
 		AvatarURL:        "www.hello.com",
 		RemoteIdentities: nonAdminUser.RemoteIdentities,
 	}
-
-	if !cmp.Equal(withName, wantUser, cmpopts.IgnoreUnexported(pb.User{}, pb.RemoteIdentity{})) {
-		t.Errorf("have users\n%+v want\n%+v\n", withName, wantUser)
+	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
 }
 
 func TestUpdateUserFailures(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	// user := &pb.User{Name: "Test User", StudentID: "11", Email: "test@email", AvatarURL: "url.com"}
-	adminUser := qtest.CreateFakeUser(t, db, 1)
+	wantAdminUser := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateFakeUser(t, db, 11)
 
 	_, scms := qtest.FakeProviderMap(t)
@@ -424,11 +404,11 @@ func TestUpdateUserFailures(t *testing.T) {
 		t.Fatalf("expected user %v to be non-admin", u)
 	}
 	// context with user u (non-admin user); can only change its own name etc
-	ctx := withUserContext(context.Background(), u)
+	ctx := qtest.WithUserContext(context.Background(), u)
 
 	// trying to demote current adminUser by setting IsAdmin to false
 	nameChangeRequest := &pb.User{
-		ID:        adminUser.ID,
+		ID:        wantAdminUser.ID,
 		IsAdmin:   false,
 		Name:      "Scrooge McDuck",
 		StudentID: "99",
@@ -441,13 +421,12 @@ func TestUpdateUserFailures(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	noChangeAdmin, err := db.GetUser(adminUser.ID)
-	noChangeAdmin.Enrollments = nil
+	gotAdminUserWithoutChanges, err := db.GetUser(wantAdminUser.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !cmp.Equal(noChangeAdmin, adminUser, cmpopts.IgnoreUnexported(pb.User{}, pb.RemoteIdentity{})) {
-		t.Errorf("\nhave: %+v\nwant: %+v\n", noChangeAdmin, adminUser)
+	if diff := cmp.Diff(wantAdminUser, gotAdminUserWithoutChanges, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateUser() mismatch (-wantAdminUser +gotAdminUserWithoutChanges):\n%s", diff)
 	}
 
 	nameChangeRequest = &pb.User{
@@ -462,13 +441,12 @@ func TestUpdateUserFailures(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	withName, err := db.GetUser(u.ID)
+	gotUser, err := db.GetUser(u.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	withName.Enrollments = nil
 	wantUser := &pb.User{
-		ID:               withName.ID,
+		ID:               gotUser.ID,
 		Name:             "Scrooge McDuck",
 		IsAdmin:          false, // we want that the current user u cannot promote himself to admin
 		StudentID:        "99",
@@ -476,8 +454,7 @@ func TestUpdateUserFailures(t *testing.T) {
 		AvatarURL:        "www.hello.com",
 		RemoteIdentities: u.RemoteIdentities,
 	}
-
-	if !cmp.Equal(withName, wantUser, cmpopts.IgnoreUnexported(pb.User{}, pb.RemoteIdentity{})) {
-		t.Errorf("\nhave: %+v\nwant: %+v\n", withName, wantUser)
+	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
 }

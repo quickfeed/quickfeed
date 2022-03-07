@@ -1,7 +1,7 @@
 import React from "react"
 import { Review } from "../../../proto/ag/ag_pb"
 import { NoSubmission } from "../../consts"
-import { Color, getCourseID, isCourseCreator, SubmissionStatus } from "../../Helpers"
+import { Color, SubmissionStatus } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
@@ -17,8 +17,6 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element => {
 
     const assignment = state.activeSubmissionLink?.getAssignment()
     const submission = state.activeSubmissionLink?.getSubmission()
-
-    const isTeacher = isCourseCreator(state.self, state.courses[getCourseID()])
     const ready = review.getReady()
     const allCriteriaGraded = state.review.graded === state.review.criteriaTotal
 
@@ -33,15 +31,15 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element => {
 
     const setReadyOrGradeButton = ready ? <ManageSubmissionStatus /> : markReadyButton
     const releaseButton = (
-        <Button onclick={() => { isTeacher && actions.review.release(!submission?.getReleased()) }}
-            classname={`float-right ${!isTeacher && "disabled"} `}
+        <Button onclick={() => { state.isCourseCreator && actions.review.release(!submission?.getReleased()) }}
+            classname={`float-right ${!state.isCourseCreator && "disabled"} `}
             text={submission?.getReleased() ? "Released" : "Release"}
             color={submission?.getReleased() ? Color.WHITE : Color.YELLOW}
             type={ButtonType.BUTTON} />
     )
     return (
         <ul className="list-group">
-            <li className={`list-group-item active`}>
+            <li className="list-group-item active">
                 <span className="align-middle">
                     <span style={{ display: "inline-block" }} className="w-25 mr-5 p-3">{assignment?.getName()}</span>
                     {releaseButton}

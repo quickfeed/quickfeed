@@ -177,6 +177,18 @@ func (db *GormDB) UpdateSubmissions(courseID uint64, query *pb.Submission) error
 		}).Error
 }
 
+// GetReview fetches a review
+func (db *GormDB) GetReview(query *pb.Review) (*pb.Review, error) {
+	var review pb.Review
+	if err := db.conn.Where(query).
+		Preload("GradingBenchmarks", "review_id = (?)", query.ID).
+		Preload("GradingBenchmarks.Criteria").
+		First(&review).Error; err != nil {
+		return nil, err
+	}
+	return &review, nil
+}
+
 // CreateReview creates a new submission review
 func (db *GormDB) CreateReview(query *pb.Review) error {
 	return db.conn.Create(query).Error

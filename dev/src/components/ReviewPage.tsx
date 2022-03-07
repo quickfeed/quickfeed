@@ -1,20 +1,19 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect } from "react"
 import { useActions, useAppState } from "../overmind"
 import { SubmissionLink } from "../../proto/ag/ag_pb"
-import { Color, generateAssignmentsHeader, generateSubmissionRows, getCourseID, isApproved, isManuallyGraded, isPending, isRevision } from "../Helpers"
+import { Color, generateAssignmentsHeader, generateSubmissionRows, getCourseID, getSubmissionCellColor, isApproved, isManuallyGraded, isRevision, SubmissionSort } from "../Helpers"
 import Search from "./Search"
 import ReviewForm from "./manual-grading/ReviewForm"
-import DynamicTable, { RowElement } from "./DynamicTable"
+import DynamicTable, { Row, RowElement } from "./DynamicTable"
 import Button, { ButtonType } from "./admin/Button"
 import Release from "./Release"
+import TableSort from "./forms/TableSort"
 
 
 const ReviewPage = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
     const courseID = getCourseID()
-    const isCourseCreator = state.courses[courseID].getCoursecreatorid() === state.self.getId()
-    const [groupView, setGroupView] = useState<boolean>(false)
 
     useEffect(() => {
         if (!state.courseSubmissions[courseID]) {
@@ -23,6 +22,7 @@ const ReviewPage = (): JSX.Element => {
         return () => {
             actions.setActiveSubmissionLink(undefined)
             actions.review.setAssignmentID(-1)
+            actions.setGroupView(false)
         }
     }, [])
 
@@ -37,7 +37,7 @@ const ReviewPage = (): JSX.Element => {
             return ({
                 // TODO: Figure out a better way to visualize released submissions than '(r)'
                 value: `${reviews.length}/${assignment.getReviewers()} ${submission.getReleased() ? "(r)" : ""}`,
-                className: `${isApproved(submission) ? "result-approved" : isRevision(submission) ? "result-revision" : "result-pending"} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""}`,
+                className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""}`,
                 onClick: () => {
                     actions.setActiveSubmissionLink(submissionLink)
                     actions.review.setSelectedReview(-1)
@@ -52,23 +52,26 @@ const ReviewPage = (): JSX.Element => {
             })
         }
     }
-
-    const links = groupView ? state.courseGroupSubmissions[courseID] : state.courseSubmissions[courseID]
-    const rows = generateSubmissionRows(links, generateReviewCell)
+    const groupView = state.groupView
     const assignments = state.assignments[courseID].filter(assignment => (state.review.assignmentID < 0) || assignment.getId() === state.review.assignmentID)
-    const header = generateAssignmentsHeader(["Name"], assignments, groupView)
+    const base: Row = [{ value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }]
+    const header = generateAssignmentsHeader(base, assignments, groupView)
+
+    const links = state.sortedAndFilteredSubmissions
+    const rows = generateSubmissionRows(links, generateReviewCell)
 
     return (
         <div>
-            {isCourseCreator && <Release />}
+            {state.isCourseCreator && <Release />}
             <div className="row">
                 <div className={state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"}>
                     <Search placeholder={"Search by name ..."} >
                         <Button type={ButtonType.BUTTON}
-                            text={groupView ? "View by group" : "View by student"}
-                            onclick={() => { setGroupView(!groupView); actions.review.setAssignmentID(-1) }}
+                            text={`View by ${groupView ? "student" : "group"}`}
+                            onclick={() => { actions.setGroupView(!groupView); actions.review.setAssignmentID(-1) }}
                             color={groupView ? Color.BLUE : Color.GREEN} />
                     </Search>
+                    <TableSort />
                     <DynamicTable header={header} data={rows} />
                 </div>
                 {state.activeSubmissionLink ? <ReviewForm /> : null}
