@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/google/go-github/v35/github"
 	"go.uber.org/zap"
 )
 
@@ -64,9 +63,9 @@ type SCM interface {
 	// Lists all authorizations for authenticated user.
 	GetUserScopes(context.Context) *Authorization
 	// Lists all pending repository invites.
-	GetRepositoryInvites(context.Context, *RepositoryOptions) ([]*github.RepositoryInvitation, error)
+	GetRepositoryInvites(context.Context, *RepositoryInvitationOptions) ([]*RepositoryInvitation, error)
 	// Accepts repository invite.
-	AcceptRepositoryInvite(context.Context, *RepositoryInvitationOptions) error
+	AcceptRepositoryInvite(context.Context, *RepositoryInvitation) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -221,6 +220,12 @@ type Authorization struct {
 }
 
 // RepositoryInvitation represents a repository invitation.
+type RepositoryInvitation struct {
+	ID   int64
+	Repo string
+}
+
 type RepositoryInvitationOptions struct {
-	InvitationID uint64
+	Login string
+	Owner string
 }
