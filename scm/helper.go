@@ -112,8 +112,12 @@ func (opt RepositoryOptions) valid() bool {
 	return opt.ID > 0 || (opt.Path != "" && opt.Owner != "")
 }
 
+func (opt RepositoryInvitation) valid() bool {
+	return opt.ID > 0
+}
+
 func (opt RepositoryInvitationOptions) valid() bool {
-	return opt.InvitationID > 0
+	return opt.Login != "" && opt.Owner != ""
 }
 
 // Errors //
