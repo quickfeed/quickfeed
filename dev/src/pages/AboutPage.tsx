@@ -1,4 +1,5 @@
 import React from 'react'
+import Alert from '../components/Alert'
 
 
 /* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users. */
@@ -20,6 +21,7 @@ const AboutPage = (): JSX.Element => {
                     </p>
                 </div>
             </div>
+            <Alert />
             <div key="container" className="container">
 
                 <div key="rowheader" className="row marketing">
@@ -66,7 +68,7 @@ const AboutPage = (): JSX.Element => {
                         <h2>Fair Grading</h2>
                         <p>
                             On due date of an assignment, the most recent version
-                            of each student's code is available through GitHub.
+                            of each student&apos;s code is available through GitHub.
                             Easily accessible for the teachers.
                             Together with latest build log, this makes grading easier and more fair.
                         </p>

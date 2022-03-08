@@ -1,11 +1,13 @@
 package qtest
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -13,6 +15,7 @@ import (
 	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web/auth"
+	"google.golang.org/grpc/metadata"
 )
 
 // TestDB returns a test database and close function.
@@ -146,4 +149,12 @@ func RandomString(t *testing.T) string {
 		t.Fatal(err)
 	}
 	return fmt.Sprintf("%x", sha1.Sum(randomness))[:6]
+}
+
+// WithUserContext is a test helper function to create metadata for the
+// given user mimicking the context coming from the browser.
+func WithUserContext(ctx context.Context, user *pb.User) context.Context {
+	userID := strconv.Itoa(int(user.GetID()))
+	meta := metadata.New(map[string]string{"user": userID})
+	return metadata.NewIncomingContext(ctx, meta)
 }
