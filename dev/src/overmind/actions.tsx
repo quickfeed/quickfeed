@@ -187,7 +187,11 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
     let confirmed = false
     switch (status) {
         case Enrollment.UserStatus.NONE:
-            confirmed = confirm("WARNING! Rejecting a student is irreversible. Are you sure?")
+            const isEmptyRepo = await effects.grpcMan.isEmptyRepo(enrollment.getCourseid(), enrollment.getUserid(), 0)
+            const reject = "WARNING! Rejecting a student is irreversible. Are you sure?"
+            confirmed = success(isEmptyRepo)
+                ? confirm(reject)
+                : confirm(reject) && confirm(`Warning! User repository is not empty! Do you still want to reject the user?`)
             break
         case Enrollment.UserStatus.STUDENT:
             // If the enrollment is pending, don't ask for confirmation
@@ -485,7 +489,7 @@ export const updateGroupStatus = async ({ actions, effects }: Context, { group, 
 export const deleteGroup = async ({ state, actions, effects }: Context, group: Group): Promise<void> => {
     if (confirm("Deleting a group is an irreversible action. Are you sure?")) {
         const isRepoEmpty = await effects.grpcMan.isEmptyRepo(group.getCourseid(), 0, group.getId())
-        if (isRepoEmpty || confirm(`Warning! Group repository is not empty! Do you still want to delete group, github team and group repository?`)) {
+        if (success(isRepoEmpty) || confirm(`Warning! Group repository is not empty! Do you still want to delete group, github team and group repository?`)) {
             const response = await effects.grpcMan.deleteGroup(group.getCourseid(), group.getId())
             if (success(response)) {
                 state.groups[group.getCourseid()] = state.groups[group.getCourseid()].filter(g => g.getId() !== group.getId())
