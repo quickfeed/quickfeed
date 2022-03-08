@@ -177,9 +177,9 @@ func TestGormDBGetCourses(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	c1 := &pb.Course{OrganizationID: 1}
-	c2 := &pb.Course{OrganizationID: 2}
-	c3 := &pb.Course{OrganizationID: 3}
+	c1 := &pb.Course{OrganizationID: 1, Year: 1}
+	c2 := &pb.Course{OrganizationID: 2, Year: 2}
+	c3 := &pb.Course{OrganizationID: 3, Year: 3}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 	qtest.CreateCourse(t, db, admin, c3)
@@ -333,10 +333,10 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	c1 := &pb.Course{OrganizationID: 1}
-	c2 := &pb.Course{OrganizationID: 2}
-	c3 := &pb.Course{OrganizationID: 3}
-	c4 := &pb.Course{OrganizationID: 4}
+	c1 := &pb.Course{OrganizationID: 1, Year: 1}
+	c2 := &pb.Course{OrganizationID: 2, Year: 2}
+	c3 := &pb.Course{OrganizationID: 3, Year: 3}
+	c4 := &pb.Course{OrganizationID: 4, Year: 4}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 	qtest.CreateCourse(t, db, admin, c3)
@@ -379,10 +379,10 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	}
 
 	wantCourses := []*pb.Course{
-		{ID: c1.ID, OrganizationID: 1, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_PENDING},
-		{ID: c2.ID, OrganizationID: 2, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_NONE},
-		{ID: c3.ID, OrganizationID: 3, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_STUDENT},
-		{ID: c4.ID, OrganizationID: 4, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_NONE},
+		{ID: c1.ID, OrganizationID: 1, Year: 1, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_PENDING},
+		{ID: c2.ID, OrganizationID: 2, Year: 2, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_NONE},
+		{ID: c3.ID, OrganizationID: 3, Year: 3, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_STUDENT},
+		{ID: c4.ID, OrganizationID: 4, Year: 4, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_NONE},
 	}
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCoursesByUser() mismatch (-wantCourses, +gotCourses):\n%s", diff)
@@ -877,8 +877,8 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	c1 := &pb.Course{OrganizationID: 1}
-	c2 := &pb.Course{OrganizationID: 2}
+	c1 := &pb.Course{OrganizationID: 1, Year: 1}
+	c2 := &pb.Course{OrganizationID: 2, Year: 2}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 
