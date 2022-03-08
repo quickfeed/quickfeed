@@ -52,18 +52,6 @@ func (db *GormDB) GetRepositories(query *pb.Repository) ([]*pb.Repository, error
 	return repos, nil
 }
 
-func (db *GormDB) GetRepositoryByType(userID uint64, orgID uint64, repoType pb.Repository_Type) (*pb.Repository, error) {
-	var repo pb.Repository
-	query := &pb.Repository{OrganizationID: orgID, RepoType: repoType}
-	if repoType == pb.Repository_USER {
-		query.UserID = userID
-	}
-	if err := db.conn.First(&repo, query).Error; err != nil {
-		return nil, err
-	}
-	return &repo, nil
-}
-
 // DeleteRepositoryByRemoteID deletes repository by provider's ID
 func (db *GormDB) DeleteRepositoryByRemoteID(rid uint64) error {
 	repo, err := db.GetRepositoryByRemoteID(rid)
