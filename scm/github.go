@@ -701,9 +701,9 @@ func (s *GithubSCM) GetRepositoryInvites(ctx context.Context, opt *RepositoryInv
 	invites, _, err := s.client.Users.ListInvitations(ctx, &github.ListOptions{})
 	if err != nil {
 		return nil, ErrFailedSCM{
-			GitError: fmt.Errorf("failed to get GitHub repository invitations: %w", err),
+			GitError: fmt.Errorf("failed to fetch GitHub repository invitations: %w", err),
 			Method:   "GetRepositoryInvites",
-			Message:  fmt.Sprintf("failed to get GitHub repository invitations"),
+			Message:  "failed to fetch GitHub repository invitations",
 		}
 	}
 
