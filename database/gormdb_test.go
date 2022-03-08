@@ -751,6 +751,54 @@ func TestGormDBUpdateCourse(t *testing.T) {
 	}
 }
 
+func TestGormDBCourseUniqueContraint(t *testing.T) {
+	// Test that a course with the same code and year cannot be created.
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	wantCourse := &pb.Course{
+		Name:           "Test Course",
+		Code:           "DAT100",
+		Year:           2017,
+		Tag:            "Spring",
+		Provider:       "github",
+		OrganizationID: 1235,
+	}
+	course := &pb.Course{
+		Name:           "Test Course 2",
+		Code:           "DAT100",
+		Year:           2017,
+		Tag:            "Spring",
+		Provider:       "github",
+		OrganizationID: 1234,
+	}
+
+	remoteID := &pb.RemoteIdentity{Provider: wantCourse.Provider, RemoteID: 10, AccessToken: "token"}
+	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
+
+	if err := db.CreateCourse(admin.ID, wantCourse); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := db.CreateCourse(admin.ID, course); err == nil {
+		// This should fail because the unique constraint (course.code, course.year) is violated
+		t.Fatal(err)
+	}
+	gotCourse, err := db.GetCourse(wantCourse.ID, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
+		t.Errorf("course mismatch (-want +got):\n%s", diff)
+	}
+
+	// Now create a course with same code but different year
+	course.Year = 2018
+	if err := db.CreateCourse(admin.ID, course); err != nil {
+		// This should succeed because the unique constraint (course.code, course.year) is not violated
+		t.Fatal(err)
+	}
+}
+
 func TestGormDBGetEmptyRepo(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
