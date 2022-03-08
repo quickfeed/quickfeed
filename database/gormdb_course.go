@@ -17,6 +17,9 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *pb.Course) error 
 	var courses int64
 	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
 		OrganizationID: course.OrganizationID,
+	}).Or(&pb.Course{
+		Code: course.Code,
+		Year: course.Year,
 	}).Count(&courses).Error; err != nil {
 		return err
 	}
