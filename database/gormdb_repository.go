@@ -1,7 +1,10 @@
 package database
 
 import (
+	"fmt"
+
 	pb "github.com/autograde/quickfeed/ag"
+	"gorm.io/gorm"
 )
 
 // CreateRepository creates a new repository record.
@@ -30,22 +33,20 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 	return db.conn.Create(repo).Error
 }
 
-// GetRepositoryByRemoteID fetches repository by provider's ID.
-func (db *GormDB) GetRepositoryByRemoteID(remoteID uint64) (*pb.Repository, error) {
-	var repo pb.Repository
-	if err := db.conn.First(&repo, &pb.Repository{RepositoryID: remoteID}).Error; err != nil {
-		return nil, err
-	}
-	return &repo, nil
-}
-
-// GetRepositories returns all repositories satisfying the given query.
-func (db *GormDB) GetRepositories(query *pb.Repository) ([]*pb.Repository, error) {
+// GetRepository returns the repository satisfying the given query.
+// If more than one repository satisfies the query, an error is returned.
+func (db *GormDB) GetRepository(query *pb.Repository) (*pb.Repository, error) {
 	var repos []*pb.Repository
 	if err := db.conn.Find(&repos, query).Error; err != nil {
 		return nil, err
 	}
-	return repos, nil
+	if len(repos) > 1 {
+		return nil, fmt.Errorf("ambiguous query: found %d repositories", len(repos))
+	} else if len(repos) == 0 {
+		// no repositories found
+		return nil, gorm.ErrRecordNotFound
+	}
+	return repos[0], nil
 }
 
 // DeleteRepository deletes repository for the given remote provider's ID.

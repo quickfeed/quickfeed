@@ -82,11 +82,10 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group
 }
 
 // deletes group repository and team
-func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID uint64, teamID, orgID uint64) error {
+func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID, teamID, orgID uint64) error {
 	if err := sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repositoryID}); err != nil {
 		return fmt.Errorf("deleteGroupRepoAndTeam: failed to delete repository: %w", err)
 	}
-
 	if err := sc.DeleteTeam(ctx, &scm.TeamOptions{TeamID: teamID, OrganizationID: orgID}); err != nil {
 		return fmt.Errorf("deleteGroupRepoAndTeam: failed to delete team: %w", err)
 	}
@@ -251,8 +250,8 @@ func revokeTeacherStatus(ctx context.Context, sc scm.SCM, org, userName string) 
 
 // isEmpty ensured that all of the provided repositories are empty
 func isEmpty(ctx context.Context, sc scm.SCM, repos []*pb.Repository) error {
-	for _, r := range repos {
-		if !sc.RepositoryIsEmpty(ctx, &scm.RepositoryOptions{ID: r.GetRepositoryID()}) {
+	for _, repo := range repos {
+		if !sc.RepositoryIsEmpty(ctx, &scm.RepositoryOptions{ID: repo.GetRepositoryID()}) {
 			return fmt.Errorf("repository is not empty")
 		}
 	}

@@ -257,8 +257,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 		s.logger.Errorf("UpdateEnrollment failed: user %s attempted to demote course creator", usr.GetName())
 		return nil, status.Error(codes.PermissionDenied, "course creator cannot be demoted")
 	}
-	err = s.updateEnrollment(ctx, scm, usr.Login, in)
-	if err != nil {
+	if err = s.updateEnrollment(ctx, scm, usr, in); err != nil {
 		s.logger.Errorf("UpdateEnrollment failed: %v", err)
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)

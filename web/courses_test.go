@@ -6,6 +6,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/internal/qtest"
+	"github.com/autograde/quickfeed/log"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -425,7 +426,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	if err := db.CreateEnrollment(&pb.Enrollment{
 		UserID:   student1.ID,

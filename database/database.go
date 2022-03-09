@@ -123,10 +123,8 @@ type Database interface {
 	GetBenchmarks(*pb.Assignment) ([]*pb.GradingBenchmark, error)
 	// CreateRepository creates a new repository.
 	CreateRepository(repo *pb.Repository) error
-	// GetRepository returns the repository for the SCM provider's repository ID.
-	GetRepositoryByRemoteID(uint64) (*pb.Repository, error)
-	// GetRepositories returns repositories that match the given query.
-	GetRepositories(query *pb.Repository) ([]*pb.Repository, error)
+	// GetRepository returns the repository satisfying the given query.
+	GetRepository(query *pb.Repository) (*pb.Repository, error)
 	// DeleteRepository deletes repository for the given remote provider's ID.
 	DeleteRepository(remoteID uint64) error
 

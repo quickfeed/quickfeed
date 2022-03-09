@@ -59,25 +59,28 @@ func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request
 	if err != nil {
 		return err
 	}
-	repos, err := s.getGroupRepos(course.GetOrganizationID(), group.GetID())
-	if err != nil {
-		return err
+	if err = s.db.DeleteGroup(group.GetID()); err != nil {
+		s.logger.Debugf("Failed to delete group from database: %v", err)
+		// continue with other group delete operations
 	}
-
-	// when deleting an approved group, remove github repository and team as well
-	for _, repo := range repos {
-		if err = s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
-			// even if database record not found, still attempt to remove related github repo and team
-			if err != gorm.ErrRecordNotFound {
-				return err
-			}
-		}
-		if err = deleteGroupRepoAndTeam(ctx, sc, repo.GetRepositoryID(), group.GetTeamID(), repo.GetOrganizationID()); err != nil {
-			return err
-		}
+	repo, err := s.db.GetRepository(&pb.Repository{
+		OrganizationID: course.GetOrganizationID(),
+		GroupID:        group.GetID(),
+		RepoType:       pb.Repository_GROUP,
+	})
+	switch {
+	case err != nil && err != gorm.ErrRecordNotFound:
+		return err // unexpected error
+	case repo == nil:
+		// record not found: cannot continue without repository information; just log and return
+		s.logger.Debugf("Could not find %s repository for group %d (expected behavior): %v", course.GetCode(), group.GetID(), err)
+		return nil
 	}
-
-	return s.db.DeleteGroup(request.GetGroupID())
+	if err := s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
+		s.logger.Debugf("Failed to delete group repository from database: %v", err)
+		// continue with other group delete operations
+	}
+	return deleteGroupRepoAndTeam(ctx, sc, repo.GetRepositoryID(), group.GetTeamID(), repo.GetOrganizationID())
 }
 
 // createGroup creates a new group for the given course and users.
@@ -139,11 +142,16 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 		Enrollments: group.Enrollments,
 	}
 
-	repos, err := s.getGroupRepos(course.GetOrganizationID(), group.GetID())
-	if err != nil {
-		return err
+	repo, err := s.db.GetRepository(&pb.Repository{
+		OrganizationID: course.GetOrganizationID(),
+		GroupID:        group.GetID(),
+		RepoType:       pb.Repository_GROUP,
+	})
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return err // unexpected error
 	}
-	if len(repos) == 0 {
+	if repo == nil {
+		// record not found: continue to create repository
 		if request.Name != "" && newGroup.TeamID < 1 {
 			// update group name only if team not already created on SCM
 			newGroup.Name = request.Name

@@ -6,48 +6,30 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
-	"gorm.io/gorm"
 )
 
 func (s *AutograderService) getUserRepo(course *pb.Course, userID uint64) (*pb.Repository, error) {
-	repos, err := s.db.GetRepositories(&pb.Repository{
+	repo, err := s.db.GetRepository(&pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		UserID:         userID,
 		RepoType:       pb.Repository_USER,
 	})
-	if err != nil || len(repos) < 1 {
-		return nil, fmt.Errorf("could not find user repository for user: %d, course: %s: %w", userID, course.GetCode(), err)
+	if err != nil {
+		return nil, fmt.Errorf("could not find %s repository for user: %d: %w", course.GetCode(), userID, err)
 	}
-	return repos[0], nil
+	return repo, nil
 }
 
 func (s *AutograderService) getGroupRepo(course *pb.Course, groupID uint64) (*pb.Repository, error) {
-	repos, err := s.db.GetRepositories(&pb.Repository{
+	repo, err := s.db.GetRepository(&pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		GroupID:        groupID,
 		RepoType:       pb.Repository_GROUP,
 	})
-	if err != nil || len(repos) < 1 {
-		return nil, fmt.Errorf("could not find group repository for group: %d, course: %s: %w", groupID, course.GetCode(), err)
-	}
-	return repos[0], nil
-}
-
-func (s *AutograderService) getGroupRepos(orgID, groupID uint64) ([]*pb.Repository, error) {
-	repoQuery := &pb.Repository{
-		OrganizationID: orgID,
-		GroupID:        groupID,
-		RepoType:       pb.Repository_GROUP,
-	}
-	repos, err := s.db.GetRepositories(repoQuery)
 	if err != nil {
-		if err != gorm.ErrRecordNotFound {
-			return nil, err
-		}
-		// return empty slice if no group repos found
-		repos = []*pb.Repository{}
+		return nil, fmt.Errorf("could not find %s repository for group: %d: %w", course.GetCode(), groupID, err)
 	}
-	return repos, nil
+	return repo, nil
 }
 
 // getRepositoryURL returns URL of a course repository of the given type.
@@ -74,14 +56,11 @@ func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint
 		}
 	}
 
-	repos, err := s.db.GetRepositories(userRepoQuery)
+	repo, err := s.db.GetRepository(userRepoQuery)
 	if err != nil {
 		return "", err
 	}
-	if len(repos) != 1 {
-		return "", fmt.Errorf("found %d repositories for query %+v", len(repos), userRepoQuery)
-	}
-	return repos[0].HTMLURL, nil
+	return repo.GetHTMLURL(), nil
 }
 
 // isEmptyRepo returns nil if all repositories for the given course and student or group are empty,
@@ -91,7 +70,7 @@ func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request
 	if err != nil {
 		return err
 	}
-	repos, err := s.db.GetRepositories(&pb.Repository{
+	repo, err := s.db.GetRepository(&pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		UserID:         request.GetUserID(),
 		GroupID:        request.GetGroupID(),
@@ -99,8 +78,9 @@ func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request
 	if err != nil {
 		return err
 	}
-	if len(repos) < 1 {
-		return fmt.Errorf("no repositories found")
+	if !sc.RepositoryIsEmpty(ctx, &scm.RepositoryOptions{ID: repo.GetRepositoryID()}) {
+		return fmt.Errorf("repository is not empty")
 	}
-	return isEmpty(ctx, sc, repos)
+	return nil
+	// return isEmpty(ctx, sc, repos)
 }

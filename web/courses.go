@@ -8,6 +8,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
+	"gorm.io/gorm"
 )
 
 // getCourses returns all courses.
@@ -82,14 +83,14 @@ func (s *AutograderService) createEnrollment(request *pb.Enrollment) error {
 }
 
 // updateEnrollment changes the status of the given course enrollment.
-func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *pb.Enrollment) error {
+func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser *pb.User, request *pb.Enrollment) error {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
 	if err != nil {
 		return err
 	}
 	// log changes to teacher status
 	if enrollment.Status == pb.Enrollment_TEACHER || request.Status == pb.Enrollment_TEACHER {
-		s.logger.Debugf("User %s attempting to change enrollment status of user %d from %s to %s", curUser, enrollment.UserID, enrollment.Status, request.Status)
+		s.logger.Debugf("User %d attempting to change enrollment status of user %d from %s to %s", curUser.ID, enrollment.UserID, enrollment.Status, request.Status)
 	}
 
 	switch request.Status {
@@ -107,13 +108,17 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, cu
 
 // updateEnrollments enrolls all students with pending enrollments into course
 func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, cid uint64) error {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		return err
+	}
 	enrolls, err := s.db.GetEnrollmentsByCourse(cid, pb.Enrollment_PENDING)
 	if err != nil {
 		return err
 	}
 	for _, enrol := range enrolls {
 		enrol.Status = pb.Enrollment_STUDENT
-		if err = s.updateEnrollment(ctx, sc, "", enrol); err != nil {
+		if err = s.updateEnrollment(ctx, sc, usr, enrol); err != nil {
 			return err
 		}
 	}
@@ -315,25 +320,33 @@ func (s *AutograderService) changeCourseVisibility(enrollment *pb.Enrollment) er
 func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
-	repos, err := s.db.GetRepositories(&pb.Repository{
+	if err := s.db.RejectEnrollment(user.ID, course.ID); err != nil {
+		s.logger.Debugf("rejectEnrollment: failed to delete enrollment from database: %v", err)
+		// continue with other delete operations
+	}
+	repo, err := s.db.GetRepository(&pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		UserID:         user.GetID(),
 		RepoType:       pb.Repository_USER,
 	})
-	if err != nil {
-		return err
+	switch {
+	case err != nil && err != gorm.ErrRecordNotFound:
+		return err // unexpected error
+	case repo == nil:
+		// record not found: cannot continue without repository information; just log and return
+		s.logger.Debugf("rejectEnrollment: could not find %s repository for user %d (expected behavior): %v", course.GetCode(), user.GetID(), err)
+		return nil
 	}
-	for _, repo := range repos {
-		// we do not care about errors here, even if the github repo does not exists,
-		// log the error and go on with deleting database entries
-		if err := removeUserFromCourse(ctx, sc, user.GetLogin(), repo); err != nil {
-			s.logger.Debug("rejectEnrollment: failed to remove user from course (expected behavior): ", err)
-		}
-		if err := s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
-			return err
-		}
+	if err := s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
+		s.logger.Debugf("rejectEnrollment: failed to delete enrollment from database: %v", err)
+		// continue with other delete operations
 	}
-	return s.db.RejectEnrollment(user.ID, course.ID)
+	// we do not care about errors here, even if the github repo does not exists,
+	// log the error and go on with deleting database entries
+	if err := removeUserFromCourse(ctx, sc, user.GetLogin(), repo); err != nil {
+		s.logger.Debugf("rejectEnrollment: failed to delete user from course on git provider (expected behavior): %v", err)
+	}
+	return nil
 }
 
 // enrollStudent enrolls the given user as a student into the given course.
@@ -343,12 +356,12 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 
 	// check whether user repo already exists,
 	// which could happen if accepting a previously rejected student
-	repos, err := s.db.GetRepositories(&pb.Repository{
+	repo, err := s.db.GetRepository(&pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		UserID:         user.GetID(),
 		RepoType:       pb.Repository_USER,
 	})
-	if err != nil {
+	if err != nil && err != gorm.ErrRecordNotFound {
 		return err
 	}
 
@@ -363,8 +376,8 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 			s.logger.Errorf("Failed to revoke teacher status for user %s and course %s: %v", user.Login, course.Name, err)
 		}
 	} else {
-		s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repos: ", len(repos))
-		if len(repos) > 0 {
+		s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repo: ", repo)
+		if repo != nil {
 			// repo already exist, update enrollment in database
 			return s.db.UpdateEnrollment(userEnrolQuery)
 		}
