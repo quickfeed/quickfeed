@@ -281,17 +281,8 @@ func (s *GitlabSCM) GetUserScopes(ctx context.Context) *Authorization {
 	return nil
 }
 
-// GetRepositoryInvites implements the SCM interface
-func (s *GitlabSCM) GetRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) ([]*RepositoryInvitation, error) {
-	// TODO no implementation provided yet
-	return nil, ErrNotSupported{
-		SCM:    "gitlab",
-		Method: "GetRepositoryInvites",
-	}
-}
-
 // AcceptRepositoryInvite implements the SCM interface
-func (s *GitlabSCM) AcceptRepositoryInvite(ctx context.Context, opt *RepositoryInvitation) error {
+func (s *GitlabSCM) AcceptRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) error {
 	// TODO no implementation provided yet
 	return ErrNotSupported{
 		SCM:    "gitlab",

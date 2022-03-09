@@ -690,9 +690,9 @@ func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
 }
 
 // GetRepositoryInvites implements the SCM interface
-func (s *GithubSCM) GetRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) ([]*RepositoryInvitation, error) {
+func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) error {
 	if !opt.valid() {
-		return nil, ErrMissingFields{
+		return ErrMissingFields{
 			Method:  "GetRepositoryInvites",
 			Message: fmt.Sprintf("%+v", opt),
 		}
@@ -700,43 +700,26 @@ func (s *GithubSCM) GetRepositoryInvites(ctx context.Context, opt *RepositoryInv
 
 	invites, _, err := s.client.Users.ListInvitations(ctx, &github.ListOptions{})
 	if err != nil {
-		return nil, ErrFailedSCM{
+		return ErrFailedSCM{
 			GitError: fmt.Errorf("failed to fetch GitHub repository invitations: %w", err),
 			Method:   "GetRepositoryInvites",
 			Message:  "failed to fetch GitHub repository invitations",
 		}
 	}
 
-	scmInvites := make([]*RepositoryInvitation, 0)
 	for _, invite := range invites {
 		if invite.Repo.Owner.GetLogin() != opt.Owner || invite.Invitee.GetLogin() != opt.Login {
 			// Ignore unrelated invites
 			continue
 		}
-		scmInvite := &RepositoryInvitation{
-			ID:   invite.GetID(),
-			Repo: invite.GetRepo().GetName(),
-		}
-		scmInvites = append(scmInvites, scmInvite)
-	}
-	return scmInvites, nil
-}
 
-// AcceptRepositoryInvite implements the SCM interface
-func (s *GithubSCM) AcceptRepositoryInvite(ctx context.Context, opt *RepositoryInvitation) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "AcceptRepositoryInvite",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	_, err := s.client.Users.AcceptInvitation(ctx, opt.ID)
-	if err != nil {
-		return ErrFailedSCM{
-			Method:   "AcceptRepositoryInvite",
-			GitError: fmt.Errorf("failed to accept repository invitation %d: %w", opt.ID, err),
-			Message:  fmt.Sprintf("failed to accept repository invitation %d", opt.ID),
+		_, err := s.client.Users.AcceptInvitation(ctx, invite.GetID())
+		if err != nil {
+			return ErrFailedSCM{
+				GitError: fmt.Errorf("failed to accept GitHub repository invitation: %w", err),
+				Method:   "GetRepositoryInvites",
+				Message:  "failed to accept GitHub repository invitation",
+			}
 		}
 	}
 	return nil

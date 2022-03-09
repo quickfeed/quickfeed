@@ -218,14 +218,8 @@ func (s *FakeSCM) GetUserScopes(ctx context.Context) *Authorization {
 	return nil
 }
 
-// GetRepositoryInvites implements the SCM interface
-func (s *FakeSCM) GetRepositoryInvites(ctx context.Context, org *RepositoryInvitationOptions) ([]*RepositoryInvitation, error) {
-	// TODO no implementation provided yet
-	return nil, nil
-}
-
 // AcceptRepositoryInvite implements the SCM interface
-func (s *FakeSCM) AcceptRepositoryInvite(ctx context.Context, opt *RepositoryInvitation) error {
+func (s *FakeSCM) AcceptRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }

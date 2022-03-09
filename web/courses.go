@@ -535,7 +535,7 @@ func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission,
 	return s.db.UpdateEnrollment(query)
 }
 
-// acceptRepositoryInvites tries to accept repository invitations for the given repository types on behalf of the given user.
+// acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
 func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, user *pb.User, course *pb.Course) {
 	user, err := s.db.GetUser(user.ID)
 	if err != nil {
@@ -551,15 +551,8 @@ func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, user *p
 		Login: user.Login,
 		Owner: course.GetOrganizationPath(),
 	}
-	invites, err := userSCM.GetRepositoryInvites(ctx, opts)
-	if err != nil {
+	if err := userSCM.AcceptRepositoryInvites(ctx, opts); err != nil {
 		s.logger.Errorf("Failed to get repository invites for %s: %s", user.Login, err)
-		return
-	}
-	for _, invite := range invites {
-		if err := userSCM.AcceptRepositoryInvite(ctx, invite); err != nil {
-			s.logger.Errorf("Failed to invite user %s to repository %s: %v", user.Login, invite.Repo, err)
-		}
 	}
 }
 
