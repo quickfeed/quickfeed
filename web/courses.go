@@ -317,25 +317,28 @@ func (s *AutograderService) changeCourseVisibility(enrollment *pb.Enrollment) er
 func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
-	repos, err := s.db.GetRepositories(&pb.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		UserID:         user.GetID(),
-		RepoType:       pb.Repository_USER,
-	})
-	if err != nil {
-		return err
+	if err := s.db.RejectEnrollment(user.ID, course.ID); err != nil {
+		s.logger.Debugf("Failed to delete enrollment from database: %v", err)
+		// continue with other delete operations
 	}
-	for _, repo := range repos {
-		// we do not care about errors here, even if the github repo does not exists,
-		// log the error and go on with deleting database entries
-		if err := removeUserFromCourse(ctx, sc, user.GetLogin(), repo); err != nil {
-			s.logger.Debug("rejectEnrollment: failed to remove user from course (expected behavior): ", err)
-		}
-		if err := s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
-			return err
-		}
+	repo, err := s.getRepo(course, user.GetID(), pb.Repository_USER)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err // unexpected error
 	}
-	return s.db.RejectEnrollment(user.ID, course.ID)
+	if repo == nil {
+		s.logger.Debugf("No repository: %v", err)
+		// cannot continue without repository information
+		return nil
+	}
+	if err = s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
+		s.logger.Debugf("Failed to delete repository from database: %v", err)
+		// continue with other delete operations
+	}
+	// when deleting a user, remove github repository and organization membership as well
+	if err := removeUserFromCourse(ctx, sc, user.GetLogin(), repo); err != nil {
+		s.logger.Debug("rejectEnrollment: failed to remove user from course (expected behavior): ", err)
+	}
+	return nil
 }
 
 // enrollStudent enrolls the given user as a student into the given course.
