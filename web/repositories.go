@@ -9,45 +9,25 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *AutograderService) getUserRepo(course *pb.Course, userID uint64) (*pb.Repository, error) {
-	repos, err := s.db.GetRepositories(&pb.Repository{
+func (s *AutograderService) getRepo(course *pb.Course, id uint64, repoType pb.Repository_Type) (*pb.Repository, error) {
+	query := &pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
-		UserID:         userID,
-		RepoType:       pb.Repository_USER,
-	})
-	if err != nil || len(repos) < 1 {
-		return nil, fmt.Errorf("could not find user repository for user: %d, course: %s: %w", userID, course.GetCode(), err)
+		RepoType:       repoType,
 	}
-	return repos[0], nil
-}
-
-func (s *AutograderService) getGroupRepo(course *pb.Course, groupID uint64) (*pb.Repository, error) {
-	repos, err := s.db.GetRepositories(&pb.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		GroupID:        groupID,
-		RepoType:       pb.Repository_GROUP,
-	})
-	if err != nil || len(repos) < 1 {
-		return nil, fmt.Errorf("could not find group repository for group: %d, course: %s: %w", groupID, course.GetCode(), err)
+	switch repoType {
+	case pb.Repository_USER:
+		query.UserID = id
+	case pb.Repository_GROUP:
+		query.GroupID = id
 	}
-	return repos[0], nil
-}
-
-func (s *AutograderService) getGroupRepos(orgID, groupID uint64) ([]*pb.Repository, error) {
-	repoQuery := &pb.Repository{
-		OrganizationID: orgID,
-		GroupID:        groupID,
-		RepoType:       pb.Repository_GROUP,
-	}
-	repos, err := s.db.GetRepositories(repoQuery)
+	repos, err := s.db.GetRepositories(query)
 	if err != nil {
-		if err != gorm.ErrRecordNotFound {
-			return nil, err
-		}
-		// return empty slice if no group repos found
-		repos = []*pb.Repository{}
+		return nil, err
 	}
-	return repos, nil
+	if len(repos) < 1 {
+		return nil, fmt.Errorf("no %s repositories found for %s id %d: %w", repoType, course.GetCode(), id, gorm.ErrRecordNotFound)
+	}
+	return repos[0], nil
 }
 
 // getRepositoryURL returns URL of a course repository of the given type.
