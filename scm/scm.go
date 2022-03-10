@@ -217,7 +217,8 @@ type Authorization struct {
 	Scopes []string
 }
 
+// RepositoryInvitationOptions contains information on which organization and user to accept invitations for.
 type RepositoryInvitationOptions struct {
-	Login string
-	Owner string
+	Login string // GitHub username.
+	Owner string // Name of the organization.
 }

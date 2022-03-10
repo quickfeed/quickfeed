@@ -708,6 +708,10 @@ func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *Repository
 	}
 
 	for _, invite := range invites {
+		// The list of invitations contain all the invitations for the authenticated user.
+		// We only want to accept invitations from the owner specified in the options.
+		// For our courses, the owner is the organization.
+		// For invitations originating from an organization, the owner login is the organization path.
 		if invite.Repo.Owner.GetLogin() != opt.Owner || invite.Invitee.GetLogin() != opt.Login {
 			// Ignore unrelated invites
 			continue
