@@ -153,15 +153,14 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 
 	course.SetSlipDays()
 
-	enrolLinks := make([]*pb.EnrollmentLink, 0)
-
+	var enrolLinks []*pb.EnrollmentLink
 	switch request.Type {
 	case pb.SubmissionsForCourseRequest_GROUP:
-		enrolLinks = append(enrolLinks, s.makeGroupResults(course, assignments)...)
+		enrolLinks = s.makeGroupResults(course, assignments)
 	case pb.SubmissionsForCourseRequest_INDIVIDUAL:
-		enrolLinks = append(enrolLinks, makeResults(course, assignments, false)...)
+		enrolLinks = makeResults(course, assignments, false)
 	default:
-		enrolLinks = append(enrolLinks, makeResults(course, assignments, true)...)
+		enrolLinks = makeResults(course, assignments, true)
 	}
 	return &pb.CourseSubmissions{Course: course, Links: enrolLinks}, nil
 }
