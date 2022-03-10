@@ -722,7 +722,7 @@ func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *Repository
 			return ErrFailedSCM{
 				GitError: fmt.Errorf("failed to accept GitHub repository invitation: %w", err),
 				Method:   "GetRepositoryInvites",
-				Message:  "failed to accept GitHub repository invitation",
+				Message:  fmt.Sprintf("failed to accept invitation for user: %s, to repo: %s", opt.Login, invite.Repo.GetName()),
 			}
 		}
 	}
