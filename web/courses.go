@@ -443,7 +443,9 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 			return err
 		}
 
-		s.acceptRepositoryInvites(ctx, user, course)
+		if err := s.acceptRepositoryInvites(ctx, user, course); err != nil {
+			s.logger.Errorf("Failed to accept repository invites for student %s: %v", user.Login, err)
+		}
 	}
 
 	return s.db.UpdateEnrollment(userEnrolQuery)
@@ -536,24 +538,23 @@ func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission,
 }
 
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
-func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, user *pb.User, course *pb.Course) {
+func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, user *pb.User, course *pb.Course) error {
 	user, err := s.db.GetUser(user.ID)
 	if err != nil {
-		s.logger.Errorf("Failed to get user %d: %v", user.ID, err)
-		return
+		return fmt.Errorf("Failed to get user %d: %w", user.ID, err)
 	}
 	userSCM, err := s.getSCM(ctx, user, "github")
 	if err != nil {
-		s.logger.Errorf("Failed to get SCM for user %d: %v", user.ID, err)
-		return
+		return fmt.Errorf("Failed to get SCM for user %d: %w", user.ID, err)
 	}
 	opts := &scm.RepositoryInvitationOptions{
 		Login: user.Login,
 		Owner: course.GetOrganizationPath(),
 	}
 	if err := userSCM.AcceptRepositoryInvites(ctx, opts); err != nil {
-		s.logger.Errorf("Failed to get repository invites for %s: %s", user.Login, err)
+		return fmt.Errorf("Failed to get repository invites for %s: %w", user.Login, err)
 	}
+	return nil
 }
 
 func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.SubmissionLink {
