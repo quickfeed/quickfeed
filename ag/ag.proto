@@ -382,19 +382,17 @@ message SubmissionsForCourseRequest {
 }
 
 message RebuildRequest {
-    uint64 submissionID = 1;
-    uint64 assignmentID = 2;
+    oneof rebuildType {
+        uint64 submissionID = 1;
+        uint64 courseID = 2;
+    }
+    uint64 assignmentID = 3;
 }
 
 message CourseUserRequest {
     string courseCode = 1;
     uint32 courseYear = 2;
     string userLogin = 3;
-}
-
-message AssignmentRequest {
-    uint64 courseID = 1;
-    uint64 assignmentID = 2;
 }
 
 // Void contains no fields. A server response with a Void still contains a gRPC status code,
@@ -451,8 +449,7 @@ service AutograderService {
     rpc GetSubmissionsByCourse(SubmissionsForCourseRequest) returns (CourseSubmissions) {}
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
     rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
-    rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
-    rpc RebuildSubmissions(AssignmentRequest) returns (Void) {}
+    rpc RebuildSubmissions(RebuildRequest) returns (Void) {}
 
     // manual grading //
     
