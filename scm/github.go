@@ -33,7 +33,7 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 }
 
 // CreateOrganization implements the SCM interface.
-func (s *GithubSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*pb.Organization, error) {
+func (*GithubSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*pb.Organization, error) {
 	return nil, ErrNotSupported{
 		SCM:    "github",
 		Method: "CreateOrganization",
