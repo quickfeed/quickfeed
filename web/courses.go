@@ -159,7 +159,7 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 		enrolLinks = s.makeGroupResults(course, assignments)
 	case pb.SubmissionsForCourseRequest_INDIVIDUAL:
 		enrolLinks = makeResults(course, assignments, false)
-	default:
+	case pb.SubmissionsForCourseRequest_ALL:
 		enrolLinks = makeResults(course, assignments, true)
 	}
 	return &pb.CourseSubmissions{Course: course, Links: enrolLinks}, nil
