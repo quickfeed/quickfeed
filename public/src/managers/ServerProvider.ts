@@ -333,12 +333,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.responseCodeSuccess(result);
     }
 
-    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null> {
-        const result = await this.grpcHelper.rebuildSubmission(assignmentID, submissionID);
+    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<boolean> {
+        const result = await this.grpcHelper.rebuildSubmission(assignmentID, submissionID)
         if (!this.responseCodeSuccess(result) || !result.data) {
-            return null;
+            return false
         }
-        return this.toISubmission(result.data);
+        return true
     }
     public async rebuildSubmissions(assignmentID: number, courseID: number): Promise<boolean> {
         const result = await this.grpcHelper.rebuildSubmissions(assignmentID, courseID);
