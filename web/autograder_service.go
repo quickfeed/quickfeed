@@ -605,37 +605,39 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 	return &pb.Void{}, err
 }
 
-// RebuildSubmission rebuilds the submission with the given ID
-// Access policy: any user.
-func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.RebuildRequest) (*pb.Submission, error) {
-	if !s.isValidSubmission(in.GetSubmissionID()) {
-		s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
-		return nil, status.Error(codes.PermissionDenied, "submitter has no course access")
-	}
-	submission, err := s.rebuildSubmission(in)
-	if err != nil {
-		s.logger.Errorf("RebuildSubmission failed: %v", err)
-		return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission")
-	}
-	return submission, nil
-}
-
-// RebuildSubmissions runs tests for all submissions for the given assignment ID.
+// RebuildSubmissions runs tests for a single submission if the request contain submission ID
+// or for all submissions for the given assignment if the request contains course ID.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.AssignmentRequest) (*pb.Void, error) {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Errorf("RebuildSubmissions failed: authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
+// TODO: Access policy: any for SubmissionID type ?
+func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.RebuildRequest) (*pb.Void, error) {
+	// RebuildType can be either SubmissionID or CourseID, but not both.
+	switch in.GetRebuildType().(type) {
+	case *pb.RebuildRequest_SubmissionID:
+		if !s.isValidSubmission(in.GetSubmissionID()) {
+			s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
+			return nil, status.Error(codes.PermissionDenied, "submitter has no course access")
+		}
+		_, err := s.rebuildSubmission(in)
+		if err != nil {
+			s.logger.Errorf("RebuildSubmission failed: %v", err)
+			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission")
+		}
+	case *pb.RebuildRequest_CourseID:
+		usr, err := s.getCurrentUser(ctx)
+		if err != nil {
+			s.logger.Errorf("RebuildSubmissions failed: authentication error: %v", err)
+			return nil, ErrInvalidUserInfo
+		}
+		if !s.isTeacher(usr.ID, in.GetCourseID()) {
+			s.logger.Error("RebuildSubmissions failed: user is not teacher")
+			return nil, status.Error(codes.PermissionDenied, "only teachers can rebuild all submissions")
+		}
+		if err := s.rebuildSubmissions(in); err != nil {
+			s.logger.Errorf("RebuildSubmissions failed: %v", err)
+			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submissions")
+		}
 	}
-	if !s.isTeacher(usr.ID, in.GetCourseID()) {
-		s.logger.Error("RebuildSubmissions failed: user is not teacher")
-		return nil, status.Error(codes.PermissionDenied, "only teachers can rebuild all submissions")
-	}
-	if err := s.rebuildSubmissions(in); err != nil {
-		s.logger.Errorf("RebuildSubmissions failed: %v", err)
-		return nil, status.Error(codes.InvalidArgument, "failed to rebuild submissions")
-	}
+
 	return &pb.Void{}, nil
 }
 

@@ -59,7 +59,7 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 	return submission, nil
 }
 
-func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) error {
+func (s *AutograderService) rebuildSubmissions(request *pb.RebuildRequest) error {
 	if _, err := s.db.GetAssignment(&pb.Assignment{ID: request.AssignmentID}); err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) er
 	for _, submission := range submissions {
 		rebuildReq := &pb.RebuildRequest{
 			AssignmentID: request.AssignmentID,
-			SubmissionID: submission.ID,
+			RebuildType:  &pb.RebuildRequest_SubmissionID{SubmissionID: submission.GetID()},
 		}
 		// the counting semaphore limits concurrency to maxContainers
 		go func() {
