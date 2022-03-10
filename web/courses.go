@@ -2,12 +2,14 @@ package web
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
+	"gorm.io/gorm"
 )
 
 // getCourses returns all courses.
@@ -343,30 +345,21 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 
 	// check whether user repo already exists,
 	// which could happen if accepting a previously rejected student
-	repos, err := s.db.GetRepositories(&pb.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		UserID:         user.GetID(),
-		RepoType:       pb.Repository_USER,
-	})
-	if err != nil {
+	repo, err := s.getRepo(course, user.GetID(), pb.Repository_USER)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 
-	userEnrolQuery := &pb.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   pb.Enrollment_STUDENT,
-	}
 	if enrolled.Status == pb.Enrollment_TEACHER {
 		err = revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
 		if err != nil {
 			s.logger.Errorf("Failed to revoke teacher status for user %s and course %s: %v", user.Login, course.Name, err)
 		}
 	} else {
-		s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repos: ", len(repos))
-		if len(repos) > 0 {
+		s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repo: ", repo != nil)
+		if repo != nil {
 			// repo already exist, update enrollment in database
-			return s.db.UpdateEnrollment(userEnrolQuery)
+			goto UPDATE
 		}
 		// create user repo, user team, and add user to students team
 		repo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
@@ -389,8 +382,12 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 			return err
 		}
 	}
-
-	return s.db.UpdateEnrollment(userEnrolQuery)
+UPDATE:
+	return s.db.UpdateEnrollment(&pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	})
 }
 
 // enrollTeacher promotes the given user to teacher of the given course
