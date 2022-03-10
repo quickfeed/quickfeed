@@ -541,18 +541,18 @@ func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission,
 func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, user *pb.User, course *pb.Course) error {
 	user, err := s.db.GetUser(user.ID)
 	if err != nil {
-		return fmt.Errorf("Failed to get user %d: %w", user.ID, err)
+		return fmt.Errorf("failed to get user %d: %w", user.ID, err)
 	}
 	userSCM, err := s.getSCM(ctx, user, "github")
 	if err != nil {
-		return fmt.Errorf("Failed to get SCM for user %d: %w", user.ID, err)
+		return fmt.Errorf("failed to get SCM for user %d: %w", user.ID, err)
 	}
 	opts := &scm.RepositoryInvitationOptions{
 		Login: user.Login,
 		Owner: course.GetOrganizationPath(),
 	}
 	if err := userSCM.AcceptRepositoryInvites(ctx, opts); err != nil {
-		return fmt.Errorf("Failed to get repository invites for %s: %w", user.Login, err)
+		return fmt.Errorf("failed to get repository invites for %s: %w", user.Login, err)
 	}
 	return nil
 }
