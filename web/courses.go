@@ -449,6 +449,10 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		if err := s.db.CreateRepository(&userRepo); err != nil {
 			return err
 		}
+
+		if err := s.acceptRepositoryInvites(ctx, user, course); err != nil {
+			s.logger.Errorf("Failed to accept repository invites for student %s: %v", user.Login, err)
+		}
 	}
 
 	return s.db.UpdateEnrollment(userEnrolQuery)
@@ -538,4 +542,24 @@ func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission,
 	}
 	query.UserID = submission.UserID
 	return s.db.UpdateEnrollment(query)
+}
+
+// acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
+func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, user *pb.User, course *pb.Course) error {
+	user, err := s.db.GetUser(user.ID)
+	if err != nil {
+		return fmt.Errorf("failed to get user %d: %w", user.ID, err)
+	}
+	userSCM, err := s.getSCM(ctx, user, "github")
+	if err != nil {
+		return fmt.Errorf("failed to get SCM for user %d: %w", user.ID, err)
+	}
+	opts := &scm.RepositoryInvitationOptions{
+		Login: user.Login,
+		Owner: course.GetOrganizationPath(),
+	}
+	if err := userSCM.AcceptRepositoryInvites(ctx, opts); err != nil {
+		return fmt.Errorf("failed to get repository invites for %s: %w", user.Login, err)
+	}
+	return nil
 }
