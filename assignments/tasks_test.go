@@ -17,7 +17,7 @@ import (
 // Otherwise when creating the database there will be no clear way to know which issue is supposed to be associated with which task.
 // This disclaimer applies only when running tests.
 
-// InitializeDbEnvironment initializes a db, based on org. It creates repositories and issues based on what already exists.
+// InitializeDbEnvironment initializes a db, based on org.
 func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course, s scm.SCM) (database.Database, func(), error) {
 	db, cleanup := qtest.TestDB(t)
 
@@ -26,24 +26,54 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 		return db, cleanup, err
 	}
 
+	// Create course
+	admin := qtest.CreateFakeUser(t, db, uint64(1))
+	qtest.CreateCourse(t, db, admin, course)
+
+	// Create assignments
+	foundAssignments, _, err := fetchAssignments(c, zap.NewNop().Sugar(), s, course)
+	if err != nil {
+		return db, cleanup, err
+	}
+
+	err = db.UpdateAssignments(foundAssignments)
+	if err != nil {
+		return db, cleanup, err
+	}
+
+	// Get created tasks
+	tasks := []*pb.Task{}
+	for _, assignment := range foundAssignments {
+		dbTasks, err := db.GetTasks(&pb.Task{AssignmentID: uint64(assignment.GetOrder())})
+		if err != nil {
+			return db, cleanup, err
+		}
+		tasks = append(tasks, dbTasks...)
+	}
+	taskMap := make(map[string]*pb.Task)
+	for _, task := range tasks {
+		taskMap[task.Name] = task
+	}
+
+	// Create repositories
 	repos, err := s.GetRepositories(c, org)
 	if err != nil {
 		return db, cleanup, err
 	}
 
-	n := 1
+	// Create issues for repositories
+	n := 2
 	for _, repo := range repos {
-		user := qtest.CreateFakeUser(t, db, uint64(n))
+		var user *pb.User
 		// Hacky solution, but did not quickly find already supplied function for doing this.
 		// Does not handle if repo is group repo.
-		// Might not even be necessary do handle repos differently in these tests.
+		// Might not even be necessary to handle repos differently in these tests.
 		dbRepo := &pb.Repository{}
 		switch repo.Path {
 		case "course-info":
 			dbRepo = &pb.Repository{
 				RepositoryID:   repo.ID,
 				OrganizationID: org.GetID(),
-				UserID:         user.ID,
 				HTMLURL:        repo.WebURL,
 				RepoType:       pb.Repository_COURSEINFO,
 			}
@@ -51,7 +81,6 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 			dbRepo = &pb.Repository{
 				RepositoryID:   repo.ID,
 				OrganizationID: org.GetID(),
-				UserID:         user.ID,
 				HTMLURL:        repo.WebURL,
 				RepoType:       pb.Repository_ASSIGNMENTS,
 			}
@@ -59,11 +88,11 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 			dbRepo = &pb.Repository{
 				RepositoryID:   repo.ID,
 				OrganizationID: org.GetID(),
-				UserID:         user.ID,
 				HTMLURL:        repo.WebURL,
 				RepoType:       pb.Repository_TESTS,
 			}
 		default:
+			user = qtest.CreateFakeUser(t, db, uint64(n))
 			dbRepo = &pb.Repository{
 				RepositoryID:   repo.ID,
 				OrganizationID: org.GetID(),
@@ -89,17 +118,29 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 		}
 
 		for _, scmIssue := range existingScmIssues {
-			dbIssue := &pb.Issue{
-				RepositoryID:       dbRepo.ID,
-				GithubRepositoryID: dbRepo.RepositoryID,
-				Name:               scmIssue.Title,
-				Title:              scmIssue.Title,
-				Body:               scmIssue.Body,
+			correspondingTask, ok := taskMap[scmIssue.Title]
+			dbIssue := &pb.Issue{}
+			if !ok {
+				dbIssue = &pb.Issue{
+					RepositoryID: dbRepo.ID,
+					IssueNumber:  uint64(scmIssue.IssueNumber),
+					Name:         scmIssue.Title,
+					Title:        scmIssue.Title,
+					Body:         scmIssue.Body,
+				}
+			} else {
+				dbIssue = &pb.Issue{
+					RepositoryID: dbRepo.ID,
+					TaskID:       correspondingTask.ID,
+					IssueNumber:  uint64(scmIssue.IssueNumber),
+					Name:         scmIssue.Title,
+					Title:        scmIssue.Title,
+					Body:         scmIssue.Body,
+				}
 			}
 			issues = append(issues, dbIssue)
 		}
-
-		UpdateRepositoryIssues(db, dbRepo, issues)
+		db.CreateIssues(issues)
 		n++
 	}
 
@@ -137,15 +178,27 @@ func TestInitializeDbEnvironment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	t.Logf("\n\nRepositories and issues:\n")
 	for _, repo := range repos {
 		t.Logf("\nRepository ID: %d\nRepository HTMLURL: %s\nRepository UserID: %d", repo.ID, repo.HTMLURL, repo.UserID)
 		for _, issue := range repo.Issues {
-			t.Logf("\nIssue ID: %d\nIssue RepositoryID: %d\nIssue Name: %s\nIssue Title: %s\nIssue Body: %s", issue.ID, issue.RepositoryID, issue.Name, issue.Title, issue.Body)
+			t.Logf("\nIssue ID: %d\nIssue RepositoryID: %d\nIssue TaskID: %d\nIssue IssueNumber: %d\nIssue Name: %s\nIssue Title: %s\nIssue Body: %s", issue.ID, issue.RepositoryID, issue.TaskID, issue.IssueNumber, issue.Name, issue.Title, issue.Body)
 		}
+	}
+
+	assignments, err := db.GetAssignmentsByCourse(course.ID, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("\n\nAssignments:\n")
+	for _, assignment := range assignments {
+		t.Logf("\nAssignment ID: %d\nAssignment Name: %s", assignment.ID, assignment.Name)
 	}
 }
 
-// TestGetTasks retrieves all tasks of a given course.
+// TestGetTasks retrieves all tasks of a given course via API call.
 func TestGetTasks(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
@@ -167,12 +220,12 @@ func TestGetTasks(t *testing.T) {
 
 	for _, assignment := range assignments {
 		for _, task := range assignment.Tasks {
-			t.Logf("\nTask AssignmentID: %d\nTask GitIssueID: %d\nTask IssueNumber: %d\nTask Name: %s\nTask Title: %s\nTask Body: %s\n\n", task.AssignmentID, task.GitIssueID, task.IssueNumber, task.Name, task.Title, task.Body)
+			t.Logf("\nTask AssignmentID: %d\nTask Name: %s\nTask Title: %s\nTask Body: %s\n\n", task.AssignmentID, task.Name, task.Title, task.Body)
 		}
 	}
 }
 
-// TestGetIssuesOnOrg should get all issues on "-labs" repos. Does not get closed issues
+// TestGetIssuesOnOrg should get all issues on "-labs" repos via API call. Does not get closed issues
 func TestGetIssuesOnOrg(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
@@ -222,7 +275,7 @@ func TestGetIssuesOnOrg(t *testing.T) {
 	}
 }
 
-// TestHandleTasks runs HandleTasks on specified org. Results vary depending on which tasks/issues exist prior to running.
+// TestHandleTasks runs HandleTasks() on specified org. Results vary depending on which tasks/issues existed prior to running.
 func TestHandleTasks(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
@@ -251,7 +304,7 @@ func TestHandleTasks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Prints db contents before HandleTasks. This code is also used elsewhere and should be turned into a function if its going to stick around
+	// Prints db contents before HandleTasks. This code is also used elsewhere and should be turned into a function if it's going to stick around
 	repos, err := GetRepositoriesByOrgID(db, org.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -259,7 +312,7 @@ func TestHandleTasks(t *testing.T) {
 	for _, repo := range repos {
 		t.Logf("\nRepository ID: %d\nRepository HTMLURL: %s\nRepository UserID: %d", repo.ID, repo.HTMLURL, repo.UserID)
 		for _, issue := range repo.Issues {
-			t.Logf("\nIssue ID: %d\nIssue RepositoryID: %d\nIssue Name: %s\nIssue Title: %s\nIssue Body: %s", issue.ID, issue.RepositoryID, issue.Name, issue.Title, issue.Body)
+			t.Logf("\nIssue ID: %d\nIssue RepositoryID: %d\nIssue TaskID: %d\nIssue IssueNumber: %d\nIssue Name: %s\nIssue Title: %s\nIssue Body: %s", issue.ID, issue.RepositoryID, issue.TaskID, issue.IssueNumber, issue.Name, issue.Title, issue.Body)
 		}
 	}
 
@@ -282,7 +335,7 @@ func TestHandleTasks(t *testing.T) {
 	for _, repo := range repos {
 		t.Logf("\nRepository ID: %d\nRepository HTMLURL: %s\nRepository UserID: %d", repo.ID, repo.HTMLURL, repo.UserID)
 		for _, issue := range repo.Issues {
-			t.Logf("\nIssue ID: %d\nIssue RepositoryID: %d\nIssue Name: %s\nIssue Title: %s\nIssue Body: %s", issue.ID, issue.RepositoryID, issue.Name, issue.Title, issue.Body)
+			t.Logf("\nIssue ID: %d\nIssue RepositoryID: %d\nIssue TaskID: %d\nIssue IssueNumber: %d\nIssue Name: %s\nIssue Title: %s\nIssue Body: %s", issue.ID, issue.RepositoryID, issue.TaskID, issue.IssueNumber, issue.Name, issue.Title, issue.Body)
 		}
 	}
 }

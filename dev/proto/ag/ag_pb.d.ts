@@ -648,17 +648,13 @@ export class Task extends jspb.Message {
   getBody(): string;
   setBody(value: string): Task;
 
-  getGitissueid(): number;
-  setGitissueid(value: number): Task;
-
-  getIssuenumber(): number;
-  setIssuenumber(value: number): Task;
-
-  getStatus(): string;
-  setStatus(value: string): Task;
-
   getName(): string;
   setName(value: string): Task;
+
+  getIssuesList(): Array<Issue>;
+  setIssuesList(value: Array<Issue>): Task;
+  clearIssuesList(): Task;
+  addIssues(value?: Issue, index?: number): Issue;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Task.AsObject;
@@ -674,10 +670,8 @@ export namespace Task {
     assignmentid: number,
     title: string,
     body: string,
-    gitissueid: number,
-    issuenumber: number,
-    status: string,
     name: string,
+    issuesList: Array<Issue.AsObject>,
   }
 }
 
@@ -688,8 +682,11 @@ export class Issue extends jspb.Message {
   getRepositoryid(): number;
   setRepositoryid(value: number): Issue;
 
-  getGithubrepositoryid(): number;
-  setGithubrepositoryid(value: number): Issue;
+  getTaskid(): number;
+  setTaskid(value: number): Issue;
+
+  getIssuenumber(): number;
+  setIssuenumber(value: number): Issue;
 
   getName(): string;
   setName(value: string): Issue;
@@ -712,7 +709,8 @@ export namespace Issue {
   export type AsObject = {
     id: number,
     repositoryid: number,
-    githubrepositoryid: number,
+    taskid: number,
+    issuenumber: number,
     name: string,
     title: string,
     body: string,

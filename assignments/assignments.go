@@ -35,6 +35,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		updateGradingCriteria(logger, db, assignment)
 	}
 
+	// Oje - HandleTasks currently relies on assignments being created or updated before being run. Probably needs to be run after assignments are created or updated.
 	err = HandleTasks(context.Background(), db, s, course, assignments)
 	if err != nil {
 		logger.Errorf("Failed to Create tasks on '%s' repository: %v", pb.TestsRepo, err)
@@ -48,6 +49,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 			return
 		}
 	}
+
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)

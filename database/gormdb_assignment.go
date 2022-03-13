@@ -20,6 +20,7 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 	}).Count(&course).Error; err != nil {
 		return err
 	}
+
 	if course != 1 {
 		return gorm.ErrRecordNotFound
 	}

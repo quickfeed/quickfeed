@@ -4722,12 +4722,19 @@ proto.ag.Assignment.prototype.clearGradingbenchmarksList = function() {
  * @constructor
  */
 proto.ag.Task = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.ag.Task.repeatedFields_, null);
 };
 goog.inherits(proto.ag.Task, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
   proto.ag.Task.displayName = 'proto.ag.Task';
 }
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.ag.Task.repeatedFields_ = [6];
+
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -4761,10 +4768,9 @@ proto.ag.Task.toObject = function(includeInstance, msg) {
     assignmentid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     title: jspb.Message.getFieldWithDefault(msg, 3, ""),
     body: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    gitissueid: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    issuenumber: jspb.Message.getFieldWithDefault(msg, 6, 0),
-    status: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    name: jspb.Message.getFieldWithDefault(msg, 8, "")
+    name: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    issuesList: jspb.Message.toObjectList(msg.getIssuesList(),
+    proto.ag.Issue.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -4818,20 +4824,13 @@ proto.ag.Task.deserializeBinaryFromReader = function(msg, reader) {
       msg.setBody(value);
       break;
     case 5:
-      var value = /** @type {number} */ (reader.readUint64());
-      msg.setGitissueid(value);
-      break;
-    case 6:
-      var value = /** @type {number} */ (reader.readUint32());
-      msg.setIssuenumber(value);
-      break;
-    case 7:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setStatus(value);
-      break;
-    case 8:
       var value = /** @type {string} */ (reader.readString());
       msg.setName(value);
+      break;
+    case 6:
+      var value = new proto.ag.Issue;
+      reader.readMessage(value,proto.ag.Issue.deserializeBinaryFromReader);
+      msg.addIssues(value);
       break;
     default:
       reader.skipField();
@@ -4890,32 +4889,19 @@ proto.ag.Task.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getGitissueid();
-  if (f !== 0) {
-    writer.writeUint64(
+  f = message.getName();
+  if (f.length > 0) {
+    writer.writeString(
       5,
       f
     );
   }
-  f = message.getIssuenumber();
-  if (f !== 0) {
-    writer.writeUint32(
+  f = message.getIssuesList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
       6,
-      f
-    );
-  }
-  f = message.getStatus();
-  if (f.length > 0) {
-    writer.writeString(
-      7,
-      f
-    );
-  }
-  f = message.getName();
-  if (f.length > 0) {
-    writer.writeString(
-      8,
-      f
+      f,
+      proto.ag.Issue.serializeBinaryToWriter
     );
   }
 };
@@ -4937,7 +4923,7 @@ proto.ag.Task.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 AssignmentID = 2;
+ * optional uint64 assignmentID = 2;
  * @return {number}
  */
 proto.ag.Task.prototype.getAssignmentid = function() {
@@ -4952,7 +4938,7 @@ proto.ag.Task.prototype.setAssignmentid = function(value) {
 
 
 /**
- * optional string Title = 3;
+ * optional string title = 3;
  * @return {string}
  */
 proto.ag.Task.prototype.getTitle = function() {
@@ -4967,7 +4953,7 @@ proto.ag.Task.prototype.setTitle = function(value) {
 
 
 /**
- * optional string Body = 4;
+ * optional string body = 4;
  * @return {string}
  */
 proto.ag.Task.prototype.getBody = function() {
@@ -4982,62 +4968,48 @@ proto.ag.Task.prototype.setBody = function(value) {
 
 
 /**
- * optional uint64 gitIssueID = 5;
- * @return {number}
- */
-proto.ag.Task.prototype.getGitissueid = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
-};
-
-
-/** @param {number} value */
-proto.ag.Task.prototype.setGitissueid = function(value) {
-  jspb.Message.setProto3IntField(this, 5, value);
-};
-
-
-/**
- * optional uint32 IssueNumber = 6;
- * @return {number}
- */
-proto.ag.Task.prototype.getIssuenumber = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
-};
-
-
-/** @param {number} value */
-proto.ag.Task.prototype.setIssuenumber = function(value) {
-  jspb.Message.setProto3IntField(this, 6, value);
-};
-
-
-/**
- * optional string Status = 7;
- * @return {string}
- */
-proto.ag.Task.prototype.getStatus = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
-};
-
-
-/** @param {string} value */
-proto.ag.Task.prototype.setStatus = function(value) {
-  jspb.Message.setProto3StringField(this, 7, value);
-};
-
-
-/**
- * optional string Name = 8;
+ * optional string name = 5;
  * @return {string}
  */
 proto.ag.Task.prototype.getName = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
 
 /** @param {string} value */
 proto.ag.Task.prototype.setName = function(value) {
-  jspb.Message.setProto3StringField(this, 8, value);
+  jspb.Message.setProto3StringField(this, 5, value);
+};
+
+
+/**
+ * repeated Issue issues = 6;
+ * @return {!Array<!proto.ag.Issue>}
+ */
+proto.ag.Task.prototype.getIssuesList = function() {
+  return /** @type{!Array<!proto.ag.Issue>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.ag.Issue, 6));
+};
+
+
+/** @param {!Array<!proto.ag.Issue>} value */
+proto.ag.Task.prototype.setIssuesList = function(value) {
+  jspb.Message.setRepeatedWrapperField(this, 6, value);
+};
+
+
+/**
+ * @param {!proto.ag.Issue=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.ag.Issue}
+ */
+proto.ag.Task.prototype.addIssues = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 6, opt_value, proto.ag.Issue, opt_index);
+};
+
+
+proto.ag.Task.prototype.clearIssuesList = function() {
+  this.setIssuesList([]);
 };
 
 
@@ -5090,10 +5062,11 @@ proto.ag.Issue.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     repositoryid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    githubrepositoryid: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    name: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    title: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    body: jspb.Message.getFieldWithDefault(msg, 6, "")
+    taskid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    issuenumber: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    name: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    title: jspb.Message.getFieldWithDefault(msg, 6, ""),
+    body: jspb.Message.getFieldWithDefault(msg, 7, "")
   };
 
   if (includeInstance) {
@@ -5140,17 +5113,21 @@ proto.ag.Issue.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setGithubrepositoryid(value);
+      msg.setTaskid(value);
       break;
     case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setName(value);
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setIssuenumber(value);
       break;
     case 5:
       var value = /** @type {string} */ (reader.readString());
-      msg.setTitle(value);
+      msg.setName(value);
       break;
     case 6:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setTitle(value);
+      break;
+    case 7:
       var value = /** @type {string} */ (reader.readString());
       msg.setBody(value);
       break;
@@ -5197,31 +5174,38 @@ proto.ag.Issue.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getGithubrepositoryid();
+  f = message.getTaskid();
   if (f !== 0) {
     writer.writeUint64(
       3,
       f
     );
   }
-  f = message.getName();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getIssuenumber();
+  if (f !== 0) {
+    writer.writeUint64(
       4,
       f
     );
   }
-  f = message.getTitle();
+  f = message.getName();
   if (f.length > 0) {
     writer.writeString(
       5,
       f
     );
   }
-  f = message.getBody();
+  f = message.getTitle();
   if (f.length > 0) {
     writer.writeString(
       6,
+      f
+    );
+  }
+  f = message.getBody();
+  if (f.length > 0) {
+    writer.writeString(
+      7,
       f
     );
   }
@@ -5259,62 +5243,77 @@ proto.ag.Issue.prototype.setRepositoryid = function(value) {
 
 
 /**
- * optional uint64 githubRepositoryID = 3;
+ * optional uint64 taskID = 3;
  * @return {number}
  */
-proto.ag.Issue.prototype.getGithubrepositoryid = function() {
+proto.ag.Issue.prototype.getTaskid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
 /** @param {number} value */
-proto.ag.Issue.prototype.setGithubrepositoryid = function(value) {
+proto.ag.Issue.prototype.setTaskid = function(value) {
   jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional string name = 4;
- * @return {string}
+ * optional uint64 issueNumber = 4;
+ * @return {number}
  */
-proto.ag.Issue.prototype.getName = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+proto.ag.Issue.prototype.getIssuenumber = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
-/** @param {string} value */
-proto.ag.Issue.prototype.setName = function(value) {
-  jspb.Message.setProto3StringField(this, 4, value);
+/** @param {number} value */
+proto.ag.Issue.prototype.setIssuenumber = function(value) {
+  jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional string title = 5;
+ * optional string name = 5;
  * @return {string}
  */
-proto.ag.Issue.prototype.getTitle = function() {
+proto.ag.Issue.prototype.getName = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
 
 /** @param {string} value */
-proto.ag.Issue.prototype.setTitle = function(value) {
+proto.ag.Issue.prototype.setName = function(value) {
   jspb.Message.setProto3StringField(this, 5, value);
 };
 
 
 /**
- * optional string body = 6;
+ * optional string title = 6;
  * @return {string}
  */
-proto.ag.Issue.prototype.getBody = function() {
+proto.ag.Issue.prototype.getTitle = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
 };
 
 
 /** @param {string} value */
-proto.ag.Issue.prototype.setBody = function(value) {
+proto.ag.Issue.prototype.setTitle = function(value) {
   jspb.Message.setProto3StringField(this, 6, value);
+};
+
+
+/**
+ * optional string body = 7;
+ * @return {string}
+ */
+proto.ag.Issue.prototype.getBody = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
+};
+
+
+/** @param {string} value */
+proto.ag.Issue.prototype.setBody = function(value) {
+  jspb.Message.setProto3StringField(this, 7, value);
 };
 
 

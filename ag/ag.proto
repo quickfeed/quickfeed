@@ -183,23 +183,22 @@ message Assignment {
 }
 
 message Task {
-    uint64 ID           = 1;
-    uint64 AssignmentID = 2;  // foreign key
-    string Title        = 3;
-    string Body         = 4;
-    uint64 gitIssueID   = 5;
-    uint32 IssueNumber  = 6;
-    string Status       = 7;
-    string Name         = 8;
+    uint64 ID             = 1;
+    uint64 assignmentID   = 2;  // foreign key
+    string title          = 3;
+    string body           = 4;
+    string name           = 5;
+    repeated Issue issues = 6; // Oje - This might not be necessary
 }
 
 message Issue {
-    uint64 ID                   = 1;
-    uint64 repositoryID         = 2; // Represents the internal ID of a repository 
-    uint64 githubRepositoryID   = 3; // Represents the ID of a repository given by github
-    string name                 = 4; // Name of associated task/issue, e.g. "task-1"
-    string title                = 5;
-    string body                 = 6;
+    uint64 ID           = 1;
+    uint64 repositoryID = 2; // Represents the internal ID of a repository
+    uint64 taskID       = 3; // Parent task
+    uint64 issueNumber  = 4; // Issue number on scm. Needed for associating db issue with scm issue
+    string name         = 5; // Name of associated task/issue, e.g. "lab1/task-1.md"
+    string title        = 6;
+    string body         = 7;
 }
             
 message Assignments {

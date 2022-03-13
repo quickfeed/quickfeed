@@ -60,11 +60,6 @@ func (db *GormDB) DeleteRepositoryByRemoteID(rid uint64) error {
 	return db.conn.Delete(repo).Error
 }
 
-// UpdateRepositoryIssues updates repository issues
-func (db *GormDB) UpdateRepositoryIssues(repo *pb.Repository, issues []*pb.Issue) error {
-	return db.conn.Model(repo).Update("Issues", issues).Error
-}
-
 // GetRepositoriesWithIssues gets repositories with issues
 func (db *GormDB) GetRepositoriesWithIssues(query *pb.Repository) ([]*pb.Repository, error) {
 	var repos []*pb.Repository

@@ -129,10 +129,19 @@ type Database interface {
 	GetRepositories(query *pb.Repository) ([]*pb.Repository, error)
 	// DeleteRepository deletes repository by the given provider's ID
 	DeleteRepositoryByRemoteID(uint64) error
-	// UpdateRepositoryIssues updates the issues of the repository
-	UpdateRepositoryIssues(repo *pb.Repository, issues []*pb.Issue) error
 	// GetRepositoriesWithIssues gets repositories with issues
 	GetRepositoriesWithIssues(query *pb.Repository) ([]*pb.Repository, error)
+
+	// CreateTasks creates slice of tasks
+	CreateTasks(tasks []*pb.Task) (err error)
+	// UpdateTasks updates slice of tasks
+	UpdateTasks(tasks []*pb.Task) (err error)
+	// GetTasks gets tasks based on query
+	GetTasks(query *pb.Task) ([]*pb.Task, error)
+	// CreateIssues creates a batch of issues
+	CreateIssues(issues []*pb.Issue) error
+	// UpdateIssues updates a batch of issues
+	UpdateIssues(issues []*pb.Issue) (err error)
 
 	// UpdateSlipDays updates used slipdays for the given course enrollment
 	UpdateSlipDays([]*pb.UsedSlipDays) error

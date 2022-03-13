@@ -22,25 +22,29 @@ func newTask(contents []byte, assignment *pb.Assignment, name string) (*pb.Task,
 	if bodyIndex == -1 {
 		return nil, fmt.Errorf("failed to find task body in %s", assignment.Name)
 	}
-	return &pb.Task{
+
+	task := &pb.Task{
 		AssignmentID: uint64(assignment.Order),
 		Title:        string(contents[2:bodyIndex]),
 		Body:         string(contents[bodyIndex+2:]),
 		Name:         name,
-	}, nil
+	}
+
+	return task, nil
 }
 
-func UpdateIssue(c context.Context, sc scm.SCM, course *pb.Course, repo *scm.Repository, task *pb.Task, gitIssue *scm.Issue) (issue *scm.Issue, err error) {
+// Updates an issue on specified repository
+func UpdateScmIssue(c context.Context, sc scm.SCM, course *pb.Course, repo *pb.Repository, issue *pb.Issue) (*scm.Issue, error) {
 	newIssue := &scm.CreateIssueOptions{
 		Organization: course.Name,
-		Repository:   repo.Path,
-		Title:        task.Title,
-		Body:         task.Body,
+		Repository:   filepath.Base(repo.GetHTMLURL()), // Todo
+		Title:        issue.Title,
+		Body:         issue.Body,
 	}
 	updateIssue := &scm.IssueOptions{
 		Organization: course.Name,
-		Repository:   repo.Path,
-		IssueNumber:  int(gitIssue.IssueNumber),
+		Repository:   filepath.Base(repo.GetHTMLURL()), // Todo
+		IssueNumber:  int(issue.IssueNumber),
 	}
 	return sc.EditRepoIssue(c, updateIssue, newIssue)
 }
@@ -61,13 +65,14 @@ func CreateScmIssue(c context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 }
 
 // This is more of a converter function, and cannot currently return an error. Should probably be renamed or something.
-func CreateDbIssue(c context.Context, repo *pb.Repository, task *pb.Task) (*pb.Issue, error) {
+func CreateIssue(c context.Context, repo *pb.Repository, task *pb.Task, scmIssue *scm.Issue) (*pb.Issue, error) {
 	issue := &pb.Issue{
-		RepositoryID:       repo.ID,
-		GithubRepositoryID: repo.RepositoryID,
-		Name:               task.Name,
-		Title:              task.Title,
-		Body:               task.Body,
+		RepositoryID: repo.ID,
+		TaskID:       task.ID,
+		IssueNumber:  uint64(scmIssue.IssueNumber),
+		Name:         task.Name,
+		Title:        task.Title,
+		Body:         task.Body,
 	}
 	return issue, nil
 }
@@ -87,8 +92,15 @@ func CreateDbIssue(c context.Context, repo *pb.Repository, task *pb.Task) (*pb.I
 //		  issue.
 
 // Oje - Todo list:
-// - Currently there is a db-record for tasks, it is however not used, but the struct is used. Since we now have a db-record for issues,
-// 	 we should not need the db-record for tasks, however the struct will be necessary. Therefore we need an equivalent
+// - When assignments are parsed from API call, the assignmentID field is 0, but order is set to assignmentID in yaml file.
+//	 Should check that this doesn't lead to problems when creating/updating assignments in db, and also their related tasks.
+// - Need to create a test that tests the synchronization of tasks. Currently in TestHandleTasks(), all tasks are already created in db before running.
+// - There are many fmt.Printf()'s scattered across different functions. These need to be removed.
+// - SynchronizeTasks now synchs per assignment, instead of just for the entire course. Should review the possibility of changing
+// - Repositories in database do not have a "Name"-field.
+// - SynchronizeTasks might not be necessary since assignments are updated in UpdateFromTestsRepo. Should generally review UpdateFromTestsRepo.
+// - Current implementation is highly reliant on assignments being created an updated correctly in database. Need to review whether or not this is actually happening.
+// - Implement DeleteTask() in SynchronizeTasks.
 
 // Following is Oje code (placement might be temporary):
 
@@ -106,18 +118,26 @@ func HandleTasks(c context.Context, db database.Database, s scm.SCM, course *pb.
 		return err
 	}
 
+	// Loops through all assignments found in "tests"-repo
+	tasks := []*pb.Task{}
+	for _, assignment := range assignments {
+		synchronizedTasks, err := SynchronizeTasks(c, db, assignment)
+		if err != nil {
+			return err
+		}
+		tasks = append(tasks, synchronizedTasks...)
+	}
+
+	// Loops through all student repos
 	for _, repo := range repos {
 		if !repo.IsStudentRepo() {
 			continue
 		}
 
-		tasks := make(map[string]*pb.Task)
-		for _, assignment := range assignments {
-			for _, task := range assignment.Tasks {
-				tasks[task.Name] = task
-			}
-		}
-		err = HandleTasksForRepo(c, db, course, s, repo, tasks)
+		// Remember to remove
+		fmt.Printf("\n\nHandeling tasks fro repo: %s\n", repo.HTMLURL)
+
+		err = SynchronizeIssues(c, db, course, s, repo, tasks)
 		if err != nil {
 			return err
 		}
@@ -126,10 +146,73 @@ func HandleTasks(c context.Context, db database.Database, s scm.SCM, course *pb.
 	return nil
 }
 
-func HandleTasksForRepo(c context.Context, db database.Database, course *pb.Course, s scm.SCM, repo *pb.Repository, tasks map[string]*pb.Task) error {
-	newOrAlteredIssues := []*pb.Issue{}
+// SynchronizeTasks synchronizes tasks in the database, with the ones of given assignment.
+// Returns a slice of tasks as they appear in the database.
+func SynchronizeTasks(c context.Context, db database.Database, assignment *pb.Assignment) ([]*pb.Task, error) {
+	// Here foundTasks represents tasks that have been found by running readTestsRepositoryContent().
+	// While existingTasks represent tasks that are found in the database for this given assignment.
+
+	tasksToBeCreated := []*pb.Task{}
+	tasksToBeUpdated := []*pb.Task{}
+	tasksToReturn := []*pb.Task{}
+	foundTasks := make(map[string]*pb.Task)
+	for _, task := range assignment.Tasks {
+		foundTasks[task.Name] = task
+	}
+
+	existingTasks, err := db.GetTasks(&pb.Task{AssignmentID: uint64(assignment.GetOrder())}) // Check todo
+	if err != nil {
+		return nil, err
+	}
+
+	for _, existingTask := range existingTasks {
+		foundTask, ok := foundTasks[existingTask.Name]
+		if !ok {
+			// There exists a task in db, that is not represented by a task found in scm.
+			// This task should be deleted
+			// DeleteTask()
+			continue
+		}
+		if !(foundTask.Title == existingTask.Title && foundTask.Body == existingTask.Body) {
+			// Task has been changed
+			existingTask.Title = foundTask.Title
+			existingTask.Body = foundTask.Body
+			tasksToBeUpdated = append(tasksToBeUpdated, existingTask)
+		}
+		tasksToReturn = append(tasksToReturn, existingTask)
+		delete(foundTasks, existingTask.Name)
+	}
+
+	// Only tasks that there is no existing record of remains
+	for _, task := range foundTasks {
+		tasksToBeCreated = append(tasksToBeCreated, task)
+		tasksToReturn = append(tasksToReturn, task)
+	}
+
+	err = db.CreateTasks(tasksToBeCreated)
+	if err != nil {
+		return nil, err
+	}
+	err = db.UpdateTasks(tasksToBeUpdated)
+	if err != nil {
+		return nil, err
+	}
+
+	return tasksToReturn, nil
+}
+
+// SynchronizeIssues synchronizes database and scm with issues based on tasks found
+func SynchronizeIssues(c context.Context, db database.Database, course *pb.Course, s scm.SCM, repo *pb.Repository, tasks []*pb.Task) error {
+	issuesToBeCreated := []*pb.Issue{}
+	issuesToBeUpdated := []*pb.Issue{}
+	tasksMap := make(map[string]*pb.Task)
+	for _, task := range tasks {
+		tasksMap[task.Name] = task
+	}
+
+	// Loops through existing issues on repo.
 	for _, issue := range repo.Issues {
-		task, ok := tasks[issue.Name]
+		task, ok := tasksMap[issue.Name]
 		if !ok {
 			// What should happen if task does not exist for issue?
 			continue
@@ -138,41 +221,59 @@ func HandleTasksForRepo(c context.Context, db database.Database, course *pb.Cour
 			// Issue needs to be updated here
 			issue.Title = task.Title
 			issue.Body = task.Body
-			newOrAlteredIssues = append(newOrAlteredIssues, issue)
-			// UpdateIssue(c, s, course, )
-			continue
+			issuesToBeUpdated = append(issuesToBeUpdated, issue)
 		}
-		delete(tasks, issue.Name)
+		delete(tasksMap, issue.Name)
 	}
 
-	// Only tasks that have no issue associated with them remain. There must be created an issue for them.
-	for _, task := range tasks {
+	// Only tasks that do not have an issue with them remain.
+	for _, task := range tasksMap {
 		// Creates the actual issue on a scm
-		_, err := CreateScmIssue(c, s, course, repo, task)
+		scmIssue, err := CreateScmIssue(c, s, course, repo, task)
 		if err != nil {
 			return err
 		}
 		// Creates issue to be saved in db
-		issue, err := CreateDbIssue(c, repo, task)
+		issue, err := CreateIssue(c, repo, task, scmIssue)
 		if err != nil {
 			return err
 		}
-		newOrAlteredIssues = append(newOrAlteredIssues, issue)
+		issuesToBeCreated = append(issuesToBeCreated, issue)
 	}
-	// This creates new record instead of updating existing one. TBC
-	UpdateRepositoryIssues(db, repo, newOrAlteredIssues)
-	return nil
-}
 
-func UpdateRepositoryIssues(db database.Database, repo *pb.Repository, issues []*pb.Issue) error {
-	err := db.UpdateRepositoryIssues(repo, issues)
+	// Updates issues on scm.
+	for _, issue := range issuesToBeUpdated {
+		_, err := UpdateScmIssue(c, s, course, repo, issue)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Remember to remove
+	fmt.Printf("\nIssues to be created:\n")
+	for _, issue := range issuesToBeCreated {
+		fmt.Printf("%v\n", issue)
+	}
+
+	// Remember to remove
+	fmt.Printf("\nIssues to be updated:\n")
+	for _, issue := range issuesToBeUpdated {
+		fmt.Printf("%v\n", issue)
+	}
+
+	err := db.CreateIssues(issuesToBeCreated)
 	if err != nil {
 		return err
 	}
+	err = db.UpdateIssues(issuesToBeUpdated)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// Gets dbRepo based on orgID. Should maybe be moved to be a separate method in gormdb_repository.go of some kind
+// Gets dbRepo based on orgID. Might not be necessary to have this
 func GetRepositoriesByOrgID(db database.Database, orgID uint64) ([]*pb.Repository, error) {
 	repositories, err := db.GetRepositoriesWithIssues(&pb.Repository{
 		OrganizationID: orgID,
