@@ -1,18 +1,17 @@
-import {isValid} from "../../Helpers"
-import {User, EnrollmentLink, Enrollment, Submission, SubmissionLink} from "../../../proto/ag/ag_pb";
+import {isValid} from "../Helpers"
+import {User, EnrollmentLink, Enrollment, Submission, SubmissionLink} from "../../proto/ag/ag_pb"
 
 describe("User and enrollment validation", ()=> {
     it("User should be valid", () =>{
         const user = new User().setId(1).setName("Test User").setEmail("mail@mail.com").setStudentid("1234567")
         const isValidUser = isValid(user)
         expect(isValidUser).toBe(true)
-
     });
+
     it("User should not be valid if name is empty", () =>{
         const user2 = new User().setId(2).setEmail("mail@mail.com").setStudentid("1234567")
         const isValidUser = isValid(user2)
         expect(isValidUser).toBe(false)
-        
     });
     
     //Should isValid have a function that checks that it is a legit email, and not just a string with length > 0?
@@ -33,6 +32,7 @@ describe("User and enrollment validation", ()=> {
         const isValidUser = isValid(user5)
         expect(isValidUser).toBe(false)
     });
+
     it("If enrollment link is valid it should pass", () =>{
         const user = new User().setId(6)
         const enrollment = new Enrollment().setId(1).setUser(user)
@@ -51,4 +51,3 @@ describe("User and enrollment validation", ()=> {
         expect(isValidEnrollmentlink2).toBe(false)
     })
 }); 
-

@@ -1,8 +1,7 @@
-import {updateAdmin}  from "../../overmind/actions";
-import { User} from "../../../proto/ag/ag_pb";
-import { createOvermindMock } from "overmind";
-import { config } from "../../overmind";
-
+import {updateAdmin}  from "../overmind/actions"
+import { User} from "../../proto/ag/ag_pb"
+import { createOvermindMock } from "overmind"
+import { config } from "../overmind"
 
 describe("Correct permission status should be set", () => {
     it('If user is not admin, promote to admin', () =>{
@@ -14,8 +13,8 @@ describe("Correct permission status should be set", () => {
         updateAdmin(mockedOvermind, user)
         var bool = user.getIsadmin()
         expect(bool).toBe(true)
-        
     })
+    
     it('If user is admin, demote user', () => {
         const user2 = new User().setId(2).setName("Test User2").setIsadmin(true);
         const mockedOvermind2 = createOvermindMock(config, (state) => {
