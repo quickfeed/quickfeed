@@ -1,12 +1,12 @@
-import React from "react";
-import { useActions, useAppState } from "../overmind";
-import { Link } from 'react-router-dom'
-import NavBarFooter from "./navbar/NavBarFooter";
-import NavBarCourse from "./navbar/NavBarCourse";
-import { Color, isEnrolled, isFavorite } from "../Helpers";
-import NavFavorites from "./NavFavorites";
+import React from "react"
+import { useActions, useAppState } from "../overmind"
+import { Link } from "react-router-dom"
+import NavBarFooter from "./navbar/NavBarFooter"
+import NavBarCourse from "./navbar/NavBarCourse"
+import { Color, isEnrolled, isFavorite } from "../Helpers"
+import NavFavorites from "./NavFavorites"
 import { Status } from "../consts"
-import NavBarUser from "./navbar/NavBarUser";
+import NavBarUser from "./navbar/NavBarUser"
 
 //TODO Review the NavBar behaviour.
 const NavBar = (): JSX.Element => {
@@ -27,18 +27,18 @@ const NavBar = (): JSX.Element => {
             </a>
             }     
             {!state.isLoggedIn &&
-            <div className="navbar-collapse ml-auto ">
-                <ul className="ms-auto ml-auto list-unstyled" >
+            <div className="navbar-collapse ml-auto">
+                <ul className="ms-auto ml-auto list-unstyled">
                     <li className="nav-item">      
                         <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px", color: "#d4d4d4", marginLeft: "40px"}}>
-                            Sign in with <i className="fa fa-2x fa-github align-middle ms-auto " id="github" />
+                            Sign in with <i className="fa fa-2x fa-github align-middle ms-auto " id="github"/>
                         </a>
                     </li>
                 </ul>  
             </div>
             } 
             {state.isLoggedIn &&
-            <ul className="mr-auto me-auto list-unstyled" >
+            <ul className="mr-auto me-auto list-unstyled">
                 <a className="clickable"  onClick={() => { onCourseClick()}} style={{paddingTop: "15px", marginLeft: "10px", fontSize:25}}>☰</a>
             </ul> 
             }
@@ -53,4 +53,5 @@ const NavBar = (): JSX.Element => {
         </nav>
     )
 }
+
 export default NavBar

@@ -1,9 +1,8 @@
 import React, { Component } from "react";
 import { useAppState,  useActions } from "../overmind";
 import { Link } from 'react-router-dom'
-import NavBarFooter from "./navbar/NavBarFooter";
 import NavBarCourse from "./navbar/NavBarCourse";
-import { isEnrolled, isFavorite, isVisible } from "../Helpers";
+import { isEnrolled,  isVisible } from "../Helpers";
 
 const NavFavorites = ():JSX.Element  =>{
     const state = useAppState()
@@ -40,4 +39,5 @@ const NavFavorites = ():JSX.Element  =>{
         </nav>
     )
 }
+
 export default NavFavorites

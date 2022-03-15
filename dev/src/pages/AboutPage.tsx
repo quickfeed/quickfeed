@@ -18,7 +18,7 @@ const AboutPage = (): JSX.Element => {
                             assignments.
                         </p>
                         <p>
-                            <a className="btn btn-primary btn-lg" href="#autograder" role="button">Learn more »</a>
+                            <a className="btn btn-primary btn-lg" href="#quickfeed" role="button">Learn more »</a>
                         </p>
                     </div>
                 </div>
@@ -79,7 +79,7 @@ const AboutPage = (): JSX.Element => {
                         </p>
                     </div>
                 </div>
-                <section id="autograder">
+                <section id="#quickfeed">
                     <hr className="featurette-divider" />
                     <div key="row1" className="row featurette">
                         <div key="c1r1" className="col-md-7">
