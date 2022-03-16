@@ -194,3 +194,13 @@ func (db *GormDB) GetBenchmarks(query *pb.Assignment) ([]*pb.GradingBenchmark, e
 	}
 	return benchmarks, nil
 }
+
+// Oje - for testing, REMOVE
+func (db *GormDB) GetAssignmentsWithTasks(query *pb.Assignment) ([]*pb.Assignment, error) {
+	var assignments []*pb.Assignment
+	if err := db.conn.Preload("Tasks").Find(&assignments, query).Error; err != nil {
+		return nil, err
+	}
+
+	return assignments, nil
+}

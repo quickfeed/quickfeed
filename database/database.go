@@ -134,6 +134,8 @@ type Database interface {
 
 	// CreateTasks creates slice of tasks
 	CreateTasks(tasks []*pb.Task) (err error)
+	// DeleteTask deletes specified task
+	DeleteTask(task *pb.Task) error
 	// UpdateTasks updates slice of tasks
 	UpdateTasks(tasks []*pb.Task) (err error)
 	// GetTasks gets tasks based on query
@@ -142,6 +144,10 @@ type Database interface {
 	CreateIssues(issues []*pb.Issue) error
 	// UpdateIssues updates a batch of issues
 	UpdateIssues(issues []*pb.Issue) (err error)
+	// GetIssues gets issues based on query
+	GetIssues(query *pb.Issue) ([]*pb.Issue, error)
+	// Oje - for testing, REMOVE
+	GetAssignmentsWithTasks(query *pb.Assignment) ([]*pb.Assignment, error)
 
 	// UpdateSlipDays updates used slipdays for the given course enrollment
 	UpdateSlipDays([]*pb.UsedSlipDays) error

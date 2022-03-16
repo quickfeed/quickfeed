@@ -12,6 +12,11 @@ func (db *GormDB) CreateTasks(tasks []*pb.Task) (err error) {
 	return db.conn.Create(tasks).Error
 }
 
+// DeleteTask deletes specified task
+func (db *GormDB) DeleteTask(task *pb.Task) error {
+	return db.conn.Delete(task).Error
+}
+
 // UpdateTasks updates slice of tasks
 func (db *GormDB) UpdateTasks(tasks []*pb.Task) (err error) {
 	for _, task := range tasks {
@@ -54,4 +59,14 @@ func (db *GormDB) UpdateIssues(issues []*pb.Issue) (err error) {
 		}
 	}
 	return nil
+}
+
+// GetIssues gets issues based on query
+func (db *GormDB) GetIssues(query *pb.Issue) ([]*pb.Issue, error) {
+	var issues []*pb.Issue
+	err := db.conn.Find(&issues, query).Error
+	if err != nil {
+		return nil, err
+	}
+	return issues, err
 }

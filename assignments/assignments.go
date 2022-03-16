@@ -35,13 +35,6 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		updateGradingCriteria(logger, db, assignment)
 	}
 
-	// Oje - HandleTasks currently relies on assignments being created or updated before being run. Probably needs to be run after assignments are created or updated.
-	err = HandleTasks(context.Background(), db, s, course, assignments)
-	if err != nil {
-		logger.Errorf("Failed to Create tasks on '%s' repository: %v", pb.TestsRepo, err)
-		return
-	}
-
 	if dockerfile != "" && dockerfile != course.Dockerfile {
 		course.Dockerfile = dockerfile
 		if err := db.UpdateCourse(course); err != nil {
@@ -50,6 +43,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		}
 	}
 
+	// Need to check how this works with tasks
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)
@@ -58,6 +52,13 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		return
 	}
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
+
+	ctx := context.Background()
+	err = HandleTasks(ctx, db, s, course, GetTasksFromAssignments(ctx, assignments))
+	if err != nil {
+		logger.Errorf("Failed to Create tasks on '%s' repository: %v", pb.TestsRepo, err)
+		return
+	}
 }
 
 // fetchAssignments returns a list of assignments for the given course, by
