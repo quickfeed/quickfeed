@@ -153,83 +153,88 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 
 	course.SetSlipDays()
 
-	enrolLinks := make([]*pb.EnrollmentLink, 0)
-
+	var enrolLinks []*pb.EnrollmentLink
 	switch request.Type {
 	case pb.SubmissionsForCourseRequest_GROUP:
-		enrolLinks = append(enrolLinks, s.makeGroupResults(course, assignments)...)
+		enrolLinks = makeGroupResults(course, assignments)
 	case pb.SubmissionsForCourseRequest_INDIVIDUAL:
-		enrolLinks = append(enrolLinks, makeResults(course, assignments, false)...)
-	default:
-		enrolLinks = append(enrolLinks, makeResults(course, assignments, true)...)
+		enrolLinks = makeIndividualResults(course, assignments)
+	default: // case pb.SubmissionsForCourseRequest_ALL:
+		enrolLinks = makeAllResults(course, assignments)
 	}
 	return &pb.CourseSubmissions{Course: course, Links: enrolLinks}, nil
 }
 
-// makeResults generates enrollment-assignment-submissions links
-// for all course students and all individual and group assignments.
-func makeResults(course *pb.Course, assignments []*pb.Assignment, addGroups bool) []*pb.EnrollmentLink {
+// makeGroupResults generates enrollment to assignment to submissions links
+// for all course groups and all group assignments
+func makeGroupResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
-
-	for _, enrol := range course.Enrollments {
-		newLink := &pb.EnrollmentLink{Enrollment: enrol}
-		allSubmissions := make([]*pb.SubmissionLink, 0)
-		for _, a := range assignments {
-			copyWithoutSubmissions := a.CloneWithoutSubmissions()
-			subLink := &pb.SubmissionLink{
-				Assignment: copyWithoutSubmissions,
-			}
-
-			for _, sb := range a.Submissions {
-				if !a.IsGroupLab && sb.GroupID == 0 && sb.UserID == enrol.UserID {
-					subLink.Submission = sb
-				} else if addGroups && a.IsGroupLab && sb.GroupID > 0 && sb.GroupID == enrol.GroupID {
-					subLink.Submission = sb
-				}
-			}
-			allSubmissions = append(allSubmissions, subLink)
+	seenGroup := make(map[uint64]bool)
+	for _, enrollment := range course.Enrollments {
+		if seenGroup[enrollment.GroupID] {
+			continue // include group enrollment only once
 		}
-		sortSubmissionsByAssignmentOrder(allSubmissions)
-		newLink.Submissions = allSubmissions
-		enrolLinks = append(enrolLinks, newLink)
+		seenGroup[enrollment.GroupID] = true
+		enrolLinks = append(enrolLinks, &pb.EnrollmentLink{
+			Enrollment: enrollment,
+			Submissions: makeSubmissionLinks(assignments, func(submission *pb.Submission) bool {
+				// include group submissions for this enrollment
+				return submission.ByGroup(enrollment.GroupID)
+			}),
+		})
 	}
 	return enrolLinks
 }
 
-// makeGroupResults generates enrollment to assignment to submissions links
-// for all course groups and all group assignments
-func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
+// makeIndividualResults returns enrollment links with submissions
+// for individual assignments for all students in the course.
+func makeIndividualResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
-	for _, grp := range course.Groups {
-
-		newLink := &pb.EnrollmentLink{}
-		for _, enrol := range course.Enrollments {
-			if enrol.GroupID > 0 && enrol.GroupID == grp.ID {
-				newLink.Enrollment = enrol
-			}
-		}
-		if newLink.Enrollment == nil {
-			s.logger.Debugf("Got empty enrollment for group %+v", grp)
-		}
-
-		allSubmissions := make([]*pb.SubmissionLink, 0)
-		for _, a := range assignments {
-			copyWithoutSubmissions := a.CloneWithoutSubmissions()
-			subLink := &pb.SubmissionLink{
-				Assignment: copyWithoutSubmissions,
-			}
-			for _, sb := range a.Submissions {
-				if sb.GroupID > 0 && sb.GroupID == grp.ID {
-					subLink.Submission = sb
-				}
-			}
-			allSubmissions = append(allSubmissions, subLink)
-		}
-		sortSubmissionsByAssignmentOrder(allSubmissions)
-		newLink.Submissions = allSubmissions
-		enrolLinks = append(enrolLinks, newLink)
+	for _, enrollment := range course.Enrollments {
+		enrolLinks = append(enrolLinks, &pb.EnrollmentLink{
+			Enrollment: enrollment,
+			Submissions: makeSubmissionLinks(assignments, func(submission *pb.Submission) bool {
+				// include individual submissions for this enrollment
+				return submission.ByUser(enrollment.UserID)
+			}),
+		})
 	}
 	return enrolLinks
+}
+
+// makeAllResults returns enrollment links with submissions
+// for both individual and group assignments for all students/groups in the course.
+func makeAllResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
+	enrolLinks := make([]*pb.EnrollmentLink, len(course.Enrollments))
+	for i, enrollment := range course.Enrollments {
+		enrolLinks[i] = &pb.EnrollmentLink{
+			Enrollment: enrollment,
+			Submissions: makeSubmissionLinks(assignments, func(submission *pb.Submission) bool {
+				// include individual and group submissions for this enrollment
+				return submission.ByUser(enrollment.UserID) || submission.ByGroup(enrollment.GroupID)
+			}),
+		}
+	}
+	return enrolLinks
+}
+
+func makeSubmissionLinks(assignments []*pb.Assignment, include func(*pb.Submission) bool) []*pb.SubmissionLink {
+	subLinks := make([]*pb.SubmissionLink, len(assignments))
+	for i, assignment := range assignments {
+		subLinks[i] = &pb.SubmissionLink{
+			Assignment: assignment.CloneWithoutSubmissions(),
+		}
+		for _, submission := range assignment.Submissions {
+			if include(submission) {
+				subLinks[i].Submission = submission
+			}
+		}
+	}
+	// sort submission links by assignment order
+	sort.Slice(subLinks, func(i, j int) bool {
+		return subLinks[i].Assignment.Order < subLinks[j].Assignment.Order
+	})
+	return subLinks
 }
 
 // updateSubmission updates submission status or sets a submission score based on a manual review.
@@ -555,11 +560,4 @@ func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, user *p
 		return fmt.Errorf("failed to get repository invites for %s: %w", user.Login, err)
 	}
 	return nil
-}
-
-func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.SubmissionLink {
-	sort.Slice(unsorted, func(i, j int) bool {
-		return unsorted[i].Assignment.Order < unsorted[j].Assignment.Order
-	})
-	return unsorted
 }

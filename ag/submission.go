@@ -26,3 +26,11 @@ func (s *Submission) NewestBuildDate(submissionDate time.Time) (t time.Time, err
 	}
 	return submissionDate, nil
 }
+
+func (s *Submission) ByUser(userID uint64) bool {
+	return s.GetGroupID() == 0 && s.GetUserID() > 0 && s.GetUserID() == userID
+}
+
+func (s *Submission) ByGroup(groupID uint64) bool {
+	return s.GetUserID() == 0 && s.GetGroupID() > 0 && s.GetGroupID() == groupID
+}
