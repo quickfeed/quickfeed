@@ -40,7 +40,7 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 			"reviewers":         assignment.Reviewers,
 			"container_timeout": assignment.ContainerTimeout,
 			"tasks":             assignment.Tasks,
-		}).FirstOrCreate(assignment).Error
+		}).Omit("Tasks").FirstOrCreate(assignment).Error
 }
 
 // GetAssignment returns assignment with the given ID.
@@ -193,14 +193,4 @@ func (db *GormDB) GetBenchmarks(query *pb.Assignment) ([]*pb.GradingBenchmark, e
 		b.Criteria = criteria
 	}
 	return benchmarks, nil
-}
-
-// Oje - for testing, REMOVE
-func (db *GormDB) GetAssignmentsWithTasks(query *pb.Assignment) ([]*pb.Assignment, error) {
-	var assignments []*pb.Assignment
-	if err := db.conn.Preload("Tasks").Find(&assignments, query).Error; err != nil {
-		return nil, err
-	}
-
-	return assignments, nil
 }

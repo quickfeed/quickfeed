@@ -18,7 +18,6 @@ import (
 // When running tests that have anything to do with tasks/issues, it is important that issues have their title corresponding to the name of an associated task.
 // For example, if you have an issue that is supposed to be connected to the task "task-1.md" in "lab1", the title of this issue needs to be "lab1/task-1.md".
 // Otherwise when creating the database there will be no clear way to know which issue is supposed to be associated with which task.
-// This disclaimer applies only when running tests.
 
 // InitializeDbEnvironment initializes a db, based on org.
 func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course, s scm.SCM) (database.Database, func(), error) {
@@ -54,26 +53,25 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 	n := 2
 	for _, repo := range repos {
 		var user *pb.User
-		// Hacky solution, but did not quickly find already supplied function for doing this.
-		// Does not handle if repo is group repo.
 		// Might not even be necessary to handle repos differently in these tests.
 		dbRepo := &pb.Repository{}
+		fmt.Printf("\n%s", repo.Path)
 		switch repo.Path {
-		case "course-info":
+		case pb.InfoRepo: // repo.Path is "course-info" here, yet we only check for "info"
 			dbRepo = &pb.Repository{
 				RepositoryID:   repo.ID,
 				OrganizationID: org.GetID(),
 				HTMLURL:        repo.WebURL,
 				RepoType:       pb.Repository_COURSEINFO,
 			}
-		case "assignments":
+		case pb.AssignmentRepo:
 			dbRepo = &pb.Repository{
 				RepositoryID:   repo.ID,
 				OrganizationID: org.GetID(),
 				HTMLURL:        repo.WebURL,
 				RepoType:       pb.Repository_ASSIGNMENTS,
 			}
-		case "tests":
+		case pb.TestsRepo:
 			dbRepo = &pb.Repository{
 				RepositoryID:   repo.ID,
 				OrganizationID: org.GetID(),
@@ -231,8 +229,8 @@ func TestGetIssuesOnOrg(t *testing.T) {
 	}
 
 	for _, repo := range repos {
-		// Should change this test, though there is no good alternative atm.
-		if !strings.HasSuffix(repo.Path, "-labs") {
+		// Should change this test.
+		if !strings.HasSuffix(repo.Path, pb.StudentRepoSuffix) {
 			continue
 		}
 		t.Logf("\n\nIssues on repo %s:\n", repo.Path)
@@ -282,7 +280,7 @@ func TestHandleTasks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Prints db contents before HandleTasks. This code is also used elsewhere and should be turned into a function if it's going to stick around
+	// Prints db contents before HandleTasks. This code is also used elsewhere and should maybe be turned into a function if it's going to stick around
 	repos, err := db.GetRepositoriesWithIssues(&pb.Repository{
 		OrganizationID: org.GetID(),
 	})
@@ -607,165 +605,4 @@ func TestSynchronizeIssues(t *testing.T) {
 	// -------------------------------------------------------------------------- //
 
 	// Need to check for issue not represented with task (maybe)
-}
-
-// Oje - Temporary test for figuring out how to handle storing tasks in the database
-func TestUpdateAssignments(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	// ctx := context.Background()
-	admin := qtest.CreateFakeUser(t, db, uint64(1))
-	qtest.CreateCourse(t, db, admin, &pb.Course{})
-
-	foundAssignments1 := []*pb.Assignment{
-		{
-			CourseID: 1,
-			Name:     "Lab1",
-			Order:    1,
-		},
-		{
-			CourseID: 1,
-			Name:     "Lab2",
-			Order:    2,
-		},
-	}
-
-	for _, assignment := range foundAssignments1 {
-		err := db.CreateAssignment(assignment)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	tasks := []*pb.Task{
-		{
-			AssignmentID:    1,
-			AssignmentOrder: 1,
-			Title:           "Lab1, task1",
-			Body:            "Description of task1 in lab1",
-			Name:            "Lab1/task1.md",
-		},
-		{
-			AssignmentID:    1,
-			AssignmentOrder: 1,
-			Title:           "Lab1, task2",
-			Body:            "Description of task2 in lab1",
-			Name:            "Lab1/task2.md",
-		},
-		{
-			AssignmentID:    2,
-			AssignmentOrder: 2,
-			Title:           "Lab2, task1",
-			Body:            "Description of task1 in lab2",
-			Name:            "Lab2/task1.md",
-		},
-		{
-			AssignmentID:    2,
-			AssignmentOrder: 2,
-			Title:           "Lab2, task2",
-			Body:            "Description of task2 in lab2",
-			Name:            "Lab2/task2.md",
-		},
-	}
-	foundAssignments1[0].Tasks = tasks[:2]
-	foundAssignments1[1].Tasks = tasks[2:]
-	err := db.UpdateAssignments(foundAssignments1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	dbAssignments, err := db.GetAssignmentsWithTasks(&pb.Assignment{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for _, assignment := range dbAssignments {
-		fmt.Printf("\n%v", assignment.Name)
-		for _, task := range assignment.Tasks {
-			fmt.Printf("\n%v", task)
-		}
-	}
-
-	// Try adding one assignment
-	fmt.Printf("\n\nAdding one new assignment\n\n")
-	foundAssignments2 := []*pb.Assignment{}
-	for _, assignment := range foundAssignments1 {
-		temp := *assignment
-		temp.Tasks = []*pb.Task{}
-		for _, task := range assignment.Tasks {
-			temp2 := *task
-			temp.Tasks = append(temp.Tasks, &temp2)
-		}
-		foundAssignments2 = append(foundAssignments2, &temp)
-	}
-	for _, assignment := range foundAssignments2 {
-		if assignment.Name == "Lab1" {
-			assignment.Tasks = append(assignment.Tasks, &pb.Task{
-				AssignmentID:    1,
-				AssignmentOrder: 1,
-				Title:           "New task",
-				Body:            "Description description",
-				Name:            "NewTask",
-			})
-		}
-	}
-	err = db.UpdateAssignments(foundAssignments2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	dbAssignments, err = db.GetAssignmentsWithTasks(&pb.Assignment{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, assignment := range dbAssignments {
-		fmt.Printf("\n%v", assignment.Name)
-		for _, task := range assignment.Tasks {
-			fmt.Printf("\n%v", task)
-		}
-	}
-	// Seems to work fine
-	// ------------------------------------------------------------------//
-
-	// Try adding one assignment, but without previous tasks in slice
-	fmt.Printf("\n\nAdding one new assignment, but solo\n\n")
-	foundAssignments3 := []*pb.Assignment{}
-	for _, assignment := range foundAssignments1 {
-		temp := *assignment
-		temp.Tasks = []*pb.Task{}
-		for _, task := range assignment.Tasks {
-			temp2 := *task
-			temp.Tasks = append(temp.Tasks, &temp2)
-		}
-		foundAssignments3 = append(foundAssignments2, &temp)
-	}
-	for _, assignment := range foundAssignments2 {
-		if assignment.Name == "Lab1" {
-			assignment.Tasks = []*pb.Task{
-				{
-					AssignmentID:    1,
-					AssignmentOrder: 1,
-					Title:           "Only one task now in 'tests'",
-					Body:            "Description description",
-					Name:            "Solo task",
-				},
-			}
-		}
-	}
-	err = db.UpdateAssignments(foundAssignments3)
-	if err != nil {
-		t.Fatal(err)
-	}
-	dbAssignments, err = db.GetAssignmentsWithTasks(&pb.Assignment{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, assignment := range dbAssignments {
-		fmt.Printf("\n%v", assignment.Name)
-		for _, task := range assignment.Tasks {
-			fmt.Printf("\n%v", task)
-		}
-	}
-	// In this situation the solo task is simply appended to the existing list of tasks for that assignment
-	// With the current implementation this would cause problems, since tasks in db is supposed to always be whatever is found
-	// ------------------------------------------------------------------//
 }

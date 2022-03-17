@@ -11,6 +11,10 @@ import (
 	"github.com/autograde/quickfeed/scm"
 )
 
+// Things to do:
+// - Repositories in database do not have a "Name"-field.
+// - Ordering of tasks (See teacher.md)
+
 // newTask returns a task from markdown contents and associates it with the given assignment.
 // The provided markdown contents must contain a title specified on the first line,
 // starting with the "# " character sequence, followed by two new line characters.
@@ -75,14 +79,6 @@ func CreateIssue(c context.Context, repo *pb.Repository, task *pb.Task, scmIssue
 	}
 	return issue, nil
 }
-
-// Oje - Todo list:
-// - SynchronizeTasks now synchs per assignment, instead of just for the entire course. Should review the possibility of changing
-// - Repositories in database do not have a "Name"-field.
-// - SynchronizeTasks might not be necessary since assignments are updated in UpdateFromTestsRepo. Should generally review UpdateFromTestsRepo.
-// - Current implementation is highly reliant on assignments being created an updated correctly in database. Need to review whether or not this is actually happening.
-// - What happens if an issue has been closed as a result of a PR being reviewed and closed?
-// - Ordering of tasks (See teacher.md)
 
 // Following is Oje code (placement might be temporary):
 

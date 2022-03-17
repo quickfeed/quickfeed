@@ -146,8 +146,6 @@ type Database interface {
 	UpdateIssues(issues []*pb.Issue) (err error)
 	// GetIssues gets issues based on query
 	GetIssues(query *pb.Issue) ([]*pb.Issue, error)
-	// Oje - for testing, REMOVE
-	GetAssignmentsWithTasks(query *pb.Assignment) ([]*pb.Assignment, error)
 
 	// UpdateSlipDays updates used slipdays for the given course enrollment
 	UpdateSlipDays([]*pb.UsedSlipDays) error

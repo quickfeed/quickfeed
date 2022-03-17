@@ -43,7 +43,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		}
 	}
 
-	// Need to check how this works with tasks
+	// Does not store tasks, since they need to be handled by HandleTasks
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)
@@ -171,10 +171,4 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 			}
 		}
 	}
-}
-
-// Following is Oje code (placement might be temporary):
-
-func UpdateAssignmentWithIssues(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment, issues []*scm.Issue) {
-	// First convert
 }
