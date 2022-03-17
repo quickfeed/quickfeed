@@ -292,8 +292,8 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	c1 := &pb.Course{OrganizationID: 1}
-	c2 := &pb.Course{OrganizationID: 2}
+	c1 := &pb.Course{OrganizationID: 1, Year: 1}
+	c2 := &pb.Course{OrganizationID: 2, Year: 2}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 
