@@ -40,8 +40,7 @@ type AutograderServiceClient interface {
 	GetEnrollmentsByUser(ctx context.Context, in *EnrollmentStatusRequest, opts ...grpc.CallOption) (*Enrollments, error)
 	GetEnrollmentsByCourse(ctx context.Context, in *EnrollmentRequest, opts ...grpc.CallOption) (*Enrollments, error)
 	CreateEnrollment(ctx context.Context, in *Enrollment, opts ...grpc.CallOption) (*Void, error)
-	UpdateEnrollment(ctx context.Context, in *Enrollment, opts ...grpc.CallOption) (*Void, error)
-	UpdateEnrollments(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Void, error)
+	UpdateEnrollments(ctx context.Context, in *UpdateEnrollmentsRequest, opts ...grpc.CallOption) (*Void, error)
 	// Get latest submissions for all course assignments for a user or a group.
 	GetSubmissions(ctx context.Context, in *SubmissionRequest, opts ...grpc.CallOption) (*Submissions, error)
 	// Get lab submissions for every course user or every course group
@@ -271,16 +270,7 @@ func (c *autograderServiceClient) CreateEnrollment(ctx context.Context, in *Enro
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateEnrollment(ctx context.Context, in *Enrollment, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
-	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateEnrollment", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *autograderServiceClient) UpdateEnrollments(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Void, error) {
+func (c *autograderServiceClient) UpdateEnrollments(ctx context.Context, in *UpdateEnrollmentsRequest, opts ...grpc.CallOption) (*Void, error) {
 	out := new(Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateEnrollments", in, out, opts...)
 	if err != nil {
@@ -486,8 +476,7 @@ type AutograderServiceServer interface {
 	GetEnrollmentsByUser(context.Context, *EnrollmentStatusRequest) (*Enrollments, error)
 	GetEnrollmentsByCourse(context.Context, *EnrollmentRequest) (*Enrollments, error)
 	CreateEnrollment(context.Context, *Enrollment) (*Void, error)
-	UpdateEnrollment(context.Context, *Enrollment) (*Void, error)
-	UpdateEnrollments(context.Context, *CourseRequest) (*Void, error)
+	UpdateEnrollments(context.Context, *UpdateEnrollmentsRequest) (*Void, error)
 	// Get latest submissions for all course assignments for a user or a group.
 	GetSubmissions(context.Context, *SubmissionRequest) (*Submissions, error)
 	// Get lab submissions for every course user or every course group
@@ -582,10 +571,7 @@ func (UnimplementedAutograderServiceServer) GetEnrollmentsByCourse(context.Conte
 func (UnimplementedAutograderServiceServer) CreateEnrollment(context.Context, *Enrollment) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateEnrollment not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateEnrollment(context.Context, *Enrollment) (*Void, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateEnrollment not implemented")
-}
-func (UnimplementedAutograderServiceServer) UpdateEnrollments(context.Context, *CourseRequest) (*Void, error) {
+func (UnimplementedAutograderServiceServer) UpdateEnrollments(context.Context, *UpdateEnrollmentsRequest) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateEnrollments not implemented")
 }
 func (UnimplementedAutograderServiceServer) GetSubmissions(context.Context, *SubmissionRequest) (*Submissions, error) {
@@ -1054,26 +1040,8 @@ func _AutograderService_CreateEnrollment_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AutograderService_UpdateEnrollment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Enrollment)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AutograderServiceServer).UpdateEnrollment(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/ag.AutograderService/UpdateEnrollment",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateEnrollment(ctx, req.(*Enrollment))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _AutograderService_UpdateEnrollments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CourseRequest)
+	in := new(UpdateEnrollmentsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1085,7 +1053,7 @@ func _AutograderService_UpdateEnrollments_Handler(srv interface{}, ctx context.C
 		FullMethod: "/ag.AutograderService/UpdateEnrollments",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateEnrollments(ctx, req.(*CourseRequest))
+		return srv.(AutograderServiceServer).UpdateEnrollments(ctx, req.(*UpdateEnrollmentsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1526,10 +1494,6 @@ var AutograderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateEnrollment",
 			Handler:    _AutograderService_CreateEnrollment_Handler,
-		},
-		{
-			MethodName: "UpdateEnrollment",
-			Handler:    _AutograderService_UpdateEnrollment_Handler,
 		},
 		{
 			MethodName: "UpdateEnrollments",
