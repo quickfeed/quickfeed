@@ -168,21 +168,19 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 // makeGroupResults generates enrollment to assignment to submissions links
 // for all course groups and all group assignments
 func makeGroupResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
-	enrolLinks := make([]*pb.EnrollmentLink, len(course.Groups))
-	for i, group := range course.Groups {
-		enrolLinks[i] = &pb.EnrollmentLink{}
-		for _, enrollment := range course.Enrollments {
-			if enrollment.GroupID > 0 && enrollment.GroupID == group.ID {
-				enrolLinks[i].Enrollment = enrollment
-			}
+	enrolLinks := make([]*pb.EnrollmentLink, 0)
+	seenGroup := make(map[uint64]bool)
+	for _, enrollment := range course.Enrollments {
+		if seenGroup[enrollment.GroupID] {
+			continue // include group enrollment only once
 		}
-		if enrolLinks[i].Enrollment == nil {
-			// should not happen that a group is not enrolled
-			continue
-		}
-		enrolLinks[i].Submissions = makeSubmissionLinks(assignments, func(submission *pb.Submission) bool {
-			// include group submissions for this enrollment
-			return submission.ByGroup(group.GetID())
+		seenGroup[enrollment.GroupID] = true
+		enrolLinks = append(enrolLinks, &pb.EnrollmentLink{
+			Enrollment: enrollment,
+			Submissions: makeSubmissionLinks(assignments, func(submission *pb.Submission) bool {
+				// include group submissions for this enrollment
+				return submission.ByGroup(enrollment.GroupID)
+			}),
 		})
 	}
 	return enrolLinks
@@ -191,15 +189,15 @@ func makeGroupResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enr
 // makeIndividualResults returns enrollment links with submissions
 // for individual assignments for all students in the course.
 func makeIndividualResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
-	enrolLinks := make([]*pb.EnrollmentLink, len(course.Enrollments))
-	for i, enrollment := range course.Enrollments {
-		enrolLinks[i] = &pb.EnrollmentLink{
+	enrolLinks := make([]*pb.EnrollmentLink, 0)
+	for _, enrollment := range course.Enrollments {
+		enrolLinks = append(enrolLinks, &pb.EnrollmentLink{
 			Enrollment: enrollment,
 			Submissions: makeSubmissionLinks(assignments, func(submission *pb.Submission) bool {
 				// include individual submissions for this enrollment
 				return submission.ByUser(enrollment.UserID)
 			}),
-		}
+		})
 	}
 	return enrolLinks
 }
