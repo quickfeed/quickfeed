@@ -68,8 +68,8 @@ message Course {
     uint64 ID                      = 1;
     uint64 courseCreatorID         = 2;
     string name                    = 3;
-    string code                    = 4;
-    uint32 year                    = 5;
+    string code                    = 4 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_course"' }];
+    uint32 year                    = 5 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_course"' }];
     string tag                     = 6;
     string provider                = 7;
     uint64 organizationID          = 8;
@@ -183,23 +183,23 @@ message Assignment {
 }
 
 message Task {
-    uint64 ID             = 1;
-    uint64 assignmentID   = 2;  // foreign key
+    uint64 ID              = 1;
+    uint64 assignmentID    = 2;  // foreign key
     uint32 assignmentOrder = 3;
-    string title          = 4;
-    string body           = 5;
-    string name           = 6;
+    string title           = 4;
+    string body            = 5;
+    string name            = 6;
 }
 
 message Issue {
     uint64 ID           = 1;
-    uint64 repositoryID = 2; // Represents the internal ID of a repository
-    uint64 issueNumber  = 4; // Issue number on scm. Needed for associating db issue with scm issue
-    string name         = 5; // Name of associated task/issue, e.g. "lab1/task-1.md"
+    uint64 repositoryID = 2;  // Represents the internal ID of a repository
+    uint64 issueNumber  = 4;  // Issue number on scm. Needed for associating db issue with scm issue
+    string name         = 5;  // Name of associated task/issue, e.g. "lab1/task-1.md"
     string title        = 6;
     string body         = 7;
 }
-            
+
 message Assignments {
     repeated Assignment assignments = 1;
 }

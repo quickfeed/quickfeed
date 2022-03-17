@@ -33,7 +33,7 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 }
 
 // CreateOrganization implements the SCM interface.
-func (s *GithubSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*pb.Organization, error) {
+func (*GithubSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*pb.Organization, error) {
 	return nil, ErrNotSupported{
 		SCM:    "github",
 		Method: "CreateOrganization",
@@ -789,6 +789,46 @@ func (s *GithubSCM) EditRepoIssue(ctx context.Context, opt *IssueOptions, isu *C
 	s.logger.Debugf("EditRepoIssue: done Editing issue number  %s", opt.IssueNumber)
 
 	return toIssue(issue), nil
+}
+
+// GetRepositoryInvites implements the SCM interface
+func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) error {
+	if !opt.valid() {
+		return ErrMissingFields{
+			Method:  "GetRepositoryInvites",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
+
+	invites, _, err := s.client.Users.ListInvitations(ctx, &github.ListOptions{})
+	if err != nil {
+		return ErrFailedSCM{
+			GitError: fmt.Errorf("failed to fetch GitHub repository invitations: %w", err),
+			Method:   "GetRepositoryInvites",
+			Message:  "failed to fetch GitHub repository invitations",
+		}
+	}
+
+	for _, invite := range invites {
+		// The list of invitations contain all the invitations for the authenticated user.
+		// We only want to accept invitations from the owner specified in the options.
+		// For our courses, the owner is the organization.
+		// For invitations originating from an organization, the owner login is the organization path.
+		if invite.Repo.Owner.GetLogin() != opt.Owner || invite.Invitee.GetLogin() != opt.Login {
+			// Ignore unrelated invites
+			continue
+		}
+
+		_, err := s.client.Users.AcceptInvitation(ctx, invite.GetID())
+		if err != nil {
+			return ErrFailedSCM{
+				GitError: fmt.Errorf("failed to accept GitHub repository invitation: %w", err),
+				Method:   "GetRepositoryInvites",
+				Message:  fmt.Sprintf("failed to accept invitation for user: %s, to repo: %s", opt.Login, invite.Repo.GetName()),
+			}
+		}
+	}
+	return nil
 }
 
 func toRepository(repo *github.Repository) *Repository {

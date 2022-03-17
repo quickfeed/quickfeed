@@ -120,6 +120,10 @@ func (opt IssueOptions) valid() bool {
 	return (opt.IssueNumber >= 0 && opt.Organization != "" && opt.Repository != "")
 }
 
+func (opt RepositoryInvitationOptions) valid() bool {
+	return opt.Login != "" && opt.Owner != ""
+}
+
 // Errors //
 
 // ErrNotSupported is returned when the source code management solution used

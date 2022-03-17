@@ -71,6 +71,9 @@ type SCM interface {
 	GetRepoIssues(context.Context, *IssueOptions) ([]*Issue, error)
 	// Edit a particular issue in a Repository
 	EditRepoIssue(context.Context, *IssueOptions, *CreateIssueOptions) (*Issue, error)
+
+	// Accepts repository invite.
+	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -261,4 +264,10 @@ type IssueOptions struct {
 	Organization string
 	Repository   string
 	IssueNumber  int
+}
+
+// RepositoryInvitationOptions contains information on which organization and user to accept invitations for.
+type RepositoryInvitationOptions struct {
+	Login string // GitHub username.
+	Owner string // Name of the organization.
 }
