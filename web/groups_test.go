@@ -482,13 +482,16 @@ func TestDeleteGroup(t *testing.T) {
 	if _, err := ags.CreateEnrollment(ctx, &pb.Enrollment{UserID: teacher.ID, CourseID: testCourse.ID}); err != nil {
 		t.Fatal(err)
 	}
-	// update enrollment to teacher; must be done by admin
-	ctx = qtest.WithUserContext(context.Background(), admin)
-	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+
+	enrollReq := &pb.UpdateEnrollmentsRequest{}
+	enrollReq.SetEnrollment(&pb.Enrollment{
 		UserID:   teacher.ID,
 		CourseID: testCourse.ID,
 		Status:   pb.Enrollment_TEACHER,
-	}); err != nil {
+	})
+	// update enrollment to teacher; must be done by admin
+	ctx = qtest.WithUserContext(context.Background(), admin)
+	if _, err := ags.UpdateEnrollments(ctx, enrollReq); err != nil {
 		t.Fatal(err)
 	}
 
@@ -498,13 +501,15 @@ func TestDeleteGroup(t *testing.T) {
 	if _, err := ags.CreateEnrollment(ctx, &pb.Enrollment{UserID: user.ID, CourseID: testCourse.ID}); err != nil {
 		t.Fatal(err)
 	}
-	// update pending enrollment to student; must be done by teacher
-	ctx = qtest.WithUserContext(context.Background(), teacher)
-	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+
+	enrollReq.SetEnrollment(&pb.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourse.ID,
 		Status:   pb.Enrollment_STUDENT,
-	}); err != nil {
+	})
+	// update pending enrollment to student; must be done by teacher
+	ctx = qtest.WithUserContext(context.Background(), teacher)
+	if _, err := ags.UpdateEnrollments(ctx, enrollReq); err != nil {
 		t.Fatal(err)
 	}
 
