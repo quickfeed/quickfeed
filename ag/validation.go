@@ -67,7 +67,7 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 }
 
 // IsValid on void message always returns true.
-func (v *Void) IsValid() bool {
+func (*Void) IsValid() bool {
 	return true
 }
 
@@ -170,7 +170,7 @@ func (req *EnrollmentRequest) IsValid() bool {
 	return req.GetCourseID() > 0
 }
 
-// Isvalid ensures that course and assignment IDs are set.
+// IsValid ensures that course and assignment IDs are set.
 func (req *AssignmentRequest) IsValid() bool {
 	return req.CourseID > 0 && req.AssignmentID > 0
 }
