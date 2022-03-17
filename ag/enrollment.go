@@ -86,3 +86,11 @@ func (m *Enrollment) IsTeacher() bool {
 func (m *Enrollment) IsStudent() bool {
 	return m.GetStatus() == Enrollment_STUDENT
 }
+
+func (m *UpdateEnrollmentsRequest) SetEnrollment(e *Enrollment) {
+	m.EnrollmentsType = &UpdateEnrollmentsRequest_Enrollment{Enrollment: e}
+}
+
+func (m *UpdateEnrollmentsRequest) SetCourseID(id uint64) {
+	m.EnrollmentsType = &UpdateEnrollmentsRequest_CourseID{CourseID: id}
+}

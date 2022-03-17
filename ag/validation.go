@@ -242,3 +242,7 @@ func (c *GradingCriterion) IsValid() bool {
 func (r *CourseUserRequest) IsValid() bool {
 	return r.CourseCode != "" && r.UserLogin != "" && r.CourseYear > 2019
 }
+
+func (u *UpdateEnrollmentsRequest) IsValid() bool {
+	return u.GetCourseID() > 0 || u.GetEnrollment() != nil
+}

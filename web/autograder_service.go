@@ -241,40 +241,16 @@ func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollm
 	return &pb.Void{}, err
 }
 
-// UpdateEnrollment updates the enrollment status of a student as specified in the request.
-// Access policy: Teacher of CourseID.
-func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
-	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
-	if err != nil {
-		s.logger.Errorf("UpdateEnrollment failed: scm authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
-	}
-	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
-		s.logger.Error("UpdateEnrollment failed: user is not teacher")
-		return nil, status.Error(codes.PermissionDenied, "only teachers can update enrollment status")
-	}
-	if s.isCourseCreator(in.CourseID, in.UserID) {
-		s.logger.Errorf("UpdateEnrollment failed: user %s attempted to demote course creator", usr.GetName())
-		return nil, status.Error(codes.PermissionDenied, "course creator cannot be demoted")
-	}
-	err = s.updateEnrollment(ctx, scm, usr.Login, in)
-	if err != nil {
-		s.logger.Errorf("UpdateEnrollment failed: %v", err)
-		if contextCanceled(ctx) {
-			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
-		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
-		}
-		return nil, status.Error(codes.InvalidArgument, "failed to update enrollment")
-	}
-	return &pb.Void{}, nil
-}
-
 // UpdateEnrollments changes status of all pending enrollments for the given course to approved
 // Access policy: Teacher of CourseID
-func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.CourseRequest) (*pb.Void, error) {
-	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
+func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.UpdateEnrollmentsRequest) (*pb.Void, error) {
+	var courseID uint64
+	if in.GetCourseID() != 0 {
+		courseID = in.GetCourseID()
+	} else {
+		courseID = in.GetEnrollment().GetCourseID()
+	}
+	usr, scm, err := s.getUserAndSCMForCourse(ctx, courseID)
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
@@ -283,7 +259,19 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Course
 		s.logger.Error("UpdateEnrollments failed: user is not teacher")
 		return nil, status.Error(codes.PermissionDenied, "only teachers can update enrollment status")
 	}
-	err = s.updateEnrollments(ctx, scm, in.GetCourseID())
+
+	switch in.GetEnrollmentsType().(type) {
+	case *pb.UpdateEnrollmentsRequest_Enrollment:
+		enrollment := in.GetEnrollment()
+		if s.isCourseCreator(enrollment.CourseID, enrollment.UserID) {
+			s.logger.Errorf("UpdateEnrollment failed: user %s attempted to demote course creator", usr.GetName())
+			return nil, status.Error(codes.PermissionDenied, "course creator cannot be demoted")
+		}
+		err = s.updateEnrollment(ctx, scm, usr.Login, enrollment)
+	case *pb.UpdateEnrollmentsRequest_CourseID:
+		err = s.updateEnrollments(ctx, scm, in.GetCourseID())
+	}
+
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: %v", err)
 		if contextCanceled(ctx) {
