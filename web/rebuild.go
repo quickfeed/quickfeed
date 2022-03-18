@@ -28,11 +28,11 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 	if assignment.IsGroupLab {
 		s.logger.Debugf("Rebuilding submission %d for group(%d): %s, assignment: %+v, repo: %s",
 			submission.GetID(), submission.GetGroupID(), name, assignment, repo.GetHTMLURL())
-		repo, err = s.getGroupRepo(course, submission.GetGroupID())
+		repo, err = s.getRepo(course, submission.GetGroupID(), pb.Repository_GROUP)
 	} else {
 		s.logger.Debugf("Rebuilding submission %d for user(%d): %s, assignment: %+v, repo: %s",
 			submission.GetID(), submission.GetUserID(), name, assignment, repo.GetHTMLURL())
-		repo, err = s.getUserRepo(course, submission.GetUserID())
+		repo, err = s.getRepo(course, submission.GetUserID(), pb.Repository_USER)
 	}
 	if err != nil {
 		return nil, err

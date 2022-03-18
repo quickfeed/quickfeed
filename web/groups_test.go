@@ -11,6 +11,7 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/internal/qtest"
+	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web"
 )
@@ -272,7 +273,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	defer cleanup()
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	_, err := fakeProvider.CreateOrganization(context.Background(),
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
 	)
@@ -436,7 +437,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(gotChangedGroup.Users) != 1 {
-		t.Fatal("expected only single member group")
+		t.Errorf("Expected only single member group, got %d members", len(gotChangedGroup.Users))
 	}
 	wantGroup = updateGroupRequest
 	wantGroup.Users = grpUsers
@@ -471,7 +472,7 @@ func TestDeleteGroup(t *testing.T) {
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(qtest.Logger(t).Desugar(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
 		t.Fatal(err)
 	}

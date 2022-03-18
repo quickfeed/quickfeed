@@ -67,7 +67,7 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 }
 
 // IsValid on void message always returns true.
-func (v *Void) IsValid() bool {
+func (*Void) IsValid() bool {
 	return true
 }
 
