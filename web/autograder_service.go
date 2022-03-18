@@ -40,7 +40,7 @@ func NewAutograderService(logger *zap.Logger, db database.Database, scms *auth.S
 // GetUser will return current user with active course enrollments
 // to use in separating teacher and admin roles
 // Access policy: everyone
-func (s *AutograderService) GetUser(ctx context.Context, in *pb.Void) (*pb.User, error) {
+func (s *AutograderService) GetUser(ctx context.Context, _ *pb.Void) (*pb.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetUser failed: authentication error: %v", err)
@@ -56,7 +56,7 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.Void) (*pb.User,
 // GetUsers returns a list of all users.
 // Access policy: Admin.
 // Frontend note: This method is called from AdminPage.
-func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.Users, error) {
+func (s *AutograderService) GetUsers(ctx context.Context, _ *pb.Void) (*pb.Users, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetUsers failed: authentication error: %v", err)
@@ -114,7 +114,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Vo
 
 // IsAuthorizedTeacher checks whether current user has teacher scopes.
 // Access policy: Any User.
-func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void) (*pb.AuthorizationResponse, error) {
+func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, _ *pb.Void) (*pb.AuthorizationResponse, error) {
 	// Currently hardcoded for github only
 	_, scm, err := s.getUserAndSCM(ctx, "github")
 	if err != nil {
@@ -201,7 +201,7 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.CourseRequest)
 
 // GetCourses returns a list of all courses.
 // Access policy: Any User.
-func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Courses, error) {
+func (s *AutograderService) GetCourses(ctx context.Context, _ *pb.Void) (*pb.Courses, error) {
 	courses, err := s.getCourses()
 	if err != nil {
 		s.logger.Errorf("GetCourses failed: %v", err)
@@ -832,7 +832,7 @@ func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.Course
 
 // GetProviders returns a list of SCM providers supported by the backend.
 // Access policy: Any User.
-func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.Providers, error) {
+func (s *AutograderService) GetProviders(ctx context.Context, _ *pb.Void) (*pb.Providers, error) {
 	providers := auth.GetProviders()
 	if len(providers.GetProviders()) < 1 {
 		s.logger.Error("GetProviders failed: found no enabled SCM providers")
