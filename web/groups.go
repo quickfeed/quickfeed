@@ -61,22 +61,22 @@ func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request
 		return err
 	}
 	if err := s.db.DeleteGroup(request.GetGroupID()); err != nil {
-		s.logger.Debugf("Failed to delete group from database: %v", err)
+		s.logger.Debugf("Failed to delete %s group %q from database: %v", course.Code, group.Name, err)
 		// continue with other delete operations
 	}
 	repo, err := s.getRepo(course, group.GetID(), pb.Repository_GROUP)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err // unexpected error
+		return fmt.Errorf("failed to get %s repository for group %q: %w", course.Code, group.Name, err)
 	}
 	if repo == nil {
-		s.logger.Debugf("No repository: %v", err)
+		s.logger.Debugf("No %s repository found for group %q: %v", course.Code, group.Name, err)
 		// cannot continue without repository information
 		return nil
 	}
 
 	// when deleting an approved group, remove github repository and team as well
 	if err = s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
-		s.logger.Debugf("Failed to delete repository from database: %v", err)
+		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.Code, group.Name, err)
 		// continue with other delete operations
 	}
 	return deleteGroupRepoAndTeam(ctx, sc, repo.GetRepositoryID(), group.GetTeamID(), repo.GetOrganizationID())
@@ -143,7 +143,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 
 	repo, err := s.getRepo(course, group.GetID(), pb.Repository_GROUP)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err // unexpected error
+		return fmt.Errorf("failed to get %s repository for group %q: %w", course.Code, group.Name, err)
 	}
 	if repo == nil {
 		// no group repository exists; create new repository for group

@@ -323,25 +323,25 @@ func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, en
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 	if err := s.db.RejectEnrollment(user.ID, course.ID); err != nil {
-		s.logger.Debugf("Failed to delete enrollment from database: %v", err)
+		s.logger.Debugf("Failed to delete %s enrollment for %q from database: %v", course.Code, user.Login, err)
 		// continue with other delete operations
 	}
 	repo, err := s.getRepo(course, user.GetID(), pb.Repository_USER)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err // unexpected error
+		return fmt.Errorf("failed to get %s repository for %q: %w", course.Code, user.Login, err)
 	}
 	if repo == nil {
-		s.logger.Debugf("No repository: %v", err)
+		s.logger.Debugf("No %s repository found for %q: %v", course.Code, user.Login, err)
 		// cannot continue without repository information
 		return nil
 	}
 	if err = s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
-		s.logger.Debugf("Failed to delete repository from database: %v", err)
+		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.Code, user.Login, err)
 		// continue with other delete operations
 	}
 	// when deleting a user, remove github repository and organization membership as well
 	if err := removeUserFromCourse(ctx, sc, user.GetLogin(), repo); err != nil {
-		s.logger.Debug("rejectEnrollment: failed to remove user from course (expected behavior): ", err)
+		s.logger.Debugf("rejectEnrollment: failed to remove %q from %s (expected behavior): %v", course.Code, user.Login, err)
 	}
 	return nil
 }
@@ -355,16 +355,16 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 	// which could happen if accepting a previously rejected student
 	repo, err := s.getRepo(course, user.GetID(), pb.Repository_USER)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
+		return fmt.Errorf("failed to get %s repository for %q: %w", course.Code, user.Login, err)
 	}
 
 	if enrolled.Status == pb.Enrollment_TEACHER {
 		err = revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
 		if err != nil {
-			s.logger.Errorf("Failed to revoke teacher status for user %s and course %s: %v", user.Login, course.Name, err)
+			s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.Code, user.Login, err)
 		}
 	} else {
-		s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repo: ", repo != nil)
+		s.logger.Debugf("Enrolling student %q in %s; has database repo: %t", user.Login, course.Code, repo != nil)
 		if repo != nil {
 			// repo already exist, update enrollment in database
 			goto UPDATE
@@ -372,10 +372,9 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		// create user repo, user team, and add user to students team
 		repo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
 		if err != nil {
-			s.logger.Errorf("Failed to update repos or team membership for student %s: %v", user.Login, err)
-			return err
+			return fmt.Errorf("failed to update %s repository or team membership for %q: %w", course.Code, user.Login, err)
 		}
-		s.logger.Debug("Enrolling student: ", user.GetLogin(), " repo and team update done")
+		s.logger.Debugf("Enrolling student %q in %s; repo and team update done", user.Login, course.Code)
 
 		// add student repo to database if SCM interaction above was successful
 		userRepo := pb.Repository{
@@ -385,13 +384,12 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 			HTMLURL:        repo.WebURL,
 			RepoType:       pb.Repository_USER,
 		}
-
 		if err := s.db.CreateRepository(&userRepo); err != nil {
-			return err
+			return fmt.Errorf("failed to create %s repository for %q: %w", course.Code, user.Login, err)
 		}
 
 		if err := s.acceptRepositoryInvites(ctx, user, course); err != nil {
-			s.logger.Errorf("Failed to accept repository invites for student %s: %v", user.Login, err)
+			s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.Code, user.Login, err)
 		}
 	}
 UPDATE:
@@ -409,8 +407,7 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 
 	// make owner, remove from students, add to teachers
 	if _, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_TEACHER); err != nil {
-		s.logger.Errorf("Failed to update team membership for teacher %s: %v", user.Login, err)
-		return err
+		return fmt.Errorf("failed to update %s repository or team membership for teacher %q: %w", course.Code, user.Login, err)
 	}
 	return s.db.UpdateEnrollment(&pb.Enrollment{
 		UserID:   user.ID,
