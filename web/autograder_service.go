@@ -201,7 +201,7 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.CourseRequest)
 
 // GetCourses returns a list of all courses.
 // Access policy: Any User.
-func (s *AutograderService) GetCourses(ctx context.Context, _ *pb.Void) (*pb.Courses, error) {
+func (s *AutograderService) GetCourses(_ context.Context, _ *pb.Void) (*pb.Courses, error) {
 	courses, err := s.getCourses()
 	if err != nil {
 		s.logger.Errorf("GetCourses failed: %v", err)
@@ -232,7 +232,7 @@ func (s *AutograderService) UpdateCourseVisibility(ctx context.Context, in *pb.E
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
 // Access policy: Any User.
-func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
+func (s *AutograderService) CreateEnrollment(_ context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	err := s.createEnrollment(in)
 	if err != nil {
 		s.logger.Errorf("CreateEnrollment failed: %v", err)
@@ -299,7 +299,7 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Course
 
 // GetCoursesByUser returns all courses the given user is enrolled into with the given status.
 // Access policy: Any User.
-func (s *AutograderService) GetCoursesByUser(ctx context.Context, in *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
+func (s *AutograderService) GetCoursesByUser(_ context.Context, in *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
 	courses, err := s.getCoursesByUser(in)
 	if err != nil {
 		s.logger.Errorf("GetCoursesWithEnrollment failed: %v", err)
@@ -643,7 +643,7 @@ func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.Rebui
 
 // CreateBenchmark adds a new grading benchmark for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) CreateBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
+func (s *AutograderService) CreateBenchmark(_ context.Context, in *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
 	bm, err := s.createBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("CreateBenchmark failed for %+v: %v", in, err)
@@ -654,7 +654,7 @@ func (s *AutograderService) CreateBenchmark(ctx context.Context, in *pb.GradingB
 
 // UpdateBenchmark edits a grading benchmark for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) UpdateBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
+func (s *AutograderService) UpdateBenchmark(_ context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
 	err := s.updateBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("UpdateBenchmark failed for %+v: %v", in, err)
@@ -665,7 +665,7 @@ func (s *AutograderService) UpdateBenchmark(ctx context.Context, in *pb.GradingB
 
 // DeleteBenchmark removes a grading benchmark
 // Access policy: Teacher of CourseID
-func (s *AutograderService) DeleteBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
+func (s *AutograderService) DeleteBenchmark(_ context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
 	err := s.deleteBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("DeleteBenchmark failed for %+v: %v", in, err)
@@ -676,7 +676,7 @@ func (s *AutograderService) DeleteBenchmark(ctx context.Context, in *pb.GradingB
 
 // CreateCriterion adds a new grading criterion for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) CreateCriterion(ctx context.Context, in *pb.GradingCriterion) (*pb.GradingCriterion, error) {
+func (s *AutograderService) CreateCriterion(_ context.Context, in *pb.GradingCriterion) (*pb.GradingCriterion, error) {
 	c, err := s.createCriterion(in)
 	if err != nil {
 		s.logger.Errorf("CreateCriterion failed for %+v: %v", in, err)
@@ -687,7 +687,7 @@ func (s *AutograderService) CreateCriterion(ctx context.Context, in *pb.GradingC
 
 // UpdateCriterion edits a grading criterion for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) UpdateCriterion(ctx context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
+func (s *AutograderService) UpdateCriterion(_ context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
 	err := s.updateCriterion(in)
 	if err != nil {
 		s.logger.Errorf("UpdateCriterion failed for %+v: %v", in, err)
@@ -698,7 +698,7 @@ func (s *AutograderService) UpdateCriterion(ctx context.Context, in *pb.GradingC
 
 // DeleteCriterion removes a grading criterion for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) DeleteCriterion(ctx context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
+func (s *AutograderService) DeleteCriterion(_ context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
 	err := s.deleteCriterion(in)
 	if err != nil {
 		s.logger.Errorf("DeleteCriterion failed for %+v: %v", in, err)
@@ -798,7 +798,7 @@ func (s *AutograderService) GetReviewers(ctx context.Context, in *pb.SubmissionR
 
 // GetAssignments returns a list of all assignments for the given course.
 // Access policy: Any User.
-func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.CourseRequest) (*pb.Assignments, error) {
+func (s *AutograderService) GetAssignments(_ context.Context, in *pb.CourseRequest) (*pb.Assignments, error) {
 	courseID := in.GetCourseID()
 	assignments, err := s.getAssignments(courseID)
 	if err != nil {
@@ -832,7 +832,7 @@ func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.Course
 
 // GetProviders returns a list of SCM providers supported by the backend.
 // Access policy: Any User.
-func (s *AutograderService) GetProviders(ctx context.Context, _ *pb.Void) (*pb.Providers, error) {
+func (s *AutograderService) GetProviders(_ context.Context, _ *pb.Void) (*pb.Providers, error) {
 	providers := auth.GetProviders()
 	if len(providers.GetProviders()) < 1 {
 		s.logger.Error("GetProviders failed: found no enabled SCM providers")
