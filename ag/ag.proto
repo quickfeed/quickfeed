@@ -69,8 +69,8 @@ message Course {
     uint64 ID = 1;
     uint64 courseCreatorID = 2;
     string name = 3;
-    string code = 4;
-    uint32 year = 5;
+    string code = 4 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_course"'}];
+    uint32 year = 5 [(go.field) = {tags: 'gorm:"uniqueIndex:idx_unique_course"'}];
     string tag = 6;
     string provider = 7;
     uint64 organizationID = 8;

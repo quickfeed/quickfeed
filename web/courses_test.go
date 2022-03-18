@@ -49,7 +49,7 @@ var allCourses = []*pb.Course{
 		Name:            "Hyped Systems",
 		CourseCreatorID: 1,
 		Code:            "DATx20",
-		Year:            2019,
+		Year:            2020,
 		Tag:             "Fall",
 		Provider:        "fake",
 		OrganizationID:  4,

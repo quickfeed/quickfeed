@@ -867,12 +867,27 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 		s.logger.Errorf("GetRepositories failed: authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
+
+	course, err := s.getCourse(in.GetCourseID())
+	if err != nil {
+		s.logger.Errorf("GetRepositories failed: course %d not found: %v", in.GetCourseID(), err)
+		return nil, status.Error(codes.NotFound, "course not found")
+	}
+
+	enrol, _ := s.db.GetEnrollmentByCourseAndUser(course.GetID(), usr.GetID())
+
 	urls := make(map[string]string)
 	for _, repoType := range in.GetRepoTypes() {
-		repo, _ := s.getRepositoryURL(usr, in.GetCourseID(), repoType)
-		// we do not care if some repo was not found, this will append an empty url string in that case
-		// frontend will take care of the rest
-		urls[repoType.String()] = repo
+		var id uint64
+		switch repoType {
+		case pb.Repository_USER:
+			id = usr.GetID()
+		case pb.Repository_GROUP:
+			id = enrol.GetGroupID() // will be 0 if not enrolled in a group
+		}
+		repo, _ := s.getRepo(course, id, repoType)
+		// for repo == nil: will result in an empty URL string, which will be ignored by the frontend
+		urls[repoType.String()] = repo.GetHTMLURL()
 	}
 	return &pb.Repositories{URLs: urls}, nil
 }

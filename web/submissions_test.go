@@ -349,6 +349,186 @@ func TestApproveSubmission(t *testing.T) {
 	}
 }
 
+func TestGetSubmissionsByCourse(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeUser(t, db, 1)
+	course := allCourses[2]
+	qtest.CreateCourse(t, db, admin, course)
+	student1 := qtest.CreateFakeUser(t, db, 2)
+	student2 := qtest.CreateFakeUser(t, db, 3)
+	student3 := qtest.CreateFakeUser(t, db, 4)
+
+	fakeProvider, scms := qtest.FakeProviderMap(t)
+	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ctx := qtest.WithUserContext(context.Background(), admin)
+	if _, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
+		t.Fatal(err)
+	}
+	qtest.EnrollStudent(t, db, student1, course)
+	qtest.EnrollStudent(t, db, student2, course)
+	qtest.EnrollStudent(t, db, student3, course)
+
+	enrols, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: course.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(enrols.Enrollments) != 4 {
+		t.Errorf("expected 4 enrollments, got %d", len(enrols.Enrollments))
+	}
+
+	group, err := ags.CreateGroup(ctx, &pb.Group{
+		CourseID: course.ID,
+		Name:     "group1",
+		Users:    []*pb.User{student1, student3},
+		Status:   pb.Group_APPROVED,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	group2, err := ags.CreateGroup(ctx, &pb.Group{
+		CourseID: course.ID,
+		Name:     "group2",
+		Users:    []*pb.User{student2},
+		Status:   pb.Group_APPROVED,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	lab1 := &pb.Assignment{
+		CourseID: course.ID,
+		Name:     "lab 1",
+		Deadline: "2020-02-23T18:00",
+		Order:    1,
+	}
+	lab2 := &pb.Assignment{
+		CourseID:   course.ID,
+		Name:       "lab 2",
+		Deadline:   "2020-02-23T18:00",
+		Order:      2,
+		IsGroupLab: true,
+	}
+	if err = db.CreateAssignment(lab1); err != nil {
+		t.Fatal(err)
+	}
+	if err = db.CreateAssignment(lab2); err != nil {
+		t.Fatal(err)
+	}
+	submission1 := &pb.Submission{
+		UserID:       student1.ID,
+		AssignmentID: lab1.ID,
+		Score:        44,
+	}
+	submission2 := &pb.Submission{
+		UserID:       student2.ID,
+		AssignmentID: lab1.ID,
+		Score:        66,
+	}
+	submission3 := &pb.Submission{
+		GroupID:      group.ID,
+		AssignmentID: lab2.ID,
+		Score:        16,
+	}
+	submission4 := &pb.Submission{
+		GroupID:      group2.ID,
+		AssignmentID: lab2.ID,
+		Score:        29,
+	}
+	if err = db.CreateSubmission(submission1); err != nil {
+		t.Fatal(err)
+	}
+	if err = db.CreateSubmission(submission2); err != nil {
+		t.Fatal(err)
+	}
+	if err = db.CreateSubmission(submission3); err != nil {
+		t.Fatal(err)
+	}
+	if err = db.CreateSubmission(submission4); err != nil {
+		t.Fatal(err)
+	}
+
+	// submission3 appears before submission2 because the allSubmissions.Links ([]*EnrollmentLink)
+	// are returned in the order of enrollments, not the order of submission inserts.
+	// Similarly, submission3 also appear at the end because student3 (last to enroll) is in submission3's group.
+	wantAllSubmissions := []*pb.Submission{submission1, submission3, submission2, submission4, submission3}
+	wantIndividualSubmissions := []*pb.Submission{submission1, submission2}
+	wantGroupSubmissions := []*pb.Submission{submission3, submission4}
+
+	// default is all submissions
+	submissions, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// be specific that we want all submissions
+	allSubmissions, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{
+		CourseID: course.ID,
+		Type:     pb.SubmissionsForCourseRequest_ALL,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// check that default and all submissions (SubmissionsForCourseRequest_ALL) are the same
+	if diff := cmp.Diff(submissions, allSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.TestGetSubmissionsByCourse() mismatch (-submissions +allSubmissions):\n%s", diff)
+	}
+
+	gotAllSubmissions := []*pb.Submission{}
+	for _, s := range allSubmissions.Links {
+		for _, subLink := range s.Submissions {
+			if subLink.Submission != nil {
+				gotAllSubmissions = append(gotAllSubmissions, subLink.Submission)
+			}
+		}
+	}
+	if diff := cmp.Diff(wantAllSubmissions, gotAllSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.TestGetSubmissionsByCourse() mismatch (-wantAllSubmissions +gotAllSubmissions):\n%s", diff)
+	}
+
+	// get only individual submissions
+	individualSubmissions, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{
+		CourseID: course.ID,
+		Type:     pb.SubmissionsForCourseRequest_INDIVIDUAL,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	gotIndividualSubmissions := []*pb.Submission{}
+	for _, s := range individualSubmissions.Links {
+		for _, subLink := range s.Submissions {
+			if subLink.Submission != nil {
+				gotIndividualSubmissions = append(gotIndividualSubmissions, subLink.Submission)
+			}
+		}
+	}
+	if diff := cmp.Diff(wantIndividualSubmissions, gotIndividualSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.TestGetSubmissionsByCourse() mismatch (-wantIndividualSubmissions +gotIndividualSubmissions):\n%s", diff)
+	}
+
+	// get only group submissions
+	groupSubmissions, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{
+		CourseID: course.ID,
+		Type:     pb.SubmissionsForCourseRequest_GROUP,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	gotGroupSubmissions := []*pb.Submission{}
+	for _, s := range groupSubmissions.Links {
+		for _, subLink := range s.Submissions {
+			if subLink.Submission != nil {
+				gotGroupSubmissions = append(gotGroupSubmissions, subLink.Submission)
+			}
+		}
+	}
+	if diff := cmp.Diff(wantGroupSubmissions, gotGroupSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.TestGetSubmissionsByCourse() mismatch (-wantGroupSubmissions +gotGroupSubmissions):\n%s", diff)
+	}
+}
+
 func TestGetCourseLabSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -365,26 +545,8 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	student := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course1.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course2.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&pb.Enrollment{
-		UserID:   student.ID,
-		CourseID: course1.ID,
-		Status:   pb.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&pb.Enrollment{
-		UserID:   student.ID,
-		CourseID: course2.ID,
-		Status:   pb.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, student, course1)
+	qtest.EnrollStudent(t, db, student, course2)
 
 	// make labs with similar lab names for both courses
 	lab1c1 := &pb.Assignment{
