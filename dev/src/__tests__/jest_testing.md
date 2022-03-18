@@ -1,11 +1,11 @@
 # How to run jest tests
 
-# Plugins needed installments
+## Plugins needed
 
 To install jest:
 
 ```shell
-% npm i jest   
+% npm i jest
 ```
 
 To install enzyme:
@@ -26,16 +26,18 @@ To install enzyme-adapter-react-17:
 % npm i @wojtekmaj/enzyme-adapter-react-17
 ```
 
-# How to run the tests
+## How to run the tests
 
-To run tests go to the `src/__tests__` folder. 
+To run tests go to the `src/__tests__` folder.
 
 To run all tests:
 
 ```shell
 % jest
 ```
+
 or:
+
 ```shell
 % npm test
 ```
@@ -47,6 +49,7 @@ To run a specific test:
 ```
 
 or:
+
 ```shell
 % jest <name of the test you want to run>
 ````
