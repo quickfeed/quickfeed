@@ -74,9 +74,21 @@ printf "Default script\n"
 printf "Default script\n"
 `,
 			Tasks: []*pb.Task{
-				{Title: "Exercises from Tour of Go"},
-				{Title: "Go Exercises"},
-				{Title: "Multiple Choice Questions about Go Programming"},
+				{
+					Title:           "Exercises from Tour of Go",
+					AssignmentOrder: 3,
+					Name:            "lab3/task-tour-of-go.md",
+				},
+				{
+					Title:           "Go Exercises",
+					AssignmentOrder: 3,
+					Name:            "lab3/task-learn-go.md",
+				},
+				{
+					Title:           "Multiple Choice Questions about Go Programming",
+					AssignmentOrder: 3,
+					Name:            "lab3/task-go-questions.md",
+				},
 			},
 		},
 	}

@@ -5,7 +5,7 @@ import (
 )
 
 // CreateTasks creates slice of tasks
-func (db *GormDB) CreateTasks(tasks []*pb.Task) (err error) {
+func (db *GormDB) CreateTasks(tasks []*pb.Task) error {
 	if len(tasks) == 0 {
 		return nil
 	}
@@ -18,9 +18,9 @@ func (db *GormDB) DeleteTask(task *pb.Task) error {
 }
 
 // UpdateTasks updates slice of tasks
-func (db *GormDB) UpdateTasks(tasks []*pb.Task) (err error) {
+func (db *GormDB) UpdateTasks(tasks []*pb.Task) error {
 	for _, task := range tasks {
-		err = db.conn.Model(&pb.Task{}).
+		err := db.conn.Model(&pb.Task{}).
 			Where(&pb.Task{ID: task.GetID()}).
 			Updates(task).Error
 		if err != nil {
@@ -49,9 +49,9 @@ func (db *GormDB) CreateIssues(issues []*pb.Issue) error {
 }
 
 // UpdateIssues updates a batch of issues
-func (db *GormDB) UpdateIssues(issues []*pb.Issue) (err error) {
+func (db *GormDB) UpdateIssues(issues []*pb.Issue) error {
 	for _, issue := range issues {
-		err = db.conn.Model(&pb.Issue{}).
+		err := db.conn.Model(&pb.Issue{}).
 			Where(&pb.Issue{ID: issue.GetID()}).
 			Updates(issue).Error
 		if err != nil {

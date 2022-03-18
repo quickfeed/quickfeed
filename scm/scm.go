@@ -66,11 +66,11 @@ type SCM interface {
 	// CreateIssue on a Repository
 	CreateIssue(context.Context, *CreateIssueOptions) (*Issue, error)
 	// GetRepoIssue a particular issue in a Repository
-	GetRepoIssue(context.Context, *IssueOptions) (*Issue, error)
+	GetRepoIssue(ctx context.Context, issueNumber int, opt *RepositoryOptions) (*Issue, error)
 	// List all the issues in a Repository
-	GetRepoIssues(context.Context, *IssueOptions) ([]*Issue, error)
+	GetRepoIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error)
 	// Edit a particular issue in a Repository
-	EditRepoIssue(context.Context, *IssueOptions, *CreateIssueOptions) (*Issue, error)
+	EditRepoIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error)
 
 	// Accepts repository invite.
 	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
@@ -257,13 +257,6 @@ type CreateIssueOptions struct {
 	Labels       *[]string
 	Assignee     *string
 	Assignees    *[]string
-}
-
-// IssueOptions to get certain get issue
-type IssueOptions struct {
-	Organization string
-	Repository   string
-	IssueNumber  int
 }
 
 // RepositoryInvitationOptions contains information on which organization and user to accept invitations for.

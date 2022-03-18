@@ -291,7 +291,7 @@ func (*GitlabSCM) CreateIssue(ctx context.Context, opt *CreateIssueOptions) (*Is
 }
 
 // GetRepoIssue implements the SCM interface
-func (*GitlabSCM) GetRepoIssue(context.Context, *IssueOptions) (*Issue, error) {
+func (*GitlabSCM) GetRepoIssue(ctx context.Context, issueNumber int, opt *RepositoryOptions) (*Issue, error) {
 	// TODO no implementation provided yet
 	return nil, ErrNotSupported{
 		SCM:    "gitlab",
@@ -300,7 +300,7 @@ func (*GitlabSCM) GetRepoIssue(context.Context, *IssueOptions) (*Issue, error) {
 }
 
 // GetRepoIssues implements the SCM interface
-func (*GitlabSCM) GetRepoIssues(context.Context, *IssueOptions) ([]*Issue, error) {
+func (*GitlabSCM) GetRepoIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error) {
 	// TODO no implementation provided yet
 	return nil, ErrNotSupported{
 		SCM:    "gitlab",
@@ -308,7 +308,7 @@ func (*GitlabSCM) GetRepoIssues(context.Context, *IssueOptions) ([]*Issue, error
 	}
 }
 
-func (*GitlabSCM) EditRepoIssue(context.Context, *IssueOptions, *CreateIssueOptions) (*Issue, error) {
+func (*GitlabSCM) EditRepoIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error) {
 	// TODO no implementation provided yet
 	return nil, ErrNotSupported{
 		SCM:    "gitlab",

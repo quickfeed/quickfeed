@@ -21,12 +21,12 @@ import (
 // UpdateFromTestsRepo updates the database record for the course assignments.
 func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course *pb.Course) {
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), pb.TestsRepo)
-	s, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
+	scm, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
 	if err != nil {
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
 	}
-	assignments, dockerfile, err := fetchAssignments(context.Background(), logger, s, course)
+	assignments, dockerfile, err := fetchAssignments(context.Background(), logger, scm, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
 		return
@@ -54,7 +54,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
 
 	ctx := context.Background()
-	err = HandleTasks(ctx, db, s, course, GetTasksFromAssignments(ctx, assignments))
+	err = handleTasks(ctx, db, scm, course, getTasksFromAssignments(ctx, assignments))
 	if err != nil {
 		logger.Errorf("Failed to Create tasks on '%s' repository: %v", pb.TestsRepo, err)
 		return

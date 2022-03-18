@@ -133,17 +133,17 @@ type Database interface {
 	GetRepositoriesWithIssues(query *pb.Repository) ([]*pb.Repository, error)
 
 	// CreateTasks creates slice of tasks
-	CreateTasks(tasks []*pb.Task) (err error)
+	CreateTasks(tasks []*pb.Task) error
 	// DeleteTask deletes specified task
 	DeleteTask(task *pb.Task) error
 	// UpdateTasks updates slice of tasks
-	UpdateTasks(tasks []*pb.Task) (err error)
+	UpdateTasks(tasks []*pb.Task) error
 	// GetTasks gets tasks based on query
 	GetTasks(query *pb.Task) ([]*pb.Task, error)
 	// CreateIssues creates a batch of issues
 	CreateIssues(issues []*pb.Issue) error
 	// UpdateIssues updates a batch of issues
-	UpdateIssues(issues []*pb.Issue) (err error)
+	UpdateIssues(issues []*pb.Issue) error
 	// GetIssues gets issues based on query
 	GetIssues(query *pb.Issue) ([]*pb.Issue, error)
 

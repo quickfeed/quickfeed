@@ -719,7 +719,7 @@ func (s *GithubSCM) CreateIssue(ctx context.Context, opt *CreateIssueOptions) (*
 }
 
 // GetRepoIssue implements the SCM interface
-func (s *GithubSCM) GetRepoIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
+func (s *GithubSCM) GetRepoIssue(ctx context.Context, issueNumber int, opt *RepositoryOptions) (*Issue, error) {
 	if !opt.valid() {
 		return nil, ErrMissingFields{
 			Method:  "GetRepoIssue",
@@ -727,11 +727,11 @@ func (s *GithubSCM) GetRepoIssue(ctx context.Context, opt *IssueOptions) (*Issue
 		}
 	}
 
-	issue, _, err := s.client.Issues.Get(ctx, opt.Organization, opt.Repository, opt.IssueNumber)
+	issue, _, err := s.client.Issues.Get(ctx, opt.Owner, opt.Path, issueNumber)
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "GetRepoIssue",
-			Message:  fmt.Sprintf("Failed to get Issue %v, make sure all the details are correct ", opt.IssueNumber),
+			Message:  fmt.Sprintf("Failed to get Issue %v, make sure all the details are correct ", issueNumber),
 			GitError: err,
 		}
 	}
@@ -739,18 +739,18 @@ func (s *GithubSCM) GetRepoIssue(ctx context.Context, opt *IssueOptions) (*Issue
 }
 
 // GetRepoIssues implements the SCM interface
-func (s *GithubSCM) GetRepoIssues(ctx context.Context, opt *IssueOptions) ([]*Issue, error) {
+func (s *GithubSCM) GetRepoIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error) {
 	if !opt.valid() {
 		return nil, ErrMissingFields{
 			Method:  "GetRepoIssues",
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	issueList, _, err := s.client.Issues.ListByRepo(ctx, opt.Organization, opt.Repository, &github.IssueListByRepoOptions{})
+	issueList, _, err := s.client.Issues.ListByRepo(ctx, opt.Owner, opt.Path, &github.IssueListByRepoOptions{})
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "GetRepoIssues",
-			Message:  fmt.Sprintf("Failed to get Issues from repo %s make sure all the details are correct ", opt.Repository),
+			Message:  fmt.Sprintf("Failed to get Issues from repo %s make sure all the details are correct ", opt.Path),
 			GitError: err,
 		}
 	}
@@ -763,7 +763,7 @@ func (s *GithubSCM) GetRepoIssues(ctx context.Context, opt *IssueOptions) ([]*Is
 }
 
 // EditRepoIssue implements the SCM interface
-func (s *GithubSCM) EditRepoIssue(ctx context.Context, opt *IssueOptions, isu *CreateIssueOptions) (*Issue, error) {
+func (s *GithubSCM) EditRepoIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error) {
 	if !opt.valid() {
 		return nil, ErrMissingFields{
 			Method:  "EditRepoIssue",
@@ -771,22 +771,22 @@ func (s *GithubSCM) EditRepoIssue(ctx context.Context, opt *IssueOptions, isu *C
 		}
 	}
 	issueReq := &github.IssueRequest{
-		Title:     &isu.Title,
-		Body:      &isu.Body,
-		Assignee:  isu.Assignee,
-		Assignees: isu.Assignees,
+		Title:     &opt.Title,
+		Body:      &opt.Body,
+		Assignee:  opt.Assignee,
+		Assignees: opt.Assignees,
 	}
 
-	s.logger.Debugf("EditRepoIssue: Editing issue %s on %s Repository", opt.IssueNumber, opt.Repository)
-	issue, _, err := s.client.Issues.Edit(ctx, opt.Organization, opt.Repository, opt.IssueNumber, issueReq)
+	s.logger.Debugf("EditRepoIssue: Editing issue %s on %s Repository", issueNumber, opt.Repository)
+	issue, _, err := s.client.Issues.Edit(ctx, opt.Organization, opt.Repository, issueNumber, issueReq)
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "CreateIssue",
-			Message:  fmt.Sprintf("failed to Edit Issue %v, make sure all the details are correct ", opt.IssueNumber),
+			Message:  fmt.Sprintf("failed to Edit Issue #%v, on repository: %s, at organization: %s", issueNumber, opt.Repository, opt.Organization),
 			GitError: err,
 		}
 	}
-	s.logger.Debugf("EditRepoIssue: done Editing issue number  %s", opt.IssueNumber)
+	s.logger.Debugf("EditRepoIssue: done Editing issue number  %s", issueNumber)
 
 	return toIssue(issue), nil
 }

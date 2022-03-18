@@ -159,9 +159,9 @@ func TestGetIssues(t *testing.T) {
 
 	ctx := context.Background()
 
-	opt := &scm.IssueOptions{
-		Organization: qfTestOrg,
-		Repository:   repo,
+	opt := &scm.RepositoryOptions{
+		Owner: qfTestOrg,
+		Path:  repo,
 	}
 	_, err = s.GetRepoIssues(ctx, opt)
 	if err != nil {
@@ -185,12 +185,11 @@ func TestGetIssue(t *testing.T) {
 
 	ctx := context.Background()
 
-	opt := &scm.IssueOptions{
-		Organization: qfTestOrg,
-		Repository:   repo,
-		IssueNumber:  issueNumber,
+	opt := &scm.RepositoryOptions{
+		Owner: qfTestOrg,
+		Path:  repo,
 	}
-	_, err = s.GetRepoIssue(ctx, opt)
+	_, err = s.GetRepoIssue(ctx, issueNumber, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -216,20 +215,14 @@ func TestEditRepoIssue(t *testing.T) {
 
 	ctx := context.Background()
 
-	opt1 := &scm.IssueOptions{
-		Organization: qfTestOrg,
-		Repository:   repo,
-		IssueNumber:  issueNumber,
-	}
-
-	opt2 := &scm.CreateIssueOptions{
+	opt := &scm.CreateIssueOptions{
 		Organization: qfTestOrg,
 		Repository:   repo,
 		Title:        title,
 		Body:         body,
 	}
 
-	_, err = s.EditRepoIssue(ctx, opt1, opt2)
+	_, err = s.EditRepoIssue(ctx, issueNumber, opt)
 	if err != nil {
 		t.Fatal(err)
 	}

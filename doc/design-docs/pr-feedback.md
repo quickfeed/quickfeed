@@ -104,7 +104,7 @@ Another idea: maybe we could assign all teachers as reviewer/approver, but requi
 ### When should a pull request be created?
 
 The purpose of using pull requests is to give the student a more accessible hub to track their process (via actions). It would therefore make sense for the student to have the pull request accessible as they work, and not just when they
-feel they are ready for approval. This question is also somewhat related to the previous one, in the sense of when is the `review` and the `approval` process supposed to begin, and is there any difference between them?
+feel they are ready for approval. This question is also somewhat related to the previous one, in the sense of when are the `review` and the `approval` processes supposed to begin, and is there any difference between them?
 If there is a difference between them, when are reviewers assigned, and when do we go from the `review` to the `approval` phase? When the automatic tests give the student a passing score?
 
 #### Hein's response
@@ -125,3 +125,12 @@ There are three stages:
 
 Maybe in the initial stage, the PR is marked as draft; only when the all tests pass will the PR be moved out of draft mode to be reviewed.
 Moving the PR out of draft mode could be automatic, but students can do it manually also.
+
+#### Oje notes on responses
+
+- How do we know that a task is completed. Currently quickfeed grades only based on the entire assignment.
+- If group assignments are to be separated into individual tasks, one drawback would be that these tasks would have to be independent of each other. Otherwise one task can not be implemented before another is complete.
+- How does the teacher communicate to quickfeed their desired "settings" for the assignment, e.g. that quickfeed is supposed to automatically assign reviewers. I assume via .yaml file.
+- How would a student signal that their pull request is ready for approval? Would they have to be reliant on the teacher assigned as a reviewer simply checking in every once in a while, to see if they have gotten a passing grade?
+  Or would they maybe signal in a comment on the pull request, that they now want their assignment reviewed? It still leads to a situation where the approver would have to check in, in order to know.
+- If we now are going to a group only implementation, what should happen with issues/tasks? Should issues now only be created on group repositories?

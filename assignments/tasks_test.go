@@ -2,8 +2,6 @@ package assignments
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -32,7 +30,7 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 	admin := qtest.CreateFakeUser(t, db, uint64(1))
 	qtest.CreateCourse(t, db, admin, course)
 
-	// Create assignments
+	// Find and create assignments
 	foundAssignments, _, err := fetchAssignments(c, zap.NewNop().Sugar(), s, course)
 	if err != nil {
 		return db, cleanup, err
@@ -41,6 +39,15 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 	err = db.UpdateAssignments(foundAssignments)
 	if err != nil {
 		return db, cleanup, err
+	}
+
+	// Creates tasks found in assignments
+	tasks := getTasksFromAssignments(c, foundAssignments)
+	for _, assignment := range foundAssignments {
+		err = synchronizeTasks(c, db, assignment, tasks)
+		if err != nil {
+			return db, cleanup, err
+		}
 	}
 
 	// Get repositories
@@ -55,7 +62,6 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 		var user *pb.User
 		// Might not even be necessary to handle repos differently in these tests.
 		dbRepo := &pb.Repository{}
-		fmt.Printf("\n%s", repo.Path)
 		switch repo.Path {
 		case pb.InfoRepo: // repo.Path is "course-info" here, yet we only check for "info"
 			dbRepo = &pb.Repository{
@@ -96,9 +102,9 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 			return db, cleanup, err
 		}
 
-		existingScmIssues, err := s.GetRepoIssues(c, &scm.IssueOptions{
-			Organization: course.Name,
-			Repository:   repo.Path,
+		existingScmIssues, err := s.GetRepoIssues(c, &scm.RepositoryOptions{
+			Owner: course.Name,
+			Path:  repo.Path,
 		})
 		if err != nil {
 			return db, cleanup, err
@@ -174,7 +180,7 @@ func TestInitializeDbEnvironment(t *testing.T) {
 	}
 }
 
-// TestGetTasks retrieves all tasks of a given course via API call.
+// TestGetTasks retrieves all tasks of a given course as found in "tests" repository.
 func TestGetTasks(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
@@ -201,57 +207,7 @@ func TestGetTasks(t *testing.T) {
 	}
 }
 
-// TestGetIssuesOnOrg should get all issues on "-labs" repos via API call. Does not get closed issues
-func TestGetIssuesOnOrg(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	course := &pb.Course{
-		Name:             qfTestOrg,
-		OrganizationPath: qfTestOrg,
-	}
-
-	ctx := context.Background()
-
-	org, err := s.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	repos, err := s.GetRepositories(ctx, org)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for _, repo := range repos {
-		// Should change this test.
-		if !strings.HasSuffix(repo.Path, pb.StudentRepoSuffix) {
-			continue
-		}
-		t.Logf("\n\nIssues on repo %s:\n", repo.Path)
-		issues, err := s.GetRepoIssues(ctx, &scm.IssueOptions{
-			Organization: course.Name,
-			Repository:   repo.Path,
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-		for _, issue := range issues {
-			t.Logf("Issue ID: %d\nIssue IssueNumber: %d\nIssue title: %s\nIssue body: %s\n\n", issue.ID, issue.IssueNumber, issue.Title, issue.Body)
-		}
-	}
-
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-// TestHandleTasks runs HandleTasks() on specified org. Results vary depending on which tasks/issues existed prior to running.
+// TestHandleTasks runs handleTasks() on specified org. Results vary depending on what tasks/issues existed prior to running.
 func TestHandleTasks(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
@@ -275,48 +231,14 @@ func TestHandleTasks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	org, err := s.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Prints db contents before HandleTasks. This code is also used elsewhere and should maybe be turned into a function if it's going to stick around
-	repos, err := db.GetRepositoriesWithIssues(&pb.Repository{
-		OrganizationID: org.GetID(),
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, repo := range repos {
-		t.Logf("\nRepository ID: %d\nRepository HTMLURL: %s\nRepository UserID: %d", repo.ID, repo.HTMLURL, repo.UserID)
-		for _, issue := range repo.Issues {
-			t.Logf("\nIssue ID: %d\nIssue RepositoryID: %d\nIssue IssueNumber: %d\nIssue Name: %s\nIssue Title: %s\nIssue Body: %s", issue.ID, issue.RepositoryID, issue.IssueNumber, issue.Name, issue.Title, issue.Body)
-		}
-	}
-
 	assignments, _, err := fetchAssignments(ctx, logger, s, course)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = HandleTasks(ctx, db, s, course, GetTasksFromAssignments(ctx, assignments))
+	err = handleTasks(ctx, db, s, course, getTasksFromAssignments(ctx, assignments))
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	// Db contents after
-	t.Logf("\n\n\nDB AFTER\n\n\n")
-	repos, err = db.GetRepositoriesWithIssues(&pb.Repository{
-		OrganizationID: org.GetID(),
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, repo := range repos {
-		t.Logf("\nRepository ID: %d\nRepository HTMLURL: %s\nRepository UserID: %d", repo.ID, repo.HTMLURL, repo.UserID)
-		for _, issue := range repo.Issues {
-			t.Logf("\nIssue ID: %d\nIssue RepositoryID: %d\nIssue IssueNumber: %d\nIssue Name: %s\nIssue Title: %s\nIssue Body: %s", issue.ID, issue.RepositoryID, issue.IssueNumber, issue.Name, issue.Title, issue.Body)
-		}
 	}
 }
 
@@ -387,7 +309,7 @@ func TestSynchronizeTasks(t *testing.T) {
 
 	// Nothing should happen from this synchronization
 	for _, assignment := range assignments {
-		err := SynchronizeTasks(ctx, db, assignment, tasks)
+		err := synchronizeTasks(ctx, db, assignment, tasks)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -414,7 +336,7 @@ func TestSynchronizeTasks(t *testing.T) {
 	wantTasks = tasks
 
 	for _, assignment := range assignments {
-		err := SynchronizeTasks(ctx, db, assignment, tasks)
+		err := synchronizeTasks(ctx, db, assignment, tasks)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -429,7 +351,7 @@ func TestSynchronizeTasks(t *testing.T) {
 	// -------------------------------------------------------------------------- //
 
 	// Testing adding new task to db, that is not represented by tasks supplied to SynchronizeTasks
-	db.CreateTasks([]*pb.Task{
+	err = db.CreateTasks([]*pb.Task{
 		{
 			AssignmentID:    1,
 			AssignmentOrder: 1,
@@ -438,10 +360,13 @@ func TestSynchronizeTasks(t *testing.T) {
 			Name:            "Fake name",
 		},
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	wantTasks = tasks
 
 	for _, assignment := range assignments {
-		err := SynchronizeTasks(ctx, db, assignment, tasks)
+		err := synchronizeTasks(ctx, db, assignment, tasks)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -541,8 +466,11 @@ func TestSynchronizeIssues(t *testing.T) {
 	// Nothing should happen from this synchronization
 	wantIssues := issues
 	repositories, err = db.GetRepositoriesWithIssues(&pb.Repository{})
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, repo := range repositories {
-		err := FakeSynchronizeIssues(ctx, db, repo, tasks)
+		err := fakeSynchronizeIssues(ctx, db, repo, tasks)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -588,8 +516,11 @@ func TestSynchronizeIssues(t *testing.T) {
 	wantIssues = issues
 
 	repositories, err = db.GetRepositoriesWithIssues(&pb.Repository{})
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, repo := range repositories {
-		err := FakeSynchronizeIssues(ctx, db, repo, tasks)
+		err := fakeSynchronizeIssues(ctx, db, repo, tasks)
 		if err != nil {
 			t.Fatal(err)
 		}
