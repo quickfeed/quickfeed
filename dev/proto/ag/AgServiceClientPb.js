@@ -79,10 +79,7 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoCreateEnrollment = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateEnrollment', grpcWeb.MethodType.UNARY, ag_ag_pb.Enrollment, ag_ag_pb.Void, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoUpdateEnrollment = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateEnrollment', grpcWeb.MethodType.UNARY, ag_ag_pb.Enrollment, ag_ag_pb.Void, function (request) {
-            return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoUpdateEnrollments = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateEnrollments', grpcWeb.MethodType.UNARY, ag_ag_pb.CourseRequest, ag_ag_pb.Void, function (request) {
+        this.methodInfoUpdateEnrollments = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateEnrollments', grpcWeb.MethodType.UNARY, ag_ag_pb.UpdateEnrollmentsRequest, ag_ag_pb.Void, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Void.deserializeBinary);
         this.methodInfoGetSubmissions = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetSubmissions', grpcWeb.MethodType.UNARY, ag_ag_pb.SubmissionRequest, ag_ag_pb.Submissions, function (request) {
@@ -327,14 +324,6 @@ var AutograderServiceClient = /** @class */ (function () {
         }
         return this.client_.unaryCall(this.hostname_ +
             '/ag.AutograderService/CreateEnrollment', request, metadata || {}, this.methodInfoCreateEnrollment);
-    };
-    AutograderServiceClient.prototype.updateEnrollment = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/ag.AutograderService/UpdateEnrollment', request, metadata || {}, this.methodInfoUpdateEnrollment, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateEnrollment', request, metadata || {}, this.methodInfoUpdateEnrollment);
     };
     AutograderServiceClient.prototype.updateEnrollments = function (request, metadata, callback) {
         if (callback !== undefined) {
