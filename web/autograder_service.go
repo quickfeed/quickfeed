@@ -605,19 +605,19 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 	return &pb.Void{}, err
 }
 
-// RebuildSubmissions runs tests for a single submission if the request contain submission ID
-// or for all submissions for the given assignment if the request contains course ID.
-// Access policy:
-// Teacher of CourseID.
+// RebuildSubmissions re-runs the tests for the given assignment.
+// A single submission is executed again if the request specifies a submission ID
+// or all submissions if the request specifies a course ID.
+// Access policy: Teacher of CourseID.
 func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.RebuildRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
-	if !s.isTeacher(usr.ID, in.GetCourseID()) {
-		s.logger.Error("RebuildSubmissions failed: user is not teacher")
-		return nil, status.Error(codes.PermissionDenied, "only teachers can rebuild all submissions")
-	}
 	if err != nil {
 		s.logger.Errorf("RebuildSubmissions failed: authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
+	}
+	if !s.isTeacher(usr.ID, in.GetCourseID()) {
+		s.logger.Error("RebuildSubmissions failed: user is not teacher")
+		return nil, status.Error(codes.PermissionDenied, "only teachers can rebuild all submissions")
 	}
 	// RebuildType can be either SubmissionID or CourseID, but not both.
 	switch in.GetRebuildType().(type) {
@@ -626,8 +626,7 @@ func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.Rebui
 			s.logger.Errorf("RebuildSubmission failed: submitter has no access to the course")
 			return nil, status.Error(codes.PermissionDenied, "submitter has no course access")
 		}
-		_, err := s.rebuildSubmission(in)
-		if err != nil {
+		if _, err := s.rebuildSubmission(in); err != nil {
 			s.logger.Errorf("RebuildSubmission failed: %v", err)
 			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission")
 		}
@@ -637,7 +636,6 @@ func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.Rebui
 			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submissions")
 		}
 	}
-
 	return &pb.Void{}, nil
 }
 
