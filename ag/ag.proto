@@ -398,10 +398,8 @@ message AssignmentRequest {
 }
 
 message UpdateEnrollmentsRequest {
-    oneof enrollmentsType {
-        Enrollment Enrollment = 1;
-        uint64 courseID = 2;
-    }
+    uint64 courseID = 1;
+    Enrollment Enrollment = 2;
 }
 
 // Void contains no fields. A server response with a Void still contains a gRPC status code,

@@ -244,13 +244,7 @@ func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollm
 // UpdateEnrollments changes status of all pending enrollments for the given course to approved
 // Access policy: Teacher of CourseID
 func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.UpdateEnrollmentsRequest) (*pb.Void, error) {
-	var courseID uint64
-	if in.GetCourseID() != 0 {
-		courseID = in.GetCourseID()
-	} else {
-		courseID = in.GetEnrollment().GetCourseID()
-	}
-	usr, scm, err := s.getUserAndSCMForCourse(ctx, courseID)
+	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.CourseID)
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
@@ -260,15 +254,16 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Update
 		return nil, status.Error(codes.PermissionDenied, "only teachers can update enrollment status")
 	}
 
-	switch in.GetEnrollmentsType().(type) {
-	case *pb.UpdateEnrollmentsRequest_Enrollment:
-		enrollment := in.GetEnrollment()
-		if s.isCourseCreator(enrollment.CourseID, enrollment.UserID) {
+	// Check if request contains an enrollment
+	// If it does, then update the enrollment
+	// Else update all pending enrollments
+	if in.Enrollment != nil {
+		if s.isCourseCreator(in.Enrollment.CourseID, in.Enrollment.UserID) {
 			s.logger.Errorf("UpdateEnrollment failed: user %s attempted to demote course creator", usr.GetName())
 			return nil, status.Error(codes.PermissionDenied, "course creator cannot be demoted")
 		}
-		err = s.updateEnrollment(ctx, scm, usr.Login, enrollment)
-	case *pb.UpdateEnrollmentsRequest_CourseID:
+		err = s.updateEnrollment(ctx, scm, usr.Login, in.Enrollment)
+	} else {
 		err = s.updateEnrollments(ctx, scm, in.GetCourseID())
 	}
 
@@ -280,7 +275,7 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Update
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
-		err = status.Error(codes.InvalidArgument, "failed to update pending enrollments")
+		err = status.Error(codes.InvalidArgument, "failed to update enrollments")
 	}
 	return &pb.Void{}, err
 }

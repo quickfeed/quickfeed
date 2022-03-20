@@ -243,6 +243,8 @@ func (r *CourseUserRequest) IsValid() bool {
 	return r.CourseCode != "" && r.UserLogin != "" && r.CourseYear > 2019
 }
 
+// IsValid ensures that course ID is provided.
+// Enrollment is optional, but if it is set, it must be valid.
 func (u *UpdateEnrollmentsRequest) IsValid() bool {
-	return u.GetCourseID() > 0 || u.GetEnrollment() != nil
+	return u.CourseID > 0 && (u.Enrollment == nil || u.Enrollment.IsValid())
 }
