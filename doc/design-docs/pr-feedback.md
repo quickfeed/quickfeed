@@ -128,9 +128,27 @@ Moving the PR out of draft mode could be automatic, but students can do it manua
 
 #### Oje notes on responses
 
-- How do we know that a task is completed. Currently quickfeed grades only based on the entire assignment.
+- How do we know that a task is completed? Currently quickfeed grades only based on the entire assignment.
 - If group assignments are to be separated into individual tasks, one drawback would be that these tasks would have to be independent of each other. Otherwise one task can not be implemented before another is complete.
 - How does the teacher communicate to quickfeed their desired "settings" for the assignment, e.g. that quickfeed is supposed to automatically assign reviewers. I assume via .yaml file.
 - How would a student signal that their pull request is ready for approval? Would they have to be reliant on the teacher assigned as a reviewer simply checking in every once in a while, to see if they have gotten a passing grade?
   Or would they maybe signal in a comment on the pull request, that they now want their assignment reviewed? It still leads to a situation where the approver would have to check in, in order to know.
-- If we now are going to a group only implementation, what should happen with issues/tasks? Should issues now only be created on group repositories?
+- How does a teacher approve a task? By creating a comment on the pull request, saying that it is approved and ready to be merged with the main branch? If so this will have to be explicitly specified to students,
+  otherwise we may end up with situations where students see that they have gotten a passing grade on a task, and therefore merge it back into the main branch without getting approval from a teacher.
+- How do we communicate to quickfeed that a task is approved? Currently assignments as a whole can be manually approved by teachers, but not tasks. In this sense we have no way of checking, when a pull request is closed,
+  whether or not it has been approved by a teacher. This is a problem that needs to be solved, otherwise we have no good way of checking if a closing pull request is legitimate or not, i.e. that it has gone through
+  all the checks that need to be fulfilled, in order to be closed.
+- Many of the comments above highlight a reoccurring issue; what if a pull request is closed when it is not supposed to? When this happens, it is very important that quickfeed handles the event correctly, and that it does
+  not corrupt the state of the pull request in question.
+- If a teacher sets the assignment to automatically assign assigners, how is this handled? Internally we could have a data record of each pull request, with a list of users as assigners.
+  How would this be communicated to the students in question? The most logical solution would be that quickfeed automatically sets reviewers on the pull request on github.
+  This information would still have to be somehow communicated to students. Probably the easiest way of doing this would simply be to state in the assignment that users should check reviewers on their pull request.
+- If we now are going for a group only implementation, what should happen with issues/tasks? Should issues now only be created on group repositories?
+
+#### Implementation
+
+There are two types of hooks quickfeed will have to listen to. One would be when a pull request is created/opened, while the other would be when a pull request is closed (ideally when it is going to be merged).
+When receiving created/opened event, quickfeed would first have to check if this pull request is from a student group repository, since those are the only ones we want to manage.
+Creating a pull request data-record would then seem fitting, letting us keep an association of all pull requests internally. Here quickfeed will also need to check the associated assignment, 
+so as to see which pull request related settings are desired (such as whether quickfeed should auto assign reviewers). The student creating the pull request will also have to be assigned as owner/responsible
+on the pull request data-record.
