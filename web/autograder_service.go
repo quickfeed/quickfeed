@@ -241,7 +241,8 @@ func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollm
 	return &pb.Void{}, err
 }
 
-// UpdateEnrollments changes status of all pending enrollments for the given course to approved
+// UpdateEnrollments changes status of all pending enrollments for the specified course to approved.
+// If the request contains a single enrollment, it will be updated to the specified status.
 // Access policy: Teacher of CourseID
 func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.UpdateEnrollmentsRequest) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.CourseID)
@@ -255,15 +256,15 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Update
 	}
 
 	// Check if request contains an enrollment
-	// If it does, then update the enrollment
-	// Else update all pending enrollments
 	if in.Enrollment != nil {
 		if s.isCourseCreator(in.Enrollment.CourseID, in.Enrollment.UserID) {
 			s.logger.Errorf("UpdateEnrollment failed: user %s attempted to demote course creator", usr.GetName())
 			return nil, status.Error(codes.PermissionDenied, "course creator cannot be demoted")
 		}
+		// Update the specified enrollment
 		err = s.updateEnrollment(ctx, scm, usr.Login, in.Enrollment)
 	} else {
+		// Update all pending enrollments for the specified course
 		err = s.updateEnrollments(ctx, scm, in.GetCourseID())
 	}
 
