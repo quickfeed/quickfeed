@@ -47,9 +47,33 @@ func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 	case *github.PushEvent:
 		wh.logger.Debug(log.IndentJson(e))
 		wh.handlePush(e)
+	case *github.PullRequestEvent:
+		wh.handlePullRequest(e)
 	default:
 		wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
 	}
+}
+
+func (wh GitHubWebHook) handlePullRequest(payload *github.PullRequestEvent) {
+	wh.logger.Debugf("Received pull request event for repository: %s", *payload.GetRepo().Name)
+	wh.logger.Debugf("%s", payload.GetAction())
+	switch payload.GetAction() {
+	case "opened": // After pr has been created
+		handlePullRequestOpen(payload)
+	case "closed": // After pr has been approved, and is merged back in (This event is sent when someone closes pr, or when someone clicks merge pr. In case of merge, a push event is also sent)
+		handlePullRequestClose(payload)
+	}
+}
+
+func handlePullRequestOpen(payload *github.PullRequestEvent) {
+	// Check if pull request already exists in db. Can happen if someone closes, and then reopens pull request?
+	// If it does not exist, create new pull request data-record.
+	return
+}
+
+func handlePullRequestClose(payload *github.PullRequestEvent) {
+	// What if someone closes the pull request, without it being approved?
+	return
 }
 
 func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {

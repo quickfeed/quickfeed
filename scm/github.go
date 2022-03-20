@@ -321,6 +321,7 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) erro
 			"content_type": "json",
 			"insecure_ssl": "0",
 		},
+		Events: []string{"push", "pull_request"},
 	}
 	var err error
 	// prioritize creating an organization hook

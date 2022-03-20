@@ -65,7 +65,6 @@ func TestGitHubWebHook(t *testing.T) {
 	for _, hook := range hooks {
 		t.Logf("hook: %v", hook)
 	}
-
 	// TODO(meling) db is nil; will cause handling of push event to panic; will need a database with content for this to work fully.
 	var db database.Database
 	var runner ci.Runner
@@ -74,6 +73,39 @@ func TestGitHubWebHook(t *testing.T) {
 	log.Println("starting webhook server")
 	http.HandleFunc("/webhook", webhook.Handle)
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func TestGitHubWebHooks(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
+	serverURL := scm.GetWebHookServer(t)
+
+	logger := logq.Zap(true).Sugar()
+	defer func() { _ = logger.Sync() }()
+
+	s, err := scm.NewSCMClient(logger, "github", accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	opt := &scm.CreateHookOptions{
+		URL:          serverURL + "/webhook",
+		Secret:       secret,
+		Organization: qfTestOrg,
+	}
+
+	err = s.CreateHook(ctx, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var db database.Database
+	var runner ci.Runner
+	webhook := NewGitHubWebHook(logger, db, runner, secret)
+
+	log.Println("starting webhook server")
+	http.HandleFunc("/webhook", webhook.Handle)
+	log.Fatal(http.ListenAndServe(":4567", nil))
 }
 
 func TestExtractChanges(t *testing.T) {
