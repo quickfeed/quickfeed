@@ -90,19 +90,19 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, cu
 		return err
 	}
 	// log changes to teacher status
-	if enrollment.Status == pb.Enrollment_TEACHER || request.Status == pb.Enrollment_TEACHER {
+	if enrollment.IsTeacher() || request.IsTeacher() {
 		s.logger.Debugf("User %s attempting to change enrollment status of user %d from %s to %s", curUser, enrollment.UserID, enrollment.Status, request.Status)
 	}
 
-	switch request.Status {
-	case pb.Enrollment_NONE:
+	switch {
+	case enrollment.IsPending() && request.IsNone(): // pending -> none
 		return s.rejectEnrollment(ctx, sc, enrollment)
-
-	case pb.Enrollment_STUDENT, pb.Enrollment_PENDING:
+	case enrollment.IsPending() && request.IsStudent(): // pending -> student
 		return s.enrollStudent(ctx, sc, enrollment)
-
-	case pb.Enrollment_TEACHER:
+	case enrollment.IsStudent() && request.IsTeacher(): // student -> teacher
 		return s.enrollTeacher(ctx, sc, enrollment)
+	case enrollment.IsTeacher() && request.IsStudent(): // teacher -> student
+		return s.revokeTeacherStatus(ctx, sc, enrollment)
 	}
 	return fmt.Errorf("unknown enrollment")
 }
@@ -331,6 +331,20 @@ func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, en
 	return nil
 }
 
+func (s *AutograderService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
+	// course and user are both preloaded, no need to query the database
+	course, user := enrolled.GetCourse(), enrolled.GetUser()
+	err := revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
+	if err != nil {
+		s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.Code, user.Login, err)
+	}
+	return s.db.UpdateEnrollment(&pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	})
+}
+
 // enrollStudent enrolls the given user as a student into the given course.
 func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
@@ -343,41 +357,37 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		return fmt.Errorf("failed to get %s repository for %q: %w", course.Code, user.Login, err)
 	}
 
-	if enrolled.Status == pb.Enrollment_TEACHER {
-		err = revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
-		if err != nil {
-			s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.Code, user.Login, err)
-		}
-	} else {
-		s.logger.Debugf("Enrolling student %q in %s; has database repo: %t", user.Login, course.Code, repo != nil)
-		if repo != nil {
-			// repo already exist, update enrollment in database
-			goto UPDATE
-		}
-		// create user repo, user team, and add user to students team
-		repo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
-		if err != nil {
-			return fmt.Errorf("failed to update %s repository or team membership for %q: %w", course.Code, user.Login, err)
-		}
-		s.logger.Debugf("Enrolling student %q in %s; repo and team update done", user.Login, course.Code)
-
-		// add student repo to database if SCM interaction above was successful
-		userRepo := pb.Repository{
-			OrganizationID: course.GetOrganizationID(),
-			RepositoryID:   repo.ID,
-			UserID:         user.ID,
-			HTMLURL:        repo.WebURL,
-			RepoType:       pb.Repository_USER,
-		}
-		if err := s.db.CreateRepository(&userRepo); err != nil {
-			return fmt.Errorf("failed to create %s repository for %q: %w", course.Code, user.Login, err)
-		}
-
-		if err := s.acceptRepositoryInvites(ctx, user, course); err != nil {
-			s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.Code, user.Login, err)
-		}
+	s.logger.Debugf("Enrolling student %q in %s; has database repo: %t", user.Login, course.Code, repo != nil)
+	if repo != nil {
+		// repo already exist, update enrollment in database
+		return s.db.UpdateEnrollment(&pb.Enrollment{
+			UserID:   user.ID,
+			CourseID: course.ID,
+			Status:   pb.Enrollment_STUDENT,
+		})
 	}
-UPDATE:
+	// create user scmRepo, user team, and add user to students team
+	scmRepo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
+	if err != nil {
+		return fmt.Errorf("failed to update %s repository or team membership for %q: %w", course.Code, user.Login, err)
+	}
+	s.logger.Debugf("Enrolling student %q in %s; repo and team update done", user.Login, course.Code)
+
+	// add student repo to database if SCM interaction above was successful
+	userRepo := pb.Repository{
+		OrganizationID: course.GetOrganizationID(),
+		RepositoryID:   scmRepo.ID,
+		UserID:         user.ID,
+		HTMLURL:        scmRepo.WebURL,
+		RepoType:       pb.Repository_USER,
+	}
+	if err := s.db.CreateRepository(&userRepo); err != nil {
+		return fmt.Errorf("failed to create %s repository for %q: %w", course.Code, user.Login, err)
+	}
+	if err := s.acceptRepositoryInvites(ctx, user, course); err != nil {
+		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.Code, user.Login, err)
+	}
+
 	return s.db.UpdateEnrollment(&pb.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
