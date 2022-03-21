@@ -98,7 +98,7 @@ func TestGetRepositories(t *testing.T) {
 
 	// check that no repositories are returned when no repo types are specified
 	repos, err := ags.GetRepositories(ctx, &pb.URLRequest{
-		CourseID: uint64(course.ID),
+		CourseID: course.ID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -109,7 +109,7 @@ func TestGetRepositories(t *testing.T) {
 
 	// check that empty user repository is returned before user repository has been created
 	gotUserRepoURLs, err := ags.GetRepositories(ctx, &pb.URLRequest{
-		CourseID: uint64(course.ID),
+		CourseID: course.ID,
 		RepoTypes: []pb.Repository_Type{
 			pb.Repository_USER,
 		},
@@ -137,7 +137,7 @@ func TestGetRepositories(t *testing.T) {
 
 	// check that no repositories are returned when no repo types are specified
 	repos, err = ags.GetRepositories(ctx, &pb.URLRequest{
-		CourseID: uint64(course.ID),
+		CourseID: course.ID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -148,7 +148,7 @@ func TestGetRepositories(t *testing.T) {
 
 	// check that user repository is returned when user repo type is specified
 	gotUserRepoURLs, err = ags.GetRepositories(ctx, &pb.URLRequest{
-		CourseID: uint64(course.ID),
+		CourseID: course.ID,
 		RepoTypes: []pb.Repository_Type{
 			pb.Repository_USER,
 		},
@@ -165,7 +165,7 @@ func TestGetRepositories(t *testing.T) {
 
 	// try to get group repository before group exists (user not enrolled in group)
 	gotGroupRepoURLs, err := ags.GetRepositories(ctx, &pb.URLRequest{
-		CourseID: uint64(course.ID),
+		CourseID: course.ID,
 		RepoTypes: []pb.Repository_Type{
 			pb.Repository_GROUP,
 		},
@@ -202,7 +202,7 @@ func TestGetRepositories(t *testing.T) {
 
 	// check that group repository is returned when group repo type is specified
 	gotGroupRepoURLs, err = ags.GetRepositories(ctx, &pb.URLRequest{
-		CourseID: uint64(course.ID),
+		CourseID: course.ID,
 		RepoTypes: []pb.Repository_Type{
 			pb.Repository_GROUP,
 		},
@@ -219,7 +219,7 @@ func TestGetRepositories(t *testing.T) {
 
 	// check that both user and group repositories are returned when both repo types are specified
 	gotUserGroupRepoURLs, err := ags.GetRepositories(ctx, &pb.URLRequest{
-		CourseID: uint64(course.ID),
+		CourseID: course.ID,
 		RepoTypes: []pb.Repository_Type{
 			pb.Repository_USER,
 			pb.Repository_GROUP,
@@ -268,7 +268,7 @@ func TestGetRepositories(t *testing.T) {
 
 	// check that all repositories are returned when all repo types are specified
 	gotAllRepoURLs, err := ags.GetRepositories(ctx, &pb.URLRequest{
-		CourseID: uint64(course.ID),
+		CourseID: course.ID,
 		RepoTypes: []pb.Repository_Type{
 			pb.Repository_USER,
 			pb.Repository_GROUP,

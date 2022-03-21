@@ -7,13 +7,13 @@ import { generateCellClass, sortByScore } from "./labHelper";
 import { searchForLabs, userRepoLink, getSlipDays, legalIndex, groupRepoLink, setScoreString } from "../../componentHelper";
 
 interface IResultsProps {
-    course: Course;
-    courseURL: string;
-    allCourseSubmissions: IAllSubmissionsForEnrollment[];
-    assignments: Assignment[];
-    courseCreatorView: boolean;
-    onSubmissionStatusUpdate: (submission: ISubmission) => Promise<boolean>;
-    onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
+    course: Course
+    courseURL: string
+    allCourseSubmissions: IAllSubmissionsForEnrollment[]
+    assignments: Assignment[]
+    courseCreatorView: boolean
+    onSubmissionStatusUpdate: (submission: ISubmission) => Promise<boolean>
+    onSubmissionRebuild: (assignmentID: number, submissionID: number) => Promise<boolean>
 }
 
 interface IResultsState {
@@ -171,18 +171,20 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
     }
 
     private async rebuildSubmission(): Promise<boolean> {
-        const currentSubmission = this.state.selectedSubmission;
+        const currentSubmission = this.state.selectedSubmission
         if (currentSubmission && currentSubmission.submission) {
-            const ans = await this.props.onSubmissionRebuild(currentSubmission.assignment.getId(), currentSubmission.submission.id);
+            const ans = await this.props.onSubmissionRebuild(currentSubmission.assignment.getId(), currentSubmission.submission.id)
             if (ans) {
-                currentSubmission.submission = ans;
+                // TODO: This no longer works because the updated submission
+                // TODO: is no longer returned from the server
+                //currentSubmission.submission = ans
                 this.setState({
                     selectedSubmission: currentSubmission,
-                });
-                return true;
+                })
+                return true
             }
         }
-        return false;
+        return false
     }
 
     private getResultHeader(): (string | JSX.Element)[] {

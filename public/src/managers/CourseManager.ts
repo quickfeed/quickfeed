@@ -46,27 +46,27 @@ export interface ICourseProvider {
     getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null>;
     updateGroup(group: Group): Promise<Status>;
 
-    getSubmissionsByUser(courseID: number, userID: number): Promise<ISubmission[]>;
-    getSubmissionsByGroup(courseID: number, groupID: number): Promise<ISubmission[]>;
-    getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IAllSubmissionsForEnrollment[]>;
-    getEnrollmentsForUser(userID: number, statuses?: Enrollment.UserStatus[]): Promise<Enrollment[]>;
-    getOrganization(orgName: string): Promise<Organization | Status >;
-    getProviders(): Promise<string[]>;
-    updateAssignments(courseID: number): Promise<boolean>;
-    updateSubmission(courseID: number, submission: ISubmission): Promise<boolean>;
-    updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean>;
-    rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null>;
-    rebuildSubmissions(assignmentID: number, courseID: number): Promise<boolean>;
-    getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
-    isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean>;
-    addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null>;
-    addNewCriterion(c: GradingCriterion): Promise<GradingCriterion | null>;
-    updateBenchmark(bm: GradingBenchmark): Promise<boolean>;
-    updateCriterion(c: GradingCriterion): Promise<boolean>;
-    deleteBenchmark(bm: GradingBenchmark): Promise<boolean>;
-    deleteCriterion(c: GradingCriterion): Promise<boolean>;
-    addReview(r: Review, courseID: number): Promise<Review | null>;
-    editReview(r: Review, courseID: number): Promise<Review | null>;
+    getSubmissionsByUser(courseID: number, userID: number): Promise<ISubmission[]>
+    getSubmissionsByGroup(courseID: number, groupID: number): Promise<ISubmission[]>
+    getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IAllSubmissionsForEnrollment[]>
+    getEnrollmentsForUser(userID: number, statuses?: Enrollment.UserStatus[]): Promise<Enrollment[]>
+    getOrganization(orgName: string): Promise<Organization | Status>
+    getProviders(): Promise<string[]>
+    updateAssignments(courseID: number): Promise<boolean>
+    updateSubmission(courseID: number, submission: ISubmission): Promise<boolean>
+    updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean>
+    rebuildSubmission(assignmentID: number, submissionID: number): Promise<boolean>
+    rebuildSubmissions(assignmentID: number, courseID: number): Promise<boolean>
+    getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>
+    isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean>
+    addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null>
+    addNewCriterion(c: GradingCriterion): Promise<GradingCriterion | null>
+    updateBenchmark(bm: GradingBenchmark): Promise<boolean>
+    updateCriterion(c: GradingCriterion): Promise<boolean>
+    deleteBenchmark(bm: GradingBenchmark): Promise<boolean>
+    deleteCriterion(c: GradingCriterion): Promise<boolean>
+    addReview(r: Review, courseID: number): Promise<Review | null>
+    editReview(r: Review, courseID: number): Promise<Review | null>
     getReviewers(submissionID: number, courseID: number): Promise<User[]>
 }
 
@@ -289,8 +289,8 @@ export class CourseManager {
         return this.courseProvider.getRepositories(courseID, types);
     }
 
-    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null> {
-        return this.courseProvider.rebuildSubmission(assignmentID, submissionID);
+    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<boolean> {
+        return this.courseProvider.rebuildSubmission(assignmentID, submissionID)
     }
 
     public async rebuildSubmissions(assignmentID: number, courseID: number): Promise<boolean> {
