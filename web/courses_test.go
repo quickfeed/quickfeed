@@ -192,10 +192,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 
 	enrollStud1.Status = pb.Enrollment_STUDENT
-	if _, err = ags.UpdateEnrollments(ctx, &pb.UpdateEnrollmentsRequest{
-		CourseID:   course.ID,
-		Enrollment: enrollStud1,
-	}); err != nil {
+	if _, err = ags.UpdateEnrollments(ctx, &pb.Enrollments{Enrollments: []*pb.Enrollment{enrollStud1}}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -217,10 +214,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	enrollStud2.Status = pb.Enrollment_STUDENT
-	if _, err = ags.UpdateEnrollments(ctx, &pb.UpdateEnrollmentsRequest{
-		CourseID:   course.ID,
-		Enrollment: enrollStud2,
-	}); err != nil {
+	if _, err = ags.UpdateEnrollments(ctx, &pb.Enrollments{Enrollments: []*pb.Enrollment{enrollStud2}}); err != nil {
 		t.Fatal(err)
 	}
 	// verify that the stud2 was enrolled with student status.
@@ -240,10 +234,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	// promote stud2 to teaching assistant
 
 	enrollStud2.Status = pb.Enrollment_TEACHER
-	if _, err = ags.UpdateEnrollments(ctx, &pb.UpdateEnrollmentsRequest{
-		CourseID:   course.ID,
-		Enrollment: enrollStud2,
-	}); err != nil {
+	if _, err = ags.UpdateEnrollments(ctx, &pb.Enrollments{Enrollments: []*pb.Enrollment{enrollStud2}}); err != nil {
 		t.Fatal(err)
 	}
 	// verify that the stud2 was promoted to teacher status.
@@ -497,10 +488,10 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 		Status:   pb.Enrollment_STUDENT,
 	}
 
-	request := &pb.UpdateEnrollmentsRequest{CourseID: course.ID}
+	request := &pb.Enrollments{}
 
 	// student1 attempts to promote student2 to teacher, must fail
-	request.Enrollment = student2_enrollment
+	request.Enrollments = []*pb.Enrollment{student2_enrollment}
 	ctx := qtest.WithUserContext(context.Background(), student1)
 	if _, err := ags.UpdateEnrollments(ctx, request); err == nil {
 		t.Errorf("expected error: 'only teachers can update enrollment status'")
@@ -513,25 +504,14 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request.Enrollment = student1_enrollment
-	if _, err := ags.UpdateEnrollments(ctx, request); err != nil {
-		t.Fatal(err)
-	}
-
-	request.Enrollment = student2_enrollment
-	if _, err := ags.UpdateEnrollments(ctx, request); err != nil {
-		t.Fatal(err)
-	}
-
-	// promote the TA to teacher as well
-	request.Enrollment = ta_enrollment
+	request.Enrollments = []*pb.Enrollment{student1_enrollment, student2_enrollment, ta_enrollment}
 	if _, err := ags.UpdateEnrollments(ctx, request); err != nil {
 		t.Fatal(err)
 	}
 
 	// TA attempts to demote self, must succeed
 	ta_enrollment.Status = pb.Enrollment_STUDENT
-	request.Enrollment = ta_enrollment
+	request.Enrollments = []*pb.Enrollment{ta_enrollment}
 	ctx = qtest.WithUserContext(context.Background(), ta)
 	if _, err := ags.UpdateEnrollments(ctx, request); err != nil {
 		t.Fatal(err)
@@ -539,10 +519,10 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	// student2 attempts to demote course creator, must fail
 	teacher_enrollment.Status = pb.Enrollment_STUDENT
-	request.Enrollment = teacher_enrollment
+	request.Enrollments = []*pb.Enrollment{teacher_enrollment}
 	ctx = qtest.WithUserContext(context.Background(), student2)
 	if _, err := ags.UpdateEnrollments(ctx, request); err == nil {
-		t.Error("expected error: 'only course creator can change status of other teachers'")
+		t.Error("expected error: 'only course creator can change status of other teachers'", err)
 	}
 
 	// student2 attempts to reject course creator, must fail
@@ -553,7 +533,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	// teacher demotes student1, must succeed
 	student1_enrollment.Status = pb.Enrollment_STUDENT
-	request.Enrollment = student1_enrollment
+	request.Enrollments = []*pb.Enrollment{student1_enrollment}
 	ctx = qtest.WithUserContext(context.Background(), teacher)
 	if _, err := ags.UpdateEnrollments(ctx, request); err != nil {
 		t.Fatal(err)
@@ -570,7 +550,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	// teacher rejects student2, must succeed
 	student2_enrollment.Status = pb.Enrollment_NONE
-	request.Enrollment = student2_enrollment
+	request.Enrollments = []*pb.Enrollment{student2_enrollment}
 	if _, err := ags.UpdateEnrollments(ctx, request); err != nil {
 		t.Fatal(err)
 	}
@@ -584,7 +564,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	// course creator attempts to demote himself, must fail as well
 	teacher_enrollment.Status = pb.Enrollment_STUDENT
-	request.Enrollment = teacher_enrollment
+	request.Enrollments = []*pb.Enrollment{teacher_enrollment}
 	if _, err := ags.UpdateEnrollments(ctx, request); err == nil {
 		t.Error("expected error 'course creator cannot be demoted'")
 	}
