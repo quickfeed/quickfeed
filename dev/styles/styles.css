@@ -342,9 +342,21 @@ input {
   margin-left: -350px;
 }
 
+.width-resize{
+  min-width: 150px;
+
+}
+
 @media all and (min-width: 992px) {
     .navbar .nav-item .dropdown-menu{ display: none; }
     .navbar .nav-item:hover .dropdown-menu{ display: block; }
     .navbar .nav-item .dropdown-menu{ margin-top:0; }
 }  
+
+@media only screen and (max-width: 980px) {
+  .width-resize{
+    width: 350px;
+    padding-top: 15px;
+  }
+}
   
