@@ -98,28 +98,13 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, cu
 	case pb.Enrollment_NONE:
 		return s.rejectEnrollment(ctx, sc, enrollment)
 
-	case pb.Enrollment_STUDENT:
+	case pb.Enrollment_STUDENT, pb.Enrollment_PENDING:
 		return s.enrollStudent(ctx, sc, enrollment)
 
 	case pb.Enrollment_TEACHER:
 		return s.enrollTeacher(ctx, sc, enrollment)
 	}
 	return fmt.Errorf("unknown enrollment")
-}
-
-// updateEnrollments enrolls all students with pending enrollments into course
-func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, cid uint64) error {
-	enrolls, err := s.db.GetEnrollmentsByCourse(cid, pb.Enrollment_PENDING)
-	if err != nil {
-		return err
-	}
-	for _, enrol := range enrolls {
-		enrol.Status = pb.Enrollment_STUDENT
-		if err = s.updateEnrollment(ctx, sc, "", enrol); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // getCourse returns a course object for the given course id.
