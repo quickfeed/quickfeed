@@ -89,19 +89,21 @@ func (m *Enrollment) IsStudent() bool {
 
 // GetCourseID returns the course ID for a slice of enrollments
 func (m *Enrollments) GetCourseID() uint64 {
-	if len(m.GetEnrollments()) == 0 {
+	enrollments := m.GetEnrollments()
+	if len(enrollments) == 0 {
 		return 0
 	}
-	return m.Enrollments[0].GetCourseID()
+	return enrollments[0].GetCourseID()
 }
 
 // HasCourseID checks all enrollments have the same Course ID
 func (m *Enrollments) HasCourseID() bool {
-	if len(m.GetEnrollments()) == 0 {
+	enrollments := m.GetEnrollments()
+	if len(enrollments) == 0 {
 		return false
 	}
-	courseID := m.GetEnrollments()[0].GetCourseID()
-	for _, e := range m.GetEnrollments() {
+	courseID := enrollments[0].GetCourseID()
+	for _, e := range enrollments {
 		if e.GetCourseID() != courseID {
 			return false
 		}
