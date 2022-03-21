@@ -218,7 +218,8 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
     }
 }
 
-export const updateEnrollments = async ({ state, actions, effects }: Context, courseID: number): Promise<void> => {
+/** approvePendingEnrollments approves all pending enrollments for the current course */
+export const approvePendingEnrollments = async ({ state, actions, effects }: Context): Promise<void> => {
     if (confirm("Please confirm that you want to approve all students")) {
         const enrollments = state.pendingEnrollments.map(e => json(e).clone())
         const response = await effects.grpcMan.updateEnrollments(enrollments)
