@@ -984,26 +984,26 @@ export class AutograderServiceClient {
   methodDescriptorUpdateEnrollments = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateEnrollments',
     grpcWeb.MethodType.UNARY,
-    ag_ag_pb.UpdateEnrollmentsRequest,
+    ag_ag_pb.Enrollments,
     ag_ag_pb.Void,
-    (request: ag_ag_pb.UpdateEnrollmentsRequest) => {
+    (request: ag_ag_pb.Enrollments) => {
       return request.serializeBinary();
     },
     ag_ag_pb.Void.deserializeBinary
   );
 
   updateEnrollments(
-    request: ag_ag_pb.UpdateEnrollmentsRequest,
+    request: ag_ag_pb.Enrollments,
     metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
 
   updateEnrollments(
-    request: ag_ag_pb.UpdateEnrollmentsRequest,
+    request: ag_ag_pb.Enrollments,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.RpcError,
                response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
 
   updateEnrollments(
-    request: ag_ag_pb.UpdateEnrollmentsRequest,
+    request: ag_ag_pb.Enrollments,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.RpcError,
                response: ag_ag_pb.Void) => void) {

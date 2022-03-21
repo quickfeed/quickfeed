@@ -1492,30 +1492,6 @@ export namespace CourseUserRequest {
   }
 }
 
-export class UpdateEnrollmentsRequest extends jspb.Message {
-  getCourseid(): number;
-  setCourseid(value: number): UpdateEnrollmentsRequest;
-
-  getEnrollment(): Enrollment | undefined;
-  setEnrollment(value?: Enrollment): UpdateEnrollmentsRequest;
-  hasEnrollment(): boolean;
-  clearEnrollment(): UpdateEnrollmentsRequest;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): UpdateEnrollmentsRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: UpdateEnrollmentsRequest): UpdateEnrollmentsRequest.AsObject;
-  static serializeBinaryToWriter(message: UpdateEnrollmentsRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): UpdateEnrollmentsRequest;
-  static deserializeBinaryFromReader(message: UpdateEnrollmentsRequest, reader: jspb.BinaryReader): UpdateEnrollmentsRequest;
-}
-
-export namespace UpdateEnrollmentsRequest {
-  export type AsObject = {
-    courseid: number,
-    enrollment?: Enrollment.AsObject,
-  }
-}
-
 export class Void extends jspb.Message {
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Void.AsObject;
