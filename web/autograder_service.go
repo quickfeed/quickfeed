@@ -257,12 +257,11 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Enroll
 
 	for _, enrollment := range in.GetEnrollments() {
 		if s.isCourseCreator(enrollment.CourseID, enrollment.UserID) {
-			s.logger.Errorf("UpdateEnrollment failed: user %s attempted to demote course creator", user.GetName())
+			s.logger.Errorf("UpdateEnrollments failed: user %s attempted to demote course creator", user.GetName())
 			return nil, status.Error(codes.PermissionDenied, "course creator cannot be demoted")
 		}
 
-		err = s.updateEnrollment(ctx, scm, user.GetLogin(), enrollment)
-		if err != nil {
+		if err = s.updateEnrollment(ctx, scm, user.GetLogin(), enrollment); err != nil {
 			s.logger.Errorf("UpdateEnrollments failed: %v", err)
 			if contextCanceled(ctx) {
 				return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
