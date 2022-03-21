@@ -188,6 +188,8 @@ func synchronizeIssues(c context.Context, db database.Database, course *pb.Cours
 			// What should happen if task does not exist for issue?
 			continue
 		}
+		// Might be necessary to check if the issue is closed here, otherwise we might end up editing already closed issues.
+		// If this becomes a necessity, then the issue data-record must have a closed (true/false) field, or a status field.
 		if !(task.Title == issue.Title && task.Body == issue.Body) {
 			// Issue needs to be updated here
 			issue.Title = task.Title

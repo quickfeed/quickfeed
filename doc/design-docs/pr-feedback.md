@@ -81,7 +81,7 @@ Instead we would have to deal with the same problem for late-to-enroll groups.
 ### How reviewers are handled
 
 When a student creates a pull request for a certain task, reviewers will have to be assigned to that pull request. Questions arise as to who these reviewers should be, and how they are to be assigned.
-Should a teacher always be assigned, should co-students? And if so, how are these selected? Would it be automatically by quickfeed, or more manually by the teachers themselves?
+Should a teacher always be assigned, should co-students? And if so, how are these selected? Would it be automatically done by quickfeed, or more manually by the teachers themselves?
 
 #### Hein's response
 
@@ -103,7 +103,7 @@ Another idea: maybe we could assign all teachers as reviewer/approver, but requi
 
 ### When should a pull request be created?
 
-The purpose of using pull requests is to give the student a more accessible hub to track their process (via actions). It would therefore make sense for the student to have the pull request accessible as they work, and not just when they
+The purpose of using pull requests is to give the student a more accessible hub to track their process via actions and reviews. It would therefore make sense for the student to have the pull request accessible as they work, and not just when they
 feel they are ready for approval. This question is also somewhat related to the previous one, in the sense of when are the `review` and the `approval` processes supposed to begin, and is there any difference between them?
 If there is a difference between them, when are reviewers assigned, and when do we go from the `review` to the `approval` phase? When the automatic tests give the student a passing score?
 
@@ -126,16 +126,16 @@ There are three stages:
 Maybe in the initial stage, the PR is marked as draft; only when the all tests pass will the PR be moved out of draft mode to be reviewed.
 Moving the PR out of draft mode could be automatic, but students can do it manually also.
 
-#### Oje notes on responses
+### Oje's notes on responses
 
 - How do we know that a task is completed? Currently quickfeed grades only based on the entire assignment.
 - If group assignments are to be separated into individual tasks, one drawback would be that these tasks would have to be independent of each other. Otherwise one task can not be implemented before another is complete.
 - How does the teacher communicate to quickfeed their desired "settings" for the assignment, e.g. that quickfeed is supposed to automatically assign reviewers. I assume via .yaml file.
 - How would a student signal that their pull request is ready for approval? Would they have to be reliant on the teacher assigned as a reviewer simply checking in every once in a while, to see if they have gotten a passing grade?
-  Or would they maybe signal in a comment on the pull request, that they now want their assignment reviewed? It still leads to a situation where the approver would have to check in, in order to know.
+  Or would they maybe signal in a comment on the pull request that they now want their assignment reviewed? It still leads to a situation where the approver would have to check in, in order to know.
 - How does a teacher approve a task? By creating a comment on the pull request, saying that it is approved and ready to be merged with the main branch? If so this will have to be explicitly specified to students,
-  otherwise we may end up with situations where students see that they have gotten a passing grade on a task, and therefore merge it back into the main branch without getting approval from a teacher.
-- How do we communicate to quickfeed that a task is approved? Currently assignments as a whole can be manually approved by teachers, but not tasks. In this sense we have no way of checking, when a pull request is closed,
+  otherwise we may end up with situations where students see that they have gotten a passing score on a task, and therefore merge it back into the main branch without getting approval from a teacher.
+- How do we communicate to quickfeed that a task is approved? Currently assignments as a whole can be manually approved by teachers, but not tasks(?). In this sense we have no way of checking, when a pull request is closed,
   whether or not it has been approved by a teacher. This is a problem that needs to be solved, otherwise we have no good way of checking if a closing pull request is legitimate or not, i.e. that it has gone through
   all the checks that need to be fulfilled, in order to be closed.
 - Many of the comments above highlight a reoccurring issue; what if a pull request is closed when it is not supposed to? When this happens, it is very important that quickfeed handles the event correctly, and that it does
@@ -145,10 +145,44 @@ Moving the PR out of draft mode could be automatic, but students can do it manua
   This information would still have to be somehow communicated to students. Probably the easiest way of doing this would simply be to state in the assignment that users should check reviewers on their pull request.
 - If we now are going for a group only implementation, what should happen with issues/tasks? Should issues now only be created on group repositories?
 
-#### Implementation
+## Implementation
 
 There are two types of hooks quickfeed will have to listen to. One would be when a pull request is created/opened, while the other would be when a pull request is closed (ideally when it is going to be merged).
-When receiving created/opened event, quickfeed would first have to check if this pull request is from a student group repository, since those are the only ones we want to manage.
-Creating a pull request data-record would then seem fitting, letting us keep an association of all pull requests internally. Here quickfeed will also need to check the associated assignment, 
+
+### When a pull request is created
+
+When receiving a created/opened event, quickfeed would first have to check if this pull request is from a student group repository, since those are the only ones we want to manage.
+It will also have to check if this pull request is created with an associated issue/task, otherwise we have no way of differentiating regular pull requests to the ones quickfeed should handle.
+This means that students will have to correctly link their pull request to an existing task/issue when creating it, and if not, the pull request should not be handled.
+A pull request will from here on be referred to as being "legitimate" when these conditions are true.
+
+After passing all these tests, a pull request data-record should be created, letting us keep an association of all pull requests internally. Quickfeed will need to check the associated assignment, 
 so as to see which pull request related settings are desired (such as whether quickfeed should auto assign reviewers). The student creating the pull request will also have to be assigned as owner/responsible
-on the pull request data-record.
+for the pull request data-record.
+
+The data-record should look as follows:
+
+PullRequest
+- ID                      number
+- Some foreign key?       number
+- Owner                   reference to user data-record
+- Reviewers               reference to several user data-records
+- Approved                bool
+- Merged                  bool
+
+
+
+### When a pull request is closed
+
+For closing legitimate pull requests there are seemingly four different scenarios we must take into consideration.
+1. When a pull request is closed and merged after it has been approved by a teacher.
+2. When a pull request is closed, but not merged, after being approved by a teacher.
+3. When a pull request is closed and merged, but has not been approved by a teacher.
+4. When a pull request is closed, but not merged, and has not been approved by a teacher.
+
+#### Scenario 1
+
+Scenario one is the only scenario where things are happening as they should. Quickfeed should check if the pull request has status "approved" (how it is set to approved is currently unknown),
+and then handle the completion of the according task.
+
+TO BE CONTINUED...
