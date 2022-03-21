@@ -16,7 +16,6 @@ import {
     Group,
     GroupRequest,
     Groups,
-    AssignmentRequest,
     Organization,
     OrgRequest,
     Providers,
@@ -261,18 +260,18 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateSubmissions, request);
     }
 
-    public rebuildSubmission(assignmentID: number, submissionID: number): Promise<IGrpcResponse<Submission>> {
-        const request = new RebuildRequest();
-        request.setAssignmentid(assignmentID);
-        request.setSubmissionid(submissionID);
-        return this.grpcSend<Submission>(this.agService.rebuildSubmission, request);
+    public rebuildSubmission(assignmentID: number, submissionID: number): Promise<IGrpcResponse<Void>> {
+        const request = new RebuildRequest()
+        request.setAssignmentid(assignmentID)
+        request.setSubmissionid(submissionID)
+        return this.grpcSend<Void>(this.agService.rebuildSubmissions, request)
     }
 
     public rebuildSubmissions(assignmentID: number, courseID: number): Promise<IGrpcResponse<Void>> {
-        const request = new AssignmentRequest()
-        request.setAssignmentid(assignmentID);
-        request.setCourseid(courseID);
-        return this.grpcSend<Void>(this.agService.rebuildSubmissions, request);
+        const request = new RebuildRequest()
+        request.setAssignmentid(assignmentID)
+        request.setCourseid(courseID)
+        return this.grpcSend<Void>(this.agService.rebuildSubmissions, request)
     }
 
     // /* MANUAL GRADING */ //
