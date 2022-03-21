@@ -116,9 +116,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.status;
     }
 
-    public async approveAll(courseID: number): Promise<boolean> {
-        const result = await this.grpcHelper.updateEnrollments(courseID);
-        return result.data ? this.responseCodeSuccess(result) : false;
+    public async approveAll(enrollments: Enrollment[]): Promise<boolean> {
+        const result = await this.grpcHelper.updateEnrollments(enrollments)
+        return result.data ? this.responseCodeSuccess(result) : false
     }
 
     public async isAuthorizedTeacher(): Promise<boolean> {

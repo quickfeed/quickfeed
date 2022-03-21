@@ -222,10 +222,10 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     }
 
     private async handleApproveClick(): Promise<boolean> {
-        this.setState({approveAllClicked: true});
-        const ans = await this.props.courseMan.approveAll(this.props.course.getId());
-        this.props.navMan.refresh();
-        return ans;
+        this.setState({ approveAllClicked: true })
+        const ans = await this.props.courseMan.approveAll(this.props.pendingUsers)
+        this.props.navMan.refresh()
+        return ans
     }
 
     private approveButtonString(): string {

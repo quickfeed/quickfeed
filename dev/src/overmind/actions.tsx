@@ -202,7 +202,7 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
         // Copy enrollment object and change status
         const temp = json(enrollment).clone().setStatus(status)
         // Send updated enrollment to server
-        const response = await effects.grpcMan.updateEnrollment(temp)
+        const response = await effects.grpcMan.updateEnrollments([temp])
         if (success(response)) {
             // If successful, update enrollment in state with new status
             if (status == Enrollment.UserStatus.NONE) {
@@ -220,7 +220,8 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
 
 export const updateEnrollments = async ({ state, actions, effects }: Context, courseID: number): Promise<void> => {
     if (confirm("Please confirm that you want to approve all students")) {
-        const response = await effects.grpcMan.updateEnrollments(courseID)
+        const enrollments = state.pendingEnrollments.map(e => json(e).clone())
+        const response = await effects.grpcMan.updateEnrollments(enrollments)
         if (success(response)) {
             for (const enrollment of state.pendingEnrollments) {
                 enrollment.setStatus(Enrollment.UserStatus.STUDENT)

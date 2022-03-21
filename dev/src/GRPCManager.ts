@@ -38,7 +38,6 @@ import {
     Users,
     Void,
     Reviewers,
-    UpdateEnrollmentsRequest,
 } from "../proto/ag/ag_pb"
 import { AutograderServiceClient } from "../proto/ag/AgServiceClientPb"
 
@@ -144,15 +143,9 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.createEnrollment, request);
     }
 
-    public updateEnrollment(enrollment: Enrollment): Promise<IGrpcResponse<Void>> {
-        const request = new UpdateEnrollmentsRequest()
-        request.setEnrollment(enrollment)
-        return this.grpcSend<Void>(this.agService.updateEnrollments, request)
-    }
-
-    public updateEnrollments(courseID: number): Promise<IGrpcResponse<Void>> {
-        const request = new UpdateEnrollmentsRequest()
-        request.setCourseid(courseID)
+    public updateEnrollments(enrollments: Enrollment[]): Promise<IGrpcResponse<Void>> {
+        const request = new Enrollments()
+        request.setEnrollmentsList(enrollments)
         return this.grpcSend<Void>(this.agService.updateEnrollments, request)
     }
 
