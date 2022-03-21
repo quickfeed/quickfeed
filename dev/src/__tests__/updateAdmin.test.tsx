@@ -3,6 +3,7 @@ import { User} from "../../proto/ag/ag_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
 
+
 describe("Correct permission status should be set", () => {
     it('If user is not admin, promote to admin', () =>{
         const user = new User().setId(1).setName("Test User").setIsadmin(false);
