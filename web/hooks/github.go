@@ -47,8 +47,28 @@ func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 	case *github.PushEvent:
 		wh.logger.Debug(log.IndentJson(e))
 		wh.handlePush(e)
+	case *github.InstallationEvent:
+		wh.logger.Debug(log.IndentJson(e))
+		wh.handleInstallation(e)
 	default:
 		wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
+	}
+}
+
+func (wh GitHubWebHook) handleInstallation(payload *github.InstallationEvent) {
+	wh.logger.Debugf("Received app installation event with ID %s for organization %s with ID %d",
+		payload.Installation.ID, *payload.Sender.Login, payload.Installation.Account.ID)
+
+	// TODO: check if course for such organization name exists in the database
+	course, err := wh.db.GetCourse(uint64(*payload.Installation.Account.ID), false)
+	if err != nil {
+		wh.logger.Errorf("Failed to get course for app installation with organization %s (ID %d)")
+		return
+	}
+	course.InstallationID = uint64(*payload.Installation.ID)
+	if err := wh.db.UpdateCourse(course); err != nil {
+		wh.logger.Errorf("Failed to update installation ID for course %s", course.Code)
+		return
 	}
 }
 
