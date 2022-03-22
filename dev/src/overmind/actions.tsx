@@ -458,11 +458,13 @@ export const setActiveFavorite = ({ state }: Context, isActive: boolean): void =
 }
 
 /** Rebuilds the currently active submission */
-export const rebuildSubmission = async ({ state, effects }: Context): Promise<void> => {
+export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<void> => {
     if (state.currentSubmission && state.selectedAssignment) {
         const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.getId(), state.activeSubmission)
-        if (response.data) {
-            state.currentSubmission = response.data
+        if (success(response)) {
+            // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
+            // TODO: gRPC streaming should be implemented to send the updated submission to the client.
+            actions.alert({ color: Color.GREEN, text: 'Submission rebuilt successfully' })
         }
     }
 }
