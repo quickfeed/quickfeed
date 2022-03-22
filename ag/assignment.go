@@ -3,6 +3,8 @@ package ag
 import (
 	context "context"
 	"time"
+
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -44,21 +46,11 @@ func (a *Assignment) IsApproved(latest *Submission, score uint32) Submission_Sta
 	return latest.GetStatus()
 }
 
-// CloneWithoutSubmissions returns a deep copy of the given assignment
-// without submissions.
+// CloneWithoutSubmissions returns a deep copy of the assignment without submissions.
 func (a *Assignment) CloneWithoutSubmissions() *Assignment {
-	return &Assignment{
-		ID:                a.ID,
-		CourseID:          a.CourseID,
-		Name:              a.Name,
-		Deadline:          a.Deadline,
-		AutoApprove:       a.AutoApprove,
-		Order:             a.Order,
-		IsGroupLab:        a.IsGroupLab,
-		ScoreLimit:        a.ScoreLimit,
-		Reviewers:         a.Reviewers,
-		GradingBenchmarks: a.GradingBenchmarks,
-	}
+	clone := proto.Clone(a).(*Assignment)
+	clone.Submissions = nil
+	return clone
 }
 
 // GradedManually returns true if the assignment will be graded manually.

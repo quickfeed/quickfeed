@@ -24,6 +24,17 @@ On systems with homebrew:
 % gh help
 ```
 
+Further, we require that code is formatted according to the rules and extensions that have been configured for VSCode.
+When opening VSCode, please install the recommended extensions for QuickFeed; [see also style guidelines below](#style-guidelines).
+Specifically, you will need to install the `clang-format` tool to edit `.proto` files, and the `golangci-lint` tool to edit `.go` files.
+
+On systems with homebrew:
+
+```shell
+% brew install clang-format
+% brew install golangci-lint
+```
+
 ### Create Issue First
 
 Before you implement some feature or bug fix, you should open an issue first.

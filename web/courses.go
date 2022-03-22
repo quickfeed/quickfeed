@@ -2,12 +2,14 @@ package web
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
+	"gorm.io/gorm"
 )
 
 // getCourses returns all courses.
@@ -153,83 +155,88 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 
 	course.SetSlipDays()
 
-	enrolLinks := make([]*pb.EnrollmentLink, 0)
-
+	var enrolLinks []*pb.EnrollmentLink
 	switch request.Type {
 	case pb.SubmissionsForCourseRequest_GROUP:
-		enrolLinks = append(enrolLinks, s.makeGroupResults(course, assignments)...)
+		enrolLinks = makeGroupResults(course, assignments)
 	case pb.SubmissionsForCourseRequest_INDIVIDUAL:
-		enrolLinks = append(enrolLinks, makeResults(course, assignments, false)...)
-	default:
-		enrolLinks = append(enrolLinks, makeResults(course, assignments, true)...)
+		enrolLinks = makeIndividualResults(course, assignments)
+	default: // case pb.SubmissionsForCourseRequest_ALL:
+		enrolLinks = makeAllResults(course, assignments)
 	}
 	return &pb.CourseSubmissions{Course: course, Links: enrolLinks}, nil
 }
 
-// makeResults generates enrollment-assignment-submissions links
-// for all course students and all individual and group assignments.
-func makeResults(course *pb.Course, assignments []*pb.Assignment, addGroups bool) []*pb.EnrollmentLink {
+// makeGroupResults generates enrollment to assignment to submissions links
+// for all course groups and all group assignments
+func makeGroupResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
-
-	for _, enrol := range course.Enrollments {
-		newLink := &pb.EnrollmentLink{Enrollment: enrol}
-		allSubmissions := make([]*pb.SubmissionLink, 0)
-		for _, a := range assignments {
-			copyWithoutSubmissions := a.CloneWithoutSubmissions()
-			subLink := &pb.SubmissionLink{
-				Assignment: copyWithoutSubmissions,
-			}
-
-			for _, sb := range a.Submissions {
-				if !a.IsGroupLab && sb.GroupID == 0 && sb.UserID == enrol.UserID {
-					subLink.Submission = sb
-				} else if addGroups && a.IsGroupLab && sb.GroupID > 0 && sb.GroupID == enrol.GroupID {
-					subLink.Submission = sb
-				}
-			}
-			allSubmissions = append(allSubmissions, subLink)
+	seenGroup := make(map[uint64]bool)
+	for _, enrollment := range course.Enrollments {
+		if seenGroup[enrollment.GroupID] {
+			continue // include group enrollment only once
 		}
-		sortSubmissionsByAssignmentOrder(allSubmissions)
-		newLink.Submissions = allSubmissions
-		enrolLinks = append(enrolLinks, newLink)
+		seenGroup[enrollment.GroupID] = true
+		enrolLinks = append(enrolLinks, &pb.EnrollmentLink{
+			Enrollment: enrollment,
+			Submissions: makeSubmissionLinks(assignments, func(submission *pb.Submission) bool {
+				// include group submissions for this enrollment
+				return submission.ByGroup(enrollment.GroupID)
+			}),
+		})
 	}
 	return enrolLinks
 }
 
-// makeGroupResults generates enrollment to assignment to submissions links
-// for all course groups and all group assignments
-func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
+// makeIndividualResults returns enrollment links with submissions
+// for individual assignments for all students in the course.
+func makeIndividualResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
-	for _, grp := range course.Groups {
-
-		newLink := &pb.EnrollmentLink{}
-		for _, enrol := range course.Enrollments {
-			if enrol.GroupID > 0 && enrol.GroupID == grp.ID {
-				newLink.Enrollment = enrol
-			}
-		}
-		if newLink.Enrollment == nil {
-			s.logger.Debugf("Got empty enrollment for group %+v", grp)
-		}
-
-		allSubmissions := make([]*pb.SubmissionLink, 0)
-		for _, a := range assignments {
-			copyWithoutSubmissions := a.CloneWithoutSubmissions()
-			subLink := &pb.SubmissionLink{
-				Assignment: copyWithoutSubmissions,
-			}
-			for _, sb := range a.Submissions {
-				if sb.GroupID > 0 && sb.GroupID == grp.ID {
-					subLink.Submission = sb
-				}
-			}
-			allSubmissions = append(allSubmissions, subLink)
-		}
-		sortSubmissionsByAssignmentOrder(allSubmissions)
-		newLink.Submissions = allSubmissions
-		enrolLinks = append(enrolLinks, newLink)
+	for _, enrollment := range course.Enrollments {
+		enrolLinks = append(enrolLinks, &pb.EnrollmentLink{
+			Enrollment: enrollment,
+			Submissions: makeSubmissionLinks(assignments, func(submission *pb.Submission) bool {
+				// include individual submissions for this enrollment
+				return submission.ByUser(enrollment.UserID)
+			}),
+		})
 	}
 	return enrolLinks
+}
+
+// makeAllResults returns enrollment links with submissions
+// for both individual and group assignments for all students/groups in the course.
+func makeAllResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
+	enrolLinks := make([]*pb.EnrollmentLink, len(course.Enrollments))
+	for i, enrollment := range course.Enrollments {
+		enrolLinks[i] = &pb.EnrollmentLink{
+			Enrollment: enrollment,
+			Submissions: makeSubmissionLinks(assignments, func(submission *pb.Submission) bool {
+				// include individual and group submissions for this enrollment
+				return submission.ByUser(enrollment.UserID) || submission.ByGroup(enrollment.GroupID)
+			}),
+		}
+	}
+	return enrolLinks
+}
+
+func makeSubmissionLinks(assignments []*pb.Assignment, include func(*pb.Submission) bool) []*pb.SubmissionLink {
+	subLinks := make([]*pb.SubmissionLink, len(assignments))
+	for i, assignment := range assignments {
+		subLinks[i] = &pb.SubmissionLink{
+			Assignment: assignment.CloneWithoutSubmissions(),
+		}
+		for _, submission := range assignment.Submissions {
+			if include(submission) {
+				subLinks[i].Submission = submission
+			}
+		}
+	}
+	// sort submission links by assignment order
+	sort.Slice(subLinks, func(i, j int) bool {
+		return subLinks[i].Assignment.Order < subLinks[j].Assignment.Order
+	})
+	return subLinks
 }
 
 // updateSubmission updates submission status or sets a submission score based on a manual review.
@@ -311,81 +318,32 @@ func (s *AutograderService) changeCourseVisibility(enrollment *pb.Enrollment) er
 	return s.db.UpdateEnrollment(enrollment)
 }
 
-// getRepositoryURL returns URL of a course repository of the given type.
-func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint64, repoType pb.Repository_Type) (string, error) {
-	course, err := s.db.GetCourse(courseID, false)
-	if err != nil {
-		return "", err
-	}
-	userRepoQuery := &pb.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		RepoType:       repoType,
-	}
-
-	switch repoType {
-	case pb.Repository_USER:
-		userRepoQuery.UserID = currentUser.GetID()
-	case pb.Repository_GROUP:
-		enrol, err := s.db.GetEnrollmentByCourseAndUser(courseID, currentUser.GetID())
-		if err != nil {
-			return "", err
-		}
-		if enrol.GetGroupID() > 0 {
-			userRepoQuery.GroupID = enrol.GroupID
-		}
-	}
-
-	repos, err := s.db.GetRepositories(userRepoQuery)
-	if err != nil {
-		return "", err
-	}
-	if len(repos) != 1 {
-		return "", fmt.Errorf("found %d repositories for query %+v", len(repos), userRepoQuery)
-	}
-	return repos[0].HTMLURL, nil
-}
-
-// isEmptyRepo returns nil if all repositories for the given course and student or group are empty,
-// returns an error otherwise.
-func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *pb.RepositoryRequest) error {
-	course, err := s.db.GetCourse(request.GetCourseID(), false)
-	if err != nil {
-		return err
-	}
-	repos, err := s.db.GetRepositories(&pb.Repository{OrganizationID: course.GetOrganizationID(), UserID: request.GetUserID(), GroupID: request.GetGroupID()})
-	if err != nil {
-		return err
-	}
-	if len(repos) < 1 {
-		return fmt.Errorf("no repositories found")
-	}
-	return isEmpty(ctx, sc, repos)
-}
-
 // rejectEnrollment rejects a student enrollment, if a student repo exists for the given course, removes it from the SCM and database.
 func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
-	repos, err := s.db.GetRepositories(&pb.Repository{
-		UserID:         user.GetID(),
-		OrganizationID: course.GetOrganizationID(),
-		RepoType:       pb.Repository_USER,
-	})
-	if err != nil {
-		return err
+	if err := s.db.RejectEnrollment(user.ID, course.ID); err != nil {
+		s.logger.Debugf("Failed to delete %s enrollment for %q from database: %v", course.Code, user.Login, err)
+		// continue with other delete operations
 	}
-	for _, repo := range repos {
-		// we do not care about errors here, even if the github repo does not exists,
-		// log the error and go on with deleting database entries
-		if err := removeUserFromCourse(ctx, sc, user.GetLogin(), repo); err != nil {
-			s.logger.Debug("updateEnrollment: rejectUserFromCourse failed (expected behavior): ", err)
-		}
-
-		if err := s.db.DeleteRepositoryByRemoteID(repo.GetRepositoryID()); err != nil {
-			return err
-		}
+	repo, err := s.getRepo(course, user.GetID(), pb.Repository_USER)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("failed to get %s repository for %q: %w", course.Code, user.Login, err)
 	}
-	return s.db.RejectEnrollment(user.ID, course.ID)
+	if repo == nil {
+		s.logger.Debugf("No %s repository found for %q: %v", course.Code, user.Login, err)
+		// cannot continue without repository information
+		return nil
+	}
+	if err = s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
+		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.Code, user.Login, err)
+		// continue with other delete operations
+	}
+	// when deleting a user, remove github repository and organization membership as well
+	if err := removeUserFromCourse(ctx, sc, user.GetLogin(), repo); err != nil {
+		s.logger.Debugf("rejectEnrollment: failed to remove %q from %s (expected behavior): %v", course.Code, user.Login, err)
+	}
+	return nil
 }
 
 // enrollStudent enrolls the given user as a student into the given course.
@@ -395,40 +353,28 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 
 	// check whether user repo already exists,
 	// which could happen if accepting a previously rejected student
-	userRepoQuery := &pb.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		UserID:         user.GetID(),
-		RepoType:       pb.Repository_USER,
-	}
-	userEnrolQuery := &pb.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		Status:   pb.Enrollment_STUDENT,
-	}
-	repos, err := s.db.GetRepositories(userRepoQuery)
-	if err != nil {
-		return err
+	repo, err := s.getRepo(course, user.GetID(), pb.Repository_USER)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("failed to get %s repository for %q: %w", course.Code, user.Login, err)
 	}
 
 	if enrolled.Status == pb.Enrollment_TEACHER {
 		err = revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
 		if err != nil {
-			s.logger.Errorf("Failed to revoke teacher status for user %s and course %s: %v", user.Login, course.Name, err)
+			s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.Code, user.Login, err)
 		}
 	} else {
-
-		s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repos: ", len(repos))
-		if len(repos) > 0 {
+		s.logger.Debugf("Enrolling student %q in %s; has database repo: %t", user.Login, course.Code, repo != nil)
+		if repo != nil {
 			// repo already exist, update enrollment in database
-			return s.db.UpdateEnrollment(userEnrolQuery)
+			goto UPDATE
 		}
 		// create user repo, user team, and add user to students team
 		repo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
 		if err != nil {
-			s.logger.Errorf("Failed to update repos or team membership for student %s: %v", user.Login, err)
-			return err
+			return fmt.Errorf("failed to update %s repository or team membership for %q: %w", course.Code, user.Login, err)
 		}
-		s.logger.Debug("Enrolling student: ", user.GetLogin(), " repo and team update done")
+		s.logger.Debugf("Enrolling student %q in %s; repo and team update done", user.Login, course.Code)
 
 		// add student repo to database if SCM interaction above was successful
 		userRepo := pb.Repository{
@@ -438,17 +384,20 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 			HTMLURL:        repo.WebURL,
 			RepoType:       pb.Repository_USER,
 		}
-
 		if err := s.db.CreateRepository(&userRepo); err != nil {
-			return err
+			return fmt.Errorf("failed to create %s repository for %q: %w", course.Code, user.Login, err)
 		}
 
 		if err := s.acceptRepositoryInvites(ctx, user, course); err != nil {
-			s.logger.Errorf("Failed to accept repository invites for student %s: %v", user.Login, err)
+			s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.Code, user.Login, err)
 		}
 	}
-
-	return s.db.UpdateEnrollment(userEnrolQuery)
+UPDATE:
+	return s.db.UpdateEnrollment(&pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	})
 }
 
 // enrollTeacher promotes the given user to teacher of the given course
@@ -458,8 +407,7 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 
 	// make owner, remove from students, add to teachers
 	if _, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_TEACHER); err != nil {
-		s.logger.Errorf("Failed to update team membership for teacher %s: %v", user.Login, err)
-		return err
+		return fmt.Errorf("failed to update %s repository or team membership for teacher %q: %w", course.Code, user.Login, err)
 	}
 	return s.db.UpdateEnrollment(&pb.Enrollment{
 		UserID:   user.ID,
@@ -555,11 +503,4 @@ func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, user *p
 		return fmt.Errorf("failed to get repository invites for %s: %w", user.Login, err)
 	}
 	return nil
-}
-
-func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.SubmissionLink {
-	sort.Slice(unsorted, func(i, j int) bool {
-		return unsorted[i].Assignment.Order < unsorted[j].Assignment.Order
-	})
-	return unsorted
 }

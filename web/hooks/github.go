@@ -60,11 +60,16 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		return
 	}
 
-	repo, err := wh.db.GetRepositoryByRemoteID(uint64(payload.GetRepo().GetID()))
+	repos, err := wh.db.GetRepositories(&pb.Repository{RepositoryID: uint64(payload.GetRepo().GetID())})
 	if err != nil {
 		wh.logger.Errorf("Failed to get repository by remote ID %d from database: %v", payload.GetRepo().GetID(), err)
 		return
 	}
+	if len(repos) != 1 {
+		wh.logger.Debugf("Ignoring push event for unknown repository: %s", payload.GetRepo().GetFullName())
+		return
+	}
+	repo := repos[0]
 	wh.logger.Debugf("Received push event for repository %v", repo)
 
 	course, err := wh.db.GetCourseByOrganizationID(repo.OrganizationID)

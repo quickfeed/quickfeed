@@ -1484,8 +1484,13 @@ export class RebuildRequest extends jspb.Message {
   getSubmissionid(): number;
   setSubmissionid(value: number): RebuildRequest;
 
+  getCourseid(): number;
+  setCourseid(value: number): RebuildRequest;
+
   getAssignmentid(): number;
   setAssignmentid(value: number): RebuildRequest;
+
+  getRebuildtypeCase(): RebuildRequest.RebuildtypeCase;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): RebuildRequest.AsObject;
@@ -1498,7 +1503,14 @@ export class RebuildRequest extends jspb.Message {
 export namespace RebuildRequest {
   export type AsObject = {
     submissionid: number,
+    courseid: number,
     assignmentid: number,
+  }
+
+  export enum RebuildtypeCase { 
+    REBUILDTYPE_NOT_SET = 0,
+    SUBMISSIONID = 1,
+    COURSEID = 2,
   }
 }
 
@@ -1525,28 +1537,6 @@ export namespace CourseUserRequest {
     coursecode: string,
     courseyear: number,
     userlogin: string,
-  }
-}
-
-export class AssignmentRequest extends jspb.Message {
-  getCourseid(): number;
-  setCourseid(value: number): AssignmentRequest;
-
-  getAssignmentid(): number;
-  setAssignmentid(value: number): AssignmentRequest;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): AssignmentRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: AssignmentRequest): AssignmentRequest.AsObject;
-  static serializeBinaryToWriter(message: AssignmentRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): AssignmentRequest;
-  static deserializeBinaryFromReader(message: AssignmentRequest, reader: jspb.BinaryReader): AssignmentRequest;
-}
-
-export namespace AssignmentRequest {
-  export type AsObject = {
-    courseid: number,
-    assignmentid: number,
   }
 }
 
