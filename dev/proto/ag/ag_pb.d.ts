@@ -210,6 +210,9 @@ export class Course extends jspb.Message {
   getOrganizationpath(): string;
   setOrganizationpath(value: string): Course;
 
+  getInstallationid(): number;
+  setInstallationid(value: number): Course;
+
   getSlipdays(): number;
   setSlipdays(value: number): Course;
 
@@ -253,6 +256,7 @@ export namespace Course {
     provider: string,
     organizationid: number,
     organizationpath: string,
+    installationid: number,
     slipdays: number,
     dockerfile: string,
     enrolled: Enrollment.UserStatus,
