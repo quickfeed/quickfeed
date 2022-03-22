@@ -116,7 +116,6 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
 }
 
 export const getEnrollmentsByCourse = async ({ state, effects }: Context, value: { courseID: number, statuses: Enrollment.UserStatus[] }): Promise<boolean> => {
-    state.courseEnrollments[value.courseID] = []
     const result = await effects.grpcMan.getEnrollmentsByCourse(value.courseID, undefined, true, value.statuses)
     if (result.data) {
         state.courseEnrollments[value.courseID] = result.data.getEnrollmentsList()
@@ -221,13 +220,18 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
 /** approvePendingEnrollments approves all pending enrollments for the current course */
 export const approvePendingEnrollments = async ({ state, actions, effects }: Context): Promise<void> => {
     if (confirm("Please confirm that you want to approve all students")) {
-        const enrollments = state.pendingEnrollments.map(e => json(e).clone())
+        // Clone and set status to student for all pending enrollments
+        const enrollments = state.pendingEnrollments
+            .map(e => json(e).clone())
+            .map(e => e.setStatus(Enrollment.UserStatus.STUDENT))
         const response = await effects.grpcMan.updateEnrollments(enrollments)
         if (success(response)) {
             for (const enrollment of state.pendingEnrollments) {
                 enrollment.setStatus(Enrollment.UserStatus.STUDENT)
             }
         } else {
+            // Fetch enrollments again if update failed in case the user was able to approve some enrollments
+            await actions.getEnrollmentsByCourse({ courseID: state.activeCourse, statuses: [Enrollment.UserStatus.PENDING] })
             actions.alertHandler(response)
         }
     }
