@@ -1,55 +1,29 @@
-# How to run jest tests
+# Testing with Jest
 
-## Plugins needed
-
-To install jest:
+To run the frontend tests in `dev/src/__tests__`, make sure to install the required packages:
 
 ```shell
-% npm i jest
+% cd dev
+% npm ci
 ```
 
-To install enzyme:
+To run `jest` from the command line, you will need to install it globally:
 
 ```shell
-% npm i enzyme
+% npm i --global jest
 ```
 
-To install react-router-dom:
-
-```shell
-% npm i react-router-dom
-```
-
-To install enzyme-adapter-react-17:
-
-```shell
-% npm i @wojtekmaj/enzyme-adapter-react-17
-```
-
-## How to run the tests
-
-To run tests go to the `src/__tests__` folder.
+For more information on running `jest` from the command line, please see the [getting started](https://jestjs.io/docs/getting-started) documentation.
 
 To run all tests:
 
 ```shell
+% cd dev/src/__tests__
 % jest
-```
-
-or:
-
-```shell
-% npm test
 ```
 
 To run a specific test:
 
 ```shell
-% npm test <name of the test you want to run>
+% jest <test-filename>
 ```
-
-or:
-
-```shell
-% jest <name of the test you want to run>
-````
