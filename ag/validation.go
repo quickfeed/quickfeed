@@ -239,12 +239,10 @@ func (r *CourseUserRequest) IsValid() bool {
 }
 
 func (m *Enrollments) IsValid() bool {
-	isValid := true
 	for _, e := range m.Enrollments {
 		if !e.IsValid() {
-			isValid = false
-			break
+			return false
 		}
 	}
-	return isValid && m.HasCourseID()
+	return m.HasCourseID()
 }
