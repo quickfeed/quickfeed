@@ -35,7 +35,7 @@ export class AutograderServiceClient {
     this.options_ = options;
   }
 
-  methodInfoGetUser = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetUser = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetUser',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.Void,
@@ -67,7 +67,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetUser',
         request,
         metadata || {},
-        this.methodInfoGetUser,
+        this.methodDescriptorGetUser,
         callback);
     }
     return this.client_.unaryCall(
@@ -75,10 +75,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetUser',
     request,
     metadata || {},
-    this.methodInfoGetUser);
+    this.methodDescriptorGetUser);
   }
 
-  methodInfoGetUsers = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetUsers = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetUsers',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.Void,
@@ -110,7 +110,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetUsers',
         request,
         metadata || {},
-        this.methodInfoGetUsers,
+        this.methodDescriptorGetUsers,
         callback);
     }
     return this.client_.unaryCall(
@@ -118,10 +118,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetUsers',
     request,
     metadata || {},
-    this.methodInfoGetUsers);
+    this.methodDescriptorGetUsers);
   }
 
-  methodInfoGetUserByCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetUserByCourse = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetUserByCourse',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.CourseUserRequest,
@@ -153,7 +153,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetUserByCourse',
         request,
         metadata || {},
-        this.methodInfoGetUserByCourse,
+        this.methodDescriptorGetUserByCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -161,10 +161,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetUserByCourse',
     request,
     metadata || {},
-    this.methodInfoGetUserByCourse);
+    this.methodDescriptorGetUserByCourse);
   }
 
-  methodInfoUpdateUser = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateUser = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateUser',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.User,
@@ -196,7 +196,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/UpdateUser',
         request,
         metadata || {},
-        this.methodInfoUpdateUser,
+        this.methodDescriptorUpdateUser,
         callback);
     }
     return this.client_.unaryCall(
@@ -204,10 +204,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/UpdateUser',
     request,
     metadata || {},
-    this.methodInfoUpdateUser);
+    this.methodDescriptorUpdateUser);
   }
 
-  methodInfoIsAuthorizedTeacher = new grpcWeb.MethodDescriptor(
+  methodDescriptorIsAuthorizedTeacher = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/IsAuthorizedTeacher',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.Void,
@@ -239,7 +239,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/IsAuthorizedTeacher',
         request,
         metadata || {},
-        this.methodInfoIsAuthorizedTeacher,
+        this.methodDescriptorIsAuthorizedTeacher,
         callback);
     }
     return this.client_.unaryCall(
@@ -247,10 +247,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/IsAuthorizedTeacher',
     request,
     metadata || {},
-    this.methodInfoIsAuthorizedTeacher);
+    this.methodDescriptorIsAuthorizedTeacher);
   }
 
-  methodInfoGetGroup = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetGroup = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetGroup',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.GetGroupRequest,
@@ -282,7 +282,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetGroup',
         request,
         metadata || {},
-        this.methodInfoGetGroup,
+        this.methodDescriptorGetGroup,
         callback);
     }
     return this.client_.unaryCall(
@@ -290,10 +290,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetGroup',
     request,
     metadata || {},
-    this.methodInfoGetGroup);
+    this.methodDescriptorGetGroup);
   }
 
-  methodInfoGetGroupByUserAndCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetGroupByUserAndCourse = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetGroupByUserAndCourse',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.GroupRequest,
@@ -325,7 +325,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetGroupByUserAndCourse',
         request,
         metadata || {},
-        this.methodInfoGetGroupByUserAndCourse,
+        this.methodDescriptorGetGroupByUserAndCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -333,10 +333,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetGroupByUserAndCourse',
     request,
     metadata || {},
-    this.methodInfoGetGroupByUserAndCourse);
+    this.methodDescriptorGetGroupByUserAndCourse);
   }
 
-  methodInfoGetGroupsByCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetGroupsByCourse = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetGroupsByCourse',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.CourseRequest,
@@ -368,7 +368,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetGroupsByCourse',
         request,
         metadata || {},
-        this.methodInfoGetGroupsByCourse,
+        this.methodDescriptorGetGroupsByCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -376,10 +376,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetGroupsByCourse',
     request,
     metadata || {},
-    this.methodInfoGetGroupsByCourse);
+    this.methodDescriptorGetGroupsByCourse);
   }
 
-  methodInfoCreateGroup = new grpcWeb.MethodDescriptor(
+  methodDescriptorCreateGroup = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/CreateGroup',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.Group,
@@ -411,7 +411,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/CreateGroup',
         request,
         metadata || {},
-        this.methodInfoCreateGroup,
+        this.methodDescriptorCreateGroup,
         callback);
     }
     return this.client_.unaryCall(
@@ -419,10 +419,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/CreateGroup',
     request,
     metadata || {},
-    this.methodInfoCreateGroup);
+    this.methodDescriptorCreateGroup);
   }
 
-  methodInfoUpdateGroup = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateGroup = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateGroup',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.Group,
@@ -454,7 +454,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/UpdateGroup',
         request,
         metadata || {},
-        this.methodInfoUpdateGroup,
+        this.methodDescriptorUpdateGroup,
         callback);
     }
     return this.client_.unaryCall(
@@ -462,10 +462,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/UpdateGroup',
     request,
     metadata || {},
-    this.methodInfoUpdateGroup);
+    this.methodDescriptorUpdateGroup);
   }
 
-  methodInfoDeleteGroup = new grpcWeb.MethodDescriptor(
+  methodDescriptorDeleteGroup = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/DeleteGroup',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.GroupRequest,
@@ -497,7 +497,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/DeleteGroup',
         request,
         metadata || {},
-        this.methodInfoDeleteGroup,
+        this.methodDescriptorDeleteGroup,
         callback);
     }
     return this.client_.unaryCall(
@@ -505,10 +505,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/DeleteGroup',
     request,
     metadata || {},
-    this.methodInfoDeleteGroup);
+    this.methodDescriptorDeleteGroup);
   }
 
-  methodInfoGetCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetCourse = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetCourse',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.CourseRequest,
@@ -540,7 +540,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetCourse',
         request,
         metadata || {},
-        this.methodInfoGetCourse,
+        this.methodDescriptorGetCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -548,10 +548,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetCourse',
     request,
     metadata || {},
-    this.methodInfoGetCourse);
+    this.methodDescriptorGetCourse);
   }
 
-  methodInfoGetCourses = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetCourses = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetCourses',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.Void,
@@ -583,7 +583,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetCourses',
         request,
         metadata || {},
-        this.methodInfoGetCourses,
+        this.methodDescriptorGetCourses,
         callback);
     }
     return this.client_.unaryCall(
@@ -591,10 +591,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetCourses',
     request,
     metadata || {},
-    this.methodInfoGetCourses);
+    this.methodDescriptorGetCourses);
   }
 
-  methodInfoGetCoursesByUser = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetCoursesByUser = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetCoursesByUser',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.EnrollmentStatusRequest,
@@ -626,7 +626,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetCoursesByUser',
         request,
         metadata || {},
-        this.methodInfoGetCoursesByUser,
+        this.methodDescriptorGetCoursesByUser,
         callback);
     }
     return this.client_.unaryCall(
@@ -634,10 +634,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetCoursesByUser',
     request,
     metadata || {},
-    this.methodInfoGetCoursesByUser);
+    this.methodDescriptorGetCoursesByUser);
   }
 
-  methodInfoCreateCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorCreateCourse = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/CreateCourse',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.Course,
@@ -669,7 +669,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/CreateCourse',
         request,
         metadata || {},
-        this.methodInfoCreateCourse,
+        this.methodDescriptorCreateCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -677,10 +677,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/CreateCourse',
     request,
     metadata || {},
-    this.methodInfoCreateCourse);
+    this.methodDescriptorCreateCourse);
   }
 
-  methodInfoUpdateCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateCourse = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateCourse',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.Course,
@@ -712,7 +712,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/UpdateCourse',
         request,
         metadata || {},
-        this.methodInfoUpdateCourse,
+        this.methodDescriptorUpdateCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -720,10 +720,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/UpdateCourse',
     request,
     metadata || {},
-    this.methodInfoUpdateCourse);
+    this.methodDescriptorUpdateCourse);
   }
 
-  methodInfoUpdateCourseVisibility = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateCourseVisibility = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateCourseVisibility',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.Enrollment,
@@ -755,7 +755,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/UpdateCourseVisibility',
         request,
         metadata || {},
-        this.methodInfoUpdateCourseVisibility,
+        this.methodDescriptorUpdateCourseVisibility,
         callback);
     }
     return this.client_.unaryCall(
@@ -763,10 +763,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/UpdateCourseVisibility',
     request,
     metadata || {},
-    this.methodInfoUpdateCourseVisibility);
+    this.methodDescriptorUpdateCourseVisibility);
   }
 
-  methodInfoGetAssignments = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetAssignments = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetAssignments',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.CourseRequest,
@@ -798,7 +798,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetAssignments',
         request,
         metadata || {},
-        this.methodInfoGetAssignments,
+        this.methodDescriptorGetAssignments,
         callback);
     }
     return this.client_.unaryCall(
@@ -806,10 +806,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetAssignments',
     request,
     metadata || {},
-    this.methodInfoGetAssignments);
+    this.methodDescriptorGetAssignments);
   }
 
-  methodInfoUpdateAssignments = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateAssignments = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateAssignments',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.CourseRequest,
@@ -841,7 +841,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/UpdateAssignments',
         request,
         metadata || {},
-        this.methodInfoUpdateAssignments,
+        this.methodDescriptorUpdateAssignments,
         callback);
     }
     return this.client_.unaryCall(
@@ -849,10 +849,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/UpdateAssignments',
     request,
     metadata || {},
-    this.methodInfoUpdateAssignments);
+    this.methodDescriptorUpdateAssignments);
   }
 
-  methodInfoGetEnrollmentsByUser = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetEnrollmentsByUser = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetEnrollmentsByUser',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.EnrollmentStatusRequest,
@@ -884,7 +884,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetEnrollmentsByUser',
         request,
         metadata || {},
-        this.methodInfoGetEnrollmentsByUser,
+        this.methodDescriptorGetEnrollmentsByUser,
         callback);
     }
     return this.client_.unaryCall(
@@ -892,10 +892,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetEnrollmentsByUser',
     request,
     metadata || {},
-    this.methodInfoGetEnrollmentsByUser);
+    this.methodDescriptorGetEnrollmentsByUser);
   }
 
-  methodInfoGetEnrollmentsByCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetEnrollmentsByCourse = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetEnrollmentsByCourse',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.EnrollmentRequest,
@@ -927,7 +927,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetEnrollmentsByCourse',
         request,
         metadata || {},
-        this.methodInfoGetEnrollmentsByCourse,
+        this.methodDescriptorGetEnrollmentsByCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -935,10 +935,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetEnrollmentsByCourse',
     request,
     metadata || {},
-    this.methodInfoGetEnrollmentsByCourse);
+    this.methodDescriptorGetEnrollmentsByCourse);
   }
 
-  methodInfoCreateEnrollment = new grpcWeb.MethodDescriptor(
+  methodDescriptorCreateEnrollment = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/CreateEnrollment',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.Enrollment,
@@ -970,7 +970,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/CreateEnrollment',
         request,
         metadata || {},
-        this.methodInfoCreateEnrollment,
+        this.methodDescriptorCreateEnrollment,
         callback);
     }
     return this.client_.unaryCall(
@@ -978,10 +978,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/CreateEnrollment',
     request,
     metadata || {},
-    this.methodInfoCreateEnrollment);
+    this.methodDescriptorCreateEnrollment);
   }
 
-  methodInfoUpdateEnrollment = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateEnrollment = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateEnrollment',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.Enrollment,
@@ -1013,7 +1013,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/UpdateEnrollment',
         request,
         metadata || {},
-        this.methodInfoUpdateEnrollment,
+        this.methodDescriptorUpdateEnrollment,
         callback);
     }
     return this.client_.unaryCall(
@@ -1021,10 +1021,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/UpdateEnrollment',
     request,
     metadata || {},
-    this.methodInfoUpdateEnrollment);
+    this.methodDescriptorUpdateEnrollment);
   }
 
-  methodInfoUpdateEnrollments = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateEnrollments = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateEnrollments',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.CourseRequest,
@@ -1056,7 +1056,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/UpdateEnrollments',
         request,
         metadata || {},
-        this.methodInfoUpdateEnrollments,
+        this.methodDescriptorUpdateEnrollments,
         callback);
     }
     return this.client_.unaryCall(
@@ -1064,10 +1064,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/UpdateEnrollments',
     request,
     metadata || {},
-    this.methodInfoUpdateEnrollments);
+    this.methodDescriptorUpdateEnrollments);
   }
 
-  methodInfoGetSubmissions = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetSubmissions = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetSubmissions',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.SubmissionRequest,
@@ -1099,7 +1099,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetSubmissions',
         request,
         metadata || {},
-        this.methodInfoGetSubmissions,
+        this.methodDescriptorGetSubmissions,
         callback);
     }
     return this.client_.unaryCall(
@@ -1107,10 +1107,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetSubmissions',
     request,
     metadata || {},
-    this.methodInfoGetSubmissions);
+    this.methodDescriptorGetSubmissions);
   }
 
-  methodInfoGetSubmissionsByCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetSubmissionsByCourse = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetSubmissionsByCourse',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.SubmissionsForCourseRequest,
@@ -1142,7 +1142,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetSubmissionsByCourse',
         request,
         metadata || {},
-        this.methodInfoGetSubmissionsByCourse,
+        this.methodDescriptorGetSubmissionsByCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -1150,10 +1150,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetSubmissionsByCourse',
     request,
     metadata || {},
-    this.methodInfoGetSubmissionsByCourse);
+    this.methodDescriptorGetSubmissionsByCourse);
   }
 
-  methodInfoUpdateSubmission = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateSubmission = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateSubmission',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.UpdateSubmissionRequest,
@@ -1185,7 +1185,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/UpdateSubmission',
         request,
         metadata || {},
-        this.methodInfoUpdateSubmission,
+        this.methodDescriptorUpdateSubmission,
         callback);
     }
     return this.client_.unaryCall(
@@ -1193,10 +1193,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/UpdateSubmission',
     request,
     metadata || {},
-    this.methodInfoUpdateSubmission);
+    this.methodDescriptorUpdateSubmission);
   }
 
-  methodInfoUpdateSubmissions = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateSubmissions = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateSubmissions',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.UpdateSubmissionsRequest,
@@ -1228,7 +1228,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/UpdateSubmissions',
         request,
         metadata || {},
-        this.methodInfoUpdateSubmissions,
+        this.methodDescriptorUpdateSubmissions,
         callback);
     }
     return this.client_.unaryCall(
@@ -1236,75 +1236,32 @@ export class AutograderServiceClient {
       '/ag.AutograderService/UpdateSubmissions',
     request,
     metadata || {},
-    this.methodInfoUpdateSubmissions);
+    this.methodDescriptorUpdateSubmissions);
   }
 
-  methodInfoRebuildSubmission = new grpcWeb.MethodDescriptor(
-    '/ag.AutograderService/RebuildSubmission',
-    grpcWeb.MethodType.UNARY,
-    ag_ag_pb.RebuildRequest,
-    ag_ag_pb.Submission,
-    (request: ag_ag_pb.RebuildRequest) => {
-      return request.serializeBinary();
-    },
-    ag_ag_pb.Submission.deserializeBinary
-  );
-
-  rebuildSubmission(
-    request: ag_ag_pb.RebuildRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Submission>;
-
-  rebuildSubmission(
-    request: ag_ag_pb.RebuildRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.Submission) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Submission>;
-
-  rebuildSubmission(
-    request: ag_ag_pb.RebuildRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.Submission) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/RebuildSubmission',
-        request,
-        metadata || {},
-        this.methodInfoRebuildSubmission,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/ag.AutograderService/RebuildSubmission',
-    request,
-    metadata || {},
-    this.methodInfoRebuildSubmission);
-  }
-
-  methodInfoRebuildSubmissions = new grpcWeb.MethodDescriptor(
+  methodDescriptorRebuildSubmissions = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/RebuildSubmissions',
     grpcWeb.MethodType.UNARY,
-    ag_ag_pb.AssignmentRequest,
+    ag_ag_pb.RebuildRequest,
     ag_ag_pb.Void,
-    (request: ag_ag_pb.AssignmentRequest) => {
+    (request: ag_ag_pb.RebuildRequest) => {
       return request.serializeBinary();
     },
     ag_ag_pb.Void.deserializeBinary
   );
 
   rebuildSubmissions(
-    request: ag_ag_pb.AssignmentRequest,
+    request: ag_ag_pb.RebuildRequest,
     metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
 
   rebuildSubmissions(
-    request: ag_ag_pb.AssignmentRequest,
+    request: ag_ag_pb.RebuildRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.RpcError,
                response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
 
   rebuildSubmissions(
-    request: ag_ag_pb.AssignmentRequest,
+    request: ag_ag_pb.RebuildRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.RpcError,
                response: ag_ag_pb.Void) => void) {
@@ -1314,7 +1271,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/RebuildSubmissions',
         request,
         metadata || {},
-        this.methodInfoRebuildSubmissions,
+        this.methodDescriptorRebuildSubmissions,
         callback);
     }
     return this.client_.unaryCall(
@@ -1322,10 +1279,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/RebuildSubmissions',
     request,
     metadata || {},
-    this.methodInfoRebuildSubmissions);
+    this.methodDescriptorRebuildSubmissions);
   }
 
-  methodInfoCreateBenchmark = new grpcWeb.MethodDescriptor(
+  methodDescriptorCreateBenchmark = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/CreateBenchmark',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.GradingBenchmark,
@@ -1357,7 +1314,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/CreateBenchmark',
         request,
         metadata || {},
-        this.methodInfoCreateBenchmark,
+        this.methodDescriptorCreateBenchmark,
         callback);
     }
     return this.client_.unaryCall(
@@ -1365,10 +1322,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/CreateBenchmark',
     request,
     metadata || {},
-    this.methodInfoCreateBenchmark);
+    this.methodDescriptorCreateBenchmark);
   }
 
-  methodInfoUpdateBenchmark = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateBenchmark = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateBenchmark',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.GradingBenchmark,
@@ -1400,7 +1357,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/UpdateBenchmark',
         request,
         metadata || {},
-        this.methodInfoUpdateBenchmark,
+        this.methodDescriptorUpdateBenchmark,
         callback);
     }
     return this.client_.unaryCall(
@@ -1408,10 +1365,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/UpdateBenchmark',
     request,
     metadata || {},
-    this.methodInfoUpdateBenchmark);
+    this.methodDescriptorUpdateBenchmark);
   }
 
-  methodInfoDeleteBenchmark = new grpcWeb.MethodDescriptor(
+  methodDescriptorDeleteBenchmark = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/DeleteBenchmark',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.GradingBenchmark,
@@ -1443,7 +1400,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/DeleteBenchmark',
         request,
         metadata || {},
-        this.methodInfoDeleteBenchmark,
+        this.methodDescriptorDeleteBenchmark,
         callback);
     }
     return this.client_.unaryCall(
@@ -1451,10 +1408,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/DeleteBenchmark',
     request,
     metadata || {},
-    this.methodInfoDeleteBenchmark);
+    this.methodDescriptorDeleteBenchmark);
   }
 
-  methodInfoCreateCriterion = new grpcWeb.MethodDescriptor(
+  methodDescriptorCreateCriterion = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/CreateCriterion',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.GradingCriterion,
@@ -1486,7 +1443,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/CreateCriterion',
         request,
         metadata || {},
-        this.methodInfoCreateCriterion,
+        this.methodDescriptorCreateCriterion,
         callback);
     }
     return this.client_.unaryCall(
@@ -1494,10 +1451,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/CreateCriterion',
     request,
     metadata || {},
-    this.methodInfoCreateCriterion);
+    this.methodDescriptorCreateCriterion);
   }
 
-  methodInfoUpdateCriterion = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateCriterion = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateCriterion',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.GradingCriterion,
@@ -1529,7 +1486,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/UpdateCriterion',
         request,
         metadata || {},
-        this.methodInfoUpdateCriterion,
+        this.methodDescriptorUpdateCriterion,
         callback);
     }
     return this.client_.unaryCall(
@@ -1537,10 +1494,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/UpdateCriterion',
     request,
     metadata || {},
-    this.methodInfoUpdateCriterion);
+    this.methodDescriptorUpdateCriterion);
   }
 
-  methodInfoDeleteCriterion = new grpcWeb.MethodDescriptor(
+  methodDescriptorDeleteCriterion = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/DeleteCriterion',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.GradingCriterion,
@@ -1572,7 +1529,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/DeleteCriterion',
         request,
         metadata || {},
-        this.methodInfoDeleteCriterion,
+        this.methodDescriptorDeleteCriterion,
         callback);
     }
     return this.client_.unaryCall(
@@ -1580,10 +1537,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/DeleteCriterion',
     request,
     metadata || {},
-    this.methodInfoDeleteCriterion);
+    this.methodDescriptorDeleteCriterion);
   }
 
-  methodInfoCreateReview = new grpcWeb.MethodDescriptor(
+  methodDescriptorCreateReview = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/CreateReview',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.ReviewRequest,
@@ -1615,7 +1572,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/CreateReview',
         request,
         metadata || {},
-        this.methodInfoCreateReview,
+        this.methodDescriptorCreateReview,
         callback);
     }
     return this.client_.unaryCall(
@@ -1623,10 +1580,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/CreateReview',
     request,
     metadata || {},
-    this.methodInfoCreateReview);
+    this.methodDescriptorCreateReview);
   }
 
-  methodInfoUpdateReview = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateReview = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateReview',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.ReviewRequest,
@@ -1658,7 +1615,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/UpdateReview',
         request,
         metadata || {},
-        this.methodInfoUpdateReview,
+        this.methodDescriptorUpdateReview,
         callback);
     }
     return this.client_.unaryCall(
@@ -1666,10 +1623,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/UpdateReview',
     request,
     metadata || {},
-    this.methodInfoUpdateReview);
+    this.methodDescriptorUpdateReview);
   }
 
-  methodInfoGetReviewers = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetReviewers = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetReviewers',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.SubmissionReviewersRequest,
@@ -1701,7 +1658,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetReviewers',
         request,
         metadata || {},
-        this.methodInfoGetReviewers,
+        this.methodDescriptorGetReviewers,
         callback);
     }
     return this.client_.unaryCall(
@@ -1709,10 +1666,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetReviewers',
     request,
     metadata || {},
-    this.methodInfoGetReviewers);
+    this.methodDescriptorGetReviewers);
   }
 
-  methodInfoGetProviders = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetProviders = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetProviders',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.Void,
@@ -1744,7 +1701,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetProviders',
         request,
         metadata || {},
-        this.methodInfoGetProviders,
+        this.methodDescriptorGetProviders,
         callback);
     }
     return this.client_.unaryCall(
@@ -1752,10 +1709,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetProviders',
     request,
     metadata || {},
-    this.methodInfoGetProviders);
+    this.methodDescriptorGetProviders);
   }
 
-  methodInfoGetOrganization = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetOrganization = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetOrganization',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.OrgRequest,
@@ -1787,7 +1744,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetOrganization',
         request,
         metadata || {},
-        this.methodInfoGetOrganization,
+        this.methodDescriptorGetOrganization,
         callback);
     }
     return this.client_.unaryCall(
@@ -1795,10 +1752,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetOrganization',
     request,
     metadata || {},
-    this.methodInfoGetOrganization);
+    this.methodDescriptorGetOrganization);
   }
 
-  methodInfoGetRepositories = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetRepositories = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetRepositories',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.URLRequest,
@@ -1830,7 +1787,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/GetRepositories',
         request,
         metadata || {},
-        this.methodInfoGetRepositories,
+        this.methodDescriptorGetRepositories,
         callback);
     }
     return this.client_.unaryCall(
@@ -1838,10 +1795,10 @@ export class AutograderServiceClient {
       '/ag.AutograderService/GetRepositories',
     request,
     metadata || {},
-    this.methodInfoGetRepositories);
+    this.methodDescriptorGetRepositories);
   }
 
-  methodInfoIsEmptyRepo = new grpcWeb.MethodDescriptor(
+  methodDescriptorIsEmptyRepo = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/IsEmptyRepo',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.RepositoryRequest,
@@ -1873,7 +1830,7 @@ export class AutograderServiceClient {
           '/ag.AutograderService/IsEmptyRepo',
         request,
         metadata || {},
-        this.methodInfoIsEmptyRepo,
+        this.methodDescriptorIsEmptyRepo,
         callback);
     }
     return this.client_.unaryCall(
@@ -1881,7 +1838,7 @@ export class AutograderServiceClient {
       '/ag.AutograderService/IsEmptyRepo',
     request,
     metadata || {},
-    this.methodInfoIsEmptyRepo);
+    this.methodDescriptorIsEmptyRepo);
   }
 
 }
