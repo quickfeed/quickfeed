@@ -95,7 +95,7 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, cu
 	}
 
 	switch {
-	case enrollment.IsPending() && request.IsNone(): // pending -> none
+	case (enrollment.IsPending() || enrollment.IsStudent()) && request.IsNone(): // pending or student -> none
 		return s.rejectEnrollment(ctx, sc, enrollment)
 	case enrollment.IsPending() && request.IsStudent(): // pending -> student
 		return s.enrollStudent(ctx, sc, enrollment)
