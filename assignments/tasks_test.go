@@ -14,7 +14,7 @@ import (
 )
 
 // When running tests that have anything to do with tasks/issues, it is important that issues have their title corresponding to the name of an associated task.
-// For example, if you have an issue that is supposed to be connected to the task "task-1.md" in "lab1", the title of this issue needs to be "lab1/task-1.md".
+// For example, if you have an issue that is supposed to be connected to the task "task-hello_world.md" in "lab1", the title of this issue needs to be "lab1/hello_world".
 // Otherwise when creating the database there will be no clear way to know which issue is supposed to be associated with which task.
 
 // InitializeDbEnvironment initializes a db, based on org.
@@ -42,7 +42,7 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 	}
 
 	// Creates tasks found in assignments
-	tasks := getTasksFromAssignments(c, foundAssignments)
+	tasks := getTasksFromAssignments(foundAssignments)
 	for _, assignment := range foundAssignments {
 		err = synchronizeTasks(c, db, assignment, tasks)
 		if err != nil {
@@ -61,7 +61,7 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 	for _, repo := range repos {
 		var user *pb.User
 		// Might not even be necessary to handle repos differently in these tests.
-		dbRepo := &pb.Repository{}
+		var dbRepo *pb.Repository
 		switch repo.Path {
 		case pb.InfoRepo: // repo.Path is "course-info" here, yet we only check for "info"
 			dbRepo = &pb.Repository{
@@ -236,7 +236,7 @@ func TestHandleTasks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = handleTasks(ctx, db, s, course, getTasksFromAssignments(ctx, assignments))
+	err = handleTasks(ctx, db, s, course, assignments)
 	if err != nil {
 		t.Fatal(err)
 	}

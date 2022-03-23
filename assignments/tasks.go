@@ -11,24 +11,22 @@ import (
 	"github.com/autograde/quickfeed/scm"
 )
 
-// Things to do:
-// - Repositories in database do not have a "Name"-field.
-// - Ordering of tasks (See teacher.md)
+// TODO(Espeland): Ordering of tasks (See teacher.md)
 
 // newTask returns a task from markdown contents and associates it with the given assignment.
 // The provided markdown contents must contain a title specified on the first line,
 // starting with the "# " character sequence, followed by two new line characters.
-func newTask(contents []byte, assignment *pb.Assignment, name string) (*pb.Task, error) {
+func newTask(contents []byte, assignmentOrder uint32, name string) (*pb.Task, error) {
 	if !bytes.HasPrefix(contents, []byte("# ")) {
-		return nil, fmt.Errorf("task for assignment %s does not start with a # title marker", assignment.Name)
+		return nil, fmt.Errorf("task with name: %s, does not start with a # title marker", name)
 	}
 	bodyIndex := bytes.Index(contents, []byte("\n\n"))
 	if bodyIndex == -1 {
-		return nil, fmt.Errorf("failed to find task body in %s", assignment.Name)
+		return nil, fmt.Errorf("failed to find task body in task: %s", name)
 	}
 
 	task := &pb.Task{
-		AssignmentOrder: assignment.GetOrder(),
+		AssignmentOrder: assignmentOrder,
 		Title:           string(contents[2:bodyIndex]),
 		Body:            string(contents[bodyIndex+2:]),
 		Name:            name,
@@ -41,7 +39,7 @@ func newTask(contents []byte, assignment *pb.Assignment, name string) (*pb.Task,
 func updateScmIssue(c context.Context, sc scm.SCM, course *pb.Course, repo *pb.Repository, issue *pb.Issue) (*scm.Issue, error) {
 	issueOptions := &scm.CreateIssueOptions{
 		Organization: course.Name,
-		Repository:   filepath.Base(repo.GetHTMLURL()), // Todo
+		Repository:   repo.Name(),
 		Title:        issue.Title,
 		Body:         issue.Body,
 	}
@@ -52,15 +50,11 @@ func updateScmIssue(c context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 func createScmIssue(c context.Context, sc scm.SCM, course *pb.Course, repo *pb.Repository, task *pb.Task) (*scm.Issue, error) {
 	issueOptions := &scm.CreateIssueOptions{
 		Organization: course.Name,
-		Repository:   filepath.Base(repo.GetHTMLURL()), // Needs to be of type "tests", not "https://github.com/qf101/tests". This is a very hacky solution. pb.Repository should probably have a field "Name" that is set upon creation.
+		Repository:   repo.Name(),
 		Title:        task.Title,
 		Body:         task.Body,
 	}
-	issue, err := sc.CreateIssue(c, issueOptions)
-	if err != nil {
-		return nil, err
-	}
-	return issue, nil
+	return sc.CreateIssue(c, issueOptions)
 }
 
 // This is more of a converter function, and cannot currently return an error. Should probably be renamed or something.
@@ -75,18 +69,25 @@ func createIssue(c context.Context, repo *pb.Repository, task *pb.Task, scmIssue
 	return issue, nil
 }
 
-// Following is Oje code (placement might be temporary):
-
-func getTasksFromAssignments(c context.Context, assignments []*pb.Assignment) []*pb.Task {
+// getTasksFromAssignments returns a list of all tasks of given assignments.
+func getTasksFromAssignments(assignments []*pb.Assignment) []*pb.Task {
 	tasks := []*pb.Task{}
 	for _, assignment := range assignments {
 		tasks = append(tasks, assignment.Tasks...)
 	}
-
 	return tasks
 }
 
-func handleTasks(c context.Context, db database.Database, s scm.SCM, course *pb.Course, tasks []*pb.Task) error {
+// taskName returns the task name as a combination of assignmentName/filename
+// excluding the task- prefix and the .md suffix.
+func taskName(assignmentName, basePath string) string {
+	taskName := basePath[len("task-"):]
+	taskName = taskName[:len(taskName)-len(".md")]
+	return filepath.Join(assignmentName, taskName)
+}
+
+func handleTasks(c context.Context, db database.Database, s scm.SCM, course *pb.Course, assignments []*pb.Assignment) error {
+	tasks := getTasksFromAssignments(assignments)
 	repos, err := db.GetRepositoriesWithIssues(&pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
 	})
@@ -94,36 +95,34 @@ func handleTasks(c context.Context, db database.Database, s scm.SCM, course *pb.
 		return err
 	}
 
-	assignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
+	existingAssignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
 	if err != nil {
 		return err
 	}
 
-	// Loops through all assignments
-	for _, assignment := range assignments {
-		err := synchronizeTasks(c, db, assignment, tasks)
-		if err != nil {
+	for _, assignment := range existingAssignments {
+		if err = synchronizeTasks(c, db, assignment, tasks); err != nil {
 			return err
 		}
 	}
 
-	// Loops through all student repos
+	// Synchronize issues on all student repositories.
 	for _, repo := range repos {
 		if !repo.IsStudentRepo() {
 			continue
 		}
-
 		err = synchronizeIssues(c, db, course, s, repo, tasks)
-		if err != nil {
-			return err
-		}
+	}
+
+	// TODO(Espeland): What should happen if there is an error while syncing issues?
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-// synchronizeTasks synchronizes tasks in the database, with the ones of given assignment.
-// Returns a slice of tasks as they appear in the database.
+// synchronizeTasks synchronizes tasks in the database with the ones of given assignment.
 func synchronizeTasks(c context.Context, db database.Database, assignment *pb.Assignment, tasks []*pb.Task) error {
 	tasksToBeCreated := []*pb.Task{}
 	tasksToBeUpdated := []*pb.Task{}
@@ -146,7 +145,7 @@ func synchronizeTasks(c context.Context, db database.Database, assignment *pb.As
 			db.DeleteTask(existingTask)
 			continue
 		}
-		if !(task.Title == existingTask.Title && task.Body == existingTask.Body) {
+		if existingTask.HasChanged(task) {
 			// Task has been changed
 			existingTask.Title = task.Title
 			existingTask.Body = task.Body
@@ -199,7 +198,7 @@ func synchronizeIssues(c context.Context, db database.Database, course *pb.Cours
 		delete(tasksMap, issue.Name)
 	}
 
-	// Only tasks that do not have an issue with them remain.
+	// Only tasks that do not have an issue associated with them remain.
 	for _, task := range tasksMap {
 		// Creates the actual issue on a scm
 		scmIssue, err := createScmIssue(c, s, course, repo, task)
@@ -259,7 +258,7 @@ func fakeSynchronizeIssues(c context.Context, db database.Database, repo *pb.Rep
 		delete(tasksMap, issue.Name)
 	}
 
-	// Only tasks that do not have an issue with them remain.
+	// Only tasks that do not have an issue associated with them remain.
 	for _, task := range tasksMap {
 		// Creates issue to be saved in db
 		issue, err := createIssue(c, repo, task, &scm.Issue{

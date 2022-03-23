@@ -22,11 +22,12 @@ import (
 func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course *pb.Course) {
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), pb.TestsRepo)
 	scm, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
+	ctx := context.Background()
 	if err != nil {
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
 	}
-	assignments, dockerfile, err := fetchAssignments(context.Background(), logger, scm, course)
+	assignments, dockerfile, err := fetchAssignments(ctx, logger, scm, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
 		return
@@ -53,10 +54,9 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	}
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
 
-	ctx := context.Background()
-	err = handleTasks(ctx, db, scm, course, getTasksFromAssignments(ctx, assignments))
+	err = handleTasks(ctx, db, scm, course, assignments)
 	if err != nil {
-		logger.Errorf("Failed to Create tasks on '%s' repository: %v", pb.TestsRepo, err)
+		logger.Errorf("Failed to create tasks on '%s' repository: %v", pb.TestsRepo, err)
 		return
 	}
 }

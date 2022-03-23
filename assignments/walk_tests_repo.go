@@ -98,8 +98,8 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*pb.Assignment, 
 
 		if match(filepath.Base(path), taskFilePattern) {
 			assignment := assignmentsMap[assignmentName]
-			// Probably a better way of acquiring task name
-			task, err := newTask(contents, assignment, assignmentName+"/"+filepath.Base(path))
+			taskName := taskName(assignmentName, filepath.Base(path))
+			task, err := newTask(contents, assignment.GetOrder(), taskName)
 			if err != nil {
 				return nil, "", err
 			}
