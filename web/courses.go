@@ -104,7 +104,7 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, cu
 	case enrollment.IsTeacher() && request.IsStudent(): // teacher -> student
 		return s.revokeTeacherStatus(ctx, sc, enrollment)
 	}
-	return fmt.Errorf("unknown enrollment")
+	return fmt.Errorf("unknown enrollment status change from %s to %s", enrollment.GetStatus(), request.GetStatus())
 }
 
 // rejectEnrollment rejects a student enrollment, if a student repo exists for the given course, removes it from the SCM and database.

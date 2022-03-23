@@ -549,8 +549,12 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 
 	// teacher rejects student2, must succeed
-	student2Enrollment.Status = pb.Enrollment_NONE
+	student2Enrollment.Status = pb.Enrollment_STUDENT
 	request.Enrollments = []*pb.Enrollment{student2Enrollment}
+	if _, err := ags.UpdateEnrollments(ctx, request); err != nil {
+		t.Fatal(err)
+	}
+	student2Enrollment.Status = pb.Enrollment_NONE
 	if _, err := ags.UpdateEnrollments(ctx, request); err != nil {
 		t.Fatal(err)
 	}

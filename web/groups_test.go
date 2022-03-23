@@ -446,14 +446,15 @@ func TestDeleteGroup(t *testing.T) {
 		ID:             1,
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
-	if err := db.CreateCourse(admin.ID, &testCourse); err != nil {
-		t.Fatal(err)
-	}
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
+
+	ctx := qtest.WithUserContext(context.Background(), admin)
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ags.CreateCourse(ctx, &testCourse); err != nil {
 		t.Fatal(err)
 	}
 
@@ -464,8 +465,21 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// update enrollment to teacher; must be done by admin
+	// update enrollment from pending->student->teacher; must be done by admin
 	ctx = qtest.WithUserContext(context.Background(), admin)
+	if _, err := ags.UpdateEnrollments(ctx, &pb.Enrollments{
+		Enrollments: []*pb.Enrollment{
+			{
+				UserID:   teacher.ID,
+				CourseID: testCourse.ID,
+				Status:   pb.Enrollment_STUDENT,
+			},
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// update enrollment to teacher
 	if _, err := ags.UpdateEnrollments(ctx, &pb.Enrollments{
 		Enrollments: []*pb.Enrollment{
 			{
