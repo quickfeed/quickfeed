@@ -107,18 +107,19 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeUserStatus(enrollment: Enrollment, status: Enrollment.UserStatus): Promise<Status> {
-        const originalStatus = enrollment.getStatus();
-        enrollment.setStatus(status);
-        const result = await this.grpcHelper.updateEnrollment(enrollment);
+        const originalStatus = enrollment.getStatus()
+        enrollment.setStatus(status)
+        const result = await this.grpcHelper.updateEnrollments([enrollment])
         if (!this.responseCodeSuccess(result)) {
-            enrollment.setStatus(originalStatus);
+            enrollment.setStatus(originalStatus)
         }
-        return result.status;
+        return result.status
     }
 
-    public async approveAll(courseID: number): Promise<boolean> {
-        const result = await this.grpcHelper.updateEnrollments(courseID);
-        return result.data ? this.responseCodeSuccess(result) : false;
+    public async approveAll(enrollments: Enrollment[]): Promise<boolean> {
+        const toApprove = enrollments.map(e => e.setStatus(Enrollment.UserStatus.STUDENT))
+        const result = await this.grpcHelper.updateEnrollments(toApprove)
+        return result.data ? this.responseCodeSuccess(result) : false
     }
 
     public async isAuthorizedTeacher(): Promise<boolean> {
