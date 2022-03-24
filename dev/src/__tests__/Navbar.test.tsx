@@ -22,10 +22,10 @@ const wrapped = mount(<Provider value={mockedOvermind}>
                <NavBar />
             </Router>
         </Provider>
-     )
+    )
 
 describe("Visibility when logged in", () => {
-    it("When user is logged in, hamburger menu should aappear", () => {
+    it("When user is logged in, hamburger menu should appear", () => {
         const hamburger = "☰"
         expect(wrapped.find(".clickable").text()).toEqual(hamburger)
     })
