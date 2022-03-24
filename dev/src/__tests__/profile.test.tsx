@@ -8,7 +8,6 @@ import { createMemoryHistory } from "history"
 import { configure, render } from "enzyme"
 import Adapter from "@wojtekmaj/enzyme-adapter-react-17"
 import React from "react"
-import { state } from "../overmind/state"
 
 configure({ adapter: new Adapter() })
 React.useLayoutEffect = React.useEffect
