@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 import { useActions, useAppState } from "../overmind"
 import { SubmissionLink } from "../../proto/ag/ag_pb"
-import { Color, getCourseID, getSubmissionCellColor, isApproved, isManuallyGraded, isRevision, SubmissionSort } from "../Helpers"
+import { Color, getCourseID, getSubmissionCellColor, isManuallyGraded, SubmissionSort } from "../Helpers"
 import Search from "./Search"
 import ReviewForm from "./manual-grading/ReviewForm"
 import DynamicTable, { Row, RowElement } from "./DynamicTable"
