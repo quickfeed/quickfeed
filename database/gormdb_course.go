@@ -5,6 +5,8 @@ import (
 )
 
 // CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
+// The provided course must have a unique (GitHub) OrganizationID not already associated with existing course.
+// Similarly, the course must have a unique course code and year.
 func (db *GormDB) CreateCourse(courseCreatorID uint64, course *pb.Course) error {
 	courseCreator, err := db.GetUser(courseCreatorID)
 	if err != nil {
@@ -17,6 +19,9 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *pb.Course) error 
 	var courses int64
 	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
 		OrganizationID: course.OrganizationID,
+	}).Or(&pb.Course{
+		Code: course.Code,
+		Year: course.Year,
 	}).Count(&courses).Error; err != nil {
 		return err
 	}

@@ -2,7 +2,6 @@ package web_test
 
 import (
 	"context"
-	"strconv"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -10,7 +9,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/testing/protocmp"
 
@@ -51,7 +49,7 @@ var allCourses = []*pb.Course{
 		Name:            "Hyped Systems",
 		CourseCreatorID: 1,
 		Code:            "DATx20",
-		Year:            2019,
+		Year:            2020,
 		Tag:             "Fall",
 		Provider:        "fake",
 		OrganizationID:  4,
@@ -85,20 +83,12 @@ func TestGetCourses(t *testing.T) {
 	}
 }
 
-// withUserContext is a test helper function to create metadata for the
-// given user mimicking the context coming from the browser.
-func withUserContext(ctx context.Context, user *pb.User) context.Context {
-	userID := strconv.Itoa(int(user.GetID()))
-	meta := metadata.New(map[string]string{"user": userID})
-	return metadata.NewIncomingContext(ctx, meta)
-}
-
 func TestNewCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
@@ -134,7 +124,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
@@ -161,7 +151,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
@@ -478,7 +468,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 
 	// student1 attempts to promote student2 to teacher, must fail
-	ctx := withUserContext(context.Background(), student1)
+	ctx := qtest.WithUserContext(context.Background(), student1)
 	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
 		UserID:   student2.ID,
 		CourseID: course.ID,
@@ -488,7 +478,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 
 	// teacher promotes students to teachers, must succeed
-	ctx = withUserContext(context.Background(), teacher)
+	ctx = qtest.WithUserContext(context.Background(), teacher)
 	_, err = fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)
@@ -520,7 +510,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 
 	// TA attempts to demote self, must succeed
-	ctx = withUserContext(context.Background(), ta)
+	ctx = qtest.WithUserContext(context.Background(), ta)
 	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
 		UserID:   ta.ID,
 		CourseID: course.ID,
@@ -530,7 +520,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 
 	// student2 attempts to demote course creator, must fail
-	ctx = withUserContext(context.Background(), student2)
+	ctx = qtest.WithUserContext(context.Background(), student2)
 	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
 		UserID:   teacher.ID,
 		CourseID: course.ID,
@@ -549,7 +539,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 
 	// teacher demotes student1, must succeed
-	ctx = withUserContext(context.Background(), teacher)
+	ctx = qtest.WithUserContext(context.Background(), teacher)
 	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
 		UserID:   student1.ID,
 		CourseID: course.ID,
@@ -602,7 +592,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 
 	// ta attempts to demote course creator, must fail
-	ctx = withUserContext(context.Background(), ta)
+	ctx = qtest.WithUserContext(context.Background(), ta)
 	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
 		UserID:   teacher.ID,
 		CourseID: course.ID,

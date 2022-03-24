@@ -62,6 +62,8 @@ type SCM interface {
 	RemoveMember(context.Context, *OrgMembershipOptions) error
 	// Lists all authorizations for authenticated user.
 	GetUserScopes(context.Context) *Authorization
+	// Accepts repository invite.
+	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -213,4 +215,10 @@ type Team struct {
 // Authorization stores information about user scopes
 type Authorization struct {
 	Scopes []string
+}
+
+// RepositoryInvitationOptions contains information on which organization and user to accept invitations for.
+type RepositoryInvitationOptions struct {
+	Login string // GitHub username.
+	Owner string // Name of the organization.
 }
