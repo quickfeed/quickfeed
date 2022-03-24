@@ -11,6 +11,7 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/internal/qtest"
+	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web"
 )
@@ -50,10 +51,7 @@ func TestNewGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	users := make([]*pb.User, 0)
-	users = append(users, &pb.User{ID: user.ID})
-	createGroupRequest := &pb.Group{Name: "Heins-Group", CourseID: course.ID, Users: users}
-
+	createGroupRequest := &pb.Group{Name: "Heins-Group", CourseID: course.ID, Users: []*pb.User{{ID: user.ID}}}
 	// current user (in context) must be in group being created
 	ctx = qtest.WithUserContext(context.Background(), user)
 	wantGroup, err := ags.CreateGroup(ctx, createGroupRequest)
@@ -104,8 +102,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	users := make([]*pb.User, 0)
-	users = append(users, &pb.User{ID: user.ID})
+	users := []*pb.User{{ID: user.ID}}
 	group_wo_course_id := &pb.Group{Name: "Hein's Group", Users: users}
 	group_wo_name := &pb.Group{CourseID: course.ID, Users: users}
 	group_wo_users := &pb.Group{Name: "Hein's Group", CourseID: course.ID}
@@ -173,8 +170,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	users := make([]*pb.User, 0)
-	users = append(users, &pb.User{ID: user.ID})
+	users := []*pb.User{{ID: user.ID}}
 	createGroupRequest := &pb.Group{Name: "HeinsGroup", CourseID: course.ID, Users: users}
 
 	ctx := qtest.WithUserContext(context.Background(), user)
@@ -254,11 +250,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	users := make([]*pb.User, 0)
-	users = append(users, &pb.User{ID: user.ID})
-	users = append(users, &pb.User{ID: teacher.ID})
-	group_req := &pb.Group{Name: "HeinsGroup", CourseID: course.ID, Users: users}
-
+	group_req := &pb.Group{Name: "HeinsGroup", CourseID: course.ID, Users: []*pb.User{{ID: user.ID}, {ID: teacher.ID}}}
 	_, err = ags.CreateGroup(ctx, group_req)
 	if err != nil {
 		t.Fatal(err)
@@ -272,7 +264,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	defer cleanup()
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	_, err := fakeProvider.CreateOrganization(context.Background(),
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
 	)
@@ -333,10 +325,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	}
 
 	// group with two students
-	users := make([]*pb.User, 0)
-	users = append(users, user1)
-	users = append(users, user2)
-	createGroupRequest := &pb.Group{Name: "HeinsTwoMemberGroup", CourseID: course.ID, Users: users}
+	createGroupRequest := &pb.Group{Name: "HeinsTwoMemberGroup", CourseID: course.ID, Users: []*pb.User{user1, user2}}
 
 	// set ID of user3 to context, user3 is not member of group (should fail)
 	ctx := qtest.WithUserContext(context.Background(), user3)
@@ -363,13 +352,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	// ******************* Teacher UpdateGroup *******************
 
 	// group with three students
-
-	users1 := make([]*pb.User, 0)
-	users1 = append(users1, user1)
-	users1 = append(users1, user2)
-	users1 = append(users1, user3)
-
-	updateGroupRequest := &pb.Group{ID: gotGroup.ID, Name: "Heins3MemberGroup", CourseID: course.ID, Users: users1}
+	updateGroupRequest := &pb.Group{ID: gotGroup.ID, Name: "Heins3MemberGroup", CourseID: course.ID, Users: []*pb.User{user1, user2, user3}}
 
 	// set teacher ID in context
 	ctx = qtest.WithUserContext(context.Background(), teacher)
@@ -410,10 +393,8 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	// ******************* Teacher UpdateGroup *******************
 
 	// change group to only one student
-	users2 := make([]*pb.User, 0)
-	users2 = append(users2, user1)
 	// name must not update because group team and repo already exist
-	updateGroupReqest1 := &pb.Group{ID: gotGroup.ID, Name: "Hein's single member Group", CourseID: course.ID, Users: users2}
+	updateGroupReqest1 := &pb.Group{ID: gotGroup.ID, Name: "Hein's single member Group", CourseID: course.ID, Users: []*pb.User{user1}}
 
 	// set teacher ID in context
 	ctx = qtest.WithUserContext(context.Background(), teacher)
@@ -436,7 +417,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(gotChangedGroup.Users) != 1 {
-		t.Fatal("expected only single member group")
+		t.Errorf("Expected only single member group, got %d members", len(gotChangedGroup.Users))
 	}
 	wantGroup = updateGroupRequest
 	wantGroup.Users = grpUsers
@@ -471,7 +452,7 @@ func TestDeleteGroup(t *testing.T) {
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(qtest.Logger(t).Desugar(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
 		t.Fatal(err)
 	}

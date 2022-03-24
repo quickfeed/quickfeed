@@ -28,11 +28,11 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 	if assignment.IsGroupLab {
 		s.logger.Debugf("Rebuilding submission %d for group(%d): %s, assignment: %+v, repo: %s",
 			submission.GetID(), submission.GetGroupID(), name, assignment, repo.GetHTMLURL())
-		repo, err = s.getGroupRepo(course, submission.GetGroupID())
+		repo, err = s.getRepo(course, submission.GetGroupID(), pb.Repository_GROUP)
 	} else {
 		s.logger.Debugf("Rebuilding submission %d for user(%d): %s, assignment: %+v, repo: %s",
 			submission.GetID(), submission.GetUserID(), name, assignment, repo.GetHTMLURL())
-		repo, err = s.getUserRepo(course, submission.GetUserID())
+		repo, err = s.getRepo(course, submission.GetUserID(), pb.Repository_USER)
 	}
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 	return submission, nil
 }
 
-func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) error {
+func (s *AutograderService) rebuildSubmissions(request *pb.RebuildRequest) error {
 	if _, err := s.db.GetAssignment(&pb.Assignment{ID: request.AssignmentID}); err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) er
 	for _, submission := range submissions {
 		rebuildReq := &pb.RebuildRequest{
 			AssignmentID: request.AssignmentID,
-			SubmissionID: submission.ID,
+			RebuildType:  &pb.RebuildRequest_SubmissionID{SubmissionID: submission.GetID()},
 		}
 		// the counting semaphore limits concurrency to maxContainers
 		go func() {
