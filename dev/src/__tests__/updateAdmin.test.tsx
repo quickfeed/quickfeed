@@ -1,4 +1,4 @@
-import {updateAdmin}  from "../overmind/actions"
+import { updateAdmin }  from "../overmind/actions"
 import { User} from "../../proto/ag/ag_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
@@ -11,7 +11,7 @@ describe("Correct permission status should be set", () => {
         })
         window.confirm = jest.fn(() => true)
         updateAdmin(mockedOvermind, user)
-        var bool = user.getIsadmin()
+        const bool = user.getIsadmin()
         expect(bool).toBe(true)
     })
     
