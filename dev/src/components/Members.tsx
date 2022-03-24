@@ -96,7 +96,7 @@ const Members = (): JSX.Element => {
                 </div>
                 {pending.length > 0 ?
                     <div style={{ marginLeft: "10px" }}>
-                        <DynamicButton color={Color.GREEN} type={ButtonType.BUTTON} text="Approve All" onClick={() => actions.updateEnrollments(courseID)} />
+                        <DynamicButton color={Color.GREEN} type={ButtonType.BUTTON} text="Approve All" onClick={() => actions.approvePendingEnrollments()} />
                     </div> : null}
             </div>
 

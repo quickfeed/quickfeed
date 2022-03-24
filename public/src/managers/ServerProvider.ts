@@ -107,18 +107,19 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeUserStatus(enrollment: Enrollment, status: Enrollment.UserStatus): Promise<Status> {
-        const originalStatus = enrollment.getStatus();
-        enrollment.setStatus(status);
-        const result = await this.grpcHelper.updateEnrollment(enrollment);
+        const originalStatus = enrollment.getStatus()
+        enrollment.setStatus(status)
+        const result = await this.grpcHelper.updateEnrollments([enrollment])
         if (!this.responseCodeSuccess(result)) {
-            enrollment.setStatus(originalStatus);
+            enrollment.setStatus(originalStatus)
         }
-        return result.status;
+        return result.status
     }
 
-    public async approveAll(courseID: number): Promise<boolean> {
-        const result = await this.grpcHelper.updateEnrollments(courseID);
-        return result.data ? this.responseCodeSuccess(result) : false;
+    public async approveAll(enrollments: Enrollment[]): Promise<boolean> {
+        const toApprove = enrollments.map(e => e.setStatus(Enrollment.UserStatus.STUDENT))
+        const result = await this.grpcHelper.updateEnrollments(toApprove)
+        return result.data ? this.responseCodeSuccess(result) : false
     }
 
     public async isAuthorizedTeacher(): Promise<boolean> {
@@ -333,12 +334,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.responseCodeSuccess(result);
     }
 
-    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null> {
-        const result = await this.grpcHelper.rebuildSubmission(assignmentID, submissionID);
+    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<boolean> {
+        const result = await this.grpcHelper.rebuildSubmission(assignmentID, submissionID)
         if (!this.responseCodeSuccess(result) || !result.data) {
-            return null;
+            return false
         }
-        return this.toISubmission(result.data);
+        return true
     }
     public async rebuildSubmissions(assignmentID: number, courseID: number): Promise<boolean> {
         const result = await this.grpcHelper.rebuildSubmissions(assignmentID, courseID);

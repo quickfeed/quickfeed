@@ -155,14 +155,14 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	// try to rebuild non-existing submission
 	rebuildRequest := &pb.RebuildRequest{
 		AssignmentID: assignment.ID,
-		SubmissionID: 123,
+		RebuildType:  &pb.RebuildRequest_SubmissionID{SubmissionID: 123},
 	}
-	if _, err := ags.RebuildSubmission(ctx, rebuildRequest); err == nil {
+	if _, err := ags.RebuildSubmissions(ctx, rebuildRequest); err == nil {
 		t.Errorf("Expected error: record not found")
 	}
 	// rebuild existing submission
-	rebuildRequest.SubmissionID = 1
-	if _, err := ags.RebuildSubmission(ctx, rebuildRequest); err != nil {
+	rebuildRequest.SetSubmissionID(1)
+	if _, err := ags.RebuildSubmissions(ctx, rebuildRequest); err != nil {
 		t.Fatalf("Failed to rebuild submission: %s", err)
 	}
 	submissions, err := db.GetSubmissions(&pb.Submission{AssignmentID: assignment.ID})
@@ -171,14 +171,14 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	}
 
 	// make sure wrong course ID returns error
-	var request pb.AssignmentRequest
-	request.CourseID = 15
+	var request pb.RebuildRequest
+	request.SetCourseID(15)
 	if _, err = ags.RebuildSubmissions(ctx, &request); err == nil {
 		t.Fatal("Expected error: record not found")
 	}
 
 	// make sure wrong assignment ID returns error
-	request.CourseID = course.ID
+	request.SetCourseID(course.ID)
 	request.AssignmentID = 1337
 	if _, err = ags.RebuildSubmissions(ctx, &request); err == nil {
 		t.Fatal("Expected error: record not found")
