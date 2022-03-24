@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { Link, useHistory } from "react-router-dom"
 import { useActions, useAppState } from "../../overmind"
 
-const NavBarUser = ():JSX.Element =>{
+const NavBarUser = (): JSX.Element => {
     const logout = useActions().logout
     const { self, isLoggedIn } = useAppState()
 
@@ -11,7 +11,7 @@ const NavBarUser = ():JSX.Element =>{
         return (
             <li key="about">
                 <a className="dropdown-item bg-dark" >
-                    <Link to="/about" className="Sidebar-items-link" style={{color: "#d4d4d4"}}>
+                    <Link to="/about" className="Sidebar-items-link" style={{ color: "#d4d4d4" }}>
                         About
                     </Link>
                 </a>
@@ -24,9 +24,9 @@ const NavBarUser = ():JSX.Element =>{
             return (
                 <li>
                     <a className="dropdown-item bg-dark" >
-                        <Link to="/admin" className="Sidebar-items-link" style={{color: "#d4d4d4"}}>
+                        <Link to="/admin" className="Sidebar-items-link" style={{ color: "#d4d4d4" }}>
                             Admin
-                        </Link>                       
+                        </Link>
                     </a>
                 </li>
             )
@@ -38,7 +38,7 @@ const NavBarUser = ():JSX.Element =>{
             return (
                 <li>
                     <a className="dropdown-item bg-dark">
-                       <a href="/logout" className="Sidebar-items-link" style={{color: "#d4d4d4"}} onClick={() => logout()}>Log out</a> 
+                        <a href="/logout" className="Sidebar-items-link" style={{ color: "#d4d4d4" }} onClick={() => logout()}>Log out</a>
                     </a>
                 </li>
             )
@@ -59,13 +59,13 @@ const NavBarUser = ():JSX.Element =>{
                         <img className="mrounded-circle" src={self.getAvatarurl()} id="avatar" style={{ height: "40px", borderRadius: "50%" }}></img>
                     </a>
                     <ul className="dropdown-menu dropdown-menu-center bg-dark">
-                        <AboutButton/>
-                        <AdminButton/>
-                        <LoginButton/>
+                        <AboutButton />
+                        <AdminButton />
+                        <LoginButton />
                     </ul>
                 </li>
             </ul>
-        </div> 
+        </div>
     )
 }
 
