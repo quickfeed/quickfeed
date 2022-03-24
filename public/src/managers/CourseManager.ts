@@ -29,9 +29,9 @@ export interface ICourseProvider {
     getUsersForCourse(course: Course, withoutGroupMemebers?: boolean, withActivity?: boolean, status?: Enrollment.UserStatus[]):
         Promise<Enrollment[]>;
 
-    addUserToCourse(course: Course, user: User): Promise<boolean>;
-    changeUserStatus(enrollment: Enrollment, status: Enrollment.UserStatus): Promise<Status>;
-    approveAll(courseID: number): Promise<boolean>;
+    addUserToCourse(course: Course, user: User): Promise<boolean>
+    changeUserStatus(enrollment: Enrollment, status: Enrollment.UserStatus): Promise<Status>
+    approveAll(enrollments: Enrollment[]): Promise<boolean>
 
     createNewCourse(course: Course): Promise<Course | Status>;
     getCourse(courseID: number): Promise<Course | null>;
@@ -138,8 +138,8 @@ export class CourseManager {
     /**
      * Approve all pending enrollments for a course
      */
-    public async approveAll(courseID: number): Promise<boolean> {
-        return this.courseProvider.approveAll(courseID);
+    public async approveAll(enrollments: Enrollment[]): Promise<boolean> {
+        return this.courseProvider.approveAll(enrollments)
     }
 
     /**

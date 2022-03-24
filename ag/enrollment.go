@@ -79,10 +79,42 @@ func (m *Enrollment) SetSlipDays(c *Course) {
 	}
 }
 
-func (m *Enrollment) IsTeacher() bool {
-	return m.GetStatus() == Enrollment_TEACHER
+func (m *Enrollment) IsNone() bool {
+	return m.GetStatus() == Enrollment_NONE
+}
+
+func (m *Enrollment) IsPending() bool {
+	return m.GetStatus() == Enrollment_PENDING
 }
 
 func (m *Enrollment) IsStudent() bool {
 	return m.GetStatus() == Enrollment_STUDENT
+}
+
+func (m *Enrollment) IsTeacher() bool {
+	return m.GetStatus() == Enrollment_TEACHER
+}
+
+// GetCourseID returns the course ID for a slice of enrollments
+func (m *Enrollments) GetCourseID() uint64 {
+	enrollments := m.GetEnrollments()
+	if len(enrollments) == 0 {
+		return 0
+	}
+	return enrollments[0].GetCourseID()
+}
+
+// HasCourseID checks all enrollments have the same Course ID
+func (m *Enrollments) HasCourseID() bool {
+	enrollments := m.GetEnrollments()
+	if len(enrollments) == 0 {
+		return false
+	}
+	courseID := enrollments[0].GetCourseID()
+	for _, e := range enrollments {
+		if e.GetCourseID() != courseID {
+			return false
+		}
+	}
+	return true
 }
