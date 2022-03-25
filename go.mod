@@ -6,6 +6,7 @@ require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
 	github.com/alta/protopatch v0.5.0
 	github.com/autograde/quickfeed/kit v0.6.0
+	github.com/beatlabs/github-auth v0.0.0-20220228165532-228567f612ea
 	github.com/docker/docker v20.10.12+incompatible
 	github.com/google/go-cmp v0.5.7
 	github.com/google/go-github/v35 v35.3.0
