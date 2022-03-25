@@ -981,72 +981,29 @@ export class AutograderServiceClient {
     this.methodDescriptorCreateEnrollment);
   }
 
-  methodDescriptorUpdateEnrollment = new grpcWeb.MethodDescriptor(
-    '/ag.AutograderService/UpdateEnrollment',
-    grpcWeb.MethodType.UNARY,
-    ag_ag_pb.Enrollment,
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.Enrollment) => {
-      return request.serializeBinary();
-    },
-    ag_ag_pb.Void.deserializeBinary
-  );
-
-  updateEnrollment(
-    request: ag_ag_pb.Enrollment,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
-
-  updateEnrollment(
-    request: ag_ag_pb.Enrollment,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
-
-  updateEnrollment(
-    request: ag_ag_pb.Enrollment,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateEnrollment',
-        request,
-        metadata || {},
-        this.methodDescriptorUpdateEnrollment,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/ag.AutograderService/UpdateEnrollment',
-    request,
-    metadata || {},
-    this.methodDescriptorUpdateEnrollment);
-  }
-
   methodDescriptorUpdateEnrollments = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateEnrollments',
     grpcWeb.MethodType.UNARY,
-    ag_ag_pb.CourseRequest,
+    ag_ag_pb.Enrollments,
     ag_ag_pb.Void,
-    (request: ag_ag_pb.CourseRequest) => {
+    (request: ag_ag_pb.Enrollments) => {
       return request.serializeBinary();
     },
     ag_ag_pb.Void.deserializeBinary
   );
 
   updateEnrollments(
-    request: ag_ag_pb.CourseRequest,
+    request: ag_ag_pb.Enrollments,
     metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
 
   updateEnrollments(
-    request: ag_ag_pb.CourseRequest,
+    request: ag_ag_pb.Enrollments,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.RpcError,
                response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
 
   updateEnrollments(
-    request: ag_ag_pb.CourseRequest,
+    request: ag_ag_pb.Enrollments,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.RpcError,
                response: ag_ag_pb.Void) => void) {

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/autograde/quickfeed/ag"
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/internal/qtest"
@@ -81,7 +80,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		UserID:       user.ID,
 		Score:        80,
 		Status:       pb.Submission_NONE,
-		Reviews:      []*ag.Review{},
+		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
 	}
 	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
@@ -107,7 +106,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		UserID:       user.ID,
 		Score:        0,
 		Status:       pb.Submission_NONE,
-		Reviews:      []*ag.Review{},
+		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
 	}
 	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {

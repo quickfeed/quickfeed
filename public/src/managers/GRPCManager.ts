@@ -38,10 +38,10 @@ import {
     Users,
     Void,
     Reviewers,
-} from "../../proto/ag/ag_pb";
-import { AutograderServiceClient } from "../../proto/ag/AgServiceClientPb";
-import { UserManager } from "./UserManager";
-import { ISubmission } from "../models";
+} from "../../proto/ag/ag_pb"
+import { AutograderServiceClient } from "../../proto/ag/AgServiceClientPb"
+import { UserManager } from "./UserManager"
+import { ISubmission } from "../models"
 
 export interface IGrpcResponse<T> {
     status: Status;
@@ -150,14 +150,10 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.createEnrollment, request);
     }
 
-    public updateEnrollment(request: Enrollment): Promise<IGrpcResponse<Void>> {
-        return this.grpcSend<Void>(this.agService.updateEnrollment, request);
-    }
-
-    public updateEnrollments(courseID: number): Promise<IGrpcResponse<Void>> {
-        const request = new CourseRequest();
-        request.setCourseid(courseID);
-        return this.grpcSend<Void>(this.agService.updateEnrollments, request);
+    public updateEnrollments(enrollments: Enrollment[]): Promise<IGrpcResponse<Void>> {
+        const request = new Enrollments()
+        request.setEnrollmentsList(enrollments)
+        return this.grpcSend<Void>(this.agService.updateEnrollments, request)
     }
 
     // /* GROUPS */ //

@@ -161,7 +161,7 @@ func TestDockerTimeout(t *testing.T) {
 	// Note that the timeout value below is sensitive to startup time of the container.
 	// If the timeout is too short, the Run() call may not reach the ContainerWait() call.
 	// Hence, if this test fails, you may try to increase the timeout.
-	ctx, cancel := context.WithTimeout(context.Background(), 1000*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 5000*time.Millisecond)
 	defer cancel()
 
 	docker, closeFn := dockerClient(t)
