@@ -79,10 +79,7 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoCreateEnrollment = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateEnrollment', grpcWeb.MethodType.UNARY, ag_ag_pb.Enrollment, ag_ag_pb.Void, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoUpdateEnrollment = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateEnrollment', grpcWeb.MethodType.UNARY, ag_ag_pb.Enrollment, ag_ag_pb.Void, function (request) {
-            return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoUpdateEnrollments = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateEnrollments', grpcWeb.MethodType.UNARY, ag_ag_pb.CourseRequest, ag_ag_pb.Void, function (request) {
+        this.methodInfoUpdateEnrollments = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateEnrollments', grpcWeb.MethodType.UNARY, ag_ag_pb.Enrollments, ag_ag_pb.Void, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Void.deserializeBinary);
         this.methodInfoGetSubmissions = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetSubmissions', grpcWeb.MethodType.UNARY, ag_ag_pb.SubmissionRequest, ag_ag_pb.Submissions, function (request) {
@@ -97,10 +94,7 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoUpdateSubmissions = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateSubmissions', grpcWeb.MethodType.UNARY, ag_ag_pb.UpdateSubmissionsRequest, ag_ag_pb.Void, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoRebuildSubmission = new grpcWeb.MethodDescriptor('/ag.AutograderService/RebuildSubmission', grpcWeb.MethodType.UNARY, ag_ag_pb.RebuildRequest, ag_ag_pb.Submission, function (request) {
-            return request.serializeBinary();
-        }, ag_ag_pb.Submission.deserializeBinary);
-        this.methodInfoRebuildSubmissions = new grpcWeb.MethodDescriptor('/ag.AutograderService/RebuildSubmissions', grpcWeb.MethodType.UNARY, ag_ag_pb.AssignmentRequest, ag_ag_pb.Void, function (request) {
+        this.methodInfoRebuildSubmissions = new grpcWeb.MethodDescriptor('/ag.AutograderService/RebuildSubmissions', grpcWeb.MethodType.UNARY, ag_ag_pb.RebuildRequest, ag_ag_pb.Void, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Void.deserializeBinary);
         this.methodInfoCreateBenchmark = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateBenchmark', grpcWeb.MethodType.UNARY, ag_ag_pb.GradingBenchmark, ag_ag_pb.GradingBenchmark, function (request) {
@@ -328,14 +322,6 @@ var AutograderServiceClient = /** @class */ (function () {
         return this.client_.unaryCall(this.hostname_ +
             '/ag.AutograderService/CreateEnrollment', request, metadata || {}, this.methodInfoCreateEnrollment);
     };
-    AutograderServiceClient.prototype.updateEnrollment = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/ag.AutograderService/UpdateEnrollment', request, metadata || {}, this.methodInfoUpdateEnrollment, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateEnrollment', request, metadata || {}, this.methodInfoUpdateEnrollment);
-    };
     AutograderServiceClient.prototype.updateEnrollments = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
@@ -375,14 +361,6 @@ var AutograderServiceClient = /** @class */ (function () {
         }
         return this.client_.unaryCall(this.hostname_ +
             '/ag.AutograderService/UpdateSubmissions', request, metadata || {}, this.methodInfoUpdateSubmissions);
-    };
-    AutograderServiceClient.prototype.rebuildSubmission = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/ag.AutograderService/RebuildSubmission', request, metadata || {}, this.methodInfoRebuildSubmission, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/RebuildSubmission', request, metadata || {}, this.methodInfoRebuildSubmission);
     };
     AutograderServiceClient.prototype.rebuildSubmissions = function (request, metadata, callback) {
         if (callback !== undefined) {

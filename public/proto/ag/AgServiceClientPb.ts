@@ -981,72 +981,29 @@ export class AutograderServiceClient {
     this.methodInfoCreateEnrollment);
   }
 
-  methodInfoUpdateEnrollment = new grpcWeb.MethodDescriptor(
-    '/ag.AutograderService/UpdateEnrollment',
-    grpcWeb.MethodType.UNARY,
-    ag_ag_pb.Enrollment,
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.Enrollment) => {
-      return request.serializeBinary();
-    },
-    ag_ag_pb.Void.deserializeBinary
-  );
-
-  updateEnrollment(
-    request: ag_ag_pb.Enrollment,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
-
-  updateEnrollment(
-    request: ag_ag_pb.Enrollment,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
-
-  updateEnrollment(
-    request: ag_ag_pb.Enrollment,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/UpdateEnrollment',
-        request,
-        metadata || {},
-        this.methodInfoUpdateEnrollment,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/ag.AutograderService/UpdateEnrollment',
-    request,
-    metadata || {},
-    this.methodInfoUpdateEnrollment);
-  }
-
   methodInfoUpdateEnrollments = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/UpdateEnrollments',
     grpcWeb.MethodType.UNARY,
-    ag_ag_pb.CourseRequest,
+    ag_ag_pb.Enrollments,
     ag_ag_pb.Void,
-    (request: ag_ag_pb.CourseRequest) => {
+    (request: ag_ag_pb.Enrollments) => {
       return request.serializeBinary();
     },
     ag_ag_pb.Void.deserializeBinary
   );
 
   updateEnrollments(
-    request: ag_ag_pb.CourseRequest,
+    request: ag_ag_pb.Enrollments,
     metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
 
   updateEnrollments(
-    request: ag_ag_pb.CourseRequest,
+    request: ag_ag_pb.Enrollments,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.RpcError,
                response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
 
   updateEnrollments(
-    request: ag_ag_pb.CourseRequest,
+    request: ag_ag_pb.Enrollments,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.RpcError,
                response: ag_ag_pb.Void) => void) {
@@ -1239,72 +1196,29 @@ export class AutograderServiceClient {
     this.methodInfoUpdateSubmissions);
   }
 
-  methodInfoRebuildSubmission = new grpcWeb.MethodDescriptor(
-    '/ag.AutograderService/RebuildSubmission',
-    grpcWeb.MethodType.UNARY,
-    ag_ag_pb.RebuildRequest,
-    ag_ag_pb.Submission,
-    (request: ag_ag_pb.RebuildRequest) => {
-      return request.serializeBinary();
-    },
-    ag_ag_pb.Submission.deserializeBinary
-  );
-
-  rebuildSubmission(
-    request: ag_ag_pb.RebuildRequest,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Submission>;
-
-  rebuildSubmission(
-    request: ag_ag_pb.RebuildRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.Submission) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Submission>;
-
-  rebuildSubmission(
-    request: ag_ag_pb.RebuildRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.Submission) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/RebuildSubmission',
-        request,
-        metadata || {},
-        this.methodInfoRebuildSubmission,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/ag.AutograderService/RebuildSubmission',
-    request,
-    metadata || {},
-    this.methodInfoRebuildSubmission);
-  }
-
   methodInfoRebuildSubmissions = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/RebuildSubmissions',
     grpcWeb.MethodType.UNARY,
-    ag_ag_pb.AssignmentRequest,
+    ag_ag_pb.RebuildRequest,
     ag_ag_pb.Void,
-    (request: ag_ag_pb.AssignmentRequest) => {
+    (request: ag_ag_pb.RebuildRequest) => {
       return request.serializeBinary();
     },
     ag_ag_pb.Void.deserializeBinary
   );
 
   rebuildSubmissions(
-    request: ag_ag_pb.AssignmentRequest,
+    request: ag_ag_pb.RebuildRequest,
     metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
 
   rebuildSubmissions(
-    request: ag_ag_pb.AssignmentRequest,
+    request: ag_ag_pb.RebuildRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.RpcError,
                response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
 
   rebuildSubmissions(
-    request: ag_ag_pb.AssignmentRequest,
+    request: ag_ag_pb.RebuildRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.RpcError,
                response: ag_ag_pb.Void) => void) {

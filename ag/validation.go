@@ -170,11 +170,6 @@ func (req *EnrollmentRequest) IsValid() bool {
 	return req.GetCourseID() > 0
 }
 
-// IsValid ensures that course and assignment IDs are set.
-func (req *AssignmentRequest) IsValid() bool {
-	return req.CourseID > 0 && req.AssignmentID > 0
-}
-
 // IsValid ensures that provider string is one of implemented providers
 func (req *Provider) IsValid() bool {
 	provider := req.GetProvider()
@@ -190,8 +185,8 @@ func (req *SubmissionsForCourseRequest) IsValid() bool {
 
 // IsValid ensures that both course and submission IDs are set
 func (req *RebuildRequest) IsValid() bool {
-	aid, sid := req.GetAssignmentID(), req.GetSubmissionID()
-	return aid > 0 && sid > 0
+	aid, sid, cid := req.GetAssignmentID(), req.GetSubmissionID(), req.GetCourseID()
+	return aid > 0 && (sid > 0 || cid > 0)
 }
 
 // IsValid checks that either ID or path field is set
@@ -241,4 +236,13 @@ func (c *GradingCriterion) IsValid() bool {
 // IsValid ensures that course code, year, and student login are set
 func (r *CourseUserRequest) IsValid() bool {
 	return r.CourseCode != "" && r.UserLogin != "" && r.CourseYear > 2019
+}
+
+func (m *Enrollments) IsValid() bool {
+	for _, e := range m.Enrollments {
+		if !e.IsValid() {
+			return false
+		}
+	}
+	return m.HasCourseID()
 }

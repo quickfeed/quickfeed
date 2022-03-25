@@ -44,16 +44,14 @@ type AutograderServiceClient interface {
 	GetEnrollmentsByUser(ctx context.Context, in *EnrollmentStatusRequest, opts ...grpc.CallOption) (*Enrollments, error)
 	GetEnrollmentsByCourse(ctx context.Context, in *EnrollmentRequest, opts ...grpc.CallOption) (*Enrollments, error)
 	CreateEnrollment(ctx context.Context, in *Enrollment, opts ...grpc.CallOption) (*Void, error)
-	UpdateEnrollment(ctx context.Context, in *Enrollment, opts ...grpc.CallOption) (*Void, error)
-	UpdateEnrollments(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Void, error)
+	UpdateEnrollments(ctx context.Context, in *Enrollments, opts ...grpc.CallOption) (*Void, error)
 	// Get latest submissions for all course assignments for a user or a group.
 	GetSubmissions(ctx context.Context, in *SubmissionRequest, opts ...grpc.CallOption) (*Submissions, error)
 	// Get lab submissions for every course user or every course group
 	GetSubmissionsByCourse(ctx context.Context, in *SubmissionsForCourseRequest, opts ...grpc.CallOption) (*CourseSubmissions, error)
 	UpdateSubmission(ctx context.Context, in *UpdateSubmissionRequest, opts ...grpc.CallOption) (*Void, error)
 	UpdateSubmissions(ctx context.Context, in *UpdateSubmissionsRequest, opts ...grpc.CallOption) (*Void, error)
-	RebuildSubmission(ctx context.Context, in *RebuildRequest, opts ...grpc.CallOption) (*Submission, error)
-	RebuildSubmissions(ctx context.Context, in *AssignmentRequest, opts ...grpc.CallOption) (*Void, error)
+	RebuildSubmissions(ctx context.Context, in *RebuildRequest, opts ...grpc.CallOption) (*Void, error)
 	CreateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*GradingBenchmark, error)
 	UpdateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*Void, error)
 	DeleteBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*Void, error)
@@ -275,16 +273,7 @@ func (c *autograderServiceClient) CreateEnrollment(ctx context.Context, in *Enro
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateEnrollment(ctx context.Context, in *Enrollment, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
-	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateEnrollment", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *autograderServiceClient) UpdateEnrollments(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Void, error) {
+func (c *autograderServiceClient) UpdateEnrollments(ctx context.Context, in *Enrollments, opts ...grpc.CallOption) (*Void, error) {
 	out := new(Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateEnrollments", in, out, opts...)
 	if err != nil {
@@ -329,16 +318,7 @@ func (c *autograderServiceClient) UpdateSubmissions(ctx context.Context, in *Upd
 	return out, nil
 }
 
-func (c *autograderServiceClient) RebuildSubmission(ctx context.Context, in *RebuildRequest, opts ...grpc.CallOption) (*Submission, error) {
-	out := new(Submission)
-	err := c.cc.Invoke(ctx, "/ag.AutograderService/RebuildSubmission", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *autograderServiceClient) RebuildSubmissions(ctx context.Context, in *AssignmentRequest, opts ...grpc.CallOption) (*Void, error) {
+func (c *autograderServiceClient) RebuildSubmissions(ctx context.Context, in *RebuildRequest, opts ...grpc.CallOption) (*Void, error) {
 	out := new(Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/RebuildSubmissions", in, out, opts...)
 	if err != nil {
@@ -490,16 +470,14 @@ type AutograderServiceServer interface {
 	GetEnrollmentsByUser(context.Context, *EnrollmentStatusRequest) (*Enrollments, error)
 	GetEnrollmentsByCourse(context.Context, *EnrollmentRequest) (*Enrollments, error)
 	CreateEnrollment(context.Context, *Enrollment) (*Void, error)
-	UpdateEnrollment(context.Context, *Enrollment) (*Void, error)
-	UpdateEnrollments(context.Context, *CourseRequest) (*Void, error)
+	UpdateEnrollments(context.Context, *Enrollments) (*Void, error)
 	// Get latest submissions for all course assignments for a user or a group.
 	GetSubmissions(context.Context, *SubmissionRequest) (*Submissions, error)
 	// Get lab submissions for every course user or every course group
 	GetSubmissionsByCourse(context.Context, *SubmissionsForCourseRequest) (*CourseSubmissions, error)
 	UpdateSubmission(context.Context, *UpdateSubmissionRequest) (*Void, error)
 	UpdateSubmissions(context.Context, *UpdateSubmissionsRequest) (*Void, error)
-	RebuildSubmission(context.Context, *RebuildRequest) (*Submission, error)
-	RebuildSubmissions(context.Context, *AssignmentRequest) (*Void, error)
+	RebuildSubmissions(context.Context, *RebuildRequest) (*Void, error)
 	CreateBenchmark(context.Context, *GradingBenchmark) (*GradingBenchmark, error)
 	UpdateBenchmark(context.Context, *GradingBenchmark) (*Void, error)
 	DeleteBenchmark(context.Context, *GradingBenchmark) (*Void, error)
@@ -586,10 +564,7 @@ func (UnimplementedAutograderServiceServer) GetEnrollmentsByCourse(context.Conte
 func (UnimplementedAutograderServiceServer) CreateEnrollment(context.Context, *Enrollment) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateEnrollment not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateEnrollment(context.Context, *Enrollment) (*Void, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateEnrollment not implemented")
-}
-func (UnimplementedAutograderServiceServer) UpdateEnrollments(context.Context, *CourseRequest) (*Void, error) {
+func (UnimplementedAutograderServiceServer) UpdateEnrollments(context.Context, *Enrollments) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateEnrollments not implemented")
 }
 func (UnimplementedAutograderServiceServer) GetSubmissions(context.Context, *SubmissionRequest) (*Submissions, error) {
@@ -604,10 +579,7 @@ func (UnimplementedAutograderServiceServer) UpdateSubmission(context.Context, *U
 func (UnimplementedAutograderServiceServer) UpdateSubmissions(context.Context, *UpdateSubmissionsRequest) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSubmissions not implemented")
 }
-func (UnimplementedAutograderServiceServer) RebuildSubmission(context.Context, *RebuildRequest) (*Submission, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RebuildSubmission not implemented")
-}
-func (UnimplementedAutograderServiceServer) RebuildSubmissions(context.Context, *AssignmentRequest) (*Void, error) {
+func (UnimplementedAutograderServiceServer) RebuildSubmissions(context.Context, *RebuildRequest) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RebuildSubmissions not implemented")
 }
 func (UnimplementedAutograderServiceServer) CreateBenchmark(context.Context, *GradingBenchmark) (*GradingBenchmark, error) {
@@ -1058,26 +1030,8 @@ func _AutograderService_CreateEnrollment_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AutograderService_UpdateEnrollment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Enrollment)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AutograderServiceServer).UpdateEnrollment(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/ag.AutograderService/UpdateEnrollment",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateEnrollment(ctx, req.(*Enrollment))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _AutograderService_UpdateEnrollments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CourseRequest)
+	in := new(Enrollments)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1089,7 +1043,7 @@ func _AutograderService_UpdateEnrollments_Handler(srv interface{}, ctx context.C
 		FullMethod: "/ag.AutograderService/UpdateEnrollments",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateEnrollments(ctx, req.(*CourseRequest))
+		return srv.(AutograderServiceServer).UpdateEnrollments(ctx, req.(*Enrollments))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1166,26 +1120,8 @@ func _AutograderService_UpdateSubmissions_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AutograderService_RebuildSubmission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RebuildRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AutograderServiceServer).RebuildSubmission(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/ag.AutograderService/RebuildSubmission",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).RebuildSubmission(ctx, req.(*RebuildRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _AutograderService_RebuildSubmissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AssignmentRequest)
+	in := new(RebuildRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1197,7 +1133,7 @@ func _AutograderService_RebuildSubmissions_Handler(srv interface{}, ctx context.
 		FullMethod: "/ag.AutograderService/RebuildSubmissions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).RebuildSubmissions(ctx, req.(*AssignmentRequest))
+		return srv.(AutograderServiceServer).RebuildSubmissions(ctx, req.(*RebuildRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1532,10 +1468,6 @@ var AutograderService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AutograderService_CreateEnrollment_Handler,
 		},
 		{
-			MethodName: "UpdateEnrollment",
-			Handler:    _AutograderService_UpdateEnrollment_Handler,
-		},
-		{
 			MethodName: "UpdateEnrollments",
 			Handler:    _AutograderService_UpdateEnrollments_Handler,
 		},
@@ -1554,10 +1486,6 @@ var AutograderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateSubmissions",
 			Handler:    _AutograderService_UpdateSubmissions_Handler,
-		},
-		{
-			MethodName: "RebuildSubmission",
-			Handler:    _AutograderService_RebuildSubmission_Handler,
 		},
 		{
 			MethodName: "RebuildSubmissions",

@@ -116,7 +116,6 @@ export const updateAdmin = async ({ state, effects }: Context, user: User): Prom
 }
 
 export const getEnrollmentsByCourse = async ({ state, effects }: Context, value: { courseID: number, statuses: Enrollment.UserStatus[] }): Promise<boolean> => {
-    state.courseEnrollments[value.courseID] = []
     const result = await effects.grpcMan.getEnrollmentsByCourse(value.courseID, undefined, true, value.statuses)
     if (result.data) {
         state.courseEnrollments[value.courseID] = result.data.getEnrollmentsList()
@@ -202,7 +201,7 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
         // Copy enrollment object and change status
         const temp = json(enrollment).clone().setStatus(status)
         // Send updated enrollment to server
-        const response = await effects.grpcMan.updateEnrollment(temp)
+        const response = await effects.grpcMan.updateEnrollments([temp])
         if (success(response)) {
             // If successful, update enrollment in state with new status
             if (status == Enrollment.UserStatus.NONE) {
@@ -218,14 +217,21 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
     }
 }
 
-export const updateEnrollments = async ({ state, actions, effects }: Context, courseID: number): Promise<void> => {
+/** approvePendingEnrollments approves all pending enrollments for the current course */
+export const approvePendingEnrollments = async ({ state, actions, effects }: Context): Promise<void> => {
     if (confirm("Please confirm that you want to approve all students")) {
-        const response = await effects.grpcMan.updateEnrollments(courseID)
+        // Clone and set status to student for all pending enrollments
+        const enrollments = state.pendingEnrollments
+            .map(e => json(e).clone())
+            .map(e => e.setStatus(Enrollment.UserStatus.STUDENT))
+        const response = await effects.grpcMan.updateEnrollments(enrollments)
         if (success(response)) {
             for (const enrollment of state.pendingEnrollments) {
                 enrollment.setStatus(Enrollment.UserStatus.STUDENT)
             }
         } else {
+            // Fetch enrollments again if update failed in case the user was able to approve some enrollments
+            await actions.getEnrollmentsByCourse({ courseID: state.activeCourse, statuses: [Enrollment.UserStatus.PENDING] })
             actions.alertHandler(response)
         }
     }
@@ -454,11 +460,13 @@ export const setActiveAssignment = ({ state }: Context, assignmentID: number): v
 }
 
 /** Rebuilds the currently active submission */
-export const rebuildSubmission = async ({ state, effects }: Context): Promise<void> => {
+export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<void> => {
     if (state.currentSubmission && state.selectedAssignment) {
         const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.getId(), state.activeSubmission)
-        if (response.data) {
-            state.currentSubmission = response.data
+        if (success(response)) {
+            // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
+            // TODO: gRPC streaming should be implemented to send the updated submission to the client.
+            actions.alert({ color: Color.GREEN, text: 'Submission rebuilt successfully' })
         }
     }
 }
