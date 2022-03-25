@@ -225,7 +225,7 @@ func (*FakeSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitati
 }
 
 // CreateIssue implements the SCM interface
-func (s *FakeSCM) CreateIssue(ctx context.Context, opt *CreateIssueOptions) (*Issue, error) {
+func (*FakeSCM) CreateIssue(_ context.Context, _ *CreateIssueOptions) (*Issue, error) {
 	// TODO no implementation provided yet
 	return nil, ErrNotSupported{
 		SCM:    "FakeSCM",
@@ -234,7 +234,7 @@ func (s *FakeSCM) CreateIssue(ctx context.Context, opt *CreateIssueOptions) (*Is
 }
 
 // GetRepoIssue implements the SCM interface
-func (s *FakeSCM) GetRepoIssue(ctx context.Context, issueNumber int, opt *RepositoryOptions) (*Issue, error) {
+func (*FakeSCM) GetRepoIssue(_ context.Context, _ int, _ *RepositoryOptions) (*Issue, error) {
 	// TODO no implementation provided yet
 	return nil, ErrNotSupported{
 		SCM:    "FakeSCM",
@@ -243,7 +243,7 @@ func (s *FakeSCM) GetRepoIssue(ctx context.Context, issueNumber int, opt *Reposi
 }
 
 // GetRepoIssues implements the SCM interface
-func (s *FakeSCM) GetRepoIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error) {
+func (*FakeSCM) GetRepoIssues(_ context.Context, _ *RepositoryOptions) ([]*Issue, error) {
 	// TODO no implementation provided yet
 	return nil, ErrNotSupported{
 		SCM:    "FakeSCM",
@@ -252,7 +252,7 @@ func (s *FakeSCM) GetRepoIssues(ctx context.Context, opt *RepositoryOptions) ([]
 }
 
 // EditRepoIssue implements the SCM interface
-func (s *FakeSCM) EditRepoIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error) {
+func (*FakeSCM) EditRepoIssue(_ context.Context, _ int, _ *CreateIssueOptions) (*Issue, error) {
 	// TODO no implementation provided yet
 	return nil, ErrNotSupported{
 		SCM:    "FakeSCM",

@@ -301,13 +301,11 @@ func TestReturnSynchronizeAssignmentTasks(t *testing.T) {
 
 	wantCreatedTasks = newTasks
 
-	wantUpdatedTasks = append(wantUpdatedTasks, foundAssignments1[0].Tasks[0])
-	wantUpdatedTasks = append(wantUpdatedTasks, foundAssignments1[1].Tasks[0])
+	wantUpdatedTasks = append(wantUpdatedTasks, foundAssignments1[0].Tasks[0], foundAssignments1[1].Tasks[0])
 	wantUpdatedTasks[0].Title = "New title for task 1 assignment 1"
 	wantUpdatedTasks[1].Title = "New title for task 1 assignment 2"
 
-	wantDeletedTasks = append(wantDeletedTasks, foundAssignments1[0].Tasks[1])
-	wantDeletedTasks = append(wantDeletedTasks, foundAssignments1[1].Tasks[1])
+	wantDeletedTasks = append(wantDeletedTasks, foundAssignments1[0].Tasks[1], foundAssignments1[1].Tasks[1])
 
 	if diff := cmp.Diff(wantCreatedTasks, gotCreatedTasks, protocmp.Transform()); diff != "" {
 		t.Errorf("SynchronizeAssignmentTasks return mismatch (-wantCreatedTasks, +gotCreatedTasks):\n%s", diff)

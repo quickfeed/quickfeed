@@ -68,7 +68,7 @@ func (db *GormDB) DeleteIssuesOfAssociatedTasks(tasks []*pb.Task) ([]*pb.Issue, 
 }
 
 // SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks
-func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) (createdTasks []*pb.Task, updatedTasks []*pb.Task, deletedTasks []*pb.Task, err error) {
+func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) (createdTasks, updatedTasks, deletedTasks []*pb.Task, err error) {
 	createdTasks = []*pb.Task{}
 	updatedTasks = []*pb.Task{}
 	// Might be a problem when having to find associated issues if parent task has already been deleted
