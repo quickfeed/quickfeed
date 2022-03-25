@@ -130,20 +130,16 @@ type Database interface {
 	// GetRepositoriesWithIssues gets repositories with issues
 	GetRepositoriesWithIssues(query *pb.Repository) ([]*pb.Repository, error)
 
-	// CreateTasks creates slice of tasks
-	CreateTasks(tasks []*pb.Task) error
-	// DeleteTask deletes specified task
-	DeleteTask(task *pb.Task) error
-	// UpdateTasks updates slice of tasks
-	UpdateTasks(tasks []*pb.Task) error
 	// GetTasks gets tasks based on query
 	GetTasks(query *pb.Task) ([]*pb.Task, error)
+	// CreateTasks creates a batch of tasks
+	CreateTasks(tasks []*pb.Task) error
 	// CreateIssues creates a batch of issues
 	CreateIssues(issues []*pb.Issue) error
-	// UpdateIssues updates a batch of issues
-	UpdateIssues(issues []*pb.Issue) error
-	// GetIssues gets issues based on query
-	GetIssues(query *pb.Issue) ([]*pb.Issue, error)
+	// DeleteIssuesOfAssociatedTasks deletes a batch of issues
+	DeleteIssuesOfAssociatedTasks(tasks []*pb.Task) ([]*pb.Issue, error)
+	// SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks
+	SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) ([]*pb.Task, []*pb.Task, []*pb.Task, error)
 
 	// UpdateSlipDays updates used slipdays for the given course enrollment
 	UpdateSlipDays([]*pb.UsedSlipDays) error

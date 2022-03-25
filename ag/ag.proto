@@ -178,7 +178,7 @@ message Assignment {
     uint32 reviewers                = 10;  // number of reviewers that will review submissions for this assignment
     uint32 containerTimeout         = 11;  // container timeout for this assignment
     repeated Submission submissions = 12;  // submissions produced for this assignment
-    repeated Task Tasks             = 13;  // tasks associated with this assignment
+    repeated Task tasks             = 13;  // tasks associated with this assignment
     repeated GradingBenchmark gradingBenchmarks = 14;  // grading benchmarks for this assignment
 }
 
@@ -189,15 +189,14 @@ message Task {
     string title           = 4;
     string body            = 5;
     string name            = 6;
+    repeated Issue issues  = 7;  // Issues that use this task as a benchmark
 }
 
 message Issue {
     uint64 ID           = 1;
     uint64 repositoryID = 2;  // Represents the internal ID of a repository
+    uint64 taskID       = 3;  // Task that this issue draws its content from
     uint64 issueNumber  = 4;  // Issue number on scm. Needed for associating db issue with scm issue
-    string name         = 5;  // Name of associated task/issue, e.g. "lab1/task-1.md"
-    string title        = 6;
-    string body         = 7;
 }
 
 message Assignments {

@@ -654,6 +654,11 @@ export class Task extends jspb.Message {
   getName(): string;
   setName(value: string): Task;
 
+  getIssuesList(): Array<Issue>;
+  setIssuesList(value: Array<Issue>): Task;
+  clearIssuesList(): Task;
+  addIssues(value?: Issue, index?: number): Issue;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Task.AsObject;
   static toObject(includeInstance: boolean, msg: Task): Task.AsObject;
@@ -670,6 +675,7 @@ export namespace Task {
     title: string,
     body: string,
     name: string,
+    issuesList: Array<Issue.AsObject>,
   }
 }
 
@@ -680,17 +686,11 @@ export class Issue extends jspb.Message {
   getRepositoryid(): number;
   setRepositoryid(value: number): Issue;
 
+  getTaskid(): number;
+  setTaskid(value: number): Issue;
+
   getIssuenumber(): number;
   setIssuenumber(value: number): Issue;
-
-  getName(): string;
-  setName(value: string): Issue;
-
-  getTitle(): string;
-  setTitle(value: string): Issue;
-
-  getBody(): string;
-  setBody(value: string): Issue;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Issue.AsObject;
@@ -704,10 +704,8 @@ export namespace Issue {
   export type AsObject = {
     id: number,
     repositoryid: number,
+    taskid: number,
     issuenumber: number,
-    name: string,
-    title: string,
-    body: string,
   }
 }
 
