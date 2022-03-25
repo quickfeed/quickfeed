@@ -1,7 +1,6 @@
-import * as jspb from 'google-protobuf'
+import * as jspb from "google-protobuf"
 
 import * as kit_score_score_pb from '../kit/score/score_pb';
-
 
 export class User extends jspb.Message {
   getId(): number;
@@ -304,6 +303,11 @@ export class Repository extends jspb.Message {
   getRepotype(): Repository.Type;
   setRepotype(value: Repository.Type): Repository;
 
+  getIssuesList(): Array<Issue>;
+  setIssuesList(value: Array<Issue>): Repository;
+  clearIssuesList(): Repository;
+  addIssues(value?: Issue, index?: number): Issue;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Repository.AsObject;
   static toObject(includeInstance: boolean, msg: Repository): Repository.AsObject;
@@ -321,6 +325,7 @@ export namespace Repository {
     groupid: number,
     htmlurl: string,
     repotype: Repository.Type,
+    issuesList: Array<Issue.AsObject>,
   }
 
   export enum Type { 
@@ -636,20 +641,22 @@ export class Task extends jspb.Message {
   getAssignmentid(): number;
   setAssignmentid(value: number): Task;
 
+  getAssignmentorder(): number;
+  setAssignmentorder(value: number): Task;
+
   getTitle(): string;
   setTitle(value: string): Task;
 
   getBody(): string;
   setBody(value: string): Task;
 
-  getGitissueid(): number;
-  setGitissueid(value: number): Task;
+  getName(): string;
+  setName(value: string): Task;
 
-  getIssuenumber(): number;
-  setIssuenumber(value: number): Task;
-
-  getStatus(): string;
-  setStatus(value: string): Task;
+  getIssuesList(): Array<Issue>;
+  setIssuesList(value: Array<Issue>): Task;
+  clearIssuesList(): Task;
+  addIssues(value?: Issue, index?: number): Issue;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Task.AsObject;
@@ -663,11 +670,41 @@ export namespace Task {
   export type AsObject = {
     id: number,
     assignmentid: number,
+    assignmentorder: number,
     title: string,
     body: string,
-    gitissueid: number,
+    name: string,
+    issuesList: Array<Issue.AsObject>,
+  }
+}
+
+export class Issue extends jspb.Message {
+  getId(): number;
+  setId(value: number): Issue;
+
+  getRepositoryid(): number;
+  setRepositoryid(value: number): Issue;
+
+  getTaskid(): number;
+  setTaskid(value: number): Issue;
+
+  getIssuenumber(): number;
+  setIssuenumber(value: number): Issue;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Issue.AsObject;
+  static toObject(includeInstance: boolean, msg: Issue): Issue.AsObject;
+  static serializeBinaryToWriter(message: Issue, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Issue;
+  static deserializeBinaryFromReader(message: Issue, reader: jspb.BinaryReader): Issue;
+}
+
+export namespace Issue {
+  export type AsObject = {
+    id: number,
+    repositoryid: number,
+    taskid: number,
     issuenumber: number,
-    status: string,
   }
 }
 

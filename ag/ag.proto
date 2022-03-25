@@ -456,8 +456,7 @@ service AutograderService {
     rpc GetEnrollmentsByUser(EnrollmentStatusRequest) returns (Enrollments) {}
     rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
     rpc CreateEnrollment(Enrollment) returns (Void) {}
-    rpc UpdateEnrollment(Enrollment) returns (Void) {}
-    rpc UpdateEnrollments(CourseRequest) returns (Void) {}
+    rpc UpdateEnrollments(Enrollments) returns (Void) {}
 
     // submissions //
 
