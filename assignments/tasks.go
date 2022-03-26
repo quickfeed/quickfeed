@@ -44,7 +44,6 @@ func newTask(contents []byte, assignmentOrder uint32, name string) (*pb.Task, er
 }
 
 // getTasksFromAssignments returns a map, mapping each assignment-order to a map of tasks.
-// TODO(Meling): Don't know if this is a good approach... But it removes a lot of redundancy when synchronizing tasks
 func getTasksFromAssignments(assignments []*pb.Assignment) map[uint32]map[string]*pb.Task {
 	taskMap := make(map[uint32]map[string]*pb.Task)
 	for _, assignment := range assignments {

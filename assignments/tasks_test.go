@@ -11,9 +11,16 @@ import (
 	"go.uber.org/zap"
 )
 
+type issueInformation struct {
+	IssueNumber uint64
+	Name        string
+}
+
 // When running tests that have anything to do with tasks/issues, it is important that issues have their title corresponding to the name of an associated task.
 // For example, if you have an issue that is supposed to be connected to the task "task-hello_world.md" in "lab1", the title of this issue needs to be "lab1/hello_world".
 // Otherwise when creating the database there will be no clear way to know which issue is supposed to be associated with which task.
+// It is also important that should you create an issue that is supposed to represent a task, that it is created on all student repositories.
+// Otherwise InitializeDbEnvironment will detect that this issue/task relation is present on one repository, and therefore create a record for both in the database.
 
 // InitializeDbEnvironment initializes a db, based on org.
 func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course, s scm.SCM) (database.Database, func(), error) {
@@ -39,31 +46,23 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 		return db, cleanup, err
 	}
 
-	// Creates tasks found in assignments
-	createdTasks, _, _, err := db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments))
-	if err != nil {
-		return db, cleanup, err
-	}
-
-	taskMap := make(map[string]*pb.Task)
-	for _, task := range createdTasks {
-		taskMap[task.Name] = task
-	}
-
 	// Get repositories
 	repos, err := s.GetRepositories(c, org)
 	if err != nil {
 		return db, cleanup, err
 	}
 
-	// Create repositories with issues
+	foundIssues := make(map[uint64]map[string]*issueInformation)
+	tasks := make(map[string]*pb.Task)
+
+	// Create repositories
 	n := 2
 	for _, repo := range repos {
 		var user *pb.User
 		// Might not even be necessary to handle repos differently in these tests.
 		var dbRepo *pb.Repository
 		switch repo.Path {
-		case pb.InfoRepo: // repo.Path is "course-info" here, yet we only check for "info"
+		case "course-" + pb.InfoRepo:
 			dbRepo = &pb.Repository{
 				RepositoryID:   repo.ID,
 				OrganizationID: org.GetID(),
@@ -91,12 +90,10 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 				OrganizationID: org.GetID(),
 				UserID:         user.ID,
 				HTMLURL:        repo.WebURL,
-				// Since tasks are only to be managed for group-repositories, we assume for testing every student-repository is a group-repository
+				// Since tasks are only to be managed for group-repositories, we assume while testing, that every student-repository is a group-repository
 				RepoType: pb.Repository_GROUP,
 			}
 		}
-
-		issues := []*pb.Issue{}
 
 		err = db.CreateRepository(dbRepo)
 		if err != nil {
@@ -111,23 +108,69 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 			return db, cleanup, err
 		}
 
-		for _, scmIssue := range existingScmIssues {
-			task, ok := taskMap[scmIssue.Title]
-			if !ok {
-				continue
-			}
-			dbIssue := &pb.Issue{
-				RepositoryID: dbRepo.ID,
-				TaskID:       task.ID,
-				IssueNumber:  uint64(scmIssue.IssueNumber),
-			}
-			issues = append(issues, dbIssue)
+		if len(existingScmIssues) == 0 {
+			continue
 		}
-		db.CreateIssues(issues)
+		foundIssues[repo.ID] = make(map[string]*issueInformation)
+		for _, scmIssue := range existingScmIssues {
+			foundIssues[repo.ID][scmIssue.Title] = &issueInformation{
+				IssueNumber: uint64(scmIssue.IssueNumber),
+				Name:        scmIssue.Title,
+			}
+			tasks[scmIssue.Title] = &pb.Task{
+				Title: scmIssue.Title,
+				Body:  scmIssue.Body,
+				Name:  scmIssue.Title,
+			}
+		}
 		n++
 	}
 
-	return db, cleanup, nil
+	// We remove from foundTasks every task that is not represented by an issue. This way, the database is initialized with tasks based on issues and tasks, and not just the tasks found in the tests repository.
+	foundTasks := getTasksFromAssignments(foundAssignments)
+	for _, taskMap := range foundTasks {
+		for _, task := range taskMap {
+			if _, ok := tasks[task.Name]; !ok {
+				delete(taskMap, task.Name)
+			} else {
+				task.Title = tasks[task.Name].Title
+				task.Body = tasks[task.Name].Body
+			}
+		}
+	}
+	createdTasks, _, _, err := db.SynchronizeAssignmentTasks(course, foundTasks)
+	if err != nil {
+		return db, cleanup, err
+	}
+
+	createdTasksMap := make(map[string]*pb.Task)
+	for _, createdTask := range createdTasks {
+		createdTasksMap[createdTask.Name] = createdTask
+	}
+
+	dbRepos, err := db.GetRepositoriesWithIssues(&pb.Repository{
+		OrganizationID: course.GetOrganizationID(),
+	})
+	if err != nil {
+		return db, cleanup, err
+	}
+
+	issuesToCreate := []*pb.Issue{}
+	for _, repo := range dbRepos {
+		if !repo.IsGroupRepo() {
+			continue
+		}
+		for _, createdTask := range createdTasksMap {
+			foundIssue := foundIssues[repo.RepositoryID][createdTask.Name]
+			issuesToCreate = append(issuesToCreate, &pb.Issue{
+				RepositoryID: repo.ID,
+				TaskID:       createdTasksMap[foundIssue.Name].ID,
+				IssueNumber:  foundIssue.IssueNumber,
+			})
+		}
+	}
+	err = db.CreateIssues(issuesToCreate)
+	return db, cleanup, err
 }
 
 // TestInitializeDbEnvironment tests if db is correctly initialized based on preexisting repositories
@@ -187,9 +230,6 @@ func TestInitializeDbEnvironment(t *testing.T) {
 	}
 }
 
-// TODO(Espeland): TestHandleTasks no longer works as intended, since issues are now only stored with a reference to a parent task, and therefore no longer has its own name, title and body fields.
-// This means when creating the test database based on org, it creates the tasks, but has no way of comparing them with the existing issues, to check if they differ.
-// It also no longer creates issues based on the tasks on the org, since tasks are first created in InitializeDbEnvironment, and therefore none are created when running handleTasks.
 // TestHandleTasks runs handleTasks() on specified org. Results vary depending on what tasks/issues existed prior to running.
 func TestHandleTasks(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
