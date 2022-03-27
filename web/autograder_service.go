@@ -13,6 +13,7 @@ import (
 	"github.com/autograde/quickfeed/database"
 	scms "github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web/auth"
+	"github.com/autograde/quickfeed/web/config"
 )
 
 // AutograderService holds references to the database and
@@ -21,18 +22,20 @@ type AutograderService struct {
 	logger *zap.SugaredLogger
 	db     database.Database
 	scms   *auth.Scms
-	bh     BaseHookOptions
+	// bh     BaseHookOptions
+	config *config.Config
 	runner ci.Runner
 	pb.UnimplementedAutograderServiceServer
 }
 
 // NewAutograderService returns an AutograderService object.
-func NewAutograderService(logger *zap.Logger, db database.Database, scms *auth.Scms, bh BaseHookOptions, runner ci.Runner) *AutograderService {
+func NewAutograderService(logger *zap.Logger, db database.Database, scms *auth.Scms, config *config.Config, runner ci.Runner) *AutograderService {
 	return &AutograderService{
 		logger: logger.Sugar(),
 		db:     db,
 		scms:   scms,
-		bh:     bh,
+		// bh:     bh,
+		config: config,
 		runner: runner,
 	}
 }
