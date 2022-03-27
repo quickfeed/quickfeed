@@ -74,7 +74,7 @@ message Course {
     string provider = 7;
     uint64 organizationID = 8;
     string organizationPath = 9; // The organization's SCM name, e.g. uis-dat520-2020.
-    uint64 installationID = 10;
+    uint64 installationID = 10; // Each organization has a unique GitHub App installation ID
     uint32 slipDays = 11;
     string dockerfile = 12;
     Enrollment.UserStatus enrolled = 13 [(go.field) = {tags: 'gorm:"-"'}];

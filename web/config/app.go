@@ -14,10 +14,6 @@ import (
 	gh "github.com/google/go-github/v35/github"
 )
 
-const (
-	keyPath = "./appth.private-key.pem"
-)
-
 // GithubAppConfig keeps parameters of the GitHub app
 type GithubAppConfig struct {
 	AppID    string
@@ -53,7 +49,7 @@ func NewApp() (*GithubApp, error) {
 	if !config.Valid() {
 		return nil, fmt.Errorf("Error configuring GitHub App: %+v", config)
 	}
-	appKey, err := key.FromFile(keyPath)
+	appKey, err := key.FromFile(appKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("Error reading key from file: %s", err)
 	}
