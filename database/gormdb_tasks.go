@@ -1,6 +1,9 @@
 package database
 
 import (
+	"errors"
+	"fmt"
+
 	pb "github.com/autograde/quickfeed/ag"
 	"gorm.io/gorm"
 )
@@ -14,6 +17,9 @@ func (db *GormDB) GetTasks(query *pb.Task) ([]*pb.Task, error) {
 	err := db.conn.Find(&tasks, query).Error
 	if err != nil {
 		return nil, err
+	}
+	if len(tasks) == 0 {
+		return tasks, gorm.ErrRecordNotFound
 	}
 	return tasks, err
 }
@@ -68,7 +74,7 @@ func (db *GormDB) DeleteIssuesOfAssociatedTasks(tasks []*pb.Task) ([]*pb.Issue, 
 func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) (createdTasks, updatedTasks, deletedTasks []*pb.Task, err error) {
 	createdTasks = []*pb.Task{}
 	updatedTasks = []*pb.Task{}
-	// Might be a problem when having to find associated issues if parent task has already been deleted
+	// TODO(Espeland): Might be a problem when having to find associated issues if parent task has already been deleted. Should test.
 	deletedTasks = []*pb.Task{}
 	assignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
 	if err != nil {
@@ -78,8 +84,8 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint
 	err = db.conn.Transaction(func(tx *gorm.DB) error {
 		for _, assignment := range assignments {
 			existingTasks, err := db.GetTasks(&pb.Task{AssignmentID: assignment.GetID()})
-			if err != nil {
-				return err
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return fmt.Errorf("failed to get tasks for assignment %d: %w", assignment.GetID(), err)
 			}
 
 			for _, existingTask := range existingTasks {

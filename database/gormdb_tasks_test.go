@@ -8,6 +8,7 @@ import (
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
+	"gorm.io/gorm"
 )
 
 // Helper function
@@ -23,87 +24,75 @@ func getTasksFromAssignments(assignments []*pb.Assignment) map[uint32]map[string
 	return taskMap
 }
 
-// Helper function
-func initialAssignments(course *pb.Course, db database.Database) ([]*pb.Assignment, []*pb.Task, error) {
-	foundTasks := []*pb.Task{
-		{
-			AssignmentOrder: 1,
-			Title:           "Lab1, task1",
-			Body:            "Description of task1 in lab1",
-			Name:            "Lab1/1",
-		},
-		{
-			AssignmentOrder: 1,
-			Title:           "Lab1, task2",
-			Body:            "Description of task2 in lab1",
-			Name:            "Lab1/2",
-		},
-		{
-			AssignmentOrder: 2,
-			Title:           "Lab2, task1",
-			Body:            "Description of task1 in lab2",
-			Name:            "Lab2/1",
-		},
-		{
-			AssignmentOrder: 2,
-			Title:           "Lab2, task2",
-			Body:            "Description of task2 in lab2",
-			Name:            "Lab2/2",
-		},
-	}
-
-	// Represents assignments found in "tests" repository
-	foundAssignments := []*pb.Assignment{
-		{
-			CourseID: course.GetID(),
-			Name:     "Lab1",
-			Order:    1,
-			Tasks:    foundTasks[:2],
-		},
-		{
-			CourseID: course.GetID(),
-			Name:     "Lab2",
-			Order:    2,
-			Tasks:    foundTasks[2:],
-		},
-	}
-	return foundAssignments, foundTasks, nil
-}
-
-// TODO(Espeland): This test is very messy at the moment. Should figure out a more human-readable approach.
-// TestSynchronizeTasks tests whether tasks are correctly updated in the database
-func TestSynchronizeAssignmentTasks(t *testing.T) {
+// initialDatabase initializes a database.
+func initialDatabase(t *testing.T) (database.Database, func(), *pb.Course, error) {
 	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, uint64(1))
 	qtest.CreateCourse(t, db, admin, &pb.Course{})
 
 	course, err := db.GetCourse(1, false)
 	if err != nil {
-		t.Fatal(err)
+		return db, cleanup, nil, err
 	}
 	assignments := []*pb.Assignment{
-		{
-			CourseID: course.GetID(),
-			Name:     "Lab1",
-			Order:    1,
-		},
-		{
-			CourseID: course.GetID(),
-			Name:     "Lab2",
-			Order:    2,
-		},
+		{CourseID: course.GetID(), Name: "Lab1", Order: 1},
+		{CourseID: course.GetID(), Name: "Lab2", Order: 2},
 	}
 
 	for _, assignment := range assignments {
 		err := db.CreateAssignment(assignment)
 		if err != nil {
-			t.Fatal(err)
+			return db, cleanup, nil, err
 		}
 	}
+	return db, cleanup, course, nil
+}
 
-	foundAssignments1, foundTasks1, err := initialAssignments(course, db)
+// initialAssignments simulates getting assignments parsed from tests repository.
+func initialAssignments() ([]*pb.Assignment, []*pb.Task, error) {
+	foundTasks := []*pb.Task{
+		{AssignmentOrder: 1, Title: "Lab1, task1", Body: "Description of task1 in lab1", Name: "Lab1/1"},
+		{AssignmentOrder: 1, Title: "Lab1, task2", Body: "Description of task2 in lab1", Name: "Lab1/2"},
+		{AssignmentOrder: 2, Title: "Lab2, task1", Body: "Description of task1 in lab2", Name: "Lab2/1"},
+		{AssignmentOrder: 2, Title: "Lab2, task2", Body: "Description of task2 in lab2", Name: "Lab2/2"},
+	}
+
+	// Represents assignments found in "tests" repository
+	foundAssignments := []*pb.Assignment{
+		{Name: "Lab1", Order: 1, Tasks: foundTasks[:2]},
+		{Name: "Lab2", Order: 2, Tasks: foundTasks[2:]},
+	}
+	return foundAssignments, foundTasks, nil
+}
+
+func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
+	db, cleanup, course, err := initialDatabase(t)
+	defer cleanup()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
+	if err != nil || len(assignments) == 0 {
+		t.Fatal(err)
+	}
+
+	wantError := gorm.ErrRecordNotFound
+	if _, gotError := db.GetTasks(&pb.Task{AssignmentID: assignments[0].GetID()}); gotError != wantError {
+		t.Errorf("got error '%v' wanted '%v'", gotError, wantError)
+	}
+}
+
+// TestSynchronizeTasks tests whether tasks are correctly updated in the database
+func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
+	db, cleanup, course, err := initialDatabase(t)
+	defer cleanup()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	foundAssignments1, foundTasks1, err := initialAssignments()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +114,7 @@ func TestSynchronizeAssignmentTasks(t *testing.T) {
 	// -------------------------------------------------------------------------- //
 
 	// Testing adding one new task, and updating another
-	foundAssignments2, foundTasks2, err := initialAssignments(course, db)
+	foundAssignments2, foundTasks2, err := initialAssignments()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -188,41 +177,16 @@ func TestSynchronizeAssignmentTasks(t *testing.T) {
 	// -------------------------------------------------------------------------- //
 }
 
-// TODO(Espeland): This test fails sometimes. I think it only fails because the order of the compared slices are not the same, which does not matter for this test.
+// TODO(Espeland): This test fails sometimes. I think it only fails because the order of the compared slices are not the same, which should not matter anyways.
 // TestSynchronizeAssignmentTasksReturn tests if SynchronizeAssignmentTasks returns correct values
-func TestReturnSynchronizeAssignmentTasks(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+func TestGormDBReturnSynchronizeAssignmentTasks(t *testing.T) {
+	db, cleanup, course, err := initialDatabase(t)
 	defer cleanup()
-
-	admin := qtest.CreateFakeUser(t, db, uint64(1))
-	qtest.CreateCourse(t, db, admin, &pb.Course{})
-
-	course, err := db.GetCourse(1, false)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assignments := []*pb.Assignment{
-		{
-			CourseID: course.GetID(),
-			Name:     "Lab1",
-			Order:    1,
-		},
-		{
-			CourseID: course.GetID(),
-			Name:     "Lab2",
-			Order:    2,
-		},
-	}
-
-	for _, assignment := range assignments {
-		err := db.CreateAssignment(assignment)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	foundAssignments1, foundTasks1, err := initialAssignments(course, db)
+	foundAssignments1, foundTasks1, err := initialAssignments()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -251,7 +215,7 @@ func TestReturnSynchronizeAssignmentTasks(t *testing.T) {
 	// -------------------------------------------------------------------------- //
 
 	// Creating three new tasks, updating two existing and deleting two existing
-	foundAssignments2, foundTasks2, err := initialAssignments(course, db)
+	foundAssignments2, foundTasks2, err := initialAssignments()
 	if err != nil {
 		t.Fatal(err)
 	}
