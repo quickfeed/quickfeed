@@ -11,8 +11,6 @@ import (
 	"github.com/autograde/quickfeed/scm"
 )
 
-// TODO(Espeland): Ordering of tasks (See teacher.md)
-
 // taskName returns the task name as a combination of assignmentName/filename
 // excluding the task- prefix and the .md suffix.
 func taskName(assignmentName, basePath string) string {
@@ -59,6 +57,7 @@ func getTasksFromAssignments(assignments []*pb.Assignment) map[uint32]map[string
 // TODO(Espeland): handleTasks no longer handles late enrolling students, as it only creates, updates and deletes based on how tasks differ from last time checked.
 // A different function will have to run when students enroll, creating an issue per task found in the database.
 // handleTasks would currently only work in such a way if there are no tasks in tests-repo when a student enrolls. Then this function would catch all created new tasks, and then create an issue from them.
+// TODO(Espeland): Currently we have no way of handleing if a student deletes an issue manually. We could solve this by listening to issue deletions, getting the repo and issue number, and using this to recreate the issue.
 func handleTasks(c context.Context, db database.Database, s scm.SCM, course *pb.Course, assignments []*pb.Assignment) error {
 	var createdIssues []*pb.Issue
 	var err error
@@ -122,8 +121,9 @@ func createIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repo
 	return createdIssues, nil
 }
 
-// createIssues updates issues based on repository, course and tasks.
-func updateIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repository, tasks []*pb.Task) (err error) {
+// updateIssues updates issues based on repository, course and tasks.
+func updateIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repository, tasks []*pb.Task) error {
+	var err error
 	taskMap := make(map[uint64]*pb.Task)
 	for _, task := range tasks {
 		taskMap[task.ID] = task
@@ -141,7 +141,6 @@ func updateIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repo
 			Title:        task.Title,
 			Body:         task.Body,
 		}
-		// TODO(Espeland): How do we handle an error while updating a single repository issue?
 		_, err = s.EditRepoIssue(c, int(issue.IssueNumber), issueOptions)
 	}
 	return err

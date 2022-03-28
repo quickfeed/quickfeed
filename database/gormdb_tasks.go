@@ -61,9 +61,6 @@ func (db *GormDB) DeleteIssuesOfAssociatedTasks(tasks []*pb.Task) ([]*pb.Issue, 
 		}
 		return nil
 	})
-	if err != nil {
-		return []*pb.Issue{}, err
-	}
 	return deletedIssues, err
 }
 

@@ -19,8 +19,7 @@ type issueInformation struct {
 // When running tests that have anything to do with tasks/issues, it is important that issues have their title corresponding to the name of an associated task.
 // For example, if you have an issue that is supposed to be connected to the task "task-hello_world.md" in "lab1", the title of this issue needs to be "lab1/hello_world".
 // Otherwise when creating the database there will be no clear way to know which issue is supposed to be associated with which task.
-// It is also important that should you create an issue that is supposed to represent a task, that it is created on all student repositories.
-// Otherwise InitializeDbEnvironment will detect that this issue/task relation is present on one repository, and therefore create a record for both in the database.
+// InitializeDbEnvironment is supposed to create a database environment that would be representative of the state of the organization on the previous push to the tests repository.
 
 // InitializeDbEnvironment initializes a db, based on org.
 func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course, s scm.SCM) (database.Database, func(), error) {
@@ -173,7 +172,7 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 	return db, cleanup, err
 }
 
-// TestInitializeDbEnvironment tests if db is correctly initialized based on preexisting repositories
+// TestInitializeDbEnvironment tests if db is correctly initialized.
 func TestInitializeDbEnvironment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
