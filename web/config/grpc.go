@@ -8,13 +8,13 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-type grpcMultiplexer struct {
+type GrpcMultiplexer struct {
 	*grpcweb.WrappedGrpcServer
 }
 
 // GenerateTLSApi will load TLS certificates and key and create a grpc server with those.
 func (conf *Config) GenerateTLSApi() (*grpc.Server, error) {
-	cred, err := credentials.NewServerTLSFromFile(conf.Paths.pemPath, conf.Paths.keyPath)
+	cred, err := credentials.NewServerTLSFromFile(conf.Paths.PemPath, conf.Paths.KeyPath)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (conf *Config) GenerateTLSApi() (*grpc.Server, error) {
 }
 
 // MultiplexHandler is used to route requests to either grpc or to regular http
-func (m *grpcMultiplexer) MultiplexerHandler(next http.Handler) http.Handler {
+func (m *GrpcMultiplexer) MultiplexerHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if m.IsGrpcWebRequest(r) {
 			m.ServeHTTP(w, r)

@@ -23,7 +23,7 @@ type AutograderService struct {
 	db     database.Database
 	scms   *auth.Scms
 	// bh     BaseHookOptions
-	config *config.Config
+	Config *config.Config // TODO: make unexported again after refactoring the startup method
 	runner ci.Runner
 	pb.UnimplementedAutograderServiceServer
 }
@@ -35,7 +35,7 @@ func NewAutograderService(logger *zap.Logger, db database.Database, scms *auth.S
 		db:     db,
 		scms:   scms,
 		// bh:     bh,
-		config: config,
+		Config: config,
 		runner: runner,
 	}
 }

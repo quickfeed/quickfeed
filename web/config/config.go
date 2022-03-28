@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/autograde/quickfeed/internal/rand"
 )
@@ -27,6 +28,7 @@ const (
 	appKeyPath = "./appth.private-key.pem"
 	pemPath    = "cert/server.crt"
 	keyPath    = "cert/server.key"
+	indexFile  = "index.html"
 )
 
 // Endpoints keeps all URL endpoints used by the server for user authentication,
@@ -39,6 +41,8 @@ type Endpoints struct {
 	GithubUserURL string
 	WebhookURL    string
 	InstallAppURL string
+	Public        string
+	HttpAddress   string
 }
 
 // Secrets keeps secrets that have been generated
@@ -50,9 +54,9 @@ type Secrets struct {
 }
 
 type Paths struct {
-	pemPath    string
-	keyPath    string
-	appKeyPath string
+	PemPath    string
+	KeyPath    string
+	AppKeyPath string
 }
 
 // Config keeps all configuration information in one place
@@ -67,10 +71,12 @@ type Config struct {
 // TokenManager keeps track of UserIDs for token updates
 type TokenManager []uint64
 
-func NewConfig(baseURL string) *Config {
+func NewConfig(baseURL, public, httpAddr string) *Config {
 	conf := &Config{
 		Endpoints: &Endpoints{
 			BaseURL:       baseURL,
+			Public:        filepath.Join(public, indexFile),
+			HttpAddress:   httpAddr,
 			LoginURL:      Login,
 			LogoutURL:     Logout,
 			CallbackURL:   Callback,
@@ -83,9 +89,9 @@ func NewConfig(baseURL string) *Config {
 			TokenSecret:    os.Getenv(JWTKeyEnv),
 		},
 		Paths: &Paths{
-			appKeyPath: appKeyPath,
-			pemPath:    pemPath,
-			keyPath:    keyPath,
+			AppKeyPath: appKeyPath,
+			PemPath:    pemPath,
+			KeyPath:    keyPath,
 		},
 	}
 	return conf

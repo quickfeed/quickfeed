@@ -41,7 +41,7 @@ func New(ags *AutograderService, public, httpAddr string) {
 	gothic.Store = store
 	e := newServer(ags, store)
 
-	enabled := enableProviders(ags.logger, ags.bh.BaseURL)
+	enabled := enableProviders(ags.logger, ags.Config.Endpoints.BaseURL)
 	registerWebhooks(ags, e, enabled)
 	registerAuth(ags, e)
 
@@ -107,7 +107,7 @@ func enableProviders(l *zap.SugaredLogger, baseURL string) map[string]bool {
 
 func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]bool) {
 	if enabled["github"] {
-		ghHook := hooks.NewGitHubWebHook(ags.logger, ags.db, ags.runner, ags.bh.Secret)
+		ghHook := hooks.NewGitHubWebHook(ags.logger, ags.db, ags.runner, ags.Config.Secrets.WebhookSecret)
 		e.POST("/hook/github/events", func(c echo.Context) error {
 			ghHook.Handle(c.Response(), c.Request())
 			return nil
@@ -115,7 +115,7 @@ func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]b
 	}
 	if enabled["gitlab"] {
 		// TODO(meling) fix gitlab
-		glHook := hooks.NewGitHubWebHook(ags.logger, ags.db, ags.runner, ags.bh.Secret)
+		glHook := hooks.NewGitHubWebHook(ags.logger, ags.db, ags.runner, ags.Config.Secrets.WebhookSecret)
 		e.POST("/hook/gitlab/events", func(c echo.Context) error {
 			glHook.Handle(c.Response(), c.Request())
 			return nil
