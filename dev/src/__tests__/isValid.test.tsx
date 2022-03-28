@@ -24,11 +24,11 @@ describe("User and enrollment validation", ()=> {
 
     it("Email is a valid email", ()=>{
         const email = "hei@mail.com"
-        var regex = /\S+@\S+\.\S+/
-        var valid = false
+        const regex = /\S+@\S+\.\S+/
+        let valid = false
         const test= email.match(regex) 
         
-        if (test != null){
+        if (test !== null){
             if (test.length > 0){
                 valid = true 
             }            
@@ -38,11 +38,11 @@ describe("User and enrollment validation", ()=> {
     )
     it("Email is not a valid email", ()=>{
         var email = "hei@mail"
-        var regex = /\S+@\S+\.\S+/
-        var valid= false
+        const regex = /\S+@\S+\.\S+/
+        let valid= false
         const test= email.match(regex) 
 
-        if (test != null){
+        if (test !== null){
             if (test.length > 0){
                 valid = true 
             }            
@@ -69,14 +69,13 @@ describe("User and enrollment validation", ()=> {
         const enrollment = new Enrollment().setId(1).setUser(user)
         const submission = new Submission().setId(1)
         const submissionLink1 = new SubmissionLink().setSubmission(submission)
-        var submissionArray = [submissionLink1]
+        const submissionArray = [submissionLink1]
         const enrollmentLink = new EnrollmentLink().setEnrollment(enrollment).setSubmissionsList(submissionArray)
         const isValidEnrollmentlink = isValid(enrollmentLink)
         expect(isValidEnrollmentlink).toBe(true)
     });
     
     it("If enrollment link has no submission list, enrollment or user it should be invalid", () =>{
-        const user2 = new User().setId(6)
         const enrollmentLink2 = new EnrollmentLink()
         const isValidEnrollmentlink2 = isValid(enrollmentLink2)
         expect(isValidEnrollmentlink2).toBe(false)

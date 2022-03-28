@@ -6,7 +6,7 @@ import React from "react"
 configure({ adapter: new Adapter() });
 
 const title = "Create Course"
-let wrapped = shallow(<CourseCreationInfo></CourseCreationInfo>);
+const wrapped = shallow(<CourseCreationInfo/>);
 describe("Title should be equal to", () => {
     it('Should render correctly', ()=> {
         expect(wrapped).toMatchSnapshot();

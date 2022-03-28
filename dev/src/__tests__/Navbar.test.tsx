@@ -33,7 +33,7 @@ describe("Visibility when logged in", () => {
     it("Sign in is not visible when logged in", () => {
         const signIn = "Sign in with"
         const link = wrapped.find("a").at(1)
-        var exists = true
+        let exists = true
         if (link.text() !== signIn){
             exists = false
         }

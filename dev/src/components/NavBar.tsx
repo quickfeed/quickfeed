@@ -1,11 +1,7 @@
 import React from "react"
 import { useActions, useAppState } from "../overmind"
 import { Link } from "react-router-dom"
-import NavBarFooter from "./navbar/NavBarFooter"
-import NavBarCourse from "./navbar/NavBarCourse"
-import { Color, isEnrolled, isFavorite } from "../Helpers"
 import NavFavorites from "./NavFavorites"
-import { Status } from "../consts"
 import NavBarUser from "./navbar/NavBarUser"
 
 //TODO Review the NavBar behaviour.

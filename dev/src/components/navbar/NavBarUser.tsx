@@ -1,5 +1,5 @@
-import React, { useState } from "react"
-import { Link, useHistory } from "react-router-dom"
+import React from "react"
+import { Link } from "react-router-dom"
 import { useActions, useAppState } from "../../overmind"
 
 const NavBarUser = ():JSX.Element =>{
@@ -46,7 +46,7 @@ const NavBarUser = ():JSX.Element =>{
         return (
             <li>
                 <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px" }}>
-                    <i className="fa fa-2x fa-github" id="github"></i>
+                    <i className="fa fa-2x fa-github" id="github"/>
                 </a>
             </li>
         )
@@ -56,7 +56,7 @@ const NavBarUser = ():JSX.Element =>{
             <ul className="navbar-nav ml-auto">
                 <li className="nav-item dropdown ml-auto">
                     <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px", marginLeft: "40px" }}>
-                        <img className="mrounded-circle" src={self.getAvatarurl()} id="avatar" style={{ height: "40px", borderRadius: "50%" }}></img>
+                        <img className="rounded-circle" src={self.getAvatarurl()} id="avatar" style={{ height: "40px", borderRadius: "50%" }}/>
                     </a>
                     <ul className="dropdown-menu dropdown-menu-center bg-dark">
                         <AboutButton/>

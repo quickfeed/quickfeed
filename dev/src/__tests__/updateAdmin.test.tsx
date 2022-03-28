@@ -12,7 +12,7 @@ describe("Correct permission status should be set", () => {
         })
         window.confirm = jest.fn(() => true)
         updateAdmin(mockedOvermind, user)
-        var bool = user.getIsadmin()
+        let bool = user.getIsadmin()
         expect(bool).toBe(true)
     })
     
