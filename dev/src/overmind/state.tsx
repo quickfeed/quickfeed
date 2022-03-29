@@ -175,6 +175,8 @@ type State = {
     groupView: boolean,
     showFavorites: boolean,
 
+    showFavorites: boolean,
+
 }
 
 
