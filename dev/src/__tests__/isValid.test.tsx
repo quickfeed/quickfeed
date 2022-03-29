@@ -1,70 +1,66 @@
-import {isValid} from "../Helpers"
-import {User, EnrollmentLink, Enrollment, Submission, SubmissionLink} from "../../proto/ag/ag_pb"
+import { isValid } from "../Helpers"
+import { User, EnrollmentLink, Enrollment, Submission, SubmissionLink } from "../../proto/ag/ag_pb"
 
-
-
-describe("User and enrollment validation", ()=> {
-    it("User should be valid", () =>{
+describe("User and enrollment validation", () => {
+    it("User should be valid", () => {
         const user = new User().setId(1).setName("Test User").setEmail("mail@mail.com").setStudentid("1234567")
         const isValidUser = isValid(user)
         expect(isValidUser).toBe(true)
-    });
+    })
 
-    it("User should not be valid if name is empty", () =>{
+    it("User should not be valid if name is empty", () => {
         const user2 = new User().setId(2).setEmail("mail@mail.com").setStudentid("1234567")
         const isValidUser = isValid(user2)
         expect(isValidUser).toBe(false)
-    });
-    
-    it("User should not be valid if email is empty", ()=>{
+    })
+
+    it("User should not be valid if email is empty", () => {
         const user3 = new User().setId(1).setName("Test User3").setStudentid("1234567")
         const isValidUser = isValid(user3)
         expect(isValidUser).toBe(false)
-    });
+    })
 
-    it("Email is a valid email", ()=>{
+    it("Email is a valid email", () => {
         const email = "hei@mail.com"
         const regex = /\S+@\S+\.\S+/
         let valid = false
-        const test= email.match(regex) 
-        
-        if (test !== null){
-            if (test.length > 0){
-                valid = true 
-            }            
+        const test = email.match(regex)
+
+        if (test !== null) {
+            if (test.length > 0) {
+                valid = true
+            }
         }
         expect(valid).toBe(true)
-        }
+    }
     )
-    it("Email is not a valid email", ()=>{
-        var email = "hei@mail"
+    it("Email is not a valid email", () => {
+        const email = "hei@mail"
         const regex = /\S+@\S+\.\S+/
-        let valid= false
-        const test= email.match(regex) 
+        let valid = false
+        const test = email.match(regex)
 
-        if (test !== null){
-            if (test.length > 0){
-                valid = true 
-            }            
+        if (test !== null) {
+            if (test.length > 0) {
+                valid = true
+            }
         }
         expect(valid).toBe(false)
-        }
-    )
+    })
 
-
-    it("User should not be valid if studentId is empty", ()=>{
+    it("User should not be valid if studentId is empty", () => {
         const user4 = new User().setId(4).setName("Test User3").setEmail("mail@mail.com")
         const isValidUser = isValid(user4)
         expect(isValidUser).toBe(false)
-    });
+    })
 
-    it("User should not be valid if name,email and studentId is empty", ()=>{
+    it("User should not be valid if name,email and studentId is empty", () => {
         const user5 = new User().setId(5)
         const isValidUser = isValid(user5)
         expect(isValidUser).toBe(false)
-    });
+    })
 
-    it("If enrollment link is valid it should pass", () =>{
+    it("If enrollment link is valid it should pass", () => {
         const user = new User().setId(6)
         const enrollment = new Enrollment().setId(1).setUser(user)
         const submission = new Submission().setId(1)
@@ -73,11 +69,11 @@ describe("User and enrollment validation", ()=> {
         const enrollmentLink = new EnrollmentLink().setEnrollment(enrollment).setSubmissionsList(submissionArray)
         const isValidEnrollmentlink = isValid(enrollmentLink)
         expect(isValidEnrollmentlink).toBe(true)
-    });
-    
-    it("If enrollment link has no submission list, enrollment or user it should be invalid", () =>{
+    })
+
+    it("If enrollment link has no submission list, enrollment or user it should be invalid", () => {
         const enrollmentLink2 = new EnrollmentLink()
         const isValidEnrollmentlink2 = isValid(enrollmentLink2)
         expect(isValidEnrollmentlink2).toBe(false)
     })
-}); 
+})

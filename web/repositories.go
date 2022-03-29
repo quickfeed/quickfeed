@@ -1,33 +1,52 @@
 package web
 
 import (
+	"context"
 	"fmt"
 
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/scm"
+	"gorm.io/gorm"
 )
 
-func (s *AutograderService) getUserRepo(course *pb.Course, userID uint64) (*pb.Repository, error) {
-	repoQuery := &pb.Repository{
+func (s *AutograderService) getRepo(course *pb.Course, id uint64, repoType pb.Repository_Type) (*pb.Repository, error) {
+	query := &pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
-		UserID:         userID,
-		RepoType:       pb.Repository_USER,
+		RepoType:       repoType,
 	}
-	repos, err := s.db.GetRepositories(repoQuery)
-	if err != nil || len(repos) < 1 {
-		return nil, fmt.Errorf("could not find user repository for user: %d, course: %s: %w", userID, course.GetCode(), err)
+	switch repoType {
+	case pb.Repository_USER:
+		query.UserID = id
+	case pb.Repository_GROUP:
+		query.GroupID = id
+	}
+	repos, err := s.db.GetRepositories(query)
+	if err != nil {
+		return nil, err
+	}
+	if len(repos) < 1 {
+		return nil, fmt.Errorf("no %s repositories found for %s id %d: %w", repoType, course.GetCode(), id, gorm.ErrRecordNotFound)
 	}
 	return repos[0], nil
 }
 
-func (s *AutograderService) getGroupRepo(course *pb.Course, groupID uint64) (*pb.Repository, error) {
-	repoQuery := &pb.Repository{
+// isEmptyRepo returns nil if all repositories for the given course and student or group are empty,
+// returns an error otherwise.
+func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *pb.RepositoryRequest) error {
+	course, err := s.db.GetCourse(request.GetCourseID(), false)
+	if err != nil {
+		return err
+	}
+	repos, err := s.db.GetRepositories(&pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
-		GroupID:        groupID,
-		RepoType:       pb.Repository_GROUP,
+		UserID:         request.GetUserID(),
+		GroupID:        request.GetGroupID(),
+	})
+	if err != nil {
+		return err
 	}
-	repos, err := s.db.GetRepositories(repoQuery)
-	if err != nil || len(repos) < 1 {
-		return nil, fmt.Errorf("could not find group repository for group: %d, course: %s: %w", groupID, course.GetCode(), err)
+	if len(repos) < 1 {
+		return fmt.Errorf("no repositories found")
 	}
-	return repos[0], nil
+	return isEmpty(ctx, sc, repos)
 }
