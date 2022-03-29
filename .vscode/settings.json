@@ -123,6 +123,7 @@
         "Infof",
         "Ingve",
         "ipam",
+        "Isadmin",
         "isgrouplab",
         "itest",
         "jinzhu",
@@ -151,6 +152,7 @@
         "opsys",
         "orgs",
         "outform",
+        "Overmind",
         "overmind",
         "paxos",
         "pgrep",
@@ -176,6 +178,7 @@
         "sqlite",
         "Stavnes",
         "structs",
+        "Studentid",
         "testdb",
         "tmpl",
         "Unexported",
@@ -187,9 +190,10 @@
         "URL's",
         "usermod",
         "webpack's",
+        "wojtekmaj",
         "xanzy",
         "xargs",
         "xini",
-        "xlsx"
-    ]
+        "xlsx",
+    ],
 }
