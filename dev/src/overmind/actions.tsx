@@ -463,10 +463,6 @@ export const setActiveAssignment = ({ state }: Context, assignmentID: number): v
     state.activeAssignment = assignmentID
 }
 
-export const setActiveFavorite = ({ state }: Context, isActive: boolean): void => {
-    state.showFavorites = isActive
-}
-
 /** Rebuilds the currently active submission */
 export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<void> => {
     if (state.currentSubmission && state.selectedAssignment) {
