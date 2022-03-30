@@ -1,6 +1,6 @@
 # Quickfeed Support for Feedback via Pull Requests and Issues
 
-The following is a proposed solution for implementing support for feedback via pull requests and issues in quickfeed.
+The following document discusses how to implement quickfeed support for github pull requests.
 
 ## Goals
 
@@ -156,13 +156,14 @@ It will also have to check if this pull request is created with an associated is
 This means that students will have to correctly link their pull request to an existing task/issue when creating it, and if not, the pull request should not be handled.
 A pull request will from here on be referred to as being "legitimate" when these conditions are true.
 
-After passing all these tests, a pull request data-record should be created, letting us keep an association of all pull requests internally. Quickfeed will need to check the associated assignment, 
+After passing all these tests, a pull request data-record should be created, letting us keep an association of all pull requests internally. Quickfeed will need to check the associated assignment,
 so as to see which pull request related settings are desired (such as whether quickfeed should auto assign reviewers). The student creating the pull request will also have to be assigned as owner/responsible
 for the pull request data-record.
 
 The data-record should look as follows:
 
 PullRequest
+
 - ID                      number
 - Some foreign key?       number
 - Owner                   reference to user data-record
@@ -170,11 +171,10 @@ PullRequest
 - Approved                bool
 - Merged                  bool
 
-
-
 ### When a pull request is closed
 
 For closing legitimate pull requests there are seemingly four different scenarios we must take into consideration.
+
 1. When a pull request is closed and merged after it has been approved by a teacher.
 2. When a pull request is closed, but not merged, after being approved by a teacher.
 3. When a pull request is closed and merged, but has not been approved by a teacher.
