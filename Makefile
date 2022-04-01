@@ -8,6 +8,7 @@ OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
 tmpdir				:= tmp
 proto-swift-path	:= ../quickfeed-swiftui/Quickfeed/Proto
+grpcweb-latest		:= $(shell git ls-remote --tags https://github.com/grpc/grpc-web.git | tail -1 | awk -F"/" '{ print $$3 }')
 grpcweb-ver			:= $(shell cd dev; npm ls grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
 grpcweb-pub			:= $(shell cd public; npm ls grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
 protoc-grpcweb		:= protoc-gen-grpc-web
@@ -32,6 +33,9 @@ go-tools:
 	@go install `go list -f "{{range .Imports}}{{.}} {{end}}" tools.go`
 
 version-check:
+ifneq ($(grpcweb-ver), $(grpcweb-latest))
+	@echo WARNING: grpc-web version is not latest: $(grpcweb-ver) != $(grpcweb-latest)
+endif
 ifneq ($(grpcweb-ver), $(grpcweb-pub))
 	@echo grpc-web version differs between dev and public: $(grpcweb-ver) != $(grpcweb-pub)
 	@false
