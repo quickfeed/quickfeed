@@ -11,6 +11,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
-      -run: npm-install
-      -name: jest
-      -run: npx jest
+      - name: Run Jest
+        uses: stefanoeb/jest-action@1.0.3
+      with:
+          jestArgs: ./../dev/src/__tests__
+      run: 'npm test'
