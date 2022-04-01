@@ -15,5 +15,9 @@ jobs:
         with:
           node-version: 12
 
+      - name: Install modules
+        working-directory: ./dev
+        run: npm i
+
       - name: Run tests
         run: npm test
