@@ -85,12 +85,13 @@ Operativsystemer
 opsys
 orgs
 outform
-Overmind
 overmind
+Overmind
 paxos
 pgrep
 pkgs
 privkey
+proto
 protobuf
 protoc
 protoimpl
