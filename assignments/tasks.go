@@ -39,8 +39,8 @@ func newTask(contents []byte, assignmentOrder uint32, name string) (*pb.Task, er
 	}, nil
 }
 
-// getTasksFromAssignments returns a map, mapping each assignment-order to a map of tasks.
-func getTasksFromAssignments(assignments []*pb.Assignment) map[uint32]map[string]*pb.Task {
+// tasksFromAssignments returns a map, mapping each assignment-order to a map of tasks.
+func tasksFromAssignments(assignments []*pb.Assignment) map[uint32]map[string]*pb.Task {
 	taskMap := make(map[uint32]map[string]*pb.Task)
 	for _, assignment := range assignments {
 		temp := make(map[string]*pb.Task)
@@ -65,8 +65,8 @@ func handleTasks(c context.Context, db database.Database, s scm.SCM, course *pb.
 	createdIssues := []*pb.Issue{}
 	var err error
 
-	foundTasks := getTasksFromAssignments(assignments)
-	createdTasks, updatedTasks, deletedTasks, err := db.SynchronizeAssignmentTasks(course, foundTasks)
+	tasksFromTestsRepo := tasksFromAssignments(assignments)
+	createdTasks, updatedTasks, deletedTasks, err := db.SynchronizeAssignmentTasks(course, tasksFromTestsRepo)
 	if err != nil {
 		return err
 	}
