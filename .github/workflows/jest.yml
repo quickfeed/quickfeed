@@ -1,4 +1,4 @@
-name: JestTests
+name: Jest Test
 
 on:
   push:
@@ -13,5 +13,3 @@ jobs:
       - uses: actions/checkout@v1
       - name: Run Jest
         uses: stefanoeb/jest-action@1.0.3
-        with:
-          jestArgs: ../dev/src/__tests__
