@@ -14,11 +14,9 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: 12.x
-          cache: yarn
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+          cache: npm
 
       - name: Run Jest
         uses: stefanoeb/jest-action@1.0.3
       - name: Run tests
-        run: yarn test
+        run: npm test
