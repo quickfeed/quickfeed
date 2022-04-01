@@ -15,4 +15,4 @@ jobs:
         uses: stefanoeb/jest-action@1.0.3
       with:
           jestArgs: ./../dev/src/__tests__
-      run: 'npm test'
+      run: npm test
