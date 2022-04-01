@@ -773,6 +773,7 @@ func (s *GithubSCM) EditRepoIssue(ctx context.Context, issueNumber int, opt *Cre
 	issueReq := &github.IssueRequest{
 		Title:     &opt.Title,
 		Body:      &opt.Body,
+		State:     &opt.State,
 		Assignee:  opt.Assignee,
 		Assignees: opt.Assignees,
 	}

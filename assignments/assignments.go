@@ -22,11 +22,11 @@ import (
 func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course *pb.Course) {
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), pb.TestsRepo)
 	scm, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
-	ctx := context.Background()
 	if err != nil {
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
 	}
+	ctx := context.Background()
 	assignments, dockerfile, err := fetchAssignments(ctx, logger, scm, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
@@ -44,7 +44,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		}
 	}
 
-	// Does not store tasks, since they need to be handled by HandleTasks
+	// Does not store tasks associated with assignments; tasks are handled separately by handleTasks below
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)
@@ -54,8 +54,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	}
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
 
-	err = handleTasks(ctx, db, scm, course, assignments)
-	if err != nil {
+	if err = handleTasks(ctx, db, scm, course, assignments); err != nil {
 		logger.Errorf("Failed to create tasks on '%s' repository: %v", pb.TestsRepo, err)
 		return
 	}

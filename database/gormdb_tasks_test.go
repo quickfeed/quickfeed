@@ -24,8 +24,8 @@ func getTasksFromAssignments(assignments []*pb.Assignment) map[uint32]map[string
 	return taskMap
 }
 
-// initialDatabase initializes a database.
-func initialDatabase(t *testing.T) (database.Database, func(), *pb.Course, error) {
+// taskTestingDB initializes a database used for task related tests.
+func taskTestingDB(t *testing.T) (database.Database, func(), *pb.Course, error) {
 	db, cleanup := qtest.TestDB(t)
 
 	admin := qtest.CreateFakeUser(t, db, uint64(1))
@@ -50,7 +50,7 @@ func initialDatabase(t *testing.T) (database.Database, func(), *pb.Course, error
 }
 
 // initialAssignments simulates getting assignments parsed from tests repository.
-func initialAssignments() ([]*pb.Assignment, []*pb.Task, error) {
+func initialAssignments() ([]*pb.Assignment, []*pb.Task) {
 	foundTasks := []*pb.Task{
 		{AssignmentOrder: 1, Title: "Lab1, task1", Body: "Description of task1 in lab1", Name: "Lab1/1"},
 		{AssignmentOrder: 1, Title: "Lab1, task2", Body: "Description of task2 in lab1", Name: "Lab1/2"},
@@ -58,16 +58,15 @@ func initialAssignments() ([]*pb.Assignment, []*pb.Task, error) {
 		{AssignmentOrder: 2, Title: "Lab2, task2", Body: "Description of task2 in lab2", Name: "Lab2/2"},
 	}
 
-	// Represents assignments found in "tests" repository
 	foundAssignments := []*pb.Assignment{
 		{Name: "Lab1", Order: 1, Tasks: foundTasks[:2]},
 		{Name: "Lab2", Order: 2, Tasks: foundTasks[2:]},
 	}
-	return foundAssignments, foundTasks, nil
+	return foundAssignments, foundTasks
 }
 
 func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
-	db, cleanup, course, err := initialDatabase(t)
+	db, cleanup, course, err := taskTestingDB(t)
 	defer cleanup()
 	if err != nil {
 		t.Fatal(err)
@@ -84,18 +83,17 @@ func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
 	}
 }
 
+// TODO(Espeland): The following tests fail sometimes. I think they only fail because the order of the compared slices are not the same, which should not matter anyways.
+
 // TestSynchronizeTasks tests whether tasks are correctly updated in the database
 func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
-	db, cleanup, course, err := initialDatabase(t)
+	db, cleanup, course, err := taskTestingDB(t)
 	defer cleanup()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	foundAssignments1, foundTasks1, err := initialAssignments()
-	if err != nil {
-		t.Fatal(err)
-	}
+	foundAssignments1, foundTasks1 := initialAssignments()
 
 	// Should create a new database-record for each task in foundTasks
 	if _, _, _, err = db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments1)); err != nil {
@@ -114,10 +112,7 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	// -------------------------------------------------------------------------- //
 
 	// Testing adding one new task, and updating another
-	foundAssignments2, foundTasks2, err := initialAssignments()
-	if err != nil {
-		t.Fatal(err)
-	}
+	foundAssignments2, foundTasks2 := initialAssignments()
 
 	newTask := &pb.Task{
 		AssignmentOrder: 2,
@@ -177,19 +172,15 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	// -------------------------------------------------------------------------- //
 }
 
-// TODO(Espeland): This test fails sometimes. I think it only fails because the order of the compared slices are not the same, which should not matter anyways.
 // TestSynchronizeAssignmentTasksReturn tests if SynchronizeAssignmentTasks returns correct values
 func TestGormDBReturnSynchronizeAssignmentTasks(t *testing.T) {
-	db, cleanup, course, err := initialDatabase(t)
+	db, cleanup, course, err := taskTestingDB(t)
 	defer cleanup()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	foundAssignments1, foundTasks1, err := initialAssignments()
-	if err != nil {
-		t.Fatal(err)
-	}
+	foundAssignments1, foundTasks1 := initialAssignments()
 
 	// Creating four new tasks
 	gotCreatedTasks, gotUpdatedTasks, gotDeletedTasks, err := db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments1))
@@ -215,10 +206,7 @@ func TestGormDBReturnSynchronizeAssignmentTasks(t *testing.T) {
 	// -------------------------------------------------------------------------- //
 
 	// Creating three new tasks, updating two existing and deleting two existing
-	foundAssignments2, foundTasks2, err := initialAssignments()
-	if err != nil {
-		t.Fatal(err)
-	}
+	foundAssignments2, foundTasks2 := initialAssignments()
 
 	newTasks := []*pb.Task{
 		{

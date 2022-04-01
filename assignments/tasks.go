@@ -31,14 +31,12 @@ func newTask(contents []byte, assignmentOrder uint32, name string) (*pb.Task, er
 		return nil, fmt.Errorf("failed to find task body in task: %s", name)
 	}
 
-	task := &pb.Task{
+	return &pb.Task{
 		AssignmentOrder: assignmentOrder,
 		Title:           string(contents[2:bodyIndex]),
 		Body:            string(contents[bodyIndex+2:]),
 		Name:            name,
-	}
-
-	return task, nil
+	}, nil
 }
 
 // getTasksFromAssignments returns a map, mapping each assignment-order to a map of tasks.
@@ -54,13 +52,19 @@ func getTasksFromAssignments(assignments []*pb.Assignment) map[uint32]map[string
 	return taskMap
 }
 
-// TODO(Espeland): handleTasks no longer handles late enrolling students, as it only creates, updates and deletes based on how tasks differ from last time checked.
-// A different function will have to run when students enroll, creating an issue per task found in the database.
-// handleTasks would currently only work in such a way if there are no tasks in tests-repo when a student enrolls. Then this function would catch all created new tasks, and then create an issue from them.
-// TODO(Espeland): Currently we have no way of handleing if a student deletes an issue manually. We could solve this by listening to issue deletions, getting the repo and issue number, and using this to recreate the issue.
+// mapTasksByID returns a map, mapping each task to its ID.
+func mapTasksByID(tasks []*pb.Task) map[uint64]*pb.Task {
+	taskMap := make(map[uint64]*pb.Task)
+	for _, task := range tasks {
+		taskMap[task.ID] = task
+	}
+	return taskMap
+}
+
 func handleTasks(c context.Context, db database.Database, s scm.SCM, course *pb.Course, assignments []*pb.Assignment) error {
-	var createdIssues []*pb.Issue
+	createdIssues := []*pb.Issue{}
 	var err error
+
 	foundTasks := getTasksFromAssignments(assignments)
 	createdTasks, updatedTasks, deletedTasks, err := db.SynchronizeAssignmentTasks(course, foundTasks)
 	if err != nil {
@@ -74,24 +78,29 @@ func handleTasks(c context.Context, db database.Database, s scm.SCM, course *pb.
 		return err
 	}
 
-	// Todo(Espeland): In general, how do we handle if something goes wrong during one of these processes?
-
-	// Deleting issues from database that no longer has an associated task.
-	deletedIssues, err := db.DeleteIssuesOfAssociatedTasks(deletedTasks)
-	if err != nil {
-		return err
-	}
-
 	// Creates, updates and deletes issues on all group repositories, based on how tasks differ from last push.
 	for _, repo := range repos {
 		if !repo.IsGroupRepo() {
 			continue
 		}
-		createdIssues, err = createIssues(c, s, course, repo, createdTasks)
-		err = updateIssues(c, s, course, repo, updatedTasks)
-		err = deleteIssues(c, s, course, repo, deletedIssues)
+
+		repoCreatedIssues, err := createIssues(c, s, course, repo, createdTasks)
+		if err != nil {
+			return err
+		}
+		createdIssues = append(createdIssues, repoCreatedIssues...)
+		if err = updateIssues(c, s, course, repo, updatedTasks, false); err != nil {
+			return err
+		}
+		if err = updateIssues(c, s, course, repo, deletedTasks, true); err != nil {
+			return err
+		}
 	}
 
+	// Deleting issues from database that no longer has an associated task.
+	if err = db.DeleteIssuesOfAssociatedTasks(deletedTasks); err != nil {
+		return err
+	}
 	// Creating issues in database, based on issues created on scm.
 	err = db.CreateIssues(createdIssues)
 	return err
@@ -109,8 +118,7 @@ func createIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repo
 		}
 		scmIssue, err := s.CreateIssue(c, issueOptions)
 		if err != nil {
-			// TODO(Espeland): Should we return here if there was an error creating the issue? We certainly shouldn't create a db-entry for the issue if there was an error.
-			continue
+			return createdIssues, err
 		}
 		createdIssues = append(createdIssues, &pb.Issue{
 			RepositoryID: repo.ID,
@@ -121,32 +129,31 @@ func createIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repo
 	return createdIssues, nil
 }
 
-// updateIssues updates issues based on repository, course and tasks.
-func updateIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repository, tasks []*pb.Task) error {
-	var err error
-	taskMap := make(map[uint64]*pb.Task)
-	for _, task := range tasks {
-		taskMap[task.ID] = task
-	}
-
+// updateIssues updates issues based on repository, course and tasks. It handles deleted tasks by closing them and inserting a statement into the body.
+func updateIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repository, tasks []*pb.Task, handleDeletion bool) error {
+	taskMap := mapTasksByID(tasks)
 	for _, issue := range repo.Issues {
 		task, ok := taskMap[issue.TaskID]
 		if !ok {
 			// Issue does not need to be updated
 			continue
 		}
+		state := "open"
+		body := task.Body
+		if handleDeletion {
+			state = "closed"
+			body = task.Body + "\n**Task associated with this issue has been deleted by teacher**"
+		}
 		issueOptions := &scm.CreateIssueOptions{
 			Organization: course.Name,
 			Repository:   repo.Name(),
 			Title:        task.Title,
-			Body:         task.Body,
+			Body:         body,
+			State:        state,
 		}
-		_, err = s.EditRepoIssue(c, int(issue.IssueNumber), issueOptions)
+		if _, err := s.EditRepoIssue(c, int(issue.IssueNumber), issueOptions); err != nil {
+			return err
+		}
 	}
-	return err
-}
-
-func deleteIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repository, issues []*pb.Issue) error {
-	// TODO(Espeland): How do we handle a deleted task? Go-github does not have a way of deleting issues, only closing them.
 	return nil
 }

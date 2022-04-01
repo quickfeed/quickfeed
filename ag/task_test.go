@@ -4,65 +4,25 @@ import (
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/google/go-cmp/cmp"
-	"google.golang.org/protobuf/testing/protocmp"
 )
+
+var changetests = map[string]struct {
+	task1, task2 *pb.Task
+	want         bool
+}{
+	"No change":             {task1: &pb.Task{Title: "Title 1", Body: "Body 1"}, task2: &pb.Task{Title: "Title 1", Body: "Body 1"}, want: false},
+	"Body change":           {task1: &pb.Task{Title: "Title 1", Body: "Body 1"}, task2: &pb.Task{Title: "Title 1", Body: "Body 2"}, want: true},
+	"Title change":          {task1: &pb.Task{Title: "Title 1", Body: "Body 1"}, task2: &pb.Task{Title: "Title 2", Body: "Body 1"}, want: true},
+	"Body and title change": {task1: &pb.Task{Title: "Title 1", Body: "Body 1"}, task2: &pb.Task{Title: "Title 2", Body: "Body 2"}, want: true},
+}
 
 // TestHasChanged tests if HasChanged returns the correct value
 func TestHasChanged(t *testing.T) {
-	originalTask := &pb.Task{
-		ID:              1,
-		AssignmentID:    1,
-		AssignmentOrder: 1,
-		Title:           "This is the original task",
-		Body:            "Description description",
-		Name:            "lab1/1",
+	for name, tt := range changetests {
+		t.Run(name, func(t *testing.T) {
+			if got := tt.task1.HasChanged(tt.task2); tt.want != got {
+				t.Errorf("\ntask1.HasChanged(task2) = %t, expected %t\ntask1:\t%v\ntask2:\t%v", got, tt.want, tt.task1, tt.task2)
+			}
+		})
 	}
-
-	// Comparing the original task with itself.
-	wantResult := false
-	gotResult := originalTask.HasChanged(originalTask)
-
-	if diff := cmp.Diff(wantResult, gotResult, protocmp.Transform()); diff != "" {
-		t.Errorf("HasChanged mismatch (-wantResult, +gotResult):\n%s", diff)
-	}
-	// -------------------------------------------------------------------------- //
-
-	// Checking for body change.
-	updatedTask := &pb.Task{
-		ID:              1,
-		AssignmentID:    1,
-		AssignmentOrder: 1,
-		Title:           "This is the original task",
-		Body:            "Different description",
-		Name:            "lab1/1",
-	}
-	wantResult = true
-	gotResult = originalTask.HasChanged(updatedTask)
-
-	if diff := cmp.Diff(wantResult, gotResult, protocmp.Transform()); diff != "" {
-		t.Errorf("HasChanged mismatch (-wantResult, +gotResult):\n%s", diff)
-	}
-	// -------------------------------------------------------------------------- //
-
-	// Checking for title change.
-	updatedTask.Body = "Description description"
-	updatedTask.Title = "A new title"
-	wantResult = true
-	gotResult = originalTask.HasChanged(updatedTask)
-
-	if diff := cmp.Diff(wantResult, gotResult, protocmp.Transform()); diff != "" {
-		t.Errorf("HasChanged mismatch (-wantResult, +gotResult):\n%s", diff)
-	}
-	// -------------------------------------------------------------------------- //
-
-	// Checking for title and body change.
-	updatedTask.Body = "Different description"
-	wantResult = true
-	gotResult = originalTask.HasChanged(updatedTask)
-
-	if diff := cmp.Diff(wantResult, gotResult, protocmp.Transform()); diff != "" {
-		t.Errorf("HasChanged mismatch (-wantResult, +gotResult):\n%s", diff)
-	}
-	// -------------------------------------------------------------------------- //
 }

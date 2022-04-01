@@ -254,6 +254,7 @@ type CreateIssueOptions struct {
 	Repository   string
 	Title        string
 	Body         string
+	State        string
 	Labels       *[]string
 	Assignee     *string
 	Assignees    *[]string

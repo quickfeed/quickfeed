@@ -130,14 +130,12 @@ type Database interface {
 	// GetRepositoriesWithIssues gets repositories with issues
 	GetRepositoriesWithIssues(query *pb.Repository) ([]*pb.Repository, error)
 
-	// GetTasks gets tasks based on query
 	GetTasks(query *pb.Task) ([]*pb.Task, error)
-	// CreateTasks creates a batch of tasks
 	CreateTasks(tasks []*pb.Task) error
 	// CreateIssues creates a batch of issues
 	CreateIssues(issues []*pb.Issue) error
 	// DeleteIssuesOfAssociatedTasks deletes a batch of issues
-	DeleteIssuesOfAssociatedTasks(tasks []*pb.Task) ([]*pb.Issue, error)
+	DeleteIssuesOfAssociatedTasks(tasks []*pb.Task) error
 	// SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks
 	SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) ([]*pb.Task, []*pb.Task, []*pb.Task, error)
 

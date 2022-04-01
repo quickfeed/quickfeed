@@ -2,6 +2,8 @@ package assignments
 
 import (
 	"context"
+	"strconv"
+	"strings"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -11,18 +13,18 @@ import (
 	"go.uber.org/zap"
 )
 
-type issueInformation struct {
+type foundIssue struct {
 	IssueNumber uint64
 	Name        string
 }
 
-// When running tests that have anything to do with tasks/issues, it is important that issues have their title corresponding to the name of an associated task.
-// For example, if you have an issue that is supposed to be connected to the task "task-hello_world.md" in "lab1", the title of this issue needs to be "lab1/hello_world".
-// Otherwise when creating the database there will be no clear way to know which issue is supposed to be associated with which task.
-// InitializeDbEnvironment is supposed to create a database environment that would be representative of the state of the organization on the previous push to the tests repository.
+// The test environment creates tasks based on the issues that are found on student repositories on the org. This is so that we can emulate the result of a previous push to the tests repository.
+// For these tasks to be created correctly the title of each has to be of the following format: "<task name>, <assignment order>".
+// For example if an issue is supposed to relate to the task: "task-hello_world.md" in "lab1", then the title of the corresponding issue would be: "lab1/hello_world, 1" (assuming lab1 has assignment order 1).
+// It is also recommended that issues are created on all student repositories, and that they are the same.
 
-// InitializeDbEnvironment initializes a db, based on org.
-func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course, s scm.SCM) (database.Database, func(), error) {
+// taskTestingDB initializes a db based on org.
+func taskTestingDB(t *testing.T, c context.Context, course *pb.Course, s scm.SCM) (database.Database, func(), error) {
 	db, cleanup := qtest.TestDB(t)
 
 	org, err := s.GetOrganization(c, &scm.GetOrgOptions{Name: course.Name})
@@ -51,8 +53,8 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 		return db, cleanup, err
 	}
 
-	foundIssues := make(map[uint64]map[string]*issueInformation)
-	tasks := make(map[string]*pb.Task)
+	foundIssues := make(map[uint64]map[string]*foundIssue)
+	tasks := make(map[uint32]map[string]*pb.Task)
 
 	// Create repositories
 	n := 2
@@ -110,41 +112,28 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 		if len(existingScmIssues) == 0 {
 			continue
 		}
-		foundIssues[repo.ID] = make(map[string]*issueInformation)
+		foundIssues[repo.ID] = make(map[string]*foundIssue)
 		for _, scmIssue := range existingScmIssues {
-			foundIssues[repo.ID][scmIssue.Title] = &issueInformation{
-				IssueNumber: uint64(scmIssue.IssueNumber),
-				Name:        scmIssue.Title,
+			splitTitle := strings.Split(scmIssue.Title, ", ")
+			name := splitTitle[0]
+			temp, err := strconv.Atoi(splitTitle[len(splitTitle)-1])
+			if err != nil {
+				return db, cleanup, err
 			}
-			tasks[scmIssue.Title] = &pb.Task{
-				Title: scmIssue.Title,
-				Body:  scmIssue.Body,
-				Name:  scmIssue.Title,
+			assignmentOrder := uint32(temp)
+			foundIssues[repo.ID][name] = &foundIssue{IssueNumber: uint64(scmIssue.IssueNumber), Name: name}
+
+			if _, ok := tasks[assignmentOrder]; !ok {
+				tasks[assignmentOrder] = make(map[string]*pb.Task)
 			}
+			tasks[assignmentOrder][name] = &pb.Task{Title: scmIssue.Title, Body: scmIssue.Body, Name: name, AssignmentOrder: assignmentOrder}
 		}
 		n++
 	}
 
-	// We remove from foundTasks every task that is not represented by an issue. This way, the database is initialized with tasks based on issues and tasks, and not just the tasks found in the tests repository.
-	foundTasks := getTasksFromAssignments(foundAssignments)
-	for _, taskMap := range foundTasks {
-		for _, task := range taskMap {
-			if _, ok := tasks[task.Name]; !ok {
-				delete(taskMap, task.Name)
-			} else {
-				task.Title = tasks[task.Name].Title
-				task.Body = tasks[task.Name].Body
-			}
-		}
-	}
-	createdTasks, _, _, err := db.SynchronizeAssignmentTasks(course, foundTasks)
+	createdTasks, _, _, err := db.SynchronizeAssignmentTasks(course, tasks)
 	if err != nil {
 		return db, cleanup, err
-	}
-
-	createdTasksMap := make(map[string]*pb.Task)
-	for _, createdTask := range createdTasks {
-		createdTasksMap[createdTask.Name] = createdTask
 	}
 
 	dbRepos, err := db.GetRepositoriesWithIssues(&pb.Repository{
@@ -159,74 +148,17 @@ func InitializeDbEnvironment(t *testing.T, c context.Context, course *pb.Course,
 		if !repo.IsGroupRepo() {
 			continue
 		}
-		for _, createdTask := range createdTasksMap {
-			foundIssue := foundIssues[repo.RepositoryID][createdTask.Name]
-			issuesToCreate = append(issuesToCreate, &pb.Issue{
-				RepositoryID: repo.ID,
-				TaskID:       createdTasksMap[foundIssue.Name].ID,
-				IssueNumber:  foundIssue.IssueNumber,
-			})
+		for _, task := range createdTasks {
+			foundIssue, ok := foundIssues[repo.RepositoryID][task.Name]
+			if !ok {
+				continue
+			}
+			issuesToCreate = append(issuesToCreate, &pb.Issue{RepositoryID: repo.ID, TaskID: task.ID, IssueNumber: foundIssue.IssueNumber})
 		}
 	}
+
 	err = db.CreateIssues(issuesToCreate)
 	return db, cleanup, err
-}
-
-// TestInitializeDbEnvironment tests if db is correctly initialized.
-func TestInitializeDbEnvironment(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	course := &pb.Course{
-		Name:             qfTestOrg,
-		OrganizationPath: qfTestOrg,
-	}
-
-	ctx := context.Background()
-
-	db, callback, err := InitializeDbEnvironment(t, ctx, course, s)
-	defer callback()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	org, err := s.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	repos, err := db.GetRepositoriesWithIssues(&pb.Repository{
-		OrganizationID: org.GetID(),
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Logf("\n\nRepositories and issues:\n")
-	for _, repo := range repos {
-		t.Logf("\nRepository ID: %d\nRepository HTMLURL: %s\nRepository UserID: %d", repo.ID, repo.HTMLURL, repo.UserID)
-		for _, issue := range repo.Issues {
-			t.Logf("\nIssue ID: %d\nIssue RepositoryID: %d\nIssue TaskID: %d\nIssue IssueNumber: %d", issue.ID, issue.RepositoryID, issue.TaskID, issue.IssueNumber)
-		}
-	}
-
-	assignments, err := db.GetAssignmentsByCourse(course.ID, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Logf("\n\nAssignments:\n")
-	for _, assignment := range assignments {
-		t.Logf("\nAssignment ID: %d\nAssignment Name: %s", assignment.ID, assignment.Name)
-		tasks, _ := db.GetTasks(&pb.Task{AssignmentID: assignment.GetID()})
-		for _, task := range tasks {
-			t.Logf("\nTask ID: %d\nTask AssignmentID: %d\nTask Name: %s\nTask Title: %s\nTask Body: %s", task.ID, task.AssignmentID, task.Name, task.Title, task.Body)
-		}
-	}
 }
 
 // TestHandleTasks runs handleTasks() on specified org. Results vary depending on what tasks/issues existed prior to running.
@@ -247,7 +179,7 @@ func TestHandleTasks(t *testing.T) {
 	ctx := context.Background()
 	logger := zap.NewNop().Sugar()
 
-	db, callback, err := InitializeDbEnvironment(t, ctx, course, s)
+	db, callback, err := taskTestingDB(t, ctx, course, s)
 	defer callback()
 	if err != nil {
 		t.Fatal(err)

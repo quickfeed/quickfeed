@@ -9,7 +9,7 @@ import (
 )
 
 // TODO(Meling): Methods such as GetTasks and CreateTasks are not necessary, except for in tests. They therefore need to be a part of the interface, even though they are not actually used.
-// Is there a better way of handleing this?
+// Is there a better way of handeling this?
 
 // GetTasks gets tasks based on query
 func (db *GormDB) GetTasks(query *pb.Task) ([]*pb.Task, error) {
@@ -51,8 +51,7 @@ func (db *GormDB) CreateIssues(issues []*pb.Issue) error {
 }
 
 // DeleteIssuesOfAssociatedTasks deletes a batch of issues
-func (db *GormDB) DeleteIssuesOfAssociatedTasks(tasks []*pb.Task) ([]*pb.Issue, error) {
-	deletedIssues := []*pb.Issue{}
+func (db *GormDB) DeleteIssuesOfAssociatedTasks(tasks []*pb.Task) error {
 	err := db.conn.Transaction(func(tx *gorm.DB) error {
 		for _, task := range tasks {
 			issues, err := db.getIssues(&pb.Issue{TaskID: task.ID})
@@ -63,18 +62,16 @@ func (db *GormDB) DeleteIssuesOfAssociatedTasks(tasks []*pb.Task) ([]*pb.Issue, 
 			if err = tx.Delete(issues).Error; err != nil {
 				return err
 			}
-			deletedIssues = append(deletedIssues, issues...)
 		}
 		return nil
 	})
-	return deletedIssues, err
+	return err
 }
 
 // SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks
 func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) (createdTasks, updatedTasks, deletedTasks []*pb.Task, err error) {
 	createdTasks = []*pb.Task{}
 	updatedTasks = []*pb.Task{}
-	// TODO(Espeland): Might be a problem when having to find associated issues if parent task has already been deleted. Should test.
 	deletedTasks = []*pb.Task{}
 	assignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
 	if err != nil {
