@@ -61,7 +61,7 @@ func mapTasksByID(tasks []*pb.Task) map[uint64]*pb.Task {
 	return taskMap
 }
 
-func handleTasks(c context.Context, db database.Database, s scm.SCM, course *pb.Course, assignments []*pb.Assignment) error {
+func handleTasks(ctx context.Context, db database.Database, sc scm.SCM, course *pb.Course, assignments []*pb.Assignment) error {
 	createdIssues := []*pb.Issue{}
 	var err error
 
@@ -84,15 +84,15 @@ func handleTasks(c context.Context, db database.Database, s scm.SCM, course *pb.
 			continue
 		}
 
-		repoCreatedIssues, err := createIssues(c, s, course, repo, createdTasks)
+		repoCreatedIssues, err := createIssues(ctx, sc, course, repo, createdTasks)
 		if err != nil {
 			return err
 		}
 		createdIssues = append(createdIssues, repoCreatedIssues...)
-		if err = updateIssues(c, s, course, repo, updatedTasks, false); err != nil {
+		if err = updateIssues(ctx, sc, course, repo, updatedTasks, false); err != nil {
 			return err
 		}
-		if err = updateIssues(c, s, course, repo, deletedTasks, true); err != nil {
+		if err = updateIssues(ctx, sc, course, repo, deletedTasks, true); err != nil {
 			return err
 		}
 	}
@@ -102,12 +102,11 @@ func handleTasks(c context.Context, db database.Database, s scm.SCM, course *pb.
 		return err
 	}
 	// Creating issues in database, based on issues created on scm.
-	err = db.CreateIssues(createdIssues)
-	return err
+	return db.CreateIssues(createdIssues)
 }
 
 // createIssues creates issues on scm based on repository, course and tasks. Returns created issues.
-func createIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repository, tasks []*pb.Task) ([]*pb.Issue, error) {
+func createIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.Repository, tasks []*pb.Task) ([]*pb.Issue, error) {
 	createdIssues := []*pb.Issue{}
 	for _, task := range tasks {
 		issueOptions := &scm.CreateIssueOptions{
@@ -116,7 +115,7 @@ func createIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repo
 			Title:        task.Title,
 			Body:         task.Body,
 		}
-		scmIssue, err := s.CreateIssue(c, issueOptions)
+		scmIssue, err := sc.CreateIssue(ctx, issueOptions)
 		if err != nil {
 			return createdIssues, err
 		}
@@ -130,7 +129,7 @@ func createIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repo
 }
 
 // updateIssues updates issues based on repository, course and tasks. It handles deleted tasks by closing them and inserting a statement into the body.
-func updateIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repository, tasks []*pb.Task, handleDeletion bool) error {
+func updateIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.Repository, tasks []*pb.Task, handleDeletion bool) error {
 	taskMap := mapTasksByID(tasks)
 	for _, issue := range repo.Issues {
 		task, ok := taskMap[issue.TaskID]
@@ -151,7 +150,7 @@ func updateIssues(c context.Context, s scm.SCM, course *pb.Course, repo *pb.Repo
 			Body:         body,
 			State:        state,
 		}
-		if _, err := s.EditRepoIssue(c, int(issue.IssueNumber), issueOptions); err != nil {
+		if _, err := sc.EditRepoIssue(ctx, int(issue.IssueNumber), issueOptions); err != nil {
 			return err
 		}
 	}
