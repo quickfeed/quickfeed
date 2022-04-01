@@ -20,4 +20,5 @@ jobs:
         run: npm i
 
       - name: Run tests
+        working-directory: ./dev/src/__tests__
         run: npm test
