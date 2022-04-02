@@ -31,13 +31,12 @@ type foundIssue struct {
 // It is also recommended that issues are created on all student repositories, and that they are the same.
 
 // populateDatabaseWithTasks based on the given course's organization.
-func populateDatabaseWithTasks(t *testing.T, ctx context.Context, course *pb.Course, sc scm.SCM) (database.Database, func(), error) {
+func populateDatabaseWithTasks(t *testing.T, ctx context.Context, db database.Database, sc scm.SCM, course *pb.Course) error {
 	t.Helper()
-	db, cleanup := qtest.TestDB(t)
 
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
 	if err != nil {
-		return db, cleanup, err
+		return err
 	}
 
 	admin := qtest.CreateFakeUser(t, db, uint64(1))
@@ -46,16 +45,16 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, course *pb.Cou
 	// Find and create assignments
 	foundAssignments, _, err := fetchAssignments(ctx, zap.NewNop().Sugar(), sc, course)
 	if err != nil {
-		return db, cleanup, err
+		return err
 	}
 
 	if err = db.UpdateAssignments(foundAssignments); err != nil {
-		return db, cleanup, err
+		return err
 	}
 
 	repos, err := sc.GetRepositories(ctx, org)
 	if err != nil {
-		return db, cleanup, err
+		return err
 	}
 
 	foundIssues := make(map[uint64]map[string]*foundIssue)
@@ -104,7 +103,7 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, course *pb.Cou
 
 		err = db.CreateRepository(dbRepo)
 		if err != nil {
-			return db, cleanup, err
+			return err
 		}
 
 		existingScmIssues, err := sc.GetRepoIssues(ctx, &scm.RepositoryOptions{
@@ -112,7 +111,7 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, course *pb.Cou
 			Path:  repo.Path,
 		})
 		if err != nil {
-			return db, cleanup, err
+			return err
 		}
 
 		if len(existingScmIssues) == 0 {
@@ -124,7 +123,7 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, course *pb.Cou
 			name := splitTitle[0]
 			temp, err := strconv.Atoi(splitTitle[len(splitTitle)-1])
 			if err != nil {
-				return db, cleanup, err
+				return err
 			}
 			assignmentOrder := uint32(temp)
 			foundIssues[repo.ID][name] = &foundIssue{IssueNumber: uint64(scmIssue.IssueNumber), Name: name}
@@ -139,14 +138,14 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, course *pb.Cou
 
 	createdTasks, _, _, err := db.SynchronizeAssignmentTasks(course, tasks)
 	if err != nil {
-		return db, cleanup, err
+		return err
 	}
 
 	dbRepos, err := db.GetRepositoriesWithIssues(&pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
 	})
 	if err != nil {
-		return db, cleanup, err
+		return err
 	}
 
 	issuesToCreate := []*pb.Issue{}
@@ -163,8 +162,7 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, course *pb.Cou
 		}
 	}
 
-	err = db.CreateIssues(issuesToCreate)
-	return db, cleanup, err
+	return db.CreateIssues(issuesToCreate)
 }
 
 // TestHandleTasks runs handleTasks() on the specified organization.
@@ -185,9 +183,10 @@ func TestHandleTasks(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	db, callback, err := populateDatabaseWithTasks(t, ctx, course, scm)
-	defer callback()
-	if err != nil {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	if err = populateDatabaseWithTasks(t, ctx, db, scm, course); err != nil {
 		t.Fatal(err)
 	}
 
