@@ -18,9 +18,15 @@ type foundIssue struct {
 	Name        string
 }
 
-// The test environment creates tasks based on the issues that are found on student repositories on the org. This is so that we can emulate the result of a previous push to the tests repository.
-// For these tasks to be created correctly the title of each has to be of the following format: "<task name>, <assignment order>".
-// For example if an issue is supposed to relate to the task: "task-hello_world.md" in "lab1", then the title of the corresponding issue would be: "lab1/hello_world, 1" (assuming lab1 has assignment order 1).
+// The test environment creates tasks based on the issues found on student repositories in the organization.
+// This is so that we can emulate the result of a previous push to the tests repository.
+// For these tasks to be created correctly the title of each task must use the following format:
+//   "<task name>, <assignment order>".
+//
+// For example if an issue is relate to "task-hello_world.md" in "lab1",
+// then the title of the corresponding issue should be:
+//   "lab1/hello_world, 1" (assuming lab1 has assignment order 1).
+//
 // It is also recommended that issues are created on all student repositories, and that they are the same.
 
 // taskTestingDB initializes a db based on org.
