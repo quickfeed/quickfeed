@@ -9,6 +9,7 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/internal/qtest"
+	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"go.uber.org/zap"
 )
@@ -29,32 +30,30 @@ type foundIssue struct {
 //
 // It is also recommended that issues are created on all student repositories, and that they are the same.
 
-// taskTestingDB initializes a db based on org.
-func taskTestingDB(t *testing.T, c context.Context, course *pb.Course, s scm.SCM) (database.Database, func(), error) {
+// populateDatabaseWithTasks based on the given course's organization.
+func populateDatabaseWithTasks(t *testing.T, ctx context.Context, course *pb.Course, sc scm.SCM) (database.Database, func(), error) {
+	t.Helper()
 	db, cleanup := qtest.TestDB(t)
 
-	org, err := s.GetOrganization(c, &scm.GetOrgOptions{Name: course.Name})
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
 	if err != nil {
 		return db, cleanup, err
 	}
 
-	// Create course
 	admin := qtest.CreateFakeUser(t, db, uint64(1))
 	qtest.CreateCourse(t, db, admin, course)
 
 	// Find and create assignments
-	foundAssignments, _, err := fetchAssignments(c, zap.NewNop().Sugar(), s, course)
+	foundAssignments, _, err := fetchAssignments(ctx, zap.NewNop().Sugar(), sc, course)
 	if err != nil {
 		return db, cleanup, err
 	}
 
-	err = db.UpdateAssignments(foundAssignments)
-	if err != nil {
+	if err = db.UpdateAssignments(foundAssignments); err != nil {
 		return db, cleanup, err
 	}
 
-	// Get repositories
-	repos, err := s.GetRepositories(c, org)
+	repos, err := sc.GetRepositories(ctx, org)
 	if err != nil {
 		return db, cleanup, err
 	}
@@ -97,7 +96,8 @@ func taskTestingDB(t *testing.T, c context.Context, course *pb.Course, s scm.SCM
 				OrganizationID: org.GetID(),
 				UserID:         user.ID,
 				HTMLURL:        repo.WebURL,
-				// Since tasks are only to be managed for group-repositories, we assume while testing, that every student-repository is a group-repository
+				// For testing purposes, we will assume that all student repositories are group repositories
+				// since tasks are only supported for groups anyway.
 				RepoType: pb.Repository_GROUP,
 			}
 		}
@@ -107,7 +107,7 @@ func taskTestingDB(t *testing.T, c context.Context, course *pb.Course, s scm.SCM
 			return db, cleanup, err
 		}
 
-		existingScmIssues, err := s.GetRepoIssues(c, &scm.RepositoryOptions{
+		existingScmIssues, err := sc.GetRepoIssues(ctx, &scm.RepositoryOptions{
 			Owner: course.Name,
 			Path:  repo.Path,
 		})
@@ -167,12 +167,14 @@ func taskTestingDB(t *testing.T, c context.Context, course *pb.Course, s scm.SCM
 	return db, cleanup, err
 }
 
-// TestHandleTasks runs handleTasks() on specified org. Results vary depending on what tasks/issues existed prior to running.
+// TestHandleTasks runs handleTasks() on the specified organization.
+// Results vary depending on what tasks/issues existed prior to running.
 func TestHandleTasks(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	logger := log.Zap(false).Sugar()
+	scm, err := scm.NewSCMClient(logger, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -183,21 +185,18 @@ func TestHandleTasks(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	logger := zap.NewNop().Sugar()
-
-	db, callback, err := taskTestingDB(t, ctx, course, s)
+	db, callback, err := populateDatabaseWithTasks(t, ctx, course, scm)
 	defer callback()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assignments, _, err := fetchAssignments(ctx, logger, s, course)
+	assignments, _, err := fetchAssignments(ctx, logger, scm, course)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = handleTasks(ctx, db, s, course, assignments)
-	if err != nil {
+	if err = handleTasks(ctx, db, scm, course, assignments); err != nil {
 		t.Fatal(err)
 	}
 }
