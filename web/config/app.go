@@ -14,6 +14,12 @@ import (
 	gh "github.com/google/go-github/v35/github"
 )
 
+const (
+	AppEnv    = "APP_ID"
+	KeyEnv    = "APP_KEY"
+	SecretEnv = "APP_SECRET"
+)
+
 // GithubAppConfig keeps parameters of the GitHub app
 type GithubAppConfig struct {
 	AppID    string
@@ -21,13 +27,13 @@ type GithubAppConfig struct {
 	Secret   string
 }
 
-// TODO: rename because confusing
+// TODO(vera): rename because confusing
 type GithubApp struct {
 	Config *GithubAppConfig
 	App    *app.Config
 }
 
-func NewAppConfig() *GithubAppConfig {
+func newAppConfig() *GithubAppConfig {
 	return &GithubAppConfig{
 		AppID:    os.Getenv(AppEnv),
 		ClientID: os.Getenv(KeyEnv),
@@ -45,7 +51,7 @@ func (conf *GithubAppConfig) Valid() bool {
 // To access organizations via GitHub API we need to derive an installation client
 // from this Application client for each course organization
 func NewApp() (*GithubApp, error) {
-	config := NewAppConfig()
+	config := newAppConfig()
 	if !config.Valid() {
 		return nil, fmt.Errorf("error configuring GitHub App: %+v", config)
 	}
@@ -70,7 +76,7 @@ func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg str
 		return nil, fmt.Errorf("error fetching installations for GitHub app %s: %s", ghApp.Config.AppID, err)
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body) // response body is []byte
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading installation response: %s", err)
 	}

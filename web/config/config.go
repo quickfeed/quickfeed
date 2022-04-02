@@ -10,9 +10,6 @@ import (
 const (
 	// Environmental variables
 	WebhookEnv = "WEBHOOK_SECRET"
-	AppEnv     = "APP_ID"
-	KeyEnv     = "APP_KEY"
-	SecretEnv  = "APP_SECRET"
 	JWTKeyEnv  = "JWT_KEY" // TODO: where to store? Or reuse another secret?
 
 	// Endpoints
