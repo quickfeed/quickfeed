@@ -11,6 +11,9 @@ import (
 	"github.com/autograde/quickfeed/scm"
 )
 
+// Message added to the body of an issue when closing it, since there is no support for deleting issues.
+const deleteMsg = "\n**The task associated with this issue has been deleted by the teaching staff.**\n"
+
 // taskName returns the task name as a combination of assignmentName/filename
 // excluding the task- prefix and the .md suffix.
 func taskName(assignmentName, basePath string) string {
@@ -52,7 +55,7 @@ func tasksFromAssignments(assignments []*pb.Assignment) map[uint32]map[string]*p
 	return taskMap
 }
 
-// mapTasksByID returns a map, mapping each task to its ID.
+// mapTasksByID transforms the given tasks to a map from taskID to task.
 func mapTasksByID(tasks []*pb.Task) map[uint64]*pb.Task {
 	taskMap := make(map[uint64]*pb.Task)
 	for _, task := range tasks {
@@ -62,9 +65,6 @@ func mapTasksByID(tasks []*pb.Task) map[uint64]*pb.Task {
 }
 
 func handleTasks(ctx context.Context, db database.Database, sc scm.SCM, course *pb.Course, assignments []*pb.Assignment) error {
-	createdIssues := []*pb.Issue{}
-	var err error
-
 	tasksFromTestsRepo := tasksFromAssignments(assignments)
 	createdTasks, updatedTasks, deletedTasks, err := db.SynchronizeAssignmentTasks(course, tasksFromTestsRepo)
 	if err != nil {
@@ -79,11 +79,11 @@ func handleTasks(ctx context.Context, db database.Database, sc scm.SCM, course *
 	}
 
 	// Creates, updates and deletes issues on all group repositories, based on how tasks differ from last push.
+	createdIssues := []*pb.Issue{}
 	for _, repo := range repos {
 		if !repo.IsGroupRepo() {
 			continue
 		}
-
 		repoCreatedIssues, err := createIssues(ctx, sc, course, repo, createdTasks)
 		if err != nil {
 			return err
@@ -141,7 +141,7 @@ func updateIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 		body := task.Body
 		if handleDeletion {
 			state = "closed"
-			body = task.Body + "\n**Task associated with this issue has been deleted by teacher**"
+			body = deleteMsg + task.Body
 		}
 		issueOptions := &scm.CreateIssueOptions{
 			Organization: course.Name,
