@@ -24,16 +24,15 @@ func getTasksFromAssignments(assignments []*pb.Assignment) map[uint32]map[string
 	return taskMap
 }
 
-// taskTestingDB initializes a database used for task related tests.
-func taskTestingDB(t *testing.T) (database.Database, func(), *pb.Course, error) {
-	db, cleanup := qtest.TestDB(t)
-
+// createCourseWithAssignments creates a course with two assignments.
+func createCourseWithAssignments(t *testing.T, db database.Database) *pb.Course {
+	t.Helper()
 	admin := qtest.CreateFakeUser(t, db, uint64(1))
 	qtest.CreateCourse(t, db, admin, &pb.Course{})
 
 	course, err := db.GetCourse(1, false)
 	if err != nil {
-		return db, cleanup, nil, err
+		t.Fatal(err)
 	}
 	assignments := []*pb.Assignment{
 		{CourseID: course.GetID(), Name: "Lab1", Order: 1},
@@ -41,12 +40,11 @@ func taskTestingDB(t *testing.T) (database.Database, func(), *pb.Course, error) 
 	}
 
 	for _, assignment := range assignments {
-		err := db.CreateAssignment(assignment)
-		if err != nil {
-			return db, cleanup, nil, err
+		if err := db.CreateAssignment(assignment); err != nil {
+			t.Error(err)
 		}
 	}
-	return db, cleanup, course, nil
+	return course
 }
 
 // initialAssignments simulates getting assignments parsed from tests repository.
@@ -66,11 +64,9 @@ func initialAssignments() ([]*pb.Assignment, []*pb.Task) {
 }
 
 func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
-	db, cleanup, course, err := taskTestingDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	if err != nil {
-		t.Fatal(err)
-	}
+	course := createCourseWithAssignments(t, db)
 
 	assignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
 	if err != nil || len(assignments) == 0 {
@@ -87,16 +83,14 @@ func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
 
 // TestSynchronizeTasks tests whether tasks are correctly updated in the database
 func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
-	db, cleanup, course, err := taskTestingDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	if err != nil {
-		t.Fatal(err)
-	}
+	course := createCourseWithAssignments(t, db)
 
 	foundAssignments1, foundTasks1 := initialAssignments()
 
 	// Should create a new database-record for each task in foundTasks
-	if _, _, _, err = db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments1)); err != nil {
+	if _, _, _, err := db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments1)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -174,11 +168,9 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 
 // TestSynchronizeAssignmentTasksReturn tests if SynchronizeAssignmentTasks returns correct values
 func TestGormDBReturnSynchronizeAssignmentTasks(t *testing.T) {
-	db, cleanup, course, err := taskTestingDB(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	if err != nil {
-		t.Fatal(err)
-	}
+	course := createCourseWithAssignments(t, db)
 
 	foundAssignments1, foundTasks1 := initialAssignments()
 
