@@ -1,6 +1,7 @@
-import * as jspb from "google-protobuf"
+import * as jspb from 'google-protobuf'
 
 import * as kit_score_score_pb from '../kit/score/score_pb';
+
 
 export class User extends jspb.Message {
   getId(): number;
