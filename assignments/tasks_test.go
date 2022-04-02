@@ -67,7 +67,7 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.Su
 		// Might not even be necessary to handle repos differently in these tests.
 		var dbRepo *pb.Repository
 		switch repo.Path {
-		case "course-" + pb.InfoRepo:
+		case pb.InfoRepo:
 			dbRepo = &pb.Repository{
 				RepositoryID:   repo.ID,
 				OrganizationID: org.GetID(),
