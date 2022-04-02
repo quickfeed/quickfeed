@@ -55,7 +55,7 @@ func TestGetRepo(t *testing.T) {
 	}
 
 	_, scms := qtest.FakeProviderMap(t)
-	ags := NewAutograderService(zap.NewNop(), db, scms, BaseHookOptions{}, &ci.Local{})
+	ags := NewAutograderService(zap.NewNop(), db, scms, qtest.TestConfig(t), &ci.Local{})
 	gotUserRepo, err := ags.getRepo(course, user.ID, pb.Repository_USER)
 	if err != nil {
 		t.Fatal(err)
@@ -93,7 +93,7 @@ func TestGetRepositories(t *testing.T) {
 	qtest.CreateCourse(t, db, user, course)
 
 	_, scms := qtest.FakeProviderMap(t)
-	ags := NewAutograderService(zap.NewNop(), db, scms, BaseHookOptions{}, &ci.Local{})
+	ags := NewAutograderService(zap.NewNop(), db, scms, qtest.TestConfig(t), &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), user)
 
 	// check that no repositories are returned when no repo types are specified

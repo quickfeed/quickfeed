@@ -49,7 +49,7 @@ func TestGetSelf(t *testing.T) {
 		return lis.Dial()
 	}
 
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, qtest.TestConfig(t), &ci.Local{})
 	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier())
 	s := grpc.NewServer(opt)
 	pb.RegisterAutograderServiceServer(s, ags)
@@ -129,7 +129,7 @@ func TestGetUsers(t *testing.T) {
 	defer cleanup()
 
 	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, qtest.TestConfig(t), &ci.Local{})
 	unexpectedUsers, err := ags.GetUsers(context.Background(), &pb.Void{})
 	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
 		t.Fatalf("found unexpected users %+v", unexpectedUsers)
@@ -193,7 +193,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 
 	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, qtest.TestConfig(t), &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	// users to enroll in course DAT520 Distributed Systems
@@ -263,7 +263,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	admin := users[0]
 
 	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, qtest.TestConfig(t), &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	course := allCourses[1]
@@ -340,7 +340,7 @@ func TestUpdateUser(t *testing.T) {
 	nonAdminUser := qtest.CreateFakeUser(t, db, 11)
 
 	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, qtest.TestConfig(t), &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), firstAdminUser)
 
 	// we want to update nonAdminUser to become admin
@@ -397,7 +397,7 @@ func TestUpdateUserFailures(t *testing.T) {
 	qtest.CreateFakeUser(t, db, 11)
 
 	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, qtest.TestConfig(t), &ci.Local{})
 
 	u := qtest.CreateFakeUser(t, db, 3)
 	if u.IsAdmin {

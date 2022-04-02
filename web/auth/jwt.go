@@ -18,7 +18,7 @@ type Claims struct {
 }
 
 type TokenManager struct {
-	TokensToUpdate []uint64
+	TokensToUpdate []uint64 // UserID
 }
 
 // TODO: probably most of these methods (and struct fields) can be changed to unexported

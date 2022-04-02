@@ -54,8 +54,8 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 
 	// create a push hook on organization level
 	hookOptions := &scm.CreateHookOptions{
-		URL:          auth.GetEventsURL(s.config.Endpoints.BaseURL, request.Provider),
-		Secret:       s.config.Secrets.WebhookSecret,
+		URL:          auth.GetEventsURL(s.Config.Endpoints.BaseURL, request.Provider),
+		Secret:       s.Config.Secrets.WebhookSecret,
 		Organization: org.Path,
 	}
 

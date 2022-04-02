@@ -15,6 +15,7 @@ import (
 	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web/auth"
+	"github.com/autograde/quickfeed/web/config"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -46,6 +47,12 @@ func TestDB(t *testing.T) (database.Database, func()) {
 			t.Error(err)
 		}
 	}
+}
+
+// TestConfig creates a configuration for test instance of the AutograderService
+func TestConfig(t *testing.T) *config.Config {
+	// TODO: add a file with all test-specific configuration constants to qtest package
+	return config.NewConfig("tmp", "tmp", "tmp")
 }
 
 // CreateFakeUser is a test helper to create a user in the database
