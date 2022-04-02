@@ -24,7 +24,7 @@ type foundIssue struct {
 // For these tasks to be created correctly the title of each task must use the following format:
 //   "<task name>, <assignment order>".
 //
-// For example if an issue is relate to "task-hello_world.md" in "lab1",
+// For example if an issue is related to "task-hello_world.md" in "lab1",
 // then the title of the corresponding issue should be:
 //   "lab1/hello_world, 1" (assuming lab1 has assignment order 1).
 //
