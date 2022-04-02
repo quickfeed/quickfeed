@@ -455,6 +455,10 @@ export const setActiveCourse = ({ state }: Context, courseID: number): void => {
     state.activeCourse = courseID
 }
 
+export const setActiveFavorite = ({ state }: Context, isActive: boolean): void => {
+    state.showFavorites = isActive
+}
+
 export const setActiveAssignment = ({ state }: Context, assignmentID: number): void => {
     state.activeAssignment = assignmentID
 }
