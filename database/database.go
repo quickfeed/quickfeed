@@ -111,6 +111,7 @@ type Database interface {
 	UpdateSubmission(*pb.Submission) error
 	// UpdateSubmissions releases and/or approves all submissions with a certain score
 	UpdateSubmissions(uint64, *pb.Submission) error
+
 	// GetReview returns a single review matching the given query.
 	GetReview(query *pb.Review) (*pb.Review, error)
 	// CreateReview adds a new submission review.
@@ -127,6 +128,13 @@ type Database interface {
 	GetRepositories(query *pb.Repository) ([]*pb.Repository, error)
 	// DeleteRepository deletes repository for the given remote provider's ID.
 	DeleteRepository(remoteID uint64) error
+
+	// GetTokenRecord returns all current update token records.
+	GetTokenRecords() ([]*pb.UpdateTokenRecord, error)
+	// UpdateTokenRecord adds a new update token record.
+	CreateTokenRecord(*pb.UpdateTokenRecord) error
+	// DeleteTokenRecord deletes an update token record.
+	DeleteTokenRecord(*pb.UpdateTokenRecord) error
 
 	// UpdateSlipDays updates used slipdays for the given course enrollment
 	UpdateSlipDays([]*pb.UsedSlipDays) error

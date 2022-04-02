@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -47,15 +47,15 @@ func (conf *GithubAppConfig) Valid() bool {
 func NewApp() (*GithubApp, error) {
 	config := NewAppConfig()
 	if !config.Valid() {
-		return nil, fmt.Errorf("Error configuring GitHub App: %+v", config)
+		return nil, fmt.Errorf("error configuring GitHub App: %+v", config)
 	}
 	appKey, err := key.FromFile(appKeyPath)
 	if err != nil {
-		return nil, fmt.Errorf("Error reading key from file: %s", err)
+		return nil, fmt.Errorf("error reading key from file: %s", err)
 	}
 	appClientConfig, err := app.NewConfig(config.AppID, appKey)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating GitHub application client: %s", err)
+		return nil, fmt.Errorf("error creating GitHub application client: %s", err)
 	}
 	return &GithubApp{
 		Config: config,
@@ -67,32 +67,30 @@ func NewApp() (*GithubApp, error) {
 func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg string) (*gh.Client, error) {
 	resp, err := ghApp.App.Client().Get(InstallationsAPI)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot get installations for App %s: %s", ghApp.Config.AppID, err)
+		return nil, fmt.Errorf("error fetching installations for GitHub app %s: %s", ghApp.Config.AppID, err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body) // response body is []byte
+	body, err := io.ReadAll(resp.Body) // response body is []byte
 	if err != nil {
-		return nil, fmt.Errorf("Error reading installation response: %s", err)
+		return nil, fmt.Errorf("error reading installation response: %s", err)
 	}
 	var installations []*gh.Installation
 	if err := json.Unmarshal(body, &installations); err != nil {
-		return nil, fmt.Errorf("Error unmarshalling installation response: %s", err)
+		return nil, fmt.Errorf("error unmarshalling installation response: %s", err)
 	}
 	var installationID int64
 	for _, inst := range installations {
 		log.Println("Checking installation ", *inst.Account.Login)
 		if *inst.Account.Login == courseOrg {
-			log.Println("Found installation for ", courseOrg)
-			log.Println("Installation ID is ", *inst.ID)
 			installationID = *inst.ID
 		}
 	}
 	if installationID == 0 {
-		return nil, fmt.Errorf("Installation not found for organization %s", courseOrg)
+		return nil, fmt.Errorf("cannot find GitHub app installation for organization %s", courseOrg)
 	}
 	install, err := ghApp.App.InstallationConfig(strconv.Itoa(int(installationID)))
 	if err != nil {
-		return nil, fmt.Errorf("Error configuring github client for installation: %s", err)
+		return nil, fmt.Errorf("error configuring github client for installation: %s", err)
 	}
-	return gh.NewClient(install.Client(ctx)), err
+	return gh.NewClient(install.Client(ctx)), nil
 }

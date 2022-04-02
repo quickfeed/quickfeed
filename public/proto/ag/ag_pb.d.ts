@@ -1104,6 +1104,28 @@ export namespace Organizations {
   }
 }
 
+export class UpdateTokenRecord extends jspb.Message {
+  getId(): number;
+  setId(value: number): UpdateTokenRecord;
+
+  getUserid(): number;
+  setUserid(value: number): UpdateTokenRecord;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UpdateTokenRecord.AsObject;
+  static toObject(includeInstance: boolean, msg: UpdateTokenRecord): UpdateTokenRecord.AsObject;
+  static serializeBinaryToWriter(message: UpdateTokenRecord, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UpdateTokenRecord;
+  static deserializeBinaryFromReader(message: UpdateTokenRecord, reader: jspb.BinaryReader): UpdateTokenRecord;
+}
+
+export namespace UpdateTokenRecord {
+  export type AsObject = {
+    id: number,
+    userid: number,
+  }
+}
+
 export class EnrollmentRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): EnrollmentRequest;
