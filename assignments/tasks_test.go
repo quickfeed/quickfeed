@@ -65,43 +65,27 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.Su
 	for _, repo := range repos {
 		var user *pb.User
 		// Might not even be necessary to handle repos differently in these tests.
-		var dbRepo *pb.Repository
+		dbRepo := &pb.Repository{
+			RepositoryID:   repo.ID,
+			OrganizationID: org.GetID(),
+			HTMLURL:        repo.WebURL,
+		}
 		switch repo.Path {
 		case pb.InfoRepo:
-			dbRepo = &pb.Repository{
-				RepositoryID:   repo.ID,
-				OrganizationID: org.GetID(),
-				HTMLURL:        repo.WebURL,
-				RepoType:       pb.Repository_COURSEINFO,
-			}
+			dbRepo.RepoType = pb.Repository_COURSEINFO
 		case pb.AssignmentRepo:
-			dbRepo = &pb.Repository{
-				RepositoryID:   repo.ID,
-				OrganizationID: org.GetID(),
-				HTMLURL:        repo.WebURL,
-				RepoType:       pb.Repository_ASSIGNMENTS,
-			}
+			dbRepo.RepoType = pb.Repository_ASSIGNMENTS
 		case pb.TestsRepo:
-			dbRepo = &pb.Repository{
-				RepositoryID:   repo.ID,
-				OrganizationID: org.GetID(),
-				HTMLURL:        repo.WebURL,
-				RepoType:       pb.Repository_TESTS,
-			}
+			dbRepo.RepoType = pb.Repository_TESTS
 		default:
 			user = qtest.CreateFakeUser(t, db, nxtRemoteID)
-			dbRepo = &pb.Repository{
-				RepositoryID:   repo.ID,
-				OrganizationID: org.GetID(),
-				UserID:         user.ID,
-				HTMLURL:        repo.WebURL,
-				// For testing purposes, assume all student repositories are group repositories
-				// since tasks are only supported for groups anyway.
-				RepoType: pb.Repository_GROUP,
-			}
+			// For testing purposes, assume all student repositories are group repositories
+			// since tasks are only supported for groups anyway.
+			dbRepo.RepoType = pb.Repository_GROUP
+			dbRepo.UserID = user.GetID()
 		}
 
-		t.Logf("create repo: %v %v", dbRepo, user)
+		t.Logf("create repo: %v", dbRepo)
 		if err = db.CreateRepository(dbRepo); err != nil {
 			return err
 		}
@@ -171,7 +155,7 @@ func TestHandleTasks(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
-	logger := log.Zap(true).Sugar()
+	logger := log.Zap(false).Sugar()
 	scm, err := scm.NewSCMClient(logger, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
