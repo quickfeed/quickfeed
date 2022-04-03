@@ -48,30 +48,48 @@ func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 		wh.logger.Debug(log.IndentJson(e))
 		wh.handlePush(e)
 	case *github.PullRequestEvent:
+		wh.logger.Debug(log.IndentJson(e))
 		wh.handlePullRequest(e)
+	case *github.PullRequestReviewEvent:
+		wh.logger.Debug(log.IndentJson(e))
+		wh.handlePullRequestReview(e)
 	default:
 		wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
 	}
 }
 
 func (wh GitHubWebHook) handlePullRequest(payload *github.PullRequestEvent) {
-	wh.logger.Debugf("Received pull request event for repository: %s", *payload.GetRepo().Name)
-	wh.logger.Debugf("%s", payload.GetAction())
 	switch payload.GetAction() {
+	// TODO(Espeland): Make these actions into global variables?
 	case "opened": // After pr has been created
-		handlePullRequestOpen(payload)
+		wh.handlePullRequestOpened(payload)
 	case "closed": // After pr has been approved, and is merged back in (This event is sent when someone closes pr, or when someone clicks merge pr. In case of merge, a push event is also sent)
-		handlePullRequestClose(payload)
+		wh.handlePullRequestClosed(payload)
 	}
 }
 
-func handlePullRequestOpen(payload *github.PullRequestEvent) {
-	// Check if pull request already exists in db. Can happen if someone closes, and then reopens pull request?
-	// If it does not exist, create new pull request data-record.
+func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestReviewEvent) {
 	return
 }
 
-func handlePullRequestClose(payload *github.PullRequestEvent) {
+func (wh GitHubWebHook) handlePullRequestOpened(payload *github.PullRequestEvent) {
+	wh.logger.Debugf("Received pull request opened event for repository: %s, in organization: %s",
+		payload.GetRepo().GetName(), payload.GetOrganization().GetName())
+
+	// TODO(Espeland): Should maybe have a check here to see if the pull request is linked to a valid issue.
+	pullRequest := &pb.PullRequest{
+		ID: uint64(payload.PullRequest.GetID()),
+		// TODO(Espeland): Probably a way of approved being automatically set to false
+		Approved: false,
+	}
+
+	if err := wh.db.CreatePullRequest(pullRequest); err != nil {
+		wh.logger.Errorf("Failed to create pull request record for repository %s: %v", payload.GetRepo().GetFullName(), err)
+		return
+	}
+}
+
+func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent) {
 	// What if someone closes the pull request, without it being approved?
 	return
 }

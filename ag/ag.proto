@@ -199,6 +199,12 @@ message Issue {
     uint64 issueNumber  = 4;  // Issue number on scm. Needed for associating db issue with scm issue
 }
 
+message PullRequest {
+    uint64 ID               = 1;
+    uint64 pullRequestID    = 2; // Represents the external pull request ID
+    bool approved           = 3;
+}
+
 message Assignments {
     repeated Assignment assignments = 1;
 }

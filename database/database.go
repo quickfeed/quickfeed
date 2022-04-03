@@ -138,6 +138,8 @@ type Database interface {
 	DeleteIssuesOfAssociatedTasks(tasks []*pb.Task) error
 	// SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks
 	SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) ([]*pb.Task, []*pb.Task, []*pb.Task, error)
+	// CreatePullRequest creates a pull request
+	CreatePullRequest(pullRequest *pb.PullRequest) error
 
 	// UpdateSlipDays updates used slipdays for the given course enrollment
 	UpdateSlipDays([]*pb.UsedSlipDays) error

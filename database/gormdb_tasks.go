@@ -122,3 +122,8 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint
 
 	return createdTasks, updatedTasks, deletedTasks, err
 }
+
+// CreatePullRequest creates a pull request
+func (db *GormDB) CreatePullRequest(pullRequest *pb.PullRequest) error {
+	return db.conn.Create(pullRequest).Error
+}

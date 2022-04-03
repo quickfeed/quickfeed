@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"testing"
 
+	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/internal/qtest"
 	logq "github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/google/go-cmp/cmp"
@@ -33,6 +35,12 @@ const (
 // will manually have to create a push event to the 'tests' repository.
 //
 // TODO(meling) add code to create a push event to the tests repository.
+
+func readyDBForWebHookTesting(t *testing.T, ctx context.Context, db database.Database, sc scm.SCM, course *pb.Course) error {
+	t.Helper()
+
+	return nil
+}
 
 func TestGitHubWebHook(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
@@ -65,41 +73,9 @@ func TestGitHubWebHook(t *testing.T) {
 	for _, hook := range hooks {
 		t.Logf("hook: %v", hook)
 	}
-	// TODO(meling) db is nil; will cause handling of push event to panic; will need a database with content for this to work fully.
-	var db database.Database
-	var runner ci.Runner
-	webhook := NewGitHubWebHook(logger, db, runner, secret)
 
-	log.Println("starting webhook server")
-	http.HandleFunc("/webhook", webhook.Handle)
-	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-func TestGitHubWebHooks(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-	serverURL := scm.GetWebHookServer(t)
-
-	logger := logq.Zap(true).Sugar()
-	defer func() { _ = logger.Sync() }()
-
-	s, err := scm.NewSCMClient(logger, "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ctx := context.Background()
-	opt := &scm.CreateHookOptions{
-		URL:          serverURL + "/webhook",
-		Secret:       secret,
-		Organization: qfTestOrg,
-	}
-
-	err = s.CreateHook(ctx, opt)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var db database.Database
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
 	var runner ci.Runner
 	webhook := NewGitHubWebHook(logger, db, runner, secret)
 

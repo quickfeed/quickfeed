@@ -1,6 +1,7 @@
-import * as jspb from "google-protobuf"
+import * as jspb from 'google-protobuf'
 
 import * as kit_score_score_pb from '../kit/score/score_pb';
+
 
 export class User extends jspb.Message {
   getId(): number;
@@ -705,6 +706,32 @@ export namespace Issue {
     repositoryid: number,
     taskid: number,
     issuenumber: number,
+  }
+}
+
+export class PullRequest extends jspb.Message {
+  getId(): number;
+  setId(value: number): PullRequest;
+
+  getPullrequestid(): number;
+  setPullrequestid(value: number): PullRequest;
+
+  getApproved(): boolean;
+  setApproved(value: boolean): PullRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): PullRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: PullRequest): PullRequest.AsObject;
+  static serializeBinaryToWriter(message: PullRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): PullRequest;
+  static deserializeBinaryFromReader(message: PullRequest, reader: jspb.BinaryReader): PullRequest;
+}
+
+export namespace PullRequest {
+  export type AsObject = {
+    id: number,
+    pullrequestid: number,
+    approved: boolean,
   }
 }
 
