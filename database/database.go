@@ -129,13 +129,6 @@ type Database interface {
 	// DeleteRepository deletes repository for the given remote provider's ID.
 	DeleteRepository(remoteID uint64) error
 
-	// GetTokenRecord returns all current update token records.
-	GetTokenRecords() ([]*pb.UpdateTokenRecord, error)
-	// UpdateTokenRecord adds a new update token record.
-	CreateTokenRecord(*pb.UpdateTokenRecord) error
-	// DeleteTokenRecord deletes an update token record.
-	DeleteTokenRecord(*pb.UpdateTokenRecord) error
-
 	// UpdateSlipDays updates used slipdays for the given course enrollment
 	UpdateSlipDays([]*pb.UsedSlipDays) error
 }

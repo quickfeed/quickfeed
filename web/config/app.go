@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strconv"
 
 	"github.com/beatlabs/github-auth/app"
 	"github.com/beatlabs/github-auth/key"
-	gh "github.com/google/go-github/v35/github"
+	gh "github.com/google/go-github/v43/github"
 )
 
 const (
@@ -86,9 +85,9 @@ func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg str
 	}
 	var installationID int64
 	for _, inst := range installations {
-		log.Println("Checking installation ", *inst.Account.Login)
 		if *inst.Account.Login == courseOrg {
 			installationID = *inst.ID
+			break
 		}
 	}
 	if installationID == 0 {

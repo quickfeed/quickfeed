@@ -25,6 +25,9 @@ export class User extends jspb.Message {
   getLogin(): string;
   setLogin(value: string): User;
 
+  getUpdatetoken(): boolean;
+  setUpdatetoken(value: boolean): User;
+
   getRemoteidentitiesList(): Array<RemoteIdentity>;
   setRemoteidentitiesList(value: Array<RemoteIdentity>): User;
   clearRemoteidentitiesList(): User;
@@ -52,6 +55,7 @@ export namespace User {
     email: string,
     avatarurl: string,
     login: string,
+    updatetoken: boolean,
     remoteidentitiesList: Array<RemoteIdentity.AsObject>,
     enrollmentsList: Array<Enrollment.AsObject>,
   }
@@ -1101,28 +1105,6 @@ export class Organizations extends jspb.Message {
 export namespace Organizations {
   export type AsObject = {
     organizationsList: Array<Organization.AsObject>,
-  }
-}
-
-export class UpdateTokenRecord extends jspb.Message {
-  getId(): number;
-  setId(value: number): UpdateTokenRecord;
-
-  getUserid(): number;
-  setUserid(value: number): UpdateTokenRecord;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): UpdateTokenRecord.AsObject;
-  static toObject(includeInstance: boolean, msg: UpdateTokenRecord): UpdateTokenRecord.AsObject;
-  static serializeBinaryToWriter(message: UpdateTokenRecord, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): UpdateTokenRecord;
-  static deserializeBinaryFromReader(message: UpdateTokenRecord, reader: jspb.BinaryReader): UpdateTokenRecord;
-}
-
-export namespace UpdateTokenRecord {
-  export type AsObject = {
-    id: number,
-    userid: number,
   }
 }
 
