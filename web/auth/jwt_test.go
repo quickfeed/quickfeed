@@ -5,25 +5,15 @@ import (
 
 	"github.com/autograde/quickfeed/ag"
 	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/web/auth"
+	"github.com/google/go-cmp/cmp"
 )
 
-func TestUpdateJWTClaims(t *testing.T) {
-	tokens := []*pb.UpdateTokenRecord{
-		{
-			ID:     1,
-			UserID: 1,
-		},
-		{
-			ID:     2,
-			UserID: 2,
-		},
-		{
-			ID:     3,
-			UserID: 3,
-		},
+func TestTokenManager(t *testing.T) {
+	manager := &auth.TokenManager{
+		TokensToUpdate: []uint64{2, 3, 4},
 	}
-	manager := &auth.TokenManager{TokensToUpdate: tokens}
 
 	claimsToUpdate := auth.Claims{
 		UserID:  2,
@@ -33,35 +23,55 @@ func TestUpdateJWTClaims(t *testing.T) {
 
 	claimsNoUpdate := auth.Claims{
 		UserID:  10,
-		Admin:   true,
+		Admin:   false,
 		Courses: make(map[uint64]pb.Enrollment_UserStatus, 0),
 	}
 
-	idNoUpdate := manager.JWTUpdateRequired(&claimsNoUpdate)
-	if idNoUpdate != -1 {
-		t.Errorf("expected index -1 (update not required), got %d", idNoUpdate)
+	if manager.UpdateRequired(&claimsNoUpdate) {
+		t.Error("expected false (update not required), got true")
 	}
-	idToUpdate := manager.JWTUpdateRequired(&claimsToUpdate)
-	if idToUpdate != int(claimsToUpdate.UserID) {
-		t.Errorf("expected user ID %d, got %d", claimsToUpdate.UserID, idToUpdate)
+
+	if !manager.UpdateRequired(&claimsToUpdate) {
+		t.Error("expected true (update required), got false")
 	}
-}
 
-func TestJWTDatabaseUpdates(t *testing.T) {
-	// db, cleanup := qtest.TestDB(t)
-	// defer cleanup()
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	manager.DB = db
 
-	// TODO(vera): create user, create user claims with different info, update,
-	// make sure new claims are correct
-}
+	admin := qtest.CreateFakeUser(t, db, 10)
+	course := &pb.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+	user := qtest.CreateFakeUser(t, db, 2)
 
-func TestJWTmanagerUpdates(t *testing.T) {
-	// db, cleanup := qtest.TestDB(t)
-	// defer cleanup()
+	// User is not enrolled in any course, this must be reflected in the updated claims
+	updatedClaims, err := manager.UpdateClaims(user.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(updatedClaims.Courses) > 0 {
+		t.Errorf("expected 0 enrollments, got %d", len(updatedClaims.Courses))
+	}
 
-	// TODO(vera): make manager, add records to db
-
-	// add new record, check that db and manager have same records
-
-	// remove a record, check manager and db
+	if err := manager.Add(admin.ID); err != nil {
+		t.Fatal(err)
+	}
+	wantTokenList := []uint64{2, 3, 4, 1}
+	if !cmp.Equal(wantTokenList, manager.TokensToUpdate) {
+		t.Errorf("mismatch: expected %v got %v", wantTokenList, manager.TokensToUpdate)
+	}
+	if err := manager.Update(); err != nil {
+		t.Fatal(err)
+	}
+	// Only the admin (user with ID = 1) must be in the refreshed list
+	wantTokenList = []uint64{1}
+	if !cmp.Equal(wantTokenList, manager.TokensToUpdate) {
+		t.Errorf("mismatch: expected %v got %v", wantTokenList, manager.TokensToUpdate)
+	}
+	if err := manager.Remove(admin.ID); err != nil {
+		t.Fatal(err)
+	}
+	if len(manager.TokensToUpdate) > 0 {
+		t.Errorf("expected 0 elements in the list, got %d", len(manager.TokensToUpdate))
+	}
 }

@@ -17,7 +17,7 @@ type Claims struct {
 
 type TokenManager struct {
 	TokensToUpdate []uint64 // UserID
-	db             database.Database
+	DB             database.Database
 }
 
 // TODO(vera): probably most of these methods (and struct fields) can be changed to unexported
@@ -37,7 +37,7 @@ func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 // UpdateClaims fetches the up-to-date user information from the database and returns
 // updated JWT user claims
 func (tm *TokenManager) UpdateClaims(userID uint64) (*Claims, error) {
-	usr, err := tm.db.GetUserWithEnrollments(userID)
+	usr, err := tm.DB.GetUserWithEnrollments(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (tm *TokenManager) Add(userID uint64) error {
 
 // Update fetches IDs of users who need token updates from the database
 func (tm *TokenManager) Update() error {
-	users, err := tm.db.GetUsers()
+	users, err := tm.DB.GetUsers()
 	if err != nil {
 		return fmt.Errorf("cannot fetch token to update from the database: %w", err)
 	}
@@ -103,12 +103,12 @@ func (tm *TokenManager) Update() error {
 
 // update updates user record in the database
 func (tm *TokenManager) update(userID uint64, updateToken bool) error {
-	user, err := tm.db.GetUser(userID)
+	user, err := tm.DB.GetUser(userID)
 	if err != nil {
 		return err
 	}
 	user.UpdateToken = updateToken
-	if err := tm.db.UpdateUser(user); err != nil {
+	if err := tm.DB.UpdateUser(user); err != nil {
 		return err
 	}
 	return nil
