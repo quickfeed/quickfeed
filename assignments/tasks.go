@@ -110,7 +110,7 @@ func createIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 	createdIssues := []*pb.Issue{}
 	for _, task := range tasks {
 		issueOptions := &scm.CreateIssueOptions{
-			Organization: course.Name,
+			Organization: course.GetOrganizationPath(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
 			Body:         task.Body,
@@ -144,7 +144,7 @@ func updateIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 			body = deleteMsg + task.Body
 		}
 		issueOptions := &scm.CreateIssueOptions{
-			Organization: course.Name,
+			Organization: course.GetOrganizationPath(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
 			Body:         body,

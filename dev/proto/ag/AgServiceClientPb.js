@@ -152,7 +152,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetUser', request, metadata || {}, this.methodInfoGetUser, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetUser', request, metadata || {}, this.methodInfoGetUser);
+            '/ag.AutograderService/GetUser', request, metadata || {}, this.methodDescriptorGetUser);
     };
     AutograderServiceClient.prototype.getUsers = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -160,7 +160,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetUsers', request, metadata || {}, this.methodInfoGetUsers, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetUsers', request, metadata || {}, this.methodInfoGetUsers);
+            '/ag.AutograderService/GetUsers', request, metadata || {}, this.methodDescriptorGetUsers);
     };
     AutograderServiceClient.prototype.getUserByCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -168,7 +168,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetUserByCourse', request, metadata || {}, this.methodInfoGetUserByCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetUserByCourse', request, metadata || {}, this.methodInfoGetUserByCourse);
+            '/ag.AutograderService/GetUserByCourse', request, metadata || {}, this.methodDescriptorGetUserByCourse);
     };
     AutograderServiceClient.prototype.updateUser = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -176,7 +176,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/UpdateUser', request, metadata || {}, this.methodInfoUpdateUser, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateUser', request, metadata || {}, this.methodInfoUpdateUser);
+            '/ag.AutograderService/UpdateUser', request, metadata || {}, this.methodDescriptorUpdateUser);
     };
     AutograderServiceClient.prototype.isAuthorizedTeacher = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -184,7 +184,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher);
+            '/ag.AutograderService/IsAuthorizedTeacher', request, metadata || {}, this.methodDescriptorIsAuthorizedTeacher);
     };
     AutograderServiceClient.prototype.getGroup = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -192,7 +192,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetGroup', request, metadata || {}, this.methodInfoGetGroup, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetGroup', request, metadata || {}, this.methodInfoGetGroup);
+            '/ag.AutograderService/GetGroup', request, metadata || {}, this.methodDescriptorGetGroup);
     };
     AutograderServiceClient.prototype.getGroupByUserAndCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -200,7 +200,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetGroupByUserAndCourse', request, metadata || {}, this.methodInfoGetGroupByUserAndCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetGroupByUserAndCourse', request, metadata || {}, this.methodInfoGetGroupByUserAndCourse);
+            '/ag.AutograderService/GetGroupByUserAndCourse', request, metadata || {}, this.methodDescriptorGetGroupByUserAndCourse);
     };
     AutograderServiceClient.prototype.getGroupsByCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -208,7 +208,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetGroupsByCourse', request, metadata || {}, this.methodInfoGetGroupsByCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetGroupsByCourse', request, metadata || {}, this.methodInfoGetGroupsByCourse);
+            '/ag.AutograderService/GetGroupsByCourse', request, metadata || {}, this.methodDescriptorGetGroupsByCourse);
     };
     AutograderServiceClient.prototype.createGroup = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -216,7 +216,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/CreateGroup', request, metadata || {}, this.methodInfoCreateGroup, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/CreateGroup', request, metadata || {}, this.methodInfoCreateGroup);
+            '/ag.AutograderService/CreateGroup', request, metadata || {}, this.methodDescriptorCreateGroup);
     };
     AutograderServiceClient.prototype.updateGroup = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -224,7 +224,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/UpdateGroup', request, metadata || {}, this.methodInfoUpdateGroup, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateGroup', request, metadata || {}, this.methodInfoUpdateGroup);
+            '/ag.AutograderService/UpdateGroup', request, metadata || {}, this.methodDescriptorUpdateGroup);
     };
     AutograderServiceClient.prototype.deleteGroup = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -232,7 +232,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/DeleteGroup', request, metadata || {}, this.methodInfoDeleteGroup, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/DeleteGroup', request, metadata || {}, this.methodInfoDeleteGroup);
+            '/ag.AutograderService/DeleteGroup', request, metadata || {}, this.methodDescriptorDeleteGroup);
     };
     AutograderServiceClient.prototype.getCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -240,7 +240,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetCourse', request, metadata || {}, this.methodInfoGetCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetCourse', request, metadata || {}, this.methodInfoGetCourse);
+            '/ag.AutograderService/GetCourse', request, metadata || {}, this.methodDescriptorGetCourse);
     };
     AutograderServiceClient.prototype.getCourses = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -248,7 +248,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetCourses', request, metadata || {}, this.methodInfoGetCourses, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetCourses', request, metadata || {}, this.methodInfoGetCourses);
+            '/ag.AutograderService/GetCourses', request, metadata || {}, this.methodDescriptorGetCourses);
     };
     AutograderServiceClient.prototype.getCoursesByUser = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -256,7 +256,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetCoursesByUser', request, metadata || {}, this.methodInfoGetCoursesByUser, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetCoursesByUser', request, metadata || {}, this.methodInfoGetCoursesByUser);
+            '/ag.AutograderService/GetCoursesByUser', request, metadata || {}, this.methodDescriptorGetCoursesByUser);
     };
     AutograderServiceClient.prototype.createCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -264,7 +264,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/CreateCourse', request, metadata || {}, this.methodInfoCreateCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/CreateCourse', request, metadata || {}, this.methodInfoCreateCourse);
+            '/ag.AutograderService/CreateCourse', request, metadata || {}, this.methodDescriptorCreateCourse);
     };
     AutograderServiceClient.prototype.updateCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -272,7 +272,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/UpdateCourse', request, metadata || {}, this.methodInfoUpdateCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateCourse', request, metadata || {}, this.methodInfoUpdateCourse);
+            '/ag.AutograderService/UpdateCourse', request, metadata || {}, this.methodDescriptorUpdateCourse);
     };
     AutograderServiceClient.prototype.updateCourseVisibility = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -280,7 +280,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/UpdateCourseVisibility', request, metadata || {}, this.methodInfoUpdateCourseVisibility, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateCourseVisibility', request, metadata || {}, this.methodInfoUpdateCourseVisibility);
+            '/ag.AutograderService/UpdateCourseVisibility', request, metadata || {}, this.methodDescriptorUpdateCourseVisibility);
     };
     AutograderServiceClient.prototype.getAssignments = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -288,7 +288,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetAssignments', request, metadata || {}, this.methodInfoGetAssignments, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetAssignments', request, metadata || {}, this.methodInfoGetAssignments);
+            '/ag.AutograderService/GetAssignments', request, metadata || {}, this.methodDescriptorGetAssignments);
     };
     AutograderServiceClient.prototype.updateAssignments = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -296,7 +296,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/UpdateAssignments', request, metadata || {}, this.methodInfoUpdateAssignments, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateAssignments', request, metadata || {}, this.methodInfoUpdateAssignments);
+            '/ag.AutograderService/UpdateAssignments', request, metadata || {}, this.methodDescriptorUpdateAssignments);
     };
     AutograderServiceClient.prototype.getEnrollmentsByUser = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -304,7 +304,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetEnrollmentsByUser', request, metadata || {}, this.methodInfoGetEnrollmentsByUser, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetEnrollmentsByUser', request, metadata || {}, this.methodInfoGetEnrollmentsByUser);
+            '/ag.AutograderService/GetEnrollmentsByUser', request, metadata || {}, this.methodDescriptorGetEnrollmentsByUser);
     };
     AutograderServiceClient.prototype.getEnrollmentsByCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -312,7 +312,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetEnrollmentsByCourse', request, metadata || {}, this.methodInfoGetEnrollmentsByCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetEnrollmentsByCourse', request, metadata || {}, this.methodInfoGetEnrollmentsByCourse);
+            '/ag.AutograderService/GetEnrollmentsByCourse', request, metadata || {}, this.methodDescriptorGetEnrollmentsByCourse);
     };
     AutograderServiceClient.prototype.createEnrollment = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -320,7 +320,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/CreateEnrollment', request, metadata || {}, this.methodInfoCreateEnrollment, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/CreateEnrollment', request, metadata || {}, this.methodInfoCreateEnrollment);
+            '/ag.AutograderService/CreateEnrollment', request, metadata || {}, this.methodDescriptorCreateEnrollment);
     };
     AutograderServiceClient.prototype.updateEnrollments = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -328,7 +328,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/UpdateEnrollments', request, metadata || {}, this.methodInfoUpdateEnrollments, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateEnrollments', request, metadata || {}, this.methodInfoUpdateEnrollments);
+            '/ag.AutograderService/UpdateEnrollments', request, metadata || {}, this.methodDescriptorUpdateEnrollments);
     };
     AutograderServiceClient.prototype.getSubmissions = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -336,7 +336,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetSubmissions', request, metadata || {}, this.methodInfoGetSubmissions, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetSubmissions', request, metadata || {}, this.methodInfoGetSubmissions);
+            '/ag.AutograderService/GetSubmissions', request, metadata || {}, this.methodDescriptorGetSubmissions);
     };
     AutograderServiceClient.prototype.getSubmissionsByCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -344,7 +344,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetSubmissionsByCourse', request, metadata || {}, this.methodInfoGetSubmissionsByCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetSubmissionsByCourse', request, metadata || {}, this.methodInfoGetSubmissionsByCourse);
+            '/ag.AutograderService/GetSubmissionsByCourse', request, metadata || {}, this.methodDescriptorGetSubmissionsByCourse);
     };
     AutograderServiceClient.prototype.updateSubmission = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -352,7 +352,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/UpdateSubmission', request, metadata || {}, this.methodInfoUpdateSubmission, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateSubmission', request, metadata || {}, this.methodInfoUpdateSubmission);
+            '/ag.AutograderService/UpdateSubmission', request, metadata || {}, this.methodDescriptorUpdateSubmission);
     };
     AutograderServiceClient.prototype.updateSubmissions = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -360,7 +360,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/UpdateSubmissions', request, metadata || {}, this.methodInfoUpdateSubmissions, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateSubmissions', request, metadata || {}, this.methodInfoUpdateSubmissions);
+            '/ag.AutograderService/UpdateSubmissions', request, metadata || {}, this.methodDescriptorUpdateSubmissions);
     };
     AutograderServiceClient.prototype.rebuildSubmissions = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -368,7 +368,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/RebuildSubmissions', request, metadata || {}, this.methodInfoRebuildSubmissions, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/RebuildSubmissions', request, metadata || {}, this.methodInfoRebuildSubmissions);
+            '/ag.AutograderService/RebuildSubmissions', request, metadata || {}, this.methodDescriptorRebuildSubmissions);
     };
     AutograderServiceClient.prototype.createBenchmark = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -376,7 +376,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/CreateBenchmark', request, metadata || {}, this.methodInfoCreateBenchmark, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/CreateBenchmark', request, metadata || {}, this.methodInfoCreateBenchmark);
+            '/ag.AutograderService/CreateBenchmark', request, metadata || {}, this.methodDescriptorCreateBenchmark);
     };
     AutograderServiceClient.prototype.updateBenchmark = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -384,7 +384,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/UpdateBenchmark', request, metadata || {}, this.methodInfoUpdateBenchmark, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateBenchmark', request, metadata || {}, this.methodInfoUpdateBenchmark);
+            '/ag.AutograderService/UpdateBenchmark', request, metadata || {}, this.methodDescriptorUpdateBenchmark);
     };
     AutograderServiceClient.prototype.deleteBenchmark = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -392,7 +392,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/DeleteBenchmark', request, metadata || {}, this.methodInfoDeleteBenchmark, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/DeleteBenchmark', request, metadata || {}, this.methodInfoDeleteBenchmark);
+            '/ag.AutograderService/DeleteBenchmark', request, metadata || {}, this.methodDescriptorDeleteBenchmark);
     };
     AutograderServiceClient.prototype.createCriterion = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -400,7 +400,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/CreateCriterion', request, metadata || {}, this.methodInfoCreateCriterion, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/CreateCriterion', request, metadata || {}, this.methodInfoCreateCriterion);
+            '/ag.AutograderService/CreateCriterion', request, metadata || {}, this.methodDescriptorCreateCriterion);
     };
     AutograderServiceClient.prototype.updateCriterion = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -408,7 +408,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/UpdateCriterion', request, metadata || {}, this.methodInfoUpdateCriterion, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateCriterion', request, metadata || {}, this.methodInfoUpdateCriterion);
+            '/ag.AutograderService/UpdateCriterion', request, metadata || {}, this.methodDescriptorUpdateCriterion);
     };
     AutograderServiceClient.prototype.deleteCriterion = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -416,7 +416,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/DeleteCriterion', request, metadata || {}, this.methodInfoDeleteCriterion, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/DeleteCriterion', request, metadata || {}, this.methodInfoDeleteCriterion);
+            '/ag.AutograderService/DeleteCriterion', request, metadata || {}, this.methodDescriptorDeleteCriterion);
     };
     AutograderServiceClient.prototype.createReview = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -424,7 +424,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/CreateReview', request, metadata || {}, this.methodInfoCreateReview, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/CreateReview', request, metadata || {}, this.methodInfoCreateReview);
+            '/ag.AutograderService/CreateReview', request, metadata || {}, this.methodDescriptorCreateReview);
     };
     AutograderServiceClient.prototype.updateReview = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -432,7 +432,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/UpdateReview', request, metadata || {}, this.methodInfoUpdateReview, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateReview', request, metadata || {}, this.methodInfoUpdateReview);
+            '/ag.AutograderService/UpdateReview', request, metadata || {}, this.methodDescriptorUpdateReview);
     };
     AutograderServiceClient.prototype.getReviewers = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -440,7 +440,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetReviewers', request, metadata || {}, this.methodInfoGetReviewers, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetReviewers', request, metadata || {}, this.methodInfoGetReviewers);
+            '/ag.AutograderService/GetReviewers', request, metadata || {}, this.methodDescriptorGetReviewers);
     };
     AutograderServiceClient.prototype.getProviders = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -448,7 +448,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetProviders', request, metadata || {}, this.methodInfoGetProviders, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetProviders', request, metadata || {}, this.methodInfoGetProviders);
+            '/ag.AutograderService/GetProviders', request, metadata || {}, this.methodDescriptorGetProviders);
     };
     AutograderServiceClient.prototype.getOrganization = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -456,7 +456,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetOrganization', request, metadata || {}, this.methodInfoGetOrganization, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetOrganization', request, metadata || {}, this.methodInfoGetOrganization);
+            '/ag.AutograderService/GetOrganization', request, metadata || {}, this.methodDescriptorGetOrganization);
     };
     AutograderServiceClient.prototype.getRepositories = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -464,7 +464,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/GetRepositories', request, metadata || {}, this.methodInfoGetRepositories, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetRepositories', request, metadata || {}, this.methodInfoGetRepositories);
+            '/ag.AutograderService/GetRepositories', request, metadata || {}, this.methodDescriptorGetRepositories);
     };
     AutograderServiceClient.prototype.isEmptyRepo = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -472,7 +472,7 @@ var AutograderServiceClient = /** @class */ (function () {
                 '/ag.AutograderService/IsEmptyRepo', request, metadata || {}, this.methodInfoIsEmptyRepo, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/IsEmptyRepo', request, metadata || {}, this.methodInfoIsEmptyRepo);
+            '/ag.AutograderService/IsEmptyRepo', request, metadata || {}, this.methodDescriptorIsEmptyRepo);
     };
     return AutograderServiceClient;
 }());
