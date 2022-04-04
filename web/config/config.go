@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/autograde/quickfeed/internal/rand"
+	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web/auth"
 )
 
@@ -42,7 +43,7 @@ type Config struct {
 	Secrets        *Secrets
 	Paths          *Paths
 	TokensToUpdate *auth.TokenManager // TODO: not sure if this and app belongs here
-	App            *GithubApp
+	App            *scm.GithubApp
 }
 
 func NewConfig(baseURL, public, httpAddr string) *Config {
@@ -63,9 +64,8 @@ func NewConfig(baseURL, public, httpAddr string) *Config {
 			TokenSecret:    os.Getenv(JWTKeyEnv),
 		},
 		Paths: &Paths{
-			AppKeyPath: appKeyPath,
-			PemPath:    pemPath,
-			KeyPath:    keyPath,
+			PemPath: pemPath,
+			KeyPath: keyPath,
 		},
 	}
 	return conf

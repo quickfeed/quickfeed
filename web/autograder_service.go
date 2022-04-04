@@ -22,7 +22,6 @@ type AutograderService struct {
 	logger *zap.SugaredLogger
 	db     database.Database
 	scms   *auth.Scms
-	// bh     BaseHookOptions
 	Config *config.Config // TODO: make unexported again after refactoring the startup method
 	runner ci.Runner
 	pb.UnimplementedAutograderServiceServer
@@ -34,7 +33,6 @@ func NewAutograderService(logger *zap.Logger, db database.Database, scms *auth.S
 		logger: logger.Sugar(),
 		db:     db,
 		scms:   scms,
-		// bh:     bh,
 		Config: config,
 		runner: runner,
 	}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/autograde/quickfeed/ci"
 	logq "github.com/autograde/quickfeed/log"
+	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/autograde/quickfeed/web/config"
@@ -96,7 +97,7 @@ func main() {
 	serverConfig := config.NewConfig(*baseURL, *public, *httpAddr)
 
 	// TODO: register GitHub App
-	githubApp, err := config.NewApp()
+	githubApp, err := scm.NewApp()
 	if err != nil {
 		log.Fatalf("failed to start GitHub app: %v/n", err)
 	}

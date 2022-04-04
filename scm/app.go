@@ -1,4 +1,4 @@
-package config
+package scm
 
 import (
 	"context"
@@ -14,35 +14,38 @@ import (
 )
 
 const (
-	AppEnv    = "APP_ID"
-	KeyEnv    = "APP_KEY"
-	SecretEnv = "APP_SECRET"
+	AppEnv           = "APP_ID"
+	KeyEnv           = "APP_KEY"
+	SecretEnv        = "APP_SECRET"
+	KeyPath          = "./appth.private-key.pem" // TODO(vera): read path from env
+	InstallationsAPI = "https://api.github.com/app/installations"
 )
 
 // GithubAppConfig keeps parameters of the GitHub app
 type GithubAppConfig struct {
-	AppID    string
-	ClientID string
-	Secret   string
+	appID    string
+	clientID string
+	secret   string
+	keyPath  string
 }
 
 // TODO(vera): rename because confusing
 type GithubApp struct {
-	Config *GithubAppConfig
-	App    *app.Config
+	app    *app.Config
+	config *GithubAppConfig
 }
 
 func newAppConfig() *GithubAppConfig {
 	return &GithubAppConfig{
-		AppID:    os.Getenv(AppEnv),
-		ClientID: os.Getenv(KeyEnv),
-		Secret:   os.Getenv(SecretEnv),
+		appID:    os.Getenv(AppEnv),
+		clientID: os.Getenv(KeyEnv),
+		secret:   os.Getenv(SecretEnv),
 	}
 }
 
 func (conf *GithubAppConfig) Valid() bool {
-	return conf.AppID != "" &&
-		conf.ClientID != "" && conf.Secret != ""
+	return conf.appID != "" &&
+		conf.clientID != "" && conf.secret != ""
 }
 
 // AppClient creates client for the Quickfeed GitHub Application
@@ -54,25 +57,25 @@ func NewApp() (*GithubApp, error) {
 	if !config.Valid() {
 		return nil, fmt.Errorf("error configuring GitHub App: %+v", config)
 	}
-	appKey, err := key.FromFile(appKeyPath)
+	appKey, err := key.FromFile(KeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("error reading key from file: %s", err)
 	}
-	appClientConfig, err := app.NewConfig(config.AppID, appKey)
+	appClientConfig, err := app.NewConfig(config.appID, appKey)
 	if err != nil {
 		return nil, fmt.Errorf("error creating GitHub application client: %s", err)
 	}
 	return &GithubApp{
-		Config: config,
-		App:    appClientConfig,
+		config: config,
+		app:    appClientConfig,
 	}, nil
 }
 
 // Creates a new scm client with access to the course organization
 func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg string) (*gh.Client, error) {
-	resp, err := ghApp.App.Client().Get(InstallationsAPI)
+	resp, err := ghApp.app.Client().Get(InstallationsAPI)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching installations for GitHub app %s: %s", ghApp.Config.AppID, err)
+		return nil, fmt.Errorf("error fetching installations for GitHub app %s: %s", ghApp.config.appID, err)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
@@ -93,7 +96,7 @@ func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg str
 	if installationID == 0 {
 		return nil, fmt.Errorf("cannot find GitHub app installation for organization %s", courseOrg)
 	}
-	install, err := ghApp.App.InstallationConfig(strconv.Itoa(int(installationID)))
+	install, err := ghApp.app.InstallationConfig(strconv.Itoa(int(installationID)))
 	if err != nil {
 		return nil, fmt.Errorf("error configuring github client for installation: %s", err)
 	}

@@ -1,4 +1,4 @@
-package config_test
+package scm_test
 
 import "testing"
 
