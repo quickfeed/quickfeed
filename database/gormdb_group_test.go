@@ -196,7 +196,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				t.Fatal(err)
 			}
 			if len(uids) > 0 {
-				group.Users, err = db.GetUsers()
+				group.Users, err = db.GetUsers(uids...)
 				if err != nil {
 					t.Fatal(err)
 				}
