@@ -16,18 +16,14 @@ type Claims struct {
 }
 
 type TokenManager struct {
-	TokensToUpdate []uint64 // UserID
+	TokensToUpdate []uint64
 	DB             database.Database
 }
-
-// TODO(vera): probably most of these methods (and struct fields) can be changed to unexported
 
 // JWTUpdateRequired returns true if JWT update is needed for this user ID
 func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 	for _, token := range tm.TokensToUpdate {
-		fmt.Printf("Comparing %d with %d", claims.UserID, token)
 		if claims.UserID == token {
-			fmt.Printf("Token for UserID %d found in the refresh list", claims.UserID)
 			return true
 		}
 	}
@@ -47,7 +43,6 @@ func (tm *TokenManager) UpdateClaims(userID uint64) (*Claims, error) {
 	}
 	userCourses := make(map[uint64]pb.Enrollment_UserStatus)
 	for _, enrol := range usr.Enrollments {
-		fmt.Printf("User %d enrolled into course %d %s with role %d", userID, enrol.GetCourseID(), enrol.GetCourse().GetName(), enrol.GetStatus())
 		userCourses[enrol.GetCourseID()] = enrol.GetStatus()
 	}
 	newClaims.Courses = userCourses
@@ -57,7 +52,7 @@ func (tm *TokenManager) UpdateClaims(userID uint64) (*Claims, error) {
 // Update removes user ID from the manager and updates user record in the database
 func (tm *TokenManager) Remove(userID uint64) error {
 	if !tm.exists(userID) {
-		return fmt.Errorf("User ID %d is not in the list", userID)
+		return fmt.Errorf("user with ID %d is not in the list", userID)
 	}
 	if err := tm.update(userID, false); err != nil {
 		return err
@@ -89,7 +84,7 @@ func (tm *TokenManager) Add(userID uint64) error {
 func (tm *TokenManager) Update() error {
 	users, err := tm.DB.GetUsers()
 	if err != nil {
-		return fmt.Errorf("cannot fetch token to update from the database: %w", err)
+		return fmt.Errorf("failed to update JWT tokens from database: %w", err)
 	}
 	var tokens []uint64
 	for _, user := range users {

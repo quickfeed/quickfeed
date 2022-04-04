@@ -29,7 +29,6 @@ type GithubAppConfig struct {
 	keyPath  string
 }
 
-// TODO(vera): rename because confusing
 type GithubApp struct {
 	app    *app.Config
 	config *GithubAppConfig
