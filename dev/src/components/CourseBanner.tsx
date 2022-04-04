@@ -15,8 +15,7 @@ const CourseBanner = (): JSX.Element => {
             <div className="centerblock container">
                 <h1>{enrollment.getCourse()?.getName()}
                     <i className={style} style={{ "paddingLeft": "20px" }}
-                        onClick={() => actions.setEnrollmentState(enrollment)}>
-                    </i>
+                        onClick={() => actions.setEnrollmentState(enrollment)} role="button" />
                 </h1>
                 {hasTeacher(state.status[enrollment.getCourseid()]) &&
                     <span className="clickable" onClick={() => actions.changeView(enrollment.getCourseid())}>

@@ -25,7 +25,7 @@ const NavFavorites = (): JSX.Element => {
                     <Link to="/" >
                         QuickFeed
                     </Link>
-                    <a onClick={() => { onCourseClick() }}>✖</a>
+                    <a onClick={() => { onCourseClick() }} role="button">✖</a>
                 </li>
                 {courses}
                 {state.isLoggedIn &&
