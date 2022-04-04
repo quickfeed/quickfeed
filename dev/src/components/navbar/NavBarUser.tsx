@@ -2,16 +2,15 @@ import React from "react"
 import { Link } from "react-router-dom"
 import { useActions, useAppState } from "../../overmind"
 
-const NavBarUser = ():JSX.Element =>{
+const NavBarUser = (): JSX.Element => {
     const logout = useActions().logout
     const { self, isLoggedIn } = useAppState()
-
 
     const AboutButton = () => {
         return (
             <li key="about">
                 <a className="dropdown-item bg-dark" >
-                    <Link to="/about" className="Sidebar-items-link" style={{color: "#d4d4d4"}}>
+                    <Link to="/about" className="Sidebar-items-link" style={{ color: "#d4d4d4" }}>
                         About
                     </Link>
                 </a>
@@ -24,21 +23,22 @@ const NavBarUser = ():JSX.Element =>{
             return (
                 <li>
                     <a className="dropdown-item bg-dark" >
-                        <Link to="/admin" className="Sidebar-items-link" style={{color: "#d4d4d4"}}>
+                        <Link to="/admin" className="Sidebar-items-link" style={{ color: "#d4d4d4" }}>
                             Admin
-                        </Link>                       
+                        </Link>
                     </a>
                 </li>
             )
         }
         return null
     }
+
     const LoginButton = () => {
         if (isLoggedIn) {
             return (
                 <li>
                     <a className="dropdown-item bg-dark">
-                       <a href="/logout" className="Sidebar-items-link" style={{color: "#d4d4d4"}} onClick={() => logout()}>Log out</a> 
+                        <a href="/logout" className="Sidebar-items-link" style={{ color: "#d4d4d4" }} onClick={() => logout()}>Log out</a>
                     </a>
                 </li>
             )
@@ -46,7 +46,7 @@ const NavBarUser = ():JSX.Element =>{
         return (
             <li>
                 <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px" }}>
-                    <i className="fa fa-2x fa-github" id="github"/>
+                    <i className="fa fa-2x fa-github" id="github" />
                 </a>
             </li>
         )
@@ -56,16 +56,16 @@ const NavBarUser = ():JSX.Element =>{
             <ul className="navbar-nav ml-auto">
                 <li className="nav-item dropdown ml-auto">
                     <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px", marginLeft: "40px" }}>
-                        <img className="rounded-circle" src={self.getAvatarurl()} id="avatar" style={{ height: "40px", borderRadius: "50%" }}/>
+                        <img className="rounded-circle" src={self.getAvatarurl()} id="avatar" style={{ height: "40px", borderRadius: "50%" }} />
                     </a>
                     <ul className="dropdown-menu dropdown-menu-center bg-dark">
-                        <AboutButton/>
-                        <AdminButton/>
-                        <LoginButton/>
+                        <AboutButton />
+                        <AdminButton />
+                        <LoginButton />
                     </ul>
                 </li>
             </ul>
-        </div> 
+        </div>
     )
 }
 

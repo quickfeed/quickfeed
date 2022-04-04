@@ -257,7 +257,6 @@ input {
   position: absolute;
   top: 120px;
   transform: translateX(-70px);
-  
 }
 
 .result-approved {
@@ -329,7 +328,6 @@ input {
   rgba(0, 0, 0, 0.2) 5px 0px 0px inset;
 }
 
-
 .dropdown-menu-center {
   right: auto;
   left: 50%;
@@ -344,14 +342,13 @@ input {
 
 .width-resize {
   min-width: 150px;
-
 }
 
 @media all and (min-width: 992px) {
     .navbar .nav-item .dropdown-menu { display: none; }
     .navbar .nav-item:hover .dropdown-menu { display: block; }
     .navbar .nav-item .dropdown-menu { margin-top:0; }
-}  
+}
 
 @media only screen and (max-width: 980px) {
   .width-resize {
@@ -359,7 +356,7 @@ input {
     padding-top: 15px;
   }
 }
-  
+
 @media only screen and (max-width: 1200px) {
   .lab-resize{ padding-top: 15px; }
 }
