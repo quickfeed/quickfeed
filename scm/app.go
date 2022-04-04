@@ -17,7 +17,7 @@ const (
 	AppEnv           = "APP_ID"
 	KeyEnv           = "APP_KEY"
 	SecretEnv        = "APP_SECRET"
-	KeyPath          = "./appth.private-key.pem" // TODO(vera): read path from env
+	KeyPath          = "APP_KEYPATH"
 	InstallationsAPI = "https://api.github.com/app/installations"
 )
 
@@ -39,7 +39,7 @@ func newAppConfig() *GithubAppConfig {
 		appID:    os.Getenv(AppEnv),
 		clientID: os.Getenv(KeyEnv),
 		secret:   os.Getenv(SecretEnv),
-		keyPath:  KeyPath,
+		keyPath:  os.Getenv(KeyPath),
 	}
 }
 
@@ -58,7 +58,7 @@ func NewApp() (*GithubApp, error) {
 	if !config.Valid() {
 		return nil, fmt.Errorf("error configuring GitHub App: %+v", config)
 	}
-	appKey, err := key.FromFile(KeyPath)
+	appKey, err := key.FromFile(config.keyPath)
 	if err != nil {
 		return nil, fmt.Errorf("error reading key from file: %s", err)
 	}
