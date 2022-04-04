@@ -40,7 +40,7 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.Su
 	}
 
 	// Find and create assignments
-	foundAssignments, _, err := fetchAssignments(ctx, logger, sc, course)
+	foundAssignments, _, err := FetchAssignments(ctx, logger, sc, course)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func TestHandleTasks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assignments, _, err := fetchAssignments(ctx, logger, scm, course)
+	assignments, _, err := FetchAssignments(ctx, logger, scm, course)
 	if err != nil {
 		t.Fatal(err)
 	}
