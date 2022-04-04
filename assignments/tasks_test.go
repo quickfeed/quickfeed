@@ -39,9 +39,6 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.Su
 		return err
 	}
 
-	admin := qtest.CreateFakeUser(t, db, uint64(1))
-	qtest.CreateCourse(t, db, admin, course)
-
 	// Find and create assignments
 	foundAssignments, _, err := fetchAssignments(ctx, logger, sc, course)
 	if err != nil {
@@ -60,36 +57,8 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.Su
 	foundIssues := make(map[uint64]map[string]*foundIssue)
 	tasks := make(map[uint32]map[string]*pb.Task)
 
-	// Create repositories
-	nxtRemoteID := uint64(2)
+	// Finds issues, and creates tasks based on them
 	for _, repo := range repos {
-		var user *pb.User
-		// Might not even be necessary to handle repos differently in these tests.
-		dbRepo := &pb.Repository{
-			RepositoryID:   repo.ID,
-			OrganizationID: org.GetID(),
-			HTMLURL:        repo.WebURL,
-		}
-		switch repo.Path {
-		case pb.InfoRepo:
-			dbRepo.RepoType = pb.Repository_COURSEINFO
-		case pb.AssignmentRepo:
-			dbRepo.RepoType = pb.Repository_ASSIGNMENTS
-		case pb.TestsRepo:
-			dbRepo.RepoType = pb.Repository_TESTS
-		default:
-			user = qtest.CreateFakeUser(t, db, nxtRemoteID)
-			// For testing purposes, assume all student repositories are group repositories
-			// since tasks are only supported for groups anyway.
-			dbRepo.RepoType = pb.Repository_GROUP
-			dbRepo.UserID = user.GetID()
-		}
-
-		t.Logf("create repo: %v", dbRepo)
-		if err = db.CreateRepository(dbRepo); err != nil {
-			return err
-		}
-
 		existingScmIssues, err := sc.GetRepoIssues(ctx, &scm.RepositoryOptions{
 			Owner: course.Name,
 			Path:  repo.Path,
@@ -107,7 +76,7 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.Su
 			name := splitTitle[0]
 			temp, err := strconv.Atoi(splitTitle[len(splitTitle)-1])
 			if err != nil {
-				return err
+				continue
 			}
 			assignmentOrder := uint32(temp)
 			foundIssues[repo.ID][name] = &foundIssue{IssueNumber: uint64(scmIssue.IssueNumber), Name: name}
@@ -117,7 +86,6 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.Su
 			}
 			tasks[assignmentOrder][name] = &pb.Task{Title: scmIssue.Title, Body: scmIssue.Body, Name: name, AssignmentOrder: assignmentOrder}
 		}
-		nxtRemoteID++
 	}
 
 	createdTasks, _, _, err := db.SynchronizeAssignmentTasks(course, tasks)
@@ -170,6 +138,9 @@ func TestHandleTasks(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
+	if err = qtest.PopulateDatabaseWithInitialData(t, ctx, db, scm, course); err != nil {
+		t.Fatal(err)
+	}
 	if err = populateDatabaseWithTasks(t, ctx, logger, db, scm, course); err != nil {
 		t.Fatal(err)
 	}

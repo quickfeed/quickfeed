@@ -158,3 +158,54 @@ func WithUserContext(ctx context.Context, user *pb.User) context.Context {
 	meta := metadata.New(map[string]string{"user": userID})
 	return metadata.NewIncomingContext(ctx, meta)
 }
+
+// PopulateDatabaseWithInitialData creates initial data-records based on organization
+func PopulateDatabaseWithInitialData(t *testing.T, ctx context.Context, db database.Database, sc scm.SCM, course *pb.Course) error {
+	t.Helper()
+
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
+	if err != nil {
+		return err
+	}
+
+	admin := CreateFakeUser(t, db, uint64(1))
+	CreateCourse(t, db, admin, course)
+
+	repos, err := sc.GetRepositories(ctx, org)
+	if err != nil {
+		return err
+	}
+
+	// Create repositories
+	nxtRemoteID := uint64(2)
+	for _, repo := range repos {
+		var user *pb.User
+		dbRepo := &pb.Repository{
+			RepositoryID:   repo.ID,
+			OrganizationID: org.GetID(),
+			HTMLURL:        repo.WebURL,
+		}
+		switch repo.Path {
+		case pb.InfoRepo:
+			dbRepo.RepoType = pb.Repository_COURSEINFO
+		case pb.AssignmentRepo:
+			dbRepo.RepoType = pb.Repository_ASSIGNMENTS
+		case pb.TestsRepo:
+			dbRepo.RepoType = pb.Repository_TESTS
+		default:
+			// TODO(Espeland): Could use CreateNamedUser() instead.
+			user = CreateFakeUser(t, db, nxtRemoteID)
+			// For testing purposes, assume all student repositories are group repositories
+			// since tasks are only supported for groups anyway.
+			dbRepo.RepoType = pb.Repository_GROUP
+			dbRepo.UserID = user.GetID()
+		}
+
+		t.Logf("create repo: %v", dbRepo)
+		if err = db.CreateRepository(dbRepo); err != nil {
+			return err
+		}
+		nxtRemoteID++
+	}
+	return nil
+}
