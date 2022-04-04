@@ -1,4 +1,4 @@
-import React, { Component } from "react"
+import React from "react"
 import { useAppState, useActions } from "../overmind"
 import { Link } from "react-router-dom"
 import NavBarCourse from "./navbar/NavBarCourse"
