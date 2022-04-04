@@ -77,17 +77,17 @@ printf "Default script\n"
 				{
 					Title:           "Exercises from Tour of Go",
 					AssignmentOrder: 3,
-					Name:            "lab3/task-tour-of-go.md",
+					Name:            "lab3/tour-of-go",
 				},
 				{
 					Title:           "Go Exercises",
 					AssignmentOrder: 3,
-					Name:            "lab3/task-learn-go.md",
+					Name:            "lab3/learn-go",
 				},
 				{
 					Title:           "Multiple Choice Questions about Go Programming",
 					AssignmentOrder: 3,
-					Name:            "lab3/task-go-questions.md",
+					Name:            "lab3/go-questions",
 				},
 			},
 		},
