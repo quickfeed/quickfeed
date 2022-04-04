@@ -20,7 +20,7 @@ const NavFavorites = (): JSX.Element => {
 
     return (
         <nav className="navigator">
-            <ul key="list" className="SidebarList">
+            <ul key="list" className="sidebarList">
                 <li key="logo" className="logo" style={{ paddingLeft: "40px" }}>
                     <Link to="/" >
                         QuickFeed
@@ -30,7 +30,7 @@ const NavFavorites = (): JSX.Element => {
                 {courses}
                 {state.isLoggedIn &&
                     <li key="all">
-                        <Link to="/courses" className="Sidebar-items-link">
+                        <Link to="/courses" className="sidebar-items-link">
                             View all courses
                         </Link>
                     </li>

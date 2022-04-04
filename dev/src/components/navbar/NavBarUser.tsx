@@ -10,7 +10,7 @@ const NavBarUser = (): JSX.Element => {
         return (
             <li key="about">
                 <a className="dropdown-item bg-dark" >
-                    <Link to="/about" className="Sidebar-items-link" style={{ color: "#d4d4d4" }}>
+                    <Link to="/about" className="sidebar-items-link" style={{ color: "#d4d4d4" }}>
                         About
                     </Link>
                 </a>
@@ -23,7 +23,7 @@ const NavBarUser = (): JSX.Element => {
             return (
                 <li>
                     <a className="dropdown-item bg-dark" >
-                        <Link to="/admin" className="Sidebar-items-link" style={{ color: "#d4d4d4" }}>
+                        <Link to="/admin" className="sidebar-items-link" style={{ color: "#d4d4d4" }}>
                             Admin
                         </Link>
                     </a>
@@ -38,7 +38,7 @@ const NavBarUser = (): JSX.Element => {
             return (
                 <li>
                     <a className="dropdown-item bg-dark">
-                        <a href="/logout" className="Sidebar-items-link" style={{ color: "#d4d4d4" }} onClick={() => logout()}>Log out</a>
+                        <a href="/logout" className="sidebar-items-link" style={{ color: "#d4d4d4" }} onClick={() => logout()}>Log out</a>
                     </a>
                 </li>
             )
