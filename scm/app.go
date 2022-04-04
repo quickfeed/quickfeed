@@ -39,11 +39,13 @@ func newAppConfig() *GithubAppConfig {
 		appID:    os.Getenv(AppEnv),
 		clientID: os.Getenv(KeyEnv),
 		secret:   os.Getenv(SecretEnv),
+		keyPath:  KeyPath,
 	}
 }
 
+// Valid ensures that all configuration fields are not empty
 func (conf *GithubAppConfig) Valid() bool {
-	return conf.appID != "" &&
+	return conf.appID != "" && conf.keyPath != "" &&
 		conf.clientID != "" && conf.secret != ""
 }
 
