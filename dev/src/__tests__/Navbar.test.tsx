@@ -11,18 +11,18 @@ import Enzyme from "enzyme"
 import EnzymeAdapter from "@wojtekmaj/enzyme-adapter-react-17"
 import { Provider } from "overmind-react"
 
-configure({ adapter: new Adapter() });
-Enzyme.configure( { adapter: new EnzymeAdapter() });
+configure({ adapter: new Adapter() })
+Enzyme.configure({ adapter: new EnzymeAdapter() })
 const history = createMemoryHistory()
 const mockedOvermind = createOvermindMock(config, (state) => {
-        state.self = new User().setId(1).setName("Test User")
+    state.self = new User().setId(1).setName("Test User")
 })
 const wrapped = mount(<Provider value={mockedOvermind}>
-            <Router history={history}>
-               <NavBar />
-            </Router>
-        </Provider>
-    )
+    <Router history={history}>
+        <NavBar />
+    </Router>
+</Provider>
+)
 
 describe("Visibility when logged in", () => {
     it("When user is logged in, hamburger menu should appear", () => {
@@ -34,9 +34,9 @@ describe("Visibility when logged in", () => {
         const signIn = "Sign in with"
         const link = wrapped.find("a").at(1)
         let exists = true
-        if (link.text() !== signIn){
+        if (link.text() !== signIn) {
             exists = false
         }
         expect(exists).toBe(false)
     })
-});
+})
