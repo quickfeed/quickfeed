@@ -11,7 +11,6 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/google/go-github/v43/github"
 	"github.com/gosimple/slug"
-	"golang.org/x/oauth2"
 )
 
 // GithubSCM implements the SCM interface.
@@ -22,9 +21,7 @@ type GithubSCM struct {
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
-func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
-	client := github.NewClient(oauth2.NewClient(context.Background(), ts))
+func NewGithubSCMClient(logger *zap.SugaredLogger, client *github.Client, token string) *GithubSCM {
 	return &GithubSCM{
 		logger: logger,
 		client: client,

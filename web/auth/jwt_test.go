@@ -3,7 +3,6 @@ package auth_test
 import (
 	"testing"
 
-	"github.com/autograde/quickfeed/ag"
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/web/auth"
@@ -18,7 +17,7 @@ func TestTokenManager(t *testing.T) {
 	claimsToUpdate := auth.Claims{
 		UserID:  2,
 		Admin:   false,
-		Courses: map[uint64]ag.Enrollment_UserStatus{1: pb.Enrollment_STUDENT},
+		Courses: map[uint64]pb.Enrollment_UserStatus{1: pb.Enrollment_STUDENT},
 	}
 
 	claimsNoUpdate := auth.Claims{
@@ -28,11 +27,11 @@ func TestTokenManager(t *testing.T) {
 	}
 
 	if manager.UpdateRequired(&claimsNoUpdate) {
-		t.Error("expected false (update not required), got true")
+		t.Error("JWT update required is true, expected false")
 	}
 
 	if !manager.UpdateRequired(&claimsToUpdate) {
-		t.Error("expected true (update required), got false")
+		t.Error("JWT update required is false, expected true")
 	}
 
 	db, cleanup := qtest.TestDB(t)
@@ -50,7 +49,7 @@ func TestTokenManager(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(updatedClaims.Courses) > 0 {
-		t.Errorf("expected 0 enrollments, got %d", len(updatedClaims.Courses))
+		t.Errorf("got %d enrollments, expected 0", len(updatedClaims.Courses))
 	}
 
 	if err := manager.Add(admin.ID); err != nil {
@@ -58,7 +57,7 @@ func TestTokenManager(t *testing.T) {
 	}
 	wantTokenList := []uint64{2, 3, 4, 1}
 	if !cmp.Equal(wantTokenList, manager.TokensToUpdate) {
-		t.Errorf("mismatch: expected %v got %v", wantTokenList, manager.TokensToUpdate)
+		t.Errorf("token list is %v, expected %v", wantTokenList, manager.TokensToUpdate)
 	}
 	if err := manager.Update(); err != nil {
 		t.Fatal(err)
@@ -66,12 +65,12 @@ func TestTokenManager(t *testing.T) {
 	// Only the admin (user with ID = 1) must be in the refreshed list
 	wantTokenList = []uint64{1}
 	if !cmp.Equal(wantTokenList, manager.TokensToUpdate) {
-		t.Errorf("mismatch: expected %v got %v", wantTokenList, manager.TokensToUpdate)
+		t.Errorf("token list is %v, expected %v", wantTokenList, manager.TokensToUpdate)
 	}
 	if err := manager.Remove(admin.ID); err != nil {
 		t.Fatal(err)
 	}
 	if len(manager.TokensToUpdate) > 0 {
-		t.Errorf("expected 0 elements in the list, got %d", len(manager.TokensToUpdate))
+		t.Errorf("%d tokens in the list, expected 0", len(manager.TokensToUpdate))
 	}
 }

@@ -23,8 +23,15 @@ const (
 func TestGetOrganization(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
-
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	app, err := scm.NewApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	client, err := app.NewInstallationClient(context.Background(), qfTestOrg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), client, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,8 +52,16 @@ func TestGetOrganization(t *testing.T) {
 func TestListHooks(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
+	app, err := scm.NewApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	client, err := app.NewInstallationClient(context.Background(), qfTestOrg)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), client, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,12 +98,20 @@ func TestCreateHook(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 	serverURL := scm.GetWebHookServer(t)
+	app, err := scm.NewApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	client, err := app.NewInstallationClient(context.Background(), qfTestOrg)
+	if err != nil {
+		t.Fatal(err)
+	}
 	// Only enable this test to add a new webhook to your test course organization
 	if serverURL == "" {
 		t.Skip("Disabled pending support for deleting webhooks")
 	}
 
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), client, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
