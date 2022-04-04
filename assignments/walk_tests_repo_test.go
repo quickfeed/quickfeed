@@ -100,7 +100,7 @@ printf "Default script\n"
 	if gotDockerfile != wantDockerfile {
 		t.Errorf("got Dockerfile %q, want %q", gotDockerfile, wantDockerfile)
 	}
-	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&pb.Task{}, "Body")); diff != "" {
+	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&pb.Task{}, "body")); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
 	}
 }
