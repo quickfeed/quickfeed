@@ -227,3 +227,28 @@ func TestEditRepoIssue(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestRequestReviewers(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repository := "oleespe-labs"
+	pullNumber := 48
+	reviewers := []string{"oleespe-2"}
+
+	opt := &scm.RequestReviewersOptions{
+		Organization: qfTestOrg,
+		Repository:   repository,
+		PullNumber:   pullNumber,
+		Reviewers:    reviewers,
+	}
+
+	err = s.RequestReviewers(context.Background(), opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

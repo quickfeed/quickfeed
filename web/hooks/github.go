@@ -2,7 +2,6 @@ package hooks
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -94,26 +93,26 @@ func (wh GitHubWebHook) TempHandle(w http.ResponseWriter, r *http.Request) {
 		}
 		course.Provider = "github"
 		// Printing db before
-		repos, err = wh.db.GetRepositoriesWithIssues(&pb.Repository{OrganizationID: course.GetOrganizationID()})
-		for _, repo := range repos {
-			fmt.Printf("\nRepository: %s", repo.Name())
-			for _, issue := range repo.Issues {
-				fmt.Printf("\nIssue ID: %d, issue TaskID: %d", issue.GetID(), issue.GetTaskID())
-			}
-		}
+		// repos, err = wh.db.GetRepositoriesWithIssues(&pb.Repository{OrganizationID: course.GetOrganizationID()})
+		// for _, repo := range repos {
+		// 	fmt.Printf("\nRepository: %s", repo.Name())
+		// 	for _, issue := range repo.Issues {
+		// 		fmt.Printf("\nIssue ID: %d, issue TaskID: %d", issue.GetID(), issue.GetTaskID())
+		// 	}
+		// }
 		assignments.UpdateFromTestsRepo(wh.logger, wh.db, course)
-		repos, err = wh.db.GetRepositoriesWithIssues(&pb.Repository{OrganizationID: course.GetOrganizationID()})
-		for _, repo := range repos {
-			fmt.Printf("\nRepository: %s", repo.Name())
-			for _, issue := range repo.Issues {
-				fmt.Printf("\nIssue ID: %d, issue TaskID: %d", issue.GetID(), issue.GetTaskID())
-			}
-		}
+		// repos, err = wh.db.GetRepositoriesWithIssues(&pb.Repository{OrganizationID: course.GetOrganizationID()})
+		// for _, repo := range repos {
+		// 	fmt.Printf("\nRepository: %s", repo.Name())
+		// 	for _, issue := range repo.Issues {
+		// 		fmt.Printf("\nIssue ID: %d, issue TaskID: %d", issue.GetID(), issue.GetTaskID())
+		// 	}
+		// }
 	case *github.PullRequestEvent:
-		wh.logger.Debug(log.IndentJson(e))
+		// wh.logger.Debug(log.IndentJson(e))
 		wh.handlePullRequest(e)
 	case *github.PullRequestReviewEvent:
-		wh.logger.Debug(log.IndentJson(e))
+		// wh.logger.Debug(log.IndentJson(e))
 		wh.handlePullRequestReview(e)
 	default:
 		wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
@@ -137,8 +136,8 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{PullRequestID: uint64(payload.GetPullRequest().GetID())})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			wh.logger.Debugf("Ignoring pull request review event for non-managed pull request %s: %s",
-				payload.GetRepo().GetFullName(), payload.PullRequest.GetTitle())
+			wh.logger.Debugf("Ignoring pull request review event for non-managed pull request #%d, in %s",
+				payload.GetPullRequest().GetNumber(), payload.GetRepo().GetFullName())
 		} else {
 			wh.logger.Errorf("Failed to get pull request from database %v", err)
 		}
@@ -149,6 +148,7 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 		pullRequest.Approved = true
 		wh.db.UpdatePullRequest(pullRequest)
 	}
+	wh.logger.Debugf("Pull request successfully approved for repository: %s", payload.GetRepo().GetFullName())
 }
 
 func (wh GitHubWebHook) handlePullRequestOpened(payload *github.PullRequestEvent) {
@@ -171,21 +171,28 @@ func (wh GitHubWebHook) handlePullRequestOpened(payload *github.PullRequestEvent
 	}
 
 	// If we do not link a PR to an issue, then we cannot delete the issue upon PR approval and merge.
-	// New issues are not created if one is deleted. However, if an issue has been closed1 because it was completed
+	// New issues are not created if one is deleted. However, if an issue has been closed because it was completed
 	// then qf would try to update an issue that has been closed. This is probably ok since the issue is not deleted, just closed.
-	// If editing a closed issue, it simply edits it.
+	// Answer: If editing a closed issue, it simply edits it.
 
 	// TODO(Espeland): Should maybe have a check here to see if the pull request is linked to a valid issue.
+
+	// Get teachers of course
 	pullRequest := &pb.PullRequest{
-		ID: uint64(payload.GetPullRequest().GetID()),
+		PullRequestID: uint64(payload.GetPullRequest().GetID()),
 		// TODO(Espeland): Probably a way of approved being automatically set to false
 		Approved: false,
 	}
+
+	// How do we run tests on the task in question?
+	// Get the task, and the associated tests (not implemented).
+	// Create workflow
 
 	if err := wh.db.CreatePullRequest(pullRequest); err != nil {
 		wh.logger.Errorf("Failed to create pull request record for repository %s: %v", payload.GetRepo().GetFullName(), err)
 		return
 	}
+	wh.logger.Debugf("Pull request successfully created for repository: %s", payload.GetRepo().GetFullName())
 }
 
 func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent) {
@@ -193,30 +200,33 @@ func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent
 		payload.GetRepo().GetName(), payload.GetOrganization().GetLogin())
 
 	if !payload.PullRequest.GetMerged() {
-		wh.logger.Debugf("Ignoring pull request closed event for non-merged pull request %s: %s",
-			payload.GetRepo().GetFullName(), payload.GetPullRequest().GetTitle())
+		wh.logger.Debugf("Ignoring pull request closed event for non-merged pull request #%d, in %s",
+			payload.GetPullRequest().GetNumber(), payload.GetRepo().GetFullName())
 		return
 	}
 
 	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{PullRequestID: uint64(payload.GetPullRequest().GetID())})
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			wh.logger.Debugf("Ignoring pull request closed event for non-managed pull request %s: %s",
-				payload.GetRepo().GetFullName(), payload.GetPullRequest().GetTitle())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			wh.logger.Debugf("Ignoring pull request closed event for non-managed pull request #%d, in %s",
+				payload.GetPullRequest().GetNumber(), payload.GetRepo().GetFullName())
 		} else {
-			wh.logger.Errorf("Failed to get pull request from database %v", err)
+			wh.logger.Errorf("Failed to get pull request from database: %v", err)
 		}
 		return
 	}
 
 	if !pullRequest.GetApproved() {
-		wh.logger.Debugf("Ignoring pull request closed event for non-approved pull request %s: %s",
-			payload.GetRepo().GetFullName(), payload.GetPullRequest().GetTitle())
-		return
+		// What to do here?
+
+		// wh.logger.Debugf("Ignoring pull request review event for non-approved pull request #%d, in %s",
+		// 	payload.GetPullRequest().GetNumber(), payload.GetRepo().GetFullName())
+		// return
 	}
 	if err := wh.db.DeletePullRequest(pullRequest); err != nil {
 		wh.logger.Errorf("Failed to delete pull request from database %v", err)
 	}
+	wh.logger.Debugf("Pull request successfully closed for repository: %s", payload.GetRepo().GetFullName())
 }
 
 func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {

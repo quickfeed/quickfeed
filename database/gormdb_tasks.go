@@ -130,9 +130,11 @@ func (db *GormDB) CreatePullRequest(pullRequest *pb.PullRequest) error {
 
 // GetPullRequest returns the pull request matching the given query
 func (db *GormDB) GetPullRequest(query *pb.PullRequest) (*pb.PullRequest, error) {
-	var pullRequest *pb.PullRequest
-	err := db.conn.Last(pullRequest, query).Error
-	return pullRequest, err
+	var pullRequest pb.PullRequest
+	if err := db.conn.Where(query).Last(&pullRequest).Error; err != nil {
+		return nil, err
+	}
+	return &pullRequest, nil
 }
 
 // DeletePullRequest deletes the pull request matching the given query

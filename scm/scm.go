@@ -72,6 +72,9 @@ type SCM interface {
 	// Edit a particular issue in a Repository
 	EditRepoIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error)
 
+	// RequestReviewers requests reviewers for a pull request
+	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
+
 	// Accepts repository invite.
 	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
 }
@@ -258,6 +261,13 @@ type CreateIssueOptions struct {
 	Labels       *[]string
 	Assignee     *string
 	Assignees    *[]string
+}
+
+type RequestReviewersOptions struct {
+	Organization string
+	Repository   string
+	PullNumber   int
+	Reviewers    []string
 }
 
 // RepositoryInvitationOptions contains information on which organization and user to accept invitations for.

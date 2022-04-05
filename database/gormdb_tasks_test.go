@@ -264,3 +264,22 @@ func TestGormDBReturnSynchronizeAssignmentTasks(t *testing.T) {
 	}
 	// -------------------------------------------------------------------------- //
 }
+
+func TestCreatePullRequest(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	wantPullRequest := &pb.PullRequest{PullRequestID: 1234, Approved: false}
+
+	if err := db.CreatePullRequest(wantPullRequest); err != nil {
+		t.Fatal(err)
+	}
+	gotPullRequest, err := db.GetPullRequest(&pb.PullRequest{PullRequestID: 1234})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if diff := cmp.Diff(wantPullRequest, gotPullRequest, protocmp.Transform()); diff != "" {
+		t.Errorf("CreatePullRequest mismatch (-wantPullRequest, +gotPullRequest):\n%s", diff)
+	}
+}

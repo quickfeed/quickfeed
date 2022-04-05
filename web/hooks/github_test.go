@@ -40,12 +40,6 @@ const (
 //
 // TODO(meling) add code to create a push event to the tests repository.
 
-func readyDBForWebHookTesting(t *testing.T, ctx context.Context, db database.Database, sc scm.SCM, course *pb.Course) error {
-	t.Helper()
-
-	return nil
-}
-
 func TestGitHubWebHook(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)

@@ -316,6 +316,15 @@ func (*GitlabSCM) EditRepoIssue(_ context.Context, _ int, _ *CreateIssueOptions)
 	}
 }
 
+// RequestReviewers implements the SCM interface
+func (*GitlabSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error {
+	// TODO no implementation provided yet
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "EditRepoIssue",
+	}
+}
+
 // AcceptRepositoryInvite implements the SCM interface
 func (*GitlabSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
 	// TODO no implementation provided yet

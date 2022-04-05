@@ -793,6 +793,28 @@ func (s *GithubSCM) EditRepoIssue(ctx context.Context, issueNumber int, opt *Cre
 	return toIssue(issue), nil
 }
 
+// RequestReviewers implements the SCM interface
+func (s *GithubSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error {
+	if !opt.valid() {
+		return ErrMissingFields{
+			Method:  "RequestReviewers",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
+	reviewersRequest := github.ReviewersRequest{
+		Reviewers: opt.Reviewers,
+	}
+
+	if _, _, err := s.client.PullRequests.RequestReviewers(ctx, opt.Organization, opt.Repository, opt.PullNumber, reviewersRequest); err != nil {
+		return ErrFailedSCM{
+			Method:   "RequestReviewers",
+			Message:  fmt.Sprintf("Failed to request reviewers for pull request #%d, in repository: %s, for organization: %s", opt.PullNumber, opt.Repository, opt.Organization),
+			GitError: err,
+		}
+	}
+	return nil
+}
+
 // GetRepositoryInvites implements the SCM interface
 func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) error {
 	if !opt.valid() {

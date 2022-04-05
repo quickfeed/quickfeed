@@ -116,6 +116,11 @@ func (opt CreateIssueOptions) valid() bool {
 	return (opt.Organization != "" && opt.Repository != "" && opt.Title != "" && opt.Body != "")
 }
 
+func (opt RequestReviewersOptions) valid() bool {
+	return opt.Organization != "" && opt.Repository != "" &&
+		opt.PullNumber > 0 && len(opt.Reviewers) != 0
+}
+
 func (opt RepositoryInvitationOptions) valid() bool {
 	return opt.Login != "" && opt.Owner != ""
 }

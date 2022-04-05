@@ -259,3 +259,12 @@ func (*FakeSCM) EditRepoIssue(_ context.Context, _ int, _ *CreateIssueOptions) (
 		Method: "EditRepoIssue",
 	}
 }
+
+// RequestReviewers implements the SCM interface
+func (*FakeSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error {
+	// TODO no implementation provided yet
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "EditRepoIssue",
+	}
+}
