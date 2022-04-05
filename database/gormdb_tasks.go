@@ -1,8 +1,6 @@
 package database
 
 import (
-	"errors"
-	"fmt"
 	"sort"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -41,12 +39,10 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint
 
 	err = db.conn.Transaction(func(tx *gorm.DB) error {
 		for _, assignment := range assignments {
-			existingTasks, err := db.GetTasks(&pb.Task{AssignmentID: assignment.GetID()})
-			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-				// will rollback transaction
-				return fmt.Errorf("failed to get tasks for assignment %d: %w", assignment.GetID(), err)
+			var existingTasks []*pb.Task
+			if err := tx.Find(&existingTasks, &pb.Task{AssignmentID: assignment.GetID()}).Error; err != nil {
+				return err // will rollback transaction
 			}
-
 			for _, existingTask := range existingTasks {
 				task, ok := taskMap[assignment.Order][existingTask.Name]
 				if !ok {
