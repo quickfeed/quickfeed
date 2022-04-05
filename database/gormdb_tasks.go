@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"gorm.io/gorm"
@@ -75,26 +76,27 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint
 	deletedTasks = []*pb.Task{}
 	assignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
 	if err != nil {
-		return createdTasks, updatedTasks, deletedTasks, err
+		return nil, nil, nil, err
 	}
 
 	err = db.conn.Transaction(func(tx *gorm.DB) error {
 		for _, assignment := range assignments {
 			existingTasks, err := db.GetTasks(&pb.Task{AssignmentID: assignment.GetID()})
 			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				// will rollback transaction
 				return fmt.Errorf("failed to get tasks for assignment %d: %w", assignment.GetID(), err)
 			}
 
 			for _, existingTask := range existingTasks {
 				task, ok := taskMap[assignment.Order][existingTask.Name]
 				if !ok {
-					// There exists a task in db, that is not represented by any supplied task.
+					// Existing task in database not among the supplied tasks to synchronize.
 					deletedTasks = append(deletedTasks, existingTask)
 					_ = tx.Delete(existingTask)
 					continue
 				}
 				if existingTask.HasChanged(task) {
-					// Task has been changed, and is therefore updated.
+					// Task has been changed and must be updated.
 					existingTask.Title = task.Title
 					existingTask.Body = task.Body
 					updatedTasks = append(updatedTasks, existingTask)
@@ -102,19 +104,28 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint
 						Where(&pb.Task{ID: existingTask.GetID()}).
 						Updates(existingTask).Error
 					if err != nil {
-						return err
+						return err // will rollback transaction
 					}
 				}
 				delete(taskMap[assignment.Order], existingTask.Name)
 			}
 
-			// Only tasks that there is no existing record of remain. These are created.
+			// Find new tasks to be created for the current assignment
 			for _, task := range taskMap[assignment.Order] {
 				task.AssignmentID = assignment.ID
 				createdTasks = append(createdTasks, task)
-				if err = tx.Create(task).Error; err != nil {
-					return err
-				}
+			}
+		}
+
+		// Tasks to be created must be sorted since map iteration order is non-deterministic
+		sort.Slice(createdTasks, func(i, j int) bool {
+			return createdTasks[i].Name < createdTasks[j].Name
+		})
+
+		// Create tasks that are not in the database
+		for _, task := range createdTasks {
+			if err = tx.Create(task).Error; err != nil {
+				return err // will rollback transaction
 			}
 		}
 		return nil

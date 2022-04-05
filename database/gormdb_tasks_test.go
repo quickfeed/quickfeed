@@ -79,8 +79,6 @@ func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
 	}
 }
 
-// TODO(Espeland): The following tests fail sometimes. I think they only fail because the order of the compared slices are not the same, which should not matter anyways.
-
 // TestSynchronizeTasks tests whether tasks are correctly updated in the database
 func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
@@ -163,7 +161,6 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	if diff := cmp.Diff(wantTasks3, gotTasks3, protocmp.Transform()); diff != "" {
 		t.Errorf("Synchronization mismatch (-wantTasks3, +gotTasks3):\n%s", diff)
 	}
-	// -------------------------------------------------------------------------- //
 }
 
 // TestSynchronizeAssignmentTasksReturn tests if SynchronizeAssignmentTasks returns correct values
@@ -262,5 +259,4 @@ func TestGormDBReturnSynchronizeAssignmentTasks(t *testing.T) {
 	if diff := cmp.Diff(wantDeletedTasks, gotDeletedTasks, protocmp.Transform()); diff != "" {
 		t.Errorf("SynchronizeAssignmentTasks return mismatch (-wantDeletedTasks, +gotDeletedTasks):\n%s", diff)
 	}
-	// -------------------------------------------------------------------------- //
 }
