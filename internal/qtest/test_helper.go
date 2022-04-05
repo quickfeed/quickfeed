@@ -3,7 +3,7 @@ package qtest
 import (
 	"context"
 	"crypto/rand"
-	"crypto/sha1"
+	"crypto/sha256"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -148,7 +148,7 @@ func RandomString(t *testing.T) string {
 	if _, err := rand.Read(randomness); err != nil {
 		t.Fatal(err)
 	}
-	return fmt.Sprintf("%x", sha1.Sum(randomness))[:6]
+	return fmt.Sprintf("%x", sha256.Sum256(randomness))[:6]
 }
 
 // WithUserContext is a test helper function to create metadata for the
