@@ -33,16 +33,6 @@ func (db *GormDB) CreateTasks(tasks []*pb.Task) error {
 	return db.conn.Create(tasks).Error
 }
 
-// getIssues gets issues based on query
-func (db *GormDB) getIssues(query *pb.Issue) ([]*pb.Issue, error) {
-	var issues []*pb.Issue
-	err := db.conn.Find(&issues, query).Error
-	if err != nil {
-		return nil, err
-	}
-	return issues, err
-}
-
 // CreateIssues creates a batch of issues
 func (db *GormDB) CreateIssues(issues []*pb.Issue) error {
 	if len(issues) == 0 {
