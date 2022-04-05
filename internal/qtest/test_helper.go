@@ -160,9 +160,10 @@ func WithUserContext(ctx context.Context, user *pb.User) context.Context {
 }
 
 // PopulateDatabaseWithInitialData creates initial data-records based on organization
-func PopulateDatabaseWithInitialData(t *testing.T, ctx context.Context, db database.Database, sc scm.SCM, course *pb.Course) error {
+func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.SCM, course *pb.Course) error {
 	t.Helper()
 
+	ctx := context.Background()
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
 	if err != nil {
 		return err
