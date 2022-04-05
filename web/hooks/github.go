@@ -136,7 +136,7 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 
 	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{PullRequestID: uint64(payload.GetPullRequest().GetID())})
 	if err != nil {
-		if err == errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			wh.logger.Debugf("Ignoring pull request review event for non-managed pull request %s: %s",
 				payload.GetRepo().GetFullName(), payload.PullRequest.GetTitle())
 		} else {
