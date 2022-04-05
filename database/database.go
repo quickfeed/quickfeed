@@ -132,8 +132,6 @@ type Database interface {
 
 	// GetTasks returns tasks that match the given query.
 	GetTasks(query *pb.Task) ([]*pb.Task, error)
-	// CreateTasks creates new tasks.
-	CreateTasks(tasks []*pb.Task) error
 	// CreateIssues creates a batch of issues
 	CreateIssues(issues []*pb.Issue) error
 	// SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks

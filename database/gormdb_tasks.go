@@ -9,9 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// TODO(Meling): Methods such as GetTasks and CreateTasks are not necessary, except for in tests. They therefore need to be a part of the interface, even though they are not actually used.
-// Is there a better way of handeling this?
-
 // GetTasks gets tasks based on query
 func (db *GormDB) GetTasks(query *pb.Task) ([]*pb.Task, error) {
 	var tasks []*pb.Task
@@ -23,14 +20,6 @@ func (db *GormDB) GetTasks(query *pb.Task) ([]*pb.Task, error) {
 		return tasks, gorm.ErrRecordNotFound
 	}
 	return tasks, err
-}
-
-// CreateTasks creates a batch of tasks
-func (db *GormDB) CreateTasks(tasks []*pb.Task) error {
-	if len(tasks) == 0 {
-		return nil
-	}
-	return db.conn.Create(tasks).Error
 }
 
 // CreateIssues creates a batch of issues

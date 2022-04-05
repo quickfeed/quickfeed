@@ -136,18 +136,6 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	// Test adding a new task to database not represented by tasks supplied to
 	// SynchronizeAssignmentTasks, then finding the same tasks as in previous test.
 	// -------------------------------------------------------------------------- //
-	err = db.CreateTasks([]*pb.Task{
-		{
-			AssignmentID:    1,
-			AssignmentOrder: 1,
-			Title:           "Title title",
-			Body:            "This task should not exists in db",
-			Name:            "Fake name",
-		},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
 	if _, _, err = db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments2)); err != nil {
 		t.Fatal(err)
 	}
