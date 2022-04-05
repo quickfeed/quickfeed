@@ -137,19 +137,18 @@ func updateIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 			// Issue does not need to be updated
 			continue
 		}
-		state := "open"
-		body := task.Body
-		if handleDeletion {
-			state = "closed"
-			body = deleteMsg + task.Body
-		}
 		issueOptions := &scm.CreateIssueOptions{
 			Organization: course.GetOrganizationPath(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
-			Body:         body,
-			State:        state,
 		}
+		if handleDeletion {
+			issueOptions.State = "closed"
+			issueOptions.Body = deleteMsg + task.Body
+		} else {
+			issueOptions.Body = task.Body
+		}
+
 		if _, err := sc.EditRepoIssue(ctx, int(issue.IssueNumber), issueOptions); err != nil {
 			return err
 		}

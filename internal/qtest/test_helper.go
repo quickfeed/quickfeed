@@ -167,6 +167,7 @@ func PopulateDatabaseWithInitialData(t *testing.T, ctx context.Context, db datab
 	if err != nil {
 		return err
 	}
+	course.OrganizationID = org.GetID()
 
 	admin := CreateFakeUser(t, db, uint64(1))
 	CreateCourse(t, db, admin, course)

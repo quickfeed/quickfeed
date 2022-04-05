@@ -127,3 +127,22 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint
 func (db *GormDB) CreatePullRequest(pullRequest *pb.PullRequest) error {
 	return db.conn.Create(pullRequest).Error
 }
+
+// GetPullRequest returns the pull request matching the given query
+func (db *GormDB) GetPullRequest(query *pb.PullRequest) (*pb.PullRequest, error) {
+	var pullRequest *pb.PullRequest
+	err := db.conn.Last(pullRequest, query).Error
+	return pullRequest, err
+}
+
+// DeletePullRequest deletes the pull request matching the given query
+func (db *GormDB) DeletePullRequest(pullRequest *pb.PullRequest) error {
+	return db.conn.Delete(pullRequest).Error
+}
+
+// DeletePullRequest updates the pull request matching the given query
+func (db *GormDB) UpdatePullRequest(pullRequest *pb.PullRequest) error {
+	return db.conn.Model(&pb.PullRequest{}).
+		Where(&pb.PullRequest{ID: pullRequest.GetID()}).
+		Updates(pullRequest).Error
+}

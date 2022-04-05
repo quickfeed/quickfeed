@@ -126,21 +126,13 @@ func TestGitHubPRWebHook(t *testing.T) {
 
 	ctx := context.Background()
 	opt := &scm.CreateHookOptions{
-		URL:        serverURL + "/webhook",
-		Secret:     secret,
-		Repository: &scm.Repository{Owner: qfTestOrg, Path: "tests"},
+		URL:          serverURL + "/webhook",
+		Secret:       secret,
+		Organization: qfTestOrg,
 	}
 	err = s.CreateHook(ctx, opt)
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	hooks, err := s.ListHooks(ctx, opt.Repository, "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, hook := range hooks {
-		t.Logf("hook: %v", hook)
 	}
 
 	course := &pb.Course{
@@ -156,6 +148,7 @@ func TestGitHubPRWebHook(t *testing.T) {
 	if err := populateDatabaseWithTasks(t, ctx, logger, db, s, course); err != nil {
 		t.Fatal(err)
 	}
+	pb.SetAccessToken(course.GetID(), accessToken)
 	var runner ci.Runner
 	webhook := NewGitHubWebHook(logger, db, runner, secret)
 

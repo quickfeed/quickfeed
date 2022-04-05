@@ -1,6 +1,8 @@
 package hooks
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -12,6 +14,7 @@ import (
 	"github.com/autograde/quickfeed/log"
 	"github.com/google/go-github/v35/github"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // GitHubWebHook holds references and data for handling webhook events.
@@ -71,7 +74,41 @@ func (wh GitHubWebHook) TempHandle(w http.ResponseWriter, r *http.Request) {
 		wh.logger.Errorf("Could not parse github webhook: %v", err)
 		return
 	}
+
 	switch e := event.(type) {
+	case *github.PushEvent:
+		repos, err := wh.db.GetRepositories(&pb.Repository{RepositoryID: uint64(e.GetRepo().GetID())})
+		if err != nil {
+			wh.logger.Errorf("Failed to get repository by remote ID %d from database: %v", e.GetRepo().GetID(), err)
+			return
+		}
+		if len(repos) != 1 {
+			wh.logger.Debugf("Ignoring pull request opened event for unknown repository: %s", e.GetRepo().GetFullName())
+			return
+		}
+		repo := repos[0]
+		course, err := wh.db.GetCourseByOrganizationID(repo.OrganizationID)
+		if err != nil {
+			wh.logger.Errorf("Failed to get course from database: %v", err)
+			return
+		}
+		course.Provider = "github"
+		// Printing db before
+		repos, err = wh.db.GetRepositoriesWithIssues(&pb.Repository{OrganizationID: course.GetOrganizationID()})
+		for _, repo := range repos {
+			fmt.Printf("\nRepository: %s", repo.Name())
+			for _, issue := range repo.Issues {
+				fmt.Printf("\nIssue ID: %d, issue TaskID: %d", issue.GetID(), issue.GetTaskID())
+			}
+		}
+		assignments.UpdateFromTestsRepo(wh.logger, wh.db, course)
+		repos, err = wh.db.GetRepositoriesWithIssues(&pb.Repository{OrganizationID: course.GetOrganizationID()})
+		for _, repo := range repos {
+			fmt.Printf("\nRepository: %s", repo.Name())
+			for _, issue := range repo.Issues {
+				fmt.Printf("\nIssue ID: %d, issue TaskID: %d", issue.GetID(), issue.GetTaskID())
+			}
+		}
 	case *github.PullRequestEvent:
 		wh.logger.Debug(log.IndentJson(e))
 		wh.handlePullRequest(e)
@@ -80,6 +117,105 @@ func (wh GitHubWebHook) TempHandle(w http.ResponseWriter, r *http.Request) {
 		wh.handlePullRequestReview(e)
 	default:
 		wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
+	}
+}
+
+func (wh GitHubWebHook) handlePullRequest(payload *github.PullRequestEvent) {
+	switch payload.GetAction() {
+	// TODO(Espeland): Make these actions into global variables?
+	case "opened": // After pr has been created
+		wh.handlePullRequestOpened(payload)
+	case "closed": // After pr has been approved, and is merged back in (This event is sent when someone closes pr, or when someone clicks merge pr. In case of merge, a push event is also sent)
+		wh.handlePullRequestClosed(payload)
+	}
+}
+
+func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestReviewEvent) {
+	wh.logger.Debugf("Received pull request review event for pull request: %s, in repository: %s",
+		payload.GetPullRequest().GetTitle(), payload.GetRepo().GetName())
+
+	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{PullRequestID: uint64(payload.GetPullRequest().GetID())})
+	if err != nil {
+		if err == errors.Is(err, gorm.ErrRecordNotFound) {
+			wh.logger.Debugf("Ignoring pull request review event for non-managed pull request %s: %s",
+				payload.GetRepo().GetFullName(), payload.PullRequest.GetTitle())
+		} else {
+			wh.logger.Errorf("Failed to get pull request from database %v", err)
+		}
+		return
+	}
+
+	if payload.GetReview().GetState() == "approved" {
+		pullRequest.Approved = true
+		wh.db.UpdatePullRequest(pullRequest)
+	}
+}
+
+func (wh GitHubWebHook) handlePullRequestOpened(payload *github.PullRequestEvent) {
+	wh.logger.Debugf("Received pull request opened event for repository: %s, in organization: %s",
+		payload.GetRepo().GetName(), payload.GetOrganization().GetLogin())
+
+	repos, err := wh.db.GetRepositories(&pb.Repository{RepositoryID: uint64(payload.GetRepo().GetID())})
+	if err != nil {
+		wh.logger.Errorf("Failed to get repository by remote ID %d from database: %v", payload.GetRepo().GetID(), err)
+		return
+	}
+	if len(repos) != 1 {
+		wh.logger.Debugf("Ignoring pull request opened event for unknown repository: %s", payload.GetRepo().GetFullName())
+		return
+	}
+	repo := repos[0]
+	if !repo.IsGroupRepo() {
+		wh.logger.Debugf("Ignoring pull request opened event for non-group repository: %s", payload.GetRepo().GetFullName())
+		return
+	}
+
+	// If we do not link a PR to an issue, then we cannot delete the issue upon PR approval and merge.
+	// New issues are not created if one is deleted. However, if an issue has been closed1 because it was completed
+	// then qf would try to update an issue that has been closed. This is probably ok since the issue is not deleted, just closed.
+	// If editing a closed issue, it simply edits it.
+
+	// TODO(Espeland): Should maybe have a check here to see if the pull request is linked to a valid issue.
+	pullRequest := &pb.PullRequest{
+		ID: uint64(payload.GetPullRequest().GetID()),
+		// TODO(Espeland): Probably a way of approved being automatically set to false
+		Approved: false,
+	}
+
+	if err := wh.db.CreatePullRequest(pullRequest); err != nil {
+		wh.logger.Errorf("Failed to create pull request record for repository %s: %v", payload.GetRepo().GetFullName(), err)
+		return
+	}
+}
+
+func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent) {
+	wh.logger.Debugf("Received pull request closed event for repository: %s, in organization: %s",
+		payload.GetRepo().GetName(), payload.GetOrganization().GetLogin())
+
+	if !payload.PullRequest.GetMerged() {
+		wh.logger.Debugf("Ignoring pull request closed event for non-merged pull request %s: %s",
+			payload.GetRepo().GetFullName(), payload.GetPullRequest().GetTitle())
+		return
+	}
+
+	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{PullRequestID: uint64(payload.GetPullRequest().GetID())})
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			wh.logger.Debugf("Ignoring pull request closed event for non-managed pull request %s: %s",
+				payload.GetRepo().GetFullName(), payload.GetPullRequest().GetTitle())
+		} else {
+			wh.logger.Errorf("Failed to get pull request from database %v", err)
+		}
+		return
+	}
+
+	if !pullRequest.GetApproved() {
+		wh.logger.Debugf("Ignoring pull request closed event for non-approved pull request %s: %s",
+			payload.GetRepo().GetFullName(), payload.GetPullRequest().GetTitle())
+		return
+	}
+	if err := wh.db.DeletePullRequest(pullRequest); err != nil {
+		wh.logger.Errorf("Failed to delete pull request from database %v", err)
 	}
 }
 
@@ -233,44 +369,4 @@ func (wh GitHubWebHook) updateLastActivityDate(userID, courseID uint64) {
 	if err := wh.db.UpdateEnrollment(query); err != nil {
 		wh.logger.Errorf("Failed to update the last activity date for user %d: %v", userID, err)
 	}
-}
-
-func (wh GitHubWebHook) handlePullRequest(payload *github.PullRequestEvent) {
-	switch payload.GetAction() {
-	// TODO(Espeland): Make these actions into global variables?
-	case "opened": // After pr has been created
-		wh.handlePullRequestOpened(payload)
-	case "closed": // After pr has been approved, and is merged back in (This event is sent when someone closes pr, or when someone clicks merge pr. In case of merge, a push event is also sent)
-		wh.handlePullRequestClosed(payload)
-	}
-}
-
-func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestReviewEvent) {
-	// If review is approved, we set the pr to approved.
-	// We must also check that the review is on a pr that quickfeed manages.
-	return
-}
-
-func (wh GitHubWebHook) handlePullRequestOpened(payload *github.PullRequestEvent) {
-	wh.logger.Debugf("Received pull request opened event for repository: %s, in organization: %s",
-		payload.GetRepo().GetName(), payload.GetOrganization().GetName())
-
-	// TODO(Espeland): Should maybe have a check here to see if the pull request is linked to a valid issue.
-	pullRequest := &pb.PullRequest{
-		ID: uint64(payload.PullRequest.GetID()),
-		// TODO(Espeland): Probably a way of approved being automatically set to false
-		Approved: false,
-	}
-
-	if err := wh.db.CreatePullRequest(pullRequest); err != nil {
-		wh.logger.Errorf("Failed to create pull request record for repository %s: %v", payload.GetRepo().GetFullName(), err)
-		return
-	}
-
-	// Assign reviewers?
-}
-
-func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent) {
-	// Check if PR has been merged and approved. Only then do we delete the pr record.
-	return
 }

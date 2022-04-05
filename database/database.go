@@ -140,6 +140,12 @@ type Database interface {
 	SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) ([]*pb.Task, []*pb.Task, []*pb.Task, error)
 	// CreatePullRequest creates a pull request
 	CreatePullRequest(pullRequest *pb.PullRequest) error
+	// GetPullRequest returns the pull request matching the given query
+	GetPullRequest(query *pb.PullRequest) (*pb.PullRequest, error)
+	// DeletePullRequest deletes the pull request matching the given query
+	DeletePullRequest(query *pb.PullRequest) error
+	// DeletePullRequest updates the pull request matching the given query
+	UpdatePullRequest(pullRequest *pb.PullRequest) error
 
 	// UpdateSlipDays updates used slipdays for the given course enrollment
 	UpdateSlipDays([]*pb.UsedSlipDays) error
