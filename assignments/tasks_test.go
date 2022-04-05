@@ -89,7 +89,7 @@ func populateDatabaseWithTasks(t *testing.T, logger *zap.SugaredLogger, db datab
 		}
 	}
 
-	createdTasks, _, _, err := db.SynchronizeAssignmentTasks(course, tasks)
+	createdTasks, _, err := db.SynchronizeAssignmentTasks(course, tasks)
 	if err != nil {
 		return err
 	}

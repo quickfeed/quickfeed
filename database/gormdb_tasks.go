@@ -51,32 +51,13 @@ func (db *GormDB) CreateIssues(issues []*pb.Issue) error {
 	return db.conn.Create(issues).Error
 }
 
-// DeleteIssuesOfAssociatedTasks deletes a batch of issues
-func (db *GormDB) DeleteIssuesOfAssociatedTasks(tasks []*pb.Task) error {
-	err := db.conn.Transaction(func(tx *gorm.DB) error {
-		for _, task := range tasks {
-			issues, err := db.getIssues(&pb.Issue{TaskID: task.ID})
-			if err != nil {
-				return err
-			}
-
-			if err = tx.Delete(issues).Error; err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	return err
-}
-
 // SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks
-func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) (createdTasks, updatedTasks, deletedTasks []*pb.Task, err error) {
+func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) (createdTasks, updatedTasks []*pb.Task, err error) {
 	createdTasks = []*pb.Task{}
 	updatedTasks = []*pb.Task{}
-	deletedTasks = []*pb.Task{}
 	assignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	err = db.conn.Transaction(func(tx *gorm.DB) error {
@@ -90,9 +71,18 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint
 			for _, existingTask := range existingTasks {
 				task, ok := taskMap[assignment.Order][existingTask.Name]
 				if !ok {
+					// Find issues associated with the existing task and delete them
+					var issues []*pb.Issue
+					if err = tx.Delete(issues, &pb.Issue{TaskID: existingTask.ID}).Error; err != nil {
+						return err // will rollback transaction
+					}
 					// Existing task in database not among the supplied tasks to synchronize.
-					deletedTasks = append(deletedTasks, existingTask)
-					_ = tx.Delete(existingTask)
+					err = tx.Delete(existingTask).Error
+					if err != nil {
+						return err // will rollback transaction
+					}
+					existingTask.MarkDeleted()
+					updatedTasks = append(updatedTasks, existingTask)
 					continue
 				}
 				if existingTask.HasChanged(task) {
@@ -131,5 +121,5 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint
 		return nil
 	})
 
-	return createdTasks, updatedTasks, deletedTasks, err
+	return createdTasks, updatedTasks, err
 }

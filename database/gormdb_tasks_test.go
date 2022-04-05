@@ -88,7 +88,7 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	foundAssignments1, foundTasks1 := initialAssignments()
 
 	// Should create a new database-record for each task in foundTasks
-	if _, _, _, err := db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments1)); err != nil {
+	if _, _, err := db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments1)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -97,13 +97,13 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if diff := cmp.Diff(wantTasks1, gotTasks1, protocmp.Transform()); diff != "" {
 		t.Errorf("Synchronization mismatch (-wantTasks1, +gotTasks1):\n%s", diff)
 	}
-	// -------------------------------------------------------------------------- //
 
-	// Testing adding one new task, and updating another
+	// -------------------------------------------------------------------------- //
+	// Testing adding one new task and updating another
+	// -------------------------------------------------------------------------- //
 	foundAssignments2, foundTasks2 := initialAssignments()
 
 	newTask := &pb.Task{
@@ -116,7 +116,7 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	foundAssignments2[1].Tasks = append(foundAssignments2[1].Tasks, newTask)
 	foundAssignments2[0].Tasks[0].Body = "New body for lab1 task1"
 
-	if _, _, _, err = db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments2)); err != nil {
+	if _, _, err = db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments2)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -128,13 +128,14 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if diff := cmp.Diff(wantTasks2, gotTasks2, protocmp.Transform()); diff != "" {
 		t.Errorf("Synchronization mismatch (-wantTasks2, +gotTasks2):\n%s", diff)
 	}
-	// -------------------------------------------------------------------------- //
 
-	// Testing adding new task to db, that is not represented by tasks supplied to SynchronizeAssignmentTasks, then finding the same tasks as in previous test
+	// -------------------------------------------------------------------------- //
+	// Test adding a new task to database not represented by tasks supplied to
+	// SynchronizeAssignmentTasks, then finding the same tasks as in previous test.
+	// -------------------------------------------------------------------------- //
 	err = db.CreateTasks([]*pb.Task{
 		{
 			AssignmentID:    1,
@@ -147,8 +148,7 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if _, _, _, err = db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments2)); err != nil {
+	if _, _, err = db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments2)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -157,7 +157,6 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if diff := cmp.Diff(wantTasks3, gotTasks3, protocmp.Transform()); diff != "" {
 		t.Errorf("Synchronization mismatch (-wantTasks3, +gotTasks3):\n%s", diff)
 	}
@@ -172,29 +171,24 @@ func TestGormDBReturnSynchronizeAssignmentTasks(t *testing.T) {
 	foundAssignments1, foundTasks1 := initialAssignments()
 
 	// Creating four new tasks
-	gotCreatedTasks, gotUpdatedTasks, gotDeletedTasks, err := db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments1))
+	gotCreatedTasks, gotUpdatedTasks, err := db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments1))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	wantDeletedTasks := []*pb.Task{}
 	wantUpdatedTasks := []*pb.Task{}
 	wantCreatedTasks := foundTasks1
 
 	if diff := cmp.Diff(wantCreatedTasks, gotCreatedTasks, protocmp.Transform()); diff != "" {
 		t.Errorf("SynchronizeAssignmentTasks return mismatch (-wantCreatedTasks, +gotCreatedTasks):\n%s", diff)
 	}
-
 	if diff := cmp.Diff(wantUpdatedTasks, gotUpdatedTasks, protocmp.Transform()); diff != "" {
 		t.Errorf("SynchronizeAssignmentTasks return mismatch (-wantUpdatedTasks, +gotUpdatedTasks):\n%s", diff)
 	}
 
-	if diff := cmp.Diff(wantDeletedTasks, gotDeletedTasks, protocmp.Transform()); diff != "" {
-		t.Errorf("SynchronizeAssignmentTasks return mismatch (-wantDeletedTasks, +gotDeletedTasks):\n%s", diff)
-	}
 	// -------------------------------------------------------------------------- //
-
 	// Creating three new tasks, updating two existing and deleting two existing
+	// -------------------------------------------------------------------------- //
 	foundAssignments2, foundTasks2 := initialAssignments()
 
 	newTasks := []*pb.Task{
@@ -235,28 +229,27 @@ func TestGormDBReturnSynchronizeAssignmentTasks(t *testing.T) {
 	foundAssignments2[0].Tasks[0].Title = "New title for task 1 assignment 1"
 	foundAssignments2[1].Tasks[0].Title = "New title for task 1 assignment 2"
 
-	gotCreatedTasks, gotUpdatedTasks, gotDeletedTasks, err = db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments2))
+	gotCreatedTasks, gotUpdatedTasks, err = db.SynchronizeAssignmentTasks(course, getTasksFromAssignments(foundAssignments2))
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	wantCreatedTasks = newTasks
 
-	wantUpdatedTasks = append(wantUpdatedTasks, foundAssignments1[0].Tasks[0], foundAssignments1[1].Tasks[0])
-	wantUpdatedTasks[0].Title = "New title for task 1 assignment 1"
-	wantUpdatedTasks[1].Title = "New title for task 1 assignment 2"
-
-	wantDeletedTasks = append(wantDeletedTasks, foundAssignments1[0].Tasks[1], foundAssignments1[1].Tasks[1])
+	foundAssignments1[0].Tasks[0].Title = "New title for task 1 assignment 1"
+	foundAssignments1[0].Tasks[1].MarkDeleted()
+	foundAssignments1[1].Tasks[0].Title = "New title for task 1 assignment 2"
+	foundAssignments1[1].Tasks[1].MarkDeleted()
+	wantUpdatedTasks = append(wantUpdatedTasks,
+		foundAssignments1[0].Tasks[0], // updated task 1 of assignment 1
+		foundAssignments1[0].Tasks[1], // deleted task 2 of assignment 1
+		foundAssignments1[1].Tasks[0], // updated task 1 of assignment 2
+		foundAssignments1[1].Tasks[1], // deleted task 2 of assignment 2
+	)
 
 	if diff := cmp.Diff(wantCreatedTasks, gotCreatedTasks, protocmp.Transform()); diff != "" {
 		t.Errorf("SynchronizeAssignmentTasks return mismatch (-wantCreatedTasks, +gotCreatedTasks):\n%s", diff)
 	}
-
 	if diff := cmp.Diff(wantUpdatedTasks, gotUpdatedTasks, protocmp.Transform()); diff != "" {
 		t.Errorf("SynchronizeAssignmentTasks return mismatch (-wantUpdatedTasks, +gotUpdatedTasks):\n%s", diff)
-	}
-
-	if diff := cmp.Diff(wantDeletedTasks, gotDeletedTasks, protocmp.Transform()); diff != "" {
-		t.Errorf("SynchronizeAssignmentTasks return mismatch (-wantDeletedTasks, +gotDeletedTasks):\n%s", diff)
 	}
 }
