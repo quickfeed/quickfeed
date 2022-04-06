@@ -58,8 +58,9 @@ func TestRunTests(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
+	client := qtest.TestAppClient(context.Background(), t, qfTestOrg)
 	// Only used to fetch the user's GitHub login (user name)
-	s, err := scm.NewSCMClient(qtest.Logger(t), "github", accessToken)
+	s, err := scm.NewSCMClient(qtest.Logger(t), client, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,8 +88,9 @@ func TestRunTestsTimeout(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
+	client := qtest.TestAppClient(context.Background(), t, qfTestOrg)
 	// Only used to fetch the user's GitHub login (user name)
-	s, err := scm.NewSCMClient(qtest.Logger(t), "github", accessToken)
+	s, err := scm.NewSCMClient(qtest.Logger(t), client, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

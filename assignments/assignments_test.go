@@ -17,8 +17,9 @@ import (
 func TestFetchAssignments(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
+	client := qtest.TestAppClient(context.Background(), t, qfTestOrg)
 
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), client, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

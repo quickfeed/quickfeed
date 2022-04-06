@@ -215,7 +215,7 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database) echo.HandlerFu
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
-func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms) echo.HandlerFunc {
+func OAuth2Callback(logger *zap.SugaredLogger, db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		logger.Debug("OAuth2Callback: started")
 		w := c.Response()
@@ -291,15 +291,6 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 			}
 			logger.Debugf("enableProvider: %v, r=%v, w=%v", provider, r, w)
 
-			if user, err := db.GetUser(us.ID); err != nil {
-				// handle
-				logger.Errorf("Failed to get user: %v", err)
-			} else {
-				if ok := updateScm(c, logger, scms, user); !ok {
-					logger.Debugf("Failed to update SCM for User: %v", user)
-				}
-			}
-
 			// Enable gRPC requests for session
 			if token := extractSessionCookie(w); len(token) > 0 {
 				logger.Debugf("extractSessionCookie: %v", token)
@@ -370,10 +361,6 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 		}
 		logger.Debugf("Session.Save: %v", sess)
 
-		if ok := updateScm(c, logger, scms, user); !ok {
-			logger.Debugf("Failed to update SCM for User: %v", user)
-		}
-
 		// Register session and associated user ID to enable gRPC requests for this session.
 		if token := extractSessionCookie(w); len(token) > 0 {
 			logger.Debugf("extractSessionCookie: %v", token)
@@ -389,7 +376,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 // AccessControl returns an access control middleware. Given a valid context
 // with sufficient access the next handler is called. Missing or invalid
 // credentials results in a 401 unauthorized response.
-func AccessControl(logger *zap.SugaredLogger, db database.Database, scms *Scms) echo.MiddlewareFunc {
+func AccessControl(logger *zap.SugaredLogger, db database.Database) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			sess, err := session.Get(SessionKey, c)
@@ -437,23 +424,6 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, scms *Scms) 
 			return next(c)
 		}
 	}
-}
-
-func updateScm(ctx echo.Context, logger *zap.SugaredLogger, scms *Scms, user *pb.User) bool {
-	foundSCMProvider := false
-	for _, remoteID := range user.RemoteIdentities {
-		scm, err := scms.GetOrCreateSCMEntry(logger.Desugar(), remoteID.GetProvider(), remoteID.GetAccessToken())
-		if err != nil {
-			logger.Errorf("Unknown SCM provider: %v", err)
-			continue
-		}
-		foundSCMProvider = true
-		ctx.Set(remoteID.Provider, scm)
-	}
-	if !foundSCMProvider {
-		logger.Debugf("No SCM provider found for user %v", user)
-	}
-	return foundSCMProvider
 }
 
 func extractRedirectURL(r *http.Request, key string) string {

@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/autograde/quickfeed/internal/rand"
-	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web/auth"
 )
 
@@ -42,8 +41,7 @@ type Config struct {
 	Endpoints      *Endpoints
 	Secrets        *Secrets
 	Paths          *Paths
-	TokensToUpdate *auth.TokenManager // TODO: not sure if this and app belongs here
-	App            *scm.GithubApp
+	TokensToUpdate *auth.TokenManager // TODO: not sure if this belongs here or in the ag service
 }
 
 func NewConfig(baseURL, public, httpAddr string) *Config {

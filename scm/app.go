@@ -10,7 +10,7 @@ import (
 
 	"github.com/beatlabs/github-auth/app"
 	"github.com/beatlabs/github-auth/key"
-	gh "github.com/google/go-github/v43/github"
+	"github.com/google/go-github/v43/github"
 )
 
 const (
@@ -31,6 +31,7 @@ type GithubAppConfig struct {
 
 type GithubApp struct {
 	app    *app.Config
+	scms   *Scms
 	config *GithubAppConfig
 }
 
@@ -69,11 +70,12 @@ func NewApp() (*GithubApp, error) {
 	return &GithubApp{
 		config: config,
 		app:    appClientConfig,
+		scms:   NewScms(),
 	}, nil
 }
 
 // Creates a new scm client with access to the course organization
-func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg string) (*gh.Client, error) {
+func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg string) (*github.Client, error) {
 	resp, err := ghApp.app.Client().Get(InstallationsAPI)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching installations for GitHub app %s: %s", ghApp.config.appID, err)
@@ -83,7 +85,7 @@ func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg str
 	if err != nil {
 		return nil, fmt.Errorf("error reading installation response: %s", err)
 	}
-	var installations []*gh.Installation
+	var installations []*github.Installation
 	if err := json.Unmarshal(body, &installations); err != nil {
 		return nil, fmt.Errorf("error unmarshalling installation response: %s", err)
 	}
@@ -101,5 +103,5 @@ func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg str
 	if err != nil {
 		return nil, fmt.Errorf("error configuring github client for installation: %s", err)
 	}
-	return gh.NewClient(install.Client(ctx)), nil
+	return github.NewClient(install.Client(ctx)), nil
 }

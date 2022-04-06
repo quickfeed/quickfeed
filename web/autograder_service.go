@@ -11,6 +11,7 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
+	"github.com/autograde/quickfeed/scm"
 	scms "github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/autograde/quickfeed/web/config"
@@ -21,18 +22,18 @@ import (
 type AutograderService struct {
 	logger *zap.SugaredLogger
 	db     database.Database
-	scms   *auth.Scms
+	app    *scms.GithubApp
 	Config *config.Config // TODO: make unexported again after refactoring the startup method
 	runner ci.Runner
 	pb.UnimplementedAutograderServiceServer
 }
 
 // NewAutograderService returns an AutograderService object.
-func NewAutograderService(logger *zap.Logger, db database.Database, scms *auth.Scms, config *config.Config, runner ci.Runner) *AutograderService {
+func NewAutograderService(logger *zap.Logger, db database.Database, app *scm.GithubApp, config *config.Config, runner ci.Runner) *AutograderService {
 	return &AutograderService{
 		logger: logger.Sugar(),
 		db:     db,
-		scms:   scms,
+		app:    app,
 		Config: config,
 		runner: runner,
 	}

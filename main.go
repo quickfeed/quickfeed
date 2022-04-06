@@ -72,20 +72,13 @@ func main() {
 		log.Fatalf("can't connect to database: %v\n", err)
 	}
 
-	// holds references for activated providers for current user token
-	scms := auth.NewScms()
-	// bh := web.BaseHookOptions{
-	// 	BaseURL: *baseURL,
-	// 	Secret:  os.Getenv("WEBHOOK_SECRET"),
-	// }
-
 	runner, err := ci.NewDockerCI(logger)
 	if err != nil {
 		log.Fatalf("failed to set up docker client: %v\n", err)
 	}
 	defer runner.Close()
 
-	// TODO: find and replace (if possible) all occasions where this tiken is used
+	// TODO(vera): find and replace (if possible) all occasions where this token is used
 	// Add application token for external applications (to allow invoking gRPC methods)
 	// TODO(meling): this is a temporary solution, and we should find a better way to do this
 	token := os.Getenv("QUICKFEED_AUTH_TOKEN")
@@ -96,13 +89,12 @@ func main() {
 
 	serverConfig := config.NewConfig(*baseURL, *public, *httpAddr)
 
-	// TODO: register GitHub App
 	githubApp, err := scm.NewApp()
 	if err != nil {
 		log.Fatalf("failed to start GitHub app: %v/n", err)
 	}
-	serverConfig.App = githubApp
-	agService := web.NewAutograderService(logger, db, scms, serverConfig, runner)
+	// TODO(vera): make a new method that will populate scm storage with scm clients for each course
+	agService := web.NewAutograderService(logger, db, githubApp, serverConfig, runner)
 	APIServer, err := serverConfig.GenerateTLSApi()
 	if err != nil {
 		log.Fatalf("failed to generate TLS grpc API: %v/n", err)

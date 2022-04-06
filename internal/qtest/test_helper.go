@@ -16,6 +16,7 @@ import (
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/autograde/quickfeed/web/config"
+	"github.com/google/go-github/v43/github"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -51,7 +52,7 @@ func TestDB(t *testing.T) (database.Database, func()) {
 
 // TestConfig creates a configuration for test instance of the AutograderService
 func TestConfig(t *testing.T) *config.Config {
-	// TODO: add a file with all test-specific configuration constants to qtest package
+	// TODO(vera): add a file with all test-specific configuration constants to qtest package
 	return config.NewConfig("tmp", "tmp", "tmp")
 }
 
@@ -142,7 +143,7 @@ func EnrollStudent(t *testing.T, db database.Database, student *pb.User, course 
 func FakeProviderMap(t *testing.T) (scm.SCM, *auth.Scms) {
 	t.Helper()
 	scms := auth.NewScms()
-	scm, err := scms.GetOrCreateSCMEntry(Logger(t).Desugar(), "fake", "token")
+	scm, err := scms.GetOrCreateSCMEntry(Logger(t).Desugar(), nil, "fake", "token")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,4 +165,16 @@ func WithUserContext(ctx context.Context, user *pb.User) context.Context {
 	userID := strconv.Itoa(int(user.GetID()))
 	meta := metadata.New(map[string]string{"user": userID})
 	return metadata.NewIncomingContext(ctx, meta)
+}
+
+func TestAppClient(ctx context.Context, t *testing.T, org string) *github.Client {
+	app, err := scm.NewApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	client, err := app.NewInstallationClient(ctx, org)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return client
 }

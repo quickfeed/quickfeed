@@ -38,6 +38,7 @@ func (s *AutograderService) getCurrentUser(ctx context.Context) (*pb.User, error
 	return s.db.GetUser(userID)
 }
 
+// TODO(vera): repurpose for new scm type (or two scm types)
 func (s *AutograderService) getSCM(ctx context.Context, user *pb.User, provider string) (scm.SCM, error) {
 	providers, err := s.GetProviders(ctx, &pb.Void{})
 	if err != nil {
@@ -131,6 +132,7 @@ func (s *AutograderService) isCourseCreator(courseID, userID uint64) bool {
 	return course.GetCourseCreatorID() == userID
 }
 
+// TODO(vera): repurpose for accepting invitations only
 // getUserAndSCM returns the current user and scm for the given provider.
 // All errors are logged, but only a single error is returned to the client.
 // This is a helper method to facilitate consistent treatment of errors and logging.

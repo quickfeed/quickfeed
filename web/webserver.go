@@ -57,7 +57,7 @@ func newServer(ags *AutograderService, store sessions.Store) *echo.Echo {
 		Logger(ags.logger.Desugar()),
 		middleware.Secure(),
 		session.Middleware(store),
-		auth.AccessControl(ags.logger, ags.db, ags.scms),
+		auth.AccessControl(ags.logger, ags.db),
 	)
 	return e
 }
@@ -137,7 +137,7 @@ func registerAuth(ags *AutograderService, e *echo.Echo) {
 
 	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(ags.logger, ags.db))
 	oauth2.GET("", auth.OAuth2Login(ags.logger, ags.db))
-	oauth2.GET("/callback", auth.OAuth2Callback(ags.logger, ags.db, ags.scms))
+	oauth2.GET("/callback", auth.OAuth2Callback(ags.logger, ags.db))
 	e.GET("/logout", auth.OAuth2Logout(ags.logger))
 }
 

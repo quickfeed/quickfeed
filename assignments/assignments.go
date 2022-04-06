@@ -19,13 +19,8 @@ import (
 )
 
 // UpdateFromTestsRepo updates the database record for the course assignments.
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course *pb.Course) {
+func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, s scm.SCM, course *pb.Course) {
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), pb.TestsRepo)
-	s, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
-	if err != nil {
-		logger.Errorf("Failed to create SCM Client: %v", err)
-		return
-	}
 	assignments, dockerfile, err := fetchAssignments(context.Background(), logger, s, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
