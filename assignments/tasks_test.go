@@ -31,9 +31,10 @@ type foundIssue struct {
 // It is also recommended that issues are created on all student repositories, and that they are the same.
 
 // populateDatabaseWithTasks based on the given course's organization.
-func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.SugaredLogger, db database.Database, sc scm.SCM, course *pb.Course) error {
+func populateDatabaseWithTasks(t *testing.T, logger *zap.SugaredLogger, db database.Database, sc scm.SCM, course *pb.Course) error {
 	t.Helper()
 
+	ctx := context.Background()
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
 	if err != nil {
 		return err
@@ -88,7 +89,7 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.Su
 		}
 	}
 
-	createdTasks, _, _, err := db.SynchronizeAssignmentTasks(course, tasks)
+	createdTasks, _, err := db.SynchronizeAssignmentTasks(course, tasks)
 	if err != nil {
 		return err
 	}
@@ -134,17 +135,17 @@ func TestHandleTasks(t *testing.T) {
 		OrganizationPath: qfTestOrg,
 	}
 
-	ctx := context.Background()
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	if err = qtest.PopulateDatabaseWithInitialData(t, ctx, db, scm, course); err != nil {
+	if err = qtest.PopulateDatabaseWithInitialData(t, db, scm, course); err != nil {
 		t.Fatal(err)
 	}
-	if err = populateDatabaseWithTasks(t, ctx, logger, db, scm, course); err != nil {
+	if err = populateDatabaseWithTasks(t, logger, db, scm, course); err != nil {
 		t.Fatal(err)
 	}
 
+	ctx := context.Background()
 	assignments, _, err := FetchAssignments(ctx, logger, scm, course)
 	if err != nil {
 		t.Fatal(err)

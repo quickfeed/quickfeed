@@ -3,7 +3,7 @@ package qtest
 import (
 	"context"
 	"crypto/rand"
-	"crypto/sha1"
+	"crypto/sha256"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -148,7 +148,7 @@ func RandomString(t *testing.T) string {
 	if _, err := rand.Read(randomness); err != nil {
 		t.Fatal(err)
 	}
-	return fmt.Sprintf("%x", sha1.Sum(randomness))[:6]
+	return fmt.Sprintf("%x", sha256.Sum256(randomness))[:6]
 }
 
 // WithUserContext is a test helper function to create metadata for the
@@ -160,9 +160,10 @@ func WithUserContext(ctx context.Context, user *pb.User) context.Context {
 }
 
 // PopulateDatabaseWithInitialData creates initial data-records based on organization
-func PopulateDatabaseWithInitialData(t *testing.T, ctx context.Context, db database.Database, sc scm.SCM, course *pb.Course) error {
+func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.SCM, course *pb.Course) error {
 	t.Helper()
 
+	ctx := context.Background()
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
 	if err != nil {
 		return err

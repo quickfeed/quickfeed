@@ -11,9 +11,6 @@ import (
 	"github.com/autograde/quickfeed/scm"
 )
 
-// Message added to the body of an issue when closing it, since there is no support for deleting issues.
-const deleteMsg = "\n**The task associated with this issue has been deleted by the teaching staff.**\n"
-
 // taskName returns the task name as a combination of assignmentName/filename
 // excluding the task- prefix and the .md suffix.
 func taskName(assignmentName, basePath string) string {
@@ -66,7 +63,7 @@ func mapTasksByID(tasks []*pb.Task) map[uint64]*pb.Task {
 
 func handleTasks(ctx context.Context, db database.Database, sc scm.SCM, course *pb.Course, assignments []*pb.Assignment) error {
 	tasksFromTestsRepo := tasksFromAssignments(assignments)
-	createdTasks, updatedTasks, deletedTasks, err := db.SynchronizeAssignmentTasks(course, tasksFromTestsRepo)
+	createdTasks, updatedTasks, err := db.SynchronizeAssignmentTasks(course, tasksFromTestsRepo)
 	if err != nil {
 		return err
 	}
@@ -89,19 +86,11 @@ func handleTasks(ctx context.Context, db database.Database, sc scm.SCM, course *
 			return err
 		}
 		createdIssues = append(createdIssues, repoCreatedIssues...)
-		if err = updateIssues(ctx, sc, course, repo, updatedTasks, false); err != nil {
-			return err
-		}
-		if err = updateIssues(ctx, sc, course, repo, deletedTasks, true); err != nil {
+		if err = updateIssues(ctx, sc, course, repo, updatedTasks); err != nil {
 			return err
 		}
 	}
-
-	// Deleting issues from database that no longer has an associated task.
-	if err = db.DeleteIssuesOfAssociatedTasks(deletedTasks); err != nil {
-		return err
-	}
-	// Creating issues in database, based on issues created on scm.
+	// Create issues in the database based on issues created on the scm.
 	return db.CreateIssues(createdIssues)
 }
 
@@ -117,7 +106,7 @@ func createIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 		}
 		scmIssue, err := sc.CreateIssue(ctx, issueOptions)
 		if err != nil {
-			return createdIssues, err
+			return nil, err
 		}
 		createdIssues = append(createdIssues, &pb.Issue{
 			RepositoryID: repo.ID,
@@ -129,7 +118,7 @@ func createIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 }
 
 // updateIssues updates issues based on repository, course and tasks. It handles deleted tasks by closing them and inserting a statement into the body.
-func updateIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.Repository, tasks []*pb.Task, handleDeletion bool) error {
+func updateIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.Repository, tasks []*pb.Task) error {
 	taskMap := mapTasksByID(tasks)
 	for _, issue := range repo.Issues {
 		task, ok := taskMap[issue.TaskID]
@@ -141,12 +130,10 @@ func updateIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 			Organization: course.GetOrganizationPath(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
+			Body:         task.Body,
 		}
-		if handleDeletion {
+		if task.IsDeleted() {
 			issueOptions.State = "closed"
-			issueOptions.Body = deleteMsg + task.Body
-		} else {
-			issueOptions.Body = task.Body
 		}
 
 		if _, err := sc.EditRepoIssue(ctx, int(issue.IssueNumber), issueOptions); err != nil {

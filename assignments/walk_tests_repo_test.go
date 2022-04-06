@@ -77,17 +77,17 @@ printf "Default script\n"
 				{
 					Title:           "Exercises from Tour of Go",
 					AssignmentOrder: 3,
-					Name:            "lab3/task-tour-of-go.md",
+					Name:            "lab3/tour-of-go",
 				},
 				{
 					Title:           "Go Exercises",
 					AssignmentOrder: 3,
-					Name:            "lab3/task-learn-go.md",
+					Name:            "lab3/learn-go",
 				},
 				{
 					Title:           "Multiple Choice Questions about Go Programming",
 					AssignmentOrder: 3,
-					Name:            "lab3/task-go-questions.md",
+					Name:            "lab3/go-questions",
 				},
 			},
 		},
@@ -100,7 +100,7 @@ printf "Default script\n"
 	if gotDockerfile != wantDockerfile {
 		t.Errorf("got Dockerfile %q, want %q", gotDockerfile, wantDockerfile)
 	}
-	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&pb.Task{}, "Body")); diff != "" {
+	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&pb.Task{}, "body")); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
 	}
 }
