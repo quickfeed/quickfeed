@@ -45,6 +45,7 @@ Grafana
 Grafana's
 groupname
 grpc
+grpcpb
 grpcweb
 Hein
 Hein's
@@ -88,6 +89,7 @@ outform
 overmind
 Overmind
 paxos
+pbgo
 pgrep
 pkgs
 privkey

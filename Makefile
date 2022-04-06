@@ -33,6 +33,7 @@ go-tools:
 	@go install `go list -f "{{range .Imports}}{{.}} {{end}}" tools.go`
 
 version-check:
+	@go run cmd/vercheck/main.go
 ifneq ($(grpcweb-ver), $(grpcweb-latest))
 	@echo WARNING: grpc-web version is not latest: $(grpcweb-ver) != $(grpcweb-latest)
 endif
