@@ -95,6 +95,7 @@ func main() {
 	}
 	// TODO(vera): make a new method that will populate scm storage with scm clients for each course
 	agService := web.NewAutograderService(logger, db, githubApp, serverConfig, runner)
+	agService.MakeSCMClients("github")
 	APIServer, err := serverConfig.GenerateTLSApi()
 	if err != nil {
 		log.Fatalf("failed to generate TLS grpc API: %v/n", err)
@@ -114,7 +115,7 @@ func main() {
 
 	//////////////////////////
 
-	// Create a HTTP server and bind the router to it, and set wanted address
+	// Create an HTTP server and bind the router to it, and set wanted address
 	srv := &http.Server{
 		Handler:      router,
 		Addr:         serverConfig.Endpoints.HttpAddress,

@@ -131,6 +131,8 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, _ *pb.Void)
 
 // CreateCourse creates a new course.
 // Access policy: Admin.
+// TODO(vera): instead of calling getUserAndSCM here we want to fetch the app installations, choose the correct installation
+// for the given course org and create a new scm for this course, because there will be no scm client for the course at this point.
 func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*pb.Course, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.GetID())
 	if err != nil {

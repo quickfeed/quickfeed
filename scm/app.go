@@ -105,3 +105,10 @@ func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg str
 	}
 	return github.NewClient(install.Client(ctx)), nil
 }
+
+//
+func NewTestApp() *GithubApp {
+	return &GithubApp{
+		scms: NewScms(),
+	}
+}

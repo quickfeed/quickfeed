@@ -29,8 +29,14 @@ func (app *GithubApp) GetSCM(courseID uint64) (sc SCM, ok bool) {
 	return
 }
 
-// GetOrCreateSCMEntry returns an scm client for the given course. If no scm client exists for the course,
-// creates a new client for the course.
+// AddSCM adds a new scm client to scm storage.
+func (app *GithubApp) AddSCM(scm SCM, courseID uint64) {
+	app.scms.mu.Lock()
+	defer app.scms.mu.Unlock()
+	app.scms.scms[courseID] = scm
+}
+
+// GetOrCreateSCMEntry returns an existing scm client for the given course or creates a new one.
 func (app *GithubApp) GetOrCreateSCMEntry(logger *zap.SugaredLogger, course *pb.Course, accessToken string) (SCM, error) {
 	app.scms.mu.Lock()
 	defer app.scms.mu.Unlock()

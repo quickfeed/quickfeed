@@ -28,6 +28,42 @@ var (
 	FreeOrgPlan = "free"
 )
 
+// MakeSCMClients creates a new scm client (GitHub app installation based client) for each course in the database.
+// This method is called at the server start.
+func (s *AutograderService) MakeSCMClients(provider string) error {
+	ctx := context.Background()
+	courses, err := s.db.GetCourses()
+	if err != nil {
+		return err
+	}
+	for _, course := range courses {
+		courseCreator, err := s.db.GetUser(course.CourseCreatorID)
+		if err != nil {
+			return err
+		}
+		ghClient, err := s.app.NewInstallationClient(ctx, course.OrganizationPath)
+		if err != nil {
+			return err
+		}
+		token, err := courseCreator.GetAccessToken(provider)
+		if err != nil {
+			return err
+		}
+
+		sc, err := scm.NewSCMClient(s.logger, ghClient, provider, token)
+		if err != nil {
+			return err
+		}
+		s.app.AddSCM(sc, course.ID)
+	}
+	return nil
+}
+
+// AddSCM is a wrapper method to simplify usage in test and avoid making the app field exported.
+func (s *AutograderService) AddSCM(scm scm.SCM, courseID uint64) {
+	s.app.AddSCM(scm, courseID)
+}
+
 // createRepoAndTeam invokes the SCM to create a repository and team for the
 // specified course (represented with organization ID). The SCM team name
 // is also used as the group name and repository path. The provided user names represent the SCM group members.
