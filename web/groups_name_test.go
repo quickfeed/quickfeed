@@ -22,8 +22,8 @@ func TestBadGroupNames(t *testing.T) {
 	}
 	qtest.CreateCourse(t, db, admin, course)
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := NewAutograderService(zap.NewNop(), db, scms, qtest.TestConfig(t), &ci.Local{})
+	// TODO(vera): update test to use app client
+	ags := NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
 	user1 := qtest.CreateFakeUser(t, db, 2)
 	user2 := qtest.CreateFakeUser(t, db, 3)
 	// enroll users in course

@@ -13,6 +13,8 @@ import (
 	"github.com/gosimple/slug"
 )
 
+// TODO(vera): it is possible to never use token here if there is a way to
+// clone private repos with github app authorization
 // GithubSCM implements the SCM interface.
 type GithubSCM struct {
 	logger *zap.SugaredLogger
@@ -573,6 +575,7 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOption
 	return nil
 }
 
+// TODO(vera): needs checking if can be done by app-based client, otherwise needs access token based client
 // CreateCloneURL implements the SCM interface.
 func (s *GithubSCM) CreateCloneURL(opt *URLPathOptions) string {
 	token := s.token
@@ -605,6 +608,7 @@ func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) er
 	return nil
 }
 
+// TODO(vera): not accessible by app-based client, needs access token based client
 // GetUserName implements the SCM interface.
 func (s *GithubSCM) GetUserName(ctx context.Context) (string, error) {
 	user, _, err := s.client.Users.Get(ctx, "")
@@ -664,6 +668,7 @@ func (s *GithubSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions)
 	return nil
 }
 
+// TODO(vera): not accessible by app-based client, needs access token based client
 // GetUserScopes implements the SCM interface
 func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// Users.Get method will always return nil, response struct and error,

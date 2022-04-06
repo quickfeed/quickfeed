@@ -113,8 +113,9 @@ func TestRebuildSubmissions(t *testing.T) {
 	if err := db.CreateRepository(&repo2); err != nil {
 		t.Fatal(err)
 	}
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, qtest.TestConfig(t), &ci.Local{})
+	// TODO(vera): update test to use app client
+	fakeProvider, _ := qtest.FakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})

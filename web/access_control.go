@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 
 	"google.golang.org/grpc/codes"
@@ -39,23 +38,10 @@ func (s *AutograderService) getCurrentUser(ctx context.Context) (*pb.User, error
 }
 
 // TODO(vera): repurpose for new scm type (or two scm types)
-func (s *AutograderService) getSCM(ctx context.Context, user *pb.User, provider string) (scm.SCM, error) {
-	providers, err := s.GetProviders(ctx, &pb.Void{})
-	if err != nil {
-		return nil, err
-	}
-	if !providers.IsValidProvider(provider) {
-		return nil, fmt.Errorf("invalid provider(%s)", provider)
-	}
-
-	for _, remoteID := range user.RemoteIdentities {
-		if remoteID.Provider == provider {
-			scm, ok := s.scms.GetSCM(remoteID.GetAccessToken())
-			if !ok {
-				return nil, fmt.Errorf("invalid token for user(%d) provider(%s)", user.ID, provider)
-			}
-			return scm, nil
-		}
+func (s *AutograderService) getSCM(courseID uint64) (scm.SCM, error) {
+	sc, ok := s.app.GetSCM(courseID)
+	if ok {
+		return sc, nil
 	}
 	return nil, errors.New("no SCM found")
 }
@@ -132,16 +118,17 @@ func (s *AutograderService) isCourseCreator(courseID, userID uint64) bool {
 	return course.GetCourseCreatorID() == userID
 }
 
-// TODO(vera): repurpose for accepting invitations only
+// TODO(vera): these two methods can be repurposed to return course-related scm client for most methods
+// and personal access token based scm for user when accepting invitations
 // getUserAndSCM returns the current user and scm for the given provider.
 // All errors are logged, but only a single error is returned to the client.
 // This is a helper method to facilitate consistent treatment of errors and logging.
-func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string) (*pb.User, scm.SCM, error) {
+func (s *AutograderService) getUserAndSCM(ctx context.Context, courseID uint64) (*pb.User, scm.SCM, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	scm, err := s.getSCM(ctx, usr, provider)
+	scm, err := s.getSCM(courseID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -152,11 +139,7 @@ func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string) 
 // All errors are logged, but only a single error is returned to the client.
 // This is a helper method to facilitate consistent treatment of errors and logging.
 func (s *AutograderService) getUserAndSCMForCourse(ctx context.Context, courseID uint64) (*pb.User, scm.SCM, error) {
-	crs, err := s.getCourse(courseID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get course with ID %d: %w", courseID, err)
-	}
-	return s.getUserAndSCM(ctx, crs.GetProvider())
+	return s.getUserAndSCM(ctx, courseID)
 }
 
 // teacherScopes defines scopes that must be enabled for a teacher token to be valid.

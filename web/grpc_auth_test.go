@@ -92,11 +92,10 @@ func fillDatabase(t *testing.T, db database.Database) {
 	qtest.EnrollStudent(t, db, user, course)
 }
 
+// TODO(vera): this method needs update (add methods that create test app and installation client)
 func startGrpcAuthServer(t *testing.T, db database.Database) {
 	logger := qtest.Logger(t)
-
-	_, scms := qtest.FakeProviderMap(t)
-	agService := web.NewAutograderService(logger.Desugar(), db, scms, qtest.TestConfig(t), &ci.Local{})
+	agService := web.NewAutograderService(logger.Desugar(), db, nil, qtest.TestConfig(t), &ci.Local{})
 
 	lis, err := net.Listen("tcp", grpcAddr)
 	check(t, err)

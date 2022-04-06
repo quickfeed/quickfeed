@@ -31,7 +31,7 @@ func (app *GithubApp) GetSCM(courseID uint64) (sc SCM, ok bool) {
 
 // GetOrCreateSCMEntry returns an scm client for the given course. If no scm client exists for the course,
 // creates a new client for the course.
-func (app *GithubApp) GetOrCreateSCMEntry(logger *zap.Logger, course *pb.Course, provider, accessToken string) (SCM, error) {
+func (app *GithubApp) GetOrCreateSCMEntry(logger *zap.SugaredLogger, course *pb.Course, accessToken string) (SCM, error) {
 	app.scms.mu.Lock()
 	defer app.scms.mu.Unlock()
 	client, ok := app.scms.scms[course.GetID()]
@@ -45,7 +45,7 @@ func (app *GithubApp) GetOrCreateSCMEntry(logger *zap.Logger, course *pb.Course,
 	if err != nil {
 		return nil, err
 	}
-	client, err = NewSCMClient(logger.Sugar(), ghClient, provider, accessToken)
+	client, err = NewSCMClient(logger, ghClient, course.GetProvider(), accessToken)
 	if err != nil {
 		return nil, err
 	}

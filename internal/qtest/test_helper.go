@@ -14,7 +14,6 @@ import (
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
-	"github.com/autograde/quickfeed/web/auth"
 	"github.com/autograde/quickfeed/web/config"
 	"github.com/google/go-github/v43/github"
 	"google.golang.org/grpc/metadata"
@@ -140,14 +139,10 @@ func EnrollStudent(t *testing.T, db database.Database, student *pb.User, course 
 }
 
 // FakeProviderMap is a test helper function to create an SCM map.
-func FakeProviderMap(t *testing.T) (scm.SCM, *auth.Scms) {
+func FakeProviderMap(t *testing.T) (scm.SCM, *scm.Scms) {
 	t.Helper()
-	scms := auth.NewScms()
-	scm, err := scms.GetOrCreateSCMEntry(Logger(t).Desugar(), nil, "fake", "token")
-	if err != nil {
-		t.Fatal(err)
-	}
-	return scm, scms
+	scms := scm.NewScms()
+	return scm.NewFakeSCMClient(), scms
 }
 
 func RandomString(t *testing.T) string {

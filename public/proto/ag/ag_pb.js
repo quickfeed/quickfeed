@@ -2612,7 +2612,7 @@ proto.ag.Course.deserializeBinaryFromReader = function(msg, reader) {
       msg.setOrganizationpath(value);
       break;
     case 10:
-      var value = /** @type {number} */ (reader.readUint64());
+      var value = /** @type {number} */ (reader.readInt64());
       msg.setInstallationid(value);
       break;
     case 11:
@@ -2736,7 +2736,7 @@ proto.ag.Course.serializeBinaryToWriter = function(message, writer) {
   }
   f = message.getInstallationid();
   if (f !== 0) {
-    writer.writeUint64(
+    writer.writeInt64(
       10,
       f
     );
@@ -2952,7 +2952,7 @@ proto.ag.Course.prototype.setOrganizationpath = function(value) {
 
 
 /**
- * optional uint64 installationID = 10;
+ * optional int64 installationID = 10;
  * @return {number}
  */
 proto.ag.Course.prototype.getInstallationid = function() {

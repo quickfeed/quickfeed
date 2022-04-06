@@ -31,7 +31,12 @@ func (s *AutograderService) updateAssignments(courseID uint64) error {
 	if err != nil {
 		return fmt.Errorf("could not find course ID %d", courseID)
 	}
-	assignments.UpdateFromTestsRepo(s.logger, s.db, course)
+	// TODO(vera): this method needs update
+	sc, err := s.app.GetOrCreateSCMEntry(s.logger, course, "")
+	if err != nil {
+		return err
+	}
+	assignments.UpdateFromTestsRepo(s.logger, s.db, sc, course)
 	return nil
 }
 

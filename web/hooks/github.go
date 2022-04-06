@@ -55,19 +55,20 @@ func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// TODO(vera): looks like we don't need installation hook events after all, remove when tested out
 func (wh GitHubWebHook) handleInstallation(payload *github.InstallationEvent) {
 	wh.logger.Debugf("Received app installation event with ID %s for organization %s with ID %d",
-		payload.Installation.ID, *payload.Sender.Login, payload.Installation.Account.ID)
+		payload.GetInstallation().GetID(), payload.GetSender().GetLogin(), payload.GetInstallation().GetAccount().GetID())
 
 	// TODO: check if course for such organization name exists in the database
-	course, err := wh.db.GetCourse(uint64(*payload.Installation.Account.ID), false)
+	course, err := wh.db.GetCourse(uint64(payload.GetInstallation().GetAccount().GetID()), false)
 	if err != nil {
 		wh.logger.Errorf("Failed to get course for app installation with organization %s (ID %d)")
 		return
 	}
-	course.InstallationID = uint64(*payload.Installation.ID)
+	course.InstallationID = payload.GetInstallation().GetID()
 	if err := wh.db.UpdateCourse(course); err != nil {
-		wh.logger.Errorf("Failed to update installation ID for course %s", course.Code)
+		wh.logger.Errorf("Failed to update installation ID for course %s", course.GetCode())
 		return
 	}
 }
@@ -103,7 +104,10 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	case repo.IsTestsRepo():
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		assignments.UpdateFromTestsRepo(wh.logger, wh.db, course)
+		// TODO(vera): this method will need an scm client for this org at some point. Consider passing the scm map to the handler method itself?
+		// Otherwise it will create a new client for the same installation.
+		// Another option is to create all clients on the go and not store anything in scm storage (as it is no longer needed for auth)
+		assignments.UpdateFromTestsRepo(wh.logger, wh.db, nil, course)
 
 	case repo.IsUserRepo():
 		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())

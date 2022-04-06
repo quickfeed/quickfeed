@@ -114,11 +114,12 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Vo
 	return &pb.Void{}, err
 }
 
+// TODO(vera): doublecheck that this method no longer useful
 // IsAuthorizedTeacher checks whether current user has teacher scopes.
 // Access policy: Any User.
 func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, _ *pb.Void) (*pb.AuthorizationResponse, error) {
 	// Currently hardcoded for github only
-	_, scm, err := s.getUserAndSCM(ctx, "github")
+	_, scm, err := s.getUserAndSCM(ctx, 0) // TODO(vera): if the method is still needed, needs the new method for token-based scm client
 	if err != nil {
 		s.logger.Errorf("IsAuthorizedTeacher failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
@@ -131,7 +132,7 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, _ *pb.Void)
 // CreateCourse creates a new course.
 // Access policy: Admin.
 func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*pb.Course, error) {
-	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
+	usr, scm, err := s.getUserAndSCM(ctx, in.GetID())
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
@@ -165,7 +166,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 // UpdateCourse changes the course information details.
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
-	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
+	usr, scm, err := s.getUserAndSCM(ctx, in.GetID())
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
@@ -821,17 +822,28 @@ func (s *AutograderService) GetProviders(_ context.Context, _ *pb.Void) (*pb.Pro
 
 // GetOrganization fetches a github organization by name.
 // Access policy: Admin
+// TODO(vera): in this case we don't have a course to keep a reference to the organization (yet). This means
+// we have to fetch installations for the app, select one for this org and create a new client (then update scm map).
+// Need internal method to do so
 func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgRequest) (*pb.Organization, error) {
-	usr, scm, err := s.getUserAndSCM(ctx, "github")
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: scm authentication error: %v", err)
 		return nil, err
 	}
+	// TODO(vera): refactor this part
+	ghClient, err := s.app.NewInstallationClient(ctx, in.OrgName)
+	if err != nil {
+		s.logger.Errorf("GetOrganization failed: error creating GitHub app client: %v", err)
+		return nil, status.Error(codes.NotFound, "failed to create GitHub client")
+	}
+	// TODO(vera): get course creator's token here, (for provider == github)
+	sc := scm.NewGithubSCMClient(s.logger, ghClient, "")
 	if !usr.IsAdmin {
 		s.logger.Error("GetOrganization failed: user is not admin")
 		return nil, status.Error(codes.PermissionDenied, "only admin can access organizations")
 	}
-	org, err := s.getOrganization(ctx, scm, in.GetOrgName(), usr.GetLogin())
+	org, err := s.getOrganization(ctx, sc, in.GetOrgName(), usr.GetLogin())
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %v", err)
 		if contextCanceled(ctx) {
