@@ -4,22 +4,24 @@ import (
 	"context"
 	"testing"
 
+	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 )
 
 func TestGitHubApp(t *testing.T) {
-	app, err := scm.NewApp()
-	if err != nil {
-		t.Fatal(err)
-	}
+	testOrg := scm.GetTestOrganization(t)
+	client := scm.GetTestClient(t, testOrg)
 	ctx := context.Background()
-	qfTestOrg := scm.GetTestOrganization(t)
-
-	client, err := app.NewInstallationClient(ctx, qfTestOrg)
+	if _, _, err := client.Organizations.Get(ctx, testOrg); err != nil {
+		t.Fatal(err)
+	}
+	sc := scm.NewGithubSCMClient(log.Zap(false).Sugar(), client, scm.GetAccessToken(t))
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: testOrg})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err = client.Organizations.Get(ctx, qfTestOrg); err != nil {
+	_, err = sc.GetRepositories(ctx, org)
+	if err != nil {
 		t.Fatal(err)
 	}
 }

@@ -711,7 +711,7 @@ func (s *GithubSCM) CreateIssue(ctx context.Context, opt *CreateIssueOptions) (*
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "CreateIssue",
-			Message:  fmt.Sprintf("failed to create Issue %s, make sure all the details are correct ", opt.Title),
+			Message:  fmt.Sprintf("failed to create issue (repository %s, organization %s), make sure all the details are correct ", opt.Repository, opt.Organization),
 			GitError: err,
 		}
 	}

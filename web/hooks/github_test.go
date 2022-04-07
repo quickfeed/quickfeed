@@ -38,18 +38,10 @@ func TestGitHubWebHook(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 	serverURL := scm.GetWebHookServer(t)
-
+	ctx := context.Background()
 	logger := logq.Zap(true).Sugar()
 	defer func() { _ = logger.Sync() }()
-	app, err := scm.NewApp()
-	if err != nil {
-		t.Fatal(err)
-	}
-	ctx := context.Background()
-	ghClient, err := app.NewInstallationClient(ctx, qfTestOrg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	ghClient := scm.GetTestClient(t, qfTestOrg)
 	s, err := scm.NewSCMClient(logger, ghClient, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)

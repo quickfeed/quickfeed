@@ -142,14 +142,18 @@ func TestCreateHook(t *testing.T) {
 func TestCreateIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
+	// TODO(vera): make a helper method to populate these from env variables or to fetch from the test given repo
 	// Replace with Repository name
-	repo := "Replace with Repository Name"
+	repo := "test-labs"
 	// Add Issue Title here
-	title := "Replace with Issue Title"
+	title := "Test issue"
 	// Add Issue body here
-	body := "Replace with Issue Body"
+	body := "The test of imminent testing"
 	// Creating new Client
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(
+		zap.NewNop().Sugar(),
+		scm.GetTestClient(t, qfTestOrg),
+		"github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,11 +175,15 @@ func TestCreateIssue(t *testing.T) {
 func TestGetIssues(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
+	// TODO(vera): make helper method to fetch repo/issue names
 	// Replace with Repository name
-	repo := "Replace with Repository Name"
+	repo := "test-labs"
 
 	// Creating new Client
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(
+		zap.NewNop().Sugar(),
+		scm.GetTestClient(t, qfTestOrg),
+		"github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -196,12 +204,16 @@ func TestGetIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 	// Replace with Repository name
-	repo := "Replace with Repository Name"
+	// TODO(vera): make helper method to fetch repo/issue names, numbers
+	repo := "test-labs"
 	// Replace 0 with Issue Number in Repository
-	issueNumber := 0
+	issueNumber := 1
 
 	// Creating new Client
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(
+		zap.NewNop().Sugar(),
+		scm.GetTestClient(t, qfTestOrg),
+		"github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -223,15 +235,18 @@ func TestEditRepoIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 	// Replace with Repository name
-	repo := "Testing"
+	repo := "test-labs"
 	// Add Issue Title here
-	title := "Replace with new Issue Title"
+	title := "Test issue"
 	// Add Issue body here
-	body := "Replace with new Issue Body"
+	body := "Updated test of imminent testing"
 	// Add Issue Number here
-	issueNumber := 20
+	issueNumber := 1
 	// Creating new Client
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(
+		zap.NewNop().Sugar(),
+		scm.GetTestClient(t, qfTestOrg),
+		"github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,8 +1,11 @@
 package scm
 
 import (
+	"context"
 	"os"
 	"testing"
+
+	"github.com/google/go-github/v43/github"
 )
 
 func GetTestOrganization(t *testing.T) string {
@@ -32,4 +35,22 @@ func GetWebHookServer(t *testing.T) string {
 		t.Skipf("This test requires that 'QF_WEBHOOK_SERVER' is set and that you have access to the '%v' GitHub organization", qfTestOrg)
 	}
 	return serverURL
+}
+
+// Creates organization based GitHub app client to use in tests. If organization name is empty,
+// uses the default test organization name
+func GetTestClient(t *testing.T, org string) *github.Client {
+	app, err := NewApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	if org == "" {
+		org = GetTestOrganization(t)
+	}
+	client, err := app.NewInstallationClient(ctx, org)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return client
 }

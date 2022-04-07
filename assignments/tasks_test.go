@@ -125,7 +125,7 @@ func TestHandleTasks(t *testing.T) {
 	accessToken := scm.GetAccessToken(t)
 
 	logger := log.Zap(false).Sugar()
-	scm, err := scm.NewSCMClient(logger, "github", accessToken)
+	scm, err := scm.NewSCMClient(logger, scm.GetTestClient(t, qfTestOrg), "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

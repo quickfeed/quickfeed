@@ -961,11 +961,14 @@ func TestReleaseApproveAll(t *testing.T) {
 	qtest.EnrollStudent(t, db, student1, course)
 	qtest.EnrollStudent(t, db, student2, course)
 	qtest.EnrollStudent(t, db, student3, course)
-
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	app, err := scm.NewApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fakeProvider, _ := qtest.FakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, app, qtest.TestConfig(t), &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
+	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)
 	}
