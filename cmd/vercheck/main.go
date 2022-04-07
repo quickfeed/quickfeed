@@ -51,6 +51,10 @@ func toolVersion(tool string) string {
 	b, err := cmd.Output()
 	check(err)
 	s := strings.TrimSpace(string(b))
+	if strings.Contains(s, `unknown argument "--version"`) {
+		log.Println(s)
+		log.Fatalf("Your installed %s version is too old. Please update to the latest version.", tool)
+	}
 	i := strings.LastIndex(s, " ")
 	s = s[i+1:]
 	if strings.HasPrefix(s, "v") {
