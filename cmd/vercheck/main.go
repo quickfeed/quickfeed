@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/autograde/quickfeed/kit/sh"
 )
 
 const (
@@ -47,13 +48,17 @@ func checkVersions(tool, toolVer, codeVer string) bool {
 
 // toolVersion returns the given tool's version.
 func toolVersion(tool string) string {
-	cmd := exec.Command(tool, "--version")
-	b, err := cmd.Output()
+	s, err := sh.Output(tool + " --version")
 	check(err)
-	s := strings.TrimSpace(string(b))
-	if strings.Contains(s, `unknown argument "--version"`) {
-		log.Println(s)
-		log.Fatalf("Your installed %s version is too old. Please update to the latest version.", tool)
+	s = strings.TrimSpace(s)
+	switch s {
+	case "Missing value for flag: --version":
+		fallthrough
+	case `unknown argument "--version"`:
+		fallthrough
+	case `flag provided but not defined: -version`:
+		log.Printf("Your installed %s version is too old. Please update to the latest version.", tool)
+		return "0.0.0"
 	}
 	i := strings.LastIndex(s, " ")
 	s = s[i+1:]
