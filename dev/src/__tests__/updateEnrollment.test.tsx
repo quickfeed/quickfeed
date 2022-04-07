@@ -1,17 +1,14 @@
 import { updateEnrollment } from "../overmind/actions"
-import { Course, Enrollment, User } from "../../proto/ag/ag_pb"
+import { Enrollment, User } from "../../proto/ag/ag_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
-import { configure, mount, render, shallow } from "enzyme"
+import { configure, render } from "enzyme"
 import Adapter from "@wojtekmaj/enzyme-adapter-react-17"
 import { createMemoryHistory } from "history"
 import React from "react"
 import Members from "../components/Members"
 import { Route, Router } from "react-router"
-import TeacherPage from "../pages/TeacherPage"
 import { Provider } from "overmind-react"
-import { actions } from "../overmind/namespaces/review"
-
 
 React.useLayoutEffect = React.useEffect
 
@@ -71,7 +68,6 @@ describe("UpdateEnrollment in webpage", () => {
                 </Router>
             </Provider>
         )
-
         expect(wrapped.find("i").first().text()).toEqual("Demote")
     })
     it("If status is student, button should display promote", () => {

@@ -17,12 +17,15 @@ const Members = (): JSX.Element => {
     const [sortBy, setSortBy] = useState<EnrollmentSort>(EnrollmentSort.Status)
     const [descending, setDescending] = useState<boolean>(false)
     const [edit, setEditing] = useState<boolean>(false)
+    const [accept, setAccept] = useState<boolean>(false)
+    const [promote, setPromote] = useState<boolean>(false)
 
     const approveAll = () => {
         for (const enrollment of pending) {
             actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT })
         }
     }
+
 
     const setSort = (sort: EnrollmentSort) => {
         if (sortBy === sort) {
@@ -55,7 +58,7 @@ const Members = (): JSX.Element => {
             data.push(
                 <div>
                     <i className="badge badge-primary" style={{ cursor: "pointer" }}
-                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT })}>
+                        onClick={() => { actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT }); setAccept(!accept) }}>
                         Accept
                     </i>
                     <i className="badge badge-danger clickable ml-1"
@@ -67,7 +70,7 @@ const Members = (): JSX.Element => {
             data.push(edit ? (
                 <div>
                     <i className="badge badge-primary clickable"
-                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER })}>
+                        onClick={() => { actions.updateEnrollment({ enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER }); setPromote(!promote) }}>
                         {isTeacher(enrollment) ? "Demote" : "Promote"}
                     </i>
                     <i className="badge badge-danger clickable ml-1"
@@ -78,6 +81,7 @@ const Members = (): JSX.Element => {
                 <i className={EnrollmentStatusBadge[enrollment.getStatus()]}>
                     {EnrollmentStatus[enrollment.getStatus()]}
                 </i>
+
             )
         }
         return data
