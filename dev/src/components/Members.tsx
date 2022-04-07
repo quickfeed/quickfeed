@@ -8,7 +8,6 @@ import { json } from "overmind"
 import DynamicButton from "./DynamicButton"
 import { ButtonType } from "./admin/Button"
 
-
 const Members = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
@@ -25,7 +24,6 @@ const Members = (): JSX.Element => {
             actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT })
         }
     }
-
 
     const setSort = (sort: EnrollmentSort) => {
         if (sortBy === sort) {
@@ -81,7 +79,6 @@ const Members = (): JSX.Element => {
                 <i className={EnrollmentStatusBadge[enrollment.getStatus()]}>
                     {EnrollmentStatus[enrollment.getStatus()]}
                 </i>
-
             )
         }
         return data
