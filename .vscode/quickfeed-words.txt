@@ -82,6 +82,7 @@ ngrok
 npmtools
 npmwebpack
 NTNU
+oneof
 Operativsystemer
 opsys
 orgs
