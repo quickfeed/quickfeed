@@ -21,7 +21,8 @@ import (
 // UpdateFromTestsRepo updates the database record for the course assignments.
 func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, s scm.SCM, course *pb.Course) {
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), pb.TestsRepo)
-	assignments, dockerfile, err := fetchAssignments(context.Background(), logger, s, course)
+	ctx := context.Background()
+	assignments, dockerfile, err := fetchAssignments(ctx, logger, s, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
 		return
@@ -29,6 +30,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, s scm.
 	for _, assignment := range assignments {
 		updateGradingCriteria(logger, db, assignment)
 	}
+
 	if dockerfile != "" && dockerfile != course.Dockerfile {
 		course.Dockerfile = dockerfile
 		if err := db.UpdateCourse(course); err != nil {
@@ -36,6 +38,8 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, s scm.
 			return
 		}
 	}
+
+	// Does not store tasks associated with assignments; tasks are handled separately by handleTasks below
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)
@@ -44,6 +48,11 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, s scm.
 		return
 	}
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
+
+	if err = handleTasks(ctx, db, s, course, assignments); err != nil {
+		logger.Errorf("Failed to create tasks on '%s' repository: %v", pb.TestsRepo, err)
+		return
+	}
 }
 
 // fetchAssignments returns a list of assignments for the given course, by
@@ -89,7 +98,8 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 	}
 
 	// parse assignments found in the cloned tests directory
-	assignments, dockerfile, err := parseAssignments(cloneDir, course.ID)
+	logger.Debugf("readTestsRepositoryContent %v", cloneURL)
+	assignments, dockerfile, err := readTestsRepositoryContent(cloneDir, course.ID)
 	if err != nil {
 		return nil, "", err
 	}

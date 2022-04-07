@@ -27,10 +27,12 @@ Docroot
 Eivind
 envoyproxy
 errcheck
+Errorf
 excelize
 extendee
 Frøyland
 fullchain
+Getwd
 GOBIN
 Godkjent
 golangci
@@ -110,6 +112,7 @@ skiptests
 slugified
 sqlite
 Stavnes
+struct
 structs
 Studentid
 testdb

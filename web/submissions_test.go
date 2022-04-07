@@ -945,6 +945,298 @@ func TestCreateApproveList(t *testing.T) {
 	}
 }
 
+func TestReleaseApproveAll(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeUser(t, db, 1)
+
+	course := allCourses[2]
+	if err := db.CreateCourse(admin.ID, course); err != nil {
+		t.Fatal(err)
+	}
+	student1 := qtest.CreateNamedUser(t, db, 2, "Leslie Lamport")
+	student2 := qtest.CreateNamedUser(t, db, 3, "Hein Meling")
+	student3 := qtest.CreateNamedUser(t, db, 4, "John Doe")
+	qtest.EnrollStudent(t, db, student1, course)
+	qtest.EnrollStudent(t, db, student2, course)
+	qtest.EnrollStudent(t, db, student3, course)
+
+	fakeProvider, scms := qtest.FakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ctx := qtest.WithUserContext(context.Background(), admin)
+	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assignments := []*pb.Assignment{
+		{
+			CourseID:   course.ID,
+			Name:       "lab 1",
+			ScriptFile: "go.sh",
+			Deadline:   "2020-02-23T18:00:00",
+			Order:      1,
+			Reviewers:  1,
+		},
+		{
+			CourseID:   course.ID,
+			Name:       "lab 2",
+			ScriptFile: "go.sh",
+			Deadline:   "2020-03-23T18:00:00",
+			Order:      2,
+			Reviewers:  1,
+		},
+	}
+
+	for _, assignment := range assignments {
+		if err := db.CreateAssignment(assignment); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	benchmarks := []*pb.GradingBenchmark{
+		{
+			AssignmentID: assignments[0].ID,
+			Heading:      "lab 1",
+			Criteria: []*pb.GradingCriterion{
+				{
+					BenchmarkID: 1,
+					Description: "Test 1",
+					Points:      10,
+				},
+				{
+					BenchmarkID: 2,
+					Description: "Test 2",
+					Points:      10,
+				},
+			},
+		},
+		{
+			AssignmentID: assignments[1].ID,
+			Heading:      "lab 2",
+			Criteria: []*pb.GradingCriterion{
+				{
+					BenchmarkID: 3,
+					Description: "Test 3",
+				},
+				{
+					BenchmarkID: 4,
+					Description: "Test 4",
+				},
+			},
+		},
+	}
+
+	for _, benchmark := range benchmarks {
+		if err := db.CreateBenchmark(benchmark); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	submissions := []*pb.Submission{
+		{
+			UserID:       student1.ID,
+			AssignmentID: assignments[0].ID,
+		},
+		{
+			UserID:       student1.ID,
+			AssignmentID: assignments[1].ID,
+		},
+		{
+			UserID:       student2.ID,
+			AssignmentID: assignments[0].ID,
+		},
+		{
+			UserID:       student2.ID,
+			AssignmentID: assignments[1].ID,
+		},
+		{
+			UserID:       student3.ID,
+			AssignmentID: assignments[0].ID,
+		},
+		{
+			UserID:       student3.ID,
+			AssignmentID: assignments[1].ID,
+		},
+	}
+
+	reviews := []*pb.Review{}
+	for _, s := range submissions {
+		if err := db.CreateSubmission(s); err != nil {
+			t.Fatal(err)
+		}
+		review, err := ags.CreateReview(ctx, &pb.ReviewRequest{
+			CourseID: course.ID,
+			Review: &pb.Review{
+				SubmissionID: s.ID,
+				ReviewerID:   admin.GetID(),
+			},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		reviews = append(reviews, review)
+	}
+
+	for _, r := range reviews {
+		for _, benchmark := range r.GradingBenchmarks {
+			for _, criterion := range benchmark.Criteria {
+				criterion.Grade = pb.GradingCriterion_PASSED
+			}
+		}
+
+		// Update the review. This will also update the submission score for the related submission.
+		_, err := ags.UpdateReview(ctx, &pb.ReviewRequest{
+			CourseID: uint64(course.ID),
+			Review:   r,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	gotSubmissions1, err := db.GetSubmissions(&pb.Submission{
+		AssignmentID: assignments[0].ID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, submission := range gotSubmissions1 {
+		// All submissions should have a score of 20
+		if submission.Score != 20 {
+			t.Errorf("Expected score 20, got %d", submission.Score)
+		}
+	}
+
+	gotSubmissions2, err := db.GetSubmissions(&pb.Submission{
+		AssignmentID: assignments[1].ID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, submission := range gotSubmissions2 {
+		// All submissions should have a score of 100
+		if submission.Score != 100 {
+			t.Errorf("Expected score 100, got %d", submission.Score)
+		}
+	}
+
+	// Attempt to release all submissions with score >= 80
+	if _, err = ags.UpdateSubmissions(ctx, &pb.UpdateSubmissionsRequest{
+		CourseID:     course.ID,
+		AssignmentID: assignments[0].ID,
+		Release:      true,
+		ScoreLimit:   80,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	gotSubmissions3, err := db.GetSubmissions(&pb.Submission{
+		AssignmentID: assignments[0].ID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Only submissions with score >= 80 should be released
+	// All submissions for assignment 1 should have score == 20, and not be released
+	for _, submission := range gotSubmissions3 {
+		if submission.Released {
+			t.Errorf("Expected submission to not be released")
+		}
+	}
+
+	// We want to make sure that submissions received by the student do not leak data
+	studentCtx := qtest.WithUserContext(context.Background(), student1)
+	gotStudentSubmissions, err := ags.GetSubmissions(studentCtx, &pb.SubmissionRequest{
+		CourseID: course.ID,
+		UserID:   student1.ID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, submission := range gotStudentSubmissions.Submissions {
+		// For submissions that have not been released
+		// the score should be 0, and any reviews should be nil
+		if submission.Released || submission.Score > 0 || submission.Reviews != nil || submission.Status != pb.Submission_NONE {
+			t.Errorf("Expected submission to not be released, have score, and have no reviews")
+		}
+	}
+
+	// Attempt to release all submissions with score >= 80
+	if _, err = ags.UpdateSubmissions(ctx, &pb.UpdateSubmissionsRequest{
+		CourseID:     course.ID,
+		AssignmentID: assignments[1].ID,
+		Release:      true,
+		ScoreLimit:   80,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// All submissions for assignment 2 should have score == 100, and be released
+	gotSubmissions4, err := db.GetSubmissions(&pb.Submission{
+		AssignmentID: assignments[1].ID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, submission := range gotSubmissions4 {
+		if !submission.Released {
+			t.Errorf("Expected submission to be released")
+		}
+	}
+
+	// Approve all submissions for assignment 1 with score >= 80
+	if _, err = ags.UpdateSubmissions(ctx, &pb.UpdateSubmissionsRequest{
+		CourseID:     course.ID,
+		AssignmentID: assignments[1].ID,
+		Approve:      true,
+		ScoreLimit:   80,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	gotSubmissions5, err := db.GetSubmissions(&pb.Submission{
+		AssignmentID: assignments[1].ID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, submission := range gotSubmissions5 {
+		// Check that all submissions for assignment 1 have been approved
+		if submission.Status != pb.Submission_APPROVED {
+			t.Errorf("Expected submission to be approved")
+		}
+	}
+
+	gotStudentSubmissions, err = ags.GetSubmissions(studentCtx, &pb.SubmissionRequest{
+		CourseID: course.ID,
+		UserID:   student1.ID,
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, submission := range gotStudentSubmissions.Submissions {
+		// Submissions for assignment 1 should not be released, have score, or reviews.
+		if submission.ID == assignments[0].ID && (submission.Released || submission.Score > 0 || submission.Reviews != nil) {
+			t.Errorf("Expected submission to not be released, have score, and have no reviews")
+		}
+
+		// Submissions for assignment 2 should be released, have score, and have reviews
+		if submission.ID == assignments[1].ID && !(submission.Released || submission.Score > 0 || submission.Reviews != nil || submission.Status != pb.Submission_NONE) {
+			t.Error("Expected submission to be released, have score, and have reviews", submission.Score, submission.Reviews, submission.Released)
+		}
+	}
+}
+
 func isApproved(requirements int, approved []bool) bool {
 	for _, a := range approved {
 		if a {

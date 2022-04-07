@@ -16,3 +16,14 @@ func TestGetTestURL(t *testing.T) {
 		t.Errorf("GetTestURL() = %s, want %s", got, want)
 	}
 }
+
+func TestName(t *testing.T) {
+	want := "meling-labs"
+	repo := &pb.Repository{
+		HTMLURL: "https://github.com/dat320-2020/" + want,
+	}
+	got := repo.Name()
+	if got != want {
+		t.Errorf("Name() = %s, want %s", got, want)
+	}
+}

@@ -111,6 +111,7 @@ func TestUpdateAssignment(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	wantAssignments := make([]*pb.Assignment, len(assignments))
 	for i, a := range assignments {
 		// test setting various zero-value entries to check that we can read back the same value
@@ -130,6 +131,7 @@ func TestUpdateAssignment(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	for i := range gotAssignments {
 		if diff := cmp.Diff(wantAssignments[i], gotAssignments[i], protocmp.Transform()); diff != "" {
 			t.Errorf("UpdateAssignments() mismatch (-want +got):\n%s", diff)
