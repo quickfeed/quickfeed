@@ -34,3 +34,18 @@ func (s *Submission) ByUser(userID uint64) bool {
 func (s *Submission) ByGroup(groupID uint64) bool {
 	return s.GetUserID() == 0 && s.GetGroupID() > 0 && s.GetGroupID() == groupID
 }
+
+// Clean removes any score or reviews from the submission if it is not released.
+// This is to prevent users from seeing the score or reviews of a submission that has not been released.
+func (s *Submissions) Clean() {
+	for _, submission := range s.Submissions {
+		// Released submissions, or submissions with no reviews need no cleaning.
+		if submission.GetReleased() || len(submission.GetReviews()) == 0 {
+			continue
+		}
+		// Remove any score, status, or reviews if the submission is not released.
+		submission.Score = 0
+		submission.Status = Submission_NONE
+		submission.Reviews = nil
+	}
+}

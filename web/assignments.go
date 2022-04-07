@@ -131,9 +131,8 @@ func (s *AutograderService) updateReview(review *pb.Review) (*pb.Review, error) 
 			}
 		}
 	}
-	if submission.Released {
-		// Updated review will most probably have a new score. Update the submission score as well
-		// for submissions with released review.
+	// Update the submission's score if the review score has changed.
+	if submission.Score != review.Score {
 		submission.Score = review.Score
 		if err := s.db.UpdateSubmission(submission); err != nil {
 			return nil, err
