@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"sort"
@@ -40,7 +39,7 @@ func main() {
 // checkVersions returns true if the installed tool must be updated.
 func checkVersions(tool, toolVer, codeVer string) bool {
 	if toolVer != codeVer && sort.StringsAreSorted([]string{toolVer, codeVer}) {
-		fmt.Printf("Installed %s version %v is older than generated code version %v\n", tool, toolVer, codeVer)
+		fmt.Printf("Installed %q version %v is older than generated code version %v\n", tool, toolVer, codeVer)
 		return true
 	}
 	return false
@@ -48,17 +47,17 @@ func checkVersions(tool, toolVer, codeVer string) bool {
 
 // toolVersion returns the given tool's version.
 func toolVersion(tool string) string {
-	s, err := sh.Output(tool + " --version")
-	check(err)
-	s = strings.TrimSpace(s)
-	switch s {
-	case "Missing value for flag: --version":
-		fallthrough
-	case `unknown argument "--version"`:
-		fallthrough
-	case `flag provided but not defined: -version`:
-		log.Printf("Your installed %s version is too old. Please update to the latest version.", tool)
-		return "0.0.0"
+	s, stdErr, _ := sh.OutputErr(tool + " --version")
+	stdErr = strings.TrimSpace(stdErr)
+	for _, errMsg := range []string{
+		`Missing value for flag: --version`,
+		`unknown argument "--version"`,
+		`flag provided but not defined: -version`,
+	} {
+		if strings.Contains(stdErr, errMsg) {
+			fmt.Printf("Installed %q version is too old.\n", tool)
+			return "?"
+		}
 	}
 	i := strings.LastIndex(s, " ")
 	s = s[i+1:]
@@ -89,6 +88,6 @@ func scan(file string, re *regexp.Regexp) (string, string) {
 
 func check(err error) {
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 }
