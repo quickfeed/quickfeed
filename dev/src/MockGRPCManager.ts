@@ -365,21 +365,24 @@ export class MockGrpcManager {
     }
 
     public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IGrpcResponse<CourseSubmissions>> {
+        // TODO: Remove `.clone()` when done migrating to AsObject in state
+        const users = this.users.getUsersList()
+        const groups = this.groups.getGroupsList()
         const submissions = new CourseSubmissions()
         const enrollmentLinks: EnrollmentLink[] = []
         const course = this.courses.getCoursesList().find(c => c.getId() === courseID)
         if (!course) {
             return this.grpcSend<CourseSubmissions>(null, new Status().setCode(2).setError('Course not found'))
         }
-        submissions.setCourse(course)
+        submissions.setCourse(course.clone())
 
         const enrollments = this.enrollments.getEnrollmentsList().filter(e => e.getCourseid() === courseID)
         const aIDs = this.assignments.getAssignmentsList().filter(a => a.getCourseid() === courseID).map(a => a.getId())
-        for (const enrollment of enrollments) {
+        enrollments.forEach(enrollment => {
             const link = new EnrollmentLink()
-            const enroll = Object.assign(new Enrollment(), enrollment)
-            enroll.setUser(this.users.getUsersList().find(u => u.getId() === enrollment.getUserid()))
-            enroll.setGroup(this.groups.getGroupsList().find(g => g.getId() === enrollment.getGroupid()))
+            const enroll = Object.assign(new Enrollment(), enrollment.clone())
+            enroll.setUser(users.find(u => u.getId() === enrollment.getUserid())?.clone())
+            enroll.setGroup(groups.find(g => g.getId() === enrollment.getGroupid())?.clone())
             link.setEnrollment(enroll)
             let subs: SubmissionLink[] = []
 
@@ -388,7 +391,7 @@ export class MockGrpcManager {
                     return
                 }
                 const subLink = new SubmissionLink()
-                subLink.setAssignment(assignment)
+                subLink.setAssignment(assignment.clone())
                 let submission: Submission | undefined
                 switch (type) {
                     case SubmissionsForCourseRequest.Type.ALL:
@@ -407,13 +410,12 @@ export class MockGrpcManager {
                     return
                 }
 
-                subLink.setSubmission(submission)
+                subLink.setSubmission(submission.clone())
                 subs.push(subLink)
             })
-
             link.setSubmissionsList(subs)
             enrollmentLinks.push(link)
-        }
+        })
         submissions.setLinksList(enrollmentLinks)
         // TODO
         return this.grpcSend<CourseSubmissions>(submissions)
