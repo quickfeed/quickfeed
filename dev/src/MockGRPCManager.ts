@@ -589,18 +589,18 @@ export class MockGrpcManager {
                 .setEmail("admin@admin")
                 .setLogin("Admin")
                 .setStudentid("1000")
-                .setIsadmin(false)
+                .setIsadmin(true)
         )
 
         userList.push(
             new User()
                 .setId(3)
-                .setName("Per Pettersen")
-                .setEmail("per@pettersen.no")
-                .setLogin("Per")
+                .setName("Test Student")
+                .setEmail("test@student.no")
+                .setLogin("Student")
                 .setAvatarurl("https://avatars0.githubusercontent.com/u/1?v=4")
                 .setStudentid("1234")
-                .setIsadmin(true)
+                .setIsadmin(false)
         )
 
         userList.push(
@@ -985,7 +985,43 @@ export class MockGrpcManager {
                 .setAssignmentid(5)
                 .setUserid(1)
                 .setScore(100)
-                .setCommithash("efg")
+                .setCommithash("efg"),
+
+            new Submission()
+                .setId(6)
+                .setAssignmentid(1)
+                .setUserid(3)
+                .setScore(50)
+                .setCommithash("test")
+                .setStatus(0)
+                .setBuildinfo(
+                    new BuildInfo()
+                        .setId(3)
+                        .setBuilddate(new Date(2022, 6, 4).toISOString())
+                        .setBuildlog("Build log for test student")
+                        .setExectime(1)
+                )
+                .setScoresList(
+                    [
+                        new Score()
+                            .setId(3)
+                            .setMaxscore(10)
+                            .setScore(5)
+                            .setSubmissionid(6)
+                            .setTestname("Test 1")
+                            .setTestdetails("Test details")
+                            .setWeight(2),
+
+                        new Score()
+                            .setId(4)
+                            .setMaxscore(10)
+                            .setScore(5)
+                            .setTestname("Test 2")
+                            .setTestdetails("Test details")
+                            .setSubmissionid(6)
+                            .setWeight(2),
+                    ]
+                )
         ]
         )
     }
