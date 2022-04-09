@@ -31,7 +31,6 @@ import {
     EnrollmentLink,
     SubmissionLink,
 } from "../proto/ag/ag_pb"
-import { AutograderServiceClient } from "../proto/ag/AgServiceClientPb"
 import { delay } from "./Helpers"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
 
@@ -40,9 +39,9 @@ export interface IGrpcResponse<T> {
     data?: T
 }
 
-export class GrpcManager {
+export class MockGrpcManager {
 
-    constructor() {
+    constructor(id?: number) {
         this.initProviders()
         this.initUsers()
         this.initAssignments()
@@ -52,7 +51,11 @@ export class GrpcManager {
         this.addLocalCourseStudent()
         this.addLocalLabInfo()
         this.initBenchmarks()
-        this.currentUser = this.users.getUsersList().find(user => user.getId() === 1) ?? this.users.getUsersList()[0]
+        if (id) {
+            this.setCurrentUser(id)
+        } else {
+            this.setCurrentUser(1)
+        }
     }
 
 
@@ -67,6 +70,13 @@ export class GrpcManager {
     private submissions: Submissions
     private templateBenchmarks: GradingBenchmark[]
 
+
+    public setCurrentUser(id: number) {
+        const user = this.users.getUsersList().find(u => u.getId() === id)
+        if (user) {
+            this.currentUser = user
+        }
+    }
 
     public getUser(): Promise<IGrpcResponse<User>> {
         return this.grpcSend<User>(this.currentUser)
