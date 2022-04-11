@@ -9,17 +9,17 @@ type State = {
     /* Contains all reviews for the different courses, indexed by the course id and submission id */
     reviews: {
         [courseID: number]: {
-            [submissionID: number]: Review[]
+            [submissionID: number]: Review.AsObject[]
         }
     }
 
     /* The current review */
     // derived from reviews and selectedReview
-    currentReview: Review | undefined
+    currentReview: Review.AsObject | null
 
     /* The reviewer for the current review */
     // derived from currentReview
-    reviewer: User | undefined
+    reviewer: User.AsObject | null
 
     /* Indicates if the current review can be updated */
     canUpdate: boolean
@@ -45,30 +45,30 @@ export const state: State = {
 
     currentReview: derived(({ reviews, selectedReview }: State, rootState: Context["state"]) => {
         if (!(rootState.activeCourse > 0 && rootState.activeSubmission > 0)) {
-            return undefined
+            return null
         }
         const check = reviews[rootState.activeCourse][rootState.activeSubmission]
-        return check ? check[selectedReview] : undefined
+        return check ? check[selectedReview] : null
     }),
 
     reviewer: derived(({ currentReview }: State, rootState: Context["state"]) => {
         if (!currentReview) {
-            return undefined
+            return null
         }
-        return rootState.users[currentReview.getReviewerid()]
+        return rootState.users[currentReview.reviewerid]
     }),
 
     canUpdate: derived(({ currentReview }: State, rootState: Context["state"]) => {
-        return currentReview != undefined && rootState.activeSubmission > 0 && rootState.activeCourse > 0 && currentReview.getId() > 0
+        return currentReview != null && rootState.activeSubmission > 0 && rootState.activeCourse > 0 && currentReview.id > 0
     }),
 
     criteriaTotal: derived((state: State, rootState: Context["state"]) => {
         let total = 0
         if (rootState.currentSubmission, rootState.activeCourse) {
-            const assignment = rootState.assignments[rootState.activeCourse]?.find(a => a.getId() === rootState.currentSubmission?.getAssignmentid())
+            const assignment = rootState.assignments[rootState.activeCourse]?.find(a => a.id === rootState.currentSubmission?.assignmentid)
             if (assignment) {
-                json(assignment).getGradingbenchmarksList().forEach(bm => {
-                    bm.getCriteriaList().forEach(() => {
+                assignment.gradingbenchmarksList.forEach(bm => {
+                    bm.criteriaList.forEach(() => {
                         total++
                     })
                 })
@@ -79,9 +79,9 @@ export const state: State = {
 
     graded: derived(({ currentReview }: State) => {
         let total = 0
-        json(currentReview)?.getGradingbenchmarksList()?.forEach(bm => {
-            json(bm).getCriteriaList().forEach((c) => {
-                if (c.getGrade() > GradingCriterion.Grade.NONE) {
+        currentReview?.gradingbenchmarksList?.forEach(bm => {
+            bm.criteriaList.forEach((c) => {
+                if (c.grade > GradingCriterion.Grade.NONE) {
                     total++
                 }
             })
