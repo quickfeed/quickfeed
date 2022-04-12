@@ -1,17 +1,19 @@
 import React, { useState } from "react"
 import { useActions } from "../../overmind"
 import { Course, Organization } from "../../../proto/ag/ag_pb"
-import { json } from "overmind"
 import FormInput from "./FormInput"
 import CourseCreationInfo from "../admin/CourseCreationInfo"
 import { useHistory } from "react-router"
-import { defaultTag, defaultYear } from "../../Helpers"
+import { defaultTag, defaultYear, ProtoConverter } from "../../Helpers"
 
+
+// TODO: There are currently issues with navigating a new course without refreshing the page to trigger a state reload.
+// TODO: Plenty of required fields are undefined across multiple components.
 
 /** CourseForm is used to create a new course or edit an existing course.
  *  If `editCourse` is provided, the existing course will be modified.
  *  If no course is provided, a new course will be created. */
-const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element => {
+const CourseForm = ({ editCourse }: { editCourse?: Course.AsObject }): JSX.Element => {
     const actions = useActions()
     const history = useHistory()
 
@@ -21,33 +23,33 @@ const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element => {
     const [org, setOrg] = useState<Organization>()
 
     // Local state containing the course to be created or edited (if any)
-    const [course, setCourse] = useState(editCourse ? json(editCourse).clone() : new Course)
+    const [course, setCourse] = useState(editCourse ? ProtoConverter.clone(editCourse) : ProtoConverter.create(Course))
 
     // Local state containing a boolean indicating whether the organization is valid. Courses that are being edited do not need to be validated.
     const [orgFound, setOrgFound] = useState<boolean>(editCourse ? true : false)
 
     /* Date object used to fill in certain default values for new courses */
     const date = new Date(Date.now())
-    course.setYear(defaultYear(date))
-    course.setTag(defaultTag(date))
+    course.year = defaultYear(date)
+    course.tag = defaultTag(date)
 
     const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
         const { name, value } = event.currentTarget
         switch (name) {
             case "courseName":
-                course.setName(value)
+                course.name = value
                 break
             case "courseTag":
-                course.setTag(value)
+                course.tag = value
                 break
             case "courseCode":
-                course.setCode(value)
+                course.code = value
                 break
             case "courseYear":
-                course.setYear(Number(value))
+                course.year = Number(value)
                 break
             case "slipDays":
-                course.setSlipdays(Number(value))
+                course.slipdays = Number(value)
                 break
         }
         setCourse(course)
@@ -102,7 +104,7 @@ const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element => {
                         <FormInput prepend="Name"
                             name="courseName"
                             placeholder={"Course Name"}
-                            defaultValue={editCourse?.getName()}
+                            defaultValue={editCourse?.name}
                             onChange={handleChange}
                         />
                     </div>
@@ -111,14 +113,14 @@ const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element => {
                             prepend="Code"
                             name="courseCode"
                             placeholder={"(ex. DAT320)"}
-                            defaultValue={editCourse?.getCode()}
+                            defaultValue={editCourse?.code}
                             onChange={handleChange}
                         />
                         <FormInput
                             prepend="Tag"
                             name="courseTag"
                             placeholder={"(ex. Fall / Spring)"}
-                            defaultValue={editCourse ? editCourse.getTag() : defaultTag(date)}
+                            defaultValue={editCourse ? editCourse.tag : defaultTag(date)}
                             onChange={handleChange}
                         />
                     </div>
@@ -127,7 +129,7 @@ const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element => {
                             prepend="Slip days"
                             name="slipDays"
                             placeholder={"(ex. 7)"}
-                            defaultValue={editCourse?.getSlipdays().toString()}
+                            defaultValue={editCourse?.slipdays.toString()}
                             onChange={handleChange}
                             type="number"
                         />
@@ -135,7 +137,7 @@ const CourseForm = ({ editCourse }: { editCourse?: Course }): JSX.Element => {
                             prepend="Year"
                             name="courseYear"
                             placeholder={"(ex. 2021)"}
-                            defaultValue={editCourse ? editCourse.getYear().toString() : defaultYear(date).toString()}
+                            defaultValue={editCourse ? editCourse.year.toString() : defaultYear(date).toString()}
                             onChange={handleChange}
                             type="number"
                         />

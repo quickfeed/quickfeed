@@ -12,15 +12,15 @@ const SubmissionsTable = (): JSX.Element => {
     const history = useHistory()
 
     const sortedAssignments = () => {
-        const assignments: Assignment[] = []
+        const assignments: Assignment.AsObject[] = []
         for (const courseID in state.assignments) {
             assignments.push(...state.assignments[courseID])
         }
         assignments.sort((a, b) => {
-            if (b.getDeadline() > a.getDeadline()) {
+            if (b.deadline > a.deadline) {
                 return -1
             }
-            if (a.getDeadline() > b.getDeadline()) {
+            if (a.deadline > b.deadline) {
                 return 1
             }
             return 0
@@ -31,35 +31,35 @@ const SubmissionsTable = (): JSX.Element => {
     const SubmissionsTable = (): JSX.Element[] => {
         const table: JSX.Element[] = []
         sortedAssignments().forEach(assignment => {
-            const courseID = assignment.getCourseid()
+            const courseID = assignment.courseid
             const submissions = state.submissions[courseID]
             if (!submissions) {
                 return
             }
             // Submissions are indexed by the assignment order - 1.
-            const submission = submissions[assignment.getOrder() - 1] ?? new Submission()
-            if (submission.getStatus() !== Submission.Status.APPROVED) {
-                const deadline = timeFormatter(assignment.getDeadline())
-                if (deadline.daysUntil > 3 && submission.getScore() >= assignment.getScorelimit()) {
+            const submission = submissions[assignment.order - 1] ?? (new Submission()).toObject()
+            if (submission.status !== Submission.Status.APPROVED) {
+                const deadline = timeFormatter(assignment.deadline)
+                if (deadline.daysUntil > 3 && submission.score >= assignment.scorelimit) {
                     deadline.className = "table-success"
                 }
                 if (!deadline.message) {
                     return
                 }
-                const course = state.courses.find(course => course.getId() === courseID)
+                const course = state.courses.find(course => course.id === courseID)
                 table.push(
-                    <tr key={assignment.getId()} className={"clickable-row " + deadline.className}
-                        onClick={() => history.push(`/course/${courseID}/${assignment.getId()}`)}>
-                        <th scope="row">{course?.getCode()}</th>
+                    <tr key={assignment.id} className={"clickable-row " + deadline.className}
+                        onClick={() => history.push(`/course/${courseID}/${assignment.id}`)}>
+                        <th scope="row">{course?.code}</th>
                         <td>
-                            {assignment.getName()}
-                            {assignment.getIsgrouplab() ?
+                            {assignment.name}
+                            {assignment.isgrouplab ?
                                 <span className="badge ml-2 float-right"><i className="fa fa-users" title="Group Assignment"></i></span> : null}
                         </td>
-                        <td><ProgressBar assignmentIndex={assignment.getOrder() - 1} courseID={courseID} submission={submission} type={Progress.OVERVIEW} /></td>
-                        <td>{getFormattedTime(assignment.getDeadline())}</td>
+                        <td><ProgressBar assignmentIndex={assignment.order - 1} courseID={courseID} submission={submission} type={Progress.OVERVIEW} /></td>
+                        <td>{getFormattedTime(assignment.deadline)}</td>
                         <td>{deadline.message ? deadline.message : '--'}</td>
-                        <td className={SubmissionStatus[submission.getStatus()]}>
+                        <td className={SubmissionStatus[submission.status]}>
                             {assignmentStatusText(assignment, submission)}
                         </td>
                     </tr>
