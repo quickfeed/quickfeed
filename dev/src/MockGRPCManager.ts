@@ -512,7 +512,14 @@ export class MockGrpcManager {
         }
         r.setScore(this.computeScore(r))
         r.setEdited(new Date().getTime().toString())
-        submission.setReviewsList(submission.getReviewsList().concat([r]))
+        submission.setReviewsList(submission.getReviewsList().map(rev => {
+            if (rev.getId() === r.getId()) {
+                // Return the updated review
+                return r
+            }
+            // Return the original review
+            return rev
+        }))
         return this.grpcSend<Review>(r)
     }
 
