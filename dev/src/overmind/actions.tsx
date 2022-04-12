@@ -208,11 +208,11 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
                 // If the enrollment is rejected, remove it from state
                 state.courseEnrollments[state.activeCourse] = state.courseEnrollments[state.activeCourse]?.filter(s => s.getId() != enrollment.getId())
             } else {
-                enrollment.setStatus(status)
+                const enrollment = state.courseEnrollments[state.activeCourse]?.find(s => s.getId() == temp.getId())
+                if (enrollment) {
+                    enrollment.setStatus(status)
+                }
             }
-        } else {
-            // If unsuccessful, alert user
-            actions.alertHandler(response)
         }
     }
 }

@@ -16,8 +16,6 @@ const Members = (): JSX.Element => {
     const [sortBy, setSortBy] = useState<EnrollmentSort>(EnrollmentSort.Status)
     const [descending, setDescending] = useState<boolean>(false)
     const [edit, setEditing] = useState<boolean>(false)
-    const [accept, setAccept] = useState<boolean>(false)
-    const [promote, setPromote] = useState<boolean>(false)
 
     const approveAll = () => {
         for (const enrollment of pending) {
@@ -56,7 +54,7 @@ const Members = (): JSX.Element => {
             data.push(
                 <div>
                     <i className="badge badge-primary" style={{ cursor: "pointer" }}
-                        onClick={() => { actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT }); setAccept(!accept) }}>
+                        onClick={() => { actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT }) }}>
                         Accept
                     </i>
                     <i className="badge badge-danger clickable ml-1"
@@ -68,7 +66,7 @@ const Members = (): JSX.Element => {
             data.push(edit ? (
                 <div>
                     <i className="badge badge-primary clickable"
-                        onClick={() => { actions.updateEnrollment({ enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER }); setPromote(!promote) }}>
+                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER })}>
                         {isTeacher(enrollment) ? "Demote" : "Promote"}
                     </i>
                     <i className="badge badge-danger clickable ml-1"
