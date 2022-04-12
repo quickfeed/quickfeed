@@ -20,6 +20,65 @@ export const onInitializeOvermind = async ({ actions }: Context): Promise<void> 
         actions.alert({ text: alert, color: Color.RED })
         localStorage.removeItem("alert")
     }
+
+    // Load state from local storage
+    /*const savedState = ProtoConverter.load()
+    if (savedState) {
+        // Ignore saved state if it is derived
+        Object.entries(savedState).forEach(([key, value]) => {
+            if (derivedState.includes(key)) {
+                delete savedState[key]
+                return
+            }
+        })
+        Object.assign(state, savedState)
+    }*/
+}
+
+export const resetState = ({ state, actions, effects }: Context) => {
+    Object.assign(state.review, {
+        selectedReview: -1,
+        reviews: {},
+        minimumScore: 0,
+        assignmentID: -1
+    })
+
+    const initialState = {
+        activeAssignment: -1,
+        activeCourse: -1,
+        activeEnrollment: null,
+        activeSubmissionLink: null,
+        query: "",
+        sortSubmissionsBy: SubmissionSort.Approved,
+        sortAscending: true,
+        submissionFilters: [],
+        groupView: false,
+        status: [],
+        activeUser: null,
+        assignments: {},
+        repositories: {},
+
+        courseGroup: { courseID: 0, enrollments: [], users: [], groupName: "" },
+        alerts: [],
+        isLoading: true,
+        courseEnrollments: {},
+        groups: {},
+        users: {},
+        allUsers: [],
+        courses: [],
+        courseSubmissions: [],
+        courseGroupSubmissions: {},
+        submissions: {},
+        userGroup: {},
+        enrollments: [],
+    }
+
+    Object.assign(state, initialState)
+}
+
+export const saveState = async ({ state, actions }: Context): Promise<void> => {
+    // Save state to local storage
+    localStorage.setItem("state", JSON.stringify(state))
 }
 
 /**
