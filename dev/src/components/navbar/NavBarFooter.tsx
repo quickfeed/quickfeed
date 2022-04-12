@@ -19,7 +19,7 @@ const NavBarFooter = (): JSX.Element => {
     const profileButton = isLoggedIn
         ? (
             <li onClick={() => history.push("/profile")} onMouseEnter={() => setHidden(false)}>
-                <div><img src={self.getAvatarurl()} id="avatar"></img></div>
+                <div><img src={self.avatarurl} id="avatar"></img></div>
             </li>
         )
         : null
@@ -34,7 +34,7 @@ const NavBarFooter = (): JSX.Element => {
     )
 
 
-    const adminButton = self.getIsadmin()
+    const adminButton = self.isadmin
         ? (
             <li hidden={hidden}>
                 <Link to="/admin" className="Sidebar-items-link">

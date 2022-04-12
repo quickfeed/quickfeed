@@ -8,14 +8,13 @@ export enum Progress {
     OVERVIEW
 }
 
-const ProgressBar = (props: { courseID: number, assignmentIndex: number, submission?: Submission, type: Progress }): JSX.Element => {
+const ProgressBar = (props: { courseID: number, assignmentIndex: number, submission?: Submission.AsObject, type: Progress }): JSX.Element => {
     const state = useAppState()
 
     const submission = props.submission ? props.submission : state.submissions[props.courseID][props.assignmentIndex]
     const assignment = state.assignments[props.courseID][props.assignmentIndex]
-
-    const score = submission.getScore()
-    const secondaryProgress = assignment.getScorelimit() - score
+    const score = submission.score
+    const secondaryProgress = assignment.scorelimit - score
 
     // Returns a thin line to be used for labs in the NavBar
     if (props.type === Progress.NAV) {
@@ -27,7 +26,7 @@ const ProgressBar = (props: { courseID: number, assignmentIndex: number, submiss
                 bottom: 0,
                 left: 0,
                 right: `${percentage}%`,
-                borderColor: `${score >= assignment.getScorelimit() ? "green" : "yellow"}`,
+                borderColor: `${score >= assignment.scorelimit ? "green" : "yellow"}`,
                 opacity: 0.3
             }}>
             </div>
@@ -44,7 +43,7 @@ const ProgressBar = (props: { courseID: number, assignmentIndex: number, submiss
     // Returns a regular size progress bar to be used for labs
     let color = ""
     if (props.type > Progress.NAV) {
-        switch (submission.getStatus()) {
+        switch (submission.status) {
             case Submission.Status.NONE:
                 color = "bg-primary"
                 break
