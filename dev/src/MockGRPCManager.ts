@@ -148,10 +148,10 @@ export class MockGrpcManager {
     }
 
     public updateCourseVisibility(request: Enrollment): Promise<IGrpcResponse<Void>> {
-        const index = this.enrollments.getEnrollmentsList().findIndex(e => e.getUserid() === request.getUserid())
+        const index = this.enrollments.getEnrollmentsList().findIndex(e => e.getUserid() === this.currentUser.getId())
         if (index > -1) {
             const enrollments = this.enrollments.getEnrollmentsList()
-            enrollments[index].setStatus(request.getStatus())
+            enrollments[index].setState(request.getState())
             this.enrollments.setEnrollmentsList(enrollments)
         }
         return this.grpcSend<Void>(new Void())
