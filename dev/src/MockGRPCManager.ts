@@ -71,6 +71,9 @@ export class MockGrpcManager {
     private templateBenchmarks: GradingBenchmark[]
 
 
+    public getMockedUsers() {
+        return this.users
+    }
     public setCurrentUser(id: number) {
         const user = this.users.getUsersList().find(u => u.getId() === id)
         if (user) {
@@ -78,7 +81,8 @@ export class MockGrpcManager {
         }
     }
 
-    public getUser(): Promise<IGrpcResponse<User>> {
+    public async getUser(): Promise<IGrpcResponse<User>> {
+        //await delay(10000)
         return this.grpcSend<User>(this.currentUser)
     }
 
@@ -186,7 +190,7 @@ export class MockGrpcManager {
         const enrollments = new Enrollments()
         const enrollmentsList: Enrollment[] = []
         for (const enrollment of this.enrollments.getEnrollmentsList()) {
-            if (enrollment.getUserid() === userID && (!statuses || statuses.includes(enrollment.getStatus()))) {
+            if (enrollment.getUserid() === userID && userID === this.currentUser.getId() && (!statuses || statuses.includes(enrollment.getStatus()))) {
                 const course = this.courses.getCoursesList().find(c => c.getId() === enrollment.getCourseid())
                 if (course) {
                     enrollment.setCourse(course)
@@ -752,6 +756,7 @@ export class MockGrpcManager {
         course0.setYear(2017)
         course0.setProvider("github")
         course0.setOrganizationid(23650610)
+        course0.setCoursecreatorid(1)
 
         course1.setId(2)
         course1.setName("Algorithms and Datastructures")
