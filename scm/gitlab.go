@@ -281,6 +281,41 @@ func (*GitlabSCM) GetUserScopes(_ context.Context) *Authorization {
 	return nil
 }
 
+// CreateIssue implements the SCM interface
+func (*GitlabSCM) CreateIssue(_ context.Context, _ *CreateIssueOptions) (*Issue, error) {
+	// TODO no implementation provided yet
+	return nil, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "CreateIssue",
+	}
+}
+
+// GetRepoIssue implements the SCM interface
+func (*GitlabSCM) GetRepoIssue(_ context.Context, _ int, _ *RepositoryOptions) (*Issue, error) {
+	// TODO no implementation provided yet
+	return nil, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "GetRepoIssue",
+	}
+}
+
+// GetRepoIssues implements the SCM interface
+func (*GitlabSCM) GetRepoIssues(_ context.Context, _ *RepositoryOptions) ([]*Issue, error) {
+	// TODO no implementation provided yet
+	return nil, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "GetRepoIssues",
+	}
+}
+
+func (*GitlabSCM) EditRepoIssue(_ context.Context, _ int, _ *CreateIssueOptions) (*Issue, error) {
+	// TODO no implementation provided yet
+	return nil, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "EditRepoIssue",
+	}
+}
+
 // AcceptRepositoryInvite implements the SCM interface
 func (*GitlabSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
 	// TODO no implementation provided yet

@@ -223,3 +223,39 @@ func (*FakeSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitati
 	// TODO no implementation provided yet
 	return nil
 }
+
+// CreateIssue implements the SCM interface
+func (*FakeSCM) CreateIssue(_ context.Context, _ *CreateIssueOptions) (*Issue, error) {
+	// TODO no implementation provided yet
+	return nil, ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "CreateIssue",
+	}
+}
+
+// GetRepoIssue implements the SCM interface
+func (*FakeSCM) GetRepoIssue(_ context.Context, _ int, _ *RepositoryOptions) (*Issue, error) {
+	// TODO no implementation provided yet
+	return nil, ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "GetRepoIssue",
+	}
+}
+
+// GetRepoIssues implements the SCM interface
+func (*FakeSCM) GetRepoIssues(_ context.Context, _ *RepositoryOptions) ([]*Issue, error) {
+	// TODO no implementation provided yet
+	return nil, ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "GetRepoIssues",
+	}
+}
+
+// EditRepoIssue implements the SCM interface
+func (*FakeSCM) EditRepoIssue(_ context.Context, _ int, _ *CreateIssueOptions) (*Issue, error) {
+	// TODO no implementation provided yet
+	return nil, ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "EditRepoIssue",
+	}
+}
