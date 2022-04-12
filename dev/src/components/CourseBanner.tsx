@@ -13,15 +13,15 @@ const CourseBanner = (): JSX.Element => {
     return (
         <div className="jumbotron">
             <div className="centerblock container">
-                <h1>{enrollment.getCourse()?.getName()}
+                <h1>{enrollment.course?.name}
                     <span style={{ "paddingLeft": "20px" }}>
                         <i className={style}
                             onClick={() => actions.setEnrollmentState(enrollment)}>
                         </i>
                     </span>
                 </h1>
-                {hasTeacher(state.status[enrollment.getCourseid()]) &&
-                    <span className="clickable" onClick={() => actions.changeView(enrollment.getCourseid())}>
+                {hasTeacher(state.status[enrollment.courseid]) &&
+                    <span className="clickable" onClick={() => actions.changeView(enrollment.courseid)}>
                         {isTeacher(enrollment) ? "Switch to Student View" : "Switch to Teacher View"}
                     </span>
                 }

@@ -44,12 +44,12 @@ const Members = (): JSX.Element => {
     ]
     const members = sortEnrollments(json(state.courseEnrollments[courseID]), sortBy, descending).map(enrollment => {
         const data: Row = []
-        data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getName() : "")
-        data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getEmail() : "")
-        data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getStudentid() : "")
-        data.push(enrollment.getLastactivitydate())
-        data.push(enrollment.getTotalapproved().toString())
-        data.push(enrollment.getSlipdaysremaining().toString())
+        data.push(enrollment.user ? enrollment.user.name : "")
+        data.push(enrollment.user ? enrollment.user.email : "")
+        data.push(enrollment.user ? enrollment.user.studentid : "")
+        data.push(enrollment.lastactivitydate)
+        data.push(enrollment.totalapproved.toString())
+        data.push(enrollment.slipdaysremaining.toString())
 
         if (isPending(enrollment)) {
             data.push(
@@ -75,8 +75,8 @@ const Members = (): JSX.Element => {
                         Reject
                     </i>
                 </div>) :
-                <i className={EnrollmentStatusBadge[enrollment.getStatus()]}>
-                    {EnrollmentStatus[enrollment.getStatus()]}
+                <i className={EnrollmentStatusBadge[enrollment.status]}>
+                    {EnrollmentStatus[enrollment.status]}
                 </i>
             )
         }

@@ -30,7 +30,7 @@ const Profile = (): JSX.Element => {
             <div>
                 <div className="jumbotron">
                     <div className="centerblock container">
-                        <h1>Hi, {state.self.getName()}</h1>
+                        <h1>Hi, {state.self.name}</h1>
                         <p>You can edit your user information here.</p>
                         <p><span className='font-weight-bold'>Use your real name as it appears on Canvas</span> to ensure that approvals are correctly attributed.</p>
                     </div>

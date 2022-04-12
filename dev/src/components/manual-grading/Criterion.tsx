@@ -6,7 +6,7 @@ import CriteriaStatus from "./CriteriaStatus"
 
 
 /* Criteria component for the manual grading page */
-const Criteria = ({ criteria }: { criteria: GradingCriterion }): JSX.Element => {
+const Criteria = ({ criteria }: { criteria: GradingCriterion.AsObject }): JSX.Element => {
 
     // editing, setEditing is used to toggle the GradeComment component
     const [editing, setEditing] = useState<boolean>(false)
@@ -15,7 +15,7 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }): JSX.Element => 
     // classname is used to style the first column of the row returned by this component
     // it adds a vertical line to the left of the row with color based on the grading criterion.
     let className: string
-    switch (criteria.getGrade()) {
+    switch (criteria.grade) {
         case GradingCriterion.Grade.PASSED:
             className = "passed"
             break
@@ -27,7 +27,7 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }): JSX.Element => 
             break
     }
 
-    const passed = criteria.getGrade() == GradingCriterion.Grade.PASSED
+    const passed = criteria.grade == GradingCriterion.Grade.PASSED
     // manageOrShowPassed renders the ManageCriteriaStatus component if the user is a teacher, otherwise it renders a passed/failed icon
     const criteriaStatusOrPassFailIcon = isTeacher
         ? <CriteriaStatus criterion={criteria} />
@@ -36,11 +36,11 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion }): JSX.Element => 
     return (
         <>
             <tr className="align-items-center">
-                <th className={className}>{criteria.getDescription()}</th>
+                <th className={className}>{criteria.description}</th>
                 <th>
                     {criteriaStatusOrPassFailIcon}
                 </th>
-                <th onClick={() => setEditing(true)}>{criteria.getComment()}</th>
+                <th onClick={() => setEditing(true)}>{criteria.comment}</th>
             </tr>
             <GradeComment grade={criteria} editing={editing} setEditing={setEditing} />
         </>

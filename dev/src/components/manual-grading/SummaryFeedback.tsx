@@ -4,12 +4,12 @@ import { Review } from "../../../proto/ag/ag_pb"
 import { useActions, useAppState } from "../../overmind"
 
 
-const SummaryFeedback = ({ review }: { review: Review }) => {
+const SummaryFeedback = ({ review }: { review: Review.AsObject }) => {
     const state = useAppState()
     const actions = useActions()
     const [editing, setEditing] = useState<boolean>(false)
 
-    const summaryFeedback = <td colSpan={3}>{review.getFeedback().length > 0 ? review.getFeedback() : "No summary feedback"}</td>
+    const summaryFeedback = <td colSpan={3}>{review.feedback.length > 0 ? review.feedback : "No summary feedback"}</td>
 
     if (!state.isTeacher) {
         return summaryFeedback
@@ -19,7 +19,7 @@ const SummaryFeedback = ({ review }: { review: Review }) => {
         const { value } = event.currentTarget
         setEditing(false)
         // Exit early if the value is unchanged
-        if (value === review.getFeedback()) {
+        if (value === review.feedback) {
             return
         }
         actions.review.updateFeedback({ feedback: value })
@@ -33,7 +33,7 @@ const SummaryFeedback = ({ review }: { review: Review }) => {
             {editing &&
                 <tr>
                     <th colSpan={3}>
-                        <input autoFocus onBlur={handleChange} defaultValue={review.getFeedback()} className="form-control" type="text" />
+                        <input autoFocus onBlur={handleChange} defaultValue={review.feedback} className="form-control" type="text" />
                     </th>
                 </tr>
             }

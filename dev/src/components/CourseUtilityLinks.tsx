@@ -27,7 +27,7 @@ const CourseUtilityLinks = (): JSX.Element => {
 
                 {repo[Repository.Type.GROUP] ? (
                     <a href={repo[Repository.Type.GROUP]} target={"_blank"} rel="noopener noreferrer" className="list-group-item list-group-item-action overflow-ellipses" style={{ textAlign: "left" }}>
-                        Group Repository ({enrollment.getGroup()?.getName()})
+                        Group Repository ({enrollment.group?.name})
                     </a>
                 ) : null}
 
@@ -39,7 +39,7 @@ const CourseUtilityLinks = (): JSX.Element => {
                     Course Info
                 </a>
 
-                {enrollment.hasGroup() ?
+                {enrollment.group ?
                     <Link to={"/course/" + courseID + "/group"} className="list-group-item list-group-item-action">
                         View Group
                     </Link>
