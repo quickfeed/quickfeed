@@ -1,36 +1,40 @@
-import { json } from "overmind"
 import React, { useState } from "react"
 import { Assignment, GradingCriterion } from "../../../proto/ag/ag_pb"
+import { ProtoConverter } from "../../Helpers"
 import { useActions } from "../../overmind"
 
 
-const EditCriterion = ({ criterion, benchmarkID, assignment }: { criterion?: GradingCriterion, benchmarkID: number, assignment: Assignment }): JSX.Element => {
+const EditCriterion = ({ criterion, benchmarkID, assignment }: { criterion?: GradingCriterion.AsObject, benchmarkID: number, assignment: Assignment.AsObject }): JSX.Element => {
     const actions = useActions()
 
     const [editing, setEditing] = useState<boolean>(false)
     const [add, setAdd] = useState<boolean>(criterion ? false : true)
-    const [newCriterion, setNewCriterion] = useState<GradingCriterion>(new GradingCriterion().setBenchmarkid(benchmarkID))
-    // Clone the criterion to use as backup in case of cancel
-    const copy = json(criterion)?.cloneMessage()
-    const c = json(criterion) ?? newCriterion
+
+    // Clone the criterion, or create a new one if none was passed in
+    const c = criterion
+        ? ProtoConverter.clone(criterion)
+        : ProtoConverter.create<GradingCriterion.AsObject>(GradingCriterion)
 
     const handleCriteria = (event: React.KeyboardEvent<HTMLInputElement>) => {
         const { value } = event.currentTarget
         if (event.key === "Enter") {
+            // Set the criterion's benchmark ID
+            // This could already be set if a criterion was passed in
+            c.benchmarkid = benchmarkID
             actions.createOrUpdateCriterion({ criterion: c, assignment: assignment })
             setEditing(false)
         } else {
-            criterion ? c.setDescription(value) : setNewCriterion(c.setDescription(value))
+            c.description = value
         }
     }
 
     const handleBlur = () => {
-        if (criterion && copy) {
+        if (criterion) {
             // Restore the original criterion
-            c.setDescription(copy.getDescription())
+            c.description = criterion.description
         } else {
             // Reset the criterion and enable add button
-            setNewCriterion(c.setDescription(""))
+            c.description = ""
             setAdd(true)
         }
         setEditing(false)
@@ -47,8 +51,8 @@ const EditCriterion = ({ criterion, benchmarkID, assignment }: { criterion?: Gra
     return (
         <div className="list-group-item" onClick={() => setEditing(!editing)}>
             {editing
-                ? <input className="form-control" type="text" onBlur={() => { handleBlur() }} autoFocus defaultValue={c?.getDescription()} name="criterion" onKeyUp={e => { handleCriteria(e) }}></input>
-                : <><span>{c.getDescription()}</span><span className="badge badge-danger float-right clickable" onClick={() => actions.deleteCriterion({ criterion: criterion, assignment: assignment })}>Delete</span></>
+                ? <input className="form-control" type="text" onBlur={() => { handleBlur() }} autoFocus defaultValue={c.description} name="criterion" onKeyUp={e => { handleCriteria(e) }}></input>
+                : <><span>{c.description}</span><span className="badge badge-danger float-right clickable" onClick={() => actions.deleteCriterion({ criterion: criterion, assignment: assignment })}>Delete</span></>
             }
         </div>
     )
