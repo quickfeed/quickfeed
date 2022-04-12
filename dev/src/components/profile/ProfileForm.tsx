@@ -2,7 +2,7 @@ import React, { Dispatch, SetStateAction, useMemo } from "react"
 import { useActions, useAppState } from "../../overmind"
 import { json } from "overmind"
 import FormInput from "../forms/FormInput"
-import { hasEnrollment } from "../../Helpers"
+import { hasEnrollment, ProtoConverter } from "../../Helpers"
 import { useHistory } from "react-router"
 
 
@@ -14,7 +14,7 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
     const signup = useMemo(() => !state.isValid, [state.isValid])
 
     // Create a copy of the user object, so that we can modify it without affecting the original object.
-    const user = json(state.self)
+    const user = ProtoConverter.toUser(state.self)
 
     // Update the user object when user input changes, and update the state.
     const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
@@ -30,7 +30,6 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
                 user.setStudentid(value)
                 break
         }
-        actions.setSelf(user)
     }
 
 
