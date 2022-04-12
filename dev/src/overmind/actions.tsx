@@ -95,13 +95,6 @@ export const getSelf = async ({ state, effects }: Context): Promise<boolean> => 
     return false
 }
 
-/** setSelf is used to update the state with modified user data */
-export const setSelf = ({ state }: Context, user: User): void => {
-    state.self.setName(user.getName())
-    state.self.setEmail(user.getEmail())
-    state.self.setStudentid(user.getStudentid())
-}
-
 /** Gets all enrollments for the current user and stores them in state */
 export const getEnrollmentsByUser = async ({ state, effects }: Context): Promise<boolean> => {
     const result = await effects.grpcMan.getEnrollmentsByUser(state.self.getId())
