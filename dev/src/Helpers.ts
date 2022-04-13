@@ -309,7 +309,7 @@ const slugify = (str: string): string => {
 
 /* Use this function to simulate a delay in the loading of data */
 /* Used in development to simulate a slow network connection */
-const delay = (ms: number) => {
+export const delay = (ms: number) => {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
