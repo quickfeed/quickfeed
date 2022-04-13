@@ -43,7 +43,7 @@ const CourseUtilityLinks = (): JSX.Element => {
                     <Link to={"/course/" + courseID + "/group"} className="list-group-item list-group-item-action">
                         View Group
                     </Link>
-                    : <Link to={"/course/" + courseID + "/group/create"} className="list-group-item list-group-item-action list-group-item-success">
+                    : <Link to={"/course/" + courseID + "/group"} className="list-group-item list-group-item-action list-group-item-success">
                         Create a Group
                     </Link>}
             </div>
