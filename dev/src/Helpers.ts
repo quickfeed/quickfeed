@@ -421,6 +421,10 @@ export class ProtoConverter {
         return (new type()).toObject() as T
     }
 
+    public static clone<T>(obj: T): T {
+        return JSON.parse(JSON.stringify(obj)) as T
+    }
+
     /** The following functions will convert various kinds of objects
      *  into their respective protobuf message types */
     // TODO(jostein): Add converting functions for all types
