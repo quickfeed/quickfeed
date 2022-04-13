@@ -1,4 +1,3 @@
-import { updateEnrollment } from "../overmind/actions"
 import { Enrollment, User } from "../../proto/ag/ag_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
@@ -10,8 +9,7 @@ import Members from "../components/Members"
 import { Route, Router } from "react-router"
 import { Provider } from "overmind-react"
 import { MockGrpcManager } from "../MockGRPCManager"
-import { state } from "../overmind/state"
-import { hasTeacher } from "../Helpers"
+
 
 React.useLayoutEffect = React.useEffect
 
