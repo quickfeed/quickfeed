@@ -148,7 +148,7 @@ func TestCreateIssue(t *testing.T) {
 	// Add Issue Title here
 	title := "Test issue"
 	// Add Issue body here
-	body := "The test of imminent testing"
+	body := "Test issue of testing"
 	// Creating new Client
 	s, err := scm.NewSCMClient(
 		zap.NewNop().Sugar(),
@@ -232,6 +232,7 @@ func TestGetIssue(t *testing.T) {
 
 // Test case for Updating existing Issue in a git Repository
 func TestEditRepoIssue(t *testing.T) {
+	// TODO(vera): make helper method to fetch repo/issue names, numbers
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 	// Replace with Repository name
@@ -239,7 +240,7 @@ func TestEditRepoIssue(t *testing.T) {
 	// Add Issue Title here
 	title := "Test issue"
 	// Add Issue body here
-	body := "Updated test of imminent testing"
+	body := "Updated test issue"
 	// Add Issue Number here
 	issueNumber := 1
 	// Creating new Client

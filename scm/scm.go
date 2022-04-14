@@ -81,7 +81,7 @@ type SCM interface {
 func NewSCMClient(logger *zap.SugaredLogger, client *github.Client, provider, token string) (SCM, error) {
 	switch provider {
 	case "github":
-		return NewGithubSCMClient(logger, client, token), nil
+		return NewGithubSCMClient(logger, client, token)
 	case "gitlab":
 		return NewGitlabSCMClient(token), nil
 	case "fake":

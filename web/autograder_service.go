@@ -837,14 +837,19 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 		s.logger.Errorf("GetOrganization failed: scm authentication error: %v", err)
 		return nil, err
 	}
-	// TODO(vera): refactor this part
+	// TODO(vera): refactor this part into a more general helper method
 	ghClient, err := s.app.NewInstallationClient(ctx, in.OrgName)
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: error creating GitHub app client: %v", err)
 		return nil, status.Error(codes.NotFound, "failed to create GitHub client")
 	}
 	// TODO(vera): get course creator's token here, (for provider == github)
-	sc := scm.NewGithubSCMClient(s.logger, ghClient, "")
+	courseCreatorToken, err := usr.GetAccessToken("github")
+	if err != nil {
+		s.logger.Errorf("GetOrganization failed: error getting access token for user %s and organization %s: %v", usr.Name, in.OrgName, err)
+		return nil, status.Error(codes.NotFound, "failed to get organization: missing access token")
+	}
+	sc, err := scm.NewSCMClient(s.logger, ghClient, "github", courseCreatorToken)
 	if !usr.IsAdmin {
 		s.logger.Error("GetOrganization failed: user is not admin")
 		return nil, status.Error(codes.PermissionDenied, "only admin can access organizations")
