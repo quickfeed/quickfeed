@@ -60,13 +60,9 @@ func TestRunTests(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
-	client := qtest.TestAppClient(context.Background(), t, qfTestOrg)
-	// Only used to fetch the user's GitHub login (user name)
-	s, err := scm.NewSCMClient(qtest.Logger(t), client, "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
-	userName, err := s.GetUserName(context.Background())
+	ctx := context.Background()
+	s := qtest.TestSCMClient(ctx, t, qfTestOrg, "github", accessToken)
+	userName, err := s.GetUserName(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}

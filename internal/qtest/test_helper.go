@@ -15,7 +15,7 @@ import (
 	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web/config"
-	"github.com/google/go-github/v43/github"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -162,7 +162,7 @@ func WithUserContext(ctx context.Context, user *pb.User) context.Context {
 	return metadata.NewIncomingContext(ctx, meta)
 }
 
-func TestAppClient(ctx context.Context, t *testing.T, org string) *github.Client {
+func TestSCMClient(ctx context.Context, t *testing.T, org, provider, token string) scm.SCM {
 	app, err := scm.NewApp()
 	if err != nil {
 		t.Fatal(err)
@@ -171,7 +171,11 @@ func TestAppClient(ctx context.Context, t *testing.T, org string) *github.Client
 	if err != nil {
 		t.Fatal(err)
 	}
-	return client
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), client, "github", token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return s
 }
 
 // PopulateDatabaseWithInitialData creates initial data-records based on organization

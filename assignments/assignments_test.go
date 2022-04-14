@@ -17,19 +17,15 @@ import (
 func TestFetchAssignments(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
-	client := qtest.TestAppClient(context.Background(), t, qfTestOrg)
-
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), client, "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	ctx := context.Background()
+	s := qtest.TestSCMClient(ctx, t, qfTestOrg, "github", accessToken)
 
 	course := &pb.Course{
 		Name:             "QuickFeed Test Course",
 		OrganizationPath: qfTestOrg,
 	}
 
-	assignments, _, err := fetchAssignments(context.Background(), zap.NewNop().Sugar(), s, course)
+	assignments, _, err := fetchAssignments(ctx, zap.NewNop().Sugar(), s, course)
 	if err != nil {
 		t.Fatal(err)
 	}
