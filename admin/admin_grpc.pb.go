@@ -23,12 +23,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AdminServiceClient interface {
-	GetUser(ctx context.Context, in *ag.Void, opts ...grpc.CallOption) (*ag.User, error)
 	GetUsers(ctx context.Context, in *ag.Void, opts ...grpc.CallOption) (*ag.Users, error)
-	UpdateUser(ctx context.Context, in *ag.User, opts ...grpc.CallOption) (*ag.Void, error)
 	CreateCourse(ctx context.Context, in *ag.Course, opts ...grpc.CallOption) (*ag.Course, error)
 	UpdateCourse(ctx context.Context, in *ag.Course, opts ...grpc.CallOption) (*ag.Void, error)
-	GetOrganization(ctx context.Context, in *OrgRequest, opts ...grpc.CallOption) (*Organization, error)
+	GetOrganization(ctx context.Context, in *ag.OrgRequest, opts ...grpc.CallOption) (*ag.Organization, error)
 }
 
 type adminServiceClient struct {
@@ -39,27 +37,9 @@ func NewAdminServiceClient(cc grpc.ClientConnInterface) AdminServiceClient {
 	return &adminServiceClient{cc}
 }
 
-func (c *adminServiceClient) GetUser(ctx context.Context, in *ag.Void, opts ...grpc.CallOption) (*ag.User, error) {
-	out := new(ag.User)
-	err := c.cc.Invoke(ctx, "/admin.AdminService/GetUser", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *adminServiceClient) GetUsers(ctx context.Context, in *ag.Void, opts ...grpc.CallOption) (*ag.Users, error) {
 	out := new(ag.Users)
 	err := c.cc.Invoke(ctx, "/admin.AdminService/GetUsers", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *adminServiceClient) UpdateUser(ctx context.Context, in *ag.User, opts ...grpc.CallOption) (*ag.Void, error) {
-	out := new(ag.Void)
-	err := c.cc.Invoke(ctx, "/admin.AdminService/UpdateUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +64,8 @@ func (c *adminServiceClient) UpdateCourse(ctx context.Context, in *ag.Course, op
 	return out, nil
 }
 
-func (c *adminServiceClient) GetOrganization(ctx context.Context, in *OrgRequest, opts ...grpc.CallOption) (*Organization, error) {
-	out := new(Organization)
+func (c *adminServiceClient) GetOrganization(ctx context.Context, in *ag.OrgRequest, opts ...grpc.CallOption) (*ag.Organization, error) {
+	out := new(ag.Organization)
 	err := c.cc.Invoke(ctx, "/admin.AdminService/GetOrganization", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -97,12 +77,10 @@ func (c *adminServiceClient) GetOrganization(ctx context.Context, in *OrgRequest
 // All implementations must embed UnimplementedAdminServiceServer
 // for forward compatibility
 type AdminServiceServer interface {
-	GetUser(context.Context, *ag.Void) (*ag.User, error)
 	GetUsers(context.Context, *ag.Void) (*ag.Users, error)
-	UpdateUser(context.Context, *ag.User) (*ag.Void, error)
 	CreateCourse(context.Context, *ag.Course) (*ag.Course, error)
 	UpdateCourse(context.Context, *ag.Course) (*ag.Void, error)
-	GetOrganization(context.Context, *OrgRequest) (*Organization, error)
+	GetOrganization(context.Context, *ag.OrgRequest) (*ag.Organization, error)
 	mustEmbedUnimplementedAdminServiceServer()
 }
 
@@ -110,14 +88,8 @@ type AdminServiceServer interface {
 type UnimplementedAdminServiceServer struct {
 }
 
-func (UnimplementedAdminServiceServer) GetUser(context.Context, *ag.Void) (*ag.User, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
-}
 func (UnimplementedAdminServiceServer) GetUsers(context.Context, *ag.Void) (*ag.Users, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUsers not implemented")
-}
-func (UnimplementedAdminServiceServer) UpdateUser(context.Context, *ag.User) (*ag.Void, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
 }
 func (UnimplementedAdminServiceServer) CreateCourse(context.Context, *ag.Course) (*ag.Course, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCourse not implemented")
@@ -125,7 +97,7 @@ func (UnimplementedAdminServiceServer) CreateCourse(context.Context, *ag.Course)
 func (UnimplementedAdminServiceServer) UpdateCourse(context.Context, *ag.Course) (*ag.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCourse not implemented")
 }
-func (UnimplementedAdminServiceServer) GetOrganization(context.Context, *OrgRequest) (*Organization, error) {
+func (UnimplementedAdminServiceServer) GetOrganization(context.Context, *ag.OrgRequest) (*ag.Organization, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOrganization not implemented")
 }
 func (UnimplementedAdminServiceServer) mustEmbedUnimplementedAdminServiceServer() {}
@@ -139,24 +111,6 @@ type UnsafeAdminServiceServer interface {
 
 func RegisterAdminServiceServer(s grpc.ServiceRegistrar, srv AdminServiceServer) {
 	s.RegisterService(&AdminService_ServiceDesc, srv)
-}
-
-func _AdminService_GetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ag.Void)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdminServiceServer).GetUser(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/admin.AdminService/GetUser",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminServiceServer).GetUser(ctx, req.(*ag.Void))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _AdminService_GetUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -173,24 +127,6 @@ func _AdminService_GetUsers_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AdminServiceServer).GetUsers(ctx, req.(*ag.Void))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AdminService_UpdateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ag.User)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdminServiceServer).UpdateUser(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/admin.AdminService/UpdateUser",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminServiceServer).UpdateUser(ctx, req.(*ag.User))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -232,7 +168,7 @@ func _AdminService_UpdateCourse_Handler(srv interface{}, ctx context.Context, de
 }
 
 func _AdminService_GetOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrgRequest)
+	in := new(ag.OrgRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -244,7 +180,7 @@ func _AdminService_GetOrganization_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/admin.AdminService/GetOrganization",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminServiceServer).GetOrganization(ctx, req.(*OrgRequest))
+		return srv.(AdminServiceServer).GetOrganization(ctx, req.(*ag.OrgRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -257,16 +193,8 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AdminServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetUser",
-			Handler:    _AdminService_GetUser_Handler,
-		},
-		{
 			MethodName: "GetUsers",
 			Handler:    _AdminService_GetUsers_Handler,
-		},
-		{
-			MethodName: "UpdateUser",
-			Handler:    _AdminService_UpdateUser_Handler,
 		},
 		{
 			MethodName: "CreateCourse",

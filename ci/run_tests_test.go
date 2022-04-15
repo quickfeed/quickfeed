@@ -56,7 +56,7 @@ func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *ci.Ru
 
 // TODO(vera): needs update (GetUserName needs client based on a personal access token)
 func TestRunTests(t *testing.T) {
-	t.Skip("temporarily disabled")
+	t.Skip("needs update")
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
@@ -84,7 +84,7 @@ func TestRunTests(t *testing.T) {
 
 // TODO(vera): needs update (GetUserName needs client based on a personal access token)
 func TestRunTestsTimeout(t *testing.T) {
-	t.Skip("temporarily disabled")
+	t.Skip("needs update")
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 

@@ -23,7 +23,7 @@ type AutograderService struct {
 	logger *zap.SugaredLogger
 	db     database.Database
 	app    *scms.GithubApp
-	Config *config.Config // TODO: make unexported again after refactoring the startup method
+	Config *config.Config // TODO(vera): make unexported again after refactoring the startup method
 	runner ci.Runner
 	pb.UnimplementedAutograderServiceServer
 }
@@ -53,27 +53,6 @@ func (s *AutograderService) GetUser(ctx context.Context, _ *pb.Void) (*pb.User, 
 		s.logger.Errorf("GetUser failed to get user with enrollments: %v ", err)
 	}
 	return userInfo, nil
-}
-
-// GetUsers returns a list of all users.
-// Access policy: Admin.
-// Frontend note: This method is called from AdminPage.
-func (s *AutograderService) GetUsers(ctx context.Context, _ *pb.Void) (*pb.Users, error) {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Errorf("GetUsers failed: authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
-	}
-	if !usr.IsAdmin {
-		s.logger.Error("GetUsers failed: user is not admin")
-		return nil, status.Error(codes.PermissionDenied, "only admin can access other users")
-	}
-	users, err := s.getUsers()
-	if err != nil {
-		s.logger.Errorf("GetUsers failed: %v", err)
-		return nil, status.Error(codes.NotFound, "failed to get users")
-	}
-	return users, nil
 }
 
 // GetUserByCourse returns the user matching the given course name and GitHub login
@@ -129,42 +108,6 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, _ *pb.Void)
 	return &pb.AuthorizationResponse{
 		IsAuthorized: hasTeacherScopes(ctx, scm),
 	}, nil
-}
-
-// CreateCourse creates a new course.
-// Access policy: Admin.
-// TODO(vera): instead of calling getUserAndSCM here we want to fetch the app installations, choose the correct installation
-// for the given course org and create a new scm for this course, because there will be no scm client for the course at this point.
-func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*pb.Course, error) {
-	usr, scm, err := s.getUserAndSCM(ctx, in.GetID())
-	if err != nil {
-		s.logger.Errorf("CreateCourse failed: scm authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
-	}
-	if !usr.IsAdmin {
-		s.logger.Error("CreateCourse failed: user is not admin")
-		return nil, status.Error(codes.PermissionDenied, "user must be admin to create course")
-	}
-
-	// make sure that the current user is set as course creator
-	in.CourseCreatorID = usr.GetID()
-	course, err := s.createCourse(ctx, scm, in)
-	if err != nil {
-		s.logger.Errorf("CreateCourse failed: %v", err)
-		// errors informing about requested organization state will have code 9: FailedPrecondition
-		// error message will be displayed to the user
-		if contextCanceled(ctx) {
-			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
-		}
-		if err == ErrAlreadyExists || err == ErrFreePlan {
-			return nil, status.Error(codes.FailedPrecondition, err.Error())
-		}
-		if ok, parsedErr := parseSCMError(err); ok {
-			return nil, parsedErr
-		}
-		return nil, status.Error(codes.InvalidArgument, "failed to create course")
-	}
-	return course, nil
 }
 
 // UpdateCourse changes the course information details.

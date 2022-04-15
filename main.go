@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/autograde/quickfeed/admin"
 	"github.com/autograde/quickfeed/ci"
 	logq "github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
@@ -94,13 +95,19 @@ func main() {
 		log.Fatalf("failed to start GitHub app: %v/n", err)
 	}
 	// TODO(vera): make a new method that will populate scm storage with scm clients for each course
+	// there must be one shared scm storage, instead of each service having
+	// to
 	agService := web.NewAutograderService(logger, db, githubApp, serverConfig, runner)
 	agService.MakeSCMClients("github")
+	adminService := web.NewAdminService(logger, db, githubApp, serverConfig)
+	adminService.MakeSCMClients("github")
+
 	apiServer, err := serverConfig.GenerateTLSApi()
 	if err != nil {
 		log.Fatalf("failed to generate TLS grpc API: %v/n", err)
 	}
 	pb.RegisterAutograderServiceServer(apiServer, agService)
+	admin.RegisterAdminServiceServer(apiServer, adminService)
 
 	grpcWebServer := grpcweb.WrapServer(apiServer)
 	multiplexer := config.GrpcMultiplexer{

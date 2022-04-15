@@ -35,6 +35,49 @@ export class AutograderServiceClient {
     this.options_ = options;
   }
 
+  methodInfoGetUser = new grpcWeb.MethodDescriptor(
+    '/ag.AutograderService/GetUser',
+    grpcWeb.MethodType.UNARY,
+    ag_ag_pb.Void,
+    ag_ag_pb.User,
+    (request: ag_ag_pb.Void) => {
+      return request.serializeBinary();
+    },
+    ag_ag_pb.User.deserializeBinary
+  );
+
+  getUser(
+    request: ag_ag_pb.Void,
+    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.User>;
+
+  getUser(
+    request: ag_ag_pb.Void,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: ag_ag_pb.User) => void): grpcWeb.ClientReadableStream<ag_ag_pb.User>;
+
+  getUser(
+    request: ag_ag_pb.Void,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: ag_ag_pb.User) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/ag.AutograderService/GetUser',
+        request,
+        metadata || {},
+        this.methodInfoGetUser,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/ag.AutograderService/GetUser',
+    request,
+    metadata || {},
+    this.methodInfoGetUser);
+  }
+
   methodInfoGetUserByCourse = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetUserByCourse',
     grpcWeb.MethodType.UNARY,
@@ -76,6 +119,49 @@ export class AutograderServiceClient {
     request,
     metadata || {},
     this.methodInfoGetUserByCourse);
+  }
+
+  methodInfoUpdateUser = new grpcWeb.MethodDescriptor(
+    '/ag.AutograderService/UpdateUser',
+    grpcWeb.MethodType.UNARY,
+    ag_ag_pb.User,
+    ag_ag_pb.Void,
+    (request: ag_ag_pb.User) => {
+      return request.serializeBinary();
+    },
+    ag_ag_pb.Void.deserializeBinary
+  );
+
+  updateUser(
+    request: ag_ag_pb.User,
+    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+
+  updateUser(
+    request: ag_ag_pb.User,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+
+  updateUser(
+    request: ag_ag_pb.User,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: ag_ag_pb.Void) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/ag.AutograderService/UpdateUser',
+        request,
+        metadata || {},
+        this.methodInfoUpdateUser,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/ag.AutograderService/UpdateUser',
+    request,
+    metadata || {},
+    this.methodInfoUpdateUser);
   }
 
   methodInfoGetGroup = new grpcWeb.MethodDescriptor(

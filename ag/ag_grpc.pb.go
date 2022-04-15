@@ -22,7 +22,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AutograderServiceClient interface {
+	// users //
+	GetUser(ctx context.Context, in *Void, opts ...grpc.CallOption) (*User, error)
 	GetUserByCourse(ctx context.Context, in *CourseUserRequest, opts ...grpc.CallOption) (*User, error)
+	UpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*Void, error)
 	GetGroup(ctx context.Context, in *GetGroupRequest, opts ...grpc.CallOption) (*Group, error)
 	GetGroupByUserAndCourse(ctx context.Context, in *GroupRequest, opts ...grpc.CallOption) (*Group, error)
 	GetGroupsByCourse(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Groups, error)
@@ -69,9 +72,27 @@ func NewAutograderServiceClient(cc grpc.ClientConnInterface) AutograderServiceCl
 	return &autograderServiceClient{cc}
 }
 
+func (c *autograderServiceClient) GetUser(ctx context.Context, in *Void, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
+	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *autograderServiceClient) GetUserByCourse(ctx context.Context, in *CourseUserRequest, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetUserByCourse", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) UpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -388,7 +409,10 @@ func (c *autograderServiceClient) IsEmptyRepo(ctx context.Context, in *Repositor
 // All implementations must embed UnimplementedAutograderServiceServer
 // for forward compatibility
 type AutograderServiceServer interface {
+	// users //
+	GetUser(context.Context, *Void) (*User, error)
 	GetUserByCourse(context.Context, *CourseUserRequest) (*User, error)
+	UpdateUser(context.Context, *User) (*Void, error)
 	GetGroup(context.Context, *GetGroupRequest) (*Group, error)
 	GetGroupByUserAndCourse(context.Context, *GroupRequest) (*Group, error)
 	GetGroupsByCourse(context.Context, *CourseRequest) (*Groups, error)
@@ -432,8 +456,14 @@ type AutograderServiceServer interface {
 type UnimplementedAutograderServiceServer struct {
 }
 
+func (UnimplementedAutograderServiceServer) GetUser(context.Context, *Void) (*User, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
+}
 func (UnimplementedAutograderServiceServer) GetUserByCourse(context.Context, *CourseUserRequest) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserByCourse not implemented")
+}
+func (UnimplementedAutograderServiceServer) UpdateUser(context.Context, *User) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
 }
 func (UnimplementedAutograderServiceServer) GetGroup(context.Context, *GetGroupRequest) (*Group, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroup not implemented")
@@ -550,6 +580,24 @@ func RegisterAutograderServiceServer(s grpc.ServiceRegistrar, srv AutograderServ
 	s.RegisterService(&AutograderService_ServiceDesc, srv)
 }
 
+func _AutograderService_GetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Void)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ag.AutograderService/GetUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetUser(ctx, req.(*Void))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AutograderService_GetUserByCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CourseUserRequest)
 	if err := dec(in); err != nil {
@@ -564,6 +612,24 @@ func _AutograderService_GetUserByCourse_Handler(srv interface{}, ctx context.Con
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AutograderServiceServer).GetUserByCourse(ctx, req.(*CourseUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_UpdateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(User)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).UpdateUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ag.AutograderService/UpdateUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).UpdateUser(ctx, req.(*User))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1188,8 +1254,16 @@ var AutograderService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AutograderServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "GetUser",
+			Handler:    _AutograderService_GetUser_Handler,
+		},
+		{
 			MethodName: "GetUserByCourse",
 			Handler:    _AutograderService_GetUserByCourse_Handler,
+		},
+		{
+			MethodName: "UpdateUser",
+			Handler:    _AutograderService_UpdateUser_Handler,
 		},
 		{
 			MethodName: "GetGroup",

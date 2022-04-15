@@ -28,6 +28,7 @@ var (
 	FreeOrgPlan = "free"
 )
 
+// TODO(vera): this method must work for any service, all services must share same scm list
 // MakeSCMClients creates a new scm client (GitHub app installation based client) for each course in the database.
 // This method is called at the server start.
 func (s *AutograderService) MakeSCMClients(provider string) error {

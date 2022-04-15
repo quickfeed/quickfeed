@@ -8,6 +8,12 @@
     "breadcrumbs.enabled": true,
     "protoc": {
         "compile_on_save": false,
+        "path": "usr/local/bin/protoc",
+        "options": [
+            "--proto-path=ag/",
+            "--proto-path=admin",
+            "--proto-path=kit/"
+        ]
     },
     "go.lintTool": "golangci-lint",
     "go.lintFlags": [

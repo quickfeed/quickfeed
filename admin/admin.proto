@@ -4,24 +4,11 @@ option go_package = "github.com/autograde/quickfeed/admin";
 
 import "ag/ag.proto";
 
-message Organization {
-    uint64 ID          = 1;
-    string path        = 2;
-    string avatar      = 3;
-    string paymentPlan = 4;
-}
-
-message OrgRequest {
-    string orgName = 1;
-}
-
 service AdminService {
-    rpc GetUser(ag.Void) returns (ag.User) {}
     rpc GetUsers(ag.Void) returns (ag.Users) {}
-    rpc UpdateUser(ag.User) returns (ag.Void) {}
 
     rpc CreateCourse(ag.Course) returns (ag.Course) {}
     rpc UpdateCourse(ag.Course) returns (ag.Void) {}
 
-    rpc GetOrganization(OrgRequest) returns (Organization) {}
+    rpc GetOrganization(ag.OrgRequest) returns (ag.Organization) {}
 }

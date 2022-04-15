@@ -89,6 +89,13 @@ message Courses {
     repeated Course courses = 1;
 }
 
+message Organization {
+    uint64 ID          = 1;
+    string path        = 2;
+    string avatar      = 3;
+    string paymentPlan = 4;
+}
+
 message Repository {
     enum Type {
         NONE        = 0;
@@ -299,6 +306,10 @@ message GroupRequest {
     uint64 courseID = 3;
 }
 
+message OrgRequest {
+    string orgName = 1;
+}
+
 message Provider {
     string provider = 1;
 }
@@ -408,8 +419,9 @@ message Void {}
 
 service AutograderService {
     // users //
-
+    rpc GetUser(Void) returns (User) {}
     rpc GetUserByCourse(CourseUserRequest) returns (User) {}
+    rpc UpdateUser(User) returns (Void) {}
 
     // groups //
 

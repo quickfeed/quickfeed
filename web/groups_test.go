@@ -452,13 +452,14 @@ func TestDeleteGroup(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(log.Zap(false), db, nil, qtest.TestConfig(t), &ci.Local{})
-
+	logger := log.Zap(false)
+	ags := web.NewAutograderService(logger, db, nil, qtest.TestConfig(t), &ci.Local{})
+	ads := web.NewAdminService(logger, db, scm.NewTestApp(), qtest.TestConfig(t))
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ags.CreateCourse(ctx, &testCourse); err != nil {
+	if _, err := ads.CreateCourse(ctx, &testCourse); err != nil {
 		t.Fatal(err)
 	}
 

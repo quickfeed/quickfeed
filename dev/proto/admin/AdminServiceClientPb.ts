@@ -13,7 +13,6 @@
 
 import * as grpcWeb from 'grpc-web';
 
-import * as admin_admin_pb from '../admin/admin_pb';
 import * as ag_ag_pb from '../ag/ag_pb';
 
 
@@ -34,49 +33,6 @@ export class AdminServiceClient {
     this.hostname_ = hostname;
     this.credentials_ = credentials;
     this.options_ = options;
-  }
-
-  methodInfoGetUser = new grpcWeb.MethodDescriptor(
-    '/admin.AdminService/GetUser',
-    grpcWeb.MethodType.UNARY,
-    ag_ag_pb.Void,
-    ag_ag_pb.User,
-    (request: ag_ag_pb.Void) => {
-      return request.serializeBinary();
-    },
-    ag_ag_pb.User.deserializeBinary
-  );
-
-  getUser(
-    request: ag_ag_pb.Void,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.User>;
-
-  getUser(
-    request: ag_ag_pb.Void,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.User) => void): grpcWeb.ClientReadableStream<ag_ag_pb.User>;
-
-  getUser(
-    request: ag_ag_pb.Void,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.User) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/admin.AdminService/GetUser',
-        request,
-        metadata || {},
-        this.methodInfoGetUser,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/admin.AdminService/GetUser',
-    request,
-    metadata || {},
-    this.methodInfoGetUser);
   }
 
   methodInfoGetUsers = new grpcWeb.MethodDescriptor(
@@ -120,49 +76,6 @@ export class AdminServiceClient {
     request,
     metadata || {},
     this.methodInfoGetUsers);
-  }
-
-  methodInfoUpdateUser = new grpcWeb.MethodDescriptor(
-    '/admin.AdminService/UpdateUser',
-    grpcWeb.MethodType.UNARY,
-    ag_ag_pb.User,
-    ag_ag_pb.Void,
-    (request: ag_ag_pb.User) => {
-      return request.serializeBinary();
-    },
-    ag_ag_pb.Void.deserializeBinary
-  );
-
-  updateUser(
-    request: ag_ag_pb.User,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
-
-  updateUser(
-    request: ag_ag_pb.User,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
-
-  updateUser(
-    request: ag_ag_pb.User,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.Void) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/admin.AdminService/UpdateUser',
-        request,
-        metadata || {},
-        this.methodInfoUpdateUser,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/admin.AdminService/UpdateUser',
-    request,
-    metadata || {},
-    this.methodInfoUpdateUser);
   }
 
   methodInfoCreateCourse = new grpcWeb.MethodDescriptor(
@@ -254,29 +167,29 @@ export class AdminServiceClient {
   methodInfoGetOrganization = new grpcWeb.MethodDescriptor(
     '/admin.AdminService/GetOrganization',
     grpcWeb.MethodType.UNARY,
-    admin_admin_pb.OrgRequest,
-    admin_admin_pb.Organization,
-    (request: admin_admin_pb.OrgRequest) => {
+    ag_ag_pb.OrgRequest,
+    ag_ag_pb.Organization,
+    (request: ag_ag_pb.OrgRequest) => {
       return request.serializeBinary();
     },
-    admin_admin_pb.Organization.deserializeBinary
+    ag_ag_pb.Organization.deserializeBinary
   );
 
   getOrganization(
-    request: admin_admin_pb.OrgRequest,
-    metadata: grpcWeb.Metadata | null): Promise<admin_admin_pb.Organization>;
+    request: ag_ag_pb.OrgRequest,
+    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Organization>;
 
   getOrganization(
-    request: admin_admin_pb.OrgRequest,
+    request: ag_ag_pb.OrgRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.RpcError,
-               response: admin_admin_pb.Organization) => void): grpcWeb.ClientReadableStream<admin_admin_pb.Organization>;
+               response: ag_ag_pb.Organization) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Organization>;
 
   getOrganization(
-    request: admin_admin_pb.OrgRequest,
+    request: ag_ag_pb.OrgRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.RpcError,
-               response: admin_admin_pb.Organization) => void) {
+               response: ag_ag_pb.Organization) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
