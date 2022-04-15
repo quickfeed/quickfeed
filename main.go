@@ -96,15 +96,15 @@ func main() {
 	// TODO(vera): make a new method that will populate scm storage with scm clients for each course
 	agService := web.NewAutograderService(logger, db, githubApp, serverConfig, runner)
 	agService.MakeSCMClients("github")
-	APIServer, err := serverConfig.GenerateTLSApi()
+	apiServer, err := serverConfig.GenerateTLSApi()
 	if err != nil {
 		log.Fatalf("failed to generate TLS grpc API: %v/n", err)
 	}
-	pb.RegisterAutograderServiceServer(APIServer, agService)
+	pb.RegisterAutograderServiceServer(apiServer, agService)
 
-	grpcWebServer := grpcweb.WrapServer(APIServer)
+	grpcWebServer := grpcweb.WrapServer(apiServer)
 	multiplexer := config.GrpcMultiplexer{
-		grpcWebServer,
+		Server: grpcWebServer,
 	}
 	router := http.NewServeMux()
 	staticHandler := http.FileServer(http.Dir(serverConfig.Endpoints.Public))

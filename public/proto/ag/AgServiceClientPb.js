@@ -13,21 +13,9 @@ var grpcWeb = require("grpc-web");
 var ag_ag_pb = require("../ag/ag_pb");
 var AutograderServiceClient = /** @class */ (function () {
     function AutograderServiceClient(hostname, credentials, options) {
-        this.methodInfoGetUser = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetUser', grpcWeb.MethodType.UNARY, ag_ag_pb.Void, ag_ag_pb.User, function (request) {
-            return request.serializeBinary();
-        }, ag_ag_pb.User.deserializeBinary);
-        this.methodInfoGetUsers = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetUsers', grpcWeb.MethodType.UNARY, ag_ag_pb.Void, ag_ag_pb.Users, function (request) {
-            return request.serializeBinary();
-        }, ag_ag_pb.Users.deserializeBinary);
         this.methodInfoGetUserByCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetUserByCourse', grpcWeb.MethodType.UNARY, ag_ag_pb.CourseUserRequest, ag_ag_pb.User, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.User.deserializeBinary);
-        this.methodInfoUpdateUser = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateUser', grpcWeb.MethodType.UNARY, ag_ag_pb.User, ag_ag_pb.Void, function (request) {
-            return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoIsAuthorizedTeacher = new grpcWeb.MethodDescriptor('/ag.AutograderService/IsAuthorizedTeacher', grpcWeb.MethodType.UNARY, ag_ag_pb.Void, ag_ag_pb.AuthorizationResponse, function (request) {
-            return request.serializeBinary();
-        }, ag_ag_pb.AuthorizationResponse.deserializeBinary);
         this.methodInfoGetGroup = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetGroup', grpcWeb.MethodType.UNARY, ag_ag_pb.GetGroupRequest, ag_ag_pb.Group, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Group.deserializeBinary);
@@ -55,12 +43,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetCoursesByUser = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetCoursesByUser', grpcWeb.MethodType.UNARY, ag_ag_pb.EnrollmentStatusRequest, ag_ag_pb.Courses, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Courses.deserializeBinary);
-        this.methodInfoCreateCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateCourse', grpcWeb.MethodType.UNARY, ag_ag_pb.Course, ag_ag_pb.Course, function (request) {
+        this.methodInfoIsAuthorizedTeacher = new grpcWeb.MethodDescriptor('/ag.AutograderService/IsAuthorizedTeacher', grpcWeb.MethodType.UNARY, ag_ag_pb.Void, ag_ag_pb.AuthorizationResponse, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Course.deserializeBinary);
-        this.methodInfoUpdateCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateCourse', grpcWeb.MethodType.UNARY, ag_ag_pb.Course, ag_ag_pb.Void, function (request) {
-            return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
+        }, ag_ag_pb.AuthorizationResponse.deserializeBinary);
         this.methodInfoUpdateCourseVisibility = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateCourseVisibility', grpcWeb.MethodType.UNARY, ag_ag_pb.Enrollment, ag_ag_pb.Void, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Void.deserializeBinary);
@@ -127,9 +112,6 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetProviders = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetProviders', grpcWeb.MethodType.UNARY, ag_ag_pb.Void, ag_ag_pb.Providers, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Providers.deserializeBinary);
-        this.methodInfoGetOrganization = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetOrganization', grpcWeb.MethodType.UNARY, ag_ag_pb.OrgRequest, ag_ag_pb.Organization, function (request) {
-            return request.serializeBinary();
-        }, ag_ag_pb.Organization.deserializeBinary);
         this.methodInfoGetRepositories = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetRepositories', grpcWeb.MethodType.UNARY, ag_ag_pb.URLRequest, ag_ag_pb.Repositories, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Repositories.deserializeBinary);
@@ -146,22 +128,6 @@ var AutograderServiceClient = /** @class */ (function () {
         this.credentials_ = credentials;
         this.options_ = options;
     }
-    AutograderServiceClient.prototype.getUser = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/ag.AutograderService/GetUser', request, metadata || {}, this.methodInfoGetUser, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetUser', request, metadata || {}, this.methodInfoGetUser);
-    };
-    AutograderServiceClient.prototype.getUsers = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/ag.AutograderService/GetUsers', request, metadata || {}, this.methodInfoGetUsers, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetUsers', request, metadata || {}, this.methodInfoGetUsers);
-    };
     AutograderServiceClient.prototype.getUserByCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
@@ -169,22 +135,6 @@ var AutograderServiceClient = /** @class */ (function () {
         }
         return this.client_.unaryCall(this.hostname_ +
             '/ag.AutograderService/GetUserByCourse', request, metadata || {}, this.methodInfoGetUserByCourse);
-    };
-    AutograderServiceClient.prototype.updateUser = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/ag.AutograderService/UpdateUser', request, metadata || {}, this.methodInfoUpdateUser, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateUser', request, metadata || {}, this.methodInfoUpdateUser);
-    };
-    AutograderServiceClient.prototype.isAuthorizedTeacher = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/ag.AutograderService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher);
     };
     AutograderServiceClient.prototype.getGroup = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -258,21 +208,13 @@ var AutograderServiceClient = /** @class */ (function () {
         return this.client_.unaryCall(this.hostname_ +
             '/ag.AutograderService/GetCoursesByUser', request, metadata || {}, this.methodInfoGetCoursesByUser);
     };
-    AutograderServiceClient.prototype.createCourse = function (request, metadata, callback) {
+    AutograderServiceClient.prototype.isAuthorizedTeacher = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/ag.AutograderService/CreateCourse', request, metadata || {}, this.methodInfoCreateCourse, callback);
+                '/ag.AutograderService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/CreateCourse', request, metadata || {}, this.methodInfoCreateCourse);
-    };
-    AutograderServiceClient.prototype.updateCourse = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/ag.AutograderService/UpdateCourse', request, metadata || {}, this.methodInfoUpdateCourse, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/UpdateCourse', request, metadata || {}, this.methodInfoUpdateCourse);
+            '/ag.AutograderService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher);
     };
     AutograderServiceClient.prototype.updateCourseVisibility = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -449,14 +391,6 @@ var AutograderServiceClient = /** @class */ (function () {
         }
         return this.client_.unaryCall(this.hostname_ +
             '/ag.AutograderService/GetProviders', request, metadata || {}, this.methodInfoGetProviders);
-    };
-    AutograderServiceClient.prototype.getOrganization = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/ag.AutograderService/GetOrganization', request, metadata || {}, this.methodInfoGetOrganization, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/GetOrganization', request, metadata || {}, this.methodInfoGetOrganization);
     };
     AutograderServiceClient.prototype.getRepositories = function (request, metadata, callback) {
         if (callback !== undefined) {

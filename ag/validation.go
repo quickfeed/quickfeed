@@ -112,11 +112,6 @@ func (req *EnrollmentStatusRequest) IsValid() bool {
 	return req.GetUserID() > 0
 }
 
-// IsValid checks whether OrgRequest fields are valid
-func (req *OrgRequest) IsValid() bool {
-	return req.GetOrgName() != ""
-}
-
 // IsValid checks that all requested repo types are valid types and course ID field is set
 func (req *URLRequest) IsValid() bool {
 	if req.GetCourseID() < 1 {
@@ -187,12 +182,6 @@ func (req *SubmissionsForCourseRequest) IsValid() bool {
 func (req *RebuildRequest) IsValid() bool {
 	aid, sid, cid := req.GetAssignmentID(), req.GetSubmissionID(), req.GetCourseID()
 	return aid > 0 && (sid > 0 || cid > 0)
-}
-
-// IsValid checks that either ID or path field is set
-func (org *Organization) IsValid() bool {
-	id, path := org.GetID(), org.GetPath()
-	return id > 0 || path != ""
 }
 
 // IsValidProvider validates provider string coming from front end

@@ -1126,74 +1126,6 @@ export namespace Provider {
   }
 }
 
-export class OrgRequest extends jspb.Message {
-  getOrgname(): string;
-  setOrgname(value: string): OrgRequest;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): OrgRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: OrgRequest): OrgRequest.AsObject;
-  static serializeBinaryToWriter(message: OrgRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): OrgRequest;
-  static deserializeBinaryFromReader(message: OrgRequest, reader: jspb.BinaryReader): OrgRequest;
-}
-
-export namespace OrgRequest {
-  export type AsObject = {
-    orgname: string,
-  }
-}
-
-export class Organization extends jspb.Message {
-  getId(): number;
-  setId(value: number): Organization;
-
-  getPath(): string;
-  setPath(value: string): Organization;
-
-  getAvatar(): string;
-  setAvatar(value: string): Organization;
-
-  getPaymentplan(): string;
-  setPaymentplan(value: string): Organization;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Organization.AsObject;
-  static toObject(includeInstance: boolean, msg: Organization): Organization.AsObject;
-  static serializeBinaryToWriter(message: Organization, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Organization;
-  static deserializeBinaryFromReader(message: Organization, reader: jspb.BinaryReader): Organization;
-}
-
-export namespace Organization {
-  export type AsObject = {
-    id: number,
-    path: string,
-    avatar: string,
-    paymentplan: string,
-  }
-}
-
-export class Organizations extends jspb.Message {
-  getOrganizationsList(): Array<Organization>;
-  setOrganizationsList(value: Array<Organization>): Organizations;
-  clearOrganizationsList(): Organizations;
-  addOrganizations(value?: Organization, index?: number): Organization;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Organizations.AsObject;
-  static toObject(includeInstance: boolean, msg: Organizations): Organizations.AsObject;
-  static serializeBinaryToWriter(message: Organizations, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Organizations;
-  static deserializeBinaryFromReader(message: Organizations, reader: jspb.BinaryReader): Organizations;
-}
-
-export namespace Organizations {
-  export type AsObject = {
-    organizationsList: Array<Organization.AsObject>,
-  }
-}
-
 export class EnrollmentRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): EnrollmentRequest;
@@ -1454,24 +1386,6 @@ export namespace Repositories {
   }
 }
 
-export class AuthorizationResponse extends jspb.Message {
-  getIsauthorized(): boolean;
-  setIsauthorized(value: boolean): AuthorizationResponse;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): AuthorizationResponse.AsObject;
-  static toObject(includeInstance: boolean, msg: AuthorizationResponse): AuthorizationResponse.AsObject;
-  static serializeBinaryToWriter(message: AuthorizationResponse, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): AuthorizationResponse;
-  static deserializeBinaryFromReader(message: AuthorizationResponse, reader: jspb.BinaryReader): AuthorizationResponse;
-}
-
-export namespace AuthorizationResponse {
-  export type AsObject = {
-    isauthorized: boolean,
-  }
-}
-
 export class Status extends jspb.Message {
   getCode(): number;
   setCode(value: number): Status;
@@ -1583,6 +1497,24 @@ export namespace CourseUserRequest {
     coursecode: string,
     courseyear: number,
     userlogin: string,
+  }
+}
+
+export class AuthorizationResponse extends jspb.Message {
+  getIsauthorized(): boolean;
+  setIsauthorized(value: boolean): AuthorizationResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): AuthorizationResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: AuthorizationResponse): AuthorizationResponse.AsObject;
+  static serializeBinaryToWriter(message: AuthorizationResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): AuthorizationResponse;
+  static deserializeBinaryFromReader(message: AuthorizationResponse, reader: jspb.BinaryReader): AuthorizationResponse;
+}
+
+export namespace AuthorizationResponse {
+  export type AsObject = {
+    isauthorized: boolean,
   }
 }
 

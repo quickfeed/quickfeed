@@ -9,7 +9,7 @@ import (
 )
 
 type GrpcMultiplexer struct {
-	*grpcweb.WrappedGrpcServer
+	Server *grpcweb.WrappedGrpcServer
 }
 
 // GenerateTLSApi will load TLS certificates and key and create a grpc server with those.
@@ -33,8 +33,8 @@ func (conf *Config) GenerateTLSApi() (*grpc.Server, error) {
 // MultiplexHandler is used to route requests to either grpc or to regular http
 func (m *GrpcMultiplexer) MultiplexerHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if m.IsGrpcWebRequest(r) {
-			m.ServeHTTP(w, r)
+		if m.Server.IsGrpcWebRequest(r) {
+			m.Server.ServeHTTP(w, r)
 			return
 		}
 		next.ServeHTTP(w, r)
