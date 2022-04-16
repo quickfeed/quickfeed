@@ -1,7 +1,10 @@
 package auth
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
@@ -16,13 +19,33 @@ type Claims struct {
 }
 
 type TokenManager struct {
-	TokensToUpdate []uint64
-	DB             database.Database
+	tokens      []uint64
+	db          database.Database
+	expireAfter time.Duration
+	secret      string
+	domain      string
+	cookie      string
+}
+
+func NewTokenManager(db database.Database, expireAfter time.Duration, secret, domain string) (*TokenManager, error) {
+	if secret == "" || domain == "" {
+		return nil, fmt.Errorf("failed to create a token manager: missing secret or domain")
+	}
+	manager := &TokenManager{
+		db:          db,
+		expireAfter: expireAfter,
+		secret:      secret,
+		domain:      domain,
+	}
+	if err := manager.Update(); err != nil {
+		return nil, err
+	}
+	return manager, nil
 }
 
 // JWTUpdateRequired returns true if JWT update is needed for this user ID
 func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
-	for _, token := range tm.TokensToUpdate {
+	for _, token := range tm.tokens {
 		if claims.UserID == token {
 			return true
 		}
@@ -30,14 +53,37 @@ func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 	return false
 }
 
-// UpdateClaims fetches the up-to-date user information from the database and returns
-// updated JWT user claims
-func (tm *TokenManager) UpdateClaims(userID uint64) (*Claims, error) {
-	usr, err := tm.DB.GetUserWithEnrollments(userID)
+func (tm *TokenManager) NewTokenCookie(ctx context.Context, token *jwt.Token) (*http.Cookie, error) {
+	signed, err := token.SignedString([]byte(tm.secret))
+	if err != nil {
+		return nil, err
+	}
+	return &http.Cookie{
+		Name:     tm.cookie,
+		Value:    signed,
+		Domain:   tm.domain,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		Expires:  time.Now().Add(tm.expireAfter),
+	}, nil
+}
+
+func (tm *TokenManager) NewToken(claims *Claims) *jwt.Token {
+	return jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+}
+
+// NewClaims creates user claims for a JWT token
+func (tm *TokenManager) NewClaims(userID uint64) (*Claims, error) {
+	usr, err := tm.db.GetUserWithEnrollments(userID)
 	if err != nil {
 		return nil, err
 	}
 	newClaims := &Claims{
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(tm.expireAfter).Unix(),
+			IssuedAt:  time.Now().Unix(),
+		},
 		UserID: userID,
 		Admin:  usr.IsAdmin,
 	}
@@ -49,6 +95,27 @@ func (tm *TokenManager) UpdateClaims(userID uint64) (*Claims, error) {
 	return newClaims, nil
 }
 
+func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodECDSA); !ok {
+			return nil, fmt.Errorf("failed to parse token: incorrect signing method")
+		}
+		return []byte(tm.secret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		return claims, nil
+	}
+	return nil, fmt.Errorf("failed to parse token: invalid claims")
+}
+
+// Get returns the list with tokens that require update
+func (tm *TokenManager) GetTokens() []uint64 {
+	return tm.tokens
+}
+
 // Update removes user ID from the manager and updates user record in the database
 func (tm *TokenManager) Remove(userID uint64) error {
 	if !tm.exists(userID) {
@@ -58,12 +125,12 @@ func (tm *TokenManager) Remove(userID uint64) error {
 		return err
 	}
 	var updatedTokenList []uint64
-	for _, id := range tm.TokensToUpdate {
+	for _, id := range tm.tokens {
 		if id != userID {
 			updatedTokenList = append(updatedTokenList, id)
 		}
 	}
-	tm.TokensToUpdate = updatedTokenList
+	tm.tokens = updatedTokenList
 	return nil
 }
 
@@ -76,13 +143,13 @@ func (tm *TokenManager) Add(userID uint64) error {
 	if err := tm.update(userID, true); err != nil {
 		return err
 	}
-	tm.TokensToUpdate = append(tm.TokensToUpdate, userID)
+	tm.tokens = append(tm.tokens, userID)
 	return nil
 }
 
 // Update fetches IDs of users who need token updates from the database
 func (tm *TokenManager) Update() error {
-	users, err := tm.DB.GetUsers()
+	users, err := tm.db.GetUsers()
 	if err != nil {
 		return fmt.Errorf("failed to update JWT tokens from database: %w", err)
 	}
@@ -92,18 +159,18 @@ func (tm *TokenManager) Update() error {
 			tokens = append(tokens, user.ID)
 		}
 	}
-	tm.TokensToUpdate = tokens
+	tm.tokens = tokens
 	return nil
 }
 
 // update updates user record in the database
 func (tm *TokenManager) update(userID uint64, updateToken bool) error {
-	user, err := tm.DB.GetUser(userID)
+	user, err := tm.db.GetUser(userID)
 	if err != nil {
 		return err
 	}
 	user.UpdateToken = updateToken
-	if err := tm.DB.UpdateUser(user); err != nil {
+	if err := tm.db.UpdateUser(user); err != nil {
 		return err
 	}
 	return nil
@@ -111,7 +178,7 @@ func (tm *TokenManager) update(userID uint64, updateToken bool) error {
 
 // exists checks if ID is in the list
 func (tm *TokenManager) exists(id uint64) bool {
-	for _, token := range tm.TokensToUpdate {
+	for _, token := range tm.tokens {
 		if id == token {
 			return true
 		}
