@@ -8,7 +8,9 @@ OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
 tmpdir				:= tmp
 proto-swift-path	:= ../quickfeed-swiftui/Quickfeed/Proto
-grpcweb-ver			:= 1.3.1
+grpcweb-latest		:= $(shell git ls-remote --tags https://github.com/grpc/grpc-web.git | tail -1 | awk -F"/" '{ print $$3 }')
+grpcweb-ver			:= $(shell cd dev; npm ls grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
+grpcweb-pub			:= $(shell cd public; npm ls grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
 protoc-grpcweb		:= protoc-gen-grpc-web
 protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
 grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ver)/$(protoc-grpcweb-long)
@@ -18,7 +20,7 @@ testorg				:= ag-test-course
 envoy-config-gen	:= ./cmd/envoy/envoy_config_gen.go
 
 # necessary when target is not tied to a file
-.PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm
+.PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm version-check
 
 devtools: grpcweb go-tools
 
@@ -29,6 +31,16 @@ download:
 go-tools:
 	@echo "Installing tools from tools.go"
 	@go install `go list -f "{{range .Imports}}{{.}} {{end}}" tools.go`
+
+version-check:
+	@go run cmd/vercheck/main.go
+ifneq ($(grpcweb-ver), $(grpcweb-latest))
+	@echo WARNING: grpc-web version is not latest: $(grpcweb-ver) != $(grpcweb-latest)
+endif
+ifneq ($(grpcweb-ver), $(grpcweb-pub))
+	@echo grpc-web version differs between dev and public: $(grpcweb-ver) != $(grpcweb-pub)
+	@false
+endif
 
 grpcweb:
 	@echo "Fetch and install grpcweb protoc plugin (may require sudo access on some systems)"
@@ -58,7 +70,7 @@ proto_$(1):
 	--go-patch_out=plugin=go-grpc,paths=source_relative:. \
 	--js_out=import_style=commonjs:$(1)/proto \
 	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(1)/proto \
-	ag/ag.proto admin/admin.proto kit/score/score.proto
+	ag/ag.proto auth/auth.proto kit/score/score.proto
 
 	$$(info Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529))
 	@$(sedi) '/patch_go_pb/d' \
@@ -76,7 +88,7 @@ dirs := dev public
 $(foreach dir,$(dirs),$(eval $(call ui_target,$(dir))))
 $(foreach dir,$(dirs),$(eval $(call proto_target,$(dir))))
 
-ui: ui_dev ui_public
+ui: version-check ui_dev ui_public
 
 proto: proto_dev proto_public
 
