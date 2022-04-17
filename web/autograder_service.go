@@ -687,7 +687,7 @@ func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewReque
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
 // with the given score.
-// Access policy: Creator of CourseID
+// Access policy: Teacher of CourseID
 func (s *AutograderService) UpdateSubmissions(ctx context.Context, in *pb.UpdateSubmissionsRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {

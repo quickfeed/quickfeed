@@ -27,6 +27,7 @@ type TokenManager struct {
 	cookie      string
 }
 
+// NewTokenManager creates a new token manager
 func NewTokenManager(db database.Database, expireAfter time.Duration, secret, domain string) (*TokenManager, error) {
 	if secret == "" || domain == "" {
 		return nil, fmt.Errorf("failed to create a token manager: missing secret or domain")
@@ -37,6 +38,7 @@ func NewTokenManager(db database.Database, expireAfter time.Duration, secret, do
 		secret:      secret,
 		domain:      domain,
 	}
+	// Collect IDs of users who require token update from database
 	if err := manager.Update(); err != nil {
 		return nil, err
 	}
@@ -53,6 +55,7 @@ func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 	return false
 }
 
+// NewTokenCookie creates a cookie with signed JWT
 func (tm *TokenManager) NewTokenCookie(ctx context.Context, token *jwt.Token) (*http.Cookie, error) {
 	signed, err := token.SignedString([]byte(tm.secret))
 	if err != nil {
@@ -69,6 +72,7 @@ func (tm *TokenManager) NewTokenCookie(ctx context.Context, token *jwt.Token) (*
 	}, nil
 }
 
+// NewToken makes a new JWT token with given claims
 func (tm *TokenManager) NewToken(claims *Claims) *jwt.Token {
 	return jwt.NewWithClaims(jwt.SigningMethodES256, claims)
 }
@@ -95,6 +99,7 @@ func (tm *TokenManager) NewClaims(userID uint64) (*Claims, error) {
 	return newClaims, nil
 }
 
+// GetClaims returns user claims after parsing and validating a signed token string
 func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodECDSA); !ok {
@@ -138,7 +143,7 @@ func (tm *TokenManager) Remove(userID uint64) error {
 func (tm *TokenManager) Add(userID uint64) error {
 	// Return if the given ID is already in the list to avoid duplicates
 	if tm.exists(userID) {
-		return fmt.Errorf("user with ID %d is already in the list", userID)
+		return fmt.Errorf("user wit	h ID %d is already in the list", userID)
 	}
 	if err := tm.update(userID, true); err != nil {
 		return err
