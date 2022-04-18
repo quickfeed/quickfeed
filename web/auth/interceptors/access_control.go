@@ -19,16 +19,13 @@ import (
 // "teacher": user enrolled in the course with teacher status.
 // "owner" is the creator of the manual review.
 var accessRoles = map[string][]string{
-	"GetUserByCourse":         {"admin", "teacher"},
-	"GetSubmissionsByCourse":  {"admin", "teacher"},
-	"UpdateUser":              {"admin", "user"},
-	"GetEnrollmentsByUser":    {"admin", "user"},
-	"GetOrganization":         {"admin"}, // TODO(vera): not needed in case of admin service
+	"UpdateUser":              {"user", "admin"},
+	"GetEnrollmentsByUser":    {"user", "admin"},
 	"GetEnrollmentsByCourse":  {"student"},
-	"UpdateReview":            {"teacher", "owner"}, // TODO(vera): a new role for review owner or just a server-side check?
-	"GetGroupByUserAndCourse": {"teacher", "group"},
-	"CreateGroup":             {"teacher", "group"},
-	"GetGroup":                {"teacher", "group"}, // TODO(vera): "group" needs a db call or a field in claims
+	"UpdateReview":            {"owner", "teacher"}, // TODO(vera): a new role for review owner or just a server-side check?
+	"GetGroupByUserAndCourse": {"group", "teacher"},
+	"CreateGroup":             {"group", "teacher"},
+	"GetGroup":                {"group", "teacher"}, // TODO(vera): "group" needs a db call or a field in claims
 	"UpdateGroup":             {"teacher"},
 	"DeleteGroup":             {"teacher"},
 	"GetSubmissions":          {"teacher"},
@@ -48,6 +45,11 @@ var accessRoles = map[string][]string{
 	"UpdateSubmissions":       {"teacher"},
 	"GetReviewers":            {"teacher"},
 	"UpdateAssignments":       {"teacher"},
+	"GetUserByCourse":         {"teacher", "admin"},
+	"GetSubmissionsByCourse":  {"teacher", "admin"},
+	"GetOrganization":         {"admin"},
+	// TODO(vera): GetOrganization and other admin methods not needed in case of admin service
+	// otherwise add all admin methods here
 }
 
 func AccessControl(logger *zap.Logger, tokens *auth.TokenManager) grpc.UnaryServerInterceptor {
@@ -84,6 +86,8 @@ func AccessControl(logger *zap.Logger, tokens *auth.TokenManager) grpc.UnaryServ
 							case "user":
 								// Methods that can be accessed by the owner of the UserID can also be accessed by admin.
 								// Skip other checks if user has admin role.
+								// TODO(vera): should better let it continue and check the next role
+								// instead of checking for admin here
 								if !claims.Admin {
 									switch method {
 									case "UpdateUser":
