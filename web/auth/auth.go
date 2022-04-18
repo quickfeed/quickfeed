@@ -16,6 +16,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/markbates/goth/gothic"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -178,39 +179,28 @@ func sessionData(session *sessions.Session) string {
 }
 
 // OAuth2Login tries to authenticate against an oauth2 provider.
-func OAuth2Login(logger *zap.SugaredLogger, db database.Database) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		w := c.Response()
-		r := c.Request()
+func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO(vera): adapt to use with other providers if needed
+		provider := "github"
 
-		provider, err := gothic.GetProviderName(r)
-		if err != nil {
-			logger.Error(err.Error())
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		}
+		// TODO(vera): make sure teacher suffix no longer necessary
 		var teacher int
 		if strings.HasSuffix(provider, TeacherSuffix) {
 			teacher = 1
 		}
 		logger.Debugf("Provider: %v ; Teacher: %v", provider, teacher)
-
 		qv := r.URL.Query()
 		logger.Debugf("qv: %v", qv)
-		redirect := extractRedirectURL(r, Redirect)
-		logger.Debugf("redirect: %v", redirect)
+		// redirect := extractRedirectURL(r, Redirect)
+		logger.Debugf("redirect: %v", config.RedirectURL)
 		// TODO: Add a random string to protect against CSRF.
-		qv.Set(State, strconv.Itoa(teacher)+redirect)
-		logger.Debugf("State: %v", strconv.Itoa(teacher)+redirect)
+		qv.Set(State, strconv.Itoa(teacher)+config.RedirectURL)
+		logger.Debugf("State: %v", strconv.Itoa(teacher)+config.RedirectURL)
 		r.URL.RawQuery = qv.Encode()
 		logger.Debugf("RawQuery: %v", r.URL.RawQuery)
-
-		url, err := gothic.GetAuthURL(w, r)
-		if err != nil {
-			logger.Error(err.Error())
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		}
-		logger.Debugf("Redirecting to %s to perform authentication; AuthURL: %v", provider, url)
-		return c.Redirect(http.StatusTemporaryRedirect, url)
+		logger.Debugf("Redirecting to %s to perform authentication; AuthURL: %v", provider, config.Endpoint.AuthURL)
+		http.Redirect(w, r, config.Endpoint.AuthURL, http.StatusTemporaryRedirect)
 	}
 }
 

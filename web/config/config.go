@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/autograde/quickfeed/internal/rand"
-	"github.com/autograde/quickfeed/web/auth"
+	//"github.com/autograde/quickfeed/web/auth"
 )
 
 // Endpoints keeps all URL endpoints used by the server for user authentication,
@@ -38,10 +38,10 @@ type Paths struct {
 
 // Config keeps all configuration information in one place.
 type Config struct {
-	Endpoints      *Endpoints
-	Secrets        *Secrets
-	Paths          *Paths
-	TokensToUpdate *auth.TokenManager // TODO: not sure if this belongs here or in the ag service
+	Endpoints *Endpoints
+	Secrets   *Secrets
+	Paths     *Paths
+	// TokensToUpdate *auth.TokenManager // TODO: not sure if this belongs here or in the ag service
 }
 
 func NewConfig(baseURL, public, httpAddr string) *Config {

@@ -30,8 +30,8 @@ var (
 )
 
 // New starts a new web server
-func New(ags *AutograderService, public, httpAddr string) {
-	entryPoint := filepath.Join(public, "index.html")
+func New(ags *AutograderService) {
+	entryPoint := filepath.Join(ags.Config.Endpoints.Public, "index.html")
 	if _, err := os.Stat(entryPoint); os.IsNotExist(err) {
 		ags.logger.Fatalf("file not found %s", entryPoint)
 	}
@@ -45,8 +45,8 @@ func New(ags *AutograderService, public, httpAddr string) {
 	registerWebhooks(ags, e, enabled)
 	registerAuth(ags, e)
 
-	registerFrontend(e, entryPoint, public)
-	runWebServer(ags.logger, e, httpAddr)
+	registerFrontend(e, entryPoint, ags.Config.Endpoints.Public)
+	runWebServer(ags.logger, e, ags.Config.Endpoints.HttpAddress)
 }
 
 func newServer(ags *AutograderService, store sessions.Store) *echo.Echo {

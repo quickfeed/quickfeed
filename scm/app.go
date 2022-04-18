@@ -106,7 +106,12 @@ func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg str
 	return github.NewClient(install.Client(ctx)), nil
 }
 
-//
+// GetIDs returns app client ID and secret to be used in auth flow
+func (ghApp *GithubApp) GetID() (string, string) {
+	return ghApp.config.clientID, ghApp.config.secret
+}
+
+// TODO(vera): update and move to a file with test helpers
 func NewTestApp() *GithubApp {
 	return &GithubApp{
 		scms: NewScms(),

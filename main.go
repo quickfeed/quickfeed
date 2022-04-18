@@ -16,6 +16,8 @@ import (
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/autograde/quickfeed/web/config"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
@@ -92,7 +94,14 @@ func main() {
 
 	githubApp, err := scm.NewApp()
 	if err != nil {
-		log.Fatalf("failed to start GitHub app: %v/n", err)
+		log.Fatalf("failed to start GitHub app: %v\n", err)
+	}
+	id, secret := githubApp.GetID()
+	authConfig := oauth2.Config{
+		ClientID:     id,
+		ClientSecret: secret,
+		Endpoint:     github.Endpoint,
+		RedirectURL:  serverConfig.Endpoints.CallbackURL,
 	}
 	// TODO(vera): make a new method that will populate scm storage with scm clients for each course
 	// there must be one shared scm storage, instead of each service having
@@ -119,7 +128,9 @@ func main() {
 
 	//////////////////////////
 	// TODO: register auth endpoints here: RegisterAuth(router, config.App or full config)
-
+	// TODO(vera): update to handle gitlab, refactor all htt stuff to webserver.go
+	// TODO(vera): shouldn't need http middleware anymore, needs tests
+	router.HandleFunc("/auth/github/", auth.OAuth2Login(logger.Sugar(), db, authConfig))
 	//////////////////////////
 
 	// Create an HTTP server and bind the router to it, and set wanted address
@@ -129,11 +140,11 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-	// Serve the webapp over TLS
+	// Serve the static handler over TLS
 	log.Fatal(srv.ListenAndServeTLS(serverConfig.Paths.PemPath, serverConfig.Paths.KeyPath))
 
 	///////////////////////////////////
-	go web.New(agService, *public, *httpAddr)
+	//go web.New(agService)
 
 	// lis, err := net.Listen("tcp", *grpcAddr)
 	// if err != nil {
