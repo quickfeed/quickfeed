@@ -16,11 +16,9 @@ const NavBar = (): JSX.Element => {
     return (
         <nav className="navbar navbar-expand-lg" style={{ backgroundColor: "#222", color: "#d4d4d4" }} id="main" >
             {!state.showFavorites &&
-                <a className="navbar-brand" style={{ marginLeft: "30px", fontWeight: "bold" }}>
-                    <Link to="/" style={{ fontWeight: "bold", fontSize: "30px", color: "#d4d4d4" }}>
-                        QuickFeed
-                    </Link>
-                </a>
+                <Link to="/" className="navbar-brand" style={{ marginLeft: "30px", fontWeight: "bold", fontSize: "30px", color: "#d4d4d4" }}>
+                    QuickFeed
+                </Link>
             }
             {!state.isLoggedIn &&
                 <div className="navbar-collapse ml-auto">

@@ -7,9 +7,7 @@ const LoginButton = () => {
     if (isLoggedIn) {
         return (
             <li>
-                <a className="dropdown-item bg-dark">
-                    <a href="/logout" className="sidebar-items-link" style={{ color: "#d4d4d4" }} onClick={() => logout()}>Log out</a>
-                </a>
+                <a href="/logout" className="sidebar-items-link dropdown-item bg-dark" style={{ color: "#d4d4d4" }} onClick={() => logout()}>Log out</a>
             </li>
         )
     }

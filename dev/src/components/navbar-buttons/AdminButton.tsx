@@ -7,11 +7,9 @@ const AdminButton = () => {
     if (self.getIsadmin()) {
         return (
             <li>
-                <a className="dropdown-item bg-dark" >
-                    <Link to="/admin" className="sidebar-items-link" style={{ color: "#d4d4d4" }}>
-                        Admin
-                    </Link>
-                </a>
+                <Link to="/admin" className="sidebar-items-link dropdown-item bg-dark" style={{ color: "#d4d4d4" }}>
+                    Admin
+                </Link>
             </li>
         )
     }

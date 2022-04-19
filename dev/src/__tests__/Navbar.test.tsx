@@ -15,7 +15,7 @@ configure({ adapter: new Adapter() })
 Enzyme.configure({ adapter: new EnzymeAdapter() })
 const history = createMemoryHistory()
 const mockedOvermind = createOvermindMock(config, (state) => {
-    state.self = new User().setId(1).setName("Test User")
+    state.self = new User().setId(1).setName("Test User").setIsadmin(true)
 })
 const wrapped = mount(<Provider value={mockedOvermind}>
     <Router history={history}>
