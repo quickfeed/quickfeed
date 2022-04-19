@@ -788,7 +788,7 @@ func (s *GithubSCM) EditRepoIssue(ctx context.Context, issueNumber int, opt *Cre
 			GitError: err,
 		}
 	}
-	s.logger.Debugf("EditRepoIssue: done Editing issue number  %s", issueNumber)
+	s.logger.Debugf("EditRepoIssue: Done editing issue number  %s", issueNumber)
 
 	return toIssue(issue), nil
 }

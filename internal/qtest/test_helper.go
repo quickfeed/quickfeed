@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -23,7 +24,9 @@ import (
 func TestDB(t *testing.T) (database.Database, func()) {
 	t.Helper()
 
-	f, err := ioutil.TempFile(t.TempDir(), "test.db")
+	tempDir := t.TempDir()
+	fmt.Printf("\n%s\n", tempDir)
+	f, err := ioutil.TempFile(tempDir, "test.db")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,6 +163,7 @@ func WithUserContext(ctx context.Context, user *pb.User) context.Context {
 }
 
 // PopulateDatabaseWithInitialData creates initial data-records based on organization
+// This function was created with the intent of being used for testing task and pull request related functionality.
 func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.SCM, course *pb.Course) error {
 	t.Helper()
 
@@ -171,6 +175,12 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 	course.OrganizationID = org.GetID()
 
 	admin := CreateFakeUser(t, db, uint64(1))
+	admin.RemoteIdentities = append(admin.RemoteIdentities, &pb.RemoteIdentity{
+		Provider:    course.GetProvider(),
+		RemoteID:    uint64(1),
+		AccessToken: scm.GetAccessToken(t),
+	})
+	db.UpdateUser(admin)
 	CreateCourse(t, db, admin, course)
 
 	repos, err := sc.GetRepositories(ctx, org)
@@ -181,7 +191,6 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 	// Create repositories
 	nxtRemoteID := uint64(2)
 	for _, repo := range repos {
-		var user *pb.User
 		dbRepo := &pb.Repository{
 			RepositoryID:   repo.ID,
 			OrganizationID: org.GetID(),
@@ -195,8 +204,10 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 		case pb.TestsRepo:
 			dbRepo.RepoType = pb.Repository_TESTS
 		default:
-			// TODO(Espeland): Could use CreateNamedUser() instead.
-			user = CreateFakeUser(t, db, nxtRemoteID)
+			login := strings.TrimSuffix(dbRepo.Name(), "-labs")
+			user := &pb.User{Login: login}
+			CreateUser(t, db, nxtRemoteID, user)
+			EnrollStudent(t, db, user, course)
 			// For testing purposes, assume all student repositories are group repositories
 			// since tasks are only supported for groups anyway.
 			dbRepo.RepoType = pb.Repository_GROUP

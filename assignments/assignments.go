@@ -113,6 +113,7 @@ func FetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 	// tag the image with the course code
 	if dockerfile != "" && dockerfile != course.Dockerfile {
 		buildDir := filepath.Join(cloneDir, pb.TestsRepo, scriptFolder)
+		// TODO(Espeland): Remember to remove sudo!
 		buildCmd := fmt.Sprintf("docker build -t %s .", strings.ToLower(course.GetCode()))
 		job.Commands = []string{
 			"cd " + buildDir,

@@ -36,7 +36,7 @@ func assignReviewers(ctx context.Context, sc scm.SCM, db database.Database, cour
 	}
 	reviewers := []string{}
 	for _, teacher := range teachers {
-		reviewers = append(reviewers, teacher.GetName())
+		reviewers = append(reviewers, teacher.GetLogin())
 	}
 
 	opt := &scm.RequestReviewersOptions{

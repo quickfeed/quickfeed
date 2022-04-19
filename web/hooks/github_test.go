@@ -16,7 +16,6 @@ import (
 	logq "github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-github/v35/github"
 	"go.uber.org/zap"
 )
 
@@ -111,15 +110,16 @@ func TestExtractChanges(t *testing.T) {
 	}
 }
 
-func TestGitHubPRWebHook(t *testing.T) {
+// TestGitHubWebHookOrg tests listening to hooks from an entire repository.
+func TestGitHubWebHookOrg(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 	serverURL := scm.GetWebHookServer(t)
 
-	logger := logq.Zap(true).Sugar()
+	logger := logq.Zap(true)
 	defer func() { _ = logger.Sync() }()
 
-	s, err := scm.NewSCMClient(logger, "github", accessToken)
+	s, err := scm.NewSCMClient(logger.Sugar(), "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,6 +138,8 @@ func TestGitHubPRWebHook(t *testing.T) {
 	course := &pb.Course{
 		Name:             qfTestOrg,
 		OrganizationPath: qfTestOrg,
+		Code:             qfTestOrg,
+		Provider:         "github",
 	}
 
 	db, cleanup := qtest.TestDB(t)
@@ -145,75 +147,19 @@ func TestGitHubPRWebHook(t *testing.T) {
 	if err := qtest.PopulateDatabaseWithInitialData(t, db, s, course); err != nil {
 		t.Fatal(err)
 	}
-	if err := populateDatabaseWithTasks(t, ctx, logger, db, s, course); err != nil {
+	if err := populateDatabaseWithTasks(t, ctx, logger.Sugar(), db, s, course); err != nil {
 		t.Fatal(err)
 	}
-	pb.SetAccessToken(course.GetID(), accessToken)
-	var runner ci.Runner
-	webhook := NewGitHubWebHook(logger, db, runner, secret)
+	runner, err := ci.NewDockerCI(logger)
+	if err != nil {
+		log.Fatalf("failed to set up docker client: %v\n", err)
+	}
+	defer runner.Close()
+	webhook := NewGitHubWebHook(logger.Sugar(), db, runner, secret)
 
 	log.Println("starting webhook server")
-	http.HandleFunc("/webhook", webhook.HandlePR)
-	log.Fatal(http.ListenAndServe(":4567", nil))
-}
-
-func (wh GitHubWebHook) HandlePR(w http.ResponseWriter, r *http.Request) {
-	payload, err := github.ValidatePayload(r, []byte(wh.secret))
-	if err != nil {
-		wh.logger.Errorf("Error in request body: %v", err)
-		return
-	}
-	defer r.Body.Close()
-
-	event, err := github.ParseWebHook(github.WebHookType(r), payload)
-	if err != nil {
-		wh.logger.Errorf("Could not parse github webhook: %v", err)
-		return
-	}
-
-	switch e := event.(type) {
-	case *github.PushEvent:
-		repos, err := wh.db.GetRepositories(&pb.Repository{RepositoryID: uint64(e.GetRepo().GetID())})
-		if err != nil {
-			wh.logger.Errorf("Failed to get repository by remote ID %d from database: %v", e.GetRepo().GetID(), err)
-			return
-		}
-		if len(repos) != 1 {
-			wh.logger.Debugf("Ignoring pull request opened event for unknown repository: %s", e.GetRepo().GetFullName())
-			return
-		}
-		repo := repos[0]
-		course, err := wh.db.GetCourseByOrganizationID(repo.OrganizationID)
-		if err != nil {
-			wh.logger.Errorf("Failed to get course from database: %v", err)
-			return
-		}
-		course.Provider = "github"
-		// Printing db before
-		// repos, err = wh.db.GetRepositoriesWithIssues(&pb.Repository{OrganizationID: course.GetOrganizationID()})
-		// for _, repo := range repos {
-		// 	fmt.Printf("\nRepository: %s", repo.Name())
-		// 	for _, issue := range repo.Issues {
-		// 		fmt.Printf("\nIssue ID: %d, issue TaskID: %d", issue.GetID(), issue.GetTaskID())
-		// 	}
-		// }
-		assignments.UpdateFromTestsRepo(wh.logger, wh.db, course)
-		// repos, err = wh.db.GetRepositoriesWithIssues(&pb.Repository{OrganizationID: course.GetOrganizationID()})
-		// for _, repo := range repos {
-		// 	fmt.Printf("\nRepository: %s", repo.Name())
-		// 	for _, issue := range repo.Issues {
-		// 		fmt.Printf("\nIssue ID: %d, issue TaskID: %d", issue.GetID(), issue.GetTaskID())
-		// 	}
-		// }
-	case *github.PullRequestEvent:
-		// wh.logger.Debug(log.IndentJson(e))
-		wh.handlePullRequest(e)
-	case *github.PullRequestReviewEvent:
-		// wh.logger.Debug(log.IndentJson(e))
-		wh.handlePullRequestReview(e)
-	default:
-		wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
-	}
+	http.HandleFunc("/webhook", webhook.Handle)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.SugaredLogger, db database.Database, sc scm.SCM, course *pb.Course) error {
@@ -225,8 +171,12 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.Su
 	}
 
 	// Find and create assignments
-	foundAssignments, _, err := assignments.FetchAssignments(ctx, logger, sc, course)
+	foundAssignments, dockerfile, err := assignments.FetchAssignments(ctx, logger, sc, course)
 	if err != nil {
+		return err
+	}
+	course.Dockerfile = dockerfile
+	if err = db.UpdateCourse(course); err != nil {
 		return err
 	}
 

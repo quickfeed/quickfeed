@@ -39,16 +39,16 @@ func TestGetLinkedIssue(t *testing.T) {
 
 func TestAssignReviewers(t *testing.T) {
 	type testUser struct {
-		name string
-		role pb.Enrollment_UserStatus
+		login string
+		role  pb.Enrollment_UserStatus
 	}
 	tests := map[string]struct {
 		testUsers []testUser
 	}{
 		"Simple": {
 			testUsers: []testUser{
-				{name: "student1", role: pb.Enrollment_STUDENT},
-				{name: "teacher1", role: pb.Enrollment_TEACHER},
+				{login: "student1", role: pb.Enrollment_STUDENT},
+				{login: "teacher1", role: pb.Enrollment_TEACHER},
 			},
 		},
 		"No enrollments": {testUsers: []testUser{}},
@@ -67,7 +67,7 @@ func TestAssignReviewers(t *testing.T) {
 
 			var nextRemoteID uint64 = 2
 			for _, testUser := range tt.testUsers {
-				user := qtest.CreateNamedUser(t, db, nextRemoteID, testUser.name)
+				user := qtest.CreateNamedUser(t, db, nextRemoteID, testUser.login)
 				enrollment := &pb.Enrollment{UserID: user.GetID(), CourseID: course.GetID()}
 				if err := db.CreateEnrollment(enrollment); err != nil {
 					t.Fatal(err)

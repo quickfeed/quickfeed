@@ -47,13 +47,13 @@ func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 	switch e := event.(type) {
 	case *github.PushEvent:
-		wh.logger.Debug(log.IndentJson(e))
+		// wh.logger.Debug(log.IndentJson(e))
 		wh.handlePush(e)
 	case *github.PullRequestEvent:
-		wh.logger.Debug(log.IndentJson(e))
+		// wh.logger.Debug(log.IndentJson(e))
 		wh.handlePullRequest(e)
 	case *github.PullRequestReviewEvent:
-		wh.logger.Debug(log.IndentJson(e))
+		// wh.logger.Debug(log.IndentJson(e))
 		wh.handlePullRequestReview(e)
 	default:
 		wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
