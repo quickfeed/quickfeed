@@ -118,7 +118,7 @@ func (opt *CreateIssueOptions) valid() bool {
 
 func (opt RequestReviewersOptions) valid() bool {
 	return opt.Organization != "" && opt.Repository != "" &&
-		opt.PullNumber > 0 && len(opt.Reviewers) != 0
+		opt.Number > 0 && len(opt.Reviewers) != 0
 }
 
 func (opt RepositoryInvitationOptions) valid() bool {

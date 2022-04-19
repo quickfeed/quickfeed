@@ -6506,7 +6506,8 @@ proto.ag.PullRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     pullrequestid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    approved: jspb.Message.getBooleanFieldWithDefault(msg, 3, false)
+    issueid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    approved: jspb.Message.getBooleanFieldWithDefault(msg, 4, false)
   };
 
   if (includeInstance) {
@@ -6552,6 +6553,10 @@ proto.ag.PullRequest.deserializeBinaryFromReader = function(msg, reader) {
       msg.setPullrequestid(value);
       break;
     case 3:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setIssueid(value);
+      break;
+    case 4:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setApproved(value);
       break;
@@ -6598,10 +6603,17 @@ proto.ag.PullRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getIssueid();
+  if (f !== 0) {
+    writer.writeUint64(
+      3,
+      f
+    );
+  }
   f = message.getApproved();
   if (f) {
     writer.writeBool(
-      3,
+      4,
       f
     );
   }
@@ -6645,11 +6657,29 @@ proto.ag.PullRequest.prototype.setPullrequestid = function(value) {
 
 
 /**
- * optional bool approved = 3;
+ * optional uint64 issueID = 3;
+ * @return {number}
+ */
+proto.ag.PullRequest.prototype.getIssueid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.ag.PullRequest} returns this
+ */
+proto.ag.PullRequest.prototype.setIssueid = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional bool approved = 4;
  * @return {boolean}
  */
 proto.ag.PullRequest.prototype.getApproved = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 4, false));
 };
 
 
@@ -6658,7 +6688,7 @@ proto.ag.PullRequest.prototype.getApproved = function() {
  * @return {!proto.ag.PullRequest} returns this
  */
 proto.ag.PullRequest.prototype.setApproved = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 3, value);
+  return jspb.Message.setProto3BooleanField(this, 4, value);
 };
 
 

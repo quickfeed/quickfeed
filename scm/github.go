@@ -805,10 +805,10 @@ func (s *GithubSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersO
 		Reviewers: opt.Reviewers,
 	}
 
-	if _, _, err := s.client.PullRequests.RequestReviewers(ctx, opt.Organization, opt.Repository, opt.PullNumber, reviewersRequest); err != nil {
+	if _, _, err := s.client.PullRequests.RequestReviewers(ctx, opt.Organization, opt.Repository, opt.Number, reviewersRequest); err != nil {
 		return ErrFailedSCM{
 			Method:   "RequestReviewers",
-			Message:  fmt.Sprintf("Failed to request reviewers for pull request #%d, in repository: %s, for organization: %s", opt.PullNumber, opt.Repository, opt.Organization),
+			Message:  fmt.Sprintf("Failed to request reviewers for pull request #%d, in repository: %s, for organization: %s", opt.Number, opt.Repository, opt.Organization),
 			GitError: err,
 		}
 	}

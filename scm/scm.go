@@ -263,11 +263,12 @@ type CreateIssueOptions struct {
 	Assignees    *[]string
 }
 
+// RequestReviewersOptions contains information on how to assign reviewers to a pull request
 type RequestReviewersOptions struct {
 	Organization string
 	Repository   string
-	PullNumber   int
-	Reviewers    []string
+	Number       int
+	Reviewers    []string // Reviewers is a slice of github usernames
 }
 
 // RepositoryInvitationOptions contains information on which organization and user to accept invitations for.

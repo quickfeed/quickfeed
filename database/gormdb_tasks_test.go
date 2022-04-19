@@ -263,3 +263,21 @@ func TestCreatePullRequest(t *testing.T) {
 		t.Errorf("CreatePullRequest mismatch (-wantPullRequest, +gotPullRequest):\n%s", diff)
 	}
 }
+
+func TestHandleMergingPR(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	if err := db.CreateIssues([]*pb.Issue{{IssueNumber: 10}}); err != nil {
+		t.Fatal(err)
+	}
+
+	pullRequest := &pb.PullRequest{PullRequestID: 1234, IssueID: 1, Approved: false}
+	if err := db.CreatePullRequest(pullRequest); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := db.HandleMergingPR(pullRequest); err != nil {
+		t.Fatal(err)
+	}
+}

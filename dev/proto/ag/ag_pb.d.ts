@@ -716,6 +716,9 @@ export class PullRequest extends jspb.Message {
   getPullrequestid(): number;
   setPullrequestid(value: number): PullRequest;
 
+  getIssueid(): number;
+  setIssueid(value: number): PullRequest;
+
   getApproved(): boolean;
   setApproved(value: boolean): PullRequest;
 
@@ -731,6 +734,7 @@ export namespace PullRequest {
   export type AsObject = {
     id: number,
     pullrequestid: number,
+    issueid: number,
     approved: boolean,
   }
 }

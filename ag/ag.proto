@@ -202,7 +202,8 @@ message Issue {
 message PullRequest {
     uint64 ID               = 1;
     uint64 pullRequestID    = 2; // Represents the external pull request ID
-    bool approved           = 3;
+    uint64 issueID          = 3; // foreign key
+    bool approved           = 4;
 }
 
 message Assignments {

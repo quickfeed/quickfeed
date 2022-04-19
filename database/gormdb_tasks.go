@@ -113,8 +113,20 @@ func (db *GormDB) GetPullRequest(query *pb.PullRequest) (*pb.PullRequest, error)
 	return &pullRequest, nil
 }
 
-// DeletePullRequest deletes the pull request matching the given query
-func (db *GormDB) DeletePullRequest(pullRequest *pb.PullRequest) error {
+// HandleMergingPR handles merging a pull request
+func (db *GormDB) HandleMergingPR(pullRequest *pb.PullRequest) error {
+	// If a pull request has not been approved, it should not have been merged.
+	// We therefore do not delete the associated issue.
+	// To resume a working state, students are expected to reopen
+	// the issue that was closed from this merging, and create a new PR for it.
+	if !pullRequest.GetApproved() {
+		return db.conn.Delete(pullRequest).Error
+	}
+	var associatedIssue []*pb.Issue
+	if err := db.conn.Find(associatedIssue, &pb.Issue{ID: pullRequest.GetIssueID()}).Error; err != nil {
+		return err
+	}
+	_ = db.conn.Delete(associatedIssue)
 	return db.conn.Delete(pullRequest).Error
 }
 
