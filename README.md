@@ -35,6 +35,34 @@ On systems with homebrew:
 % brew install golangci-lint
 ```
 
+### Install Development Tools
+
+On Unix systems you should be able to install development tools using:
+
+```shell
+% make devtools
+```
+
+However, if your system does not have `make` you may try these steps:
+
+```shell
+# Install go tools that we use
+% go install `go list -f "{{range .Imports}}{{.}} {{end}}" tools.go`
+```
+
+```shell
+# Download the latest release
+%	gh release download --repo grpc/grpc-web --pattern \*`uname -s | tr A-Z a-z`\*
+# Check the downloaded file
+% shasum -c protoc-gen-grpc-web-1.3.1-*.sha256
+protoc-gen-grpc-web-1.3.1-darwin-x86_64: OK
+# Remove the checksum file
+% rm protoc-gen-grpc-web-1.3.1-*.sha256
+# Install in location of your choice, but must be specified in PATH so that it can be found by protoc
+% sudo mv protoc-gen-grpc-web-1.3.1-* /usr/local/bin/protoc-gen-grpc-web
+% chmod +x /usr/local/bin/protoc-gen-grpc-web
+```
+
 ### Create Issue First
 
 Before you implement some feature or bug fix, you should open an issue first.
@@ -106,7 +134,6 @@ Closes <Issue#>.
 Fixes <Issue#>.
 Resolves <Issue#>.
 ```
-
 
 For detailed instructions on configuring QuickFeed for development, please see our [Developer Guide](doc/dev.md).
 

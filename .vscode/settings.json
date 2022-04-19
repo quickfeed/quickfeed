@@ -8,6 +8,12 @@
     "breadcrumbs.enabled": true,
     "protoc": {
         "compile_on_save": false,
+        "options": [
+            "--proto_path=${workspaceRoot}",
+            "--proto_path=${workspaceRoot}/kit",
+            "--proto_path=`go list -m -f {{.Dir}} google.golang.org/protobuf`",
+            "--proto_path=`go list -m -f {{.Dir}} github.com/alta/protopatch`"
+        ]
     },
     "go.lintTool": "golangci-lint",
     "go.lintFlags": [
