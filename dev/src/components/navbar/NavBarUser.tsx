@@ -13,7 +13,7 @@ const NavBarUser = (): JSX.Element => {
         <div className="navbar-collapse ml-auto" id="main_nav">
             <ul className="navbar-nav ml-auto">
                 <li className="nav-item dropdown ml-auto">
-                    <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px", marginLeft: "40px" }}>
+                    <a href="/auth/github" style={{ textAlign: "center", marginLeft: "40px" }}>
                         <img className="rounded-circle" src={self.getAvatarurl()} id="avatar"
                             style={{ height: "40px", borderRadius: "50%" }} />
                     </a>

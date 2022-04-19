@@ -13,7 +13,7 @@ const LoginButton = () => {
     }
     return (
         <li>
-            <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px" }}>
+            <a href="/auth/github" style={{ textAlign: "center" }}>
                 <i className="fa fa-2x fa-github" id="github" />
             </a>
         </li>
