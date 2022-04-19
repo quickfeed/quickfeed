@@ -8,7 +8,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/autograde/quickfeed/admin"
 	"github.com/autograde/quickfeed/ci"
 	logq "github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
@@ -112,15 +111,12 @@ func main() {
 	// to
 	agService := web.NewAutograderService(logger, db, githubApp, serverConfig, runner)
 	agService.MakeSCMClients("github")
-	adminService := web.NewAdminService(logger, db, githubApp, serverConfig)
-	adminService.MakeSCMClients("github")
 
 	apiServer, err := serverConfig.GenerateTLSApi()
 	if err != nil {
 		log.Fatalf("failed to generate TLS grpc API: %v/n", err)
 	}
 	pb.RegisterAutograderServiceServer(apiServer, agService)
-	admin.RegisterAdminServiceServer(apiServer, adminService)
 
 	grpcWebServer := grpcweb.WrapServer(apiServer)
 	multiplexer := config.GrpcMultiplexer{
@@ -132,10 +128,10 @@ func main() {
 
 	//////////////////////////
 	// TODO: register auth endpoints here: RegisterAuth(router, config.App or full config)
-	// TODO(vera): update to handle gitlab, refactor all htt stuff to webserver.go
+	// TODO(vera): update to handle gitlab, refactor all http stuff to webserver.go
 	// TODO(vera): shouldn't need http middleware anymore, needs tests
 	router.HandleFunc(serverConfig.Endpoints.LoginURL, auth.OAuth2Login(logger.Sugar(), db, authConfig))
-	router.HandleFunc("/auth/github/callback", auth.OAuth2Callback(logger.Sugar(), db, authConfig, githubApp, tokenManager, serverConfig.Secrets.CallbackSecret))
+	router.HandleFunc(serverConfig.Endpoints.CallbackURL, auth.OAuth2Callback(logger.Sugar(), db, authConfig, githubApp, tokenManager, serverConfig.Secrets.CallbackSecret))
 	//////////////////////////
 
 	// Create an HTTP server and bind the router to it, and set wanted address

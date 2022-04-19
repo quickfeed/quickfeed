@@ -78,6 +78,49 @@ export class AutograderServiceClient {
     this.methodInfoGetUser);
   }
 
+  methodInfoGetUsers = new grpcWeb.MethodDescriptor(
+    '/ag.AutograderService/GetUsers',
+    grpcWeb.MethodType.UNARY,
+    ag_ag_pb.Void,
+    ag_ag_pb.Users,
+    (request: ag_ag_pb.Void) => {
+      return request.serializeBinary();
+    },
+    ag_ag_pb.Users.deserializeBinary
+  );
+
+  getUsers(
+    request: ag_ag_pb.Void,
+    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Users>;
+
+  getUsers(
+    request: ag_ag_pb.Void,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: ag_ag_pb.Users) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Users>;
+
+  getUsers(
+    request: ag_ag_pb.Void,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: ag_ag_pb.Users) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/ag.AutograderService/GetUsers',
+        request,
+        metadata || {},
+        this.methodInfoGetUsers,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/ag.AutograderService/GetUsers',
+    request,
+    metadata || {},
+    this.methodInfoGetUsers);
+  }
+
   methodInfoGetUserByCourse = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetUserByCourse',
     grpcWeb.MethodType.UNARY,
@@ -162,6 +205,49 @@ export class AutograderServiceClient {
     request,
     metadata || {},
     this.methodInfoUpdateUser);
+  }
+
+  methodInfoIsAuthorizedTeacher = new grpcWeb.MethodDescriptor(
+    '/ag.AutograderService/IsAuthorizedTeacher',
+    grpcWeb.MethodType.UNARY,
+    ag_ag_pb.Void,
+    ag_ag_pb.AuthorizationResponse,
+    (request: ag_ag_pb.Void) => {
+      return request.serializeBinary();
+    },
+    ag_ag_pb.AuthorizationResponse.deserializeBinary
+  );
+
+  isAuthorizedTeacher(
+    request: ag_ag_pb.Void,
+    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.AuthorizationResponse>;
+
+  isAuthorizedTeacher(
+    request: ag_ag_pb.Void,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: ag_ag_pb.AuthorizationResponse) => void): grpcWeb.ClientReadableStream<ag_ag_pb.AuthorizationResponse>;
+
+  isAuthorizedTeacher(
+    request: ag_ag_pb.Void,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: ag_ag_pb.AuthorizationResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/ag.AutograderService/IsAuthorizedTeacher',
+        request,
+        metadata || {},
+        this.methodInfoIsAuthorizedTeacher,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/ag.AutograderService/IsAuthorizedTeacher',
+    request,
+    metadata || {},
+    this.methodInfoIsAuthorizedTeacher);
   }
 
   methodInfoGetGroup = new grpcWeb.MethodDescriptor(
@@ -551,47 +637,90 @@ export class AutograderServiceClient {
     this.methodInfoGetCoursesByUser);
   }
 
-  methodInfoIsAuthorizedTeacher = new grpcWeb.MethodDescriptor(
-    '/ag.AutograderService/IsAuthorizedTeacher',
+  methodInfoCreateCourse = new grpcWeb.MethodDescriptor(
+    '/ag.AutograderService/CreateCourse',
     grpcWeb.MethodType.UNARY,
-    ag_ag_pb.Void,
-    ag_ag_pb.AuthorizationResponse,
-    (request: ag_ag_pb.Void) => {
+    ag_ag_pb.Course,
+    ag_ag_pb.Course,
+    (request: ag_ag_pb.Course) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.AuthorizationResponse.deserializeBinary
+    ag_ag_pb.Course.deserializeBinary
   );
 
-  isAuthorizedTeacher(
-    request: ag_ag_pb.Void,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.AuthorizationResponse>;
+  createCourse(
+    request: ag_ag_pb.Course,
+    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Course>;
 
-  isAuthorizedTeacher(
-    request: ag_ag_pb.Void,
+  createCourse(
+    request: ag_ag_pb.Course,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.AuthorizationResponse) => void): grpcWeb.ClientReadableStream<ag_ag_pb.AuthorizationResponse>;
+               response: ag_ag_pb.Course) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Course>;
 
-  isAuthorizedTeacher(
-    request: ag_ag_pb.Void,
+  createCourse(
+    request: ag_ag_pb.Course,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.AuthorizationResponse) => void) {
+               response: ag_ag_pb.Course) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
-          '/ag.AutograderService/IsAuthorizedTeacher',
+          '/ag.AutograderService/CreateCourse',
         request,
         metadata || {},
-        this.methodInfoIsAuthorizedTeacher,
+        this.methodInfoCreateCourse,
         callback);
     }
     return this.client_.unaryCall(
     this.hostname_ +
-      '/ag.AutograderService/IsAuthorizedTeacher',
+      '/ag.AutograderService/CreateCourse',
     request,
     metadata || {},
-    this.methodInfoIsAuthorizedTeacher);
+    this.methodInfoCreateCourse);
+  }
+
+  methodInfoUpdateCourse = new grpcWeb.MethodDescriptor(
+    '/ag.AutograderService/UpdateCourse',
+    grpcWeb.MethodType.UNARY,
+    ag_ag_pb.Course,
+    ag_ag_pb.Void,
+    (request: ag_ag_pb.Course) => {
+      return request.serializeBinary();
+    },
+    ag_ag_pb.Void.deserializeBinary
+  );
+
+  updateCourse(
+    request: ag_ag_pb.Course,
+    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+
+  updateCourse(
+    request: ag_ag_pb.Course,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+
+  updateCourse(
+    request: ag_ag_pb.Course,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: ag_ag_pb.Void) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/ag.AutograderService/UpdateCourse',
+        request,
+        metadata || {},
+        this.methodInfoUpdateCourse,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/ag.AutograderService/UpdateCourse',
+    request,
+    metadata || {},
+    this.methodInfoUpdateCourse);
   }
 
   methodInfoUpdateCourseVisibility = new grpcWeb.MethodDescriptor(
@@ -1538,6 +1667,49 @@ export class AutograderServiceClient {
     request,
     metadata || {},
     this.methodInfoGetProviders);
+  }
+
+  methodInfoGetOrganization = new grpcWeb.MethodDescriptor(
+    '/ag.AutograderService/GetOrganization',
+    grpcWeb.MethodType.UNARY,
+    ag_ag_pb.OrgRequest,
+    ag_ag_pb.Organization,
+    (request: ag_ag_pb.OrgRequest) => {
+      return request.serializeBinary();
+    },
+    ag_ag_pb.Organization.deserializeBinary
+  );
+
+  getOrganization(
+    request: ag_ag_pb.OrgRequest,
+    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Organization>;
+
+  getOrganization(
+    request: ag_ag_pb.OrgRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: ag_ag_pb.Organization) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Organization>;
+
+  getOrganization(
+    request: ag_ag_pb.OrgRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: ag_ag_pb.Organization) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/ag.AutograderService/GetOrganization',
+        request,
+        metadata || {},
+        this.methodInfoGetOrganization,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/ag.AutograderService/GetOrganization',
+    request,
+    metadata || {},
+    this.methodInfoGetOrganization);
   }
 
   methodInfoGetRepositories = new grpcWeb.MethodDescriptor(

@@ -18,6 +18,8 @@ import (
 // "student" role implies that the user is enrolled in the course with any role.
 // "teacher": user enrolled in the course with teacher status.
 // "owner" is the creator of the manual review.
+// If there are several roles that can call a method, roles must be ordered with
+// least privilege role first
 var accessRoles = map[string][]string{
 	"UpdateUser":              {"user", "admin"},
 	"GetEnrollmentsByUser":    {"user", "admin"},

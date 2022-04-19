@@ -22,10 +22,11 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AutograderServiceClient interface {
-	// users //
 	GetUser(ctx context.Context, in *Void, opts ...grpc.CallOption) (*User, error)
+	GetUsers(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Users, error)
 	GetUserByCourse(ctx context.Context, in *CourseUserRequest, opts ...grpc.CallOption) (*User, error)
 	UpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*Void, error)
+	IsAuthorizedTeacher(ctx context.Context, in *Void, opts ...grpc.CallOption) (*AuthorizationResponse, error)
 	GetGroup(ctx context.Context, in *GetGroupRequest, opts ...grpc.CallOption) (*Group, error)
 	GetGroupByUserAndCourse(ctx context.Context, in *GroupRequest, opts ...grpc.CallOption) (*Group, error)
 	GetGroupsByCourse(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Groups, error)
@@ -35,7 +36,8 @@ type AutograderServiceClient interface {
 	GetCourse(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Course, error)
 	GetCourses(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Courses, error)
 	GetCoursesByUser(ctx context.Context, in *EnrollmentStatusRequest, opts ...grpc.CallOption) (*Courses, error)
-	IsAuthorizedTeacher(ctx context.Context, in *Void, opts ...grpc.CallOption) (*AuthorizationResponse, error)
+	CreateCourse(ctx context.Context, in *Course, opts ...grpc.CallOption) (*Course, error)
+	UpdateCourse(ctx context.Context, in *Course, opts ...grpc.CallOption) (*Void, error)
 	UpdateCourseVisibility(ctx context.Context, in *Enrollment, opts ...grpc.CallOption) (*Void, error)
 	GetAssignments(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Assignments, error)
 	UpdateAssignments(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Void, error)
@@ -60,6 +62,7 @@ type AutograderServiceClient interface {
 	UpdateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error)
 	GetReviewers(ctx context.Context, in *SubmissionReviewersRequest, opts ...grpc.CallOption) (*Reviewers, error)
 	GetProviders(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Providers, error)
+	GetOrganization(ctx context.Context, in *OrgRequest, opts ...grpc.CallOption) (*Organization, error)
 	GetRepositories(ctx context.Context, in *URLRequest, opts ...grpc.CallOption) (*Repositories, error)
 	IsEmptyRepo(ctx context.Context, in *RepositoryRequest, opts ...grpc.CallOption) (*Void, error)
 }
@@ -81,6 +84,15 @@ func (c *autograderServiceClient) GetUser(ctx context.Context, in *Void, opts ..
 	return out, nil
 }
 
+func (c *autograderServiceClient) GetUsers(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Users, error) {
+	out := new(Users)
+	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetUsers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *autograderServiceClient) GetUserByCourse(ctx context.Context, in *CourseUserRequest, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetUserByCourse", in, out, opts...)
@@ -93,6 +105,15 @@ func (c *autograderServiceClient) GetUserByCourse(ctx context.Context, in *Cours
 func (c *autograderServiceClient) UpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*Void, error) {
 	out := new(Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) IsAuthorizedTeacher(ctx context.Context, in *Void, opts ...grpc.CallOption) (*AuthorizationResponse, error) {
+	out := new(AuthorizationResponse)
+	err := c.cc.Invoke(ctx, "/ag.AutograderService/IsAuthorizedTeacher", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -180,9 +201,18 @@ func (c *autograderServiceClient) GetCoursesByUser(ctx context.Context, in *Enro
 	return out, nil
 }
 
-func (c *autograderServiceClient) IsAuthorizedTeacher(ctx context.Context, in *Void, opts ...grpc.CallOption) (*AuthorizationResponse, error) {
-	out := new(AuthorizationResponse)
-	err := c.cc.Invoke(ctx, "/ag.AutograderService/IsAuthorizedTeacher", in, out, opts...)
+func (c *autograderServiceClient) CreateCourse(ctx context.Context, in *Course, opts ...grpc.CallOption) (*Course, error) {
+	out := new(Course)
+	err := c.cc.Invoke(ctx, "/ag.AutograderService/CreateCourse", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) UpdateCourse(ctx context.Context, in *Course, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateCourse", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -387,6 +417,15 @@ func (c *autograderServiceClient) GetProviders(ctx context.Context, in *Void, op
 	return out, nil
 }
 
+func (c *autograderServiceClient) GetOrganization(ctx context.Context, in *OrgRequest, opts ...grpc.CallOption) (*Organization, error) {
+	out := new(Organization)
+	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetOrganization", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *autograderServiceClient) GetRepositories(ctx context.Context, in *URLRequest, opts ...grpc.CallOption) (*Repositories, error) {
 	out := new(Repositories)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetRepositories", in, out, opts...)
@@ -409,10 +448,11 @@ func (c *autograderServiceClient) IsEmptyRepo(ctx context.Context, in *Repositor
 // All implementations must embed UnimplementedAutograderServiceServer
 // for forward compatibility
 type AutograderServiceServer interface {
-	// users //
 	GetUser(context.Context, *Void) (*User, error)
+	GetUsers(context.Context, *Void) (*Users, error)
 	GetUserByCourse(context.Context, *CourseUserRequest) (*User, error)
 	UpdateUser(context.Context, *User) (*Void, error)
+	IsAuthorizedTeacher(context.Context, *Void) (*AuthorizationResponse, error)
 	GetGroup(context.Context, *GetGroupRequest) (*Group, error)
 	GetGroupByUserAndCourse(context.Context, *GroupRequest) (*Group, error)
 	GetGroupsByCourse(context.Context, *CourseRequest) (*Groups, error)
@@ -422,7 +462,8 @@ type AutograderServiceServer interface {
 	GetCourse(context.Context, *CourseRequest) (*Course, error)
 	GetCourses(context.Context, *Void) (*Courses, error)
 	GetCoursesByUser(context.Context, *EnrollmentStatusRequest) (*Courses, error)
-	IsAuthorizedTeacher(context.Context, *Void) (*AuthorizationResponse, error)
+	CreateCourse(context.Context, *Course) (*Course, error)
+	UpdateCourse(context.Context, *Course) (*Void, error)
 	UpdateCourseVisibility(context.Context, *Enrollment) (*Void, error)
 	GetAssignments(context.Context, *CourseRequest) (*Assignments, error)
 	UpdateAssignments(context.Context, *CourseRequest) (*Void, error)
@@ -447,6 +488,7 @@ type AutograderServiceServer interface {
 	UpdateReview(context.Context, *ReviewRequest) (*Review, error)
 	GetReviewers(context.Context, *SubmissionReviewersRequest) (*Reviewers, error)
 	GetProviders(context.Context, *Void) (*Providers, error)
+	GetOrganization(context.Context, *OrgRequest) (*Organization, error)
 	GetRepositories(context.Context, *URLRequest) (*Repositories, error)
 	IsEmptyRepo(context.Context, *RepositoryRequest) (*Void, error)
 	mustEmbedUnimplementedAutograderServiceServer()
@@ -459,11 +501,17 @@ type UnimplementedAutograderServiceServer struct {
 func (UnimplementedAutograderServiceServer) GetUser(context.Context, *Void) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
 }
+func (UnimplementedAutograderServiceServer) GetUsers(context.Context, *Void) (*Users, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUsers not implemented")
+}
 func (UnimplementedAutograderServiceServer) GetUserByCourse(context.Context, *CourseUserRequest) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserByCourse not implemented")
 }
 func (UnimplementedAutograderServiceServer) UpdateUser(context.Context, *User) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
+}
+func (UnimplementedAutograderServiceServer) IsAuthorizedTeacher(context.Context, *Void) (*AuthorizationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsAuthorizedTeacher not implemented")
 }
 func (UnimplementedAutograderServiceServer) GetGroup(context.Context, *GetGroupRequest) (*Group, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroup not implemented")
@@ -492,8 +540,11 @@ func (UnimplementedAutograderServiceServer) GetCourses(context.Context, *Void) (
 func (UnimplementedAutograderServiceServer) GetCoursesByUser(context.Context, *EnrollmentStatusRequest) (*Courses, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCoursesByUser not implemented")
 }
-func (UnimplementedAutograderServiceServer) IsAuthorizedTeacher(context.Context, *Void) (*AuthorizationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method IsAuthorizedTeacher not implemented")
+func (UnimplementedAutograderServiceServer) CreateCourse(context.Context, *Course) (*Course, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCourse not implemented")
+}
+func (UnimplementedAutograderServiceServer) UpdateCourse(context.Context, *Course) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCourse not implemented")
 }
 func (UnimplementedAutograderServiceServer) UpdateCourseVisibility(context.Context, *Enrollment) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCourseVisibility not implemented")
@@ -561,6 +612,9 @@ func (UnimplementedAutograderServiceServer) GetReviewers(context.Context, *Submi
 func (UnimplementedAutograderServiceServer) GetProviders(context.Context, *Void) (*Providers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProviders not implemented")
 }
+func (UnimplementedAutograderServiceServer) GetOrganization(context.Context, *OrgRequest) (*Organization, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOrganization not implemented")
+}
 func (UnimplementedAutograderServiceServer) GetRepositories(context.Context, *URLRequest) (*Repositories, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRepositories not implemented")
 }
@@ -598,6 +652,24 @@ func _AutograderService_GetUser_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AutograderService_GetUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Void)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ag.AutograderService/GetUsers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetUsers(ctx, req.(*Void))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AutograderService_GetUserByCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CourseUserRequest)
 	if err := dec(in); err != nil {
@@ -630,6 +702,24 @@ func _AutograderService_UpdateUser_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AutograderServiceServer).UpdateUser(ctx, req.(*User))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_IsAuthorizedTeacher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Void)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).IsAuthorizedTeacher(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ag.AutograderService/IsAuthorizedTeacher",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).IsAuthorizedTeacher(ctx, req.(*Void))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -796,20 +886,38 @@ func _AutograderService_GetCoursesByUser_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AutograderService_IsAuthorizedTeacher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Void)
+func _AutograderService_CreateCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Course)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AutograderServiceServer).IsAuthorizedTeacher(ctx, in)
+		return srv.(AutograderServiceServer).CreateCourse(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ag.AutograderService/IsAuthorizedTeacher",
+		FullMethod: "/ag.AutograderService/CreateCourse",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).IsAuthorizedTeacher(ctx, req.(*Void))
+		return srv.(AutograderServiceServer).CreateCourse(ctx, req.(*Course))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_UpdateCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Course)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).UpdateCourse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ag.AutograderService/UpdateCourse",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).UpdateCourse(ctx, req.(*Course))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1210,6 +1318,24 @@ func _AutograderService_GetProviders_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AutograderService_GetOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OrgRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetOrganization(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ag.AutograderService/GetOrganization",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetOrganization(ctx, req.(*OrgRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AutograderService_GetRepositories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(URLRequest)
 	if err := dec(in); err != nil {
@@ -1258,12 +1384,20 @@ var AutograderService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AutograderService_GetUser_Handler,
 		},
 		{
+			MethodName: "GetUsers",
+			Handler:    _AutograderService_GetUsers_Handler,
+		},
+		{
 			MethodName: "GetUserByCourse",
 			Handler:    _AutograderService_GetUserByCourse_Handler,
 		},
 		{
 			MethodName: "UpdateUser",
 			Handler:    _AutograderService_UpdateUser_Handler,
+		},
+		{
+			MethodName: "IsAuthorizedTeacher",
+			Handler:    _AutograderService_IsAuthorizedTeacher_Handler,
 		},
 		{
 			MethodName: "GetGroup",
@@ -1302,8 +1436,12 @@ var AutograderService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AutograderService_GetCoursesByUser_Handler,
 		},
 		{
-			MethodName: "IsAuthorizedTeacher",
-			Handler:    _AutograderService_IsAuthorizedTeacher_Handler,
+			MethodName: "CreateCourse",
+			Handler:    _AutograderService_CreateCourse_Handler,
+		},
+		{
+			MethodName: "UpdateCourse",
+			Handler:    _AutograderService_UpdateCourse_Handler,
 		},
 		{
 			MethodName: "UpdateCourseVisibility",
@@ -1392,6 +1530,10 @@ var AutograderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetProviders",
 			Handler:    _AutograderService_GetProviders_Handler,
+		},
+		{
+			MethodName: "GetOrganization",
+			Handler:    _AutograderService_GetOrganization_Handler,
 		},
 		{
 			MethodName: "GetRepositories",

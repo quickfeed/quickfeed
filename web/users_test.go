@@ -130,7 +130,7 @@ func TestGetUsers(t *testing.T) {
 	defer cleanup()
 
 	// TODO(vera): update test to use app client
-	ags := web.NewAdminService(zap.NewNop(), db, nil, qtest.TestConfig(t))
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
 	unexpectedUsers, err := ags.GetUsers(context.Background(), &pb.Void{})
 	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
 		t.Fatalf("found unexpected users %+v", unexpectedUsers)

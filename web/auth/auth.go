@@ -227,6 +227,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 		logger.Debugf("Redirect: %v ; Teacher: %t", redirect, teacher)
 
 		provider := "github"
+		// TODO(vera): remove teacher suffix if not needed
 		// Add teacher suffix if upgrading scope.
 		if teacher {
 			qv.Set("provider", provider+TeacherSuffix)
@@ -248,7 +249,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 		logger.Debug("Callback: got state in request: ", callbackSecret) // tmp
 		if callbackSecret != secret {
 			logger.Errorf("Warning: secrets don't match: expected %s, got %s", secret, callbackSecret)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			http.Redirect(w, r, extractRedirectURL(r, TeacherSuffix), http.StatusUnauthorized)
 		}
 
 		logger.Debug("EXCHANGING CODE FOR TOKEN") // tmp

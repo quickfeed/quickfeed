@@ -70,7 +70,7 @@ proto_$(1):
 	--go-patch_out=plugin=go-grpc,paths=source_relative:. \
 	--js_out=import_style=commonjs:$(1)/proto \
 	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(1)/proto \
-	ag/ag.proto auth/auth.proto kit/score/score.proto
+	ag/ag.proto kit/score/score.proto
 
 	$$(info Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529))
 	@$(sedi) '/patch_go_pb/d' \

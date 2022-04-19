@@ -93,7 +93,7 @@ func TestNewCourse(t *testing.T) {
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAdminService(zap.NewNop(), db, nil, qtest.TestConfig(t))
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
 
 	for _, wantCourse := range allCourses {
 		// each course needs a separate directory
@@ -132,7 +132,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAdminService(zap.NewNop(), db, nil, qtest.TestConfig(t))
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
 
 	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
 	for path, private := range web.RepoPaths {
@@ -168,13 +168,12 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	logger := zap.NewNop()
 	ags := web.NewAutograderService(logger, db, app, qtest.TestConfig(t), &ci.Local{})
-	ads := web.NewAdminService(logger, db, app, qtest.TestConfig(t))
 	_, err = fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	ags.AddSCM(scm.NewFakeSCMClient(), 0)
-	course, err := ads.CreateCourse(ctx, allCourses[0])
+	course, err := ags.CreateCourse(ctx, allCourses[0])
 	if err != nil {
 		t.Fatal(err)
 	}

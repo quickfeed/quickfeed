@@ -9,7 +9,7 @@ const (
 	JWTCookieName = "auth"
 	// Endpoints
 	Install  = "https://github.com/apps/appth-gh" // TODO(vera): change to the real URL (or better yet read from a config file)
-	Login    = "/auth/github/"
+	Login    = "/auth/github"
 	Logout   = "/logout"
 	Callback = "/auth/github/callback"
 	Webhook  = "/hook/github/events"

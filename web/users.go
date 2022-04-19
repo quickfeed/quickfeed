@@ -5,7 +5,7 @@ import (
 )
 
 // getUsers returns all the users in the database.
-func (s *AdminService) getUsers() (*pb.Users, error) {
+func (s *AutograderService) getUsers() (*pb.Users, error) {
 	users, err := s.db.GetUsers()
 	if err != nil {
 		return nil, err
