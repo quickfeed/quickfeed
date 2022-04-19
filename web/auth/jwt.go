@@ -72,6 +72,7 @@ func (tm *TokenManager) NewTokenCookie(ctx context.Context, token *jwt.Token) (*
 	}, nil
 }
 
+// TODO(vera): needs a single method that makes a cookie from a user ID
 // NewToken makes a new JWT token with given claims
 func (tm *TokenManager) NewToken(claims *Claims) *jwt.Token {
 	return jwt.NewWithClaims(jwt.SigningMethodES256, claims)

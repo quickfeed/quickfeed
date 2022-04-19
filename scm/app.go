@@ -19,6 +19,7 @@ const (
 	SecretEnv        = "APP_SECRET"
 	KeyPath          = "APP_KEYPATH"
 	InstallationsAPI = "https://api.github.com/app/installations"
+	GitHubUserAPI    = "https://api.github.com/user"
 )
 
 // GithubAppConfig keeps parameters of the GitHub app
@@ -30,7 +31,7 @@ type GithubAppConfig struct {
 }
 
 type GithubApp struct {
-	app    *app.Config
+	App    *app.Config
 	scms   *Scms
 	config *GithubAppConfig
 }
@@ -69,14 +70,14 @@ func NewApp() (*GithubApp, error) {
 	}
 	return &GithubApp{
 		config: config,
-		app:    appClientConfig,
+		App:    appClientConfig,
 		scms:   NewScms(),
 	}, nil
 }
 
 // Creates a new scm client with access to the course organization
 func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg string) (*github.Client, error) {
-	resp, err := ghApp.app.Client().Get(InstallationsAPI)
+	resp, err := ghApp.App.Client().Get(InstallationsAPI)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching installations for GitHub app %s: %s", ghApp.config.appID, err)
 	}
@@ -99,7 +100,7 @@ func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg str
 	if installationID == 0 {
 		return nil, fmt.Errorf("cannot find GitHub app installation for organization %s", courseOrg)
 	}
-	install, err := ghApp.app.InstallationConfig(strconv.Itoa(int(installationID)))
+	install, err := ghApp.App.InstallationConfig(strconv.Itoa(int(installationID)))
 	if err != nil {
 		return nil, fmt.Errorf("error configuring github client for installation: %s", err)
 	}
@@ -109,6 +110,10 @@ func (ghApp *GithubApp) NewInstallationClient(ctx context.Context, courseOrg str
 // GetIDs returns app client ID and secret to be used in auth flow
 func (ghApp *GithubApp) GetID() (string, string) {
 	return ghApp.config.clientID, ghApp.config.secret
+}
+
+func (ghApp *GithubApp) GetUserURL() string {
+	return GitHubUserAPI
 }
 
 // TODO(vera): update and move to a file with test helpers

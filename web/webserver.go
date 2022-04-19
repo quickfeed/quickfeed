@@ -126,18 +126,18 @@ func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]b
 func registerAuth(ags *AutograderService, e *echo.Echo) {
 	// makes the oauth2 provider available in the request query so that
 	// markbates/goth/gothic.GetProviderName can find it.
-	withProvider := func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			qv := c.Request().URL.Query()
-			qv.Set("provider", c.Param("provider"))
-			c.Request().URL.RawQuery = qv.Encode()
-			return next(c)
-		}
-	}
+	// withProvider := func(next echo.HandlerFunc) echo.HandlerFunc {
+	// 	return func(c echo.Context) error {
+	// 		qv := c.Request().URL.Query()
+	// 		qv.Set("provider", c.Param("provider"))
+	// 		c.Request().URL.RawQuery = qv.Encode()
+	// 		return next(c)
+	// 	}
+	// }
 
-	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(ags.logger, ags.db))
+	// oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(ags.logger, ags.db))
 	// oauth2.GET("", auth.OAuth2Login(ags.logger, ags.db))
-	oauth2.GET("/callback", auth.OAuth2Callback(ags.logger, ags.db))
+	// oauth2.GET("/callback", auth.OAuth2Callback(ags.logger, ags.db))
 	e.GET("/logout", auth.OAuth2Logout(ags.logger))
 }
 

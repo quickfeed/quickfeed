@@ -103,6 +103,10 @@ func main() {
 		Endpoint:     github.Endpoint,
 		RedirectURL:  serverConfig.Endpoints.CallbackURL,
 	}
+	tokenManager, err := auth.NewTokenManager(db, config.TokenExpirationTime, serverConfig.Secrets.TokenSecret, *httpAddr)
+	if err != nil {
+		log.Fatalf("failed to make token manager: %v\n", err)
+	}
 	// TODO(vera): make a new method that will populate scm storage with scm clients for each course
 	// there must be one shared scm storage, instead of each service having
 	// to
@@ -130,7 +134,8 @@ func main() {
 	// TODO: register auth endpoints here: RegisterAuth(router, config.App or full config)
 	// TODO(vera): update to handle gitlab, refactor all htt stuff to webserver.go
 	// TODO(vera): shouldn't need http middleware anymore, needs tests
-	router.HandleFunc("/auth/github/", auth.OAuth2Login(logger.Sugar(), db, authConfig))
+	router.HandleFunc(serverConfig.Endpoints.LoginURL, auth.OAuth2Login(logger.Sugar(), db, authConfig))
+	router.HandleFunc("/auth/github/callback", auth.OAuth2Callback(logger.Sugar(), db, authConfig, githubApp, tokenManager, serverConfig.Secrets.CallbackSecret))
 	//////////////////////////
 
 	// Create an HTTP server and bind the router to it, and set wanted address

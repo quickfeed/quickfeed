@@ -1,9 +1,13 @@
 package auth
 
 import (
+	"bytes"
 	"context"
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,6 +15,7 @@ import (
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 	lg "github.com/autograde/quickfeed/log"
+	"github.com/autograde/quickfeed/scm"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -181,6 +186,10 @@ func sessionData(session *sessions.Session) string {
 // OAuth2Login tries to authenticate against an oauth2 provider.
 func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			logger.Errorf("GitHub login failed: request method %s", r.Method)
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
+		}
 		// TODO(vera): adapt to use with other providers if needed
 		provider := "github"
 
@@ -205,22 +214,19 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
-func OAuth2Callback(logger *zap.SugaredLogger, db database.Database) echo.HandlerFunc {
-	return func(c echo.Context) error {
+func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oauth2.Config, app *scm.GithubApp, tokens *TokenManager, secret string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			logger.Errorf("GitHub login failed: request method %s", r.Method)
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
+		}
 		logger.Debug("OAuth2Callback: started")
-		w := c.Response()
-		r := c.Request()
-
 		qv := r.URL.Query()
 		logger.Debugf("qv: %v", qv)
 		redirect, teacher := extractState(r, State)
 		logger.Debugf("Redirect: %v ; Teacher: %t", redirect, teacher)
 
-		provider, err := gothic.GetProviderName(r)
-		if err != nil {
-			logger.Error("failed to get gothic provider", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		}
+		provider := "github"
 		// Add teacher suffix if upgrading scope.
 		if teacher {
 			qv.Set("provider", provider+TeacherSuffix)
@@ -230,72 +236,97 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database) echo.Handle
 		logger.Debugf("RawQuery: %v", r.URL.RawQuery)
 
 		// Complete authentication.
-		externalUser, err := gothic.CompleteUserAuth(w, r)
+		// parse request for code and state
+		if err := r.ParseForm(); err != nil {
+			logger.Error("GitHub login failed: error parsing authentication code")
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
+		}
+
+		logger.Debug("VALIDATING STATE") // tmp
+		// validate state
+		callbackSecret := r.FormValue("state")
+		logger.Debug("Callback: got state in request: ", callbackSecret) // tmp
+		if callbackSecret != secret {
+			logger.Errorf("Warning: secrets don't match: expected %s, got %s", secret, callbackSecret)
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
+		}
+
+		logger.Debug("EXCHANGING CODE FOR TOKEN") // tmp
+		// exchange code for token
+		code := r.FormValue("code")
+		if code == "" {
+			logger.Error("GitHub login failed: received empty code")
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
+		}
+		logger.Debug("CODE RECEIVED, PROCEED") // tmp
+		githubToken, err := config.Exchange(context.Background(), code)
 		if err != nil {
-			logger.Error("failed to complete user authentication", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			logger.Errorf("GitHub login failed: cannot exchange token: %s", err)
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
+		}
+		logger.Debugf("Successfully fetched access token: %s", githubToken.AccessToken) // tmp
+
+		// get user info with the token
+		req, err := http.NewRequest("GET", app.GetUserURL(), nil)
+		if err != nil {
+			logger.Errorf("GitHub login failed: failed to make user request: %s", err)
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
+		}
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", githubToken.AccessToken))
+		resp, err := app.App.Client().Do(req)
+		if err != nil {
+			logger.Errorf("GitHub login failed: failed to send user request: %s", err)
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			logger.Errorf("GitHub login failed: API responded with status: %d: %s", resp.StatusCode, resp.Status)
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
+		}
+		respBits, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Println("Error reading response bits from user API: ", err.Error())
+		}
+		externalUser := &externalUser{}
+		if err := json.NewDecoder(bytes.NewReader(respBits)).Decode(&externalUser); err != nil {
+			logger.Errorf("GitHub login failed: failed to decode user information: %s", err)
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
 		}
 		logger.Debugf("externalUser: %v", lg.IndentJson(externalUser))
+		logger.Debugf("EXTRACTED set-cookie token: %s", extractToken(w)) // tmp
 
-		remoteID, err := strconv.ParseUint(externalUser.UserID, 10, 64)
-		if err != nil {
-			logger.Error(err.Error())
-			return err
+		var userToken string
+		for _, cookie := range r.Cookies() {
+			if cookie.Name == "auth" {
+				userToken = cookie.Value
+			}
 		}
-		logger.Debugf("remoteID: %v", remoteID)
+		logger.Debugf("EXTRACTED auth cookie", userToken) // tmp
 
-		// session.Get(name, context) returns an existing session, or a new session if the context does not have an existing session
-		sess, err := session.Get(SessionKey, c)
-		if err != nil {
-			logger.Error(err.Error())
-			return err
-		}
-		logger.Debugf("%s", sessionData(sess))
+		// There is already a cookie with JWT, make sure the user exists in the database
+		if userToken != "" {
+			// TODO(vera): here is a good place to verify that the user claims and the current user that
+			// is set in the frontend aren't different
+			claims, err := tokens.GetClaims(userToken)
+			if err != nil {
+				logger.Errorf("GitHub login failed: failed to read user claims: %s", err)
+				http.Redirect(w, r, "/", http.StatusUnauthorized)
+			}
 
-		// Try to get already logged in user.
-		// If session.Get(...) returns a new session, the check below will be nil.
-		if sess.Values[UserKey] != nil {
-			i, ok := sess.Values[UserKey]
-			if !ok {
-				logger.Debug("failed to get logged in user from session; logout")
-				return OAuth2Logout(logger)(c)
+			if err := db.AssociateUserWithRemoteIdentity(claims.UserID, provider, externalUser.ID, githubToken.AccessToken); err != nil {
+				logger.Debugf("Associate failed: %d, %s, %d, %s", claims.UserID, provider, externalUser.ID, githubToken.AccessToken)
+				logger.Errorf("GitHub login failed: failed to associate user with remote identity: %s", err)
+				http.Redirect(w, r, "/", http.StatusUnauthorized)
 			}
-			// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-			us := i.(*UserSession)
-			logger.Debug(us)
-			// Associate user with remote identity.
-			if err := db.AssociateUserWithRemoteIdentity(
-				us.ID, provider, remoteID, externalUser.AccessToken,
-			); err != nil {
-				logger.Debugf("Associate failed: %d, %s, %d, %s", us.ID, provider, remoteID, externalUser.AccessToken)
-				logger.Error("failed to associate user with remote identity", zap.Error(err))
-				return err
-			}
-			logger.Debugf("Associate: %d, %s, %d, %s", us.ID, provider, remoteID, externalUser.AccessToken)
-
-			// Enable provider in session.
-			us.enableProvider(provider)
-			if err := sess.Save(r, w); err != nil {
-				logger.Error(err.Error())
-				return err
-			}
-			logger.Debugf("enableProvider: %v, r=%v, w=%v", provider, r, w)
-
-			// Enable gRPC requests for session
-			if token := extractSessionCookie(w); len(token) > 0 {
-				logger.Debugf("extractSessionCookie: %v", token)
-				Add(token, us.ID)
-			} else {
-				logger.Debugf("no session cookie found in w: %v", w)
-			}
-			logger.Debugf("Redirecting: %s", redirect)
-			return c.Redirect(http.StatusFound, redirect)
+			logger.Debugf("Associate: %d, %s, %d, %s", claims.UserID, provider, externalUser.ID, githubToken.AccessToken)
 		}
 
+		// If no user cookie in context
 		remote := &pb.RemoteIdentity{
 			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: externalUser.AccessToken,
+			RemoteID:    externalUser.ID,
+			AccessToken: githubToken.AccessToken,
 		}
 		// Try to get user from database.
 		user, err := db.GetUserByRemoteIdentity(remote)
@@ -305,8 +336,8 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database) echo.Handle
 			// found user in database; update access token
 			err = db.UpdateAccessToken(remote)
 			if err != nil {
-				logger.Error("failed to update access token for user", zap.Error(err), zap.String("user", user.String()))
-				return err
+				logger.Errorf("GitHub login failed: failed to update access token for user %v: %s", externalUser, err)
+				http.Redirect(w, r, "/", http.StatusUnauthorized)
 			}
 			logger.Debugf("access token updated: %v", remote)
 
@@ -317,12 +348,12 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database) echo.Handle
 				Name:      externalUser.Name,
 				Email:     externalUser.Email,
 				AvatarURL: externalUser.AvatarURL,
-				Login:     externalUser.NickName,
+				Login:     externalUser.Login,
 			}
 			err = db.CreateUserFromRemoteIdentity(user, remote)
 			if err != nil {
-				logger.Error("failed to create remote identify for user", zap.Error(err), zap.String("user", user.String()))
-				return err
+				logger.Errorf("GitHub login failed: failed to create remote identity for user %v: %s", externalUser, err)
+				http.Redirect(w, r, "/", http.StatusUnauthorized)
 			}
 			logger.Debugf("New user created: %v, remote: %v", user, remote)
 
@@ -334,32 +365,25 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database) echo.Handle
 		// otherwise frontend will get user object where only name, email and url are set.
 		user, err = db.GetUserByRemoteIdentity(remote)
 		if err != nil {
-			logger.Error(err.Error())
-			return err
+			logger.Errorf("GitHub login failed: failed to fetch user %v	 from database: %s", externalUser, err)
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
 		}
 		logger.Debugf("Fetching full user info for %v, user: %v", remote, user)
 
-		// Register user session.
-		us := newUserSession(user.ID)
-		us.enableProvider(provider)
-		sess.Values[UserKey] = us
-		logger.Debugf("New Session: %s", us)
-		// save the session to a store in addition to adding an outgoing ('set-cookie') session cookie to the response.
-		if err := sess.Save(r, w); err != nil {
-			logger.Error(err.Error())
-			return err
+		claims, err := tokens.NewClaims(user.ID)
+		if err != nil {
+			logger.Errorf("GitHub login failed: failed to make claims for user %v: %s", externalUser, err)
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
 		}
-		logger.Debugf("Session.Save: %v", sess)
-
-		// Register session and associated user ID to enable gRPC requests for this session.
-		if token := extractSessionCookie(w); len(token) > 0 {
-			logger.Debugf("extractSessionCookie: %v", token)
-			Add(token, us.ID)
-		} else {
-			logger.Debugf("No session cookie found in w: %v", w)
+		cookie, err := tokens.NewTokenCookie(context.Background(), tokens.NewToken(claims))
+		if err != nil {
+			logger.Errorf("GitHub login failed: failed to make token cookie for user %v: %s", externalUser, err)
+			// TODO(vera): this pattern for handling auth errors might be better
+			w.WriteHeader(http.StatusUnauthorized)
+			return
 		}
-		logger.Debugf("Redirecting: %s", redirect)
-		return c.Redirect(http.StatusFound, redirect)
+		http.SetCookie(w, cookie)
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	}
 }
 
@@ -437,11 +461,11 @@ func extractState(r *http.Request, key string) (redirect string, teacher bool) {
 	return url[1:], teacher
 }
 
-func extractSessionCookie(w *echo.Response) string {
+func extractToken(w http.ResponseWriter) string {
 	// Helper function that extracts an outgoing session cookie.
 	outgoingCookies := w.Header().Values(OutgoingCookie)
 	for _, cookie := range outgoingCookies {
-		if c := strings.Split(cookie, "="); c[0] == SessionKey {
+		if c := strings.Split(cookie, "="); c[0] == "auth" {
 			token := strings.Split(cookie, ";")[0]
 			return token
 		}

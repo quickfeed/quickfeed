@@ -15,7 +15,6 @@ type Endpoints struct {
 	LoginURL      string
 	CallbackURL   string
 	LogoutURL     string
-	GithubUserURL string
 	WebhookURL    string
 	InstallAppURL string
 	Public        string
@@ -53,7 +52,6 @@ func NewConfig(baseURL, public, httpAddr string) *Config {
 			LoginURL:      Login,
 			LogoutURL:     Logout,
 			CallbackURL:   Callback,
-			GithubUserURL: GitHubUser,
 			InstallAppURL: Install,
 		},
 		Secrets: &Secrets{
