@@ -52,12 +52,6 @@ func TestAssignReviewers(t *testing.T) {
 			},
 		},
 		"No enrollments": {testUsers: []testUser{}},
-		"fds": {
-			testUsers: []testUser{
-				{name: "student1", role: pb.Enrollment_STUDENT},
-				{name: "teacher1", role: pb.Enrollment_TEACHER},
-			},
-		},
 	}
 
 	logger := qtest.Logger(t)
