@@ -2,9 +2,7 @@ import { json } from "overmind"
 import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, EnrollmentLink, GradingBenchmark, Group, Review, Submission, SubmissionLink, User } from "../proto/ag/ag_pb"
 import { Score } from "../proto/kit/score/score_pb"
-import { Row, RowElement } from "./components/DynamicTable"
-import { useActions, useAppState } from "./overmind"
-import { UserCourseSubmissions } from "./overmind/state"
+
 
 export enum Color {
     RED = "danger",
@@ -24,9 +22,9 @@ export enum Sort {
 
 /** Returns a string with a prettier format for a deadline */
 export const getFormattedTime = (deadline_string: string): string => {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     const deadline = new Date(deadline_string)
-    return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? '0' + deadline.getMinutes() : deadline.getMinutes()}`
+    return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? "0" + deadline.getMinutes() : deadline.getMinutes()}`
 }
 
 export interface Deadline {
@@ -52,7 +50,7 @@ export const timeFormatter = (deadline: string): Deadline => {
     }
 
     if (days < 3) {
-        return { className: "table-warning", message: `${days} day${days == 1 ? ' ' : 's'} to deadline`, daysUntil: days }
+        return { className: "table-warning", message: `${days} day${days == 1 ? " " : "s"} to deadline`, daysUntil: days }
     }
 
     if (days < 14) {
@@ -129,7 +127,6 @@ export const getPassedTestsCount = (score: Score[]): string => {
     return `${passedTests}/${totalTests}`
 }
 
-
 export const isValid = (elm: User | EnrollmentLink): boolean => {
     if (elm instanceof User) {
         return elm.getName().length > 0 && elm.getEmail().length > 0 && elm.getStudentid().length > 0
@@ -197,6 +194,36 @@ export const isHidden = (value: string, query: string): boolean => {
     return !value.toLowerCase().includes(query) && query.length > 0
 }
 
+/** getSubmissionsScore calculates the total score of all submissions in a SubmissionLink[] */
+export const getSubmissionsScore = (submissions: SubmissionLink[]): number => {
+    let score = 0
+    submissions.forEach(submission => {
+        if (!submission.hasSubmission()) {
+            return
+        }
+        score += (submission.getSubmission() as Submission).getScore()
+    })
+    return score
+}
+
+/** getNumApproved returns the number of approved submissions in a SubmissionLink[] */
+export const getNumApproved = (submissions: SubmissionLink[]): number => {
+    let num = 0
+    submissions.forEach(submission => {
+        if (!submission.hasSubmission()) {
+            return
+        }
+        if (isApproved(submission.getSubmission() as Submission)) {
+            num++
+        }
+    })
+    return num
+}
+
+export const getSubmissionByAssignmentID = (submissions: SubmissionLink[] | undefined, assignmentID: number): Submission | undefined => {
+    return submissions?.find(submission => submission.getAssignment()?.getId() === assignmentID)?.getSubmission()
+}
+
 export const EnrollmentStatusBadge = {
     0: "",
     1: "badge badge-info",
@@ -238,46 +265,101 @@ export const defaultYear = (date: Date): number => {
     return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
 }
 
-export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGenerator: (s: SubmissionLink) => RowElement, groupName?: boolean, assignmentID?: number): Row[] => {
-    const state = useAppState()
-    return links?.map((link) => {
-        const row: Row = []
-        if (link.enrollment && link.user) {
-            row.push({ value: link.user.getName(), link: `https://github.com/${link.user.getLogin()}` })
-            groupName && row.push(link.enrollment.getGroup()?.getName() ?? "")
-        } else if (link.group) {
-            row.push(link.group.getName())
-        }
-        if (link.submissions) {
-            for (const submissionLink of link.submissions) {
-                if (state.review.assignmentID > 0 && submissionLink.getAssignment()?.getId() != state.review.assignmentID) {
-                    continue
-                }
-                row.push(cellGenerator(submissionLink))
-            }
-        }
-        return row
-    })
+export const userLink = (user: User): string => {
+    return `https://github.com/${user.getLogin()}`
 }
 
-export const generateAssignmentsHeader = (base: RowElement[], assignments: Assignment[], group: boolean, assignmentID?: number): Row => {
-    const actions = useActions()
-    for (const assignment of assignments) {
-        if (assignmentID && assignment.getId() !== assignmentID) {
-            continue
-        }
-        if (group && assignment.getIsgrouplab()) {
-            base.push({ value: `${assignment.getName()} (g)`, onClick: () => actions.review.setAssignmentID(assignment.getId()) })
-        }
-        if (!group) {
-            base.push({ value: assignment.getIsgrouplab() ? `${assignment.getName()} (g)` : assignment.getName(), onClick: () => actions.review.setAssignmentID(assignment.getId()) })
-        }
+export const userRepoLink = (course: Course, user: User): string => {
+    return `https://github.com/${course.getOrganizationpath()}/${user.getLogin()}-labs`
+}
+
+export const groupRepoLink = (course: Course, group: Group): string => {
+    course.getOrganizationpath()
+    return `https://github.com/${course.getOrganizationpath()}/${slugify(group.getName())}`
+}
+
+export const getSubmissionCellColor = (submission: Submission): string => {
+    if (isApproved(submission)) {
+        return "result-approved"
     }
-    return base
+    if (isRevision(submission)) {
+        return "result-revision"
+    }
+    if (isRejected(submission)) {
+        return "result-rejected"
+    }
+    return "clickable"
+}
+
+const slugify = (str: string): string => {
+    str = str.replace(/^\s+|\s+$/g, "").toLowerCase()
+
+    // Remove accents, swap ñ for n, etc
+    const from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆaæ·/,:;&"
+    const to = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaa-cccdeeeeeeeeiiiinnooooo-orrstuuuuuyyzbBDdBAa-------"
+    for (let i = 0; i < from.length; i++) {
+        str = str.replace(new RegExp(from.charAt(i), "g"), to.charAt(i))
+    }
+
+    // Remove invalid chars, replace whitespace by dashes, collapse dashes
+    return str.replace(/[^a-z0-9 -_]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-")
 }
 
 /* Use this function to simulate a delay in the loading of data */
 /* Used in development to simulate a slow network connection */
 const delay = (ms: number) => {
     return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+
+export enum EnrollmentSort {
+    Name,
+    Status,
+    Email,
+    Activity,
+    Slipdays,
+    Approved,
+    StudentID
+}
+
+export enum SubmissionSort {
+    Name,
+    Status,
+    Score,
+    Approved
+}
+
+/** Sorting */
+const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort, descending: boolean): number => {
+    const m = descending ? -1 : 1
+    switch (sortBy) {
+        case EnrollmentSort.Name:
+            const nameA = a.getUser()?.getName() ?? ""
+            const nameB = b.getUser()?.getName() ?? ""
+            return m * (nameA.localeCompare(nameB))
+        case EnrollmentSort.Status:
+            return m * (a.getStatus() - b.getStatus())
+        case EnrollmentSort.Email:
+            const emailA = a.getUser()?.getEmail() ?? ""
+            const emailB = b.getUser()?.getEmail() ?? ""
+            return m * (emailA.localeCompare(emailB))
+        case EnrollmentSort.Activity:
+            return m * (new Date(a.getLastactivitydate()).getTime() - new Date(b.getLastactivitydate()).getTime())
+        case EnrollmentSort.Slipdays:
+            return m * (a.getSlipdaysremaining() - b.getSlipdaysremaining())
+        case EnrollmentSort.Approved:
+            return m * (a.getTotalapproved() - b.getTotalapproved())
+        case EnrollmentSort.StudentID:
+            const aID = a.getUser()?.getId() ?? 0
+            const bID = b.getUser()?.getId() ?? 0
+            return m * (aID - bID)
+        default:
+            return 0
+    }
+}
+
+export const sortEnrollments = (enrollments: Enrollment[], sortBy: EnrollmentSort, descending: boolean): Enrollment[] => {
+    return enrollments.sort((a, b) => {
+        return enrollmentCompare(a, b, sortBy, descending)
+    })
 }

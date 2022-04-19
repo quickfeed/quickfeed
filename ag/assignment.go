@@ -1,7 +1,10 @@
 package ag
 
 import (
+	context "context"
 	"time"
+
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -21,6 +24,17 @@ func (a *Assignment) SinceDeadline(now time.Time) (time.Duration, error) {
 	return now.Sub(deadline), nil
 }
 
+// WithTimeout returns a context with an execution timeout set to the assignment's specified
+// container timeout. If the assignment has no container timeout, the provided timeout value
+// is used instead.
+func (a *Assignment) WithTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
+	t := a.GetContainerTimeout()
+	if t > 0 {
+		timeout = time.Duration(t) * time.Minute
+	}
+	return context.WithTimeout(context.Background(), timeout)
+}
+
 // IsApproved returns an approved submission status if this assignment is already approved
 // for the latest submission, or if the score of the latest submission is sufficient
 // to autoapprove the assignment.
@@ -32,21 +46,11 @@ func (a *Assignment) IsApproved(latest *Submission, score uint32) Submission_Sta
 	return latest.GetStatus()
 }
 
-// CloneWithoutSubmissions returns a deep copy of the given assignment
-// without submissions.
+// CloneWithoutSubmissions returns a deep copy of the assignment without submissions.
 func (a *Assignment) CloneWithoutSubmissions() *Assignment {
-	return &Assignment{
-		ID:                a.ID,
-		CourseID:          a.CourseID,
-		Name:              a.Name,
-		Deadline:          a.Deadline,
-		AutoApprove:       a.AutoApprove,
-		Order:             a.Order,
-		IsGroupLab:        a.IsGroupLab,
-		ScoreLimit:        a.ScoreLimit,
-		Reviewers:         a.Reviewers,
-		GradingBenchmarks: a.GradingBenchmarks,
-	}
+	clone := proto.Clone(a).(*Assignment)
+	clone.Submissions = nil
+	return clone
 }
 
 // GradedManually returns true if the assignment will be graded manually.

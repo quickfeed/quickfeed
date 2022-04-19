@@ -1,9 +1,12 @@
 import React, { useState } from "react"
-import { EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortByField } from "../Helpers"
+import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortEnrollments } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment, User } from "../../proto/ag/ag_pb"
 import Search from "./Search"
-import DynamicTable from "./DynamicTable"
+import DynamicTable, { Row } from "./DynamicTable"
+import { json } from "overmind"
+import DynamicButton from "./DynamicButton"
+import { ButtonType } from "./admin/Button"
 
 
 const Members = (): JSX.Element => {
@@ -11,20 +14,9 @@ const Members = (): JSX.Element => {
     const actions = useActions()
     const courseID = getCourseID()
 
-    const [func, setFunc] = useState("STATUS")
-    const [descending, setDescending] = useState(false)
+    const [sortBy, setSortBy] = useState<EnrollmentSort>(EnrollmentSort.Status)
+    const [descending, setDescending] = useState<boolean>(false)
     const [edit, setEditing] = useState<boolean>(false)
-
-    const sort = () => {
-        switch (func) {
-            case "STATUS":
-                return Enrollment.prototype.getStatus
-            case "ID":
-                return Enrollment.prototype.getId
-            default:
-                return Enrollment.prototype.getStatus
-        }
-    }
 
     const approveAll = () => {
         for (const enrollment of pending) {
@@ -32,15 +24,32 @@ const Members = (): JSX.Element => {
         }
     }
 
+    const setSort = (sort: EnrollmentSort) => {
+        if (sortBy === sort) {
+            setDescending(!descending)
+        }
+        setSortBy(sort)
+    }
+
     const pending = state.courseEnrollments[courseID].filter(enrollment => isPending(enrollment))
 
-    const members = sortByField(state.courseEnrollments[courseID], [], sort(), descending).map((enrollment: Enrollment) => {
-        const data: (string | JSX.Element)[] = []
+    const header: Row = [
+        { value: "Name", onClick: () => setSort(EnrollmentSort.Name) },
+        { value: "Email", onClick: () => setSort(EnrollmentSort.Email) },
+        { value: "Student ID", onClick: () => setSort(EnrollmentSort.StudentID) },
+        { value: "Activity", onClick: () => setSort(EnrollmentSort.Activity) },
+        { value: "Approved", onClick: () => setSort(EnrollmentSort.Approved) },
+        { value: "Slipdays", onClick: () => { setSort(EnrollmentSort.Slipdays) } },
+        { value: "Role", onClick: () => { setSort(EnrollmentSort.Status) } },
+    ]
+    const members = sortEnrollments(json(state.courseEnrollments[courseID]), sortBy, descending).map(enrollment => {
+        const data: Row = []
         data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getName() : "")
         data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getEmail() : "")
         data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getStudentid() : "")
         data.push(enrollment.getLastactivitydate())
         data.push(enrollment.getTotalapproved().toString())
+        data.push(enrollment.getSlipdaysremaining().toString())
 
         if (isPending(enrollment)) {
             data.push(
@@ -87,18 +96,15 @@ const Members = (): JSX.Element => {
                 </div>
                 {pending.length > 0 ?
                     <div style={{ marginLeft: "10px" }}>
-                        <button className="btn btn-success float-right" onClick={() => approveAll()}>
-                            Approve All
-                        </button>
+                        <DynamicButton color={Color.GREEN} type={ButtonType.BUTTON} text="Approve All" onClick={() => actions.approvePendingEnrollments()} />
                     </div> : null}
             </div>
 
             <div>
-                <DynamicTable header={["Name", "Email", { value: "Student ID", onClick: () => { setFunc("ID"); setDescending(!descending) } }, "Activity", "Approved", { value: "Role", onClick: () => { setFunc("STATUS"); setDescending(!descending) } }]} data={members} />
+                <DynamicTable header={header} data={members} />
             </div>
         </div>
     )
 }
-
 
 export default Members

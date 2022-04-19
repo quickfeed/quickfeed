@@ -64,6 +64,8 @@ func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 		&pb.GradingBenchmark{},
 		&pb.GradingCriterion{},
 		&pb.Review{},
+		&pb.Issue{},
+		&pb.Task{},
 		&score.BuildInfo{},
 		&score.Score{},
 	); err != nil {
@@ -181,4 +183,12 @@ func (db *GormDB) updateCourseAccessTokenIfEmpty(course *pb.Course) error {
 	// update the access token cache
 	pb.SetAccessToken(course.GetID(), accessToken)
 	return nil
+}
+
+func (db *GormDB) Close() error {
+	sqlDB, err := db.conn.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Close()
 }

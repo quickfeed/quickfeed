@@ -2,7 +2,6 @@ package database_test
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -148,13 +147,13 @@ func TestGormDBUpdateUser(t *testing.T) {
 		t.Error(err)
 	}
 
-	updatedUser, err := db.GetUser(user.ID)
+	gotUser, err := db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	updatedUser.Enrollments = nil
-	if !reflect.DeepEqual(updatedUser, wantUser) {
-		t.Errorf("have user %+v want %+v", updatedUser, wantUser)
+	gotUser.Enrollments = nil
+	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 
 	// check that admin role can be revoked
@@ -163,62 +162,13 @@ func TestGormDBUpdateUser(t *testing.T) {
 	if err := db.UpdateUser(updates); err != nil {
 		t.Fatal(err)
 	}
-	updatedUser, err = db.GetUser(user.ID)
+	gotUser, err = db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	updatedUser.Enrollments = nil
-	if !reflect.DeepEqual(updatedUser, wantUser) {
-		t.Errorf("have user %+v want %+v", updatedUser, wantUser)
-	}
-}
-
-func TestGormDBGetCourses(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	admin := qtest.CreateFakeUser(t, db, 10)
-	c1 := &pb.Course{OrganizationID: 1}
-	c2 := &pb.Course{OrganizationID: 2}
-	c3 := &pb.Course{OrganizationID: 3}
-	qtest.CreateCourse(t, db, admin, c1)
-	qtest.CreateCourse(t, db, admin, c2)
-	qtest.CreateCourse(t, db, admin, c3)
-
-	courses, err := db.GetCourses()
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantCourses := []*pb.Course{c1, c2, c3}
-	if !reflect.DeepEqual(courses, wantCourses) {
-		t.Errorf("have %v want %v", courses, wantCourses)
-	}
-	// An empty list should return the same as no argument, it makes no
-	// sense to ask the database to return no courses.
-	coursesNoArg, err := db.GetCourses([]uint64{}...)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(coursesNoArg, wantCourses) {
-		t.Errorf("have %v want %v", coursesNoArg, wantCourses)
-	}
-
-	course1, err := db.GetCourses(c1.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantCourse1 := []*pb.Course{c1}
-	if !reflect.DeepEqual(course1, wantCourse1) {
-		t.Errorf("have %v want %v", course1, wantCourse1)
-	}
-
-	course1and2, err := db.GetCourses(c1.ID, c2.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantCourse1and2 := []*pb.Course{c1, c2}
-	if !reflect.DeepEqual(course1and2, wantCourse1and2) {
-		t.Errorf("have %v want %v", course1and2, wantCourse1and2)
+	gotUser.Enrollments = nil
+	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUser() mismatch (-wantUser, +gotUser):\n%s", diff)
 	}
 }
 
@@ -327,67 +277,6 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 	}
 }
 
-func TestGormDBGetCoursesByUser(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	admin := qtest.CreateFakeUser(t, db, 1)
-	c1 := &pb.Course{OrganizationID: 1}
-	c2 := &pb.Course{OrganizationID: 2}
-	c3 := &pb.Course{OrganizationID: 3}
-	c4 := &pb.Course{OrganizationID: 4}
-	qtest.CreateCourse(t, db, admin, c1)
-	qtest.CreateCourse(t, db, admin, c2)
-	qtest.CreateCourse(t, db, admin, c3)
-	qtest.CreateCourse(t, db, admin, c4)
-
-	user := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserID:   user.ID,
-		CourseID: c1.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserID:   user.ID,
-		CourseID: c2.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserID:   user.ID,
-		CourseID: c3.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.RejectEnrollment(user.ID, c2.ID); err != nil {
-		t.Fatal(err)
-	}
-	query := &pb.Enrollment{
-		UserID:   user.ID,
-		CourseID: c3.ID,
-		Status:   pb.Enrollment_STUDENT,
-	}
-	if err := db.UpdateEnrollment(query); err != nil {
-		t.Fatal(err)
-	}
-
-	courses, err := db.GetCoursesByUser(user.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	wantCourses := []*pb.Course{
-		{ID: c1.ID, OrganizationID: 1, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_PENDING},
-		{ID: c2.ID, OrganizationID: 2, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_NONE},
-		{ID: c3.ID, OrganizationID: 3, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_STUDENT},
-		{ID: c4.ID, OrganizationID: 4, CourseCreatorID: admin.ID, Provider: "fake", Enrolled: pb.Enrollment_NONE},
-	}
-	if diff := cmp.Diff(wantCourses, courses, protocmp.Transform()); diff != "" {
-		t.Errorf("courses mismatch (-want +got):\n%s", diff)
-	}
-}
-
 func TestGormDBDuplicateIdentity(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -466,9 +355,9 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var user1 pb.User
+	gotUser1 := &pb.User{}
 	if err := db.CreateUserFromRemoteIdentity(
-		&user1,
+		gotUser1,
 		&pb.RemoteIdentity{
 			Provider:    provider1,
 			RemoteID:    remoteID1,
@@ -478,35 +367,37 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(&user1, wantUser1) {
-		t.Errorf("have user %+v want %+v", &user1, wantUser1)
+	if diff := cmp.Diff(wantUser1, gotUser1, protocmp.Transform()); diff != "" {
+		t.Errorf("CreateUserFromRemoteIdentity() mismatch (-wantUser1, +gotUser1):\n%s", diff)
 	}
 
-	if err := db.AssociateUserWithRemoteIdentity(user1.ID, provider2, remoteID2, secret2); err != nil {
+	if err := db.AssociateUserWithRemoteIdentity(gotUser1.ID, provider2, remoteID2, secret2); err != nil {
 		t.Fatal(err)
 	}
 
-	user2, err := db.GetUser(uID)
+	gotUser2, err := db.GetUser(uID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	user2.Enrollments = nil
-	if !reflect.DeepEqual(user2, wantUser2) {
-		t.Errorf("have user %+v want %+v", user2, wantUser2)
+	gotUser2.Enrollments = nil
+
+	if diff := cmp.Diff(wantUser2, gotUser2, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUser() mismatch (-wantUser2, +gotUser2):\n%s", diff)
 	}
 
-	if err := db.AssociateUserWithRemoteIdentity(user1.ID, provider2, remoteID2, secret3); err != nil {
+	if err := db.AssociateUserWithRemoteIdentity(gotUser1.ID, provider2, remoteID2, secret3); err != nil {
 		t.Fatal(err)
 	}
 
-	user3, err := db.GetUser(uID)
+	gotUser3, err := db.GetUser(uID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	user3.Enrollments = nil
+	gotUser3.Enrollments = nil
 	wantUser2.RemoteIdentities[1].AccessToken = secret3
-	if !reflect.DeepEqual(user3, wantUser2) {
-		t.Errorf("have user %+v want %+v", user3, wantUser2)
+
+	if diff := cmp.Diff(wantUser2, gotUser3, protocmp.Transform()); diff != "" {
+		t.Errorf("GetUser() mismatch (-wantUser2, +gotUser3):\n%s", diff)
 	}
 }
 
@@ -568,249 +459,6 @@ func TestGormDBSetAdmin(t *testing.T) {
 	}
 }
 
-func TestGormDBCreateCourse(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	course := &pb.Course{
-		Name:           "name",
-		Code:           "code",
-		Year:           2017,
-		Tag:            "tag",
-		Provider:       "github",
-		OrganizationID: 1,
-	}
-
-	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
-	qtest.CreateCourse(t, db, admin, course)
-	if course.ID == 0 {
-		t.Error("expected id to be set")
-	}
-
-	// check that admin (teacher) was automatically enrolled when creating course
-	enroll, err := db.GetEnrollmentByCourseAndUser(course.ID, admin.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if enroll.CourseID != course.ID || enroll.UserID != admin.ID {
-		t.Errorf("expected user %d to be enrolled in course %d, but got user %d and course %d", admin.ID, course.ID, enroll.UserID, enroll.CourseID)
-	}
-	if enroll.Status != pb.Enrollment_TEACHER || enroll.State != pb.Enrollment_VISIBLE {
-		t.Errorf("expected enrolled user to be teacher and visible, but got status: %v and state: %v", enroll.Status, enroll.State)
-	}
-
-	// check that no users were enrolled as students
-	enrolls, err := db.GetEnrollmentsByCourse(course.ID, pb.Enrollment_STUDENT)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(enrolls) > 0 {
-		t.Errorf("expected no enrollments, but got %d enrollments: %v", len(enrolls), enrolls)
-	}
-
-	// check that exactly one user was enrolled as teacher for the course
-	enrolls, err = db.GetEnrollmentsByCourse(course.ID, pb.Enrollment_TEACHER)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(enrolls) != 1 {
-		t.Errorf("expected exactly one enrollment, but got %d enrollments: %v", len(enrolls), enrolls)
-	}
-	for _, enroll := range enrolls {
-		if enroll.CourseID != course.ID || enroll.UserID != admin.ID {
-			t.Errorf("expected user %d to be enrolled in course %d, but got user %d and course %d", admin.ID, course.ID, enroll.UserID, enroll.CourseID)
-		}
-		if enroll.Status != pb.Enrollment_TEACHER || enroll.State != pb.Enrollment_VISIBLE {
-			t.Errorf("expected enrolled user to be teacher and visible, but got status: %v and state: %v", enroll.Status, enroll.State)
-		}
-	}
-}
-
-func TestGormDBCreateCourseNonAdmin(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	admin := qtest.CreateFakeUser(t, db, 10)
-	qtest.CreateCourse(t, db, admin, &pb.Course{})
-
-	nonAdmin := qtest.CreateFakeUser(t, db, 11)
-	// the following should fail to create a course
-	if err := db.CreateCourse(nonAdmin.ID, &pb.Course{}); err == nil {
-		t.Fatal(err)
-	}
-}
-
-func TestGormDBGetCourse(t *testing.T) {
-	course := &pb.Course{
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		Provider:       "github",
-		OrganizationID: 1234,
-	}
-
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
-	qtest.CreateCourse(t, db, admin, course)
-
-	// Get the created course.
-	createdCourse, err := db.GetCourse(course.ID, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(createdCourse, course) {
-		t.Errorf("have course %+v want %+v", createdCourse, course)
-	}
-}
-
-func TestGormDBGetCourseByOrganization(t *testing.T) {
-	course := &pb.Course{
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		Provider:       "github",
-		OrganizationID: 1234,
-	}
-
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
-	qtest.CreateCourse(t, db, admin, course)
-
-	// Get the created course.
-	createdCourse, err := db.GetCourseByOrganizationID(course.OrganizationID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(createdCourse, course) {
-		t.Errorf("have course %+v want %+v", createdCourse, course)
-	}
-}
-
-func TestGormDBGetCourseNoRecord(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	if _, err := db.GetCourse(10, false); err != gorm.ErrRecordNotFound {
-		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
-	}
-}
-
-func TestGormDBUpdateCourse(t *testing.T) {
-	course := &pb.Course{
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		Provider:       "github",
-		OrganizationID: 1234,
-	}
-	wantCourse := &pb.Course{
-		Name:           "Test Course Edit",
-		Code:           "DAT100-1",
-		Year:           2018,
-		Tag:            "Autumn",
-		Provider:       "gitlab",
-		OrganizationID: 12345,
-	}
-
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
-	qtest.CreateCourse(t, db, admin, course)
-
-	wantCourse.ID = course.ID
-	wantCourse.CourseCreatorID = admin.ID
-	if err := db.UpdateCourse(wantCourse); err != nil {
-		t.Fatal(err)
-	}
-
-	// Get the updated course.
-	gotCourse, err := db.GetCourse(course.ID, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if diff := cmp.Diff(wantCourse, gotCourse, protocmp.Transform()); diff != "" {
-		t.Errorf("course mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestGormDBGetEmptyRepo(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-	if _, err := db.GetRepositoryByRemoteID(10); err != gorm.ErrRecordNotFound {
-		t.Fatal(err)
-	}
-}
-
-func TestGormDBGetSingleRepoWithUser(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	user := qtest.CreateFakeUser(t, db, 10)
-	repo := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		UserID:         user.ID,
-	}
-	if err := db.CreateRepository(&repo); err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err := db.GetRepositoryByRemoteID(repo.RepositoryID); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestGormDBCreateSingleRepoWithMissingUser(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	repo := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		UserID:         20,
-	}
-	if err := db.CreateRepository(&repo); err != gorm.ErrRecordNotFound {
-		t.Fatal(err)
-	}
-}
-
-func TestGormDBGetCourseRepoType(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	repo := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		RepoType:       pb.Repository_COURSEINFO,
-	}
-	if err := db.CreateRepository(&repo); err != nil {
-		t.Fatal(err)
-	}
-
-	gotRepo, err := db.GetRepositoryByRemoteID(repo.RepositoryID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !gotRepo.RepoType.IsCourseRepo() {
-		t.Fatalf("Expected course info repo (%v), but got: %v", pb.Repository_COURSEINFO, gotRepo.RepoType)
-	}
-}
-
 func TestGormDBGetGroupSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -826,8 +474,8 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	c1 := &pb.Course{OrganizationID: 1}
-	c2 := &pb.Course{OrganizationID: 2}
+	c1 := &pb.Course{OrganizationID: 1, Code: "DAT101", Year: 1}
+	c2 := &pb.Course{OrganizationID: 2, Code: "DAT101", Year: 2}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 
@@ -963,67 +611,6 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	}
 }
 
-func TestGetRepositoriesByOrganization(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	course := &pb.Course{
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		Provider:       "github",
-		OrganizationID: 1234,
-	}
-	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
-	qtest.CreateCourse(t, db, admin, course)
-
-	user := qtest.CreateFakeUser(t, db, 11)
-
-	// Creating Course info repo
-	repoCourseInfo := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_COURSEINFO,
-		HTMLURL:        "http://repoCourseInfo.com/",
-	}
-	if err := db.CreateRepository(&repoCourseInfo); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating AssignmentRepo
-	repoAssignment := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   102,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_ASSIGNMENTS,
-		HTMLURL:        "http://repoAssignment.com/",
-	}
-	if err := db.CreateRepository(&repoAssignment); err != nil {
-		t.Fatal(err)
-	}
-
-	want := []*pb.Repository{&repoCourseInfo, &repoAssignment}
-
-	gotRepo, err := db.GetRepositories(&pb.Repository{OrganizationID: 120})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(gotRepo, want) {
-		for _, s := range gotRepo {
-			t.Logf("have %+v\n", s)
-		}
-		t.Log()
-		for _, s := range want {
-			t.Logf("want %+v\n", s)
-		}
-		t.Errorf("Failed")
-	}
-}
-
 func TestDeleteGroup(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -1083,235 +670,5 @@ func TestDeleteGroup(t *testing.T) {
 	gotModels, _ := db.GetGroup(group.ID)
 	if gotModels != nil {
 		t.Errorf("Got %+v wanted None", gotModels)
-	}
-}
-
-func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	course := &pb.Course{
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		Provider:       "github",
-		OrganizationID: 1234,
-	}
-
-	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
-	qtest.CreateCourse(t, db, admin, course)
-
-	user := qtest.CreateFakeUser(t, db, 11)
-
-	// Creating Course info repo
-	repoCourseInfo := pb.Repository{
-		OrganizationID: 1234,
-		RepositoryID:   100,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_COURSEINFO,
-		HTMLURL:        "http://repoCourseInfo.com/",
-	}
-	if err := db.CreateRepository(&repoCourseInfo); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating AssignmentRepo
-	repoAssignment := pb.Repository{
-		OrganizationID: 1234,
-		RepositoryID:   102,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_ASSIGNMENTS,
-		HTMLURL:        "http://repoAssignment.com/",
-	}
-	if err := db.CreateRepository(&repoAssignment); err != nil {
-		t.Fatal(err)
-	}
-
-	want := []*pb.Repository{&repoCourseInfo}
-
-	repoQuery := &pb.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		RepoType:       pb.Repository_COURSEINFO,
-	}
-	gotRepo, err := db.GetRepositories(repoQuery)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(gotRepo, want) {
-		t.Errorf("\nhave %+v\nwant %+v\n", gotRepo, want)
-	}
-}
-
-func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	course := &pb.Course{
-		ID:             1234,
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		Provider:       "github",
-		OrganizationID: 120,
-	}
-
-	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 10, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
-	qtest.CreateCourse(t, db, admin, course)
-
-	user := qtest.CreateFakeUser(t, db, 10)
-	userTwo := qtest.CreateFakeUser(t, db, 11)
-
-	// Creating Course info repo
-	repoCourseInfo := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_COURSEINFO,
-		HTMLURL:        "http://repoCourseInfo.com/",
-	}
-	if err := db.CreateRepository(&repoCourseInfo); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating AssignmentRepo
-	repoAssignment := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   102,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_ASSIGNMENTS,
-		HTMLURL:        "http://repoAssignment.com/",
-	}
-	if err := db.CreateRepository(&repoAssignment); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating UserRepo for user
-	repoUser := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   103,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_USER,
-		HTMLURL:        "http://repoAssignment.com/",
-	}
-	if err := db.CreateRepository(&repoUser); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating UserRepo for userTwo
-	repoUserTwo := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   104,
-		UserID:         userTwo.ID,
-		RepoType:       pb.Repository_USER,
-		HTMLURL:        "http://repoAssignment.com/",
-	}
-	if err := db.CreateRepository(&repoUserTwo); err != nil {
-		t.Fatal(err)
-	}
-
-	want := []*pb.Repository{&repoUserTwo}
-
-	repoQuery := &pb.Repository{
-		OrganizationID: course.OrganizationID,
-		UserID:         userTwo.ID,
-		RepoType:       pb.Repository_USER,
-	}
-	gotRepo, err := db.GetRepositories(repoQuery)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(gotRepo, want) {
-		t.Errorf("\nhave %+v\nwant %+v\n", gotRepo, want)
-	}
-}
-
-func TestGetRepositoryByCourseUser(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	course := &pb.Course{
-		Name:           "Test Course",
-		Code:           "DAT100",
-		Year:           2017,
-		Tag:            "Spring",
-		Provider:       "github",
-		OrganizationID: 120,
-	}
-
-	remoteID := &pb.RemoteIdentity{Provider: course.Provider, RemoteID: 1, AccessToken: "token"}
-	admin := qtest.CreateUserFromRemoteIdentity(t, db, remoteID)
-	qtest.CreateCourse(t, db, admin, course)
-
-	user := qtest.CreateFakeUser(t, db, 10)
-	userTwo := qtest.CreateFakeUser(t, db, 11)
-
-	// Creating Course info repo
-	repoCourseInfo := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   100,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_COURSEINFO,
-		HTMLURL:        "http://repoCourseInfo.com/",
-	}
-	if err := db.CreateRepository(&repoCourseInfo); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating AssignmentRepo
-	repoAssignment := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   102,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_ASSIGNMENTS,
-		HTMLURL:        "http://repoAssignment.com/",
-	}
-	if err := db.CreateRepository(&repoAssignment); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating UserRepo for user
-	repoUser := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   103,
-		UserID:         user.ID,
-		RepoType:       pb.Repository_USER,
-		HTMLURL:        "http://repoAssignment.com/",
-	}
-	if err := db.CreateRepository(&repoUser); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating UserRepo for userTwo
-	repoUserTwo := pb.Repository{
-		OrganizationID: 120,
-		RepositoryID:   104,
-		UserID:         userTwo.ID,
-		RepoType:       pb.Repository_USER,
-		HTMLURL:        "http://repoAssignment.com/",
-	}
-	if err := db.CreateRepository(&repoUserTwo); err != nil {
-		t.Fatal(err)
-	}
-
-	want := []*pb.Repository{&repoUserTwo}
-
-	repoQuery := &pb.Repository{
-		OrganizationID: course.OrganizationID,
-		UserID:         userTwo.ID,
-		RepoType:       pb.Repository_USER,
-	}
-	gotRepo, err := db.GetRepositories(repoQuery)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(gotRepo, want) {
-		t.Errorf("\nhave %+v\nwant %+v\n", gotRepo, want)
 	}
 }

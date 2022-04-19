@@ -1,13 +1,13 @@
 package web
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/ci"
-	"github.com/gosimple/slug"
 )
 
 const maxContainers = 10
@@ -28,11 +28,11 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 	if assignment.IsGroupLab {
 		s.logger.Debugf("Rebuilding submission %d for group(%d): %s, assignment: %+v, repo: %s",
 			submission.GetID(), submission.GetGroupID(), name, assignment, repo.GetHTMLURL())
-		repo, err = s.getGroupRepo(course, submission.GetGroupID())
+		repo, err = s.getRepo(course, submission.GetGroupID(), pb.Repository_GROUP)
 	} else {
 		s.logger.Debugf("Rebuilding submission %d for user(%d): %s, assignment: %+v, repo: %s",
 			submission.GetID(), submission.GetUserID(), name, assignment, repo.GetHTMLURL())
-		repo, err = s.getUserRepo(course, submission.GetUserID())
+		repo, err = s.getRepo(course, submission.GetUserID(), pb.Repository_USER)
 	}
 	if err != nil {
 		return nil, err
@@ -43,14 +43,23 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 		Assignment: assignment,
 		Repo:       repo,
 		CommitID:   submission.GetCommitHash(),
-		JobOwner:   slug.Make(name),
+		JobOwner:   name,
 		Rebuild:    true,
 	}
-	ci.RunTests(s.logger, s.db, s.runner, runData)
-	return s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
+	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
+	defer cancel()
+	results, err := runData.RunTests(ctx, s.logger, s.runner)
+	if err != nil {
+		return nil, err
+	}
+	submission, err = runData.RecordResults(s.logger, s.db, results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to record results for assignment %s for course %s: %w", assignment.Name, course.Name, err)
+	}
+	return submission, nil
 }
 
-func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) error {
+func (s *AutograderService) rebuildSubmissions(request *pb.RebuildRequest) error {
 	if _, err := s.db.GetAssignment(&pb.Assignment{ID: request.AssignmentID}); err != nil {
 		return err
 	}
@@ -69,7 +78,7 @@ func (s *AutograderService) rebuildSubmissions(request *pb.AssignmentRequest) er
 	for _, submission := range submissions {
 		rebuildReq := &pb.RebuildRequest{
 			AssignmentID: request.AssignmentID,
-			SubmissionID: submission.ID,
+			RebuildType:  &pb.RebuildRequest_SubmissionID{SubmissionID: submission.GetID()},
 		}
 		// the counting semaphore limits concurrency to maxContainers
 		go func() {

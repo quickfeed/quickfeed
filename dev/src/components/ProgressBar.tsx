@@ -1,8 +1,6 @@
 import React from "react"
 import { useAppState } from "../overmind"
 import { Submission } from "../../proto/ag/ag_pb"
-import { getPassedTestsCount } from "../Helpers"
-import { json } from "overmind"
 
 export enum Progress {
     NAV,
@@ -15,7 +13,6 @@ const ProgressBar = (props: { courseID: number, assignmentIndex: number, submiss
 
     const submission = props.submission ? props.submission : state.submissions[props.courseID][props.assignmentIndex]
     const assignment = state.assignments[props.courseID][props.assignmentIndex]
-    const passedTests = getPassedTestsCount(json(submission).getScoresList())
 
     const score = submission.getScore()
     const secondaryProgress = assignment.getScorelimit() - score
@@ -37,13 +34,13 @@ const ProgressBar = (props: { courseID: number, assignmentIndex: number, submiss
         )
     }
 
-
     let text = ""
     let secondaryText = ""
     if (props.type === Progress.LAB) {
         text = `${score} %`
-        secondaryText = `${secondaryProgress} % ${passedTests} to go`
+        secondaryText = `${secondaryProgress} %`
     }
+
     // Returns a regular size progress bar to be used for labs
     let color = ""
     if (props.type > Progress.NAV) {
@@ -75,14 +72,16 @@ const ProgressBar = (props: { courseID: number, assignmentIndex: number, submiss
             >
                 {text}
             </div>
-            <div
-                className={"progress-bar progressbar-secondary bg-secondary"}
-                role="progressbar"
-                style={{ width: secondaryProgress + "%" }}
-                aria-valuemax={100}
-            >
-                {secondaryText}
-            </div>
+            {secondaryProgress > 0 &&
+                <div
+                    className={"progress-bar progressbar-secondary bg-secondary"}
+                    role="progressbar"
+                    style={{ width: secondaryProgress + "%" }}
+                    aria-valuemax={100}
+                >
+                    {secondaryText}
+                </div>
+            }
         </div>
     )
 }

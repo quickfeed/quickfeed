@@ -21,12 +21,13 @@ import (
 // UpdateFromTestsRepo updates the database record for the course assignments.
 func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course *pb.Course) {
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), pb.TestsRepo)
-	s, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
+	scm, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
 	if err != nil {
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
 	}
-	assignments, dockerfile, err := fetchAssignments(context.Background(), logger, s, course)
+	ctx := context.Background()
+	assignments, dockerfile, err := fetchAssignments(ctx, logger, scm, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
 		return
@@ -34,6 +35,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	for _, assignment := range assignments {
 		updateGradingCriteria(logger, db, assignment)
 	}
+
 	if dockerfile != "" && dockerfile != course.Dockerfile {
 		course.Dockerfile = dockerfile
 		if err := db.UpdateCourse(course); err != nil {
@@ -41,6 +43,8 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 			return
 		}
 	}
+
+	// Does not store tasks associated with assignments; tasks are handled separately by handleTasks below
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)
@@ -49,6 +53,11 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		return
 	}
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
+
+	if err = handleTasks(ctx, db, scm, course, assignments); err != nil {
+		logger.Errorf("Failed to create tasks on '%s' repository: %v", pb.TestsRepo, err)
+		return
+	}
 }
 
 // fetchAssignments returns a list of assignments for the given course, by
@@ -94,7 +103,8 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 	}
 
 	// parse assignments found in the cloned tests directory
-	assignments, dockerfile, err := parseAssignments(cloneDir, course.ID)
+	logger.Debugf("readTestsRepositoryContent %v", cloneURL)
+	assignments, dockerfile, err := readTestsRepositoryContent(cloneDir, course.ID)
 	if err != nil {
 		return nil, "", err
 	}
@@ -124,9 +134,9 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 // updateGradingCriteria will remove old grading criteria and related reviews when criteria.json gets updated
 func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment) {
 	if len(assignment.GetGradingBenchmarks()) > 0 {
-		savedAssignment, err := db.GetAssignment(&pb.Assignment{
+		gradingBenchmarks, err := db.GetBenchmarks(&pb.Assignment{
 			CourseID: assignment.CourseID,
-			Name:     assignment.Name,
+			Order:    assignment.Order,
 		})
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
@@ -136,14 +146,14 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 			logger.Debugf("Failed to fetch assignment %s from database: %s", assignment.Name, err)
 			return
 		}
-		if len(savedAssignment.GetGradingBenchmarks()) > 0 {
-			if !cmp.Equal(assignment.GradingBenchmarks, savedAssignment.GradingBenchmarks, cmp.Options{
+		if len(gradingBenchmarks) > 0 {
+			if !cmp.Equal(assignment.GradingBenchmarks, gradingBenchmarks, cmp.Options{
 				protocmp.Transform(),
 				protocmp.IgnoreFields(&pb.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
 				protocmp.IgnoreFields(&pb.GradingCriterion{}, "ID", "BenchmarkID"),
 				protocmp.IgnoreEnums(),
 			}) {
-				for _, bm := range savedAssignment.GradingBenchmarks {
+				for _, bm := range gradingBenchmarks {
 					for _, c := range bm.Criteria {
 						if err := db.DeleteCriterion(c); err != nil {
 							logger.Errorf("Failed to delete criteria %v: %s\n", c, err)
@@ -155,26 +165,8 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 						return
 					}
 				}
-				submissions, err := db.GetSubmissions(&pb.Submission{AssignmentID: assignment.GetID()})
-				if err != nil {
-					// No submissions for this assignment, nothing to update
-					return
-				}
-				for _, submission := range submissions {
-					if err := db.DeleteReview(&pb.Review{SubmissionID: submission.ID}); err != nil {
-						logger.Errorf("Failed to delete reviews for submission %s to assignment %s: %s", submission.ID, assignment.Name, err)
-						return
-					}
-				}
 			} else {
 				assignment.GradingBenchmarks = nil
-			}
-		}
-		for _, bm := range assignment.GradingBenchmarks {
-			bm.AssignmentID = assignment.ID
-			if err := db.CreateBenchmark(bm); err != nil {
-				logger.Errorf("Failed to save grading benchmark %+v: %s", bm, err)
-				return
 			}
 		}
 	}

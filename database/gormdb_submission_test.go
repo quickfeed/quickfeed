@@ -2,10 +2,8 @@ package database_test
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 
-	"github.com/autograde/quickfeed/ag"
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/internal/qtest"
@@ -82,7 +80,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		UserID:       user.ID,
 		Score:        80,
 		Status:       pb.Submission_NONE,
-		Reviews:      []*ag.Review{},
+		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
 	}
 	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
@@ -108,7 +106,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		UserID:       user.ID,
 		Score:        0,
 		Status:       pb.Submission_NONE,
-		Reviews:      []*ag.Review{},
+		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
 	}
 	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
@@ -231,15 +229,17 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	if len(submissions) != 1 {
 		t.Fatalf("have %d submissions want %d", len(submissions), 1)
 	}
-	want := &pb.Submission{
-		ID:           submissions[0].ID,
+	gotSubmission := submissions[0]
+	wantSubmission := &pb.Submission{
+		ID:           gotSubmission.ID,
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
 	}
-	if !reflect.DeepEqual(submissions[0], want) {
-		t.Errorf("have %#v want %#v", submissions[0], want)
+
+	if diff := cmp.Diff(wantSubmission, gotSubmission, protocmp.Transform()); diff != "" {
+		t.Errorf("GetLastSubmissions() mismatch (-wantSubmission, +gotSubmission):\n%s", diff)
 	}
 }
 
@@ -291,8 +291,8 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	c1 := &pb.Course{OrganizationID: 1}
-	c2 := &pb.Course{OrganizationID: 2}
+	c1 := &pb.Course{OrganizationID: 1, Year: 1}
+	c2 := &pb.Course{OrganizationID: 2, Year: 2}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 

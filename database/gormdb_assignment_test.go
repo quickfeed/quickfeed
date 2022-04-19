@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"reflect"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -48,12 +47,12 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 10)
 	qtest.CreateCourse(t, db, admin, &pb.Course{})
 
-	assignment := pb.Assignment{
+	gotAssignment := &pb.Assignment{
 		CourseID: 1,
 		Order:    1,
 	}
 
-	if err := db.CreateAssignment(&assignment); err != nil {
+	if err := db.CreateAssignment(gotAssignment); err != nil {
 		t.Fatal(err)
 	}
 
@@ -61,13 +60,14 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	wantAssignment := assignments[0]
 
 	if len(assignments) != 1 {
 		t.Fatalf("have size %v wanted %v", len(assignments), 1)
 	}
 
-	if !reflect.DeepEqual(assignments[0], &assignment) {
-		t.Fatalf("want %v have %v", assignments[0], &assignment)
+	if diff := cmp.Diff(wantAssignment, gotAssignment, protocmp.Transform()); diff != "" {
+		t.Errorf("CreateAssignment() mismatch (-wantAssignment, +gotAssignment):\n%s", diff)
 	}
 
 	if _, err = db.GetAssignment(&pb.Assignment{ID: 1}); err != nil {
@@ -111,6 +111,7 @@ func TestUpdateAssignment(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	wantAssignments := make([]*pb.Assignment, len(assignments))
 	for i, a := range assignments {
 		// test setting various zero-value entries to check that we can read back the same value
@@ -130,6 +131,7 @@ func TestUpdateAssignment(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	for i := range gotAssignments {
 		if diff := cmp.Diff(wantAssignments[i], gotAssignments[i], protocmp.Transform()); diff != "" {
 			t.Errorf("UpdateAssignments() mismatch (-want +got):\n%s", diff)

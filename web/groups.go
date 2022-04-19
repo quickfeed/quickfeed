@@ -2,20 +2,24 @@ package web
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"regexp"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
-	"github.com/gosimple/slug"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
-// ErrGroupNameDuplicate indicates that another group with the same name already exists on this course
+const maxGroupNameLength = 20
+
 var (
-	ErrGroupNameDuplicate = status.Errorf(codes.AlreadyExists, "group with this name already exists. Please choose another name")
-	ErrUserNotInGroup     = status.Errorf(codes.NotFound, "user is not in group")
+	errGroupNameDuplicate = status.Errorf(codes.AlreadyExists, "group name already in use")
+	errGroupNameTooLong   = status.Errorf(codes.InvalidArgument, "group name is too long")
+	errGroupNameInvalid   = status.Errorf(codes.InvalidArgument, "group name contains invalid characters")
+	errUserNotInGroup     = status.Errorf(codes.NotFound, "user is not in group")
 )
 
 // getGroup returns the group for the given group ID.
@@ -45,32 +49,37 @@ func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*
 	enrollment.SetSlipDays(enrollment.Course)
 	grp, err := s.db.GetGroup(enrollment.GroupID)
 	if err != nil && err == gorm.ErrRecordNotFound {
-		err = ErrUserNotInGroup
+		err = errUserNotInGroup
 	}
 	return grp, err
 }
 
 // DeleteGroup deletes group with the provided ID.
 func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request *pb.GroupRequest) error {
-	group, repos, _, err := s.getCourseGroupRepos(request)
+	course, group, err := s.getCourseGroup(request)
 	if err != nil {
 		return err
 	}
-
-	// when deleting an approved group, remove github repository and team as well
-	for _, repo := range repos {
-		if err = s.db.DeleteRepositoryByRemoteID(repo.GetRepositoryID()); err != nil {
-			// even if database record not found, still attempt to remove related github repo and team
-			if err != gorm.ErrRecordNotFound {
-				return err
-			}
-		}
-		if err = deleteGroupRepoAndTeam(ctx, sc, repo.GetRepositoryID(), group.GetTeamID(), repo.GetOrganizationID()); err != nil {
-			return err
-		}
+	if err := s.db.DeleteGroup(request.GetGroupID()); err != nil {
+		s.logger.Debugf("Failed to delete %s group %q from database: %v", course.Code, group.Name, err)
+		// continue with other delete operations
+	}
+	repo, err := s.getRepo(course, group.GetID(), pb.Repository_GROUP)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("failed to get %s repository for group %q: %w", course.Code, group.Name, err)
+	}
+	if repo == nil {
+		s.logger.Debugf("No %s repository found for group %q: %v", course.Code, group.Name, err)
+		// cannot continue without repository information
+		return nil
 	}
 
-	return s.db.DeleteGroup(request.GetGroupID())
+	// when deleting an approved group, remove github repository and team as well
+	if err = s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
+		s.logger.Debugf("Failed to delete %s repository for %q from database: %v", course.Code, group.Name, err)
+		// continue with other delete operations
+	}
+	return deleteGroupRepoAndTeam(ctx, sc, repo.GetRepositoryID(), group.GetTeamID(), repo.GetOrganizationID())
 }
 
 // createGroup creates a new group for the given course and users.
@@ -78,8 +87,8 @@ func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request
 // a group, which will later be (optionally) edited and approved
 // by a teacher of the course using the updateGroup function below.
 func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
-	if !s.isValidGroupName(request.GetCourseID(), request.GetName()) {
-		return nil, ErrGroupNameDuplicate
+	if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
+		return nil, err
 	}
 	// get users of group, check consistency of group request
 	if _, err := s.getGroupUsers(request); err != nil {
@@ -98,7 +107,7 @@ func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
 func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request *pb.Group) error {
-	group, repos, course, err := s.getCourseGroupRepos(&pb.GroupRequest{
+	course, group, err := s.getCourseGroup(&pb.GroupRequest{
 		CourseID: request.GetCourseID(),
 		GroupID:  request.GetID(),
 	})
@@ -115,10 +124,9 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 	// allow changing the name of the group only if the group
 	// is not already approved and the new name is valid
 	if group.Name != request.Name && group.Status == pb.Group_PENDING {
-		// if the new name coincides with one of the existing groups,
-		// fail and inform the user
-		if !s.isValidGroupName(request.CourseID, request.Name) {
-			return ErrGroupNameDuplicate
+		// return error to user if group name is invalid
+		if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
+			return err
 		}
 		group.Name = request.Name
 	}
@@ -133,7 +141,12 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 		Enrollments: group.Enrollments,
 	}
 
-	if len(repos) == 0 {
+	repo, err := s.getRepo(course, group.GetID(), pb.Repository_GROUP)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("failed to get %s repository for group %q: %w", course.Code, group.Name, err)
+	}
+	if repo == nil {
+		// no group repository exists; create new repository for group
 		if request.Name != "" && newGroup.TeamID < 1 {
 			// update group name only if team not already created on SCM
 			newGroup.Name = request.Name
@@ -206,39 +219,38 @@ func (s *AutograderService) getGroupUsers(request *pb.Group) ([]*pb.User, error)
 	return users, nil
 }
 
-// isValidGroupName ensures that SCM team and repository names for the given group
-// will not coincide with one of the existing approved groups
-func (s *AutograderService) isValidGroupName(courseID uint64, groupName string) bool {
-	courseGroups, _ := s.db.GetGroupsByCourse(courseID)
+// only allow letters, numbers, dash and underscore.
+var regexpNonAuthorizedChars = regexp.MustCompile("[^a-zA-Z0-9-_]")
+
+// checkGroupName returns an error if the group name is invalid; otherwise nil is returned.
+func (s *AutograderService) checkGroupName(courseID uint64, groupName string) error {
+	if len(groupName) > maxGroupNameLength {
+		return errGroupNameTooLong
+	}
+	if regexpNonAuthorizedChars.MatchString(groupName) {
+		return errGroupNameInvalid
+	}
+	courseGroups, err := s.db.GetGroupsByCourse(courseID)
+	if err != nil {
+		return err
+	}
 	for _, group := range courseGroups {
-		if slug.Make(groupName) == slug.Make(group.GetName()) {
-			s.logger.Errorf("Failed to create group %s, another group % already exists, both names will result in %s on GitHub", groupName, group.Name, slug.Make(groupName))
-			return false
+		if group.GetName() == groupName {
+			return errGroupNameDuplicate
 		}
 	}
-	return true
+	return nil
 }
 
-// getCourseGroupRepos returns the group, the group's repositories and the organization ID
-// for the given course and group specified in the GroupRequest.
-func (s *AutograderService) getCourseGroupRepos(request *pb.GroupRequest) (*pb.Group, []*pb.Repository, *pb.Course, error) {
+// getCourseGroup returns the course and group specified in the GroupRequest.
+func (s *AutograderService) getCourseGroup(request *pb.GroupRequest) (*pb.Course, *pb.Group, error) {
 	group, err := s.db.GetGroup(request.GetGroupID())
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	course, err := s.db.GetCourse(request.GetCourseID(), false)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
-
-	groupRepoQuery := &pb.Repository{
-		OrganizationID: course.OrganizationID,
-		GroupID:        group.GetID(),
-		RepoType:       pb.Repository_GROUP,
-	}
-	repos, err := s.db.GetRepositories(groupRepoQuery)
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, nil, nil, err
-	}
-	return group, repos, course, nil
+	return course, group, nil
 }

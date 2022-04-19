@@ -2,7 +2,6 @@ package web_test
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -68,7 +67,7 @@ func TestSubmissionsAccess(t *testing.T) {
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), teacher)
+	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
@@ -76,7 +75,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	users := []*pb.User{student1, student2}
-	group_req := &pb.Group{Name: "Test group", CourseID: course.ID, Users: users}
+	group_req := &pb.Group{Name: "TestGroup", CourseID: course.ID, Users: users}
 
 	_, err = ags.CreateGroup(ctx, group_req)
 	if err != nil {
@@ -155,7 +154,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	allSubmissions := []*pb.Submission{submission1, submission2, submission3}
-	latestSubmissions := []*pb.Submission{submission2, submission3}
+	wantLatestSubmissions := []*pb.Submission{submission2, submission3}
 
 	// there must be exactly three submissions for given course and assignment in the database
 	if len(allSubmissions) != 3 {
@@ -163,22 +162,23 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	// teacher must be able to access all of the latest course submissions
-	haveSubmissions, err := ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
+	submissions, err := ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(latestSubmissions, haveSubmissions.GetSubmissions()) {
-		t.Errorf("Teacher got submissions %+v, expected submissions: %+v", haveSubmissions.GetSubmissions(), latestSubmissions)
+	gotSubmissions := submissions.GetSubmissions()
+	if diff := cmp.Diff(wantLatestSubmissions, gotSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetSubmissions() mismatch (-wantLatestSubmissions, +gotSubmissions):\n%s", diff)
 	}
 
 	// admin not enrolled in the course must not be able to access any course submissions
-	ctx = withUserContext(context.Background(), admin)
-	haveSubmissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
+	ctx = qtest.WithUserContext(context.Background(), admin)
+	submissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
 	if err == nil {
 		t.Error("Expected error: user not enrolled")
 	}
-	if len(haveSubmissions.GetSubmissions()) > 0 {
-		t.Errorf("Not enrolled admin should not see any submissions, got submissions: %v+ ", haveSubmissions.GetSubmissions())
+	if len(submissions.GetSubmissions()) > 0 {
+		t.Errorf("Not enrolled admin should not see any submissions, got submissions: %v+ ", submissions.GetSubmissions())
 	}
 
 	// enroll admin as course student
@@ -193,17 +193,18 @@ func TestSubmissionsAccess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	haveSubmissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
+	submissions, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	// enrolled as student, admin must be able to access all course submissions
-	if !reflect.DeepEqual(latestSubmissions, haveSubmissions.GetSubmissions()) {
-		t.Errorf("Admin got submissions %+v, expected submissions: %+v", haveSubmissions.GetSubmissions(), latestSubmissions)
+	gotSubmissions = submissions.GetSubmissions()
+	if diff := cmp.Diff(wantLatestSubmissions, gotSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetSubmissions() mismatch (-wantLatestSubmissions, +gotSubmissions):\n%s", diff)
 	}
 
 	// the first student must be able to access own submissions as well as submissions made by group he has membership in
-	ctx = withUserContext(context.Background(), student1)
+	ctx = qtest.WithUserContext(context.Background(), student1)
 
 	personalSubmission, err := ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID, UserID: student1.ID})
 	if err != nil {
@@ -221,13 +222,14 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	wantSubmissions := []*pb.Submission{submission1, submission3}
-	student1Submissions := []*pb.Submission{personalSubmission.GetSubmissions()[0], groupSubmission.GetSubmissions()[0]}
-	if !reflect.DeepEqual(wantSubmissions, student1Submissions) {
-		t.Errorf("Student 1 got submissions %+v, expected submissions: %+v", haveSubmissions.GetSubmissions(), wantSubmissions)
+	gotStudent1Submissions := []*pb.Submission{personalSubmission.GetSubmissions()[0], groupSubmission.GetSubmissions()[0]}
+
+	if diff := cmp.Diff(wantSubmissions, gotStudent1Submissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetSubmissions() mismatch (-wantSubmissions, +gotStudent1Submissions):\n%s", diff)
 	}
 
 	// the second student should not be able to access the submission by student1
-	ctx = withUserContext(context.Background(), student2)
+	ctx = qtest.WithUserContext(context.Background(), student2)
 	personalSubmission, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID, UserID: student1.ID})
 	if err == nil || personalSubmission != nil {
 		t.Error("Expected error: only owner and teachers can get submissions")
@@ -249,7 +251,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	// the third student (not enrolled in the course) should not be able to access submission even if it belongs to that student
-	ctx = withUserContext(context.Background(), student3)
+	ctx = qtest.WithUserContext(context.Background(), student3)
 	personalSubmission, err = ags.GetSubmissions(ctx, &pb.SubmissionRequest{CourseID: course.ID, UserID: student3.ID})
 	if err == nil || personalSubmission != nil {
 		t.Error("Expected error: only owner and teachers can get submissions")
@@ -301,7 +303,7 @@ func TestApproveSubmission(t *testing.T) {
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
@@ -316,14 +318,15 @@ func TestApproveSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	updatedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
+	gotApprovedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantSubmission.Status = pb.Submission_APPROVED
+	wantSubmission.ApprovedDate = gotApprovedSubmission.ApprovedDate
 
-	if !reflect.DeepEqual(wantSubmission.GetStatus(), updatedSubmission.GetStatus()) {
-		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetStatus().String(), updatedSubmission.GetStatus().String())
+	if diff := cmp.Diff(wantSubmission, gotApprovedSubmission, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateSubmission(approve) mismatch (-wantSubmission, +gotApprovedSubmission):\n%s", diff)
 	}
 
 	if _, err = ags.UpdateSubmission(ctx, &pb.UpdateSubmissionRequest{
@@ -334,14 +337,195 @@ func TestApproveSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	updatedSubmission, err = db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
+	gotRejectedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantSubmission.Status = pb.Submission_REJECTED
+	// Note that the approved date is not set when the submission is rejected
 
-	if !reflect.DeepEqual(wantSubmission.GetStatus(), updatedSubmission.GetStatus()) {
-		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetStatus().String(), updatedSubmission.GetStatus().String())
+	if diff := cmp.Diff(wantSubmission, gotRejectedSubmission, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateSubmission(reject) mismatch (-wantSubmission, +gotRejectedSubmission):\n%s", diff)
+	}
+}
+
+func TestGetSubmissionsByCourse(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeUser(t, db, 1)
+	course := allCourses[2]
+	qtest.CreateCourse(t, db, admin, course)
+	student1 := qtest.CreateFakeUser(t, db, 2)
+	student2 := qtest.CreateFakeUser(t, db, 3)
+	student3 := qtest.CreateFakeUser(t, db, 4)
+
+	fakeProvider, scms := qtest.FakeProviderMap(t)
+	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ctx := qtest.WithUserContext(context.Background(), admin)
+	if _, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
+		t.Fatal(err)
+	}
+	qtest.EnrollStudent(t, db, student1, course)
+	qtest.EnrollStudent(t, db, student2, course)
+	qtest.EnrollStudent(t, db, student3, course)
+
+	enrols, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: course.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(enrols.Enrollments) != 4 {
+		t.Errorf("expected 4 enrollments, got %d", len(enrols.Enrollments))
+	}
+
+	group, err := ags.CreateGroup(ctx, &pb.Group{
+		CourseID: course.ID,
+		Name:     "group1",
+		Users:    []*pb.User{student1, student3},
+		Status:   pb.Group_APPROVED,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	group2, err := ags.CreateGroup(ctx, &pb.Group{
+		CourseID: course.ID,
+		Name:     "group2",
+		Users:    []*pb.User{student2},
+		Status:   pb.Group_APPROVED,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	lab1 := &pb.Assignment{
+		CourseID: course.ID,
+		Name:     "lab 1",
+		Deadline: "2020-02-23T18:00",
+		Order:    1,
+	}
+	lab2 := &pb.Assignment{
+		CourseID:   course.ID,
+		Name:       "lab 2",
+		Deadline:   "2020-02-23T18:00",
+		Order:      2,
+		IsGroupLab: true,
+	}
+	if err = db.CreateAssignment(lab1); err != nil {
+		t.Fatal(err)
+	}
+	if err = db.CreateAssignment(lab2); err != nil {
+		t.Fatal(err)
+	}
+	submission1 := &pb.Submission{
+		UserID:       student1.ID,
+		AssignmentID: lab1.ID,
+		Score:        44,
+	}
+	submission2 := &pb.Submission{
+		UserID:       student2.ID,
+		AssignmentID: lab1.ID,
+		Score:        66,
+	}
+	submission3 := &pb.Submission{
+		GroupID:      group.ID,
+		AssignmentID: lab2.ID,
+		Score:        16,
+	}
+	submission4 := &pb.Submission{
+		GroupID:      group2.ID,
+		AssignmentID: lab2.ID,
+		Score:        29,
+	}
+	if err = db.CreateSubmission(submission1); err != nil {
+		t.Fatal(err)
+	}
+	if err = db.CreateSubmission(submission2); err != nil {
+		t.Fatal(err)
+	}
+	if err = db.CreateSubmission(submission3); err != nil {
+		t.Fatal(err)
+	}
+	if err = db.CreateSubmission(submission4); err != nil {
+		t.Fatal(err)
+	}
+
+	// submission3 appears before submission2 because the allSubmissions.Links ([]*EnrollmentLink)
+	// are returned in the order of enrollments, not the order of submission inserts.
+	// Similarly, submission3 also appear at the end because student3 (last to enroll) is in submission3's group.
+	wantAllSubmissions := []*pb.Submission{submission1, submission3, submission2, submission4, submission3}
+	wantIndividualSubmissions := []*pb.Submission{submission1, submission2}
+	wantGroupSubmissions := []*pb.Submission{submission3, submission4}
+
+	// default is all submissions
+	submissions, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// be specific that we want all submissions
+	allSubmissions, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{
+		CourseID: course.ID,
+		Type:     pb.SubmissionsForCourseRequest_ALL,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// check that default and all submissions (SubmissionsForCourseRequest_ALL) are the same
+	if diff := cmp.Diff(submissions, allSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.TestGetSubmissionsByCourse() mismatch (-submissions +allSubmissions):\n%s", diff)
+	}
+
+	gotAllSubmissions := []*pb.Submission{}
+	for _, s := range allSubmissions.Links {
+		for _, subLink := range s.Submissions {
+			if subLink.Submission != nil {
+				gotAllSubmissions = append(gotAllSubmissions, subLink.Submission)
+			}
+		}
+	}
+	if diff := cmp.Diff(wantAllSubmissions, gotAllSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.TestGetSubmissionsByCourse() mismatch (-wantAllSubmissions +gotAllSubmissions):\n%s", diff)
+	}
+
+	// get only individual submissions
+	individualSubmissions, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{
+		CourseID: course.ID,
+		Type:     pb.SubmissionsForCourseRequest_INDIVIDUAL,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	gotIndividualSubmissions := []*pb.Submission{}
+	for _, s := range individualSubmissions.Links {
+		for _, subLink := range s.Submissions {
+			if subLink.Submission != nil {
+				gotIndividualSubmissions = append(gotIndividualSubmissions, subLink.Submission)
+			}
+		}
+	}
+	if diff := cmp.Diff(wantIndividualSubmissions, gotIndividualSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.TestGetSubmissionsByCourse() mismatch (-wantIndividualSubmissions +gotIndividualSubmissions):\n%s", diff)
+	}
+
+	// get only group submissions
+	groupSubmissions, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{
+		CourseID: course.ID,
+		Type:     pb.SubmissionsForCourseRequest_GROUP,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	gotGroupSubmissions := []*pb.Submission{}
+	for _, s := range groupSubmissions.Links {
+		for _, subLink := range s.Submissions {
+			if subLink.Submission != nil {
+				gotGroupSubmissions = append(gotGroupSubmissions, subLink.Submission)
+			}
+		}
+	}
+	if diff := cmp.Diff(wantGroupSubmissions, gotGroupSubmissions, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.TestGetSubmissionsByCourse() mismatch (-wantGroupSubmissions +gotGroupSubmissions):\n%s", diff)
 	}
 }
 
@@ -361,26 +545,8 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	student := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course1.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course2.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&pb.Enrollment{
-		UserID:   student.ID,
-		CourseID: course1.ID,
-		Status:   pb.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateEnrollment(&pb.Enrollment{
-		UserID:   student.ID,
-		CourseID: course2.ID,
-		Status:   pb.Enrollment_STUDENT,
-	}); err != nil {
-		t.Fatal(err)
-	}
+	qtest.EnrollStudent(t, db, student, course1)
+	qtest.EnrollStudent(t, db, student, course2)
 
 	// make labs with similar lab names for both courses
 	lab1c1 := &pb.Assignment{
@@ -441,7 +607,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		ExecTime:  3,
 	}
 
-	sub1 := &pb.Submission{
+	wantSubmission1 := &pb.Submission{
 		UserID:       student.ID,
 		AssignmentID: lab1c1.ID,
 		Score:        44,
@@ -449,7 +615,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		Scores:       []*score.Score{},
 		BuildInfo:    buildInfo1,
 	}
-	sub2 := &pb.Submission{
+	wantSubmission2 := &pb.Submission{
 		UserID:       student.ID,
 		AssignmentID: lab2c2.ID,
 		Score:        66,
@@ -457,16 +623,16 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		Scores:       []*score.Score{},
 		BuildInfo:    buildInfo2,
 	}
-	if err := db.CreateSubmission(sub1); err != nil {
+	if err := db.CreateSubmission(wantSubmission1); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateSubmission(sub2); err != nil {
+	if err := db.CreateSubmission(wantSubmission2); err != nil {
 		t.Fatal(err)
 	}
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
@@ -477,19 +643,22 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	wantAssignments1 := []*pb.Assignment{lab1c1, lab2c1}
 	wantAssignments2 := []*pb.Assignment{lab1c2, lab2c2}
 
-	haveAssignments1, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course1.ID})
+	assignments1, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course1.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(wantAssignments1, haveAssignments1.GetAssignments()) {
-		t.Errorf("Expected assignments for course 1: %+v, got %+v", wantAssignments1, haveAssignments1.GetAssignments())
+	gotAssignments1 := assignments1.GetAssignments()
+	if diff := cmp.Diff(wantAssignments1, gotAssignments1, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetAssignments() mismatch (-wantAssignments1, +gotAssignments1):\n%s", diff)
 	}
-	haveAssignments2, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course2.ID})
+
+	assignments2, err := ags.GetAssignments(ctx, &pb.CourseRequest{CourseID: course2.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(wantAssignments2, haveAssignments2.GetAssignments()) {
-		t.Errorf("Expected assignments for course 2: %+v, got %+v", wantAssignments1, haveAssignments1.GetAssignments())
+	gotAssignments2 := assignments2.GetAssignments()
+	if diff := cmp.Diff(wantAssignments2, gotAssignments2, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.GetAssignments() mismatch (-wantAssignments2, +gotAssignments2):\n%s", diff)
 	}
 
 	// check that all submissions were saved for the correct labs
@@ -497,14 +666,16 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	for _, enrolLink := range labsForCourse1.GetLinks() {
 		if enrolLink.GetEnrollment().GetUserID() == student.ID {
 			labs := enrolLink.GetSubmissions()
 			if len(labs) != 2 {
 				t.Fatalf("Expected 2 submission links for course 1, got %d", len(labs))
 			}
-			if diff := cmp.Diff(sub1, labs[0].Submission, protocmp.Transform()); diff != "" {
-				t.Errorf("TestGetCourseLabSubmissions() mismatch (-sub1 +labs[0]):\n%s", diff)
+			gotSubmission1 := labs[0].GetSubmission()
+			if diff := cmp.Diff(wantSubmission1, gotSubmission1, protocmp.Transform()); diff != "" {
+				t.Errorf("ags.GetSubmissionsByCourse() mismatch (-wantSubmission1 +gotSubmission1):\n%s", diff)
 			}
 		}
 	}
@@ -519,8 +690,9 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 			if len(labs) != 2 {
 				t.Fatalf("Expected 2 submission for course 1, got %d", len(labs))
 			}
-			if diff := cmp.Diff(sub2, labs[1].Submission, protocmp.Transform()); diff != "" {
-				t.Errorf("TestGetCourseLabSubmissions() mismatch (-sub2 +labs[1]):\n%s", diff)
+			gotSubmission2 := labs[1].GetSubmission()
+			if diff := cmp.Diff(wantSubmission2, gotSubmission2, protocmp.Transform()); diff != "" {
+				t.Errorf("ags.GetSubmissionsByCourse() mismatch (-wantSubmission2 +gotSubmission2):\n%s", diff)
 			}
 		}
 	}
@@ -564,12 +736,12 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 
 	// check that method fails for unenrolled student user
 	unenrolledStudent := qtest.CreateFakeUser(t, db, 3)
-	ctx = withUserContext(ctx, unenrolledStudent)
+	ctx = qtest.WithUserContext(ctx, unenrolledStudent)
 	if _, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
 		t.Error("Expected 'only teachers can get all lab submissions'")
 	}
 	// check that method fails for non-teacher user
-	ctx = withUserContext(ctx, student)
+	ctx = qtest.WithUserContext(ctx, student)
 	if _, err = ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
 		t.Error("Expected 'only teachers can get all lab submissions'")
 	}
@@ -688,7 +860,7 @@ func TestCreateApproveList(t *testing.T) {
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := withUserContext(context.Background(), admin)
+	ctx := qtest.WithUserContext(context.Background(), admin)
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)
@@ -767,6 +939,298 @@ func TestCreateApproveList(t *testing.T) {
 			}
 		}
 		t.Logf("%s\t%t", el.Enrollment.User.Name, isApproved(4, approved))
+	}
+}
+
+func TestReleaseApproveAll(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeUser(t, db, 1)
+
+	course := allCourses[2]
+	if err := db.CreateCourse(admin.ID, course); err != nil {
+		t.Fatal(err)
+	}
+	student1 := qtest.CreateNamedUser(t, db, 2, "Leslie Lamport")
+	student2 := qtest.CreateNamedUser(t, db, 3, "Hein Meling")
+	student3 := qtest.CreateNamedUser(t, db, 4, "John Doe")
+	qtest.EnrollStudent(t, db, student1, course)
+	qtest.EnrollStudent(t, db, student2, course)
+	qtest.EnrollStudent(t, db, student3, course)
+
+	fakeProvider, scms := qtest.FakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ctx := qtest.WithUserContext(context.Background(), admin)
+	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assignments := []*pb.Assignment{
+		{
+			CourseID:   course.ID,
+			Name:       "lab 1",
+			ScriptFile: "go.sh",
+			Deadline:   "2020-02-23T18:00:00",
+			Order:      1,
+			Reviewers:  1,
+		},
+		{
+			CourseID:   course.ID,
+			Name:       "lab 2",
+			ScriptFile: "go.sh",
+			Deadline:   "2020-03-23T18:00:00",
+			Order:      2,
+			Reviewers:  1,
+		},
+	}
+
+	for _, assignment := range assignments {
+		if err := db.CreateAssignment(assignment); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	benchmarks := []*pb.GradingBenchmark{
+		{
+			AssignmentID: assignments[0].ID,
+			Heading:      "lab 1",
+			Criteria: []*pb.GradingCriterion{
+				{
+					BenchmarkID: 1,
+					Description: "Test 1",
+					Points:      10,
+				},
+				{
+					BenchmarkID: 2,
+					Description: "Test 2",
+					Points:      10,
+				},
+			},
+		},
+		{
+			AssignmentID: assignments[1].ID,
+			Heading:      "lab 2",
+			Criteria: []*pb.GradingCriterion{
+				{
+					BenchmarkID: 3,
+					Description: "Test 3",
+				},
+				{
+					BenchmarkID: 4,
+					Description: "Test 4",
+				},
+			},
+		},
+	}
+
+	for _, benchmark := range benchmarks {
+		if err := db.CreateBenchmark(benchmark); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	submissions := []*pb.Submission{
+		{
+			UserID:       student1.ID,
+			AssignmentID: assignments[0].ID,
+		},
+		{
+			UserID:       student1.ID,
+			AssignmentID: assignments[1].ID,
+		},
+		{
+			UserID:       student2.ID,
+			AssignmentID: assignments[0].ID,
+		},
+		{
+			UserID:       student2.ID,
+			AssignmentID: assignments[1].ID,
+		},
+		{
+			UserID:       student3.ID,
+			AssignmentID: assignments[0].ID,
+		},
+		{
+			UserID:       student3.ID,
+			AssignmentID: assignments[1].ID,
+		},
+	}
+
+	reviews := []*pb.Review{}
+	for _, s := range submissions {
+		if err := db.CreateSubmission(s); err != nil {
+			t.Fatal(err)
+		}
+		review, err := ags.CreateReview(ctx, &pb.ReviewRequest{
+			CourseID: course.ID,
+			Review: &pb.Review{
+				SubmissionID: s.ID,
+				ReviewerID:   admin.GetID(),
+			},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		reviews = append(reviews, review)
+	}
+
+	for _, r := range reviews {
+		for _, benchmark := range r.GradingBenchmarks {
+			for _, criterion := range benchmark.Criteria {
+				criterion.Grade = pb.GradingCriterion_PASSED
+			}
+		}
+
+		// Update the review. This will also update the submission score for the related submission.
+		_, err := ags.UpdateReview(ctx, &pb.ReviewRequest{
+			CourseID: uint64(course.ID),
+			Review:   r,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	gotSubmissions1, err := db.GetSubmissions(&pb.Submission{
+		AssignmentID: assignments[0].ID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, submission := range gotSubmissions1 {
+		// All submissions should have a score of 20
+		if submission.Score != 20 {
+			t.Errorf("Expected score 20, got %d", submission.Score)
+		}
+	}
+
+	gotSubmissions2, err := db.GetSubmissions(&pb.Submission{
+		AssignmentID: assignments[1].ID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, submission := range gotSubmissions2 {
+		// All submissions should have a score of 100
+		if submission.Score != 100 {
+			t.Errorf("Expected score 100, got %d", submission.Score)
+		}
+	}
+
+	// Attempt to release all submissions with score >= 80
+	if _, err = ags.UpdateSubmissions(ctx, &pb.UpdateSubmissionsRequest{
+		CourseID:     course.ID,
+		AssignmentID: assignments[0].ID,
+		Release:      true,
+		ScoreLimit:   80,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	gotSubmissions3, err := db.GetSubmissions(&pb.Submission{
+		AssignmentID: assignments[0].ID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Only submissions with score >= 80 should be released
+	// All submissions for assignment 1 should have score == 20, and not be released
+	for _, submission := range gotSubmissions3 {
+		if submission.Released {
+			t.Errorf("Expected submission to not be released")
+		}
+	}
+
+	// We want to make sure that submissions received by the student do not leak data
+	studentCtx := qtest.WithUserContext(context.Background(), student1)
+	gotStudentSubmissions, err := ags.GetSubmissions(studentCtx, &pb.SubmissionRequest{
+		CourseID: course.ID,
+		UserID:   student1.ID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, submission := range gotStudentSubmissions.Submissions {
+		// For submissions that have not been released
+		// the score should be 0, and any reviews should be nil
+		if submission.Released || submission.Score > 0 || submission.Reviews != nil || submission.Status != pb.Submission_NONE {
+			t.Errorf("Expected submission to not be released, have score, and have no reviews")
+		}
+	}
+
+	// Attempt to release all submissions with score >= 80
+	if _, err = ags.UpdateSubmissions(ctx, &pb.UpdateSubmissionsRequest{
+		CourseID:     course.ID,
+		AssignmentID: assignments[1].ID,
+		Release:      true,
+		ScoreLimit:   80,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// All submissions for assignment 2 should have score == 100, and be released
+	gotSubmissions4, err := db.GetSubmissions(&pb.Submission{
+		AssignmentID: assignments[1].ID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, submission := range gotSubmissions4 {
+		if !submission.Released {
+			t.Errorf("Expected submission to be released")
+		}
+	}
+
+	// Approve all submissions for assignment 1 with score >= 80
+	if _, err = ags.UpdateSubmissions(ctx, &pb.UpdateSubmissionsRequest{
+		CourseID:     course.ID,
+		AssignmentID: assignments[1].ID,
+		Approve:      true,
+		ScoreLimit:   80,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	gotSubmissions5, err := db.GetSubmissions(&pb.Submission{
+		AssignmentID: assignments[1].ID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, submission := range gotSubmissions5 {
+		// Check that all submissions for assignment 1 have been approved
+		if submission.Status != pb.Submission_APPROVED {
+			t.Errorf("Expected submission to be approved")
+		}
+	}
+
+	gotStudentSubmissions, err = ags.GetSubmissions(studentCtx, &pb.SubmissionRequest{
+		CourseID: course.ID,
+		UserID:   student1.ID,
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, submission := range gotStudentSubmissions.Submissions {
+		// Submissions for assignment 1 should not be released, have score, or reviews.
+		if submission.ID == assignments[0].ID && (submission.Released || submission.Score > 0 || submission.Reviews != nil) {
+			t.Errorf("Expected submission to not be released, have score, and have no reviews")
+		}
+
+		// Submissions for assignment 2 should be released, have score, and have reviews
+		if submission.ID == assignments[1].ID && !(submission.Released || submission.Score > 0 || submission.Reviews != nil || submission.Status != pb.Submission_NONE) {
+			t.Error("Expected submission to be released, have score, and have reviews", submission.Score, submission.Reviews, submission.Released)
+		}
 	}
 }
 
