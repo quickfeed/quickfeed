@@ -6,29 +6,15 @@ import (
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )
 
-// Helper function
-func getTasksFromAssignments(assignments []*pb.Assignment) map[uint32]map[string]*pb.Task {
-	taskMap := make(map[uint32]map[string]*pb.Task)
-	for _, assignment := range assignments {
-		temp := make(map[string]*pb.Task)
-		for _, task := range assignment.Tasks {
-			temp[task.Name] = task
-		}
-		taskMap[assignment.Order] = temp
-	}
-	return taskMap
-}
-
-// createCourseWithAssignments creates a course with two assignments.
-func createCourseWithAssignments(t *testing.T, db database.Database) *pb.Course {
-	t.Helper()
+func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
 	admin := qtest.CreateFakeUser(t, db, uint64(1))
 	course := &pb.Course{}
 	qtest.CreateCourse(t, db, admin, course)
@@ -43,29 +29,6 @@ func createCourseWithAssignments(t *testing.T, db database.Database) *pb.Course 
 			t.Error(err)
 		}
 	}
-	return course
-}
-
-// initialAssignments simulates getting assignments parsed from tests repository.
-func initialAssignments() ([]*pb.Assignment, []*pb.Task) {
-	foundTasks := []*pb.Task{
-		{AssignmentOrder: 1, Title: "Lab1, task1", Body: "Description of task1 in lab1", Name: "Lab1/1"},
-		{AssignmentOrder: 1, Title: "Lab1, task2", Body: "Description of task2 in lab1", Name: "Lab1/2"},
-		{AssignmentOrder: 2, Title: "Lab2, task1", Body: "Description of task1 in lab2", Name: "Lab2/1"},
-		{AssignmentOrder: 2, Title: "Lab2, task2", Body: "Description of task2 in lab2", Name: "Lab2/2"},
-	}
-
-	foundAssignments := []*pb.Assignment{
-		{Name: "Lab1", Order: 1, Tasks: foundTasks[:2]},
-		{Name: "Lab2", Order: 2, Tasks: foundTasks[2:]},
-	}
-	return foundAssignments, foundTasks
-}
-
-func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-	course := createCourseWithAssignments(t, db)
 
 	assignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
 	if err != nil {
@@ -82,8 +45,8 @@ func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
 }
 
 // TestGormDBSynchronizeAssignmentTasks tests whether SynchronizeAssignmentTasks
-// correctly synchronizes tasks in the database, and whether it returns the correct values.
-// It runs through possible assignment sequences.
+// correctly synchronizes tasks in the database, and whether it returns the correct created and updated tasks.
+// It loops through possible assignment sequences.
 func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	tests := map[string]struct {
 		foundAssignmentSequence [][]*pb.Assignment
@@ -174,6 +137,17 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 		sort.Slice(tasks, func(i, j int) bool {
 			return tasks[i].Name < tasks[j].Name
 		})
+	}
+	getTasksFromAssignments := func(assignments []*pb.Assignment) map[uint32]map[string]*pb.Task {
+		taskMap := make(map[uint32]map[string]*pb.Task)
+		for _, assignment := range assignments {
+			temp := make(map[string]*pb.Task)
+			for _, task := range assignment.Tasks {
+				temp[task.Name] = task
+			}
+			taskMap[assignment.Order] = temp
+		}
+		return taskMap
 	}
 
 	for name, tt := range tests {
