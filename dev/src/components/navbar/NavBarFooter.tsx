@@ -12,7 +12,7 @@ const NavBarFooter = (): JSX.Element => {
 
     const logoutButton = (
         <li hidden={hidden}>
-            <a href="/logout" className="Sidebar-items-link" onClick={() => logout()}>Log out</a>
+            <a href="/logout" className="sidebar-items-link" onClick={() => logout()}>Log out</a>
         </li>
     )
 
@@ -27,7 +27,7 @@ const NavBarFooter = (): JSX.Element => {
 
     const aboutButton = (
         <li key="about" hidden={hidden}>
-            <Link to="/about" className="Sidebar-items-link">
+            <Link to="/about" className="sidebar-items-link">
                 About
             </Link>
         </li>
@@ -37,7 +37,7 @@ const NavBarFooter = (): JSX.Element => {
     const adminButton = self.getIsadmin()
         ? (
             <li hidden={hidden}>
-                <Link to="/admin" className="Sidebar-items-link">
+                <Link to="/admin" className="sidebar-items-link">
                     Admin
                 </Link>
             </li>
@@ -46,7 +46,7 @@ const NavBarFooter = (): JSX.Element => {
 
 
     return (
-        <div className="SidebarFooter" onMouseLeave={() => setHidden(true)}>
+        <div className="sidebarFooter" onMouseLeave={() => setHidden(true)}>
             {aboutButton}
             {adminButton}
             {logoutButton}

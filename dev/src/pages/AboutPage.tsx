@@ -6,19 +6,21 @@ import Alert from '../components/Alert'
 const AboutPage = (): JSX.Element => {
     return (
         <div>
-            <div key="jb" id="0" className="jumbotron">
-                <div key="cblock" className="centerblock container">
-                    <h1>Automated student feedback</h1>
-                    <p>
-                        <strong>QuickFeed </strong>
-                        provides instantaneous feedback to students on
-                        their programming assignments. It is also a
-                        valuable tool for teachers when grading lab
-                        assignments.
-                    </p>
-                    <p>
-                        <a className="btn btn-primary btn-lg" href="#autograder" role="button">Learn more »</a>
-                    </p>
+            <div className="banner">
+                <div key="jb" id="0" className="jumbotron">
+                    <div key="cblock" className="centerblock container">
+                        <h1>Automated student feedback</h1>
+                        <p>
+                            <strong>QuickFeed </strong>
+                            provides instantaneous feedback to students on
+                            their programming assignments. It is also a
+                            valuable tool for teachers when grading lab
+                            assignments.
+                        </p>
+                        <p>
+                            <a className="btn btn-primary btn-lg" href="#quickfeed" role="button">Learn more »</a>
+                        </p>
+                    </div>
                 </div>
             </div>
             <Alert />
@@ -77,7 +79,7 @@ const AboutPage = (): JSX.Element => {
                         </p>
                     </div>
                 </div>
-                <section id="autograder">
+                <section id="#quickfeed">
                     <hr className="featurette-divider" />
                     <div key="row1" className="row featurette">
                         <div key="c1r1" className="col-md-7">
