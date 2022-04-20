@@ -1,17 +1,12 @@
 import React from "react"
 import AboutButton from "../navbar-buttons/AboutButton"
 import AdminButton from "../navbar-buttons/AdminButton"
-import LoginButton from "../navbar-buttons/LoginButton"
 import { useAppState } from "../../overmind"
 import ProfileButton from "../navbar-buttons/ProfileButton"
+import LogoutButton from "../navbar-buttons/LogoutButton"
 
 const NavBarUser = (): JSX.Element => {
     const { self } = useAppState()
-    const state = useAppState()
-
-    if (!state.isLoggedIn) {
-        return <></>
-    }
 
     return (
         <div className="navbar-collapse ml-auto" id="main_nav">
@@ -23,7 +18,7 @@ const NavBarUser = (): JSX.Element => {
                         <ProfileButton />
                         <AboutButton />
                         <AdminButton />
-                        <LoginButton />
+                        <LogoutButton />
                     </ul>
                 </li>
             </ul>

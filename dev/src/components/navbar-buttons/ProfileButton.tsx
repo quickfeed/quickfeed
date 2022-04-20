@@ -1,6 +1,5 @@
 import React from "react"
 import { Link } from "react-router-dom"
-import { User } from "../../../proto/ag/ag_pb"
 
 
 const ProfileButton = () => {
