@@ -13,7 +13,8 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-router": "^5.2.0",
-    "react-router-dom": "^5.3.0"
+    "react-router-dom": "^5.3.0",
+    "selenium-webdriver": "^4.1.1"
   },
   "scripts": {
     "tsc": "tsc",
@@ -24,6 +25,7 @@
     "@types/google-protobuf": "^3.15.3",
     "@types/jest": "^27.4.1",
     "@types/react-router-dom": "^5.1.7",
+    "@types/selenium-webdriver": "^4.0.19",
     "@typescript-eslint/eslint-plugin": "^4.29.2",
     "@typescript-eslint/parser": "^4.29.2",
     "enzyme": "^3.11.0",
