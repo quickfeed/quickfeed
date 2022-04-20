@@ -30,7 +30,7 @@ const NavBar = (): JSX.Element => {
                 <div className="navbar-collapse ml-auto">
                     <ul className="ms-auto ml-auto list-unstyled">
                         <li className="nav-item">
-                            <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px", color: "#d4d4d4", marginLeft: "40px" }}>
+                            <a href="/auth/github" style={{ textAlign: "center", paddingTop: "15px", color: "#d4d4d4", marginRight: "55px" }}>
                                 Sign in with <i className="fa fa-2x fa-github align-middle ms-auto " id="github" />
                             </a>
                         </li>
@@ -42,9 +42,11 @@ const NavBar = (): JSX.Element => {
                     <a className="clickable" onClick={() => { onCourseClick() }} style={{ paddingTop: "15px", marginLeft: "10px", fontSize: 25 }}>☰</a>
                 </ul>
             }
-            <ul className="ms-auto ml-auto list-unstyled" style={{ marginRight: "55px", paddingTop: "15px" }}>
-                <NavBarUser />
-            </ul>
+            {state.isLoggedIn &&
+                <ul className="ms-auto ml-auto list-unstyled" style={{ marginRight: "55px", paddingTop: "15px" }}>
+                    <NavBarUser />
+                </ul>
+            }
             <div>
                 {state.showFavorites &&
                     <NavFavorites />
