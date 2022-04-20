@@ -9,10 +9,12 @@ RUN apk update && apk add --no-cache \
         protobuf \
         protobuf-dev \
         npm
-ADD . /quickfeed
+COPY . /quickfeed
 WORKDIR /quickfeed
 RUN make devtools
 RUN make proto
+RUN npm install -g webpack
+RUN npm install -g webpack-cli
 RUN make ui
 RUN make install
 
@@ -23,4 +25,4 @@ ARG HTTP_PORT
 ENV HTTP_PORT=${HTTP_PORT:-8081}
 
 EXPOSE ${HTTP_PORT} ${GRPC_PORT}
-ENTRYPOINT ["quickfeed"]
+ENTRYPOINT ["/quickfeed/run.sh"]

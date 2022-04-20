@@ -19,12 +19,19 @@ services:
   quickfeed:
     container_name: quickfeed
     image: quickfeed/quickfeed
+    volumes:
+      - ./dev:/quickfeed/dev
     build:
       context: ./
       dockerfile: ./ci/docker/quickfeed/Dockerfile
-      args:
-        - GRPC_PORT=${GRPC_PORT}
-        - HTTP_PORT=${HTTP_PORT}
+    environment:
+      - GRPC_PORT=${GRPC_PORT}
+      - HTTP_PORT=${HTTP_PORT}
+      - GITHUB_KEY=${GITHUB_KEY}
+      - GITHUB_SECRET=${GITHUB_SECRET}
+      - DOMAIN=${DOMAIN}
+      - DATABASE=${DATABASE}
+      - DEVELOPMENT=${DEVELOPMENT}
     links:
       - envoy
     # Uncomment to expose quickfeed ports for debugging on the host machine.

@@ -41,6 +41,7 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "jsdom",
+    "verbose": true,
     "transform": {
       "^.+\\.tsx?$": "ts-jest"
     },
