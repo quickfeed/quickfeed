@@ -27,7 +27,7 @@ const wrapped = mount(<Provider value={mockedOvermind}>
 describe("Visibility when logged in", () => {
     it("When user is logged in, hamburger menu should appear", () => {
         const hamburger = "☰"
-        expect(wrapped.find(".clickable").text()).toEqual(hamburger)
+        expect(wrapped.find("span").text()).toEqual(hamburger)
     })
 
     it("Sign in is not visible when logged in", () => {
