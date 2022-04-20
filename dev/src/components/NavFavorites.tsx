@@ -14,10 +14,6 @@ const NavFavorites = (): JSX.Element => {
         return <NavBarCourse key={enrollment.getId()} enrollment={enrollment} />
     })
 
-    const onCourseClick = () => {
-        actions.setActiveFavorite(!state.showFavorites)
-    }
-
     return (
         <nav className="navigator">
             <ul key="list" className="sidebarList">
@@ -25,7 +21,7 @@ const NavFavorites = (): JSX.Element => {
                     <Link to="/" >
                         QuickFeed
                     </Link>
-                    <a onClick={() => { onCourseClick() }} role="button">✖</a>
+                    <a onClick={() => actions.toggleFavorites()} role="button">✖</a>
                 </li>
                 {courses}
                 {state.isLoggedIn &&

@@ -9,11 +9,7 @@ const NavBar = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
 
-    const onCourseClick = () => {
-        actions.setActiveFavorite(!state.showFavorites)
-    }
-
-    const hamburger = state.isLoggedIn ? <span onClick={() => onCourseClick()} className="ml-3">☰</span> : null
+    const hamburger = state.isLoggedIn ? <span onClick={() => actions.toggleFavorites()} className="ml-3">☰</span> : null
 
     return (
         <nav className="navbar navbar-expand-lg" style={{ backgroundColor: "#222", color: "#d4d4d4" }} id="main" >
@@ -35,11 +31,9 @@ const NavBar = (): JSX.Element => {
                     <NavBarUser />
                 </ul>
             }
-            <div>
-                {state.showFavorites &&
-                    <NavFavorites />
-                }
-            </div>
+            {state.showFavorites &&
+                <NavFavorites />
+            }
         </nav>
     )
 }

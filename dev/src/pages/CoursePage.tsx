@@ -10,12 +10,15 @@ import TeacherPage from "./TeacherPage"
  *  depending on the active course and the user's enrollment status. */
 const CoursePage = (): JSX.Element => {
     const state = useAppState()
-    const setActiveCourse = useActions().setActiveCourse
+    const actions = useActions()
     const courseID = getCourseID()
     const enrollment = state.enrollmentsByCourseID[courseID]
 
     useEffect(() => {
-        setActiveCourse(courseID)
+        if (!state.showFavorites) {
+            actions.toggleFavorites()
+        }
+        actions.setActiveCourse(courseID)
     }, [courseID])
 
     if (state.enrollmentsByCourseID[courseID] && isEnrolled(enrollment)) {
