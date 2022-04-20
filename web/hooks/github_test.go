@@ -152,7 +152,7 @@ func TestGitHubWebHookOrg(t *testing.T) {
 	}
 	runner, err := ci.NewDockerCI(logger)
 	if err != nil {
-		log.Fatalf("failed to set up docker client: %v\n", err)
+		logger.Sugar().Errorf("failed to set up docker client: %v\n", err)
 	}
 	defer runner.Close()
 	webhook := NewGitHubWebHook(logger.Sugar(), db, runner, secret)
