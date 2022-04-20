@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 import NavFavorites from "./NavFavorites"
 import NavBarUser from "./navbar/NavBarUser"
 
-//TODO Review the NavBar behaviour.
+
 const NavBar = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
