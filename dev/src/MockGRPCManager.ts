@@ -843,7 +843,7 @@ export class MockGrpcManager {
 
         localEnrols.push(
             new Enrollment()
-                .setId(5)
+                .setId(6)
                 .setCourseid(1)
                 .setUserid(4)
                 .setStatus(2)
