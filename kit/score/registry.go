@@ -60,8 +60,8 @@ func (s *registry) PrintTestInfo(sorted ...bool) {
 // Add test with given max score and weight to the registry.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
-func (s *registry) Add(test interface{}, max, weight int) {
-	s.add(testName(test), max, weight)
+func (s *registry) Add(test interface{}, taskName string, max, weight int) {
+	s.add(testName(test), taskName, max, weight)
 }
 
 // AddSub test with given max score and weight to the registry.
@@ -69,9 +69,9 @@ func (s *registry) Add(test interface{}, max, weight int) {
 // conjunction with MaxByName and MinByName called from within a subtest.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
-func (s *registry) AddSub(test interface{}, subTestName string, max, weight int) {
+func (s *registry) AddSub(test interface{}, taskName, subTestName string, max, weight int) {
 	tstName := fmt.Sprintf("%s/%s", testName(test), subTestName)
-	s.add(tstName, max, weight)
+	s.add(tstName, taskName, max, weight)
 }
 
 // Max returns a score object with Score equal to MaxScore.
@@ -159,7 +159,7 @@ func firstElem(name string) string {
 	return name[:end]
 }
 
-func (s *registry) add(testName string, max, weight int) {
+func (s *registry) add(testName, taskName string, max, weight int) {
 	if _, found := s.scores[testName]; found {
 		panic(errMsg(testName, "Duplicate score test"))
 	}
@@ -172,6 +172,7 @@ func (s *registry) add(testName string, max, weight int) {
 	sc := &Score{
 		Secret:   sessionSecret,
 		TestName: testName,
+		TaskName: taskName,
 		MaxScore: int32(max),
 		Weight:   int32(weight),
 	}

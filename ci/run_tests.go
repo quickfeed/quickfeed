@@ -124,7 +124,7 @@ func (r RunData) newTestRunSubmission(previous *pb.Submission, results *score.Re
 		// Keep previous submission's delivery date if this is a rebuild.
 		results.BuildInfo.BuildDate = previous.BuildInfo.BuildDate
 	}
-	score := results.Sum()
+	score := results.Sum("")
 	return &pb.Submission{
 		ID:           previous.GetID(),
 		AssignmentID: r.Assignment.GetID(),
