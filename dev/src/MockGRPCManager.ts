@@ -111,7 +111,24 @@ export class MockGrpcManager {
         let data: Course | null = null
         const found = this.courses.getCoursesList().find(c => c.getId() === course.getId())
         if (!found || !this.currentUser.getIsadmin()) {
+            // TODO: This is not a guaranteed unique ID
+            course.setId(this.courses.getCoursesList().length + 1)
+            course.setCoursecreatorid(this.currentUser.getId())
+
             this.courses.getCoursesList().push(course)
+
+            // Create new enrollment
+            const enrollment = new Enrollment()
+            enrollment.setCourseid(course.getId())
+            enrollment.setUserid(this.currentUser.getId())
+            enrollment.setStatus(Enrollment.UserStatus.TEACHER)
+            // TODO: This is not a guaranteed unique ID
+            enrollment.setId(this.enrollments.getEnrollmentsList().length + 1)
+            enrollment.setCourse(course)
+            enrollment.setUser(this.currentUser)
+            enrollment.setSlipdaysremaining(course.getSlipdays())
+            this.enrollments.getEnrollmentsList().push(enrollment)
+
             data = course
         }
         return this.grpcSend<Course>(data)
