@@ -1,20 +1,27 @@
 name: golangci-lint
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
+permissions:
+  contents: read
+  # Optional: allow read access to pull request. Use with `only-new-issues` option.
+  pull-requests: read
 
 jobs:
   golangci:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: "1.17"
+      - uses: actions/checkout@v3
+
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-          # skip-go-installation: true
           skip-pkg-cache: true
           skip-build-cache: true
           args: --disable errcheck --timeout 5m

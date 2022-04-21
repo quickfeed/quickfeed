@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/autograde/quickfeed/ag"
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/internal/qtest"
@@ -81,7 +80,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		UserID:       user.ID,
 		Score:        80,
 		Status:       pb.Submission_NONE,
-		Reviews:      []*ag.Review{},
+		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
 	}
 	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
@@ -107,7 +106,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		UserID:       user.ID,
 		Score:        0,
 		Status:       pb.Submission_NONE,
-		Reviews:      []*ag.Review{},
+		Reviews:      []*pb.Review{},
 		Scores:       []*score.Score{},
 	}
 	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
@@ -292,8 +291,8 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	c1 := &pb.Course{OrganizationID: 1}
-	c2 := &pb.Course{OrganizationID: 2}
+	c1 := &pb.Course{OrganizationID: 1, Year: 1}
+	c2 := &pb.Course{OrganizationID: 2, Year: 2}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 

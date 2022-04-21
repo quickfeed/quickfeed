@@ -173,6 +173,8 @@ type State = {
 
     /* Determine if all submissions should be displayed, or only group submissions */
     groupView: boolean,
+    showFavorites: boolean,
+
 
 }
 
@@ -349,5 +351,6 @@ export const state: State = {
     sortSubmissionsBy: SubmissionSort.Approved,
     sortAscending: true,
     submissionFilters: [],
-    groupView: false
+    groupView: false,
+    showFavorites: false,
 }

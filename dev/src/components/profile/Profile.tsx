@@ -28,7 +28,7 @@ const Profile = (): JSX.Element => {
     if (state.isLoggedIn) {
         return (
             <div>
-                <div className="jumbotron">
+                <div className="banner jumbotron">
                     <div className="centerblock container">
                         <h1>Hi, {state.self.getName()}</h1>
                         <p>You can edit your user information here.</p>

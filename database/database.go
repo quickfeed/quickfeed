@@ -123,12 +123,19 @@ type Database interface {
 	GetBenchmarks(*pb.Assignment) ([]*pb.GradingBenchmark, error)
 	// CreateRepository creates a new repository.
 	CreateRepository(repo *pb.Repository) error
-	// GetRepository returns the repository for the SCM provider's repository ID.
-	GetRepositoryByRemoteID(uint64) (*pb.Repository, error)
 	// GetRepositories returns repositories that match the given query.
 	GetRepositories(query *pb.Repository) ([]*pb.Repository, error)
-	// DeleteRepository deletes repository by the given provider's ID
-	DeleteRepositoryByRemoteID(uint64) error
+	// DeleteRepository deletes repository for the given remote provider's ID.
+	DeleteRepository(remoteID uint64) error
+	// GetRepositoriesWithIssues gets repositories with issues
+	GetRepositoriesWithIssues(query *pb.Repository) ([]*pb.Repository, error)
+
+	// GetTasks returns tasks that match the given query.
+	GetTasks(query *pb.Task) ([]*pb.Task, error)
+	// CreateIssues creates a batch of issues
+	CreateIssues(issues []*pb.Issue) error
+	// SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks
+	SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) ([]*pb.Task, []*pb.Task, error)
 
 	// UpdateSlipDays updates used slipdays for the given course enrollment
 	UpdateSlipDays([]*pb.UsedSlipDays) error

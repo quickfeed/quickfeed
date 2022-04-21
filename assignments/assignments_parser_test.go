@@ -15,25 +15,25 @@ import (
 
 func TestParseWithInvalidDir(t *testing.T) {
 	const dir = "invalid/dir"
-	_, _, err := parseAssignments(dir, 0)
+	_, _, err := readTestsRepositoryContent(dir, 0)
 	if err == nil {
 		t.Errorf("want no such file or directory error, got nil")
 	}
 }
 
 const (
-	y1 = `assignmentid: 1
+	y1 = `order: 1
 name: "For loops"
 deadline: "27-08-2017 12:00"
 autoapprove: false
 `
-	y2 = `assignmentid: 2
+	y2 = `order: 2
 name: "Nested loops"
 deadline: "27-08-2018 12:00"
 autoapprove: false
 `
 
-	yUnknownFields = `assignmentid: 1
+	yUnknownFields = `order: 1
 subject: "Go Programming for Fun and Profit"
 name: "For loops"
 deadline: "27-08-2017 12:00"
@@ -117,19 +117,20 @@ func TestParse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantCriteria := []*pb.GradingBenchmark{{
-		Heading: "First benchmark",
-		Criteria: []*pb.GradingCriterion{
-			{
-				Description: "Test 1",
-				Points:      5,
-			},
-			{
-				Description: "Test 2",
-				Points:      10,
+	wantCriteria := []*pb.GradingBenchmark{
+		{
+			Heading: "First benchmark",
+			Criteria: []*pb.GradingCriterion{
+				{
+					Description: "Test 1",
+					Points:      5,
+				},
+				{
+					Description: "Test 2",
+					Points:      10,
+				},
 			},
 		},
-	},
 		{
 			Heading: "Second benchmark",
 			Criteria: []*pb.GradingCriterion{
@@ -162,7 +163,7 @@ func TestParse(t *testing.T) {
 		GradingBenchmarks: wantCriteria,
 	}
 
-	assignments, dockerfile, err := parseAssignments(testsDir, 0)
+	assignments, dockerfile, err := readTestsRepositoryContent(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -173,13 +174,13 @@ func TestParse(t *testing.T) {
 		t.Errorf("Incorrect dockerfile\n Want: %s\n Got: %s\n", df, dockerfile)
 	}
 	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
-		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
+		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
 	}
 	if diff := cmp.Diff(assignments[1], wantAssignment2, protocmp.Transform()); diff != "" {
-		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
+		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
 	}
 	if diff := cmp.Diff(assignments[1].GradingBenchmarks, wantCriteria, protocmp.Transform()); diff != "" {
-		t.Errorf("parseAssignments() mismatch when parsing criteria (-want +got):\n%s", diff)
+		t.Errorf("readTestsRepositoryContent() mismatch when parsing criteria (-want +got):\n%s", diff)
 	}
 }
 
@@ -216,7 +217,7 @@ func TestParseUnknownFields(t *testing.T) {
 		ScoreLimit:  80,
 	}
 
-	assignments, _, err := parseAssignments(testsDir, 0)
+	assignments, _, err := readTestsRepositoryContent(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -224,7 +225,7 @@ func TestParseUnknownFields(t *testing.T) {
 		t.Errorf("len(assignments) = %d, want %d", len(assignments), 1)
 	}
 	if diff := cmp.Diff(assignments[0], wantAssignment1, protocmp.Transform()); diff != "" {
-		t.Errorf("parseAssignments() mismatch (-want +got):\n%s", diff)
+		t.Errorf("readTestsRepositoryContent() mismatch (-want +got):\n%s", diff)
 	}
 }
 

@@ -1,4 +1,4 @@
-# This trick allow us to source the environment variables defined in .env file in the Makefile 
+# This trick allow us to source the environment variables defined in .env file in the Makefile
 # (see include directive in GNU make for more details).
 # It ignores errors in case the .env file does not exists.
 # It may be necessary to skip variables that uses special makefile caracters, like $.
@@ -7,10 +7,10 @@
 OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
 tmpdir				:= tmp
-ui					:= dev
-proto-path			:= $(ui)/proto
 proto-swift-path	:= ../quickfeed-swiftui/Quickfeed/Proto
-grpcweb-ver			:= 1.3.0
+grpcweb-latest		:= $(shell git ls-remote --tags https://github.com/grpc/grpc-web.git | tail -1 | awk -F"/" '{ print $$3 }')
+grpcweb-ver			:= $(shell cd dev; npm ls grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
+grpcweb-pub			:= $(shell cd public; npm ls grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
 protoc-grpcweb		:= protoc-gen-grpc-web
 protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
 grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ver)/$(protoc-grpcweb-long)
@@ -20,7 +20,7 @@ testorg				:= ag-test-course
 envoy-config-gen	:= ./cmd/envoy/envoy_config_gen.go
 
 # necessary when target is not tied to a file
-.PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm
+.PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm version-check
 
 devtools: grpcweb go-tools
 
@@ -31,6 +31,16 @@ download:
 go-tools:
 	@echo "Installing tools from tools.go"
 	@go install `go list -f "{{range .Imports}}{{.}} {{end}}" tools.go`
+
+version-check:
+	@go run cmd/vercheck/main.go
+ifneq ($(grpcweb-ver), $(grpcweb-latest))
+	@echo WARNING: grpc-web version is not latest: $(grpcweb-ver) != $(grpcweb-latest)
+endif
+ifneq ($(grpcweb-ver), $(grpcweb-pub))
+	@echo grpc-web version differs between dev and public: $(grpcweb-ver) != $(grpcweb-pub)
+	@false
+endif
 
 grpcweb:
 	@echo "Fetch and install grpcweb protoc plugin (may require sudo access on some systems)"
@@ -44,31 +54,43 @@ install:
 	@echo go install
 	@go install
 
-ui:
-	@echo Running npm ci and webpack for $(ui)
-	@cd $(ui); npm ci; webpack
+define ui_target
+ui_$(1):
+	$$(info Running npm ci and webpack for $(1))
+	@cd $(1); npm ci; webpack
+endef
 
-proto:
-	@echo "Compiling QuickFeed's ag and kit/score proto definitions for Go and TypeScript"
-	@protoc \
-	-I . \
+define proto_target
+proto_$(1):
+	$$(info Compiling proto definitions for Go and TypeScript for $(1))
+	@protoc --fatal_warnings -I . \
 	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
 	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
 	--go-patch_out=plugin=go,paths=source_relative:. \
 	--go-patch_out=plugin=go-grpc,paths=source_relative:. \
-	--js_out=import_style=commonjs:$(proto-path) \
-	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(proto-path) \
+	--js_out=import_style=commonjs:$(1)/proto \
+	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(1)/proto \
 	ag/ag.proto kit/score/score.proto
 
-	@echo "Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529)"
+	$$(info Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529))
 	@$(sedi) '/patch_go_pb/d' \
-	$(proto-path)/kit/score/score_pb.js \
-	$(proto-path)/kit/score/score_pb.d.ts \
-	$(proto-path)/ag/ag_pb.js \
-	$(proto-path)/ag/ag_pb.d.ts \
-	$(proto-path)/ag/AgServiceClientPb.ts
-	@echo "Compiling proto for $(ui)"
-	@cd $(ui) && npm run tsc -- proto/ag/AgServiceClientPb.ts
+	$(1)/proto/kit/score/score_pb.js \
+	$(1)/proto/kit/score/score_pb.d.ts \
+	$(1)/proto/ag/ag_pb.js \
+	$(1)/proto/ag/ag_pb.d.ts \
+	$(1)/proto/ag/AgServiceClientPb.ts
+
+	$$(info Compiling proto for $(1))
+	@cd $(1) && npm run tsc -- proto/ag/AgServiceClientPb.ts
+endef
+
+dirs := dev public
+$(foreach dir,$(dirs),$(eval $(call ui_target,$(dir))))
+$(foreach dir,$(dirs),$(eval $(call proto_target,$(dir))))
+
+ui: version-check ui_dev ui_public
+
+proto: proto_dev proto_public
 
 proto-swift:
 	@echo "Compiling QuickFeed's proto definitions for Swift"

@@ -20,6 +20,7 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 	}).Count(&course).Error; err != nil {
 		return err
 	}
+
 	if course != 1 {
 		return gorm.ErrRecordNotFound
 	}
@@ -38,7 +39,8 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 			"is_group_lab":      assignment.IsGroupLab,
 			"reviewers":         assignment.Reviewers,
 			"container_timeout": assignment.ContainerTimeout,
-		}).FirstOrCreate(assignment).Error
+			"tasks":             assignment.Tasks,
+		}).Omit("Tasks").FirstOrCreate(assignment).Error
 }
 
 // GetAssignment returns assignment with the given ID.
@@ -136,10 +138,12 @@ func (db *GormDB) UpdateBenchmark(query *pb.GradingBenchmark) error {
 		Where(&pb.GradingBenchmark{
 			ID:           query.ID,
 			AssignmentID: query.AssignmentID,
-			ReviewID:     query.ReviewID}).
+			ReviewID:     query.ReviewID,
+		}).
 		Updates(&pb.GradingBenchmark{
 			Heading: query.Heading,
-			Comment: query.Comment}).Error
+			Comment: query.Comment,
+		}).Error
 }
 
 // DeleteBenchmark removes the given benchmark
