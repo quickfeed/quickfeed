@@ -124,7 +124,15 @@ func (r *Results) Validate(secret string) error {
 // Sum returns the total score computed over the set of recorded scores.
 // The total is a grade in the range 0-100.
 // This method must only be called after Validate has returned nil.
-func (r *Results) Sum(taskName string) uint32 {
+func (r *Results) Sum() uint32 {
+	return r.sum("")
+}
+
+func (r *Results) TaskSum(taskName string) uint32 {
+	return r.sum(taskName)
+}
+
+func (r *Results) sum(taskName string) uint32 {
 	totalWeight := float64(0)
 	var max, score, weight []float64
 	for _, ts := range r.Scores {

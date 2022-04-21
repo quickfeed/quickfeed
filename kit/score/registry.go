@@ -60,7 +60,11 @@ func (s *registry) PrintTestInfo(sorted ...bool) {
 // Add test with given max score and weight to the registry.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
-func (s *registry) Add(test interface{}, taskName string, max, weight int) {
+func (s *registry) Add(test interface{}, max, weight int) {
+	s.add(testName(test), "", max, weight)
+}
+
+func (s *registry) AddWithTaskName(test interface{}, taskName string, max, weight int) {
 	s.add(testName(test), taskName, max, weight)
 }
 
@@ -69,7 +73,12 @@ func (s *registry) Add(test interface{}, taskName string, max, weight int) {
 // conjunction with MaxByName and MinByName called from within a subtest.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
-func (s *registry) AddSub(test interface{}, taskName, subTestName string, max, weight int) {
+func (s *registry) AddSub(test interface{}, subTestName string, max, weight int) {
+	tstName := fmt.Sprintf("%s/%s", testName(test), subTestName)
+	s.add(tstName, "", max, weight)
+}
+
+func (s *registry) AddSubWithTaskName(test interface{}, taskName, subTestName string, max, weight int) {
 	tstName := fmt.Sprintf("%s/%s", testName(test), subTestName)
 	s.add(tstName, taskName, max, weight)
 }

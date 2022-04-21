@@ -146,7 +146,7 @@ func TestScoresSum(t *testing.T) {
 	if err := results.Validate(""); err != nil {
 		t.Errorf("Validate() = %v, expected <nil>", err)
 	}
-	got := results.Sum("")
+	got := results.Sum()
 	const want = 100
 	if got != want {
 		t.Errorf("Sum() = %d, want %d", got, want)
@@ -217,7 +217,7 @@ func TestScore100(t *testing.T) {
 			if err := results.Validate(""); err != nil {
 				t.Error(err)
 			}
-			got := results.Sum("")
+			got := results.Sum()
 			if got != want {
 				t.Errorf("Sum() = %d, want %d", got, want)
 			}
@@ -228,7 +228,7 @@ func TestScore100(t *testing.T) {
 func TestScoreNil(t *testing.T) {
 	const want = 0
 	results := &score.Results{Scores: nil}
-	got := results.Sum("")
+	got := results.Sum()
 	if got != want {
 		t.Errorf("Sum() = %d, want %d", got, want)
 	}
@@ -436,7 +436,7 @@ func TestSumGrade(t *testing.T) {
 		if err := results.Validate(""); err != nil {
 			t.Error(err)
 		}
-		tot := results.Sum("")
+		tot := results.Sum()
 		grade := g.Grade(tot)
 		if grade != s.wantGrade {
 			t.Errorf("Grade(%d) = %s, expected %s", tot, grade, s.wantGrade)
@@ -494,7 +494,7 @@ func TestTaskSum(t *testing.T) {
 			t.Error(err)
 		}
 		for taskName, wantSum := range tt.wantSums {
-			taskSum := results.Sum(taskName)
+			taskSum := results.TaskSum(taskName)
 			if taskSum != wantSum {
 				t.Errorf("TaskSum(%s) = %d, expected %d", taskName, taskSum, wantSum)
 			}
