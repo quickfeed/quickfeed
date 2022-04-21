@@ -484,18 +484,43 @@ export class MockGrpcManager {
 
     // TODO: All manual grading functions
     public createBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<GradingBenchmark>> {
+        // TODO: Generate ID
+        bm.setId(this.templateBenchmarks.length + 1)
+        this.templateBenchmarks.push(bm)
         return this.grpcSend<GradingBenchmark>(bm)
     }
 
     public createCriterion(c: GradingCriterion): Promise<IGrpcResponse<GradingCriterion>> {
+        const benchmarks = this.templateBenchmarks.find(bm => bm.getId() === c.getBenchmarkid())
+        if (!benchmarks) {
+            return this.grpcSend<GradingCriterion>(null, new Status().setCode(2).setError('Benchmark not found'))
+        }
+        // TODO: Generate unique ID
+        c.setId(benchmarks.getCriteriaList().length + 1)
+        benchmarks.getCriteriaList().push(c)
         return this.grpcSend<GradingCriterion>(c)
     }
 
     public updateBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<Void>> {
+        const foundIdx = this.templateBenchmarks.findIndex(b => b.getId() === bm.getId())
+        if (foundIdx === -1) {
+            return this.grpcSend<Void>(null, new Status().setCode(2).setError('Benchmark not found'))
+        }
+        Object.assign(this.templateBenchmarks[foundIdx], bm)
         return this.grpcSend<Void>(bm)
     }
 
     public updateCriterion(c: GradingCriterion): Promise<IGrpcResponse<Void>> {
+        this.templateBenchmarks.forEach(bm => {
+            if (bm.getId() !== c.getBenchmarkid()) {
+                return
+            }
+            const index = bm.getCriteriaList().findIndex(cr => cr.getId() === c.getId())
+            if (index !== -1) {
+                Object.assign(bm.getCriteriaList()[index], c)
+            }
+        })
+
         return this.grpcSend<Void>(c)
     }
 
@@ -1060,6 +1085,7 @@ export class MockGrpcManager {
 
         this.templateBenchmarks.push(
             new GradingBenchmark()
+                .setId(1)
                 .setAssignmentid(2)
                 .setHeading("HTML")
                 .setCriteriaList([
@@ -1074,6 +1100,7 @@ export class MockGrpcManager {
                         .setPoints(10),
                 ]),
             new GradingBenchmark()
+                .setId(2)
                 .setAssignmentid(2)
                 .setHeading("CSS")
                 .setCriteriaList([
