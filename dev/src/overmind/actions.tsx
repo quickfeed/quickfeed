@@ -654,12 +654,12 @@ export const deleteBenchmark = async ({ actions, effects }: Context, { benchmark
     }
 }
 
-export const setActiveSubmissionLink = ({ state }: Context, link: SubmissionLink): void => {
-    state.activeSubmissionLink = json(link)
+export const setActiveSubmissionLink = ({ state }: Context, link: SubmissionLink.AsObject): void => {
+    state.activeSubmissionLink = link ? ProtoConverter.clone(link) : null
 }
 
-export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment): void => {
-    state.activeEnrollment = json(enrollment)
+export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment.AsObject): void => {
+    state.activeEnrollment = enrollment ? ProtoConverter.clone(enrollment) : null
 }
 
 /* fetchUserData is called when the user enters the app. It fetches all data that is needed for the user to be able to use the app. */
