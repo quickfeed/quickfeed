@@ -10,10 +10,11 @@ message Score {
     uint64 SubmissionID = 2 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
     string Secret = 3 [(go.field) = {tags: 'gorm:"-"'}]; // the unique identifier for a scoring session
     string TestName = 4;     // name of the test
-    int32 Score = 5;         // the score obtained
-    int32 MaxScore = 6;      // max score possible to get on this specific test
-    int32 Weight = 7;        // the weight of this test; used to compute final grade
-    string TestDetails = 8;  // if populated, the frontend may display additional details (TODO(meling) adapt to output from go test -json)
+    string TaskName = 5;     // name of task this score belongs to
+    int32 Score = 6;         // the score obtained
+    int32 MaxScore = 7;      // max score possible to get on this specific test
+    int32 Weight = 8;        // the weight of this test; used to compute final grade
+    string TestDetails = 9;  // if populated, the frontend may display additional details (TODO(meling) adapt to output from go test -json)
 }
 
 // BuildInfo holds build data for an assignment's test execution.

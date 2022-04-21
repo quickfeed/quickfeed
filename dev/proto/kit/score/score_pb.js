@@ -95,10 +95,11 @@ proto.score.Score.toObject = function(includeInstance, msg) {
     submissionid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     secret: jspb.Message.getFieldWithDefault(msg, 3, ""),
     testname: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    score: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    maxscore: jspb.Message.getFieldWithDefault(msg, 6, 0),
-    weight: jspb.Message.getFieldWithDefault(msg, 7, 0),
-    testdetails: jspb.Message.getFieldWithDefault(msg, 8, "")
+    taskname: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    score: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    maxscore: jspb.Message.getFieldWithDefault(msg, 7, 0),
+    weight: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    testdetails: jspb.Message.getFieldWithDefault(msg, 9, "")
   };
 
   if (includeInstance) {
@@ -152,18 +153,22 @@ proto.score.Score.deserializeBinaryFromReader = function(msg, reader) {
       msg.setTestname(value);
       break;
     case 5:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setScore(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setTaskname(value);
       break;
     case 6:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setMaxscore(value);
+      msg.setScore(value);
       break;
     case 7:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setWeight(value);
+      msg.setMaxscore(value);
       break;
     case 8:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setWeight(value);
+      break;
+    case 9:
       var value = /** @type {string} */ (reader.readString());
       msg.setTestdetails(value);
       break;
@@ -224,31 +229,38 @@ proto.score.Score.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getScore();
-  if (f !== 0) {
-    writer.writeInt32(
+  f = message.getTaskname();
+  if (f.length > 0) {
+    writer.writeString(
       5,
       f
     );
   }
-  f = message.getMaxscore();
+  f = message.getScore();
   if (f !== 0) {
     writer.writeInt32(
       6,
       f
     );
   }
-  f = message.getWeight();
+  f = message.getMaxscore();
   if (f !== 0) {
     writer.writeInt32(
       7,
       f
     );
   }
+  f = message.getWeight();
+  if (f !== 0) {
+    writer.writeInt32(
+      8,
+      f
+    );
+  }
   f = message.getTestdetails();
   if (f.length > 0) {
     writer.writeString(
-      8,
+      9,
       f
     );
   }
@@ -328,28 +340,28 @@ proto.score.Score.prototype.setTestname = function(value) {
 
 
 /**
- * optional int32 Score = 5;
+ * optional string TaskName = 5;
+ * @return {string}
+ */
+proto.score.Score.prototype.getTaskname = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.score.Score} returns this
+ */
+proto.score.Score.prototype.setTaskname = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
+};
+
+
+/**
+ * optional int32 Score = 6;
  * @return {number}
  */
 proto.score.Score.prototype.getScore = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.score.Score} returns this
- */
-proto.score.Score.prototype.setScore = function(value) {
-  return jspb.Message.setProto3IntField(this, 5, value);
-};
-
-
-/**
- * optional int32 MaxScore = 6;
- * @return {number}
- */
-proto.score.Score.prototype.getMaxscore = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
@@ -358,16 +370,16 @@ proto.score.Score.prototype.getMaxscore = function() {
  * @param {number} value
  * @return {!proto.score.Score} returns this
  */
-proto.score.Score.prototype.setMaxscore = function(value) {
+proto.score.Score.prototype.setScore = function(value) {
   return jspb.Message.setProto3IntField(this, 6, value);
 };
 
 
 /**
- * optional int32 Weight = 7;
+ * optional int32 MaxScore = 7;
  * @return {number}
  */
-proto.score.Score.prototype.getWeight = function() {
+proto.score.Score.prototype.getMaxscore = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
 };
 
@@ -376,17 +388,35 @@ proto.score.Score.prototype.getWeight = function() {
  * @param {number} value
  * @return {!proto.score.Score} returns this
  */
-proto.score.Score.prototype.setWeight = function(value) {
+proto.score.Score.prototype.setMaxscore = function(value) {
   return jspb.Message.setProto3IntField(this, 7, value);
 };
 
 
 /**
- * optional string TestDetails = 8;
+ * optional int32 Weight = 8;
+ * @return {number}
+ */
+proto.score.Score.prototype.getWeight = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.score.Score} returns this
+ */
+proto.score.Score.prototype.setWeight = function(value) {
+  return jspb.Message.setProto3IntField(this, 8, value);
+};
+
+
+/**
+ * optional string TestDetails = 9;
  * @return {string}
  */
 proto.score.Score.prototype.getTestdetails = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
 };
 
 
@@ -395,7 +425,7 @@ proto.score.Score.prototype.getTestdetails = function() {
  * @return {!proto.score.Score} returns this
  */
 proto.score.Score.prototype.setTestdetails = function(value) {
-  return jspb.Message.setProto3StringField(this, 8, value);
+  return jspb.Message.setProto3StringField(this, 9, value);
 };
 
 
