@@ -232,7 +232,7 @@ export const updateCurrentSubmissionStatus = ({ state }: Context, { links, statu
 }
 
 /** updateEnrollment updates an enrollment status with the given status */
-export const updateEnrollment = async ({ state, actions, effects }: Context, { enrollment, status }: { enrollment: Enrollment, status: Enrollment.UserStatus }): Promise<void> => {
+export const updateEnrollment = async ({ state, actions, effects }: Context, { enrollment, status }: { enrollment: Enrollment.AsObject, status: Enrollment.UserStatus }): Promise<void> => {
     // Confirm that user really wants to change enrollment status
     let confirmed = false
     switch (status) {
@@ -241,25 +241,36 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
             break
         case Enrollment.UserStatus.STUDENT:
             // If the enrollment is pending, don't ask for confirmation
-            confirmed = isPending(enrollment) || confirm(`Warning! ${enrollment.getUser()?.getName()} is a teacher. Are sure you want to demote?`)
+            confirmed = isPending(enrollment) || confirm(`Warning! ${enrollment.user?.name} is a teacher. Are sure you want to demote?`)
             break
         case Enrollment.UserStatus.TEACHER:
-            confirmed = confirm(`Are you sure you want to promote ${enrollment.getUser()?.getName()} to teacher status?`)
+            confirmed = confirm(`Are you sure you want to promote ${enrollment.user?.name} to teacher status?`)
             break
     }
 
     if (confirmed) {
-        // Copy enrollment object and change status
-        const temp = json(enrollment).clone().setStatus(status)
+        // Lookup the enrollment
+        // The enrollment should be in state, if it is not, do nothing
+        const enrollments = state.courseEnrollments[state.activeCourse]
+        const found = enrollments.findIndex(e => e.id == enrollment.id)
+        if (found === -1) {
+            return
+        }
+
+        // Clone enrollment object and change status
+        const temp = ProtoConverter.clone(enrollment)
+        temp.status = status
+
         // Send updated enrollment to server
-        const response = await effects.grpcMan.updateEnrollments([temp])
+        const response = await effects.grpcMan.updateEnrollments([ProtoConverter.toEnrollment(temp)])
         if (success(response)) {
             // If successful, update enrollment in state with new status
             if (status == Enrollment.UserStatus.NONE) {
                 // If the enrollment is rejected, remove it from state
-                state.courseEnrollments[state.activeCourse] = state.courseEnrollments[state.activeCourse]?.filter(s => s.getId() != enrollment.getId())
+                enrollments.splice(found, 1)
             } else {
-                enrollment.setStatus(status)
+                // If the enrollment is accepted, update the enrollment in state
+                enrollments[found].status = status
             }
         } else {
             // If unsuccessful, alert user
