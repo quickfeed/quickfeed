@@ -1,13 +1,13 @@
-import { StatusCode } from "grpc-web"
-import { json } from "overmind"
-import { Context } from "."
-import { IGrpcResponse } from "../GRPCManager"
+import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, ProtoConverter, SubmissionSort, SubmissionStatus } from "../Helpers"
 import {
     User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions,
     Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark,
 } from "../../proto/ag/ag_pb"
 import { Alert, UserCourseSubmissions } from "./state"
-import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
+import { IGrpcResponse } from "../GRPCManager"
+import { StatusCode } from "grpc-web"
+import { Context } from "."
+
 
 
 /** Use this to verify that a gRPC request completed without an error code */
@@ -169,7 +169,7 @@ export const updateAdmin = async ({ state, effects }: Context, user: User.AsObje
 export const getEnrollmentsByCourse = async ({ state, effects }: Context, value: { courseID: number, statuses: Enrollment.UserStatus[] }): Promise<boolean> => {
     const result = await effects.grpcMan.getEnrollmentsByCourse(value.courseID, undefined, true, value.statuses)
     if (result.data) {
-        state.courseEnrollments[value.courseID] = result.data.getEnrollmentsList()
+        state.courseEnrollments[value.courseID] = result.data.getEnrollmentsList().map((e) => e.toObject())
         return true
     }
     return false
@@ -776,7 +776,8 @@ export const popAlert = ({ state }: Context, index: number): void => {
 }
 
 export const logout = ({ state }: Context): void => {
-    state.self = new User()
+    // This does not empty the state.
+    state.self = {} as User.AsObject
 }
 
 const generateRepositoryList = (enrollment: Enrollment): Repository.Type[] => {
