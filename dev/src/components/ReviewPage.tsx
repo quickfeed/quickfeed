@@ -26,17 +26,17 @@ const ReviewPage = (): JSX.Element => {
         }
     }, [])
 
-    const generateReviewCell = (submissionLink: SubmissionLink): RowElement => {
-        const submission = submissionLink.getSubmission()
-        const assignment = submissionLink.getAssignment()
+    const generateReviewCell = (submissionLink: SubmissionLink.AsObject): RowElement => {
+        const submission = submissionLink.submission
+        const assignment = submissionLink.assignment
         if (submission && assignment && isManuallyGraded(assignment)) {
-            const reviews = state.review.reviews[courseID][submission.getId()] ?? []
-            const isSelected = state.activeSubmission === submission?.getId()
-            const score = reviews.reduce((acc, review) => acc + review.getScore(), 0) / reviews.length
+            const reviews = state.review.reviews[courseID][submission.id] ?? []
+            const isSelected = state.activeSubmission === submission.id
+            const score = reviews.reduce((acc, review) => acc + review.score, 0) / reviews.length
             const willBeReleased = state.review.minimumScore > 0 && score >= state.review.minimumScore
             return ({
                 // TODO: Figure out a better way to visualize released submissions than '(r)'
-                value: `${reviews.length}/${assignment.getReviewers()} ${submission.getReleased() ? "(r)" : ""}`,
+                value: `${reviews.length}/${assignment.reviewers} ${submission.released ? "(r)" : ""}`,
                 className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""} ${willBeReleased ? "release" : ""}`,
                 onClick: () => {
                     actions.setActiveSubmissionLink(submissionLink)
@@ -53,7 +53,7 @@ const ReviewPage = (): JSX.Element => {
         }
     }
     const groupView = state.groupView
-    const assignments = state.assignments[courseID].filter(assignment => (state.review.assignmentID < 0) || assignment.getId() === state.review.assignmentID)
+    const assignments = state.assignments[courseID].filter(assignment => (state.review.assignmentID < 0) || assignment.id === state.review.assignmentID)
     const base: Row = [{ value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }]
     const header = generateAssignmentsHeader(base, assignments, groupView)
 
