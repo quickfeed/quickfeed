@@ -176,9 +176,9 @@ export const getEnrollmentsByCourse = async ({ state, effects }: Context, value:
 }
 
 /**  setEnrollmentState toggles the state of an enrollment between favorite and visible */
-export const setEnrollmentState = async ({ actions, effects }: Context, enrollment: Enrollment): Promise<void> => {
-    enrollment.setState(isVisible(enrollment) ? Enrollment.DisplayState.HIDDEN : Enrollment.DisplayState.VISIBLE)
-    const response = await effects.grpcMan.updateCourseVisibility(json(enrollment))
+export const setEnrollmentState = async ({ actions, effects }: Context, enrollment: Enrollment.AsObject): Promise<void> => {
+    enrollment.state = isVisible(enrollment) ? Enrollment.DisplayState.HIDDEN : Enrollment.DisplayState.VISIBLE
+    const response = await effects.grpcMan.updateCourseVisibility(ProtoConverter.toEnrollment(enrollment))
     if (!success(response)) {
         actions.alertHandler(response)
     }
@@ -187,7 +187,7 @@ export const setEnrollmentState = async ({ actions, effects }: Context, enrollme
 /** Updates a given submission with a new status. This updates the given submission, as well as all other occurrences of the given submission in state. */
 export const updateSubmission = async ({ state, actions, effects }: Context, status: Submission.Status): Promise<void> => {
     /* Do not update if the status is already the same or if there is no selected submission */
-    if (!state.currentSubmission || state.currentSubmission.getStatus() == status) {
+    if (!state.currentSubmission || state.currentSubmission.status == status) {
         return
     }
 
@@ -197,18 +197,18 @@ export const updateSubmission = async ({ state, actions, effects }: Context, sta
     }
 
     /* Store the previous submission status */
-    const previousStatus = state.currentSubmission.getStatus()
+    const previousStatus = state.currentSubmission.status
 
     /* Update the submission status */
-    state.currentSubmission.setStatus(status)
-    const result = await effects.grpcMan.updateSubmission(state.activeCourse, state.currentSubmission)
+    state.currentSubmission.status = status
+    const result = await effects.grpcMan.updateSubmission(state.activeCourse, ProtoConverter.toSubmission(state.currentSubmission))
     if (!success(result)) {
         /* If the update failed, revert the submission status */
-        state.currentSubmission.setStatus(previousStatus)
+        state.currentSubmission.status = previousStatus
         return
     }
 
-    if (state.activeSubmissionLink?.getAssignment()?.getIsgrouplab()) {
+    if (state.activeSubmissionLink?.assignment?.isgrouplab) {
         actions.updateCurrentSubmissionStatus({ links: state.courseGroupSubmissions[state.activeCourse], status: status })
     }
     actions.updateCurrentSubmissionStatus({ links: state.courseSubmissions[state.activeCourse], status: status })
@@ -319,10 +319,10 @@ type RepoKey = keyof typeof Repository.Type
 export const getRepositories = async ({ state, effects }: Context): Promise<boolean> => {
     let success = true
     for (const enrollment of state.enrollments) {
-        const courseID = enrollment.getCourseid()
+        const courseID = enrollment.courseid
         state.repositories[courseID] = {}
 
-        const response = await effects.grpcMan.getRepositories(courseID, generateRepositoryList(enrollment))
+        const response = await effects.grpcMan.getRepositories(courseID, generateRepositoryList(ProtoConverter.toEnrollment(enrollment)))
         if (response.data) {
             response.data.getUrlsMap().forEach((entry, key) => {
                 state.repositories[courseID][Repository.Type[key as RepoKey]] = entry
@@ -593,16 +593,17 @@ export const createOrUpdateCriterion = async ({ effects }: Context, { criterion,
     }
 }
 
-export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark, assignment: Assignment }): Promise<void> => {
-    if (benchmark.getId() && success(await effects.grpcMan.updateBenchmark(benchmark))) {
-        const index = assignment.getGradingbenchmarksList().indexOf(benchmark)
+export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark.AsObject, assignment: Assignment.AsObject }): Promise<void> => {
+    const bm = ProtoConverter.toGradingBenchmark(benchmark)
+    if (benchmark.id && success(await effects.grpcMan.updateBenchmark(bm))) {
+        const index = assignment.gradingbenchmarksList.indexOf(benchmark)
         if (index > -1) {
-            assignment.getGradingbenchmarksList()[index] = benchmark
+            assignment.gradingbenchmarksList[index] = benchmark
         }
     } else {
-        const response = await effects.grpcMan.createBenchmark(benchmark)
+        const response = await effects.grpcMan.createBenchmark(bm)
         if (success(response) && response.data) {
-            assignment.getGradingbenchmarksList().push(response.data)
+            assignment.gradingbenchmarksList.push(response.data.toObject())
         }
     }
 }
@@ -615,23 +616,41 @@ export const createBenchmark = async ({ effects }: Context, { benchmark, assignm
     }
 }
 
-export const deleteCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion?: GradingCriterion, assignment: Assignment }): Promise<void> => {
-    for (const benchmark of assignment.getGradingbenchmarksList()) {
-        if (benchmark.getId() === criterion?.getBenchmarkid()) {
-            if (confirm("Do you really want to delete this criterion?")) {
-                const index = benchmark.getCriteriaList().indexOf(criterion)
-                benchmark.getCriteriaList().splice(index, 1)
-                await effects.grpcMan.deleteCriterion(criterion)
+export const deleteCriterion = async ({ actions, effects }: Context, { criterion, assignment }: { criterion?: GradingCriterion.AsObject, assignment: Assignment.AsObject }): Promise<void> => {
+    for (const benchmark of assignment.gradingbenchmarksList) {
+        if (benchmark.id !== criterion?.benchmarkid) {
+            continue
+        }
+        if (!confirm("Do you really want to delete this criterion?")) {
+            // Do nothing if user cancels
+            return
+        }
+
+        // Delete criterion
+        const response = await effects.grpcMan.deleteCriterion(ProtoConverter.toGradingCriterion(criterion))
+        if (success(response)) {
+            // Remove criterion from benchmark in state if successful
+            const index = assignment.gradingbenchmarksList.indexOf(benchmark)
+            if (index > -1) {
+                assignment.gradingbenchmarksList.splice(index, 1)
             }
+        } else {
+            actions.alertHandler(response)
         }
     }
 }
 
-export const deleteBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark?: GradingBenchmark, assignment: Assignment }): Promise<void> => {
+export const deleteBenchmark = async ({ actions, effects }: Context, { benchmark, assignment }: { benchmark?: GradingBenchmark.AsObject, assignment: Assignment.AsObject }): Promise<void> => {
     if (benchmark && confirm("Do you really want to delete this benchmark?")) {
-        const index = assignment.getGradingbenchmarksList().indexOf(benchmark)
-        assignment.getGradingbenchmarksList().splice(index, 1)
-        await effects.grpcMan.deleteBenchmark(benchmark)
+        const response = await effects.grpcMan.deleteBenchmark(ProtoConverter.toGradingBenchmark(benchmark))
+        if (success(response)) {
+            const index = assignment.gradingbenchmarksList.indexOf(benchmark)
+            if (index > -1) {
+                assignment.gradingbenchmarksList.splice(index, 1)
+            }
+        } else {
+            actions.alertHandler(response)
+        }
     }
 }
 
