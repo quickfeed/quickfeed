@@ -9,7 +9,6 @@ import AdminPage from './pages/AdminPage'
 import Loading from './components/Loading'
 import Dashboard from './components/Dashboard'
 import AboutPage from './pages/AboutPage'
-import DevelopmentButtons from './DevelopmentButtons'
 
 const App = (): JSX.Element => {
     const state = useAppState()
@@ -64,9 +63,6 @@ const App = (): JSX.Element => {
             <NavBar />
             <div className="app wrapper">
                 <div id="content">
-                    {/* TODO */}
-                    {/* <DevelopmentButtons /> should only be included if in development mode */}
-                    {process.env.NODE_ENV === 'development' && <DevelopmentButtons />}
                     {Main()}
                 </div>
             </div>
