@@ -336,13 +336,22 @@ export const state: State = {
     courseEnrollments: {},
     groups: {},
     pendingGroups: derived(({ activeCourse, groups }: State) => {
-        return activeCourse > 0 ? groups[activeCourse]?.filter(group => isPendingGroup(group)) : []
+        if (activeCourse > 0 && groups[activeCourse]) {
+            return groups[activeCourse]?.filter(group => isPendingGroup(group))
+        }
+        return []
     }),
     pendingEnrollments: derived(({ activeCourse, courseEnrollments }: State) => {
-        return activeCourse > 0 ? courseEnrollments[activeCourse]?.filter(enrollment => isPending(enrollment)) : []
+        if (activeCourse > 0 && courseEnrollments[activeCourse]) {
+            return courseEnrollments[activeCourse].filter(enrollment => isPending(enrollment))
+        }
+        return []
     }),
     numEnrolled: derived(({ activeCourse, courseEnrollments }: State) => {
-        return activeCourse > 0 ? courseEnrollments[activeCourse]?.filter(enrollment => !isPending(enrollment)).length : 0
+        if (activeCourse > 0 && courseEnrollments[activeCourse]) {
+            return courseEnrollments[activeCourse]?.filter(enrollment => !isPending(enrollment)).length
+        }
+        return 0
     }),
     query: "",
     sortSubmissionsBy: SubmissionSort.Approved,
