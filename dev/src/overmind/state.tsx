@@ -174,6 +174,11 @@ export type State = {
     /* Determine if all submissions should be displayed, or only group submissions */
     groupView: boolean,
 
+    /* Currently selected group */
+    /* Contains either an existing group to edit, or a new group to create */
+    activeGroup: Group.AsObject | null,
+
+    hasGroup: (courseID: number) => boolean,
 }
 
 
@@ -357,5 +362,9 @@ export const state: State = {
     sortSubmissionsBy: SubmissionSort.Approved,
     sortAscending: true,
     submissionFilters: [],
-    groupView: false
+    groupView: false,
+    activeGroup: null,
+    hasGroup: derived(({ userGroup }: State) => courseID => {
+        return userGroup[courseID] !== undefined
+    }),
 }

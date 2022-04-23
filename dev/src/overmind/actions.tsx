@@ -9,7 +9,6 @@ import { StatusCode } from "grpc-web"
 import { Context } from "."
 
 
-
 /** Use this to verify that a gRPC request completed without an error code */
 export const success = (response: IGrpcResponse<unknown>): boolean => response.status.getCode() === 0
 
@@ -352,10 +351,12 @@ export const getGroupByUserAndCourse = async ({ state, effects }: Context, cours
     }
 }
 
-// TODO: Add group to state
-export const createGroup = async ({ actions, effects }: Context, group: { courseID: number, users: number[], name: string }): Promise<void> => {
+export const createGroup = async ({ state, actions, effects }: Context, group: { courseID: number, users: number[], name: string }): Promise<void> => {
     const response = await effects.grpcMan.createGroup(group.courseID, group.name, group.users)
-    if (!success(response)) {
+    if (success(response) && response.data) {
+        state.userGroup[group.courseID] = response.data.toObject()
+        state.activeGroup = null
+    } else {
         actions.alertHandler(response)
     }
 }
@@ -580,9 +581,20 @@ export const deleteGroup = async ({ state, effects }: Context, group: Group.AsOb
     }
 }
 
-export const updateGroup = async ({ actions, effects }: Context, group: Group.AsObject): Promise<void> => {
+// TODO(jostein): Make UpdateGroup return Group rather than Void
+// TODO(jostein): Requires a slight modification to ag.proto and autograder_service.go
+export const updateGroup = async ({ state, actions, effects }: Context, group: Group.AsObject): Promise<void> => {
     const response = await effects.grpcMan.updateGroup(ProtoConverter.toGroup(group))
-    actions.alertHandler(response)
+    if (success(response)) {
+        const found = state.groups[group.courseid].find(g => g.id === group.id)
+        if (found) {
+            // TODO(jostein): This should be `found = response.data.toObject()` when the above TODO is implemented
+            Object.assign(found, ProtoConverter.clone(group))
+            actions.setActiveGroup(null)
+        }
+    } else {
+        actions.alertHandler(response)
+    }
 }
 
 export const createOrUpdateCriterion = async ({ effects }: Context, { criterion, assignment }: { criterion: GradingCriterion.AsObject, assignment: Assignment.AsObject }): Promise<void> => {
@@ -692,6 +704,7 @@ export const fetchUserData = async ({ state, actions, effects }: Context): Promi
                 await actions.getGroupSubmissions(courseID)
                 const statuses = isStudent(enrollment) ? [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER] : []
                 success = await actions.getEnrollmentsByCourse({ courseID: courseID, statuses: statuses })
+                await actions.getGroupByUserAndCourse(courseID)
             }
             if (isTeacher(enrollment)) {
                 actions.getGroupsByCourse(courseID)
@@ -817,4 +830,29 @@ export const setSubmissionFilter = ({ state }: Context, filter: string): void =>
 
 export const setGroupView = ({ state }: Context, groupView: boolean): void => {
     state.groupView = groupView
+}
+
+export const setActiveGroup = ({ state }: Context, group: Group.AsObject | null): void => {
+    state.activeGroup = ProtoConverter.clone(group)
+}
+
+export const updateGroupUsers = ({ state }: Context, user: User.AsObject): void => {
+    if (!state.activeGroup) {
+        return
+    }
+    const group = state.activeGroup
+    // Remove the user from the group if they are already in it.
+    const index = group.usersList.findIndex(u => u.id == user.id)
+    if (index >= 0) {
+        group.usersList.splice(index, 1)
+    } else {
+        group.usersList.push(user)
+    }
+}
+
+export const updateGroupName = ({ state }: Context, name: string): void => {
+    if (!state.activeGroup) {
+        return
+    }
+    state.activeGroup.name = name
 }
