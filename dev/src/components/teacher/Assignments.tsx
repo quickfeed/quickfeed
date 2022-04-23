@@ -1,4 +1,3 @@
-import { json } from "overmind"
 import React, { useState } from "react"
 import { Assignment } from "../../../proto/ag/ag_pb"
 import { getCourseID, isManuallyGraded, Color, hasBenchmarks, hasCriteria } from "../../Helpers"
