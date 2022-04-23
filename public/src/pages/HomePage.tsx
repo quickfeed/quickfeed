@@ -1,21 +1,21 @@
-import * as React from "react";
-import { ViewPage } from "./ViewPage";
+import * as React from "react"
+import { ViewPage } from "./ViewPage"
 
 export class HomePage extends ViewPage {
-    constructor() {
-        super();
-        this.template = "frontpage";
+    constructor () {
+        super()
+        this.template = "frontpage"
     }
 
-    public async renderContent(page: string): Promise<JSX.Element> {
+    public async renderContent( page: string ): Promise<JSX.Element> {
         return <div key="container" className="container">
 
             <div key="rowheader" className="row marketing">
                 <div key="gh" className="col-lg-4">
                     <img
                         className="img-circle"
-                        src="/static/img/GitHub-Mark-120px-plus.png"
-                        alt="GitHub logo" style={{ width: "140px", height: "140px" }} />
+                        src="/img/GitHub-Mark-120px-plus.png"
+                        alt="GitHub logo" style={ { width: "140px", height: "140px" } } />
                     <h2>GitHub Integration</h2>
                     <p>
                         Manage all students and courses on GitHub.
@@ -31,9 +31,9 @@ export class HomePage extends ViewPage {
 
                     <img
                         className="img-circle"
-                        src="/static/img/overlapping-arrows.png"
+                        src="/img/overlapping-arrows.png"
                         alt=""
-                        style={{ width: "140px", height: "140px" }}
+                        style={ { width: "140px", height: "140px" } }
                     />
                     <h2>Continuous Integration</h2>
                     <p>
@@ -50,8 +50,8 @@ export class HomePage extends ViewPage {
                 <div key="grade" className="col-lg-4">
                     <img
                         className="img-circle"
-                        src="/static/img/Aplus2.png"
-                        alt="A+ image" style={{ width: "140px", height: "140px" }} />
+                        src="/img/Aplus2.png"
+                        alt="A+ image" style={ { width: "140px", height: "140px" } } />
                     <h2>Fair Grading</h2>
                     <p>
                         On due date of an assignment, the most recent version
@@ -90,7 +90,7 @@ export class HomePage extends ViewPage {
                     <div key="c2r1" className="col-md-5">
                         <img
                             className="featurette-image img-responsive"
-                            src="/static/img/intro1.png"
+                            src="/img/intro1.png"
                             alt="Generic placeholder image" />
                     </div>
                 </div>
@@ -103,7 +103,7 @@ export class HomePage extends ViewPage {
                     <div key="c1r2" className="col-md-5">
                         <img
                             className="featurette-image img-responsive"
-                            src="/static/img/intro3.png"
+                            src="/img/intro3.png"
                             alt="Generic placeholder image" />
                     </div>
                     <div key="c2r2" className="col-md-7">
@@ -140,7 +140,7 @@ export class HomePage extends ViewPage {
                     <div key="c2r3" className="col-md-5">
                         <img
                             className="featurette-image img-responsive"
-                            src="/static/img/intro4.png"
+                            src="/img/intro4.png"
                             alt="Generic placeholder image" />
                     </div>
                 </div>
@@ -153,7 +153,7 @@ export class HomePage extends ViewPage {
                     <div key="c1r4" className="col-md-5">
                         <img
                             className="featurette-image img-responsive"
-                            src="/static/img/intro2.png"
+                            src="/img/intro2.png"
                             alt="Generic placeholder image" />
                     </div>
                     <div key="c2r4" className="col-md-7">
@@ -174,12 +174,12 @@ export class HomePage extends ViewPage {
                 <hr />
                 <p className="pull-right"><a href="#">Back to top</a></p>
             </footer>
-        </div>;
+        </div>
     }
 
-    public async renderMenu(index: number): Promise<JSX.Element[]> {
-        if (index === 1) {
-            return [<div key="jb" id="0" className="jumbotron">
+    public async renderMenu( index: number ): Promise<JSX.Element[]> {
+        if ( index === 1 ) {
+            return [ <div key="jb" id="0" className="jumbotron">
                 <div key="cblock" className="centerblock container">
                     <h1>Automated student feedback</h1>
                     <p>
@@ -192,8 +192,8 @@ export class HomePage extends ViewPage {
                         <a className="btn btn-primary btn-lg" href="#autograder" role="button">Learn more »</a>
                     </p>
                 </div>
-            </div>];
+            </div> ]
         }
-        return [];
+        return []
     }
 }

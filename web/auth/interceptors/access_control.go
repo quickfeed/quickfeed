@@ -18,13 +18,12 @@ import (
 // "student" role implies that the user is enrolled in the course with any role.
 // "teacher": user enrolled in the course with teacher status.
 // "owner" is the creator of the manual review.
-// If there are several roles that can call a method, roles must be ordered with
-// least privilege role first
+// If there are several roles that can call a method, a role with least privilege must come first
 var accessRoles = map[string][]string{
 	"UpdateUser":              {"user", "admin"},
 	"GetEnrollmentsByUser":    {"user", "admin"},
 	"GetEnrollmentsByCourse":  {"student"},
-	"UpdateReview":            {"owner", "teacher"}, // TODO(vera): a new role for review owner or just a server-side check?
+	"UpdateReview":            {"owner", "teacher"},
 	"GetGroupByUserAndCourse": {"group", "teacher"},
 	"CreateGroup":             {"group", "teacher"},
 	"GetGroup":                {"group", "teacher"}, // TODO(vera): "group" needs a db call or a field in claims
@@ -50,12 +49,12 @@ var accessRoles = map[string][]string{
 	"GetUserByCourse":         {"teacher", "admin"},
 	"GetSubmissionsByCourse":  {"teacher", "admin"},
 	"GetOrganization":         {"admin"},
-	// TODO(vera): GetOrganization and other admin methods not needed in case of admin service
-	// otherwise add all admin methods here
+	"CreateCourse":            {"admin"},
 }
 
 func AccessControl(logger *zap.Logger, tokens *auth.TokenManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		logger.Debug("ACCESS CONTROL")
 		// get JWT from context
 		meta, ok := metadata.FromIncomingContext(ctx)
 		if !ok {

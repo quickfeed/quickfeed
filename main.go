@@ -58,10 +58,10 @@ var reg = prometheus.NewRegistry()
 
 func main() {
 	var (
-		baseURL  = flag.String("service.url", "", "base service DNS name")
+		baseURL  = flag.String("service.url", "localhost", "base service DNS name")
 		dbFile   = flag.String("database.file", "qf.db", "database file")
 		public   = flag.String("http.public", "public", "path to content to serve")
-		httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
+		httpAddr = flag.String("http.addr", ":8080", "HTTP listen address")
 		// grpcAddr = flag.String("grpc.addr", ":9090", "gRPC listen address")
 	)
 	flag.Parse()
@@ -90,6 +90,7 @@ func main() {
 	}
 
 	serverConfig := config.NewConfig(*baseURL, *public, *httpAddr)
+	logger.Sugar().Debugf("SERVER CONFIG: %+V", serverConfig)
 
 	githubApp, err := scm.NewApp()
 	if err != nil {
@@ -102,17 +103,16 @@ func main() {
 		Endpoint:     github.Endpoint,
 		RedirectURL:  serverConfig.Endpoints.CallbackURL,
 	}
+	logger.Sugar().Debugf("OAUTH CONFIG: %+V", authConfig)
 	tokenManager, err := auth.NewTokenManager(db, config.TokenExpirationTime, serverConfig.Secrets.TokenSecret, *httpAddr)
 	if err != nil {
 		log.Fatalf("failed to make token manager: %v\n", err)
 	}
-	// TODO(vera): make a new method that will populate scm storage with scm clients for each course
-	// there must be one shared scm storage, instead of each service having
-	// to
-	agService := web.NewAutograderService(logger, db, githubApp, serverConfig, runner)
-	agService.MakeSCMClients("github")
 
-	apiServer, err := serverConfig.GenerateTLSApi()
+	agService := web.NewAutograderService(logger, db, githubApp, serverConfig, runner)
+	agService.MakeSCMClients("github") // TODO(vera): shouldn't be hardcoded...
+
+	apiServer, err := serverConfig.GenerateTLSApi(logger, tokenManager)
 	if err != nil {
 		log.Fatalf("failed to generate TLS grpc API: %v/n", err)
 	}
@@ -120,24 +120,24 @@ func main() {
 
 	grpcWebServer := grpcweb.WrapServer(apiServer)
 	multiplexer := config.GrpcMultiplexer{
-		Server: grpcWebServer,
+		grpcWebServer,
 	}
 	router := http.NewServeMux()
-	staticHandler := http.FileServer(http.Dir(serverConfig.Endpoints.Public))
-	router.Handle("/", multiplexer.MultiplexerHandler(staticHandler))
+	staticHandler := http.FileServer(http.Dir("public"))
+	router.Handle("/", multiplexer.MultiplexerHandler(http.StripPrefix("/", staticHandler)))
 
 	//////////////////////////
 	// TODO: register auth endpoints here: RegisterAuth(router, config.App or full config)
 	// TODO(vera): update to handle gitlab, refactor all http stuff to webserver.go
 	// TODO(vera): shouldn't need http middleware anymore, needs tests
-	router.HandleFunc(serverConfig.Endpoints.LoginURL, auth.OAuth2Login(logger.Sugar(), db, authConfig))
-	router.HandleFunc(serverConfig.Endpoints.CallbackURL, auth.OAuth2Callback(logger.Sugar(), db, authConfig, githubApp, tokenManager, serverConfig.Secrets.CallbackSecret))
+	router.HandleFunc("/auth/github", auth.OAuth2Login(logger.Sugar(), db, authConfig))
+	router.HandleFunc("/auth/github/callback", auth.OAuth2Callback(logger.Sugar(), db, authConfig, githubApp, tokenManager, serverConfig.Secrets.CallbackSecret))
 	//////////////////////////
 
 	// Create an HTTP server and bind the router to it, and set wanted address
 	srv := &http.Server{
 		Handler:      router,
-		Addr:         serverConfig.Endpoints.HttpAddress,
+		Addr:         "localhost:8080", // TODO(vera): read from config
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}

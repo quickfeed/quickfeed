@@ -22,6 +22,7 @@ quickfeed-env.sh
 # Configuration files
 ci/docker/envoy/*.yaml
 ci/docker/envoy/certs
+./certs
 
 # Database and Log files
 *.db

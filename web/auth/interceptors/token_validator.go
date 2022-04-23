@@ -14,6 +14,7 @@ import (
 
 func ValidateToken(logger *zap.Logger, tokens *auth.TokenManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		logger.Debug("TOKEN VALIDATE INTERCEPTOR")
 		meta, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			logger.Sugar().Errorf("Token validation failed: missing metadata")

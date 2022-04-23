@@ -4,15 +4,21 @@ import (
 	"context"
 	"reflect"
 	"strings"
+	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/web/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+// MaxWait is the maximum time a request is allowed to stay open before aborting.
+const MaxWait = 2 * time.Minute
+
+// TODO(vera): this constand does not belong here,
+// but putting it in config package causes import cycle
 
 type validator interface {
 	IsValid() bool
@@ -22,13 +28,14 @@ type idCleaner interface {
 	RemoveRemoteID()
 }
 
-// Interceptor returns a new unary server interceptor that validates requests
+// ValidateMethod returns a new unary server interceptor that validates requests
 // that implements the validator interface.
 // Invalid requests are rejected without logging and before it reaches any
 // user-level code and returns an illegal argument to the client.
 // In addition, the interceptor also implements a cancel mechanism.
-func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
+func ValidateMethod(logger *zap.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		logger.Debug("VALIDATE INTERCEPTOR")
 		methodName := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
 		pb.AgMethodSuccessRateMetric.WithLabelValues(methodName, "total").Inc()
 		responseTimer := prometheus.NewTimer(prometheus.ObserverFunc(
@@ -45,7 +52,7 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 			logger.Sugar().Debugf("message type '%s' does not implement validator interface",
 				reflect.TypeOf(req).String())
 		}
-		ctx, cancel := context.WithTimeout(ctx, config.MaxWait)
+		ctx, cancel := context.WithTimeout(ctx, MaxWait)
 		defer cancel()
 
 		// if response has information on remote ID, it will be removed
