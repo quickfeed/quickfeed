@@ -13,6 +13,9 @@ import (
 
 // TODO(Espeland): This test doesn't currently accomplish much.
 func TestAssignReviewers(t *testing.T) {
+	// Reset these before every test.
+	teacherReviewCounter = make(map[uint64]map[uint64]int)
+	groupReviewCounter = make(map[uint64]map[uint64]int)
 	type testUser struct {
 		login string
 		role  pb.Enrollment_UserStatus
@@ -64,6 +67,9 @@ func TestAssignReviewers(t *testing.T) {
 }
 
 func TestGetNextReviewer(t *testing.T) {
+	// Reset these before every test.
+	teacherReviewCounter = make(map[uint64]map[uint64]int)
+	groupReviewCounter = make(map[uint64]map[uint64]int)
 	IDs := []uint64{1, 2, 3, 4}
 	teachers := []*pb.User{{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}}
 	students := []*pb.User{{ID: 1}, {ID: 2}, {ID: 3}}
