@@ -253,7 +253,7 @@ export class MockGrpcManager {
 
     public updateEnrollments(enrollments: Enrollment[]): Promise<IGrpcResponse<Void>> {
         this.enrollments.getEnrollmentsList().forEach((e, i) => {
-            const enrollment = enrollments.find(en => en.getUserid() === e.getUserid() && en.getCourseid() === e.getCourseid())
+            const enrollment = enrollments.find(en => en.getId() === e.getId() && en.getCourseid() === e.getCourseid())
             if (enrollment) {
                 this.enrollments.getEnrollmentsList()[i].setStatus(enrollment.getStatus())
             }
@@ -283,20 +283,16 @@ export class MockGrpcManager {
         }
         groups.forEach(group => {
             const groupEnrollments = this.enrollments.getEnrollmentsList().filter(e => e.getGroupid() === group.getId())
-            let users: User[] = []
+            group.setEnrollmentsList(groupEnrollments)
+            const users: User[] = []
             groupEnrollments.forEach(e => {
                 const user = this.users.getUsersList().find(u => u.getId() === e.getUserid())
                 if (user) {
-                    e.setUser(this.users.getUsersList().find(u => u.getId() === e.getUserid()))
                     users.push(user)
                 }
-
             })
             group.setUsersList(users)
-            console.log(group.getUsersList())
-            group.setEnrollmentsList(groupEnrollments)
         })
-        console.log(groups)
         return this.grpcSend<Groups>(new Groups().setGroupsList(groups))
     }
 
@@ -309,6 +305,7 @@ export class MockGrpcManager {
     }
 
     public updateGroup(group: Group): Promise<IGrpcResponse<Void>> {
+        // TODO: Remove / add group IDs to enrollments
         const groupID = group.getId()
         const g = this.groups.getGroupsList().findIndex(g => g.getId() === groupID)
         if (g > 0) {
@@ -320,6 +317,11 @@ export class MockGrpcManager {
     public deleteGroup(courseID: number, groupID: number): Promise<IGrpcResponse<Void>> {
         const group = this.groups.getGroupsList().findIndex(g => g.getId() === groupID)
         if (group > 0) {
+            this.enrollments.getEnrollmentsList().forEach(e => {
+                if (e.getGroupid() === groupID && e.getCourseid() === courseID) {
+                    e.setGroupid(0)
+                }
+            })
             this.groups.getGroupsList().splice(group, 1)
         }
         return this.grpcSend<Void>(new Void())
@@ -334,11 +336,17 @@ export class MockGrpcManager {
         const request = new Group()
         request.setName(name)
         request.setCourseid(courseID)
+        // TODO: Not a unique ID
+        request.setId(this.groups.getGroupsList().length + 1)
         const groupUsers: User[] = []
         users.forEach((ele) => {
             const user = this.users.getUsersList().find(u => u.getId() === ele)
             if (user) {
                 groupUsers.push(user)
+                const enrollment = this.enrollments.getEnrollmentsList().find(e => e.getUserid() === ele && e.getCourseid() === courseID)
+                if (enrollment) {
+                    enrollment.setGroupid(request.getId())
+                }
             } else {
                 return this.grpcSend<Group>(null, new Status().setCode(2).setError('User not found'))
             }
@@ -346,8 +354,6 @@ export class MockGrpcManager {
         if (groupUsers.length > 0) {
             request.setUsersList(groupUsers)
         }
-        // TODO: Figure out IDs
-        request.setUsersList(groupUsers)
         this.groups.getGroupsList().push(request)
         return this.grpcSend<Group>(request)
     }
