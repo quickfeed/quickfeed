@@ -238,7 +238,7 @@ func TestRequestReviewers(t *testing.T) {
 
 	repository := "oleespe-labs"
 	pullNumber := 48
-	reviewers := []string{"oleespe-2"}
+	reviewers := []string{"oleespe2"}
 
 	opt := &scm.RequestReviewersOptions{
 		Organization: qfTestOrg,

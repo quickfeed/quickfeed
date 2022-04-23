@@ -64,7 +64,11 @@ func (s *registry) Add(test interface{}, max, weight int) {
 	s.add(testName(test), "", max, weight)
 }
 
-func (s *registry) AddWithTaskName(test interface{}, taskName string, max, weight int) {
+// AddWithTask test with given taskName, max score and weight to the registry.
+// This function is identical to Add, with the addition of assigning a taskName.
+//
+// Will panic if the test has already been registered or if max or weight is non-positive.
+func (s *registry) AddWithTask(test interface{}, taskName string, max, weight int) {
 	s.add(testName(test), taskName, max, weight)
 }
 
@@ -78,7 +82,13 @@ func (s *registry) AddSub(test interface{}, subTestName string, max, weight int)
 	s.add(tstName, "", max, weight)
 }
 
-func (s *registry) AddSubWithTaskName(test interface{}, taskName, subTestName string, max, weight int) {
+// AddSubWithTask test with given taskName, max score and weight to the registry.
+// This function should be used to register subtests, and should be used in
+// conjunction with MaxByName and MinByName called from within a subtest.
+// This function is identical to AddSub, with the addition of assigning a taskName.
+//
+// Will panic if the test has already been registered or if max or weight is non-positive.
+func (s *registry) AddSubWithTask(test interface{}, subTestName, taskName string, max, weight int) {
 	tstName := fmt.Sprintf("%s/%s", testName(test), subTestName)
 	s.add(tstName, taskName, max, weight)
 }

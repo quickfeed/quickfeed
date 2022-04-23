@@ -31,7 +31,7 @@ type Score struct {
 	SubmissionID uint64 `protobuf:"varint,2,opt,name=SubmissionID,proto3" json:"SubmissionID,omitempty" gorm:"foreignKey:ID"`
 	Secret       string `protobuf:"bytes,3,opt,name=Secret,proto3" json:"Secret,omitempty" gorm:"-"`  // the unique identifier for a scoring session
 	TestName     string `protobuf:"bytes,4,opt,name=TestName,proto3" json:"TestName,omitempty"`       // name of the test
-	TaskName     string `protobuf:"bytes,5,opt,name=TaskName,proto3" json:"TaskName,omitempty"`       // name of the test
+	TaskName     string `protobuf:"bytes,5,opt,name=TaskName,proto3" json:"TaskName,omitempty"`       // name of task this score belongs to
 	Score        int32  `protobuf:"varint,6,opt,name=Score,proto3" json:"Score,omitempty"`            // the score obtained
 	MaxScore     int32  `protobuf:"varint,7,opt,name=MaxScore,proto3" json:"MaxScore,omitempty"`      // max score possible to get on this specific test
 	Weight       int32  `protobuf:"varint,8,opt,name=Weight,proto3" json:"Weight,omitempty"`          // the weight of this test; used to compute final grade

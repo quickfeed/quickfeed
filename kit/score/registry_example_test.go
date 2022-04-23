@@ -23,13 +23,13 @@ func fibonacci(n uint) uint {
 var scoreRegistry = score.NewRegistry()
 
 func init() {
-	scoreRegistry.Add(TestFibonacciMax, "", len(fibonacciTests), 20)
-	scoreRegistry.Add(TestFibonacciMin, "", len(fibonacciTests), 20)
+	scoreRegistry.Add(TestFibonacciMax, len(fibonacciTests), 20)
+	scoreRegistry.Add(TestFibonacciMin, len(fibonacciTests), 20)
 	for _, ft := range fibonacciTests {
-		scoreRegistry.AddSub(TestFibonacciSubTest, "", subTestName("Max", ft.in), 1, 1)
+		scoreRegistry.AddSub(TestFibonacciSubTest, subTestName("Max", ft.in), 1, 1)
 	}
 	for _, ft := range fibonacciTests {
-		scoreRegistry.AddSub(TestFibonacciSubTest, "", subTestName("Min", ft.in), 1, 1)
+		scoreRegistry.AddSub(TestFibonacciSubTest, subTestName("Min", ft.in), 1, 1)
 	}
 }
 

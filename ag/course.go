@@ -24,7 +24,7 @@ func (course *Course) SetSlipDays() {
 	}
 }
 
-func (course *Course) GetAllTeacherEnrollments() []*Enrollment {
+func (course *Course) TeacherEnrollments() []*Enrollment {
 	enrolledTeachers := []*Enrollment{}
 	for _, enrollment := range course.Enrollments {
 		if enrollment.IsTeacher() {

@@ -3,96 +3,114 @@ package assignments
 import (
 	"context"
 	"errors"
-	"strconv"
-	"strings"
+	"fmt"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/scm"
-	"github.com/google/go-github/v35/github"
-	"go.uber.org/zap"
 )
 
-var ErrInvalidBody = errors.New("invalid pull request body")
+var (
+	// These are used to track how many times someone has been assigned to review a pull request. They map as follows.
+	// teacherReviewCounter[courseID][userID] = count
+	// groupReviewCounter[groupID][userID] = count
+	teacherReviewCounter = make(map[uint64]map[uint64]int)
+	groupReviewCounter   = make(map[uint64]map[uint64]int)
+)
 
-// getLinkedIssue returns the issue number from a pull requests body.
-// E.g. 30, from the body "Fixes #30".
-func getLinkedIssue(body string) (uint64, error) {
-	if count := strings.Count(body, "#"); count != 1 {
-		return 0, ErrInvalidBody
-	}
-	_, numString, _ := strings.Cut(body, "#")
-	issueNumber, err := strconv.Atoi(numString)
-	if err != nil {
-		return 0, ErrInvalidBody
-	}
-	return uint64(issueNumber), nil
-}
-
-func assignReviewers(ctx context.Context, sc scm.SCM, db database.Database, course *pb.Course, repo *pb.Repository, pullRequestNumber int) error {
-	teachers, err := db.GetCourseTeachers(course)
+func AssignReviewers(sc scm.SCM, db database.Database, course *pb.Course, repo *pb.Repository, pullRequest *pb.PullRequest) error {
+	teacherReviewer, err := getNextTeacherReviewer(db, course)
 	if err != nil {
 		return err
 	}
-	reviewers := []string{}
-	for _, teacher := range teachers {
-		reviewers = append(reviewers, teacher.GetLogin())
+	studentReviewer, err := getNextStudentReviewer(db, repo, pullRequest.GetUserID())
+	if err != nil {
+		return err
 	}
+
+	reviewers := []string{}
+	reviewers = append(reviewers, teacherReviewer.GetLogin())
+	reviewers = append(reviewers, studentReviewer.GetLogin())
 
 	opt := &scm.RequestReviewersOptions{
 		Organization: course.GetOrganizationPath(),
 		Repository:   repo.Name(),
-		Number:       pullRequestNumber,
+		Number:       int(pullRequest.GetNumber()),
 		Reviewers:    reviewers,
 	}
 
+	ctx := context.Background()
 	if err := sc.RequestReviewers(ctx, opt); err != nil {
 		return err
 	}
-	return nil
+	// Change pull request stage to review
+	pullRequest.SetReview()
+	return db.UpdatePullRequest(pullRequest)
 }
 
-func CreatePullRequest(db database.Database, logger *zap.SugaredLogger, course *pb.Course, repo *pb.Repository, payload *github.PullRequestEvent) {
-	scm, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
-	if err != nil {
-		logger.Errorf("Failed to create SCM Client: %v", err)
-		return
+// getNextReviewer gets the next reviewer from either teacherReviewCounter or studentReviewCounter,
+// based on whoever in total has been assigned to the least amount of pull requests.
+// It is simple, and does not account for how many current review requests any user has.
+//
+// Returns an error if the list of users is empty
+func getNextReviewer(ID uint64, users []*pb.User, reviewCounter map[uint64]map[uint64]int) (*pb.User, error) {
+	if len(users) == 0 {
+		return nil, errors.New("list of users is empty")
 	}
-	ctx := context.Background()
-
-	issueNumber, err := getLinkedIssue(payload.GetPullRequest().GetBody())
-	if err != nil {
-		logger.Debugf("Failed to get issue number from pull request body: %v, in repository %s", err, payload.GetRepo().GetFullName())
-		return
+	reviewerMap, ok := reviewCounter[ID]
+	if !ok {
+		// If a map does not exist for a course we create it,
+		// and assign the first user as the reviewer.
+		reviewCounter[ID] = make(map[uint64]int)
+		reviewCounter[ID][users[0].GetID()] = 1
+		return users[0], nil
 	}
-	var associatedIssue *pb.Issue = nil
-	for _, issue := range repo.Issues {
-		if issue.IssueNumber == issueNumber {
-			associatedIssue = issue
-			break
+	userWithLowestCount := users[0]
+	lowestCount := reviewerMap[users[0].GetID()]
+	for _, user := range users {
+		count, ok := reviewerMap[user.GetID()]
+		if !ok {
+			// If the user is not present in the review map,
+			// then they are assigned as the next reviewer.
+			reviewerMap[user.GetID()] = 1
+			return user, nil
+		}
+		if count < lowestCount {
+			userWithLowestCount = user
+			lowestCount = count
 		}
 	}
-	if associatedIssue == nil {
-		logger.Debugf("Ignoring pull request opened event for: %s, since linked issue is not managed", payload.GetRepo().GetFullName())
-		return
-	}
+	reviewerMap[userWithLowestCount.GetID()]++
+	return userWithLowestCount, nil
+}
 
-	pullRequest := &pb.PullRequest{
-		PullRequestID: uint64(payload.GetPullRequest().GetID()),
-		IssueID:       associatedIssue.GetID(),
-		// TODO(Espeland): Probably a way of approved being automatically set to false
-		Approved: false,
+// getNextTeacherReviewer gets the teacher with the least total reviews.
+func getNextTeacherReviewer(db database.Database, course *pb.Course) (*pb.User, error) {
+	teachers, err := db.GetCourseTeachers(course)
+	if err != nil {
+		return nil, err
 	}
-
-	if err = db.CreatePullRequest(pullRequest); err != nil {
-		logger.Errorf("Failed to create pull request record for repository %s: %v", payload.GetRepo().GetFullName(), err)
-		return
+	teacherReviewer, err := getNextReviewer(course.GetID(), teachers, teacherReviewCounter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get next teacher reviewer: %w", err)
 	}
+	return teacherReviewer, nil
+}
 
-	if err = assignReviewers(ctx, scm, db, course, repo, payload.GetNumber()); err != nil {
-		logger.Errorf("Failed to assign reviewers to pull request: %v", err)
-		return
+// getNextStudentReviewer gets the student with the least total reviews.
+func getNextStudentReviewer(db database.Database, repo *pb.Repository, ownerID uint64) (*pb.User, error) {
+	group, err := db.GetGroup(repo.GetGroupID())
+	if err != nil {
+		return nil, err
 	}
-
-	logger.Debugf("Pull request successfully created for repository: %s", payload.GetRepo().GetFullName())
+	if len(group.Users) == 0 {
+		// This should never happen.
+		return nil, errors.New("failed to get next teacher reviewer: no users in group")
+	}
+	// We exclude the PR owner from the search.
+	studentReviewer, err := getNextReviewer(group.GetID(), group.GetUserSubset(ownerID), groupReviewCounter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get next teacher reviewer: %w", err)
+	}
+	return studentReviewer, nil
 }

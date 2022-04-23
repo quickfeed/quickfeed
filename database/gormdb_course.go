@@ -167,12 +167,11 @@ func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_User
 // GetCourseTeachers returns a list of all teachers in a course.
 func (db *GormDB) GetCourseTeachers(query *pb.Course) ([]*pb.User, error) {
 	var course pb.Course
-	if err := db.conn.Where(query).First(&course).Error; err != nil {
+	if err := db.conn.Where(query).Preload("Enrollments").First(&course).Error; err != nil {
 		return nil, err
 	}
-	teacherEnrollments := course.GetAllTeacherEnrollments()
 	teachers := []*pb.User{}
-	for _, teacherEnrollment := range teacherEnrollments {
+	for _, teacherEnrollment := range course.TeacherEnrollments() {
 		teacher, err := db.GetUser(teacherEnrollment.GetUserID())
 		if err != nil {
 			return nil, err

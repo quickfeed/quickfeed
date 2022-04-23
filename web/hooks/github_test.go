@@ -15,7 +15,6 @@ import (
 	"github.com/autograde/quickfeed/internal/qtest"
 	logq "github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
-	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 )
 
@@ -23,28 +22,21 @@ const (
 	secret = "the-secret-quickfeed-test"
 )
 
-// To run this test, please see instructions in the developer guide (dev.md).
-
+// To run these tests, please see instructions in the developer guide (dev.md).
 // On macOS, get ngrok using `brew install ngrok`.
 // See steps to follow [here](https://groob.io/tutorial/go-github-webhook/).
 
-// To run this test, use the following (replace the forwarding URL with your own):
+// To run these tests, use the following (replace the forwarding URL with your own):
 //
-// QF_WEBHOOK_SERVER=https://53c51fa9.ngrok.io go test -v -run TestGitHubWebHook
-//
+// QF_WEBHOOK_SERVER=https://53c51fa9.ngrok.io go test -v -run <test name> -timeout 999999s
 // This will create a new webhook with URL `https://53c51fa9.ngrok.io/webhook`
-// for the $QF_TEST_ORG/tests repository for handling push events.
+// The -timeout flag is not necessary, but stops the test from timing out after 10 minutes.
 //
-// This test will then block waiting for a push event from GitHub; meaning that you
-// will manually have to create a push event to the 'tests' repository.
-//
+// These tests will then block waiting for an event from GitHub; meaning that you
+// will manually have to create these events.
+
 // TODO(meling) add code to create a push event to the tests repository.
-
-type foundIssue struct {
-	IssueNumber uint64
-	Name        string
-}
-
+// TestGitHubWebHook tests listening to events from the tests repository.
 func TestGitHubWebHook(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
@@ -86,31 +78,7 @@ func TestGitHubWebHook(t *testing.T) {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func TestExtractChanges(t *testing.T) {
-	modifiedFiles := []string{
-		"go.mod",
-		"go.sum",
-		"exercise.go",
-		"README.md",
-		"lab2/fib.go",
-		"lab3/detector/fd.go",
-		"paxos/proposer.go",
-		"/hallo",
-		"",
-	}
-	want := map[string]bool{
-		"lab2":  true,
-		"lab3":  true,
-		"paxos": true,
-	}
-	got := make(map[string]bool)
-	extractChanges(modifiedFiles, got)
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Fatalf("content mismatch (-want +got):\n%s", diff)
-	}
-}
-
-// TestGitHubWebHookOrg tests listening to hooks from an entire repository.
+// TestGitHubWebHookOrg tests listening to events from an entire org.
 func TestGitHubWebHookOrg(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
@@ -162,8 +130,15 @@ func TestGitHubWebHookOrg(t *testing.T) {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
+// TODO(Espeland): This function is almost identical to the one in assignments/tasks_test.go.
+// It would be best if we could add this to qtest, which is currently not possible since using FetchAssignments there would lead to an import cycle.
 func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.SugaredLogger, db database.Database, sc scm.SCM, course *pb.Course) error {
 	t.Helper()
+
+	type foundIssue struct {
+		IssueNumber uint64
+		Name        string
+	}
 
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
 	if err != nil {

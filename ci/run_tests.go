@@ -19,6 +19,7 @@ type RunData struct {
 	Course     *pb.Course
 	Assignment *pb.Assignment
 	Repo       *pb.Repository
+	BranchName string
 	CommitID   string
 	JobOwner   string
 	Rebuild    bool

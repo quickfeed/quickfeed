@@ -48,6 +48,7 @@ goog.exportSymbol('proto.ag.Organizations', null, global);
 goog.exportSymbol('proto.ag.Provider', null, global);
 goog.exportSymbol('proto.ag.Providers', null, global);
 goog.exportSymbol('proto.ag.PullRequest', null, global);
+goog.exportSymbol('proto.ag.PullRequest.Stage', null, global);
 goog.exportSymbol('proto.ag.RebuildRequest', null, global);
 goog.exportSymbol('proto.ag.RebuildRequest.RebuildtypeCase', null, global);
 goog.exportSymbol('proto.ag.RemoteIdentity', null, global);
@@ -6505,9 +6506,13 @@ proto.ag.PullRequest.prototype.toObject = function(opt_includeInstance) {
 proto.ag.PullRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    pullrequestid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    issueid: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    approved: jspb.Message.getBooleanFieldWithDefault(msg, 4, false)
+    externalrepositoryid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    taskid: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    issueid: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    userid: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    sourcebranchname: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    number: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    stage: jspb.Message.getFieldWithDefault(msg, 9, 0)
   };
 
   if (includeInstance) {
@@ -6548,17 +6553,33 @@ proto.ag.PullRequest.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {number} */ (reader.readUint64());
       msg.setId(value);
       break;
-    case 2:
-      var value = /** @type {number} */ (reader.readUint64());
-      msg.setPullrequestid(value);
-      break;
     case 3:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setExternalrepositoryid(value);
+      break;
+    case 4:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setTaskid(value);
+      break;
+    case 5:
       var value = /** @type {number} */ (reader.readUint64());
       msg.setIssueid(value);
       break;
-    case 4:
-      var value = /** @type {boolean} */ (reader.readBool());
-      msg.setApproved(value);
+    case 6:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setUserid(value);
+      break;
+    case 7:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setSourcebranchname(value);
+      break;
+    case 8:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setNumber(value);
+      break;
+    case 9:
+      var value = /** @type {!proto.ag.PullRequest.Stage} */ (reader.readEnum());
+      msg.setStage(value);
       break;
     default:
       reader.skipField();
@@ -6596,29 +6617,67 @@ proto.ag.PullRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getPullrequestid();
-  if (f !== 0) {
-    writer.writeUint64(
-      2,
-      f
-    );
-  }
-  f = message.getIssueid();
+  f = message.getExternalrepositoryid();
   if (f !== 0) {
     writer.writeUint64(
       3,
       f
     );
   }
-  f = message.getApproved();
-  if (f) {
-    writer.writeBool(
+  f = message.getTaskid();
+  if (f !== 0) {
+    writer.writeUint64(
       4,
+      f
+    );
+  }
+  f = message.getIssueid();
+  if (f !== 0) {
+    writer.writeUint64(
+      5,
+      f
+    );
+  }
+  f = message.getUserid();
+  if (f !== 0) {
+    writer.writeUint64(
+      6,
+      f
+    );
+  }
+  f = message.getSourcebranchname();
+  if (f.length > 0) {
+    writer.writeString(
+      7,
+      f
+    );
+  }
+  f = message.getNumber();
+  if (f !== 0) {
+    writer.writeUint64(
+      8,
+      f
+    );
+  }
+  f = message.getStage();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      9,
       f
     );
   }
 };
 
+
+/**
+ * @enum {number}
+ */
+proto.ag.PullRequest.Stage = {
+  NONE: 0,
+  DRAFT: 1,
+  REVIEW: 2,
+  APPROVED: 3
+};
 
 /**
  * optional uint64 ID = 1;
@@ -6639,28 +6698,10 @@ proto.ag.PullRequest.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 pullRequestID = 2;
+ * optional uint64 externalRepositoryID = 3;
  * @return {number}
  */
-proto.ag.PullRequest.prototype.getPullrequestid = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.ag.PullRequest} returns this
- */
-proto.ag.PullRequest.prototype.setPullrequestid = function(value) {
-  return jspb.Message.setProto3IntField(this, 2, value);
-};
-
-
-/**
- * optional uint64 issueID = 3;
- * @return {number}
- */
-proto.ag.PullRequest.prototype.getIssueid = function() {
+proto.ag.PullRequest.prototype.getExternalrepositoryid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -6669,26 +6710,116 @@ proto.ag.PullRequest.prototype.getIssueid = function() {
  * @param {number} value
  * @return {!proto.ag.PullRequest} returns this
  */
-proto.ag.PullRequest.prototype.setIssueid = function(value) {
+proto.ag.PullRequest.prototype.setExternalrepositoryid = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional bool approved = 4;
- * @return {boolean}
+ * optional uint64 taskID = 4;
+ * @return {number}
  */
-proto.ag.PullRequest.prototype.getApproved = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 4, false));
+proto.ag.PullRequest.prototype.getTaskid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
 /**
- * @param {boolean} value
+ * @param {number} value
  * @return {!proto.ag.PullRequest} returns this
  */
-proto.ag.PullRequest.prototype.setApproved = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 4, value);
+proto.ag.PullRequest.prototype.setTaskid = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional uint64 issueID = 5;
+ * @return {number}
+ */
+proto.ag.PullRequest.prototype.getIssueid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.ag.PullRequest} returns this
+ */
+proto.ag.PullRequest.prototype.setIssueid = function(value) {
+  return jspb.Message.setProto3IntField(this, 5, value);
+};
+
+
+/**
+ * optional uint64 userID = 6;
+ * @return {number}
+ */
+proto.ag.PullRequest.prototype.getUserid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.ag.PullRequest} returns this
+ */
+proto.ag.PullRequest.prototype.setUserid = function(value) {
+  return jspb.Message.setProto3IntField(this, 6, value);
+};
+
+
+/**
+ * optional string sourceBranchName = 7;
+ * @return {string}
+ */
+proto.ag.PullRequest.prototype.getSourcebranchname = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.ag.PullRequest} returns this
+ */
+proto.ag.PullRequest.prototype.setSourcebranchname = function(value) {
+  return jspb.Message.setProto3StringField(this, 7, value);
+};
+
+
+/**
+ * optional uint64 number = 8;
+ * @return {number}
+ */
+proto.ag.PullRequest.prototype.getNumber = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.ag.PullRequest} returns this
+ */
+proto.ag.PullRequest.prototype.setNumber = function(value) {
+  return jspb.Message.setProto3IntField(this, 8, value);
+};
+
+
+/**
+ * optional Stage stage = 9;
+ * @return {!proto.ag.PullRequest.Stage}
+ */
+proto.ag.PullRequest.prototype.getStage = function() {
+  return /** @type {!proto.ag.PullRequest.Stage} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
+};
+
+
+/**
+ * @param {!proto.ag.PullRequest.Stage} value
+ * @return {!proto.ag.PullRequest} returns this
+ */
+proto.ag.PullRequest.prototype.setStage = function(value) {
+  return jspb.Message.setProto3EnumField(this, 9, value);
 };
 
 

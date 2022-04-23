@@ -705,7 +705,7 @@ func (s *GithubSCM) CreateIssue(ctx context.Context, opt *CreateIssueOptions) (*
 		Assignees: opt.Assignees,
 	}
 
-	s.logger.Debugf("CreateRepository: creating issue %s on %s Repository", opt.Title, opt.Repository)
+	s.logger.Debugf("Creating issue %s on %s Repository", opt.Title, opt.Repository)
 	issue, _, err := s.client.Issues.Create(ctx, opt.Organization, opt.Repository, newIssue)
 	if err != nil {
 		return nil, ErrFailedSCM{
@@ -714,7 +714,7 @@ func (s *GithubSCM) CreateIssue(ctx context.Context, opt *CreateIssueOptions) (*
 			GitError: err,
 		}
 	}
-	s.logger.Debugf("CreateRepository: done creating issue %s", opt.Title)
+	s.logger.Debugf("Done creating issue %s", opt.Title)
 
 	return toIssue(issue), nil
 }

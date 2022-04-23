@@ -30,12 +30,12 @@ var triangularTests = []struct {
 }
 
 func init() {
-	scores.Add(TestPanicTriangularBefore, "", len(triangularTests), 5)
-	scores.Add(TestPanicTriangularPanic, "", len(triangularTests), 5)
-	scores.Add(TestPanicTriangularAfter, "", len(triangularTests), 5)
-	scores.Add(TestPanicHandler, "", len(triangularTests), 5)
-	scores.Add(TestPanicTriangularPanicWithMsg, "", len(triangularTests), 5)
-	scores.Add(TestPanicHandlerWithMsg, "", len(triangularTests), 5)
+	scores.Add(TestPanicTriangularBefore, len(triangularTests), 5)
+	scores.Add(TestPanicTriangularPanic, len(triangularTests), 5)
+	scores.Add(TestPanicTriangularAfter, len(triangularTests), 5)
+	scores.Add(TestPanicHandler, len(triangularTests), 5)
+	scores.Add(TestPanicTriangularPanicWithMsg, len(triangularTests), 5)
+	scores.Add(TestPanicHandlerWithMsg, len(triangularTests), 5)
 }
 
 // TestPanicTriangularBefore is meant to run before TestPanicTriangularPanic.

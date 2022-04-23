@@ -713,14 +713,26 @@ export class PullRequest extends jspb.Message {
   getId(): number;
   setId(value: number): PullRequest;
 
-  getPullrequestid(): number;
-  setPullrequestid(value: number): PullRequest;
+  getExternalrepositoryid(): number;
+  setExternalrepositoryid(value: number): PullRequest;
+
+  getTaskid(): number;
+  setTaskid(value: number): PullRequest;
 
   getIssueid(): number;
   setIssueid(value: number): PullRequest;
 
-  getApproved(): boolean;
-  setApproved(value: boolean): PullRequest;
+  getUserid(): number;
+  setUserid(value: number): PullRequest;
+
+  getSourcebranchname(): string;
+  setSourcebranchname(value: string): PullRequest;
+
+  getNumber(): number;
+  setNumber(value: number): PullRequest;
+
+  getStage(): PullRequest.Stage;
+  setStage(value: PullRequest.Stage): PullRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): PullRequest.AsObject;
@@ -733,9 +745,20 @@ export class PullRequest extends jspb.Message {
 export namespace PullRequest {
   export type AsObject = {
     id: number,
-    pullrequestid: number,
+    externalrepositoryid: number,
+    taskid: number,
     issueid: number,
-    approved: boolean,
+    userid: number,
+    sourcebranchname: string,
+    number: number,
+    stage: PullRequest.Stage,
+  }
+
+  export enum Stage { 
+    NONE = 0,
+    DRAFT = 1,
+    REVIEW = 2,
+    APPROVED = 3,
   }
 }
 

@@ -128,6 +128,9 @@ func (r *Results) Sum() uint32 {
 	return r.sum("")
 }
 
+// TaskSum returns the total score computed over the set of recorded scores with the given taskName.
+// The total is a grade in the range 0-100.
+// This method must only be called after Validate has returned nil.
 func (r *Results) TaskSum(taskName string) uint32 {
 	return r.sum(taskName)
 }

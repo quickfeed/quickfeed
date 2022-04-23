@@ -2,6 +2,7 @@ package database_test
 
 import (
 	"errors"
+	"sort"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -194,7 +195,6 @@ func TestGormDBGetCourses(t *testing.T) {
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCourses() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
-
 }
 
 func TestGormDBGetCourse(t *testing.T) {
@@ -355,5 +355,53 @@ func TestGormDBCourseUniqueContraint(t *testing.T) {
 	// CreateCourse should succeed because the unique constraint (course.code, course.year) is not violated
 	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestGetCourseTeachers(t *testing.T) {
+	tests := map[string]struct {
+		wantTeachers, students []*pb.User
+	}{
+		"Basic": {
+			wantTeachers: []*pb.User{{Login: "teacher1"}, {Login: "teacher2"}},
+			students:     []*pb.User{{Login: "student1"}},
+		},
+		"No teachers": {
+			wantTeachers: []*pb.User{},
+			students:     []*pb.User{{Login: "student1"}},
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			db, cleanup := qtest.TestDB(t)
+			defer cleanup()
+			admin := qtest.CreateUser(t, db, 1, &pb.User{})
+			course := &pb.Course{}
+			qtest.CreateCourse(t, db, admin, course)
+			nextRemoteID := uint64(2)
+			for _, teacher := range tt.wantTeachers {
+				qtest.CreateUser(t, db, nextRemoteID, teacher)
+				qtest.EnrollTeacher(t, db, teacher, course)
+				nextRemoteID++
+			}
+			for _, student := range tt.students {
+				qtest.CreateUser(t, db, nextRemoteID, student)
+				qtest.EnrollStudent(t, db, student, course)
+				nextRemoteID++
+			}
+			// We add the admin to the list of wantTeachers,
+			// since the admin is always registered as a teacher when the course is created.
+			tt.wantTeachers = append(tt.wantTeachers, admin)
+			sort.Slice(tt.wantTeachers, func(i, j int) bool {
+				return tt.wantTeachers[i].GetID() < tt.wantTeachers[j].GetID()
+			})
+			gotTeachers, err := db.GetCourseTeachers(course)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(tt.wantTeachers, gotTeachers, protocmp.Transform()); diff != "" {
+				t.Errorf("GetCourseTeachers mismatch (-wantTeachers +gotTeachers):\n%s", diff)
+			}
+		})
 	}
 }

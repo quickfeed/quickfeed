@@ -200,10 +200,20 @@ message Issue {
 }
 
 message PullRequest {
-    uint64 ID               = 1;
-    uint64 pullRequestID    = 2; // Represents the external pull request ID
-    uint64 issueID          = 3; // foreign key
-    bool approved           = 4;
+    enum Stage {
+        NONE    = 0;
+        DRAFT   = 1;
+        REVIEW  = 2;
+        APPROVED = 3;
+    }
+    uint64 ID                   = 1;
+    uint64 externalRepositoryID = 3; // Represents the external repository ID
+    uint64 taskID               = 4; // foreign key
+    uint64 issueID              = 5; // foreign key
+    uint64 userID               = 6; // The user who created this PR
+    string sourceBranchName     = 7; // The source branch for this pull request
+    uint64 number               = 8; // Pull request number
+    Stage stage                 = 9;
 }
 
 message Assignments {

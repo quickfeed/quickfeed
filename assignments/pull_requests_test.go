@@ -1,42 +1,17 @@
 package assignments
 
 import (
-	"context"
 	"errors"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/scm"
+	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
-func TestGetLinkedIssue(t *testing.T) {
-	var wantIssueNumber uint64 = 30
-	tests := map[string]struct {
-		body string
-		err  error
-	}{
-		"Simple":         {body: "Fixes #30", err: nil},
-		"Not a number":   {body: "Fixes #30nan", err: ErrInvalidBody},
-		"Invalid body":   {body: "Fixes #30nan #", err: ErrInvalidBody},
-		"Invalid body 2": {body: "Fixes", err: ErrInvalidBody},
-	}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			gotIssueNumber, err := getLinkedIssue(tt.body)
-			if err != nil {
-				if !errors.Is(err, tt.err) {
-					t.Errorf("getLinkedIssue() error mismatch, got %v, expected %v", err, tt.err)
-				}
-				return
-			}
-			if gotIssueNumber != wantIssueNumber {
-				t.Errorf("getLinkedIssue() = %d, expected %d", gotIssueNumber, wantIssueNumber)
-			}
-		})
-	}
-}
-
+// TODO(Espeland): This test doesn't currently accomplish much.
 func TestAssignReviewers(t *testing.T) {
 	type testUser struct {
 		login string
@@ -55,7 +30,6 @@ func TestAssignReviewers(t *testing.T) {
 	}
 
 	logger := qtest.Logger(t)
-	ctx := context.Background()
 	repo := &pb.Repository{HTMLURL: "irrelevant"}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -82,9 +56,68 @@ func TestAssignReviewers(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err = assignReviewers(ctx, sc, db, course, repo, 1); err != nil && errors.Is(err, scm.ErrNotSupported{}) {
+			if err = AssignReviewers(sc, db, course, repo, &pb.PullRequest{Number: 1}); err != nil && errors.Is(err, scm.ErrNotSupported{}) {
 				t.Fatal(err)
 			}
 		})
+	}
+}
+
+func TestGetNextReviewer(t *testing.T) {
+	IDs := []uint64{1, 2, 3, 4}
+	teachers := []*pb.User{{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}}
+	students := []*pb.User{{ID: 1}, {ID: 2}, {ID: 3}}
+	for _, ID := range IDs {
+		for i := 0; i < len(teachers)*5; i++ {
+			gotTeacher, err := getNextReviewer(ID, teachers, teacherReviewCounter)
+			if err != nil {
+				t.Fatal(err)
+			}
+			wantTeacher := teachers[i%len(teachers)]
+			if diff := cmp.Diff(wantTeacher, gotTeacher, protocmp.Transform()); diff != "" {
+				t.Errorf("getNextReviewer() mismatch (-wantTeacher, +gotTeacher):\n%s", diff)
+			}
+		}
+
+		// Adding a new teacher.
+		// Teacher is expected to be picked as reviewer len(teachers)-1 times.
+		wantTeacher := &pb.User{ID: 6}
+		teachers = append(teachers, wantTeacher)
+		for i := 0; i < len(teachers)-1; i++ {
+			gotTeacher, err := getNextReviewer(ID, teachers, teacherReviewCounter)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(wantTeacher, gotTeacher, protocmp.Transform()); diff != "" {
+				t.Errorf("getNextReviewer() mismatch (-wantTeacher, +gotTeacher):\n%s", diff)
+			}
+		}
+		teachers = teachers[:len(teachers)-1]
+
+		for i := 0; i < len(students)*3; i++ {
+			gotStudent, err := getNextReviewer(ID, students, groupReviewCounter)
+			if err != nil {
+				t.Fatal(err)
+			}
+			wantStudent := students[i%len(students)]
+			if diff := cmp.Diff(wantStudent, gotStudent, protocmp.Transform()); diff != "" {
+				t.Errorf("getNextReviewer() mismatch (-wantStudent, +gotStudent):\n%s", diff)
+			}
+		}
+
+		// Adding a new student
+		// Student is expected to be picked as reviewer len(student)-1 times.
+		wantStudent := &pb.User{ID: 4}
+		students = append(students, wantStudent)
+		for i := 0; i < len(students)-1; i++ {
+			gotStudent, err := getNextReviewer(ID, students, groupReviewCounter)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(wantStudent, gotStudent, protocmp.Transform()); diff != "" {
+				t.Errorf("getNextReviewer() mismatch (-wantStudent, +gotStudent):\n%s", diff)
+			}
+		}
+		students = students[:len(students)-1]
 	}
 }

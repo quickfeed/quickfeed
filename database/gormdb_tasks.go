@@ -101,6 +101,7 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint
 
 // CreatePullRequest creates a pull request
 func (db *GormDB) CreatePullRequest(pullRequest *pb.PullRequest) error {
+	pullRequest.Stage = pb.PullRequest_DRAFT
 	return db.conn.Create(pullRequest).Error
 }
 
@@ -119,14 +120,14 @@ func (db *GormDB) HandleMergingPR(pullRequest *pb.PullRequest) error {
 	// We therefore do not delete the associated issue.
 	// To resume a working state, students are expected to reopen
 	// the issue that was closed from this merging, and create a new PR for it.
-	if !pullRequest.GetApproved() {
+	if !pullRequest.IsApproved() {
 		return db.conn.Delete(pullRequest).Error
 	}
-	var associatedIssue []*pb.Issue
-	if err := db.conn.Find(associatedIssue, &pb.Issue{ID: pullRequest.GetIssueID()}).Error; err != nil {
+	var associatedIssue *pb.Issue
+	if err := db.conn.First(associatedIssue, &pb.Issue{ID: pullRequest.GetIssueID()}).Error; err != nil {
 		return err
 	}
-	_ = db.conn.Delete(associatedIssue)
+	_ = db.conn.Delete(associatedIssue).Error
 	return db.conn.Delete(pullRequest).Error
 }
 

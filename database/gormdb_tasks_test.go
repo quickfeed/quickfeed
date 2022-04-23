@@ -225,16 +225,16 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	}
 }
 
+// TODO(Espeland): These tests don't really do anything atm
 func TestCreatePullRequest(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	wantPullRequest := &pb.PullRequest{PullRequestID: 1234, Approved: false}
-
+	wantPullRequest := &pb.PullRequest{}
 	if err := db.CreatePullRequest(wantPullRequest); err != nil {
 		t.Fatal(err)
 	}
-	gotPullRequest, err := db.GetPullRequest(&pb.PullRequest{PullRequestID: 1234})
+	gotPullRequest, err := db.GetPullRequest(&pb.PullRequest{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -252,7 +252,7 @@ func TestHandleMergingPR(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pullRequest := &pb.PullRequest{PullRequestID: 1234, IssueID: 1, Approved: false}
+	pullRequest := &pb.PullRequest{IssueID: 1}
 	if err := db.CreatePullRequest(pullRequest); err != nil {
 		t.Fatal(err)
 	}

@@ -11,12 +11,12 @@ import (
 )
 
 func init() {
-	scores.Add(TestMultipleChoice0, "", len(tests[0].correct), 1)
-	scores.Add(TestMultipleChoice1, "", len(tests[1].correct), 1)
-	scores.Add(TestMultipleChoice2, "", len(tests[2].correct), 1)
-	scores.Add(TestMultipleChoice3, "", len(tests[3].correct), 1)
+	scores.Add(TestMultipleChoice0, len(tests[0].correct), 1)
+	scores.Add(TestMultipleChoice1, len(tests[1].correct), 1)
+	scores.Add(TestMultipleChoice2, len(tests[2].correct), 1)
+	scores.Add(TestMultipleChoice3, len(tests[3].correct), 1)
 	for _, test := range tests {
-		scores.AddSub(TestMultipleChoiceWithFail, "", test.name, len(test.correct), 1)
+		scores.AddSub(TestMultipleChoiceWithFail, test.name, len(test.correct), 1)
 	}
 }
 

@@ -24,9 +24,7 @@ import (
 func TestDB(t *testing.T) (database.Database, func()) {
 	t.Helper()
 
-	tempDir := t.TempDir()
-	fmt.Printf("\n%s\n", tempDir)
-	f, err := ioutil.TempFile(tempDir, "test.db")
+	f, err := ioutil.TempFile(t.TempDir(), "test.db")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,6 +132,20 @@ func EnrollStudent(t *testing.T, db database.Database, student *pb.User, course 
 	}
 }
 
+func EnrollTeacher(t *testing.T, db database.Database, student *pb.User, course *pb.Course) {
+	t.Helper()
+	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.UpdateEnrollment(&pb.Enrollment{
+		UserID:   student.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_TEACHER,
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // FakeProviderMap is a test helper function to create an SCM map.
 func FakeProviderMap(t *testing.T) (scm.SCM, *auth.Scms) {
 	t.Helper()
@@ -173,8 +185,9 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 		return err
 	}
 	course.OrganizationID = org.GetID()
-
-	admin := CreateFakeUser(t, db, uint64(1))
+	// TODO(Espeland): Remember to remove myself when done testing!
+	admin := &pb.User{Login: "oleespe2"}
+	CreateUser(t, db, 1, admin)
 	admin.RemoteIdentities = append(admin.RemoteIdentities, &pb.RemoteIdentity{
 		Provider:    course.GetProvider(),
 		RemoteID:    uint64(1),
@@ -206,19 +219,40 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 		default:
 			login := strings.TrimSuffix(dbRepo.Name(), "-labs")
 			user := &pb.User{Login: login}
-			CreateUser(t, db, nxtRemoteID, user)
+			// TODO(Espeland): Remember to remove myself when done testing!
+			if login == "oleespe" {
+				err := db.CreateUserFromRemoteIdentity(user, &pb.RemoteIdentity{
+					Provider:    "github",
+					RemoteID:    69901339,
+					AccessToken: "token",
+				})
+				if err != nil {
+					return err
+				}
+			} else {
+				CreateUser(t, db, nxtRemoteID, user)
+				nxtRemoteID++
+			}
 			EnrollStudent(t, db, user, course)
+			group := &pb.Group{
+				Name:     login,
+				CourseID: course.GetID(),
+				Users:    []*pb.User{user},
+			}
+			err := db.CreateGroup(group)
+			if err != nil {
+				return err
+			}
 			// For testing purposes, assume all student repositories are group repositories
 			// since tasks are only supported for groups anyway.
 			dbRepo.RepoType = pb.Repository_GROUP
-			dbRepo.UserID = user.GetID()
+			dbRepo.UserID = group.GetID()
 		}
 
 		t.Logf("create repo: %v", dbRepo)
 		if err = db.CreateRepository(dbRepo); err != nil {
 			return err
 		}
-		nxtRemoteID++
 	}
 	return nil
 }
