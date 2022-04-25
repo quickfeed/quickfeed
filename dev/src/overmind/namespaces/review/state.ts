@@ -1,8 +1,8 @@
-import { derived, json } from "overmind"
+import { derived } from "overmind"
 import { Context } from "../.."
 import { GradingCriterion, Review, User } from "../../../../proto/ag/ag_pb"
 
-type State = {
+export type ReviewState = {
     /* The index of the selected review */
     selectedReview: number
 
@@ -38,12 +38,12 @@ type State = {
     minimumScore: number
 }
 
-export const state: State = {
+export const state: ReviewState = {
     selectedReview: -1,
 
     reviews: {},
 
-    currentReview: derived(({ reviews, selectedReview }: State, rootState: Context["state"]) => {
+    currentReview: derived(({ reviews, selectedReview }: ReviewState, rootState: Context["state"]) => {
         if (!(rootState.activeCourse > 0 && rootState.activeSubmission > 0)) {
             return null
         }
@@ -51,18 +51,18 @@ export const state: State = {
         return check ? check[selectedReview] : null
     }),
 
-    reviewer: derived(({ currentReview }: State, rootState: Context["state"]) => {
+    reviewer: derived(({ currentReview }: ReviewState, rootState: Context["state"]) => {
         if (!currentReview) {
             return null
         }
         return rootState.users[currentReview.reviewerid]
     }),
 
-    canUpdate: derived(({ currentReview }: State, rootState: Context["state"]) => {
+    canUpdate: derived(({ currentReview }: ReviewState, rootState: Context["state"]) => {
         return currentReview != null && rootState.activeSubmission > 0 && rootState.activeCourse > 0 && currentReview.id > 0
     }),
 
-    criteriaTotal: derived((state: State, rootState: Context["state"]) => {
+    criteriaTotal: derived((state: ReviewState, rootState: Context["state"]) => {
         let total = 0
         if (rootState.currentSubmission, rootState.activeCourse) {
             const assignment = rootState.assignments[rootState.activeCourse]?.find(a => a.id === rootState.currentSubmission?.assignmentid)
@@ -77,7 +77,7 @@ export const state: State = {
         return total
     }),
 
-    graded: derived(({ currentReview }: State) => {
+    graded: derived(({ currentReview }: ReviewState) => {
         let total = 0
         currentReview?.gradingbenchmarksList?.forEach(bm => {
             bm.criteriaList.forEach((c) => {
