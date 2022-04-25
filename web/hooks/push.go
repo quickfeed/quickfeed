@@ -98,7 +98,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 
 // handleTaskPush attempts to find a task for the pushed to branch.
 // It then extracts the score from all tests belonging to that task
-// If a passing score is reached, reviewers are assigned.
+// If a passing score is reached, it assigns reviewers.
 func (wh GitHubWebHook) handleTaskPush(payload *github.PushEvent, results *score.Results, assignment *pb.Assignment, course *pb.Course, repo *pb.Repository) {
 	wh.logger.Debugf("Attempting to find pull request for ref: %s, in repository: %s",
 		payload.GetRef(), payload.GetRepo().GetFullName())
@@ -109,6 +109,8 @@ func (wh GitHubWebHook) handleTaskPush(payload *github.PushEvent, results *score
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// This can happen if someone pushes to a branch group assignment, without having a PR created for it.
+			// If this happens, QF should not do anything.
 			wh.logger.Debugf("No pull request found for ref: %s", payload.GetRef())
 			return
 		}
@@ -117,7 +119,8 @@ func (wh GitHubWebHook) handleTaskPush(payload *github.PushEvent, results *score
 	}
 	tasks, err := wh.db.GetTasks(&pb.Task{ID: pullRequest.GetTaskID()})
 	if err != nil {
-		// A pull request should always have a task association, we therefore log an error.
+		// A pull request should always have a task association.
+		// If not, something must have gone wrong elsewhere.
 		wh.logger.Errorf("Failed to get task from the database: %v", err)
 		return
 	}
@@ -130,8 +133,6 @@ func (wh GitHubWebHook) handleTaskPush(payload *github.PushEvent, results *score
 	// TODO(Meling): My idea is that when a teacher wants to assign a test to a specific task they will use the 'local' task name.
 	// For example, if a teacher has created the markdown file task-hello_world.md,
 	// they would do scores.AddWithTaskName(TestHelloWorld, "task-hello_world", max, weight).
-	// For the proceeding logic we need the 'global' task name however, i.e. if task-hello_world.md is in assignment1,
-	// then the full task name would be assignment1/hello_world.
 	// Do you concur with this approach?
 	// We could of course simply make teachers assign the global task name, but that seems somewhat counter-intuitive to me.
 
@@ -247,13 +248,13 @@ func (wh GitHubWebHook) updateLastActivityDate(userID, courseID uint64) {
 	}
 }
 
-// getBranchName gets the branch name from a push event
+// getBranchName returns the branch name from a push event ref.
 func getBranchName(ref string) string {
 	components := strings.Split(ref, "/")
 	return components[len(components)-1]
 }
 
-// isDefaultBranch returns true if a push event came from repository's default branch.
+// isDefaultBranch returns true if a push event is for a repository's default branch.
 func isDefaultBranch(payload *github.PushEvent) bool {
 	return strings.HasSuffix(payload.GetRef(), payload.GetRepo().GetDefaultBranch())
 }

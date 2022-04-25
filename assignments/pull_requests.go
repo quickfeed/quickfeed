@@ -18,20 +18,19 @@ var (
 	groupReviewCounter   = make(map[uint64]map[uint64]int)
 )
 
+// AssignReviewers assigns reviewers to a group repository pull request.
+// It assigns one other group member and one course teacher as reviewers.
 func AssignReviewers(sc scm.SCM, db database.Database, course *pb.Course, repo *pb.Repository, pullRequest *pb.PullRequest) error {
 	teacherReviewer, err := getNextTeacherReviewer(db, course)
 	if err != nil {
 		return err
 	}
-	studentReviewer, err := getNextStudentReviewer(db, repo, pullRequest.GetUserID())
+	studentReviewer, err := getNextStudentReviewer(db, repo.GetGroupID(), pullRequest.GetUserID())
 	if err != nil {
 		return err
 	}
 
-	reviewers := []string{}
-	reviewers = append(reviewers, teacherReviewer.GetLogin())
-	reviewers = append(reviewers, studentReviewer.GetLogin())
-
+	reviewers := []string{teacherReviewer.GetLogin(), studentReviewer.GetLogin()}
 	opt := &scm.RequestReviewersOptions{
 		Organization: course.GetOrganizationPath(),
 		Repository:   repo.Name(),
@@ -59,8 +58,8 @@ func getNextReviewer(ID uint64, users []*pb.User, reviewCounter map[uint64]map[u
 	}
 	reviewerMap, ok := reviewCounter[ID]
 	if !ok {
-		// If a map does not exist for a course we create it,
-		// and assign the first user as the reviewer.
+		// If a map does not exist for a given ID we create it,
+		// and return the first user.
 		reviewCounter[ID] = make(map[uint64]int)
 		reviewCounter[ID][users[0].GetID()] = 1
 		return users[0], nil
@@ -71,7 +70,7 @@ func getNextReviewer(ID uint64, users []*pb.User, reviewCounter map[uint64]map[u
 		count, ok := reviewerMap[user.GetID()]
 		if !ok {
 			// If the user is not present in the review map,
-			// then they are assigned as the next reviewer.
+			// then they are returned as the next reviewer.
 			reviewerMap[user.GetID()] = 1
 			return user, nil
 		}
@@ -98,19 +97,19 @@ func getNextTeacherReviewer(db database.Database, course *pb.Course) (*pb.User, 
 }
 
 // getNextStudentReviewer gets the student with the least total reviews.
-func getNextStudentReviewer(db database.Database, repo *pb.Repository, ownerID uint64) (*pb.User, error) {
-	group, err := db.GetGroup(repo.GetGroupID())
+func getNextStudentReviewer(db database.Database, groupID, ownerID uint64) (*pb.User, error) {
+	group, err := db.GetGroup(groupID)
 	if err != nil {
 		return nil, err
 	}
 	if len(group.Users) == 0 {
 		// This should never happen.
-		return nil, errors.New("failed to get next teacher reviewer: no users in group")
+		return nil, errors.New("failed to get next student reviewer: no users in group")
 	}
 	// We exclude the PR owner from the search.
 	studentReviewer, err := getNextReviewer(group.GetID(), group.GetUserSubset(ownerID), groupReviewCounter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get next teacher reviewer: %w", err)
+		return nil, fmt.Errorf("failed to get next student reviewer: %w", err)
 	}
 	return studentReviewer, nil
 }

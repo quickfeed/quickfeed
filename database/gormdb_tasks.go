@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"sort"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -101,7 +102,10 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint
 
 // CreatePullRequest creates a pull request
 func (db *GormDB) CreatePullRequest(pullRequest *pb.PullRequest) error {
-	pullRequest.Stage = pb.PullRequest_DRAFT
+	if !pullRequest.Validate() {
+		return errors.New("pull request is not valid for creation")
+	}
+	pullRequest.SetDraft()
 	return db.conn.Create(pullRequest).Error
 }
 

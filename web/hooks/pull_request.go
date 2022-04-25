@@ -166,11 +166,9 @@ func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, repo
 		SourceBranchName:     payload.GetPullRequest().GetHead().GetRef(),
 		Number:               uint64(payload.GetNumber()),
 	}
-	if !pullRequest.IsValid() {
-		wh.logger.Errorf("Failed to create pull request from event payload")
-	}
+
 	if err = wh.db.CreatePullRequest(pullRequest); err != nil {
-		wh.logger.Errorf("Failed to create pull request record for repository %s: %v", payload.GetRepo().GetFullName(), err)
+		wh.logger.Errorf("Failed to create pull request data-record for repository %s: %v", payload.GetRepo().GetFullName(), err)
 		return
 	}
 	wh.logger.Debugf("Pull request successfully created for repository: %s", payload.GetRepo().GetFullName())

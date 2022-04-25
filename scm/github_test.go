@@ -236,9 +236,10 @@ func TestRequestReviewers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	repository := "oleespe-labs"
-	pullNumber := 48
-	reviewers := []string{"oleespe2"}
+	// Set these when testing
+	repository := "repo-name"
+	pullNumber := 0
+	reviewers := []string{"reviewer-login"}
 
 	opt := &scm.RequestReviewersOptions{
 		Organization: qfTestOrg,
