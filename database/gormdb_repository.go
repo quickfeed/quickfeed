@@ -10,7 +10,6 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 		// both organization and repository must be non-zero
 		return ErrCreateRepo
 	}
-
 	switch {
 	case repo.UserID > 0:
 		// check that user exists before creating repo in database
@@ -42,4 +41,13 @@ func (db *GormDB) GetRepositories(query *pb.Repository) ([]*pb.Repository, error
 // DeleteRepository deletes repository for the given remote provider's ID.
 func (db *GormDB) DeleteRepository(remoteID uint64) error {
 	return db.conn.Delete(&pb.Repository{}, &pb.Repository{RepositoryID: remoteID}).Error
+}
+
+// GetRepositoriesWithIssues gets repositories with issues
+func (db *GormDB) GetRepositoriesWithIssues(query *pb.Repository) ([]*pb.Repository, error) {
+	var repos []*pb.Repository
+	if err := db.conn.Preload("Issues").Find(&repos, query).Error; err != nil {
+		return nil, err
+	}
+	return repos, nil
 }

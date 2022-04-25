@@ -158,7 +158,7 @@ export const updateAdmin = async ({ state, effects }: Context, user: User.AsObje
         if (success(result)) {
             // If successful, update user in state with new admin status
             const found = state.allUsers.findIndex(s => s.id == user.id)
-            if (found) {
+            if (found > -1) {
                 state.allUsers[found].isadmin = protoUser.getIsadmin()
             }
         }
@@ -501,10 +501,10 @@ export const getUserSubmissions = async ({ state, effects }: Context, courseID: 
     const submissions = await effects.grpcMan.getSubmissions(courseID, state.self.id)
     if (submissions.data) {
         // Insert submissions into state.submissions by the assignment order
-        for (const assignment of state.assignments[courseID]) {
-            const submission = submissions.data.getSubmissionsList().find(s => s.getAssignmentid() === assignment.id)
+        state.assignments[courseID]?.forEach(assignment => {
+            const submission = submissions.data?.getSubmissionsList().find(s => s.getAssignmentid() === assignment.id)
             state.submissions[courseID][assignment.order - 1] = submission ? submission.toObject() : (new Submission()).toObject()
-        }
+        })
         return true
     }
     return false
@@ -514,17 +514,21 @@ export const getGroupSubmissions = async ({ state, effects }: Context, courseID:
     const enrollment = state.enrollmentsByCourseID[courseID]
     if (enrollment && enrollment.group) {
         const submissions = await effects.grpcMan.getGroupSubmissions(courseID, enrollment.groupid)
-        for (const assignment of state.assignments[courseID]) {
+        state.assignments[courseID]?.forEach(assignment => {
             const submission = submissions.data?.getSubmissionsList().find(submission => submission.getAssignmentid() === assignment.id)
             if (submission && assignment.isgrouplab) {
                 state.submissions[courseID][assignment.order - 1] = submission.toObject()
             }
-        }
+        })
     }
 }
 
 export const setActiveCourse = ({ state }: Context, courseID: number): void => {
     state.activeCourse = courseID
+}
+
+export const toggleFavorites = ({ state }: Context): void => {
+    state.showFavorites = !state.showFavorites
 }
 
 export const setActiveAssignment = ({ state }: Context, assignmentID: number): void => {

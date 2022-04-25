@@ -78,6 +78,12 @@ func (t *Repository) GetTestURL() string {
 	return repoURL[:strings.LastIndex(repoURL, "/")+1] + TestsRepo
 }
 
+// Name returns the name of the repository.
+func (t *Repository) Name() string {
+	repoURL := t.GetHTMLURL()
+	return repoURL[strings.LastIndex(repoURL, "/")+1:]
+}
+
 // RepoType returns the repository type for the given path name.
 func RepoType(path string) (repoType Repository_Type) {
 	switch path {

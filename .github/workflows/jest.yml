@@ -1,0 +1,24 @@
+name: Jest Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+
+      - name: Install modules
+        working-directory: ./dev
+        run: npm i
+
+      - name: Run tests
+        working-directory: ./dev/src/__tests__
+        run: npm test

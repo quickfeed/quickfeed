@@ -103,6 +103,7 @@ message Repository {
     uint64 groupID        = 5 [(go.field) = { tags: 'gorm:"uniqueIndex:uid_gid_org_type"' }];
     string HTMLURL        = 6;
     Type repoType         = 7 [(go.field) = { tags: 'gorm:"uniqueIndex:uid_gid_org_type"' }];
+    repeated Issue issues = 8;  // Issues associated with this repository
 }
 
 message Enrollment {
@@ -175,9 +176,27 @@ message Assignment {
     bool isGroupLab                 = 8;
     uint32 scoreLimit               = 9;   // minimal score limit for auto approval
     uint32 reviewers                = 10;  // number of reviewers that will review submissions for this assignment
-    repeated Submission submissions = 11;  // submissions produced for this assignment
-    repeated GradingBenchmark gradingBenchmarks = 12;  // grading benchmarks for this assignment
-    uint32 containerTimeout                     = 13;  // TODO(meling) Do we need this?
+    uint32 containerTimeout         = 11;  // container timeout for this assignment
+    repeated Submission submissions = 12;  // submissions produced for this assignment
+    repeated Task tasks             = 13;  // tasks associated with this assignment
+    repeated GradingBenchmark gradingBenchmarks = 14;  // grading benchmarks for this assignment
+}
+
+message Task {
+    uint64 ID              = 1;
+    uint64 assignmentID    = 2;  // foreign key
+    uint32 assignmentOrder = 3;
+    string title           = 4;
+    string body            = 5;
+    string name            = 6;
+    repeated Issue issues  = 7;  // Issues that use this task as a benchmark
+}
+
+message Issue {
+    uint64 ID           = 1;
+    uint64 repositoryID = 2;  // Represents the internal ID of a repository
+    uint64 taskID       = 3;  // Task that this issue draws its content from
+    uint64 issueNumber  = 4;  // Issue number on scm. Needed for associating db issue with scm issue
 }
 
 message Assignments {

@@ -173,6 +173,8 @@ export type State = {
 
     /* Determine if all submissions should be displayed, or only group submissions */
     groupView: boolean,
+    showFavorites: boolean,
+
 
     /* Currently selected group */
     /* Contains either an existing group to edit, or a new group to create */
@@ -367,4 +369,5 @@ export const state: State = {
     hasGroup: derived(({ userGroup }: State) => courseID => {
         return userGroup[courseID] !== undefined
     }),
+    showFavorites: false,
 }

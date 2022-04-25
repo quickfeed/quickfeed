@@ -517,6 +517,10 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 		s.logger.Errorf("GetSubmissions failed: %v", err)
 		return nil, status.Error(codes.NotFound, "no submissions found")
 	}
+	// If the user is not a teacher, remove score and reviews from submissions that are not released.
+	if !s.isTeacher(usr.ID, in.CourseID) {
+		submissions.Clean()
+	}
 	return submissions, nil
 }
 

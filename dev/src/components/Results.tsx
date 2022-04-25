@@ -1,8 +1,9 @@
 import React, { useEffect } from "react"
 import { Enrollment, SubmissionLink } from "../../proto/ag/ag_pb"
-import { Color, generateAssignmentsHeader, generateSubmissionRows, getCourseID, getSubmissionCellColor, SubmissionSort } from "../Helpers"
+import { Color, getCourseID, getSubmissionCellColor, SubmissionSort } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"
+import { generateAssignmentsHeader, generateSubmissionRows } from "./ComponentsHelpers"
 import DynamicTable, { CellElement, Row } from "./DynamicTable"
 import TableSort from "./forms/TableSort"
 import Lab from "./Lab"
@@ -63,16 +64,18 @@ const Results = (): JSX.Element => {
 
     const labView = state.currentSubmission ?
         <>
-            <ManageSubmissionStatus />
-            <div className="reviewLabResult mt-2">
-                <Lab />
+            <div className="lab-resize">
+                <ManageSubmissionStatus />
+                <div className="reviewLabResult mt-2">
+                    <Lab />
+                </div>
             </div>
         </>
         : null
 
     return (
         <div className="row">
-            <div className={state.review.assignmentID >= 0 ? "col-md-4" : "col-md-6"}>
+            <div className={state.review.assignmentID >= 0 ? "col-md-4" : "col-xl-6"}>
                 <Search placeholder={"Search by name ..."} >
                     <Button type={ButtonType.BUTTON}
                         text={`View by ${groupView ? "student" : "group"}`}
