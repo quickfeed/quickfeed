@@ -124,8 +124,8 @@ export const getUsers = async ({ state, effects }: Context): Promise<void> => {
 }
 
 /** Changes user information server-side */
-export const updateUser = async ({ actions, effects }: Context, user: User): Promise<void> => {
-    const result = await effects.grpcMan.updateUser(user)
+export const updateUser = async ({ actions, effects }: Context, user: User.AsObject): Promise<void> => {
+    const result = await effects.grpcMan.updateUser(ProtoConverter.toUser(user))
     if (result.status.getCode() === 0) {
         await actions.getSelf()
     }
