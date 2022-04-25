@@ -455,16 +455,14 @@ export const setActiveCourse = ({ state }: Context, courseID: number): void => {
     state.activeCourse = courseID
 }
 
-export const setActiveFavorite = ({ state }: Context, isActive: boolean): void => {
-    state.showFavorites = isActive
+export const toggleFavorites = ({ state }: Context): void => {
+    state.showFavorites = !state.showFavorites
 }
 
 
 export const setActiveAssignment = ({ state }: Context, assignmentID: number): void => {
     state.activeAssignment = assignmentID
 }
-
-
 
 /** Rebuilds the currently active submission */
 export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<void> => {
