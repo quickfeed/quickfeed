@@ -230,7 +230,14 @@ func TestCreatePullRequest(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	wantPullRequest := &pb.PullRequest{}
+	wantPullRequest := &pb.PullRequest{
+		ExternalRepositoryID: 1,
+		TaskID:               1,
+		IssueID:              1,
+		UserID:               1,
+		SourceBranchName:     "A",
+		Number:               1,
+	}
 	if err := db.CreatePullRequest(wantPullRequest); err != nil {
 		t.Fatal(err)
 	}
@@ -252,7 +259,14 @@ func TestHandleMergingPR(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pullRequest := &pb.PullRequest{IssueID: 1}
+	pullRequest := &pb.PullRequest{
+		ExternalRepositoryID: 1,
+		TaskID:               1,
+		IssueID:              1,
+		UserID:               1,
+		SourceBranchName:     "A",
+		Number:               1,
+	}
 	if err := db.CreatePullRequest(pullRequest); err != nil {
 		t.Fatal(err)
 	}
