@@ -1,0 +1,10 @@
+syntax = "proto3";
+package auth;
+option go_package   = "github.com/autograde/quickfeed/we/auth";
+option swift_prefix = "";
+
+import "ag/ag.proto";
+
+service AuthService {
+    rpc GetUser(ag.Void) returns (ag.User) {}
+}

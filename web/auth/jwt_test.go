@@ -19,7 +19,7 @@ func TestTokenManager(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 	user := qtest.CreateFakeUser(t, db, 2)
 
-	manager, err := auth.NewTokenManager(db, time.Minute*30, "notasecret", "localhost")
+	manager, err := auth.NewTokenManager(db, time.Minute*30, "notasecret", "127.0.0.1:8080")
 	if err != nil {
 		t.Fatal(err)
 	}

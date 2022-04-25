@@ -19,7 +19,5 @@ const (
 	keyPath   = "cert/server.key"
 	indexFile = "index.html"
 
-	// MaxWait is the maximum time a request is allowed to stay open before aborting.
-	MaxWait             = 2 * time.Minute
 	TokenExpirationTime = time.Hour * 244
 )

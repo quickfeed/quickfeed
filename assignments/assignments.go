@@ -12,7 +12,7 @@ import (
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/scm"
-	"github.com/autograde/quickfeed/web/config"
+	"github.com/autograde/quickfeed/web/auth/interceptors"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -69,7 +69,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, s scm.
 // The TempDir() function ensures that cloning is done in distinct temp
 // directories, should there be concurrent calls to this function.
 func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
-	ctx, cancel := context.WithTimeout(c, config.MaxWait)
+	ctx, cancel := context.WithTimeout(c, interceptors.MaxWait)
 	defer cancel()
 
 	cloneURL := sc.CreateCloneURL(&scm.URLPathOptions{

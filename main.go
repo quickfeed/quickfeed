@@ -58,7 +58,7 @@ var reg = prometheus.NewRegistry()
 
 func main() {
 	var (
-		baseURL  = flag.String("service.url", "localhost", "base service DNS name")
+		baseURL  = flag.String("service.url", "127.0.0.1", "base service DNS name")
 		dbFile   = flag.String("database.file", "qf.db", "database file")
 		public   = flag.String("http.public", "public", "path to content to serve")
 		httpAddr = flag.String("http.addr", ":8080", "HTTP listen address")
@@ -101,7 +101,7 @@ func main() {
 		ClientID:     id,
 		ClientSecret: secret,
 		Endpoint:     github.Endpoint,
-		RedirectURL:  serverConfig.Endpoints.CallbackURL,
+		RedirectURL:  "https://127.0.0.1:8080/auth/github/callback/",
 	}
 	logger.Sugar().Debugf("OAUTH CONFIG: %+V", authConfig)
 	tokenManager, err := auth.NewTokenManager(db, config.TokenExpirationTime, serverConfig.Secrets.TokenSecret, *httpAddr)
@@ -130,14 +130,14 @@ func main() {
 	// TODO: register auth endpoints here: RegisterAuth(router, config.App or full config)
 	// TODO(vera): update to handle gitlab, refactor all http stuff to webserver.go
 	// TODO(vera): shouldn't need http middleware anymore, needs tests
-	router.HandleFunc("/auth/github", auth.OAuth2Login(logger.Sugar(), db, authConfig))
-	router.HandleFunc("/auth/github/callback", auth.OAuth2Callback(logger.Sugar(), db, authConfig, githubApp, tokenManager, serverConfig.Secrets.CallbackSecret))
+	router.HandleFunc("/auth/github/", auth.OAuth2Login(logger.Sugar(), db, authConfig, serverConfig.Secrets.CallbackSecret))
+	router.HandleFunc("/auth/github/callback/", auth.OAuth2Callback(logger.Sugar(), db, authConfig, githubApp, tokenManager, serverConfig.Secrets.CallbackSecret))
 	//////////////////////////
 
 	// Create an HTTP server and bind the router to it, and set wanted address
 	srv := &http.Server{
 		Handler:      router,
-		Addr:         "localhost:8080", // TODO(vera): read from config
+		Addr:         "127.0.0.1:8080", // TODO(vera): read from config
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}

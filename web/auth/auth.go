@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
@@ -135,6 +136,7 @@ func OAuth2Logout(logger *zap.SugaredLogger) echo.HandlerFunc {
 // PreAuth checks the current user session and executes the next handler if none
 // was found for the given provider.
 func PreAuth(logger *zap.SugaredLogger, db database.Database) echo.MiddlewareFunc {
+	logger.Debug("PREAUTH STARTED")
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			sess, err := session.Get(SessionKey, c)
@@ -184,7 +186,8 @@ func sessionData(session *sessions.Session) string {
 }
 
 // OAuth2Login tries to authenticate against an oauth2 provider.
-func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.Config) http.HandlerFunc {
+func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.Config, secret string) http.HandlerFunc {
+	logger.Debug("LOGIN STARTED")
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			logger.Errorf("GitHub login failed: request method %s", r.Method)
@@ -194,53 +197,57 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.
 		provider := "github"
 
 		// TODO(vera): make sure teacher suffix no longer necessary
-		var teacher int
-		if strings.HasSuffix(provider, TeacherSuffix) {
-			teacher = 1
-		}
-		logger.Debugf("Provider: %v ; Teacher: %v", provider, teacher)
-		qv := r.URL.Query()
-		logger.Debugf("qv: %v", qv)
-		// redirect := extractRedirectURL(r, Redirect)
+		// var teacher int
+		// if strings.HasSuffix(provider, TeacherSuffix) {
+		// 	teacher = 1
+		// }
+		// logger.Debugf("Provider: %v ; Teacher: %v", provider, teacher)
+		// qv := r.URL.Query()
+		// logger.Debugf("qv: %v", qv)
+		// // redirect := extractRedirectURL(r, Redirect)
 		logger.Debugf("redirect: %v", config.RedirectURL)
 		// TODO: Add a random string to protect against CSRF.
-		qv.Set(State, strconv.Itoa(teacher)+config.RedirectURL)
-		logger.Debugf("State: %v", strconv.Itoa(teacher)+config.RedirectURL)
-		r.URL.RawQuery = qv.Encode()
-		logger.Debugf("RawQuery: %v", r.URL.RawQuery)
-		logger.Debugf("Redirecting to %s to perform authentication; AuthURL: %v", provider, config.Endpoint.AuthURL)
-		http.Redirect(w, r, config.Endpoint.AuthURL, http.StatusTemporaryRedirect)
+		// qv.Set(State, strconv.Itoa(teacher)+config.RedirectURL)
+		// logger.Debugf("State: %v", strconv.Itoa(teacher)+config.RedirectURL)
+		// r.URL.RawQuery = qv.Encode()
+		// logger.Debugf("RawQuery: %v", r.URL.RawQuery)
+		redirectURL := config.AuthCodeURL(secret)
+		logger.Debugf("Redirecting to %s to perform authentication; AuthURL: %v", provider, redirectURL)
+		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 	}
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
 func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oauth2.Config, app *scm.GithubApp, tokens *TokenManager, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Debug("CALLBACK STARTED")
 		if r.Method != "GET" {
 			logger.Errorf("GitHub login failed: request method %s", r.Method)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
 		}
 		logger.Debug("OAuth2Callback: started")
-		qv := r.URL.Query()
-		logger.Debugf("qv: %v", qv)
-		redirect, teacher := extractState(r, State)
-		logger.Debugf("Redirect: %v ; Teacher: %t", redirect, teacher)
+		// qv := r.URL.Query()
+		// logger.Debugf("qv: %v", qv)
+		// redirect, teacher := extractState(r, State)
+		// logger.Debugf("Redirect: %v ; Teacher: %t", redirect, teacher)
 
 		provider := "github"
-		// TODO(vera): remove teacher suffix if not needed
-		// Add teacher suffix if upgrading scope.
-		if teacher {
-			qv.Set("provider", provider+TeacherSuffix)
-			logger.Debugf("Set('provider') = %v", provider+TeacherSuffix)
-		}
-		r.URL.RawQuery = qv.Encode()
-		logger.Debugf("RawQuery: %v", r.URL.RawQuery)
+		// // TODO(vera): remove teacher suffix if not needed
+		// // Add teacher suffix if upgrading scope.
+		// if teacher {
+		// 	qv.Set("provider", provider+TeacherSuffix)
+		// 	logger.Debugf("Set('provider') = %v", provider+TeacherSuffix)
+		// }
+		// r.URL.RawQuery = qv.Encode()
+		// logger.Debugf("RawQuery: %v", r.URL.RawQuery)
 
 		// Complete authentication.
 		// parse request for code and state
 		if err := r.ParseForm(); err != nil {
 			logger.Error("GitHub login failed: error parsing authentication code")
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
 		}
 
 		logger.Debug("VALIDATING STATE") // tmp
@@ -248,8 +255,9 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 		callbackSecret := r.FormValue("state")
 		logger.Debug("Callback: got state in request: ", callbackSecret) // tmp
 		if callbackSecret != secret {
-			logger.Errorf("Warning: secrets don't match: expected %s, got %s", secret, callbackSecret)
-			http.Redirect(w, r, extractRedirectURL(r, TeacherSuffix), http.StatusUnauthorized)
+			logger.Errorf("GitHub login failed: secrets don't match: expected %s, got %s", secret, callbackSecret)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
 		}
 
 		logger.Debug("EXCHANGING CODE FOR TOKEN") // tmp
@@ -257,48 +265,62 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 		code := r.FormValue("code")
 		if code == "" {
 			logger.Error("GitHub login failed: received empty code")
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
 		}
 		logger.Debug("CODE RECEIVED, PROCEED") // tmp
 		githubToken, err := config.Exchange(context.Background(), code)
 		if err != nil {
 			logger.Errorf("GitHub login failed: cannot exchange token: %s", err)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
 		}
 		logger.Debugf("Successfully fetched access token: %s", githubToken.AccessToken) // tmp
 
 		// get user info with the token
-		req, err := http.NewRequest("GET", app.GetUserURL(), nil)
+		logger.Debugf("Making user request: want url https://api.github.com/user, have url %s", app.GetUserURL())
+		req, err := http.NewRequest("GET", "https://api.github.com/user", nil)
 		if err != nil {
 			logger.Errorf("GitHub login failed: failed to make user request: %s", err)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
 		}
+		logger.Debugf("REQUEST HEADER want (%s), have (%s)", "Bearer "+githubToken.AccessToken, fmt.Sprintf("Bearer %s", githubToken.AccessToken))
 		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", githubToken.AccessToken))
-		resp, err := app.App.Client().Do(req)
+		httpClient := &http.Client{
+			Timeout: time.Second * 10,
+		}
+		resp, err := httpClient.Do(req)
 		if err != nil {
 			logger.Errorf("GitHub login failed: failed to send user request: %s", err)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
 			logger.Errorf("GitHub login failed: API responded with status: %d: %s", resp.StatusCode, resp.Status)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
 		}
 		respBits, err := io.ReadAll(resp.Body)
 		if err != nil {
 			log.Println("Error reading response bits from user API: ", err.Error())
+			w.WriteHeader(http.StatusUnauthorized)
+			return
 		}
 		externalUser := &externalUser{}
 		if err := json.NewDecoder(bytes.NewReader(respBits)).Decode(&externalUser); err != nil {
 			logger.Errorf("GitHub login failed: failed to decode user information: %s", err)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
 		}
 		logger.Debugf("externalUser: %v", lg.IndentJson(externalUser))
 		logger.Debugf("EXTRACTED set-cookie token: %s", extractToken(w)) // tmp
 
 		var userToken string
 		for _, cookie := range r.Cookies() {
+			logger.Debugf("AUTH: Checking cookie: %s", cookie.Name) // tmp
 			if cookie.Name == "auth" {
 				userToken = cookie.Value
 			}
@@ -312,13 +334,15 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 			claims, err := tokens.GetClaims(userToken)
 			if err != nil {
 				logger.Errorf("GitHub login failed: failed to read user claims: %s", err)
-				http.Redirect(w, r, "/", http.StatusUnauthorized)
+				w.WriteHeader(http.StatusUnauthorized)
+				return
 			}
 
 			if err := db.AssociateUserWithRemoteIdentity(claims.UserID, provider, externalUser.ID, githubToken.AccessToken); err != nil {
 				logger.Debugf("Associate failed: %d, %s, %d, %s", claims.UserID, provider, externalUser.ID, githubToken.AccessToken)
 				logger.Errorf("GitHub login failed: failed to associate user with remote identity: %s", err)
-				http.Redirect(w, r, "/", http.StatusUnauthorized)
+				w.WriteHeader(http.StatusUnauthorized)
+				return
 			}
 			logger.Debugf("Associate: %d, %s, %d, %s", claims.UserID, provider, externalUser.ID, githubToken.AccessToken)
 		}
@@ -376,7 +400,9 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 			logger.Errorf("GitHub login failed: failed to make claims for user %v: %s", externalUser, err)
 			http.Redirect(w, r, "/", http.StatusUnauthorized)
 		}
-		cookie, err := tokens.NewTokenCookie(context.Background(), tokens.NewToken(claims))
+		authToken := tokens.NewToken(claims)
+		logger.Debugf("Created new JWT for user %s: %+v", user.Login, authToken)
+		cookie, err := tokens.NewTokenCookie(context.Background(), authToken)
 		if err != nil {
 			logger.Errorf("GitHub login failed: failed to make token cookie for user %v: %s", externalUser, err)
 			// TODO(vera): this pattern for handling auth errors might be better
@@ -384,7 +410,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 			return
 		}
 		http.SetCookie(w, cookie)
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }
 
@@ -454,6 +480,8 @@ func extractRedirectURL(r *http.Request, key string) string {
 func extractState(r *http.Request, key string) (redirect string, teacher bool) {
 	// TODO: Validate redirect URL.
 	url := r.URL.Query().Get(key)
+	log.Printf("EXTRACT STATE: url for key (%s) is %s", key, url)
+	log.Printf("URL [1:], [:1] is %s, %s", url[1:], url[:1])
 	teacher = url != "" && url[:1] == "1"
 
 	if url == "" || url[1:] == "" {

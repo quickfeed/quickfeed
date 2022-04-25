@@ -30,7 +30,7 @@ type TokenManager struct {
 // NewTokenManager creates a new token manager
 func NewTokenManager(db database.Database, expireAfter time.Duration, secret, domain string) (*TokenManager, error) {
 	if secret == "" || domain == "" {
-		return nil, fmt.Errorf("failed to create a token manager: missing secret or domain")
+		return nil, fmt.Errorf("failed to create a token manager: missing secret (%s) or domain (%s)", secret, domain)
 	}
 	manager := &TokenManager{
 		db:          db,
@@ -57,9 +57,10 @@ func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 
 // NewTokenCookie creates a cookie with signed JWT
 func (tm *TokenManager) NewTokenCookie(ctx context.Context, token *jwt.Token) (*http.Cookie, error) {
+	fmt.Printf("Making new token cookie: secret is %s", tm.secret) // tmp
 	signed, err := token.SignedString([]byte(tm.secret))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to sign token: %s", err)
 	}
 	return &http.Cookie{
 		Name:     tm.cookie,
@@ -75,7 +76,7 @@ func (tm *TokenManager) NewTokenCookie(ctx context.Context, token *jwt.Token) (*
 // TODO(vera): needs a single method that makes a cookie from a user ID
 // NewToken makes a new JWT token with given claims
 func (tm *TokenManager) NewToken(claims *Claims) *jwt.Token {
-	return jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	return jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 }
 
 // NewClaims creates user claims for a JWT token

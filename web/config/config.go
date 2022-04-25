@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 
@@ -44,6 +45,7 @@ type Config struct {
 }
 
 func NewConfig(baseURL, public, httpAddr string) *Config {
+	log.Printf("making new config: base URL (%s), public (%s), httpAddr (%s)", baseURL, public, httpAddr) // tmp
 	conf := &Config{
 		Endpoints: &Endpoints{
 			BaseURL:       baseURL,
