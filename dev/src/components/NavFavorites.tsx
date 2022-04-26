@@ -21,7 +21,7 @@ const NavFavorites = (): JSX.Element => {
                     <Link to="/" >
                         QuickFeed
                     </Link>
-                    <a onClick={() => actions.toggleFavorites()} role="button">✖</a>
+                    <a onClick={() => actions.toggleFavorites()} role="button" className="closeButton">✖</a>
                 </li>
                 {courses}
                 {state.isLoggedIn &&
