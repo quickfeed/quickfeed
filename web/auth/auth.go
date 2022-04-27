@@ -183,12 +183,22 @@ func sessionData(session *sessions.Session) string {
 	return fmt.Sprintf("Session: ID=%s, IsNew=%t, %s", session.ID, session.IsNew, out)
 }
 
+const (
+	login    = "Login failed:"
+	callback = "Callback failed:"
+)
+
+func unauthorized(logger *zap.SugaredLogger, w http.ResponseWriter, prefix, format string, a ...interface{}) {
+	logger.Error(prefix + fmt.Sprintf(format, a...))
+	w.WriteHeader(http.StatusUnauthorized)
+}
+
 // OAuth2Login tries to authenticate against an oauth2 provider.
 func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
-			logger.Errorf("GitHub login failed: request method %s", r.Method)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			unauthorized(logger, w, login, "request method: %s", r.Method)
+			return
 		}
 		// TODO(vera): adapt to use with other providers if needed
 		provider := "github"
@@ -217,8 +227,8 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.
 func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oauth2.Config, app *scm.GithubApp, tokens *TokenManager, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
-			logger.Errorf("GitHub login failed: request method %s", r.Method)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			unauthorized(logger, w, callback, "request method: %s", r.Method)
+			return
 		}
 		logger.Debug("OAuth2Callback: started")
 		qv := r.URL.Query()
@@ -238,8 +248,8 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 		// Complete authentication.
 		// parse request for code and state
 		if err := r.ParseForm(); err != nil {
-			logger.Error("GitHub login failed: error parsing authentication code")
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			unauthorized(logger, w, callback, "error parsing authentication code: %v", err)
+			return
 		}
 
 		logger.Debug("VALIDATING STATE") // tmp
@@ -247,51 +257,52 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 		callbackSecret := r.FormValue("state")
 		logger.Debug("Callback: got state in request: ", callbackSecret) // tmp
 		if callbackSecret != secret {
-			logger.Errorf("Warning: secrets don't match: expected %s, got %s", secret, callbackSecret)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			unauthorized(logger, w, callback, "mismatching secrets: expected %s, got %s", secret, callbackSecret)
+			return
 		}
 
 		logger.Debug("EXCHANGING CODE FOR TOKEN") // tmp
 		// exchange code for token
 		code := r.FormValue("code")
 		if code == "" {
-			logger.Error("GitHub login failed: received empty code")
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			unauthorized(logger, w, callback, "empty code")
+			return
 		}
 		logger.Debug("CODE RECEIVED, PROCEED") // tmp
 		githubToken, err := config.Exchange(context.Background(), code)
 		if err != nil {
-			logger.Errorf("GitHub login failed: cannot exchange token: %s", err)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			unauthorized(logger, w, callback, "could not exchange token: %v", err)
+			return
 		}
 		logger.Debugf("Successfully fetched access token: %s", githubToken.AccessToken) // tmp
 
 		// get user info with the token
 		req, err := http.NewRequest("GET", app.GetUserURL(), nil)
 		if err != nil {
-			logger.Errorf("GitHub login failed: failed to make user request: %s", err)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			unauthorized(logger, w, callback, "failed to create user request: %v", err)
+			return
 		}
 		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", githubToken.AccessToken))
 		resp, err := app.App.Client().Do(req)
 		if err != nil {
-			logger.Errorf("GitHub login failed: failed to send user request: %s", err)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			unauthorized(logger, w, callback, "failed to send user request: %v", err)
+			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			logger.Errorf("GitHub login failed: API responded with status: %d: %s", resp.StatusCode, resp.Status)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			unauthorized(logger, w, callback, "API response status: %d: %s", resp.StatusCode, resp.Status)
+			return
 		}
-		respBits, err := io.ReadAll(resp.Body)
+		responseBody, err := io.ReadAll(resp.Body)
 		if err != nil {
+			// TODO(meling) shouldn't this also be an unauthorized error and return?
 			log.Println("Error reading response bits from user API: ", err.Error())
 		}
 		externalUser := &externalUser{}
-		if err := json.NewDecoder(bytes.NewReader(respBits)).Decode(&externalUser); err != nil {
-			logger.Errorf("GitHub login failed: failed to decode user information: %s", err)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+		if err := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&externalUser); err != nil {
+			unauthorized(logger, w, callback, "failed to decode user information: %v", err)
+			return
 		}
 		logger.Debugf("externalUser: %v", lg.IndentJson(externalUser))
 		logger.Debugf("EXTRACTED set-cookie token: %s", extractToken(w)) // tmp
@@ -310,14 +321,14 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 			// is set in the frontend aren't different
 			claims, err := tokens.GetClaims(userToken)
 			if err != nil {
-				logger.Errorf("GitHub login failed: failed to read user claims: %s", err)
-				http.Redirect(w, r, "/", http.StatusUnauthorized)
+				unauthorized(logger, w, callback, "could not read user claims: %v", err)
+				return
 			}
 
 			if err := db.AssociateUserWithRemoteIdentity(claims.UserID, provider, externalUser.ID, githubToken.AccessToken); err != nil {
 				logger.Debugf("Associate failed: %d, %s, %d, %s", claims.UserID, provider, externalUser.ID, githubToken.AccessToken)
-				logger.Errorf("GitHub login failed: failed to associate user with remote identity: %s", err)
-				http.Redirect(w, r, "/", http.StatusUnauthorized)
+				unauthorized(logger, w, callback, "could not match user with remote identity: %v", err)
+				return
 			}
 			logger.Debugf("Associate: %d, %s, %d, %s", claims.UserID, provider, externalUser.ID, githubToken.AccessToken)
 		}
@@ -330,56 +341,51 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 		}
 		// Try to get user from database.
 		user, err := db.GetUserByRemoteIdentity(remote)
-		switch {
-		case err == nil:
-			logger.Debugf("found user: %v", user)
-			// found user in database; update access token
-			err = db.UpdateAccessToken(remote)
-			if err != nil {
-				logger.Errorf("GitHub login failed: failed to update access token for user %v: %s", externalUser, err)
-				http.Redirect(w, r, "/", http.StatusUnauthorized)
+		switch err {
+		case nil:
+			logger.Debugf("Updating access token for user in database: %v", user)
+			if err = db.UpdateAccessToken(remote); err != nil {
+				unauthorized(logger, w, callback, "failed to update access token for user %v: %v", externalUser, err)
+				return
 			}
-			logger.Debugf("access token updated: %v", remote)
+			logger.Debugf("Access token updated: %v", remote)
 
-		case err == gorm.ErrRecordNotFound:
-			logger.Debug("user not found in database; creating new user")
-			// user not in database; create new user
+		case gorm.ErrRecordNotFound:
+			logger.Debug("User not found in database; Creating new user")
 			user = &pb.User{
 				Name:      externalUser.Name,
 				Email:     externalUser.Email,
 				AvatarURL: externalUser.AvatarURL,
 				Login:     externalUser.Login,
 			}
-			err = db.CreateUserFromRemoteIdentity(user, remote)
-			if err != nil {
-				logger.Errorf("GitHub login failed: failed to create remote identity for user %v: %s", externalUser, err)
-				http.Redirect(w, r, "/", http.StatusUnauthorized)
+			if err = db.CreateUserFromRemoteIdentity(user, remote); err != nil {
+				unauthorized(logger, w, callback, "failed to create remote identity for user %v: %v", externalUser, err)
+				return
 			}
 			logger.Debugf("New user created: %v, remote: %v", user, remote)
 
 		default:
-			logger.Error("failed to fetch user for remote identity", zap.Error(err))
+			logger.Error("Failed to fetch user for remote identity", zap.Error(err))
+			// TODO(meling) shouldn't this also be an unauthorized error and return?
 		}
 
 		// in case this is a new user we need a user object with full information,
 		// otherwise frontend will get user object where only name, email and url are set.
 		user, err = db.GetUserByRemoteIdentity(remote)
 		if err != nil {
-			logger.Errorf("GitHub login failed: failed to fetch user %v	 from database: %s", externalUser, err)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			unauthorized(logger, w, callback, "failed to fetch user %v from database: %v", externalUser, err)
+			return
 		}
 		logger.Debugf("Fetching full user info for %v, user: %v", remote, user)
 
 		claims, err := tokens.NewClaims(user.ID)
 		if err != nil {
-			logger.Errorf("GitHub login failed: failed to make claims for user %v: %s", externalUser, err)
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			unauthorized(logger, w, callback, "failed to make claims for user %v: %v", externalUser, err)
+			return
 		}
 		cookie, err := tokens.NewTokenCookie(context.Background(), tokens.NewToken(claims))
 		if err != nil {
-			logger.Errorf("GitHub login failed: failed to make token cookie for user %v: %s", externalUser, err)
-			// TODO(vera): this pattern for handling auth errors might be better
-			w.WriteHeader(http.StatusUnauthorized)
+			unauthorized(logger, w, callback, "failed to make token cookie for user %v: %v", externalUser, err)
 			return
 		}
 		http.SetCookie(w, cookie)
