@@ -1,5 +1,4 @@
-import { Builder, By, Browser, IRectangle, Capabilities, until } from 'selenium-webdriver'
-import { isVisible } from '../Helpers'
+import { Builder, By, Capabilities, until } from 'selenium-webdriver'
 import { isOverlapping } from './testHelpers'
 
 
