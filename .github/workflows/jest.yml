@@ -3,12 +3,11 @@ name: Jest Test
 on:
   push:
     branches: [master]
-  pull_request:
     paths-ignore:
-      - "**.md"
-      - "E2ECourseVisability.test.tsx"
-      - "CourseUtilityLinks.test.tsx"
-      - "navbarResponsive.test.tsx"
+      - "./dev/src/__tests__/E2ECourseVisability.test.tsx"
+      - "./dev/src/__tests__/navbarResponsive.test.tsx"
+      - ./dev/src/__tests__/courseUtilityLinks.test.tsx
+  pull_request:
 
 jobs:
   build:
