@@ -4,6 +4,11 @@ on:
   push:
     branches: [master]
   pull_request:
+    paths-ignore:
+      - "**.md"
+      - "E2ECourseVisability.test.tsx"
+      - "CourseUtilityLinks.test.tsx"
+      - "navbarResponsive.test.tsx"
 
 jobs:
   build:
@@ -21,9 +26,5 @@ jobs:
 
       - name: Run tests
         working-directory: ./dev/src/__tests__
-        paths-ignore:
-      - '**.md'
-      - 'E2ECourseVisability.test.tsx'
-      - 'CourseUtilityLinks.test.tsx'
-      - 'navbarResponsive.test.tsx'
+
         run: npm test
