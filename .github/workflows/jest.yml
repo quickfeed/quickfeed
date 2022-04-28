@@ -6,7 +6,7 @@ on:
     paths-ignore:
       - "./dev/src/__tests__/E2ECourseVisability.test.tsx"
       - "./dev/src/__tests__/navbarResponsive.test.tsx"
-      - ./dev/src/__tests__/courseUtilityLinks.test.tsx
+      - "./dev/src/__tests__/courseUtilityLinks.test.tsx"
   pull_request:
 
 jobs:
