@@ -25,7 +25,7 @@ const NavFavorites = (): JSX.Element => {
                 </li>
                 {courses}
                 {state.isLoggedIn &&
-                    <li key="all">
+                    <li key="all" className="courseLink">
                         <Link to="/courses" className="sidebar-items-link">
                             View all courses
                         </Link>
