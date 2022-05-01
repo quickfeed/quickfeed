@@ -9,24 +9,15 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
 	lg "github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
-	"github.com/gorilla/sessions"
-	"github.com/labstack/echo-contrib/session"
-	"github.com/labstack/echo/v4"
-	"github.com/markbates/goth/gothic"
+
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
@@ -55,6 +46,7 @@ type UserSession struct {
 }
 
 func newUserSession(id uint64) *UserSession {
+	log.Println("NEW USER SESSION")
 	return &UserSession{
 		ID:        id,
 		Providers: make(map[string]struct{}),
@@ -91,104 +83,100 @@ func Get(cookie string) uint64 {
 }
 
 // OAuth2Logout invalidates the session for the logged in user.
-func OAuth2Logout(logger *zap.SugaredLogger) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		r := c.Request()
-		w := c.Response()
+func OAuth2Logout(logger *zap.SugaredLogger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO(vera): get token from cookie, set a new empty expired token,
+		// redirect back
 
-		sess, err := session.Get(SessionKey, c)
-		if err != nil {
-			logger.Error(err.Error())
-			return sess.Save(r, w)
-		}
-		logger.Debug(sessionData(sess))
+		// if i, ok := sess.Values[UserKey]; ok {
+		// 	// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
+		// 	us := i.(*UserSession)
+		// 	logger.Debug(us)
+		// 	// Invalidate gothic user sessions.
+		// 	for provider := range us.Providers {
+		// 		sess, err := session.Get(provider+gothic.SessionName, c)
+		// 		if err != nil {
+		// 			logger.Error(err.Error())
+		// 			return err
+		// 		}
+		// 		logger.Debug(sessionData(sess))
 
-		if i, ok := sess.Values[UserKey]; ok {
-			// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-			us := i.(*UserSession)
-			logger.Debug(us)
-			// Invalidate gothic user sessions.
-			for provider := range us.Providers {
-				sess, err := session.Get(provider+gothic.SessionName, c)
-				if err != nil {
-					logger.Error(err.Error())
-					return err
-				}
-				logger.Debug(sessionData(sess))
-
-				sess.Options.MaxAge = -1
-				sess.Values = make(map[interface{}]interface{})
-				if err := sess.Save(r, w); err != nil {
-					logger.Error(err.Error())
-				}
-			}
-		}
-		// Invalidate our user session.
-		sess.Options.MaxAge = -1
-		sess.Values = make(map[interface{}]interface{})
-		if err := sess.Save(r, w); err != nil {
-			logger.Error(err.Error())
-		}
-		return c.Redirect(http.StatusFound, extractRedirectURL(r, Redirect))
+		// 		sess.Options.MaxAge = -1
+		// 		sess.Values = make(map[interface{}]interface{})
+		// 		if err := sess.Save(r, w); err != nil {
+		// 			logger.Error(err.Error())
+		// 		}
+		// 	}
+		// }
+		// // Invalidate our user session.
+		// sess.Options.MaxAge = -1
+		// sess.Values = make(map[interface{}]interface{})
+		// if err := sess.Save(r, w); err != nil {
+		// 	logger.Error(err.Error())
+		// }
+		// return c.Redirect(http.StatusFound, extractRedirectURL(r, Redirect))
+		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }
 
-// PreAuth checks the current user session and executes the next handler if none
-// was found for the given provider.
-func PreAuth(logger *zap.SugaredLogger, db database.Database) echo.MiddlewareFunc {
-	logger.Debug("PREAUTH STARTED")
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			sess, err := session.Get(SessionKey, c)
-			if err != nil {
-				logger.Error(err.Error())
-				if err := sess.Save(c.Request(), c.Response()); err != nil {
-					logger.Error(err.Error())
-					return err
-				}
-				return next(c)
-			}
-			logger.Debug(sessionData(sess))
+// // PreAuth checks the current user session and executes the next handler if none
+// // was found for the given provider.
+// func PreAuth(logger *zap.SugaredLogger, db database.Database) echo.MiddlewareFunc {
+// 	logger.Debug("PREAUTH STARTED")
+// 	return func(next echo.HandlerFunc) echo.HandlerFunc {
+// 		return func(c echo.Context) error {
+// 			logger.Debug("PRE AUTH")
+// 			sess, err := session.Get(SessionKey, c)
+// 			if err != nil {
+// 				logger.Error(err.Error())
+// 				if err := sess.Save(c.Request(), c.Response()); err != nil {
+// 					logger.Error(err.Error())
+// 					return err
+// 				}
+// 				return next(c)
+// 			}
+// 			logger.Debug(sessionData(sess))
 
-			if i, ok := sess.Values[UserKey]; ok {
-				// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-				us := i.(*UserSession)
-				logger.Debug(us)
-				user, err := db.GetUser(us.ID)
-				if err != nil {
-					logger.Error(err.Error())
-					return OAuth2Logout(logger)(c)
-				}
-				logger.Debugf("User: %v", user)
-			}
-			return next(c)
-		}
-	}
-}
+// 			if i, ok := sess.Values[UserKey]; ok {
+// 				// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
+// 				us := i.(*UserSession)
+// 				logger.Debug(us)
+// 				user, err := db.GetUser(us.ID)
+// 				if err != nil {
+// 					logger.Error(err.Error())
+// 					return OAuth2Logout(logger)(c)
+// 				}
+// 				logger.Debugf("User: %v", user)
+// 			}
+// 			logger.Debug("PRE AUTH next")
+// 			return next(c)
+// 		}
+// 	}
+// }
 
-func sessionData(session *sessions.Session) string {
-	if session == nil {
-		return "<nil>"
-	}
-	out := "Values: "
-	for k, v := range session.Values {
-		out += fmt.Sprintf("<%s: %v>, ", k, v)
-	}
-	out += "Options: "
-	out += fmt.Sprintf("<%s: %v>, ", "MaxAge", session.Options.MaxAge)
-	out += fmt.Sprintf("<%s: %v>, ", "Path", session.Options.Path)
-	out += fmt.Sprintf("<%s: %v>, ", "Domain", session.Options.Domain)
-	out += fmt.Sprintf("<%s: %v>, ", "Secure", session.Options.Secure)
-	out += fmt.Sprintf("<%s: %v>, ", "HttpOnly", session.Options.HttpOnly)
-	out += fmt.Sprintf("<%s: %v>, ", "SameSite", session.Options.SameSite)
+// func sessionData(session *sessions.Session) string {
+// 	if session == nil {
+// 		return "<nil>"
+// 	}
+// 	out := "Values: "
+// 	for k, v := range session.Values {
+// 		out += fmt.Sprintf("<%s: %v>, ", k, v)
+// 	}
+// 	out += "Options: "
+// 	out += fmt.Sprintf("<%s: %v>, ", "MaxAge", session.Options.MaxAge)
+// 	out += fmt.Sprintf("<%s: %v>, ", "Path", session.Options.Path)
+// 	out += fmt.Sprintf("<%s: %v>, ", "Domain", session.Options.Domain)
+// 	out += fmt.Sprintf("<%s: %v>, ", "Secure", session.Options.Secure)
+// 	out += fmt.Sprintf("<%s: %v>, ", "HttpOnly", session.Options.HttpOnly)
+// 	out += fmt.Sprintf("<%s: %v>, ", "SameSite", session.Options.SameSite)
 
-	return fmt.Sprintf("Session: ID=%s, IsNew=%t, %s", session.ID, session.IsNew, out)
-}
+// 	return fmt.Sprintf("Session: ID=%s, IsNew=%t, %s", session.ID, session.IsNew, out)
+// }
 
 // OAuth2Login tries to authenticate against an oauth2 provider.
 func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.Config, secret string) http.HandlerFunc {
-	logger.Debug("LOGIN STARTED")
 	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Debug("LOGIN STARTED")
 		if r.Method != "GET" {
 			logger.Errorf("GitHub login failed: request method %s", r.Method)
 			http.Redirect(w, r, "/", http.StatusUnauthorized)
@@ -206,7 +194,7 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.
 		// logger.Debugf("qv: %v", qv)
 		// // redirect := extractRedirectURL(r, Redirect)
 		logger.Debugf("redirect: %v", config.RedirectURL)
-		// TODO: Add a random string to protect against CSRF.
+		// TODO(vera): Add a random string to protect against CSRF.
 		// qv.Set(State, strconv.Itoa(teacher)+config.RedirectURL)
 		// logger.Debugf("State: %v", strconv.Itoa(teacher)+config.RedirectURL)
 		// r.URL.RawQuery = qv.Encode()
@@ -287,6 +275,10 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 		}
 		logger.Debugf("REQUEST HEADER want (%s), have (%s)", "Bearer "+githubToken.AccessToken, fmt.Sprintf("Bearer %s", githubToken.AccessToken))
 		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", githubToken.AccessToken))
+		// TODO(vera): this http client has only  one purpose: to fetch user data from github on auth. Somehow, the http client that
+		// alredy exists for the github app fails to make this request. However, this client will be used every time a user logs into
+		// the system without a cookie, which means it is dumb to make a new client every time -> we have to create one when the server starts
+		// and reuse it (for example as a part of the github app struct) or find out what can be done to use the app client for this request
 		httpClient := &http.Client{
 			Timeout: time.Second * 10,
 		}
@@ -316,27 +308,29 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 			return
 		}
 		logger.Debugf("externalUser: %v", lg.IndentJson(externalUser))
-		logger.Debugf("EXTRACTED set-cookie token: %s", extractToken(w)) // tmp
+		// logger.Debugf("EXTRACTED set-cookie token: %s", extractToken(w)) // tmp
 
-		var userToken string
-		for _, cookie := range r.Cookies() {
-			logger.Debugf("AUTH: Checking cookie: %s", cookie.Name) // tmp
-			if cookie.Name == "auth" {
-				userToken = cookie.Value
-			}
-		}
-		logger.Debugf("EXTRACTED auth cookie", userToken) // tmp
+		// TODO(vera): this is only used when trying to log in with github explicitly. If a user already has a JWT
+		// he must be logged in automatically when loading the page, no use to check it here
+		// for _, cookie := range r.Cookies() {
+		// 	logger.Debugf("AUTH: Checking cookie with name %s: %+v", tokens.cookieName, cookie) // tmp
+		// 	if cookie.Name == tokens.cookieName {
+		// 		userToken = cookie.Value
+		// 	}
+		// }
+		// logger.Debugf("EXTRACTED auth cookie", userToken) // tmp
 
 		// There is already a cookie with JWT, make sure the user exists in the database
+		userToken := extractToken(r, tokens.cookieName)
+		logger.Debugf("GitHub login: extracted token from request: %s", userToken)
 		if userToken != "" {
-			// TODO(vera): here is a good place to verify that the user claims and the current user that
-			// is set in the frontend aren't different
 			claims, err := tokens.GetClaims(userToken)
 			if err != nil {
 				logger.Errorf("GitHub login failed: failed to read user claims: %s", err)
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
+			// TODO(vera): check that user in the claims and in remote ID is the same user
 
 			if err := db.AssociateUserWithRemoteIdentity(claims.UserID, provider, externalUser.ID, githubToken.AccessToken); err != nil {
 				logger.Debugf("Associate failed: %d, %s, %d, %s", claims.UserID, provider, externalUser.ID, githubToken.AccessToken)
@@ -409,129 +403,130 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
+		logger.Debugf("setting cookie: %+v", cookie)
 		http.SetCookie(w, cookie)
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }
 
-// AccessControl returns an access control middleware. Given a valid context
-// with sufficient access the next handler is called. Missing or invalid
-// credentials results in a 401 unauthorized response.
-func AccessControl(logger *zap.SugaredLogger, db database.Database) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			sess, err := session.Get(SessionKey, c)
-			if err != nil {
-				logger.Error(err.Error())
-				// Save fixes the session if it has been modified
-				// or it is no longer valid due to newUserSess change of keys.
-				if err := sess.Save(c.Request(), c.Response()); err != nil {
-					logger.Error(err.Error())
-					return err
-				}
-				return next(c)
-			}
-			logger.Debug(sessionData(sess))
+// // AccessControl returns an access control middleware. Given a valid context
+// // with sufficient access the next handler is called. Missing or invalid
+// // credentials results in a 401 unauthorized response.
+// func AccessControl(logger *zap.SugaredLogger, db database.Database) echo.MiddlewareFunc {
+// 	return func(next echo.HandlerFunc) echo.HandlerFunc {
+// 		return func(c echo.Context) error {
+// 			logger.Debug("ACCESS CONTROL")
+// 			sess, err := session.Get(SessionKey, c)
+// 			if err != nil {
+// 				logger.Error(err.Error())
+// 				// Save fixes the session if it has been modified
+// 				// or it is no longer valid due to newUserSess change of keys.
+// 				if err := sess.Save(c.Request(), c.Response()); err != nil {
+// 					logger.Error(err.Error())
+// 					return err
+// 				}
+// 				return next(c)
+// 			}
+// 			logger.Debug(sessionData(sess))
 
-			i, ok := sess.Values[UserKey]
-			if !ok {
-				return next(c)
-			}
+// 			i, ok := sess.Values[UserKey]
+// 			if !ok {
+// 				return next(c)
+// 			}
 
-			// If type assertion fails, the recover middleware will catch the panic and log a stack trace.
-			us := i.(*UserSession)
-			logger.Debug(us)
-			user, err := db.GetUser(us.ID)
-			if err != nil {
-				logger.Error(err.Error())
-				// Invalidate session. This could happen if the user has been entirely remove
-				// from the database, but a valid session still exists.
-				if err == gorm.ErrRecordNotFound {
-					logger.Error(err.Error())
-					return OAuth2Logout(logger)(c)
-				}
-				logger.Error(echo.ErrUnauthorized.Error())
-				return next(c)
-			}
-			c.Set(UserKey, user)
+// 			// If type assertion fails, the recover middleware will catch the panic and log a stack trace.
+// 			us := i.(*UserSession)
+// 			logger.Debug(us)
+// 			user, err := db.GetUser(us.ID)
+// 			if err != nil {
+// 				logger.Error(err.Error())
+// 				// Invalidate session. This could happen if the user has been entirely remove
+// 				// from the database, but a valid session still exists.
+// 				if err == gorm.ErrRecordNotFound {
+// 					logger.Error(err.Error())
+// 					return OAuth2Logout(logger)(c)
+// 				}
+// 				logger.Error(echo.ErrUnauthorized.Error())
+// 				return next(c)
+// 			}
+// 			c.Set(UserKey, user)
 
-			// TODO: Add access control list.
-			// - Extract endpoint.
-			// - Verify whether the user has sufficient rights. This
-			//   can be a simple hash map. A user should be able to
-			//   access /users/:uid if the user's id is uid.
-			//   - Not authorized: return c.NoContent(http.StatusUnauthorized)
-			//   - Authorized: return next(c)
-			return next(c)
-		}
-	}
-}
+// 			// TODO: Add access control list.
+// 			// - Extract endpoint.
+// 			// - Verify whether the user has sufficient rights. This
+// 			//   can be a simple hash map. A user should be able to
+// 			//   access /users/:uid if the user's id is uid.
+// 			//   - Not authorized: return c.NoContent(http.StatusUnauthorized)
+// 			//   - Authorized: return next(c)
+// 			return next(c)
+// 		}
+// 	}
+// }
 
-func extractRedirectURL(r *http.Request, key string) string {
-	// TODO: Validate redirect URL.
+// func extractRedirectURL(r *http.Request, key string) string {
+// 	// TODO: Validate redirect URL.
 
-	url := r.URL.Query().Get(key)
-	if url == "" {
-		url = "/"
-	}
-	return url
-}
+// 	url := r.URL.Query().Get(key)
+// 	if url == "" {
+// 		url = "/"
+// 	}
+// 	return url
+// }
 
-func extractState(r *http.Request, key string) (redirect string, teacher bool) {
-	// TODO: Validate redirect URL.
-	url := r.URL.Query().Get(key)
-	log.Printf("EXTRACT STATE: url for key (%s) is %s", key, url)
-	log.Printf("URL [1:], [:1] is %s, %s", url[1:], url[:1])
-	teacher = url != "" && url[:1] == "1"
+// func extractState(r *http.Request, key string) (redirect string, teacher bool) {
+// 	// TODO: Validate redirect URL.
+// 	url := r.URL.Query().Get(key)
+// 	log.Printf("EXTRACT STATE: url for key (%s) is %s", key, url)
+// 	log.Printf("URL [1:], [:1] is %s, %s", url[1:], url[:1])
+// 	teacher = url != "" && url[:1] == "1"
 
-	if url == "" || url[1:] == "" {
-		return "/", teacher
-	}
-	return url[1:], teacher
-}
+// 	if url == "" || url[1:] == "" {
+// 		return "/", teacher
+// 	}
+// 	return url[1:], teacher
+// }
 
-func extractToken(w http.ResponseWriter) string {
-	// Helper function that extracts an outgoing session cookie.
-	outgoingCookies := w.Header().Values(OutgoingCookie)
-	for _, cookie := range outgoingCookies {
-		if c := strings.Split(cookie, "="); c[0] == "auth" {
-			token := strings.Split(cookie, ";")[0]
-			return token
+// extractToken returns a request cookie with given name, or an empty string
+// is cookie does not exist
+func extractToken(r *http.Request, cookieName string) string {
+	for _, cookie := range r.Cookies() {
+		if cookie.Name == cookieName {
+			return cookie.Value
 		}
 	}
 	return ""
 }
 
-var (
-	ErrInvalidSessionCookie = status.Errorf(codes.Unauthenticated, "Request does not contain a valid session cookie.")
-	ErrContextMetadata      = status.Errorf(codes.Unauthenticated, "Could not obtain metadata from context")
-)
+// var (
+// 	ErrInvalidSessionCookie = status.Errorf(codes.Unauthenticated, "Request does not contain a valid session cookie.")
+// 	ErrContextMetadata      = status.Errorf(codes.Unauthenticated, "Could not obtain metadata from context")
+// )
 
-func UserVerifier() grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		meta, ok := metadata.FromIncomingContext(ctx)
-		if !ok {
-			return nil, ErrContextMetadata
-		}
-		newMeta, err := userValidation(meta)
-		if err != nil {
-			return nil, err
-		}
-		// create new context with user id instead of cookie for use internally
-		newCtx := metadata.NewIncomingContext(ctx, newMeta)
-		resp, err := handler(newCtx, req)
-		return resp, err
-	}
-}
+// func UserVerifier() grpc.UnaryServerInterceptor {
+// 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+// 		meta, ok := metadata.FromIncomingContext(ctx)
+// 		if !ok {
+// 			return nil, ErrContextMetadata
+// 		}
+// 		newMeta, err := userValidation(meta)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		// create new context with user id instead of cookie for use internally
+// 		newCtx := metadata.NewIncomingContext(ctx, newMeta)
+// 		resp, err := handler(newCtx, req)
+// 		return resp, err
+// 	}
+// }
 
-// userValidation returns modified metadata containing a valid user.
-// An error is returned if the user is not authenticated.
-func userValidation(meta metadata.MD) (metadata.MD, error) {
-	for _, cookie := range meta.Get(Cookie) {
-		if user := Get(cookie); user > 0 {
-			meta.Set(UserKey, strconv.FormatUint(user, 10))
-			return meta, nil
-		}
-	}
-	return nil, ErrInvalidSessionCookie
-}
+// // userValidation returns modified metadata containing a valid user.
+// // An error is returned if the user is not authenticated.
+// func userValidation(meta metadata.MD) (metadata.MD, error) {
+// 	for _, cookie := range meta.Get(Cookie) {
+// 		if user := Get(cookie); user > 0 {
+// 			meta.Set(UserKey, strconv.FormatUint(user, 10))
+// 			return meta, nil
+// 		}
+// 	}
+// 	return nil, ErrInvalidSessionCookie
+// }

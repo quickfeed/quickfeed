@@ -34,6 +34,7 @@ export class LoginPage extends ViewPage {
                 console.log( result )
                 this.navMan.navigateToDefault()
             } else {
+                // TODO(vera): fetch user here (grpc) instead of failing
                 console.log( "Failed" )
             }
         } )

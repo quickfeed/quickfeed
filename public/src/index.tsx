@@ -202,7 +202,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         topArea = await this.renderActiveMenu( page, 1 )
 
         const loginLink: ILink[] = [
-            { name: "Github", uri: "auth/github" },
+            { name: "Github", uri: "app/login/login/github" },
             { name: "Gitlab", uri: "app/login/login/gitlab" },
         ]
         const dropDownMenuLinks: ILink[] = [

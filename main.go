@@ -101,7 +101,7 @@ func main() {
 		ClientID:     id,
 		ClientSecret: secret,
 		Endpoint:     github.Endpoint,
-		RedirectURL:  "https://127.0.0.1:8080/auth/github/callback/",
+		RedirectURL:  "https://127.0.0.1:8080/auth/github/callback/", // TODO(vera): get from config
 	}
 	logger.Sugar().Debugf("OAUTH CONFIG: %+V", authConfig)
 	tokenManager, err := auth.NewTokenManager(db, config.TokenExpirationTime, serverConfig.Secrets.TokenSecret, *httpAddr)

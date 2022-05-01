@@ -58,8 +58,9 @@ export class NavigationManager {
     }
 
     public navigateTo( path: string, preventPush?: boolean ) {
-        console.log( "NAV: to path " + path )
+        console.log( "NAV: navigate to " + path )
         if ( path === "/" ) {
+            console.log( "NAV: navigate to default" )
             this.navigateToDefault()
             return
         }

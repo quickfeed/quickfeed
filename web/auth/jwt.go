@@ -11,6 +11,8 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
+var authCookieName = "auth"
+
 type Claims struct {
 	jwt.StandardClaims
 	UserID  uint64                              `json:"user_id"`
@@ -24,7 +26,7 @@ type TokenManager struct {
 	expireAfter time.Duration
 	secret      string
 	domain      string
-	cookie      string
+	cookieName  string
 }
 
 // NewTokenManager creates a new token manager
@@ -37,6 +39,7 @@ func NewTokenManager(db database.Database, expireAfter time.Duration, secret, do
 		expireAfter: expireAfter,
 		secret:      secret,
 		domain:      domain,
+		cookieName:  authCookieName,
 	}
 	// Collect IDs of users who require token update from database
 	if err := manager.Update(); err != nil {
@@ -63,13 +66,14 @@ func (tm *TokenManager) NewTokenCookie(ctx context.Context, token *jwt.Token) (*
 		return nil, fmt.Errorf("failed to sign token: %s", err)
 	}
 	return &http.Cookie{
-		Name:     tm.cookie,
-		Value:    signed,
-		Domain:   tm.domain,
+		Name:  tm.cookieName,
+		Value: signed,
+		// Domain:   tm.domain,  // TODO(vera): looks like you have to omit this field when working on localhost
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 		Expires:  time.Now().Add(tm.expireAfter),
+		SameSite: http.SameSiteStrictMode, // http.SameSiteLaxMode,
 	}, nil
 }
 
