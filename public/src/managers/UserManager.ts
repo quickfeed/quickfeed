@@ -71,29 +71,14 @@ export class UserManager {
      * Try to login with a remote service, like github and gitlab.
      * Normaly this function redirects before it returns.
      */
-    // public async tryRemoteLogin( provider: string ): Promise<User | null> {
-    //     console.log( "UserMan: try remote login with provider " + provider )
-    //     const result = await this.userProvider.tryRemoteLogin( provider )
-    //     console.log( "UserMan: result: " + result )
-    //     if ( result ) {
-    //         console.log( "USERMAn: try remote login, got user" )
-    //         this.currentUser = result
-    //         this.onLogin( { target: this, user: this.currentUser } )
-    //     }
-    //     return result
-    // }
-
-    // TODO(vera): a temporary hack
     public async tryRemoteLogin( provider: string ): Promise<User | null> {
-        console.log( "TRY REMOTE LOGIN with provider " + provider )
-        if ( provider.length > 0 ) {
-            const requestString = "/auth/github"
-            console.log( "TRY REMOTE LOGIN redirect to " + requestString )
-            window.location.assign( requestString )
+        const result = await this.userProvider.tryRemoteLogin( provider )
+        if ( result ) {
+            this.currentUser = result
+            this.onLogin( { target: this, user: this.currentUser } )
         }
-        return null
+        return result
     }
-
 
     /**
      * logout from the current logged in session

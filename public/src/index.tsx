@@ -20,6 +20,7 @@ import { LoginPage } from "./pages/LoginPage"
 
 import { ServerProvider } from "./managers/ServerProvider"
 
+import { HttpHelper } from "./HttpHelper"
 import { ILogEntry, LogManager } from "./managers/LogManager"
 
 import { PageInfo } from "./components/information/PageInfo"
@@ -129,7 +130,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
 
     public componentDidMount() {
         const curUrl = location.pathname
-        console.log( "INDEX: current url: " + curUrl )
         if ( curUrl === "/" ) {
             this.navMan.navigateToDefault()
         } else {
@@ -138,7 +138,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     }
 
     public checkloggedInUser(): boolean {
-        console.log( "INDEX: checkloggedinUser" )
         const cur = this.userMan.getCurrentUser()
         if ( cur ) {
             return this.userMan.isValidUser( cur )
@@ -163,7 +162,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
 
     private handleClick( link: ILink ) {
         if ( link.uri ) {
-            console.log( "INDEX: navigating to " + link.uri )
             this.navMan.navigateTo( link.uri )
         } else {
             console.warn( "Warning! Empty link detected", link )
@@ -302,7 +300,7 @@ async function main(): Promise<void> {
 
     let curRunning = DEBUG_SERVER
 
-    if ( window.location.host.match( "127.0.0.1" )
+    if ( window.location.host.match( "localhost" )
         || localStorage.getItem( "debug" ) ) {
         curRunning = DEBUG_BROWSER
     }
@@ -314,10 +312,11 @@ async function main(): Promise<void> {
     const navMan: NavigationManager = new NavigationManager( history, logMan.createLogger( "NavigationManager" ) )
 
     if ( curRunning === DEBUG_SERVER ) {
+        const httpHelper = new HttpHelper( "/api/v1" )
         // TODO: use process.env.QUICKFEED_PORT
         // https://webpack.js.org/plugins/environment-plugin/
         const grpcHelper = new GrpcManager( "https://" + window.location.hostname )
-        const serverData = new ServerProvider( grpcHelper, logMan.createLogger( "ServerProvider" ) )
+        const serverData = new ServerProvider( httpHelper, grpcHelper, logMan.createLogger( "ServerProvider" ) )
         userMan = new UserManager( serverData, logMan.createLogger( "UserManager" ) )
         grpcHelper.setUserMan( userMan )
         courseMan = new CourseManager( serverData, logMan.createLogger( "CourseManager" ) )

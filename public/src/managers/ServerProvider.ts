@@ -24,6 +24,7 @@ import {
     IUser,
 } from "../models"
 
+import { HttpHelper } from "../HttpHelper"
 import { ICourseProvider } from "./CourseManager"
 import { GrpcManager, IGrpcResponse } from "./GRPCManager"
 
@@ -44,10 +45,13 @@ const URL_ENDPOINT: IEndpoints = {
 }
 
 export class ServerProvider implements IUserProvider, ICourseProvider {
+
+    private helper: HttpHelper
     private grpcHelper: GrpcManager
     private logger: ILogger
 
-    constructor ( grpcHelper: GrpcManager, logger: ILogger ) {
+    constructor ( helper: HttpHelper, grpcHelper: GrpcManager, logger: ILogger ) {
+        this.helper = helper
         this.grpcHelper = grpcHelper
         this.logger = logger
     }
@@ -261,10 +265,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async tryRemoteLogin( provider: string ): Promise<User | null> {
-        console.log( "TRY REMOTE LOGIN with provider " + provider )
         if ( provider.length > 0 ) {
             const requestString = "/" + URL_ENDPOINT.auth + "/" + provider
-            console.log( "TRY REMOTE LOGIN redirect to " + requestString )
             window.location.assign( requestString )
         }
         return null
