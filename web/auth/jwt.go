@@ -108,7 +108,7 @@ func (tm *TokenManager) NewClaims(userID uint64) (*Claims, error) {
 // GetClaims returns user claims after parsing and validating a signed token string
 func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodECDSA); !ok {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("failed to parse token: incorrect signing method")
 		}
 		return []byte(tm.secret), nil

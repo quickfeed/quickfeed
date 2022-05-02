@@ -3,10 +3,8 @@ package config
 import (
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/autograde/quickfeed/internal/rand"
-	//"github.com/autograde/quickfeed/web/auth"
 )
 
 // Endpoints keeps all URL endpoints used by the server for user authentication,
@@ -19,7 +17,7 @@ type Endpoints struct {
 	WebhookURL    string
 	InstallAppURL string
 	Public        string
-	HttpAddress   string
+	PortNumber    string
 }
 
 // Secrets keeps secrets that have been generated.
@@ -31,9 +29,9 @@ type Secrets struct {
 }
 
 type Paths struct {
-	PemPath    string
-	KeyPath    string
-	AppKeyPath string
+	CertPath    string
+	CertKeyPath string
+	AppKeyPath  string
 }
 
 // Config keeps all configuration information in one place.
@@ -41,29 +39,28 @@ type Config struct {
 	Endpoints *Endpoints
 	Secrets   *Secrets
 	Paths     *Paths
-	// TokensToUpdate *auth.TokenManager // TODO: not sure if this belongs here or in the ag service
 }
 
-func NewConfig(baseURL, public, httpAddr string) *Config {
-	log.Printf("making new config: base URL (%s), public (%s), httpAddr (%s)", baseURL, public, httpAddr) // tmp
+func NewConfig(baseURL, public, portNumber string) *Config {
+	log.Printf("Making new config: base URL (%s), public (%s), httpAddr (%s)", baseURL, public, portNumber) // tmp
 	conf := &Config{
 		Endpoints: &Endpoints{
-			BaseURL:       baseURL,
-			Public:        filepath.Join(public, indexFile),
-			HttpAddress:   httpAddr,
-			LoginURL:      Login,
-			LogoutURL:     Logout,
+			BaseURL:    baseURL,
+			Public:     public, // filepath.Join(public, indexFile),
+			PortNumber: portNumber,
+			LoginURL:   Login,
+			// LogoutURL:     Logout,
 			CallbackURL:   Callback,
 			InstallAppURL: Install,
 		},
 		Secrets: &Secrets{
 			WebhookSecret:  os.Getenv(WebhookEnv),
 			CallbackSecret: rand.String(),
-			TokenSecret:    os.Getenv(JWTKeyEnv),
+			TokenSecret:    os.Getenv(TokenKeyEnv),
 		},
 		Paths: &Paths{
-			PemPath: pemPath,
-			KeyPath: keyPath,
+			CertPath:    os.Getenv(CertEnv),
+			CertKeyPath: os.Getenv(CertKeyEnv),
 		},
 	}
 	return conf

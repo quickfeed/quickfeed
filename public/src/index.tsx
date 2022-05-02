@@ -297,6 +297,8 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
 async function main(): Promise<void> {
     const DEBUG_BROWSER = "DEBUG_BROWSER"
     const DEBUG_SERVER = "DEBUG_SERVER"
+    console.log( "HOSTNAME: " + window.location.hostname )
+    console.log( "HOST: " + window.location.host )
 
     let curRunning = DEBUG_SERVER
 
@@ -315,7 +317,7 @@ async function main(): Promise<void> {
         const httpHelper = new HttpHelper( "/api/v1" )
         // TODO: use process.env.QUICKFEED_PORT
         // https://webpack.js.org/plugins/environment-plugin/
-        const grpcHelper = new GrpcManager( "https://" + window.location.hostname )
+        const grpcHelper = new GrpcManager( "https://" + window.location.host )
         const serverData = new ServerProvider( httpHelper, grpcHelper, logMan.createLogger( "ServerProvider" ) )
         userMan = new UserManager( serverData, logMan.createLogger( "UserManager" ) )
         grpcHelper.setUserMan( userMan )

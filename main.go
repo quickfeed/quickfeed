@@ -112,7 +112,7 @@ func main() {
 	agService := web.NewAutograderService(logger, db, githubApp, serverConfig, runner)
 	agService.MakeSCMClients("github") // TODO(vera): shouldn't be hardcoded...
 
-	apiServer, err := serverConfig.GenerateTLSApi(logger, tokenManager)
+	apiServer, err := serverConfig.GenerateTLSApi(logger.Sugar(), tokenManager)
 	if err != nil {
 		log.Fatalf("failed to generate TLS grpc API: %v/n", err)
 	}
@@ -123,49 +123,17 @@ func main() {
 		grpcWebServer,
 	}
 	router := http.NewServeMux()
-	staticHandler := http.FileServer(http.Dir("public"))
-	router.Handle("/", multiplexer.MultiplexerHandler(http.StripPrefix("/", staticHandler)))
+	// staticHandler := http.FileServer(http.Dir("public"))
+	router.Handle("/", multiplexer.MultiplexerHandler(http.StripPrefix("/", http.FileServer(http.Dir("public")))))
+	router.HandleFunc(serverConfig.Endpoints.LoginURL, auth.OAuth2Login(logger.Sugar(), db, authConfig, serverConfig.Secrets.CallbackSecret))
+	router.HandleFunc(serverConfig.Endpoints.CallbackURL, auth.OAuth2Callback(logger.Sugar(), db, authConfig, githubApp, tokenManager, serverConfig.Secrets.CallbackSecret))
 
-	//////////////////////////
-	// TODO: register auth endpoints here: RegisterAuth(router, config.App or full config)
-	// TODO(vera): update to handle gitlab, refactor all http stuff to webserver.go
-	// TODO(vera): shouldn't need http middleware anymore, needs tests
-	router.HandleFunc("/auth/github/", auth.OAuth2Login(logger.Sugar(), db, authConfig, serverConfig.Secrets.CallbackSecret))
-	router.HandleFunc("/auth/github/callback/", auth.OAuth2Callback(logger.Sugar(), db, authConfig, githubApp, tokenManager, serverConfig.Secrets.CallbackSecret))
-	//////////////////////////
-
-	// Create an HTTP server and bind the router to it, and set wanted address
 	srv := &http.Server{
 		Handler:      router,
-		Addr:         "127.0.0.1:8080", // TODO(vera): read from config
+		Addr:         serverConfig.Endpoints.BaseURL + serverConfig.Endpoints.PortNumber, // TODO(vera): fix port/localhost issue
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
 	// Serve the static handler over TLS
-	log.Fatal(srv.ListenAndServeTLS(serverConfig.Paths.PemPath, serverConfig.Paths.KeyPath))
-
-	///////////////////////////////////
-	//go web.New(agService)
-
-	// lis, err := net.Listen("tcp", *grpcAddr)
-	// if err != nil {
-	// 	log.Fatalf("failed to start tcp listener: %v\n", err)
-	// }
-	// opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), pb.Interceptor(logger))
-	// grpcServer := grpc.NewServer(opt)
-	// Create a HTTP server for prometheus.
-	// httpServer := &http.Server{
-	// 	Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
-	// 	Addr:    fmt.Sprintf("0.0.0.0:%d", 9097),
-	// }
-	// go func() {
-	// 	if err := httpServer.ListenAndServe(); err != nil {
-	// 		log.Fatal("Unable to start a http server.")
-	// 	}
-	// }()
-
-	// pb.RegisterAutograderServiceServer(grpcServer, agService)
-	// if err := grpcServer.Serve(lis); err != nil {
-	// 	log.Fatalf("failed to start grpc server: %v\n", err)
-	// }
+	log.Fatal(srv.ListenAndServeTLS(serverConfig.Paths.CertPath, serverConfig.Paths.CertKeyPath))
 }

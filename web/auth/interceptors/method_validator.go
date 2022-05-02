@@ -33,7 +33,7 @@ type idCleaner interface {
 // Invalid requests are rejected without logging and before it reaches any
 // user-level code and returns an illegal argument to the client.
 // In addition, the interceptor also implements a cancel mechanism.
-func ValidateMethod(logger *zap.Logger) grpc.UnaryServerInterceptor {
+func ValidateMethod(logger *zap.SugaredLogger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		logger.Debug("VALIDATE INTERCEPTOR")
 		methodName := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
@@ -49,7 +49,7 @@ func ValidateMethod(logger *zap.Logger) grpc.UnaryServerInterceptor {
 			}
 		} else {
 			// just logging, but still handling the call
-			logger.Sugar().Debugf("message type '%s' does not implement validator interface",
+			logger.Debugf("message type '%s' does not implement validator interface",
 				reflect.TypeOf(req).String())
 		}
 		ctx, cancel := context.WithTimeout(ctx, MaxWait)
