@@ -104,23 +104,6 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Vo
 	return &pb.Void{}, err
 }
 
-// TODO(vera): doublecheck that this method no longer useful
-// IsAuthorizedTeacher checks whether current user has teacher scopes.
-// Access policy: Any User.
-// TODO(vera): this method is used to add teacher scopes to the user token. Most probably
-// this is no longer needed.
-func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, _ *pb.Void) (*pb.AuthorizationResponse, error) {
-	// Currently hardcoded for github only
-	_, scm, err := s.getUserAndSCM(ctx, 0)
-	if err != nil {
-		s.logger.Errorf("IsAuthorizedTeacher failed: scm authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
-	}
-	return &pb.AuthorizationResponse{
-		IsAuthorized: hasTeacherScopes(ctx, scm),
-	}, nil
-}
-
 // CreateCourse creates a new course.
 // Access policy: Admin.
 // TODO(vera): instead of calling getUserAndSCM here we want to fetch the app installations, choose the correct installation

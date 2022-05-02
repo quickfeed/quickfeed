@@ -26,7 +26,6 @@ type AutograderServiceClient interface {
 	GetUsers(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Users, error)
 	GetUserByCourse(ctx context.Context, in *CourseUserRequest, opts ...grpc.CallOption) (*User, error)
 	UpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*Void, error)
-	IsAuthorizedTeacher(ctx context.Context, in *Void, opts ...grpc.CallOption) (*AuthorizationResponse, error)
 	GetGroup(ctx context.Context, in *GetGroupRequest, opts ...grpc.CallOption) (*Group, error)
 	GetGroupByUserAndCourse(ctx context.Context, in *GroupRequest, opts ...grpc.CallOption) (*Group, error)
 	GetGroupsByCourse(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Groups, error)
@@ -105,15 +104,6 @@ func (c *autograderServiceClient) GetUserByCourse(ctx context.Context, in *Cours
 func (c *autograderServiceClient) UpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*Void, error) {
 	out := new(Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateUser", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *autograderServiceClient) IsAuthorizedTeacher(ctx context.Context, in *Void, opts ...grpc.CallOption) (*AuthorizationResponse, error) {
-	out := new(AuthorizationResponse)
-	err := c.cc.Invoke(ctx, "/ag.AutograderService/IsAuthorizedTeacher", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -452,7 +442,6 @@ type AutograderServiceServer interface {
 	GetUsers(context.Context, *Void) (*Users, error)
 	GetUserByCourse(context.Context, *CourseUserRequest) (*User, error)
 	UpdateUser(context.Context, *User) (*Void, error)
-	IsAuthorizedTeacher(context.Context, *Void) (*AuthorizationResponse, error)
 	GetGroup(context.Context, *GetGroupRequest) (*Group, error)
 	GetGroupByUserAndCourse(context.Context, *GroupRequest) (*Group, error)
 	GetGroupsByCourse(context.Context, *CourseRequest) (*Groups, error)
@@ -509,9 +498,6 @@ func (UnimplementedAutograderServiceServer) GetUserByCourse(context.Context, *Co
 }
 func (UnimplementedAutograderServiceServer) UpdateUser(context.Context, *User) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
-}
-func (UnimplementedAutograderServiceServer) IsAuthorizedTeacher(context.Context, *Void) (*AuthorizationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method IsAuthorizedTeacher not implemented")
 }
 func (UnimplementedAutograderServiceServer) GetGroup(context.Context, *GetGroupRequest) (*Group, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroup not implemented")
@@ -702,24 +688,6 @@ func _AutograderService_UpdateUser_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AutograderServiceServer).UpdateUser(ctx, req.(*User))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AutograderService_IsAuthorizedTeacher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Void)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AutograderServiceServer).IsAuthorizedTeacher(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/ag.AutograderService/IsAuthorizedTeacher",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).IsAuthorizedTeacher(ctx, req.(*Void))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1394,10 +1362,6 @@ var AutograderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateUser",
 			Handler:    _AutograderService_UpdateUser_Handler,
-		},
-		{
-			MethodName: "IsAuthorizedTeacher",
-			Handler:    _AutograderService_IsAuthorizedTeacher_Handler,
 		},
 		{
 			MethodName: "GetGroup",

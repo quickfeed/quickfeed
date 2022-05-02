@@ -55,6 +55,7 @@ func ValidateToken(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.Un
 						}
 					}
 					meta.Set("user", strconv.FormatUint(claims.UserID, 10))
+					meta.Set("token", token)
 					ctx = metadata.NewIncomingContext(ctx, meta)
 				}
 			}

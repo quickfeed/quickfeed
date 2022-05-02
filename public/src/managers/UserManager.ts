@@ -12,7 +12,6 @@ export interface IUserProvider {
     changeAdminRole( user: User, promote: boolean ): Promise<boolean>
     getLoggedInUser(): Promise<User | null>
     updateUser( user: User ): Promise<boolean>
-    isAuthorizedTeacher(): Promise<boolean>
 }
 
 interface IUserLoginEvent extends IEventData {
@@ -95,9 +94,6 @@ export class UserManager {
      * Checks whether current user has teacher scopes
      * @returns Returns true if user has already been authorized as teacher
      */
-    public async isAuthorizedTeacher(): Promise<boolean> {
-        return this.userProvider.isAuthorizedTeacher()
-    }
 
     public async getUsers(): Promise<User[]> {
         return this.userProvider.getUsers()

@@ -207,49 +207,6 @@ export class AutograderServiceClient {
     this.methodInfoUpdateUser);
   }
 
-  methodInfoIsAuthorizedTeacher = new grpcWeb.MethodDescriptor(
-    '/ag.AutograderService/IsAuthorizedTeacher',
-    grpcWeb.MethodType.UNARY,
-    ag_ag_pb.Void,
-    ag_ag_pb.AuthorizationResponse,
-    (request: ag_ag_pb.Void) => {
-      return request.serializeBinary();
-    },
-    ag_ag_pb.AuthorizationResponse.deserializeBinary
-  );
-
-  isAuthorizedTeacher(
-    request: ag_ag_pb.Void,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.AuthorizationResponse>;
-
-  isAuthorizedTeacher(
-    request: ag_ag_pb.Void,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.AuthorizationResponse) => void): grpcWeb.ClientReadableStream<ag_ag_pb.AuthorizationResponse>;
-
-  isAuthorizedTeacher(
-    request: ag_ag_pb.Void,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.AuthorizationResponse) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/ag.AutograderService/IsAuthorizedTeacher',
-        request,
-        metadata || {},
-        this.methodInfoIsAuthorizedTeacher,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/ag.AutograderService/IsAuthorizedTeacher',
-    request,
-    metadata || {},
-    this.methodInfoIsAuthorizedTeacher);
-  }
-
   methodInfoGetGroup = new grpcWeb.MethodDescriptor(
     '/ag.AutograderService/GetGroup',
     grpcWeb.MethodType.UNARY,

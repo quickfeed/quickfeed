@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -219,7 +220,10 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 		// logger.Debugf("qv: %v", qv)
 		// redirect, teacher := extractState(r, State)
 		// logger.Debugf("Redirect: %v ; Teacher: %t", redirect, teacher)
-
+		parts := strings.Split(r.URL.Path, "/")
+		for _, part := range parts {
+			logger.Debug(part)
+		}
 		provider := "github"
 		// // TODO(vera): remove teacher suffix if not needed
 		// // Add teacher suffix if upgrading scope.

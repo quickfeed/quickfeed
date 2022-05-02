@@ -56,6 +56,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         this.logger = logger
     }
 
+
+
     public async getCourses(): Promise<Course[]> {
         const result = await this.grpcHelper.getCourses()
         if ( !this.responseCodeSuccess( result ) || !result.data ) {
@@ -122,14 +124,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data ? this.responseCodeSuccess( result ) : false
     }
 
-    public async isAuthorizedTeacher(): Promise<boolean> {
-        const result = await this.grpcHelper.isAuthorizedTeacher()
-        if ( this.responseCodeSuccess( result ) && result.data ) {
-            return result.data.getIsauthorized()
-        }
-        return false
-
-    }
 
     public async createNewCourse( course: Course ): Promise<Course | Status> {
         const result = await this.grpcHelper.createCourse( course )

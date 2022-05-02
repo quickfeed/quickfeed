@@ -25,9 +25,6 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoUpdateUser = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateUser', grpcWeb.MethodType.UNARY, ag_ag_pb.User, ag_ag_pb.Void, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoIsAuthorizedTeacher = new grpcWeb.MethodDescriptor('/ag.AutograderService/IsAuthorizedTeacher', grpcWeb.MethodType.UNARY, ag_ag_pb.Void, ag_ag_pb.AuthorizationResponse, function (request) {
-            return request.serializeBinary();
-        }, ag_ag_pb.AuthorizationResponse.deserializeBinary);
         this.methodInfoGetGroup = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetGroup', grpcWeb.MethodType.UNARY, ag_ag_pb.GetGroupRequest, ag_ag_pb.Group, function (request) {
             return request.serializeBinary();
         }, ag_ag_pb.Group.deserializeBinary);
@@ -177,14 +174,6 @@ var AutograderServiceClient = /** @class */ (function () {
         }
         return this.client_.unaryCall(this.hostname_ +
             '/ag.AutograderService/UpdateUser', request, metadata || {}, this.methodInfoUpdateUser);
-    };
-    AutograderServiceClient.prototype.isAuthorizedTeacher = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/ag.AutograderService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/ag.AutograderService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher);
     };
     AutograderServiceClient.prototype.getGroup = function (request, metadata, callback) {
         if (callback !== undefined) {

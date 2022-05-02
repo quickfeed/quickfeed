@@ -22,7 +22,6 @@ func (s *AutograderService) getCurrentUser(ctx context.Context) (*pb.User, error
 	if !ok {
 		return nil, errors.New("malformed request")
 	}
-	s.logger.Debugf("GetCurrentUser got metadata: %+v", meta)
 	userValues := meta.Get("user")
 	if len(userValues) == 0 {
 		return nil, errors.New("no user metadata in context")

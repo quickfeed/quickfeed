@@ -1,7 +1,6 @@
 import * as grpcWeb from "grpc-web"
 import {
     Assignments,
-    AuthorizationResponse,
     Course,
     CourseRequest,
     CourseSubmissions,
@@ -28,7 +27,6 @@ import {
     Status,
     SubmissionRequest,
     SubmissionsForCourseRequest,
-    Submission,
     Submissions,
     SubmissionReviewersRequest,
     UpdateSubmissionRequest,
@@ -73,10 +71,6 @@ export class GrpcManager {
 
     public updateUser( user: User ): Promise<IGrpcResponse<Void>> {
         return this.grpcSend<Void>( this.agService.updateUser, user )
-    }
-
-    public isAuthorizedTeacher(): Promise<IGrpcResponse<AuthorizationResponse>> {
-        return this.grpcSend<AuthorizationResponse>( this.agService.isAuthorizedTeacher, new Void() )
     }
 
     // /* COURSES */ //
