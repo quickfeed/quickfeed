@@ -6,8 +6,8 @@ import { Course, Enrollment } from '../../proto/ag/ag_pb'
 
 
 interface CardProps {
-    course: Course,
-    enrollment: Enrollment
+    course: Course.AsObject,
+    enrollment: Enrollment.AsObject
 }
 
 const CardColor = [
@@ -20,13 +20,13 @@ const CardColor = [
 const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
     const actions = useActions()
     const history = useHistory()
-    const status = enrollment.getStatus()
+    const status = enrollment.status
 
     return (
         <div className="col-sm-4">
             <div className="card" style={{ maxWidth: "35rem", marginBottom: "10px", minHeight: "205px" }}>
                 <div className={"card-header bg-" + CardColor[status] + " text-white"}>
-                    {course.getCode()}
+                    {course.code}
                     {hasEnrolled(status) &&
                         <>
                             <span className="float-right">
@@ -39,13 +39,13 @@ const CourseCard = ({ course, enrollment }: CardProps): JSX.Element => {
                 </div>
 
                 <div className="card-body position-relative">
-                    <h5 className="card-title">{course.getName()} - {course.getTag()}/{course.getYear()}</h5>
+                    <h5 className="card-title">{course.name} - {course.tag}/{course.year}</h5>
                     {hasNone(status) ?
-                        <div className="btn btn-primary course-button" onClick={() => actions.enroll(course.getId())}>Enroll</div>
+                        <div className="btn btn-primary course-button" onClick={() => actions.enroll(course.id)}>Enroll</div>
                         : hasPending(status) ?
                             <div className="btn btn-secondary course-button disabled">Pending</div>
                             :
-                            <div className="btn btn-primary course-button" onClick={() => history.push("/course/" + enrollment.getCourseid())}>Go to Course</div>
+                            <div className="btn btn-primary course-button" onClick={() => history.push("/course/" + enrollment.courseid)}>Go to Course</div>
                     }
                 </div>
             </div>

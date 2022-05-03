@@ -10,16 +10,18 @@ const CourseBanner = (): JSX.Element => {
     const actions = useActions()
 
     const enrollment = state.enrollmentsByCourseID[getCourseID()]
-    const style = isVisible(enrollment) ? "fa fa-star" : "fa fa-star-o"
+    const icon = isVisible(enrollment) ? "fa fa-star" : "fa fa-star-o"
     return (
         <div className="banner jumbotron">
             <div className="centerblock container">
-                <h1>{enrollment.getCourse()?.getName()}
-                    <i className={style} style={{ "paddingLeft": "20px" }}
-                        onClick={() => actions.setEnrollmentState(enrollment)} />
+                <h1>{enrollment.course?.name}
+                    <span style={{ "paddingLeft": "20px" }}>
+                        <i className={icon} style={{ "paddingLeft": "20px" }}
+                            onClick={() => actions.setEnrollmentState(enrollment)} />
+                    </span>
                 </h1>
-                {hasTeacher(state.status[enrollment.getCourseid()]) &&
-                    <span className="clickable" onClick={() => actions.changeView(enrollment.getCourseid())}>
+                {hasTeacher(state.status[enrollment.courseid]) &&
+                    <span className="clickable" onClick={() => actions.changeView(enrollment.courseid)}>
                         {isTeacher(enrollment) ? "Switch to Student View" : "Switch to Teacher View"}
                     </span>
                 }

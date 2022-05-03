@@ -1,7 +1,6 @@
-import { json } from "overmind"
+import { Assignment, Course, Enrollment, EnrollmentLink, GradingBenchmark, GradingCriterion, Group, Review, Submission, SubmissionLink, User } from "../proto/ag/ag_pb"
+import { BuildInfo, Score } from "../proto/kit/score/score_pb"
 import { useParams } from "react-router"
-import { Assignment, Course, Enrollment, EnrollmentLink, GradingBenchmark, Group, Review, Submission, SubmissionLink, User } from "../proto/ag/ag_pb"
-import { Score } from "../proto/kit/score/score_pb"
 
 
 export enum Color {
@@ -112,11 +111,11 @@ export const sortByField = (arr: any[], funcs: Function[], by: Function, descend
 
 // TODO: Could be computed on the backend (https://github.com/quickfeed/quickfeed/issues/420)
 /** getPassedTestCount returns a string with the number of passed tests and the total number of tests */
-export const getPassedTestsCount = (score: Score[]): string => {
+export const getPassedTestsCount = (score: Score.AsObject[]): string => {
     let totalTests = 0
     let passedTests = 0
     score.forEach(score => {
-        if (score.getScore() === score.getMaxscore()) {
+        if (score.score === score.maxscore) {
             passedTests++
         }
         totalTests++
@@ -138,22 +137,22 @@ export const isValid = (elm: User | EnrollmentLink): boolean => {
 }
 
 /** hasEnrollment returns true if any of the provided has been approved */
-export const hasEnrollment = (enrollments: Enrollment[]): boolean => {
-    return enrollments.some(enrollment => enrollment.getStatus() > Enrollment.UserStatus.PENDING)
+export const hasEnrollment = (enrollments: Enrollment.AsObject[]): boolean => {
+    return enrollments.some(enrollment => enrollment.status > Enrollment.UserStatus.PENDING)
 }
 
-export const isStudent = (enrollment: Enrollment): boolean => { return hasStudent(enrollment.getStatus()) }
-export const isTeacher = (enrollment: Enrollment): boolean => { return hasTeacher(enrollment.getStatus()) }
-export const isPending = (enrollment: Enrollment): boolean => { return hasPending(enrollment.getStatus()) }
+export const isStudent = (enrollment: Enrollment.AsObject): boolean => { return hasStudent(enrollment.status) }
+export const isTeacher = (enrollment: Enrollment.AsObject): boolean => { return hasTeacher(enrollment.status) }
+export const isPending = (enrollment: Enrollment.AsObject): boolean => { return hasPending(enrollment.status) }
 
-export const isPendingGroup = (group: Group): boolean => { return group.getStatus() === Group.GroupStatus.PENDING }
-export const isApprovedGroup = (group: Group): boolean => { return group.getStatus() === Group.GroupStatus.APPROVED }
+export const isPendingGroup = (group: Group.AsObject): boolean => { return group.status === Group.GroupStatus.PENDING }
+export const isApprovedGroup = (group: Group.AsObject): boolean => { return group.status === Group.GroupStatus.APPROVED }
 
 /** isEnrolled returns true if the user is enrolled in the course, and is no longer pending. */
-export const isEnrolled = (enrollment: Enrollment): boolean => { return enrollment.getStatus() >= Enrollment.UserStatus.STUDENT }
+export const isEnrolled = (enrollment: Enrollment.AsObject): boolean => { return enrollment.status >= Enrollment.UserStatus.STUDENT }
 
 /** toggleUserStatus switches between teacher and student status. */
-export const toggleUserStatus = (enrollment: Enrollment): Enrollment.UserStatus => {
+export const toggleUserStatus = (enrollment: Enrollment.AsObject): Enrollment.UserStatus => {
     return isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER
 }
 
@@ -165,24 +164,24 @@ export const hasTeacher = (status: Enrollment.UserStatus): boolean => { return s
 /** hasEnrolled returns true if user has enrolled in course, or is pending approval. */
 export const hasEnrolled = (status: Enrollment.UserStatus): boolean => { return status >= Enrollment.UserStatus.PENDING }
 
-export const isVisible = (enrollment: Enrollment): boolean => { return enrollment.getState() === Enrollment.DisplayState.VISIBLE }
-export const isFavorite = (enrollment: Enrollment): boolean => { return enrollment.getState() === Enrollment.DisplayState.FAVORITE }
+export const isVisible = (enrollment: Enrollment.AsObject): boolean => { return enrollment.state === Enrollment.DisplayState.VISIBLE }
+export const isFavorite = (enrollment: Enrollment.AsObject): boolean => { return enrollment.state === Enrollment.DisplayState.FAVORITE }
 
-export const isCourseCreator = (user: User, course: Course): boolean => { return user.getId() === course.getCoursecreatorid() }
-export const isAuthor = (user: User, review: Review): boolean => { return user.getId() === review.getReviewerid() }
+export const isCourseCreator = (user: User.AsObject, course: Course.AsObject): boolean => { return user.id === course.coursecreatorid }
+export const isAuthor = (user: User.AsObject, review: Review.AsObject): boolean => { return user.id === review.reviewerid }
 
-export const isManuallyGraded = (assignment: Assignment): boolean => {
-    return assignment.getReviewers() > 0
+export const isManuallyGraded = (assignment: Assignment.AsObject): boolean => {
+    return assignment.reviewers > 0
 }
 
-export const isApproved = (submission: Submission): boolean => { return submission.getStatus() === Submission.Status.APPROVED }
-export const isRevision = (submission: Submission): boolean => { return submission.getStatus() === Submission.Status.REVISION }
-export const isRejected = (submission: Submission): boolean => { return submission.getStatus() === Submission.Status.REJECTED }
+export const isApproved = (submission: Submission.AsObject): boolean => { return submission.status === Submission.Status.APPROVED }
+export const isRevision = (submission: Submission.AsObject): boolean => { return submission.status === Submission.Status.REVISION }
+export const isRejected = (submission: Submission.AsObject): boolean => { return submission.status === Submission.Status.REJECTED }
 
-export const hasReviews = (submission: Submission): boolean => { return json(submission).getReviewsList().length > 0 }
-export const hasBenchmarks = (obj: Review | Assignment): boolean => { return json(obj).getGradingbenchmarksList().length > 0 }
-export const hasCriteria = (benchmark: GradingBenchmark): boolean => { return json(benchmark).getCriteriaList().length > 0 }
-export const hasEnrollments = (obj: Group): boolean => { return json(obj).getEnrollmentsList().length > 0 }
+export const hasReviews = (submission: Submission.AsObject): boolean => { return submission.reviewsList.length > 0 }
+export const hasBenchmarks = (obj: Review.AsObject | Assignment.AsObject): boolean => { return obj.gradingbenchmarksList.length > 0 }
+export const hasCriteria = (benchmark: GradingBenchmark.AsObject): boolean => { return benchmark.criteriaList.length > 0 }
+export const hasEnrollments = (obj: Group.AsObject): boolean => { return obj.enrollmentsList.length > 0 }
 
 /** getCourseID returns the course ID determined by the current route */
 export const getCourseID = (): number => {
@@ -195,33 +194,33 @@ export const isHidden = (value: string, query: string): boolean => {
 }
 
 /** getSubmissionsScore calculates the total score of all submissions in a SubmissionLink[] */
-export const getSubmissionsScore = (submissions: SubmissionLink[]): number => {
+export const getSubmissionsScore = (submissions: SubmissionLink.AsObject[]): number => {
     let score = 0
-    submissions.forEach(submission => {
-        if (!submission.hasSubmission()) {
+    submissions.forEach(link => {
+        if (!link.submission) {
             return
         }
-        score += (submission.getSubmission() as Submission).getScore()
+        score += link.submission.score
     })
     return score
 }
 
 /** getNumApproved returns the number of approved submissions in a SubmissionLink[] */
-export const getNumApproved = (submissions: SubmissionLink[]): number => {
+export const getNumApproved = (submissions: SubmissionLink.AsObject[]): number => {
     let num = 0
     submissions.forEach(submission => {
-        if (!submission.hasSubmission()) {
+        if (!submission.submission) {
             return
         }
-        if (isApproved(submission.getSubmission() as Submission)) {
+        if (isApproved(submission.submission)) {
             num++
         }
     })
     return num
 }
 
-export const getSubmissionByAssignmentID = (submissions: SubmissionLink[] | undefined, assignmentID: number): Submission | undefined => {
-    return submissions?.find(submission => submission.getAssignment()?.getId() === assignmentID)?.getSubmission()
+export const getSubmissionByAssignmentID = (submissions: SubmissionLink.AsObject[] | undefined, assignmentID: number): Submission.AsObject | undefined => {
+    return submissions?.find(submission => submission.assignment?.id === assignmentID)?.submission
 }
 
 export const EnrollmentStatusBadge = {
@@ -241,19 +240,19 @@ export const SubmissionStatus = {
 
 // TODO: This could possibly be done on the server. Would need to add a field to the proto submission/score model.
 /** assignmentStatusText returns a string that is used to tell the user what the status of their submission is */
-export const assignmentStatusText = (assignment: Assignment, submission: Submission): string => {
+export const assignmentStatusText = (assignment: Assignment.AsObject, submission: Submission.AsObject): string => {
     // If the submission is not graded, return a descriptive text
-    if (submission.getStatus() === Submission.Status.NONE) {
+    if (submission.status === Submission.Status.NONE) {
         // If the assignment requires manual approval, and the score is above the threshold, return Await Approval
-        if (!assignment.getAutoapprove() && submission.getScore() >= assignment.getScorelimit()) {
+        if (!assignment.autoapprove && submission.score >= assignment.scorelimit) {
             return "Awaiting approval"
         }
-        if (submission.getScore() < assignment.getScorelimit() && submission.getStatus() !== Submission.Status.APPROVED) {
-            return `Need ${assignment.getScorelimit()}% score for approval`
+        if (submission.score < assignment.scorelimit) {
+            return `Need ${assignment.scorelimit}% score for approval`
         }
     }
     // If the submission is graded, return the status
-    return SubmissionStatus[submission.getStatus()]
+    return SubmissionStatus[submission.status]
 }
 
 // Helper functions for default values for new courses
@@ -265,20 +264,20 @@ export const defaultYear = (date: Date): number => {
     return (date.getMonth() <= 11 && date.getDate() <= 31) && date.getMonth() > 10 ? (date.getFullYear() + 1) : date.getFullYear()
 }
 
-export const userLink = (user: User): string => {
-    return `https://github.com/${user.getLogin()}`
+export const userLink = (user: User.AsObject): string => {
+    return `https://github.com/${user.login}`
 }
 
-export const userRepoLink = (course: Course, user: User): string => {
-    return `https://github.com/${course.getOrganizationpath()}/${user.getLogin()}-labs`
+export const userRepoLink = (course: Course.AsObject, user: User.AsObject): string => {
+    return `https://github.com/${course.organizationpath}/${user.login}-labs`
 }
 
-export const groupRepoLink = (course: Course, group: Group): string => {
-    course.getOrganizationpath()
-    return `https://github.com/${course.getOrganizationpath()}/${slugify(group.getName())}`
+export const groupRepoLink = (course: Course.AsObject, group: Group.AsObject): string => {
+    course.organizationpath
+    return `https://github.com/${course.organizationpath}/${slugify(group.name)}`
 }
 
-export const getSubmissionCellColor = (submission: Submission): string => {
+export const getSubmissionCellColor = (submission: Submission.AsObject): string => {
     if (isApproved(submission)) {
         return "result-approved"
     }
@@ -307,7 +306,7 @@ const slugify = (str: string): string => {
 
 /* Use this function to simulate a delay in the loading of data */
 /* Used in development to simulate a slow network connection */
-const delay = (ms: number) => {
+export const delay = (ms: number) => {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
@@ -330,36 +329,274 @@ export enum SubmissionSort {
 }
 
 /** Sorting */
-const enrollmentCompare = (a: Enrollment, b: Enrollment, sortBy: EnrollmentSort, descending: boolean): number => {
+const enrollmentCompare = (a: Enrollment.AsObject, b: Enrollment.AsObject, sortBy: EnrollmentSort, descending: boolean): number => {
     const m = descending ? -1 : 1
     switch (sortBy) {
         case EnrollmentSort.Name:
-            const nameA = a.getUser()?.getName() ?? ""
-            const nameB = b.getUser()?.getName() ?? ""
+            const nameA = a.user?.name ?? ""
+            const nameB = b.user?.name ?? ""
             return m * (nameA.localeCompare(nameB))
         case EnrollmentSort.Status:
-            return m * (a.getStatus() - b.getStatus())
+            return m * (a.status - b.status)
         case EnrollmentSort.Email:
-            const emailA = a.getUser()?.getEmail() ?? ""
-            const emailB = b.getUser()?.getEmail() ?? ""
+            const emailA = a.user?.email ?? ""
+            const emailB = b.user?.email ?? ""
             return m * (emailA.localeCompare(emailB))
         case EnrollmentSort.Activity:
-            return m * (new Date(a.getLastactivitydate()).getTime() - new Date(b.getLastactivitydate()).getTime())
+            return m * (new Date(a.lastactivitydate).getTime() - new Date(b.lastactivitydate).getTime())
         case EnrollmentSort.Slipdays:
-            return m * (a.getSlipdaysremaining() - b.getSlipdaysremaining())
+            return m * (a.slipdaysremaining - b.slipdaysremaining)
         case EnrollmentSort.Approved:
-            return m * (a.getTotalapproved() - b.getTotalapproved())
+            return m * (a.totalapproved - b.totalapproved)
         case EnrollmentSort.StudentID:
-            const aID = a.getUser()?.getId() ?? 0
-            const bID = b.getUser()?.getId() ?? 0
+            const aID = a.user?.id ?? 0
+            const bID = b.user?.id ?? 0
             return m * (aID - bID)
         default:
             return 0
     }
 }
 
-export const sortEnrollments = (enrollments: Enrollment[], sortBy: EnrollmentSort, descending: boolean): Enrollment[] => {
+export const sortEnrollments = (enrollments: Enrollment.AsObject[], sortBy: EnrollmentSort, descending: boolean): Enrollment.AsObject[] => {
     return enrollments.sort((a, b) => {
         return enrollmentCompare(a, b, sortBy, descending)
     })
+}
+
+// Class with converter functions for the different proto types
+// TODO(jostein): Move this to a separate file
+// TODO(jostein): Currently used in `actions`. Consider moving use to `GRPCManager`.
+export class ProtoConverter {
+
+    /**
+     * create creates a new object of the given type
+     * @param type the type you wish to create as T.AsObject
+     * @returns the given type as a T.AsObject
+     * @example create<User.AsObject>(User) // returns a new User.AsObject
+     */
+    public static create<T>(type: (new () => any)): T {
+        return (new type()).toObject() as T
+    }
+
+    public static clone<T>(obj: T): T {
+        return JSON.parse(JSON.stringify(obj)) as T
+    }
+
+    /** The following functions will convert various kinds of objects
+     *  into their respective protobuf message types */
+    // TODO(jostein): Add converting functions for all types
+    // TODO(jostein): It would be awesome to make this generic. Not sure how to do that though.
+    public static toUser = (obj: User.AsObject): User => {
+        const user = new User()
+        user.setId(obj.id)
+        user.setName(obj.name)
+        user.setEmail(obj.email)
+        user.setIsadmin(obj.isadmin)
+        user.setLogin(obj.login)
+        user.setAvatarurl(obj.avatarurl)
+        user.setStudentid(obj.studentid)
+        const enrollments = obj.enrollmentsList.map(e => this.toEnrollment(e))
+        user.setEnrollmentsList(enrollments)
+
+        return user
+    }
+
+    public static toEnrollment = (obj: Enrollment.AsObject): Enrollment => {
+        const enrollment = new Enrollment()
+        enrollment.setId(obj.id)
+        enrollment.setStatus(obj.status)
+        enrollment.setLastactivitydate(obj.lastactivitydate)
+        enrollment.setSlipdaysremaining(obj.slipdaysremaining)
+        enrollment.setTotalapproved(obj.totalapproved)
+        enrollment.setCourseid(obj.courseid)
+        enrollment.setUserid(obj.userid)
+        enrollment.setGroupid(obj.groupid)
+        enrollment.setHasteacherscopes(obj.hasteacherscopes)
+        enrollment.setState(obj.state)
+        for (const slipdays of obj.usedslipdaysList) {
+            // Handle usedslipdays
+        }
+        if (obj.user) {
+            enrollment.setUser(this.toUser(obj.user))
+        }
+        if (obj.course) {
+            enrollment.setCourse(this.toCourse(obj.course))
+        }
+        if (obj.group) {
+            enrollment.setGroup(this.toGroup(obj.group))
+        }
+        return enrollment
+    }
+
+    public static toCourse = (obj: Course.AsObject): Course => {
+        const course = new Course()
+        course.setId(obj.id)
+        course.setCoursecreatorid(obj.coursecreatorid)
+        course.setName(obj.name)
+        course.setCode(obj.code)
+        course.setYear(obj.year)
+        course.setTag(obj.tag)
+        course.setProvider(obj.provider)
+        course.setOrganizationid(obj.organizationid)
+        course.setOrganizationpath(obj.organizationpath)
+        course.setSlipdays(obj.slipdays)
+        course.setDockerfile(obj.dockerfile)
+        course.setEnrolled(obj.enrolled)
+
+        const enrollments = obj.enrollmentsList.map(e => this.toEnrollment(e))
+        course.setEnrollmentsList(enrollments)
+
+        const assignments = obj.assignmentsList.map(a => this.toAssignment(a))
+        course.setAssignmentsList(assignments)
+
+        const groups = obj.groupsList.map(g => this.toGroup(g))
+        course.setGroupsList(groups)
+
+        return course
+    }
+
+    public static toAssignment = (obj: Assignment.AsObject): Assignment => {
+        const assignment = new Assignment()
+        assignment.setId(obj.id)
+        assignment.setCourseid(obj.courseid)
+        assignment.setName(obj.name)
+        assignment.setScriptfile(obj.scriptfile)
+        assignment.setDeadline(obj.deadline)
+        assignment.setAutoapprove(obj.autoapprove)
+        assignment.setOrder(obj.order)
+        assignment.setIsgrouplab(obj.isgrouplab)
+        assignment.setScorelimit(obj.scorelimit)
+        assignment.setReviewers(obj.reviewers)
+
+        const submissions = obj.submissionsList.map(s => this.toSubmission(s))
+        assignment.setSubmissionsList(submissions)
+
+        const gradingBenchmarks = obj.gradingbenchmarksList.map(g => this.toGradingBenchmark(g))
+        assignment.setGradingbenchmarksList(gradingBenchmarks)
+
+        assignment.setContainertimeout(obj.containertimeout)
+
+        return assignment
+    }
+
+    public static toSubmission = (obj: Submission.AsObject): Submission => {
+        const submission = new Submission()
+        submission.setId(obj.id)
+        submission.setAssignmentid(obj.assignmentid)
+        submission.setUserid(obj.userid)
+        submission.setGroupid(obj.groupid)
+        submission.setScore(obj.score)
+        submission.setCommithash(obj.commithash)
+        submission.setReleased(obj.released)
+        submission.setStatus(obj.status)
+        submission.setApproveddate(obj.approveddate)
+
+        const reviews = obj.reviewsList.map(r => this.toReview(r))
+        submission.setReviewsList(reviews)
+
+        if (obj.buildinfo) {
+            submission.setBuildinfo(this.toBuildInfo(obj.buildinfo))
+        }
+
+        const scores = obj.scoresList.map(s => this.toScore(s))
+        submission.setScoresList(scores)
+
+        return submission
+    }
+
+    public static toBuildInfo = (obj: BuildInfo.AsObject): BuildInfo => {
+        const buildInfo = new BuildInfo()
+        buildInfo.setId(obj.id)
+        buildInfo.setSubmissionid(obj.submissionid)
+        buildInfo.setBuilddate(obj.builddate)
+        buildInfo.setBuildlog(obj.buildlog)
+        buildInfo.setExectime(obj.exectime)
+
+        return buildInfo
+    }
+
+    public static toScore = (obj: Score.AsObject): Score => {
+        const score = new Score()
+        score.setId(obj.id)
+        score.setSubmissionid(obj.submissionid)
+        score.setSecret(obj.secret)
+        score.setTestname(obj.testname)
+        score.setScore(obj.score)
+        score.setMaxscore(obj.maxscore)
+        score.setWeight(obj.weight)
+        score.setTestdetails(obj.testdetails)
+
+        return score
+    }
+
+    public static toReview = (obj: Review.AsObject): Review => {
+        const review = new Review()
+        review.setId(obj.id)
+        review.setSubmissionid(obj.submissionid)
+        review.setReviewerid(obj.reviewerid)
+        review.setFeedback(obj.feedback)
+        review.setReady(obj.ready)
+        review.setScore(obj.score)
+
+        const gradingBenchmarks = obj.gradingbenchmarksList.map(g => this.toGradingBenchmark(g))
+        review.setGradingbenchmarksList(gradingBenchmarks)
+
+        review.setEdited(obj.edited)
+
+        return review
+    }
+
+    public static toGradingBenchmark = (obj: GradingBenchmark.AsObject): GradingBenchmark => {
+        const gradingBenchmark = new GradingBenchmark()
+        gradingBenchmark.setId(obj.id)
+        gradingBenchmark.setAssignmentid(obj.assignmentid)
+        gradingBenchmark.setReviewid(obj.reviewid)
+        gradingBenchmark.setHeading(obj.heading)
+        gradingBenchmark.setComment(obj.comment)
+
+        const criteria = obj.criteriaList.map(c => this.toGradingCriterion(c))
+        gradingBenchmark.setCriteriaList(criteria)
+
+        return gradingBenchmark
+    }
+
+    public static toGradingCriterion = (obj: GradingCriterion.AsObject): GradingCriterion => {
+        const criterion = new GradingCriterion()
+        criterion.setId(obj.id)
+        criterion.setBenchmarkid(obj.benchmarkid)
+        criterion.setPoints(obj.points)
+        criterion.setDescription(obj.description)
+        criterion.setGrade(obj.grade)
+        criterion.setComment(obj.comment)
+
+        return criterion
+    }
+
+    public static toGroup = (obj: Group.AsObject): Group => {
+        const group = new Group()
+        group.setId(obj.id)
+        group.setName(obj.name)
+        group.setCourseid(obj.courseid)
+        group.setTeamid(obj.teamid)
+        group.setStatus(obj.status)
+
+        const users = obj.usersList.map(u => this.toUser(u))
+        group.setUsersList(users)
+
+        const enrollments = obj.enrollmentsList.map(e => this.toEnrollment(e))
+        group.setEnrollmentsList(enrollments)
+
+        return group
+    }
+
+    public static load = () => {
+        const data = localStorage.getItem("state")
+        if (data) {
+            const obj = JSON.parse(data)
+            console.log("Loaded state: ", obj)
+            return obj
+        }
+        return undefined
+    }
+
 }

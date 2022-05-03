@@ -4,7 +4,7 @@ import { GradingBenchmark, GradingCriterion } from "../../../proto/ag/ag_pb"
 import { useActions, useAppState } from "../../overmind"
 
 type GradeCommentProps = {
-    grade: GradingBenchmark | GradingCriterion,
+    grade: GradingBenchmark.AsObject | GradingCriterion.AsObject,
     editing: boolean,
     setEditing: Dispatch<SetStateAction<boolean>>
 }
@@ -23,7 +23,7 @@ const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.El
         const { value } = event.currentTarget
         setEditing(false)
         // Exit early if the value is unchanged
-        if (value === grade.getComment()) {
+        if (value === grade.comment) {
             return
         }
         actions.review.updateComment({ grade: grade, comment: value })
@@ -32,7 +32,7 @@ const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.El
     return (
         <tr>
             <th colSpan={3}>
-                <input autoFocus onBlur={(e) => handleChange(e)} defaultValue={grade.getComment()} className="form-control" type="text"></input>
+                <input autoFocus onBlur={(e) => handleChange(e)} defaultValue={grade.comment} className="form-control" type="text"></input>
             </th>
         </tr>
     )

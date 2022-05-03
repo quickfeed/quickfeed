@@ -6,16 +6,16 @@ import Criteria from "./manual-grading/Criterion"
 import SummaryFeedback from "./manual-grading/SummaryFeedback"
 
 
-const ReviewResult = ({ review }: { review?: Review }): JSX.Element => {
+const ReviewResult = ({ review }: { review?: Review.AsObject }): JSX.Element => {
 
     if (!review) {
         return <></>
     }
 
-    const result = hasBenchmarks(review) ? review.getGradingbenchmarksList().map((benchmark, index) => {
+    const result = hasBenchmarks(review) ? review.gradingbenchmarksList.map((benchmark, index) => {
         return (
             <Benchmark key={index} bm={benchmark}>
-                {benchmark.getCriteriaList().map((criteria, index) => <Criteria key={index} criteria={criteria} />)}
+                {benchmark.criteriaList.map((criteria, index) => <Criteria key={index} criteria={criteria} />)}
             </Benchmark>
         )
     }) : null
@@ -25,7 +25,7 @@ const ReviewResult = ({ review }: { review?: Review }): JSX.Element => {
             <thead className="thead-dark">
                 <tr className="table-primary">
                     <th>Score:</th>
-                    <th>{review.getScore()}</th>
+                    <th>{review.score}</th>
                     <th></th>
                 </tr>
                 <tr>

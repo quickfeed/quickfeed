@@ -16,16 +16,17 @@ const ReviewForm = (): JSX.Element => {
         return <div>None</div>
     }
 
-    if (!state.activeSubmissionLink.hasSubmission() || !state.activeSubmissionLink.hasAssignment()) {
+    const assignment = state.activeSubmissionLink.assignment
+    const submission = state.activeSubmissionLink.submission
+    if (!assignment || !submission) {
         return <div>No Submission</div>
     }
 
-    const isAuthor = (review: Review) => {
-        console.log("Checking author")
-        return review?.getReviewerid() === state.self.getId()
+    const isAuthor = (review: Review.AsObject) => {
+        return review?.reviewerid === state.self.id
     }
 
-    const reviewers = state.activeSubmissionLink?.getAssignment()?.getReviewers() ?? 0
+    const reviewers = assignment.reviewers ?? 0
     const reviews = state.review.reviews[courseID][state.activeSubmission] ?? []
     const selectReviewButton: JSX.Element[] = []
 
@@ -33,10 +34,10 @@ const ReviewForm = (): JSX.Element => {
         if (state.isCourseCreator || isAuthor(review)) {
             // Teaching assistants can only select their own reviews, and course creators can select any review
             selectReviewButton.push(
-                <Button key={review.getId()} onclick={() => { actions.review.setSelectedReview(index) }}
+                <Button key={review.id} onclick={() => { actions.review.setSelectedReview(index) }}
                     classname={`mr-1 ${state.review.selectedReview === index ? "active border border-dark" : ""}`}
-                    text={review.getReady() ? "Ready" : "In Progress"}
-                    color={review.getReady() ? Color.GREEN : Color.YELLOW}
+                    text={review.ready ? "Ready" : "In Progress"}
+                    color={review.ready ? Color.GREEN : Color.YELLOW}
                     type={ButtonType.BUTTON} />
             )
         }
@@ -51,7 +52,7 @@ const ReviewForm = (): JSX.Element => {
         )
     }
 
-    if (!isManuallyGraded(state.activeSubmissionLink.getAssignment() as Assignment)) {
+    if (!isManuallyGraded(assignment)) {
         return <div>This assignment is not for manual grading.</div>
     } else {
         return (

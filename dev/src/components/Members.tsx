@@ -1,10 +1,9 @@
 import React, { useState } from "react"
-import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortEnrollments } from "../Helpers"
+import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, ProtoConverter, sortEnrollments } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
-import { Enrollment, User } from "../../proto/ag/ag_pb"
+import { Enrollment } from "../../proto/ag/ag_pb"
 import Search from "./Search"
 import DynamicTable, { Row } from "./DynamicTable"
-import { json } from "overmind"
 import DynamicButton from "./DynamicButton"
 import { ButtonType } from "./admin/Button"
 
@@ -18,11 +17,6 @@ const Members = (): JSX.Element => {
     const [descending, setDescending] = useState<boolean>(false)
     const [edit, setEditing] = useState<boolean>(false)
 
-    const approveAll = () => {
-        for (const enrollment of pending) {
-            actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT })
-        }
-    }
 
     const setSort = (sort: EnrollmentSort) => {
         if (sortBy === sort) {
@@ -31,7 +25,13 @@ const Members = (): JSX.Element => {
         setSortBy(sort)
     }
 
-    const pending = state.courseEnrollments[courseID].filter(enrollment => isPending(enrollment))
+    let enrollments: Enrollment.AsObject[] = []
+    if (state.courseEnrollments[courseID]) {
+        // Clone the enrollments so we can sort them
+        enrollments = ProtoConverter.clone(state.courseEnrollments[courseID])
+    }
+
+    const pending = state.pendingEnrollments
 
     const header: Row = [
         { value: "Name", onClick: () => setSort(EnrollmentSort.Name) },
@@ -42,14 +42,14 @@ const Members = (): JSX.Element => {
         { value: "Slipdays", onClick: () => { setSort(EnrollmentSort.Slipdays) } },
         { value: "Role", onClick: () => { setSort(EnrollmentSort.Status) } },
     ]
-    const members = sortEnrollments(json(state.courseEnrollments[courseID]), sortBy, descending).map(enrollment => {
+    const members = sortEnrollments(enrollments, sortBy, descending).map(enrollment => {
         const data: Row = []
-        data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getName() : "")
-        data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getEmail() : "")
-        data.push(enrollment.hasUser() ? (enrollment.getUser() as User).getStudentid() : "")
-        data.push(enrollment.getLastactivitydate())
-        data.push(enrollment.getTotalapproved().toString())
-        data.push(enrollment.getSlipdaysremaining().toString())
+        data.push(enrollment.user ? enrollment.user.name : "")
+        data.push(enrollment.user ? enrollment.user.email : "")
+        data.push(enrollment.user ? enrollment.user.studentid : "")
+        data.push(enrollment.lastactivitydate)
+        data.push(enrollment.totalapproved.toString())
+        data.push(enrollment.slipdaysremaining.toString())
 
         if (isPending(enrollment)) {
             data.push(
@@ -75,8 +75,8 @@ const Members = (): JSX.Element => {
                         Reject
                     </i>
                 </div>) :
-                <i className={EnrollmentStatusBadge[enrollment.getStatus()]}>
-                    {EnrollmentStatus[enrollment.getStatus()]}
+                <i className={EnrollmentStatusBadge[enrollment.status]}>
+                    {EnrollmentStatus[enrollment.status]}
                 </i>
             )
         }
@@ -94,7 +94,7 @@ const Members = (): JSX.Element => {
                         {edit ? "Cancel" : "Edit"}
                     </div>
                 </div>
-                {pending.length > 0 ?
+                {pending?.length > 0 ?
                     <div style={{ marginLeft: "10px" }}>
                         <DynamicButton color={Color.GREEN} type={ButtonType.BUTTON} text="Approve All" onClick={() => actions.approvePendingEnrollments()} />
                     </div> : null}

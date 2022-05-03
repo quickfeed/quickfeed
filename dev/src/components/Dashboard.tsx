@@ -20,7 +20,7 @@ const Dashboard = (): JSX.Element => {
         <div className='box'>
             <Alert />
             <div>
-                <h1>Welcome, {state.self.getName()}!</h1>
+                <h1>Welcome, {state.self.name}!</h1>
             </div>
             <SubmissionsTable />
             <Courses home={true} />

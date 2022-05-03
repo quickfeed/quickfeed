@@ -27,17 +27,16 @@ const Results = (): JSX.Element => {
         }
     }, [state.courseSubmissions])
 
-
     if (!state.courseSubmissions[courseID]) {
         return <h1>Fetching Submissions...</h1>
     }
 
-    const getSubmissionCell = (submissionLink: SubmissionLink, enrollment: Enrollment): CellElement => {
-        const submission = submissionLink.getSubmission()
+    const getSubmissionCell = (submissionLink: SubmissionLink.AsObject, enrollment: Enrollment.AsObject): CellElement => {
+        const submission = submissionLink.submission
         if (submission) {
-            const isSelected = state.activeSubmission === submission?.getId()
+            const isSelected = state.activeSubmission === submission.id
             return ({
-                value: `${submission.getScore()} %`,
+                value: `${submission.score} %`,
                 className: `${getSubmissionCellColor(submission)} ${isSelected ? "selected" : ""}`,
                 onClick: () => {
                     actions.setActiveSubmissionLink(submissionLink)
@@ -57,7 +56,7 @@ const Results = (): JSX.Element => {
 
     const groupView = state.groupView
     const base: Row = [{ value: "Name", onClick: () => actions.setSubmissionSort(SubmissionSort.Name) }]
-    const assignments = state.assignments[courseID].filter(assignment => (state.review.assignmentID < 0) || assignment.getId() === state.review.assignmentID)
+    const assignments = state.assignments[courseID].filter(assignment => (state.review.assignmentID < 0) || assignment.id === state.review.assignmentID)
     const header = generateAssignmentsHeader(base, assignments, groupView)
 
     const links = state.sortedAndFilteredSubmissions

@@ -15,24 +15,24 @@ const NavBarLabs = (): JSX.Element => {
         return <></>
     }
 
-    const submissionIcon = (assignment: Assignment) => {
-        const submission = state.submissions[state.activeCourse][assignment.getOrder() - 1]
+    const submissionIcon = (assignment: Assignment.AsObject) => {
+        const submission = state.submissions[state.activeCourse][assignment.order - 1]
         return (
             <div>
-                {assignment.getIsgrouplab() && <i className={"fa fa-users"} title={"Group assignment"} />}
-                {submission?.getStatus() === Submission.Status.APPROVED && <i className="fa fa-check ml-2" />}
+                {assignment.isgrouplab && <i className={"fa fa-users"} title={"Group assignment"} />}
+                {submission?.status === Submission.Status.APPROVED && <i className="fa fa-check ml-2" />}
             </div>
         )
     }
 
-    const getLinkClass = (assignment: Assignment) => {
-        return state.activeAssignment === assignment.getId() ? Status.Active : ""
+    const getLinkClass = (assignment: Assignment.AsObject) => {
+        return state.activeAssignment === assignment.id ? Status.Active : ""
     }
 
     const labLinks = state.assignments[state.activeCourse]?.map((assignment, index) => {
-        const link: NavLink = { link: { text: assignment.getName(), to: `/course/${state.activeCourse}/${assignment.getId()}` }, jsx: submissionIcon(assignment) }
+        const link: NavLink = { link: { text: assignment.name, to: `/course/${state.activeCourse}/${assignment.id}` }, jsx: submissionIcon(assignment) }
         return (
-            <div className={getLinkClass(assignment)} style={{ position: "relative" }} key={assignment.getId()} onClick={() => { history.push(link.link.to) }}>
+            <div className={getLinkClass(assignment)} style={{ position: "relative" }} key={assignment.id} onClick={() => { history.push(link.link.to) }}>
                 <NavBarLink link={link.link} jsx={link.jsx} />
                 <ProgressBar courseID={state.activeCourse} assignmentIndex={index} type={Progress.NAV} />
             </div>

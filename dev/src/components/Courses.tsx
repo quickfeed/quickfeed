@@ -23,7 +23,7 @@ const Courses = (overview: overview): JSX.Element => {
         return (
             <div className="container centered">
                 <h3>There are currently no available courses.</h3>
-                {state.self.getIsadmin() ?
+                {state.self.isadmin ?
                     <>
                         <div>
                             <Button classname="mr-3" text="Go to course creation" color={Color.GREEN} type={ButtonType.BUTTON} onclick={() => history.push("/admin/create")} />
@@ -43,13 +43,13 @@ const Courses = (overview: overview): JSX.Element => {
         const pending: JSX.Element[] = []
         const availableCourses: JSX.Element[] = []
         state.courses.map(course => {
-            const enrol = state.enrollmentsByCourseID[course.getId()]
+            const enrol = state.enrollmentsByCourseID[course.id]
             if (enrol) {
-                const courseCard = <CourseCard key={course.getId()} course={course} enrollment={enrol} />
+                const courseCard = <CourseCard key={course.id} course={course} enrollment={enrol} />
                 if (isVisible(enrol)) {
                     favorite.push(courseCard)
                 } else {
-                    switch (enrol.getStatus()) {
+                    switch (enrol.status) {
                         case Enrollment.UserStatus.PENDING:
                             pending.push(courseCard)
                             break
@@ -63,7 +63,7 @@ const Courses = (overview: overview): JSX.Element => {
                 }
             } else {
                 availableCourses.push(
-                    <CourseCard key={course.getId()} course={course} enrollment={new Enrollment} />
+                    <CourseCard key={course.id} course={course} enrollment={(new Enrollment).toObject()} />
                 )
             }
         })

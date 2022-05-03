@@ -8,20 +8,13 @@ import GroupForm from "../components/group/GroupForm"
 
 const GroupPage = (): JSX.Element => {
     const state = useAppState()
-    const actions = useActions()
     const courseID = getCourseID()
-
-    useEffect(() => {
-        if (!state.isTeacher) {
-            actions.getGroupByUserAndCourse(courseID)
-        }
-    }, [])
 
     if (state.isTeacher) {
         return <Groups />
     }
 
-    if (!state.userGroup[courseID]) {
+    if (!state.hasGroup(courseID)) {
         return <GroupForm />
     }
     return <GroupComponent />

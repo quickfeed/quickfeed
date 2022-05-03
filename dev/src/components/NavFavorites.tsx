@@ -11,7 +11,7 @@ const NavFavorites = (): JSX.Element => {
     const visible = state.enrollments.filter(enrollment => isEnrolled(enrollment) && isVisible(enrollment))
 
     const courses = visible.map((enrollment) => {
-        return <NavBarCourse key={enrollment.getId()} enrollment={enrollment} />
+        return <NavBarCourse key={enrollment.id} enrollment={enrollment} />
     })
 
     return (
