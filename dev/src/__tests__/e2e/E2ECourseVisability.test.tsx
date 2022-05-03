@@ -9,7 +9,7 @@ describe("End to End course visability", () => {
             .set("acceptInsecureCerts", true)).build()
         await driver.get("https://127.0.0.1/dev/")
 
-        //Go to ccoursepage
+        //Go to coursepage
         const hamburger = await driver.findElement(By.className("hamburger"))
         await driver.wait(until.elementIsVisible(hamburger), 100)
         hamburger.click()

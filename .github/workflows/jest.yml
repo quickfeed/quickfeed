@@ -3,10 +3,6 @@ name: Jest Test
 on:
   push:
     branches: [master]
-    paths-ignore:
-      - "./dev/src/__tests__/E2ECourseVisability.test.tsx"
-      - "./dev/src/__tests__/navbarResponsive.test.tsx"
-      - "./dev/src/__tests__/courseUtilityLinks.test.tsx"
   pull_request:
 
 jobs:
@@ -26,4 +22,4 @@ jobs:
       - name: Run tests
         working-directory: ./dev/src/__tests__
 
-        run: npm test
+        run: npm test -- --testPathIgnorePatterns=/e2e/

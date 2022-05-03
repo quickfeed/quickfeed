@@ -1,5 +1,5 @@
 import { Builder, By, Capabilities, until } from 'selenium-webdriver'
-import { isOverlapping } from './testHelpers'
+import { isOverlapping } from '../testHelpers/testHelpers'
 
 
 describe("Course utility elements should not overlap", () => {

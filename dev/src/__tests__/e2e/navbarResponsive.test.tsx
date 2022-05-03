@@ -1,5 +1,5 @@
-import { Builder, By, Browser, IRectangle, Capabilities } from 'selenium-webdriver'
-import { isOverlapping } from './testHelpers'
+import { Builder, By, Capabilities } from 'selenium-webdriver'
+import { isOverlapping } from '../testHelpers/testHelpers'
 
 describe("Front page elements login and logo should not overlap", () => {
     //Laptop, desktop, mobile
