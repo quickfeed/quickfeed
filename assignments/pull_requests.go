@@ -51,7 +51,7 @@ func AssignReviewers(sc scm.SCM, db database.Database, course *pb.Course, repo *
 // based on whoever in total has been assigned to the least amount of pull requests.
 // It is simple, and does not account for how many current review requests any user has.
 //
-// Returns an error if the list of users is empty
+// Returns an error if the list of users is empty.
 func getNextReviewer(ID uint64, users []*pb.User, reviewCounter map[uint64]map[uint64]int) (*pb.User, error) {
 	if len(users) == 0 {
 		return nil, errors.New("list of users is empty")
@@ -89,6 +89,9 @@ func getNextTeacherReviewer(db database.Database, course *pb.Course) (*pb.User, 
 	if err != nil {
 		return nil, err
 	}
+	if len(teachers) == 0 {
+		return nil, errors.New("failed to get next teacher reviewer: no teachers in course")
+	}
 	teacherReviewer, err := getNextReviewer(course.GetID(), teachers, teacherReviewCounter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get next teacher reviewer: %w", err)
@@ -96,7 +99,7 @@ func getNextTeacherReviewer(db database.Database, course *pb.Course) (*pb.User, 
 	return teacherReviewer, nil
 }
 
-// getNextStudentReviewer gets the student with the least total reviews.
+// getNextStudentReviewer gets the student in a group with the least total reviews.
 func getNextStudentReviewer(db database.Database, groupID, ownerID uint64) (*pb.User, error) {
 	group, err := db.GetGroup(groupID)
 	if err != nil {

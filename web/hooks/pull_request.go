@@ -15,11 +15,11 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 	wh.logger.Debugf("Received pull request review event for pull request: %s, in repository: %s",
 		payload.GetPullRequest().GetTitle(), payload.GetRepo().GetName())
 
-	// Currently, QF only needs to do something if the PR is approved.
+	// Currently, QF only needs to do something if the PR is approved
 	if payload.GetReview().GetState() != "approved" {
 		wh.logger.Debug("Ignoring pull request review event for non-approved review")
 	}
-	// We make sure that the pull request is one that QF has a data record of.
+	// We make sure that the pull request is one that QF has a data record of
 	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{
 		ExternalRepositoryID: uint64(payload.GetRepo().GetID()),
 		Number:               uint64(payload.GetPullRequest().GetNumber()),
@@ -53,7 +53,7 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 		return
 	}
 
-	// Only if the review is from a course teacher, do we set the pull request to approved.
+	// Only if the review is from a course teacher, do we set the pull request to approved
 	if reviewer.IsTeacher() {
 		pullRequest.SetApproved()
 		wh.db.UpdatePullRequest(pullRequest)
@@ -144,7 +144,8 @@ func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, repo
 		return
 	}
 	if len(tasks) != 1 {
-		wh.logger.Errorf("Got an unexpected number of tasks: %d", len(tasks)) // This should never happen
+		// This should never happen
+		wh.logger.Errorf("Got an unexpected number of tasks: %d", len(tasks))
 		return
 	}
 	associatedTask := tasks[0]

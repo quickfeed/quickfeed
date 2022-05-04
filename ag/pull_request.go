@@ -18,7 +18,7 @@ func (pr *PullRequest) IsApproved() bool {
 }
 
 // HasReviewers returns true if a pull request is in the approved or review stage.
-// This indicates that it should have had reviewers assigned to it.
+// This implies that it should have had reviewers assigned to it.
 func (pr *PullRequest) HasReviewers() bool {
 	return pr.Stage == PullRequest_APPROVED || pr.Stage == PullRequest_REVIEW
 }

@@ -207,13 +207,13 @@ message PullRequest {
         APPROVED = 3;
     }
     uint64 ID                   = 1;
-    uint64 externalRepositoryID = 3; // Represents the external repository ID
-    uint64 taskID               = 4; // foreign key
-    uint64 issueID              = 5; // foreign key
-    uint64 userID               = 6; // The user who created this PR
-    string sourceBranchName     = 7; // The source branch for this pull request
-    uint64 number               = 8; // Pull request number
-    Stage stage                 = 9;
+    uint64 externalRepositoryID = 2; // Represents the external repository ID
+    uint64 taskID               = 3; // foreign key
+    uint64 issueID              = 4; // foreign key
+    uint64 userID               = 5; // The user who owns this PR
+    string sourceBranchName     = 6; // The source branch for this pull request
+    uint64 number               = 7; // Pull request number
+    Stage stage                 = 8;
 }
 
 message Assignments {

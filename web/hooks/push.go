@@ -78,12 +78,11 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		for _, assignment := range assignments {
 			if assignment.IsGroupLab {
 				// only run group assignments
-				// TODO(Espeland): Need to find a way to have these tests run on the correct branch
 				results := wh.runAssignmentTests(assignment, repo, course, payload)
 
 				if !isDefaultBranch(payload) {
 					// Attempt to find the pull request for the branch, if it exists,
-					// and then assign reviewers to it, if the branch task score is higher than the assignment score limit.
+					// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
 					wh.handleTaskPush(payload, results, assignment, course, repo)
 				}
 			} else {
@@ -109,8 +108,8 @@ func (wh GitHubWebHook) handleTaskPush(payload *github.PushEvent, results *score
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// This can happen if someone pushes to a branch group assignment, without having a PR created for it.
-			// If this happens, QF should not do anything.
+			// This can happen if someone pushes to a branch group assignment, without having a PR created for it
+			// If this happens, QF should not do anything
 			wh.logger.Debugf("No pull request found for ref: %s", payload.GetRef())
 			return
 		}
@@ -119,8 +118,8 @@ func (wh GitHubWebHook) handleTaskPush(payload *github.PushEvent, results *score
 	}
 	tasks, err := wh.db.GetTasks(&pb.Task{ID: pullRequest.GetTaskID()})
 	if err != nil {
-		// A pull request should always have a task association.
-		// If not, something must have gone wrong elsewhere.
+		// A pull request should always have a task association
+		// If not, something must have gone wrong elsewhere
 		wh.logger.Errorf("Failed to get task from the database: %v", err)
 		return
 	}
@@ -140,8 +139,8 @@ func (wh GitHubWebHook) handleTaskPush(payload *github.PushEvent, results *score
 	temp := strings.Split(task.GetName(), "/")
 	taskSum := results.TaskSum("task-" + temp[len(temp)-1])
 
-	// We assign reviewers to a pull request when the tests associated with it score above the assignment score limit.
-	// We do not assign reviewers if the pull request has already been assigned reviewers.
+	// We assign reviewers to a pull request when the tests associated with it score above the assignment score limit
+	// We do not assign reviewers if the pull request has already been assigned reviewers
 	if taskSum >= assignment.GetScoreLimit() && !pullRequest.HasReviewers() {
 		wh.logger.Debugf("Assigning reviewers to pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
 		scm, err := scm.NewSCMClient(wh.logger, course.GetProvider(), course.GetAccessToken())

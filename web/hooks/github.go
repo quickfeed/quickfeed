@@ -44,11 +44,12 @@ func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 		wh.logger.Debug(log.IndentJson(e))
 		wh.handlePush(e)
 	case *github.PullRequestEvent:
-		wh.logger.Debug(log.IndentJson(e))
 		switch e.GetAction() {
 		case "opened":
+			wh.logger.Debug(log.IndentJson(e))
 			wh.handlePullRequestOpened(e)
 		case "closed":
+			wh.logger.Debug(log.IndentJson(e))
 			wh.handlePullRequestClosed(e)
 		}
 	case *github.PullRequestReviewEvent:
