@@ -244,7 +244,7 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 				return err
 			}
 			// For testing purposes, assume all student repositories are group repositories
-			// since tasks are only supported for groups anyway.
+			// since tasks and pull requests are only supported for groups anyway.
 			dbRepo.RepoType = pb.Repository_GROUP
 			dbRepo.UserID = group.GetID()
 		}

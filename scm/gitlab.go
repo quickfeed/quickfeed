@@ -316,12 +316,30 @@ func (*GitlabSCM) EditRepoIssue(_ context.Context, _ int, _ *CreateIssueOptions)
 	}
 }
 
+// CreateIssueComment implements the SCM interface
+func (*GitlabSCM) CreateIssueComment(ctx context.Context, number int, opt *IssueCommentOptions) (uint64, error) {
+	// TODO no implementation provided yet
+	return 0, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "CreateIssueComment",
+	}
+}
+
+// EditIssueComment implements the SCM interface
+func (*GitlabSCM) EditIssueComment(ctx context.Context, commentID int64, opt *IssueCommentOptions) error {
+	// TODO no implementation provided yet
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "EditIssueComment",
+	}
+}
+
 // RequestReviewers implements the SCM interface
 func (*GitlabSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error {
 	// TODO no implementation provided yet
 	return ErrNotSupported{
 		SCM:    "gitlab",
-		Method: "EditRepoIssue",
+		Method: "RequestReviewers",
 	}
 }
 

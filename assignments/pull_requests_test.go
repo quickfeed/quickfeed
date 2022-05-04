@@ -1,13 +1,16 @@
 package assignments
 
 import (
+	"context"
 	"errors"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/internal/qtest"
+	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/google/go-cmp/cmp"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -59,7 +62,7 @@ func TestAssignReviewers(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err = AssignReviewers(sc, db, course, repo, &pb.PullRequest{Number: 1}); err != nil && errors.Is(err, scm.ErrNotSupported{}) {
+			if err = AssignReviewers(context.Background(), sc, db, course, repo, &pb.PullRequest{Number: 1}); err != nil && errors.Is(err, scm.ErrNotSupported{}) {
 				t.Fatal(err)
 			}
 		})
@@ -125,5 +128,36 @@ func TestGetNextReviewer(t *testing.T) {
 			}
 		}
 		students = students[:len(students)-1]
+	}
+}
+
+// TestPublishFeedbackComment tests creating a feedback comment on a pull request, with the given result.
+func TestPublishFeedbackComment(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+	results := &score.Results{
+		Scores: []*score.Score{
+			{TestName: "Test1", TaskName: "1", Score: 5, MaxScore: 7, Weight: 2},
+			{TestName: "Test2", TaskName: "1", Score: 3, MaxScore: 9, Weight: 3},
+			{TestName: "Test3", TaskName: "1", Score: 8, MaxScore: 8, Weight: 5},
+			{TestName: "Test4", TaskName: "1", Score: 2, MaxScore: 5, Weight: 1},
+			{TestName: "Test5", TaskName: "1", Score: 5, MaxScore: 7, Weight: 1},
+			{TestName: "Test6", TaskName: "2", Score: 5, MaxScore: 7, Weight: 1},
+			{TestName: "Test7", TaskName: "3", Score: 5, MaxScore: 7, Weight: 1},
+		},
+	}
+	body := CreateFeedbackComment(results, &pb.Task{Name: "lab1/1"}, &pb.Assignment{ScoreLimit: 80})
+	// TODO(espeland): Remember to reset these when done testing
+	opt := &scm.IssueCommentOptions{
+		Organization: qfTestOrg,
+		Repository:   "oleespe-labs",
+		Body:         body,
+	}
+	if err := s.EditIssueComment(context.Background(), 1117670404, opt); err != nil {
+		t.Fatal(err)
 	}
 }

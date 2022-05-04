@@ -63,16 +63,20 @@ type SCM interface {
 	// Lists all authorizations for authenticated user.
 	GetUserScopes(context.Context) *Authorization
 
-	// CreateIssue on a Repository
+	// CreateIssue on a Repository.
 	CreateIssue(context.Context, *CreateIssueOptions) (*Issue, error)
-	// GetRepoIssue a particular issue in a Repository
+	// GetRepoIssue a particular issue in a Repository.
 	GetRepoIssue(ctx context.Context, issueNumber int, opt *RepositoryOptions) (*Issue, error)
-	// List all the issues in a Repository
+	// List all the issues in a Repository.
 	GetRepoIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error)
-	// Edit a particular issue in a Repository
+	// Edit a particular issue in a Repository.
 	EditRepoIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error)
+	// CreateIssueComment creates a comment on a GitHub issue.
+	CreateIssueComment(ctx context.Context, number int, opt *IssueCommentOptions) (uint64, error)
+	// EditIssueComment edits a comment on a GitHub issue.
+	EditIssueComment(ctx context.Context, commentID int64, opt *IssueCommentOptions) error
 
-	// RequestReviewers requests reviewers for a pull request
+	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
 
 	// Accepts repository invite.
@@ -263,7 +267,14 @@ type CreateIssueOptions struct {
 	Assignees    *[]string
 }
 
-// RequestReviewersOptions contains information on how to assign reviewers to a pull request
+// RequestReviewersOptions contains information on how to create or edit a pull request comment.
+type IssueCommentOptions struct {
+	Organization string
+	Repository   string
+	Body         string
+}
+
+// RequestReviewersOptions contains information on how to assign reviewers to a pull request.
 type RequestReviewersOptions struct {
 	Organization string
 	Repository   string

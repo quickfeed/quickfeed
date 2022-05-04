@@ -65,7 +65,7 @@ func (s *registry) Add(test interface{}, max, weight int) {
 }
 
 // AddWithTask test with given taskName, max score and weight to the registry.
-// This function is identical to Add, with the addition of assigning a taskName.
+// This function is identical to Add, with the addition of assigning a task name.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
 func (s *registry) AddWithTask(test interface{}, taskName string, max, weight int) {
@@ -85,7 +85,7 @@ func (s *registry) AddSub(test interface{}, subTestName string, max, weight int)
 // AddSubWithTask test with given taskName, max score and weight to the registry.
 // This function should be used to register subtests, and should be used in
 // conjunction with MaxByName and MinByName called from within a subtest.
-// This function is identical to AddSub, with the addition of assigning a taskName.
+// This function is identical to AddSub, with the addition of assigning a task name.
 //
 // Will panic if the test has already been registered or if max or weight is non-positive.
 func (s *registry) AddSubWithTask(test interface{}, subTestName, taskName string, max, weight int) {

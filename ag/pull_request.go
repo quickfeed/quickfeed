@@ -23,6 +23,11 @@ func (pr *PullRequest) HasReviewers() bool {
 	return pr.Stage == PullRequest_APPROVED || pr.Stage == PullRequest_REVIEW
 }
 
+// HasFeedbackComment returns true if the pull request has a
+func (pr *PullRequest) HasFeedbackComment() bool {
+	return pr.CommentID > 0
+}
+
 // Checks if a pull request is valid for creation.
 func (pr *PullRequest) Validate() bool {
 	return pr.ExternalRepositoryID > 0 && pr.TaskID > 0 &&

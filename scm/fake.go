@@ -260,6 +260,24 @@ func (*FakeSCM) EditRepoIssue(_ context.Context, _ int, _ *CreateIssueOptions) (
 	}
 }
 
+// CreateIssueComment implements the SCM interface
+func (*FakeSCM) CreateIssueComment(ctx context.Context, number int, opt *IssueCommentOptions) (uint64, error) {
+	// TODO no implementation provided yet
+	return 0, ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "CreateIssueComment",
+	}
+}
+
+// EditIssueComment implements the SCM interface
+func (*FakeSCM) EditIssueComment(ctx context.Context, commentID int64, opt *IssueCommentOptions) error {
+	// TODO no implementation provided yet
+	return ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "EditIssueComment",
+	}
+}
+
 // RequestReviewers implements the SCM interface
 func (*FakeSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error {
 	// TODO no implementation provided yet

@@ -1,6 +1,7 @@
 package hooks
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"time"
@@ -79,26 +80,25 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 			if assignment.IsGroupLab {
 				// only run group assignments
 				results := wh.runAssignmentTests(assignment, repo, course, payload)
-
 				if !isDefaultBranch(payload) {
 					// Attempt to find the pull request for the branch, if it exists,
 					// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
-					wh.handleTaskPush(payload, results, assignment, course, repo)
+					wh.handlePullRequestPush(payload, results, assignment, course, repo)
 				}
 			} else {
 				wh.logger.Debugf("Ignoring assignment: %s, pushed to group repo: %s", assignment.GetName(), payload.GetRepo().GetName())
 			}
 		}
-
 	default:
 		wh.logger.Debug("Nothing to do for this push event")
 	}
 }
 
-// handleTaskPush attempts to find a task for the pushed to branch.
-// It then extracts the score from all tests belonging to that task
-// If a passing score is reached, it assigns reviewers.
-func (wh GitHubWebHook) handleTaskPush(payload *github.PushEvent, results *score.Results, assignment *pb.Assignment, course *pb.Course, repo *pb.Repository) {
+// handlePullRequestPush attempts to find a pull requested associated with the non-default branch.
+// If successfull, it then finds the relevant task, and uses it to receive the relevant task score.
+// If a passing score is reached, it assigns reviewers to the pull request.
+// It also uses the test results and task to generate a feedback comment for the pull request.
+func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results *score.Results, assignment *pb.Assignment, course *pb.Course, repo *pb.Repository) {
 	wh.logger.Debugf("Attempting to find pull request for ref: %s, in repository: %s",
 		payload.GetRef(), payload.GetRepo().GetFullName())
 
@@ -129,31 +129,58 @@ func (wh GitHubWebHook) handleTaskPush(payload *github.PushEvent, results *score
 		return
 	}
 	task := tasks[0]
-	// TODO(Meling): My idea is that when a teacher wants to assign a test to a specific task they will use the 'local' task name.
+	// TODO(meling): My idea is that when a teacher wants to assign a test to a specific task they will use the 'local' task name.
 	// For example, if a teacher has created the markdown file task-hello_world.md,
-	// they would do scores.AddWithTaskName(TestHelloWorld, "task-hello_world", max, weight).
+	// they would do scores.AddWithTaskName(TestHelloWorld, "hello_world", max, weight).
 	// Do you concur with this approach?
 	// We could of course simply make teachers assign the global task name, but that seems somewhat counter-intuitive to me.
 
-	// TODO(Espeland): Revise this when score task name format has been decided.
-	temp := strings.Split(task.GetName(), "/")
-	taskSum := results.TaskSum("task-" + temp[len(temp)-1])
+	// TODO(espeland): Revise this when score task name format has been decided.
+	taskSum := results.TaskSum(task.LocalName())
 
+	// TODO(espeland): When the project is finished. Create a GitHub issue that states all places where
+	// we need to update for GitHub apps. As it is, this would create comments as the course creator.
+	sc, err := scm.NewSCMClient(wh.logger, course.GetProvider(), course.GetAccessToken())
+	if err != nil {
+		wh.logger.Errorf("Failed to create SCM Client: %v", err)
+		return
+	}
+	ctx := context.Background()
 	// We assign reviewers to a pull request when the tests associated with it score above the assignment score limit
 	// We do not assign reviewers if the pull request has already been assigned reviewers
 	if taskSum >= assignment.GetScoreLimit() && !pullRequest.HasReviewers() {
 		wh.logger.Debugf("Assigning reviewers to pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
-		scm, err := scm.NewSCMClient(wh.logger, course.GetProvider(), course.GetAccessToken())
-		if err != nil {
-			wh.logger.Errorf("Failed to create SCM Client: %v", err)
-			return
-		}
-		if err := assignments.AssignReviewers(scm, wh.db, course, repo, pullRequest); err != nil {
+		if err := assignments.AssignReviewers(ctx, sc, wh.db, course, repo, pullRequest); err != nil {
 			wh.logger.Errorf("Failed to assign reviewers to pull request: %v", err)
 			return
 		}
-		wh.logger.Debugf("Successfully assigned reviewers")
 	}
+
+	// Create a test results feedback comment on the pull request
+	opt := &scm.IssueCommentOptions{
+		Organization: course.GetOrganizationPath(),
+		Repository:   repo.Name(),
+		Body:         assignments.CreateFeedbackComment(results, task, assignment),
+	}
+	wh.logger.Debugf("Creating feedback comment on pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
+	if !pullRequest.HasFeedbackComment() {
+		commentID, err := sc.CreateIssueComment(ctx, int(pullRequest.Number), opt)
+		if err != nil {
+			wh.logger.Errorf("Failed to create feedback comment for pull request #%d, in repository", pullRequest.GetNumber(), repo.Name())
+			return
+		}
+		pullRequest.CommentID = commentID
+		if err := wh.db.UpdatePullRequest(pullRequest); err != nil {
+			wh.logger.Errorf("Failed to update pull request: %v", err)
+			return
+		}
+	} else {
+		if err := sc.EditIssueComment(ctx, int64(pullRequest.GetCommentID()), opt); err != nil {
+			wh.logger.Errorf("Failed to update feedback comment for pull request #%d, in repository", pullRequest.GetNumber(), repo.Name())
+			return
+		}
+	}
+	wh.logger.Debugf("Successfully handled push to pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
 }
 
 // extractAssignments extracts information from the push payload from github

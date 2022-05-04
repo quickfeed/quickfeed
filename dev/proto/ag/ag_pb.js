@@ -6506,10 +6506,11 @@ proto.ag.PullRequest.prototype.toObject = function(opt_includeInstance) {
 proto.ag.PullRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    externalrepositoryid: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    taskid: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    issueid: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    userid: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    externalrepositoryid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    taskid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    issueid: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    userid: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    commentid: jspb.Message.getFieldWithDefault(msg, 6, 0),
     sourcebranchname: jspb.Message.getFieldWithDefault(msg, 7, ""),
     number: jspb.Message.getFieldWithDefault(msg, 8, 0),
     stage: jspb.Message.getFieldWithDefault(msg, 9, 0)
@@ -6553,21 +6554,25 @@ proto.ag.PullRequest.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {number} */ (reader.readUint64());
       msg.setId(value);
       break;
-    case 3:
+    case 2:
       var value = /** @type {number} */ (reader.readUint64());
       msg.setExternalrepositoryid(value);
       break;
-    case 4:
+    case 3:
       var value = /** @type {number} */ (reader.readUint64());
       msg.setTaskid(value);
       break;
-    case 5:
+    case 4:
       var value = /** @type {number} */ (reader.readUint64());
       msg.setIssueid(value);
       break;
-    case 6:
+    case 5:
       var value = /** @type {number} */ (reader.readUint64());
       msg.setUserid(value);
+      break;
+    case 6:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setCommentid(value);
       break;
     case 7:
       var value = /** @type {string} */ (reader.readString());
@@ -6620,25 +6625,32 @@ proto.ag.PullRequest.serializeBinaryToWriter = function(message, writer) {
   f = message.getExternalrepositoryid();
   if (f !== 0) {
     writer.writeUint64(
-      3,
+      2,
       f
     );
   }
   f = message.getTaskid();
   if (f !== 0) {
     writer.writeUint64(
-      4,
+      3,
       f
     );
   }
   f = message.getIssueid();
   if (f !== 0) {
     writer.writeUint64(
-      5,
+      4,
       f
     );
   }
   f = message.getUserid();
+  if (f !== 0) {
+    writer.writeUint64(
+      5,
+      f
+    );
+  }
+  f = message.getCommentid();
   if (f !== 0) {
     writer.writeUint64(
       6,
@@ -6698,11 +6710,11 @@ proto.ag.PullRequest.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 externalRepositoryID = 3;
+ * optional uint64 externalRepositoryID = 2;
  * @return {number}
  */
 proto.ag.PullRequest.prototype.getExternalrepositoryid = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
@@ -6711,16 +6723,16 @@ proto.ag.PullRequest.prototype.getExternalrepositoryid = function() {
  * @return {!proto.ag.PullRequest} returns this
  */
 proto.ag.PullRequest.prototype.setExternalrepositoryid = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional uint64 taskID = 4;
+ * optional uint64 taskID = 3;
  * @return {number}
  */
 proto.ag.PullRequest.prototype.getTaskid = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
@@ -6729,16 +6741,16 @@ proto.ag.PullRequest.prototype.getTaskid = function() {
  * @return {!proto.ag.PullRequest} returns this
  */
 proto.ag.PullRequest.prototype.setTaskid = function(value) {
-  return jspb.Message.setProto3IntField(this, 4, value);
+  return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional uint64 issueID = 5;
+ * optional uint64 issueID = 4;
  * @return {number}
  */
 proto.ag.PullRequest.prototype.getIssueid = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
@@ -6747,16 +6759,16 @@ proto.ag.PullRequest.prototype.getIssueid = function() {
  * @return {!proto.ag.PullRequest} returns this
  */
 proto.ag.PullRequest.prototype.setIssueid = function(value) {
-  return jspb.Message.setProto3IntField(this, 5, value);
+  return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional uint64 userID = 6;
+ * optional uint64 userID = 5;
  * @return {number}
  */
 proto.ag.PullRequest.prototype.getUserid = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
 
@@ -6765,6 +6777,24 @@ proto.ag.PullRequest.prototype.getUserid = function() {
  * @return {!proto.ag.PullRequest} returns this
  */
 proto.ag.PullRequest.prototype.setUserid = function(value) {
+  return jspb.Message.setProto3IntField(this, 5, value);
+};
+
+
+/**
+ * optional uint64 commentID = 6;
+ * @return {number}
+ */
+proto.ag.PullRequest.prototype.getCommentid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.ag.PullRequest} returns this
+ */
+proto.ag.PullRequest.prototype.setCommentid = function(value) {
   return jspb.Message.setProto3IntField(this, 6, value);
 };
 

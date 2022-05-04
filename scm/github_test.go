@@ -2,6 +2,7 @@ package scm_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/autograde/quickfeed/scm"
@@ -237,19 +238,59 @@ func TestRequestReviewers(t *testing.T) {
 	}
 
 	// Set these when testing
-	repository := "repo-name"
-	pullNumber := 0
-	reviewers := []string{"reviewer-login"}
-
 	opt := &scm.RequestReviewersOptions{
 		Organization: qfTestOrg,
-		Repository:   repository,
-		Number:       pullNumber,
-		Reviewers:    reviewers,
+		Repository:   "repo-name",
+		Number:       0,
+		Reviewers:    []string{"reviewer-login"},
 	}
 
 	err = s.RequestReviewers(context.Background(), opt)
 	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCreateIssueComment(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// TODO(espeland): Remember to reset these when done testing
+	opt := &scm.IssueCommentOptions{
+		Organization: qfTestOrg,
+		Repository:   "oleespe-labs",
+		Body:         "Hei hei",
+	}
+	commentID, err := s.CreateIssueComment(context.Background(), 64, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("\n%d\n", commentID)
+}
+
+func TestEditIssueComment(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	body := "| Test Name | Score | Weight | % of total |\n"
+	body += "| :-------- | :---- | :----- | ---------: |\n"
+	body += "| Test 1    |  6/7  |    1   | 20%        |\n"
+	body += "| **Total** |       |        | 20%        |\n"
+	// TODO(espeland): Remember to reset these when done testing
+	opt := &scm.IssueCommentOptions{
+		Organization: qfTestOrg,
+		Repository:   "oleespe-labs",
+		Body:         body,
+	}
+	if err := s.EditIssueComment(context.Background(), 1117670404, opt); err != nil {
 		t.Fatal(err)
 	}
 }

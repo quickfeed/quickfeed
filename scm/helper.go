@@ -121,6 +121,11 @@ func (opt RequestReviewersOptions) valid() bool {
 		opt.Number > 0 && len(opt.Reviewers) != 0
 }
 
+func (opt IssueCommentOptions) valid() bool {
+	return opt.Organization != "" && opt.Repository != "" &&
+		opt.Body != ""
+}
+
 func (opt RepositoryInvitationOptions) valid() bool {
 	return opt.Login != "" && opt.Owner != ""
 }

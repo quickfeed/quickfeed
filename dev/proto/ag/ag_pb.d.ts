@@ -725,6 +725,9 @@ export class PullRequest extends jspb.Message {
   getUserid(): number;
   setUserid(value: number): PullRequest;
 
+  getCommentid(): number;
+  setCommentid(value: number): PullRequest;
+
   getSourcebranchname(): string;
   setSourcebranchname(value: string): PullRequest;
 
@@ -749,6 +752,7 @@ export namespace PullRequest {
     taskid: number,
     issueid: number,
     userid: number,
+    commentid: number,
     sourcebranchname: string,
     number: number,
     stage: PullRequest.Stage,

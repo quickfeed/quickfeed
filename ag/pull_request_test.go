@@ -28,3 +28,21 @@ func TestIsValid(t *testing.T) {
 		})
 	}
 }
+
+func TestHasFeedbackComment(t *testing.T) {
+	tests := map[string]struct {
+		pr   *pb.PullRequest
+		want bool
+	}{
+		"Comment":    {pr: &pb.PullRequest{CommentID: 1}, want: true},
+		"No comment": {pr: &pb.PullRequest{CommentID: 0}, want: false},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tt.pr.HasFeedbackComment()
+			if tt.want != got {
+				t.Errorf("HasFeedbackComment() = %t, expected %t\npr: %v", got, tt.want, tt.pr)
+			}
+		})
+	}
+}

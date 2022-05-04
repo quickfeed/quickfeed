@@ -128,7 +128,7 @@ func (r *Results) Sum() uint32 {
 	return r.sum("")
 }
 
-// TaskSum returns the total score computed over the set of recorded scores with the given taskName.
+// TaskSum returns the total score computed over the set of recorded scores with the given task name.
 // The total is a grade in the range 0-100.
 // This method must only be called after Validate has returned nil.
 func (r *Results) TaskSum(taskName string) uint32 {
@@ -155,4 +155,16 @@ func (r *Results) sum(taskName string) uint32 {
 		total += (score[i] / max[i]) * (weight[i] / totalWeight)
 	}
 	return uint32(math.Round(total * 100))
+}
+
+// TotalTaskWeight returns the total weight of all scores with the given task name.
+func (r *Results) TotalTaskWeight(taskName string) float64 {
+	totalTaskWeight := float64(0)
+	for _, score := range r.Scores {
+		if score.TaskName != taskName {
+			continue
+		}
+		totalTaskWeight += float64(score.Weight)
+	}
+	return totalTaskWeight
 }

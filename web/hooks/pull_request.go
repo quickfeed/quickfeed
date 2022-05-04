@@ -18,6 +18,7 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 	// Currently, QF only needs to do something if the PR is approved
 	if payload.GetReview().GetState() != "approved" {
 		wh.logger.Debug("Ignoring pull request review event for non-approved review")
+		return
 	}
 	// We make sure that the pull request is one that QF has a data record of
 	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{
