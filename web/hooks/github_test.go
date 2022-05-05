@@ -169,7 +169,7 @@ func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.Su
 
 	// Finds issues, and creates tasks based on them
 	for _, repo := range repos {
-		existingScmIssues, err := sc.GetRepoIssues(ctx, &scm.RepositoryOptions{
+		existingScmIssues, err := sc.GetIssues(ctx, &scm.RepositoryOptions{
 			Owner: course.Name,
 			Path:  repo.Path,
 		})
