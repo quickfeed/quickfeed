@@ -63,14 +63,15 @@ type SCM interface {
 	// Lists all authorizations for authenticated user.
 	GetUserScopes(context.Context) *Authorization
 
-	// CreateIssue on a Repository.
+	// CreateIssue creates an issue.
 	CreateIssue(context.Context, *CreateIssueOptions) (*Issue, error)
-	// GetRepoIssue a particular issue in a Repository.
-	GetRepoIssue(ctx context.Context, issueNumber int, opt *RepositoryOptions) (*Issue, error)
-	// List all the issues in a Repository.
-	GetRepoIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error)
-	// Edit a particular issue in a Repository.
-	EditRepoIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error)
+	// EditIssue edits an issue .
+	EditIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error)
+	// GetIssue fetches a specific issue.
+	GetIssue(ctx context.Context, issueNumber int, opt *RepositoryOptions) (*Issue, error)
+	// GetIssues fetches all issues in a repository.
+	GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error)
+
 	// CreateIssueComment creates a comment on a GitHub issue.
 	CreateIssueComment(ctx context.Context, number int, opt *IssueCommentOptions) (uint64, error)
 	// EditIssueComment edits a comment on a GitHub issue.

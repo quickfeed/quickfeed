@@ -164,7 +164,7 @@ func TestGetIssues(t *testing.T) {
 		Owner: qfTestOrg,
 		Path:  repo,
 	}
-	_, err = s.GetRepoIssues(ctx, opt)
+	_, err = s.GetIssues(ctx, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -190,7 +190,7 @@ func TestGetIssue(t *testing.T) {
 		Owner: qfTestOrg,
 		Path:  repo,
 	}
-	_, err = s.GetRepoIssue(ctx, issueNumber, opt)
+	_, err = s.GetIssue(ctx, issueNumber, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -223,7 +223,7 @@ func TestEditRepoIssue(t *testing.T) {
 		Body:         body,
 	}
 
-	_, err = s.EditRepoIssue(ctx, issueNumber, opt)
+	_, err = s.EditIssue(ctx, issueNumber, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
