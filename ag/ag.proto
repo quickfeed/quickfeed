@@ -213,7 +213,7 @@ message PullRequest {
     uint64 issueID              = 4; // foreign key
     uint64 userID               = 5; // The user who owns this PR
     uint64 commentID            = 6; // GitHub ID of the comment used for automatic feedback
-    string sourceBranchName     = 7; // The source branch for this pull request
+    string sourceBranch         = 7; // The source branch for this pull request
     uint64 number               = 8; // Pull request number
     Stage stage                 = 9;
 }

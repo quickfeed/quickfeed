@@ -235,7 +235,7 @@ func TestCreatePullRequest(t *testing.T) {
 		TaskID:               1,
 		IssueID:              1,
 		UserID:               1,
-		SourceBranchName:     "A",
+		SourceBranch:         "A",
 		Number:               1,
 	}
 	if err := db.CreatePullRequest(wantPullRequest); err != nil {
@@ -264,7 +264,7 @@ func TestHandleMergingPR(t *testing.T) {
 		TaskID:               1,
 		IssueID:              1,
 		UserID:               1,
-		SourceBranchName:     "A",
+		SourceBranch:         "A",
 		Number:               1,
 	}
 	if err := db.CreatePullRequest(pullRequest); err != nil {

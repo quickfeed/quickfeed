@@ -6511,7 +6511,7 @@ proto.ag.PullRequest.toObject = function(includeInstance, msg) {
     issueid: jspb.Message.getFieldWithDefault(msg, 4, 0),
     userid: jspb.Message.getFieldWithDefault(msg, 5, 0),
     commentid: jspb.Message.getFieldWithDefault(msg, 6, 0),
-    sourcebranchname: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    sourcebranch: jspb.Message.getFieldWithDefault(msg, 7, ""),
     number: jspb.Message.getFieldWithDefault(msg, 8, 0),
     stage: jspb.Message.getFieldWithDefault(msg, 9, 0)
   };
@@ -6576,7 +6576,7 @@ proto.ag.PullRequest.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 7:
       var value = /** @type {string} */ (reader.readString());
-      msg.setSourcebranchname(value);
+      msg.setSourcebranch(value);
       break;
     case 8:
       var value = /** @type {number} */ (reader.readUint64());
@@ -6657,7 +6657,7 @@ proto.ag.PullRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getSourcebranchname();
+  f = message.getSourcebranch();
   if (f.length > 0) {
     writer.writeString(
       7,
@@ -6800,10 +6800,10 @@ proto.ag.PullRequest.prototype.setCommentid = function(value) {
 
 
 /**
- * optional string sourceBranchName = 7;
+ * optional string sourceBranch = 7;
  * @return {string}
  */
-proto.ag.PullRequest.prototype.getSourcebranchname = function() {
+proto.ag.PullRequest.prototype.getSourcebranch = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
 };
 
@@ -6812,7 +6812,7 @@ proto.ag.PullRequest.prototype.getSourcebranchname = function() {
  * @param {string} value
  * @return {!proto.ag.PullRequest} returns this
  */
-proto.ag.PullRequest.prototype.setSourcebranchname = function(value) {
+proto.ag.PullRequest.prototype.setSourcebranch = function(value) {
   return jspb.Message.setProto3StringField(this, 7, value);
 };
 

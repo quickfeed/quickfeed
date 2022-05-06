@@ -103,7 +103,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 		payload.GetRef(), payload.GetRepo().GetFullName())
 
 	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{
-		SourceBranchName:     getBranchName(payload.GetRef()),
+		SourceBranch:         branchName(payload.GetRef()),
 		ExternalRepositoryID: uint64(payload.GetRepo().GetID()),
 	})
 	if err != nil {
@@ -236,7 +236,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 		// QF will try to checkout the wrong local branch.
 		// The payload contains no information on the local branch, and it therefore seems like there is no good workaround.
 		// We must make sure that if this scenario happens, QF can handle it.
-		BranchName: getBranchName(payload.GetRef()),
+		BranchName: branchName(payload.GetRef()),
 		CommitID:   payload.GetHeadCommit().GetID(),
 		JobOwner:   payload.GetSender().GetLogin(),
 	}
@@ -274,8 +274,8 @@ func (wh GitHubWebHook) updateLastActivityDate(userID, courseID uint64) {
 	}
 }
 
-// getBranchName returns the branch name from a push event ref.
-func getBranchName(ref string) string {
+// branchName returns the branch name from a push event ref.
+func branchName(ref string) string {
 	components := strings.Split(ref, "/")
 	return components[len(components)-1]
 }

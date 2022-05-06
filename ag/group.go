@@ -33,8 +33,8 @@ func (g *Group) SetSlipDays(c *Course) {
 	}
 }
 
-// GetUserSubset returns a list of all users in a group, except the one with the given userID.
-func (g *Group) GetUserSubset(userID uint64) []*User {
+// GetUsersExcept returns a list of all users in a group, except the one with the given userID.
+func (g *Group) GetUsersExcept(userID uint64) []*User {
 	subset := []*User{}
 	for _, user := range g.Users {
 		if user.GetID() == userID {

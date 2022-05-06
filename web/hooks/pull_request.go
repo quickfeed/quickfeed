@@ -165,7 +165,7 @@ func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, repo
 		TaskID:               associatedTask.GetID(),
 		IssueID:              associatedIssue.GetID(),
 		UserID:               user.GetID(),
-		SourceBranchName:     payload.GetPullRequest().GetHead().GetRef(),
+		SourceBranch:         payload.GetPullRequest().GetHead().GetRef(),
 		Number:               uint64(payload.GetNumber()),
 	}
 

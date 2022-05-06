@@ -31,6 +31,6 @@ func (pr *PullRequest) HasFeedbackComment() bool {
 // Checks if a pull request is valid for creation.
 func (pr *PullRequest) Validate() bool {
 	return pr.ExternalRepositoryID > 0 && pr.TaskID > 0 &&
-		pr.IssueID > 0 && pr.SourceBranchName != "" && pr.Number > 0 &&
+		pr.IssueID > 0 && pr.SourceBranch != "" && pr.Number > 0 &&
 		pr.UserID > 0
 }

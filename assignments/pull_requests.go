@@ -149,7 +149,7 @@ func getNextStudentReviewer(db database.Database, groupID, ownerID uint64) (*pb.
 		return nil, errors.New("failed to get next student reviewer: no users in group")
 	}
 	// We exclude the PR owner from the search.
-	studentReviewer, err := getNextReviewer(group.GetID(), group.GetUserSubset(ownerID), groupReviewCounter)
+	studentReviewer, err := getNextReviewer(group.GetID(), group.GetUsersExcept(ownerID), groupReviewCounter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get next student reviewer: %w", err)
 	}
