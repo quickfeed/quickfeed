@@ -6,13 +6,17 @@ import (
 	"strings"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
+
+var ErrAccessDenied = status.Errorf(codes.Unauthenticated, "access denied")
 
 // GetFromMetadata extracts a value from a filed of incoming metadata
 // by the given key. Used to extract JWT tokens.
 func GetFromMetadata(ctx context.Context, field, key string) (string, error) {
-	if field == "" || key == "" {
+	if field == "" {
 		return "", fmt.Errorf("missing metadata field name (%s)", field)
 	}
 	meta, ok := metadata.FromIncomingContext(ctx)
