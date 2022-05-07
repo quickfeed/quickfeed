@@ -105,11 +105,12 @@ func main() {
 	}
 	logger.Sugar().Debugf("OAUTH CONFIG: %+V", authConfig)
 	tokenManager, err := auth.NewTokenManager(db, config.TokenExpirationTime, serverConfig.Secrets.TokenSecret, *httpAddr)
+	logger.Sugar().Debugf("Generated token manager, tokens to update: %v", tokenManager.GetTokens()) // tmp
 	if err != nil {
 		log.Fatalf("failed to make token manager: %v\n", err)
 	}
 
-	agService := web.NewAutograderService(logger, db, githubApp, serverConfig, runner)
+	agService := web.NewAutograderService(logger, db, githubApp, serverConfig, tokenManager, runner)
 	agService.MakeSCMClients("github") // TODO(vera): shouldn't be hardcoded...
 
 	apiServer, err := serverConfig.GenerateTLSApi(logger.Sugar(), tokenManager)

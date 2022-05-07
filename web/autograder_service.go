@@ -20,22 +20,24 @@ import (
 // AutograderService holds references to the database and
 // other shared data structures.
 type AutograderService struct {
-	logger *zap.SugaredLogger
-	db     database.Database
-	app    *scms.GithubApp
-	Config *config.Config // TODO(vera): make unexported again after refactoring the startup method
-	runner ci.Runner
+	logger       *zap.SugaredLogger
+	db           database.Database
+	app          *scms.GithubApp
+	Config       *config.Config // TODO(vera): make unexported again after refactoring the startup method
+	tokenManager *auth.TokenManager
+	runner       ci.Runner
 	pb.UnimplementedAutograderServiceServer
 }
 
 // NewAutograderService returns an AutograderService object.
-func NewAutograderService(logger *zap.Logger, db database.Database, app *scm.GithubApp, config *config.Config, runner ci.Runner) *AutograderService {
+func NewAutograderService(logger *zap.Logger, db database.Database, app *scm.GithubApp, config *config.Config, tokens *auth.TokenManager, runner ci.Runner) *AutograderService {
 	return &AutograderService{
-		logger: logger.Sugar(),
-		db:     db,
-		app:    app,
-		Config: config,
-		runner: runner,
+		logger:       logger.Sugar(),
+		db:           db,
+		app:          app,
+		Config:       config,
+		tokenManager: tokens,
+		runner:       runner,
 	}
 }
 
@@ -93,10 +95,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Vo
 		s.logger.Errorf("UpdateUser failed: authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
-	if !(usr.IsAdmin || usr.IsOwner(in.GetID())) {
-		s.logger.Errorf("UpdateUser failed to update user %d: user is not admin or course creator", in.GetID())
-		return nil, status.Error(codes.PermissionDenied, "only admin can update another user's information")
-	}
+
 	if _, err = s.updateUser(usr, in); err != nil {
 		s.logger.Errorf("UpdateUser failed to update user %d: %v", in.GetID(), err)
 		err = status.Error(codes.InvalidArgument, "failed to update user")
@@ -114,11 +113,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 		s.logger.Errorf("CreateCourse failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
-	if !usr.IsAdmin {
-		s.logger.Error("CreateCourse failed: user is not admin")
-		return nil, status.Error(codes.PermissionDenied, "user must be admin to create course")
-	}
-
+	// TODO(vera): do we need the course creator field?
 	// make sure that the current user is set as course creator
 	in.CourseCreatorID = usr.GetID()
 	course, err := s.createCourse(ctx, scm, in)
@@ -143,17 +138,11 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 // UpdateCourse changes the course information details.
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
-	usr, scm, err := s.getUserAndSCM(ctx, in.GetID())
+	_, scm, err := s.getUserAndSCM(ctx, in.GetID())
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
-	courseID := in.GetID()
-	if !s.isTeacher(usr.GetID(), courseID) {
-		s.logger.Error("UpdateCourse failed: user is not teacher")
-		return nil, status.Error(codes.PermissionDenied, "only teachers can update course")
-	}
-
 	if err = s.updateCourse(ctx, scm, in); err != nil {
 		s.logger.Errorf("UpdateCourse failed: %v", err)
 		if contextCanceled(ctx) {
@@ -170,8 +159,7 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 // GetCourse returns course information for the given course.
 // Access policy: Any User.
 func (s *AutograderService) GetCourse(ctx context.Context, in *pb.CourseRequest) (*pb.Course, error) {
-	courseID := in.GetCourseID()
-	course, err := s.getCourse(courseID)
+	course, err := s.getCourse(in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("GetCourse failed: %v", err)
 		return nil, status.Error(codes.NotFound, "course not found")
@@ -193,15 +181,15 @@ func (s *AutograderService) GetCourses(_ context.Context, _ *pb.Void) (*pb.Cours
 // UpdateCourseVisibility allows to edit what courses are visible in the sidebar.
 // Access policy: Any User.
 func (s *AutograderService) UpdateCourseVisibility(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
-	usr, err := s.getCurrentUser(ctx)
+	_, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("ChangeCourseVisibility failed: authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
-	if !usr.IsOwner(in.GetUserID()) {
-		s.logger.Errorf("ChangeCourseVisibility failed: user %d attempts to update enrollment for user %d", usr.GetID(), in.GetUserID())
-		return nil, status.Error(codes.PermissionDenied, "users cannot set course visibility for another users")
-	}
+	// if !usr.IsOwner(in.GetUserID()) {
+	// 	s.logger.Errorf("ChangeCourseVisibility failed: user %d attempts to update enrollment for user %d", usr.GetID(), in.GetUserID())
+	// 	return nil, status.Error(codes.PermissionDenied, "users cannot set course visibility for another users")
+	// }
 	err = s.changeCourseVisibility(in)
 	if err != nil {
 		s.logger.Errorf("ChangeCourseVisibility failed: %v", err)

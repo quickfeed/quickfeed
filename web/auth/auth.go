@@ -120,60 +120,6 @@ func OAuth2Logout(logger *zap.SugaredLogger) http.HandlerFunc {
 	}
 }
 
-// // PreAuth checks the current user session and executes the next handler if none
-// // was found for the given provider.
-// func PreAuth(logger *zap.SugaredLogger, db database.Database) echo.MiddlewareFunc {
-// 	logger.Debug("PREAUTH STARTED")
-// 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-// 		return func(c echo.Context) error {
-// 			logger.Debug("PRE AUTH")
-// 			sess, err := session.Get(SessionKey, c)
-// 			if err != nil {
-// 				logger.Error(err.Error())
-// 				if err := sess.Save(c.Request(), c.Response()); err != nil {
-// 					logger.Error(err.Error())
-// 					return err
-// 				}
-// 				return next(c)
-// 			}
-// 			logger.Debug(sessionData(sess))
-
-// 			if i, ok := sess.Values[UserKey]; ok {
-// 				// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-// 				us := i.(*UserSession)
-// 				logger.Debug(us)
-// 				user, err := db.GetUser(us.ID)
-// 				if err != nil {
-// 					logger.Error(err.Error())
-// 					return OAuth2Logout(logger)(c)
-// 				}
-// 				logger.Debugf("User: %v", user)
-// 			}
-// 			logger.Debug("PRE AUTH next")
-// 			return next(c)
-// 		}
-// 	}
-// }
-
-// func sessionData(session *sessions.Session) string {
-// 	if session == nil {
-// 		return "<nil>"
-// 	}
-// 	out := "Values: "
-// 	for k, v := range session.Values {
-// 		out += fmt.Sprintf("<%s: %v>, ", k, v)
-// 	}
-// 	out += "Options: "
-// 	out += fmt.Sprintf("<%s: %v>, ", "MaxAge", session.Options.MaxAge)
-// 	out += fmt.Sprintf("<%s: %v>, ", "Path", session.Options.Path)
-// 	out += fmt.Sprintf("<%s: %v>, ", "Domain", session.Options.Domain)
-// 	out += fmt.Sprintf("<%s: %v>, ", "Secure", session.Options.Secure)
-// 	out += fmt.Sprintf("<%s: %v>, ", "HttpOnly", session.Options.HttpOnly)
-// 	out += fmt.Sprintf("<%s: %v>, ", "SameSite", session.Options.SameSite)
-
-// 	return fmt.Sprintf("Session: ID=%s, IsNew=%t, %s", session.ID, session.IsNew, out)
-// }
-
 const (
 	login    = "Login failed:"
 	callback = "Callback failed:"
@@ -187,29 +133,12 @@ func unauthorized(logger *zap.SugaredLogger, w http.ResponseWriter, prefix, form
 // OAuth2Login tries to authenticate against an oauth2 provider.
 func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.Config, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		logger.Debug("LOGIN STARTED")
 		if r.Method != "GET" {
 			unauthorized(logger, w, login, "request method: %s", r.Method)
 			return
 		}
-		// TODO(vera): adapt to use with other providers if needed
-		provider := "github"
-
-		// TODO(vera): make sure teacher suffix no longer necessary
-		// var teacher int
-		// if strings.HasSuffix(provider, TeacherSuffix) {
-		// 	teacher = 1
-		// }
-		// logger.Debugf("Provider: %v ; Teacher: %v", provider, teacher)
-		// qv := r.URL.Query()
-		// logger.Debugf("qv: %v", qv)
-		// // redirect := extractRedirectURL(r, Redirect)
-		logger.Debugf("redirect: %v", config.RedirectURL)
+		provider := strings.Split(r.URL.Path, "/")[2]
 		// TODO(vera): Add a random string to protect against CSRF.
-		// qv.Set(State, strconv.Itoa(teacher)+config.RedirectURL)
-		// logger.Debugf("State: %v", strconv.Itoa(teacher)+config.RedirectURL)
-		// r.URL.RawQuery = qv.Encode()
-		// logger.Debugf("RawQuery: %v", r.URL.RawQuery)
 		redirectURL := config.AuthCodeURL(secret)
 		logger.Debugf("Redirecting to %s to perform authentication; AuthURL: %v", provider, redirectURL)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
@@ -219,69 +148,38 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.
 // OAuth2Callback handles the callback from an oauth2 provider.
 func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oauth2.Config, app *scm.GithubApp, tokens *TokenManager, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		logger.Debug("CALLBACK STARTED")
 		if r.Method != "GET" {
 			unauthorized(logger, w, callback, "request method: %s", r.Method)
 			return
 		}
-		logger.Debug("OAuth2Callback: started")
-		// qv := r.URL.Query()
-		// logger.Debugf("qv: %v", qv)
-		// redirect, teacher := extractState(r, State)
-		// logger.Debugf("Redirect: %v ; Teacher: %t", redirect, teacher)
-		parts := strings.Split(r.URL.Path, "/")
-		for _, part := range parts {
-			logger.Debug(part)
-		}
-		provider := "github"
-		// // TODO(vera): remove teacher suffix if not needed
-		// // Add teacher suffix if upgrading scope.
-		// if teacher {
-		// 	qv.Set("provider", provider+TeacherSuffix)
-		// 	logger.Debugf("Set('provider') = %v", provider+TeacherSuffix)
-		// }
-		// r.URL.RawQuery = qv.Encode()
-		// logger.Debugf("RawQuery: %v", r.URL.RawQuery)
-
-		// Complete authentication.
-		// parse request for code and state
+		provider := strings.Split(r.URL.Path, "/")[2]
 		if err := r.ParseForm(); err != nil {
 			unauthorized(logger, w, callback, "error parsing authentication code: %v", err)
 			return
 		}
-
-		logger.Debug("VALIDATING STATE") // tmp
-		// validate state
+		// Make sure the callback is coming from the provider by validating the state.
 		callbackSecret := r.FormValue("state")
-		logger.Debug("Callback: got state in request: ", callbackSecret) // tmp
 		if callbackSecret != secret {
 			unauthorized(logger, w, callback, "mismatching secrets: expected %s, got %s", secret, callbackSecret)
 			return
 		}
-
-		logger.Debug("EXCHANGING CODE FOR TOKEN") // tmp
-		// exchange code for token
+		// Exchange code for access token.
 		code := r.FormValue("code")
 		if code == "" {
 			unauthorized(logger, w, callback, "empty code")
 			return
 		}
-		logger.Debug("CODE RECEIVED, PROCEED") // tmp
 		githubToken, err := config.Exchange(context.Background(), code)
 		if err != nil {
 			unauthorized(logger, w, callback, "could not exchange token: %v", err)
 			return
 		}
-		logger.Debugf("Successfully fetched access token: %s", githubToken.AccessToken) // tmp
-
-		// get user info with the token
-		logger.Debugf("Making user request: want url https://api.github.com/user, have url %s", app.GetUserURL())
-		req, err := http.NewRequest("GET", "https://api.github.com/user", nil)
+		// Use access token to fetch information about the GitHub user.
+		req, err := http.NewRequest("GET", app.GetUserURL(), nil)
 		if err != nil {
 			unauthorized(logger, w, callback, "failed to create user request: %v", err)
 			return
 		}
-		logger.Debugf("REQUEST HEADER want (%s), have (%s)", "Bearer "+githubToken.AccessToken, fmt.Sprintf("Bearer %s", githubToken.AccessToken))
 		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", githubToken.AccessToken))
 		// TODO(vera): this http client has only  one purpose: to fetch user data from github on auth. Somehow, the http client that
 		// alredy exists for the github app fails to make this request. However, this client will be used every time a user logs into
@@ -303,9 +201,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 		}
 		responseBody, err := io.ReadAll(resp.Body)
 		if err != nil {
-			// TODO(meling) shouldn't this also be an unauthorized error and return?
-			log.Println("Error reading response bits from user API: ", err.Error())
-			w.WriteHeader(http.StatusUnauthorized)
+			unauthorized(logger, w, callback, "error reading response from %s: %v", provider, err)
 			return
 		}
 		externalUser := &externalUser{}
@@ -314,38 +210,6 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 			return
 		}
 		logger.Debugf("externalUser: %v", lg.IndentJson(externalUser))
-		// logger.Debugf("EXTRACTED set-cookie token: %s", extractToken(w)) // tmp
-
-		// TODO(vera): this is only used when trying to log in with github explicitly. If a user already has a JWT
-		// he must be logged in automatically when loading the page, no use to check it here
-		// for _, cookie := range r.Cookies() {
-		// 	logger.Debugf("AUTH: Checking cookie with name %s: %+v", tokens.cookieName, cookie) // tmp
-		// 	if cookie.Name == tokens.cookieName {
-		// 		userToken = cookie.Value
-		// 	}
-		// }
-		// logger.Debugf("EXTRACTED auth cookie", userToken) // tmp
-
-		// There is already a cookie with JWT, make sure the user exists in the database
-		userToken := extractToken(r, tokens.cookieName)
-		logger.Debugf("GitHub login: extracted token from request: %s", userToken)
-		if userToken != "" {
-			claims, err := tokens.GetClaims(userToken)
-			if err != nil {
-				unauthorized(logger, w, callback, "could not read user claims: %v", err)
-				return
-			}
-			// TODO(vera): check that user in the claims and in remote ID is the same user
-
-			if err := db.AssociateUserWithRemoteIdentity(claims.UserID, provider, externalUser.ID, githubToken.AccessToken); err != nil {
-				logger.Debugf("Associate failed: %d, %s, %d, %s", claims.UserID, provider, externalUser.ID, githubToken.AccessToken)
-				unauthorized(logger, w, callback, "could not match user with remote identity: %v", err)
-				return
-			}
-			logger.Debugf("Associate: %d, %s, %d, %s", claims.UserID, provider, externalUser.ID, githubToken.AccessToken)
-		}
-
-		// If no user cookie in context
 		remote := &pb.RemoteIdentity{
 			Provider:    provider,
 			RemoteID:    externalUser.ID,
@@ -377,10 +241,9 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 			logger.Debugf("New user created: %v, remote: %v", user, remote)
 
 		default:
-			logger.Error("Failed to fetch user for remote identity", zap.Error(err))
-			// TODO(meling) shouldn't this also be an unauthorized error and return?
+			unauthorized(logger, w, callback, "failed to fetch user by remote identity: %v", err)
+			return
 		}
-
 		// in case this is a new user we need a user object with full information,
 		// otherwise frontend will get user object where only name, email and url are set.
 		user, err = db.GetUserByRemoteIdentity(remote)
@@ -408,83 +271,6 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 	}
 }
 
-// // AccessControl returns an access control middleware. Given a valid context
-// // with sufficient access the next handler is called. Missing or invalid
-// // credentials results in a 401 unauthorized response.
-// func AccessControl(logger *zap.SugaredLogger, db database.Database) echo.MiddlewareFunc {
-// 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-// 		return func(c echo.Context) error {
-// 			logger.Debug("ACCESS CONTROL")
-// 			sess, err := session.Get(SessionKey, c)
-// 			if err != nil {
-// 				logger.Error(err.Error())
-// 				// Save fixes the session if it has been modified
-// 				// or it is no longer valid due to newUserSess change of keys.
-// 				if err := sess.Save(c.Request(), c.Response()); err != nil {
-// 					logger.Error(err.Error())
-// 					return err
-// 				}
-// 				return next(c)
-// 			}
-// 			logger.Debug(sessionData(sess))
-
-// 			i, ok := sess.Values[UserKey]
-// 			if !ok {
-// 				return next(c)
-// 			}
-
-// 			// If type assertion fails, the recover middleware will catch the panic and log a stack trace.
-// 			us := i.(*UserSession)
-// 			logger.Debug(us)
-// 			user, err := db.GetUser(us.ID)
-// 			if err != nil {
-// 				logger.Error(err.Error())
-// 				// Invalidate session. This could happen if the user has been entirely remove
-// 				// from the database, but a valid session still exists.
-// 				if err == gorm.ErrRecordNotFound {
-// 					logger.Error(err.Error())
-// 					return OAuth2Logout(logger)(c)
-// 				}
-// 				logger.Error(echo.ErrUnauthorized.Error())
-// 				return next(c)
-// 			}
-// 			c.Set(UserKey, user)
-
-// 			// TODO: Add access control list.
-// 			// - Extract endpoint.
-// 			// - Verify whether the user has sufficient rights. This
-// 			//   can be a simple hash map. A user should be able to
-// 			//   access /users/:uid if the user's id is uid.
-// 			//   - Not authorized: return c.NoContent(http.StatusUnauthorized)
-// 			//   - Authorized: return next(c)
-// 			return next(c)
-// 		}
-// 	}
-// }
-
-// func extractRedirectURL(r *http.Request, key string) string {
-// 	// TODO: Validate redirect URL.
-
-// 	url := r.URL.Query().Get(key)
-// 	if url == "" {
-// 		url = "/"
-// 	}
-// 	return url
-// }
-
-// func extractState(r *http.Request, key string) (redirect string, teacher bool) {
-// 	// TODO: Validate redirect URL.
-// 	url := r.URL.Query().Get(key)
-// 	log.Printf("EXTRACT STATE: url for key (%s) is %s", key, url)
-// 	log.Printf("URL [1:], [:1] is %s, %s", url[1:], url[:1])
-// 	teacher = url != "" && url[:1] == "1"
-
-// 	if url == "" || url[1:] == "" {
-// 		return "/", teacher
-// 	}
-// 	return url[1:], teacher
-// }
-
 // extractToken returns a request cookie with given name, or an empty string
 // is cookie does not exist
 func extractToken(r *http.Request, cookieName string) string {
@@ -495,37 +281,3 @@ func extractToken(r *http.Request, cookieName string) string {
 	}
 	return ""
 }
-
-// var (
-// 	ErrInvalidSessionCookie = status.Errorf(codes.Unauthenticated, "Request does not contain a valid session cookie.")
-// 	ErrContextMetadata      = status.Errorf(codes.Unauthenticated, "Could not obtain metadata from context")
-// )
-
-// func UserVerifier() grpc.UnaryServerInterceptor {
-// 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-// 		meta, ok := metadata.FromIncomingContext(ctx)
-// 		if !ok {
-// 			return nil, ErrContextMetadata
-// 		}
-// 		newMeta, err := userValidation(meta)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		// create new context with user id instead of cookie for use internally
-// 		newCtx := metadata.NewIncomingContext(ctx, newMeta)
-// 		resp, err := handler(newCtx, req)
-// 		return resp, err
-// 	}
-// }
-
-// // userValidation returns modified metadata containing a valid user.
-// // An error is returned if the user is not authenticated.
-// func userValidation(meta metadata.MD) (metadata.MD, error) {
-// 	for _, cookie := range meta.Get(Cookie) {
-// 		if user := Get(cookie); user > 0 {
-// 			meta.Set(UserKey, strconv.FormatUint(user, 10))
-// 			return meta, nil
-// 		}
-// 	}
-// 	return nil, ErrInvalidSessionCookie
-// }

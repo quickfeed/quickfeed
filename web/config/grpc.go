@@ -27,8 +27,8 @@ func (conf *Config) GenerateTLSApi(logger *zap.SugaredLogger, tokens *auth.Token
 		grpc.Creds(cred),
 		grpc.ChainUnaryInterceptor(
 			interceptors.ValidateMethod(logger),
-			// interceptors.UpdateTokens(logger, tokens),
 			interceptors.ValidateToken(logger, tokens),
+			interceptors.UpdateTokens(logger, tokens),
 			// interceptors.AccessControl(logger, tokens),
 		),
 	)

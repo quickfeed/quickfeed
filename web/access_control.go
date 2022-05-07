@@ -3,14 +3,13 @@ package web
 import (
 	"context"
 	"errors"
-	"strconv"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
-	"google.golang.org/grpc/metadata"
+	"github.com/autograde/quickfeed/web/auth/interceptors"
 )
 
 // ErrInvalidUserInfo is returned to user if user information in context is invalid.
@@ -18,23 +17,17 @@ var ErrInvalidUserInfo = status.Errorf(codes.PermissionDenied, "authorization fa
 
 func (s *AutograderService) getCurrentUser(ctx context.Context) (*pb.User, error) {
 	// process user id from context
-	meta, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New("malformed request")
-	}
-	userValues := meta.Get("user")
-	if len(userValues) == 0 {
+	token, err := interceptors.GetFromMetadata(ctx, "token", "")
+	if err != nil {
+		s.logger.Errorf("Failed to get current user: %s", err)
 		return nil, errors.New("no user metadata in context")
 	}
-	if len(userValues) != 1 || userValues[0] == "" {
-		return nil, errors.New("invalid user payload in context")
-	}
-	userID, err := strconv.ParseUint(userValues[0], 10, 64)
+	claims, err := s.tokenManager.GetClaims(token)
 	if err != nil {
 		return nil, err
 	}
 	// return the user corresponding to userID, or an error.
-	return s.db.GetUser(userID)
+	return s.db.GetUser(claims.UserID)
 }
 
 // TODO(vera): repurpose for new scm type (or two scm types)

@@ -48,6 +48,10 @@ func NewTokenManager(db database.Database, expireAfter time.Duration, secret, do
 	return manager, nil
 }
 
+func (tm *TokenManager) GetAuthCookieName() string {
+	return tm.cookieName
+}
+
 // JWTUpdateRequired returns true if JWT update is needed for this user ID
 func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 	for _, token := range tm.tokens {
