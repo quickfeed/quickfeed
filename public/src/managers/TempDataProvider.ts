@@ -5,19 +5,22 @@ import {
     GradingBenchmark,
     GradingCriterion,
     Group,
-    Organization,
     Repository,
-    Status,
     User,
     Review,
-    SubmissionsForCourseRequest
-} from "../../proto/ag/ag_pb"
+} from "../../proto/ag/types/types_pb"
+import {
+    Organization,
+    Status,
+    SubmissionsForCourseRequest,
+} from "../../proto/ag/types/requests_pb"
 import { IAllSubmissionsForEnrollment, ISubmission } from "../models"
 
 import { ICourseProvider } from "./CourseManager"
 import { IUserProvider } from "./UserManager"
 
 import { IMap, MapHelper, mapify } from "../map"
+import { BenchmarkRequest, CriteriaRequest } from '../../proto/ag/types/requests_pb'
 
 interface IGrpcDummyUser {
     user: User
@@ -294,27 +297,27 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error( "Method not implemented." )
     }
 
-    public async addNewBenchmark( bm: GradingBenchmark ): Promise<GradingBenchmark | null> {
-        return bm
+    public async addNewBenchmark( bm: BenchmarkRequest ): Promise<GradingBenchmark | null> {
+        throw new Error( "Method not implemented." )
     }
 
-    public async addNewCriterion( c: GradingCriterion ): Promise<GradingCriterion | null> {
-        return c
+    public async addNewCriterion( c: CriteriaRequest ): Promise<GradingCriterion | null> {
+        throw new Error( "Method not implemented." )
     }
 
-    public async updateBenchmark( bm: GradingBenchmark ): Promise<boolean> {
+    public async updateBenchmark( bm: BenchmarkRequest ): Promise<boolean> {
         return true
     }
 
-    public async updateCriterion( c: GradingCriterion ): Promise<boolean> {
+    public async updateCriterion( c: CriteriaRequest ): Promise<boolean> {
         return true
     }
 
-    public async deleteBenchmark( bm: GradingBenchmark ): Promise<boolean> {
+    public async deleteBenchmark( bm: BenchmarkRequest ): Promise<boolean> {
         return true
     }
 
-    public async deleteCriterion( c: GradingCriterion ): Promise<boolean> {
+    public async deleteCriterion( c: CriteriaRequest ): Promise<boolean> {
         return true
     }
 

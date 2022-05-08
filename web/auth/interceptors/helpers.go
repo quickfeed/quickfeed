@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	pb "github.com/autograde/quickfeed/ag/types"
+	"github.com/autograde/quickfeed/database"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -68,4 +70,12 @@ func setCookie(ctx context.Context, cookie string) error {
 		return fmt.Errorf("failed to set grpc header: %w", err)
 	}
 	return nil
+}
+
+func hasCourseAccess(db database.Database, courseID, userID uint64, status pb.Enrollment_UserStatus) bool {
+	enrol, err := db.GetEnrollmentByCourseAndUser(courseID, userID)
+	if err != nil {
+		return false
+	}
+	return enrol.Status == status
 }

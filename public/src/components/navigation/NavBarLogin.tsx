@@ -1,6 +1,6 @@
 
 import * as React from "react"
-import { User } from "../../../proto/ag/ag_pb"
+import { User } from "../../../proto/ag/types/types_pb"
 import { ILink } from "../../managers"
 import { NavMenuDropdown } from "./NavMenuDropdown"
 

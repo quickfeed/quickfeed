@@ -2,7 +2,8 @@ import * as React from "react"
 import { BootstrapButton } from "../../components"
 import { CourseManager } from "../../managers/CourseManager"
 import { NavigationManager } from "../../managers/NavigationManager"
-import { Course, Status, User, Void } from "../../../proto/ag/ag_pb"
+import { Course, User } from "../../../proto/ag/types/types_pb"
+import { Status, Void } from "../../../proto/ag/types/requests_pb"
 
 interface ICourseFormProps {
     className?: string

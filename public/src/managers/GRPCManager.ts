@@ -1,42 +1,46 @@
 import * as grpcWeb from "grpc-web"
 import {
-    Assignments,
-    Course,
     CourseRequest,
     CourseSubmissions,
-    Courses,
+    BenchmarkRequest,
+    CriteriaRequest,
     EnrollmentStatusRequest,
-    Enrollment,
     EnrollmentRequest,
-    Enrollments,
     GetGroupRequest,
-    GradingBenchmark,
-    GradingCriterion,
-    Group,
     GroupRequest,
-    Groups,
     Organization,
     OrgRequest,
     Providers,
     RebuildRequest,
     Repositories,
-    Repository,
     RepositoryRequest,
-    Review,
     ReviewRequest,
     Status,
     SubmissionRequest,
     SubmissionsForCourseRequest,
-    Submissions,
     SubmissionReviewersRequest,
     UpdateSubmissionRequest,
     UpdateSubmissionsRequest,
     URLRequest,
-    User,
-    Users,
     Void,
     Reviewers,
-} from "../../proto/ag/ag_pb"
+} from "../../proto/ag/types/requests_pb"
+import {
+    Assignments,
+    Course,
+    Courses,
+    Enrollment,
+    Enrollments,
+    GradingBenchmark,
+    GradingCriterion,
+    Group,
+    Groups,
+    Repository,
+    Review,
+    Submissions,
+    User,
+    Users,
+} from "../../proto/ag/types/types_pb"
 import { AutograderServiceClient } from "../../proto/ag/AgServiceClientPb"
 import { UserManager } from "./UserManager"
 import { ISubmission } from "../models"
@@ -263,27 +267,27 @@ export class GrpcManager {
 
     // /* MANUAL GRADING */ //
 
-    public createBenchmark( bm: GradingBenchmark ): Promise<IGrpcResponse<GradingBenchmark>> {
+    public createBenchmark( bm: BenchmarkRequest ): Promise<IGrpcResponse<GradingBenchmark>> {
         return this.grpcSend<GradingBenchmark>( this.agService.createBenchmark, bm )
     }
 
-    public createCriterion( c: GradingCriterion ): Promise<IGrpcResponse<GradingCriterion>> {
+    public createCriterion( c: CriteriaRequest ): Promise<IGrpcResponse<GradingCriterion>> {
         return this.grpcSend<GradingCriterion>( this.agService.createCriterion, c )
     }
 
-    public updateBenchmark( bm: GradingBenchmark ): Promise<IGrpcResponse<Void>> {
+    public updateBenchmark( bm: BenchmarkRequest ): Promise<IGrpcResponse<Void>> {
         return this.grpcSend<Void>( this.agService.updateBenchmark, bm )
     }
 
-    public updateCriterion( c: GradingCriterion ): Promise<IGrpcResponse<Void>> {
+    public updateCriterion( c: CriteriaRequest ): Promise<IGrpcResponse<Void>> {
         return this.grpcSend<Void>( this.agService.updateCriterion, c )
     }
 
-    public deleteBenchmark( bm: GradingBenchmark ): Promise<IGrpcResponse<Void>> {
+    public deleteBenchmark( bm: BenchmarkRequest ): Promise<IGrpcResponse<Void>> {
         return this.grpcSend<Void>( this.agService.deleteBenchmark, bm )
     }
 
-    public deleteCriterion( c: GradingCriterion ): Promise<IGrpcResponse<Void>> {
+    public deleteCriterion( c: CriteriaRequest ): Promise<IGrpcResponse<Void>> {
         return this.grpcSend<Void>( this.agService.deleteCriterion, c )
     }
 

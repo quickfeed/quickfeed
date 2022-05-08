@@ -1,17 +1,17 @@
-import * as React from "react";
-import { Enrollment } from "../../../proto/ag/ag_pb";
-import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
-import { ILink } from "../../managers/NavigationManager";
-import { searchForCourses, sortEnrollmentsByVisibility } from "../../componentHelper";
+import * as React from "react"
+import { Enrollment } from "../../../proto/ag/types/types_pb"
+import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components"
+import { ILink } from "../../managers/NavigationManager"
+import { searchForCourses, sortEnrollmentsByVisibility } from "../../componentHelper"
 
 interface CourseListViewProps {
-    enrollments: Enrollment[];
-    onChangeClick: (enrol: Enrollment) => Promise<boolean>;
+    enrollments: Enrollment[]
+    onChangeClick: ( enrol: Enrollment ) => Promise<boolean>
 }
 
 interface CourseListViewState {
-    sortedCourses: Enrollment[];
-    editing: boolean;
+    sortedCourses: Enrollment[]
+    editing: boolean
 }
 
 export class CourseListView extends React.Component<CourseListViewProps, CourseListViewState> {
@@ -43,127 +43,127 @@ export class CourseListView extends React.Component<CourseListViewProps, CourseL
         name: "Favorite",
         extra: "light",
     }
-    constructor(props: CourseListViewProps) {
-        super(props);
+    constructor ( props: CourseListViewProps ) {
+        super( props )
         this.state = {
             editing: false,
-            sortedCourses: sortEnrollmentsByVisibility(this.props.enrollments, true),
+            sortedCourses: sortEnrollmentsByVisibility( this.props.enrollments, true ),
         }
     }
 
     public render() {
         return <div>
             <Search className="input-group"
-                    placeholder="Search for courses"
-                    onChange={(query) => this.handleSearch(query)}
-                />
-            <div>{this.editButton()}</div>
+                placeholder="Search for courses"
+                onChange={ ( query ) => this.handleSearch( query ) }
+            />
+            <div>{ this.editButton() }</div>
             <DynamicTable
-            data={this.state.sortedCourses}
-            header={["Course code", "Course Name", "Year", "State"]}
-            selector={(enrol: Enrollment) => this.createCourseRow(enrol)}>
-        </DynamicTable></div>;
+                data={ this.state.sortedCourses }
+                header={ [ "Course code", "Course Name", "Year", "State" ] }
+                selector={ ( enrol: Enrollment ) => this.createCourseRow( enrol ) }>
+            </DynamicTable></div>
     }
 
-    private generateCourseStateLinks(status: Enrollment.DisplayState): ILink[] {
-        const buttonLinks: ILink[] = [];
-        switch (status) {
+    private generateCourseStateLinks( status: Enrollment.DisplayState ): ILink[] {
+        const buttonLinks: ILink[] = []
+        switch ( status ) {
             case Enrollment.DisplayState.VISIBLE:
                 this.state.editing ?
-                    buttonLinks.push(this.hideLink, this.makeFavoriteLink) :
-                    buttonLinks.push(this.visibleLink);
-                break;
+                    buttonLinks.push( this.hideLink, this.makeFavoriteLink ) :
+                    buttonLinks.push( this.visibleLink )
+                break
             case Enrollment.DisplayState.UNSET:
                 this.state.editing ?
-                    buttonLinks.push(this.hideLink, this.makeFavoriteLink) :
-                    buttonLinks.push(this.visibleLink);
-                break;
+                    buttonLinks.push( this.hideLink, this.makeFavoriteLink ) :
+                    buttonLinks.push( this.visibleLink )
+                break
             case Enrollment.DisplayState.HIDDEN:
                 this.state.editing ?
-                    buttonLinks.push(this.showLink, this.makeFavoriteLink) :
-                    buttonLinks.push(this.hiddenLink);
-                break;
+                    buttonLinks.push( this.showLink, this.makeFavoriteLink ) :
+                    buttonLinks.push( this.hiddenLink )
+                break
             case Enrollment.DisplayState.FAVORITE:
                 this.state.editing ?
-                    buttonLinks.push(this.showLink, this.hideLink) :
-                    buttonLinks.push(this.favoriteLink);
-                break;
+                    buttonLinks.push( this.showLink, this.hideLink ) :
+                    buttonLinks.push( this.favoriteLink )
+                break
             default:
-                console.log("Got unexpected display status: " + status);
+                console.log( "Got unexpected display status: " + status )
         }
-        return buttonLinks;
+        return buttonLinks
     }
 
-    private createCourseRow(enrol: Enrollment): (string | JSX.Element)[] {
-        const course = enrol.getCourse();
-        if (!course) {
-            return [];
+    private createCourseRow( enrol: Enrollment ): ( string | JSX.Element )[] {
+        const course = enrol.getCourse()
+        if ( !course ) {
+            return []
         }
-        const base: (string | JSX.Element)[] = [course.getCode(), course.getName(), course.getYear() + "-" + course.getTag()];
-        const links = this.generateCourseStateLinks(enrol.getState());
-        const linkButtons = links.map((v, i) => {
-            let action: Enrollment.DisplayState;
-            switch (v.uri) {
+        const base: ( string | JSX.Element )[] = [ course.getCode(), course.getName(), course.getYear() + "-" + course.getTag() ]
+        const links = this.generateCourseStateLinks( enrol.getState() )
+        const linkButtons = links.map( ( v, i ) => {
+            let action: Enrollment.DisplayState
+            switch ( v.uri ) {
                 case "show":
-                    action = Enrollment.DisplayState.VISIBLE;
-                    break;
+                    action = Enrollment.DisplayState.VISIBLE
+                    break
                 case "hide":
-                    action = Enrollment.DisplayState.HIDDEN;
-                    break;
+                    action = Enrollment.DisplayState.HIDDEN
+                    break
                 case "favorite":
-                    action = Enrollment.DisplayState.FAVORITE;
-                    break;
+                    action = Enrollment.DisplayState.FAVORITE
+                    break
                 default:
-                    console.log("Got unexpected link uri: " + v.uri);
-                    action = Enrollment.DisplayState.UNSET;
+                    console.log( "Got unexpected link uri: " + v.uri )
+                    action = Enrollment.DisplayState.UNSET
             }
 
             return <BootstrapButton
-                key={i}
-                classType={v.extra ? v.extra as BootstrapClass : "default"}
-                type={v.description}
-                onClick={() => { this.handleStateChange(enrol, action)}}
-            >{v.name}
-            </BootstrapButton>;
-            });
+                key={ i }
+                classType={ v.extra ? v.extra as BootstrapClass : "default" }
+                type={ v.description }
+                onClick={ () => { this.handleStateChange( enrol, action ) } }
+            >{ v.name }
+            </BootstrapButton>
+        } )
 
-        const btnGroup = <div className="btn-group action-btn">{linkButtons}</div>
-        base.push(btnGroup);
-        return base;
+        const btnGroup = <div className="btn-group action-btn">{ linkButtons }</div>
+        base.push( btnGroup )
+        return base
     }
 
-    private handleSearch(query: string) {
-        this.setState({
-            sortedCourses: searchForCourses(sortEnrollmentsByVisibility(this.props.enrollments, true), query) as Enrollment[],
-        });
+    private handleSearch( query: string ) {
+        this.setState( {
+            sortedCourses: searchForCourses( sortEnrollmentsByVisibility( this.props.enrollments, true ), query ) as Enrollment[],
+        } )
     }
 
     private async toggleEdit() {
-        this.setState({
+        this.setState( {
             editing: !this.state.editing,
-        })
+        } )
     }
 
-    private async handleStateChange(enrol: Enrollment, state: Enrollment.DisplayState) {
-        if (state) {
-            const baseState = enrol.getState();
-            enrol.setState(state);
-            const ans = await this.props.onChangeClick(enrol);
-            if (!ans) {
-                enrol.setState(baseState);
+    private async handleStateChange( enrol: Enrollment, state: Enrollment.DisplayState ) {
+        if ( state ) {
+            const baseState = enrol.getState()
+            enrol.setState( state )
+            const ans = await this.props.onChangeClick( enrol )
+            if ( !ans ) {
+                enrol.setState( baseState )
             }
         }
     }
 
     private editButton() {
         return <button type="button"
-                id="edit"
-                className="btn btn-success member-btn"
-                onClick={() => this.toggleEdit()}
-        >{this.editButtonString()}</button>;
+            id="edit"
+            className="btn btn-success member-btn"
+            onClick={ () => this.toggleEdit() }
+        >{ this.editButtonString() }</button>
     }
 
     private editButtonString(): string {
-        return this.state.editing ? "Done" : "Edit";
+        return this.state.editing ? "Done" : "Edit"
     }
 }

@@ -1,22 +1,22 @@
-import * as React from "react";
-import { GradingCriterion } from "../../../proto/ag/ag_pb";
+import * as React from "react"
+import { GradingCriterion } from "../../../proto/ag/types/types_pb"
 
 interface EditCriterionProps {
-    criterion: GradingCriterion;
-    customScore: boolean;
-    onUpdate: (newDescription: string) => void;
-    onDelete: () => void;
+    criterion: GradingCriterion
+    customScore: boolean
+    onUpdate: ( newDescription: string ) => void
+    onDelete: () => void
 }
 
 interface EditCriterionState {
-    editing: boolean;
-    description: string;
+    editing: boolean
+    description: string
 }
 
 export class EditCriterion extends React.Component<EditCriterionProps, EditCriterionState> {
 
-    constructor(props: EditCriterionProps) {
-        super(props);
+    constructor ( props: EditCriterionProps ) {
+        super( props )
         this.state = {
             editing: false,
             description: this.props.criterion.getDescription(),
@@ -25,36 +25,36 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
 
     public render() {
         return <div className="c-element">
-            {this.state.editing ? this.renderEditView() : this.renderTextView()}
-        </div>;
+            { this.state.editing ? this.renderEditView() : this.renderTextView() }
+        </div>
     }
 
     private renderDeleteButton(): JSX.Element {
         return <button
             className="btn btn-danger btn-xs bm-btn remove-c"
-            onClick={() => {
-                this.setState({
+            onClick={ () => {
+                this.setState( {
                     editing: false,
-                });
-                this.props.onDelete();
-            }}
+                } )
+                this.props.onDelete()
+            } }
         >X</button>
     }
 
     private toggleEditState() {
-        this.setState({
+        this.setState( {
             editing: !this.state.editing,
-        })
+        } )
     }
 
     private updateDescription() {
-        this.props.onUpdate(this.state.description);
-        this.undo();
+        this.props.onUpdate( this.state.description )
+        this.undo()
     }
 
     private renderTextView(): JSX.Element {
         return <div className="row">
-            <div className="description-c" onClick={() => this.toggleEditState()}>{this.props.criterion.getDescription()}</div>{this.renderDeleteButton()}{this.showScore()}
+            <div className="description-c" onClick={ () => this.toggleEditState() }>{ this.props.criterion.getDescription() }</div>{ this.renderDeleteButton() }{ this.showScore() }
         </div>
     }
 
@@ -62,38 +62,38 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
         return <div className="input-group col-md-12">
             <input
                 className="form-control m-input"
-                autoFocus={true}
+                autoFocus={ true }
                 type="text"
-                defaultValue={this.state.description}
-                onChange={(e) => this.setDescription(e.target.value)}
-                onBlur={() => this.undo()}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                        this.updateDescription();
-                    } else if (e.key === 'Escape') {
-                        this.undo();
+                defaultValue={ this.state.description }
+                onChange={ ( e ) => this.setDescription( e.target.value ) }
+                onBlur={ () => this.undo() }
+                onKeyDown={ ( e ) => {
+                    if ( e.key === 'Enter' ) {
+                        this.updateDescription()
+                    } else if ( e.key === 'Escape' ) {
+                        this.undo()
                     }
-                }}
-        /></div>
+                } }
+            /></div>
     }
 
-    private setDescription(inputText: string) {
-        this.setState({
+    private setDescription( inputText: string ) {
+        this.setState( {
             description: inputText,
-        })
+        } )
     }
 
     private showScore(): JSX.Element | null {
-        if (this.props.customScore && this.props.criterion.getPoints() > 0) {
-            return <div className="score-c">Points: {this.props.criterion.getPoints()}</div>;
+        if ( this.props.customScore && this.props.criterion.getPoints() > 0 ) {
+            return <div className="score-c">Points: { this.props.criterion.getPoints() }</div>
         }
-        return null;
+        return null
     }
 
     private undo() {
-        this.setState({
+        this.setState( {
             editing: false,
             description: this.props.criterion.getDescription(),
-        })
+        } )
     }
 }

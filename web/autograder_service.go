@@ -592,8 +592,8 @@ func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.Rebui
 
 // CreateBenchmark adds a new grading benchmark for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) CreateBenchmark(_ context.Context, in *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
-	bm, err := s.createBenchmark(in)
+func (s *AutograderService) CreateBenchmark(_ context.Context, in *pb.BenchmarkRequest) (*pb.GradingBenchmark, error) {
+	bm, err := s.createBenchmark(in.GetBenchmark())
 	if err != nil {
 		s.logger.Errorf("CreateBenchmark failed for %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to add benchmark")
@@ -603,8 +603,8 @@ func (s *AutograderService) CreateBenchmark(_ context.Context, in *pb.GradingBen
 
 // UpdateBenchmark edits a grading benchmark for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) UpdateBenchmark(_ context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
-	err := s.updateBenchmark(in)
+func (s *AutograderService) UpdateBenchmark(_ context.Context, in *pb.BenchmarkRequest) (*pb.Void, error) {
+	err := s.updateBenchmark(in.GetBenchmark())
 	if err != nil {
 		s.logger.Errorf("UpdateBenchmark failed for %+v: %v", in, err)
 		err = status.Error(codes.InvalidArgument, "failed to update benchmark")
@@ -614,8 +614,8 @@ func (s *AutograderService) UpdateBenchmark(_ context.Context, in *pb.GradingBen
 
 // DeleteBenchmark removes a grading benchmark
 // Access policy: Teacher of CourseID
-func (s *AutograderService) DeleteBenchmark(_ context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
-	err := s.deleteBenchmark(in)
+func (s *AutograderService) DeleteBenchmark(_ context.Context, in *pb.BenchmarkRequest) (*pb.Void, error) {
+	err := s.deleteBenchmark(in.GetBenchmark())
 	if err != nil {
 		s.logger.Errorf("DeleteBenchmark failed for %+v: %v", in, err)
 		err = status.Error(codes.InvalidArgument, "failed to delete benchmark")
@@ -625,8 +625,8 @@ func (s *AutograderService) DeleteBenchmark(_ context.Context, in *pb.GradingBen
 
 // CreateCriterion adds a new grading criterion for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) CreateCriterion(_ context.Context, in *pb.GradingCriterion) (*pb.GradingCriterion, error) {
-	c, err := s.createCriterion(in)
+func (s *AutograderService) CreateCriterion(_ context.Context, in *pb.CriteriaRequest) (*pb.GradingCriterion, error) {
+	c, err := s.createCriterion(in.GetCriterion())
 	if err != nil {
 		s.logger.Errorf("CreateCriterion failed for %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to add criterion")
@@ -636,8 +636,8 @@ func (s *AutograderService) CreateCriterion(_ context.Context, in *pb.GradingCri
 
 // UpdateCriterion edits a grading criterion for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) UpdateCriterion(_ context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
-	err := s.updateCriterion(in)
+func (s *AutograderService) UpdateCriterion(_ context.Context, in *pb.CriteriaRequest) (*pb.Void, error) {
+	err := s.updateCriterion(in.GetCriterion())
 	if err != nil {
 		s.logger.Errorf("UpdateCriterion failed for %+v: %v", in, err)
 		err = status.Error(codes.InvalidArgument, "failed to update criterion")
@@ -647,8 +647,8 @@ func (s *AutograderService) UpdateCriterion(_ context.Context, in *pb.GradingCri
 
 // DeleteCriterion removes a grading criterion for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) DeleteCriterion(_ context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
-	err := s.deleteCriterion(in)
+func (s *AutograderService) DeleteCriterion(_ context.Context, in *pb.CriteriaRequest) (*pb.Void, error) {
+	err := s.deleteCriterion(in.GetCriterion())
 	if err != nil {
 		s.logger.Errorf("DeleteCriterion failed for %+v: %v", in, err)
 		err = status.Error(codes.InvalidArgument, "failed to delete criterion")

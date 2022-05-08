@@ -1,19 +1,21 @@
 import {
     Assignment,
     Course,
-    CourseSubmissions,
     Enrollment,
     GradingBenchmark,
     GradingCriterion,
     Group,
-    Organization,
     Repository,
     Review,
-    Status,
     Submission,
-    SubmissionsForCourseRequest,
     User,
-} from "../../proto/ag/ag_pb"
+} from "../../proto/ag/types/types_pb"
+import {
+    CourseSubmissions,
+    Organization,
+    Status,
+    SubmissionsForCourseRequest,
+} from "../../proto/ag/types/requests_pb"
 
 import { BuildInfo } from "../../proto/kit/score/score_pb"
 
@@ -32,6 +34,7 @@ import {
     IUserProvider,
 } from "../managers"
 import { ILogger } from "./LogManager"
+import { BenchmarkRequest, CriteriaRequest } from '../../proto/ag/types/requests_pb'
 interface IEndpoints {
     user: string
     auth: string
@@ -345,7 +348,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.responseCodeSuccess( result )
     }
 
-    public async addNewBenchmark( bm: GradingBenchmark ): Promise<GradingBenchmark | null> {
+    public async addNewBenchmark( bm: BenchmarkRequest ): Promise<GradingBenchmark | null> {
         const result = await this.grpcHelper.createBenchmark( bm )
         if ( !this.responseCodeSuccess( result ) || !result.data ) {
             return null
@@ -353,7 +356,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data
     }
 
-    public async addNewCriterion( c: GradingCriterion ): Promise<GradingCriterion | null> {
+    public async addNewCriterion( c: CriteriaRequest ): Promise<GradingCriterion | null> {
         const result = await this.grpcHelper.createCriterion( c )
         if ( !this.responseCodeSuccess( result ) || !result.data ) {
             return null
@@ -361,21 +364,21 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data
     }
 
-    public async updateBenchmark( bm: GradingBenchmark ): Promise<boolean> {
+    public async updateBenchmark( bm: BenchmarkRequest ): Promise<boolean> {
         const result = await this.grpcHelper.updateBenchmark( bm )
         return this.responseCodeSuccess( result )
     }
 
-    public async updateCriterion( c: GradingCriterion ): Promise<boolean> {
+    public async updateCriterion( c: CriteriaRequest ): Promise<boolean> {
         const result = await this.grpcHelper.updateCriterion( c )
         return this.responseCodeSuccess( result )
     }
 
-    public async deleteBenchmark( bm: GradingBenchmark ): Promise<boolean> {
+    public async deleteBenchmark( bm: BenchmarkRequest ): Promise<boolean> {
         const result = await this.grpcHelper.deleteBenchmark( bm )
         return this.responseCodeSuccess( result )
     }
-    public async deleteCriterion( c: GradingCriterion ): Promise<boolean> {
+    public async deleteCriterion( c: CriteriaRequest ): Promise<boolean> {
         const result = await this.grpcHelper.deleteCriterion( c )
         return this.responseCodeSuccess( result )
     }

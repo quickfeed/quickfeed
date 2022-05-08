@@ -23,8 +23,6 @@ var global = (function() {
 
 var kit_score_score_pb = require('../../kit/score/score_pb.js');
 goog.object.extend(proto, kit_score_score_pb);
-var patch_go_pb = require('../../patch/go_pb.js');
-goog.object.extend(proto, patch_go_pb);
 goog.exportSymbol('proto.types.Assignment', null, global);
 goog.exportSymbol('proto.types.Assignments', null, global);
 goog.exportSymbol('proto.types.Benchmarks', null, global);

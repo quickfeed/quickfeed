@@ -5,7 +5,8 @@ import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager }
 import { View, ViewPage } from "./ViewPage"
 
 import { INavInfo } from "../NavigationHelper"
-import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest, Review } from "../../proto/ag/ag_pb"
+import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, Review } from "../../proto/ag/types/types_pb"
+import { SubmissionsForCourseRequest, BenchmarkRequest, CriteriaRequest } from '../../proto/ag/types/requests_pb'
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu"
 import { MemberView } from "./views/MemberView"
 import { showLoader } from "../loader"
@@ -420,22 +421,40 @@ export class TeacherPage extends ViewPage {
                 key={ i }
                 assignment={ a }
                 updateBenchmark={ ( bm: GradingBenchmark ) => {
-                    return this.courseMan.updateBenchmark( bm )
+                    const r = new BenchmarkRequest
+                    r.setCourseid( course.getId() )
+                    r.setBenchmark( bm )
+                    return this.courseMan.updateBenchmark( r )
                 } }
                 addBenchmark={ ( bm: GradingBenchmark ) => {
-                    return this.courseMan.addNewBenchmark( bm )
+                    const r = new BenchmarkRequest
+                    r.setCourseid( course.getId() )
+                    r.setBenchmark( bm )
+                    return this.courseMan.addNewBenchmark( r )
                 } }
                 removeBenchmark={ ( bm: GradingBenchmark ) => {
-                    return this.courseMan.deleteBenchmark( bm )
+                    const r = new BenchmarkRequest
+                    r.setCourseid( course.getId() )
+                    r.setBenchmark( bm )
+                    return this.courseMan.deleteBenchmark( r )
                 } }
                 updateCriterion={ ( c: GradingCriterion ) => {
-                    return this.courseMan.updateCriterion( c )
+                    const r = new CriteriaRequest
+                    r.setCourseid( course.getId() )
+                    r.setCriterion( c )
+                    return this.courseMan.updateCriterion( r )
                 } }
                 addCriterion={ ( c: GradingCriterion ) => {
-                    return this.courseMan.addNewCriterion( c )
+                    const r = new CriteriaRequest
+                    r.setCourseid( course.getId() )
+                    r.setCriterion( c )
+                    return this.courseMan.addNewCriterion( r )
                 } }
                 removeCriterion={ ( c: GradingCriterion ) => {
-                    return this.courseMan.deleteCriterion( c )
+                    const r = new CriteriaRequest
+                    r.setCourseid( course.getId() )
+                    r.setCriterion( c )
+                    return this.courseMan.deleteCriterion( r )
                 } }
                 runAllTests={ ( assignmentID: number, courseID: number ) => {
                     return this.courseMan.rebuildSubmissions( assignmentID, courseID )

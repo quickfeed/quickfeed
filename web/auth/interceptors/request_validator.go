@@ -28,12 +28,12 @@ type idCleaner interface {
 	RemoveRemoteID()
 }
 
-// ValidateMethod returns a new unary server interceptor that validates requests
+// ValidateRequest returns a new unary server interceptor that validates requests
 // that implements the validator interface.
 // Invalid requests are rejected without logging and before it reaches any
 // user-level code and returns an illegal argument to the client.
 // In addition, the interceptor also implements a cancel mechanism.
-func ValidateMethod(logger *zap.SugaredLogger) grpc.UnaryServerInterceptor {
+func ValidateRequest(logger *zap.SugaredLogger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		methodName := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
 		logger.Debug("REQUEST VALIDATE INTERCEPTOR: ", methodName)

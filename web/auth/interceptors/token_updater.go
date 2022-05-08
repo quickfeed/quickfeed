@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/web/auth"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
