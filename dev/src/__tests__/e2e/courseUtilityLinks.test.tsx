@@ -2,8 +2,6 @@ import { Builder, By, Capabilities, until } from 'selenium-webdriver'
 import { isOverlapping } from '../testHelpers/testHelpers'
 
 
-
-
 describe("Course utility elements should not overlap", () => {
     const overlapTests: { width: number, height: number, want: boolean }[] = [
         // Insert which resolutions to test here
@@ -15,7 +13,6 @@ describe("Course utility elements should not overlap", () => {
 
     ]
     overlapTests.forEach(test => {
-
         it(`Should not overlap on split screen ${test.width}x${test.height}`, async () => {
             const firefox = require('selenium-webdriver/firefox')
             const service = new firefox.ServiceBuilder('drivers\\geckodriver.exe')
