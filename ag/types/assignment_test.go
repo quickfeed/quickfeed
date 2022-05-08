@@ -1,9 +1,9 @@
-package ag_test
+package types_test
 
 import (
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 )
 
 func TestIsApproved(t *testing.T) {

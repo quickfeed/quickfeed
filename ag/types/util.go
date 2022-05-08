@@ -1,4 +1,4 @@
-package ag
+package types
 
 // RemoveRemoteID removes user's remote identity before transmitting to client.
 func (u *User) RemoveRemoteID() {

@@ -8,6 +8,7 @@ package ag
 
 import (
 	context "context"
+	types "github.com/autograde/quickfeed/ag/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -22,48 +23,48 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AutograderServiceClient interface {
-	GetUser(ctx context.Context, in *Void, opts ...grpc.CallOption) (*User, error)
-	GetUsers(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Users, error)
-	GetUserByCourse(ctx context.Context, in *CourseUserRequest, opts ...grpc.CallOption) (*User, error)
-	UpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*Void, error)
-	GetGroup(ctx context.Context, in *GetGroupRequest, opts ...grpc.CallOption) (*Group, error)
-	GetGroupByUserAndCourse(ctx context.Context, in *GroupRequest, opts ...grpc.CallOption) (*Group, error)
-	GetGroupsByCourse(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Groups, error)
-	CreateGroup(ctx context.Context, in *Group, opts ...grpc.CallOption) (*Group, error)
-	UpdateGroup(ctx context.Context, in *Group, opts ...grpc.CallOption) (*Void, error)
-	DeleteGroup(ctx context.Context, in *GroupRequest, opts ...grpc.CallOption) (*Void, error)
-	GetCourse(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Course, error)
-	GetCourses(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Courses, error)
-	GetCoursesByUser(ctx context.Context, in *EnrollmentStatusRequest, opts ...grpc.CallOption) (*Courses, error)
-	CreateCourse(ctx context.Context, in *Course, opts ...grpc.CallOption) (*Course, error)
-	UpdateCourse(ctx context.Context, in *Course, opts ...grpc.CallOption) (*Void, error)
-	UpdateCourseVisibility(ctx context.Context, in *Enrollment, opts ...grpc.CallOption) (*Void, error)
-	GetAssignments(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Assignments, error)
-	UpdateAssignments(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Void, error)
-	GetEnrollmentsByUser(ctx context.Context, in *EnrollmentStatusRequest, opts ...grpc.CallOption) (*Enrollments, error)
-	GetEnrollmentsByCourse(ctx context.Context, in *EnrollmentRequest, opts ...grpc.CallOption) (*Enrollments, error)
-	CreateEnrollment(ctx context.Context, in *Enrollment, opts ...grpc.CallOption) (*Void, error)
-	UpdateEnrollments(ctx context.Context, in *Enrollments, opts ...grpc.CallOption) (*Void, error)
+	GetUser(ctx context.Context, in *types.Void, opts ...grpc.CallOption) (*types.User, error)
+	GetUsers(ctx context.Context, in *types.Void, opts ...grpc.CallOption) (*types.Users, error)
+	GetUserByCourse(ctx context.Context, in *types.CourseUserRequest, opts ...grpc.CallOption) (*types.User, error)
+	UpdateUser(ctx context.Context, in *types.User, opts ...grpc.CallOption) (*types.Void, error)
+	GetGroup(ctx context.Context, in *types.GetGroupRequest, opts ...grpc.CallOption) (*types.Group, error)
+	GetGroupByUserAndCourse(ctx context.Context, in *types.GroupRequest, opts ...grpc.CallOption) (*types.Group, error)
+	GetGroupsByCourse(ctx context.Context, in *types.CourseRequest, opts ...grpc.CallOption) (*types.Groups, error)
+	CreateGroup(ctx context.Context, in *types.Group, opts ...grpc.CallOption) (*types.Group, error)
+	UpdateGroup(ctx context.Context, in *types.Group, opts ...grpc.CallOption) (*types.Void, error)
+	DeleteGroup(ctx context.Context, in *types.GroupRequest, opts ...grpc.CallOption) (*types.Void, error)
+	GetCourse(ctx context.Context, in *types.CourseRequest, opts ...grpc.CallOption) (*types.Course, error)
+	GetCourses(ctx context.Context, in *types.Void, opts ...grpc.CallOption) (*types.Courses, error)
+	GetCoursesByUser(ctx context.Context, in *types.EnrollmentStatusRequest, opts ...grpc.CallOption) (*types.Courses, error)
+	CreateCourse(ctx context.Context, in *types.Course, opts ...grpc.CallOption) (*types.Course, error)
+	UpdateCourse(ctx context.Context, in *types.Course, opts ...grpc.CallOption) (*types.Void, error)
+	UpdateCourseVisibility(ctx context.Context, in *types.Enrollment, opts ...grpc.CallOption) (*types.Void, error)
+	GetAssignments(ctx context.Context, in *types.CourseRequest, opts ...grpc.CallOption) (*types.Assignments, error)
+	UpdateAssignments(ctx context.Context, in *types.CourseRequest, opts ...grpc.CallOption) (*types.Void, error)
+	GetEnrollmentsByUser(ctx context.Context, in *types.EnrollmentStatusRequest, opts ...grpc.CallOption) (*types.Enrollments, error)
+	GetEnrollmentsByCourse(ctx context.Context, in *types.EnrollmentRequest, opts ...grpc.CallOption) (*types.Enrollments, error)
+	CreateEnrollment(ctx context.Context, in *types.Enrollment, opts ...grpc.CallOption) (*types.Void, error)
+	UpdateEnrollments(ctx context.Context, in *types.Enrollments, opts ...grpc.CallOption) (*types.Void, error)
 	// Get latest submissions for all course assignments for a user or a group.
-	GetSubmissions(ctx context.Context, in *SubmissionRequest, opts ...grpc.CallOption) (*Submissions, error)
+	GetSubmissions(ctx context.Context, in *types.SubmissionRequest, opts ...grpc.CallOption) (*types.Submissions, error)
 	// Get lab submissions for every course user or every course group
-	GetSubmissionsByCourse(ctx context.Context, in *SubmissionsForCourseRequest, opts ...grpc.CallOption) (*CourseSubmissions, error)
-	UpdateSubmission(ctx context.Context, in *UpdateSubmissionRequest, opts ...grpc.CallOption) (*Void, error)
-	UpdateSubmissions(ctx context.Context, in *UpdateSubmissionsRequest, opts ...grpc.CallOption) (*Void, error)
-	RebuildSubmissions(ctx context.Context, in *RebuildRequest, opts ...grpc.CallOption) (*Void, error)
-	CreateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*GradingBenchmark, error)
-	UpdateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*Void, error)
-	DeleteBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*Void, error)
-	CreateCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*GradingCriterion, error)
-	UpdateCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*Void, error)
-	DeleteCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*Void, error)
-	CreateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error)
-	UpdateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error)
-	GetReviewers(ctx context.Context, in *SubmissionReviewersRequest, opts ...grpc.CallOption) (*Reviewers, error)
-	GetProviders(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Providers, error)
-	GetOrganization(ctx context.Context, in *OrgRequest, opts ...grpc.CallOption) (*Organization, error)
-	GetRepositories(ctx context.Context, in *URLRequest, opts ...grpc.CallOption) (*Repositories, error)
-	IsEmptyRepo(ctx context.Context, in *RepositoryRequest, opts ...grpc.CallOption) (*Void, error)
+	GetSubmissionsByCourse(ctx context.Context, in *types.SubmissionsForCourseRequest, opts ...grpc.CallOption) (*types.CourseSubmissions, error)
+	UpdateSubmission(ctx context.Context, in *types.UpdateSubmissionRequest, opts ...grpc.CallOption) (*types.Void, error)
+	UpdateSubmissions(ctx context.Context, in *types.UpdateSubmissionsRequest, opts ...grpc.CallOption) (*types.Void, error)
+	RebuildSubmissions(ctx context.Context, in *types.RebuildRequest, opts ...grpc.CallOption) (*types.Void, error)
+	CreateBenchmark(ctx context.Context, in *types.BenchmarkRequest, opts ...grpc.CallOption) (*types.GradingBenchmark, error)
+	UpdateBenchmark(ctx context.Context, in *types.BenchmarkRequest, opts ...grpc.CallOption) (*types.Void, error)
+	DeleteBenchmark(ctx context.Context, in *types.BenchmarkRequest, opts ...grpc.CallOption) (*types.Void, error)
+	CreateCriterion(ctx context.Context, in *types.CriteriaRequest, opts ...grpc.CallOption) (*types.GradingCriterion, error)
+	UpdateCriterion(ctx context.Context, in *types.CriteriaRequest, opts ...grpc.CallOption) (*types.Void, error)
+	DeleteCriterion(ctx context.Context, in *types.CriteriaRequest, opts ...grpc.CallOption) (*types.Void, error)
+	CreateReview(ctx context.Context, in *types.ReviewRequest, opts ...grpc.CallOption) (*types.Review, error)
+	UpdateReview(ctx context.Context, in *types.ReviewRequest, opts ...grpc.CallOption) (*types.Review, error)
+	GetReviewers(ctx context.Context, in *types.SubmissionReviewersRequest, opts ...grpc.CallOption) (*types.Reviewers, error)
+	GetProviders(ctx context.Context, in *types.Void, opts ...grpc.CallOption) (*types.Providers, error)
+	GetOrganization(ctx context.Context, in *types.OrgRequest, opts ...grpc.CallOption) (*types.Organization, error)
+	GetRepositories(ctx context.Context, in *types.URLRequest, opts ...grpc.CallOption) (*types.Repositories, error)
+	IsEmptyRepo(ctx context.Context, in *types.RepositoryRequest, opts ...grpc.CallOption) (*types.Void, error)
 }
 
 type autograderServiceClient struct {
@@ -74,8 +75,8 @@ func NewAutograderServiceClient(cc grpc.ClientConnInterface) AutograderServiceCl
 	return &autograderServiceClient{cc}
 }
 
-func (c *autograderServiceClient) GetUser(ctx context.Context, in *Void, opts ...grpc.CallOption) (*User, error) {
-	out := new(User)
+func (c *autograderServiceClient) GetUser(ctx context.Context, in *types.Void, opts ...grpc.CallOption) (*types.User, error) {
+	out := new(types.User)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetUser", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -83,8 +84,8 @@ func (c *autograderServiceClient) GetUser(ctx context.Context, in *Void, opts ..
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetUsers(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Users, error) {
-	out := new(Users)
+func (c *autograderServiceClient) GetUsers(ctx context.Context, in *types.Void, opts ...grpc.CallOption) (*types.Users, error) {
+	out := new(types.Users)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetUsers", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -92,8 +93,8 @@ func (c *autograderServiceClient) GetUsers(ctx context.Context, in *Void, opts .
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetUserByCourse(ctx context.Context, in *CourseUserRequest, opts ...grpc.CallOption) (*User, error) {
-	out := new(User)
+func (c *autograderServiceClient) GetUserByCourse(ctx context.Context, in *types.CourseUserRequest, opts ...grpc.CallOption) (*types.User, error) {
+	out := new(types.User)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetUserByCourse", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -101,8 +102,8 @@ func (c *autograderServiceClient) GetUserByCourse(ctx context.Context, in *Cours
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) UpdateUser(ctx context.Context, in *types.User, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateUser", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -110,8 +111,8 @@ func (c *autograderServiceClient) UpdateUser(ctx context.Context, in *User, opts
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetGroup(ctx context.Context, in *GetGroupRequest, opts ...grpc.CallOption) (*Group, error) {
-	out := new(Group)
+func (c *autograderServiceClient) GetGroup(ctx context.Context, in *types.GetGroupRequest, opts ...grpc.CallOption) (*types.Group, error) {
+	out := new(types.Group)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -119,8 +120,8 @@ func (c *autograderServiceClient) GetGroup(ctx context.Context, in *GetGroupRequ
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetGroupByUserAndCourse(ctx context.Context, in *GroupRequest, opts ...grpc.CallOption) (*Group, error) {
-	out := new(Group)
+func (c *autograderServiceClient) GetGroupByUserAndCourse(ctx context.Context, in *types.GroupRequest, opts ...grpc.CallOption) (*types.Group, error) {
+	out := new(types.Group)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetGroupByUserAndCourse", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -128,8 +129,8 @@ func (c *autograderServiceClient) GetGroupByUserAndCourse(ctx context.Context, i
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetGroupsByCourse(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Groups, error) {
-	out := new(Groups)
+func (c *autograderServiceClient) GetGroupsByCourse(ctx context.Context, in *types.CourseRequest, opts ...grpc.CallOption) (*types.Groups, error) {
+	out := new(types.Groups)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetGroupsByCourse", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -137,8 +138,8 @@ func (c *autograderServiceClient) GetGroupsByCourse(ctx context.Context, in *Cou
 	return out, nil
 }
 
-func (c *autograderServiceClient) CreateGroup(ctx context.Context, in *Group, opts ...grpc.CallOption) (*Group, error) {
-	out := new(Group)
+func (c *autograderServiceClient) CreateGroup(ctx context.Context, in *types.Group, opts ...grpc.CallOption) (*types.Group, error) {
+	out := new(types.Group)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/CreateGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -146,8 +147,8 @@ func (c *autograderServiceClient) CreateGroup(ctx context.Context, in *Group, op
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateGroup(ctx context.Context, in *Group, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) UpdateGroup(ctx context.Context, in *types.Group, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -155,8 +156,8 @@ func (c *autograderServiceClient) UpdateGroup(ctx context.Context, in *Group, op
 	return out, nil
 }
 
-func (c *autograderServiceClient) DeleteGroup(ctx context.Context, in *GroupRequest, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) DeleteGroup(ctx context.Context, in *types.GroupRequest, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/DeleteGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -164,8 +165,8 @@ func (c *autograderServiceClient) DeleteGroup(ctx context.Context, in *GroupRequ
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetCourse(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Course, error) {
-	out := new(Course)
+func (c *autograderServiceClient) GetCourse(ctx context.Context, in *types.CourseRequest, opts ...grpc.CallOption) (*types.Course, error) {
+	out := new(types.Course)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetCourse", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -173,8 +174,8 @@ func (c *autograderServiceClient) GetCourse(ctx context.Context, in *CourseReque
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetCourses(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Courses, error) {
-	out := new(Courses)
+func (c *autograderServiceClient) GetCourses(ctx context.Context, in *types.Void, opts ...grpc.CallOption) (*types.Courses, error) {
+	out := new(types.Courses)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetCourses", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -182,8 +183,8 @@ func (c *autograderServiceClient) GetCourses(ctx context.Context, in *Void, opts
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetCoursesByUser(ctx context.Context, in *EnrollmentStatusRequest, opts ...grpc.CallOption) (*Courses, error) {
-	out := new(Courses)
+func (c *autograderServiceClient) GetCoursesByUser(ctx context.Context, in *types.EnrollmentStatusRequest, opts ...grpc.CallOption) (*types.Courses, error) {
+	out := new(types.Courses)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetCoursesByUser", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -191,8 +192,8 @@ func (c *autograderServiceClient) GetCoursesByUser(ctx context.Context, in *Enro
 	return out, nil
 }
 
-func (c *autograderServiceClient) CreateCourse(ctx context.Context, in *Course, opts ...grpc.CallOption) (*Course, error) {
-	out := new(Course)
+func (c *autograderServiceClient) CreateCourse(ctx context.Context, in *types.Course, opts ...grpc.CallOption) (*types.Course, error) {
+	out := new(types.Course)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/CreateCourse", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -200,8 +201,8 @@ func (c *autograderServiceClient) CreateCourse(ctx context.Context, in *Course, 
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateCourse(ctx context.Context, in *Course, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) UpdateCourse(ctx context.Context, in *types.Course, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateCourse", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -209,8 +210,8 @@ func (c *autograderServiceClient) UpdateCourse(ctx context.Context, in *Course, 
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateCourseVisibility(ctx context.Context, in *Enrollment, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) UpdateCourseVisibility(ctx context.Context, in *types.Enrollment, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateCourseVisibility", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -218,8 +219,8 @@ func (c *autograderServiceClient) UpdateCourseVisibility(ctx context.Context, in
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetAssignments(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Assignments, error) {
-	out := new(Assignments)
+func (c *autograderServiceClient) GetAssignments(ctx context.Context, in *types.CourseRequest, opts ...grpc.CallOption) (*types.Assignments, error) {
+	out := new(types.Assignments)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetAssignments", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -227,8 +228,8 @@ func (c *autograderServiceClient) GetAssignments(ctx context.Context, in *Course
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateAssignments(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) UpdateAssignments(ctx context.Context, in *types.CourseRequest, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateAssignments", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -236,8 +237,8 @@ func (c *autograderServiceClient) UpdateAssignments(ctx context.Context, in *Cou
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetEnrollmentsByUser(ctx context.Context, in *EnrollmentStatusRequest, opts ...grpc.CallOption) (*Enrollments, error) {
-	out := new(Enrollments)
+func (c *autograderServiceClient) GetEnrollmentsByUser(ctx context.Context, in *types.EnrollmentStatusRequest, opts ...grpc.CallOption) (*types.Enrollments, error) {
+	out := new(types.Enrollments)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetEnrollmentsByUser", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -245,8 +246,8 @@ func (c *autograderServiceClient) GetEnrollmentsByUser(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetEnrollmentsByCourse(ctx context.Context, in *EnrollmentRequest, opts ...grpc.CallOption) (*Enrollments, error) {
-	out := new(Enrollments)
+func (c *autograderServiceClient) GetEnrollmentsByCourse(ctx context.Context, in *types.EnrollmentRequest, opts ...grpc.CallOption) (*types.Enrollments, error) {
+	out := new(types.Enrollments)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetEnrollmentsByCourse", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -254,8 +255,8 @@ func (c *autograderServiceClient) GetEnrollmentsByCourse(ctx context.Context, in
 	return out, nil
 }
 
-func (c *autograderServiceClient) CreateEnrollment(ctx context.Context, in *Enrollment, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) CreateEnrollment(ctx context.Context, in *types.Enrollment, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/CreateEnrollment", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -263,8 +264,8 @@ func (c *autograderServiceClient) CreateEnrollment(ctx context.Context, in *Enro
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateEnrollments(ctx context.Context, in *Enrollments, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) UpdateEnrollments(ctx context.Context, in *types.Enrollments, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateEnrollments", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -272,8 +273,8 @@ func (c *autograderServiceClient) UpdateEnrollments(ctx context.Context, in *Enr
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetSubmissions(ctx context.Context, in *SubmissionRequest, opts ...grpc.CallOption) (*Submissions, error) {
-	out := new(Submissions)
+func (c *autograderServiceClient) GetSubmissions(ctx context.Context, in *types.SubmissionRequest, opts ...grpc.CallOption) (*types.Submissions, error) {
+	out := new(types.Submissions)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetSubmissions", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -281,8 +282,8 @@ func (c *autograderServiceClient) GetSubmissions(ctx context.Context, in *Submis
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetSubmissionsByCourse(ctx context.Context, in *SubmissionsForCourseRequest, opts ...grpc.CallOption) (*CourseSubmissions, error) {
-	out := new(CourseSubmissions)
+func (c *autograderServiceClient) GetSubmissionsByCourse(ctx context.Context, in *types.SubmissionsForCourseRequest, opts ...grpc.CallOption) (*types.CourseSubmissions, error) {
+	out := new(types.CourseSubmissions)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetSubmissionsByCourse", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -290,8 +291,8 @@ func (c *autograderServiceClient) GetSubmissionsByCourse(ctx context.Context, in
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateSubmission(ctx context.Context, in *UpdateSubmissionRequest, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) UpdateSubmission(ctx context.Context, in *types.UpdateSubmissionRequest, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateSubmission", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -299,8 +300,8 @@ func (c *autograderServiceClient) UpdateSubmission(ctx context.Context, in *Upda
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateSubmissions(ctx context.Context, in *UpdateSubmissionsRequest, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) UpdateSubmissions(ctx context.Context, in *types.UpdateSubmissionsRequest, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateSubmissions", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -308,8 +309,8 @@ func (c *autograderServiceClient) UpdateSubmissions(ctx context.Context, in *Upd
 	return out, nil
 }
 
-func (c *autograderServiceClient) RebuildSubmissions(ctx context.Context, in *RebuildRequest, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) RebuildSubmissions(ctx context.Context, in *types.RebuildRequest, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/RebuildSubmissions", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -317,8 +318,8 @@ func (c *autograderServiceClient) RebuildSubmissions(ctx context.Context, in *Re
 	return out, nil
 }
 
-func (c *autograderServiceClient) CreateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*GradingBenchmark, error) {
-	out := new(GradingBenchmark)
+func (c *autograderServiceClient) CreateBenchmark(ctx context.Context, in *types.BenchmarkRequest, opts ...grpc.CallOption) (*types.GradingBenchmark, error) {
+	out := new(types.GradingBenchmark)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/CreateBenchmark", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -326,8 +327,8 @@ func (c *autograderServiceClient) CreateBenchmark(ctx context.Context, in *Gradi
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) UpdateBenchmark(ctx context.Context, in *types.BenchmarkRequest, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateBenchmark", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -335,8 +336,8 @@ func (c *autograderServiceClient) UpdateBenchmark(ctx context.Context, in *Gradi
 	return out, nil
 }
 
-func (c *autograderServiceClient) DeleteBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) DeleteBenchmark(ctx context.Context, in *types.BenchmarkRequest, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/DeleteBenchmark", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -344,8 +345,8 @@ func (c *autograderServiceClient) DeleteBenchmark(ctx context.Context, in *Gradi
 	return out, nil
 }
 
-func (c *autograderServiceClient) CreateCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*GradingCriterion, error) {
-	out := new(GradingCriterion)
+func (c *autograderServiceClient) CreateCriterion(ctx context.Context, in *types.CriteriaRequest, opts ...grpc.CallOption) (*types.GradingCriterion, error) {
+	out := new(types.GradingCriterion)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/CreateCriterion", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -353,8 +354,8 @@ func (c *autograderServiceClient) CreateCriterion(ctx context.Context, in *Gradi
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) UpdateCriterion(ctx context.Context, in *types.CriteriaRequest, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateCriterion", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -362,8 +363,8 @@ func (c *autograderServiceClient) UpdateCriterion(ctx context.Context, in *Gradi
 	return out, nil
 }
 
-func (c *autograderServiceClient) DeleteCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) DeleteCriterion(ctx context.Context, in *types.CriteriaRequest, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/DeleteCriterion", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -371,8 +372,8 @@ func (c *autograderServiceClient) DeleteCriterion(ctx context.Context, in *Gradi
 	return out, nil
 }
 
-func (c *autograderServiceClient) CreateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error) {
-	out := new(Review)
+func (c *autograderServiceClient) CreateReview(ctx context.Context, in *types.ReviewRequest, opts ...grpc.CallOption) (*types.Review, error) {
+	out := new(types.Review)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/CreateReview", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -380,8 +381,8 @@ func (c *autograderServiceClient) CreateReview(ctx context.Context, in *ReviewRe
 	return out, nil
 }
 
-func (c *autograderServiceClient) UpdateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error) {
-	out := new(Review)
+func (c *autograderServiceClient) UpdateReview(ctx context.Context, in *types.ReviewRequest, opts ...grpc.CallOption) (*types.Review, error) {
+	out := new(types.Review)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/UpdateReview", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -389,8 +390,8 @@ func (c *autograderServiceClient) UpdateReview(ctx context.Context, in *ReviewRe
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetReviewers(ctx context.Context, in *SubmissionReviewersRequest, opts ...grpc.CallOption) (*Reviewers, error) {
-	out := new(Reviewers)
+func (c *autograderServiceClient) GetReviewers(ctx context.Context, in *types.SubmissionReviewersRequest, opts ...grpc.CallOption) (*types.Reviewers, error) {
+	out := new(types.Reviewers)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetReviewers", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -398,8 +399,8 @@ func (c *autograderServiceClient) GetReviewers(ctx context.Context, in *Submissi
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetProviders(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Providers, error) {
-	out := new(Providers)
+func (c *autograderServiceClient) GetProviders(ctx context.Context, in *types.Void, opts ...grpc.CallOption) (*types.Providers, error) {
+	out := new(types.Providers)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetProviders", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -407,8 +408,8 @@ func (c *autograderServiceClient) GetProviders(ctx context.Context, in *Void, op
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetOrganization(ctx context.Context, in *OrgRequest, opts ...grpc.CallOption) (*Organization, error) {
-	out := new(Organization)
+func (c *autograderServiceClient) GetOrganization(ctx context.Context, in *types.OrgRequest, opts ...grpc.CallOption) (*types.Organization, error) {
+	out := new(types.Organization)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetOrganization", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -416,8 +417,8 @@ func (c *autograderServiceClient) GetOrganization(ctx context.Context, in *OrgRe
 	return out, nil
 }
 
-func (c *autograderServiceClient) GetRepositories(ctx context.Context, in *URLRequest, opts ...grpc.CallOption) (*Repositories, error) {
-	out := new(Repositories)
+func (c *autograderServiceClient) GetRepositories(ctx context.Context, in *types.URLRequest, opts ...grpc.CallOption) (*types.Repositories, error) {
+	out := new(types.Repositories)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/GetRepositories", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -425,8 +426,8 @@ func (c *autograderServiceClient) GetRepositories(ctx context.Context, in *URLRe
 	return out, nil
 }
 
-func (c *autograderServiceClient) IsEmptyRepo(ctx context.Context, in *RepositoryRequest, opts ...grpc.CallOption) (*Void, error) {
-	out := new(Void)
+func (c *autograderServiceClient) IsEmptyRepo(ctx context.Context, in *types.RepositoryRequest, opts ...grpc.CallOption) (*types.Void, error) {
+	out := new(types.Void)
 	err := c.cc.Invoke(ctx, "/ag.AutograderService/IsEmptyRepo", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -438,48 +439,48 @@ func (c *autograderServiceClient) IsEmptyRepo(ctx context.Context, in *Repositor
 // All implementations must embed UnimplementedAutograderServiceServer
 // for forward compatibility
 type AutograderServiceServer interface {
-	GetUser(context.Context, *Void) (*User, error)
-	GetUsers(context.Context, *Void) (*Users, error)
-	GetUserByCourse(context.Context, *CourseUserRequest) (*User, error)
-	UpdateUser(context.Context, *User) (*Void, error)
-	GetGroup(context.Context, *GetGroupRequest) (*Group, error)
-	GetGroupByUserAndCourse(context.Context, *GroupRequest) (*Group, error)
-	GetGroupsByCourse(context.Context, *CourseRequest) (*Groups, error)
-	CreateGroup(context.Context, *Group) (*Group, error)
-	UpdateGroup(context.Context, *Group) (*Void, error)
-	DeleteGroup(context.Context, *GroupRequest) (*Void, error)
-	GetCourse(context.Context, *CourseRequest) (*Course, error)
-	GetCourses(context.Context, *Void) (*Courses, error)
-	GetCoursesByUser(context.Context, *EnrollmentStatusRequest) (*Courses, error)
-	CreateCourse(context.Context, *Course) (*Course, error)
-	UpdateCourse(context.Context, *Course) (*Void, error)
-	UpdateCourseVisibility(context.Context, *Enrollment) (*Void, error)
-	GetAssignments(context.Context, *CourseRequest) (*Assignments, error)
-	UpdateAssignments(context.Context, *CourseRequest) (*Void, error)
-	GetEnrollmentsByUser(context.Context, *EnrollmentStatusRequest) (*Enrollments, error)
-	GetEnrollmentsByCourse(context.Context, *EnrollmentRequest) (*Enrollments, error)
-	CreateEnrollment(context.Context, *Enrollment) (*Void, error)
-	UpdateEnrollments(context.Context, *Enrollments) (*Void, error)
+	GetUser(context.Context, *types.Void) (*types.User, error)
+	GetUsers(context.Context, *types.Void) (*types.Users, error)
+	GetUserByCourse(context.Context, *types.CourseUserRequest) (*types.User, error)
+	UpdateUser(context.Context, *types.User) (*types.Void, error)
+	GetGroup(context.Context, *types.GetGroupRequest) (*types.Group, error)
+	GetGroupByUserAndCourse(context.Context, *types.GroupRequest) (*types.Group, error)
+	GetGroupsByCourse(context.Context, *types.CourseRequest) (*types.Groups, error)
+	CreateGroup(context.Context, *types.Group) (*types.Group, error)
+	UpdateGroup(context.Context, *types.Group) (*types.Void, error)
+	DeleteGroup(context.Context, *types.GroupRequest) (*types.Void, error)
+	GetCourse(context.Context, *types.CourseRequest) (*types.Course, error)
+	GetCourses(context.Context, *types.Void) (*types.Courses, error)
+	GetCoursesByUser(context.Context, *types.EnrollmentStatusRequest) (*types.Courses, error)
+	CreateCourse(context.Context, *types.Course) (*types.Course, error)
+	UpdateCourse(context.Context, *types.Course) (*types.Void, error)
+	UpdateCourseVisibility(context.Context, *types.Enrollment) (*types.Void, error)
+	GetAssignments(context.Context, *types.CourseRequest) (*types.Assignments, error)
+	UpdateAssignments(context.Context, *types.CourseRequest) (*types.Void, error)
+	GetEnrollmentsByUser(context.Context, *types.EnrollmentStatusRequest) (*types.Enrollments, error)
+	GetEnrollmentsByCourse(context.Context, *types.EnrollmentRequest) (*types.Enrollments, error)
+	CreateEnrollment(context.Context, *types.Enrollment) (*types.Void, error)
+	UpdateEnrollments(context.Context, *types.Enrollments) (*types.Void, error)
 	// Get latest submissions for all course assignments for a user or a group.
-	GetSubmissions(context.Context, *SubmissionRequest) (*Submissions, error)
+	GetSubmissions(context.Context, *types.SubmissionRequest) (*types.Submissions, error)
 	// Get lab submissions for every course user or every course group
-	GetSubmissionsByCourse(context.Context, *SubmissionsForCourseRequest) (*CourseSubmissions, error)
-	UpdateSubmission(context.Context, *UpdateSubmissionRequest) (*Void, error)
-	UpdateSubmissions(context.Context, *UpdateSubmissionsRequest) (*Void, error)
-	RebuildSubmissions(context.Context, *RebuildRequest) (*Void, error)
-	CreateBenchmark(context.Context, *GradingBenchmark) (*GradingBenchmark, error)
-	UpdateBenchmark(context.Context, *GradingBenchmark) (*Void, error)
-	DeleteBenchmark(context.Context, *GradingBenchmark) (*Void, error)
-	CreateCriterion(context.Context, *GradingCriterion) (*GradingCriterion, error)
-	UpdateCriterion(context.Context, *GradingCriterion) (*Void, error)
-	DeleteCriterion(context.Context, *GradingCriterion) (*Void, error)
-	CreateReview(context.Context, *ReviewRequest) (*Review, error)
-	UpdateReview(context.Context, *ReviewRequest) (*Review, error)
-	GetReviewers(context.Context, *SubmissionReviewersRequest) (*Reviewers, error)
-	GetProviders(context.Context, *Void) (*Providers, error)
-	GetOrganization(context.Context, *OrgRequest) (*Organization, error)
-	GetRepositories(context.Context, *URLRequest) (*Repositories, error)
-	IsEmptyRepo(context.Context, *RepositoryRequest) (*Void, error)
+	GetSubmissionsByCourse(context.Context, *types.SubmissionsForCourseRequest) (*types.CourseSubmissions, error)
+	UpdateSubmission(context.Context, *types.UpdateSubmissionRequest) (*types.Void, error)
+	UpdateSubmissions(context.Context, *types.UpdateSubmissionsRequest) (*types.Void, error)
+	RebuildSubmissions(context.Context, *types.RebuildRequest) (*types.Void, error)
+	CreateBenchmark(context.Context, *types.BenchmarkRequest) (*types.GradingBenchmark, error)
+	UpdateBenchmark(context.Context, *types.BenchmarkRequest) (*types.Void, error)
+	DeleteBenchmark(context.Context, *types.BenchmarkRequest) (*types.Void, error)
+	CreateCriterion(context.Context, *types.CriteriaRequest) (*types.GradingCriterion, error)
+	UpdateCriterion(context.Context, *types.CriteriaRequest) (*types.Void, error)
+	DeleteCriterion(context.Context, *types.CriteriaRequest) (*types.Void, error)
+	CreateReview(context.Context, *types.ReviewRequest) (*types.Review, error)
+	UpdateReview(context.Context, *types.ReviewRequest) (*types.Review, error)
+	GetReviewers(context.Context, *types.SubmissionReviewersRequest) (*types.Reviewers, error)
+	GetProviders(context.Context, *types.Void) (*types.Providers, error)
+	GetOrganization(context.Context, *types.OrgRequest) (*types.Organization, error)
+	GetRepositories(context.Context, *types.URLRequest) (*types.Repositories, error)
+	IsEmptyRepo(context.Context, *types.RepositoryRequest) (*types.Void, error)
 	mustEmbedUnimplementedAutograderServiceServer()
 }
 
@@ -487,124 +488,124 @@ type AutograderServiceServer interface {
 type UnimplementedAutograderServiceServer struct {
 }
 
-func (UnimplementedAutograderServiceServer) GetUser(context.Context, *Void) (*User, error) {
+func (UnimplementedAutograderServiceServer) GetUser(context.Context, *types.Void) (*types.User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetUsers(context.Context, *Void) (*Users, error) {
+func (UnimplementedAutograderServiceServer) GetUsers(context.Context, *types.Void) (*types.Users, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUsers not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetUserByCourse(context.Context, *CourseUserRequest) (*User, error) {
+func (UnimplementedAutograderServiceServer) GetUserByCourse(context.Context, *types.CourseUserRequest) (*types.User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserByCourse not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateUser(context.Context, *User) (*Void, error) {
+func (UnimplementedAutograderServiceServer) UpdateUser(context.Context, *types.User) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetGroup(context.Context, *GetGroupRequest) (*Group, error) {
+func (UnimplementedAutograderServiceServer) GetGroup(context.Context, *types.GetGroupRequest) (*types.Group, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroup not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetGroupByUserAndCourse(context.Context, *GroupRequest) (*Group, error) {
+func (UnimplementedAutograderServiceServer) GetGroupByUserAndCourse(context.Context, *types.GroupRequest) (*types.Group, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupByUserAndCourse not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetGroupsByCourse(context.Context, *CourseRequest) (*Groups, error) {
+func (UnimplementedAutograderServiceServer) GetGroupsByCourse(context.Context, *types.CourseRequest) (*types.Groups, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupsByCourse not implemented")
 }
-func (UnimplementedAutograderServiceServer) CreateGroup(context.Context, *Group) (*Group, error) {
+func (UnimplementedAutograderServiceServer) CreateGroup(context.Context, *types.Group) (*types.Group, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateGroup(context.Context, *Group) (*Void, error) {
+func (UnimplementedAutograderServiceServer) UpdateGroup(context.Context, *types.Group) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroup not implemented")
 }
-func (UnimplementedAutograderServiceServer) DeleteGroup(context.Context, *GroupRequest) (*Void, error) {
+func (UnimplementedAutograderServiceServer) DeleteGroup(context.Context, *types.GroupRequest) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroup not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetCourse(context.Context, *CourseRequest) (*Course, error) {
+func (UnimplementedAutograderServiceServer) GetCourse(context.Context, *types.CourseRequest) (*types.Course, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCourse not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetCourses(context.Context, *Void) (*Courses, error) {
+func (UnimplementedAutograderServiceServer) GetCourses(context.Context, *types.Void) (*types.Courses, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCourses not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetCoursesByUser(context.Context, *EnrollmentStatusRequest) (*Courses, error) {
+func (UnimplementedAutograderServiceServer) GetCoursesByUser(context.Context, *types.EnrollmentStatusRequest) (*types.Courses, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCoursesByUser not implemented")
 }
-func (UnimplementedAutograderServiceServer) CreateCourse(context.Context, *Course) (*Course, error) {
+func (UnimplementedAutograderServiceServer) CreateCourse(context.Context, *types.Course) (*types.Course, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCourse not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateCourse(context.Context, *Course) (*Void, error) {
+func (UnimplementedAutograderServiceServer) UpdateCourse(context.Context, *types.Course) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCourse not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateCourseVisibility(context.Context, *Enrollment) (*Void, error) {
+func (UnimplementedAutograderServiceServer) UpdateCourseVisibility(context.Context, *types.Enrollment) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCourseVisibility not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetAssignments(context.Context, *CourseRequest) (*Assignments, error) {
+func (UnimplementedAutograderServiceServer) GetAssignments(context.Context, *types.CourseRequest) (*types.Assignments, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAssignments not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateAssignments(context.Context, *CourseRequest) (*Void, error) {
+func (UnimplementedAutograderServiceServer) UpdateAssignments(context.Context, *types.CourseRequest) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAssignments not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetEnrollmentsByUser(context.Context, *EnrollmentStatusRequest) (*Enrollments, error) {
+func (UnimplementedAutograderServiceServer) GetEnrollmentsByUser(context.Context, *types.EnrollmentStatusRequest) (*types.Enrollments, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEnrollmentsByUser not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetEnrollmentsByCourse(context.Context, *EnrollmentRequest) (*Enrollments, error) {
+func (UnimplementedAutograderServiceServer) GetEnrollmentsByCourse(context.Context, *types.EnrollmentRequest) (*types.Enrollments, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEnrollmentsByCourse not implemented")
 }
-func (UnimplementedAutograderServiceServer) CreateEnrollment(context.Context, *Enrollment) (*Void, error) {
+func (UnimplementedAutograderServiceServer) CreateEnrollment(context.Context, *types.Enrollment) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateEnrollment not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateEnrollments(context.Context, *Enrollments) (*Void, error) {
+func (UnimplementedAutograderServiceServer) UpdateEnrollments(context.Context, *types.Enrollments) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateEnrollments not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetSubmissions(context.Context, *SubmissionRequest) (*Submissions, error) {
+func (UnimplementedAutograderServiceServer) GetSubmissions(context.Context, *types.SubmissionRequest) (*types.Submissions, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubmissions not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetSubmissionsByCourse(context.Context, *SubmissionsForCourseRequest) (*CourseSubmissions, error) {
+func (UnimplementedAutograderServiceServer) GetSubmissionsByCourse(context.Context, *types.SubmissionsForCourseRequest) (*types.CourseSubmissions, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubmissionsByCourse not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateSubmission(context.Context, *UpdateSubmissionRequest) (*Void, error) {
+func (UnimplementedAutograderServiceServer) UpdateSubmission(context.Context, *types.UpdateSubmissionRequest) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSubmission not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateSubmissions(context.Context, *UpdateSubmissionsRequest) (*Void, error) {
+func (UnimplementedAutograderServiceServer) UpdateSubmissions(context.Context, *types.UpdateSubmissionsRequest) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSubmissions not implemented")
 }
-func (UnimplementedAutograderServiceServer) RebuildSubmissions(context.Context, *RebuildRequest) (*Void, error) {
+func (UnimplementedAutograderServiceServer) RebuildSubmissions(context.Context, *types.RebuildRequest) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RebuildSubmissions not implemented")
 }
-func (UnimplementedAutograderServiceServer) CreateBenchmark(context.Context, *GradingBenchmark) (*GradingBenchmark, error) {
+func (UnimplementedAutograderServiceServer) CreateBenchmark(context.Context, *types.BenchmarkRequest) (*types.GradingBenchmark, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateBenchmark not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateBenchmark(context.Context, *GradingBenchmark) (*Void, error) {
+func (UnimplementedAutograderServiceServer) UpdateBenchmark(context.Context, *types.BenchmarkRequest) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateBenchmark not implemented")
 }
-func (UnimplementedAutograderServiceServer) DeleteBenchmark(context.Context, *GradingBenchmark) (*Void, error) {
+func (UnimplementedAutograderServiceServer) DeleteBenchmark(context.Context, *types.BenchmarkRequest) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteBenchmark not implemented")
 }
-func (UnimplementedAutograderServiceServer) CreateCriterion(context.Context, *GradingCriterion) (*GradingCriterion, error) {
+func (UnimplementedAutograderServiceServer) CreateCriterion(context.Context, *types.CriteriaRequest) (*types.GradingCriterion, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCriterion not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateCriterion(context.Context, *GradingCriterion) (*Void, error) {
+func (UnimplementedAutograderServiceServer) UpdateCriterion(context.Context, *types.CriteriaRequest) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCriterion not implemented")
 }
-func (UnimplementedAutograderServiceServer) DeleteCriterion(context.Context, *GradingCriterion) (*Void, error) {
+func (UnimplementedAutograderServiceServer) DeleteCriterion(context.Context, *types.CriteriaRequest) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCriterion not implemented")
 }
-func (UnimplementedAutograderServiceServer) CreateReview(context.Context, *ReviewRequest) (*Review, error) {
+func (UnimplementedAutograderServiceServer) CreateReview(context.Context, *types.ReviewRequest) (*types.Review, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateReview not implemented")
 }
-func (UnimplementedAutograderServiceServer) UpdateReview(context.Context, *ReviewRequest) (*Review, error) {
+func (UnimplementedAutograderServiceServer) UpdateReview(context.Context, *types.ReviewRequest) (*types.Review, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateReview not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetReviewers(context.Context, *SubmissionReviewersRequest) (*Reviewers, error) {
+func (UnimplementedAutograderServiceServer) GetReviewers(context.Context, *types.SubmissionReviewersRequest) (*types.Reviewers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReviewers not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetProviders(context.Context, *Void) (*Providers, error) {
+func (UnimplementedAutograderServiceServer) GetProviders(context.Context, *types.Void) (*types.Providers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProviders not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetOrganization(context.Context, *OrgRequest) (*Organization, error) {
+func (UnimplementedAutograderServiceServer) GetOrganization(context.Context, *types.OrgRequest) (*types.Organization, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOrganization not implemented")
 }
-func (UnimplementedAutograderServiceServer) GetRepositories(context.Context, *URLRequest) (*Repositories, error) {
+func (UnimplementedAutograderServiceServer) GetRepositories(context.Context, *types.URLRequest) (*types.Repositories, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRepositories not implemented")
 }
-func (UnimplementedAutograderServiceServer) IsEmptyRepo(context.Context, *RepositoryRequest) (*Void, error) {
+func (UnimplementedAutograderServiceServer) IsEmptyRepo(context.Context, *types.RepositoryRequest) (*types.Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IsEmptyRepo not implemented")
 }
 func (UnimplementedAutograderServiceServer) mustEmbedUnimplementedAutograderServiceServer() {}
@@ -621,7 +622,7 @@ func RegisterAutograderServiceServer(s grpc.ServiceRegistrar, srv AutograderServ
 }
 
 func _AutograderService_GetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Void)
+	in := new(types.Void)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -633,13 +634,13 @@ func _AutograderService_GetUser_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/ag.AutograderService/GetUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetUser(ctx, req.(*Void))
+		return srv.(AutograderServiceServer).GetUser(ctx, req.(*types.Void))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Void)
+	in := new(types.Void)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -651,13 +652,13 @@ func _AutograderService_GetUsers_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/ag.AutograderService/GetUsers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetUsers(ctx, req.(*Void))
+		return srv.(AutograderServiceServer).GetUsers(ctx, req.(*types.Void))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetUserByCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CourseUserRequest)
+	in := new(types.CourseUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -669,13 +670,13 @@ func _AutograderService_GetUserByCourse_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/ag.AutograderService/GetUserByCourse",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetUserByCourse(ctx, req.(*CourseUserRequest))
+		return srv.(AutograderServiceServer).GetUserByCourse(ctx, req.(*types.CourseUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_UpdateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(User)
+	in := new(types.User)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -687,13 +688,13 @@ func _AutograderService_UpdateUser_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/ag.AutograderService/UpdateUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateUser(ctx, req.(*User))
+		return srv.(AutograderServiceServer).UpdateUser(ctx, req.(*types.User))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetGroupRequest)
+	in := new(types.GetGroupRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -705,13 +706,13 @@ func _AutograderService_GetGroup_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/ag.AutograderService/GetGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetGroup(ctx, req.(*GetGroupRequest))
+		return srv.(AutograderServiceServer).GetGroup(ctx, req.(*types.GetGroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetGroupByUserAndCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GroupRequest)
+	in := new(types.GroupRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -723,13 +724,13 @@ func _AutograderService_GetGroupByUserAndCourse_Handler(srv interface{}, ctx con
 		FullMethod: "/ag.AutograderService/GetGroupByUserAndCourse",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetGroupByUserAndCourse(ctx, req.(*GroupRequest))
+		return srv.(AutograderServiceServer).GetGroupByUserAndCourse(ctx, req.(*types.GroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetGroupsByCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CourseRequest)
+	in := new(types.CourseRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -741,13 +742,13 @@ func _AutograderService_GetGroupsByCourse_Handler(srv interface{}, ctx context.C
 		FullMethod: "/ag.AutograderService/GetGroupsByCourse",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetGroupsByCourse(ctx, req.(*CourseRequest))
+		return srv.(AutograderServiceServer).GetGroupsByCourse(ctx, req.(*types.CourseRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Group)
+	in := new(types.Group)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -759,13 +760,13 @@ func _AutograderService_CreateGroup_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/ag.AutograderService/CreateGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).CreateGroup(ctx, req.(*Group))
+		return srv.(AutograderServiceServer).CreateGroup(ctx, req.(*types.Group))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_UpdateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Group)
+	in := new(types.Group)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -777,13 +778,13 @@ func _AutograderService_UpdateGroup_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/ag.AutograderService/UpdateGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateGroup(ctx, req.(*Group))
+		return srv.(AutograderServiceServer).UpdateGroup(ctx, req.(*types.Group))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_DeleteGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GroupRequest)
+	in := new(types.GroupRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -795,13 +796,13 @@ func _AutograderService_DeleteGroup_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/ag.AutograderService/DeleteGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).DeleteGroup(ctx, req.(*GroupRequest))
+		return srv.(AutograderServiceServer).DeleteGroup(ctx, req.(*types.GroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CourseRequest)
+	in := new(types.CourseRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -813,13 +814,13 @@ func _AutograderService_GetCourse_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: "/ag.AutograderService/GetCourse",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetCourse(ctx, req.(*CourseRequest))
+		return srv.(AutograderServiceServer).GetCourse(ctx, req.(*types.CourseRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetCourses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Void)
+	in := new(types.Void)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -831,13 +832,13 @@ func _AutograderService_GetCourses_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/ag.AutograderService/GetCourses",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetCourses(ctx, req.(*Void))
+		return srv.(AutograderServiceServer).GetCourses(ctx, req.(*types.Void))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetCoursesByUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EnrollmentStatusRequest)
+	in := new(types.EnrollmentStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -849,13 +850,13 @@ func _AutograderService_GetCoursesByUser_Handler(srv interface{}, ctx context.Co
 		FullMethod: "/ag.AutograderService/GetCoursesByUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetCoursesByUser(ctx, req.(*EnrollmentStatusRequest))
+		return srv.(AutograderServiceServer).GetCoursesByUser(ctx, req.(*types.EnrollmentStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_CreateCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Course)
+	in := new(types.Course)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -867,13 +868,13 @@ func _AutograderService_CreateCourse_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/ag.AutograderService/CreateCourse",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).CreateCourse(ctx, req.(*Course))
+		return srv.(AutograderServiceServer).CreateCourse(ctx, req.(*types.Course))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_UpdateCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Course)
+	in := new(types.Course)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -885,13 +886,13 @@ func _AutograderService_UpdateCourse_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/ag.AutograderService/UpdateCourse",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateCourse(ctx, req.(*Course))
+		return srv.(AutograderServiceServer).UpdateCourse(ctx, req.(*types.Course))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_UpdateCourseVisibility_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Enrollment)
+	in := new(types.Enrollment)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -903,13 +904,13 @@ func _AutograderService_UpdateCourseVisibility_Handler(srv interface{}, ctx cont
 		FullMethod: "/ag.AutograderService/UpdateCourseVisibility",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateCourseVisibility(ctx, req.(*Enrollment))
+		return srv.(AutograderServiceServer).UpdateCourseVisibility(ctx, req.(*types.Enrollment))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetAssignments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CourseRequest)
+	in := new(types.CourseRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -921,13 +922,13 @@ func _AutograderService_GetAssignments_Handler(srv interface{}, ctx context.Cont
 		FullMethod: "/ag.AutograderService/GetAssignments",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetAssignments(ctx, req.(*CourseRequest))
+		return srv.(AutograderServiceServer).GetAssignments(ctx, req.(*types.CourseRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_UpdateAssignments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CourseRequest)
+	in := new(types.CourseRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -939,13 +940,13 @@ func _AutograderService_UpdateAssignments_Handler(srv interface{}, ctx context.C
 		FullMethod: "/ag.AutograderService/UpdateAssignments",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateAssignments(ctx, req.(*CourseRequest))
+		return srv.(AutograderServiceServer).UpdateAssignments(ctx, req.(*types.CourseRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetEnrollmentsByUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EnrollmentStatusRequest)
+	in := new(types.EnrollmentStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -957,13 +958,13 @@ func _AutograderService_GetEnrollmentsByUser_Handler(srv interface{}, ctx contex
 		FullMethod: "/ag.AutograderService/GetEnrollmentsByUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetEnrollmentsByUser(ctx, req.(*EnrollmentStatusRequest))
+		return srv.(AutograderServiceServer).GetEnrollmentsByUser(ctx, req.(*types.EnrollmentStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetEnrollmentsByCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EnrollmentRequest)
+	in := new(types.EnrollmentRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -975,13 +976,13 @@ func _AutograderService_GetEnrollmentsByCourse_Handler(srv interface{}, ctx cont
 		FullMethod: "/ag.AutograderService/GetEnrollmentsByCourse",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetEnrollmentsByCourse(ctx, req.(*EnrollmentRequest))
+		return srv.(AutograderServiceServer).GetEnrollmentsByCourse(ctx, req.(*types.EnrollmentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_CreateEnrollment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Enrollment)
+	in := new(types.Enrollment)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -993,13 +994,13 @@ func _AutograderService_CreateEnrollment_Handler(srv interface{}, ctx context.Co
 		FullMethod: "/ag.AutograderService/CreateEnrollment",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).CreateEnrollment(ctx, req.(*Enrollment))
+		return srv.(AutograderServiceServer).CreateEnrollment(ctx, req.(*types.Enrollment))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_UpdateEnrollments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Enrollments)
+	in := new(types.Enrollments)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1011,13 +1012,13 @@ func _AutograderService_UpdateEnrollments_Handler(srv interface{}, ctx context.C
 		FullMethod: "/ag.AutograderService/UpdateEnrollments",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateEnrollments(ctx, req.(*Enrollments))
+		return srv.(AutograderServiceServer).UpdateEnrollments(ctx, req.(*types.Enrollments))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetSubmissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SubmissionRequest)
+	in := new(types.SubmissionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1029,13 +1030,13 @@ func _AutograderService_GetSubmissions_Handler(srv interface{}, ctx context.Cont
 		FullMethod: "/ag.AutograderService/GetSubmissions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetSubmissions(ctx, req.(*SubmissionRequest))
+		return srv.(AutograderServiceServer).GetSubmissions(ctx, req.(*types.SubmissionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetSubmissionsByCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SubmissionsForCourseRequest)
+	in := new(types.SubmissionsForCourseRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1047,13 +1048,13 @@ func _AutograderService_GetSubmissionsByCourse_Handler(srv interface{}, ctx cont
 		FullMethod: "/ag.AutograderService/GetSubmissionsByCourse",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetSubmissionsByCourse(ctx, req.(*SubmissionsForCourseRequest))
+		return srv.(AutograderServiceServer).GetSubmissionsByCourse(ctx, req.(*types.SubmissionsForCourseRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_UpdateSubmission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateSubmissionRequest)
+	in := new(types.UpdateSubmissionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1065,13 +1066,13 @@ func _AutograderService_UpdateSubmission_Handler(srv interface{}, ctx context.Co
 		FullMethod: "/ag.AutograderService/UpdateSubmission",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateSubmission(ctx, req.(*UpdateSubmissionRequest))
+		return srv.(AutograderServiceServer).UpdateSubmission(ctx, req.(*types.UpdateSubmissionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_UpdateSubmissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateSubmissionsRequest)
+	in := new(types.UpdateSubmissionsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1083,13 +1084,13 @@ func _AutograderService_UpdateSubmissions_Handler(srv interface{}, ctx context.C
 		FullMethod: "/ag.AutograderService/UpdateSubmissions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateSubmissions(ctx, req.(*UpdateSubmissionsRequest))
+		return srv.(AutograderServiceServer).UpdateSubmissions(ctx, req.(*types.UpdateSubmissionsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_RebuildSubmissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RebuildRequest)
+	in := new(types.RebuildRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1101,13 +1102,13 @@ func _AutograderService_RebuildSubmissions_Handler(srv interface{}, ctx context.
 		FullMethod: "/ag.AutograderService/RebuildSubmissions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).RebuildSubmissions(ctx, req.(*RebuildRequest))
+		return srv.(AutograderServiceServer).RebuildSubmissions(ctx, req.(*types.RebuildRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_CreateBenchmark_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GradingBenchmark)
+	in := new(types.BenchmarkRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1119,13 +1120,13 @@ func _AutograderService_CreateBenchmark_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/ag.AutograderService/CreateBenchmark",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).CreateBenchmark(ctx, req.(*GradingBenchmark))
+		return srv.(AutograderServiceServer).CreateBenchmark(ctx, req.(*types.BenchmarkRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_UpdateBenchmark_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GradingBenchmark)
+	in := new(types.BenchmarkRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1137,13 +1138,13 @@ func _AutograderService_UpdateBenchmark_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/ag.AutograderService/UpdateBenchmark",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateBenchmark(ctx, req.(*GradingBenchmark))
+		return srv.(AutograderServiceServer).UpdateBenchmark(ctx, req.(*types.BenchmarkRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_DeleteBenchmark_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GradingBenchmark)
+	in := new(types.BenchmarkRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1155,13 +1156,13 @@ func _AutograderService_DeleteBenchmark_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/ag.AutograderService/DeleteBenchmark",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).DeleteBenchmark(ctx, req.(*GradingBenchmark))
+		return srv.(AutograderServiceServer).DeleteBenchmark(ctx, req.(*types.BenchmarkRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_CreateCriterion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GradingCriterion)
+	in := new(types.CriteriaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1173,13 +1174,13 @@ func _AutograderService_CreateCriterion_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/ag.AutograderService/CreateCriterion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).CreateCriterion(ctx, req.(*GradingCriterion))
+		return srv.(AutograderServiceServer).CreateCriterion(ctx, req.(*types.CriteriaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_UpdateCriterion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GradingCriterion)
+	in := new(types.CriteriaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1191,13 +1192,13 @@ func _AutograderService_UpdateCriterion_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/ag.AutograderService/UpdateCriterion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateCriterion(ctx, req.(*GradingCriterion))
+		return srv.(AutograderServiceServer).UpdateCriterion(ctx, req.(*types.CriteriaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_DeleteCriterion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GradingCriterion)
+	in := new(types.CriteriaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1209,13 +1210,13 @@ func _AutograderService_DeleteCriterion_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/ag.AutograderService/DeleteCriterion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).DeleteCriterion(ctx, req.(*GradingCriterion))
+		return srv.(AutograderServiceServer).DeleteCriterion(ctx, req.(*types.CriteriaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_CreateReview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReviewRequest)
+	in := new(types.ReviewRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1227,13 +1228,13 @@ func _AutograderService_CreateReview_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/ag.AutograderService/CreateReview",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).CreateReview(ctx, req.(*ReviewRequest))
+		return srv.(AutograderServiceServer).CreateReview(ctx, req.(*types.ReviewRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_UpdateReview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReviewRequest)
+	in := new(types.ReviewRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1245,13 +1246,13 @@ func _AutograderService_UpdateReview_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/ag.AutograderService/UpdateReview",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).UpdateReview(ctx, req.(*ReviewRequest))
+		return srv.(AutograderServiceServer).UpdateReview(ctx, req.(*types.ReviewRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetReviewers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SubmissionReviewersRequest)
+	in := new(types.SubmissionReviewersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1263,13 +1264,13 @@ func _AutograderService_GetReviewers_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/ag.AutograderService/GetReviewers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetReviewers(ctx, req.(*SubmissionReviewersRequest))
+		return srv.(AutograderServiceServer).GetReviewers(ctx, req.(*types.SubmissionReviewersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetProviders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Void)
+	in := new(types.Void)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1281,13 +1282,13 @@ func _AutograderService_GetProviders_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/ag.AutograderService/GetProviders",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetProviders(ctx, req.(*Void))
+		return srv.(AutograderServiceServer).GetProviders(ctx, req.(*types.Void))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrgRequest)
+	in := new(types.OrgRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1299,13 +1300,13 @@ func _AutograderService_GetOrganization_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/ag.AutograderService/GetOrganization",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetOrganization(ctx, req.(*OrgRequest))
+		return srv.(AutograderServiceServer).GetOrganization(ctx, req.(*types.OrgRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_GetRepositories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(URLRequest)
+	in := new(types.URLRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1317,13 +1318,13 @@ func _AutograderService_GetRepositories_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/ag.AutograderService/GetRepositories",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).GetRepositories(ctx, req.(*URLRequest))
+		return srv.(AutograderServiceServer).GetRepositories(ctx, req.(*types.URLRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AutograderService_IsEmptyRepo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RepositoryRequest)
+	in := new(types.RepositoryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1335,7 +1336,7 @@ func _AutograderService_IsEmptyRepo_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/ag.AutograderService/IsEmptyRepo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AutograderServiceServer).IsEmptyRepo(ctx, req.(*RepositoryRequest))
+		return srv.(AutograderServiceServer).IsEmptyRepo(ctx, req.(*types.RepositoryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

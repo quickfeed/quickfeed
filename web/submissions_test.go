@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/kit/score"
@@ -66,7 +66,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
@@ -303,7 +303,7 @@ func TestApproveSubmission(t *testing.T) {
 
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
@@ -363,7 +363,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(log.Zap(false), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(log.Zap(false), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	if _, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
 		t.Fatal(err)
@@ -633,7 +633,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(log.Zap(false), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(log.Zap(false), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
@@ -862,7 +862,7 @@ func TestCreateApproveList(t *testing.T) {
 
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
@@ -966,7 +966,7 @@ func TestReleaseApproveAll(t *testing.T) {
 		t.Fatal(err)
 	}
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, app, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, app, qtest.TestConfig(t), nil, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {

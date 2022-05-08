@@ -1,7 +1,7 @@
 package web
 
 import (
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 )
 
 // getUsers returns all the users in the database.
@@ -21,6 +21,8 @@ func (s *AutograderService) getUserByCourse(request *pb.CourseUserRequest, curre
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO(vera): make sure this is checked in the access control before removing
 	if !(currentUser.IsAdmin || s.isTeacher(currentUser.ID, course.ID)) {
 		return nil, ErrInvalidUserInfo
 	}
@@ -51,7 +53,7 @@ func (s *AutograderService) updateUser(curUser *pb.User, request *pb.User) (*pb.
 
 	// log every change to admin state
 	if updateUser.IsAdmin != request.IsAdmin {
-		s.logger.Debugf("User %s attempting to change admin status of user %s to %v", curUser.Login, updateUser.Login, request.IsAdmin)
+		s.logger.Debugf("User %s changed admin status of user %s to %v", curUser.Login, updateUser.Login, request.IsAdmin)
 	}
 	// current user must be admin to change admin status of another user
 	// admin status of super admin (user with ID 1) cannot be changed

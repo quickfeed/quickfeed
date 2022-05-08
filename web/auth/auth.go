@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/database"
 	lg "github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"

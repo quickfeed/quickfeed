@@ -8,7 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/autograde/quickfeed/ag"
+	"github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/scm"
@@ -26,7 +27,7 @@ type AutograderService struct {
 	Config       *config.Config // TODO(vera): make unexported again after refactoring the startup method
 	tokenManager *auth.TokenManager
 	runner       ci.Runner
-	pb.UnimplementedAutograderServiceServer
+	ag.UnimplementedAutograderServiceServer
 }
 
 // NewAutograderService returns an AutograderService object.

@@ -8,7 +8,7 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/internal/qtest"
 )

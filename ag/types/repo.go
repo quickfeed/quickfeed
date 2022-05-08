@@ -1,4 +1,4 @@
-package ag
+package types
 
 import (
 	"fmt"

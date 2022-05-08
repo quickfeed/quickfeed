@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/scm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

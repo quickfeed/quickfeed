@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
-	pb "github.com/autograde/quickfeed/ag"
+	ag "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -35,7 +36,7 @@ var ignoredStudents = map[string]bool{
 
 type QuickFeed struct {
 	cc *grpc.ClientConn
-	pb.AutograderServiceClient
+	ag.AutograderServiceClient
 	md metadata.MD
 }
 
@@ -59,7 +60,7 @@ func NewQuickFeed(authToken string) (*QuickFeed, error) {
 	}
 	return &QuickFeed{
 		cc:                      cc,
-		AutograderServiceClient: pb.NewAutograderServiceClient(cc),
+		AutograderServiceClient: ag.NewAutograderServiceClient(cc),
 		md:                      metadata.New(map[string]string{"cookie": authToken}),
 	}, nil
 }

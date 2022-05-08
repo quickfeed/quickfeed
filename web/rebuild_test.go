@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/scm"
@@ -115,7 +115,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	}
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})

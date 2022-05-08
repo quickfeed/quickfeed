@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"go.uber.org/zap"
@@ -23,7 +23,7 @@ func TestBadGroupNames(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	// TODO(vera): update test to use app client
-	ags := NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	user1 := qtest.CreateFakeUser(t, db, 2)
 	user2 := qtest.CreateFakeUser(t, db, 3)
 	// enroll users in course

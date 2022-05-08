@@ -1,9 +1,9 @@
 package config
 
 import (
-	"log"
 	"net/http"
 
+	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/autograde/quickfeed/web/auth/interceptors"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
@@ -17,7 +17,7 @@ type GrpcMultiplexer struct {
 }
 
 // GenerateTLSApi will load TLS certificates and key and create a grpc server with those.
-func (conf *Config) GenerateTLSApi(logger *zap.SugaredLogger, tokens *auth.TokenManager) (*grpc.Server, error) {
+func (conf *Config) GenerateTLSApi(logger *zap.SugaredLogger, db database.Database, tokens *auth.TokenManager) (*grpc.Server, error) {
 	cred, err := credentials.NewServerTLSFromFile(conf.Paths.CertPath, conf.Paths.CertKeyPath)
 	if err != nil {
 		return nil, err
@@ -26,10 +26,10 @@ func (conf *Config) GenerateTLSApi(logger *zap.SugaredLogger, tokens *auth.Token
 	s := grpc.NewServer(
 		grpc.Creds(cred),
 		grpc.ChainUnaryInterceptor(
-			interceptors.ValidateMethod(logger),
+			interceptors.ValidateRequest(logger),
 			interceptors.ValidateToken(logger, tokens),
 			interceptors.UpdateTokens(logger, tokens),
-			// interceptors.AccessControl(logger, tokens),
+			interceptors.AccessControl(logger, db, tokens),
 		),
 	)
 	return s, nil
@@ -38,13 +38,10 @@ func (conf *Config) GenerateTLSApi(logger *zap.SugaredLogger, tokens *auth.Token
 // MultiplexHandler is used to route requests to either grpc or to regular http
 func (m *GrpcMultiplexer) MultiplexerHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// log.Printf("MULTIPLEX: %+v", r.RequestURI)
 		if m.IsGrpcWebRequest(r) {
-			log.Println("MULTIPLEX: grpc. ", r.RequestURI)
 			m.ServeHTTP(w, r)
 			return
 		}
-		log.Println("MULTIPLEX: http. ", r.RequestURI)
 		next.ServeHTTP(w, r)
 	})
 }

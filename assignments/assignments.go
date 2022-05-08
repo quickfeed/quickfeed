@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/scm"

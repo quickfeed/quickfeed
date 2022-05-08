@@ -3,7 +3,7 @@ package web_test
 import (
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/web/auth"

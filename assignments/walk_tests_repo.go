@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 )
 
 const (

@@ -3,7 +3,7 @@ package web
 import (
 	"context"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/scm"
 )
 

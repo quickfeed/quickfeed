@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/google/go-cmp/cmp"
@@ -54,7 +54,7 @@ func TestGetRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 	// TODO(vera): update test to use app client
-	ags := NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	gotUserRepo, err := ags.getRepo(course, user.ID, pb.Repository_USER)
 	if err != nil {
 		t.Fatal(err)
@@ -92,7 +92,7 @@ func TestGetRepositories(t *testing.T) {
 	qtest.CreateCourse(t, db, user, course)
 
 	// TODO(vera): update test to use app client
-	ags := NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), user)
 
 	// check that no repositories are returned when no repo types are specified

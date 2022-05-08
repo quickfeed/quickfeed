@@ -97,6 +97,7 @@ func main() {
 		log.Fatalf("failed to start GitHub app: %v\n", err)
 	}
 	id, secret := githubApp.GetID()
+	logger.Sugar().Debugf("Callback url from config: %s", serverConfig.Endpoints.BaseURL+serverConfig.Endpoints.PortNumber+serverConfig.Endpoints.CallbackURL) // tmp
 	authConfig := oauth2.Config{
 		ClientID:     id,
 		ClientSecret: secret,
@@ -113,7 +114,7 @@ func main() {
 	agService := web.NewAutograderService(logger, db, githubApp, serverConfig, tokenManager, runner)
 	agService.MakeSCMClients("github") // TODO(vera): shouldn't be hardcoded...
 
-	apiServer, err := serverConfig.GenerateTLSApi(logger.Sugar(), tokenManager)
+	apiServer, err := serverConfig.GenerateTLSApi(logger.Sugar(), db, tokenManager)
 	if err != nil {
 		log.Fatalf("failed to generate TLS grpc API: %v/n", err)
 	}
@@ -124,7 +125,6 @@ func main() {
 		grpcWebServer,
 	}
 	router := http.NewServeMux()
-	// staticHandler := http.FileServer(http.Dir("public"))
 	router.Handle("/", multiplexer.MultiplexerHandler(http.StripPrefix("/", http.FileServer(http.Dir("public")))))
 	router.HandleFunc(serverConfig.Endpoints.LoginURL, auth.OAuth2Login(logger.Sugar(), db, authConfig, serverConfig.Secrets.CallbackSecret))
 	router.HandleFunc(serverConfig.Endpoints.CallbackURL, auth.OAuth2Callback(logger.Sugar(), db, authConfig, githubApp, tokenManager, serverConfig.Secrets.CallbackSecret))

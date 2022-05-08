@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/log"
@@ -43,7 +43,7 @@ func TestNewGroup(t *testing.T) {
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 
 	_, err := fakeProvider.CreateOrganization(ctx,
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
@@ -95,7 +95,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 
 	_, err := fakeProvider.CreateOrganization(ctx,
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
@@ -163,7 +163,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	}
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 
 	_, err := fakeProvider.CreateOrganization(context.Background(),
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
@@ -243,7 +243,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
 	ctx := qtest.WithUserContext(context.Background(), user)
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 
 	_, err := fakeProvider.CreateOrganization(ctx,
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
@@ -267,7 +267,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	defer cleanup()
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(log.Zap(false), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(log.Zap(false), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	_, err := fakeProvider.CreateOrganization(context.Background(),
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
 	)
@@ -453,7 +453,7 @@ func TestDeleteGroup(t *testing.T) {
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
 	logger := log.Zap(false)
-	ags := web.NewAutograderService(logger, db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(logger, db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
 		t.Fatal(err)
@@ -564,7 +564,7 @@ func TestGetGroup(t *testing.T) {
 	}
 
 	// TODO(vera): update test to use app client
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), user)
 
 	group := &pb.Group{Name: "TestGroup", CourseID: testCourse.ID, Users: []*pb.User{user}}
@@ -619,7 +619,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{
@@ -712,7 +712,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	}
 
 	// TODO(vera): update test to use app client
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	user1 := qtest.CreateFakeUser(t, db, 2)
@@ -781,7 +781,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{
@@ -898,7 +898,7 @@ func TestGetGroups(t *testing.T) {
 	admin := users[0]
 
 	// TODO(vera): update test to use app client
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 	// admin will be enrolled as teacher because of course creation below
 	qtest.WithUserContext(context.Background(), admin)
 

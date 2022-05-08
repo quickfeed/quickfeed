@@ -1,4 +1,4 @@
-package ag
+package types
 
 // SetSubmissionID sets the submission ID to be rebuilt.
 // Setting the submission ID will clear the CourseID field.

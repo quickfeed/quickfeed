@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/google/go-cmp/cmp"
@@ -194,7 +194,6 @@ func TestGormDBGetCourses(t *testing.T) {
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCourses() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
-
 }
 
 func TestGormDBGetCourse(t *testing.T) {

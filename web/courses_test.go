@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
@@ -62,7 +62,7 @@ func TestGetCourses(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 10)
 	// TODO(vera): update test to use app client
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 
 	var wantCourses []*pb.Course
 	for _, course := range allCourses {
@@ -93,7 +93,7 @@ func TestNewCourse(t *testing.T) {
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 
 	for _, wantCourse := range allCourses {
 		// each course needs a separate directory
@@ -132,7 +132,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 
 	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
 	for path, private := range web.RepoPaths {
@@ -167,7 +167,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	logger := zap.NewNop()
-	ags := web.NewAutograderService(logger, db, app, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(logger, db, app, qtest.TestConfig(t), nil, &ci.Local{})
 	_, err = fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)
@@ -270,7 +270,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user := qtest.CreateFakeUser(t, db, 2)
 	// TODO(vera): update test to use app client
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 
 	var testCourses []*pb.Course
 	for _, course := range allCourses {
@@ -349,7 +349,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 
 	user := qtest.CreateFakeUser(t, db, 2)
 	// TODO(vera): update test to use app client
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 
 	if err := db.CreateEnrollment(&pb.Enrollment{
 		UserID:   user.ID,
@@ -411,7 +411,7 @@ func TestGetCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 	// TODO(vera): update test to use app client
-	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 
 	gotCourse, err := ags.GetCourse(context.Background(), &pb.CourseRequest{CourseID: wantCourse.ID})
 	if err != nil {
@@ -444,7 +444,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ags := web.NewAutograderService(zap.NewNop(), db, app, qtest.TestConfig(t), &ci.Local{})
+	ags := web.NewAutograderService(zap.NewNop(), db, app, qtest.TestConfig(t), nil, &ci.Local{})
 	ags.AddSCM(scm.NewFakeSCMClient(), course.GetID())
 
 	if err := db.CreateEnrollment(&pb.Enrollment{

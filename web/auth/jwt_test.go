@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/google/go-cmp/cmp"

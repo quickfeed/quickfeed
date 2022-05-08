@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"go.uber.org/zap"
 )
 

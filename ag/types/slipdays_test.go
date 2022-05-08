@@ -1,11 +1,11 @@
-package ag_test
+package types_test
 
 import (
 	"fmt"
 	"testing"
 	"time"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
 )

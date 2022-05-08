@@ -1,10 +1,10 @@
-package ag_test
+package types_test
 
 import (
 	"testing"
 	"time"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 	score "github.com/autograde/quickfeed/kit/score"
 )
 

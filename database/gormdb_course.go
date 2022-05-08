@@ -1,7 +1,7 @@
 package database
 
 import (
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/autograde/quickfeed/ag/types"
 )
 
 // CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.

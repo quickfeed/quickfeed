@@ -1,4 +1,4 @@
-package ag
+package types
 
 // IsValid on void message always returns true.
 func (*Void) IsValid() bool {
