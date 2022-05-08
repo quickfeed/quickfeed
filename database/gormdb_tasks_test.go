@@ -30,7 +30,7 @@ func createCourseWithAssignments(t *testing.T, db database.Database) *pb.Course 
 	admin := qtest.CreateFakeUser(t, db, uint64(1))
 	qtest.CreateCourse(t, db, admin, &pb.Course{})
 
-	course, err := db.GetCourse(1, false)
+	course, err := db.GetCourse(&pb.Course{ID: 1}, false)
 	if err != nil {
 		t.Fatal(err)
 	}

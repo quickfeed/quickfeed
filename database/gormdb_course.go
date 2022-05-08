@@ -61,7 +61,7 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *pb.Course) error 
 
 // GetCourse fetches course by ID. If withInfo is true, preloads course
 // assignments, active enrollments and groups.
-func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*pb.Course, error) {
+func (db *GormDB) GetCourse(query *pb.Course, withEnrollments bool) (*pb.Course, error) {
 	m := db.conn
 	var course pb.Course
 
@@ -72,32 +72,20 @@ func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*pb.Course, 
 			pb.Enrollment_TEACHER,
 		}
 		// and only group submissions from approved groups
-		modelGroup := &pb.Group{Status: pb.Group_APPROVED, CourseID: courseID}
+		modelGroup := &pb.Group{Status: pb.Group_APPROVED, CourseID: query.ID}
 		if err := m.Preload("Assignments").
 			Preload("Enrollments", "status in (?)", userStates).
 			Preload("Enrollments.User").
 			Preload("Enrollments.Group").
 			Preload("Enrollments.UsedSlipDays").
 			Preload("Groups", modelGroup).
-			First(&course, courseID).Error; err != nil {
+			First(&course, query).Error; err != nil {
 			return nil, err
 		}
 	} else {
-		if err := m.First(&course, courseID).Error; err != nil {
+		if err := m.First(&course, query).Error; err != nil {
 			return nil, err
 		}
-	}
-	if err := db.updateCourseAccessTokenIfEmpty(&course); err != nil {
-		return nil, err
-	}
-	return &course, nil
-}
-
-// GetCourseByOrganizationID fetches course by organization ID.
-func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
-	var course pb.Course
-	if err := db.conn.First(&course, &pb.Course{OrganizationID: did}).Error; err != nil {
-		return nil, err
 	}
 	if err := db.updateCourseAccessTokenIfEmpty(&course); err != nil {
 		return nil, err

@@ -179,7 +179,8 @@ func TestGormDBUpdateAccessTokenCourseTokenCache(t *testing.T) {
 	}
 	qtest.CreateCourse(t, db, admin, course)
 
-	cr, err := db.GetCourse(1, false)
+	query := &pb.Course{ID: 1}
+	cr, err := db.GetCourse(query, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -197,7 +198,7 @@ func TestGormDBUpdateAccessTokenCourseTokenCache(t *testing.T) {
 		t.Error(err)
 	}
 
-	cr, err = db.GetCourse(1, false)
+	cr, err = db.GetCourse(query, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -215,7 +216,7 @@ func TestGormDBUpdateAccessTokenCourseTokenCache(t *testing.T) {
 		t.Error(err)
 	}
 
-	cr, err = db.GetCourse(1, false)
+	cr, err = db.GetCourse(query, false)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -214,7 +214,8 @@ func TestGormDBGetCourse(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	// Get the created course.
-	gotCourse, err := db.GetCourse(wantCourse.ID, false)
+	query := &pb.Course{ID: wantCourse.ID}
+	gotCourse, err := db.GetCourse(query, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -227,8 +228,8 @@ func TestGormDBGetCourse(t *testing.T) {
 func TestGormDBGetCourseNoRecord(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-
-	if _, err := db.GetCourse(10, false); err != gorm.ErrRecordNotFound {
+	query := &pb.Course{ID: 10}
+	if _, err := db.GetCourse(query, false); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 }
@@ -263,9 +264,8 @@ func TestGormDBUpdateCourse(t *testing.T) {
 	if err := db.UpdateCourse(wantCourse); err != nil {
 		t.Fatal(err)
 	}
-
 	// Get the updated course.
-	gotCourse, err := db.GetCourse(course.ID, false)
+	gotCourse, err := db.GetCourse(&pb.Course{ID: course.ID}, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -293,7 +293,7 @@ func TestGormDBGetCourseByOrganization(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, wantCourse)
 
 	// Get the created course.
-	gotCourse, err := db.GetCourseByOrganizationID(wantCourse.OrganizationID)
+	gotCourse, err := db.GetCourse(&pb.Course{OrganizationID: wantCourse.OrganizationID}, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -341,7 +341,7 @@ func TestGormDBCourseUniqueContraint(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotCourse, err := db.GetCourse(wantCourse.ID, false)
+	gotCourse, err := db.GetCourse(&pb.Course{ID: wantCourse.ID}, false)
 	if err != nil {
 		t.Fatal(err)
 	}

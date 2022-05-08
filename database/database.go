@@ -33,9 +33,7 @@ type Database interface {
 	CreateCourse(uint64, *pb.Course) error
 	// GetCourse fetches course by ID. If withInfo is true, preloads course
 	// assignments, active enrollments and groups.
-	GetCourse(uint64, bool) (*pb.Course, error)
-	// GetCourseByOrganizationID fetches course by organization ID.
-	GetCourseByOrganizationID(organizationID uint64) (*pb.Course, error)
+	GetCourse(*pb.Course, bool) (*pb.Course, error)
 	// GetCourses returns a list of courses. If one or more course IDs are provided,
 	// the corresponding courses are returned. Otherwise, all courses are returned.
 	GetCourses(...uint64) ([]*pb.Course, error)
