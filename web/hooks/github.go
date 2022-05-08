@@ -47,31 +47,31 @@ func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 	case *github.PushEvent:
 		wh.logger.Debug(log.IndentJson(e))
 		wh.handlePush(e)
-	case *github.InstallationEvent:
-		wh.logger.Debug(log.IndentJson(e))
-		wh.handleInstallation(e)
+	// case *github.InstallationEvent:
+	// 	wh.logger.Debug(log.IndentJson(e))
+	// 	wh.handleInstallation(e)
 	default:
 		wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
 	}
 }
 
-// TODO(vera): looks like we don't need installation hook events after all, remove when tested out
-func (wh GitHubWebHook) handleInstallation(payload *github.InstallationEvent) {
-	wh.logger.Debugf("Received app installation event with ID %s for organization %s with ID %d",
-		payload.GetInstallation().GetID(), payload.GetSender().GetLogin(), payload.GetInstallation().GetAccount().GetID())
+// // TODO(vera): looks like we don't need installation hook events after all, remove when tested out
+// func (wh GitHubWebHook) handleInstallation(payload *github.InstallationEvent) {
+// 	wh.logger.Debugf("Received app installation event with ID %s for organization %s with ID %d",
+// 		payload.GetInstallation().GetID(), payload.GetSender().GetLogin(), payload.GetInstallation().GetAccount().GetID())
 
-	// TODO: check if course for such organization name exists in the database
-	course, err := wh.db.GetCourse(uint64(payload.GetInstallation().GetAccount().GetID()), false)
-	if err != nil {
-		wh.logger.Errorf("Failed to get course for app installation with organization %s (ID %d)")
-		return
-	}
-	course.InstallationID = payload.GetInstallation().GetID()
-	if err := wh.db.UpdateCourse(course); err != nil {
-		wh.logger.Errorf("Failed to update installation ID for course %s", course.GetCode())
-		return
-	}
-}
+// 	// TODO: check if course for such organization name exists in the database
+// 	course, err := wh.db.GetCourse(uint64(payload.GetInstallation().GetAccount().GetID()), false)
+// 	if err != nil {
+// 		wh.logger.Errorf("Failed to get course for app installation with organization %s (ID %d)")
+// 		return
+// 	}
+// 	course.InstallationID = payload.GetInstallation().GetID()
+// 	if err := wh.db.UpdateCourse(course); err != nil {
+// 		wh.logger.Errorf("Failed to update installation ID for course %s", course.GetCode())
+// 		return
+// 	}
+// }
 
 func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	wh.logger.Debugf("Received push event for branch reference: %s (user's default branch: %s)",
@@ -93,7 +93,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	repo := repos[0]
 	wh.logger.Debugf("Received push event for repository %v", repo)
 
-	course, err := wh.db.GetCourseByOrganizationID(repo.OrganizationID)
+	course, err := wh.db.GetCourse(&pb.Course{OrganizationID: repo.OrganizationID}, false)
 	if err != nil {
 		wh.logger.Errorf("Failed to get course from database: %v", err)
 		return

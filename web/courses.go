@@ -217,7 +217,7 @@ func (s *AutograderService) revokeTeacherStatus(ctx context.Context, sc scm.SCM,
 
 // getCourse returns a course object for the given course id.
 func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
-	return s.db.GetCourse(courseID, false)
+	return s.db.GetCourse(&pb.Course{ID: courseID}, false)
 }
 
 // getSubmissions returns all the latests submissions for a user of the given course.
@@ -241,7 +241,7 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 		return nil, err
 	}
 	// fetch course record with all assignments and active enrollments
-	course, err := s.db.GetCourse(request.GetCourseID(), true)
+	course, err := s.db.GetCourse(&pb.Course{ID: request.GetCourseID()}, true)
 	if err != nil {
 		return nil, err
 	}
@@ -394,7 +394,7 @@ func (s *AutograderService) getReviewers(submissionID uint64) ([]*pb.User, error
 // updateCourse updates an existing course.
 func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, request *pb.Course) error {
 	// ensure the course exists
-	_, err := s.db.GetCourse(request.ID, false)
+	_, err := s.db.GetCourse(&pb.Course{ID: request.ID}, false)
 	if err != nil {
 		return err
 	}

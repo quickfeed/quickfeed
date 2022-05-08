@@ -27,7 +27,7 @@ func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, er
 
 // updateAssignments updates the assignments for the given course.
 func (s *AutograderService) updateAssignments(courseID uint64) error {
-	course, err := s.db.GetCourse(courseID, false)
+	course, err := s.db.GetCourse(&pb.Course{ID: courseID}, false)
 	if err != nil {
 		return fmt.Errorf("could not find course ID %d", courseID)
 	}
@@ -151,7 +151,7 @@ func (s *AutograderService) getAssignmentWithCourse(query *pb.Assignment, withCo
 	if err != nil {
 		return nil, nil, err
 	}
-	course, err := s.db.GetCourse(assignment.CourseID, withCourseInfo)
+	course, err := s.db.GetCourse(&pb.Course{ID: assignment.CourseID}, withCourseInfo)
 	if err != nil {
 		return nil, nil, err
 	}

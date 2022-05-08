@@ -112,7 +112,7 @@ func TestNewCourse(t *testing.T) {
 		}
 
 		// check that the database also has the course
-		gotCourse, err = db.GetCourse(wantCourse.ID, false)
+		gotCourse, err = db.GetCourse(&pb.Course{ID: wantCourse.ID}, false)
 		if err != nil {
 			t.Fatal(err)
 		}

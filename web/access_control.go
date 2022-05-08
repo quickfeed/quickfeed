@@ -107,7 +107,7 @@ func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
 
 // isCourseCreator returns true if the given user is course creator for the given course.
 func (s *AutograderService) isCourseCreator(courseID, userID uint64) bool {
-	course, _ := s.db.GetCourse(courseID, false)
+	course, _ := s.db.GetCourse(&pb.Course{ID: courseID}, false)
 	return course.GetCourseCreatorID() == userID
 }
 

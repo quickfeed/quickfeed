@@ -248,7 +248,7 @@ func (s *AutograderService) getCourseGroup(request *pb.GroupRequest) (*pb.Course
 	if err != nil {
 		return nil, nil, err
 	}
-	course, err := s.db.GetCourse(request.GetCourseID(), false)
+	course, err := s.db.GetCourse(&pb.Course{ID: request.GetCourseID()}, false)
 	if err != nil {
 		return nil, nil, err
 	}

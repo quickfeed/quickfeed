@@ -33,7 +33,7 @@ func (s *AutograderService) getRepo(course *pb.Course, id uint64, repoType pb.Re
 // isEmptyRepo returns nil if all repositories for the given course and student or group are empty,
 // returns an error otherwise.
 func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *pb.RepositoryRequest) error {
-	course, err := s.db.GetCourse(request.GetCourseID(), false)
+	course, err := s.db.GetCourse(&pb.Course{ID: request.GetCourseID()}, false)
 	if err != nil {
 		return err
 	}
