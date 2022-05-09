@@ -28,27 +28,27 @@ func ValidateToken(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.Un
 		// If user ID is in the update token list, generate and set new JWT
 		if tokens.UpdateRequired(claims) {
 			logger.Debugf("Token update required for user %d", claims.UserID)
-			updatedClaims, err := tokens.NewClaims(claims.UserID)
+			updatedToken, err := tokens.NewTokenCookie(claims.UserID)
 			if err != nil {
 				logger.Errorf("Failed to generate new user claims %v", err)
 				return nil, ErrAccessDenied
 			}
-			updatedToken := tokens.NewToken(updatedClaims)
 			logger.Debugf("Old token: %s", token)        // tmp
 			logger.Debugf("New token: %v", updatedToken) // tmp
-			tokenCookie, err := tokens.NewTokenCookie(ctx, updatedToken)
-			if err != nil {
-				logger.Errorf("Failed to make token cookie: %v", err)
-				return nil, ErrAccessDenied
-			}
-			//
+			// tokenCookie, err := tokens.NewTokenCookie(ctx, updatedToken)
+			// if err != nil {
+			// 	logger.Errorf("Failed to make token cookie: %v", err)
+			// 	return nil, ErrAccessDenied
+			// }
+			// //
 			if err := tokens.Remove(claims.UserID); err != nil {
 				logger.Errorf("Failed to update token list: %s", err)
 				return nil, ErrAccessDenied
 			}
-			if err := setCookie(ctx, tokenCookie.String()); err != nil {
+			if err := setCookie(ctx, updatedToken.String()); err != nil {
 				logger.Errorf("Failed to set auth cookie: %s", err)
 			}
+			token = updatedToken.String()
 		}
 
 		ctx, err = setToMetadata(ctx, "token", token)

@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -62,8 +61,13 @@ func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 	return false
 }
 
-// NewTokenCookie creates a cookie with signed JWT
-func (tm *TokenManager) NewTokenCookie(ctx context.Context, token *jwt.Token) (*http.Cookie, error) {
+// NewTokenCookie creates a cookie with signed JWT from user ID.
+func (tm *TokenManager) NewTokenCookie(userID uint64) (*http.Cookie, error) {
+	claims, err := tm.NewClaims(userID)
+	if err != nil {
+		return nil, err
+	}
+	token := newToken(claims)
 	fmt.Printf("Making new token cookie: secret is %s", tm.secret) // tmp
 	signed, err := token.SignedString([]byte(tm.secret))
 	if err != nil {
@@ -79,12 +83,6 @@ func (tm *TokenManager) NewTokenCookie(ctx context.Context, token *jwt.Token) (*
 		Expires:  time.Now().Add(tm.expireAfter),
 		SameSite: http.SameSiteStrictMode, // http.SameSiteLaxMode,
 	}, nil
-}
-
-// TODO(vera): needs a single method that makes a cookie from a user ID
-// NewToken makes a new JWT token with given claims
-func (tm *TokenManager) NewToken(claims *Claims) *jwt.Token {
-	return jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 }
 
 // NewClaims creates user claims for a JWT token
@@ -199,4 +197,9 @@ func (tm *TokenManager) exists(id uint64) bool {
 		}
 	}
 	return false
+}
+
+// NewToken makes a new JWT token with given claims
+func newToken(claims *Claims) *jwt.Token {
+	return jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 }

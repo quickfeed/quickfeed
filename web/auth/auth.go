@@ -253,20 +253,13 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 		}
 		logger.Debugf("Fetching full user info for %v, user: %v", remote, user)
 
-		claims, err := tokens.NewClaims(user.ID)
-		if err != nil {
-			unauthorized(logger, w, callback, "failed to make claims for user %v: %v", externalUser, err)
-			return
-		}
-		authToken := tokens.NewToken(claims)
-		logger.Debugf("Created new JWT for user %s: %+v", user.Login, authToken)
-		cookie, err := tokens.NewTokenCookie(context.Background(), authToken)
+		authToken, err := tokens.NewTokenCookie(user.ID)
 		if err != nil {
 			unauthorized(logger, w, callback, "failed to make token cookie for user %v: %v", externalUser, err)
 			return
 		}
-		logger.Debugf("setting cookie: %+v", cookie)
-		http.SetCookie(w, cookie)
+		logger.Debugf("setting cookie: %+v", authToken)
+		http.SetCookie(w, authToken)
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }
