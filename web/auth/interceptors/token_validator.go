@@ -2,6 +2,7 @@ package interceptors
 
 import (
 	"context"
+	"time"
 
 	"github.com/autograde/quickfeed/web/auth"
 	"go.uber.org/zap"
@@ -10,6 +11,7 @@ import (
 
 func ValidateToken(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		start := time.Now()
 		logger.Debug("TOKEN VALIDATE INTERCEPTOR")
 		token, err := GetFromMetadata(ctx, "cookie", tokens.GetAuthCookieName())
 		if err != nil {
@@ -54,6 +56,7 @@ func ValidateToken(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.Un
 			logger.Error(err)
 			return nil, ErrAccessDenied
 		}
+		logger.Debugf("Token validator interceptor took %v", time.Since(start))
 		return handler(ctx, req)
 	}
 }

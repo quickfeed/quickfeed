@@ -35,6 +35,7 @@ type idCleaner interface {
 // In addition, the interceptor also implements a cancel mechanism.
 func ValidateRequest(logger *zap.SugaredLogger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		start := time.Now()
 		methodName := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
 		logger.Debug("REQUEST VALIDATE INTERCEPTOR: ", methodName)
 		pb.AgMethodSuccessRateMetric.WithLabelValues(methodName, "total").Inc()
@@ -67,6 +68,7 @@ func ValidateRequest(logger *zap.SugaredLogger) grpc.UnaryServerInterceptor {
 			pb.AgFailedMethodsMetric.WithLabelValues(methodName).Inc()
 			pb.AgMethodSuccessRateMetric.WithLabelValues(methodName, "error").Inc()
 		}
+		logger.Debugf("Request validator interceptor took %v", time.Since(start))
 		return resp, err
 	}
 }

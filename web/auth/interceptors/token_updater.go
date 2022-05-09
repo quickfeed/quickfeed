@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 	"strings"
+	"time"
 
 	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/web/auth"
@@ -20,14 +21,17 @@ var methods = []string{
 
 // UpdateTokens adds relevant user IDs to the list of users that need their token refreshed
 // next time they sign in because their access roles might have changed
-// This method only logs errors to avoid overwriting the gRPC response status.
+// This method only logs errors to avoid overwriting the gRPC responses.
 func UpdateTokens(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		start := time.Now()
 		sort.Strings(methods)
 		method := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
 		// There are only three methods
-		if sort.SearchStrings(methods, method) < len(methods) {
-			logger.Debugf("Interceptors: updating token list on method %s", method)
+		idx := sort.SearchStrings(methods, method)
+		if idx < len(methods) && methods[idx] == method {
+			logger.Debugf("Token updater found method with index %d", sort.SearchStrings(methods, method)) // tmp
+			logger.Debugf("Interceptors: updating token list on method %s", method)                        // tmp
 			resp, err := handler(ctx, req)
 			// We only want to add the user ID to the list of tokens to update
 			// if the request was successful
@@ -69,6 +73,7 @@ func UpdateTokens(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.Una
 			}
 			return resp, err
 		}
+		logger.Debugf("Token update interceptor took %v", time.Since(start))
 		return handler(ctx, req)
 	}
 }

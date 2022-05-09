@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/database"
@@ -35,7 +36,7 @@ const (
 // If there are several roles that can call a method, a role with least privilege must come first
 // If method is not in the map, there is no restrictions to call it
 var access = map[string]roles{
-	"GetEnrollmentsByCourse":  {student},
+	"GetEnrollmentsByCourse":  {student, teacher},
 	"UpdateUser":              {user, admin},
 	"GetEnrollmentsByUser":    {user, admin},
 	"GetSubmissions":          {user, group, teacher, courseAdmin},
@@ -73,6 +74,7 @@ func logError(logger *zap.SugaredLogger, format string, a ...interface{}) {
 
 func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth.TokenManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		start := time.Now()
 		token, err := GetFromMetadata(ctx, "token", "")
 		if err != nil {
 			logError(logger, "missing token in metadata: %s", err)
@@ -149,6 +151,14 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth
 							}
 						}
 					}
+				case student:
+					switch method {
+					case "GetEnrollmentsByCourse":
+						courseID := req.(*pb.EnrollmentRequest).GetCourseID()
+						if hasCourseAccess(db, courseID, claims.UserID, pb.Enrollment_STUDENT) {
+							return handler(ctx, req)
+						}
+					}
 				case courseAdmin:
 					if claims.Admin {
 						var courseID uint64
@@ -191,6 +201,8 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth
 						courseID = req.(*pb.Course).GetID()
 					case "UpdateEnrollments":
 						courseID = req.(*pb.Enrollments).GetCourseID()
+					case "GetEnrollmentsByCourse":
+						courseID = req.(*pb.EnrollmentRequest).GetCourseID()
 					case "CreateBenchmark", "UpdateBenchmark", "DeleteBenchmark":
 						courseID = req.(*pb.BenchmarkRequest).GetCourseID()
 					case "CreateCriterion", "UpdateCriterion", "DeleteCriterion":
@@ -231,6 +243,7 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth
 			logError(logger, "user %d unauthorized to call method %s", claims.UserID, method)
 			return nil, ErrAccessDenied
 		}
+		logger.Debugf("Access control (%s) took %v", method, time.Since(start))
 		return handler(ctx, req)
 	}
 }
