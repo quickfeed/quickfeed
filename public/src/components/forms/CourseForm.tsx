@@ -12,7 +12,6 @@ interface ICourseFormProps {
     pagePath: string
     courseData?: Course // for editing an existing course
     curUser?: User  // to make current user info accessible
-    providers: string[]
 }
 
 interface ICourseFormState {
@@ -120,6 +119,8 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                 <p><a href="https://github.com/account/organizations/new"
                     target="_blank">Create an organization for your course</a>.
                     The course organization must allow private repositories. </p>
+
+                <p><a href="https://github.com/apps/appth-gh" target="_blank">Install Quickfeed app</a> on your course organization.</p>
 
                 <p>QuickFeed will create a following repositories for you:</p>
 

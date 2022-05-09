@@ -127,15 +127,12 @@ export class AdminPage extends ViewPage {
     }
 
     public async newCourse( info: INavInfo<{}> ): View {
-        const providers = await this.courseMan.getProviders()
-
         return (
             <div>
                 <CourseForm className="form-horizontal"
                     courseMan={ this.courseMan }
                     navMan={ this.navMan }
                     pagePath={ this.pagePath }
-                    providers={ providers }
                 />
             </div>
         )
@@ -145,13 +142,11 @@ export class AdminPage extends ViewPage {
         const courseId = parseInt( info.params.id, 10 )
         const course = await this.courseMan.getCourse( courseId )
         if ( course ) {
-            const providers = await this.courseMan.getProviders()
             return (
                 <CourseForm className="form-horizontal"
                     courseMan={ this.courseMan }
                     navMan={ this.navMan }
                     pagePath={ this.pagePath }
-                    providers={ providers }
                     courseData={ course }
                 />
             )

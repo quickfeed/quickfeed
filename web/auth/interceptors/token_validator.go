@@ -48,7 +48,7 @@ func ValidateToken(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.Un
 			if err := setCookie(ctx, updatedToken.String()); err != nil {
 				logger.Errorf("Failed to set auth cookie: %s", err)
 			}
-			token = updatedToken.String()
+			token = updatedToken.Value
 		}
 
 		ctx, err = setToMetadata(ctx, "token", token)

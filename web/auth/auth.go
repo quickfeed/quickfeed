@@ -263,14 +263,3 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }
-
-// extractToken returns a request cookie with given name, or an empty string
-// is cookie does not exist
-func extractToken(r *http.Request, cookieName string) string {
-	for _, cookie := range r.Cookies() {
-		if cookie.Name == cookieName {
-			return cookie.Value
-		}
-	}
-	return ""
-}
