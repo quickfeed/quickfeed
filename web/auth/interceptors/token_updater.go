@@ -39,6 +39,7 @@ func UpdateTokens(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.Una
 				switch method {
 				// User has been promoted to admin or demoted.
 				case "UpdateUser":
+					// Add id of the user whos info has been updated.
 					if err := tokens.Add(req.(*pb.User).GetID()); err != nil {
 						logger.Error(err)
 					}
@@ -55,7 +56,7 @@ func UpdateTokens(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.Una
 					if err := tokens.Add(claims.UserID); err != nil {
 						logger.Error(err)
 					}
-				// Users get enrolled into a course.
+				// Users has been enrolled into a course or promoted to TA.
 				case "UpdateEnrollments":
 					for _, enrol := range req.(*pb.Enrollments).GetEnrollments() {
 						if err := tokens.Add(enrol.GetUserID()); err != nil {

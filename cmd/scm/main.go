@@ -17,13 +17,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// TODO(vera): the whole scm tool is now based on a personal access token. But it uses methods from scm package
-// that are now based on app installation clients, i.e., access to each new organization needs to be done with
-// a separate (organization specific) client. Possible solutions:
-// 1) add options to scm client to support both types of clients: token-based and app-based
-// 2) create the app in before() and add new installation clients based on the requested organization
-// Problem: what to do if the app is not installed on the organization?
-
 // To use this tool, there are two options:
 // (1) you either need to have an existing ag.db database file for a running
 //     AG server instance with the appropriate access tokens for an admin user.

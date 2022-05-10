@@ -43,7 +43,6 @@ func NewAutograderService(logger *zap.Logger, db database.Database, app *scm.SCM
 
 // GetUser will return current user with active course enrollments
 // to use in separating teacher and admin roles
-// Access policy: everyone
 func (s *AutograderService) GetUser(ctx context.Context, _ *pb.Void) (*pb.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
@@ -70,7 +69,6 @@ func (s *AutograderService) GetUsers(ctx context.Context, _ *pb.Void) (*pb.Users
 
 // GetUserByCourse returns the user matching the given course name and GitHub login
 // specified in CourseUserRequest.
-// Access policy: Admins or course teachers
 func (s *AutograderService) GetUserByCourse(ctx context.Context, in *pb.CourseUserRequest) (*pb.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
@@ -87,8 +85,6 @@ func (s *AutograderService) GetUserByCourse(ctx context.Context, in *pb.CourseUs
 
 // UpdateUser updates the current users's information and returns the updated user.
 // This function can also promote a user to admin or demote a user.
-// Access policy: Admin can update other users's information and promote to Admin;
-// Current User if Owner can update its own information.
 func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
@@ -104,22 +100,16 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Vo
 }
 
 // CreateCourse creates a new course.
-// Access policy: Admin.
-// TODO(vera): instead of calling getUserAndSCM here we want to fetch the app installations, choose the correct installation
-// for the given course org and create a new scm for this course, because there will be no scm client for the course at this point.
 func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*pb.Course, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: scm authentication error: %v", err)
 		return nil, err
 	}
-	// TODO(vera): refactor this part into a more general helper method
 	sc, err := s.scmMaker.GetOrCreateSCMEntry(s.logger, in)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: scm client error: %v", err)
 	}
-	// TODO(vera): do we need the course creator field?
-	// make sure that the current user is set as course creator
 	in.CourseCreatorID = usr.GetID()
 	course, err := s.createCourse(ctx, sc, in)
 	if err != nil {
@@ -142,9 +132,8 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 }
 
 // UpdateCourse changes the course information details.
-// Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
-	scm, err := s.scmMaker.GetOrCreateSCMEntry(s.logger, in)
+	scm, err := s.getSCM(in.GetID())
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: csm client for course %s not found: %v", in.GetCode(), err)
 		return nil, ErrInvalidUserInfo
@@ -163,7 +152,6 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 }
 
 // GetCourse returns course information for the given course.
-// Access policy: Any User.
 func (s *AutograderService) GetCourse(ctx context.Context, in *pb.CourseRequest) (*pb.Course, error) {
 	course, err := s.getCourse(in.GetCourseID())
 	if err != nil {
@@ -174,7 +162,6 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.CourseRequest)
 }
 
 // GetCourses returns a list of all courses.
-// Access policy: Any User.
 func (s *AutograderService) GetCourses(_ context.Context, _ *pb.Void) (*pb.Courses, error) {
 	courses, err := s.getCourses()
 	if err != nil {
@@ -185,7 +172,6 @@ func (s *AutograderService) GetCourses(_ context.Context, _ *pb.Void) (*pb.Cours
 }
 
 // UpdateCourseVisibility allows to edit what courses are visible in the sidebar.
-// Access policy: Any User.
 func (s *AutograderService) UpdateCourseVisibility(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	err := s.changeCourseVisibility(in)
 	if err != nil {
@@ -196,7 +182,6 @@ func (s *AutograderService) UpdateCourseVisibility(ctx context.Context, in *pb.E
 }
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
-// Access policy: Any User.
 func (s *AutograderService) CreateEnrollment(_ context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	err := s.createEnrollment(in)
 	if err != nil {
@@ -208,16 +193,15 @@ func (s *AutograderService) CreateEnrollment(_ context.Context, in *pb.Enrollmen
 
 // UpdateEnrollments changes status of all pending enrollments for the specified course to approved.
 // If the request contains a single enrollment, it will be updated to the specified status.
-// Access policy: Teacher of CourseID
 func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Enrollments) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollment failed: scm authentication error: %v", err)
 		return nil, err
 	}
-	scm, ok := s.scmMaker.GetSCM(in.GetCourseID())
-	if !ok {
-		s.logger.Errorf("UpdateEnrollments failed: scm client not found for course %d", in.GetCourseID())
+	scm, err := s.getSCM(in.GetCourseID())
+	if err != nil {
+		s.logger.Errorf("UpdateEnrollments failed: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
 	for _, enrollment := range in.GetEnrollments() {
@@ -240,7 +224,6 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Enroll
 }
 
 // GetCoursesByUser returns all courses the given user is enrolled into with the given status.
-// Access policy: Any User.
 func (s *AutograderService) GetCoursesByUser(_ context.Context, in *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
 	courses, err := s.getCoursesByUser(in)
 	if err != nil {
@@ -251,7 +234,6 @@ func (s *AutograderService) GetCoursesByUser(_ context.Context, in *pb.Enrollmen
 }
 
 // GetEnrollmentsByUser returns all enrollments for the given user and enrollment status with preloaded courses and groups.
-// Access policy: user with userID or admin
 func (s *AutograderService) GetEnrollmentsByUser(ctx context.Context, in *pb.EnrollmentStatusRequest) (*pb.Enrollments, error) {
 	enrols, err := s.getEnrollmentsByUser(in)
 	if err != nil {
@@ -261,7 +243,6 @@ func (s *AutograderService) GetEnrollmentsByUser(ctx context.Context, in *pb.Enr
 }
 
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
-// Access policy: Teacher or student of CourseID.
 func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollments, error) {
 	enrolls, err := s.getEnrollmentsByCourse(in)
 	if err != nil {
@@ -272,7 +253,6 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.E
 }
 
 // GetGroup returns information about a group.
-// Access policy: Group members, Teacher of CourseID.
 func (s *AutograderService) GetGroup(ctx context.Context, in *pb.GetGroupRequest) (*pb.Group, error) {
 	group, err := s.getGroup(in)
 	if err != nil {
@@ -283,7 +263,6 @@ func (s *AutograderService) GetGroup(ctx context.Context, in *pb.GetGroupRequest
 }
 
 // GetGroupsByCourse returns a list of groups created for the course id in the record request.
-// Access policy: Teacher of CourseID.
 func (s *AutograderService) GetGroupsByCourse(ctx context.Context, in *pb.CourseRequest) (*pb.Groups, error) {
 	groups, err := s.getGroups(in)
 	if err != nil {
@@ -294,7 +273,6 @@ func (s *AutograderService) GetGroupsByCourse(ctx context.Context, in *pb.Course
 }
 
 // GetGroupByUserAndCourse returns the group of the given student for a given course.
-// Access policy: Group members, Teacher of CourseID.
 func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.GroupRequest) (*pb.Group, error) {
 	group, err := s.getGroupByUserAndCourse(in)
 	if err != nil {
@@ -307,7 +285,6 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 }
 
 // CreateGroup creates a new group in the database.
-// Access policy: Any User enrolled in course and specified as member of the group or a course teacher.
 func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
 	group, err := s.createGroup(in)
 	if err != nil {
@@ -323,14 +300,13 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 }
 
 // UpdateGroup updates group information.
-// Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
-	scm, ok := s.scmMaker.GetSCM(in.GetCourseID())
-	if !ok {
-		s.logger.Errorf("UpdateGroup failed: scm client not found for course %d", in.CourseID)
+	scm, err := s.getSCM(in.GetCourseID())
+	if err != nil {
+		s.logger.Errorf("UpdateGroup failed: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
-	err := s.updateGroup(ctx, scm, in)
+	err = s.updateGroup(ctx, scm, in)
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: %v", err)
 		if contextCanceled(ctx) {
@@ -350,11 +326,10 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 }
 
 // DeleteGroup removes group record from the database.
-// Access policy: Teacher of CourseID.
 func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest) (*pb.Void, error) {
-	scm, ok := s.scmMaker.GetSCM(in.GetCourseID())
-	if !ok {
-		s.logger.Errorf("DeleteGroup failed: scm client for course %d not found", in.GetCourseID())
+	scm, err := s.getSCM(in.GetCourseID())
+	if err != nil {
+		s.logger.Errorf("DeleteGroup failed: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if err := s.deleteGroup(ctx, scm, in); err != nil {
@@ -371,33 +346,18 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest
 }
 
 // GetSubmissions returns the submissions matching the query encoded in the action request.
-// Access policy:
-// Admin enrolled in CourseID,
-// Current User if Owner of submission,
-// Current User if member of group for group submission,
-// Teacher of CourseID.
 func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.SubmissionRequest) (*pb.Submissions, error) {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Errorf("GetSubmissions failed: authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
-	}
 	s.logger.Debugf("GetSubmissions: %v", in)
 	submissions, err := s.getSubmissions(in)
 	if err != nil {
 		s.logger.Errorf("GetSubmissions failed: %v", err)
 		return nil, status.Error(codes.NotFound, "no submissions found")
 	}
-	// If the user is not a teacher, remove score and reviews from submissions that are not released.
-	if !s.isTeacher(usr.ID, in.CourseID) {
-		submissions.Clean()
-	}
 	return submissions, nil
 }
 
 // GetSubmissionsByCourse returns all the latest submissions
 // for every individual or group course assignment for all course students/groups.
-// Access policy: Admin enrolled in CourseID, Teacher of CourseID.
 func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
 	// TODO(meling) This is a hack to give access to cmd/approvelist via the root usr admin
 	// Normally, the root admin should not have access to submissions for all courses.
@@ -416,7 +376,6 @@ func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.S
 }
 
 // UpdateSubmission is called to approve the given submission or to undo approval.
-// Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateSubmissionRequest) (*pb.Void, error) {
 	// TODO(vera): probably can check in interceptor
 	if !s.isValidSubmission(in.SubmissionID) {
@@ -434,7 +393,6 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 // RebuildSubmissions re-runs the tests for the given assignment.
 // A single submission is executed again if the request specifies a submission ID
 // or all submissions if the request specifies a course ID.
-// Access policy: Teacher of CourseID.
 func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.RebuildRequest) (*pb.Void, error) {
 	// RebuildType can be either SubmissionID or CourseID, but not both.
 	switch in.GetRebuildType().(type) {
@@ -457,7 +415,6 @@ func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.Rebui
 }
 
 // CreateBenchmark adds a new grading benchmark for an assignment
-// Access policy: Teacher of CourseID
 func (s *AutograderService) CreateBenchmark(_ context.Context, in *pb.BenchmarkRequest) (*pb.GradingBenchmark, error) {
 	bm, err := s.createBenchmark(in.GetBenchmark())
 	if err != nil {
@@ -468,7 +425,6 @@ func (s *AutograderService) CreateBenchmark(_ context.Context, in *pb.BenchmarkR
 }
 
 // UpdateBenchmark edits a grading benchmark for an assignment
-// Access policy: Teacher of CourseID
 func (s *AutograderService) UpdateBenchmark(_ context.Context, in *pb.BenchmarkRequest) (*pb.Void, error) {
 	err := s.updateBenchmark(in.GetBenchmark())
 	if err != nil {
@@ -479,7 +435,6 @@ func (s *AutograderService) UpdateBenchmark(_ context.Context, in *pb.BenchmarkR
 }
 
 // DeleteBenchmark removes a grading benchmark
-// Access policy: Teacher of CourseID
 func (s *AutograderService) DeleteBenchmark(_ context.Context, in *pb.BenchmarkRequest) (*pb.Void, error) {
 	err := s.deleteBenchmark(in.GetBenchmark())
 	if err != nil {
@@ -490,7 +445,6 @@ func (s *AutograderService) DeleteBenchmark(_ context.Context, in *pb.BenchmarkR
 }
 
 // CreateCriterion adds a new grading criterion for an assignment
-// Access policy: Teacher of CourseID
 func (s *AutograderService) CreateCriterion(_ context.Context, in *pb.CriteriaRequest) (*pb.GradingCriterion, error) {
 	c, err := s.createCriterion(in.GetCriterion())
 	if err != nil {
@@ -501,7 +455,6 @@ func (s *AutograderService) CreateCriterion(_ context.Context, in *pb.CriteriaRe
 }
 
 // UpdateCriterion edits a grading criterion for an assignment
-// Access policy: Teacher of CourseID
 func (s *AutograderService) UpdateCriterion(_ context.Context, in *pb.CriteriaRequest) (*pb.Void, error) {
 	err := s.updateCriterion(in.GetCriterion())
 	if err != nil {
@@ -512,7 +465,6 @@ func (s *AutograderService) UpdateCriterion(_ context.Context, in *pb.CriteriaRe
 }
 
 // DeleteCriterion removes a grading criterion for an assignment
-// Access policy: Teacher of CourseID
 func (s *AutograderService) DeleteCriterion(_ context.Context, in *pb.CriteriaRequest) (*pb.Void, error) {
 	err := s.deleteCriterion(in.GetCriterion())
 	if err != nil {
@@ -523,7 +475,6 @@ func (s *AutograderService) DeleteCriterion(_ context.Context, in *pb.CriteriaRe
 }
 
 // CreateReview adds a new submission review
-// Access policy: Teacher of CourseID
 func (s *AutograderService) CreateReview(ctx context.Context, in *pb.ReviewRequest) (*pb.Review, error) {
 	review, err := s.createReview(in.Review)
 	if err != nil {
@@ -534,7 +485,6 @@ func (s *AutograderService) CreateReview(ctx context.Context, in *pb.ReviewReque
 }
 
 // UpdateReview updates a submission review
-// Access policy: Teacher of CourseID, Author of the given Review
 func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewRequest) (*pb.Review, error) {
 	review, err := s.updateReview(in.Review)
 	if err != nil {
@@ -546,7 +496,6 @@ func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewReque
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
 // with the given score.
-// Access policy: Teacher of CourseID
 func (s *AutograderService) UpdateSubmissions(ctx context.Context, in *pb.UpdateSubmissionsRequest) (*pb.Void, error) {
 	err := s.updateSubmissions(in)
 	if err != nil {
@@ -557,7 +506,6 @@ func (s *AutograderService) UpdateSubmissions(ctx context.Context, in *pb.Update
 }
 
 // GetReviewers returns names of all active reviewers for a student submission
-// Access policy: Teacher of CourseID
 func (s *AutograderService) GetReviewers(ctx context.Context, in *pb.SubmissionReviewersRequest) (*pb.Reviewers, error) {
 	reviewers, err := s.getReviewers(in.SubmissionID)
 	if err != nil {
@@ -568,7 +516,6 @@ func (s *AutograderService) GetReviewers(ctx context.Context, in *pb.SubmissionR
 }
 
 // GetAssignments returns a list of all assignments for the given course.
-// Access policy: Any User.
 func (s *AutograderService) GetAssignments(_ context.Context, in *pb.CourseRequest) (*pb.Assignments, error) {
 	courseID := in.GetCourseID()
 	assignments, err := s.getAssignments(courseID)
@@ -581,19 +528,9 @@ func (s *AutograderService) GetAssignments(_ context.Context, in *pb.CourseReque
 
 // UpdateAssignments updates the assignments record in the database
 // by fetching assignment information from the course's test repository.
-// Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.CourseRequest) (*pb.Void, error) {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Errorf("UpdateAssignments failed: scm authentication error: %v", err)
-		return nil, err
-	}
 	courseID := in.GetCourseID()
-	if !s.isTeacher(usr.ID, courseID) {
-		s.logger.Error("UpdateAssignments failed: user is not teacher")
-		return nil, status.Error(codes.PermissionDenied, "only teachers can update course assignments")
-	}
-	err = s.updateAssignments(courseID)
+	err := s.updateAssignments(courseID)
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: %v", err)
 		return nil, status.Error(codes.NotFound, "course not found")
@@ -614,10 +551,6 @@ func (s *AutograderService) GetProviders(_ context.Context, _ *pb.Void) (*pb.Pro
 }
 
 // GetOrganization fetches a github organization by name.
-// Access policy: Admin
-// TODO(vera): in this case we don't have a course to keep a reference to the organization (yet). This means
-// we have to fetch installations for the app, select one for this org and create a new client (then update scm map).
-// Need internal method to do so
 func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgRequest) (*pb.Organization, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
@@ -629,6 +562,8 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 		s.logger.Errorf("GetOrganization failed: error getting access token for user %s and organization %s: %v", usr.Login, in.OrgName, err)
 		return nil, status.Error(codes.NotFound, "failed to get organization: missing access token")
 	}
+	// GetOrganization is called before a new course is created. There is no scm client yet,
+	// so we need to create a new one from the installation in order to access a private organization.
 	sc, err := s.scmMaker.NewSCM(ctx, s.logger, in.OrgName, courseCreatorToken)
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: error creating scm client for user %s and organization %s: %v", usr.Login, in.OrgName, err)
@@ -654,21 +589,18 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 	return org, nil
 }
 
-// GetRepositories returns URL strings for repositories of given type for the given course
-// Access policy: Any User.
+// GetRepositories returns URL strings for repositories of given type for the given course.
 func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLRequest) (*pb.Repositories, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetRepositories failed: authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
-
 	course, err := s.getCourse(in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("GetRepositories failed: course %d not found: %v", in.GetCourseID(), err)
 		return nil, status.Error(codes.NotFound, "course not found")
 	}
-
 	enrol, _ := s.db.GetEnrollmentByCourseAndUser(course.GetID(), usr.GetID())
 
 	urls := make(map[string]string)
@@ -688,11 +620,10 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 }
 
 // IsEmptyRepo ensures that group repository is empty and can be deleted
-// Access policy: Teacher of Course ID
 func (s *AutograderService) IsEmptyRepo(ctx context.Context, in *pb.RepositoryRequest) (*pb.Void, error) {
-	scm, ok := s.scmMaker.GetSCM(in.GetCourseID())
-	if !ok {
-		s.logger.Errorf("IsEmptyRepo failed: scm client for course  %s not found", in.GetCourseID())
+	scm, err := s.getSCM(in.GetCourseID())
+	if err != nil {
+		s.logger.Errorf("IsEmptyRepo failed: %v", err)
 		return nil, status.Error(codes.FailedPrecondition, "failed to get scm client")
 	}
 	if err := s.isEmptyRepo(ctx, scm, in); err != nil {

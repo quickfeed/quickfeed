@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -30,13 +31,12 @@ func (s *AutograderService) getCurrentUser(ctx context.Context) (*pb.User, error
 	return s.db.GetUser(claims.UserID)
 }
 
-// TODO(vera): repurpose for new scm type (or two scm types)
 func (s *AutograderService) getSCM(courseID uint64) (scm.SCM, error) {
 	sc, ok := s.scmMaker.GetSCM(courseID)
 	if ok {
 		return sc, nil
 	}
-	return nil, errors.New("no SCM found")
+	return nil, errors.New(fmt.Sprintf("no SCM found for course %d", courseID))
 }
 
 // hasCourseAccess returns true if the given user has access to the given course,
@@ -49,13 +49,6 @@ func (s *AutograderService) hasCourseAccess(userID, courseID uint64, check func(
 	}
 	s.logger.Debugf("(user=%d, course=%d) has enrollment status %+v", userID, courseID, enrollment.GetStatus())
 	return check(enrollment)
-}
-
-// isEnrolled returns true if the given user is enrolled in the given course.
-func (s *AutograderService) isEnrolled(userID, courseID uint64) bool {
-	return s.hasCourseAccess(userID, courseID, func(e *pb.Enrollment) bool {
-		return e.Status == pb.Enrollment_STUDENT || e.Status == pb.Enrollment_TEACHER
-	})
 }
 
 // isValidSubmission returns true if submitting student has active course enrollment or
@@ -89,20 +82,12 @@ func (s *AutograderService) isValidSubmission(submissionID uint64) bool {
 	if err != nil {
 		return false
 	}
-
 	request := &pb.SubmissionRequest{
 		CourseID: assignment.GetCourseID(),
 		UserID:   submission.GetUserID(),
 		GroupID:  submission.GetGroupID(),
 	}
 	return s.isValidSubmissionRequest(request)
-}
-
-// isTeacher returns true if the given user is teacher for the given course.
-func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
-	return s.hasCourseAccess(userID, courseID, func(e *pb.Enrollment) bool {
-		return e.Status == pb.Enrollment_TEACHER
-	})
 }
 
 // isCourseCreator returns true if the given user is course creator for the given course.

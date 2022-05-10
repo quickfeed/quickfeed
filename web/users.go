@@ -17,15 +17,15 @@ func (s *AutograderService) getUsers() (*pb.Users, error) {
 // the user is enrolled in the given course.
 func (s *AutograderService) getUserByCourse(request *pb.CourseUserRequest, currentUser *pb.User) (*pb.User, error) {
 	courseQuery := &pb.Course{Code: request.CourseCode, Year: request.CourseYear}
-	user, course, err := s.db.GetUserByCourse(courseQuery, request.UserLogin)
+	user, _, err := s.db.GetUserByCourse(courseQuery, request.UserLogin)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO(vera): make sure this is checked in the access control before removing
-	if !(currentUser.IsAdmin || s.isTeacher(currentUser.ID, course.ID)) {
-		return nil, ErrInvalidUserInfo
-	}
+	// if !(currentUser.IsAdmin || s.isTeacher(currentUser.ID, course.ID)) {
+	// 	return nil, ErrInvalidUserInfo
+	// }
 	return user, nil
 }
 

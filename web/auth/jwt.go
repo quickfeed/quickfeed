@@ -150,6 +150,7 @@ func (tm *TokenManager) Remove(userID uint64) error {
 // Add adds a new UserID to the manager and updates user record in the database
 func (tm *TokenManager) Add(userID uint64) error {
 	// Return if the given ID is already in the list to avoid duplicates
+	// TODO(vera): ignore, don't return err
 	if tm.exists(userID) {
 		return fmt.Errorf("user wit	h ID %d is already in the list", userID)
 	}
