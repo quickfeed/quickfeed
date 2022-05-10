@@ -41,8 +41,7 @@ func TestGitHubWebHook(t *testing.T) {
 	ctx := context.Background()
 	logger := logq.Zap(true).Sugar()
 	defer func() { _ = logger.Sync() }()
-	ghClient := scm.GetTestClient(t, qfTestOrg)
-	s, err := scm.NewSCMClient(logger, ghClient, "github", accessToken)
+	s, err := scm.NewSCMClient(logger, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

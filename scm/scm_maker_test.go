@@ -15,10 +15,8 @@ func TestGitHubApp(t *testing.T) {
 	if _, _, err := client.Organizations.Get(ctx, testOrg); err != nil {
 		t.Fatal(err)
 	}
-	sc, err := scm.NewGithubSCMClient(log.Zap(false).Sugar(), client, scm.GetAccessToken(t))
-	if err != nil {
-		t.Fatal(err)
-	}
+	// TODO(vera): needs rework with new methods
+	sc := scm.NewGithubSCMClient(log.Zap(false).Sugar(), scm.GetAccessToken(t))
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: testOrg})
 	if err != nil {
 		t.Fatal(err)

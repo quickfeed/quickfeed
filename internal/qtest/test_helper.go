@@ -162,16 +162,17 @@ func WithUserContext(ctx context.Context, user *pb.User) context.Context {
 	return metadata.NewIncomingContext(ctx, meta)
 }
 
+// TODO(vera): must be able to return two types of github clients
 func TestSCMClient(ctx context.Context, t *testing.T, org, provider, token string) scm.SCM {
-	app, err := scm.NewApp()
-	if err != nil {
-		t.Fatal(err)
-	}
-	client, err := app.NewInstallationClient(ctx, org)
-	if err != nil {
-		t.Fatal(err)
-	}
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), client, "github", token)
+	// app, err := scm.NewApp()
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// client, err := app.NewInstallationClient(ctx, org)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", token)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -2,7 +2,6 @@ package scm
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	pb "github.com/autograde/quickfeed/ag/types"
@@ -22,39 +21,32 @@ func NewScms() *Scms {
 
 // GetSCM returns an scm client for the given access token, if such token exists;
 // otherwise, nil and false is returned.
-func (app *GithubApp) GetSCM(courseID uint64) (sc SCM, ok bool) {
-	app.scms.mu.RLock()
-	defer app.scms.mu.RUnlock()
-	sc, ok = app.scms.scms[courseID]
+func (sm *SCMMaker) GetSCM(courseID uint64) (sc SCM, ok bool) {
+	sm.scms.mu.RLock()
+	defer sm.scms.mu.RUnlock()
+	sc, ok = sm.scms.scms[courseID]
 	return
 }
 
 // AddSCM adds a new scm client to scm storage.
-func (app *GithubApp) AddSCM(scm SCM, courseID uint64) {
-	app.scms.mu.Lock()
-	defer app.scms.mu.Unlock()
-	app.scms.scms[courseID] = scm
+func (sm *SCMMaker) AddSCM(scm SCM, courseID uint64) {
+	sm.scms.mu.Lock()
+	defer sm.scms.mu.Unlock()
+	sm.scms.scms[courseID] = scm
 }
 
 // GetOrCreateSCMEntry returns an existing scm client for the given course or creates a new one.
-func (app *GithubApp) GetOrCreateSCMEntry(logger *zap.SugaredLogger, course *pb.Course, accessToken string) (SCM, error) {
-	app.scms.mu.Lock()
-	defer app.scms.mu.Unlock()
-	client, ok := app.scms.scms[course.GetID()]
+func (sm *SCMMaker) GetOrCreateSCMEntry(logger *zap.SugaredLogger, course *pb.Course) (SCM, error) {
+	sm.scms.mu.Lock()
+	defer sm.scms.mu.Unlock()
+	client, ok := sm.scms.scms[course.GetID()]
 	if ok {
 		return client, nil
 	}
-	if accessToken == "" {
-		return nil, fmt.Errorf("failed to create an scm client for course %s: missing access token", course.Code)
-	}
-	ghClient, err := app.NewInstallationClient(context.Background(), course.GetOrganizationPath())
+	sc, err := sm.NewSCM(context.Background(), logger, course.OrganizationPath, course.GetAccessToken())
 	if err != nil {
 		return nil, err
 	}
-	client, err = NewSCMClient(logger, ghClient, course.GetProvider(), accessToken)
-	if err != nil {
-		return nil, err
-	}
-	app.scms.scms[course.GetID()] = client
-	return client, nil
+	sm.AddSCM(sc, course.ID)
+	return sc, nil
 }

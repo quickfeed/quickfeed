@@ -146,7 +146,7 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
-func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oauth2.Config, app *scm.GithubApp, tokens *TokenManager, secret string) http.HandlerFunc {
+func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oauth2.Config, app *scm.SCMMaker, tokens *TokenManager, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			unauthorized(logger, w, callback, "request method: %s", r.Method)

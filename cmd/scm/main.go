@@ -246,9 +246,8 @@ func before(client *scm.SCM) cli.BeforeFunc {
 	return func(c *cli.Context) (err error) {
 		provider := c.String("provider")
 		accessToken := os.Getenv(c.String("token"))
-		// TODO(vera): update scm package, needs (command line?) parameters to setup GitHub app client
 		if accessToken != "" {
-			*client, err = scm.NewSCMClient(zap.NewNop().Sugar(), nil, provider, accessToken)
+			*client, err = scm.NewSCMClient(zap.NewNop().Sugar(), provider, accessToken)
 			return
 		}
 
@@ -271,7 +270,7 @@ func before(client *scm.SCM) cli.BeforeFunc {
 		if accessToken == "" {
 			return fmt.Errorf("access token not found in database for provider %s", provider)
 		}
-		*client, err = scm.NewSCMClient(zap.NewNop().Sugar(), nil, provider, accessToken)
+		*client, err = scm.NewSCMClient(zap.NewNop().Sugar(), provider, accessToken)
 		return
 	}
 }

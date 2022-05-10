@@ -112,7 +112,7 @@ func main() {
 	}
 
 	agService := web.NewAutograderService(logger, db, githubApp, serverConfig, tokenManager, runner)
-	agService.MakeSCMClients("github") // TODO(vera): shouldn't be hardcoded...
+	agService.MakeSCMClients()
 
 	apiServer, err := serverConfig.GenerateTLSApi(logger.Sugar(), db, tokenManager)
 	if err != nil {

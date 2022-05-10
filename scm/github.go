@@ -24,21 +24,14 @@ type GithubSCM struct {
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
-func NewGithubSCMClient(logger *zap.SugaredLogger, client *github.Client, token string) (*GithubSCM, error) {
-	// In some cases (accepting repository invitations) we need to create an access token based client instead of
-	// an app client. The token string shouldn't be empty.
-	if client == nil {
-		if token == "" {
-			return nil, fmt.Errorf("failed to create GitHub scm client: missing app client and token")
-		}
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
-		client = github.NewClient(oauth2.NewClient(context.Background(), ts))
-	}
+func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+	client := github.NewClient(oauth2.NewClient(context.Background(), ts))
 	return &GithubSCM{
 		logger: logger,
 		client: client,
 		token:  token,
-	}, nil
+	}
 }
 
 // CreateOrganization implements the SCM interface.

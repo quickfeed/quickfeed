@@ -32,7 +32,7 @@ func (s *AutograderService) getCurrentUser(ctx context.Context) (*pb.User, error
 
 // TODO(vera): repurpose for new scm type (or two scm types)
 func (s *AutograderService) getSCM(courseID uint64) (scm.SCM, error) {
-	sc, ok := s.app.GetSCM(courseID)
+	sc, ok := s.scmMaker.GetSCM(courseID)
 	if ok {
 		return sc, nil
 	}

@@ -22,7 +22,7 @@ import (
 type AutograderService struct {
 	logger       *zap.SugaredLogger
 	db           database.Database
-	app          *scm.GithubApp
+	scmMaker     *scm.SCMMaker
 	Config       *config.Config // TODO(vera): make unexported again after refactoring the startup method
 	tokenManager *auth.TokenManager
 	runner       ci.Runner
@@ -30,11 +30,11 @@ type AutograderService struct {
 }
 
 // NewAutograderService returns an AutograderService object.
-func NewAutograderService(logger *zap.Logger, db database.Database, app *scm.GithubApp, config *config.Config, tokens *auth.TokenManager, runner ci.Runner) *AutograderService {
+func NewAutograderService(logger *zap.Logger, db database.Database, app *scm.SCMMaker, config *config.Config, tokens *auth.TokenManager, runner ci.Runner) *AutograderService {
 	return &AutograderService{
 		logger:       logger.Sugar(),
 		db:           db,
-		app:          app,
+		scmMaker:     app,
 		Config:       config,
 		tokenManager: tokens,
 		runner:       runner,
@@ -114,20 +114,9 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 		return nil, err
 	}
 	// TODO(vera): refactor this part into a more general helper method
-	ghClient, err := s.app.NewInstallationClient(ctx, in.GetOrganizationPath())
+	sc, err := s.scmMaker.GetOrCreateSCMEntry(s.logger, in)
 	if err != nil {
-		s.logger.Errorf("CreateCourse failed: error creating GitHub app client: %v", err)
-		return nil, status.Error(codes.NotFound, "Quickfeed app not installed for course organization")
-	}
-	courseCreatorToken, err := usr.GetAccessToken("github")
-	if err != nil {
-		s.logger.Errorf("GetOrganization failed: error getting access token for user %s and organization %s: %v", usr.Name, in.GetOrganizationPath(), err)
-		return nil, status.Error(codes.NotFound, "failed to get organization: missing access token")
-	}
-	sc, err := scm.NewSCMClient(s.logger, ghClient, "github", courseCreatorToken)
-	if !usr.IsAdmin {
-		s.logger.Error("GetOrganization failed: user is not admin")
-		return nil, status.Error(codes.PermissionDenied, "only admin can access organizations")
+		s.logger.Errorf("CreateCourse failed: scm client error: %v", err)
 	}
 	// TODO(vera): do we need the course creator field?
 	// make sure that the current user is set as course creator
@@ -148,16 +137,16 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 		}
 		return nil, status.Error(codes.InvalidArgument, "failed to create course")
 	}
-	s.app.AddSCM(sc, course.GetID())
+	s.scmMaker.AddSCM(sc, course.GetID())
 	return course, nil
 }
 
 // UpdateCourse changes the course information details.
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
-	scm, ok := s.app.GetSCM(in.GetID())
-	if !ok {
-		s.logger.Errorf("UpdateCourse failed: csm client for course %s not found", in.GetCode())
+	scm, err := s.scmMaker.GetOrCreateSCMEntry(s.logger, in)
+	if err != nil {
+		s.logger.Errorf("UpdateCourse failed: csm client for course %s not found: %v", in.GetCode(), err)
 		return nil, ErrInvalidUserInfo
 	}
 	if err := s.updateCourse(ctx, scm, in); err != nil {
@@ -226,7 +215,7 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Enroll
 		s.logger.Errorf("UpdateEnrollment failed: scm authentication error: %v", err)
 		return nil, err
 	}
-	scm, ok := s.app.GetSCM(in.GetCourseID())
+	scm, ok := s.scmMaker.GetSCM(in.GetCourseID())
 	if !ok {
 		s.logger.Errorf("UpdateEnrollments failed: scm client not found for course %d", in.GetCourseID())
 		return nil, ErrInvalidUserInfo
@@ -336,7 +325,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 // UpdateGroup updates group information.
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
-	scm, ok := s.app.GetSCM(in.GetCourseID())
+	scm, ok := s.scmMaker.GetSCM(in.GetCourseID())
 	if !ok {
 		s.logger.Errorf("UpdateGroup failed: scm client not found for course %d", in.CourseID)
 		return nil, ErrInvalidUserInfo
@@ -363,7 +352,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 // DeleteGroup removes group record from the database.
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest) (*pb.Void, error) {
-	scm, ok := s.app.GetSCM(in.GetCourseID())
+	scm, ok := s.scmMaker.GetSCM(in.GetCourseID())
 	if !ok {
 		s.logger.Errorf("DeleteGroup failed: scm client for course %d not found", in.GetCourseID())
 		return nil, ErrInvalidUserInfo
@@ -635,22 +624,15 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 		s.logger.Errorf("GetOrganization failed: scm authentication error: %v", err)
 		return nil, err
 	}
-	// TODO(vera): refactor this part into a more general helper method
-	ghClient, err := s.app.NewInstallationClient(ctx, in.OrgName)
-	if err != nil {
-		s.logger.Errorf("GetOrganization failed: error creating GitHub app client: %v", err)
-		return nil, status.Error(codes.NotFound, "Quickfeed app not installed for this organization")
-	}
-	// TODO(vera): get course creator's token here, (for provider == github)
 	courseCreatorToken, err := usr.GetAccessToken("github")
 	if err != nil {
-		s.logger.Errorf("GetOrganization failed: error getting access token for user %s and organization %s: %v", usr.Name, in.OrgName, err)
+		s.logger.Errorf("GetOrganization failed: error getting access token for user %s and organization %s: %v", usr.Login, in.OrgName, err)
 		return nil, status.Error(codes.NotFound, "failed to get organization: missing access token")
 	}
-	sc, err := scm.NewSCMClient(s.logger, ghClient, "github", courseCreatorToken)
-	if !usr.IsAdmin {
-		s.logger.Error("GetOrganization failed: user is not admin")
-		return nil, status.Error(codes.PermissionDenied, "only admin can access organizations")
+	sc, err := s.scmMaker.NewSCM(ctx, s.logger, in.OrgName, courseCreatorToken)
+	if err != nil {
+		s.logger.Errorf("GetOrganization failed: error creating scm client for user %s and organization %s: %v", usr.Login, in.OrgName, err)
+		return nil, status.Error(codes.NotFound, "failed to get organization: missing access token")
 	}
 	org, err := s.getOrganization(ctx, sc, in.GetOrgName(), usr.GetLogin())
 	if err != nil {
@@ -708,7 +690,7 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 // IsEmptyRepo ensures that group repository is empty and can be deleted
 // Access policy: Teacher of Course ID
 func (s *AutograderService) IsEmptyRepo(ctx context.Context, in *pb.RepositoryRequest) (*pb.Void, error) {
-	scm, ok := s.app.GetSCM(in.GetCourseID())
+	scm, ok := s.scmMaker.GetSCM(in.GetCourseID())
 	if !ok {
 		s.logger.Errorf("IsEmptyRepo failed: scm client for course  %s not found", in.GetCourseID())
 		return nil, status.Error(codes.FailedPrecondition, "failed to get scm client")

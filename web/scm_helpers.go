@@ -31,38 +31,25 @@ var (
 // TODO(vera): this method must work for any service, all services must share same scm list
 // MakeSCMClients creates a new scm client (GitHub app installation based client) for each course in the database.
 // This method is called at the server start.
-func (s *AutograderService) MakeSCMClients(provider string) error {
+func (s *AutograderService) MakeSCMClients() error {
 	ctx := context.Background()
 	courses, err := s.db.GetCourses()
 	if err != nil {
 		return err
 	}
 	for _, course := range courses {
-		courseCreator, err := s.db.GetUser(course.CourseCreatorID)
+		sc, err := s.scmMaker.NewSCM(ctx, s.logger, course.OrganizationPath, course.GetAccessToken())
 		if err != nil {
 			return err
 		}
-		ghClient, err := s.app.NewInstallationClient(ctx, course.OrganizationPath)
-		if err != nil {
-			return err
-		}
-		token, err := courseCreator.GetAccessToken(provider)
-		if err != nil {
-			return err
-		}
-
-		sc, err := scm.NewSCMClient(s.logger, ghClient, provider, token)
-		if err != nil {
-			return err
-		}
-		s.app.AddSCM(sc, course.ID)
+		s.scmMaker.AddSCM(sc, course.ID)
 	}
 	return nil
 }
 
 // AddSCM is a wrapper method to simplify usage in test and avoid making the app field exported.
 func (s *AutograderService) AddSCM(scm scm.SCM, courseID uint64) {
-	s.app.AddSCM(scm, courseID)
+	s.scmMaker.AddSCM(scm, courseID)
 }
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
