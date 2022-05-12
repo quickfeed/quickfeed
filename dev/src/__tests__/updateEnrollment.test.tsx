@@ -91,34 +91,5 @@ describe("UpdateEnrollment in webpage", () => {
         )
         expect(wrapped.find("i").first().text()).toEqual("Promote")
     })
-    it("If student is accepted, button should display Promote", async () => {
-        // hent accept knappen, mocke at den blir trykket på, så sjekke tekst på knapp som skal være promote
-        const mockedOvermind = createOvermindMock(config, {
-            grpcMan: new MockGrpcManager()
-        })
-        await mockedOvermind.actions.fetchUserData()
-        const history = createMemoryHistory()
-        history.push("/course/2/members")
-        console.log(mockedOvermind.state.courseEnrollments[2])
-
-        React.useState = jest.fn().mockReturnValue("True")
-        const wrapped = mount(
-            <Provider value={mockedOvermind}>
-                <Router history={history} >
-                    <Route path="/course/:id/members" component={Members} />
-                </Router>
-            </Provider>
-        )
-        // console.log("Før click: knapp1: ", wrapped.find("i").at(0).text(), " knapp 2: ", wrapped.find("i").at(2).text())
-        //expect(wrapped.find("i").at(2).text()).toEqual("Promote")
-        wrapped.find("i").at(2).simulate("click")
-        //wrapped.find("i").at(2).props().onClick()
-
-
-        wrapped.update()
-        //console.log("Etter click: knapp1: ", wrapped.find("i").at(0).text(), " knapp 2: ", wrapped.find("i").at(2).text())
-        expect(wrapped.find("i").at(2).text()).toEqual("Promote")
-        //expect(wrapped.instance().called).toBe(true)
-    })
 
 })
