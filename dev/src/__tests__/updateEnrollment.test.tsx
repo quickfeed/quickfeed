@@ -11,9 +11,7 @@ import { Provider } from "overmind-react"
 import { MockGrpcManager } from "../MockGRPCManager"
 import enzyme from "enzyme"
 
-
 React.useLayoutEffect = React.useEffect
-
 
 describe("UpdateEnrollment", () => {
     const mockedOvermind = createOvermindMock(config, {
@@ -21,26 +19,32 @@ describe("UpdateEnrollment", () => {
     })
     it("Pending student gets accecpted", async () => {
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 2, statuses: [] })
-        //This is a user with status pending
+        // This is a user with course status pending
         window.confirm = jest.fn(() => true)
-        mockedOvermind.actions.updateEnrollment({ enrollment: mockedOvermind.state.courseEnrollments[2][1], status: Enrollment.UserStatus.STUDENT })
-        await expect(mockedOvermind.state.courseEnrollments[2][1].getStatus()).toEqual(2)
+        var enrollment = mockedOvermind.state.courseEnrollments[2][1]
+        const status = Enrollment.UserStatus.STUDENT
+        mockedOvermind.actions.updateEnrollment({ enrollment: enrollment, status: status })
+        await expect(enrollment.getStatus()).toEqual(status)
     })
 
     it("Demote teacher to student", async () => {
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 2, statuses: [] })
-        //This is a user with status teacher
+        // This is a user with course status teacher
         window.confirm = jest.fn(() => true)
-        mockedOvermind.actions.updateEnrollment({ enrollment: mockedOvermind.state.courseEnrollments[2][0], status: Enrollment.UserStatus.STUDENT })
-        expect(mockedOvermind.state.courseEnrollments[2][0].getStatus()).toEqual(2)
+        var enrollment = mockedOvermind.state.courseEnrollments[2][0]
+        const status = Enrollment.UserStatus.STUDENT
+        mockedOvermind.actions.updateEnrollment({ enrollment: enrollment, status: status })
+        expect(enrollment.getStatus()).toEqual(status)
     })
+
     it("Promote student to teacher", async () => {
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 1, statuses: [] })
-        //This is a user with status student
+        // This is a user with course status student
         window.confirm = jest.fn(() => true)
-        mockedOvermind.actions.updateEnrollment({ enrollment: mockedOvermind.state.courseEnrollments[1][0], status: Enrollment.UserStatus.TEACHER })
-        expect(mockedOvermind.state.courseEnrollments[1][0].getStatus()).toEqual(3)
-
+        var enrollment = mockedOvermind.state.courseEnrollments[1][0]
+        var status = Enrollment.UserStatus.TEACHER
+        mockedOvermind.actions.updateEnrollment({ enrollment: enrollment, status: status })
+        expect(enrollment.getStatus()).toEqual(status)
     })
 })
 
@@ -49,7 +53,8 @@ configure({ adapter: new Adapter() })
 describe("UpdateEnrollment in webpage", () => {
     it("If status is teacher, button should display demote", () => {
         const user = new User().setId(1).setName("Test User").setStudentid("6583969706").setEmail("test@gmail.com")
-        const enrollment = new Enrollment().setId(2).setCourseid(1).setStatus(3).setUser(user).setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0)
+        const enrollment = new Enrollment().setId(2).setCourseid(1).setStatus(3).setUser(user)
+            .setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0)
 
         const mockedOvermind = createOvermindMock(config, (state) => {
             state.self = user
@@ -69,6 +74,7 @@ describe("UpdateEnrollment in webpage", () => {
         )
         expect(wrapped.find("i").first().text()).toEqual("Demote")
     })
+
     it("If status is student, button should display promote", () => {
         const user = new User().setId(1).setName("Test User").setStudentid("6583969706").setEmail("test@gmail.com")
         const enrollment = new Enrollment().setId(2).setCourseid(1).setStatus(2).setUser(user).setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0)
@@ -91,8 +97,9 @@ describe("UpdateEnrollment in webpage", () => {
         )
         expect(wrapped.find("i").first().text()).toEqual("Promote")
     })
+
     it("If student is accepted, button should display Promote", async () => {
-        // hent accept knappen, mocke at den blir trykket på, så sjekke tekst på knapp som skal være promote
+        // Hent accept knappen, mocke at den blir trykket på, så sjekke tekst på knapp som skal være promote
         const mockedOvermind = createOvermindMock(config, {
             grpcMan: new MockGrpcManager()
         })

@@ -584,14 +584,4 @@ export class ProtoConverter {
         return group
     }
 
-    public static load = () => {
-        const data = localStorage.getItem("state")
-        if (data) {
-            const obj = JSON.parse(data)
-            console.log("Loaded state: ", obj)
-            return obj
-        }
-        return undefined
-    }
-
 }
