@@ -17,7 +17,7 @@ describe("UpdateEnrollment", () => {
     const mockedOvermind = createOvermindMock(config, {
         grpcMan: new MockGrpcManager()
     })
-    it("Pending student gets accecpted", async () => {
+    it("Pending student gets accepted", async () => {
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 2, statuses: [] })
         // This is a user with course status pending
         window.confirm = jest.fn(() => true)
