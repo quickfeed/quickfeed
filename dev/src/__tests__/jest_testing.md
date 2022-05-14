@@ -1,6 +1,6 @@
 # How to run jest tests
 
-# Plugins needed installments
+## Required packages
 
 To install jest:
 
@@ -28,7 +28,7 @@ To install enzyme-adapter-react-17:
 
 npm i --save-dev @types/react-test-renderer
 
-# How to run the tests
+## How to run the tests
 
 To run tests go to the `src/__tests__` folder.
 
