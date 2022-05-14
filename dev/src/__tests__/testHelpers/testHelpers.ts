@@ -1,4 +1,4 @@
-import { IRectangle } from "selenium-webdriver"
+import { Browser, Builder, IRectangle, ThenableWebDriver } from "selenium-webdriver"
 
 export const isOverlapping = (rect: IRectangle, rect2: IRectangle) => {
     var overlap = (rect.x < rect2.x + rect2.width &&
@@ -9,4 +9,26 @@ export const isOverlapping = (rect: IRectangle, rect2: IRectangle) => {
         return true //Elements are overlapping
     }
     return false //Elements are not overlapping
+}
+
+// getBuilders returns an array of builders for all the browsers that are supported
+// Supported browsers must be defined in the config file: browsers.json
+// NOTE: These builders require you to have web driver executables in your PATH
+export const getBuilders = (): Builder[] => {
+    const browsers = require("./browsers.json")
+    const builders: Builder[] = []
+    Object.entries(Browser).forEach(([key, value]) => {
+        if (key in browsers && browsers[key]) {
+            builders.push(createBuilder(value))
+        }
+    })
+    if (builders.length === 0) {
+        throw new Error("No supported browsers found. Please check the browsers.json file.")
+    }
+    return builders
+}
+
+const createBuilder = (browser: string) => {
+    const builder = new Builder().forBrowser(browser)
+    return builder
 }
