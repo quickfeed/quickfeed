@@ -1,7 +1,7 @@
 import { Enrollment, User } from "../../proto/ag/ag_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
-import { configure, mount, render } from "enzyme"
+import { configure, render } from "enzyme"
 import Adapter from "@wojtekmaj/enzyme-adapter-react-17"
 import { createMemoryHistory } from "history"
 import React from "react"
@@ -9,7 +9,6 @@ import Members from "../components/Members"
 import { Route, Router } from "react-router"
 import { Provider } from "overmind-react"
 import { MockGrpcManager } from "../MockGRPCManager"
-import enzyme from "enzyme"
 
 React.useLayoutEffect = React.useEffect
 
