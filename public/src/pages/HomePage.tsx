@@ -189,7 +189,7 @@ export class HomePage extends ViewPage {
                         valuable tool for teachers when grading lab assignments.
                     </p>
                     <p>
-                        <a className="btn btn-primary btn-lg" href="#autograder" role="button">Learn more »</a>
+                        <a className="btn btn-primary btn-lg" href="#quickfeed" role="button">Learn more »</a>
                     </p>
                 </div>
             </div>];
