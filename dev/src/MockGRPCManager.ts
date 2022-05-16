@@ -262,7 +262,7 @@ export class MockGrpcManager {
         }
         groups.forEach(group => {
             const groupEnrollments = this.enrollments.getEnrollmentsList().filter(e => e.getGroupid() === group.getId())
-            let users: User[] = []
+            const users: User[] = []
             groupEnrollments.forEach(e => {
                 const user = this.users.getUsersList().find(u => u.getId() === e.getUserid())
                 if (user) {
@@ -272,10 +272,8 @@ export class MockGrpcManager {
 
             })
             group.setUsersList(users)
-            console.log(group.getUsersList())
             group.setEnrollmentsList(groupEnrollments)
         })
-        console.log(groups)
         return this.grpcSend<Groups>(new Groups().setGroupsList(groups))
     }
 
@@ -384,7 +382,7 @@ export class MockGrpcManager {
             enroll.setUser(users.find(u => u.getId() === enrollment.getUserid())?.clone())
             enroll.setGroup(groups.find(g => g.getId() === enrollment.getGroupid())?.clone())
             link.setEnrollment(enroll)
-            let subs: SubmissionLink[] = []
+            const subs: SubmissionLink[] = []
 
             this.assignments.getAssignmentsList().forEach(assignment => {
                 if (!aIDs.includes(assignment.getId())) {

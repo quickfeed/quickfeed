@@ -459,7 +459,6 @@ export const toggleFavorites = ({ state }: Context): void => {
     state.showFavorites = !state.showFavorites
 }
 
-
 export const setActiveAssignment = ({ state }: Context, assignmentID: number): void => {
     state.activeAssignment = assignmentID
 }
