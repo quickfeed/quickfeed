@@ -788,7 +788,7 @@ export class MockGrpcManager {
                 .setId(1)
                 .setCourseid(1)
                 .setUserid(1)
-                .setStatus(3)
+                .setStatus(Enrollment.UserStatus.TEACHER)
                 .setState(2)
         )
 
@@ -797,7 +797,7 @@ export class MockGrpcManager {
                 .setId(2)
                 .setCourseid(2)
                 .setUserid(1)
-                .setStatus(3)
+                .setStatus(Enrollment.UserStatus.TEACHER)
                 .setState(2)
         )
 
@@ -806,7 +806,7 @@ export class MockGrpcManager {
                 .setId(3)
                 .setCourseid(1)
                 .setUserid(2)
-                .setStatus(2)
+                .setStatus(Enrollment.UserStatus.STUDENT)
                 .setGroupid(1)
         )
 
@@ -815,7 +815,7 @@ export class MockGrpcManager {
                 .setId(4)
                 .setCourseid(2)
                 .setUserid(2)
-                .setStatus(1)
+                .setStatus(Enrollment.UserStatus.PENDING)
         )
 
         localEnrols.push(
@@ -823,7 +823,7 @@ export class MockGrpcManager {
                 .setId(5)
                 .setCourseid(1)
                 .setUserid(3)
-                .setStatus(2)
+                .setStatus(Enrollment.UserStatus.STUDENT)
                 .setGroupid(2)
         )
 
@@ -832,7 +832,7 @@ export class MockGrpcManager {
                 .setId(5)
                 .setCourseid(1)
                 .setUserid(4)
-                .setStatus(2)
+                .setStatus(Enrollment.UserStatus.STUDENT)
                 .setGroupid(2)
         )
         this.enrollments.setEnrollmentsList(localEnrols)
