@@ -13,7 +13,7 @@ const CourseUtilityLinks = (): JSX.Element => {
     const repo = state.repositories[courseID]
 
     return (
-        <div className="col-lg-3 test" >
+        <div className="col-lg-3" >
             <div className="list-group width-resize">
                 <div className="list-group-item list-group-item-action active text-center">
                     <h6>

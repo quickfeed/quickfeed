@@ -2,6 +2,7 @@ import { json } from "overmind"
 import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, EnrollmentLink, GradingBenchmark, Group, Review, Submission, SubmissionLink, User } from "../proto/ag/ag_pb"
 import { Score } from "../proto/kit/score/score_pb"
+
 export enum Color {
     RED = "danger",
     BLUE = "primary",

@@ -38,10 +38,10 @@ describe("Course utility elements should not overlap", () => {
 
                 const utility = await driver.findElement(By.className("list-group width-resize"))
                 await driver.wait(until.elementIsVisible(utility), 5000)
-                let rect = await utility.getRect()
-                let rect2 = await labs.getRect()
+                const rect = await utility.getRect()
+                const rect2 = await labs.getRect()
 
-                var overlap = isOverlapping(rect, rect2)
+                const overlap = isOverlapping(rect, rect2)
 
                 expect(overlap).toBe(test.want)
 
