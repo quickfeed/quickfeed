@@ -16,34 +16,28 @@ describe("UpdateEnrollment", () => {
     const mockedOvermind = createOvermindMock(config, {
         grpcMan: new MockGrpcManager()
     })
-    it("Pending student gets accepted", async () => {
-        await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 2, statuses: [] })
-        // This is a user with course status pending
-        window.confirm = jest.fn(() => true)
-        const enrollment = mockedOvermind.state.courseEnrollments[2][1]
-        const status = Enrollment.UserStatus.STUDENT
-        mockedOvermind.actions.updateEnrollment({ enrollment: enrollment, status: status })
-        await expect(enrollment.getStatus()).toEqual(status)
-    })
 
-    it("Demote teacher to student", async () => {
-        await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 2, statuses: [] })
-        // This is a user with course status teacher
-        window.confirm = jest.fn(() => true)
-        const enrollment = mockedOvermind.state.courseEnrollments[2][0]
-        const status = Enrollment.UserStatus.STUDENT
-        mockedOvermind.actions.updateEnrollment({ enrollment: enrollment, status: status })
-        expect(enrollment.getStatus()).toEqual(status)
-    })
+    const updateEnrollmentTests: { desc: string, courseID: number, userID: number, want: Enrollment.UserStatus }[] = [
+        // Refer to addLocalCourseStudent() in MockGRPCManager.ts for a list of available enrollments
+        { desc: "Pending student gets accepted", courseID: 2, userID: 2, want: Enrollment.UserStatus.STUDENT },
+        { desc: "Demote teacher to student", courseID: 2, userID: 1, want: Enrollment.UserStatus.STUDENT },
+        { desc: "Promote student to teacher", courseID: 1, userID: 2, want: Enrollment.UserStatus.TEACHER },
+    ]
 
-    it("Promote student to teacher", async () => {
+    beforeAll(async () => {
+        // Load enrollments into state before running tests
+        await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 2, statuses: [] })
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 1, statuses: [] })
-        // This is a user with course status student
-        window.confirm = jest.fn(() => true)
-        const enrollment = mockedOvermind.state.courseEnrollments[1][0]
-        const status = Enrollment.UserStatus.TEACHER
-        mockedOvermind.actions.updateEnrollment({ enrollment: enrollment, status: status })
-        expect(enrollment.getStatus()).toEqual(status)
+    })
+
+    updateEnrollmentTests.forEach(({ desc, courseID, userID, want }) => {
+        it(desc, async () => {
+            window.confirm = jest.fn(() => true)
+            const enrollment = mockedOvermind.state.courseEnrollments[courseID].find(e => e.getUserid() === userID)
+            expect(enrollment).toBeDefined()
+            mockedOvermind.actions.updateEnrollment({ enrollment: enrollment as Enrollment, status: want })
+            expect((enrollment as Enrollment).getStatus()).toEqual(want)
+        })
     })
 })
 
