@@ -20,7 +20,7 @@ describe("UpdateEnrollment", () => {
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 2, statuses: [] })
         // This is a user with course status pending
         window.confirm = jest.fn(() => true)
-        var enrollment = mockedOvermind.state.courseEnrollments[2][1]
+        const enrollment = mockedOvermind.state.courseEnrollments[2][1]
         const status = Enrollment.UserStatus.STUDENT
         mockedOvermind.actions.updateEnrollment({ enrollment: enrollment, status: status })
         await expect(enrollment.getStatus()).toEqual(status)
@@ -30,7 +30,7 @@ describe("UpdateEnrollment", () => {
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 2, statuses: [] })
         // This is a user with course status teacher
         window.confirm = jest.fn(() => true)
-        var enrollment = mockedOvermind.state.courseEnrollments[2][0]
+        const enrollment = mockedOvermind.state.courseEnrollments[2][0]
         const status = Enrollment.UserStatus.STUDENT
         mockedOvermind.actions.updateEnrollment({ enrollment: enrollment, status: status })
         expect(enrollment.getStatus()).toEqual(status)
@@ -40,8 +40,8 @@ describe("UpdateEnrollment", () => {
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 1, statuses: [] })
         // This is a user with course status student
         window.confirm = jest.fn(() => true)
-        var enrollment = mockedOvermind.state.courseEnrollments[1][0]
-        var status = Enrollment.UserStatus.TEACHER
+        const enrollment = mockedOvermind.state.courseEnrollments[1][0]
+        const status = Enrollment.UserStatus.TEACHER
         mockedOvermind.actions.updateEnrollment({ enrollment: enrollment, status: status })
         expect(enrollment.getStatus()).toEqual(status)
     })
