@@ -17,19 +17,23 @@ For our purposes, we require you to add drivers to your `PATH`.
 On Linux and macOS, you can verify that your drivers are installed by running `which <driver_name>`.
 On Windows you can verify by running `<driver_name>.exe`
 
-## Enabling Browsers
+## Configuring how the tests run
 
-After having downloaded the drivers and added them to your `PATH`, you need to modify `browser.json` to enable the browsers you want to use. This file is located in `dev/src/__tests__/testHelpers/browsers.json`.
+### Enabling browsers
+
+After having downloaded the drivers and added them to your `PATH`, you need to modify `config.json` to enable the browsers you want to use. This file is located in `dev/src/__tests__/testHelpers/config.json`.
 
 To enable a browser, add `true` to the browser's key.
 
 Our Selenium tests will try to run in all browsers that are enabled.
 
+### Setting the base URL
+
+To specify the base URL used by the tests, add it to the `BASE_URL` key in `config.json`.
+
 ## How to run the tests
 
->TODO: Fill out this section
-
-Selenium tests require that our frontend is reachable in a browser.
+Selenium tests require that our frontend is reachable at the URL specified in `config.json`.
 
 Selenium tests are run by:
 

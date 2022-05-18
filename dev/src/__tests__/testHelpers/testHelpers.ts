@@ -11,10 +11,10 @@ export const isOverlapping = (rect: IRectangle, rect2: IRectangle) => {
 // Supported browsers must be defined in the config file: browsers.json
 // NOTE: These builders require you to have web driver executables in your PATH
 const getBuilders = (): Builder[] => {
-    const browsers = require("./browsers.json")
+    const config = require("./config.json")
     const builders: Builder[] = []
     Object.entries(Browser).forEach(([key, value]) => {
-        if (key in browsers && browsers[key]) {
+        if (key in config.BROWSERS && config.BROWSERS[key]) {
             const builder = createBuilder(value)
             builders.push(builder)
         }
@@ -30,15 +30,27 @@ const createBuilder = (browser: string) => {
     return builder
 }
 
+// getBaseUrl returns the base url to be used for the tests
+export const getBaseUrl = (): string => {
+    const config = require("./config.json")
+    let url = config.BASE_URL as string
+    if (url.endsWith("/")) {
+        url = url.slice(0, -1)
+    }
+    return url
+}
+
 /** setupDrivers returns an array of drivers for all the browsers that are supported
- *  @url (optional) the url to load in the browser
+ *  @path (optional) the path to load in the browser
+ *  @example: setupDrivers("/path/to/page")
  */
-export const setupDrivers = (url?: string): ThenableWebDriver[] => {
+export const setupDrivers = (path?: string): ThenableWebDriver[] => {
+    const baseUrl = getBaseUrl()
     const builders = getBuilders()
     const drivers = builders.map(driver => driver.build())
     beforeAll(async () => {
         // Open the page to be tested in all browsers, before running tests
-        await Promise.all(drivers.map(driver => driver.get(url ?? "http://localhost:8082")))
+        await Promise.all(drivers.map(driver => driver.get(baseUrl + (path ? path : ""))))
     })
 
     afterAll(async () => {
