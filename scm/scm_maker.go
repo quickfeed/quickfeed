@@ -15,15 +15,15 @@ import (
 )
 
 const (
-	AppEnv           = "APP_ID"
-	KeyEnv           = "APP_KEY"
-	SecretEnv        = "APP_SECRET"
-	KeyPath          = "APP_KEYPATH"
-	InstallationsAPI = "https://api.github.com/app/installations"
-	GitHubUserAPI    = "https://api.github.com/user"
+	AppEnv          = "APP_ID"
+	KeyEnv          = "APP_KEY"
+	SecretEnv       = "APP_SECRET"
+	KeyPath         = "APP_KEYPATH"
+	InstallationAPI = "https://api.github.com/app/installations"
+	GitHubUserAPI   = "https://api.github.com/user"
 )
 
-// GithubConfig keeps parameters of the GitHub app
+// GithubConfig keeps parameters of the GitHub app.
 type GithubConfig struct {
 	appID     string
 	clientID  string
@@ -32,6 +32,8 @@ type GithubConfig struct {
 	appConfig *app.Config
 }
 
+// SCMMaker keeps provider-specific configs
+// and a map of course-based scms.
 type SCMMaker struct {
 	scms         *Scms
 	githubConfig *GithubConfig
@@ -63,7 +65,8 @@ func NewApp() (*SCMMaker, error) {
 	}
 	appKey, err := key.FromFile(config.keyPath)
 	if err != nil {
-		return nil, fmt.Errorf("error reading key from file: %s", err)
+		wd, _ := os.Getwd()
+		return nil, fmt.Errorf("wd %s error reading key from file: %s", wd, err)
 	}
 	appClientConfig, err := app.NewConfig(config.appID, appKey)
 	if err != nil {
@@ -90,7 +93,7 @@ func (sm *SCMMaker) NewSCM(ctx context.Context, logger *zap.SugaredLogger, cours
 
 // Creates a new scm client with access to the course organization
 func (sm *SCMMaker) NewInstallationClient(ctx context.Context, courseOrg string) (*github.Client, error) {
-	resp, err := sm.githubConfig.appConfig.Client().Get(InstallationsAPI)
+	resp, err := sm.githubConfig.appConfig.Client().Get(InstallationAPI)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching installations for GitHub app %s: %s", sm.githubConfig.appID, err)
 	}

@@ -31,7 +31,7 @@ type TokenManager struct {
 // NewTokenManager creates a new token manager
 func NewTokenManager(db database.Database, expireAfter time.Duration, secret, domain string) (*TokenManager, error) {
 	if secret == "" || domain == "" {
-		return nil, fmt.Errorf("failed to create a token manager: missing secret (%s) or domain (%s)", secret, domain)
+		return nil, fmt.Errorf("failed to create a new token manager: missing secret (%s) or domain (%s)", secret, domain)
 	}
 	manager := &TokenManager{
 		db:          db,
@@ -85,7 +85,7 @@ func (tm *TokenManager) NewTokenCookie(userID uint64) (*http.Cookie, error) {
 	}, nil
 }
 
-// NewClaims creates user claims for a JWT token
+// NewClaims creates new JWT claims for user ID
 func (tm *TokenManager) NewClaims(userID uint64) (*Claims, error) {
 	usr, err := tm.db.GetUserWithEnrollments(userID)
 	if err != nil {
@@ -95,6 +95,7 @@ func (tm *TokenManager) NewClaims(userID uint64) (*Claims, error) {
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(tm.expireAfter).Unix(),
 			IssuedAt:  time.Now().Unix(),
+			Issuer:    "Quickfeed",
 		},
 		UserID: userID,
 		Admin:  usr.IsAdmin,
@@ -118,6 +119,8 @@ func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("Signing algorithm in header: %+v", token.Header["alg"]) // tmp
+
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 		return claims, nil
 	}
@@ -132,7 +135,7 @@ func (tm *TokenManager) GetTokens() []uint64 {
 // Update removes user ID from the manager and updates user record in the database
 func (tm *TokenManager) Remove(userID uint64) error {
 	if !tm.exists(userID) {
-		return fmt.Errorf("user with ID %d is not in the list", userID)
+		return nil
 	}
 	if err := tm.update(userID, false); err != nil {
 		return err
@@ -149,10 +152,8 @@ func (tm *TokenManager) Remove(userID uint64) error {
 
 // Add adds a new UserID to the manager and updates user record in the database
 func (tm *TokenManager) Add(userID uint64) error {
-	// Return if the given ID is already in the list to avoid duplicates
-	// TODO(vera): ignore, don't return err
 	if tm.exists(userID) {
-		return fmt.Errorf("user wit	h ID %d is already in the list", userID)
+		return nil
 	}
 	if err := tm.update(userID, true); err != nil {
 		return err

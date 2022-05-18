@@ -4,9 +4,6 @@ import (
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag/types"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/internal/qtest"
-	"github.com/autograde/quickfeed/web/auth"
 )
 
 const (
@@ -61,27 +58,27 @@ var user *pb.User
 // 	}
 // }
 
-func fillDatabase(t *testing.T, db database.Database) {
-	// Add secret token for the helpbot application (to allow it to invoke gRPC methods)
-	auth.Add(token, botUserID)
+// func fillDatabase(t *testing.T, db database.Database) {
+// 	// Add secret token for the helpbot application (to allow it to invoke gRPC methods)
+// 	auth.Add(token, botUserID)
 
-	// Check that token was stored and maps to correct user
-	checkCookie := auth.Get(token)
-	if checkCookie != botUserID {
-		t.Errorf("Expected %v, got %v\n", botUserID, checkCookie)
-	}
-	admin := qtest.CreateFakeUser(t, db, 1)
-	// admin := qtest.CreateUser(t, db, 1, &pb.User{Login: "admin"})
-	course := &pb.Course{
-		Code: "DAT320",
-		Name: "Operating Systems and Systems Programming",
-		Year: 2021,
-	}
-	qtest.CreateCourse(t, db, admin, course)
+// 	// Check that token was stored and maps to correct user
+// 	checkCookie := auth.Get(token)
+// 	if checkCookie != botUserID {
+// 		t.Errorf("Expected %v, got %v\n", botUserID, checkCookie)
+// 	}
+// 	admin := qtest.CreateFakeUser(t, db, 1)
+// 	// admin := qtest.CreateUser(t, db, 1, &pb.User{Login: "admin"})
+// 	course := &pb.Course{
+// 		Code: "DAT320",
+// 		Name: "Operating Systems and Systems Programming",
+// 		Year: 2021,
+// 	}
+// 	qtest.CreateCourse(t, db, admin, course)
 
-	user = qtest.CreateUser(t, db, 11, &pb.User{Login: userName})
-	qtest.EnrollStudent(t, db, user, course)
-}
+// 	user = qtest.CreateUser(t, db, 11, &pb.User{Login: userName})
+// 	qtest.EnrollStudent(t, db, user, course)
+// }
 
 // TODO(vera): this method needs update (add methods that create test app and installation client)
 // func startGrpcAuthServer(t *testing.T, db database.Database) {

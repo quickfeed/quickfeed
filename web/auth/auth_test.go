@@ -1,12 +1,20 @@
 package auth_test
 
 import (
+	"log"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/autograde/quickfeed/internal/qtest"
+	"github.com/autograde/quickfeed/internal/rand"
+	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
 )
 
 const (
@@ -78,27 +86,34 @@ func logger(t *testing.T) *zap.SugaredLogger {
 // }
 
 // TODO(vera): this test needs a complete rewrite
-// func TestOAuth2LoginRedirect(t *testing.T) {
-// 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
-// 	w := httptest.NewRecorder()
+func TestOAuth2LoginRedirect(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, authURL, nil)
+	w := httptest.NewRecorder()
 
-// 	store := newStore()
-// 	gothic.Store = store
-
-// 	e := echo.New()
-// 	c := e.NewContext(r, w)
-
-// 	db, cleanup := qtest.TestDB(t)
-// 	defer cleanup()
-
-// 	authHandler := auth.OAuth2Login(logger(t), db)
-// 	withSession := session.Middleware(store)(authHandler)
-// 	if err := withSession(c); err != nil {
-// 		t.Error(err)
-// 	}
-
-// 	assertCode(t, w.Code, http.StatusTemporaryRedirect)
-// }
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	// TODO(vera): all this must be done inside a test helper method
+	// that lives in scm package to be able to read the app key
+	scmMaker, err := scm.NewApp()
+	if err != nil {
+		log.Fatalf("failed to start GitHub app: %v\n", err)
+	}
+	id, secret := scmMaker.GetID()
+	authConfig := oauth2.Config{
+		ClientID:     id,
+		ClientSecret: secret,
+		Endpoint:     github.Endpoint,
+		RedirectURL:  "https://127.0.0.1:8080/auth/github/callback/", // TODO(vera): get from config
+	}
+	callbackSecret := rand.String()
+	authHandler := auth.OAuth2Login(logger(t), db, authConfig, callbackSecret)
+	testHandler := http.HandlerFunc(authHandler)
+	testHandler.ServeHTTP(w, r)
+	if w.Code != http.StatusTemporaryRedirect {
+		t.Fatal()
+		// t.Fatalf("Want redirect status %v, got %v", http.StatusTemporaryRedirect, w.Code)
+	}
+}
 
 // TODO(vera): needs a rewrite
 // func TestOAuth2CallbackBadRequest(t *testing.T) {

@@ -5,7 +5,6 @@ import (
 	"log"
 	"mime"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/autograde/quickfeed/ci"
@@ -62,7 +61,6 @@ func main() {
 		dbFile   = flag.String("database.file", "qf.db", "database file")
 		public   = flag.String("http.public", "public", "path to content to serve")
 		httpAddr = flag.String("http.addr", ":8080", "HTTP listen address")
-		// grpcAddr = flag.String("grpc.addr", ":9090", "gRPC listen address")
 	)
 	flag.Parse()
 
@@ -83,21 +81,23 @@ func main() {
 	// TODO(vera): find and replace (if possible) all occasions where this token is used
 	// Add application token for external applications (to allow invoking gRPC methods)
 	// TODO(meling): this is a temporary solution, and we should find a better way to do this
-	token := os.Getenv("QUICKFEED_AUTH_TOKEN")
-	if len(token) > 16 {
-		auth.Add(token, 1)
-		log.Println("Added application token")
-	}
+	// token := os.Getenv("QUICKFEED_AUTH_TOKEN")
+	// if len(token) > 16 {
+	// 	auth.Add(token, 1)
+	// 	log.Println("Added application token")
+	// }
 
 	serverConfig := config.NewConfig(*baseURL, *public, *httpAddr)
 	logger.Sugar().Debugf("SERVER CONFIG: %+V", serverConfig)
 
-	githubApp, err := scm.NewApp()
+	scmMaker, err := scm.NewApp()
 	if err != nil {
 		log.Fatalf("failed to start GitHub app: %v\n", err)
 	}
-	id, secret := githubApp.GetID()
+	id, secret := scmMaker.GetID()
 	logger.Sugar().Debugf("Callback url from config: %s", serverConfig.Endpoints.BaseURL+serverConfig.Endpoints.PortNumber+serverConfig.Endpoints.CallbackURL) // tmp
+	// TODO(vera): this part is specific to github, but doesn't have to be.
+	// Idea: just pass scm maker to the enpoint handler and let it make config based on the provider.
 	authConfig := oauth2.Config{
 		ClientID:     id,
 		ClientSecret: secret,
@@ -111,7 +111,7 @@ func main() {
 		log.Fatalf("failed to make token manager: %v\n", err)
 	}
 
-	agService := web.NewAutograderService(logger, db, githubApp, serverConfig, tokenManager, runner)
+	agService := web.NewAutograderService(logger, db, scmMaker, serverConfig, tokenManager, runner)
 	agService.MakeSCMClients()
 
 	apiServer, err := serverConfig.GenerateTLSApi(logger.Sugar(), db, tokenManager)
@@ -127,7 +127,7 @@ func main() {
 	router := http.NewServeMux()
 	router.Handle("/", multiplexer.MultiplexerHandler(http.StripPrefix("/", http.FileServer(http.Dir("public")))))
 	router.HandleFunc(serverConfig.Endpoints.LoginURL, auth.OAuth2Login(logger.Sugar(), db, authConfig, serverConfig.Secrets.CallbackSecret))
-	router.HandleFunc(serverConfig.Endpoints.CallbackURL, auth.OAuth2Callback(logger.Sugar(), db, authConfig, githubApp, tokenManager, serverConfig.Secrets.CallbackSecret))
+	router.HandleFunc(serverConfig.Endpoints.CallbackURL, auth.OAuth2Callback(logger.Sugar(), db, authConfig, scmMaker, tokenManager, serverConfig.Secrets.CallbackSecret))
 
 	srv := &http.Server{
 		Handler:      router,
