@@ -10,7 +10,7 @@ describe("Course utility elements should not overlap", () => {
         { width: 412, height: 914, want: false } // Bigger phones
     ]
 
-    const drivers = setupDrivers("http://localhost:8082/#/course/1")
+    const drivers = setupDrivers("/course/1")
 
     drivers.forEach(driver => {
         overlapTests.forEach(test => {
