@@ -1,0 +1,11 @@
+{
+    "BASE_URL": "http://localhost:8082/",
+    "BROWSERS": {
+        "FIREFOX": false,
+        "CHROME": false,
+        "OPERA": false,
+        "SAFARI": false,
+        "INTERNET_EXPLORER": false,
+        "EDGE": false
+    }
+}
