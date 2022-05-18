@@ -10,7 +10,10 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-var authCookieName = "auth"
+var (
+	authCookieName = "auth"
+	refreshTime    = 5 * time.Minute
+)
 
 type Claims struct {
 	jwt.StandardClaims
@@ -52,11 +55,16 @@ func (tm *TokenManager) GetAuthCookieName() string {
 }
 
 // JWTUpdateRequired returns true if JWT update is needed for this user ID
+// due to updated user role or token expiration time
 func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 	for _, token := range tm.tokens {
 		if claims.UserID == token {
 			return true
 		}
+	}
+	if claims.ExpiresAt-time.Now().Unix() < refreshTime.Milliseconds() {
+		fmt.Println("Updating token, expires after ", claims.ExpiresAt-time.Now().Unix() < refreshTime.Milliseconds()) // tmp
+		return true
 	}
 	return false
 }
