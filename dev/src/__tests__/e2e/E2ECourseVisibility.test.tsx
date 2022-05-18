@@ -1,53 +1,53 @@
-import { Builder, By, Capabilities, until } from 'selenium-webdriver'
+import { By, until } from 'selenium-webdriver'
+import { setupDrivers } from '../testHelpers/testHelpers'
 
 
 describe("End to End course visibility", () => {
-    it("Should not overlap on res 1920x1080", async () => {
-        const firefox = require('selenium-webdriver/firefox')
-        const service = new firefox.ServiceBuilder('drivers\\geckodriver.exe')
-        const driver = new Builder().forBrowser('firefox').setFirefoxService(service).withCapabilities(Capabilities.firefox()
-            .set("acceptInsecureCerts", true)).build()
-        await driver.get("https://127.0.0.1/dev/")
 
-        // Go to courseage
-        const hamburger = await driver.findElement(By.className("hamburger"))
-        await driver.wait(until.elementIsVisible(hamburger), 100)
-        await hamburger.click()
-        const goToCourse = await driver.findElement(By.css(".courseLink"))
-        await driver.wait(until.elementIsVisible(goToCourse), 100)
-        await goToCourse.click()
+    const drivers = setupDrivers()
 
-        // Find course code from coursecard and hamburger menu
-        const card = await driver.findElement(By.css(".card"))
-        const cardCourseCode = await card.findElement(By.css(".card-header")).getText()
-        const courseCode = cardCourseCode.split("\n")[0]
-        const hamburgerCode = await driver.findElement(By.css("#title")).getText()
+    drivers.forEach(driver => {
+        it("Should not overlap on res 1920x1080", async () => {
+            // Go to courseage
+            const hamburger = await driver.findElement(By.className("hamburger"))
+            await driver.wait(until.elementIsVisible(hamburger), 100)
+            await hamburger.click()
+            const goToCourse = await driver.findElement(By.css(".courseLink"))
+            await driver.wait(until.elementIsVisible(goToCourse), 100)
+            await goToCourse.click()
 
-        // Unfavorite the course
-        const star = await driver.findElement(By.css(".fa-star"))
-        await driver.wait(until.elementIsVisible(star), 100)
-        await star.click()
+            // Find course code from coursecard and hamburger menu
+            const card = await driver.findElement(By.css(".card"))
+            const cardCourseCode = await card.findElement(By.css(".card-header")).getText()
+            const courseCode = cardCourseCode.split("\n")[0]
+            const hamburgerCode = await driver.findElement(By.css("#title")).getText()
 
-        // Get courseCode from myCourses section
-        const myCourse = await driver.findElement(By.css(".myCourses"))
-        const myCoursesCard = await myCourse.findElement(By.css(".card-header")).getText()
+            // Unfavorite the course
+            const star = await driver.findElement(By.css(".fa-star"))
+            await driver.wait(until.elementIsVisible(star), 100)
+            await star.click()
 
-        const hasMoved = (courseCode === myCoursesCard.split("\n")[0])
+            // Get courseCode from myCourses section
+            const myCourse = await driver.findElement(By.css(".myCourses"))
+            const myCoursesCard = await myCourse.findElement(By.css(".card-header")).getText()
 
-        // Find coursecodes in navigator
-        const navigatorCourses = await driver.findElement(By.css(".navigator"))
-        const courses = await navigatorCourses.findElements(By.css("#title"))
+            const hasMoved = (courseCode === myCoursesCard.split("\n")[0])
 
-        // Check if the course has moved from navigator
-        let isInList = true
-        for (let i = 0; i < courses.length; i++) {
-            if (await courses[i].getText() === hamburgerCode) {
-                isInList = false
+            // Find coursecodes in navigator
+            const navigatorCourses = await driver.findElement(By.css(".navigator"))
+            const courses = await navigatorCourses.findElements(By.css("#title"))
+
+            // Check if the course has moved from navigator
+            let isInList = true
+            for (let i = 0; i < courses.length; i++) {
+                if (await courses[i].getText() === hamburgerCode) {
+                    isInList = false
+                }
             }
-        }
-        const movedFromFavorites = (isInList && hasMoved)
+            const movedFromFavorites = (isInList && hasMoved)
 
-        await driver.close()
-        expect(movedFromFavorites).toBe((true))
-    }, 50000)
+            await driver.close()
+            expect(movedFromFavorites).toBe((true))
+        }, 50000)
+    })
 })

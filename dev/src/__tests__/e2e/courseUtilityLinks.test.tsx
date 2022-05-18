@@ -1,5 +1,5 @@
 import { By, until } from 'selenium-webdriver'
-import { getBuilders, isOverlapping } from '../testHelpers/testHelpers'
+import { isOverlapping, setupDrivers } from '../testHelpers/testHelpers'
 
 describe("Course utility elements should not overlap", () => {
     const overlapTests: { width: number, height: number, want: boolean }[] = [
@@ -10,17 +10,7 @@ describe("Course utility elements should not overlap", () => {
         { width: 412, height: 914, want: false } // Bigger phones
     ]
 
-    const builders = getBuilders()
-    const drivers = builders.map(driver => driver.build())
-    beforeAll(async () => {
-        // Open the page to be tested in all browsers, before running tests
-        await Promise.all(drivers.map(driver => driver.get("http://localhost:8082/#/course/1")))
-    })
-
-    afterAll(async () => {
-        // Close all drivers after the tests are done
-        await Promise.all(drivers.map(driver => driver.quit()))
-    })
+    const drivers = setupDrivers("http://localhost:8082/#/course/1")
 
     drivers.forEach(driver => {
         overlapTests.forEach(test => {
