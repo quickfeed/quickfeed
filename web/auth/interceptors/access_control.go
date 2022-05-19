@@ -14,8 +14,11 @@ import (
 )
 
 type (
-	role  int
-	roles []role
+	role      int
+	roles     []role
+	idRequest interface {
+		FetchID(string) uint64
+	}
 )
 
 const (
@@ -91,23 +94,14 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth
 		if ok {
 			for _, role := range roles {
 				switch role {
-				// TODO(vera): refactor case handlers?
 				case user:
-					switch method {
-					// User can update own information.
-					case "UpdateUser":
-						if claims.UserID == req.(*pb.User).GetID() {
+					if m, ok := req.(idRequest); ok {
+						id := m.FetchID("user")
+						if id == claims.UserID {
 							return handler(ctx, req)
 						}
-					// User can access own course enrollments.
-					case "GetEnrollmentsByUser":
-						if claims.UserID == req.(*pb.EnrollmentStatusRequest).GetUserID() {
-							return handler(ctx, req)
-						}
-					case "GetSubmissions":
-						if claims.UserID == req.(*pb.SubmissionRequest).GetUserID() {
-							return handler(ctx, req)
-						}
+					} else {
+						logger.Debugf("Method %s does not implement FetchID method", method)
 					}
 				case group:
 					switch method {
@@ -152,33 +146,35 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth
 						}
 					}
 				case student:
-					switch method {
-					case "GetEnrollmentsByCourse":
-						courseID := req.(*pb.EnrollmentRequest).GetCourseID()
+					if m, ok := req.(idRequest); ok {
+						courseID := m.FetchID("course")
 						if hasCourseAccess(db, courseID, claims.UserID, pb.Enrollment_STUDENT) {
 							return handler(ctx, req)
 						}
+					} else {
+						logger.Debugf("Method %s does not implement FetchID method", method)
 					}
 				case courseAdmin:
 					if claims.Admin {
-						var courseID uint64
-						switch method {
-						case "GetSubmissions":
-							courseID = req.(*pb.SubmissionRequest).GetCourseID()
-						case "GetSubmissionsByCourse":
-							courseID = req.(*pb.SubmissionsForCourseRequest).GetCourseID()
-						}
-						if hasCourseAccess(db, courseID, claims.UserID, pb.Enrollment_TEACHER) {
-							return handler(ctx, req)
+						if m, ok := req.(idRequest); ok {
+							courseID := m.FetchID("course")
+							if hasCourseAccess(db, courseID, claims.UserID, pb.Enrollment_TEACHER) {
+								return handler(ctx, req)
+							}
+						} else {
+							logger.Debugf("Method %s does not implement FetchID method", method)
 						}
 					}
 				case teacher:
 					var courseID uint64
+					if m, ok := req.(idRequest); ok {
+						courseID = m.FetchID("course")
+					} else {
+						logger.Debugf("Method %s does not implement FetchID method", method)
+					}
 					switch method {
-					case "GetGroupByUserAndCourse", "DeleteGroup":
-						courseID = req.(*pb.GroupRequest).GetCourseID()
-					case "CreateGroup", "UpdateGroup":
-						courseID = req.(*pb.Group).GetCourseID()
+					// Request here does not have a course ID
+					// TODO(vera): add one?
 					case "GetGroup":
 						groupID := req.(*pb.GetGroupRequest).GetGroupID()
 						group, err := db.GetGroup(groupID)
@@ -187,34 +183,6 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth
 							return nil, ErrAccessDenied
 						}
 						courseID = group.GetCourseID()
-					case "GetSubmissions":
-						courseID = req.(*pb.SubmissionRequest).GetCourseID()
-					case "GetSubmissionsByCourse":
-						courseID = req.(*pb.SubmissionsForCourseRequest).GetCourseID()
-					case "UpdateSubmission":
-						courseID = req.(*pb.UpdateSubmissionRequest).GetCourseID()
-					case "RebuildSubmissions":
-						courseID = req.(*pb.RebuildRequest).GetCourseID()
-					case "IsEmptyRepo":
-						courseID = req.(*pb.RepositoryRequest).GetCourseID()
-					case "UpdateCourse":
-						courseID = req.(*pb.Course).GetID()
-					case "UpdateEnrollments":
-						courseID = req.(*pb.Enrollments).GetCourseID()
-					case "GetEnrollmentsByCourse":
-						courseID = req.(*pb.EnrollmentRequest).GetCourseID()
-					case "CreateBenchmark", "UpdateBenchmark", "DeleteBenchmark":
-						courseID = req.(*pb.BenchmarkRequest).GetCourseID()
-					case "CreateCriterion", "UpdateCriterion", "DeleteCriterion":
-						courseID = req.(*pb.CriteriaRequest).GetCourseID()
-					case "CreateReview", "UpdateReview":
-						courseID = req.(*pb.ReviewRequest).GetCourseID()
-					case "UpdateSubmissions":
-						courseID = req.(*pb.UpdateSubmissionRequest).GetCourseID()
-					case "GetReviewers":
-						courseID = req.(*pb.SubmissionReviewersRequest).GetCourseID()
-					case "UpdateAssignments", "GetGroupsByCourse":
-						courseID = req.(*pb.CourseRequest).GetCourseID()
 					case "GetUserByCourse":
 						courseCode := req.(*pb.CourseUserRequest).GetCourseCode()
 						courseYear := req.(*pb.CourseUserRequest).GetCourseYear()
@@ -236,7 +204,7 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth
 					if claims.Admin {
 						return handler(ctx, req)
 					}
-				default:
+				default: // tmp
 					logger.Debugf("Unknown access role: %s", role)
 				}
 			}
