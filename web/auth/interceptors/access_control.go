@@ -36,8 +36,8 @@ const (
 	admin
 )
 
-// If there are several roles that can call a method, a role with least privilege must come first
-// If method is not in the map, there is no restrictions to call it
+// If there are several roles that can call a method, a role with the least privilege must come first.
+// If method is not in the map, there is no restrictions to call it.
 var access = map[string]roles{
 	"GetEnrollmentsByCourse":  {student, teacher},
 	"UpdateUser":              {user, admin},
@@ -61,7 +61,7 @@ var access = map[string]roles{
 	"UpdateCriterion":         {teacher},
 	"DeleteCriterion":         {teacher},
 	"CreateReview":            {teacher},
-	"UpdateReview":            {teacher}, // TODO(vera): also had "owner" role, but looks excessive?
+	"UpdateReview":            {teacher},
 	"UpdateSubmissions":       {teacher},
 	"GetReviewers":            {teacher},
 	"UpdateAssignments":       {teacher},

@@ -12,7 +12,7 @@ import (
 
 var (
 	authCookieName = "auth"
-	refreshTime    = 5 * time.Minute
+	refreshTime    = 1 * time.Minute
 )
 
 type Claims struct {
@@ -31,7 +31,8 @@ type TokenManager struct {
 	cookieName  string
 }
 
-// NewTokenManager creates a new token manager
+// NewTokenManager creates a new token manager, populating
+// the token list with user IDs from the database
 func NewTokenManager(db database.Database, expireAfter time.Duration, secret, domain string) (*TokenManager, error) {
 	if secret == "" || domain == "" {
 		return nil, fmt.Errorf("failed to create a new token manager: missing secret (%s) or domain (%s)", secret, domain)
@@ -118,7 +119,7 @@ func (tm *TokenManager) NewClaims(userID uint64) (*Claims, error) {
 
 // GetClaims returns user claims after parsing and validating a signed token string
 func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("failed to parse token: incorrect signing method")
 		}
@@ -132,7 +133,7 @@ func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 		return claims, nil
 	}
-	return nil, fmt.Errorf("failed to parse token: invalid claims")
+	return nil, fmt.Errorf("failed to parse token: validation error")
 }
 
 // Get returns the list with tokens that require update

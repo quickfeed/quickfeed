@@ -27,7 +27,6 @@ func UpdateTokens(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.Una
 		start := time.Now()
 		sort.Strings(methods)
 		method := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
-		// There are only three methods
 		idx := sort.SearchStrings(methods, method)
 		if idx < len(methods) && methods[idx] == method {
 			logger.Debugf("Token updater found method with index %d", sort.SearchStrings(methods, method)) // tmp
@@ -39,7 +38,7 @@ func UpdateTokens(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.Una
 				switch method {
 				// User has been promoted to admin or demoted.
 				case "UpdateUser":
-					// Add id of the user whos info has been updated.
+					// Add id of the user whose info has been updated.
 					if err := tokens.Add(req.(*pb.User).GetID()); err != nil {
 						logger.Error(err)
 					}
