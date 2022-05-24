@@ -13,7 +13,7 @@ const Search = ({ placeholder, setQuery, className, children }: { placeholder?: 
     }, [])
 
     return (
-        <div className={className ?? "input-group"}>
+        <div className={`input-group ${className}`}>
             <input
                 type={"text"}
                 className="form-control"
