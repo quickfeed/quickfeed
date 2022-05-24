@@ -17,7 +17,7 @@ const NavFavorites = (): JSX.Element => {
     return (
         <nav className="navigator">
             <ul key="list" className="sidebarList">
-                <li key="logo" className="logo" style={{ paddingLeft: "40px" }}>
+                <li key="logo" className="logo" style={{ paddingLeft: "40px", fontWeight: "bold" }}>
                     <Link to="/" >
                         QuickFeed
                     </Link>
