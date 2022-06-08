@@ -59,10 +59,11 @@ var reg = prometheus.NewRegistry()
 
 func main() {
 	var (
-		baseURL  = flag.String("service.url", "127.0.0.1", "base service DNS name")
-		dbFile   = flag.String("database.file", "qf.db", "database file")
-		public   = flag.String("http.public", "public", "path to content to serve")
-		httpAddr = flag.String("http.addr", ":8080", "HTTP listen address")
+		baseURL        = flag.String("service.url", "127.0.0.1", "base service DNS name")
+		dbFile         = flag.String("database.file", "qf.db", "database file")
+		public         = flag.String("http.public", "public", "path to content to serve")
+		httpAddr       = flag.String("http.addr", ":8080", "HTTP listen address")
+		withEncryption = flag.Bool("e", false, "encrypt access tokens")
 	)
 	flag.Parse()
 
@@ -91,6 +92,11 @@ func main() {
 
 	serverConfig := config.NewConfig(*baseURL, *public, *httpAddr)
 	logger.Sugar().Debugf("SERVER CONFIG: %+V", serverConfig)
+	if *withEncryption {
+		if err := serverConfig.ReadKey(); err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	scmMaker, err := scm.NewSCMMaker()
 	if err != nil {

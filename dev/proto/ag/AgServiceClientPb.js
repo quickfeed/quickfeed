@@ -10,129 +10,130 @@ exports.AutograderServiceClient = void 0;
 /* eslint-disable */
 // @ts-nocheck
 var grpcWeb = require("grpc-web");
-var ag_ag_pb = require("../ag/ag_pb");
+var ag_types_types_pb = require("../ag/types/types_pb");
+var ag_types_requests_pb = require("../ag/types/requests_pb");
 var AutograderServiceClient = /** @class */ (function () {
     function AutograderServiceClient(hostname, credentials, options) {
-        this.methodInfoGetUser = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetUser', grpcWeb.MethodType.UNARY, ag_ag_pb.Void, ag_ag_pb.User, function (request) {
+        this.methodInfoGetUser = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetUser', grpcWeb.MethodType.UNARY, ag_types_requests_pb.Void, ag_types_types_pb.User, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.User.deserializeBinary);
-        this.methodInfoGetUsers = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetUsers', grpcWeb.MethodType.UNARY, ag_ag_pb.Void, ag_ag_pb.Users, function (request) {
+        }, ag_types_types_pb.User.deserializeBinary);
+        this.methodInfoGetUsers = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetUsers', grpcWeb.MethodType.UNARY, ag_types_requests_pb.Void, ag_types_types_pb.Users, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Users.deserializeBinary);
-        this.methodInfoGetUserByCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetUserByCourse', grpcWeb.MethodType.UNARY, ag_ag_pb.CourseUserRequest, ag_ag_pb.User, function (request) {
+        }, ag_types_types_pb.Users.deserializeBinary);
+        this.methodInfoGetUserByCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetUserByCourse', grpcWeb.MethodType.UNARY, ag_types_requests_pb.CourseUserRequest, ag_types_types_pb.User, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.User.deserializeBinary);
-        this.methodInfoUpdateUser = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateUser', grpcWeb.MethodType.UNARY, ag_ag_pb.User, ag_ag_pb.Void, function (request) {
+        }, ag_types_types_pb.User.deserializeBinary);
+        this.methodInfoUpdateUser = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateUser', grpcWeb.MethodType.UNARY, ag_types_types_pb.User, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoGetGroup = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetGroup', grpcWeb.MethodType.UNARY, ag_ag_pb.GetGroupRequest, ag_ag_pb.Group, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoGetGroup = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetGroup', grpcWeb.MethodType.UNARY, ag_types_requests_pb.GetGroupRequest, ag_types_types_pb.Group, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Group.deserializeBinary);
-        this.methodInfoGetGroupByUserAndCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetGroupByUserAndCourse', grpcWeb.MethodType.UNARY, ag_ag_pb.GroupRequest, ag_ag_pb.Group, function (request) {
+        }, ag_types_types_pb.Group.deserializeBinary);
+        this.methodInfoGetGroupByUserAndCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetGroupByUserAndCourse', grpcWeb.MethodType.UNARY, ag_types_requests_pb.GroupRequest, ag_types_types_pb.Group, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Group.deserializeBinary);
-        this.methodInfoGetGroupsByCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetGroupsByCourse', grpcWeb.MethodType.UNARY, ag_ag_pb.CourseRequest, ag_ag_pb.Groups, function (request) {
+        }, ag_types_types_pb.Group.deserializeBinary);
+        this.methodInfoGetGroupsByCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetGroupsByCourse', grpcWeb.MethodType.UNARY, ag_types_requests_pb.CourseRequest, ag_types_types_pb.Groups, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Groups.deserializeBinary);
-        this.methodInfoCreateGroup = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateGroup', grpcWeb.MethodType.UNARY, ag_ag_pb.Group, ag_ag_pb.Group, function (request) {
+        }, ag_types_types_pb.Groups.deserializeBinary);
+        this.methodInfoCreateGroup = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateGroup', grpcWeb.MethodType.UNARY, ag_types_types_pb.Group, ag_types_types_pb.Group, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Group.deserializeBinary);
-        this.methodInfoUpdateGroup = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateGroup', grpcWeb.MethodType.UNARY, ag_ag_pb.Group, ag_ag_pb.Void, function (request) {
+        }, ag_types_types_pb.Group.deserializeBinary);
+        this.methodInfoUpdateGroup = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateGroup', grpcWeb.MethodType.UNARY, ag_types_types_pb.Group, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoDeleteGroup = new grpcWeb.MethodDescriptor('/ag.AutograderService/DeleteGroup', grpcWeb.MethodType.UNARY, ag_ag_pb.GroupRequest, ag_ag_pb.Void, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoDeleteGroup = new grpcWeb.MethodDescriptor('/ag.AutograderService/DeleteGroup', grpcWeb.MethodType.UNARY, ag_types_requests_pb.GroupRequest, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoGetCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetCourse', grpcWeb.MethodType.UNARY, ag_ag_pb.CourseRequest, ag_ag_pb.Course, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoGetCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetCourse', grpcWeb.MethodType.UNARY, ag_types_requests_pb.CourseRequest, ag_types_types_pb.Course, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Course.deserializeBinary);
-        this.methodInfoGetCourses = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetCourses', grpcWeb.MethodType.UNARY, ag_ag_pb.Void, ag_ag_pb.Courses, function (request) {
+        }, ag_types_types_pb.Course.deserializeBinary);
+        this.methodInfoGetCourses = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetCourses', grpcWeb.MethodType.UNARY, ag_types_requests_pb.Void, ag_types_types_pb.Courses, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Courses.deserializeBinary);
-        this.methodInfoGetCoursesByUser = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetCoursesByUser', grpcWeb.MethodType.UNARY, ag_ag_pb.EnrollmentStatusRequest, ag_ag_pb.Courses, function (request) {
+        }, ag_types_types_pb.Courses.deserializeBinary);
+        this.methodInfoGetCoursesByUser = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetCoursesByUser', grpcWeb.MethodType.UNARY, ag_types_requests_pb.EnrollmentStatusRequest, ag_types_types_pb.Courses, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Courses.deserializeBinary);
-        this.methodInfoCreateCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateCourse', grpcWeb.MethodType.UNARY, ag_ag_pb.Course, ag_ag_pb.Course, function (request) {
+        }, ag_types_types_pb.Courses.deserializeBinary);
+        this.methodInfoCreateCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateCourse', grpcWeb.MethodType.UNARY, ag_types_types_pb.Course, ag_types_types_pb.Course, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Course.deserializeBinary);
-        this.methodInfoUpdateCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateCourse', grpcWeb.MethodType.UNARY, ag_ag_pb.Course, ag_ag_pb.Void, function (request) {
+        }, ag_types_types_pb.Course.deserializeBinary);
+        this.methodInfoUpdateCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateCourse', grpcWeb.MethodType.UNARY, ag_types_types_pb.Course, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoUpdateCourseVisibility = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateCourseVisibility', grpcWeb.MethodType.UNARY, ag_ag_pb.Enrollment, ag_ag_pb.Void, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoUpdateCourseVisibility = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateCourseVisibility', grpcWeb.MethodType.UNARY, ag_types_types_pb.Enrollment, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoGetAssignments = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetAssignments', grpcWeb.MethodType.UNARY, ag_ag_pb.CourseRequest, ag_ag_pb.Assignments, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoGetAssignments = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetAssignments', grpcWeb.MethodType.UNARY, ag_types_requests_pb.CourseRequest, ag_types_types_pb.Assignments, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Assignments.deserializeBinary);
-        this.methodInfoUpdateAssignments = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateAssignments', grpcWeb.MethodType.UNARY, ag_ag_pb.CourseRequest, ag_ag_pb.Void, function (request) {
+        }, ag_types_types_pb.Assignments.deserializeBinary);
+        this.methodInfoUpdateAssignments = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateAssignments', grpcWeb.MethodType.UNARY, ag_types_requests_pb.CourseRequest, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoGetEnrollmentsByUser = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetEnrollmentsByUser', grpcWeb.MethodType.UNARY, ag_ag_pb.EnrollmentStatusRequest, ag_ag_pb.Enrollments, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoGetEnrollmentsByUser = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetEnrollmentsByUser', grpcWeb.MethodType.UNARY, ag_types_requests_pb.EnrollmentStatusRequest, ag_types_types_pb.Enrollments, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Enrollments.deserializeBinary);
-        this.methodInfoGetEnrollmentsByCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetEnrollmentsByCourse', grpcWeb.MethodType.UNARY, ag_ag_pb.EnrollmentRequest, ag_ag_pb.Enrollments, function (request) {
+        }, ag_types_types_pb.Enrollments.deserializeBinary);
+        this.methodInfoGetEnrollmentsByCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetEnrollmentsByCourse', grpcWeb.MethodType.UNARY, ag_types_requests_pb.EnrollmentRequest, ag_types_types_pb.Enrollments, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Enrollments.deserializeBinary);
-        this.methodInfoCreateEnrollment = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateEnrollment', grpcWeb.MethodType.UNARY, ag_ag_pb.Enrollment, ag_ag_pb.Void, function (request) {
+        }, ag_types_types_pb.Enrollments.deserializeBinary);
+        this.methodInfoCreateEnrollment = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateEnrollment', grpcWeb.MethodType.UNARY, ag_types_types_pb.Enrollment, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoUpdateEnrollments = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateEnrollments', grpcWeb.MethodType.UNARY, ag_ag_pb.Enrollments, ag_ag_pb.Void, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoUpdateEnrollments = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateEnrollments', grpcWeb.MethodType.UNARY, ag_types_types_pb.Enrollments, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoGetSubmissions = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetSubmissions', grpcWeb.MethodType.UNARY, ag_ag_pb.SubmissionRequest, ag_ag_pb.Submissions, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoGetSubmissions = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetSubmissions', grpcWeb.MethodType.UNARY, ag_types_requests_pb.SubmissionRequest, ag_types_types_pb.Submissions, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Submissions.deserializeBinary);
-        this.methodInfoGetSubmissionsByCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetSubmissionsByCourse', grpcWeb.MethodType.UNARY, ag_ag_pb.SubmissionsForCourseRequest, ag_ag_pb.CourseSubmissions, function (request) {
+        }, ag_types_types_pb.Submissions.deserializeBinary);
+        this.methodInfoGetSubmissionsByCourse = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetSubmissionsByCourse', grpcWeb.MethodType.UNARY, ag_types_requests_pb.SubmissionsForCourseRequest, ag_types_requests_pb.CourseSubmissions, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.CourseSubmissions.deserializeBinary);
-        this.methodInfoUpdateSubmission = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateSubmission', grpcWeb.MethodType.UNARY, ag_ag_pb.UpdateSubmissionRequest, ag_ag_pb.Void, function (request) {
+        }, ag_types_requests_pb.CourseSubmissions.deserializeBinary);
+        this.methodInfoUpdateSubmission = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateSubmission', grpcWeb.MethodType.UNARY, ag_types_requests_pb.UpdateSubmissionRequest, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoUpdateSubmissions = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateSubmissions', grpcWeb.MethodType.UNARY, ag_ag_pb.UpdateSubmissionsRequest, ag_ag_pb.Void, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoUpdateSubmissions = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateSubmissions', grpcWeb.MethodType.UNARY, ag_types_requests_pb.UpdateSubmissionsRequest, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoRebuildSubmissions = new grpcWeb.MethodDescriptor('/ag.AutograderService/RebuildSubmissions', grpcWeb.MethodType.UNARY, ag_ag_pb.RebuildRequest, ag_ag_pb.Void, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoRebuildSubmissions = new grpcWeb.MethodDescriptor('/ag.AutograderService/RebuildSubmissions', grpcWeb.MethodType.UNARY, ag_types_requests_pb.RebuildRequest, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoCreateBenchmark = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateBenchmark', grpcWeb.MethodType.UNARY, ag_ag_pb.GradingBenchmark, ag_ag_pb.GradingBenchmark, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoCreateBenchmark = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateBenchmark', grpcWeb.MethodType.UNARY, ag_types_requests_pb.BenchmarkRequest, ag_types_types_pb.GradingBenchmark, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.GradingBenchmark.deserializeBinary);
-        this.methodInfoUpdateBenchmark = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateBenchmark', grpcWeb.MethodType.UNARY, ag_ag_pb.GradingBenchmark, ag_ag_pb.Void, function (request) {
+        }, ag_types_types_pb.GradingBenchmark.deserializeBinary);
+        this.methodInfoUpdateBenchmark = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateBenchmark', grpcWeb.MethodType.UNARY, ag_types_requests_pb.BenchmarkRequest, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoDeleteBenchmark = new grpcWeb.MethodDescriptor('/ag.AutograderService/DeleteBenchmark', grpcWeb.MethodType.UNARY, ag_ag_pb.GradingBenchmark, ag_ag_pb.Void, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoDeleteBenchmark = new grpcWeb.MethodDescriptor('/ag.AutograderService/DeleteBenchmark', grpcWeb.MethodType.UNARY, ag_types_requests_pb.BenchmarkRequest, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoCreateCriterion = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateCriterion', grpcWeb.MethodType.UNARY, ag_ag_pb.GradingCriterion, ag_ag_pb.GradingCriterion, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoCreateCriterion = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateCriterion', grpcWeb.MethodType.UNARY, ag_types_requests_pb.CriteriaRequest, ag_types_types_pb.GradingCriterion, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.GradingCriterion.deserializeBinary);
-        this.methodInfoUpdateCriterion = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateCriterion', grpcWeb.MethodType.UNARY, ag_ag_pb.GradingCriterion, ag_ag_pb.Void, function (request) {
+        }, ag_types_types_pb.GradingCriterion.deserializeBinary);
+        this.methodInfoUpdateCriterion = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateCriterion', grpcWeb.MethodType.UNARY, ag_types_requests_pb.CriteriaRequest, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoDeleteCriterion = new grpcWeb.MethodDescriptor('/ag.AutograderService/DeleteCriterion', grpcWeb.MethodType.UNARY, ag_ag_pb.GradingCriterion, ag_ag_pb.Void, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoDeleteCriterion = new grpcWeb.MethodDescriptor('/ag.AutograderService/DeleteCriterion', grpcWeb.MethodType.UNARY, ag_types_requests_pb.CriteriaRequest, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
-        this.methodInfoCreateReview = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateReview', grpcWeb.MethodType.UNARY, ag_ag_pb.ReviewRequest, ag_ag_pb.Review, function (request) {
+        }, ag_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoCreateReview = new grpcWeb.MethodDescriptor('/ag.AutograderService/CreateReview', grpcWeb.MethodType.UNARY, ag_types_requests_pb.ReviewRequest, ag_types_types_pb.Review, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Review.deserializeBinary);
-        this.methodInfoUpdateReview = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateReview', grpcWeb.MethodType.UNARY, ag_ag_pb.ReviewRequest, ag_ag_pb.Review, function (request) {
+        }, ag_types_types_pb.Review.deserializeBinary);
+        this.methodInfoUpdateReview = new grpcWeb.MethodDescriptor('/ag.AutograderService/UpdateReview', grpcWeb.MethodType.UNARY, ag_types_requests_pb.ReviewRequest, ag_types_types_pb.Review, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Review.deserializeBinary);
-        this.methodInfoGetReviewers = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetReviewers', grpcWeb.MethodType.UNARY, ag_ag_pb.SubmissionReviewersRequest, ag_ag_pb.Reviewers, function (request) {
+        }, ag_types_types_pb.Review.deserializeBinary);
+        this.methodInfoGetReviewers = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetReviewers', grpcWeb.MethodType.UNARY, ag_types_requests_pb.SubmissionReviewersRequest, ag_types_requests_pb.Reviewers, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Reviewers.deserializeBinary);
-        this.methodInfoGetProviders = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetProviders', grpcWeb.MethodType.UNARY, ag_ag_pb.Void, ag_ag_pb.Providers, function (request) {
+        }, ag_types_requests_pb.Reviewers.deserializeBinary);
+        this.methodInfoGetProviders = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetProviders', grpcWeb.MethodType.UNARY, ag_types_requests_pb.Void, ag_types_requests_pb.Providers, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Providers.deserializeBinary);
-        this.methodInfoGetOrganization = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetOrganization', grpcWeb.MethodType.UNARY, ag_ag_pb.OrgRequest, ag_ag_pb.Organization, function (request) {
+        }, ag_types_requests_pb.Providers.deserializeBinary);
+        this.methodInfoGetOrganization = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetOrganization', grpcWeb.MethodType.UNARY, ag_types_requests_pb.OrgRequest, ag_types_requests_pb.Organization, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Organization.deserializeBinary);
-        this.methodInfoGetRepositories = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetRepositories', grpcWeb.MethodType.UNARY, ag_ag_pb.URLRequest, ag_ag_pb.Repositories, function (request) {
+        }, ag_types_requests_pb.Organization.deserializeBinary);
+        this.methodInfoGetRepositories = new grpcWeb.MethodDescriptor('/ag.AutograderService/GetRepositories', grpcWeb.MethodType.UNARY, ag_types_requests_pb.URLRequest, ag_types_requests_pb.Repositories, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Repositories.deserializeBinary);
-        this.methodInfoIsEmptyRepo = new grpcWeb.MethodDescriptor('/ag.AutograderService/IsEmptyRepo', grpcWeb.MethodType.UNARY, ag_ag_pb.RepositoryRequest, ag_ag_pb.Void, function (request) {
+        }, ag_types_requests_pb.Repositories.deserializeBinary);
+        this.methodInfoIsEmptyRepo = new grpcWeb.MethodDescriptor('/ag.AutograderService/IsEmptyRepo', grpcWeb.MethodType.UNARY, ag_types_requests_pb.RepositoryRequest, ag_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, ag_ag_pb.Void.deserializeBinary);
+        }, ag_types_requests_pb.Void.deserializeBinary);
         if (!options)
             options = {};
         if (!credentials)

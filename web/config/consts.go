@@ -8,6 +8,7 @@ const (
 	TokenKeyEnv = "JWT_KEY"
 	CertEnv     = "CERT"
 	CertKeyEnv  = "CERT_KEY"
+	KeyEnv      = "KEYFILE"
 	// Endpoints
 	Install  = "https://github.com/apps/appth-gh" // TODO(vera): change to the real URL (or better yet read from a config file)
 	Login    = "/auth/login/"
