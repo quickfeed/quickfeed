@@ -13,46 +13,36 @@ import (
 	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/database"
 	lg "github.com/autograde/quickfeed/log"
-	"github.com/autograde/quickfeed/scm"
 
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 )
 
-// OAuth2Logout invalidates the session for the logged in user.
+var (
+	githubUserAPI = "https://api.github.com/user"
+	httpClient    *http.Client
+)
+
+func init() {
+	httpClient = &http.Client{
+		Timeout: time.Second * 10,
+	}
+}
+
+// OAuth2Logout replace the token cookie with an empty cookie to log the user out.
 func OAuth2Logout(logger *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO(vera): get token from cookie, set a new empty expired token,
 		// redirect back
-
-		// if i, ok := sess.Values[UserKey]; ok {
-		// 	// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		// 	us := i.(*UserSession)
-		// 	logger.Debug(us)
-		// 	// Invalidate gothic user sessions.
-		// 	for provider := range us.Providers {
-		// 		sess, err := session.Get(provider+gothic.SessionName, c)
-		// 		if err != nil {
-		// 			logger.Error(err.Error())
-		// 			return err
-		// 		}
-		// 		logger.Debug(sessionData(sess))
-
-		// 		sess.Options.MaxAge = -1
-		// 		sess.Values = make(map[interface{}]interface{})
-		// 		if err := sess.Save(r, w); err != nil {
-		// 			logger.Error(err.Error())
-		// 		}
-		// 	}
-		// }
-		// // Invalidate our user session.
-		// sess.Options.MaxAge = -1
-		// sess.Values = make(map[interface{}]interface{})
-		// if err := sess.Save(r, w); err != nil {
-		// 	logger.Error(err.Error())
-		// }
-		// return c.Redirect(http.StatusFound, extractRedirectURL(r, Redirect))
+		newCookie := &http.Cookie{
+			Name:     "auth",
+			Value:    "",
+			MaxAge:   0,
+			Expires:  time.Unix(0, 0),
+			HttpOnly: true,
+			Secure:   true,
+		}
+		http.SetCookie(w, newCookie)
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }
@@ -74,9 +64,9 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.
 			unauthorized(logger, w, login, "request method: %s", r.Method)
 			return
 		}
-		// This endpoint will work for any provider as long as oauth2.Config is configured for the
-		// relevant provider. This check here is just for logging.
-		provider := strings.Split(r.URL.Path, "/")[2]
+		// This will work for any provider oauth2.Config is configured for.
+		// This check here is just for logging.
+		provider := strings.Split(r.URL.Path, "/")[3]
 		redirectURL := config.AuthCodeURL(secret)
 		logger.Debugf("Redirecting to %s to perform authentication; AuthURL: %v", provider, redirectURL)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
@@ -84,7 +74,7 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
-func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oauth2.Config, scmMaker *scm.SCMMaker, tokens *TokenManager, secret string) http.HandlerFunc {
+func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oauth2.Config, tokens *TokenManager, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			unauthorized(logger, w, callback, "request method: %s", r.Method)
@@ -115,19 +105,13 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 				return
 			}
 			// Use access token to fetch information about the GitHub user.
-			req, err := http.NewRequest("GET", scmMaker.GetUserURL(), nil)
+			req, err := http.NewRequest("GET", githubUserAPI, nil)
 			if err != nil {
 				unauthorized(logger, w, callback, "failed to create user request: %v", err)
 				return
 			}
 			req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", githubToken.AccessToken))
-			// TODO(vera): this http client has only  one purpose: to fetch user data from github on auth. Somehow, the http client that
-			// alredy exists for the github app fails to make this request. However, this client will be used every time a user logs into
-			// the system without a cookie, which means it is dumb to make a new client every time -> we have to create one when the server starts
-			// and reuse it (for example as a part of the github app struct) or find out what can be done to use the app client for this request
-			httpClient := &http.Client{
-				Timeout: time.Second * 10,
-			}
+
 			resp, err := httpClient.Do(req)
 			if err != nil {
 				unauthorized(logger, w, callback, "failed to send user request: %v", err)

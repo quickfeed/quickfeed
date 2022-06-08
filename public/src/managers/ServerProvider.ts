@@ -263,7 +263,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async tryRemoteLogin( provider: string ): Promise<User | null> {
         if ( provider.length > 0 ) {
-            const requestString = "/" + URL_ENDPOINT.auth + "/" + provider
+            const requestString = "/" + URL_ENDPOINT.auth + "/login/" + provider // TODO: check
             window.location.assign( requestString )
         }
         return null

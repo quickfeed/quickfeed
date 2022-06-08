@@ -734,7 +734,7 @@ type Course struct {
 	OrganizationPath string                `protobuf:"bytes,9,opt,name=organizationPath,proto3" json:"organizationPath,omitempty"` // The organization's SCM name, e.g. uis-dat520-2020.
 	SlipDays         uint32                `protobuf:"varint,10,opt,name=slipDays,proto3" json:"slipDays,omitempty"`
 	Dockerfile       string                `protobuf:"bytes,11,opt,name=dockerfile,proto3" json:"dockerfile,omitempty"`
-	InstallationID   int64                 `protobuf:"varint,12,opt,name=installationID,proto3" json:"installationID,omitempty"`
+	InstallationID   int64                 `protobuf:"varint,12,opt,name=installationID,proto3" json:"installationID,omitempty"` // TODO(vera): we most probably don't need it anymore
 	Enrolled         Enrollment_UserStatus `protobuf:"varint,13,opt,name=enrolled,proto3,enum=types.Enrollment_UserStatus" json:"enrolled,omitempty" gorm:"-"`
 	Enrollments      []*Enrollment         `protobuf:"bytes,14,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
 	Assignments      []*Assignment         `protobuf:"bytes,15,rep,name=assignments,proto3" json:"assignments,omitempty"`

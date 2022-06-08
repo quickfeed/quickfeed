@@ -19,8 +19,7 @@ const (
 	KeyEnv          = "APP_KEY"
 	SecretEnv       = "APP_SECRET"
 	KeyPath         = "APP_KEYPATH"
-	InstallationAPI = "https://api.github.com/app/installations"
-	GitHubUserAPI   = "https://api.github.com/user"
+	installationAPI = "https://api.github.com/app/installations"
 )
 
 // GithubConfig keeps parameters of the GitHub app.
@@ -33,7 +32,7 @@ type GithubConfig struct {
 }
 
 // SCMMaker keeps provider-specific configs
-// and a map of course-based scms.
+// and a map of scm clients for each course.
 type SCMMaker struct {
 	scms         *Scms
 	githubConfig *GithubConfig
@@ -48,19 +47,20 @@ func newAppConfig() *GithubConfig {
 	}
 }
 
-// Valid ensures that all configuration fields are not empty
-func (conf *GithubConfig) Valid() bool {
+// valid ensures that all configuration fields are not empty
+func (conf *GithubConfig) valid() bool {
 	return conf.appID != "" && conf.keyPath != "" &&
 		conf.clientID != "" && conf.secret != ""
 }
 
-// AppClient creates client for the Quickfeed GitHub Application
+// NewSCMMaker creates client for the Quickfeed GitHub Application.
 // This client can only access the metadata of the Application itself
+// like ID, settings or a list of installations.
 // To access organizations via GitHub API we need to derive an installation client
 // from this Application client for each course organization
-func NewApp() (*SCMMaker, error) {
+func NewSCMMaker() (*SCMMaker, error) {
 	config := newAppConfig()
-	if !config.Valid() {
+	if !config.valid() {
 		return nil, fmt.Errorf("error configuring GitHub App: %+v", config)
 	}
 	appKey, err := key.FromFile(config.keyPath)
@@ -93,18 +93,18 @@ func (sm *SCMMaker) NewSCM(ctx context.Context, logger *zap.SugaredLogger, cours
 
 // Creates a new scm client with access to the course organization
 func (sm *SCMMaker) NewInstallationClient(ctx context.Context, courseOrg string) (*github.Client, error) {
-	resp, err := sm.githubConfig.appConfig.Client().Get(InstallationAPI)
+	resp, err := sm.githubConfig.appConfig.Client().Get(installationAPI)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching installations for GitHub app %s: %s", sm.githubConfig.appID, err)
+		return nil, fmt.Errorf("error fetching installations for GitHub app %s: %w", sm.githubConfig.appID, err)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error reading installation response: %s", err)
+		return nil, fmt.Errorf("error reading installation response: %w", err)
 	}
 	var installations []*github.Installation
 	if err := json.Unmarshal(body, &installations); err != nil {
-		return nil, fmt.Errorf("error unmarshalling installation response: %s", err)
+		return nil, fmt.Errorf("error unmarshalling installation response: %w", err)
 	}
 	var installationID int64
 	for _, inst := range installations {
@@ -118,23 +118,12 @@ func (sm *SCMMaker) NewInstallationClient(ctx context.Context, courseOrg string)
 	}
 	install, err := sm.githubConfig.appConfig.InstallationConfig(strconv.Itoa(int(installationID)))
 	if err != nil {
-		return nil, fmt.Errorf("error configuring github client for installation: %s", err)
+		return nil, fmt.Errorf("error configuring github client for installation: %w", err)
 	}
 	return github.NewClient(install.Client(ctx)), nil
 }
 
 // GetIDs returns app client ID and secret to be used in auth flow
-func (sm *SCMMaker) GetID() (string, string) {
+func (sm *SCMMaker) GetIDs() (string, string) {
 	return sm.githubConfig.clientID, sm.githubConfig.secret
-}
-
-func (sm *SCMMaker) GetUserURL() string {
-	return GitHubUserAPI
-}
-
-// TODO(vera): update and move to a file with test helpers
-func NewTestApp() *SCMMaker {
-	return &SCMMaker{
-		scms: NewScms(),
-	}
 }

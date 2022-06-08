@@ -18,14 +18,14 @@ func ValidateToken(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.Un
 			logger.Error(err)
 			return nil, ErrAccessDenied
 		}
-		logger.Debugf("Extracted auth token: %s", token) // tmp
 		claims, err := tokens.GetClaims(token)
 		if err != nil {
 			logger.Errorf("Failed to extract claims from JWT: %s", err)
 			return nil, ErrAccessDenied
 		}
 		logger.Debugf("Claims from token: %+v", claims)
-		// If user ID is in the update token list, generate and set new JWT
+		// If the token is about to expire or the user ID
+		// is in the update token list, generate and set a new JWT.
 		if tokens.UpdateRequired(claims) {
 			logger.Debugf("Token update required for user %d", claims.UserID)
 			updatedToken, err := tokens.NewTokenCookie(claims.UserID)
@@ -33,14 +33,6 @@ func ValidateToken(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.Un
 				logger.Errorf("Failed to generate new user claims %v", err)
 				return nil, ErrAccessDenied
 			}
-			logger.Debugf("Old token: %s", token)        // tmp
-			logger.Debugf("New token: %v", updatedToken) // tmp
-			// tokenCookie, err := tokens.NewTokenCookie(ctx, updatedToken)
-			// if err != nil {
-			// 	logger.Errorf("Failed to make token cookie: %v", err)
-			// 	return nil, ErrAccessDenied
-			// }
-			// //
 			if err := tokens.Remove(claims.UserID); err != nil {
 				logger.Errorf("Failed to update token list: %s", err)
 				return nil, ErrAccessDenied
@@ -56,7 +48,7 @@ func ValidateToken(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.Un
 			logger.Error(err)
 			return nil, ErrAccessDenied
 		}
-		logger.Debugf("Token validator interceptor took %v", time.Since(start))
+		logger.Debugf("Token validator interceptor (%s) took %v", info.FullMethod, time.Since(start))
 		return handler(ctx, req)
 	}
 }

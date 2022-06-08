@@ -1520,7 +1520,8 @@ proto.types.GetGroupRequest.prototype.toObject = function(opt_includeInstance) {
  */
 proto.types.GetGroupRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    groupid: jspb.Message.getFieldWithDefault(msg, 1, 0)
+    groupid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    courseid: jspb.Message.getFieldWithDefault(msg, 2, 0)
   };
 
   if (includeInstance) {
@@ -1561,6 +1562,10 @@ proto.types.GetGroupRequest.deserializeBinaryFromReader = function(msg, reader) 
       var value = /** @type {number} */ (reader.readUint64());
       msg.setGroupid(value);
       break;
+    case 2:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setCourseid(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -1597,6 +1602,13 @@ proto.types.GetGroupRequest.serializeBinaryToWriter = function(message, writer) 
       f
     );
   }
+  f = message.getCourseid();
+  if (f !== 0) {
+    writer.writeUint64(
+      2,
+      f
+    );
+  }
 };
 
 
@@ -1615,6 +1627,24 @@ proto.types.GetGroupRequest.prototype.getGroupid = function() {
  */
 proto.types.GetGroupRequest.prototype.setGroupid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional uint64 courseID = 2;
+ * @return {number}
+ */
+proto.types.GetGroupRequest.prototype.getCourseid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.types.GetGroupRequest} returns this
+ */
+proto.types.GetGroupRequest.prototype.setCourseid = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 

@@ -961,7 +961,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	qtest.EnrollStudent(t, db, student1, course)
 	qtest.EnrollStudent(t, db, student2, course)
 	qtest.EnrollStudent(t, db, student3, course)
-	app, err := scm.NewApp()
+	app, err := scm.NewSCMMaker()
 	if err != nil {
 		t.Fatal(err)
 	}

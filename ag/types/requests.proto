@@ -29,7 +29,8 @@ message UserRequest {
 }
 
 message GetGroupRequest {
-    uint64 groupID = 1;
+    uint64 groupID  = 1;
+    uint64 courseID = 2;
 }
 
 message GroupRequest {

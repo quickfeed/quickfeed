@@ -45,11 +45,12 @@ func NewConfig(baseURL, public, portNumber string) *Config {
 	log.Printf("Making new config: base URL (%s), public (%s), httpAddr (%s)", baseURL, public, portNumber) // tmp
 	conf := &Config{
 		Endpoints: &Endpoints{
-			BaseURL:    baseURL,
-			Public:     public, // filepath.Join(public, indexFile),
-			PortNumber: portNumber,
-			LoginURL:   Login,
-			// LogoutURL:     Logout,
+			BaseURL:       baseURL,
+			Public:        public, // filepath.Join(public, indexFile),
+			PortNumber:    portNumber,
+			LoginURL:      Login,
+			LogoutURL:     Logout,
+			WebhookURL:    Webhook,
 			CallbackURL:   Callback,
 			InstallAppURL: Install,
 		},

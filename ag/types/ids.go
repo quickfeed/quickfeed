@@ -34,8 +34,14 @@ func (r *GroupRequest) FetchID(role string) uint64 {
 }
 
 // FetchID returns group ID
-func (r *GetGroupRequest) FetchID(_ string) uint64 {
-	return r.GetGroupID()
+func (r *GetGroupRequest) FetchID(role string) uint64 {
+	switch role {
+	case "course":
+		return r.GetCourseID()
+	case "group":
+		return r.GetGroupID()
+	}
+	return 0
 }
 
 // FetchID returns course ID

@@ -77,7 +77,7 @@ message Course {
     string organizationPath        = 9;  // The organization's SCM name, e.g. uis-dat520-2020.
     uint32 slipDays                = 10;
     string dockerfile              = 11;
-    int64 installationID           = 12;
+    int64 installationID           = 12;  // TODO(vera): we most probably don't need it anymore
     Enrollment.UserStatus enrolled = 13 [(go.field) = { tags: 'gorm:"-"' }];
 
     repeated Enrollment enrollments = 14;

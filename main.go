@@ -13,7 +13,9 @@ import (
 	"github.com/autograde/quickfeed/web"
 	"github.com/autograde/quickfeed/web/auth"
 	"github.com/autograde/quickfeed/web/config"
+	"github.com/autograde/quickfeed/web/hooks"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 
@@ -78,7 +80,7 @@ func main() {
 	}
 	defer runner.Close()
 
-	// TODO(vera): find and replace (if possible) all occasions where this token is used
+	// TODO(vera): replace by requesting and using the installation access token
 	// Add application token for external applications (to allow invoking gRPC methods)
 	// TODO(meling): this is a temporary solution, and we should find a better way to do this
 	// token := os.Getenv("QUICKFEED_AUTH_TOKEN")
@@ -90,11 +92,11 @@ func main() {
 	serverConfig := config.NewConfig(*baseURL, *public, *httpAddr)
 	logger.Sugar().Debugf("SERVER CONFIG: %+V", serverConfig)
 
-	scmMaker, err := scm.NewApp()
+	scmMaker, err := scm.NewSCMMaker()
 	if err != nil {
 		log.Fatalf("failed to start GitHub app: %v\n", err)
 	}
-	id, secret := scmMaker.GetID()
+	id, secret := scmMaker.GetIDs()
 	logger.Sugar().Debugf("Callback url from config: %s", serverConfig.Endpoints.BaseURL+serverConfig.Endpoints.PortNumber+serverConfig.Endpoints.CallbackURL) // tmp
 	// TODO(vera): this part is specific to github, but doesn't have to be.
 	// Idea: just pass scm maker to the enpoint handler and let it make config based on the provider.
@@ -104,7 +106,6 @@ func main() {
 		Endpoint:     github.Endpoint,
 		RedirectURL:  "https://127.0.0.1:8080/auth/github/callback/", // TODO(vera): get from config
 	}
-	logger.Sugar().Debugf("OAUTH CONFIG: %+V", authConfig)
 	tokenManager, err := auth.NewTokenManager(db, config.TokenExpirationTime, serverConfig.Secrets.TokenSecret, *httpAddr)
 	logger.Sugar().Debugf("Generated token manager, tokens to update: %v", tokenManager.GetTokens()) // tmp
 	if err != nil {
@@ -124,11 +125,8 @@ func main() {
 	multiplexer := config.GrpcMultiplexer{
 		grpcWebServer,
 	}
-	router := http.NewServeMux()
-	router.Handle("/", multiplexer.MultiplexerHandler(http.StripPrefix("/", http.FileServer(http.Dir("public")))))
-	router.HandleFunc(serverConfig.Endpoints.LoginURL, auth.OAuth2Login(logger.Sugar(), db, authConfig, serverConfig.Secrets.CallbackSecret))
-	router.HandleFunc(serverConfig.Endpoints.CallbackURL, auth.OAuth2Callback(logger.Sugar(), db, authConfig, scmMaker, tokenManager, serverConfig.Secrets.CallbackSecret))
 
+	router := registerRouter(logger.Sugar(), db, multiplexer, runner, serverConfig, authConfig, tokenManager)
 	srv := &http.Server{
 		Handler:      router,
 		Addr:         serverConfig.Endpoints.BaseURL + serverConfig.Endpoints.PortNumber, // TODO(vera): fix port/localhost issue
@@ -137,4 +135,15 @@ func main() {
 	}
 	// Serve the static handler over TLS
 	log.Fatal(srv.ListenAndServeTLS(serverConfig.Paths.CertPath, serverConfig.Paths.CertKeyPath))
+}
+
+func registerRouter(logger *zap.SugaredLogger, db database.Database, mux config.GrpcMultiplexer, runner *ci.Docker, qfConfig *config.Config, authConfig oauth2.Config, tm *auth.TokenManager) *http.ServeMux {
+	ghHook := hooks.NewGitHubWebHook(logger, db, runner, qfConfig.Secrets.WebhookSecret)
+	router := http.NewServeMux()
+	router.Handle("/", mux.MultiplexerHandler(http.StripPrefix("/", http.FileServer(http.Dir("public")))))
+	router.HandleFunc(qfConfig.Endpoints.LoginURL, auth.OAuth2Login(logger, db, authConfig, qfConfig.Secrets.CallbackSecret))
+	router.HandleFunc(qfConfig.Endpoints.CallbackURL, auth.OAuth2Callback(logger, db, authConfig, tm, qfConfig.Secrets.CallbackSecret))
+	router.HandleFunc(qfConfig.Endpoints.LogoutURL, auth.OAuth2Logout(logger))
+	router.HandleFunc(qfConfig.Endpoints.WebhookURL, hooks.HandleWebhook(ghHook))
+	return router
 }

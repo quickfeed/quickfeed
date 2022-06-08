@@ -16,7 +16,7 @@ import (
 type (
 	role      int
 	roles     []role
-	idRequest interface {
+	requestID interface {
 		FetchID(string) uint64
 	}
 )
@@ -95,9 +95,8 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth
 			for _, role := range roles {
 				switch role {
 				case user:
-					if m, ok := req.(idRequest); ok {
-						id := m.FetchID("user")
-						if id == claims.UserID {
+					if m, ok := req.(requestID); ok {
+						if m.FetchID("user") == claims.UserID {
 							return handler(ctx, req)
 						}
 					} else {
@@ -124,11 +123,15 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth
 					// and enrolled in the course.
 					case "CreateGroup":
 						group := req.(*pb.Group)
-						enrolled := hasCourseAccess(db, group.GetCourseID(), claims.UserID, pb.Enrollment_STUDENT)
-						groupMember := group.Contains(&pb.User{ID: claims.UserID})
-						if enrolled && groupMember {
-							return handler(ctx, req)
+						status, ok := claims.Courses[group.GetCourseID()]
+						if ok {
+							enrolled := status == pb.Enrollment_STUDENT || status == pb.Enrollment_TEACHER
+							isGroupMember := group.Contains(&pb.User{ID: claims.UserID})
+							if enrolled && isGroupMember {
+								return handler(ctx, req)
+							}
 						}
+
 					// Group members can access group submissions.
 					case "GetSubmissions":
 						groupID := req.(*pb.SubmissionRequest).GetGroupID()
@@ -146,9 +149,10 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth
 						}
 					}
 				case student:
-					if m, ok := req.(idRequest); ok {
+					if m, ok := req.(requestID); ok {
 						courseID := m.FetchID("course")
-						if hasCourseAccess(db, courseID, claims.UserID, pb.Enrollment_STUDENT) {
+						status, ok := claims.Courses[courseID]
+						if ok && status == pb.Enrollment_STUDENT {
 							return handler(ctx, req)
 						}
 					} else {
@@ -156,9 +160,10 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth
 					}
 				case courseAdmin:
 					if claims.Admin {
-						if m, ok := req.(idRequest); ok {
+						if m, ok := req.(requestID); ok {
 							courseID := m.FetchID("course")
-							if hasCourseAccess(db, courseID, claims.UserID, pb.Enrollment_TEACHER) {
+							status, ok := claims.Courses[courseID]
+							if ok && status == pb.Enrollment_TEACHER {
 								return handler(ctx, req)
 							}
 						} else {
@@ -167,22 +172,12 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth
 					}
 				case teacher:
 					var courseID uint64
-					if m, ok := req.(idRequest); ok {
+					if m, ok := req.(requestID); ok {
 						courseID = m.FetchID("course")
 					} else {
 						logger.Debugf("Method %s does not implement FetchID method", method)
 					}
 					switch method {
-					// Request here does not have a course ID
-					// TODO(vera): add one?
-					case "GetGroup":
-						groupID := req.(*pb.GetGroupRequest).GetGroupID()
-						group, err := db.GetGroup(groupID)
-						if err != nil {
-							logError(logger, "no group with ID %d: %s", groupID, err)
-							return nil, ErrAccessDenied
-						}
-						courseID = group.GetCourseID()
 					case "GetUserByCourse":
 						courseCode := req.(*pb.CourseUserRequest).GetCourseCode()
 						courseYear := req.(*pb.CourseUserRequest).GetCourseYear()
@@ -197,7 +192,8 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth
 						}
 						courseID = course.GetID()
 					}
-					if hasCourseAccess(db, courseID, claims.UserID, pb.Enrollment_TEACHER) {
+					status, ok := claims.Courses[courseID]
+					if ok && status == pb.Enrollment_TEACHER {
 						return handler(ctx, req)
 					}
 				case admin:

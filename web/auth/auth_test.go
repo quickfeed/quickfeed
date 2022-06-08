@@ -94,11 +94,11 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 	defer cleanup()
 	// TODO(vera): all this must be done inside a test helper method
 	// that lives in scm package to be able to read the app key
-	scmMaker, err := scm.NewApp()
+	scmMaker, err := scm.NewSCMMaker()
 	if err != nil {
 		log.Fatalf("failed to start GitHub app: %v\n", err)
 	}
-	id, secret := scmMaker.GetID()
+	id, secret := scmMaker.GetIDs()
 	authConfig := oauth2.Config{
 		ClientID:     id,
 		ClientSecret: secret,

@@ -10,9 +10,10 @@ const (
 	CertKeyEnv  = "CERT_KEY"
 	// Endpoints
 	Install  = "https://github.com/apps/appth-gh" // TODO(vera): change to the real URL (or better yet read from a config file)
-	Login    = "/auth/github/"
+	Login    = "/auth/login/"
 	Callback = "/auth/github/callback/"
-	Webhook  = "/hook/github/events"
+	Webhook  = "/hook/github/events/"
+	Logout   = "/logout"
 
 	TokenExpirationTime = time.Hour * 244
 )

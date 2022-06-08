@@ -162,7 +162,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	app, err := scm.NewApp()
+	app, err := scm.NewSCMMaker()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -440,7 +440,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}
 	// TODO(vera): update test to use app client
 	fakeProvider, _ := qtest.FakeProviderMap(t)
-	app, err := scm.NewApp()
+	app, err := scm.NewSCMMaker()
 	if err != nil {
 		t.Fatal(err)
 	}

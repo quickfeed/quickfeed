@@ -115,6 +115,9 @@ export class GetGroupRequest extends jspb.Message {
   getGroupid(): number;
   setGroupid(value: number): GetGroupRequest;
 
+  getCourseid(): number;
+  setCourseid(value: number): GetGroupRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GetGroupRequest.AsObject;
   static toObject(includeInstance: boolean, msg: GetGroupRequest): GetGroupRequest.AsObject;
@@ -126,6 +129,7 @@ export class GetGroupRequest extends jspb.Message {
 export namespace GetGroupRequest {
   export type AsObject = {
     groupid: number,
+    courseid: number,
   }
 }
 

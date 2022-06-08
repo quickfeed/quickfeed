@@ -40,7 +40,7 @@ func GetWebHookServer(t *testing.T) string {
 // Creates organization based GitHub app client to use in tests. If organization name is empty,
 // uses the default test organization name
 func GetTestClient(t *testing.T, org string) *github.Client {
-	app, err := NewApp()
+	app, err := NewSCMMaker()
 	if err != nil {
 		t.Fatal(err)
 	}
