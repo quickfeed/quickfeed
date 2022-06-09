@@ -13,6 +13,8 @@ import (
 	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/database"
 	lg "github.com/autograde/quickfeed/log"
+	"github.com/autograde/quickfeed/web/auth/tokens"
+	"github.com/autograde/quickfeed/web/config"
 
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
@@ -74,7 +76,7 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database, config oauth2.
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
-func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oauth2.Config, tokens *TokenManager, secret string) http.HandlerFunc {
+func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scmConfig oauth2.Config, tokens *tokens.TokenManager, config *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			unauthorized(logger, w, callback, "request method: %s", r.Method)
@@ -89,8 +91,8 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 			}
 			// Make sure the callback is coming from the provider by validating the state.
 			callbackSecret := r.FormValue("state")
-			if callbackSecret != secret {
-				unauthorized(logger, w, callback, "mismatching secrets: expected %s, got %s", secret, callbackSecret)
+			if callbackSecret != config.Secrets.CallbackSecret {
+				unauthorized(logger, w, callback, "mismatching secrets: expected %s, got %s", config.Secrets.CallbackSecret, callbackSecret)
 				return
 			}
 			// Exchange code for access token.
@@ -99,7 +101,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, config oaut
 				unauthorized(logger, w, callback, "empty code")
 				return
 			}
-			githubToken, err := config.Exchange(context.Background(), code)
+			githubToken, err := scmConfig.Exchange(context.Background(), code)
 			if err != nil {
 				unauthorized(logger, w, callback, "could not exchange token: %v", err)
 				return

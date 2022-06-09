@@ -14,6 +14,7 @@ import (
 	"github.com/autograde/quickfeed/database"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/autograde/quickfeed/web/auth"
+	"github.com/autograde/quickfeed/web/auth/tokens"
 	"github.com/autograde/quickfeed/web/config"
 )
 
@@ -24,13 +25,13 @@ type AutograderService struct {
 	db           database.Database
 	scmMaker     *scm.SCMMaker
 	Config       *config.Config // TODO(vera): make unexported again after refactoring the startup method
-	tokenManager *auth.TokenManager
+	tokenManager *tokens.TokenManager
 	runner       ci.Runner
 	ag.UnimplementedAutograderServiceServer
 }
 
 // NewAutograderService returns an AutograderService object.
-func NewAutograderService(logger *zap.Logger, db database.Database, app *scm.SCMMaker, config *config.Config, tokens *auth.TokenManager, runner ci.Runner) *AutograderService {
+func NewAutograderService(logger *zap.Logger, db database.Database, app *scm.SCMMaker, config *config.Config, tokens *tokens.TokenManager, runner ci.Runner) *AutograderService {
 	return &AutograderService{
 		logger:       logger.Sugar(),
 		db:           db,

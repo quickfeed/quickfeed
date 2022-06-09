@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/web/auth"
 	"github.com/autograde/quickfeed/web/auth/interceptors"
+	"github.com/autograde/quickfeed/web/auth/tokens"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -17,7 +17,7 @@ type GrpcMultiplexer struct {
 }
 
 // GenerateTLSApi will load TLS certificates and key and create a grpc server with those.
-func (conf *Config) GenerateTLSApi(logger *zap.SugaredLogger, db database.Database, tokens *auth.TokenManager) (*grpc.Server, error) {
+func (conf *Config) GenerateTLSApi(logger *zap.SugaredLogger, db database.Database, tokens *tokens.TokenManager) (*grpc.Server, error) {
 	cred, err := credentials.NewServerTLSFromFile(conf.Paths.CertPath, conf.Paths.CertKeyPath)
 	if err != nil {
 		return nil, err

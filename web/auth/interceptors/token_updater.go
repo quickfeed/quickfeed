@@ -7,7 +7,7 @@ import (
 	"time"
 
 	pb "github.com/autograde/quickfeed/ag/types"
-	"github.com/autograde/quickfeed/web/auth"
+	"github.com/autograde/quickfeed/web/auth/tokens"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -22,7 +22,7 @@ var methods = []string{
 // UpdateTokens adds relevant user IDs to the list of users that need their token refreshed
 // next time they sign in because their access roles might have changed
 // This method only logs errors to avoid overwriting the gRPC responses.
-func UpdateTokens(logger *zap.SugaredLogger, tokens *auth.TokenManager) grpc.UnaryServerInterceptor {
+func UpdateTokens(logger *zap.SugaredLogger, tokens *tokens.TokenManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		start := time.Now()
 		sort.Strings(methods)

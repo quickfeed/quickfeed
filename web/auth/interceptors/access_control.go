@@ -8,7 +8,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/web/auth"
+	"github.com/autograde/quickfeed/web/auth/tokens"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -75,7 +75,7 @@ func logError(logger *zap.SugaredLogger, format string, a ...interface{}) {
 	logger.Error("AccessControl: " + fmt.Sprintf(format, a...))
 }
 
-func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *auth.TokenManager) grpc.UnaryServerInterceptor {
+func AccessControl(logger *zap.SugaredLogger, db database.Database, tokens *tokens.TokenManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		start := time.Now()
 		token, err := GetFromMetadata(ctx, "token", "")

@@ -1,14 +1,10 @@
 package config
 
 import (
-	"encoding/base64"
-	"fmt"
 	"log"
 	"os"
 
-	"github.com/autograde/quickfeed/internal/rand"
-	"golang.org/x/crypto/nacl/secretbox"
-	"golang.org/x/term"
+	qfrand "github.com/autograde/quickfeed/internal/rand"
 )
 
 // Endpoints keeps all URL endpoints used by the server for user authentication,
@@ -30,7 +26,7 @@ type Secrets struct {
 	WebhookSecret  string
 	CallbackSecret string
 	TokenSecret    string
-	Key            []byte
+	key            *[32]byte
 }
 
 type Paths struct {
@@ -61,7 +57,7 @@ func NewConfig(baseURL, public, portNumber string) *Config {
 		},
 		Secrets: &Secrets{
 			WebhookSecret:  os.Getenv(WebhookEnv),
-			CallbackSecret: rand.String(),
+			CallbackSecret: qfrand.String(),
 			TokenSecret:    os.Getenv(TokenKeyEnv),
 		},
 		Paths: &Paths{
@@ -70,40 +66,4 @@ func NewConfig(baseURL, public, portNumber string) *Config {
 		},
 	}
 	return conf
-}
-
-// ReadKey asks for a passphrase to decrypt the master key that will be used
-// to encrypt access tokens.
-func (c *Config) ReadKey() error {
-	fmt.Println("Key: ")
-	input, err := term.ReadPassword(0)
-	if err != nil {
-		return err
-	}
-	passphrase, err := base64.RawStdEncoding.DecodeString(string(input))
-	if err != nil {
-		return err
-	}
-	if len(passphrase) != 32 {
-		return fmt.Errorf("wrong key length, expected 32, got %d", len(passphrase))
-	}
-	path := os.Getenv(KeyEnv)
-	if path == "" {
-		return fmt.Errorf("missing file path")
-	}
-	keyfile, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	passkey := new([32]byte)
-	nonce := new([24]byte)
-	copy(passkey[:], passphrase[:32])
-	copy(nonce[:], keyfile[:24])
-
-	key, ok := secretbox.Open(nil, keyfile[24:], nonce, passkey)
-	if !ok {
-		return fmt.Errorf("error decrypting the key")
-	}
-	c.Secrets.Key = key
-	return nil
 }

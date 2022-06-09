@@ -1,4 +1,4 @@
-package auth_test
+package tokens_test
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag/types"
 	"github.com/autograde/quickfeed/internal/qtest"
-	"github.com/autograde/quickfeed/web/auth"
+	"github.com/autograde/quickfeed/web/auth/tokens"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -19,7 +19,7 @@ func TestTokenManager(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 	user := qtest.CreateFakeUser(t, db, 2)
 
-	manager, err := auth.NewTokenManager(db, time.Minute*30, "notasecret", "127.0.0.1")
+	manager, err := tokens.NewTokenManager(db, time.Minute*30, "notasecret", "127.0.0.1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -27,7 +27,7 @@ func TestTokenManager(t *testing.T) {
 		t.Error(err)
 	}
 
-	claimsNoUpdate := auth.Claims{
+	claimsNoUpdate := tokens.Claims{
 		UserID:  10,
 		Admin:   false,
 		Courses: make(map[uint64]pb.Enrollment_UserStatus, 0),
@@ -36,7 +36,7 @@ func TestTokenManager(t *testing.T) {
 		t.Error("JWT update required is true, expected false")
 	}
 
-	claimsToUpdate := auth.Claims{
+	claimsToUpdate := tokens.Claims{
 		UserID:  2,
 		Admin:   false,
 		Courses: map[uint64]pb.Enrollment_UserStatus{1: pb.Enrollment_STUDENT},
