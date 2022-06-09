@@ -11,8 +11,8 @@ import (
 	"golang.org/x/term"
 )
 
-// ReadKey asks for a passphrase to decrypt the master key that will be used
-// to encrypt access tokens. If fromEnv is true, reads from environment,
+// ReadKey reads incrypted master key from a file and decrypts it
+// with a passphrase. If fromEnv is true, reads passphrase from environment,
 // otherwise asks for user input.
 func (c *Config) ReadKey(fromEnv bool) error {
 	var pass string
@@ -89,5 +89,5 @@ func (c *Config) Decipher(tokenString string) (string, error) {
 
 // WithEncryption returns true if encryption key has been set.
 func (c *Config) WithEncryption() bool {
-	return len(c.Secrets.key) > 0
+	return c.Secrets.key != nil
 }

@@ -43,6 +43,7 @@ func (sm *SCMMaker) GetOrCreateSCMEntry(logger *zap.SugaredLogger, course *pb.Co
 	if ok {
 		return client, nil
 	}
+	logger.Debug("COURSE ORGANIZATION: ", course.OrganizationPath)
 	sc, err := sm.NewSCM(context.Background(), logger, course.OrganizationPath, course.GetAccessToken())
 	if err != nil {
 		return nil, err

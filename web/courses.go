@@ -480,16 +480,29 @@ func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission,
 	return s.db.UpdateEnrollment(query)
 }
 
-// TODO(vera): this method requires another type of scm client (static token based): scm type struct needs a method that will create such client on demand
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
 func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, user *pb.User, course *pb.Course) error {
 	user, err := s.db.GetUser(user.ID)
 	if err != nil {
 		return fmt.Errorf("failed to get user %d: %w", user.ID, err)
 	}
-	// TODO(vera): add and use the method that creates a token-based scm client
-	userSCM, err := s.getSCM(0)
-	// userSCM, err := s.getSCM(ctx, user, "github")
+	token, err := user.GetAccessToken("github")
+	if err != nil {
+		return err
+	}
+	if token == "" {
+		return fmt.Errorf("user %s missing access token", user.Login)
+	}
+	if s.Config.WithEncryption() {
+		token, err = s.Config.Decipher(token)
+		if err != nil {
+			return err
+		}
+	}
+	userSCM, err := scm.NewSCMClient(s.logger, course.Provider, token)
+	if err != nil {
+		return err
+	}
 	if err != nil {
 		return fmt.Errorf("failed to get SCM for user %d: %w", user.ID, err)
 	}

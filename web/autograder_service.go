@@ -110,6 +110,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 	sc, err := s.scmMaker.GetOrCreateSCMEntry(s.logger, in)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: scm client error: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to create course")
 	}
 	in.CourseCreatorID = usr.GetID()
 	course, err := s.createCourse(ctx, sc, in)

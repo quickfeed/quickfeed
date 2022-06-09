@@ -172,11 +172,12 @@ func TestEnrollmentProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ags.AddSCM(scm.NewFakeSCMClient(), 0)
+
 	course, err := ags.CreateCourse(ctx, allCourses[0])
 	if err != nil {
 		t.Fatal(err)
 	}
+	ags.AddSCM(scm.NewFakeSCMClient(), course.ID)
 
 	stud1 := qtest.CreateFakeUser(t, db, 2)
 	enrollStud1 := &pb.Enrollment{CourseID: course.ID, UserID: stud1.ID}
@@ -410,7 +411,6 @@ func TestGetCourse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// TODO(vera): update test to use app client
 	ags := web.NewAutograderService(zap.NewNop(), db, nil, qtest.TestConfig(t), nil, &ci.Local{})
 
 	gotCourse, err := ags.GetCourse(context.Background(), &pb.CourseRequest{CourseID: wantCourse.ID})

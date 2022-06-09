@@ -14,8 +14,6 @@ import (
 	"github.com/gosimple/slug"
 )
 
-// TODO(vera): it is possible to never use token here if there is a way to
-// clone private repos with github app authorization
 // GithubSCM implements the SCM interface.
 type GithubSCM struct {
 	logger *zap.SugaredLogger

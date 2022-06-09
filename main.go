@@ -68,6 +68,7 @@ func main() {
 	)
 	flag.Parse()
 
+	log.Println("Encryption flag is ", *withEncryption)
 	logger := logq.Zap(true)
 	defer logger.Sync()
 
@@ -94,7 +95,7 @@ func main() {
 	serverConfig := config.NewConfig(*baseURL, *public, *httpAddr)
 	logger.Sugar().Debugf("SERVER CONFIG: %+V", serverConfig)
 	if *withEncryption {
-		if err := serverConfig.ReadKey(false); err != nil {
+		if err := serverConfig.ReadKey(true); err != nil {
 			log.Fatal(err)
 		}
 	}

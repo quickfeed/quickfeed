@@ -214,6 +214,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         courseData.setYear( parseInt( this.state.year, 10 ) )
         courseData.setProvider( this.state.provider )
         courseData.setOrganizationid( this.state.orgid )
+        courseData.setOrganizationpath( this.state.orgname )
         courseData.setSlipdays( parseInt( this.state.slipdays, 10 ) )
 
         return this.props.courseMan.createNewCourse( courseData )
