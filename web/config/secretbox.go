@@ -86,3 +86,8 @@ func (c *Config) Decipher(tokenString string) (string, error) {
 	}
 	return string(token), nil
 }
+
+// WithEncryption returns true if encryption key has been set.
+func (c *Config) WithEncryption() bool {
+	return len(c.Secrets.key) > 0
+}

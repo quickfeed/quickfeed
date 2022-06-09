@@ -136,10 +136,18 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scmConfig o
 				return
 			}
 			logger.Debugf("externalUser: %v", lg.IndentJson(externalUser))
+			accessToken := githubToken.AccessToken
+			if config.WithEncryption() {
+				accessToken, err = config.Cipher(accessToken)
+				if err != nil {
+					unauthorized(logger, w, callback, "failed to encrypt access token: %v", err)
+					return
+				}
+			}
 			remote := &pb.RemoteIdentity{
 				Provider:    provider,
 				RemoteID:    externalUser.ID,
-				AccessToken: githubToken.AccessToken,
+				AccessToken: accessToken,
 			}
 			// Try to get user from database.
 			user, err := db.GetUserByRemoteIdentity(remote)
