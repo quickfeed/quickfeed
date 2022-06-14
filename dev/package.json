@@ -58,7 +58,7 @@
       "node"
     ],
     "testPathIgnorePatterns": [
-      "/TestHelpers.ts"
+      "TestHelpers.ts"
     ],
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
     "transformIgnorePatterns": [
