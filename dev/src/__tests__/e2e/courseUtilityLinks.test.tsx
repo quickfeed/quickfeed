@@ -1,5 +1,5 @@
 import { By, until } from 'selenium-webdriver'
-import { isOverlapping, setupDrivers } from '../testHelpers/TestHelpers'
+import { isOverlapping, setupDrivers } from '../TestHelpers'
 
 describe("Course utility elements should not overlap", () => {
     const overlapTests: { width: number, height: number, want: boolean }[] = [
