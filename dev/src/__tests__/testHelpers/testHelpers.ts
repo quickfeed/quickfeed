@@ -26,8 +26,7 @@ const getBuilders = (): Builder[] => {
 }
 
 const createBuilder = (browser: string) => {
-    const builder = new Builder().forBrowser(browser)
-    return builder
+    return new Builder().forBrowser(browser)
 }
 
 // getBaseUrl returns the base url to be used for the tests

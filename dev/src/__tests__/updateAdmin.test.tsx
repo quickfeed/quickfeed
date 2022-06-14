@@ -25,7 +25,7 @@ describe("Correct permission status should be set", () => {
         expect(user2.getIsadmin()).toBe(false)
     })
 
-    it("If user does not confirm, dont make any changes", () => {
+    it("If user does not confirm, do not make any changes", () => {
         const user3 = new User().setId(3).setName("Test User3").setIsadmin(true)
         const mockedOvermind2 = createOvermindMock(config, (state) => {
             state.allUsers = [user3]

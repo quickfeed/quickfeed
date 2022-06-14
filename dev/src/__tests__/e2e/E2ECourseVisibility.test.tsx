@@ -1,5 +1,5 @@
 import { By, until } from 'selenium-webdriver'
-import { setupDrivers } from '../testHelpers/testHelpers'
+import { setupDrivers } from '../testHelpers/TestHelpers'
 
 
 describe("End to End course visibility", () => {
