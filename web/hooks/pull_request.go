@@ -22,8 +22,8 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 	}
 	// We make sure that the pull request is one that QF has a data record of
 	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{
-		ExternalRepositoryID: uint64(payload.GetRepo().GetID()),
-		Number:               uint64(payload.GetPullRequest().GetNumber()),
+		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
+		Number:          uint64(payload.GetPullRequest().GetNumber()),
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -94,8 +94,8 @@ func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent
 	}
 
 	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{
-		ExternalRepositoryID: uint64(payload.GetRepo().GetID()),
-		Number:               uint64(payload.GetPullRequest().GetNumber()),
+		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
+		Number:          uint64(payload.GetPullRequest().GetNumber()),
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -161,12 +161,12 @@ func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, repo
 	}
 
 	pullRequest := &pb.PullRequest{
-		ExternalRepositoryID: uint64(payload.GetRepo().GetID()),
-		TaskID:               associatedTask.GetID(),
-		IssueID:              associatedIssue.GetID(),
-		UserID:               user.GetID(),
-		SourceBranch:         payload.GetPullRequest().GetHead().GetRef(),
-		Number:               uint64(payload.GetNumber()),
+		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
+		TaskID:          associatedTask.GetID(),
+		IssueID:         associatedIssue.GetID(),
+		UserID:          user.GetID(),
+		SourceBranch:    payload.GetPullRequest().GetHead().GetRef(),
+		Number:          uint64(payload.GetNumber()),
 	}
 
 	if err = wh.db.CreatePullRequest(pullRequest); err != nil {

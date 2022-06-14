@@ -6506,11 +6506,11 @@ proto.ag.PullRequest.prototype.toObject = function(opt_includeInstance) {
 proto.ag.PullRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    externalrepositoryid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    scmrepositoryid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     taskid: jspb.Message.getFieldWithDefault(msg, 3, 0),
     issueid: jspb.Message.getFieldWithDefault(msg, 4, 0),
     userid: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    commentid: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    scmcommentid: jspb.Message.getFieldWithDefault(msg, 6, 0),
     sourcebranch: jspb.Message.getFieldWithDefault(msg, 7, ""),
     number: jspb.Message.getFieldWithDefault(msg, 8, 0),
     stage: jspb.Message.getFieldWithDefault(msg, 9, 0)
@@ -6556,7 +6556,7 @@ proto.ag.PullRequest.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setExternalrepositoryid(value);
+      msg.setScmrepositoryid(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
@@ -6572,7 +6572,7 @@ proto.ag.PullRequest.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 6:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setCommentid(value);
+      msg.setScmcommentid(value);
       break;
     case 7:
       var value = /** @type {string} */ (reader.readString());
@@ -6622,7 +6622,7 @@ proto.ag.PullRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getExternalrepositoryid();
+  f = message.getScmrepositoryid();
   if (f !== 0) {
     writer.writeUint64(
       2,
@@ -6650,7 +6650,7 @@ proto.ag.PullRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCommentid();
+  f = message.getScmcommentid();
   if (f !== 0) {
     writer.writeUint64(
       6,
@@ -6710,10 +6710,10 @@ proto.ag.PullRequest.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 externalRepositoryID = 2;
+ * optional uint64 scmRepositoryID = 2;
  * @return {number}
  */
-proto.ag.PullRequest.prototype.getExternalrepositoryid = function() {
+proto.ag.PullRequest.prototype.getScmrepositoryid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -6722,7 +6722,7 @@ proto.ag.PullRequest.prototype.getExternalrepositoryid = function() {
  * @param {number} value
  * @return {!proto.ag.PullRequest} returns this
  */
-proto.ag.PullRequest.prototype.setExternalrepositoryid = function(value) {
+proto.ag.PullRequest.prototype.setScmrepositoryid = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
 };
 
@@ -6782,10 +6782,10 @@ proto.ag.PullRequest.prototype.setUserid = function(value) {
 
 
 /**
- * optional uint64 commentID = 6;
+ * optional uint64 scmCommentID = 6;
  * @return {number}
  */
-proto.ag.PullRequest.prototype.getCommentid = function() {
+proto.ag.PullRequest.prototype.getScmcommentid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
@@ -6794,7 +6794,7 @@ proto.ag.PullRequest.prototype.getCommentid = function() {
  * @param {number} value
  * @return {!proto.ag.PullRequest} returns this
  */
-proto.ag.PullRequest.prototype.setCommentid = function(value) {
+proto.ag.PullRequest.prototype.setScmcommentid = function(value) {
   return jspb.Message.setProto3IntField(this, 6, value);
 };
 

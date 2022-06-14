@@ -24,7 +24,7 @@ func (t *Task) IsDeleted() bool {
 }
 
 // LocalName returns the task name without the assignment part,
-// i.e. if a task has the name "assignment1/hello_world". it returns "hello_world".
+// i.e., if a task has the name "assignment1/hello_world". it returns "hello_world".
 func (t *Task) LocalName() string {
 	s := strings.Split(t.GetName(), "/")
 	return s[len(s)-1]

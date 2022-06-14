@@ -37,16 +37,16 @@ var (
 // Once a total score of 80% is reached, reviewers are automatically assigned.
 //
 func CreateFeedbackComment(results *score.Results, task *pb.Task, assignment *pb.Assignment) string {
-	body := "## Test results from latest push\n"
-	body += "| Test Name | Score | Weight | % of Total |\n"
-	body += "| :-------- | :---- | :----- | ---------: |\n"
+	body := "## Test results from latest push\n\n" +
+		"| Test Name | Score | Weight | % of Total |\n" +
+		"| :-------- | :---- | :----- | ---------: |\n"
 
-	for _, score := range results.Scores {
-		if score.TaskName != task.LocalName() {
+	for _, testScore := range results.Scores {
+		if testScore.TaskName != task.LocalName() {
 			continue
 		}
-		percentageScore := (float64(score.Score) / float64(score.MaxScore)) * (float64(score.Weight) / results.TotalTaskWeight(task.LocalName()))
-		body += fmt.Sprintf("| %s | %d/%d | %d | %.2f%% |\n", score.TestName, score.Score, score.MaxScore, score.Weight, percentageScore*100)
+		percentageScore := score.CalculateWeightedScore(float64(testScore.Score), float64(testScore.MaxScore), float64(testScore.Weight), results.TotalTaskWeight(task.LocalName()))
+		body += fmt.Sprintf("| %s | %d/%d | %d | %.2f%% |\n", testScore.TestName, testScore.Score, testScore.MaxScore, testScore.Weight, percentageScore*100)
 	}
 	// TODO(espeland): TaskSum retruns an int, while a float is used for individual tests
 	body += fmt.Sprintf("| **Total** | | | **%d%%** |\n\n", results.TaskSum(task.LocalName()))

@@ -80,7 +80,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 			if assignment.IsGroupLab {
 				// only run group assignments
 				results := wh.runAssignmentTests(assignment, repo, course, payload)
-				if !isDefaultBranch(payload) {
+				if !isDefaultBranch(payload) && !assignment.GradedManually() {
 					// Attempt to find the pull request for the branch, if it exists,
 					// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
 					wh.handlePullRequestPush(payload, results, assignment, course, repo)
@@ -103,8 +103,8 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 		payload.GetRef(), payload.GetRepo().GetFullName())
 
 	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{
-		SourceBranch:         branchName(payload.GetRef()),
-		ExternalRepositoryID: uint64(payload.GetRepo().GetID()),
+		SourceBranch:    branchName(payload.GetRef()),
+		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -136,6 +136,8 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	// We could of course simply make teachers assign the global task name, but that seems somewhat counter-intuitive to me.
 
 	// TODO(espeland): Revise this when score task name format has been decided.
+	// Should also write some documentation on how a task in essence has two names.
+	// One global and one local. Where the score package only uses the local name.
 	taskSum := results.TaskSum(task.LocalName())
 
 	// TODO(espeland): When the project is finished. Create a GitHub issue that states all places where
@@ -169,13 +171,13 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 			wh.logger.Errorf("Failed to create feedback comment for pull request #%d, in repository", pullRequest.GetNumber(), repo.Name())
 			return
 		}
-		pullRequest.CommentID = commentID
+		pullRequest.ScmCommentID = commentID
 		if err := wh.db.UpdatePullRequest(pullRequest); err != nil {
 			wh.logger.Errorf("Failed to update pull request: %v", err)
 			return
 		}
 	} else {
-		if err := sc.EditIssueComment(ctx, int64(pullRequest.GetCommentID()), opt); err != nil {
+		if err := sc.EditIssueComment(ctx, int64(pullRequest.GetScmCommentID()), opt); err != nil {
 			wh.logger.Errorf("Failed to update feedback comment for pull request #%d, in repository", pullRequest.GetNumber(), repo.Name())
 			return
 		}

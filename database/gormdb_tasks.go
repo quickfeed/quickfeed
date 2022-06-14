@@ -29,6 +29,11 @@ func (db *GormDB) CreateIssues(issues []*pb.Issue) error {
 	return db.conn.Create(issues).Error
 }
 
+// TODO(espeland): Tasks currently have the following naming format: <assignment name>/<local task name>.
+// To map DBtasks and TRtasks, we do not explicitly need the assignment name to be a part of the whole task name,
+// given that we also map by assignment order.
+// Given that the score package only relies on the local task name, it would be better to confer to a single task name format.
+
 // SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks
 func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) (createdTasks, updatedTasks []*pb.Task, err error) {
 	createdTasks = []*pb.Task{}

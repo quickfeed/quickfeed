@@ -207,12 +207,11 @@ message PullRequest {
         APPROVED = 3;
     }
     uint64 ID                   = 1;
-    // TODO(meling): When a naming convention has been decided, change this field's name.
-    uint64 externalRepositoryID = 2; // Represents the external repository ID
-    uint64 taskID               = 3; // foreign key
-    uint64 issueID              = 4; // foreign key
+    uint64 scmRepositoryID      = 2; // Represents the scm repository ID
+    uint64 taskID               = 3; // Foreign key
+    uint64 issueID              = 4; // Foreign key
     uint64 userID               = 5; // The user who owns this PR
-    uint64 commentID            = 6; // GitHub ID of the comment used for automatic feedback
+    uint64 scmCommentID         = 6; // Scm ID of the comment used for automatic feedback
     string sourceBranch         = 7; // The source branch for this pull request
     uint64 number               = 8; // Pull request number
     Stage stage                 = 9;

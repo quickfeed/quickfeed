@@ -23,14 +23,14 @@ func (pr *PullRequest) HasReviewers() bool {
 	return pr.Stage == PullRequest_APPROVED || pr.Stage == PullRequest_REVIEW
 }
 
-// HasFeedbackComment returns true if the pull request has a
+// HasFeedbackComment returns true if the pull request has a comment associated with it.
 func (pr *PullRequest) HasFeedbackComment() bool {
-	return pr.CommentID > 0
+	return pr.ScmCommentID > 0
 }
 
 // Checks if a pull request is valid for creation.
 func (pr *PullRequest) Validate() bool {
-	return pr.ExternalRepositoryID > 0 && pr.TaskID > 0 &&
+	return pr.ScmRepositoryID > 0 && pr.TaskID > 0 &&
 		pr.IssueID > 0 && pr.SourceBranch != "" && pr.Number > 0 &&
 		pr.UserID > 0
 }

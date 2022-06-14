@@ -713,8 +713,8 @@ export class PullRequest extends jspb.Message {
   getId(): number;
   setId(value: number): PullRequest;
 
-  getExternalrepositoryid(): number;
-  setExternalrepositoryid(value: number): PullRequest;
+  getScmrepositoryid(): number;
+  setScmrepositoryid(value: number): PullRequest;
 
   getTaskid(): number;
   setTaskid(value: number): PullRequest;
@@ -725,8 +725,8 @@ export class PullRequest extends jspb.Message {
   getUserid(): number;
   setUserid(value: number): PullRequest;
 
-  getCommentid(): number;
-  setCommentid(value: number): PullRequest;
+  getScmcommentid(): number;
+  setScmcommentid(value: number): PullRequest;
 
   getSourcebranch(): string;
   setSourcebranch(value: string): PullRequest;
@@ -748,11 +748,11 @@ export class PullRequest extends jspb.Message {
 export namespace PullRequest {
   export type AsObject = {
     id: number,
-    externalrepositoryid: number,
+    scmrepositoryid: number,
     taskid: number,
     issueid: number,
     userid: number,
-    commentid: number,
+    scmcommentid: number,
     sourcebranch: string,
     number: number,
     stage: PullRequest.Stage,
