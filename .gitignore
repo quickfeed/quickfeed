@@ -26,3 +26,5 @@ ci/docker/envoy/certs
 # Database and Log files
 *.db
 *.log
+dev/public/index.html
+dev/public/styles.css
