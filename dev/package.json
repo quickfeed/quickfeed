@@ -5,7 +5,6 @@
   "dependencies": {
     "@types/react": "^16.14.2",
     "@types/react-dom": "^16.9.10",
-    "@wojtekmaj/enzyme-adapter-react-17": "^0.6.6",
     "google-protobuf": "^3.15.0-rc.1",
     "grpc-web": "^1.3.1",
     "overmind": "^28.0.1",
@@ -13,8 +12,7 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-router": "^5.2.0",
-    "react-router-dom": "^5.3.0",
-    "selenium-webdriver": "^4.1.1"
+    "react-router-dom": "^5.3.0"
   },
   "scripts": {
     "tsc": "tsc",
@@ -23,10 +21,11 @@
   },
   "devDependencies": {
     "@types/enzyme": "^3.10.11",
+    "@wojtekmaj/enzyme-adapter-react-17": "^0.6.6",
     "@types/google-protobuf": "^3.15.3",
     "@types/jest": "^27.4.1",
     "@types/react-router-dom": "^5.1.7",
-    "@types/selenium-webdriver": "^4.0.19",
+    "@types/selenium-webdriver": "^4.1.1",
     "@typescript-eslint/eslint-plugin": "^4.29.2",
     "@typescript-eslint/parser": "^4.29.2",
     "enzyme": "^3.11.0",
@@ -40,7 +39,8 @@
     "typescript": "^4.6.2",
     "webpack": "^5.65.0",
     "webpack-cli": "^4.9.2",
-    "webpack-dev-server": "^4.8.1"
+    "webpack-dev-server": "^4.8.1",
+    "selenium-webdriver": "^4.2.0"
   },
   "jest": {
     "preset": "ts-jest",
@@ -57,13 +57,9 @@
       "json",
       "node"
     ],
-        "testPathIgnorePatterns": [
-      "/testHelpers/"
-    ],
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
     "transformIgnorePatterns": [
       "node_modules/(?!variables/.*)"
     ]
-
   }
 }

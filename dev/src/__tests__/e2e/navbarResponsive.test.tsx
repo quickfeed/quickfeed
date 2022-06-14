@@ -19,9 +19,9 @@ describe("Front page elements login and logo should not overlap", () => {
                 await driver.manage().window().setRect({ width: test.width, height: test.height })
 
                 const logo = await driver.findElement(By.className("navbar-brand"))
-                const signIn = await driver.findElement(By.className("signIn"))
+                const avatar = await driver.findElement(By.id("avatar"))
                 const rect = await logo.getRect()
-                const rect2 = await signIn.getRect()
+                const rect2 = await avatar.getRect()
 
                 const overlap = isOverlapping(rect, rect2)
 

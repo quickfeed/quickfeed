@@ -20,7 +20,7 @@ const getBuilders = (): Builder[] => {
         }
     })
     if (builders.length === 0) {
-        throw new Error("No supported browsers found. Please check the browsers.json file.")
+        throw new Error("No supported browsers found. Please check the config.json file.")
     }
     return builders
 }

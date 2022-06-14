@@ -21,7 +21,8 @@ On Windows you can verify by running `<driver_name>.exe`
 
 ### Enabling browsers
 
-After having downloaded the drivers and added them to your `PATH`, you need to modify `config.json` to enable the browsers you want to use. This file is located in `dev/src/__tests__/testHelpers/config.json`.
+After having downloaded the drivers and added them to your `PATH`, you need to modify `config.json` to enable the browsers you want to use.
+This file is located in `dev/src/__tests__/config.json`.
 
 To enable a browser, add `true` to the browser's key.
 
