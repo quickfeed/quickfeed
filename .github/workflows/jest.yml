@@ -21,4 +21,4 @@ jobs:
 
       - name: Run tests
         working-directory: ./dev/src/__tests__
-        run: npm test
+        run: npm test -- --testPathIgnorePatterns="/e2e/|/testHelpers/"
