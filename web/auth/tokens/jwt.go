@@ -13,6 +13,7 @@ import (
 var (
 	authCookieName = "auth"
 	refreshTime    = 1 * time.Minute
+	alg            = "HS256"
 )
 
 type Claims struct {
@@ -121,8 +122,8 @@ func (tm *TokenManager) NewClaims(userID uint64) (*Claims, error) {
 func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("failed to parse token: incorrect signing method")
+		if t.Header["alg"] != alg {
+			return nil, fmt.Errorf("incorect signing algorithm, expected %s, got %s", alg, t.Header["alg"])
 		}
 		return []byte(tm.secret), nil
 	})

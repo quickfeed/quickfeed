@@ -9,10 +9,11 @@ import (
 	"google.golang.org/grpc"
 )
 
+// ValidateToken validates the integrity of a JWT in each request. It will also create and set a new JWT
+// if the current token is in the update list or about to expire.
 func ValidateToken(logger *zap.SugaredLogger, tokens *tokens.TokenManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		start := time.Now()
-		logger.Debug("TOKEN VALIDATE INTERCEPTOR")
 		token, err := GetFromMetadata(ctx, "cookie", tokens.GetAuthCookieName())
 		if err != nil {
 			logger.Error(err)
