@@ -57,10 +57,11 @@
       "json",
       "node"
     ],
-    "testPathIgnorePatterns": [
-      "src/__tests__/TestHelpers.ts"
+    "testMatch": [
+      "**/__tests__/**/*.[jt]s?(x)",
+      "**/?(*.)+(spec|test).[jt]s?(x)",
+      "**/__tests__/TestHelpers.ts"
     ],
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
     "transformIgnorePatterns": [
       "node_modules/(?!variables/.*)"
     ]
