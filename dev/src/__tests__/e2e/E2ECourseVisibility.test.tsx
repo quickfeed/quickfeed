@@ -8,7 +8,7 @@ describe("End to End course visibility", () => {
 
     drivers.forEach(driver => {
         it("Should not overlap on res 1920x1080", async () => {
-            // Go to courseage
+            // Go to course page
             const hamburger = await driver.findElement(By.className("hamburger"))
             await driver.wait(until.elementIsVisible(hamburger), 100)
             await hamburger.click()
@@ -16,7 +16,7 @@ describe("End to End course visibility", () => {
             await driver.wait(until.elementIsVisible(goToCourse), 100)
             await goToCourse.click()
 
-            // Find course code from coursecard and hamburger menu
+            // Find course code from course card and hamburger menu
             const card = await driver.findElement(By.css(".card"))
             const cardCourseCode = await card.findElement(By.css(".card-header")).getText()
             const courseCode = cardCourseCode.split("\n")[0]
@@ -33,7 +33,7 @@ describe("End to End course visibility", () => {
 
             const hasMoved = (courseCode === myCoursesCard.split("\n")[0])
 
-            // Find coursecodes in navigator
+            // Find course codes in navigator
             const navigatorCourses = await driver.findElement(By.css(".navigator"))
             const courses = await navigatorCourses.findElements(By.css("#title"))
 

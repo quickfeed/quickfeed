@@ -44,7 +44,13 @@ To start a web server for testing, run:
 make webpack-dev-server
 ```
 
-To run the actual Selenium tests, run:
+This will print messages to the console ending with something like:
+
+```shell
+webpack 5.65.0 compiled successfully in 6204 ms
+```
+
+Then in another terminal window, run the actual Selenium tests with:
 
 ```shell
 make selenium

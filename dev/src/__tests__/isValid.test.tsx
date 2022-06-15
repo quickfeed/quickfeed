@@ -1,6 +1,7 @@
 import { isValid } from "../Helpers"
 import { User, EnrollmentLink, Enrollment, Submission, SubmissionLink } from "../../proto/ag/ag_pb"
 
+
 describe("User and enrollment validation", () => {
     it("User should be valid", () => {
         const user = new User().setId(1).setName("Test User").setEmail("mail@mail.com").setStudentid("1234567")
@@ -32,8 +33,8 @@ describe("User and enrollment validation", () => {
             }
         }
         expect(valid).toBe(true)
-    }
-    )
+    })
+
     it("Email is not a valid email", () => {
         const email = "hei@mail"
         const regex = /\S+@\S+\.\S+/
