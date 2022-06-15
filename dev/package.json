@@ -60,7 +60,7 @@
     "testMatch": [
       "**/__tests__/**/*.[jt]s?(x)",
       "**/?(*.)+(spec|test).[jt]s?(x)",
-      "**/__tests__/TestHelpers.ts"
+      "!**/__tests__/TestHelpers.ts"
     ],
     "transformIgnorePatterns": [
       "node_modules/(?!variables/.*)"
