@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { Assignment, GradingCriterion } from "../../../proto/ag/ag_pb"
-import { ProtoConverter } from "../../Helpers"
+import { Converter } from "../../convert"
 import { useActions } from "../../overmind"
 
 
@@ -12,8 +12,8 @@ const EditCriterion = ({ criterion, benchmarkID, assignment }: { criterion?: Gra
 
     // Clone the criterion, or create a new one if none was passed in
     const c = criterion
-        ? ProtoConverter.clone(criterion)
-        : ProtoConverter.create<GradingCriterion.AsObject>(GradingCriterion)
+        ? Converter.clone(criterion)
+        : Converter.create<GradingCriterion.AsObject>(GradingCriterion)
 
     const handleCriteria = (event: React.KeyboardEvent<HTMLInputElement>) => {
         const { value } = event.currentTarget

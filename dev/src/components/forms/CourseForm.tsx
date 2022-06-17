@@ -4,7 +4,8 @@ import { Course, Organization } from "../../../proto/ag/ag_pb"
 import FormInput from "./FormInput"
 import CourseCreationInfo from "../admin/CourseCreationInfo"
 import { useHistory } from "react-router"
-import { defaultTag, defaultYear, ProtoConverter } from "../../Helpers"
+import { defaultTag, defaultYear } from "../../Helpers"
+import { Converter } from "../../convert"
 
 
 // TODO: There are currently issues with navigating a new course without refreshing the page to trigger a state reload.
@@ -23,7 +24,7 @@ const CourseForm = ({ editCourse }: { editCourse?: Course.AsObject }): JSX.Eleme
     const [org, setOrg] = useState<Organization>()
 
     // Local state containing the course to be created or edited (if any)
-    const [course, setCourse] = useState(editCourse ? ProtoConverter.clone(editCourse) : ProtoConverter.create(Course))
+    const [course, setCourse] = useState(editCourse ? Converter.clone(editCourse) : Converter.create(Course))
 
     // Local state containing a boolean indicating whether the organization is valid. Courses that are being edited do not need to be validated.
     const [orgFound, setOrgFound] = useState<boolean>(editCourse ? true : false)

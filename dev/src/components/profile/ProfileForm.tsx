@@ -1,8 +1,9 @@
 import React, { Dispatch, SetStateAction, useMemo } from "react"
-import { hasEnrollment, ProtoConverter } from "../../Helpers"
+import { hasEnrollment } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import FormInput from "../forms/FormInput"
 import { useHistory } from "react-router"
+import { Converter } from "../../convert"
 
 
 const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setEditing: Dispatch<SetStateAction<boolean>> }): JSX.Element => {
@@ -13,7 +14,7 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
     const signup = useMemo(() => !state.isValid, [state.isValid])
 
     // Create a copy of the user object, so that we can modify it without affecting the original object.
-    const user = ProtoConverter.clone(state.self)
+    const user = Converter.clone(state.self)
 
     // Update the user object when user input changes, and update the state.
     const handleChange = (event: React.FormEvent<HTMLInputElement>) => {

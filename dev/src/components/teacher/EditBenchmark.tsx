@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { Assignment, GradingBenchmark } from "../../../proto/ag/ag_pb"
-import { ProtoConverter } from "../../Helpers"
+import { Converter } from "../../convert"
 import { useActions } from "../../overmind"
 
 
@@ -12,8 +12,8 @@ const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.R
 
     // Clone the criterion, or create a new one if none was passed in
     const bm = benchmark
-        ? ProtoConverter.clone(benchmark)
-        : ProtoConverter.create<GradingBenchmark.AsObject>(GradingBenchmark)
+        ? Converter.clone(benchmark)
+        : Converter.create<GradingBenchmark.AsObject>(GradingBenchmark)
 
     const handleBenchmark = (event: React.KeyboardEvent<HTMLInputElement>) => {
         const { value } = event.currentTarget

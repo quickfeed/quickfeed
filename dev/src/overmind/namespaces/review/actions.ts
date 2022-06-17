@@ -1,6 +1,7 @@
 import { Context } from '../../'
 import { GradingBenchmark, GradingCriterion, Review } from '../../../../proto/ag/ag_pb'
-import { Color, isAuthor, isCourseCreator, ProtoConverter } from '../../../Helpers'
+import { Converter } from '../../../convert'
+import { Color, isAuthor, isCourseCreator } from '../../../Helpers'
 import { success } from '../../actions'
 
 
@@ -19,7 +20,7 @@ export const setSelectedReview = ({ state }: Context, index: number): void => {
 export const updateReview = async ({ state, actions, effects }: Context): Promise<boolean> => {
     // If canUpdate is false, the review cannot be updated
     if (state.review.canUpdate && state.review.currentReview) {
-        const review = ProtoConverter.toReview(state.review.currentReview)
+        const review = Converter.toReview(state.review.currentReview)
         const response = await effects.grpcMan.updateReview(review, state.activeCourse)
         if (success(response) && response.data) {
             // Updates the currently selected review with the new data from the server
@@ -126,7 +127,7 @@ export const release = async ({ state, actions, effects }: Context, release: boo
     const submission = state.activeSubmissionLink?.submission
     if (submission) {
         submission.released = release
-        const response = await effects.grpcMan.updateSubmission(state.activeCourse, ProtoConverter.toSubmission(submission))
+        const response = await effects.grpcMan.updateSubmission(state.activeCourse, Converter.toSubmission(submission))
         if (!success(response)) {
             submission.released = !release
             actions.alertHandler(response)

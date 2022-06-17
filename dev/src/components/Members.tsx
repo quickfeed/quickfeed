@@ -1,11 +1,12 @@
 import React, { useState } from "react"
-import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, ProtoConverter, sortEnrollments } from "../Helpers"
+import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortEnrollments } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment } from "../../proto/ag/ag_pb"
 import Search from "./Search"
 import DynamicTable, { Row } from "./DynamicTable"
 import DynamicButton from "./DynamicButton"
 import { ButtonType } from "./admin/Button"
+import { Converter } from "../convert"
 
 const Members = (): JSX.Element => {
     const state = useAppState()
@@ -27,7 +28,7 @@ const Members = (): JSX.Element => {
     let enrollments: Enrollment.AsObject[] = []
     if (state.courseEnrollments[courseID]) {
         // Clone the enrollments so we can sort them
-        enrollments = ProtoConverter.clone(state.courseEnrollments[courseID])
+        enrollments = Converter.clone(state.courseEnrollments[courseID])
     }
 
     const pending = state.pendingEnrollments

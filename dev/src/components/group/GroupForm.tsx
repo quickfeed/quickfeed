@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { Enrollment, Group, User } from "../../../proto/ag/ag_pb"
-import { getCourseID, isApprovedGroup, isHidden, isStudent, ProtoConverter, sortByField } from "../../Helpers"
+import { Converter } from "../../convert"
+import { getCourseID, isApprovedGroup, isHidden, isStudent, sortByField } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Search from "../Search"
 
@@ -15,8 +16,8 @@ const GroupForm = (): JSX.Element => {
     const group = state.activeGroup
     useEffect(() => {
         if (isStudent(state.enrollmentsByCourseID[courseID])) {
-            actions.setActiveGroup(ProtoConverter.create<Group.AsObject>(Group))
-            actions.updateGroupUsers(ProtoConverter.clone(state.self))
+            actions.setActiveGroup(Converter.create<Group.AsObject>(Group))
+            actions.updateGroupUsers(Converter.clone(state.self))
         }
         return () => {
             actions.setActiveGroup(null)
@@ -37,7 +38,7 @@ const GroupForm = (): JSX.Element => {
         return false
     }
 
-    const enrollments = ProtoConverter.clone(state.courseEnrollments[courseID])
+    const enrollments = Converter.clone(state.courseEnrollments[courseID])
 
     const sortedEnrollments = sortByField(enrollments, [Enrollment.prototype.getUser], User.prototype.getName) as Enrollment.AsObject[]
 
