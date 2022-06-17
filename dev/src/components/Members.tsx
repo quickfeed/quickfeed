@@ -8,7 +8,6 @@ import { json } from "overmind"
 import DynamicButton from "./DynamicButton"
 import { ButtonType } from "./admin/Button"
 
-
 const Members = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
@@ -55,7 +54,7 @@ const Members = (): JSX.Element => {
             data.push(
                 <div>
                     <i className="badge badge-primary" style={{ cursor: "pointer" }}
-                        onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT })}>
+                        onClick={() => { actions.updateEnrollment({ enrollment: enrollment, status: Enrollment.UserStatus.STUDENT }) }}>
                         Accept
                     </i>
                     <i className="badge badge-danger clickable ml-1"

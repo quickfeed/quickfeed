@@ -133,6 +133,16 @@ test:
 	@go clean -testcache ./...
 	@go test ./...
 
+webpack-dev-server:
+	@cd dev && mkdir -p public && cp index.html public/index.html && cp styles/styles.css public/styles.css
+	@cd dev && $(sedi) 's/\/dev\/dist\/bundle.js/bundle.js/g' public/index.html
+	@cd dev && $(sedi) 's/\/dev\/styles\/styles.css/styles.css/g' public/index.html
+	@cd dev && npx webpack-dev-server --config webpack.config.js --port 8082 --progress --mode development
+
+# TODO Should check that webpack-dev-server is running.
+selenium:
+	@cd dev && npm run test:selenium
+
 scm:
 	@echo "Compiling the scm tool"
 	@cd cmd/scm; go install

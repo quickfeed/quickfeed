@@ -7,7 +7,22 @@ To run the frontend tests in `dev/src/__tests__`, make sure to install the requi
 % npm ci
 ```
 
-To run `jest` from the command line, you will need to install it globally:
+To run all tests using:
+
+```shell
+% cd dev/src/__tests__
+% npm test
+```
+
+To run a specific test using:
+
+```shell
+% npm test -- <test-filename>
+```
+
+`npm test` will run all tests using the `jest` package.
+
+If you wish to run `jest` directly from the command line, you will need to install it globally:
 
 ```shell
 % npm i --global jest
@@ -15,14 +30,14 @@ To run `jest` from the command line, you will need to install it globally:
 
 For more information on running `jest` from the command line, please see the [getting started](https://jestjs.io/docs/getting-started) documentation.
 
-To run all tests:
+To run all tests using `jest`:
 
 ```shell
 % cd dev/src/__tests__
 % jest
 ```
 
-To run a specific test:
+To run a specific test using `jest`:
 
 ```shell
 % jest <test-filename>
