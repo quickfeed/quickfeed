@@ -35,10 +35,11 @@ describe("UpdateEnrollment", () => {
     updateEnrollmentTests.forEach(({ desc, courseID, userID, want }) => {
         it(desc, async () => {
             window.confirm = jest.fn(() => true)
-            const enrollment = mockedOvermind.state.courseEnrollments[courseID].find(e => e.getUserid() === userID)
+            const enrollment = mockedOvermind.state.courseEnrollments[courseID].find(e => e.userid === userID)
             expect(enrollment).toBeDefined()
-            mockedOvermind.actions.updateEnrollment({ enrollment: enrollment as Enrollment, status: want })
-            expect((enrollment as Enrollment).getStatus()).toEqual(want)
+            const definedEnrollment = enrollment as Enrollment.AsObject
+            mockedOvermind.actions.updateEnrollment({ enrollment: definedEnrollment, status: want })
+            expect(definedEnrollment.status).toEqual(want)
         })
     })
 })
@@ -47,10 +48,10 @@ describe("UpdateEnrollment in webpage", () => {
     it("If status is teacher, button should display demote", () => {
         const user = new User().setId(1).setName("Test User").setStudentid("6583969706").setEmail("test@gmail.com")
         const enrollment = new Enrollment().setId(2).setCourseid(1).setStatus(3).setUser(user)
-            .setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0)
+            .setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0).toObject()
 
         const mockedOvermind = createOvermindMock(config, (state) => {
-            state.self = user
+            state.self = user.toObject()
             state.activeCourse = 1
             state.courseEnrollments = { [1]: [enrollment] }
         })
@@ -71,10 +72,10 @@ describe("UpdateEnrollment in webpage", () => {
     it("If status is student, button should display promote", () => {
         const user = new User().setId(1).setName("Test User").setStudentid("6583969706").setEmail("test@gmail.com")
         const enrollment = new Enrollment().setId(2).setCourseid(1).setStatus(2).setUser(user)
-            .setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0)
+            .setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0).toObject()
 
         const mockedOvermind = createOvermindMock(config, (state) => {
-            state.self = user
+            state.self = user.toObject()
             state.activeCourse = 1
             state.courseEnrollments = { [1]: [enrollment] }
         })
