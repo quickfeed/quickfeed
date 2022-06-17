@@ -28,12 +28,12 @@ const NavBarCourse = ({ enrollment }: { enrollment: Enrollment.AsObject }): JSX.
 
     return (
         <>
-            <li role={"button"} onClick={() => navigateTo(enrollment.courseid)}>
+            <li role={"button"} onClick={() => navigateTo(enrollment.courseid)} className="activeClass">
                 <div className="col" id="title">
                     {enrollment.course?.code}
                 </div>
                 <div className="col" title="icon">
-                    <i className={active ? "icon fa fa-caret-down fa-lg float-right" : "icon fa fa-caret-down fa-rotate-90 fa-lg float-right"}></i>
+                    <i className={active ? " icon fa fa-caret-down fa-lg float-right" : " icon fa fa-caret-down fa-rotate-90 fa-lg float-right"} />
                 </div>
             </li>
             <div className={active ? Status.ActiveLab : Status.Inactive}>

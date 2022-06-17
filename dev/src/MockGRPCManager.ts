@@ -433,7 +433,7 @@ export class MockGrpcManager {
             enroll.setUser(users.find(u => u.getId() === enrollment.getUserid())?.clone())
             enroll.setGroup(groups.find(g => g.getId() === enrollment.getGroupid())?.clone())
             link.setEnrollment(enroll)
-            let subs: SubmissionLink[] = []
+            const subs: SubmissionLink[] = []
 
             this.assignments.getAssignmentsList().forEach(assignment => {
                 if (!aIDs.includes(assignment.getId())) {
@@ -873,7 +873,7 @@ export class MockGrpcManager {
                 .setId(1)
                 .setCourseid(1)
                 .setUserid(1)
-                .setStatus(3)
+                .setStatus(Enrollment.UserStatus.TEACHER)
                 .setState(2)
                 .setGroupid(1)
         )
@@ -883,7 +883,7 @@ export class MockGrpcManager {
                 .setId(2)
                 .setCourseid(2)
                 .setUserid(1)
-                .setStatus(3)
+                .setStatus(Enrollment.UserStatus.TEACHER)
                 .setState(2)
         )
 
@@ -892,7 +892,7 @@ export class MockGrpcManager {
                 .setId(3)
                 .setCourseid(1)
                 .setUserid(2)
-                .setStatus(2)
+                .setStatus(Enrollment.UserStatus.STUDENT)
                 .setGroupid(1)
         )
 
@@ -901,7 +901,7 @@ export class MockGrpcManager {
                 .setId(4)
                 .setCourseid(2)
                 .setUserid(2)
-                .setStatus(1)
+                .setStatus(Enrollment.UserStatus.PENDING)
         )
 
         localEnrols.push(
@@ -909,7 +909,7 @@ export class MockGrpcManager {
                 .setId(5)
                 .setCourseid(1)
                 .setUserid(3)
-                .setStatus(2)
+                .setStatus(Enrollment.UserStatus.STUDENT)
                 .setGroupid(2)
         )
 
@@ -918,7 +918,7 @@ export class MockGrpcManager {
                 .setId(6)
                 .setCourseid(1)
                 .setUserid(4)
-                .setStatus(2)
+                .setStatus(Enrollment.UserStatus.STUDENT)
                 .setGroupid(2)
         )
         this.enrollments.setEnrollmentsList(localEnrols)

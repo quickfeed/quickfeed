@@ -1,4 +1,4 @@
-import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, ProtoConverter, SubmissionSort, SubmissionStatus } from "../Helpers"
+import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
 import {
     User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions,
     Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark,
@@ -7,6 +7,7 @@ import { Alert, UserCourseSubmissions } from "./state"
 import { IGrpcResponse } from "../GRPCManager"
 import { StatusCode } from "grpc-web"
 import { Context } from "."
+import { Converter } from "../convert"
 
 
 /** Use this to verify that a gRPC request completed without an error code */
@@ -125,7 +126,7 @@ export const getUsers = async ({ state, effects }: Context): Promise<void> => {
 
 /** Changes user information server-side */
 export const updateUser = async ({ actions, effects }: Context, user: User.AsObject): Promise<void> => {
-    const result = await effects.grpcMan.updateUser(ProtoConverter.toUser(user))
+    const result = await effects.grpcMan.updateUser(Converter.toUser(user))
     if (result.status.getCode() === 0) {
         await actions.getSelf()
     }
@@ -151,7 +152,7 @@ export const updateAdmin = async ({ state, effects }: Context, user: User.AsObje
     // Confirm that user really wants to change admin status
     if (confirm(`Are you sure you want to ${user.isadmin ? "demote" : "promote"} ${user.name}?`)) {
         // Convert to proto object and change admin status
-        const protoUser = ProtoConverter.toUser(user)
+        const protoUser = Converter.toUser(user)
         protoUser.setIsadmin(!user.isadmin)
         // Send updated user to server
         const result = await effects.grpcMan.updateUser(protoUser)
@@ -177,7 +178,7 @@ export const getEnrollmentsByCourse = async ({ state, effects }: Context, value:
 /**  setEnrollmentState toggles the state of an enrollment between favorite and visible */
 export const setEnrollmentState = async ({ actions, effects }: Context, enrollment: Enrollment.AsObject): Promise<void> => {
     enrollment.state = isVisible(enrollment) ? Enrollment.DisplayState.HIDDEN : Enrollment.DisplayState.VISIBLE
-    const response = await effects.grpcMan.updateCourseVisibility(ProtoConverter.toEnrollment(enrollment))
+    const response = await effects.grpcMan.updateCourseVisibility(Converter.toEnrollment(enrollment))
     if (!success(response)) {
         actions.alertHandler(response)
     }
@@ -200,7 +201,7 @@ export const updateSubmission = async ({ state, actions, effects }: Context, sta
 
     /* Update the submission status */
     state.currentSubmission.status = status
-    const result = await effects.grpcMan.updateSubmission(state.activeCourse, ProtoConverter.toSubmission(state.currentSubmission))
+    const result = await effects.grpcMan.updateSubmission(state.activeCourse, Converter.toSubmission(state.currentSubmission))
     if (!success(result)) {
         /* If the update failed, revert the submission status */
         state.currentSubmission.status = previousStatus
@@ -257,11 +258,11 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
         }
 
         // Clone enrollment object and change status
-        const temp = ProtoConverter.clone(enrollment)
+        const temp = Converter.clone(enrollment)
         temp.status = status
 
         // Send updated enrollment to server
-        const response = await effects.grpcMan.updateEnrollments([ProtoConverter.toEnrollment(temp)])
+        const response = await effects.grpcMan.updateEnrollments([Converter.toEnrollment(temp)])
         if (success(response)) {
             // If successful, update enrollment in state with new status
             if (status == Enrollment.UserStatus.NONE) {
@@ -271,9 +272,6 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
                 // If the enrollment is accepted, update the enrollment in state
                 enrollments[found].status = status
             }
-        } else {
-            // If unsuccessful, alert user
-            actions.alertHandler(response)
         }
     }
 }
@@ -286,7 +284,7 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
         enrollments.forEach(e => e.status = Enrollment.UserStatus.STUDENT)
 
         // Send updated enrollments to server
-        const response = await effects.grpcMan.updateEnrollments(enrollments.map(e => ProtoConverter.toEnrollment(e)))
+        const response = await effects.grpcMan.updateEnrollments(enrollments.map(e => Converter.toEnrollment(e)))
         if (success(response)) {
             for (const enrollment of state.pendingEnrollments) {
                 enrollment.status = Enrollment.UserStatus.STUDENT
@@ -332,7 +330,7 @@ export const getRepositories = async ({ state, effects }: Context): Promise<bool
         const courseID = enrollment.courseid
         state.repositories[courseID] = {}
 
-        const response = await effects.grpcMan.getRepositories(courseID, generateRepositoryList(ProtoConverter.toEnrollment(enrollment)))
+        const response = await effects.grpcMan.getRepositories(courseID, generateRepositoryList(Converter.toEnrollment(enrollment)))
         if (response.data) {
             response.data.getUrlsMap().forEach((entry, key) => {
                 state.repositories[courseID][Repository.Type[key as RepoKey]] = entry
@@ -380,7 +378,7 @@ export const createCourse = async ({ state, actions, effects }: Context, value: 
     course.provider = "github"
     course.coursecreatorid = state.self.id
     /* Send the course to the server */
-    const response = await effects.grpcMan.createCourse(ProtoConverter.toCourse(course))
+    const response = await effects.grpcMan.createCourse(Converter.toCourse(course))
     if (response.data) {
         /* If successful, add the course to the state */
         state.courses.push(response.data.toObject())
@@ -394,7 +392,7 @@ export const createCourse = async ({ state, actions, effects }: Context, value: 
 
 /** Updates a given course and refreshes courses in state if successful  */
 export const editCourse = async ({ actions, effects }: Context, { course }: { course: Course.AsObject }): Promise<void> => {
-    const response = await effects.grpcMan.updateCourse(ProtoConverter.toCourse(course))
+    const response = await effects.grpcMan.updateCourse(Converter.toCourse(course))
     if (success(response)) {
         actions.getCourses()
     } else {
@@ -567,7 +565,7 @@ export const enroll = async ({ state, effects }: Context, courseID: number): Pro
 export const updateGroupStatus = async ({ effects }: Context, { group, status }: { group: Group.AsObject, status: Group.GroupStatus }): Promise<void> => {
     const oldStatus = group.status
     group.status = status
-    const response = await effects.grpcMan.updateGroup(ProtoConverter.toGroup(group))
+    const response = await effects.grpcMan.updateGroup(Converter.toGroup(group))
     if (!success(response)) {
         group.status = oldStatus
     }
@@ -588,12 +586,12 @@ export const deleteGroup = async ({ state, effects }: Context, group: Group.AsOb
 // TODO(jostein): Make UpdateGroup return Group rather than Void
 // TODO(jostein): Requires a slight modification to ag.proto and autograder_service.go
 export const updateGroup = async ({ state, actions, effects }: Context, group: Group.AsObject): Promise<void> => {
-    const response = await effects.grpcMan.updateGroup(ProtoConverter.toGroup(group))
+    const response = await effects.grpcMan.updateGroup(Converter.toGroup(group))
     if (success(response)) {
         const found = state.groups[group.courseid].find(g => g.id === group.id)
         if (found) {
             // TODO(jostein): This should be `found = response.data.toObject()` when the above TODO is implemented
-            Object.assign(found, ProtoConverter.clone(group))
+            Object.assign(found, Converter.clone(group))
             actions.setActiveGroup(null)
         }
     } else {
@@ -605,13 +603,13 @@ export const createOrUpdateCriterion = async ({ effects }: Context, { criterion,
     for (const bm of assignment.gradingbenchmarksList) {
         if (bm.id === criterion.benchmarkid) {
             // Existing criteria have a criteria id > 0, new criteria have a criteria id of 0
-            if (criterion.id && success(await effects.grpcMan.updateCriterion(ProtoConverter.toGradingCriterion(criterion)))) {
+            if (criterion.id && success(await effects.grpcMan.updateCriterion(Converter.toGradingCriterion(criterion)))) {
                 const index = bm.criteriaList.findIndex(c => c.id === criterion.id)
                 if (index > -1) {
                     bm.criteriaList[index] = criterion
                 }
             } else {
-                const response = await effects.grpcMan.createCriterion(ProtoConverter.toGradingCriterion(criterion))
+                const response = await effects.grpcMan.createCriterion(Converter.toGradingCriterion(criterion))
                 if (success(response) && response.data) {
                     bm.criteriaList.push(response.data.toObject())
                 }
@@ -621,7 +619,7 @@ export const createOrUpdateCriterion = async ({ effects }: Context, { criterion,
 }
 
 export const createOrUpdateBenchmark = async ({ effects }: Context, { benchmark, assignment }: { benchmark: GradingBenchmark.AsObject, assignment: Assignment.AsObject }): Promise<void> => {
-    const bm = ProtoConverter.toGradingBenchmark(benchmark)
+    const bm = Converter.toGradingBenchmark(benchmark)
     if (benchmark.id && success(await effects.grpcMan.updateBenchmark(bm))) {
         const index = assignment.gradingbenchmarksList.indexOf(benchmark)
         if (index > -1) {
@@ -654,7 +652,7 @@ export const deleteCriterion = async ({ actions, effects }: Context, { criterion
         }
 
         // Delete criterion
-        const response = await effects.grpcMan.deleteCriterion(ProtoConverter.toGradingCriterion(criterion))
+        const response = await effects.grpcMan.deleteCriterion(Converter.toGradingCriterion(criterion))
         if (success(response)) {
             // Remove criterion from benchmark in state if successful
             const index = assignment.gradingbenchmarksList.indexOf(benchmark)
@@ -669,7 +667,7 @@ export const deleteCriterion = async ({ actions, effects }: Context, { criterion
 
 export const deleteBenchmark = async ({ actions, effects }: Context, { benchmark, assignment }: { benchmark?: GradingBenchmark.AsObject, assignment: Assignment.AsObject }): Promise<void> => {
     if (benchmark && confirm("Do you really want to delete this benchmark?")) {
-        const response = await effects.grpcMan.deleteBenchmark(ProtoConverter.toGradingBenchmark(benchmark))
+        const response = await effects.grpcMan.deleteBenchmark(Converter.toGradingBenchmark(benchmark))
         if (success(response)) {
             const index = assignment.gradingbenchmarksList.indexOf(benchmark)
             if (index > -1) {
@@ -682,11 +680,11 @@ export const deleteBenchmark = async ({ actions, effects }: Context, { benchmark
 }
 
 export const setActiveSubmissionLink = ({ state }: Context, link: SubmissionLink.AsObject): void => {
-    state.activeSubmissionLink = link ? ProtoConverter.clone(link) : null
+    state.activeSubmissionLink = link ? Converter.clone(link) : null
 }
 
 export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment.AsObject): void => {
-    state.activeEnrollment = enrollment ? ProtoConverter.clone(enrollment) : null
+    state.activeEnrollment = enrollment ? Converter.clone(enrollment) : null
 }
 
 /* fetchUserData is called when the user enters the app. It fetches all data that is needed for the user to be able to use the app. */
@@ -837,7 +835,7 @@ export const setGroupView = ({ state }: Context, groupView: boolean): void => {
 }
 
 export const setActiveGroup = ({ state }: Context, group: Group.AsObject | null): void => {
-    state.activeGroup = ProtoConverter.clone(group)
+    state.activeGroup = Converter.clone(group)
 }
 
 export const updateGroupUsers = ({ state }: Context, user: User.AsObject): void => {

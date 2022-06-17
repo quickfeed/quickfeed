@@ -24,7 +24,7 @@ const CourseLabs = (): JSX.Element => {
             const submission = state.submissions[courseID][assignmentIndex] ?? (new Submission()).toObject()
 
             labs.push(
-                <li key={assignment.id} className="list-group-item border clickable mb-2" onClick={() => redirectTo(assignment.id)}>
+                <li key={assignment.id} className="list-group-item border clickable mb-2 labList" onClick={() => redirectTo(assignment.id)}>
                     <div className="row" >
                         <div className="col-8">
                             <strong>{assignment.name}</strong>
