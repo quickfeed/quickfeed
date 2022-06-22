@@ -20,19 +20,6 @@ export const onInitializeOvermind = async ({ actions }: Context): Promise<void> 
         actions.alert({ text: alert, color: Color.RED })
         localStorage.removeItem("alert")
     }
-
-    // Load state from local storage
-    /*const savedState = ProtoConverter.load()
-    if (savedState) {
-        // Ignore saved state if it is derived
-        Object.entries(savedState).forEach(([key, value]) => {
-            if (derivedState.includes(key)) {
-                delete savedState[key]
-                return
-            }
-        })
-        Object.assign(state, savedState)
-    }*/
 }
 
 export const resetState = ({ state, actions, effects }: Context) => {
@@ -74,11 +61,6 @@ export const resetState = ({ state, actions, effects }: Context) => {
     }
 
     Object.assign(state, initialState)
-}
-
-export const saveState = async ({ state, actions }: Context): Promise<void> => {
-    // Save state to local storage
-    localStorage.setItem("state", JSON.stringify(state))
 }
 
 /**
