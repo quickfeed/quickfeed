@@ -15,9 +15,19 @@ var (
 	// These are used to track how many times someone has been assigned to review a pull request. They map as follows.
 	// teacherReviewCounter[courseID][userID] = count
 	// groupReviewCounter[groupID][userID] = count
-	teacherReviewCounter = make(map[uint64]map[uint64]int)
-	groupReviewCounter   = make(map[uint64]map[uint64]int)
+	teacherReviewCounter = make(countMap)
+	groupReviewCounter   = make(countMap)
 )
+
+type countMap map[uint64]map[uint64]int
+
+// Creates a new map if none exists.
+func (m countMap) initialize(id uint64) {
+	_, ok := m[id]
+	if !ok {
+		m[id] = make(map[uint64]int)
+	}
+}
 
 // CreateFeedbackComment formats a feedback comment to be posted on pull requests.
 // It uses the test results from a student commit to create a table like the one shown below.
@@ -27,30 +37,28 @@ var (
 //  ## Test results from latest push
 //	| Test Name | Score | Weight | % of Total |
 //	| :-------- | :---- | :----- | ---------: |
-//  | Test 1	| 2/6	| 1		 |	   12.23% |
-//  | Test 2	| 1/3   | 2	     |     24.46% |
-//  |   |		|  |    | |      |            |
-//  |   |		|  |    | |      |            |
-//  |   |		|  |    | |      |            |
-//  |   |		|  |    | |      |            |
-//  | Total		|		|		 |	   48.23% |
-// Once a total score of 80% is reached, reviewers are automatically assigned.
+//  | Test 1	| 2/4	| 1		 |	   6.25%  |
+//  | Test 2	| 1/4   | 2	     |     6.25%  |
+//  | Test 3	| 3/4   | 5      |     46.86% |
+//  | Total		|		|		 |	   59.36% |
 //
-func CreateFeedbackComment(results *score.Results, task *pb.Task, assignment *pb.Assignment) string {
+// 	Once a total score of 80% is reached, reviewers are automatically assigned.
+//
+func CreateFeedbackComment(results *score.Results, taskLocalName string, assignment *pb.Assignment) string {
 	body := "## Test results from latest push\n\n" +
 		"| Test Name | Score | Weight | % of Total |\n" +
 		"| :-------- | :---- | :----- | ---------: |\n"
 
 	for _, testScore := range results.Scores {
-		if testScore.TaskName != task.LocalName() {
+		if testScore.TaskName != taskLocalName {
 			continue
 		}
-		percentageScore := score.CalculateWeightedScore(float64(testScore.Score), float64(testScore.MaxScore), float64(testScore.Weight), results.TotalTaskWeight(task.LocalName()))
+		percentageScore := score.CalculateWeightedScore(float64(testScore.Score), float64(testScore.MaxScore), float64(testScore.Weight), results.TotalTaskWeight(taskLocalName))
 		body += fmt.Sprintf("| %s | %d/%d | %d | %.2f%% |\n", testScore.TestName, testScore.Score, testScore.MaxScore, testScore.Weight, percentageScore*100)
 	}
-	// TODO(espeland): TaskSum retruns an int, while a float is used for individual tests
-	body += fmt.Sprintf("| **Total** | | | **%d%%** |\n\n", results.TaskSum(task.LocalName()))
-	body += fmt.Sprintf("Once a total score of %d%% is reached, reviewers are automatically assigned.\n", assignment.GetScoreLimit())
+	// TODO(espeland): TaskSum returns an int, while a float is used for individual tests
+	body += fmt.Sprintf("| **Total** | | | **%d%%** |\n\n", results.TaskSum(taskLocalName))
+	body += fmt.Sprintf("\nOnce a total score of %d%% is reached, reviewers are automatically assigned.\n", assignment.GetScoreLimit())
 	return body
 }
 
@@ -91,35 +99,24 @@ func AssignReviewers(ctx context.Context, sc scm.SCM, db database.Database, cour
 // It is simple, and does not account for how many current review requests any user has.
 //
 // Returns an error if the list of users is empty.
-func getNextReviewer(ID uint64, users []*pb.User, reviewCounter map[uint64]map[uint64]int) (*pb.User, error) {
-	if len(users) == 0 {
-		return nil, errors.New("list of users is empty")
-	}
-	reviewerMap, ok := reviewCounter[ID]
-	if !ok {
-		// If a map does not exist for a given ID we create it,
-		// and return the first user.
-		reviewCounter[ID] = make(map[uint64]int)
-		reviewCounter[ID][users[0].GetID()] = 1
-		return users[0], nil
-	}
+func getNextReviewer(users []*pb.User, reviewCounter map[uint64]int) *pb.User {
 	userWithLowestCount := users[0]
-	lowestCount := reviewerMap[users[0].GetID()]
+	lowestCount := reviewCounter[users[0].GetID()]
 	for _, user := range users {
-		count, ok := reviewerMap[user.GetID()]
+		count, ok := reviewCounter[user.GetID()]
 		if !ok {
-			// If the user is not present in the review map,
-			// then they are returned as the next reviewer.
-			reviewerMap[user.GetID()] = 1
-			return user, nil
+			// If the user is not present in the review map
+			// they are returned as the next reviewer.
+			reviewCounter[user.GetID()] = 1
+			return user
 		}
 		if count < lowestCount {
 			userWithLowestCount = user
 			lowestCount = count
 		}
 	}
-	reviewerMap[userWithLowestCount.GetID()]++
-	return userWithLowestCount, nil
+	reviewCounter[userWithLowestCount.GetID()]++
+	return userWithLowestCount
 }
 
 // getNextTeacherReviewer gets the teacher with the least total reviews.
@@ -131,10 +128,8 @@ func getNextTeacherReviewer(db database.Database, course *pb.Course) (*pb.User, 
 	if len(teachers) == 0 {
 		return nil, errors.New("failed to get next teacher reviewer: no teachers in course")
 	}
-	teacherReviewer, err := getNextReviewer(course.GetID(), teachers, teacherReviewCounter)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get next teacher reviewer: %w", err)
-	}
+	teacherReviewCounter.initialize(course.GetID())
+	teacherReviewer := getNextReviewer(teachers, teacherReviewCounter[course.GetID()])
 	return teacherReviewer, nil
 }
 
@@ -148,10 +143,8 @@ func getNextStudentReviewer(db database.Database, groupID, ownerID uint64) (*pb.
 		// This should never happen.
 		return nil, errors.New("failed to get next student reviewer: no users in group")
 	}
+	groupReviewCounter.initialize(group.GetID())
 	// We exclude the PR owner from the search.
-	studentReviewer, err := getNextReviewer(group.GetID(), group.GetUsersExcept(ownerID), groupReviewCounter)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get next student reviewer: %w", err)
-	}
+	studentReviewer := getNextReviewer(group.GetUsersExcept(ownerID), groupReviewCounter[group.GetID()])
 	return studentReviewer, nil
 }

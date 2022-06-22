@@ -95,40 +95,21 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 }
 
 // handlePullRequestPush attempts to find a pull requested associated with the non-default branch.
-// If successfull, it then finds the relevant task, and uses it to receive the relevant task score.
+// If successful, it then finds the relevant task, and uses it to receive the relevant task score.
 // If a passing score is reached, it assigns reviewers to the pull request.
 // It also uses the test results and task to generate a feedback comment for the pull request.
 func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results *score.Results, assignment *pb.Assignment, course *pb.Course, repo *pb.Repository) {
 	wh.logger.Debugf("Attempting to find pull request for ref: %s, in repository: %s",
 		payload.GetRef(), payload.GetRepo().GetFullName())
 
-	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{
-		SourceBranch:    branchName(payload.GetRef()),
-		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
-	})
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// This can happen if someone pushes to a branch group assignment, without having a PR created for it
-			// If this happens, QF should not do anything
-			wh.logger.Debugf("No pull request found for ref: %s", payload.GetRef())
-			return
-		}
-		wh.logger.Errorf("Failed to get pull request from database: %v", err)
+	// TODO (message left by espeland): I do not know the best way to "extend" the handle method,
+	// i.e., whether it is best to return an error, and then log it, or to simply log everything inside it,
+	// and then return in the main method in case nothing is returned (as is done here).
+	pullRequest, localTaskName := wh.handlePullRequestPushPayload(payload)
+	if pullRequest == nil {
 		return
 	}
-	tasks, err := wh.db.GetTasks(&pb.Task{ID: pullRequest.GetTaskID()})
-	if err != nil {
-		// A pull request should always have a task association
-		// If not, something must have gone wrong elsewhere
-		wh.logger.Errorf("Failed to get task from the database: %v", err)
-		return
-	}
-	if len(tasks) != 1 {
-		// This should never happen
-		wh.logger.Errorf("Got an unexpected number of tasks: %d", len(tasks))
-		return
-	}
-	task := tasks[0]
+
 	// TODO(meling): My idea is that when a teacher wants to assign a test to a specific task they will use the 'local' task name.
 	// For example, if a teacher has created the markdown file task-hello_world.md,
 	// they would do scores.AddWithTaskName(TestHelloWorld, "hello_world", max, weight).
@@ -138,7 +119,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	// TODO(espeland): Revise this when score task name format has been decided.
 	// Should also write some documentation on how a task in essence has two names.
 	// One global and one local. Where the score package only uses the local name.
-	taskSum := results.TaskSum(task.LocalName())
+	taskSum := results.TaskSum(localTaskName)
 
 	// TODO(espeland): When the project is finished. Create a GitHub issue that states all places where
 	// we need to update for GitHub apps. As it is, this would create comments as the course creator.
@@ -162,7 +143,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	opt := &scm.IssueCommentOptions{
 		Organization: course.GetOrganizationPath(),
 		Repository:   repo.Name(),
-		Body:         assignments.CreateFeedbackComment(results, task, assignment),
+		Body:         assignments.CreateFeedbackComment(results, localTaskName, assignment),
 	}
 	wh.logger.Debugf("Creating feedback comment on pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
 	if !pullRequest.HasFeedbackComment() {
@@ -183,6 +164,37 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 		}
 	}
 	wh.logger.Debugf("Successfully handled push to pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
+}
+
+// handlePullRequestPushPayload retrieves the pull request and task name associated with it from an event payload.
+func (wh GitHubWebHook) handlePullRequestPushPayload(payload *github.PushEvent) (*pb.PullRequest, string) {
+	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{
+		SourceBranch:    branchName(payload.GetRef()),
+		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
+	})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// This can happen if someone pushes to a branch group assignment, without having a PR created for it
+			// If this happens, QF should not do anything
+			wh.logger.Debugf("No pull request found for ref: %s", payload.GetRef())
+			return nil, ""
+		}
+		wh.logger.Errorf("Failed to get pull request from database: %v", err)
+		return nil, ""
+	}
+	tasks, err := wh.db.GetTasks(&pb.Task{ID: pullRequest.GetTaskID()})
+	if err != nil {
+		// A pull request should always have a task association
+		// If not, something must have gone wrong elsewhere
+		wh.logger.Errorf("Failed to get task from the database: %v", err)
+		return nil, ""
+	}
+	if len(tasks) != 1 {
+		// This should never happen
+		wh.logger.Errorf("Got an unexpected number of tasks: %d", len(tasks))
+		return nil, ""
+	}
+	return pullRequest, tasks[0].LocalName()
 }
 
 // extractAssignments extracts information from the push payload from github

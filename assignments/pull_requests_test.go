@@ -71,17 +71,15 @@ func TestAssignReviewers(t *testing.T) {
 
 func TestGetNextReviewer(t *testing.T) {
 	// We create local versions of the maps
-	teacherReviewCounter := make(map[uint64]map[uint64]int)
-	groupReviewCounter := make(map[uint64]map[uint64]int)
+	teacherReviewCounter := make(countMap)
+	groupReviewCounter := make(countMap)
 	IDs := []uint64{1, 2, 3, 4}
 	teachers := []*pb.User{{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}}
 	students := []*pb.User{{ID: 1}, {ID: 2}, {ID: 3}}
 	for _, ID := range IDs {
 		for i := 0; i < len(teachers)*5; i++ {
-			gotTeacher, err := getNextReviewer(ID, teachers, teacherReviewCounter)
-			if err != nil {
-				t.Fatal(err)
-			}
+			teacherReviewCounter.initialize(ID)
+			gotTeacher := getNextReviewer(teachers, teacherReviewCounter[ID])
 			wantTeacher := teachers[i%len(teachers)]
 			if diff := cmp.Diff(wantTeacher, gotTeacher, protocmp.Transform()); diff != "" {
 				t.Errorf("getNextReviewer() mismatch (-wantTeacher, +gotTeacher):\n%s", diff)
@@ -93,10 +91,8 @@ func TestGetNextReviewer(t *testing.T) {
 		wantTeacher := &pb.User{ID: 6}
 		teachers = append(teachers, wantTeacher)
 		for i := 0; i < len(teachers)-1; i++ {
-			gotTeacher, err := getNextReviewer(ID, teachers, teacherReviewCounter)
-			if err != nil {
-				t.Fatal(err)
-			}
+			teacherReviewCounter.initialize(ID)
+			gotTeacher := getNextReviewer(teachers, teacherReviewCounter[ID])
 			if diff := cmp.Diff(wantTeacher, gotTeacher, protocmp.Transform()); diff != "" {
 				t.Errorf("getNextReviewer() mismatch (-wantTeacher, +gotTeacher):\n%s", diff)
 			}
@@ -104,10 +100,8 @@ func TestGetNextReviewer(t *testing.T) {
 		teachers = teachers[:len(teachers)-1]
 
 		for i := 0; i < len(students)*3; i++ {
-			gotStudent, err := getNextReviewer(ID, students, groupReviewCounter)
-			if err != nil {
-				t.Fatal(err)
-			}
+			groupReviewCounter.initialize(ID)
+			gotStudent := getNextReviewer(students, groupReviewCounter[ID])
 			wantStudent := students[i%len(students)]
 			if diff := cmp.Diff(wantStudent, gotStudent, protocmp.Transform()); diff != "" {
 				t.Errorf("getNextReviewer() mismatch (-wantStudent, +gotStudent):\n%s", diff)
@@ -119,10 +113,8 @@ func TestGetNextReviewer(t *testing.T) {
 		wantStudent := &pb.User{ID: 4}
 		students = append(students, wantStudent)
 		for i := 0; i < len(students)-1; i++ {
-			gotStudent, err := getNextReviewer(ID, students, groupReviewCounter)
-			if err != nil {
-				t.Fatal(err)
-			}
+			groupReviewCounter.initialize(ID)
+			gotStudent := getNextReviewer(students, groupReviewCounter[ID])
 			if diff := cmp.Diff(wantStudent, gotStudent, protocmp.Transform()); diff != "" {
 				t.Errorf("getNextReviewer() mismatch (-wantStudent, +gotStudent):\n%s", diff)
 			}
@@ -150,7 +142,7 @@ func TestPublishFeedbackComment(t *testing.T) {
 			{TestName: "Test7", TaskName: "3", Score: 5, MaxScore: 7, Weight: 1},
 		},
 	}
-	body := CreateFeedbackComment(results, &pb.Task{Name: "lab1/1"}, &pb.Assignment{ScoreLimit: 80})
+	body := CreateFeedbackComment(results, "1", &pb.Assignment{ScoreLimit: 80})
 	// TODO(espeland): Remember to reset these when done testing
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,
