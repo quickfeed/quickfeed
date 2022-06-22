@@ -565,15 +565,12 @@ export const deleteGroup = async ({ state, effects }: Context, group: Group.AsOb
     }
 }
 
-// TODO(jostein): Make UpdateGroup return Group rather than Void
-// TODO(jostein): Requires a slight modification to ag.proto and autograder_service.go
 export const updateGroup = async ({ state, actions, effects }: Context, group: Group.AsObject): Promise<void> => {
     const response = await effects.grpcMan.updateGroup(Converter.toGroup(group))
     if (success(response)) {
         const found = state.groups[group.courseid].find(g => g.id === group.id)
-        if (found) {
-            // TODO(jostein): This should be `found = response.data.toObject()` when the above TODO is implemented
-            Object.assign(found, Converter.clone(group))
+        if (found && response.data) {
+            Object.assign(found, response.data.toObject())
             actions.setActiveGroup(null)
         }
     } else {
