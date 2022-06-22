@@ -1,37 +1,33 @@
-import { updateAdmin } from "../overmind/actions"
 import { User } from "../../proto/ag/ag_pb"
-import { createOvermindMock } from "overmind"
-import { config } from "../overmind"
+import { initializeOvermind } from "./TestHelpers"
 
 
 describe("Correct permission status should be set", () => {
-    it("If user is not admin, promote to admin", () => {
-        const user = new User().setId(1).setName("Test User").setIsadmin(false).toObject()
-        const mockedOvermind = createOvermindMock(config, (state) => {
-            state.allUsers = [user]
-        })
-        window.confirm = jest.fn(() => true)
-        updateAdmin(mockedOvermind, user)
-        expect(user.isadmin).toBe(true)
-    })
 
-    it("If user is admin, demote user", () => {
-        const user2 = new User().setId(2).setName("Test User2").setIsadmin(true).toObject()
-        const mockedOvermind2 = createOvermindMock(config, (state) => {
-            state.allUsers = [user2]
-        })
-        window.confirm = jest.fn(() => true)
-        updateAdmin(mockedOvermind2, user2)
-        expect(user2.isadmin).toBe(false)
-    })
-
-    it("If user does not confirm, do not make any changes", () => {
-        const user3 = new User().setId(3).setName("Test User3").setIsadmin(true).toObject()
-        const mockedOvermind2 = createOvermindMock(config, (state) => {
-            state.allUsers = [user3]
-        })
-        window.confirm = jest.fn(() => false)
-        updateAdmin(mockedOvermind2, user3)
-        expect(user3.isadmin).toBe(true)
+    const updateAdminTests: { desc: string, user: User.AsObject, confirm: boolean, want: boolean }[] = [
+        {
+            desc: "If user is not admin, promote to admin",
+            user: new User().setId(1).setIsadmin(false).toObject(),
+            confirm: true,
+            want: true
+        },
+        {
+            desc: "If user is admin, demote to non-admin",
+            user: new User().setId(1).setIsadmin(true).toObject(),
+            confirm: true,
+            want: false
+        },
+        {
+            desc: "If user does not confirm, do not change status",
+            user: new User().setId(1).setIsadmin(true).toObject(),
+            confirm: false,
+            want: true
+        }
+    ]
+    test.each(updateAdminTests)(`$desc`, async (test) => {
+        const { state, actions } = initializeOvermind({ allUsers: [test.user] })
+        window.confirm = jest.fn(() => test.confirm)
+        await actions.updateAdmin(test.user)
+        expect(state.allUsers[0].isadmin).toEqual(test.want)
     })
 })

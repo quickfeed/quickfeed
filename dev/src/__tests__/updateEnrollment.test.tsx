@@ -8,16 +8,14 @@ import React from "react"
 import Members from "../components/Members"
 import { Route, Router } from "react-router"
 import { Provider } from "overmind-react"
-import { MockGrpcManager } from "../MockGRPCManager"
+import { initializeOvermind } from "./TestHelpers"
 
 
 React.useLayoutEffect = React.useEffect
 configure({ adapter: new Adapter() })
 
 describe("UpdateEnrollment", () => {
-    const mockedOvermind = createOvermindMock(config, {
-        grpcMan: new MockGrpcManager()
-    })
+    const mockedOvermind = initializeOvermind({})
 
     const updateEnrollmentTests: { desc: string, courseID: number, userID: number, want: Enrollment.UserStatus }[] = [
         // Refer to addLocalCourseStudent() in MockGRPCManager.ts for a list of available enrollments
@@ -32,15 +30,15 @@ describe("UpdateEnrollment", () => {
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 1, statuses: [] })
     })
 
-    updateEnrollmentTests.forEach(({ desc, courseID, userID, want }) => {
-        it(desc, async () => {
-            window.confirm = jest.fn(() => true)
-            const enrollment = mockedOvermind.state.courseEnrollments[courseID].find(e => e.userid === userID)
-            expect(enrollment).toBeDefined()
-            const definedEnrollment = enrollment as Enrollment.AsObject
-            mockedOvermind.actions.updateEnrollment({ enrollment: definedEnrollment, status: want })
-            expect(definedEnrollment.status).toEqual(want)
-        })
+    test.each(updateEnrollmentTests)(`$desc`, async (test) => {
+        const enrollment = mockedOvermind.state.courseEnrollments[test.courseID].find(e => e.userid === test.userID)
+        if (enrollment === undefined) {
+            throw new Error(`No enrollment found for user ${test.userID} in course ${test.courseID}`)
+        }
+        mockedOvermind.actions.setActiveCourse(test.courseID)
+        window.confirm = jest.fn(() => true)
+        await mockedOvermind.actions.updateEnrollment({ enrollment: enrollment, status: test.want })
+        expect(enrollment.status).toEqual(test.want)
     })
 })
 
