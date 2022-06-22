@@ -3,7 +3,7 @@ import { MockGrpcManager } from "./MockGRPCManager"
 import { useActions, useGrpc } from "./overmind"
 
 
-// DevelopmentButtons contain functionality to save the current state
+// DevelopmentMode contain functionality to save the current state
 // and to switch between different signed in users.
 // This is only used for development purposes.
 // NOTE: this only works with the mocked gRPC manager.
