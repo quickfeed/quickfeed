@@ -177,8 +177,8 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateGroup, request);
     }
 
-    public updateGroup(group: Group): Promise<IGrpcResponse<Void>> {
-        return this.grpcSend<Void>(this.agService.updateGroup, group);
+    public updateGroup(group: Group): Promise<IGrpcResponse<Group>> {
+        return this.grpcSend<Group>(this.agService.updateGroup, group);
     }
 
     public deleteGroup(courseID: number, groupID: number): Promise<IGrpcResponse<Void>> {
