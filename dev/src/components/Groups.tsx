@@ -48,24 +48,30 @@ const Groups = (): JSX.Element => {
         return <td>{buttons}</td>
     }
 
+    const GroupMembers = ({ group }: { group: Group.AsObject }) => {
+        if (!hasEnrollments(group)) {
+            return <td>No members</td>
+        }
+
+        const members = group.enrollmentsList.map((enrollment, index) => {
+            return (
+                <span key={enrollment.id} className="inline-block">
+                    <a href={`https://github.com/${enrollment.user?.login}`} target="_blank" rel="noopener noreferrer">{enrollment.user?.name}</a>
+                        {index >= group.enrollmentsList.length - 1 ? "" : ", "}
+                </span>
+            )
+        })
+        return <td>{members}</td>
+    }
+
     const GroupRow = ({ group }: { group: Group.AsObject }) => {
         return (
             <tr hidden={groupSearch(group)}>
-                <th key={group.id}>
+                <td key={group.id}>
                     {group.name}
                     <span className="badge badge-warning ml-2">{isPendingGroup(group) ? "Pending" : null}</span>
-                </th>
-                <td>
-                    <div>
-                        {// Populates the unordered list with list elements for every user in the group
-                            hasEnrollments(group) && group.enrollmentsList.map((enrol, index) =>
-                                <span key={enrol.id} className="inline-block">
-                                    <a href={`https://github.com/${enrol.user?.login}`} target="_blank" rel="noopener noreferrer">{enrol.user?.name}</a>
-                                    {index >= group.enrollmentsList.length - 1 ? "" : ", "}
-                                </span>
-                            )}
-                    </div>
                 </td>
+                <GroupMembers group={group} />
                 <GroupButtons group={group} />
             </tr>
         )
@@ -80,6 +86,7 @@ const Groups = (): JSX.Element => {
         return <GroupRow key={group.id} group={group} />
     })
 
+    // If a group is active (being edited), show the group form
     if (state.activeGroup) {
         return <GroupForm />
     }
