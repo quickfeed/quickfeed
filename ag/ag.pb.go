@@ -4607,6 +4607,7 @@ var (
 		(*score.Score)(nil),                   // 59: score.Score
 	}
 )
+
 var file_ag_ag_proto_depIdxs = []int32{
 	9,  // 0: ag.User.remoteIdentities:type_name -> ag.RemoteIdentity
 	15, // 1: ag.User.enrollments:type_name -> ag.Enrollment
