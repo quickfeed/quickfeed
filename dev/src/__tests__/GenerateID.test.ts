@@ -6,7 +6,7 @@ import { MockGrpcManager } from "../MockGRPCManager"
 // - The ID should be automatically incremented
 describe('GenerateID', () => {
     let grpcMan: MockGrpcManager
-    let types: typeof grpcMan.e
+    let types: typeof grpcMan.generate
 
     beforeEach(() => {
         grpcMan = new MockGrpcManager()

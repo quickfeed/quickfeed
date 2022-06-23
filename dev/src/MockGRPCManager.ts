@@ -40,6 +40,11 @@ export interface IGrpcResponse<T> {
     data?: T
 }
 
+/** The Generate enum contains the types we generate IDs for.
+    This is used to keep track of the next ID to use for each type.
+    @example this.idMap.get(Generate.Course) // returns the previously generated ID for Course
+    @example this.generateID(Generate.Course) // returns the next ID to use for Course
+ */
 enum Generate {
     User = "user",
     Course = "course",
@@ -94,7 +99,8 @@ export class MockGrpcManager {
     private templateBenchmarks: GradingBenchmark[]
     // idMap is a map of auto incrementing IDs
     public idMap: Map<string, number> = new Map<string, number>()
-    public e: typeof Generate = Generate
+    /** generate holds the available types we generate IDs for */
+    public generate: typeof Generate = Generate
 
     public getMockedUsers() {
         return this.users
