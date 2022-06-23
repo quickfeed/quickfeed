@@ -10,7 +10,7 @@ describe('GenerateID', () => {
 
     beforeEach(() => {
         grpcMan = new MockGrpcManager()
-        types = grpcMan.e
+        types = grpcMan.generate
     })
 
     it('should generate an ID that is not already in use', async () => {
