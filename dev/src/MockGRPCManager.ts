@@ -144,7 +144,6 @@ export class MockGrpcManager {
         const isAdmin = this.currentUser?.getIsadmin()
         const user = this.currentUser
         if (!found && user && isAdmin) {
-            // TODO: This is not a guaranteed unique ID
             course.setId(this.generateID(Generate.Course))
             course.setCoursecreatorid(user.getId())
 
@@ -155,7 +154,6 @@ export class MockGrpcManager {
             enrollment.setCourseid(course.getId())
             enrollment.setUserid(user.getId())
             enrollment.setStatus(Enrollment.UserStatus.TEACHER)
-            // TODO: This is not a guaranteed unique ID
             enrollment.setId(this.generateID(Generate.Enrollment))
             enrollment.setCourse(course)
             enrollment.setUser(user)
@@ -381,7 +379,6 @@ export class MockGrpcManager {
         const request = new Group()
         request.setName(name)
         request.setCourseid(courseID)
-        // TODO: Not a unique ID
         request.setId(this.generateID(Generate.Group))
         const groupUsers: User[] = []
         users.forEach((ele) => {
@@ -540,7 +537,6 @@ export class MockGrpcManager {
 
     // TODO: All manual grading functions
     public createBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<GradingBenchmark>> {
-        // TODO: Generate ID
         bm.setId(this.generateID(Generate.TemplateBenchmark))
         this.templateBenchmarks.push(bm)
         return this.grpcSend<GradingBenchmark>(bm)
@@ -551,7 +547,6 @@ export class MockGrpcManager {
         if (!benchmarks) {
             return this.grpcSend<GradingCriterion>(null, new Status().setCode(2).setError('Benchmark not found'))
         }
-        // TODO: Generate unique ID
         c.setId(this.generateID(Generate.TemplateCriterion))
         benchmarks.getCriteriaList().push(c)
         return this.grpcSend<GradingCriterion>(c)
