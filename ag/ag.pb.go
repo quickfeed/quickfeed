@@ -7,12 +7,13 @@
 package ag
 
 import (
+	reflect "reflect"
+	sync "sync"
+
 	_ "github.com/alta/protopatch/patch/gopb"
 	score "github.com/autograde/quickfeed/kit/score"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -4540,70 +4541,73 @@ func file_ag_ag_proto_rawDescGZIP() []byte {
 	return file_ag_ag_proto_rawDescData
 }
 
-var file_ag_ag_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_ag_ag_proto_msgTypes = make([]protoimpl.MessageInfo, 51)
-var file_ag_ag_proto_goTypes = []interface{}{
-	(Group_GroupStatus)(0),                // 0: ag.Group.GroupStatus
-	(Repository_Type)(0),                  // 1: ag.Repository.Type
-	(Enrollment_UserStatus)(0),            // 2: ag.Enrollment.UserStatus
-	(Enrollment_DisplayState)(0),          // 3: ag.Enrollment.DisplayState
-	(Submission_Status)(0),                // 4: ag.Submission.Status
-	(GradingCriterion_Grade)(0),           // 5: ag.GradingCriterion.Grade
-	(SubmissionsForCourseRequest_Type)(0), // 6: ag.SubmissionsForCourseRequest.Type
-	(*User)(nil),                          // 7: ag.User
-	(*Users)(nil),                         // 8: ag.Users
-	(*RemoteIdentity)(nil),                // 9: ag.RemoteIdentity
-	(*Group)(nil),                         // 10: ag.Group
-	(*Groups)(nil),                        // 11: ag.Groups
-	(*Course)(nil),                        // 12: ag.Course
-	(*Courses)(nil),                       // 13: ag.Courses
-	(*Repository)(nil),                    // 14: ag.Repository
-	(*Enrollment)(nil),                    // 15: ag.Enrollment
-	(*UsedSlipDays)(nil),                  // 16: ag.UsedSlipDays
-	(*Enrollments)(nil),                   // 17: ag.Enrollments
-	(*SubmissionLink)(nil),                // 18: ag.SubmissionLink
-	(*EnrollmentLink)(nil),                // 19: ag.EnrollmentLink
-	(*CourseSubmissions)(nil),             // 20: ag.CourseSubmissions
-	(*Assignment)(nil),                    // 21: ag.Assignment
-	(*Task)(nil),                          // 22: ag.Task
-	(*Issue)(nil),                         // 23: ag.Issue
-	(*Assignments)(nil),                   // 24: ag.Assignments
-	(*Submission)(nil),                    // 25: ag.Submission
-	(*Submissions)(nil),                   // 26: ag.Submissions
-	(*GradingBenchmark)(nil),              // 27: ag.GradingBenchmark
-	(*Benchmarks)(nil),                    // 28: ag.Benchmarks
-	(*GradingCriterion)(nil),              // 29: ag.GradingCriterion
-	(*Review)(nil),                        // 30: ag.Review
-	(*Reviewers)(nil),                     // 31: ag.Reviewers
-	(*ReviewRequest)(nil),                 // 32: ag.ReviewRequest
-	(*CourseRequest)(nil),                 // 33: ag.CourseRequest
-	(*UserRequest)(nil),                   // 34: ag.UserRequest
-	(*GetGroupRequest)(nil),               // 35: ag.GetGroupRequest
-	(*GroupRequest)(nil),                  // 36: ag.GroupRequest
-	(*Provider)(nil),                      // 37: ag.Provider
-	(*OrgRequest)(nil),                    // 38: ag.OrgRequest
-	(*Organization)(nil),                  // 39: ag.Organization
-	(*Organizations)(nil),                 // 40: ag.Organizations
-	(*EnrollmentRequest)(nil),             // 41: ag.EnrollmentRequest
-	(*EnrollmentStatusRequest)(nil),       // 42: ag.EnrollmentStatusRequest
-	(*SubmissionRequest)(nil),             // 43: ag.SubmissionRequest
-	(*UpdateSubmissionRequest)(nil),       // 44: ag.UpdateSubmissionRequest
-	(*UpdateSubmissionsRequest)(nil),      // 45: ag.UpdateSubmissionsRequest
-	(*SubmissionReviewersRequest)(nil),    // 46: ag.SubmissionReviewersRequest
-	(*Providers)(nil),                     // 47: ag.Providers
-	(*URLRequest)(nil),                    // 48: ag.URLRequest
-	(*RepositoryRequest)(nil),             // 49: ag.RepositoryRequest
-	(*Repositories)(nil),                  // 50: ag.Repositories
-	(*AuthorizationResponse)(nil),         // 51: ag.AuthorizationResponse
-	(*Status)(nil),                        // 52: ag.Status
-	(*SubmissionsForCourseRequest)(nil),   // 53: ag.SubmissionsForCourseRequest
-	(*RebuildRequest)(nil),                // 54: ag.RebuildRequest
-	(*CourseUserRequest)(nil),             // 55: ag.CourseUserRequest
-	(*Void)(nil),                          // 56: ag.Void
-	nil,                                   // 57: ag.Repositories.URLsEntry
-	(*score.BuildInfo)(nil),               // 58: score.BuildInfo
-	(*score.Score)(nil),                   // 59: score.Score
-}
+var (
+	file_ag_ag_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
+	file_ag_ag_proto_msgTypes  = make([]protoimpl.MessageInfo, 51)
+	file_ag_ag_proto_goTypes   = []interface{}{
+		(Group_GroupStatus)(0),                // 0: ag.Group.GroupStatus
+		(Repository_Type)(0),                  // 1: ag.Repository.Type
+		(Enrollment_UserStatus)(0),            // 2: ag.Enrollment.UserStatus
+		(Enrollment_DisplayState)(0),          // 3: ag.Enrollment.DisplayState
+		(Submission_Status)(0),                // 4: ag.Submission.Status
+		(GradingCriterion_Grade)(0),           // 5: ag.GradingCriterion.Grade
+		(SubmissionsForCourseRequest_Type)(0), // 6: ag.SubmissionsForCourseRequest.Type
+		(*User)(nil),                          // 7: ag.User
+		(*Users)(nil),                         // 8: ag.Users
+		(*RemoteIdentity)(nil),                // 9: ag.RemoteIdentity
+		(*Group)(nil),                         // 10: ag.Group
+		(*Groups)(nil),                        // 11: ag.Groups
+		(*Course)(nil),                        // 12: ag.Course
+		(*Courses)(nil),                       // 13: ag.Courses
+		(*Repository)(nil),                    // 14: ag.Repository
+		(*Enrollment)(nil),                    // 15: ag.Enrollment
+		(*UsedSlipDays)(nil),                  // 16: ag.UsedSlipDays
+		(*Enrollments)(nil),                   // 17: ag.Enrollments
+		(*SubmissionLink)(nil),                // 18: ag.SubmissionLink
+		(*EnrollmentLink)(nil),                // 19: ag.EnrollmentLink
+		(*CourseSubmissions)(nil),             // 20: ag.CourseSubmissions
+		(*Assignment)(nil),                    // 21: ag.Assignment
+		(*Task)(nil),                          // 22: ag.Task
+		(*Issue)(nil),                         // 23: ag.Issue
+		(*Assignments)(nil),                   // 24: ag.Assignments
+		(*Submission)(nil),                    // 25: ag.Submission
+		(*Submissions)(nil),                   // 26: ag.Submissions
+		(*GradingBenchmark)(nil),              // 27: ag.GradingBenchmark
+		(*Benchmarks)(nil),                    // 28: ag.Benchmarks
+		(*GradingCriterion)(nil),              // 29: ag.GradingCriterion
+		(*Review)(nil),                        // 30: ag.Review
+		(*Reviewers)(nil),                     // 31: ag.Reviewers
+		(*ReviewRequest)(nil),                 // 32: ag.ReviewRequest
+		(*CourseRequest)(nil),                 // 33: ag.CourseRequest
+		(*UserRequest)(nil),                   // 34: ag.UserRequest
+		(*GetGroupRequest)(nil),               // 35: ag.GetGroupRequest
+		(*GroupRequest)(nil),                  // 36: ag.GroupRequest
+		(*Provider)(nil),                      // 37: ag.Provider
+		(*OrgRequest)(nil),                    // 38: ag.OrgRequest
+		(*Organization)(nil),                  // 39: ag.Organization
+		(*Organizations)(nil),                 // 40: ag.Organizations
+		(*EnrollmentRequest)(nil),             // 41: ag.EnrollmentRequest
+		(*EnrollmentStatusRequest)(nil),       // 42: ag.EnrollmentStatusRequest
+		(*SubmissionRequest)(nil),             // 43: ag.SubmissionRequest
+		(*UpdateSubmissionRequest)(nil),       // 44: ag.UpdateSubmissionRequest
+		(*UpdateSubmissionsRequest)(nil),      // 45: ag.UpdateSubmissionsRequest
+		(*SubmissionReviewersRequest)(nil),    // 46: ag.SubmissionReviewersRequest
+		(*Providers)(nil),                     // 47: ag.Providers
+		(*URLRequest)(nil),                    // 48: ag.URLRequest
+		(*RepositoryRequest)(nil),             // 49: ag.RepositoryRequest
+		(*Repositories)(nil),                  // 50: ag.Repositories
+		(*AuthorizationResponse)(nil),         // 51: ag.AuthorizationResponse
+		(*Status)(nil),                        // 52: ag.Status
+		(*SubmissionsForCourseRequest)(nil),   // 53: ag.SubmissionsForCourseRequest
+		(*RebuildRequest)(nil),                // 54: ag.RebuildRequest
+		(*CourseUserRequest)(nil),             // 55: ag.CourseUserRequest
+		(*Void)(nil),                          // 56: ag.Void
+		nil,                                   // 57: ag.Repositories.URLsEntry
+		(*score.BuildInfo)(nil),               // 58: score.BuildInfo
+		(*score.Score)(nil),                   // 59: score.Score
+	}
+)
+
 var file_ag_ag_proto_depIdxs = []int32{
 	9,  // 0: ag.User.remoteIdentities:type_name -> ag.RemoteIdentity
 	15, // 1: ag.User.enrollments:type_name -> ag.Enrollment
