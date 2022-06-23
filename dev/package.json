@@ -19,7 +19,7 @@
     "test": "jest --testPathIgnorePatterns=e2e",
     "test:selenium": "jest --testPathPattern=e2e",
     "build": "webpack",
-    "build:watch": "webpack --watch",
+    "build:watch": "webpack --watch --mode development",
     "build:dev": "webpack --mode development"
   },
   "devDependencies": {
