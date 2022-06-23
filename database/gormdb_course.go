@@ -1,6 +1,8 @@
 package database
 
 import (
+	"errors"
+
 	pb "github.com/autograde/quickfeed/ag"
 )
 
@@ -177,6 +179,9 @@ func (db *GormDB) GetCourseTeachers(query *pb.Course) ([]*pb.User, error) {
 			return nil, err
 		}
 		teachers = append(teachers, teacher)
+	}
+	if len(teachers) == 0 {
+		return nil, errors.New("course has no teachers")
 	}
 	return teachers, nil
 }

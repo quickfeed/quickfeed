@@ -141,6 +141,8 @@ func (db *GormDB) GetGroup(groupID uint64) (*pb.Group, error) {
 		}
 		return nil, fmt.Errorf("error fetching group record for group with ID %d: %w", groupID, err)
 	}
+
+	// TODO(espeland): I do not understand all this logic. Can't we just simply preload users, as we do with enrollments?
 	var userIds []uint64
 	for _, enrollment := range group.Enrollments {
 		userIds = append(userIds, enrollment.UserID)

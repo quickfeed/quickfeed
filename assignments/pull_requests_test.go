@@ -149,7 +149,7 @@ func TestPublishFeedbackComment(t *testing.T) {
 		Repository:   "oleespe-labs",
 		Body:         body,
 	}
-	if err := s.EditIssueComment(context.Background(), 1117670404, opt); err != nil {
+	if err := s.UpdateIssueComment(context.Background(), 1117670404, opt); err != nil {
 		t.Fatal(err)
 	}
 }

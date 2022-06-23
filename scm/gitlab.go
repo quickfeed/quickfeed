@@ -290,12 +290,12 @@ func (*GitlabSCM) CreateIssue(_ context.Context, _ *CreateIssueOptions) (*Issue,
 	}
 }
 
-// EditIssue implements the SCM interface
-func (*GitlabSCM) EditIssue(_ context.Context, _ int, _ *CreateIssueOptions) (*Issue, error) {
+// UpdateIssue implements the SCM interface
+func (*GitlabSCM) UpdateIssue(_ context.Context, _ int, _ *CreateIssueOptions) (*Issue, error) {
 	// TODO no implementation provided yet
 	return nil, ErrNotSupported{
 		SCM:    "gitlab",
-		Method: "EditIssue",
+		Method: "UpdateIssue",
 	}
 }
 
@@ -326,12 +326,12 @@ func (*GitlabSCM) CreateIssueComment(ctx context.Context, number int, opt *Issue
 	}
 }
 
-// EditIssueComment implements the SCM interface
-func (*GitlabSCM) EditIssueComment(ctx context.Context, commentID int64, opt *IssueCommentOptions) error {
+// UpdateIssueComment implements the SCM interface
+func (*GitlabSCM) UpdateIssueComment(ctx context.Context, commentID int64, opt *IssueCommentOptions) error {
 	// TODO no implementation provided yet
 	return ErrNotSupported{
 		SCM:    "gitlab",
-		Method: "EditIssueComment",
+		Method: "UpdateIssueComment",
 	}
 }
 

@@ -39,21 +39,18 @@ func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 		wh.logger.Errorf("Could not parse github webhook: %v", err)
 		return
 	}
+	wh.logger.Debug(log.IndentJson(event))
 	switch e := event.(type) {
 	case *github.PushEvent:
-		wh.logger.Debug(log.IndentJson(e))
 		wh.handlePush(e)
 	case *github.PullRequestEvent:
 		switch e.GetAction() {
 		case "opened":
-			wh.logger.Debug(log.IndentJson(e))
 			wh.handlePullRequestOpened(e)
 		case "closed":
-			wh.logger.Debug(log.IndentJson(e))
 			wh.handlePullRequestClosed(e)
 		}
 	case *github.PullRequestReviewEvent:
-		wh.logger.Debug(log.IndentJson(e))
 		wh.handlePullRequestReview(e)
 	default:
 		wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))

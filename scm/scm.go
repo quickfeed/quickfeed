@@ -65,8 +65,8 @@ type SCM interface {
 
 	// CreateIssue creates an issue.
 	CreateIssue(context.Context, *CreateIssueOptions) (*Issue, error)
-	// EditIssue edits an issue .
-	EditIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error)
+	// UpdateIssue edits an issue .
+	UpdateIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error)
 	// GetIssue fetches a specific issue.
 	GetIssue(ctx context.Context, issueNumber int, opt *RepositoryOptions) (*Issue, error)
 	// GetIssues fetches all issues in a repository.
@@ -74,8 +74,8 @@ type SCM interface {
 
 	// CreateIssueComment creates a comment on a GitHub issue.
 	CreateIssueComment(ctx context.Context, number int, opt *IssueCommentOptions) (uint64, error)
-	// EditIssueComment edits a comment on a GitHub issue.
-	EditIssueComment(ctx context.Context, commentID int64, opt *IssueCommentOptions) error
+	// UpdateIssueComment edits a comment on a GitHub issue.
+	UpdateIssueComment(ctx context.Context, commentID int64, opt *IssueCommentOptions) error
 
 	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error

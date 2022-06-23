@@ -705,25 +705,25 @@ func (s *GithubSCM) CreateIssue(ctx context.Context, opt *CreateIssueOptions) (*
 		Assignees: opt.Assignees,
 	}
 
-	s.logger.Debugf("Creating issue %s on %s Repository", opt.Title, opt.Repository)
+	s.logger.Debugf("Creating issue %q on %s", opt.Title, opt.Repository)
 	issue, _, err := s.client.Issues.Create(ctx, opt.Organization, opt.Repository, newIssue)
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "CreateIssue",
-			Message:  fmt.Sprintf("failed to create issue %s, make sure all the details are correct ", opt.Title),
+			Message:  fmt.Sprintf("failed to create issue %q", opt.Title),
 			GitError: err,
 		}
 	}
-	s.logger.Debugf("Done creating issue %s", opt.Title)
+	s.logger.Debugf("Created issue %q", opt.Title)
 
 	return toIssue(issue), nil
 }
 
 // EditRepoIssue implements the SCM interface
-func (s *GithubSCM) EditIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error) {
+func (s *GithubSCM) UpdateIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error) {
 	if !opt.valid() {
 		return nil, ErrMissingFields{
-			Method:  "EditIssue",
+			Method:  "UpdateIssue",
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
@@ -735,16 +735,16 @@ func (s *GithubSCM) EditIssue(ctx context.Context, issueNumber int, opt *CreateI
 		Assignees: opt.Assignees,
 	}
 
-	s.logger.Debugf("EditIssue: Editing issue %s on %s Repository", issueNumber, opt.Repository)
+	s.logger.Debugf("Updating issue %d on %s", issueNumber, opt.Repository)
 	issue, _, err := s.client.Issues.Edit(ctx, opt.Organization, opt.Repository, issueNumber, issueReq)
 	if err != nil {
 		return nil, ErrFailedSCM{
-			Method:   "EditIssue",
-			Message:  fmt.Sprintf("failed to edit issue #%v, on repository: %s, at organization: %s", issueNumber, opt.Repository, opt.Organization),
+			Method:   "UpdateIssue",
+			Message:  fmt.Sprintf("failed to update issue %d on %s/%s", issueNumber, opt.Organization, opt.Repository),
 			GitError: err,
 		}
 	}
-	s.logger.Debugf("EditIssue: Done editing issue number  %s", issueNumber)
+	s.logger.Debugf("Updated issue number %d", issueNumber)
 
 	return toIssue(issue), nil
 }
@@ -762,7 +762,7 @@ func (s *GithubSCM) GetIssue(ctx context.Context, issueNumber int, opt *Reposito
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "GetIssue",
-			Message:  fmt.Sprintf("failed to get Issue %v, make sure all the details are correct ", issueNumber),
+			Message:  fmt.Sprintf("failed to get issue %d", issueNumber),
 			GitError: err,
 		}
 	}
@@ -781,7 +781,7 @@ func (s *GithubSCM) GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*I
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "GetIssues",
-			Message:  fmt.Sprintf("failed to get Issues from repo %s make sure all the details are correct ", opt.Path),
+			Message:  fmt.Sprintf("failed to get issues for %s", opt.Path),
 			GitError: err,
 		}
 	}
@@ -807,7 +807,7 @@ func (s *GithubSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersO
 	if _, _, err := s.client.PullRequests.RequestReviewers(ctx, opt.Organization, opt.Repository, opt.Number, reviewersRequest); err != nil {
 		return ErrFailedSCM{
 			Method:   "RequestReviewers",
-			Message:  fmt.Sprintf("failed to request reviewers for pull request #%d, in repository: %s, for organization: %s", opt.Number, opt.Repository, opt.Organization),
+			Message:  fmt.Sprintf("failed to request reviewers for pull request #%d on %s/%s", opt.Number, opt.Organization, opt.Repository),
 			GitError: err,
 		}
 	}
@@ -834,17 +834,17 @@ func (s *GithubSCM) CreateIssueComment(ctx context.Context, number int, opt *Iss
 	return uint64(createdComment.GetID()), nil
 }
 
-// EditIssueComment implements the SCM interface
-func (s *GithubSCM) EditIssueComment(ctx context.Context, commentID int64, opt *IssueCommentOptions) error {
+// UpdateIssueComment implements the SCM interface
+func (s *GithubSCM) UpdateIssueComment(ctx context.Context, commentID int64, opt *IssueCommentOptions) error {
 	if !opt.valid() {
 		return ErrMissingFields{
-			Method:  "EditIssueComment",
+			Method:  "UpdateIssueComment",
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
 	if _, _, err := s.client.Issues.EditComment(ctx, opt.Organization, opt.Repository, commentID, &github.IssueComment{Body: &opt.Body}); err != nil {
 		return ErrFailedSCM{
-			Method:   "EditIssueComment",
+			Method:   "UpdateIssueComment",
 			Message:  fmt.Sprintf("failed to edit comment in repository: %s, for organization: %s", opt.Repository, opt.Organization),
 			GitError: err,
 		}
