@@ -1,5 +1,5 @@
-import React, { useEffect } from "react"
-import { useActions, useAppState } from "../overmind"
+import React from "react"
+import { useAppState } from "../overmind"
 import { getCourseID } from "../Helpers"
 import Groups from "../components/Groups"
 import GroupComponent from "../components/group/Group"

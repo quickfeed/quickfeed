@@ -4,7 +4,7 @@ import { useActions, useAppState } from "../overmind"
 import { UserCourseSubmissions } from "../overmind/state"
 import { RowElement, Row } from "./DynamicTable"
 
-export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGenerator: (s: SubmissionLink.AsObject, e?: Enrollment.AsObject) => RowElement, groupName?: boolean, assignmentID?: number): Row[] => {
+export const generateSubmissionRows = (links: UserCourseSubmissions[], cellGenerator: (s: SubmissionLink.AsObject, e?: Enrollment.AsObject) => RowElement, groupName?: boolean): Row[] => {
     const state = useAppState()
     const course = state.courses.find(c => c.id === state.activeCourse)
     return links?.map((link) => {

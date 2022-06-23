@@ -1,6 +1,6 @@
 import React from "react"
-import { getCourseID, hasTeacher, isTeacher, isVisible } from "../Helpers"
-import { useActions, useAppState } from "../overmind"
+import { getCourseID } from "../Helpers"
+import { useAppState } from "../overmind"
 import CourseFavoriteButton from "./CourseFavoriteButton"
 import RoleSwitch from "./teacher/RoleSwitch"
 

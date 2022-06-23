@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { useHistory } from 'react-router'
-import { EnrollmentStatus, hasEnrolled, hasNone, hasPending, isVisible } from '../Helpers'
+import { EnrollmentStatus, hasEnrolled, hasNone, hasPending } from '../Helpers'
 import { useActions } from '../overmind'
 import { Course, Enrollment } from '../../proto/ag/ag_pb'
 import CourseFavoriteButton from './CourseFavoriteButton'

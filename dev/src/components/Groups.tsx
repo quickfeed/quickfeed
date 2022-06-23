@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React from "react"
 import { Group } from "../../proto/ag/ag_pb"
 import { getCourseID, hasEnrollments, isApprovedGroup, isPendingGroup } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
@@ -57,7 +57,7 @@ const Groups = (): JSX.Element => {
             return (
                 <span key={enrollment.id} className="inline-block">
                     <a href={`https://github.com/${enrollment.user?.login}`} target="_blank" rel="noopener noreferrer">{enrollment.user?.name}</a>
-                        {index >= group.enrollmentsList.length - 1 ? "" : ", "}
+                    {index >= group.enrollmentsList.length - 1 ? "" : ", "}
                 </span>
             )
         })

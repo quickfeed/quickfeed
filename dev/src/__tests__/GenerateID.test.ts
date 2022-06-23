@@ -1,4 +1,4 @@
-import { Course, GradingBenchmark, Group } from "../../proto/ag/ag_pb"
+import { Course, GradingBenchmark } from "../../proto/ag/ag_pb"
 import { MockGrpcManager } from "../MockGRPCManager"
 
 // The functionality tested here is only used in the MockGRPCManager class.
@@ -79,6 +79,7 @@ describe('GenerateID', () => {
 
         // The next ID should be 6
         const nextId2 = grpcMan.generateID(types.Group)
+        expect(nextId2).toBe(6)
     })
 
     it('should auto-increment the ID for the Enrollment type', async () => {
