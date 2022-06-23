@@ -22,7 +22,7 @@ export const onInitializeOvermind = async ({ actions }: Context): Promise<void> 
     }
 }
 
-export const resetState = ({ state, actions, effects }: Context) => {
+export const resetState = ({ state }: Context) => {
     Object.assign(state.review, {
         selectedReview: -1,
         reviews: {},
@@ -233,7 +233,7 @@ export const updateEnrollment = async ({ state, actions, effects }: Context, { e
     if (confirmed) {
         // Lookup the enrollment
         // The enrollment should be in state, if it is not, do nothing
-        const enrollments = state.courseEnrollments[state.activeCourse]
+        const enrollments = state.courseEnrollments[state.activeCourse] ?? []
         const found = enrollments.findIndex(e => e.id == enrollment.id)
         if (found === -1) {
             return
