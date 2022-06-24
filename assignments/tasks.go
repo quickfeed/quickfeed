@@ -142,7 +142,7 @@ func updateIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 			issueOptions.State = "closed"
 		}
 
-		if _, err := sc.EditIssue(ctx, int(issue.IssueNumber), issueOptions); err != nil {
+		if _, err := sc.UpdateIssue(ctx, int(issue.IssueNumber), issueOptions); err != nil {
 			return err
 		}
 	}

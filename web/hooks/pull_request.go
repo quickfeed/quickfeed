@@ -12,8 +12,8 @@ import (
 )
 
 func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestReviewEvent) {
-	wh.logger.Debugf("Received pull request review event for pull request: %s, in repository: %s",
-		payload.GetPullRequest().GetTitle(), payload.GetRepo().GetName())
+	wh.logger.Debugf("Received review event for pull request #%d: %q in %s",
+		payload.GetPullRequest().GetNumber(), payload.GetPullRequest().GetTitle(), payload.GetRepo().GetFullName())
 
 	// Currently, QF only needs to do something if the PR is approved
 	if payload.GetReview().GetState() != "approved" {
@@ -27,7 +27,7 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			wh.logger.Debugf("Ignoring pull request review event for non-managed pull request #%d, in %s",
+			wh.logger.Debugf("Ignoring review event for unknown pull request #%d in %s",
 				payload.GetPullRequest().GetNumber(), payload.GetRepo().GetFullName())
 		} else {
 			wh.logger.Errorf("Failed to get pull request from database %v", err)
@@ -55,6 +55,9 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 	}
 
 	// Only if the review is from a course teacher, do we set the pull request to approved
+	// We do not check whether the review itself is "approved" here,
+	// given that we earlier in the method discard all events that are not "approved".
+	// If this method is to handle different types states, this check must be moved to here.
 	if reviewer.IsTeacher() {
 		pullRequest.SetApproved()
 		wh.db.UpdatePullRequest(pullRequest)
@@ -113,13 +116,8 @@ func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent
 	wh.logger.Debugf("Pull request successfully closed for repository: %s", payload.GetRepo().GetFullName())
 }
 
-// TODO(Meling): I think it makes sense to have this function here, instead of in assignments/pull_request.go,
-// since we are creating the pull request in the scope of a pull request opened event.
-// If I were to later implement a function for creating a pull request from another context, e.g. upon task creation,
-// it would make no sense to use the following process.
-// But if you have a better idea, please let me know.
-
 // createPullRequest creates a new pull request record from a pull request opened event.
+// When created, it is initially in the "draft" stage, signaling that it is not yet ready for review.
 func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, repo *pb.Repository) {
 	wh.logger.Debugf("Attempting to create pull request for repository: %s", payload.GetRepo().GetFullName())
 	issueNumber, err := getLinkedIssue(payload.GetPullRequest().GetBody())

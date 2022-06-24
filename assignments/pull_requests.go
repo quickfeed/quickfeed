@@ -97,8 +97,6 @@ func AssignReviewers(ctx context.Context, sc scm.SCM, db database.Database, cour
 // getNextReviewer gets the next reviewer from either teacherReviewCounter or studentReviewCounter,
 // based on whoever in total has been assigned to the least amount of pull requests.
 // It is simple, and does not account for how many current review requests any user has.
-//
-// Returns an error if the list of users is empty.
 func getNextReviewer(users []*pb.User, reviewCounter map[uint64]int) *pb.User {
 	userWithLowestCount := users[0]
 	lowestCount := reviewCounter[users[0].GetID()]
@@ -124,9 +122,6 @@ func getNextTeacherReviewer(db database.Database, course *pb.Course) (*pb.User, 
 	teachers, err := db.GetCourseTeachers(course)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get teachers from database: %w", err)
-	}
-	if len(teachers) == 0 {
-		return nil, errors.New("failed to get next teacher reviewer: no teachers in course")
 	}
 	teacherReviewCounter.initialize(course.GetID())
 	teacherReviewer := getNextReviewer(teachers, teacherReviewCounter[course.GetID()])

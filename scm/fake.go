@@ -233,12 +233,12 @@ func (*FakeSCM) CreateIssue(_ context.Context, _ *CreateIssueOptions) (*Issue, e
 	}
 }
 
-// EditIssue implements the SCM interface
-func (*FakeSCM) EditIssue(_ context.Context, _ int, _ *CreateIssueOptions) (*Issue, error) {
+// UpdateIssue implements the SCM interface
+func (*FakeSCM) UpdateIssue(_ context.Context, _ int, _ *CreateIssueOptions) (*Issue, error) {
 	// TODO no implementation provided yet
 	return nil, ErrNotSupported{
 		SCM:    "FakeSCM",
-		Method: "EditIssue",
+		Method: "UpdateIssue",
 	}
 }
 
@@ -269,12 +269,12 @@ func (*FakeSCM) CreateIssueComment(ctx context.Context, number int, opt *IssueCo
 	}
 }
 
-// EditIssueComment implements the SCM interface
-func (*FakeSCM) EditIssueComment(ctx context.Context, commentID int64, opt *IssueCommentOptions) error {
+// UpdateIssueComment implements the SCM interface
+func (*FakeSCM) UpdateIssueComment(ctx context.Context, commentID int64, opt *IssueCommentOptions) error {
 	// TODO no implementation provided yet
 	return ErrNotSupported{
 		SCM:    "FakeSCM",
-		Method: "EditIssueComment",
+		Method: "UpdateIssueComment",
 	}
 }
 
@@ -283,6 +283,6 @@ func (*FakeSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptio
 	// TODO no implementation provided yet
 	return ErrNotSupported{
 		SCM:    "FakeSCM",
-		Method: "EditRepoIssue",
+		Method: "RequestReviewers",
 	}
 }

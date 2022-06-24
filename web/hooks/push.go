@@ -109,19 +109,13 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	wh.logger.Debugf("Attempting to find pull request for ref: %s, in repository: %s",
 		payload.GetRef(), payload.GetRepo().GetFullName())
 
-	// TODO (message left by espeland): I do not know the best way to "extend" the handle method,
+	// TODO: I do not know the best way to "extend" the handle method,
 	// i.e., whether it is best to return an error, and then log it, or to simply log everything inside it,
 	// and then return in the main method in case nothing is returned (as is done here).
 	pullRequest, localTaskName := wh.handlePullRequestPushPayload(payload)
 	if pullRequest == nil {
 		return
 	}
-
-	// TODO(meling): My idea is that when a teacher wants to assign a test to a specific task they will use the 'local' task name.
-	// For example, if a teacher has created the markdown file task-hello_world.md,
-	// they would do scores.AddWithTaskName(TestHelloWorld, "hello_world", max, weight).
-	// Do you concur with this approach?
-	// We could of course simply make teachers assign the global task name, but that seems somewhat counter-intuitive to me.
 
 	// TODO(espeland): Revise this when score task name format has been decided.
 	// Should also write some documentation on how a task in essence has two names.
@@ -164,7 +158,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 			return
 		}
 	} else {
-		if err := sc.EditIssueComment(ctx, int64(pullRequest.GetScmCommentID()), opt); err != nil {
+		if err := sc.UpdateIssueComment(ctx, int64(pullRequest.GetScmCommentID()), opt); err != nil {
 			wh.logger.Errorf("Failed to update feedback comment for pull request #%d, in repository", pullRequest.GetNumber(), repo.Name())
 			return
 		}
@@ -225,23 +219,6 @@ func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *pb
 		assignments = append(assignments, assignment)
 	}
 	return assignments
-}
-
-func extractChanges(changes []string, modifiedAssignments map[string]bool) {
-	for _, changedFile := range changes {
-		index := strings.Index(changedFile, "/")
-		if index == -1 {
-			// ignore root-level files
-			continue
-		}
-		// we assume the first path component holds the assignment name
-		name := changedFile[:index]
-		if name == "" {
-			// ignore names that start with "/" or empty names
-			continue
-		}
-		modifiedAssignments[name] = true
-	}
 }
 
 // runAssignmentTests runs the tests for the given assignment pushed to repo.

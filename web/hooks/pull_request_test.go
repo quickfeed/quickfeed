@@ -20,6 +20,7 @@ func TestGetLinkedIssue(t *testing.T) {
 				if tt.expectError {
 					return
 				}
+				t.Errorf("getLinkedIssue() = %v, no error expected", err)
 			}
 			if gotIssueNumber != wantIssueNumber {
 				t.Errorf("getLinkedIssue() = %d, expected %d", gotIssueNumber, wantIssueNumber)

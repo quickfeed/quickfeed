@@ -2,7 +2,6 @@ package scm_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/autograde/quickfeed/scm"
@@ -197,7 +196,7 @@ func TestGetIssue(t *testing.T) {
 }
 
 // Test case for Updating existing Issue in a git Repository
-func TestEditRepoIssue(t *testing.T) {
+func TestUpdateIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 	// Replace with Repository name
@@ -223,7 +222,7 @@ func TestEditRepoIssue(t *testing.T) {
 		Body:         body,
 	}
 
-	_, err = s.EditIssue(ctx, issueNumber, opt)
+	_, err = s.UpdateIssue(ctx, issueNumber, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -265,14 +264,13 @@ func TestCreateIssueComment(t *testing.T) {
 		Repository:   "oleespe-labs",
 		Body:         "Hei hei",
 	}
-	commentID, err := s.CreateIssueComment(context.Background(), 64, opt)
+	_, err = s.CreateIssueComment(context.Background(), 64, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Printf("\n%d\n", commentID)
 }
 
-func TestEditIssueComment(t *testing.T) {
+func TestUpdateIssueComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
@@ -290,7 +288,7 @@ func TestEditIssueComment(t *testing.T) {
 		Repository:   "oleespe-labs",
 		Body:         body,
 	}
-	if err := s.EditIssueComment(context.Background(), 1117670404, opt); err != nil {
+	if err := s.UpdateIssueComment(context.Background(), 1117670404, opt); err != nil {
 		t.Fatal(err)
 	}
 }

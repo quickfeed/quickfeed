@@ -113,7 +113,7 @@ func (opt RepositoryOptions) valid() bool {
 }
 
 func (opt *CreateIssueOptions) valid() bool {
-	return (opt.Organization != "" && opt.Repository != "" && opt.Title != "" && opt.Body != "")
+	return opt.Organization != "" && opt.Repository != "" && opt.Title != "" && opt.Body != ""
 }
 
 func (opt RequestReviewersOptions) valid() bool {
@@ -122,8 +122,7 @@ func (opt RequestReviewersOptions) valid() bool {
 }
 
 func (opt IssueCommentOptions) valid() bool {
-	return opt.Organization != "" && opt.Repository != "" &&
-		opt.Body != ""
+	return opt.Organization != "" && opt.Repository != "" && opt.Body != ""
 }
 
 func (opt RepositoryInvitationOptions) valid() bool {
