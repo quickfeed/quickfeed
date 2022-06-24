@@ -128,8 +128,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	// One global and one local. Where the score package only uses the local name.
 	taskSum := results.TaskSum(localTaskName)
 
-	// TODO(espeland): When the project is finished. Create a GitHub issue that states all places where
-	// we need to update for GitHub apps. As it is, this would create comments as the course creator.
+	// TODO(espeland): Update this for GitHub web app.
 	sc, err := scm.NewSCMClient(wh.logger, course.GetProvider(), course.GetAccessToken())
 	if err != nil {
 		wh.logger.Errorf("Failed to create SCM Client: %v", err)

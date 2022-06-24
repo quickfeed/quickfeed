@@ -75,10 +75,11 @@ func handleTasks(ctx context.Context, db database.Database, sc scm.SCM, course *
 		return err
 	}
 
-	// TODO(Espeland): This will create all tasks in the course creator's name.
+	// TODO(espeland): Update this for GitHub web app.
+	// Currently this will create all tasks in the course creator's name.
 	// A possible workaround is to create a new scm client for every repo, and create the issues in one of the students name.
-
-	// TODO(Espeland): Need to think about what happens if an assignment contains two assignments with the same name.
+	// We need to think about what happens if an assignment contains two assignments with the same name.
+	// See Espeland's report for discussion about these topics.
 
 	// Creates, updates and deletes issues on all group repositories, based on how tasks differ from last push.
 	createdIssues := []*pb.Issue{}
