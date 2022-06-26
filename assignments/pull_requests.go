@@ -2,7 +2,6 @@ package assignments
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -133,10 +132,6 @@ func getNextStudentReviewer(db database.Database, groupID, ownerID uint64) (*pb.
 	group, err := db.GetGroup(groupID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get group from database: %w", err)
-	}
-	if len(group.Users) == 0 {
-		// This should never happen.
-		return nil, errors.New("failed to get next student reviewer: no users in group")
 	}
 	groupReviewCounter.initialize(group.GetID())
 	// We exclude the PR owner from the search.

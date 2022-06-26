@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -152,13 +153,14 @@ func (db *GormDB) GetGroup(groupID uint64) (*pb.Group, error) {
 		}
 		enrollment.User = u
 	}
-	if len(userIds) > 0 {
-		users, err := db.GetUsers(userIds...)
-		if err != nil {
-			return nil, err
-		}
-		group.Users = users
+	if len(userIds) == 0 {
+		return nil, errors.New("failed to get next student reviewer: no users in group")
 	}
+	users, err := db.GetUsers(userIds...)
+	if err != nil {
+		return nil, err
+	}
+	group.Users = users
 	return &group, nil
 }
 
