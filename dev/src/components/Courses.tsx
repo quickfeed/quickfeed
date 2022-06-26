@@ -95,7 +95,7 @@ const Courses = (overview: overview): JSX.Element => {
                 }
 
                 {(student.length > 0 || teacher.length > 0) &&
-                    <div className="container-fluid">
+                    <div className="container-fluid myCourses">
                         <h2>My Courses</h2>
                         <div className="card-deck course-card-row">
                             {teacher}

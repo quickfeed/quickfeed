@@ -3,7 +3,6 @@ import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, EnrollmentLink, GradingBenchmark, Group, Review, Submission, SubmissionLink, User } from "../proto/ag/ag_pb"
 import { Score } from "../proto/kit/score/score_pb"
 
-
 export enum Color {
     RED = "danger",
     BLUE = "primary",
@@ -307,7 +306,7 @@ const slugify = (str: string): string => {
 
 /* Use this function to simulate a delay in the loading of data */
 /* Used in development to simulate a slow network connection */
-const delay = (ms: number) => {
+export const delay = (ms: number) => {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
