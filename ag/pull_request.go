@@ -29,7 +29,7 @@ func (pr *PullRequest) HasFeedbackComment() bool {
 }
 
 // Checks if a pull request is valid for creation.
-func (pr *PullRequest) Validate() bool {
+func (pr *PullRequest) Valid() bool {
 	return pr.ScmRepositoryID > 0 && pr.TaskID > 0 &&
 		pr.IssueID > 0 && pr.SourceBranch != "" && pr.Number > 0 &&
 		pr.UserID > 0

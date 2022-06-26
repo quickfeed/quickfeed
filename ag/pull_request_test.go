@@ -21,7 +21,7 @@ func TestIsValid(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := tt.pr.Validate()
+			got := tt.pr.Valid()
 			if tt.want != got {
 				t.Errorf("IsValid() = %t, expected %t\npr: %v", got, tt.want, tt.pr)
 			}

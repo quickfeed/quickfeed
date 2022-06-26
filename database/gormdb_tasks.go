@@ -110,7 +110,7 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint
 // CreatePullRequest creates a pull request.
 // It is initially in the "draft" stage, signaling that it is not yet ready for review
 func (db *GormDB) CreatePullRequest(pullRequest *pb.PullRequest) error {
-	if !pullRequest.Validate() {
+	if !pullRequest.Valid() {
 		return errors.New("pull request is not valid for creation")
 	}
 	pullRequest.SetDraft()
