@@ -4,6 +4,7 @@ package ag
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -491,129 +492,168 @@ type AutograderServiceServer interface {
 }
 
 // UnimplementedAutograderServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedAutograderServiceServer struct {
-}
+type UnimplementedAutograderServiceServer struct{}
 
 func (UnimplementedAutograderServiceServer) GetUser(context.Context, *Void) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetUsers(context.Context, *Void) (*Users, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUsers not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetUserByCourse(context.Context, *CourseUserRequest) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserByCourse not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) UpdateUser(context.Context, *User) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) IsAuthorizedTeacher(context.Context, *Void) (*AuthorizationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IsAuthorizedTeacher not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetGroup(context.Context, *GetGroupRequest) (*Group, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroup not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetGroupByUserAndCourse(context.Context, *GroupRequest) (*Group, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupByUserAndCourse not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetGroupsByCourse(context.Context, *CourseRequest) (*Groups, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupsByCourse not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) CreateGroup(context.Context, *Group) (*Group, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) UpdateGroup(context.Context, *Group) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroup not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) DeleteGroup(context.Context, *GroupRequest) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroup not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetCourse(context.Context, *CourseRequest) (*Course, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCourse not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetCourses(context.Context, *Void) (*Courses, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCourses not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetCoursesByUser(context.Context, *EnrollmentStatusRequest) (*Courses, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCoursesByUser not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) CreateCourse(context.Context, *Course) (*Course, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCourse not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) UpdateCourse(context.Context, *Course) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCourse not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) UpdateCourseVisibility(context.Context, *Enrollment) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCourseVisibility not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetAssignments(context.Context, *CourseRequest) (*Assignments, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAssignments not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) UpdateAssignments(context.Context, *CourseRequest) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAssignments not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetEnrollmentsByUser(context.Context, *EnrollmentStatusRequest) (*Enrollments, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEnrollmentsByUser not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetEnrollmentsByCourse(context.Context, *EnrollmentRequest) (*Enrollments, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEnrollmentsByCourse not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) CreateEnrollment(context.Context, *Enrollment) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateEnrollment not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) UpdateEnrollments(context.Context, *Enrollments) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateEnrollments not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetSubmissions(context.Context, *SubmissionRequest) (*Submissions, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubmissions not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetSubmissionsByCourse(context.Context, *SubmissionsForCourseRequest) (*CourseSubmissions, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubmissionsByCourse not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) UpdateSubmission(context.Context, *UpdateSubmissionRequest) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSubmission not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) UpdateSubmissions(context.Context, *UpdateSubmissionsRequest) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSubmissions not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) RebuildSubmissions(context.Context, *RebuildRequest) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RebuildSubmissions not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) CreateBenchmark(context.Context, *GradingBenchmark) (*GradingBenchmark, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateBenchmark not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) UpdateBenchmark(context.Context, *GradingBenchmark) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateBenchmark not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) DeleteBenchmark(context.Context, *GradingBenchmark) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteBenchmark not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) CreateCriterion(context.Context, *GradingCriterion) (*GradingCriterion, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCriterion not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) UpdateCriterion(context.Context, *GradingCriterion) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCriterion not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) DeleteCriterion(context.Context, *GradingCriterion) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCriterion not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) CreateReview(context.Context, *ReviewRequest) (*Review, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateReview not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) UpdateReview(context.Context, *ReviewRequest) (*Review, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateReview not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetReviewers(context.Context, *SubmissionReviewersRequest) (*Reviewers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReviewers not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetProviders(context.Context, *Void) (*Providers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProviders not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetOrganization(context.Context, *OrgRequest) (*Organization, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOrganization not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) GetRepositories(context.Context, *URLRequest) (*Repositories, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRepositories not implemented")
 }
+
 func (UnimplementedAutograderServiceServer) IsEmptyRepo(context.Context, *RepositoryRequest) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IsEmptyRepo not implemented")
 }
