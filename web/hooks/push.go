@@ -3,6 +3,7 @@ package hooks
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -17,20 +18,26 @@ import (
 	"gorm.io/gorm"
 )
 
+func (wh GitHubWebHook) getRepository(repoID int64) (*pb.Repository, error) {
+	repos, err := wh.db.GetRepositories(&pb.Repository{RepositoryID: uint64(repoID)})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repository by remote ID %d: %w", repoID, err)
+	}
+	if len(repos) != 1 {
+		return nil, fmt.Errorf("unknown repository: %d", repoID)
+	}
+	return repos[0], nil
+}
+
 func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	wh.logger.Debugf("Received push event for branch reference: %s (user's default branch: %s)",
 		payload.GetRef(), payload.GetRepo().GetDefaultBranch())
 
-	repos, err := wh.db.GetRepositories(&pb.Repository{RepositoryID: uint64(payload.GetRepo().GetID())})
+	repo, err := wh.getRepository(payload.GetRepo().GetID())
 	if err != nil {
-		wh.logger.Errorf("Failed to get repository by remote ID %d from database: %v", payload.GetRepo().GetID(), err)
+		wh.logger.Errorf("Failed to get repository %s from database: %v", payload.GetRepo().GetFullName(), err)
 		return
 	}
-	if len(repos) != 1 {
-		wh.logger.Debugf("Ignoring push event for unknown repository: %s", payload.GetRepo().GetFullName())
-		return
-	}
-	repo := repos[0]
 	wh.logger.Debugf("Received push event for repository %v", repo)
 
 	course, err := wh.db.GetCourseByOrganizationID(repo.OrganizationID)
@@ -115,8 +122,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	// One global and one local. Where the score package only uses the local name.
 	taskSum := results.TaskSum(localTaskName)
 
-	// TODO(espeland): When the project is finished. Create a GitHub issue that states all places where
-	// we need to update for GitHub apps. As it is, this would create comments as the course creator.
+	// TODO(espeland): Update this for GitHub web app.
 	sc, err := scm.NewSCMClient(wh.logger, course.GetProvider(), course.GetAccessToken())
 	if err != nil {
 		wh.logger.Errorf("Failed to create SCM Client: %v", err)
