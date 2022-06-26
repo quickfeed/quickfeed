@@ -185,8 +185,7 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 		return err
 	}
 	course.OrganizationID = org.GetID()
-	// TODO(Espeland): Remember to remove myself when done testing!
-	admin := &pb.User{Login: "oleespe2"}
+	admin := &pb.User{}
 	CreateUser(t, db, 1, admin)
 	admin.RemoteIdentities = append(admin.RemoteIdentities, &pb.RemoteIdentity{
 		Provider:    course.GetProvider(),
@@ -218,21 +217,9 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 			dbRepo.RepoType = pb.Repository_TESTS
 		default:
 			login := strings.TrimSuffix(dbRepo.Name(), "-labs")
-			user := &pb.User{Login: login}
-			// TODO(Espeland): Remember to remove myself when done testing!
-			if login == "oleespe" {
-				err := db.CreateUserFromRemoteIdentity(user, &pb.RemoteIdentity{
-					Provider:    "github",
-					RemoteID:    69901339,
-					AccessToken: "token",
-				})
-				if err != nil {
-					return err
-				}
-			} else {
-				CreateUser(t, db, nxtRemoteID, user)
-				nxtRemoteID++
-			}
+			user := &pb.User{}
+			CreateUser(t, db, nxtRemoteID, user)
+			nxtRemoteID++
 			EnrollStudent(t, db, user, course)
 			group := &pb.Group{
 				Name:     login,

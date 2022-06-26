@@ -258,13 +258,16 @@ func TestCreateIssueComment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// TODO(espeland): Remember to reset these when done testing
+	// To use this test, the variables repository, body and issueNumber have to be set manually.
+	repository := "student-lab"
+	body := "Test"
+	issueNumber := 0
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,
-		Repository:   "oleespe-labs",
-		Body:         "Hei hei",
+		Repository:   repository,
+		Body:         body,
 	}
-	_, err = s.CreateIssueComment(context.Background(), 64, opt)
+	_, err = s.CreateIssueComment(context.Background(), issueNumber, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -278,17 +281,16 @@ func TestUpdateIssueComment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	body := "| Test Name | Score | Weight | % of total |\n"
-	body += "| :-------- | :---- | :----- | ---------: |\n"
-	body += "| Test 1    |  6/7  |    1   | 20%        |\n"
-	body += "| **Total** |       |        | 20%        |\n"
-	// TODO(espeland): Remember to reset these when done testing
+	// To use this test, the variables repository, body and commentID have to be set manually.
+	repository := "student-lab"
+	body := "Test update"
+	commentID := int64(0)
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,
-		Repository:   "oleespe-labs",
+		Repository:   repository,
 		Body:         body,
 	}
-	if err := s.UpdateIssueComment(context.Background(), 1117670404, opt); err != nil {
+	if err := s.UpdateIssueComment(context.Background(), commentID, opt); err != nil {
 		t.Fatal(err)
 	}
 }

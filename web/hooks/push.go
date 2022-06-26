@@ -109,11 +109,9 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	wh.logger.Debugf("Attempting to find pull request for ref: %s, in repository: %s",
 		payload.GetRef(), payload.GetRepo().GetFullName())
 
-	// TODO: I do not know the best way to "extend" the handle method,
-	// i.e., whether it is best to return an error, and then log it, or to simply log everything inside it,
-	// and then return in the main method in case nothing is returned (as is done here).
-	pullRequest, localTaskName := wh.handlePullRequestPushPayload(payload)
-	if pullRequest == nil {
+	pullRequest, localTaskName, err := wh.handlePullRequestPushPayload(payload)
+	if err != nil {
+		wh.logger.Errorf("Failed to retrieve pull request data from push payload: %v", err)
 		return
 	}
 
@@ -167,7 +165,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 }
 
 // handlePullRequestPushPayload retrieves the pull request and task name associated with it from an event payload.
-func (wh GitHubWebHook) handlePullRequestPushPayload(payload *github.PushEvent) (*pb.PullRequest, string) {
+func (wh GitHubWebHook) handlePullRequestPushPayload(payload *github.PushEvent) (*pb.PullRequest, string, error) {
 	pullRequest, err := wh.db.GetPullRequest(&pb.PullRequest{
 		SourceBranch:    branchName(payload.GetRef()),
 		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
@@ -176,25 +174,21 @@ func (wh GitHubWebHook) handlePullRequestPushPayload(payload *github.PushEvent) 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// This can happen if someone pushes to a branch group assignment, without having a PR created for it
 			// If this happens, QF should not do anything
-			wh.logger.Debugf("No pull request found for ref: %s", payload.GetRef())
-			return nil, ""
+			return nil, "", fmt.Errorf("no pull request found for ref: %s", payload.GetRef())
 		}
-		wh.logger.Errorf("Failed to get pull request from database: %v", err)
-		return nil, ""
+		return nil, "", fmt.Errorf("failed to get pull request from database: %v", err)
 	}
 	tasks, err := wh.db.GetTasks(&pb.Task{ID: pullRequest.GetTaskID()})
 	if err != nil {
 		// A pull request should always have a task association
 		// If not, something must have gone wrong elsewhere
-		wh.logger.Errorf("Failed to get task from the database: %v", err)
-		return nil, ""
+		return nil, "", fmt.Errorf("failed to get task from the database: %v", err)
 	}
 	if len(tasks) != 1 {
 		// This should never happen
-		wh.logger.Errorf("Got an unexpected number of tasks: %d", len(tasks))
-		return nil, ""
+		return nil, "", fmt.Errorf("got an unexpected number of tasks: %d", len(tasks))
 	}
-	return pullRequest, tasks[0].LocalName()
+	return pullRequest, tasks[0].LocalName(), nil
 }
 
 // extractAssignments extracts information from the push payload from github
@@ -227,12 +221,6 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *pb.Assignment, repo *pb.R
 		Course:     course,
 		Assignment: assignment,
 		Repo:       repo,
-		// TODO(Espeland): If a student for some reason pushes to a remote branch with a different name than
-		// the local one, this will fail.
-		// E.g. if a student pushes to remote branch "branch1", but their code is on the local branch "branch2",
-		// QF will try to checkout the wrong local branch.
-		// The payload contains no information on the local branch, and it therefore seems like there is no good workaround.
-		// We must make sure that if this scenario happens, QF can handle it.
 		BranchName: branchName(payload.GetRef()),
 		CommitID:   payload.GetHeadCommit().GetID(),
 		JobOwner:   payload.GetSender().GetLogin(),

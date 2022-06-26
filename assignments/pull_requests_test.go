@@ -2,72 +2,15 @@ package assignments
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/scm"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 )
-
-// TODO(Espeland): This test doesn't currently accomplish much.
-func TestAssignReviewers(t *testing.T) {
-	// Reset these before testing
-	teacherReviewCounter = make(map[uint64]map[uint64]int)
-	groupReviewCounter = make(map[uint64]map[uint64]int)
-	type testUser struct {
-		login string
-		role  pb.Enrollment_UserStatus
-	}
-	tests := map[string]struct {
-		testUsers []testUser
-	}{
-		"Simple": {
-			testUsers: []testUser{
-				{login: "student1", role: pb.Enrollment_STUDENT},
-				{login: "teacher1", role: pb.Enrollment_TEACHER},
-			},
-		},
-		"No enrollments": {testUsers: []testUser{}},
-	}
-
-	logger := qtest.Logger(t)
-	repo := &pb.Repository{HTMLURL: "irrelevant"}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			db, cleanup := qtest.TestDB(t)
-			defer cleanup()
-			admin := qtest.CreateNamedUser(t, db, 1, "admin")
-			course := &pb.Course{Provider: "fake"}
-			qtest.CreateCourse(t, db, admin, course)
-
-			var nextRemoteID uint64 = 2
-			for _, testUser := range tt.testUsers {
-				user := qtest.CreateNamedUser(t, db, nextRemoteID, testUser.login)
-				enrollment := &pb.Enrollment{UserID: user.GetID(), CourseID: course.GetID()}
-				if err := db.CreateEnrollment(enrollment); err != nil {
-					t.Fatal(err)
-				}
-				enrollment.Status = testUser.role
-				if err := db.UpdateEnrollment(enrollment); err != nil {
-					t.Fatal(err)
-				}
-				nextRemoteID++
-			}
-			sc, err := scm.NewSCMClient(logger, "fake", "irrelevant")
-			if err != nil {
-				t.Fatal(err)
-			}
-			if err = AssignReviewers(context.Background(), sc, db, course, repo, &pb.PullRequest{Number: 1}); err != nil && errors.Is(err, scm.ErrNotSupported{}) {
-				t.Fatal(err)
-			}
-		})
-	}
-}
 
 func TestGetNextReviewer(t *testing.T) {
 	// We create local versions of the maps
@@ -143,13 +86,16 @@ func TestPublishFeedbackComment(t *testing.T) {
 		},
 	}
 	body := CreateFeedbackComment(results, "1", &pb.Assignment{ScoreLimit: 80})
-	// TODO(espeland): Remember to reset these when done testing
+
+	// To use this test, the variables repository and commentID have to be set manually.
+	repository := "student-lab"
+	commentID := int64(0)
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,
-		Repository:   "oleespe-labs",
+		Repository:   repository,
 		Body:         body,
 	}
-	if err := s.UpdateIssueComment(context.Background(), 1117670404, opt); err != nil {
+	if err := s.UpdateIssueComment(context.Background(), commentID, opt); err != nil {
 		t.Fatal(err)
 	}
 }

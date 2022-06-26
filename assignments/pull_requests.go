@@ -68,15 +68,14 @@ func AssignReviewers(ctx context.Context, sc scm.SCM, db database.Database, cour
 	if err != nil {
 		return err
 	}
-	// TODO(espeland): Remember to uncomment when finished testing
-	// studentReviewer, err := getNextStudentReviewer(db, repo.GetGroupID(), pullRequest.GetUserID())
-	// if err != nil {
-	// 	return err
-	// }
+	studentReviewer, err := getNextStudentReviewer(db, repo.GetGroupID(), pullRequest.GetUserID())
+	if err != nil {
+		return err
+	}
 
 	reviewers := []string{
 		teacherReviewer.GetLogin(),
-		// studentReviewer.GetLogin(),
+		studentReviewer.GetLogin(),
 	}
 	opt := &scm.RequestReviewersOptions{
 		Organization: course.GetOrganizationPath(),
