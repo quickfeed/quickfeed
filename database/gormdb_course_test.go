@@ -194,7 +194,6 @@ func TestGormDBGetCourses(t *testing.T) {
 	if diff := cmp.Diff(wantCourses, gotCourses, protocmp.Transform()); diff != "" {
 		t.Errorf("GetCourses() mismatch (-wantCourses, +gotCourses):\n%s", diff)
 	}
-
 }
 
 func TestGormDBGetCourse(t *testing.T) {

@@ -87,12 +87,12 @@ func (p *FakeProvider) Client() *http.Client {
 // Debug is used only for testing.
 func (p *FakeProvider) Debug(debug bool) {}
 
-//RefreshTokenAvailable is used only for testing
+// RefreshTokenAvailable is used only for testing
 func (p *FakeProvider) RefreshTokenAvailable() bool {
 	return false
 }
 
-//RefreshToken is used only for testing
+// RefreshToken is used only for testing
 func (p *FakeProvider) RefreshToken(refreshToken string) (*oauth2.Token, error) {
 	return nil, nil
 }

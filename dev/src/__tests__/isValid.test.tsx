@@ -1,6 +1,7 @@
 import { isValid } from "../Helpers"
 import { User, EnrollmentLink, Enrollment, Submission, SubmissionLink } from "../../proto/ag/ag_pb"
 
+
 describe("User and enrollment validation", () => {
     it("User should be valid", () => {
         const user = new User().setId(1).setName("Test User").setEmail("mail@mail.com").setStudentid("1234567")
@@ -32,8 +33,8 @@ describe("User and enrollment validation", () => {
             }
         }
         expect(valid).toBe(true)
-    }
-    )
+    })
+
     it("Email is not a valid email", () => {
         const email = "hei@mail"
         const regex = /\S+@\S+\.\S+/
@@ -64,16 +65,16 @@ describe("User and enrollment validation", () => {
         const user = new User().setId(6)
         const enrollment = new Enrollment().setId(1).setUser(user)
         const submission = new Submission().setId(1)
-        const submissionLink1 = new SubmissionLink().setSubmission(submission)
-        const submissionArray = [submissionLink1]
+        const submissionLink = new SubmissionLink().setSubmission(submission)
+        const submissionArray = [submissionLink]
         const enrollmentLink = new EnrollmentLink().setEnrollment(enrollment).setSubmissionsList(submissionArray)
-        const isValidEnrollmentlink = isValid(enrollmentLink)
-        expect(isValidEnrollmentlink).toBe(true)
+        const isValidEnrollmentLink = isValid(enrollmentLink)
+        expect(isValidEnrollmentLink).toBe(true)
     })
 
     it("If enrollment link has no submission list, enrollment or user it should be invalid", () => {
-        const enrollmentLink2 = new EnrollmentLink()
-        const isValidEnrollmentlink2 = isValid(enrollmentLink2)
-        expect(isValidEnrollmentlink2).toBe(false)
+        const enrollmentLink = new EnrollmentLink()
+        const isValidEnrollmentLink = isValid(enrollmentLink)
+        expect(isValidEnrollmentLink).toBe(false)
     })
 })

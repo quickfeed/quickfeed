@@ -9,7 +9,7 @@ const NavBar = (): JSX.Element => {
     const state = useAppState()
     const actions = useActions()
 
-    const hamburger = state.isLoggedIn ? <span onClick={() => actions.toggleFavorites()} className="ml-3">☰</span> : null
+    const hamburger = state.isLoggedIn ? <span onClick={() => actions.toggleFavorites()} className="ml-3 hamburger">☰</span> : null
 
     return (
         <nav className="navbar navbar-expand-lg" style={{ backgroundColor: "#222", color: "#d4d4d4" }} id="main" >
@@ -21,7 +21,7 @@ const NavBar = (): JSX.Element => {
             }
             {!state.isLoggedIn &&
                 <div className="navbar-collapse ml-auto">
-                    <a href="/auth/github" className="nav-item ml-auto ms-auto" style={{ textAlign: "right", color: "#d4d4d4", marginRight: "55px" }}>
+                    <a href="/auth/github" className="nav-item ml-auto ms-auto signIn" style={{ textAlign: "right", color: "#d4d4d4", marginRight: "55px" }}>
                         <i className="fa fa-2x fa-github align-middle ms-auto " id="github" />
                     </a>
                 </div>
