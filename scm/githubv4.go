@@ -11,7 +11,8 @@ import (
 
 type GithubV4SCM struct {
 	GithubSCM
-	clientV4 *githubv4.Client
+	clientV4     *githubv4.Client
+	BypassClient *github.Client
 }
 
 func NewGithubV4SCMClient(logger *zap.SugaredLogger, token string) *GithubV4SCM {
@@ -19,13 +20,15 @@ func NewGithubV4SCMClient(logger *zap.SugaredLogger, token string) *GithubV4SCM 
 		&oauth2.Token{AccessToken: token},
 	)
 	httpClient := oauth2.NewClient(context.Background(), src)
+	client := github.NewClient(httpClient)
 	return &GithubV4SCM{
 		GithubSCM: GithubSCM{
 			logger: logger,
-			client: github.NewClient(httpClient),
+			client: client,
 			token:  token,
 		},
-		clientV4: githubv4.NewClient(httpClient),
+		clientV4:     githubv4.NewClient(httpClient),
+		BypassClient: client,
 	}
 }
 
