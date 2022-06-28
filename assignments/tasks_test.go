@@ -2,6 +2,7 @@ package assignments
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -11,8 +12,39 @@ import (
 	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
-	"go.uber.org/zap"
 )
+
+func assignmentsWithTasks(courseID uint64) []*pb.Assignment {
+	return []*pb.Assignment{
+		{
+			CourseID:    courseID,
+			Name:        "lab1",
+			ScriptFile:  "go.sh",
+			Deadline:    "12.01.2022",
+			AutoApprove: false,
+			Order:       1,
+			IsGroupLab:  false,
+			Tasks: []*pb.Task{
+				{Title: "lab1/fib, 1", Name: "lab1/fib", AssignmentOrder: 1, Body: "Implement fibonacci"},
+				{Title: "lab1/luc, 1", Name: "lab1/luc", AssignmentOrder: 1, Body: "Implement lucas numbers"},
+			},
+		},
+		{
+			CourseID:    courseID,
+			Name:        "lab2",
+			ScriptFile:  "go.sh",
+			Deadline:    "12.12.2021",
+			AutoApprove: false,
+			Order:       2,
+			IsGroupLab:  false,
+			Tasks: []*pb.Task{
+				{Title: "lab2/add, 2", Name: "lab2/add", AssignmentOrder: 2, Body: "Implement addition"},
+				{Title: "lab2/sub, 2", Name: "lab2/sub", AssignmentOrder: 2, Body: "Implement subtraction"},
+				{Title: "lab2/mul, 2", Name: "lab2/mul", AssignmentOrder: 2, Body: "Implement multiplication"},
+			},
+		},
+	}
+}
 
 type foundIssue struct {
 	IssueNumber uint64
@@ -31,25 +63,19 @@ type foundIssue struct {
 // It is also recommended that issues are created on all student repositories, and that they are the same.
 
 // populateDatabaseWithTasks based on the given course's organization.
-func populateDatabaseWithTasks(t *testing.T, logger *zap.SugaredLogger, db database.Database, sc scm.SCM, course *pb.Course) error {
+func populateDatabaseWithTasks(t *testing.T, db database.Database, sc scm.SCM, course *pb.Course) error {
 	t.Helper()
 
+	// Assignments that will be updated
+	assignmentsWithTasks := assignmentsWithTasks(course.ID)
+	if err := db.UpdateAssignments(assignmentsWithTasks); err != nil {
+		return err
+	}
+
 	ctx := context.Background()
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
-	if err != nil {
-		return err
+	org := &pb.Organization{
+		Path: course.OrganizationPath,
 	}
-
-	// Find and create assignments
-	foundAssignments, _, err := FetchAssignments(ctx, logger, sc, course)
-	if err != nil {
-		return err
-	}
-
-	if err = db.UpdateAssignments(foundAssignments); err != nil {
-		return err
-	}
-
 	repos, err := sc.GetRepositories(ctx, org)
 	if err != nil {
 		return err
@@ -73,6 +99,7 @@ func populateDatabaseWithTasks(t *testing.T, logger *zap.SugaredLogger, db datab
 		}
 		foundIssues[repo.ID] = make(map[string]*foundIssue)
 		for _, scmIssue := range existingScmIssues {
+			fmt.Printf("issue: %v\n", scmIssue)
 			splitTitle := strings.Split(scmIssue.Title, ", ")
 			name := splitTitle[0]
 			temp, err := strconv.Atoi(splitTitle[len(splitTitle)-1])
@@ -92,6 +119,9 @@ func populateDatabaseWithTasks(t *testing.T, logger *zap.SugaredLogger, db datab
 	createdTasks, _, err := db.SynchronizeAssignmentTasks(course, tasks)
 	if err != nil {
 		return err
+	}
+	for _, t := range createdTasks {
+		fmt.Printf("t: %v\n", t)
 	}
 
 	dbRepos, err := db.GetRepositoriesWithIssues(&pb.Repository{
@@ -114,6 +144,9 @@ func populateDatabaseWithTasks(t *testing.T, logger *zap.SugaredLogger, db datab
 			issuesToCreate = append(issuesToCreate, &pb.Issue{RepositoryID: repo.ID, TaskID: task.ID, IssueNumber: foundIssue.IssueNumber})
 		}
 	}
+	for _, t := range issuesToCreate {
+		fmt.Printf("i: %v\n", t)
+	}
 
 	return db.CreateIssues(issuesToCreate)
 }
@@ -122,10 +155,11 @@ func populateDatabaseWithTasks(t *testing.T, logger *zap.SugaredLogger, db datab
 // Results vary depending on what tasks/issues existed prior to running.
 func TestHandleTasks(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
+	qfTestUser := scm.GetTestUser(t)
 	accessToken := scm.GetAccessToken(t)
 
 	logger := log.Zap(false).Sugar()
-	scm, err := scm.NewSCMClient(logger, "github", accessToken)
+	sc, err := scm.NewSCMClient(logger, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,20 +172,34 @@ func TestHandleTasks(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	if err = qtest.PopulateDatabaseWithInitialData(t, db, scm, course); err != nil {
+	if err = qtest.PopulateDatabaseWithInitialData(t, db, sc, course); err != nil {
 		t.Fatal(err)
 	}
-	if err = populateDatabaseWithTasks(t, logger, db, scm, course); err != nil {
+	if err = populateDatabaseWithTasks(t, db, sc, course); err != nil {
 		t.Fatal(err)
 	}
 
+	assignments := assignmentsWithTasks(course.ID)
 	ctx := context.Background()
-	assignments, _, err := FetchAssignments(ctx, logger, scm, course)
+	if err = handleTasks(ctx, db, sc, course, assignments); err != nil {
+		t.Fatal(err)
+	}
+	// TODO(meling) Check that we get the expected assignments back from github...
+	for _, a := range assignments {
+		for _, t := range a.GetTasks() {
+			fmt.Printf("B: %v\n", t)
+		}
+	}
+
+	opt := &scm.RepositoryOptions{
+		Owner: qfTestOrg,
+		Path:  pb.StudentRepoName(qfTestUser),
+	}
+	issues, err := sc.GetIssues(ctx, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if err = handleTasks(ctx, db, scm, course, assignments); err != nil {
-		t.Fatal(err)
+	for _, issue := range issues {
+		t.Logf("issue: %v", issue)
 	}
 }
