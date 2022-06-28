@@ -28,11 +28,13 @@ Eivind
 envoyproxy
 errcheck
 Errorf
+espeland
 excelize
 extendee
 Frøyland
 fullchain
 Getwd
+githubv
 GOBIN
 Godkjent
 gofumpt
@@ -100,6 +102,7 @@ privkey
 proto
 protobuf
 protoc
+protocmp
 protoimpl
 qtest
 quickfeed
@@ -112,6 +115,7 @@ scriptfile
 sess
 SGTM
 shogo
+shurcoo
 signup
 skiptests
 slugified

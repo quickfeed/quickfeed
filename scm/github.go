@@ -86,7 +86,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*p
 
 	// if user name is provided, return the found organization only if the user is one of its owners
 	if opt.Username != "" {
-		// fetch user membersip in that organization, if exists
+		// fetch user membership in that organization, if exists
 		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, slug.Make(opt.Name))
 		if err != nil {
 			s.logger.Debug("User ", opt.Username, " is not a member of ", slug.Make(opt.Name))
