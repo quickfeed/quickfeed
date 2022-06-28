@@ -35,6 +35,7 @@ fullchain
 Getwd
 GOBIN
 Godkjent
+gofumpt
 golangci
 googleapis
 gopath

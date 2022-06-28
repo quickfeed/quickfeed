@@ -2,7 +2,6 @@ package assignments
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -69,15 +68,14 @@ func AssignReviewers(ctx context.Context, sc scm.SCM, db database.Database, cour
 	if err != nil {
 		return err
 	}
-	// TODO(espeland): Remember to uncomment when finished testing
-	// studentReviewer, err := getNextStudentReviewer(db, repo.GetGroupID(), pullRequest.GetUserID())
-	// if err != nil {
-	// 	return err
-	// }
+	studentReviewer, err := getNextStudentReviewer(db, repo.GetGroupID(), pullRequest.GetUserID())
+	if err != nil {
+		return err
+	}
 
 	reviewers := []string{
 		teacherReviewer.GetLogin(),
-		// studentReviewer.GetLogin(),
+		studentReviewer.GetLogin(),
 	}
 	opt := &scm.RequestReviewersOptions{
 		Organization: course.GetOrganizationPath(),
@@ -133,10 +131,6 @@ func getNextStudentReviewer(db database.Database, groupID, ownerID uint64) (*pb.
 	group, err := db.GetGroup(groupID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get group from database: %w", err)
-	}
-	if len(group.Users) == 0 {
-		// This should never happen.
-		return nil, errors.New("failed to get next student reviewer: no users in group")
 	}
 	groupReviewCounter.initialize(group.GetID())
 	// We exclude the PR owner from the search.

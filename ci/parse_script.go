@@ -25,17 +25,7 @@ type AssignmentInfo struct {
 // {{ .AssignmentName }}, {{ .RandomSecret }}, etc.
 func (r RunData) parseScriptTemplate(secret string) (*Job, error) {
 	info := &AssignmentInfo{
-		AssignmentName: r.Assignment.GetName(),
-		// TODO(Meling): I have added BranchName here, since we need to checkout the corresponding branch when necessary.
-		// To accommodate this, script files will now have to include the following:
-		//
-		// if [ {{ .BranchName }} != "main" ]; then
-		//	git checkout {{ .BranchName }}
-		// fi
-		//
-		// I do not know if this is sufficient. I have tested pushing from both the default branch and a feature branch,
-		// and both worked. I also tried checking out a non-existant branch in the script, which also seemed to work, as it just stayed on the default branch.
-		// We could force it to check against the default branch, but that would mean adding another field to AssignmentInfo.
+		AssignmentName:     r.Assignment.GetName(),
 		BranchName:         r.BranchName,
 		CreatorAccessToken: r.Course.GetAccessToken(),
 		GetURL:             r.Repo.GetHTMLURL(),
