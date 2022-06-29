@@ -2,6 +2,7 @@ package scm_test
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -69,8 +70,11 @@ func TestDeleteIssue(t *testing.T) {
 }
 
 // This test will delete all open and closed issues for the test user and organization.
-// The test is normally disabled, since its use is mainly for testing with GitHub test repos.
-func disabledTestDeleteAllIssues(t *testing.T) {
+// The test is skipped unless run with: SCM_TESTS=1 go test.
+func TestDeleteAllIssues(t *testing.T) {
+	if os.Getenv("SCM_TESTS") == "" {
+		t.SkipNow()
+	}
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
