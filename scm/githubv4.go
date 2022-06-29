@@ -66,12 +66,15 @@ func (s *GithubV4SCM) DeleteIssue(ctx context.Context, opt *RepositoryOptions, i
 }
 
 func (s *GithubV4SCM) DeleteIssues(ctx context.Context, opt *RepositoryOptions) error {
-	// List all open and closed issues
+	// List all open and closed issues (and pull requests)
 	issueList, _, err := s.bypassClient.Issues.ListByRepo(ctx, opt.Owner, opt.Path, &github.IssueListByRepoOptions{State: "all"})
 	if err != nil {
 		return fmt.Errorf("failed to fetch issues for %s: %w", opt.Path, err)
 	}
 	for _, issue := range issueList {
+		if issue.IsPullRequest() {
+			continue // ignore pull requests when deleting issues
+		}
 		if err = s.DeleteIssue(ctx, opt, *issue.Number); err != nil {
 			return fmt.Errorf("failed to delete issue %d in %s: %w", *issue.Number, opt.Path, err)
 		}
