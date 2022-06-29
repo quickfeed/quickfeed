@@ -2,6 +2,7 @@ package scm
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/go-github/v35/github"
 	"github.com/shurcooL/githubv4"
@@ -12,7 +13,7 @@ import (
 type GithubV4SCM struct {
 	GithubSCM
 	clientV4     *githubv4.Client
-	BypassClient *github.Client
+	bypassClient *github.Client
 }
 
 func NewGithubV4SCMClient(logger *zap.SugaredLogger, token string) *GithubV4SCM {
@@ -28,7 +29,7 @@ func NewGithubV4SCMClient(logger *zap.SugaredLogger, token string) *GithubV4SCM 
 			token:  token,
 		},
 		clientV4:     githubv4.NewClient(httpClient),
-		BypassClient: client,
+		bypassClient: client,
 	}
 }
 
@@ -62,4 +63,18 @@ func (s *GithubV4SCM) DeleteIssue(ctx context.Context, opt *RepositoryOptions, i
 		IssueID: q.Repository.Issue.ID,
 	}
 	return s.clientV4.Mutate(ctx, &m, input, nil)
+}
+
+func (s *GithubV4SCM) DeleteIssues(ctx context.Context, opt *RepositoryOptions) error {
+	// List all open and closed issues
+	issueList, _, err := s.bypassClient.Issues.ListByRepo(ctx, opt.Owner, opt.Path, &github.IssueListByRepoOptions{State: "all"})
+	if err != nil {
+		return fmt.Errorf("failed to fetch issues for %s: %w", opt.Path, err)
+	}
+	for _, issue := range issueList {
+		if err = s.DeleteIssue(ctx, opt, *issue.Number); err != nil {
+			return fmt.Errorf("failed to delete issue %d in %s: %w", *issue.Number, opt.Path, err)
+		}
+	}
+	return nil
 }

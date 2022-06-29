@@ -7,7 +7,6 @@ import (
 
 	"github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
-	"github.com/google/go-github/v35/github"
 	"go.uber.org/zap"
 )
 
@@ -83,15 +82,7 @@ func disabledTestDeleteAllIssues(t *testing.T) {
 		Owner: qfTestOrg,
 		Path:  ag.StudentRepoName(qfTestUser),
 	}
-	// List all open and closed issues
-	issueList, _, err := s.BypassClient.Issues.ListByRepo(ctx, opt.Owner, opt.Path, &github.IssueListByRepoOptions{State: "all"})
-	if err != nil {
+	if err := s.DeleteIssues(ctx, opt); err != nil {
 		t.Fatal(err)
-	}
-	for _, issue := range issueList {
-		t.Logf("Deleting issue #%d", *issue.Number)
-		if err = s.DeleteIssue(ctx, opt, *issue.Number); err != nil {
-			t.Fatal(err)
-		}
 	}
 }
