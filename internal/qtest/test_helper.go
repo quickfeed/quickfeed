@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
-	"strings"
 	"testing"
 
 	pb "github.com/autograde/quickfeed/ag"
@@ -249,33 +248,25 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 			RepositoryID:   repo.ID,
 			OrganizationID: org.GetID(),
 			HTMLURL:        repo.WebURL,
+			RepoType:       pb.RepoType(repo.Path),
 		}
-		switch repo.Path {
-		case pb.InfoRepo:
-			dbRepo.RepoType = pb.Repository_COURSEINFO
-		case pb.AssignmentRepo:
-			dbRepo.RepoType = pb.Repository_ASSIGNMENTS
-		case pb.TestsRepo:
-			dbRepo.RepoType = pb.Repository_TESTS
-		default:
-			login := strings.TrimSuffix(dbRepo.Name(), "-labs")
+		if dbRepo.IsUserRepo() {
 			user := &pb.User{}
 			CreateUser(t, db, nxtRemoteID, user)
 			nxtRemoteID++
 			EnrollStudent(t, db, user, course)
 			group := &pb.Group{
-				Name:     login,
+				Name:     dbRepo.UserName(),
 				CourseID: course.GetID(),
 				Users:    []*pb.User{user},
 			}
-			err := db.CreateGroup(group)
-			if err != nil {
+			if err := db.CreateGroup(group); err != nil {
 				return err
 			}
 			// For testing purposes, assume all student repositories are group repositories
 			// since tasks and pull requests are only supported for groups anyway.
 			dbRepo.RepoType = pb.Repository_GROUP
-			dbRepo.UserID = group.GetID()
+			dbRepo.GroupID = group.GetID()
 		}
 
 		t.Logf("create repo: %v", dbRepo)

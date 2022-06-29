@@ -99,6 +99,12 @@ func RepoType(path string) (repoType Repository_Type) {
 		repoType = Repository_ASSIGNMENTS
 	case TestsRepo:
 		repoType = Repository_TESTS
+	default:
+		if strings.HasSuffix(path, StudentRepoSuffix) {
+			repoType = Repository_USER
+		} else {
+			repoType = Repository_GROUP
+		}
 	}
 	return
 }
