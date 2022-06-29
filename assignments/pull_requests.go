@@ -10,23 +10,21 @@ import (
 	"github.com/autograde/quickfeed/scm"
 )
 
-var (
-	// These are used to track how many times someone has been assigned to review a pull request. They map as follows.
-	// teacherReviewCounter[courseID][userID] = count
-	// groupReviewCounter[groupID][userID] = count
-	teacherReviewCounter = make(countMap)
-	groupReviewCounter   = make(countMap)
-)
-
+// countMap maps a (courseID/groupID, userID)-pair to the number reviews
+// the user has been assigned for the given course/group.
 type countMap map[uint64]map[uint64]int
 
-// Creates a new map if none exists.
+// Creates a new map if none exists for the given course/group id.
 func (m countMap) initialize(id uint64) {
-	_, ok := m[id]
-	if !ok {
-		m[id] = make(map[uint64]int)
+	if _, ok := m[id]; !ok {
+		m[id] = make(map[uint64]int) // [id][userID] -> count
 	}
 }
+
+var (
+	teacherReviewCounter = make(countMap) // [courseID][userID] -> count
+	groupReviewCounter   = make(countMap) // [groupID][userID] -> count
+)
 
 // CreateFeedbackComment formats a feedback comment to be posted on pull requests.
 // It uses the test results from a student commit to create a table like the one shown below.
@@ -34,6 +32,7 @@ func (m countMap) initialize(id uint64) {
 // Table formatting ref: https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables
 //
 //  ## Test results from latest push
+//
 //	| Test Name | Score | Weight | % of Total |
 //	| :-------- | :---- | :----- | ---------: |
 //  | Test 1	| 2/4	| 1		 |	   6.25%  |
