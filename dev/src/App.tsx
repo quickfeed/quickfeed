@@ -62,7 +62,7 @@ const App = (): JSX.Element => {
         <div>
             <NavBar />
             <div className="app wrapper">
-                <div id="content">
+                <div id={state.showFavorites ? "content" : "content-full"}>
                     {Main()}
                 </div>
             </div>
