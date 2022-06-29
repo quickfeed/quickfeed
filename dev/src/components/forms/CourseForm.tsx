@@ -31,8 +31,10 @@ const CourseForm = ({ editCourse }: { editCourse?: Course.AsObject }): JSX.Eleme
 
     /* Date object used to fill in certain default values for new courses */
     const date = new Date(Date.now())
-    course.year = defaultYear(date)
-    course.tag = defaultTag(date)
+    if (!editCourse) {
+        course.year = defaultYear(date)
+        course.tag = defaultTag(date)
+    }
 
     const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
         const { name, value } = event.currentTarget
