@@ -235,24 +235,14 @@ type Authorization struct {
 	Scopes []string
 }
 
-// CreateNewIssueOptions contains information on how to create an Issue.
-//type NewIssue struct {
-//	Title string
-//	Body   *Repository
-//	Labels *[]string
-//	Assignee *string
-//	Assignees *[]string
-//}
-
 // Repository represents a git remote repository.
 type Issue struct {
-	ID         uint64
-	Title      string
-	Body       string
-	Repository string
-	Assignee   string
-	Status     string
-	//	Assignees string
+	ID          uint64
+	Title       string
+	Body        string
+	Repository  string
+	Assignee    string
+	Status      string
 	IssueNumber int
 }
 
