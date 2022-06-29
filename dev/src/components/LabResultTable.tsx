@@ -34,39 +34,39 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                     </thead>
                     <tbody>
                         <tr>
-                            <th colSpan={2} className={className}>Status</th>
+                            <td colSpan={2} className={className}>Status</td>
                             <td>{assignmentStatusText(assignment, submission)}</td>
                         </tr>
                         <tr>
-                            <th colSpan={2}>Delivered</th>
+                            <td colSpan={2}>Delivered</td>
                             <td>{delivered}</td>
                         </tr>
                         { // Only render row if submission has an approved date
                             submission.approveddate ?
                                 <tr>
-                                    <th colSpan={2}>Approved</th>
+                                    <td colSpan={2}>Approved</td>
                                     <td>{getFormattedTime(submission.approveddate)}</td>
                                 </tr>
                                 : null
                         }
                         <tr>
-                            <th colSpan={2}>Deadline</th>
+                            <td colSpan={2}>Deadline</td>
                             <td>{getFormattedTime(assignment.deadline)}</td>
                         </tr>
 
                         {!isManuallyGraded(assignment) ?
                             <tr>
-                                <th colSpan={2}>Tests Passed</th>
+                                <td colSpan={2}>Tests Passed</td>
                                 <td>{getPassedTestsCount(submission.scoresList)}</td>
                             </tr>
                             : null
                         }
                         <tr>
-                            <th colSpan={2}>Execution time</th>
+                            <td colSpan={2}>Execution time</td>
                             <td>{executionTime}</td>
                         </tr>
                         <tr>
-                            <th colSpan={2}>Slip days</th>
+                            <td colSpan={2}>Slip days</td>
                             <td>{
                                 enrollment.slipdaysremaining
                             }</td>
