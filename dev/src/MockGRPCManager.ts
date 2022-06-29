@@ -354,13 +354,48 @@ export class MockGrpcManager {
     }
 
     public updateGroup(group: Group): Promise<IGrpcResponse<Group>> {
-        // TODO: Remove / add group IDs to enrollments
         const groupID = group.getId()
-        const g = this.groups.getGroupsList().findIndex(g => g.getId() === groupID)
-        if (g > 0) {
-            Object.assign(this.groups.getGroupsList()[g], group)
+        const currentGroup = this.groups.getGroupsList().find(g => g.getId() === groupID && g.getCourseid() === group.getCourseid())
+        if (currentGroup === undefined) {
+            return this.grpcSend<Group>(new Void(), new Status().setCode(StatusCode.NOT_FOUND))
         }
-        return this.grpcSend<Group>(this.groups.getGroupsList()[g])
+        // Remove enrollments where the user is not in the group
+        let updatedUsers = group.getUsersList().map(u => u.getId())
+        let currentUsers = currentGroup.getUsersList().map(u => u.getId())
+
+        // Merge current and updated users, without duplicates
+        const combinedUsers = Array.from(new Set([...updatedUsers, ...currentUsers]))
+
+        combinedUsers.forEach(user => {
+            if (!updatedUsers.includes(user)) {
+                // Remove user from grouo
+                combinedUsers.splice(combinedUsers.indexOf(user), 1)
+
+                // Unset group ID for enrollment
+                this.enrollments.getEnrollmentsList().forEach(e => {
+                    if (e.getGroupid() === groupID && e.getUserid() === user && e.getCourseid() === group.getCourseid()) {
+                        e.setGroupid(0)
+                    }
+                })
+            }
+
+            if (!currentUsers.includes(user)) {
+                // Add group ID to enrollment, if an enrollment exists for the user
+                this.enrollments.getEnrollmentsList().forEach(e => {
+                    if (e.getUserid() === user && e.getCourseid() === group.getCourseid()) {
+                        e.setGroupid(groupID)
+                    }
+                })
+            }
+        })
+
+        // Update group users and enrollments
+        const updatedEnrollments = this.enrollments.getEnrollmentsList().filter(e => e.getGroupid() === groupID && combinedUsers.includes(e.getUserid()))
+        group.setEnrollmentsList(updatedEnrollments)
+        group.setUsersList(this.users.getUsersList().filter(u => combinedUsers.includes(u.getId())))
+        Object.assign(currentGroup, group)
+
+        return this.grpcSend<Group>(group)
     }
 
     public deleteGroup(courseID: number, groupID: number): Promise<IGrpcResponse<Void>> {
