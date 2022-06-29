@@ -394,11 +394,11 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	// change group to only one student
 	// name must not update because group team and repo already exist
-	updateGroupReqest1 := &pb.Group{ID: gotGroup.ID, Name: "Hein's single member Group", CourseID: course.ID, Users: []*pb.User{user1}}
+	updateGroupRequest1 := &pb.Group{ID: gotGroup.ID, Name: "Hein's single member Group", CourseID: course.ID, Users: []*pb.User{user1}}
 
 	// set teacher ID in context
 	ctx = qtest.WithUserContext(context.Background(), teacher)
-	_, err = ags.UpdateGroup(ctx, updateGroupReqest1)
+	_, err = ags.UpdateGroup(ctx, updateGroupRequest1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -408,7 +408,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 	userIDs = make([]uint64, 0)
-	for _, usr := range updateGroupReqest1.Users {
+	for _, usr := range updateGroupRequest1.Users {
 		userIDs = append(userIDs, usr.ID)
 	}
 

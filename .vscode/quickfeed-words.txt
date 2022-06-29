@@ -57,6 +57,7 @@ Hein's
 Heins
 hoursmax
 hoursmin
+HTMLURL
 Idxs
 Ikke
 Infof
