@@ -84,6 +84,12 @@ func (t *Repository) Name() string {
 	return repoURL[strings.LastIndex(repoURL, "/")+1:]
 }
 
+// UserName returns the user name of the repository, without the -labs suffix.
+func (t *Repository) UserName() string {
+	repoName := t.Name()
+	return repoName[:len(repoName)-len(StudentRepoSuffix)]
+}
+
 // RepoType returns the repository type for the given path name.
 func RepoType(path string) (repoType Repository_Type) {
 	switch path {
