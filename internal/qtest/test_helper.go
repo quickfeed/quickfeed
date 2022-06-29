@@ -104,6 +104,21 @@ func CreateUser(t *testing.T, db database.Database, remoteID uint64, user *pb.Us
 	return user
 }
 
+func CreateAdminUser(t *testing.T, db database.Database, provider string) *pb.User {
+	t.Helper()
+	user := &pb.User{}
+	err := db.CreateUserFromRemoteIdentity(user,
+		&pb.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    1,
+			AccessToken: scm.GetAccessToken(t),
+		})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return user
+}
+
 func CreateCourse(t *testing.T, db database.Database, user *pb.User, course *pb.Course) {
 	t.Helper()
 	if course.Provider == "" {
@@ -213,18 +228,12 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 	t.Helper()
 
 	ctx := context.Background()
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.OrganizationPath})
 	if err != nil {
 		return err
 	}
 	course.OrganizationID = org.GetID()
-	admin := &pb.User{}
-	CreateUser(t, db, 1, admin)
-	admin.RemoteIdentities = append(admin.RemoteIdentities, &pb.RemoteIdentity{
-		Provider:    course.GetProvider(),
-		RemoteID:    uint64(1),
-		AccessToken: scm.GetAccessToken(t),
-	})
+	admin := CreateAdminUser(t, db, course.GetProvider())
 	db.UpdateUser(admin)
 	CreateCourse(t, db, admin, course)
 
