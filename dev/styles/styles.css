@@ -15,9 +15,12 @@
   color: #d4d4d4;
   font-weight: bold;
   overflow-y: scroll;
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 .navigator::-webkit-scrollbar {
   display: none;
@@ -101,9 +104,11 @@
 #title {
   margin-left: 10px;
 }
+
 .card-body {
   color: black;
 }
+
 .centered {
   position: fixed;
   top: 50%;
@@ -119,6 +124,7 @@
   font-size: 24px;
   text-align: center;
 }
+
 .logo a {
   padding-top: 10px;
 }
@@ -185,6 +191,7 @@ input {
 #LandingPageTable tbody tr {
   cursor: pointer;
 }
+
 .jumbotron {
   margin-right: -100px;
   margin-left: -100px;
@@ -214,11 +221,13 @@ input {
 .icon {
   transition-duration: 0.5s;
 }
+
 .float-down-left {
   position: absolute;
   bottom: 10px;
   left: 20px;
 }
+
 .overflow-ellipses {
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -300,7 +309,7 @@ input {
   cursor: pointer;
 }
 
-.clickable:hover{
+.clickable:hover {
   text-decoration: none;
 }
 
@@ -331,7 +340,7 @@ input {
 
 .not-graded {
   box-shadow: rgb(0, 0, 0) 0px 0px 0px inset,
-  rgba(0, 0, 0, 0.2) 5px 0px 0px inset;
+    rgba(0, 0, 0, 0.2) 5px 0px 0px inset;
 }
 
 .dropdown-menu-center {
@@ -351,9 +360,17 @@ input {
 }
 
 @media all and (min-width: 992px) {
-    .navbar .nav-item .dropdown-menu { display: none; }
-    .navbar .nav-item:hover .dropdown-menu { display: block; }
-    .navbar .nav-item .dropdown-menu { margin-top:0; }
+  .navbar .nav-item .dropdown-menu {
+    display: none;
+  }
+
+  .navbar .nav-item:hover .dropdown-menu {
+    display: block;
+  }
+
+  .navbar .nav-item .dropdown-menu {
+    margin-top: 0;
+  }
 }
 
 @media only screen and (max-width: 980px) {
@@ -364,5 +381,7 @@ input {
 }
 
 @media only screen and (max-width: 1200px) {
-  .lab-resize{ padding-top: 15px; }
+  .lab-resize {
+    padding-top: 15px;
+  }
 }
