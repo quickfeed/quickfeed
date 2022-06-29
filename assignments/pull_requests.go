@@ -72,17 +72,15 @@ func AssignReviewers(ctx context.Context, sc scm.SCM, db database.Database, cour
 		return err
 	}
 
-	reviewers := []string{
-		teacherReviewer.GetLogin(),
-		studentReviewer.GetLogin(),
-	}
 	opt := &scm.RequestReviewersOptions{
 		Organization: course.GetOrganizationPath(),
 		Repository:   repo.Name(),
 		Number:       int(pullRequest.GetNumber()),
-		Reviewers:    reviewers,
+		Reviewers: []string{
+			teacherReviewer.GetLogin(),
+			studentReviewer.GetLogin(),
+		},
 	}
-
 	if err := sc.RequestReviewers(ctx, opt); err != nil {
 		return err
 	}
@@ -96,12 +94,11 @@ func AssignReviewers(ctx context.Context, sc scm.SCM, db database.Database, cour
 // It is simple, and does not account for how many current review requests any user has.
 func getNextReviewer(users []*pb.User, reviewCounter map[uint64]int) *pb.User {
 	userWithLowestCount := users[0]
-	lowestCount := reviewCounter[users[0].GetID()]
+	lowestCount := reviewCounter[userWithLowestCount.GetID()]
 	for _, user := range users {
 		count, ok := reviewCounter[user.GetID()]
 		if !ok {
-			// If the user is not present in the review map
-			// they are returned as the next reviewer.
+			// Found user with no prior reviews; assign as the next reviewer.
 			reviewCounter[user.GetID()] = 1
 			return user
 		}
