@@ -151,7 +151,7 @@ func TestHandleTasks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err = handleTasks(ctx, db, scm, course, assignments); err != nil {
+	if err = synchronizeTasksWithIssues(ctx, db, scm, course, assignments); err != nil {
 		t.Fatal(err)
 	}
 }

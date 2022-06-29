@@ -61,7 +61,8 @@ func mapTasksByID(tasks []*pb.Task) map[uint64]*pb.Task {
 	return taskMap
 }
 
-func handleTasks(ctx context.Context, db database.Database, sc scm.SCM, course *pb.Course, assignments []*pb.Assignment) error {
+// synchronizeTasksWithIssues synchronizes tasks with issues on SCM's group repositories.
+func synchronizeTasksWithIssues(ctx context.Context, db database.Database, sc scm.SCM, course *pb.Course, assignments []*pb.Assignment) error {
 	tasksFromTestsRepo := tasksFromAssignments(assignments)
 	createdTasks, updatedTasks, err := db.SynchronizeAssignmentTasks(course, tasksFromTestsRepo)
 	if err != nil {

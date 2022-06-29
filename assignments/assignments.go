@@ -54,7 +54,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	}
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
 
-	if err = handleTasks(ctx, db, scm, course, assignments); err != nil {
+	if err = synchronizeTasksWithIssues(ctx, db, scm, course, assignments); err != nil {
 		logger.Errorf("Failed to create tasks on '%s' repository: %v", pb.TestsRepo, err)
 		return
 	}
