@@ -174,6 +174,39 @@ func WithUserContext(ctx context.Context, user *pb.User) context.Context {
 	return metadata.NewIncomingContext(ctx, meta)
 }
 
+// AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
+func AssignmentsWithTasks(courseID uint64) []*pb.Assignment {
+	return []*pb.Assignment{
+		{
+			CourseID:    courseID,
+			Name:        "lab1",
+			ScriptFile:  "go.sh",
+			Deadline:    "12.01.2022",
+			AutoApprove: false,
+			Order:       1,
+			IsGroupLab:  false,
+			Tasks: []*pb.Task{
+				{Title: "lab1/fib, 1", Name: "lab1/fib", AssignmentOrder: 1, Body: "Implement fibonacci"},
+				{Title: "lab1/luc, 1", Name: "lab1/luc", AssignmentOrder: 1, Body: "Implement lucas numbers"},
+			},
+		},
+		{
+			CourseID:    courseID,
+			Name:        "lab2",
+			ScriptFile:  "go.sh",
+			Deadline:    "12.12.2021",
+			AutoApprove: false,
+			Order:       2,
+			IsGroupLab:  false,
+			Tasks: []*pb.Task{
+				{Title: "lab2/add, 2", Name: "lab2/add", AssignmentOrder: 2, Body: "Implement addition"},
+				{Title: "lab2/sub, 2", Name: "lab2/sub", AssignmentOrder: 2, Body: "Implement subtraction"},
+				{Title: "lab2/mul, 2", Name: "lab2/mul", AssignmentOrder: 2, Body: "Implement multiplication"},
+			},
+		},
+	}
+}
+
 // PopulateDatabaseWithInitialData creates initial data-records based on organization
 // This function was created with the intent of being used for testing task and pull request related functionality.
 func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.SCM, course *pb.Course) error {
