@@ -281,16 +281,22 @@ func TestUpdateIssueComment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// To use this test, the variables repository, body and commentID have to be set manually.
-	repository := "student-lab"
-	body := "Test update"
-	commentID := int64(0)
-	opt := &scm.IssueCommentOptions{
-		Organization: qfTestOrg,
-		Repository:   repository,
-		Body:         body,
-	}
-	if err := s.UpdateIssueComment(context.Background(), commentID, opt); err != nil {
+// Helper function that creates a new issue, and returns a cleanup function that deletes the issue.
+func createAndDeleteIssue(t *testing.T, s *scm.GithubV4SCM, org string, repo string) (*scm.Issue, func()) {
+	t.Helper()
+	issue, err := s.CreateIssue(context.Background(), &scm.CreateIssueOptions{
+		Organization: org,
+		Repository:   repo,
+		Title:        "Test Issue",
+		Body:         "Test Body",
+	})
+	if err != nil {
 		t.Fatal(err)
+	}
+
+	return issue, func() {
+		if err := s.DeleteIssue(context.Background(), &scm.RepositoryOptions{Owner: org, Path: repo}, issue.IssueNumber); err != nil {
+			t.Fatal(err)
+		}
 	}
 }
