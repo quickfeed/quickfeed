@@ -535,13 +535,6 @@ export class MockGrpcManager {
     }
 
     public updateSubmission(courseID: number, s: Submission): Promise<IGrpcResponse<Void>> {
-        const request = new UpdateSubmissionRequest()
-        request.setSubmissionid(s.getId())
-        request.setCourseid(courseID)
-        request.setStatus(s.getStatus())
-        request.setReleased(s.getReleased())
-        request.setScore(s.getScore())
-
         const submission = this.submissions.getSubmissionsList().find(s => s.getId() === s.getId())
         if (submission) {
             Object.assign(submission, s)
@@ -550,13 +543,25 @@ export class MockGrpcManager {
     }
 
     public updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<IGrpcResponse<Void>> {
-        const request = new UpdateSubmissionsRequest()
-        request.setAssignmentid(assignmentID)
-        request.setCourseid(courseID)
-        request.setScorelimit(score)
-        request.setRelease(release)
-        request.setApprove(approve)
-        // TODO
+        const assignment = this.assignments.getAssignmentsList().find(assignment => assignment.getId() === assignmentID && assignment.getCourseid() === courseID)
+        if (!assignment) {
+            return this.grpcSend<Void>(null, new Status().setCode(2).setError('Assignment not found'))
+        }
+
+        for (const submission of this.submissions.getSubmissionsList()) {
+            if (submission.getAssignmentid() !== assignmentID) {
+                continue
+            }
+            if (submission.getScore() < score) {
+                continue
+            }
+            if (approve) {
+                submission.setStatus(Submission.Status.APPROVED)
+            }
+            if (release) {
+                submission.setReleased(release)
+            }
+        }
         return this.grpcSend<Void>(new Void())
     }
 
