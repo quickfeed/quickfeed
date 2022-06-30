@@ -127,8 +127,8 @@ func TestCreateIssue(t *testing.T) {
 	// Creating new Client
 	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
 
-	issue, delete := createAndDeleteIssue(t, s, qfTestOrg, ag.StudentRepoName(qfTestUser))
-	defer delete()
+	issue, cleanup := createIssue(t, s, qfTestOrg, ag.StudentRepoName(qfTestUser))
+	defer cleanup()
 
 	if !(issue.Title == "Test Issue" && issue.Body == "Test Body") {
 		t.Errorf("scm.TestCreateIssue: issue: %v", issue)
@@ -152,8 +152,8 @@ func TestGetIssues(t *testing.T) {
 
 	wantIssueIDs := []int{}
 	for i := 1; i <= 5; i++ {
-		issue, delete := createAndDeleteIssue(t, s, qfTestOrg, opt.Path)
-		defer delete()
+		issue, cleanup := createIssue(t, s, qfTestOrg, opt.Path)
+		defer cleanup()
 		wantIssueIDs = append(wantIssueIDs, issue.IssueNumber)
 	}
 
@@ -186,8 +186,8 @@ func TestGetIssue(t *testing.T) {
 		Path:  ag.StudentRepoName(qfTestUser),
 	}
 
-	wantIssue, delete := createAndDeleteIssue(t, s, opt.Owner, opt.Path)
-	defer delete()
+	wantIssue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
+	defer cleanup()
 
 	gotIssue, err := s.GetIssue(ctx, wantIssue.IssueNumber, opt)
 	if err != nil {
@@ -217,8 +217,8 @@ func TestUpdateIssue(t *testing.T) {
 		Body:         "Updated Issue Body",
 	}
 
-	issue, delete := createAndDeleteIssue(t, s, opt.Organization, opt.Repository)
-	defer delete()
+	issue, cleanup := createIssue(t, s, opt.Organization, opt.Repository)
+	defer cleanup()
 
 	gotIssue, err := s.UpdateIssue(ctx, issue.IssueNumber, opt)
 	if err != nil {
@@ -265,8 +265,8 @@ func TestCreateIssueComment(t *testing.T) {
 		Body:         body,
 	}
 
-	issue, delete := createAndDeleteIssue(t, s, opt.Organization, opt.Repository)
-	defer delete()
+	issue, cleanup := createIssue(t, s, opt.Organization, opt.Repository)
+	defer cleanup()
 
 	_, err := s.CreateIssueComment(context.Background(), issue.IssueNumber, opt)
 	if err != nil {
@@ -287,8 +287,8 @@ func TestUpdateIssueComment(t *testing.T) {
 		Body:         body,
 	}
 
-	issue, delete := createAndDeleteIssue(t, s, opt.Organization, opt.Repository)
-	defer delete()
+	issue, cleanup := createIssue(t, s, opt.Organization, opt.Repository)
+	defer cleanup()
 
 	// The created comment will be deleted when the parent issue is deleted.
 	commentID, err := s.CreateIssueComment(context.Background(), issue.IssueNumber, opt)
@@ -303,8 +303,8 @@ func TestUpdateIssueComment(t *testing.T) {
 	}
 }
 
-// Helper function that creates a new issue, and returns a cleanup function that deletes the issue.
-func createAndDeleteIssue(t *testing.T, s *scm.GithubV4SCM, org string, repo string) (*scm.Issue, func()) {
+// createIssue on the given repository; returns the issue and a cleanup function.
+func createIssue(t *testing.T, s *scm.GithubV4SCM, org, repo string) (*scm.Issue, func()) {
 	t.Helper()
 	issue, err := s.CreateIssue(context.Background(), &scm.CreateIssueOptions{
 		Organization: org,
@@ -317,7 +317,9 @@ func createAndDeleteIssue(t *testing.T, s *scm.GithubV4SCM, org string, repo str
 	}
 
 	return issue, func() {
-		if err := s.DeleteIssue(context.Background(), &scm.RepositoryOptions{Owner: org, Path: repo}, issue.IssueNumber); err != nil {
+		if err := s.DeleteIssue(context.Background(), &scm.RepositoryOptions{
+			Owner: org, Path: repo,
+		}, issue.IssueNumber); err != nil {
 			t.Fatal(err)
 		}
 	}
