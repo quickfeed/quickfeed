@@ -13,6 +13,7 @@ Certbot
 certonly
 Chacon
 cmds
+cmpopts
 codecov
 containertimeout
 copytruncate
@@ -37,6 +38,7 @@ Getwd
 githubv
 GOBIN
 Godkjent
+gofumports
 gofumpt
 golangci
 googleapis

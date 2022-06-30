@@ -74,15 +74,15 @@ Here are some more logs for the student.
 	}
 }
 
-func TestExtractResultWithPanicedAndMaliciousScoreLines(t *testing.T) {
+func TestExtractResultWithPanickedAndMaliciousScoreLines(t *testing.T) {
 	out := `
     {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"GoodTest1","Score":0,"MaxScore":100,"Weight":1}
     {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"GoodTest1","Score":100,"MaxScore":100,"Weight":1}
 	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"GoodTest2","Score":0,"MaxScore":100,"Weight":1}
 	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"GoodTest2","Score":50,"MaxScore":100,"Weight":1}
-	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"PanicedTest1","Score":0,"MaxScore":100,"Weight":1}
-	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"PanicedTest2","Score":0,"MaxScore":100,"Weight":1}
-	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"PanicedTest3","Score":0,"MaxScore":100,"Weight":1}
+	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"PanickedTest1","Score":0,"MaxScore":100,"Weight":1}
+	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"PanickedTest2","Score":0,"MaxScore":100,"Weight":1}
+	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"PanickedTest3","Score":0,"MaxScore":100,"Weight":1}
 	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"MaliciousTest","Score":100,"MaxScore":100,"Weight":1}
 	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"MaliciousTest","Score":100,"MaxScore":100,"Weight":1}
 	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"MaliciousTest","Score":100,"MaxScore":100,"Weight":1}
@@ -101,9 +101,9 @@ func TestExtractResultWithPanicedAndMaliciousScoreLines(t *testing.T) {
 	testOrder := []string{
 		"GoodTest1",
 		"GoodTest2",
-		"PanicedTest1",
-		"PanicedTest2",
-		"PanicedTest3",
+		"PanickedTest1",
+		"PanickedTest2",
+		"PanickedTest3",
 		"MaliciousTest",
 	}
 	for i, sc := range res.Scores {
@@ -380,7 +380,7 @@ var scoreGrades = []struct {
 	{
 		in: []*score.Score{
 			{TestName: "A", Score: 10, MaxScore: 10, Weight: 1},
-			{TestName: "B", Score: 0o5, MaxScore: 0o5, Weight: 1},
+			{TestName: "B", Score: 5, MaxScore: 5, Weight: 1},
 			{TestName: "C", Score: 15, MaxScore: 15, Weight: 1},
 		},
 		out:       100,
@@ -388,8 +388,8 @@ var scoreGrades = []struct {
 	},
 	{
 		in: []*score.Score{
-			{TestName: "A", Score: 0o5, MaxScore: 10, Weight: 1},
-			{TestName: "B", Score: 0o5, MaxScore: 0o5, Weight: 1},
+			{TestName: "A", Score: 5, MaxScore: 10, Weight: 1},
+			{TestName: "B", Score: 5, MaxScore: 5, Weight: 1},
 			{TestName: "C", Score: 20, MaxScore: 40, Weight: 1},
 		},
 		out:       67,
@@ -397,8 +397,8 @@ var scoreGrades = []struct {
 	},
 	{
 		in: []*score.Score{
-			{TestName: "A", Score: 0o5, MaxScore: 10, Weight: 1},
-			{TestName: "B", Score: 0o5, MaxScore: 10, Weight: 1},
+			{TestName: "A", Score: 5, MaxScore: 10, Weight: 1},
+			{TestName: "B", Score: 5, MaxScore: 10, Weight: 1},
 			{TestName: "C", Score: 20, MaxScore: 40, Weight: 1},
 		},
 		out:       50,
@@ -407,7 +407,7 @@ var scoreGrades = []struct {
 	{
 		in: []*score.Score{
 			{TestName: "A", Score: 10, MaxScore: 10, Weight: 2},
-			{TestName: "B", Score: 0o5, MaxScore: 10, Weight: 1},
+			{TestName: "B", Score: 5, MaxScore: 10, Weight: 1},
 			{TestName: "C", Score: 20, MaxScore: 40, Weight: 1},
 		},
 		out:       75,
@@ -415,9 +415,9 @@ var scoreGrades = []struct {
 	},
 	{
 		in: []*score.Score{
-			{TestName: "A", Score: 0o0, MaxScore: 10, Weight: 2},
-			{TestName: "B", Score: 0o0, MaxScore: 10, Weight: 1},
-			{TestName: "C", Score: 0o0, MaxScore: 40, Weight: 1},
+			{TestName: "A", Score: 0, MaxScore: 10, Weight: 2},
+			{TestName: "B", Score: 0, MaxScore: 10, Weight: 1},
+			{TestName: "C", Score: 0, MaxScore: 40, Weight: 1},
 		},
 		out:       0,
 		wantGrade: "F",
@@ -511,23 +511,23 @@ var valScores = []struct {
 	{
 		in: []*score.Score{
 			{TestName: "A", Score: 10, MaxScore: 10, Weight: 1},
-			{TestName: "B", Score: 0o5, MaxScore: 0o5, Weight: 1},
+			{TestName: "B", Score: 5, MaxScore: 5, Weight: 1},
 			{TestName: "C", Score: 15, MaxScore: 15, Weight: 1},
 		},
 		err: nil,
 	},
 	{
 		in: []*score.Score{
-			{TestName: "A", Score: 0o5, MaxScore: 10, Weight: 1},
-			{TestName: "B", Score: 0o5, MaxScore: 0o5, Weight: 1},
+			{TestName: "A", Score: 5, MaxScore: 10, Weight: 1},
+			{TestName: "B", Score: 5, MaxScore: 5, Weight: 1},
 			{TestName: "C", Score: 20, MaxScore: 40, Weight: 1},
 		},
 		err: nil,
 	},
 	{
 		in: []*score.Score{
-			{TestName: "A", Score: 0o5, MaxScore: 10, Weight: 1},
-			{TestName: "B", Score: 0o5, MaxScore: 10, Weight: 1},
+			{TestName: "A", Score: 5, MaxScore: 10, Weight: 1},
+			{TestName: "B", Score: 5, MaxScore: 10, Weight: 1},
 			{TestName: "C", Score: 20, MaxScore: 40, Weight: 1},
 		},
 		err: nil,
@@ -535,16 +535,16 @@ var valScores = []struct {
 	{
 		in: []*score.Score{
 			{TestName: "A", Score: 10, MaxScore: 10, Weight: 2},
-			{TestName: "B", Score: 0o5, MaxScore: 10, Weight: 1},
+			{TestName: "B", Score: 5, MaxScore: 10, Weight: 1},
 			{TestName: "C", Score: 20, MaxScore: 40, Weight: 1},
 		},
 		err: nil,
 	},
 	{
 		in: []*score.Score{
-			{TestName: "A", Score: 0o0, MaxScore: 10, Weight: 2},
-			{TestName: "B", Score: 0o0, MaxScore: 10, Weight: 1},
-			{TestName: "C", Score: 0o0, MaxScore: 40, Weight: 1},
+			{TestName: "A", Score: 0, MaxScore: 10, Weight: 2},
+			{TestName: "B", Score: 0, MaxScore: 10, Weight: 1},
+			{TestName: "C", Score: 0, MaxScore: 40, Weight: 1},
 		},
 		err: nil,
 	},
@@ -559,15 +559,15 @@ var valScores = []struct {
 	{
 		in: []*score.Score{
 			{TestName: "A", Score: -10, MaxScore: 10, Weight: 1},
-			{TestName: "B", Score: 0o05, MaxScore: 0o5, Weight: 1},
-			{TestName: "C", Score: 0o15, MaxScore: 15, Weight: 1},
+			{TestName: "B", Score: 5, MaxScore: 5, Weight: 1},
+			{TestName: "C", Score: 15, MaxScore: 15, Weight: 1},
 		},
 		err: score.ErrScoreInterval,
 	},
 	{
 		in: []*score.Score{
 			{TestName: "A", Score: 10, MaxScore: 10, Weight: 1},
-			{TestName: "B", Score: 0o5, MaxScore: 0o5, Weight: 1},
+			{TestName: "B", Score: 5, MaxScore: 5, Weight: 1},
 			{TestName: "C", Score: -1, MaxScore: 15, Weight: 1},
 		},
 		err: score.ErrScoreInterval,
@@ -575,7 +575,7 @@ var valScores = []struct {
 	{
 		desc: "score = 0",
 		in: []*score.Score{
-			{TestName: "A", Score: 0o0, MaxScore: 10, Weight: 1},
+			{TestName: "A", Score: 0, MaxScore: 10, Weight: 1},
 		},
 		err: nil,
 	},
