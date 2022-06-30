@@ -3,6 +3,7 @@ package hooks
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -54,10 +55,8 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 		return
 	}
 
-	// Only if the review is from a course teacher, do we set the pull request to approved
-	// We do not check whether the review itself is "approved" here,
-	// given that we earlier in the method discard all events that are not "approved".
-	// If this method is to handle different types states, this check must be moved to here.
+	// If we reach here the pull request already has an approved state. However, only if the
+	// review is from a course teacher, do we mark the pull request as approved for QuickFeed.
 	if reviewer.IsTeacher() {
 		pullRequest.SetApproved()
 		wh.db.UpdatePullRequest(pullRequest)
@@ -71,7 +70,7 @@ func (wh GitHubWebHook) handlePullRequestOpened(payload *github.PullRequestEvent
 
 	repos, err := wh.db.GetRepositoriesWithIssues(&pb.Repository{RepositoryID: uint64(payload.GetRepo().GetID())})
 	if err != nil {
-		wh.logger.Errorf("Failed to get repository by remote ID %d from database: %v", payload.GetRepo().GetID(), err)
+		wh.logger.Errorf("Failed to get repository %d from database: %v", payload.GetRepo().GetID(), err)
 		return
 	}
 	if len(repos) != 1 {
@@ -83,7 +82,12 @@ func (wh GitHubWebHook) handlePullRequestOpened(payload *github.PullRequestEvent
 		wh.logger.Debugf("Ignoring pull request opened event for non-group repository: %s", payload.GetRepo().GetFullName())
 		return
 	}
-	wh.createPullRequest(payload, repo)
+	issue, err := findIssue(payload.GetPullRequest().GetBody(), repo.GetIssues())
+	if err != nil {
+		wh.logger.Errorf("Failed to find associated issue in pull request: %v", err)
+		return
+	}
+	wh.createPullRequest(payload, issue)
 }
 
 func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent) {
@@ -91,7 +95,7 @@ func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent
 		payload.GetRepo().GetName(), payload.GetOrganization().GetLogin())
 
 	if !payload.PullRequest.GetMerged() {
-		wh.logger.Debugf("Ignoring pull request closed event for non-merged pull request #%d, in %s",
+		wh.logger.Debugf("Ignoring pull request closed event for unmerged pull request #%d, in %s",
 			payload.GetPullRequest().GetNumber(), payload.GetRepo().GetFullName())
 		return
 	}
@@ -102,7 +106,7 @@ func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			wh.logger.Debugf("Ignoring pull request closed event for non-managed pull request #%d, in %s",
+			wh.logger.Debugf("Ignoring pull request closed event for non-QuickFeed managed pull request #%d, in %s",
 				payload.GetPullRequest().GetNumber(), payload.GetRepo().GetFullName())
 		} else {
 			wh.logger.Errorf("Failed to get pull request from database: %v", err)
@@ -112,30 +116,16 @@ func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent
 
 	if err := wh.db.HandleMergingPR(pullRequest); err != nil {
 		wh.logger.Errorf("Failed to delete pull request from database %v", err)
+		return
 	}
 	wh.logger.Debugf("Pull request successfully closed for repository: %s", payload.GetRepo().GetFullName())
 }
 
 // createPullRequest creates a new pull request record from a pull request opened event.
 // When created, it is initially in the "draft" stage, signaling that it is not yet ready for review.
-func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, repo *pb.Repository) {
-	wh.logger.Debugf("Attempting to create pull request for repository: %s", payload.GetRepo().GetFullName())
-	issueNumber, err := getLinkedIssue(payload.GetPullRequest().GetBody())
-	if err != nil {
-		wh.logger.Debugf("Failed to get issue number from pull request body: %v, in repository %s", err, payload.GetRepo().GetFullName())
-		return
-	}
-	var associatedIssue *pb.Issue = nil
-	for _, issue := range repo.Issues {
-		if issue.IssueNumber == issueNumber {
-			associatedIssue = issue
-			break
-		}
-	}
-	if associatedIssue == nil {
-		wh.logger.Debugf("Ignoring pull request opened event for: %s, found no repository issue with number: %d", payload.GetRepo().GetFullName(), issueNumber)
-		return
-	}
+func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, associatedIssue *pb.Issue) {
+	wh.logger.Debugf("Creating pull request (issue #%d) for repository: %s",
+		associatedIssue.GetIssueNumber(), payload.GetRepo().GetFullName())
 
 	tasks, err := wh.db.GetTasks(&pb.Task{ID: associatedIssue.GetTaskID()})
 	if err != nil {
@@ -174,23 +164,26 @@ func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, repo
 	wh.logger.Debugf("Pull request successfully created for repository: %s", payload.GetRepo().GetFullName())
 }
 
-// TODO(Espeland): This function would probably be best implemented using a regular expression search.
-// See: https://docs.github.com/es/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue for patterns.
-// GitHub also supports linking multiple issues. I do not think this is a feature we can/need to support atm.
-// Currently, creating a pull request in a QF context certainly relies entirely on there only being one linked issue.
+var issueRegExp = regexp.MustCompile(`(?m)((?i:fixes|closes|resolves)\s#(\d+))$`)
 
-// getLinkedIssue returns the issue number from a pull requests body.
-// E.g. 30, from the body "Fixes #30".
-// It expects only one '#' character, that should be followed only by number characters.
-// I.e. it would return an error for the body "Fixes #30 task-hello_world".
-func getLinkedIssue(body string) (uint64, error) {
-	if count := strings.Count(body, "#"); count != 1 {
-		return 0, errors.New("pull request body does not contain exactly one '#' character")
+// findIssue returns the issue from the provided list that match the pull request body.
+// Only a single issue can be linked to a pull request. The body should contain one of the
+// strings "Fixes #<issue number>" or "Closes #<issue number>" or "Resolves #<issue number>".
+// The issue number should not be followed by any other characters.
+func findIssue(body string, issues []*pb.Issue) (*pb.Issue, error) {
+	if count := strings.Count(body, "#"); count > 1 {
+		return nil, errors.New("more than one '#' character in pull request body")
 	}
-	subStrings := strings.Split(body, "#")
-	issueNumber, err := strconv.Atoi(subStrings[len(subStrings)-1])
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse issue number from pull request body: %w", err)
+	if issueRegExp.MatchString(body) {
+		issue := issueRegExp.ReplaceAllString(body, "$2")
+		// ignore error since regular expression ensure it is a positive number
+		issueNum, _ := strconv.ParseUint(issue, 10, 64)
+		for _, issue := range issues {
+			if issue.IssueNumber == issueNum {
+				return issue, nil
+			}
+		}
+		return nil, fmt.Errorf("unknown issue #%d", issueNum)
 	}
-	return uint64(issueNumber), nil
+	return nil, errors.New("no issue found in pull request body")
 }
