@@ -4,7 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/scm"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.uber.org/zap"
 )
 
@@ -119,79 +122,80 @@ func TestCreateHook(t *testing.T) {
 func TestCreateIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
-	// Replace with Repository name
-	repo := "Replace with Repository Name"
-	// Add Issue Title here
-	title := "Replace with Issue Title"
-	// Add Issue body here
-	body := "Replace with Issue Body"
+	qfTestUser := scm.GetTestUser(t)
+
 	// Creating new Client
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
 
-	ctx := context.Background()
+	issue, delete := createAndDeleteIssue(t, s, qfTestOrg, ag.StudentRepoName(qfTestUser))
+	defer delete()
 
-	opt := &scm.CreateIssueOptions{
-		Organization: qfTestOrg,
-		Repository:   repo,
-		Title:        title,
-		Body:         body,
-	}
-	_, err = s.CreateIssue(ctx, opt)
-	if err != nil {
-		t.Fatal(err)
+	if !(issue.Title == "Test Issue" && issue.Body == "Test Body") {
+		t.Errorf("scm.TestCreateIssue: issue: %v", issue)
 	}
 }
 
+// NOTE: This test only works if the given repository has no previous issues
 func TestGetIssues(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
-	// Replace with Repository name
-	repo := "Replace with Repository Name"
+	qfTestUser := scm.GetTestUser(t)
 
 	// Creating new Client
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
 
 	ctx := context.Background()
-
 	opt := &scm.RepositoryOptions{
 		Owner: qfTestOrg,
-		Path:  repo,
+		Path:  ag.StudentRepoName(qfTestUser),
 	}
-	_, err = s.GetIssues(ctx, opt)
+
+	wantIssueIDs := []int{}
+	for i := 1; i <= 5; i++ {
+		issue, delete := createAndDeleteIssue(t, s, qfTestOrg, opt.Path)
+		defer delete()
+		wantIssueIDs = append(wantIssueIDs, issue.IssueNumber)
+	}
+
+	gotIssueIDs := []int{}
+	gotIssues, err := s.GetIssues(ctx, opt)
 	if err != nil {
 		t.Fatal(err)
+	}
+	for _, issue := range gotIssues {
+		gotIssueIDs = append(gotIssueIDs, issue.IssueNumber)
+	}
+
+	less := func(a, b int) bool { return a < b }
+	if equal := cmp.Equal(wantIssueIDs, gotIssueIDs, cmpopts.SortSlices(less)); !equal {
+		t.Errorf("scm.GetIssues() mismatch wantIssueIDs: %v, gotIssueIDs: %v", wantIssueIDs, gotIssueIDs)
 	}
 }
 
 func TestGetIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
-	// Replace with Repository name
-	repo := "Replace with Repository Name"
-	// Replace 0 with Issue Number in Repository
-	issueNumber := 0
+	qfTestUser := scm.GetTestUser(t)
 
 	// Creating new Client
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
 
 	ctx := context.Background()
-
 	opt := &scm.RepositoryOptions{
 		Owner: qfTestOrg,
-		Path:  repo,
+		Path:  ag.StudentRepoName(qfTestUser),
 	}
-	_, err = s.GetIssue(ctx, issueNumber, opt)
+
+	wantIssue, delete := createAndDeleteIssue(t, s, opt.Owner, opt.Path)
+	defer delete()
+
+	gotIssue, err := s.GetIssue(ctx, wantIssue.IssueNumber, opt)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if diff := cmp.Diff(wantIssue, gotIssue); diff != "" {
+		t.Errorf("scm.TestGetIssue() mismatch (-wantIssue +gotIssue):\n%s", diff)
 	}
 }
 
@@ -199,32 +203,30 @@ func TestGetIssue(t *testing.T) {
 func TestUpdateIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
-	// Replace with Repository name
-	repo := "Testing"
-	// Add Issue Title here
-	title := "Replace with new Issue Title"
-	// Add Issue body here
-	body := "Replace with new Issue Body"
-	// Add Issue Number here
-	issueNumber := 20
+	qfTestUser := scm.GetTestUser(t)
+
 	// Creating new Client
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
 
 	ctx := context.Background()
 
 	opt := &scm.CreateIssueOptions{
 		Organization: qfTestOrg,
-		Repository:   repo,
-		Title:        title,
-		Body:         body,
+		Repository:   ag.StudentRepoName(qfTestUser),
+		Title:        "Updated Issue",
+		Body:         "Updated Issue Body",
 	}
 
-	_, err = s.UpdateIssue(ctx, issueNumber, opt)
+	issue, delete := createAndDeleteIssue(t, s, opt.Organization, opt.Repository)
+	defer delete()
+
+	gotIssue, err := s.UpdateIssue(ctx, issue.IssueNumber, opt)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if gotIssue.Title != opt.Title || gotIssue.Body != opt.Body {
+		t.Fatalf("scm.TestUpdateIssue() want (title: %s, body: %s), got (title: %s, body: %s)", opt.Title, opt.Body, gotIssue.Title, gotIssue.Body)
 	}
 }
 
@@ -253,21 +255,20 @@ func TestRequestReviewers(t *testing.T) {
 func TestCreateIssueComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	qfTestUser := scm.GetTestUser(t)
+	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
 
-	// To use this test, the variables repository, body and issueNumber have to be set manually.
-	repository := "student-lab"
 	body := "Test"
-	issueNumber := 0
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,
-		Repository:   repository,
+		Repository:   ag.StudentRepoName(qfTestUser),
 		Body:         body,
 	}
-	_, err = s.CreateIssueComment(context.Background(), issueNumber, opt)
+
+	issue, delete := createAndDeleteIssue(t, s, opt.Organization, opt.Repository)
+	defer delete()
+
+	_, err := s.CreateIssueComment(context.Background(), issue.IssueNumber, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -276,10 +277,31 @@ func TestCreateIssueComment(t *testing.T) {
 func TestUpdateIssueComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	qfTestUser := scm.GetTestUser(t)
+	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
+
+	body := "Issue Comment"
+	opt := &scm.IssueCommentOptions{
+		Organization: qfTestOrg,
+		Repository:   ag.StudentRepoName(qfTestUser),
+		Body:         body,
+	}
+
+	issue, delete := createAndDeleteIssue(t, s, opt.Organization, opt.Repository)
+	defer delete()
+
+	// The created comment will be deleted when the parent issue is deleted.
+	commentID, err := s.CreateIssueComment(context.Background(), issue.IssueNumber, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// NOTE: We do not currently return the updated comment, so we cannot verify its content.
+	opt.Body = "Updated Issue Comment"
+	if err := s.UpdateIssueComment(context.Background(), int64(commentID), opt); err != nil {
+		t.Fatal(err)
+	}
+}
 
 // Helper function that creates a new issue, and returns a cleanup function that deletes the issue.
 func createAndDeleteIssue(t *testing.T, s *scm.GithubV4SCM, org string, repo string) (*scm.Issue, func()) {
