@@ -6,7 +6,7 @@ import { useActions, useAppState } from "../../overmind"
 import Search from "../Search"
 
 
-const GroupForm = (): JSX.Element => {
+const GroupForm = (): JSX.Element | null => {
     const state = useAppState()
     const actions = useActions()
 
@@ -24,7 +24,7 @@ const GroupForm = (): JSX.Element => {
         }
     }, [])
     if (!group) {
-        return <></>
+        return null
     }
     const userIds = group.usersList.map(user => user.id)
 

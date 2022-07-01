@@ -9,13 +9,13 @@ type GradeCommentProps = {
     setEditing: Dispatch<SetStateAction<boolean>>
 }
 
-const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.Element => {
+const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.Element | null => {
     const actions = useActions()
     const state = useAppState()
 
     /* Don't allow grading if user is not a teacher or editing is false */
     if (!state.isTeacher || !editing) {
-        return <></>
+        return null
     }
 
     /* Currently only triggers when user clicks outside of the textarea */

@@ -6,10 +6,10 @@ import Criteria from "./manual-grading/Criterion"
 import SummaryFeedback from "./manual-grading/SummaryFeedback"
 
 
-const ReviewResult = ({ review }: { review?: Review.AsObject }): JSX.Element => {
+const ReviewResult = ({ review }: { review?: Review.AsObject }): JSX.Element | null => {
 
     if (!review) {
-        return <></>
+        return null
     }
 
     const result = hasBenchmarks(review) ? review.gradingbenchmarksList.map((benchmark, index) => {
@@ -42,7 +42,6 @@ const ReviewResult = ({ review }: { review?: Review.AsObject }): JSX.Element => 
             </tfoot>
         </table>
     )
-
 }
 
 export default ReviewResult

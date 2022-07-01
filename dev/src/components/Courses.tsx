@@ -24,12 +24,10 @@ const Courses = (overview: overview): JSX.Element => {
             <div className="container centered">
                 <h3>There are currently no available courses.</h3>
                 {state.self.isadmin ?
-                    <>
-                        <div>
-                            <Button classname="mr-3" text="Go to course creation" color={Color.GREEN} type={ButtonType.BUTTON} onclick={() => history.push("/admin/create")} />
-                            <Button text="Manage users" color={Color.BLUE} type={ButtonType.BUTTON} onclick={() => history.push("/admin/manage")} />
-                        </div>
-                    </>
+                    <div>
+                        <Button classname="mr-3" text="Go to course creation" color={Color.GREEN} type={ButtonType.BUTTON} onclick={() => history.push("/admin/create")} />
+                        <Button text="Manage users" color={Color.BLUE} type={ButtonType.BUTTON} onclick={() => history.push("/admin/manage")} />
+                    </div>
                     : null}
             </div>
         )

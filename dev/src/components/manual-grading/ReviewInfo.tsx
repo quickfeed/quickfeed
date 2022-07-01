@@ -7,12 +7,12 @@ import Button, { ButtonType } from "../admin/Button"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
 
 
-const ReviewInfo = ({ review }: { review?: Review.AsObject }): JSX.Element => {
+const ReviewInfo = ({ review }: { review?: Review.AsObject }): JSX.Element | null => {
     const state = useAppState()
     const actions = useActions()
 
     if (!review) {
-        return <></>
+        return null
     }
 
     const assignment = state.activeSubmissionLink?.assignment

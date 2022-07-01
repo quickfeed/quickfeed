@@ -63,14 +63,12 @@ const Results = (): JSX.Element => {
     const rows = generateSubmissionRows(links, getSubmissionCell, false)
 
     const labView = state.currentSubmission ?
-        <>
-            <div className="lab-resize">
-                <ManageSubmissionStatus />
-                <div className="reviewLabResult mt-2">
-                    <Lab />
-                </div>
+        <div className="lab-resize">
+            <ManageSubmissionStatus />
+            <div className="reviewLabResult mt-2">
+                <Lab />
             </div>
-        </>
+        </div>
         : null
 
     return (

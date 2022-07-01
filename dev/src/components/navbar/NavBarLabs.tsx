@@ -7,12 +7,12 @@ import { useHistory } from "react-router"
 import { Status } from "../../consts"
 
 
-const NavBarLabs = (): JSX.Element => {
+const NavBarLabs = (): JSX.Element | null => {
     const state = useAppState()
     const history = useHistory()
 
     if (!state.assignments[state.activeCourse] || !state.submissions[state.activeCourse]) {
-        return <></>
+        return null
     }
 
     const submissionIcon = (assignment: Assignment.AsObject) => {
@@ -39,12 +39,7 @@ const NavBarLabs = (): JSX.Element => {
         )
     })
 
-
-    return (
-        <>
-            {labLinks}
-        </>
-    )
+    return <>{labLinks}</>
 }
 
 export default NavBarLabs

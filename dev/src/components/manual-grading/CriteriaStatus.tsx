@@ -3,12 +3,12 @@ import { GradingCriterion } from "../../../proto/ag/ag_pb"
 import { useActions, useAppState } from "../../overmind"
 
 
-const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion.AsObject }): JSX.Element => {
+const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion.AsObject }): JSX.Element | null => {
     const { setGrade } = useActions().review
     const { isTeacher } = useAppState()
 
     if (!isTeacher) {
-        return <></>
+        return null
     }
 
     const buttons: { icon: string, status: GradingCriterion.Grade, style: string, onClick: () => void }[] = [
