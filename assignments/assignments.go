@@ -27,7 +27,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		return
 	}
 	ctx := context.Background()
-	assignments, dockerfile, err := FetchAssignments(ctx, logger, scm, course)
+	assignments, dockerfile, err := fetchAssignments(ctx, logger, scm, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
 		return
@@ -60,7 +60,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	}
 }
 
-// FetchAssignments returns a list of assignments for the given course, by
+// fetchAssignments returns a list of assignments for the given course, by
 // cloning the 'tests' repo for the given course and extracting the assignments
 // from the 'assignment.yml' files, one for each assignment. If there is a Dockerfile
 // in 'tests/script' will also return its contents.
@@ -72,7 +72,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 // data from GitHub, processes the yml files and returns the assignments.
 // The TempDir() function ensures that cloning is done in distinct temp
 // directories, should there be concurrent calls to this function.
-func FetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
+func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
 	ctx, cancel := context.WithTimeout(c, pb.MaxWait)
 	defer cancel()
 
