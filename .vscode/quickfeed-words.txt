@@ -127,6 +127,8 @@ Stavnes
 struct
 structs
 Studentid
+subtest
+subtests
 testdb
 tmpl
 Unexported
