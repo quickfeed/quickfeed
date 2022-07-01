@@ -8,7 +8,7 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
-var changetests = map[string]struct {
+var changeTests = map[string]struct {
 	task1, task2 *pb.Task
 	want         bool
 }{
@@ -20,7 +20,7 @@ var changetests = map[string]struct {
 
 // TestHasChanged tests if HasChanged returns the correct value
 func TestHasChanged(t *testing.T) {
-	for name, tt := range changetests {
+	for name, tt := range changeTests {
 		t.Run(name, func(t *testing.T) {
 			if got := tt.task1.HasChanged(tt.task2); tt.want != got {
 				t.Errorf("\ntask1.HasChanged(task2) = %t, expected %t\ntask1:\t%v\ntask2:\t%v", got, tt.want, tt.task1, tt.task2)
@@ -54,5 +54,19 @@ func TestMarkDeleted(t *testing.T) {
 				t.Errorf("IsDeleted() = %t, expected %t", got, tt.deleted)
 			}
 		})
+	}
+}
+
+func TestTaskName(t *testing.T) {
+	tests := []struct {
+		task *pb.Task
+		want string
+	}{
+		{task: &pb.Task{Name: "lab1/task1"}, want: "task1"},
+	}
+	for _, tt := range tests {
+		if got := tt.task.TaskName(); got != tt.want {
+			t.Errorf("LocalName() = %s, expected %s", got, tt.want)
+		}
 	}
 }

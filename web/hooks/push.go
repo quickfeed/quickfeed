@@ -173,7 +173,7 @@ func (wh GitHubWebHook) handlePullRequestPushPayload(payload *github.PushEvent) 
 		// If not, something must have gone wrong elsewhere
 		return nil, "", fmt.Errorf("failed to get task from the database: %w", err)
 	}
-	return pullRequest, associatedTask.LocalName(), nil
+	return pullRequest, associatedTask.TaskName(), nil
 }
 
 // extractAssignments extracts information from the push payload from github
