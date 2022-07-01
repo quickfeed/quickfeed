@@ -68,16 +68,11 @@ func (wh GitHubWebHook) handlePullRequestOpened(payload *github.PullRequestEvent
 	wh.logger.Debugf("Received pull request opened event for repository: %s, in organization: %s",
 		payload.GetRepo().GetName(), payload.GetOrganization().GetLogin())
 
-	repos, err := wh.db.GetRepositoriesWithIssues(&pb.Repository{RepositoryID: uint64(payload.GetRepo().GetID())})
+	repo, err := wh.getRepositoryWithIssues(payload.GetRepo().GetID())
 	if err != nil {
-		wh.logger.Errorf("Failed to get repository %d from database: %v", payload.GetRepo().GetID(), err)
+		wh.logger.Errorf("Failed to get repository %s from database: %v", payload.GetRepo().GetFullName(), err)
 		return
 	}
-	if len(repos) != 1 {
-		wh.logger.Debugf("Ignoring pull request opened event for unknown repository: %s", payload.GetRepo().GetFullName())
-		return
-	}
-	repo := repos[0]
 	if !repo.IsGroupRepo() {
 		wh.logger.Debugf("Ignoring pull request opened event for non-group repository: %s", payload.GetRepo().GetFullName())
 		return
@@ -127,17 +122,11 @@ func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, asso
 	wh.logger.Debugf("Creating pull request (issue #%d) for repository: %s",
 		associatedIssue.GetIssueNumber(), payload.GetRepo().GetFullName())
 
-	tasks, err := wh.db.GetTasks(&pb.Task{ID: associatedIssue.GetTaskID()})
+	associatedTask, err := wh.getTask(associatedIssue.GetTaskID())
 	if err != nil {
-		wh.logger.Errorf("Failed to get task from the database: %v", err)
+		wh.logger.Errorf("Failed to get task from database: %v", err)
 		return
 	}
-	if len(tasks) != 1 {
-		// This should never happen
-		wh.logger.Errorf("Got an unexpected number of tasks: %d", len(tasks))
-		return
-	}
-	associatedTask := tasks[0]
 
 	user, err := wh.db.GetUserByRemoteIdentity(&pb.RemoteIdentity{
 		RemoteID: uint64(payload.GetSender().GetID()),

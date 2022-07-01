@@ -18,17 +18,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func (wh GitHubWebHook) getRepository(repoID int64) (*pb.Repository, error) {
-	repos, err := wh.db.GetRepositories(&pb.Repository{RepositoryID: uint64(repoID)})
-	if err != nil {
-		return nil, fmt.Errorf("failed to get repository by remote ID %d: %w", repoID, err)
-	}
-	if len(repos) != 1 {
-		return nil, fmt.Errorf("unknown repository: %d", repoID)
-	}
-	return repos[0], nil
-}
-
 func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	wh.logger.Debugf("Received push event for branch reference: %s (user's default branch: %s)",
 		payload.GetRef(), payload.GetRepo().GetDefaultBranch())
@@ -178,17 +167,13 @@ func (wh GitHubWebHook) handlePullRequestPushPayload(payload *github.PushEvent) 
 		}
 		return nil, "", fmt.Errorf("failed to get pull request from database: %v", err)
 	}
-	tasks, err := wh.db.GetTasks(&pb.Task{ID: pullRequest.GetTaskID()})
+	associatedTask, err := wh.getTask(pullRequest.GetTaskID())
 	if err != nil {
 		// A pull request should always have a task association
 		// If not, something must have gone wrong elsewhere
-		return nil, "", fmt.Errorf("failed to get task from the database: %v", err)
+		return nil, "", fmt.Errorf("failed to get task from the database: %w", err)
 	}
-	if len(tasks) != 1 {
-		// This should never happen
-		return nil, "", fmt.Errorf("got an unexpected number of tasks: %d", len(tasks))
-	}
-	return pullRequest, tasks[0].LocalName(), nil
+	return pullRequest, associatedTask.LocalName(), nil
 }
 
 // extractAssignments extracts information from the push payload from github
