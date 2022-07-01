@@ -51,7 +51,7 @@ const EditCriterion = ({ criterion, benchmarkID, assignment }: { criterion?: Gra
     return (
         <div className="list-group-item" onClick={() => setEditing(!editing)}>
             {editing
-                ? <input className="form-control" type="text" onBlur={() => { handleBlur() }} autoFocus defaultValue={c.description} name="criterion" onKeyUp={e => { handleCriteria(e) }}></input>
+                ? <input className="form-control" type="text" onBlur={() => { handleBlur() }} autoFocus defaultValue={c.description} name="criterion" onKeyUp={e => { handleCriteria(e) }} />
                 : <><span>{c.description}</span><span className="badge badge-danger float-right clickable" onClick={() => actions.deleteCriterion({ criterion: criterion, assignment: assignment })}>Delete</span></>
             }
         </div>

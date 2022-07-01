@@ -32,7 +32,7 @@ const GradeComment = ({ grade, editing, setEditing }: GradeCommentProps): JSX.El
     return (
         <tr>
             <th colSpan={3}>
-                <input autoFocus onBlur={(e) => handleChange(e)} defaultValue={grade.comment} className="form-control" type="text"></input>
+                <input autoFocus onBlur={(e) => handleChange(e)} defaultValue={grade.comment} className="form-control" type="text" />
             </th>
         </tr>
     )

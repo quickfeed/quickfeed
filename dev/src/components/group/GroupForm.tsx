@@ -58,7 +58,7 @@ const GroupForm = (): JSX.Element => {
     const groupMembers = group.usersList.map(user => {
         return (
             <li key={user.id} className="list-group-item">
-                <img id="group-image" src={user.avatarurl}></img>
+                <img id="group-image" src={user.avatarurl} />
                 {user.name}
                 <i className="badge-pill badge-danger rounded-circle clickable float-right" onClick={() => actions.updateGroupUsers(user)}>-</i>
             </li>
@@ -68,7 +68,7 @@ const GroupForm = (): JSX.Element => {
     const GroupNameBanner = <div className="card-header" style={{ textAlign: "center" }}>{group.name}</div>
     const GroupNameInput = group && isApprovedGroup(group)
         ? null
-        : <input placeholder={"Group Name:"} onKeyUp={e => actions.updateGroupName(e.currentTarget.value)}></input>
+        : <input placeholder={"Group Name:"} onKeyUp={e => actions.updateGroupName(e.currentTarget.value)} />
 
     return (
         <div className="container">

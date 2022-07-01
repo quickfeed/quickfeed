@@ -11,7 +11,7 @@ const CourseFavoriteButton = ({ enrollment, style }: { enrollment: Enrollment.As
     return (
         <span style={style}>
             <i className={isVisible(enrollment) ? 'fa fa-star' : "fa fa-star-o"}
-                onClick={() => actions.setEnrollmentState(enrollment)}></i>
+                onClick={() => actions.setEnrollmentState(enrollment)} />
         </span>
     )
 }

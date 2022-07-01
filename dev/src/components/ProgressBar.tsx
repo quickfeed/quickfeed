@@ -33,8 +33,7 @@ const ProgressBar = (props: { courseID: number, assignmentIndex: number, submiss
                 left: 0,
                 right: `${percentage}%`,
                 opacity: 0.3
-            }}>
-            </div>
+            }} />
         )
     }
 
