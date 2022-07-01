@@ -1,4 +1,4 @@
-import { configure, render, shallow } from "enzyme"
+import { configure, render } from "enzyme"
 import React from "react"
 import { Assignment, Submission } from "../../proto/ag/ag_pb"
 import ProgressBar, { Progress } from "../components/ProgressBar"

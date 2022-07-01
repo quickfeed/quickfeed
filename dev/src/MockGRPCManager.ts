@@ -20,8 +20,6 @@ import {
     Submission,
     Submissions,
     SubmissionReviewersRequest,
-    UpdateSubmissionRequest,
-    UpdateSubmissionsRequest,
     User,
     Users,
     Void,
