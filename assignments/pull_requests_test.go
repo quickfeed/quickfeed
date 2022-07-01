@@ -88,15 +88,15 @@ func TestPublishFeedbackComment(t *testing.T) {
 	}
 	body := results.MarkdownComment("1", 80)
 
-	// To use this test, the commentID have to be set manually.
+	// To use this test, the CommentID have to be set manually.
 	// TODO(meling) Fix test to CreateIssue and CreateIssueComment to get commentID
-	commentID := int64(0)
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,
 		Repository:   repository,
 		Body:         body,
+		CommentID:    0,
 	}
-	if err := s.UpdateIssueComment(context.Background(), commentID, opt); err != nil {
+	if err := s.UpdateIssueComment(context.Background(), opt); err != nil {
 		t.Fatal(err)
 	}
 }

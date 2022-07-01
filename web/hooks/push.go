@@ -132,21 +132,23 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 		Organization: course.GetOrganizationPath(),
 		Repository:   repo.Name(),
 		Body:         results.MarkdownComment(localTaskName, scoreLimit),
+		Number:       int(pullRequest.GetNumber()),
 	}
 	wh.logger.Debugf("Creating feedback comment on pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
 	if !pullRequest.HasFeedbackComment() {
-		commentID, err := sc.CreateIssueComment(ctx, int(pullRequest.Number), opt)
+		commentID, err := sc.CreateIssueComment(ctx, opt)
 		if err != nil {
 			wh.logger.Errorf("Failed to create feedback comment for pull request #%d, in repository", pullRequest.GetNumber(), repo.Name())
 			return
 		}
-		pullRequest.ScmCommentID = commentID
+		pullRequest.ScmCommentID = uint64(commentID)
 		if err := wh.db.UpdatePullRequest(pullRequest); err != nil {
 			wh.logger.Errorf("Failed to update pull request: %v", err)
 			return
 		}
 	} else {
-		if err := sc.UpdateIssueComment(ctx, int64(pullRequest.GetScmCommentID()), opt); err != nil {
+		opt.CommentID = int64(pullRequest.GetScmCommentID())
+		if err := sc.UpdateIssueComment(ctx, opt); err != nil {
 			wh.logger.Errorf("Failed to update feedback comment for pull request #%d, in repository", pullRequest.GetNumber(), repo.Name())
 			return
 		}

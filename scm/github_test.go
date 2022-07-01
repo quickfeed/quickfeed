@@ -154,7 +154,7 @@ func TestGetIssues(t *testing.T) {
 	for i := 1; i <= 5; i++ {
 		issue, cleanup := createIssue(t, s, qfTestOrg, opt.Path)
 		defer cleanup()
-		wantIssueIDs = append(wantIssueIDs, issue.IssueNumber)
+		wantIssueIDs = append(wantIssueIDs, issue.Number)
 	}
 
 	gotIssueIDs := []int{}
@@ -163,7 +163,7 @@ func TestGetIssues(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, issue := range gotIssues {
-		gotIssueIDs = append(gotIssueIDs, issue.IssueNumber)
+		gotIssueIDs = append(gotIssueIDs, issue.Number)
 	}
 
 	less := func(a, b int) bool { return a < b }
@@ -189,7 +189,7 @@ func TestGetIssue(t *testing.T) {
 	wantIssue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
 	defer cleanup()
 
-	gotIssue, err := s.GetIssue(ctx, wantIssue.IssueNumber, opt)
+	gotIssue, err := s.GetIssue(ctx, opt, wantIssue.Number)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +210,7 @@ func TestUpdateIssue(t *testing.T) {
 
 	ctx := context.Background()
 
-	opt := &scm.CreateIssueOptions{
+	opt := &scm.IssueOptions{
 		Organization: qfTestOrg,
 		Repository:   ag.StudentRepoName(qfTestUser),
 		Title:        "Updated Issue",
@@ -220,7 +220,8 @@ func TestUpdateIssue(t *testing.T) {
 	issue, cleanup := createIssue(t, s, opt.Organization, opt.Repository)
 	defer cleanup()
 
-	gotIssue, err := s.UpdateIssue(ctx, issue.IssueNumber, opt)
+	opt.Number = issue.Number
+	gotIssue, err := s.UpdateIssue(ctx, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -268,7 +269,8 @@ func TestCreateIssueComment(t *testing.T) {
 	issue, cleanup := createIssue(t, s, opt.Organization, opt.Repository)
 	defer cleanup()
 
-	_, err := s.CreateIssueComment(context.Background(), issue.IssueNumber, opt)
+	opt.Number = issue.Number
+	_, err := s.CreateIssueComment(context.Background(), opt)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -290,15 +292,17 @@ func TestUpdateIssueComment(t *testing.T) {
 	issue, cleanup := createIssue(t, s, opt.Organization, opt.Repository)
 	defer cleanup()
 
+	opt.Number = issue.Number
 	// The created comment will be deleted when the parent issue is deleted.
-	commentID, err := s.CreateIssueComment(context.Background(), issue.IssueNumber, opt)
+	commentID, err := s.CreateIssueComment(context.Background(), opt)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// NOTE: We do not currently return the updated comment, so we cannot verify its content.
 	opt.Body = "Updated Issue Comment"
-	if err := s.UpdateIssueComment(context.Background(), int64(commentID), opt); err != nil {
+	opt.CommentID = commentID
+	if err := s.UpdateIssueComment(context.Background(), opt); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -306,7 +310,7 @@ func TestUpdateIssueComment(t *testing.T) {
 // createIssue on the given repository; returns the issue and a cleanup function.
 func createIssue(t *testing.T, s *scm.GithubV4SCM, org, repo string) (*scm.Issue, func()) {
 	t.Helper()
-	issue, err := s.CreateIssue(context.Background(), &scm.CreateIssueOptions{
+	issue, err := s.CreateIssue(context.Background(), &scm.IssueOptions{
 		Organization: org,
 		Repository:   repo,
 		Title:        "Test Issue",
@@ -319,7 +323,7 @@ func createIssue(t *testing.T, s *scm.GithubV4SCM, org, repo string) (*scm.Issue
 	return issue, func() {
 		if err := s.DeleteIssue(context.Background(), &scm.RepositoryOptions{
 			Owner: org, Path: repo,
-		}, issue.IssueNumber); err != nil {
+		}, issue.Number); err != nil {
 			t.Fatal(err)
 		}
 	}

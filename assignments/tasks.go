@@ -104,7 +104,7 @@ func synchronizeTasksWithIssues(ctx context.Context, db database.Database, sc sc
 func createIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.Repository, tasks []*pb.Task) ([]*pb.Issue, error) {
 	createdIssues := []*pb.Issue{}
 	for _, task := range tasks {
-		issueOptions := &scm.CreateIssueOptions{
+		issueOptions := &scm.IssueOptions{
 			Organization: course.GetOrganizationPath(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
@@ -117,7 +117,7 @@ func createIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 		createdIssues = append(createdIssues, &pb.Issue{
 			RepositoryID: repo.ID,
 			TaskID:       task.ID,
-			IssueNumber:  uint64(scmIssue.IssueNumber),
+			IssueNumber:  uint64(scmIssue.Number),
 		})
 	}
 	return createdIssues, nil
@@ -132,17 +132,18 @@ func updateIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 			// Issue does not need to be updated
 			continue
 		}
-		issueOptions := &scm.CreateIssueOptions{
+		issueOptions := &scm.IssueOptions{
 			Organization: course.GetOrganizationPath(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
 			Body:         task.Body,
+			Number:       int(issue.IssueNumber),
 		}
 		if task.IsDeleted() {
 			issueOptions.State = "closed"
 		}
 
-		if _, err := sc.UpdateIssue(ctx, int(issue.IssueNumber), issueOptions); err != nil {
+		if _, err := sc.UpdateIssue(ctx, issueOptions); err != nil {
 			return err
 		}
 	}

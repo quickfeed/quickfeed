@@ -691,7 +691,7 @@ func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
 }
 
 // CreateIssue implements the SCM interface
-func (s *GithubSCM) CreateIssue(ctx context.Context, opt *CreateIssueOptions) (*Issue, error) {
+func (s *GithubSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
 	if !opt.valid() {
 		return nil, ErrMissingFields{
 			Method:  "CreateIssue",
@@ -719,14 +719,15 @@ func (s *GithubSCM) CreateIssue(ctx context.Context, opt *CreateIssueOptions) (*
 	return toIssue(issue), nil
 }
 
-// EditRepoIssue implements the SCM interface
-func (s *GithubSCM) UpdateIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error) {
+// UpdateIssue implements the SCM interface
+func (s *GithubSCM) UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
 	if !opt.valid() {
 		return nil, ErrMissingFields{
 			Method:  "UpdateIssue",
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
+
 	issueReq := &github.IssueRequest{
 		Title:     &opt.Title,
 		Body:      &opt.Body,
@@ -734,35 +735,32 @@ func (s *GithubSCM) UpdateIssue(ctx context.Context, issueNumber int, opt *Creat
 		Assignee:  opt.Assignee,
 		Assignees: opt.Assignees,
 	}
-
-	s.logger.Debugf("Updating issue %d on %s", issueNumber, opt.Repository)
-	issue, _, err := s.client.Issues.Edit(ctx, opt.Organization, opt.Repository, issueNumber, issueReq)
+	s.logger.Debugf("Updating issue %d on %s", opt.Number, opt.Repository)
+	issue, _, err := s.client.Issues.Edit(ctx, opt.Organization, opt.Repository, opt.Number, issueReq)
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "UpdateIssue",
-			Message:  fmt.Sprintf("failed to update issue %d on %s/%s", issueNumber, opt.Organization, opt.Repository),
+			Message:  fmt.Sprintf("failed to update issue %d on %s/%s", opt.Number, opt.Organization, opt.Repository),
 			GitError: err,
 		}
 	}
-	s.logger.Debugf("Updated issue number %d", issueNumber)
-
+	s.logger.Debugf("Updated issue number %d", opt.Number)
 	return toIssue(issue), nil
 }
 
 // GetIssue implements the SCM interface
-func (s *GithubSCM) GetIssue(ctx context.Context, issueNumber int, opt *RepositoryOptions) (*Issue, error) {
+func (s *GithubSCM) GetIssue(ctx context.Context, opt *RepositoryOptions, number int) (*Issue, error) {
 	if !opt.valid() {
 		return nil, ErrMissingFields{
 			Method:  "GetIssue",
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-
-	issue, _, err := s.client.Issues.Get(ctx, opt.Owner, opt.Path, issueNumber)
+	issue, _, err := s.client.Issues.Get(ctx, opt.Owner, opt.Path, number)
 	if err != nil {
 		return nil, ErrFailedSCM{
 			Method:   "GetIssue",
-			Message:  fmt.Sprintf("failed to get issue %d", issueNumber),
+			Message:  fmt.Sprintf("failed to get issue %d", number),
 			GitError: err,
 		}
 	}
@@ -815,41 +813,39 @@ func (s *GithubSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersO
 }
 
 // CreateIssueComment implements the SCM interface
-func (s *GithubSCM) CreateIssueComment(ctx context.Context, number int, opt *IssueCommentOptions) (uint64, error) {
+func (s *GithubSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error) {
 	if !opt.valid() {
 		return 0, ErrMissingFields{
 			Method:  "CreateIssueComment",
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	createdComment, _, err := s.client.Issues.CreateComment(ctx, opt.Organization, opt.Repository, number, &github.IssueComment{Body: &opt.Body})
+	createdComment, _, err := s.client.Issues.CreateComment(ctx, opt.Organization, opt.Repository, opt.Number, &github.IssueComment{Body: &opt.Body})
 	if err != nil {
 		return 0, ErrFailedSCM{
 			Method:   "CreateIssueComment",
-			Message:  fmt.Sprintf("failed to create comment for issue #%d, in repository: %s, for organization: %s", number, opt.Repository, opt.Organization),
+			Message:  fmt.Sprintf("failed to create comment for issue #%d, in repository: %s, for organization: %s", opt.Number, opt.Repository, opt.Organization),
 			GitError: err,
 		}
 	}
-
-	return uint64(createdComment.GetID()), nil
+	return createdComment.GetID(), nil
 }
 
 // UpdateIssueComment implements the SCM interface
-func (s *GithubSCM) UpdateIssueComment(ctx context.Context, commentID int64, opt *IssueCommentOptions) error {
+func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOptions) error {
 	if !opt.valid() {
 		return ErrMissingFields{
 			Method:  "UpdateIssueComment",
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	if _, _, err := s.client.Issues.EditComment(ctx, opt.Organization, opt.Repository, commentID, &github.IssueComment{Body: &opt.Body}); err != nil {
+	if _, _, err := s.client.Issues.EditComment(ctx, opt.Organization, opt.Repository, opt.CommentID, &github.IssueComment{Body: &opt.Body}); err != nil {
 		return ErrFailedSCM{
 			Method:   "UpdateIssueComment",
 			Message:  fmt.Sprintf("failed to edit comment in repository: %s, for organization: %s", opt.Repository, opt.Organization),
 			GitError: err,
 		}
 	}
-
 	return nil
 }
 
@@ -908,12 +904,12 @@ func toRepository(repo *github.Repository) *Repository {
 
 func toIssue(issue *github.Issue) *Issue {
 	return &Issue{
-		ID:          uint64(issue.GetID()),
-		Title:       issue.GetTitle(),
-		Body:        issue.GetBody(),
-		Repository:  issue.Repository.GetName(),
-		Assignee:    issue.Assignee.GetName(),
-		IssueNumber: issue.GetNumber(),
-		Status:      issue.GetState(),
+		ID:         uint64(issue.GetID()),
+		Title:      issue.GetTitle(),
+		Body:       issue.GetBody(),
+		Repository: issue.Repository.GetName(),
+		Assignee:   issue.Assignee.GetName(),
+		Number:     issue.GetNumber(),
+		Status:     issue.GetState(),
 	}
 }

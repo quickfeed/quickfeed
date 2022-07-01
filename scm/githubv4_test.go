@@ -29,7 +29,7 @@ func TestDeleteIssue(t *testing.T) {
 
 	t.Logf("repo: %v", repo.Path)
 
-	opt := &scm.CreateIssueOptions{
+	opt := &scm.IssueOptions{
 		Organization: qfTestOrg,
 		Repository:   repo.Path,
 		Title:        "Dummy Title",
@@ -52,7 +52,7 @@ func TestDeleteIssue(t *testing.T) {
 		t.Logf("with new issue: %v", issue)
 	}
 
-	err = s.DeleteIssue(ctx, repoOpt, issue.IssueNumber)
+	err = s.DeleteIssue(ctx, repoOpt, issue.Number)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func TestDeleteIssue(t *testing.T) {
 }
 
 // This test will delete all open and closed issues for the test user and organization.
-// The test is skipped unless run with: SCM_TESTS=1 go test.
+// The test is skipped unless run with: SCM_TESTS=1 go test -v -run TestDeleteAllIssues
 func TestDeleteAllIssues(t *testing.T) {
 	if os.Getenv("SCM_TESTS") == "" {
 		t.SkipNow()

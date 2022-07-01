@@ -56,26 +56,26 @@ type SCM interface {
 	GetUserNameByID(context.Context, uint64) (string, error)
 	// Returns a provider specific clone path.
 	CreateCloneURL(*URLPathOptions) string
-	// Promotes or demotes organization member, based on Role field in OrgMembership.
+	// Promote or demote organization member based on Role field in OrgMembership.
 	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
-	// RevokeOrgMembership removes user from the organization.
+	// RemoveMember removes user from the organization.
 	RemoveMember(context.Context, *OrgMembershipOptions) error
 	// Lists all authorizations for authenticated user.
 	GetUserScopes(context.Context) *Authorization
 
 	// CreateIssue creates an issue.
-	CreateIssue(context.Context, *CreateIssueOptions) (*Issue, error)
-	// UpdateIssue edits an issue .
-	UpdateIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error)
+	CreateIssue(context.Context, *IssueOptions) (*Issue, error)
+	// UpdateIssue edits an existing issue.
+	UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error)
 	// GetIssue fetches a specific issue.
-	GetIssue(ctx context.Context, issueNumber int, opt *RepositoryOptions) (*Issue, error)
+	GetIssue(ctx context.Context, opt *RepositoryOptions, number int) (*Issue, error)
 	// GetIssues fetches all issues in a repository.
 	GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error)
 
-	// CreateIssueComment creates a comment on a GitHub issue.
-	CreateIssueComment(ctx context.Context, number int, opt *IssueCommentOptions) (uint64, error)
-	// UpdateIssueComment edits a comment on a GitHub issue.
-	UpdateIssueComment(ctx context.Context, commentID int64, opt *IssueCommentOptions) error
+	// CreateIssueComment creates a comment on a SCM issue.
+	CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error)
+	// UpdateIssueComment edits a comment on a SCM issue.
+	UpdateIssueComment(ctx context.Context, opt *IssueCommentOptions) error
 
 	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
@@ -235,19 +235,19 @@ type Authorization struct {
 	Scopes []string
 }
 
-// Repository represents a git remote repository.
+// Issue represents an SCM issue.
 type Issue struct {
-	ID          uint64
-	Title       string
-	Body        string
-	Repository  string
-	Assignee    string
-	Status      string
-	IssueNumber int
+	ID         uint64
+	Title      string
+	Body       string
+	Repository string
+	Assignee   string
+	Status     string
+	Number     int
 }
 
-// CreateIssueOptions contains information on how to create an Issue.
-type CreateIssueOptions struct {
+// IssueOptions contains information for creating or updating an Issue.
+type IssueOptions struct {
 	Organization string
 	Repository   string
 	Title        string
@@ -256,6 +256,7 @@ type CreateIssueOptions struct {
 	Labels       *[]string
 	Assignee     *string
 	Assignees    *[]string
+	Number       int
 }
 
 // RequestReviewersOptions contains information on how to create or edit a pull request comment.
@@ -263,6 +264,8 @@ type IssueCommentOptions struct {
 	Organization string
 	Repository   string
 	Body         string
+	Number       int
+	CommentID    int64
 }
 
 // RequestReviewersOptions contains information on how to assign reviewers to a pull request.
