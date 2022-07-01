@@ -70,6 +70,7 @@ func TestGetNextReviewer(t *testing.T) {
 func TestPublishFeedbackComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
+	repository := scm.GetTestUser(t)
 	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
@@ -85,10 +86,10 @@ func TestPublishFeedbackComment(t *testing.T) {
 			{TestName: "Test7", TaskName: "3", Score: 5, MaxScore: 7, Weight: 1},
 		},
 	}
-	body := CreateFeedbackComment(results, "1", &pb.Assignment{ScoreLimit: 80})
+	body := results.MarkdownComment("1", 80)
 
-	// To use this test, the variables repository and commentID have to be set manually.
-	repository := "student-lab"
+	// To use this test, the commentID have to be set manually.
+	// TODO(meling) Fix test to CreateIssue and CreateIssueComment to get commentID
 	commentID := int64(0)
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,

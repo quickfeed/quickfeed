@@ -6,7 +6,6 @@ import (
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/scm"
 )
 
@@ -25,40 +24,6 @@ var (
 	teacherReviewCounter = make(countMap) // [courseID][userID] -> count
 	groupReviewCounter   = make(countMap) // [groupID][userID] -> count
 )
-
-// CreateFeedbackComment formats a feedback comment to be posted on pull requests.
-// It uses the test results from a student commit to create a table like the one shown below.
-// Only the test scores associated with the supplied task are used to generate this table.
-// Table formatting ref: https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables
-//
-//  ## Test results from latest push
-//
-//	| Test Name | Score | Weight | % of Total |
-//	| :-------- | :---- | :----- | ---------: |
-//  | Test 1	| 2/4	| 1		 |	   6.25%  |
-//  | Test 2	| 1/4   | 2	     |     6.25%  |
-//  | Test 3	| 3/4   | 5      |     46.86% |
-//  | Total		|		|		 |	   59.36% |
-//
-// 	Once a total score of 80% is reached, reviewers are automatically assigned.
-//
-func CreateFeedbackComment(results *score.Results, taskLocalName string, assignment *pb.Assignment) string {
-	body := "## Test results from latest push\n\n" +
-		"| Test Name | Score | Weight | % of Total |\n" +
-		"| :-------- | :---- | :----- | ---------: |\n"
-
-	for _, testScore := range results.Scores {
-		if testScore.TaskName != taskLocalName {
-			continue
-		}
-		percentageScore := score.WeightedScore(float64(testScore.Score), float64(testScore.MaxScore), float64(testScore.Weight), results.TotalTaskWeight(taskLocalName))
-		body += fmt.Sprintf("| %s | %d/%d | %d | %.2f%% |\n", testScore.TestName, testScore.Score, testScore.MaxScore, testScore.Weight, percentageScore*100)
-	}
-	// TODO(espeland): TaskSum returns an int, while a float is used for individual tests
-	body += fmt.Sprintf("| **Total** | | | **%d%%** |\n\n", results.TaskSum(taskLocalName))
-	body += fmt.Sprintf("\nOnce a total score of %d%% is reached, reviewers are automatically assigned.\n", assignment.GetScoreLimit())
-	return body
-}
 
 // AssignReviewers assigns reviewers to a group repository pull request.
 // It assigns one other group member and one course teacher as reviewers.

@@ -118,7 +118,8 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	ctx := context.Background()
 	// We assign reviewers to a pull request when the tests associated with it score above the assignment score limit
 	// We do not assign reviewers if the pull request has already been assigned reviewers
-	if taskSum >= assignment.GetScoreLimit() && !pullRequest.HasReviewers() {
+	scoreLimit := assignment.GetScoreLimit()
+	if taskSum >= scoreLimit && !pullRequest.HasReviewers() {
 		wh.logger.Debugf("Assigning reviewers to pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
 		if err := assignments.AssignReviewers(ctx, sc, wh.db, course, repo, pullRequest); err != nil {
 			wh.logger.Errorf("Failed to assign reviewers to pull request: %v", err)
@@ -130,7 +131,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	opt := &scm.IssueCommentOptions{
 		Organization: course.GetOrganizationPath(),
 		Repository:   repo.Name(),
-		Body:         assignments.CreateFeedbackComment(results, localTaskName, assignment),
+		Body:         results.MarkdownComment(localTaskName, scoreLimit),
 	}
 	wh.logger.Debugf("Creating feedback comment on pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
 	if !pullRequest.HasFeedbackComment() {
