@@ -358,15 +358,15 @@ export class MockGrpcManager {
             return this.grpcSend<Group>(new Void(), new Status().setCode(StatusCode.NOT_FOUND))
         }
         // Remove enrollments where the user is not in the group
-        let updatedUsers = group.getUsersList().map(u => u.getId())
-        let currentUsers = currentGroup.getUsersList().map(u => u.getId())
+        const updatedUsers = group.getUsersList().map(u => u.getId())
+        const currentUsers = currentGroup.getUsersList().map(u => u.getId())
 
         // Merge current and updated users, without duplicates
         const combinedUsers = Array.from(new Set([...updatedUsers, ...currentUsers]))
 
         combinedUsers.forEach(user => {
             if (!updatedUsers.includes(user)) {
-                // Remove user from grouo
+                // Remove user from group
                 combinedUsers.splice(combinedUsers.indexOf(user), 1)
 
                 // Unset group ID for enrollment
