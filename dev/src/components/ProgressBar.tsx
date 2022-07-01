@@ -1,6 +1,6 @@
 import React from "react"
 import { useAppState } from "../overmind"
-import { Submission } from "../../proto/ag/ag_pb"
+import { Assignment, Submission } from "../../proto/ag/ag_pb"
 
 export enum Progress {
     NAV,
@@ -11,22 +11,27 @@ export enum Progress {
 const ProgressBar = (props: { courseID: number, assignmentIndex: number, submission?: Submission.AsObject, type: Progress }): JSX.Element => {
     const state = useAppState()
 
-    const submission = props.submission ? props.submission : state.submissions[props.courseID][props.assignmentIndex]
-    const assignment = state.assignments[props.courseID][props.assignmentIndex]
-    const score = submission.score
-    const secondaryProgress = assignment.scorelimit - score
+    const submission = props.submission
+        ? props.submission
+        : state.submissions[props.courseID][props.assignmentIndex]
 
+    const assignment = state.assignments[props.courseID][props.assignmentIndex]
+
+    const score = submission?.score ?? 0
+    const scorelimit = assignment?.scorelimit ?? 0
+    const status = submission?.status ?? Submission.Status.NONE
+    const secondaryProgress = scorelimit - score
     // Returns a thin line to be used for labs in the NavBar
     if (props.type === Progress.NAV) {
         const percentage = 100 - score
+        const color = score >= scorelimit ? "green" : "yellow"
         return (
             <div style={{
                 position: "absolute",
-                borderBottom: "2px solid green",
+                borderBottom: `2px solid ${color}`,
                 bottom: 0,
                 left: 0,
                 right: `${percentage}%`,
-                borderColor: `${score >= assignment.scorelimit ? "green" : "yellow"}`,
                 opacity: 0.3
             }}>
             </div>
@@ -43,7 +48,7 @@ const ProgressBar = (props: { courseID: number, assignmentIndex: number, submiss
     // Returns a regular size progress bar to be used for labs
     let color = ""
     if (props.type > Progress.NAV) {
-        switch (submission.status) {
+        switch (status) {
             case Submission.Status.NONE:
                 color = "bg-primary"
                 break
