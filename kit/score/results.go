@@ -125,17 +125,17 @@ func (r *Results) Validate(secret string) error {
 // The total is a grade in the range 0-100.
 // This method must only be called after Validate has returned nil.
 func (r *Results) Sum() uint32 {
-	return r.sum("")
+	return r.internalSum("")
 }
 
 // TaskSum returns the total score computed over the set of recorded scores with the given task name.
 // The total is a grade in the range 0-100.
 // This method must only be called after Validate has returned nil.
 func (r *Results) TaskSum(taskName string) uint32 {
-	return r.sum(taskName)
+	return r.internalSum(taskName)
 }
 
-func (r *Results) sum(taskName string) uint32 {
+func (r *Results) internalSum(taskName string) uint32 {
 	totalWeight := float64(0)
 	var max, score, weight []float64
 	for _, ts := range r.Scores {
