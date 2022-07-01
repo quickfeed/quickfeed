@@ -152,7 +152,7 @@ func (r *Results) internalSum(taskName string) uint32 {
 		if score[i] > max[i] {
 			score[i] = max[i]
 		}
-		total += CalculateWeightedScore(score[i], max[i], weight[i], totalWeight)
+		total += WeightedScore(score[i], max[i], weight[i], totalWeight)
 	}
 	return uint32(math.Round(total * 100))
 }
@@ -169,7 +169,7 @@ func (r *Results) TotalTaskWeight(taskName string) float64 {
 	return totalTaskWeight
 }
 
-// CalculateWeightedScore gives the weighted score of a given test.
-func CalculateWeightedScore(score, maxScore, weight, totalWeight float64) float64 {
+// WeightedScore returns the weighted score of a given test.
+func WeightedScore(score, maxScore, weight, totalWeight float64) float64 {
 	return (score / maxScore) * (weight / totalWeight)
 }

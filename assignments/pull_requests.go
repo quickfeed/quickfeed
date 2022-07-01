@@ -51,7 +51,7 @@ func CreateFeedbackComment(results *score.Results, taskLocalName string, assignm
 		if testScore.TaskName != taskLocalName {
 			continue
 		}
-		percentageScore := score.CalculateWeightedScore(float64(testScore.Score), float64(testScore.MaxScore), float64(testScore.Weight), results.TotalTaskWeight(taskLocalName))
+		percentageScore := score.WeightedScore(float64(testScore.Score), float64(testScore.MaxScore), float64(testScore.Weight), results.TotalTaskWeight(taskLocalName))
 		body += fmt.Sprintf("| %s | %d/%d | %d | %.2f%% |\n", testScore.TestName, testScore.Score, testScore.MaxScore, testScore.Weight, percentageScore*100)
 	}
 	// TODO(espeland): TaskSum returns an int, while a float is used for individual tests
