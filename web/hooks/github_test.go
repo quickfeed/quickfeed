@@ -4,18 +4,12 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"strconv"
-	"strings"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/assignments"
 	"github.com/autograde/quickfeed/ci"
 	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/internal/qtest"
 	logq "github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
-	"go.uber.org/zap"
 )
 
 const (
@@ -35,7 +29,7 @@ const (
 // These tests will then block waiting for an event from GitHub; meaning that you
 // will manually have to create these events.
 
-// TODO(meling) add code to create a push event to the tests repository.
+// TODO(meling) add code to create a push event to the tests repository and trigger synchronizing tasks with issues on repositories.
 // TestGitHubWebHook tests listening to events from the tests repository.
 func TestGitHubWebHook(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
@@ -76,153 +70,4 @@ func TestGitHubWebHook(t *testing.T) {
 	log.Println("starting webhook server")
 	http.HandleFunc("/webhook", webhook.Handle)
 	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-// TestGitHubWebHookOrg tests listening to events from an entire org.
-func TestGitHubWebHookOrg(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-	serverURL := scm.GetWebHookServer(t)
-
-	logger := logq.Zap(true)
-	defer func() { _ = logger.Sync() }()
-
-	s, err := scm.NewSCMClient(logger.Sugar(), "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := context.Background()
-	opt := &scm.CreateHookOptions{
-		URL:          serverURL + "/webhook",
-		Secret:       secret,
-		Organization: qfTestOrg,
-	}
-	err = s.CreateHook(ctx, opt)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	course := &pb.Course{
-		Name:             qfTestOrg,
-		OrganizationPath: qfTestOrg,
-		Code:             qfTestOrg,
-		Provider:         "github",
-	}
-
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-	if err := qtest.PopulateDatabaseWithInitialData(t, db, s, course); err != nil {
-		t.Fatal(err)
-	}
-	if err := populateDatabaseWithTasks(t, ctx, logger.Sugar(), db, s, course); err != nil {
-		t.Fatal(err)
-	}
-	runner, err := ci.NewDockerCI(logger)
-	if err != nil {
-		logger.Sugar().Errorf("failed to set up docker client: %v\n", err)
-	}
-	defer runner.Close()
-	webhook := NewGitHubWebHook(logger.Sugar(), db, runner, secret)
-
-	log.Println("starting webhook server")
-	http.HandleFunc("/webhook", webhook.Handle)
-	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-// TODO(Espeland): This function is almost identical to the one in assignments/tasks_test.go.
-// It would be best if we could add this to qtest, which is currently not possible since using FetchAssignments there would lead to an import cycle.
-func populateDatabaseWithTasks(t *testing.T, ctx context.Context, logger *zap.SugaredLogger, db database.Database, sc scm.SCM, course *pb.Course) error {
-	t.Helper()
-
-	type foundIssue struct {
-		IssueNumber uint64
-		Name        string
-	}
-
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
-	if err != nil {
-		return err
-	}
-
-	// Find and create assignments
-	foundAssignments, dockerfile, err := assignments.FetchAssignments(ctx, logger, sc, course)
-	if err != nil {
-		return err
-	}
-	course.Dockerfile = dockerfile
-	if err = db.UpdateCourse(course); err != nil {
-		return err
-	}
-
-	if err = db.UpdateAssignments(foundAssignments); err != nil {
-		return err
-	}
-
-	repos, err := sc.GetRepositories(ctx, org)
-	if err != nil {
-		return err
-	}
-
-	foundIssues := make(map[uint64]map[string]*foundIssue)
-	tasks := make(map[uint32]map[string]*pb.Task)
-
-	// Finds issues, and creates tasks based on them
-	for _, repo := range repos {
-		existingScmIssues, err := sc.GetIssues(ctx, &scm.RepositoryOptions{
-			Owner: course.Name,
-			Path:  repo.Path,
-		})
-		if err != nil {
-			return err
-		}
-
-		if len(existingScmIssues) == 0 {
-			continue
-		}
-		foundIssues[repo.ID] = make(map[string]*foundIssue)
-		for _, scmIssue := range existingScmIssues {
-			splitTitle := strings.Split(scmIssue.Title, ", ")
-			name := splitTitle[0]
-			temp, err := strconv.Atoi(splitTitle[len(splitTitle)-1])
-			if err != nil {
-				continue
-			}
-			assignmentOrder := uint32(temp)
-			foundIssues[repo.ID][name] = &foundIssue{IssueNumber: uint64(scmIssue.IssueNumber), Name: name}
-
-			if _, ok := tasks[assignmentOrder]; !ok {
-				tasks[assignmentOrder] = make(map[string]*pb.Task)
-			}
-			tasks[assignmentOrder][name] = &pb.Task{Title: scmIssue.Title, Body: scmIssue.Body, Name: name, AssignmentOrder: assignmentOrder}
-		}
-	}
-
-	createdTasks, _, err := db.SynchronizeAssignmentTasks(course, tasks)
-	if err != nil {
-		return err
-	}
-
-	dbRepos, err := db.GetRepositoriesWithIssues(&pb.Repository{
-		OrganizationID: course.GetOrganizationID(),
-	})
-	if err != nil {
-		return err
-	}
-
-	issuesToCreate := []*pb.Issue{}
-	for _, repo := range dbRepos {
-		if !repo.IsGroupRepo() {
-			continue
-		}
-		for _, task := range createdTasks {
-			foundIssue, ok := foundIssues[repo.RepositoryID][task.Name]
-			if !ok {
-				continue
-			}
-			issuesToCreate = append(issuesToCreate, &pb.Issue{RepositoryID: repo.ID, TaskID: task.ID, IssueNumber: foundIssue.IssueNumber})
-		}
-	}
-
-	return db.CreateIssues(issuesToCreate)
 }
