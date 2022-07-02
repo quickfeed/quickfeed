@@ -273,7 +273,7 @@ export const state: State = {
             }
         }
 
-        const m = state.sortAscending ? -1 : 1
+        const sortOrder = state.sortAscending ? -1 : 1
         const sortedSubmissions = Object.values(filteredSubmissions).sort((a, b) => {
             let subA: Submission.AsObject | undefined
             let subB: Submission.AsObject | undefined
@@ -289,28 +289,28 @@ export const state: State = {
                         const sA = subA?.score
                         const sB = subB?.score
                         if (sA !== undefined && sB !== undefined) {
-                            return m * (sB - sA)
+                            return sortOrder * (sB - sA)
                         } else if (sA !== undefined) {
-                            return -m
+                            return -sortOrder
                         }
-                        return m
+                        return sortOrder
                     }
                     const aSubs = a.submissions ? getSubmissionsScore(a.submissions) : 0
                     const bSubs = b.submissions ? getSubmissionsScore(b.submissions) : 0
-                    return m * (aSubs - bSubs)
+                    return sortOrder * (aSubs - bSubs)
                 case SubmissionSort.Approved:
                     if (rootState.review.assignmentID > 0) {
                         const sA = subA && isApproved(subA) ? 1 : 0
                         const sB = subB && isApproved(subB) ? 1 : 0
-                        return m * (sA - sB)
+                        return sortOrder * (sA - sB)
                     }
                     const aApproved = a.submissions ? getNumApproved(a.submissions) : 0
                     const bApproved = b.submissions ? getNumApproved(b.submissions) : 0
-                    return m * (aApproved - bApproved)
+                    return sortOrder * (aApproved - bApproved)
                 case SubmissionSort.Name:
                     const nameA = a.user?.name ?? ""
                     const nameB = b.user?.name ?? ""
-                    return m * (nameA.localeCompare(nameB))
+                    return sortOrder * (nameA.localeCompare(nameB))
                 default:
                     return 0
             }
