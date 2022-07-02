@@ -43,7 +43,7 @@ func TestTestNamePanic(t *testing.T) {
 					if !strings.HasSuffix(out, test.want) {
 						t.Errorf("testName('%s')='%s', expected '%s'", test.inName, out, test.want)
 					}
-					if len(test.want) == 0 {
+					if test.want == "" {
 						t.Errorf("testName('%s')='%s', not expected to fail", test.inName, out)
 					}
 				}

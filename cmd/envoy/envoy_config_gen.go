@@ -228,7 +228,7 @@ type certOptions struct {
 // It supports ECDSA curve P256 or RSA 2048 bits to generate the key.
 // based on: https://golang.org/src/crypto/tls/generate_cert.go
 func generateSelfSignedCert(opts certOptions) (err error) {
-	if len(opts.hosts) == 0 {
+	if opts.hosts == "" {
 		return errors.New("at least one hostname must be specified")
 	}
 
