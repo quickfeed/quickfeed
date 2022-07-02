@@ -329,28 +329,28 @@ export enum SubmissionSort {
 
 /** Sorting */
 const enrollmentCompare = (a: Enrollment.AsObject, b: Enrollment.AsObject, sortBy: EnrollmentSort, descending: boolean): number => {
-    const m = descending ? -1 : 1
+    const sortOrder = descending ? -1 : 1
     switch (sortBy) {
         case EnrollmentSort.Name:
             const nameA = a.user?.name ?? ""
             const nameB = b.user?.name ?? ""
-            return m * (nameA.localeCompare(nameB))
+            return sortOrder * (nameA.localeCompare(nameB))
         case EnrollmentSort.Status:
-            return m * (a.status - b.status)
+            return sortOrder * (a.status - b.status)
         case EnrollmentSort.Email:
             const emailA = a.user?.email ?? ""
             const emailB = b.user?.email ?? ""
-            return m * (emailA.localeCompare(emailB))
+            return sortOrder * (emailA.localeCompare(emailB))
         case EnrollmentSort.Activity:
-            return m * (new Date(a.lastactivitydate).getTime() - new Date(b.lastactivitydate).getTime())
+            return sortOrder * (new Date(a.lastactivitydate).getTime() - new Date(b.lastactivitydate).getTime())
         case EnrollmentSort.Slipdays:
-            return m * (a.slipdaysremaining - b.slipdaysremaining)
+            return sortOrder * (a.slipdaysremaining - b.slipdaysremaining)
         case EnrollmentSort.Approved:
-            return m * (a.totalapproved - b.totalapproved)
+            return sortOrder * (a.totalapproved - b.totalapproved)
         case EnrollmentSort.StudentID:
             const aID = a.user?.id ?? 0
             const bID = b.user?.id ?? 0
-            return m * (aID - bID)
+            return sortOrder * (aID - bID)
         default:
             return 0
     }
