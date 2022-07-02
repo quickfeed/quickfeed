@@ -1233,10 +1233,10 @@ export class MockGrpcManager {
         for (let i = 0; i < r.getGradingbenchmarksList().length; i++) {
             const gb = r.getGradingbenchmarksList()[i]
             for (let j = 0; j < gb.getCriteriaList().length; j++) {
-                const c = gb.getCriteriaList()[j]
+                const criterion = gb.getCriteriaList()[j]
                 total++
-                if (c.getGrade() == GradingCriterion.Grade.PASSED) {
-                    score += c.getPoints()
+                if (criterion.getGrade() == GradingCriterion.Grade.PASSED) {
+                    score += criterion.getPoints()
                     totalApproved++
                 }
             }
