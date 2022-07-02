@@ -13,7 +13,7 @@ const SubmissionsTable = (): JSX.Element => {
 
     const sortedAssignments = () => {
         const assignments: Assignment.AsObject[] = []
-        for (const courseID in state.assignments) {
+        for (const courseID in Object.keys(state.assignments)) {
             assignments.push(...state.assignments[courseID])
         }
         assignments.sort((a, b) => {
