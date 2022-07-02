@@ -1,5 +1,6 @@
-import React from "react"
+import React, { useCallback } from "react"
 import { Assignment, Submission } from "../../proto/ag/ag_pb"
+import { Converter } from "../convert"
 import { assignmentStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded } from "../Helpers"
 import { useAppState } from "../overmind"
 import ProgressBar, { Progress } from "./ProgressBar"
@@ -10,8 +11,42 @@ interface lab {
     assignment: Assignment.AsObject
 }
 
+type ScoreSort = "name" | "score" | "weight"
+
 const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
     const state = useAppState()
+
+    const [sortKey, setSortKey] = React.useState<ScoreSort>("name")
+    const [sortAscending, setSortAscending] = React.useState<boolean>(true)
+
+    const sortScores = () => {
+        const sortBy = sortAscending ? 1 : -1
+        const scores = Converter.clone(submission.scoresList)
+        return scores.sort((a, b) => {
+            switch (sortKey) {
+                case "name":
+                    return sortBy * (a.testname.localeCompare(b.testname))
+                case "score":
+                    return sortBy * (a.score - b.score)
+                case "weight":
+                    return sortBy * (a.weight - b.weight)
+                default:
+                    return 0
+            }
+        })
+    }
+
+    const handleSort = useCallback((event: React.MouseEvent<HTMLTableCellElement>) => {
+        const key = event.currentTarget.dataset["key"] as ScoreSort
+        if (sortKey === key) {
+            setSortAscending(!sortAscending)
+        } else {
+            setSortKey(key)
+            setSortAscending(true)
+        }
+    }, [sortKey, sortAscending])
+
+    const sortedScores = React.useMemo(sortScores, [submission, sortKey, sortAscending])
 
     if (submission && assignment) {
         const enrollment = state.activeEnrollment ?? state.enrollmentsByCourseID[assignment.courseid]
@@ -72,12 +107,12 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                             }</td>
                         </tr>
                         <tr className={"thead-dark"}>
-                            <th colSpan={1}>Test Name</th>
-                            <th colSpan={1}>Score</th>
-                            <th colSpan={1}>Weight</th>
+                            <th colSpan={1} data-key={"name"} role="button" onClick={handleSort}>Test Name</th>
+                            <th colSpan={1} data-key={"score"} role="button" onClick={handleSort}>Score</th>
+                            <th colSpan={1} data-key={"weight"} role="button" onClick={handleSort}>Weight</th>
 
                         </tr>
-                        {submission.scoresList.map(score =>
+                        {sortedScores.map(score =>
                             <SubmissionScore key={score.id} score={score} />
                         )}
 
@@ -93,7 +128,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
             </div>
         )
     }
-    return (<div className="container"> No Submission </div>)
+    return <div className="container"> No Submission </div>
 }
 
 export default LabResultTable
