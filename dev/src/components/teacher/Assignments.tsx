@@ -40,7 +40,7 @@ const Assignments = (): JSX.Element => {
                 {/* Show all criteria for this benchmark */}
                 {hasCriteria(bm) && bm.criteriaList?.map((crit) => (
                     <EditCriterion key={crit.id}
-                        criterion={crit}
+                        originalCriterion={crit}
                         assignment={assignment}
                         benchmarkID={bm.id}
                     />
