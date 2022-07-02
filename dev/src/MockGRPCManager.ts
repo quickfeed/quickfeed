@@ -787,7 +787,7 @@ export class MockGrpcManager {
         const a9 = new Assignment()
         const a10 = new Assignment()
 
-        a0.setId(0)
+        a0.setId(1)
         a0.setCourseid(1)
         a0.setName("Lab 1")
         a0.setScriptfile("Go")
@@ -795,7 +795,7 @@ export class MockGrpcManager {
         a0.setScorelimit(80)
         a0.setOrder(1)
 
-        a1.setId(1)
+        a1.setId(2)
         a1.setCourseid(1)
         a1.setName("Lab 2")
         a1.setScriptfile("Go")
@@ -803,7 +803,7 @@ export class MockGrpcManager {
         a1.setScorelimit(80)
         a1.setOrder(2)
 
-        a2.setId(2)
+        a2.setId(3)
         a2.setCourseid(1)
         a2.setName("Lab 3")
         a2.setReviewers(1)
@@ -811,7 +811,7 @@ export class MockGrpcManager {
         a2.setScorelimit(60)
         a2.setOrder(3)
 
-        a3.setId(3)
+        a3.setId(4)
         a3.setCourseid(1)
         a3.setName("Lab 4")
         a3.setScriptfile("Go")
@@ -820,7 +820,7 @@ export class MockGrpcManager {
         a3.setOrder(4)
         a3.setIsgrouplab(true)
 
-        a4.setId(4)
+        a4.setId(5)
         a4.setCourseid(2)
         a4.setName("Lab 1")
         a4.setScriptfile("Go")
@@ -828,7 +828,7 @@ export class MockGrpcManager {
         a4.setScorelimit(90)
         a4.setOrder(1)
 
-        a5.setId(5)
+        a5.setId(6)
         a5.setCourseid(2)
         a5.setName("Lab 2")
         a5.setScriptfile("Go")
@@ -836,7 +836,7 @@ export class MockGrpcManager {
         a5.setScorelimit(85)
         a5.setOrder(2)
 
-        a6.setId(6)
+        a6.setId(7)
         a6.setCourseid(2)
         a6.setName("Lab 3")
         a6.setScriptfile("Go")
@@ -844,7 +844,7 @@ export class MockGrpcManager {
         a6.setScorelimit(80)
         a6.setOrder(3)
 
-        a7.setId(7)
+        a7.setId(8)
         a7.setCourseid(3)
         a7.setName("Lab 1")
         a7.setScriptfile("TypeScript")
@@ -852,7 +852,7 @@ export class MockGrpcManager {
         a7.setScorelimit(90)
         a7.setOrder(1)
 
-        a8.setId(8)
+        a8.setId(9)
         a8.setCourseid(3)
         a8.setName("Lab 2")
         a8.setScriptfile("Go")
@@ -860,7 +860,7 @@ export class MockGrpcManager {
         a8.setScorelimit(85)
         a8.setOrder(2)
 
-        a9.setId(9)
+        a9.setId(10)
         a9.setCourseid(4)
         a9.setName("Lab 1")
         a9.setScriptfile("Go")
@@ -868,7 +868,7 @@ export class MockGrpcManager {
         a9.setScorelimit(90)
         a9.setOrder(1)
 
-        a10.setId(10)
+        a10.setId(11)
         a10.setCourseid(5)
         a10.setName("Lab 1")
         a10.setScriptfile("TypeScript")
@@ -1032,7 +1032,7 @@ export class MockGrpcManager {
         this.submissions.setSubmissionsList([
             new Submission()
                 .setId(1)
-                .setAssignmentid(0)
+                .setAssignmentid(1)
                 .setUserid(1)
                 .setStatus(Submission.Status.APPROVED)
                 .setBuildinfo(
@@ -1072,7 +1072,7 @@ export class MockGrpcManager {
 
             new Submission()
                 .setId(3)
-                .setAssignmentid(2)
+                .setAssignmentid(3)
                 .setUserid(1)
                 .setScore(80)
                 .setReleased(true)
@@ -1166,12 +1166,12 @@ export class MockGrpcManager {
                             .setSubmissionid(6)
                             .setTestname("Test 1")
                             .setTestdetails("Test details")
-                            .setWeight(2),
+                            .setWeight(5),
 
                         new Score()
                             .setId(4)
                             .setMaxscore(10)
-                            .setScore(5)
+                            .setScore(7)
                             .setTestname("Test 2")
                             .setTestdetails("Test details")
                             .setSubmissionid(6)
