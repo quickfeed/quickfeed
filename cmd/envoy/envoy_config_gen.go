@@ -93,8 +93,7 @@ var envoyTmpl embed.FS
 func createEnvoyConfigFile(config *EnvoyConfig) error {
 	envoyConfigFile := path.Join(envoyDockerRoot, fmt.Sprintf("envoy-%s.yaml", config.Domain))
 
-	err := os.MkdirAll(path.Dir(envoyConfigFile), 0755)
-	if err != nil {
+	if err := os.MkdirAll(path.Dir(envoyConfigFile), 0o600); err != nil {
 		return err
 	}
 
@@ -232,8 +231,7 @@ func generateSelfSignedCert(opts certOptions) (err error) {
 		return errors.New("at least one hostname must be specified")
 	}
 
-	err = os.MkdirAll(certsDir, 0755)
-	if err != nil {
+	if err = os.MkdirAll(certsDir, 0o600); err != nil {
 		return err
 	}
 
@@ -294,7 +292,7 @@ func generateSelfSignedCert(opts certOptions) (err error) {
 	}
 
 	// save ca certificate
-	err = savePEM(certsDir, "cacert.pem", []*pem.Block{{Type: "CERTIFICATE", Bytes: caCertBytes}}, defaultFileFlags, 0600)
+	err = savePEM(certsDir, "cacert.pem", []*pem.Block{{Type: "CERTIFICATE", Bytes: caCertBytes}}, defaultFileFlags, 0o600)
 	if err != nil {
 		return err
 	}
@@ -303,13 +301,13 @@ func generateSelfSignedCert(opts certOptions) (err error) {
 	if err != nil {
 		return fmt.Errorf("unable to marshal ca private key: %v", err)
 	}
-	err = savePEM(certsDir, "cakey.pem", []*pem.Block{{Type: "PRIVATE KEY", Bytes: caKeyBytes}}, defaultFileFlags, 0600)
+	err = savePEM(certsDir, "cakey.pem", []*pem.Block{{Type: "PRIVATE KEY", Bytes: caKeyBytes}}, defaultFileFlags, 0o600)
 	if err != nil {
 		return err
 	}
 
 	// save server certificate
-	err = savePEM(certsDir, "cert.pem", []*pem.Block{{Type: "CERTIFICATE", Bytes: serverCertBytes}}, defaultFileFlags, 0600)
+	err = savePEM(certsDir, "cert.pem", []*pem.Block{{Type: "CERTIFICATE", Bytes: serverCertBytes}}, defaultFileFlags, 0o600)
 	if err != nil {
 		return err
 	}
@@ -319,7 +317,7 @@ func generateSelfSignedCert(opts certOptions) (err error) {
 		return fmt.Errorf("unable to marshal server private key: %v", err)
 	}
 
-	err = savePEM(certsDir, "key.pem", []*pem.Block{{Type: "PRIVATE KEY", Bytes: serverKeyByes}}, defaultFileFlags, 0600)
+	err = savePEM(certsDir, "key.pem", []*pem.Block{{Type: "PRIVATE KEY", Bytes: serverKeyByes}}, defaultFileFlags, 0o600)
 	if err != nil {
 		return err
 	}
@@ -328,7 +326,7 @@ func generateSelfSignedCert(opts certOptions) (err error) {
 	err = savePEM(certsDir, "fullchain.pem", []*pem.Block{
 		{Type: "CERTIFICATE", Bytes: serverCertBytes},
 		{Type: "CERTIFICATE", Bytes: caCertBytes},
-	}, defaultFileFlags, 0600)
+	}, defaultFileFlags, 0o600)
 	if err != nil {
 		return err
 	}
