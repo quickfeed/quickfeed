@@ -1,4 +1,4 @@
-import * as grpcWeb from "grpc-web";
+import grpcWeb from "grpc-web"
 import {
     Assignments,
     AuthorizationResponse,
