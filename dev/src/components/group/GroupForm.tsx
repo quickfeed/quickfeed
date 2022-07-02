@@ -58,7 +58,7 @@ const GroupForm = (): JSX.Element | null => {
     const groupMembers = group.usersList.map(user => {
         return (
             <li key={user.id} className="list-group-item">
-                <img id="group-image" src={user.avatarurl} />
+                <img id="group-image" src={user.avatarurl} alt="" />
                 {user.name}
                 <i className="badge-pill badge-danger rounded-circle clickable float-right" onClick={() => actions.updateGroupUsers(user)}>-</i>
             </li>

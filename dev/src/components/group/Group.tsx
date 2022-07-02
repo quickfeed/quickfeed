@@ -12,7 +12,7 @@ const GroupComponent = (): JSX.Element => {
     const pendingIcon = isPendingGroup(group) ? <span className="badge badge-warning ml-2">Pending</span> : null
     const members = group.usersList.map(user =>
         <li key={user.id} className="list-group-item">
-            <img src={user.avatarurl} style={{ width: "23px", marginRight: "10px", borderRadius: "50%" }} />
+            <img src={user.avatarurl} style={{ width: "23px", marginRight: "10px", borderRadius: "50%" }} alt="" />
             {user.name}
         </li>
     )
