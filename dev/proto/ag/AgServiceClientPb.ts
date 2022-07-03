@@ -426,28 +426,28 @@ export class AutograderServiceClient {
     '/ag.AutograderService/UpdateGroup',
     grpcWeb.MethodType.UNARY,
     ag_ag_pb.Group,
-    ag_ag_pb.Void,
+    ag_ag_pb.Group,
     (request: ag_ag_pb.Group) => {
       return request.serializeBinary();
     },
-    ag_ag_pb.Void.deserializeBinary
+    ag_ag_pb.Group.deserializeBinary
   );
 
   updateGroup(
     request: ag_ag_pb.Group,
-    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Void>;
+    metadata: grpcWeb.Metadata | null): Promise<ag_ag_pb.Group>;
 
   updateGroup(
     request: ag_ag_pb.Group,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.Void) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Void>;
+               response: ag_ag_pb.Group) => void): grpcWeb.ClientReadableStream<ag_ag_pb.Group>;
 
   updateGroup(
     request: ag_ag_pb.Group,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.RpcError,
-               response: ag_ag_pb.Void) => void) {
+               response: ag_ag_pb.Group) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +

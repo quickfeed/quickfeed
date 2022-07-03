@@ -8,16 +8,14 @@ import React from "react"
 import Members from "../components/Members"
 import { Route, Router } from "react-router"
 import { Provider } from "overmind-react"
-import { MockGrpcManager } from "../MockGRPCManager"
+import { initializeOvermind } from "./TestHelpers"
 
 
 React.useLayoutEffect = React.useEffect
 configure({ adapter: new Adapter() })
 
 describe("UpdateEnrollment", () => {
-    const mockedOvermind = createOvermindMock(config, {
-        grpcMan: new MockGrpcManager()
-    })
+    const mockedOvermind = initializeOvermind({})
 
     const updateEnrollmentTests: { desc: string, courseID: number, userID: number, want: Enrollment.UserStatus }[] = [
         // Refer to addLocalCourseStudent() in MockGRPCManager.ts for a list of available enrollments
@@ -32,14 +30,15 @@ describe("UpdateEnrollment", () => {
         await mockedOvermind.actions.getEnrollmentsByCourse({ courseID: 1, statuses: [] })
     })
 
-    updateEnrollmentTests.forEach(({ desc, courseID, userID, want }) => {
-        it(desc, async () => {
-            window.confirm = jest.fn(() => true)
-            const enrollment = mockedOvermind.state.courseEnrollments[courseID].find(e => e.getUserid() === userID)
-            expect(enrollment).toBeDefined()
-            mockedOvermind.actions.updateEnrollment({ enrollment: enrollment as Enrollment, status: want })
-            expect((enrollment as Enrollment).getStatus()).toEqual(want)
-        })
+    test.each(updateEnrollmentTests)(`$desc`, async (test) => {
+        const enrollment = mockedOvermind.state.courseEnrollments[test.courseID].find(e => e.userid === test.userID)
+        if (enrollment === undefined) {
+            throw new Error(`No enrollment found for user ${test.userID} in course ${test.courseID}`)
+        }
+        mockedOvermind.actions.setActiveCourse(test.courseID)
+        window.confirm = jest.fn(() => true)
+        await mockedOvermind.actions.updateEnrollment({ enrollment: enrollment, status: test.want })
+        expect(enrollment.status).toEqual(test.want)
     })
 })
 
@@ -47,10 +46,10 @@ describe("UpdateEnrollment in webpage", () => {
     it("If status is teacher, button should display demote", () => {
         const user = new User().setId(1).setName("Test User").setStudentid("6583969706").setEmail("test@gmail.com")
         const enrollment = new Enrollment().setId(2).setCourseid(1).setStatus(3).setUser(user)
-            .setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0)
+            .setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0).toObject()
 
         const mockedOvermind = createOvermindMock(config, (state) => {
-            state.self = user
+            state.self = user.toObject()
             state.activeCourse = 1
             state.courseEnrollments = { [1]: [enrollment] }
         })
@@ -71,10 +70,10 @@ describe("UpdateEnrollment in webpage", () => {
     it("If status is student, button should display promote", () => {
         const user = new User().setId(1).setName("Test User").setStudentid("6583969706").setEmail("test@gmail.com")
         const enrollment = new Enrollment().setId(2).setCourseid(1).setStatus(2).setUser(user)
-            .setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0)
+            .setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0).toObject()
 
         const mockedOvermind = createOvermindMock(config, (state) => {
-            state.self = user
+            state.self = user.toObject()
             state.activeCourse = 1
             state.courseEnrollments = { [1]: [enrollment] }
         })

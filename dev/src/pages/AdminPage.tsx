@@ -21,7 +21,7 @@ const AdminPage = (): JSX.Element => {
     const editCourse = { title: "Edit Course", text: "Edit an existing course.", buttonText: "Edit Course", to: "/admin/edit" }
 
     // If the user is not an admin, redirect to the home page.
-    if (!state.self.getIsadmin()) {
+    if (!state.self.isadmin) {
         return <Redirect to={"/"} />
     }
 

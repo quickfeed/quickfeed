@@ -356,18 +356,14 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	// set teacher ID in context
 	ctx = qtest.WithUserContext(context.Background(), teacher)
-	_, err = ags.UpdateGroup(ctx, updateGroupRequest)
+	gotUpdatedGroup, err := ags.UpdateGroup(ctx, updateGroupRequest)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// check that the group have changed group membership
-	gotChangedGroup, err := db.GetGroup(gotGroup.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
 	userIDs := make([]uint64, 0)
-	for _, usr := range gotChangedGroup.Users {
+	for _, usr := range updateGroupRequest.Users {
 		userIDs = append(userIDs, usr.ID)
 	}
 
@@ -383,11 +379,11 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Status = pb.Group_APPROVED
 	// Ignore enrollments in check
-	gotChangedGroup.Enrollments = nil
+	gotUpdatedGroup.Enrollments = nil
 	wantGroup.Enrollments = nil
 
-	if diff := cmp.Diff(wantGroup, gotChangedGroup, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.UpdateGroup() mismatch (-wantGroup +gotChangedGroup):\n%s", diff)
+	if diff := cmp.Diff(wantGroup, gotUpdatedGroup, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateGroup() mismatch (-wantGroup +gotUpdatedGroup):\n%s", diff)
 	}
 
 	// ******************* Teacher UpdateGroup *******************
@@ -398,15 +394,11 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	// set teacher ID in context
 	ctx = qtest.WithUserContext(context.Background(), teacher)
-	_, err = ags.UpdateGroup(ctx, updateGroupReqest1)
+	gotUpdatedGroup, err = ags.UpdateGroup(ctx, updateGroupReqest1)
 	if err != nil {
 		t.Error(err)
 	}
 	// check that the group have changed group membership
-	gotChangedGroup, err = db.GetGroup(gotGroup.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
 	userIDs = make([]uint64, 0)
 	for _, usr := range updateGroupReqest1.Users {
 		userIDs = append(userIDs, usr.ID)
@@ -416,19 +408,19 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(gotChangedGroup.Users) != 1 {
-		t.Errorf("Expected only single member group, got %d members", len(gotChangedGroup.Users))
+	if len(gotUpdatedGroup.Users) != 1 {
+		t.Errorf("Expected only single member group, got %d members", len(gotUpdatedGroup.Users))
 	}
 	wantGroup = updateGroupRequest
 	wantGroup.Users = grpUsers
 	wantGroup.TeamID = 1
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Status = pb.Group_APPROVED
-	gotChangedGroup.Enrollments = nil
+	gotUpdatedGroup.Enrollments = nil
 	wantGroup.Enrollments = nil
 
-	if diff := cmp.Diff(wantGroup, gotChangedGroup, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.UpdateGroup() mismatch (-wantGroup +gotChangedGroup):\n%s", diff)
+	if diff := cmp.Diff(wantGroup, gotUpdatedGroup, protocmp.Transform()); diff != "" {
+		t.Errorf("ags.UpdateGroup() mismatch (-wantGroup +gotUpdatedGroup):\n%s", diff)
 	}
 }
 
@@ -671,16 +663,11 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	wantGroup.Status = pb.Group_APPROVED
-	_, err = ags.UpdateGroup(ctx, wantGroup)
+	gotGroup, err := ags.UpdateGroup(ctx, wantGroup)
 	if err != nil {
 		t.Error(err)
 	}
 
-	// check that the group didn't change
-	gotGroup, err := db.GetGroup(group.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
 	if diff := cmp.Diff(wantGroup, gotGroup, protocmp.Transform()); diff != "" {
 		t.Errorf("ags.UpdateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}

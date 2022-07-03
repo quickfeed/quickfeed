@@ -19,15 +19,15 @@ const CourseLabs = (): JSX.Element => {
 
     if (state.assignments[courseID] && state.submissions[courseID]) {
         state.assignments[courseID].forEach(assignment => {
-            const assignmentIndex = assignment.getOrder() - 1
+            const assignmentIndex = assignment.order - 1
             // Submissions are indexed by the assignment order.
-            const submission = state.submissions[courseID][assignmentIndex] ?? new Submission()
+            const submission = state.submissions[courseID][assignmentIndex] ?? (new Submission()).toObject()
 
             labs.push(
-                <li key={assignment.getId()} className="list-group-item border clickable mb-2 labList" onClick={() => redirectTo(assignment.getId())}>
+                <li key={assignment.id} className="list-group-item border clickable mb-2 labList" onClick={() => redirectTo(assignment.id)}>
                     <div className="row" >
                         <div className="col-8">
-                            <strong>{assignment.getName()}</strong>
+                            <strong>{assignment.name}</strong>
                         </div>
                         <div className="col-4 text-center">
                             <strong>Deadline:</strong>
@@ -41,7 +41,7 @@ const CourseLabs = (): JSX.Element => {
                             {assignmentStatusText(assignment, submission)}
                         </div>
                         <div className="col-4 text-center">
-                            {getFormattedTime(assignment.getDeadline())}
+                            {getFormattedTime(assignment.deadline)}
                         </div>
                     </div>
                 </li>

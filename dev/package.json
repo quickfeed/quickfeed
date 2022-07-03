@@ -16,8 +16,11 @@
   },
   "scripts": {
     "tsc": "tsc",
-    "test": "jest",
-    "test:selenium": "jest --testPathPattern=e2e"
+    "test": "jest --testPathIgnorePatterns=e2e",
+    "test:selenium": "jest --testPathPattern=e2e",
+    "build": "webpack",
+    "build:watch": "webpack --watch --mode development",
+    "build:dev": "webpack --mode development"
   },
   "devDependencies": {
     "@types/enzyme": "^3.10.11",

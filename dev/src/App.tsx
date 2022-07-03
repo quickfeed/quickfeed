@@ -9,7 +9,6 @@ import AdminPage from './pages/AdminPage'
 import Loading from './components/Loading'
 import Dashboard from './components/Dashboard'
 import AboutPage from './pages/AboutPage'
-import { isValid } from './Helpers'
 
 const App = (): JSX.Element => {
     const state = useAppState()
@@ -29,7 +28,7 @@ const App = (): JSX.Element => {
         // Determine which routes are available to the user depending on the state
         if (state.isLoading) {
             return <Loading />
-        } else if (!isValid(state.self) && state.isLoggedIn) {
+        } else if (!state.isValid && state.isLoggedIn) {
             // user logged in without profile information: redirect to Profile page
             return (
                 <Switch>

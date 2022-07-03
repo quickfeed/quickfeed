@@ -434,7 +434,7 @@ service AutograderService {
     rpc GetGroupByUserAndCourse(GroupRequest) returns (Group) {}
     rpc GetGroupsByCourse(CourseRequest) returns (Groups) {}
     rpc CreateGroup(Group) returns (Group) {}
-    rpc UpdateGroup(Group) returns (Void) {}
+    rpc UpdateGroup(Group) returns (Group) {}
     rpc DeleteGroup(GroupRequest) returns (Void) {}
 
     // courses //
