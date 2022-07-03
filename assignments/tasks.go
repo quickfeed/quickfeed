@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"path/filepath"
 
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/database"
@@ -13,10 +12,9 @@ import (
 
 // taskName returns the task name as a combination of assignmentName/filename
 // excluding the task- prefix and the .md suffix.
-func taskName(assignmentName, basePath string) string {
+func taskName(basePath string) string {
 	taskName := basePath[len("task-"):]
-	taskName = taskName[:len(taskName)-len(".md")]
-	return filepath.Join(assignmentName, taskName)
+	return taskName[:len(taskName)-len(".md")]
 }
 
 // newTask returns a task from markdown contents and associates it with the given assignment.

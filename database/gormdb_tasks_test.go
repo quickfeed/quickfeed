@@ -131,6 +131,40 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 				},
 			},
 		},
+		"Mirrored tasks": {
+			foundAssignmentSequence: [][]*pb.Assignment{
+				{
+					{Name: "Lab1", Order: 1, Tasks: []*pb.Task{
+						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "hello_world"},
+					}},
+					{Name: "Lab2", Order: 2, Tasks: []*pb.Task{
+						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "hello_world"},
+					}},
+				},
+				{
+					{Name: "Lab1", Order: 1, Tasks: []*pb.Task{
+						{AssignmentOrder: 1, Title: "y", Body: "y", Name: "hello_world"},
+					}},
+					{Name: "Lab2", Order: 2, Tasks: []*pb.Task{
+						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "hello_world"},
+					}},
+					{Name: "Lab3", Order: 3, Tasks: []*pb.Task{
+						{AssignmentOrder: 3, Title: "x", Body: "x", Name: "hello_world"},
+					}},
+				},
+				{
+					{Name: "Lab1", Order: 1, Tasks: []*pb.Task{
+						{AssignmentOrder: 1, Title: "y", Body: "y", Name: "hello_world"},
+					}},
+					{Name: "Lab2", Order: 2, Tasks: []*pb.Task{
+						{AssignmentOrder: 2, Title: "y", Body: "y", Name: "hello_world"},
+					}},
+					{Name: "Lab3", Order: 3, Tasks: []*pb.Task{
+						{AssignmentOrder: 3, Title: "y", Body: "y", Name: "not_hello_world"},
+					}},
+				},
+			},
+		},
 	}
 
 	sortTasksByName := func(tasks []*pb.Task) {
@@ -158,7 +192,7 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 			course := &pb.Course{}
 			qtest.CreateCourse(t, db, admin, course)
 
-			previousTasks := make(map[string]*pb.Task)
+			previousTasks := make(map[uint32]map[string]*pb.Task)
 
 			for _, foundAssignments := range tt.foundAssignmentSequence {
 				wantTasks := []*pb.Task{}
@@ -181,22 +215,32 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 				wantCreatedTasks := []*pb.Task{}
 				wantUpdatedTasks := []*pb.Task{}
 				for _, wantTask := range wantTasks {
-					task, ok := previousTasks[wantTask.GetName()]
+					taskMap, ok := previousTasks[wantTask.GetAssignmentOrder()]
+					if !ok {
+						previousTasks[wantTask.GetAssignmentOrder()] = make(map[string]*pb.Task)
+					}
+					task, ok := taskMap[wantTask.GetName()]
 					if ok {
+						// wantTask in previousTasks map; it must have been updated
 						wantTask.ID = task.GetID()
 						wantTask.AssignmentID = task.GetAssignmentID()
 						if task.HasChanged(wantTask) {
 							wantUpdatedTasks = append(wantUpdatedTasks, wantTask)
 						}
 					} else {
+						// wantTask not in previousTasks map; it must have been created
 						wantCreatedTasks = append(wantCreatedTasks, wantTask)
 					}
-					delete(previousTasks, wantTask.GetName())
+					delete(taskMap, wantTask.GetName())
 				}
-				for name, deletedTask := range previousTasks {
-					deletedTask.MarkDeleted()
-					wantUpdatedTasks = append(wantUpdatedTasks, deletedTask)
-					delete(previousTasks, name)
+
+				// All tasks remaining in previousTasks must have been deleted.
+				for _, taskMap := range previousTasks {
+					for name, deletedTask := range taskMap {
+						deletedTask.MarkDeleted()
+						wantUpdatedTasks = append(wantUpdatedTasks, deletedTask)
+						delete(taskMap, name)
+					}
 				}
 
 				sortTasksByName(wantTasks)
@@ -218,7 +262,7 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 				}
 
 				for _, task := range wantTasks {
-					previousTasks[task.GetName()] = task
+					previousTasks[task.GetAssignmentOrder()][task.GetName()] = task
 				}
 			}
 		})
