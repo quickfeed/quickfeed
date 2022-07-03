@@ -7,12 +7,11 @@
 package score
 
 import (
-	reflect "reflect"
-	sync "sync"
-
 	_ "github.com/alta/protopatch/patch/gopb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	reflect "reflect"
+	sync "sync"
 )
 
 const (
@@ -267,14 +266,11 @@ func file_kit_score_score_proto_rawDescGZIP() []byte {
 	return file_kit_score_score_proto_rawDescData
 }
 
-var (
-	file_kit_score_score_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-	file_kit_score_score_proto_goTypes  = []interface{}{
-		(*Score)(nil),     // 0: score.Score
-		(*BuildInfo)(nil), // 1: score.BuildInfo
-	}
-)
-
+var file_kit_score_score_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_kit_score_score_proto_goTypes = []interface{}{
+	(*Score)(nil),     // 0: score.Score
+	(*BuildInfo)(nil), // 1: score.BuildInfo
+}
 var file_kit_score_score_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
