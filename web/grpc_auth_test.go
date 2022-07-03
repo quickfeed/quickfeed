@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	grpcAddr = ":9090"
+	grpcAddr = "127.0.0.1:9090"
 	token    = "some-secret-string"
 	// same as quickfeed root user
 	botUserID = 1
