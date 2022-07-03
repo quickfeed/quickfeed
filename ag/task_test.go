@@ -56,17 +56,3 @@ func TestMarkDeleted(t *testing.T) {
 		})
 	}
 }
-
-func TestTaskName(t *testing.T) {
-	tests := []struct {
-		task *pb.Task
-		want string
-	}{
-		{task: &pb.Task{Name: "lab1/task1"}, want: "task1"},
-	}
-	for _, tt := range tests {
-		if got := tt.task.TaskName(); got != tt.want {
-			t.Errorf("LocalName() = %s, expected %s", got, tt.want)
-		}
-	}
-}

@@ -22,10 +22,3 @@ func (t *Task) MarkDeleted() {
 func (t *Task) IsDeleted() bool {
 	return strings.HasPrefix(t.Title, deleted)
 }
-
-// TaskName returns the task name without the assignment part. For example, given
-// a task with full name "assignment1/hello_world", "hello_world" is returned.
-func (t *Task) TaskName() string {
-	name := t.GetName()
-	return name[strings.Index(name, "/")+1:]
-}
