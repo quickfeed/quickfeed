@@ -55,22 +55,22 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 			foundAssignmentSequence: [][]*pb.Assignment{
 				{
 					{Name: "Lab1", Order: 1, Tasks: []*pb.Task{
-						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "Lab1/1"},
-						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "Lab1/2"},
+						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "1"},
+						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "2"},
 					}},
 					{Name: "Lab2", Order: 2, Tasks: []*pb.Task{
-						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "Lab2/1"},
-						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "Lab2/2"},
+						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "1"},
+						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "2"},
 					}},
 				},
 				{
 					{Name: "Lab1", Order: 1, Tasks: []*pb.Task{
-						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "Lab1/1"},
-						{AssignmentOrder: 1, Title: "x", Body: "y", Name: "Lab1/2"},
-						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "Lab1/3"},
+						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "1"},
+						{AssignmentOrder: 1, Title: "x", Body: "y", Name: "2"},
+						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "3"},
 					}},
 					{Name: "Lab2", Order: 2, Tasks: []*pb.Task{
-						{AssignmentOrder: 2, Title: "y", Body: "x", Name: "Lab2/1"},
+						{AssignmentOrder: 2, Title: "y", Body: "x", Name: "1"},
 					}},
 				},
 			},
@@ -87,10 +87,10 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 				},
 				{
 					{Name: "Lab1", Order: 1, Tasks: []*pb.Task{
-						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "Lab1/1"},
+						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "1"},
 					}},
 					{Name: "Lab2", Order: 2, Tasks: []*pb.Task{
-						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "Lab2/1"},
+						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "1"},
 					}},
 				},
 			},
@@ -99,12 +99,12 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 			foundAssignmentSequence: [][]*pb.Assignment{
 				{
 					{Name: "Lab1", Order: 1, Tasks: []*pb.Task{
-						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "Lab1/1"},
-						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "Lab1/2"},
+						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "1"},
+						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "2"},
 					}},
 					{Name: "Lab2", Order: 2, Tasks: []*pb.Task{
-						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "Lab2/1"},
-						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "Lab2/2"},
+						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "1"},
+						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "2"},
 					}},
 				},
 				{
@@ -117,16 +117,16 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 				},
 				{
 					{Name: "Lab1", Order: 1, Tasks: []*pb.Task{
-						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "Lab1/1"},
-						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "Lab1/2"},
+						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "1"},
+						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "2"},
 					}},
 					{Name: "Lab2", Order: 2, Tasks: []*pb.Task{
-						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "Lab2/1"},
-						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "Lab2/2"},
+						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "1"},
+						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "2"},
 					}},
 					{Name: "Lab3", Order: 3, Tasks: []*pb.Task{
-						{AssignmentOrder: 3, Title: "x", Body: "x", Name: "Lab3/1"},
-						{AssignmentOrder: 3, Title: "x", Body: "x", Name: "Lab3/2"},
+						{AssignmentOrder: 3, Title: "x", Body: "x", Name: "1"},
+						{AssignmentOrder: 3, Title: "x", Body: "x", Name: "2"},
 					}},
 				},
 			},

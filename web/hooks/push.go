@@ -98,16 +98,12 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	wh.logger.Debugf("Attempting to find pull request for ref: %s, in repository: %s",
 		payload.GetRef(), payload.GetRepo().GetFullName())
 
-	pullRequest, localTaskName, err := wh.handlePullRequestPushPayload(payload)
+	pullRequest, taskName, err := wh.handlePullRequestPushPayload(payload)
 	if err != nil {
 		wh.logger.Errorf("Failed to retrieve pull request data from push payload: %v", err)
 		return
 	}
-
-	// TODO(espeland): Revise this when score task name format has been decided.
-	// Should also write some documentation on how a task in essence has two names.
-	// One global and one local. Where the score package only uses the local name.
-	taskSum := results.TaskSum(localTaskName)
+	taskSum := results.TaskSum(taskName)
 
 	// TODO(espeland): Update this for GitHub web app.
 	sc, err := scm.NewSCMClient(wh.logger, course.GetProvider(), course.GetAccessToken())
@@ -131,7 +127,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	opt := &scm.IssueCommentOptions{
 		Organization: course.GetOrganizationPath(),
 		Repository:   repo.Name(),
-		Body:         results.MarkdownComment(localTaskName, scoreLimit),
+		Body:         results.MarkdownComment(taskName, scoreLimit),
 		Number:       int(pullRequest.GetNumber()),
 	}
 	wh.logger.Debugf("Creating feedback comment on pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
