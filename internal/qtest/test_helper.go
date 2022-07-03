@@ -103,6 +103,21 @@ func CreateUser(t *testing.T, db database.Database, remoteID uint64, user *pb.Us
 	return user
 }
 
+func CreateAdminUser(t *testing.T, db database.Database, provider string) *pb.User {
+	t.Helper()
+	user := &pb.User{}
+	err := db.CreateUserFromRemoteIdentity(user,
+		&pb.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    1,
+			AccessToken: scm.GetAccessToken(t),
+		})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return user
+}
+
 func CreateCourse(t *testing.T, db database.Database, user *pb.User, course *pb.Course) {
 	t.Helper()
 	if course.Provider == "" {
@@ -126,6 +141,20 @@ func EnrollStudent(t *testing.T, db database.Database, student *pb.User, course 
 		UserID:   student.ID,
 		CourseID: course.ID,
 		Status:   pb.Enrollment_STUDENT,
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func EnrollTeacher(t *testing.T, db database.Database, student *pb.User, course *pb.Course) {
+	t.Helper()
+	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.UpdateEnrollment(&pb.Enrollment{
+		UserID:   student.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_TEACHER,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -159,17 +188,52 @@ func WithUserContext(ctx context.Context, user *pb.User) context.Context {
 	return metadata.NewIncomingContext(ctx, meta)
 }
 
+// AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
+func AssignmentsWithTasks(courseID uint64) []*pb.Assignment {
+	return []*pb.Assignment{
+		{
+			CourseID:    courseID,
+			Name:        "lab1",
+			ScriptFile:  "go.sh",
+			Deadline:    "12.01.2022",
+			AutoApprove: false,
+			Order:       1,
+			IsGroupLab:  false,
+			Tasks: []*pb.Task{
+				{Title: "Fibonacci", Name: "fib", AssignmentOrder: 1, Body: "Implement fibonacci"},
+				{Title: "Lucas Numbers", Name: "luc", AssignmentOrder: 1, Body: "Implement lucas numbers"},
+			},
+		},
+		{
+			CourseID:    courseID,
+			Name:        "lab2",
+			ScriptFile:  "go.sh",
+			Deadline:    "12.12.2021",
+			AutoApprove: false,
+			Order:       2,
+			IsGroupLab:  false,
+			Tasks: []*pb.Task{
+				{Title: "Addition", Name: "add", AssignmentOrder: 2, Body: "Implement addition"},
+				{Title: "Subtraction", Name: "sub", AssignmentOrder: 2, Body: "Implement subtraction"},
+				{Title: "Multiplication", Name: "mul", AssignmentOrder: 2, Body: "Implement multiplication"},
+			},
+		},
+	}
+}
+
 // PopulateDatabaseWithInitialData creates initial data-records based on organization
+// This function was created with the intent of being used for testing task and pull request related functionality.
 func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.SCM, course *pb.Course) error {
 	t.Helper()
 
 	ctx := context.Background()
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.Name})
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.OrganizationPath})
 	if err != nil {
 		return err
 	}
-
-	admin := CreateFakeUser(t, db, uint64(1))
+	course.OrganizationID = org.GetID()
+	admin := CreateAdminUser(t, db, course.GetProvider())
+	db.UpdateUser(admin)
 	CreateCourse(t, db, admin, course)
 
 	repos, err := sc.GetRepositories(ctx, org)
@@ -180,33 +244,35 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 	// Create repositories
 	nxtRemoteID := uint64(2)
 	for _, repo := range repos {
-		var user *pb.User
 		dbRepo := &pb.Repository{
 			RepositoryID:   repo.ID,
 			OrganizationID: org.GetID(),
 			HTMLURL:        repo.WebURL,
+			RepoType:       pb.RepoType(repo.Path),
 		}
-		switch repo.Path {
-		case pb.InfoRepo:
-			dbRepo.RepoType = pb.Repository_COURSEINFO
-		case pb.AssignmentRepo:
-			dbRepo.RepoType = pb.Repository_ASSIGNMENTS
-		case pb.TestsRepo:
-			dbRepo.RepoType = pb.Repository_TESTS
-		default:
-			// TODO(Espeland): Could use CreateNamedUser() instead.
-			user = CreateFakeUser(t, db, nxtRemoteID)
+		if dbRepo.IsUserRepo() {
+			user := &pb.User{}
+			CreateUser(t, db, nxtRemoteID, user)
+			nxtRemoteID++
+			EnrollStudent(t, db, user, course)
+			group := &pb.Group{
+				Name:     dbRepo.UserName(),
+				CourseID: course.GetID(),
+				Users:    []*pb.User{user},
+			}
+			if err := db.CreateGroup(group); err != nil {
+				return err
+			}
 			// For testing purposes, assume all student repositories are group repositories
-			// since tasks are only supported for groups anyway.
+			// since tasks and pull requests are only supported for groups anyway.
 			dbRepo.RepoType = pb.Repository_GROUP
-			dbRepo.UserID = user.GetID()
+			dbRepo.GroupID = group.GetID()
 		}
 
 		t.Logf("create repo: %v", dbRepo)
 		if err = db.CreateRepository(dbRepo); err != nil {
 			return err
 		}
-		nxtRemoteID++
 	}
 	return nil
 }

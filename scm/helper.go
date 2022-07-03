@@ -112,8 +112,17 @@ func (opt RepositoryOptions) valid() bool {
 	return opt.ID > 0 || (opt.Path != "" && opt.Owner != "")
 }
 
-func (opt *CreateIssueOptions) valid() bool {
-	return (opt.Organization != "" && opt.Repository != "" && opt.Title != "" && opt.Body != "")
+func (opt *IssueOptions) valid() bool {
+	return opt.Organization != "" && opt.Repository != "" && opt.Title != "" && opt.Body != ""
+}
+
+func (opt RequestReviewersOptions) valid() bool {
+	return opt.Organization != "" && opt.Repository != "" &&
+		opt.Number > 0 && len(opt.Reviewers) != 0
+}
+
+func (opt IssueCommentOptions) valid() bool {
+	return opt.Organization != "" && opt.Repository != "" && opt.Body != ""
 }
 
 func (opt RepositoryInvitationOptions) valid() bool {

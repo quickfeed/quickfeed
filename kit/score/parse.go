@@ -8,13 +8,13 @@ import (
 
 var (
 	// ErrScoreNotFound is returned if the parsed string did not contain a JSON score string.
-	ErrScoreNotFound    = errors.New("Score not found in string")
-	ErrScoreInterval    = errors.New("Score must be in the interval [0, MaxScore]")
-	ErrMaxScore         = errors.New("MaxScore must be greater than 0")
-	ErrWeight           = errors.New("Weight must be greater than 0")
-	ErrEmptyTestName    = errors.New("TestName must be specified")
-	ErrSecret           = errors.New("Secret field must match expected secret")
-	ErrSuppressedSecret = errors.New("Error suppressed to avoid revealing secret")
+	ErrScoreNotFound    = errors.New("score not found in string")
+	ErrScoreInterval    = errors.New("score must be in the interval [0, MaxScore]")
+	ErrMaxScore         = errors.New("max score must be greater than 0")
+	ErrWeight           = errors.New("weight must be greater than 0")
+	ErrEmptyTestName    = errors.New("test name must be specified")
+	ErrSecret           = errors.New("secret field must match expected secret")
+	ErrSuppressedSecret = errors.New("error suppressed to avoid revealing secret")
 )
 
 // Parse returns a score object for the provided JSON string s

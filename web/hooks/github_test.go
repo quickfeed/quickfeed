@@ -10,30 +10,27 @@ import (
 	"github.com/autograde/quickfeed/database"
 	logq "github.com/autograde/quickfeed/log"
 	"github.com/autograde/quickfeed/scm"
-	"github.com/google/go-cmp/cmp"
 )
 
 const (
 	secret = "the-secret-quickfeed-test"
 )
 
-// To run this test, please see instructions in the developer guide (dev.md).
-
+// To run these tests, please see instructions in the developer guide (dev.md).
 // On macOS, get ngrok using `brew install ngrok`.
 // See steps to follow [here](https://groob.io/tutorial/go-github-webhook/).
 
-// To run this test, use the following (replace the forwarding URL with your own):
+// To run these tests, use the following (replace the forwarding URL with your own):
 //
-// QF_WEBHOOK_SERVER=https://53c51fa9.ngrok.io go test -v -run TestGitHubWebHook
-//
+// QF_WEBHOOK_SERVER=https://53c51fa9.ngrok.io go test -v -run <test name> -timeout 999999s
 // This will create a new webhook with URL `https://53c51fa9.ngrok.io/webhook`
-// for the $QF_TEST_ORG/tests repository for handling push events.
+// The -timeout flag is not necessary, but stops the test from timing out after 10 minutes.
 //
-// This test will then block waiting for a push event from GitHub; meaning that you
-// will manually have to create a push event to the 'tests' repository.
-//
-// TODO(meling) add code to create a push event to the tests repository.
+// These tests will then block waiting for an event from GitHub; meaning that you
+// will manually have to create these events.
 
+// TODO(meling) add code to create a push event to the tests repository and trigger synchronizing tasks with issues on repositories.
+// TestGitHubWebHook tests listening to events from the tests repository.
 func TestGitHubWebHook(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
@@ -66,7 +63,6 @@ func TestGitHubWebHook(t *testing.T) {
 		t.Logf("hook: %v", hook)
 	}
 
-	// TODO(meling) db is nil; will cause handling of push event to panic; will need a database with content for this to work fully.
 	var db database.Database
 	var runner ci.Runner
 	webhook := NewGitHubWebHook(logger, db, runner, secret)
@@ -74,28 +70,4 @@ func TestGitHubWebHook(t *testing.T) {
 	log.Println("starting webhook server")
 	http.HandleFunc("/webhook", webhook.Handle)
 	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-func TestExtractChanges(t *testing.T) {
-	modifiedFiles := []string{
-		"go.mod",
-		"go.sum",
-		"exercise.go",
-		"README.md",
-		"lab2/fib.go",
-		"lab3/detector/fd.go",
-		"paxos/proposer.go",
-		"/hallo",
-		"",
-	}
-	want := map[string]bool{
-		"lab2":  true,
-		"lab3":  true,
-		"paxos": true,
-	}
-	got := make(map[string]bool)
-	extractChanges(modifiedFiles, got)
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Fatalf("content mismatch (-want +got):\n%s", diff)
-	}
 }

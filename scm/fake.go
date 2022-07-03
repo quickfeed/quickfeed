@@ -9,6 +9,7 @@ import (
 )
 
 // FakeSCM implements the SCM interface.
+// TODO(meling) many of the methods below are not implemented.
 type FakeSCM struct {
 	Repositories  map[uint64]*Repository
 	Organizations map[uint64]*pb.Organization
@@ -40,7 +41,6 @@ func (s *FakeSCM) CreateOrganization(_ context.Context, opt *OrganizationOptions
 
 // UpdateOrganization implements the SCM interface.
 func (*FakeSCM) UpdateOrganization(_ context.Context, _ *OrganizationOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
@@ -69,7 +69,6 @@ func (s *FakeSCM) CreateRepository(_ context.Context, opt *CreateRepositoryOptio
 
 // GetRepository implements the SCM interface.
 func (*FakeSCM) GetRepository(_ context.Context, _ *RepositoryOptions) (*Repository, error) {
-	// TODO no implementation provided yet
 	return nil, nil
 }
 
@@ -95,19 +94,16 @@ func (s *FakeSCM) DeleteRepository(_ context.Context, opt *RepositoryOptions) er
 
 // UpdateRepoAccess implements the SCM interface.
 func (*FakeSCM) UpdateRepoAccess(_ context.Context, _ *Repository, _, _ string) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // RepositoryIsEmpty implements the SCM interface
 func (*FakeSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool {
-	// TODO no implementation provided yet
 	return false
 }
 
 // ListHooks implements the SCM interface.
 func (*FakeSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook, error) {
-	// TODO no implementation provided yet
 	return nil, nil
 }
 
@@ -164,19 +160,16 @@ func (s *FakeSCM) GetTeams(_ context.Context, org *pb.Organization) ([]*Team, er
 
 // AddTeamMember implements the scm interface
 func (*FakeSCM) AddTeamMember(_ context.Context, _ *TeamMembershipOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // RemoveTeamMember implements the scm interface
 func (*FakeSCM) RemoveTeamMember(_ context.Context, _ *TeamMembershipOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // UpdateTeamMembers implements the SCM interface.
 func (*FakeSCM) UpdateTeamMembers(_ context.Context, _ *UpdateTeamOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
@@ -202,60 +195,76 @@ func (*FakeSCM) GetUserNameByID(_ context.Context, _ uint64) (string, error) {
 
 // UpdateOrgMembership implements the SCM interface
 func (*FakeSCM) UpdateOrgMembership(_ context.Context, _ *OrgMembershipOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // RemoveMember implements the SCM interface
 func (*FakeSCM) RemoveMember(_ context.Context, _ *OrgMembershipOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // GetUserScopes implements the SCM interface
 func (*FakeSCM) GetUserScopes(_ context.Context) *Authorization {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // AcceptRepositoryInvite implements the SCM interface
 func (*FakeSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // CreateIssue implements the SCM interface
-func (*FakeSCM) CreateIssue(_ context.Context, _ *CreateIssueOptions) (*Issue, error) {
-	// TODO no implementation provided yet
+func (*FakeSCM) CreateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
 	return nil, ErrNotSupported{
 		SCM:    "FakeSCM",
 		Method: "CreateIssue",
 	}
 }
 
-// GetRepoIssue implements the SCM interface
-func (*FakeSCM) GetRepoIssue(_ context.Context, _ int, _ *RepositoryOptions) (*Issue, error) {
-	// TODO no implementation provided yet
+// UpdateIssue implements the SCM interface
+func (*FakeSCM) UpdateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
 	return nil, ErrNotSupported{
 		SCM:    "FakeSCM",
-		Method: "GetRepoIssue",
+		Method: "UpdateIssue",
 	}
 }
 
-// GetRepoIssues implements the SCM interface
-func (*FakeSCM) GetRepoIssues(_ context.Context, _ *RepositoryOptions) ([]*Issue, error) {
-	// TODO no implementation provided yet
+// GetIssue implements the SCM interface
+func (*FakeSCM) GetIssue(_ context.Context, _ *RepositoryOptions, _ int) (*Issue, error) {
 	return nil, ErrNotSupported{
 		SCM:    "FakeSCM",
-		Method: "GetRepoIssues",
+		Method: "GetIssue",
 	}
 }
 
-// EditRepoIssue implements the SCM interface
-func (*FakeSCM) EditRepoIssue(_ context.Context, _ int, _ *CreateIssueOptions) (*Issue, error) {
-	// TODO no implementation provided yet
+// GetIssues implements the SCM interface
+func (*FakeSCM) GetIssues(_ context.Context, _ *RepositoryOptions) ([]*Issue, error) {
 	return nil, ErrNotSupported{
 		SCM:    "FakeSCM",
-		Method: "EditRepoIssue",
+		Method: "GetIssues",
+	}
+}
+
+// CreateIssueComment implements the SCM interface
+func (*FakeSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error) {
+	return 0, ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "CreateIssueComment",
+	}
+}
+
+// UpdateIssueComment implements the SCM interface
+func (*FakeSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOptions) error {
+	return ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "UpdateIssueComment",
+	}
+}
+
+// RequestReviewers implements the SCM interface
+func (*FakeSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error {
+	return ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "RequestReviewers",
 	}
 }

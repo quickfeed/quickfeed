@@ -44,6 +44,16 @@ func (t Repository_Type) IsCourseRepo() bool {
 	return t == Repository_COURSEINFO || t == Repository_TESTS || t == Repository_ASSIGNMENTS
 }
 
+// IsUserRepo returns true if the repository is a user repo.
+func (t Repository_Type) IsUserRepo() bool {
+	return t == Repository_USER
+}
+
+// IsGroupRepo returns true if the repository is a group repo.
+func (t Repository_Type) IsGroupRepo() bool {
+	return t == Repository_GROUP
+}
+
 // IsTestsRepo returns true if the repository is a 'tests' type.
 func (t *Repository) IsTestsRepo() bool {
 	return t.RepoType == Repository_TESTS
@@ -84,6 +94,12 @@ func (t *Repository) Name() string {
 	return repoURL[strings.LastIndex(repoURL, "/")+1:]
 }
 
+// UserName returns the user name of the repository, without the -labs suffix.
+func (t *Repository) UserName() string {
+	repoName := t.Name()
+	return repoName[:len(repoName)-len(StudentRepoSuffix)]
+}
+
 // RepoType returns the repository type for the given path name.
 func RepoType(path string) (repoType Repository_Type) {
 	switch path {
@@ -93,6 +109,12 @@ func RepoType(path string) (repoType Repository_Type) {
 		repoType = Repository_ASSIGNMENTS
 	case TestsRepo:
 		repoType = Repository_TESTS
+	default:
+		if strings.HasSuffix(path, StudentRepoSuffix) {
+			repoType = Repository_USER
+		} else {
+			repoType = Repository_GROUP
+		}
 	}
 	return
 }

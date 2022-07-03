@@ -56,21 +56,29 @@ type SCM interface {
 	GetUserNameByID(context.Context, uint64) (string, error)
 	// Returns a provider specific clone path.
 	CreateCloneURL(*URLPathOptions) string
-	// Promotes or demotes organization member, based on Role field in OrgMembership.
+	// Promote or demote organization member based on Role field in OrgMembership.
 	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
-	// RevokeOrgMembership removes user from the organization.
+	// RemoveMember removes user from the organization.
 	RemoveMember(context.Context, *OrgMembershipOptions) error
 	// Lists all authorizations for authenticated user.
 	GetUserScopes(context.Context) *Authorization
 
-	// CreateIssue on a Repository
-	CreateIssue(context.Context, *CreateIssueOptions) (*Issue, error)
-	// GetRepoIssue a particular issue in a Repository
-	GetRepoIssue(ctx context.Context, issueNumber int, opt *RepositoryOptions) (*Issue, error)
-	// List all the issues in a Repository
-	GetRepoIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error)
-	// Edit a particular issue in a Repository
-	EditRepoIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error)
+	// CreateIssue creates an issue.
+	CreateIssue(context.Context, *IssueOptions) (*Issue, error)
+	// UpdateIssue edits an existing issue.
+	UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error)
+	// GetIssue fetches a specific issue.
+	GetIssue(ctx context.Context, opt *RepositoryOptions, number int) (*Issue, error)
+	// GetIssues fetches all issues in a repository.
+	GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error)
+
+	// CreateIssueComment creates a comment on a SCM issue.
+	CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error)
+	// UpdateIssueComment edits a comment on a SCM issue.
+	UpdateIssueComment(ctx context.Context, opt *IssueCommentOptions) error
+
+	// RequestReviewers requests reviewers for a pull request.
+	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
 
 	// Accepts repository invite.
 	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
@@ -227,16 +235,7 @@ type Authorization struct {
 	Scopes []string
 }
 
-// CreateNewIssueOptions contains information on how to create an Issue.
-//type NewIssue struct {
-//	Title string
-//	Body   *Repository
-//	Labels *[]string
-//	Assignee *string
-//	Assignees *[]string
-//}
-
-// Repository represents a git remote repository.
+// Issue represents an SCM issue.
 type Issue struct {
 	ID         uint64
 	Title      string
@@ -244,12 +243,11 @@ type Issue struct {
 	Repository string
 	Assignee   string
 	Status     string
-	//	Assignees string
-	IssueNumber int
+	Number     int
 }
 
-// CreateIssueOptions contains information on how to create an Issue.
-type CreateIssueOptions struct {
+// IssueOptions contains information for creating or updating an Issue.
+type IssueOptions struct {
 	Organization string
 	Repository   string
 	Title        string
@@ -258,6 +256,24 @@ type CreateIssueOptions struct {
 	Labels       *[]string
 	Assignee     *string
 	Assignees    *[]string
+	Number       int
+}
+
+// RequestReviewersOptions contains information on how to create or edit a pull request comment.
+type IssueCommentOptions struct {
+	Organization string
+	Repository   string
+	Body         string
+	Number       int
+	CommentID    int64
+}
+
+// RequestReviewersOptions contains information on how to assign reviewers to a pull request.
+type RequestReviewersOptions struct {
+	Organization string
+	Repository   string
+	Number       int
+	Reviewers    []string // Reviewers is a slice of github usernames
 }
 
 // RepositoryInvitationOptions contains information on which organization and user to accept invitations for.

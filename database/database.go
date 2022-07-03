@@ -44,6 +44,8 @@ type Database interface {
 	// If enrollment statuses is provided, the set of courses returned
 	// is filtered according to these enrollment statuses.
 	GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error)
+	// GetCourseTeachers returns a list of all teachers in a course.
+	GetCourseTeachers(query *pb.Course) ([]*pb.User, error)
 	// UpdateCourse updates course information.
 	UpdateCourse(*pb.Course) error
 
@@ -136,6 +138,14 @@ type Database interface {
 	CreateIssues(issues []*pb.Issue) error
 	// SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks
 	SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) ([]*pb.Task, []*pb.Task, error)
+	// CreatePullRequest creates a pull request
+	CreatePullRequest(pullRequest *pb.PullRequest) error
+	// GetPullRequest returns the pull request matching the given query
+	GetPullRequest(query *pb.PullRequest) (*pb.PullRequest, error)
+	// HandleMergingPR handles merging a pull request
+	HandleMergingPR(query *pb.PullRequest) error
+	// DeletePullRequest updates the pull request matching the given query
+	UpdatePullRequest(pullRequest *pb.PullRequest) error
 
 	// UpdateSlipDays updates used slipdays for the given course enrollment
 	UpdateSlipDays([]*pb.UsedSlipDays) error

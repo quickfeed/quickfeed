@@ -27,3 +27,14 @@ func TestName(t *testing.T) {
 		t.Errorf("Name() = %s, want %s", got, want)
 	}
 }
+
+func TestUserName(t *testing.T) {
+	want := "meling"
+	repo := &pb.Repository{
+		HTMLURL: "https://github.com/dat320-2020/" + pb.StudentRepoName(want),
+	}
+	got := repo.UserName()
+	if got != want {
+		t.Errorf("UserName() = %s, want %s", got, want)
+	}
+}

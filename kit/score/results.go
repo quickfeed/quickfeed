@@ -121,13 +121,30 @@ func (r *Results) Validate(secret string) error {
 	return nil
 }
 
-// Sum returns the total score computed over the set of recorded scores.
+// Sum returns the total score the of recorded scores.
 // The total is a grade in the range 0-100.
 // This method must only be called after Validate has returned nil.
 func (r *Results) Sum() uint32 {
+	return r.TaskSum("")
+}
+
+// TaskSum returns the total score the recorded scores for the given task.
+// The total is a grade in the range 0-100.
+// This method must only be called after Validate has returned nil.
+func (r *Results) TaskSum(taskName string) uint32 {
+	total, _ := r.internalSum(taskName)
+	return uint32(math.Round(total * 100))
+}
+
+// internalSum returns the total score and total weight of the recorded scores for the given task.
+// The values are in the range 0-1.
+func (r *Results) internalSum(taskName string) (float64, float64) {
 	totalWeight := float64(0)
 	var max, score, weight []float64
 	for _, ts := range r.Scores {
+		if taskName != "" && taskName != ts.TaskName {
+			continue
+		}
 		totalWeight += float64(ts.Weight)
 		weight = append(weight, float64(ts.Weight))
 		score = append(score, float64(ts.Score))
@@ -138,7 +155,12 @@ func (r *Results) Sum() uint32 {
 		if score[i] > max[i] {
 			score[i] = max[i]
 		}
-		total += (score[i] / max[i]) * (weight[i] / totalWeight)
+		total += weightedScore(score[i], max[i], weight[i], totalWeight)
 	}
-	return uint32(math.Round(total * 100))
+	return total, totalWeight
+}
+
+// weightedScore returns the weighted score of a given test.
+func weightedScore(score, maxScore, weight, totalWeight float64) float64 {
+	return (score / maxScore) * (weight / totalWeight)
 }
