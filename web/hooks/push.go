@@ -90,8 +90,8 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	}
 }
 
-// handlePullRequestPush attempts to find a pull request associated with the non-default branch.
-// If successful, it then finds the relevant task, and uses it to receive the relevant task score.
+// handlePullRequestPush attempts to find a pull request associated with a non-default branch push event.
+// If successful, it then finds the relevant task, and uses it to retrieve the relevant task score.
 // If a passing score is reached, it assigns reviewers to the pull request.
 // It also uses the test results and task to generate a feedback comment for the pull request.
 func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results *score.Results, assignment *pb.Assignment, course *pb.Course, repo *pb.Repository) {
