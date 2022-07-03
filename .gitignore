@@ -3,8 +3,7 @@ node_modules
 .idea
 debug
 !public/.vscode/tasks.json
-dev/dist/bundle.js
-dev/dist/bundle.js.map
+dev/dist/bundle.js*
 public/dist/bundle.js
 public/dist/bundle.js.map
 ./quickfeed
