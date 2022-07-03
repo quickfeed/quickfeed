@@ -1,5 +1,20 @@
 version = 1
 
+test_patterns = [
+  "*_test.go",
+  "__test__/*"
+]
+
+exclude_patterns = [
+  "public/*",
+  "doc/*",
+  "*.pb.go",
+  "*_pb.js",
+  "*_pb.d.ts",
+  "*ServiceClientPb.ts",
+  "*ServiceClientPb.js"
+]
+
 [[analyzers]]
 name = "shell"
 enabled = true
@@ -28,8 +43,4 @@ enabled = true
 
 [[analyzers]]
 name = "test-coverage"
-enabled = true
-
-[[transformers]]
-name = "gofumpt"
 enabled = true
