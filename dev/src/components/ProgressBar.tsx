@@ -8,43 +8,53 @@ export enum Progress {
     OVERVIEW
 }
 
-const ProgressBar = (props: { courseID: number, assignmentIndex: number, submission?: Submission, type: Progress }): JSX.Element => {
+type ProgressBarProps = {
+    courseID: number,
+    assignmentIndex: number,
+    submission?: Submission.AsObject,
+    type: Progress
+}
+
+const ProgressBar = ({ courseID, assignmentIndex, submission, type }: ProgressBarProps): JSX.Element => {
     const state = useAppState()
 
-    const submission = props.submission ? props.submission : state.submissions[props.courseID][props.assignmentIndex]
-    const assignment = state.assignments[props.courseID][props.assignmentIndex]
+    const sub = submission
+        ? submission
+        : state.submissions[courseID][assignmentIndex]
 
-    const score = submission.getScore()
-    const secondaryProgress = assignment.getScorelimit() - score
+    const assignment = state.assignments[courseID][assignmentIndex]
 
+    const score = sub?.score ?? 0
+    const scorelimit = assignment?.scorelimit ?? 0
+    const status = sub?.status ?? Submission.Status.NONE
+    const secondaryProgress = scorelimit - score
     // Returns a thin line to be used for labs in the NavBar
-    if (props.type === Progress.NAV) {
+    if (type === Progress.NAV) {
         const percentage = 100 - score
+        const color = score >= scorelimit ? "green" : "yellow"
         return (
             <div style={{
                 position: "absolute",
-                borderBottom: "2px solid green",
+                borderBottom: `2px solid ${color}`,
                 bottom: 0,
                 left: 0,
                 right: `${percentage}%`,
-                borderColor: `${score >= assignment.getScorelimit() ? "green" : "yellow"}`,
                 opacity: 0.3
-            }}>
-            </div>
+            }} />
         )
     }
 
     let text = ""
     let secondaryText = ""
-    if (props.type === Progress.LAB) {
+    if (type === Progress.LAB) {
         text = `${score} %`
         secondaryText = `${secondaryProgress} %`
     }
 
     // Returns a regular size progress bar to be used for labs
     let color = ""
-    if (props.type > Progress.NAV) {
-        switch (submission.getStatus()) {
+    if (type > Progress.NAV) {
+        switch (status) {
             case Submission.Status.NONE:
                 color = "bg-primary"
                 break

@@ -16,7 +16,7 @@ React.useLayoutEffect = React.useEffect
 describe("Profile", () => {
     it("Renders with logged in user", () => {
         const mockedOvermind = createOvermindMock(config, (state) => {
-            state.self = new User().setId(1).setName("Test User")
+            state.self = new User().setId(1).setName("Test User").toObject()
         })
         const history = createMemoryHistory()
         const cheerio = render(
@@ -33,7 +33,7 @@ describe("Profile", () => {
 
     it("Logged in is false if the user is invalid", () => {
         const mockedOvermind = createOvermindMock(config, (state) => {
-            state.self = new User().setId(0)
+            state.self = new User().setId(0).toObject()
         })
         const loggedIn = mockedOvermind.state.isLoggedIn
         expect(loggedIn).toBe(false)

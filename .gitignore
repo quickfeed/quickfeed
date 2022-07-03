@@ -10,6 +10,7 @@ public/dist/bundle.js.map
 ./quickfeed
 backups
 scratchpad
+proto-include
 
 # Environment and shell scripts
 cyclone.sh

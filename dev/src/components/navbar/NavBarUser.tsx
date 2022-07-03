@@ -12,7 +12,7 @@ const NavBarUser = (): JSX.Element => {
         <div className="navbar-collapse ml-auto" id="main_nav">
             <ul className="navbar-nav ml-auto">
                 <li className="nav-item dropdown ml-auto">
-                    <img className="rounded-circle" src={self.getAvatarurl()} id="avatar"
+                    <img className="rounded-circle" src={self.avatarurl} id="avatar"
                         style={{ height: "40px", borderRadius: "50%" }} />
                     <ul className="dropdown-menu dropdown-menu-center bg-dark">
                         <ProfileButton />

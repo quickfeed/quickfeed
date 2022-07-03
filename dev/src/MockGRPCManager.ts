@@ -20,8 +20,6 @@ import {
     Submission,
     Submissions,
     SubmissionReviewersRequest,
-    UpdateSubmissionRequest,
-    UpdateSubmissionsRequest,
     User,
     Users,
     Void,
@@ -33,10 +31,35 @@ import {
 } from "../proto/ag/ag_pb"
 import { delay } from "./Helpers"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
+import { StatusCode } from "grpc-web"
 
 export interface IGrpcResponse<T> {
     status: Status
     data?: T
+}
+
+/** The Generate enum contains the types we generate IDs for.
+    This is used to keep track of the next ID to use for each type.
+    @example this.idMap.get(Generate.Course) // returns the previously generated ID for Course
+    @example this.generateID(Generate.Course) // returns the next ID to use for Course
+ */
+enum Generate {
+    User = "user",
+    Course = "course",
+    Assignment = "assignment",
+    Group = "group",
+    Enrollment = "enrollment",
+    Submission = "submission",
+    Review = "review",
+    Score = "score",
+    BuildInfo = "buildInfo",
+    Organization = "organization",
+    Provider = "provider",
+    Repository = "repository",
+    GradingCriterion = "gradingCriterion",
+    GradingBenchmark = "gradingBenchmark",
+    TemplateCriterion = "templateCriterion",
+    TemplateBenchmark = "templateBenchmark",
 }
 
 export class MockGrpcManager {
@@ -51,6 +74,9 @@ export class MockGrpcManager {
         this.addLocalCourseStudent()
         this.addLocalLabInfo()
         this.initBenchmarks()
+        // By default, set the current user to the first user
+        // Optionally, set the current user to a specific user
+        // By passing -1, the current user will be set to null
         if (id) {
             this.setCurrentUser(id)
         } else {
@@ -63,34 +89,47 @@ export class MockGrpcManager {
     private groups: Groups
     private users: Users
     private enrollments: Enrollments
-    private currentUser: User
+    private currentUser: User | null
     private assignments: Assignments
     private courses: Courses
     private organizations: Organizations
     private submissions: Submissions
     private templateBenchmarks: GradingBenchmark[]
+    // idMap is a map of auto incrementing IDs
+    public idMap: Map<string, number> = new Map<string, number>()
+    /** generate holds the available types we generate IDs for */
+    public generate: typeof Generate = Generate
 
+    public getMockedUsers() {
+        return this.users
+    }
 
     public setCurrentUser(id: number) {
         const user = this.users.getUsersList().find(u => u.getId() === id)
         if (user) {
             this.currentUser = user
+        } else {
+            this.currentUser = null
         }
     }
 
-    public getUser(): Promise<IGrpcResponse<User>> {
+    public async getUser(): Promise<IGrpcResponse<User>> {
+        //await delay(10000)
         return this.grpcSend<User>(this.currentUser)
     }
 
     public getUsers(): Promise<IGrpcResponse<Users>> {
-        if (this.currentUser.getIsadmin()) {
+        if (this.currentUser?.getIsadmin()) {
             return this.grpcSend<Users>(this.users)
         }
         return this.grpcSend<Users>(null)
     }
 
     public updateUser(user: User): Promise<IGrpcResponse<Void>> {
-        const usr = this.users.getUsersList()?.findIndex(u => u.getId() === this.currentUser.getId())
+        if (!this.currentUser?.getIsadmin()) {
+            return this.grpcSend<Void>(null, new Status().setCode(StatusCode.UNAUTHENTICATED))
+        }
+        const usr = this.users.getUsersList()?.findIndex(u => u.getId() === user.getId())
         if (usr > -1) {
             Object.assign(this.users.getUsersList()[usr], user)
         }
@@ -106,8 +145,25 @@ export class MockGrpcManager {
     public createCourse(course: Course): Promise<IGrpcResponse<Course>> {
         let data: Course | null = null
         const found = this.courses.getCoursesList().find(c => c.getId() === course.getId())
-        if (!found || !this.currentUser.getIsadmin()) {
+        const isAdmin = this.currentUser?.getIsadmin()
+        const user = this.currentUser
+        if (!found && user && isAdmin) {
+            course.setId(this.generateID(Generate.Course))
+            course.setCoursecreatorid(user.getId())
+
             this.courses.getCoursesList().push(course)
+
+            // Create new enrollment
+            const enrollment = new Enrollment()
+            enrollment.setCourseid(course.getId())
+            enrollment.setUserid(user.getId())
+            enrollment.setStatus(Enrollment.UserStatus.TEACHER)
+            enrollment.setId(this.generateID(Generate.Enrollment))
+            enrollment.setCourse(course)
+            enrollment.setUser(user)
+            enrollment.setSlipdaysremaining(course.getSlipdays())
+            this.enrollments.getEnrollmentsList().push(enrollment)
+
             data = course
         }
         return this.grpcSend<Course>(data)
@@ -148,10 +204,13 @@ export class MockGrpcManager {
     }
 
     public updateCourseVisibility(request: Enrollment): Promise<IGrpcResponse<Void>> {
-        const index = this.enrollments.getEnrollmentsList().findIndex(e => e.getUserid() === request.getUserid())
+        if (this.currentUser === null) {
+            return this.grpcSend<Void>(new Void())
+        }
+        const index = this.enrollments.getEnrollmentsList().findIndex(e => e.getUserid() === this.currentUser?.getId())
         if (index > -1) {
             const enrollments = this.enrollments.getEnrollmentsList()
-            enrollments[index].setStatus(request.getStatus())
+            enrollments[index].setState(request.getState())
             this.enrollments.setEnrollmentsList(enrollments)
         }
         return this.grpcSend<Void>(new Void())
@@ -183,17 +242,25 @@ export class MockGrpcManager {
     // /* ENROLLMENTS */ //
 
     public getEnrollmentsByUser(userID: number, statuses?: Enrollment.UserStatus[]): Promise<IGrpcResponse<Enrollments>> {
+        if (this.currentUser === null) {
+            return this.grpcSend<Enrollments>(null)
+        }
         const enrollments = new Enrollments()
         const enrollmentsList: Enrollment[] = []
-        for (const enrollment of this.enrollments.getEnrollmentsList()) {
-            if (enrollment.getUserid() === userID && (!statuses || statuses.includes(enrollment.getStatus()))) {
+        this.enrollments.getEnrollmentsList().forEach(e => {
+            const enrollment = e.clone()
+            if (enrollment.getUserid() === userID && userID === this.currentUser?.getId() && (!statuses || statuses.includes(enrollment.getStatus()))) {
                 const course = this.courses.getCoursesList().find(c => c.getId() === enrollment.getCourseid())
                 if (course) {
                     enrollment.setCourse(course)
                 }
+                const group = this.groups.getGroupsList().find(g => g.getId() === enrollment.getGroupid())
+                if (group) {
+                    enrollment.setGroup(group)
+                }
                 enrollmentsList.push(enrollment)
             }
-        }
+        })
         return this.grpcSend<Enrollments>(enrollments.setEnrollmentsList(enrollmentsList))
     }
 
@@ -217,6 +284,7 @@ export class MockGrpcManager {
 
     public createEnrollment(courseID: number, userID: number): Promise<IGrpcResponse<Void>> {
         const request = new Enrollment()
+        request.setId(this.generateID(Generate.Enrollment))
         request.setUserid(userID)
         request.setCourseid(courseID)
         const course = this.courses.getCoursesList().find(c => c.getId() === courseID)
@@ -232,12 +300,12 @@ export class MockGrpcManager {
 
     public updateEnrollments(enrollments: Enrollment[]): Promise<IGrpcResponse<Void>> {
         this.enrollments.getEnrollmentsList().forEach((e, i) => {
-            const enrollment = enrollments.find(en => en.getUserid() === e.getUserid() && en.getCourseid() === e.getCourseid())
+            const enrollment = enrollments.find(en => en.getId() === e.getId() && en.getCourseid() === e.getCourseid())
             if (enrollment) {
                 this.enrollments.getEnrollmentsList()[i].setStatus(enrollment.getStatus())
             }
         })
-        return this.grpcSend<Void>(new Void())
+        return this.grpcSend<Void>(new Void(), new Status().setCode(StatusCode.OK))
     }
 
     // /* GROUPS */ //
@@ -262,17 +330,15 @@ export class MockGrpcManager {
         }
         groups.forEach(group => {
             const groupEnrollments = this.enrollments.getEnrollmentsList().filter(e => e.getGroupid() === group.getId())
+            group.setEnrollmentsList(groupEnrollments)
             const users: User[] = []
             groupEnrollments.forEach(e => {
                 const user = this.users.getUsersList().find(u => u.getId() === e.getUserid())
                 if (user) {
-                    e.setUser(this.users.getUsersList().find(u => u.getId() === e.getUserid()))
                     users.push(user)
                 }
-
             })
             group.setUsersList(users)
-            group.setEnrollmentsList(groupEnrollments)
         })
         return this.grpcSend<Groups>(new Groups().setGroupsList(groups))
     }
@@ -285,18 +351,59 @@ export class MockGrpcManager {
         return this.grpcSend<Void>(new Void())
     }
 
-    public updateGroup(group: Group): Promise<IGrpcResponse<Void>> {
+    public updateGroup(group: Group): Promise<IGrpcResponse<Group>> {
         const groupID = group.getId()
-        const g = this.groups.getGroupsList().findIndex(g => g.getId() === groupID)
-        if (g > 0) {
-            Object.assign(this.groups.getGroupsList()[g], group)
+        const currentGroup = this.groups.getGroupsList().find(g => g.getId() === groupID && g.getCourseid() === group.getCourseid())
+        if (currentGroup === undefined) {
+            return this.grpcSend<Group>(new Void(), new Status().setCode(StatusCode.NOT_FOUND))
         }
-        return this.grpcSend<Void>(new Void())
+        // Remove enrollments where the user is not in the group
+        const updatedUsers = group.getUsersList().map(u => u.getId())
+        const currentUsers = currentGroup.getUsersList().map(u => u.getId())
+
+        // Merge current and updated users, without duplicates
+        const combinedUsers = Array.from(new Set([...updatedUsers, ...currentUsers]))
+
+        combinedUsers.forEach(user => {
+            if (!updatedUsers.includes(user)) {
+                // Remove user from group
+                combinedUsers.splice(combinedUsers.indexOf(user), 1)
+
+                // Unset group ID for enrollment
+                this.enrollments.getEnrollmentsList().forEach(e => {
+                    if (e.getGroupid() === groupID && e.getUserid() === user && e.getCourseid() === group.getCourseid()) {
+                        e.setGroupid(0)
+                    }
+                })
+            }
+
+            if (!currentUsers.includes(user)) {
+                // Add group ID to enrollment, if an enrollment exists for the user
+                this.enrollments.getEnrollmentsList().forEach(e => {
+                    if (e.getUserid() === user && e.getCourseid() === group.getCourseid()) {
+                        e.setGroupid(groupID)
+                    }
+                })
+            }
+        })
+
+        // Update group users and enrollments
+        const updatedEnrollments = this.enrollments.getEnrollmentsList().filter(e => e.getGroupid() === groupID && combinedUsers.includes(e.getUserid()))
+        group.setEnrollmentsList(updatedEnrollments)
+        group.setUsersList(this.users.getUsersList().filter(u => combinedUsers.includes(u.getId())))
+        Object.assign(currentGroup, group)
+
+        return this.grpcSend<Group>(group)
     }
 
     public deleteGroup(courseID: number, groupID: number): Promise<IGrpcResponse<Void>> {
         const group = this.groups.getGroupsList().findIndex(g => g.getId() === groupID)
         if (group > 0) {
+            this.enrollments.getEnrollmentsList().forEach(e => {
+                if (e.getGroupid() === groupID && e.getCourseid() === courseID) {
+                    e.setGroupid(0)
+                }
+            })
             this.groups.getGroupsList().splice(group, 1)
         }
         return this.grpcSend<Void>(new Void())
@@ -311,11 +418,16 @@ export class MockGrpcManager {
         const request = new Group()
         request.setName(name)
         request.setCourseid(courseID)
+        request.setId(this.generateID(Generate.Group))
         const groupUsers: User[] = []
         users.forEach((ele) => {
             const user = this.users.getUsersList().find(u => u.getId() === ele)
             if (user) {
                 groupUsers.push(user)
+                const enrollment = this.enrollments.getEnrollmentsList().find(e => e.getUserid() === ele && e.getCourseid() === courseID)
+                if (enrollment) {
+                    enrollment.setGroupid(request.getId())
+                }
             } else {
                 return this.grpcSend<Group>(null, new Status().setCode(2).setError('User not found'))
             }
@@ -323,8 +435,6 @@ export class MockGrpcManager {
         if (groupUsers.length > 0) {
             request.setUsersList(groupUsers)
         }
-        // TODO: Figure out IDs
-        request.setUsersList(groupUsers)
         this.groups.getGroupsList().push(request)
         return this.grpcSend<Group>(request)
     }
@@ -347,7 +457,7 @@ export class MockGrpcManager {
 
     public getSubmissions(courseID: number, userID: number): Promise<IGrpcResponse<Submissions>> {
         // Get all assignment IDs
-        const assignmentIDs = this.assignments.getAssignmentsList().filter(a => a.getCourseid() === courseID).map(a => a.getId())
+        const assignmentIDs = this.assignments.getAssignmentsList().filter(a => a.getCourseid() === courseID && !a.getIsgrouplab()).map(a => a.getId())
         const submissionList = this.submissions.getSubmissionsList().filter(s => s.getUserid() === userID && assignmentIDs.includes(s.getAssignmentid()))
         if (submissionList.length === 0) {
             return this.grpcSend<Submissions>(null, new Status().setCode(2).setError('No submissions found'))
@@ -357,9 +467,12 @@ export class MockGrpcManager {
     }
 
     public getGroupSubmissions(courseID: number, groupID: number): Promise<IGrpcResponse<Submissions>> {
-        const assignmentIDs = this.assignments.getAssignmentsList().filter(a => a.getCourseid() === courseID).map(a => a.getId())
+        const assignmentIDs = this.assignments.getAssignmentsList().filter(a => a.getCourseid() === courseID && a.getIsgrouplab()).map(a => a.getId())
         const submissions = this.submissions.getSubmissionsList().filter(s => s.getGroupid() === groupID && assignmentIDs.includes(s.getAssignmentid()))
-        return this.grpcSend<Submissions>(submissions)
+        if (submissions.length === 0) {
+            return this.grpcSend<Submissions>(null, new Status().setCode(2).setError('No submissions found'))
+        }
+        return this.grpcSend<Submissions>(new Submissions().setSubmissionsList(submissions))
     }
 
     public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IGrpcResponse<CourseSubmissions>> {
@@ -420,26 +533,33 @@ export class MockGrpcManager {
     }
 
     public updateSubmission(courseID: number, s: Submission): Promise<IGrpcResponse<Void>> {
-        const request = new UpdateSubmissionRequest()
-        request.setSubmissionid(s.getId())
-        request.setCourseid(courseID)
-        request.setStatus(s.getStatus())
-        request.setReleased(s.getReleased())
-        request.setScore(s.getScore())
-        if (this.submissions.getSubmissionsList().find(sub => sub.getId() === s.getId())) {
-            Object.assign(this.submissions.getSubmissionsList().find(sub => sub.getId() === s.getId()), s)
+        const submission = this.submissions.getSubmissionsList().find(s => s.getId() === s.getId())
+        if (submission) {
+            Object.assign(submission, s)
         }
         return this.grpcSend<Void>(new Void())
     }
 
     public updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<IGrpcResponse<Void>> {
-        const request = new UpdateSubmissionsRequest()
-        request.setAssignmentid(assignmentID)
-        request.setCourseid(courseID)
-        request.setScorelimit(score)
-        request.setRelease(release)
-        request.setApprove(approve)
-        // TODO
+        const assignment = this.assignments.getAssignmentsList().find(assignment => assignment.getId() === assignmentID && assignment.getCourseid() === courseID)
+        if (!assignment) {
+            return this.grpcSend<Void>(null, new Status().setCode(2).setError('Assignment not found'))
+        }
+
+        for (const submission of this.submissions.getSubmissionsList()) {
+            if (submission.getAssignmentid() !== assignmentID) {
+                continue
+            }
+            if (submission.getScore() < score) {
+                continue
+            }
+            if (approve) {
+                submission.setStatus(Submission.Status.APPROVED)
+            }
+            if (release) {
+                submission.setReleased(release)
+            }
+        }
         return this.grpcSend<Void>(new Void())
     }
 
@@ -461,18 +581,41 @@ export class MockGrpcManager {
 
     // TODO: All manual grading functions
     public createBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<GradingBenchmark>> {
+        bm.setId(this.generateID(Generate.TemplateBenchmark))
+        this.templateBenchmarks.push(bm)
         return this.grpcSend<GradingBenchmark>(bm)
     }
 
     public createCriterion(c: GradingCriterion): Promise<IGrpcResponse<GradingCriterion>> {
+        const benchmarks = this.templateBenchmarks.find(bm => bm.getId() === c.getBenchmarkid())
+        if (!benchmarks) {
+            return this.grpcSend<GradingCriterion>(null, new Status().setCode(2).setError('Benchmark not found'))
+        }
+        c.setId(this.generateID(Generate.TemplateCriterion))
+        benchmarks.getCriteriaList().push(c)
         return this.grpcSend<GradingCriterion>(c)
     }
 
     public updateBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<Void>> {
+        const foundIdx = this.templateBenchmarks.findIndex(b => b.getId() === bm.getId())
+        if (foundIdx === -1) {
+            return this.grpcSend<Void>(null, new Status().setCode(2).setError('Benchmark not found'))
+        }
+        Object.assign(this.templateBenchmarks[foundIdx], bm)
         return this.grpcSend<Void>(bm)
     }
 
     public updateCriterion(c: GradingCriterion): Promise<IGrpcResponse<Void>> {
+        this.templateBenchmarks.forEach(bm => {
+            if (bm.getId() !== c.getBenchmarkid()) {
+                return
+            }
+            const index = bm.getCriteriaList().findIndex(cr => cr.getId() === c.getId())
+            if (index !== -1) {
+                Object.assign(bm.getCriteriaList()[index], c)
+            }
+        })
+
         return this.grpcSend<Void>(c)
     }
 
@@ -492,7 +635,7 @@ export class MockGrpcManager {
         const review = new Review()
         review.setReviewerid(r.getReviewerid())
         review.setSubmissionid(r.getSubmissionid())
-        review.setId(this.submissions.getSubmissionsList().length + 1)
+        review.setId(this.generateID(Generate.Review))
 
         const benchmarks = this.templateBenchmarks.filter(bm =>
             bm.getAssignmentid() === submission.getAssignmentid()
@@ -510,7 +653,14 @@ export class MockGrpcManager {
         }
         r.setScore(this.computeScore(r))
         r.setEdited(new Date().getTime().toString())
-        submission.setReviewsList(submission.getReviewsList().concat([r]))
+        submission.setReviewsList(submission.getReviewsList().map(rev => {
+            if (rev.getId() === r.getId()) {
+                // Return the updated review
+                return r
+            }
+            // Return the original review
+            return rev
+        }))
         return this.grpcSend<Review>(r)
     }
 
@@ -619,6 +769,7 @@ export class MockGrpcManager {
                 .setIsadmin(true)
         )
         this.users.setUsersList(userList)
+        this.idMap.set(Generate.User, userList.length)
     }
 
     private initAssignments() {
@@ -636,7 +787,7 @@ export class MockGrpcManager {
         const a9 = new Assignment()
         const a10 = new Assignment()
 
-        a0.setId(0)
+        a0.setId(1)
         a0.setCourseid(1)
         a0.setName("Lab 1")
         a0.setScriptfile("Go")
@@ -644,7 +795,7 @@ export class MockGrpcManager {
         a0.setScorelimit(80)
         a0.setOrder(1)
 
-        a1.setId(1)
+        a1.setId(2)
         a1.setCourseid(1)
         a1.setName("Lab 2")
         a1.setScriptfile("Go")
@@ -652,7 +803,7 @@ export class MockGrpcManager {
         a1.setScorelimit(80)
         a1.setOrder(2)
 
-        a2.setId(2)
+        a2.setId(3)
         a2.setCourseid(1)
         a2.setName("Lab 3")
         a2.setReviewers(1)
@@ -660,15 +811,16 @@ export class MockGrpcManager {
         a2.setScorelimit(60)
         a2.setOrder(3)
 
-        a3.setId(3)
+        a3.setId(4)
         a3.setCourseid(1)
         a3.setName("Lab 4")
         a3.setScriptfile("Go")
         a3.setDeadline(ts.toDateString())
         a3.setScorelimit(75)
         a3.setOrder(4)
+        a3.setIsgrouplab(true)
 
-        a4.setId(4)
+        a4.setId(5)
         a4.setCourseid(2)
         a4.setName("Lab 1")
         a4.setScriptfile("Go")
@@ -676,7 +828,7 @@ export class MockGrpcManager {
         a4.setScorelimit(90)
         a4.setOrder(1)
 
-        a5.setId(5)
+        a5.setId(6)
         a5.setCourseid(2)
         a5.setName("Lab 2")
         a5.setScriptfile("Go")
@@ -684,7 +836,7 @@ export class MockGrpcManager {
         a5.setScorelimit(85)
         a5.setOrder(2)
 
-        a6.setId(6)
+        a6.setId(7)
         a6.setCourseid(2)
         a6.setName("Lab 3")
         a6.setScriptfile("Go")
@@ -692,7 +844,7 @@ export class MockGrpcManager {
         a6.setScorelimit(80)
         a6.setOrder(3)
 
-        a7.setId(7)
+        a7.setId(8)
         a7.setCourseid(3)
         a7.setName("Lab 1")
         a7.setScriptfile("TypeScript")
@@ -700,7 +852,7 @@ export class MockGrpcManager {
         a7.setScorelimit(90)
         a7.setOrder(1)
 
-        a8.setId(8)
+        a8.setId(9)
         a8.setCourseid(3)
         a8.setName("Lab 2")
         a8.setScriptfile("Go")
@@ -708,7 +860,7 @@ export class MockGrpcManager {
         a8.setScorelimit(85)
         a8.setOrder(2)
 
-        a9.setId(9)
+        a9.setId(10)
         a9.setCourseid(4)
         a9.setName("Lab 1")
         a9.setScriptfile("Go")
@@ -716,7 +868,7 @@ export class MockGrpcManager {
         a9.setScorelimit(90)
         a9.setOrder(1)
 
-        a10.setId(10)
+        a10.setId(11)
         a10.setCourseid(5)
         a10.setName("Lab 1")
         a10.setScriptfile("TypeScript")
@@ -726,6 +878,7 @@ export class MockGrpcManager {
 
         const tempAssignments: Assignment[] = [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10]
         this.assignments.setAssignmentsList(tempAssignments)
+        this.idMap.set(Generate.Assignment, tempAssignments.length)
     }
 
     private initCourses() {
@@ -743,6 +896,7 @@ export class MockGrpcManager {
         course0.setYear(2017)
         course0.setProvider("github")
         course0.setOrganizationid(23650610)
+        course0.setCoursecreatorid(1)
 
         course1.setId(2)
         course1.setName("Algorithms and Datastructures")
@@ -778,6 +932,7 @@ export class MockGrpcManager {
 
         const tempCourses: Course[] = [course0, course1, course2, course3, course4]
         this.courses.setCoursesList(tempCourses)
+        this.idMap.set(Generate.Course, tempCourses.length)
     }
 
     private addLocalCourseStudent() {
@@ -790,6 +945,7 @@ export class MockGrpcManager {
                 .setUserid(1)
                 .setStatus(Enrollment.UserStatus.TEACHER)
                 .setState(2)
+                .setGroupid(1)
         )
 
         localEnrols.push(
@@ -829,13 +985,14 @@ export class MockGrpcManager {
 
         localEnrols.push(
             new Enrollment()
-                .setId(5)
+                .setId(6)
                 .setCourseid(1)
                 .setUserid(4)
                 .setStatus(Enrollment.UserStatus.STUDENT)
                 .setGroupid(2)
         )
         this.enrollments.setEnrollmentsList(localEnrols)
+        this.idMap.set(Generate.Enrollment, localEnrols.length)
     }
 
     private initOrganizations(): Organization[] {
@@ -867,6 +1024,7 @@ export class MockGrpcManager {
         group2.setCourseid(1)
 
         this.groups.setGroupsList([group1, group2])
+        this.idMap.set(Generate.Group, 2)
     }
 
     private addLocalLabInfo() {
@@ -874,7 +1032,7 @@ export class MockGrpcManager {
         this.submissions.setSubmissionsList([
             new Submission()
                 .setId(1)
-                .setAssignmentid(0)
+                .setAssignmentid(1)
                 .setUserid(1)
                 .setStatus(Submission.Status.APPROVED)
                 .setBuildinfo(
@@ -914,7 +1072,7 @@ export class MockGrpcManager {
 
             new Submission()
                 .setId(3)
-                .setAssignmentid(2)
+                .setAssignmentid(3)
                 .setUserid(1)
                 .setScore(80)
                 .setReleased(true)
@@ -974,7 +1132,7 @@ export class MockGrpcManager {
             new Submission()
                 .setId(4)
                 .setAssignmentid(3)
-                .setUserid(1)
+                .setGroupid(1)
                 .setScore(90)
                 .setCommithash("def"),
 
@@ -1008,12 +1166,12 @@ export class MockGrpcManager {
                             .setSubmissionid(6)
                             .setTestname("Test 1")
                             .setTestdetails("Test details")
-                            .setWeight(2),
+                            .setWeight(5),
 
                         new Score()
                             .setId(4)
                             .setMaxscore(10)
-                            .setScore(5)
+                            .setScore(7)
                             .setTestname("Test 2")
                             .setTestdetails("Test details")
                             .setSubmissionid(6)
@@ -1022,6 +1180,12 @@ export class MockGrpcManager {
                 )
         ]
         )
+        this.idMap.set(Generate.Submission, 6)
+        this.idMap.set(Generate.Review, 1)
+        this.idMap.set(Generate.Score, 4)
+        this.idMap.set(Generate.BuildInfo, 3)
+        this.idMap.set(Generate.GradingBenchmark, 2)
+        this.idMap.set(Generate.GradingCriterion, 4)
     }
 
     private initBenchmarks() {
@@ -1029,6 +1193,7 @@ export class MockGrpcManager {
 
         this.templateBenchmarks.push(
             new GradingBenchmark()
+                .setId(1)
                 .setAssignmentid(2)
                 .setHeading("HTML")
                 .setCriteriaList([
@@ -1043,6 +1208,7 @@ export class MockGrpcManager {
                         .setPoints(10),
                 ]),
             new GradingBenchmark()
+                .setId(2)
                 .setAssignmentid(2)
                 .setHeading("CSS")
                 .setCriteriaList([
@@ -1056,7 +1222,8 @@ export class MockGrpcManager {
                         .setPoints(10),
                 ])
         )
-
+        this.idMap.set(Generate.TemplateBenchmark, 2)
+        this.idMap.set(Generate.TemplateCriterion, 4)
     }
 
     private computeScore(r: Review) {
@@ -1066,10 +1233,10 @@ export class MockGrpcManager {
         for (let i = 0; i < r.getGradingbenchmarksList().length; i++) {
             const gb = r.getGradingbenchmarksList()[i]
             for (let j = 0; j < gb.getCriteriaList().length; j++) {
-                const c = gb.getCriteriaList()[j]
+                const criterion = gb.getCriteriaList()[j]
                 total++
-                if (c.getGrade() == GradingCriterion.Grade.PASSED) {
-                    score += c.getPoints()
+                if (criterion.getGrade() == GradingCriterion.Grade.PASSED) {
+                    score += criterion.getPoints()
                     totalApproved++
                 }
             }
@@ -1078,5 +1245,16 @@ export class MockGrpcManager {
             score = 100 / total * totalApproved
         }
         return score
+    }
+
+    public generateID(key: Generate): number {
+        const skey = key.toString()
+        const id = this.idMap.get(skey)
+        if (!id) {
+            this.idMap.set(skey, 1)
+            return 1
+        }
+        this.idMap.set(skey, id + 1)
+        return id + 1
     }
 }

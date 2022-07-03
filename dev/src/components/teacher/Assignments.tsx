@@ -1,4 +1,3 @@
-import { json } from "overmind"
 import React, { useState } from "react"
 import { Assignment } from "../../../proto/ag/ag_pb"
 import { getCourseID, isManuallyGraded, Color, hasBenchmarks, hasCriteria } from "../../Helpers"
@@ -16,15 +15,15 @@ const Assignments = (): JSX.Element => {
     const actions = useActions()
     const state = useAppState()
 
-    const assignmentElement = (assignment: Assignment): JSX.Element => {
+    const assignmentElement = (assignment: Assignment.AsObject): JSX.Element => {
         const [hidden, setHidden] = useState<boolean>(false)
         const [buttonText, setButtonText] = useState<string>("Rebuild all tests")
 
         /* rebuild all tests for this assignment */
         const rebuild = async () => {
-            if (confirm(`Warning! This will rebuild all submissions for ${assignment.getName()}. This may take several minutes. Are you sure you want to continue?`)) {
+            if (confirm(`Warning! This will rebuild all submissions for ${assignment.name}. This may take several minutes. Are you sure you want to continue?`)) {
                 setButtonText("Rebuilding...")
-                const success = await actions.rebuildAllSubmissions({ assignmentID: assignment.getId(), courseID: courseID })
+                const success = await actions.rebuildAllSubmissions({ assignmentID: assignment.id, courseID: courseID })
                 if (success) {
                     setButtonText("Finished rebuilding")
                 } else {
@@ -33,37 +32,37 @@ const Assignments = (): JSX.Element => {
             }
         }
 
-        const assignmentForm = hasBenchmarks(assignment) ? assignment.getGradingbenchmarksList().map((bm) => (
-            <EditBenchmark key={bm.getId()}
+        const assignmentForm = hasBenchmarks(assignment) ? assignment.gradingbenchmarksList.map((bm) => (
+            <EditBenchmark key={bm.id}
                 benchmark={bm}
                 assignment={assignment}
             >
                 {/* Show all criteria for this benchmark */}
-                {hasCriteria(bm) && bm.getCriteriaList()?.map((crit) => (
-                    <EditCriterion key={crit.getId()}
-                        criterion={crit}
+                {hasCriteria(bm) && bm.criteriaList?.map((crit) => (
+                    <EditCriterion key={crit.id}
+                        originalCriterion={crit}
                         assignment={assignment}
-                        benchmarkID={bm.getId()}
+                        benchmarkID={bm.id}
                     />
                 ))}
                 {/* Always show one criterion form in case of benchmarks without any */}
-                <EditCriterion key={bm.getCriteriaList().length}
+                <EditCriterion key={bm.criteriaList.length}
                     assignment={assignment}
-                    benchmarkID={bm.getId()}
+                    benchmarkID={bm.id}
                 />
             </EditBenchmark>
         )) : null
 
         return (
-            <ul key={assignment.getId()} className="list-group">
+            <ul key={assignment.id} className="list-group">
                 <li key={"assignment"} className="list-group-item" onClick={() => setHidden(!hidden)}>
-                    {assignment.getName()}
+                    {assignment.name}
                 </li>
                 {hidden && (
                     <li key={"form"} className="list-group-item">
                         {/* Only show the rebuild button if the assignment is not manually graded */}
                         {isManuallyGraded(assignment)
-                            ? <> {assignmentForm} <EditBenchmark key={json(assignment).getGradingbenchmarksList().length} assignment={assignment} /></>
+                            ? <> {assignmentForm} <EditBenchmark key={assignment.gradingbenchmarksList.length} assignment={assignment} /></>
                             : <Button text={buttonText} type={ButtonType.BUTTON} color={Color.BLUE} onclick={rebuild} />
                         }
                     </li>

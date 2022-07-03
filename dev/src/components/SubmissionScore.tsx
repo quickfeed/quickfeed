@@ -2,18 +2,18 @@ import React from "react"
 import { Score } from "../../proto/kit/score/score_pb"
 
 
-const SubmissionScore = ({ score }: { score: Score }) => {
-    const className = (score.getScore() === score.getMaxscore()) ? "passed" : "failed"
+const SubmissionScore = ({ score }: { score: Score.AsObject }) => {
+    const className = score.score === score.maxscore ? "passed" : "failed"
     return (
         <tr>
             <th className={className + " pl-4"}>
-                {score.getTestname()}
+                {score.testname}
             </th>
             <th>
-                {score.getScore()}/{score.getMaxscore()}
+                {score.score}/{score.maxscore}
             </th>
             <th>
-                {score.getWeight()}
+                {score.weight}
             </th>
         </tr>
     )

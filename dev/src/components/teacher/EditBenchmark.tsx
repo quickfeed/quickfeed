@@ -1,35 +1,40 @@
-import { json } from "overmind"
 import React, { useState } from "react"
 import { Assignment, GradingBenchmark } from "../../../proto/ag/ag_pb"
+import { Converter } from "../../convert"
 import { useActions } from "../../overmind"
 
 
-const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark, assignment: Assignment }): JSX.Element => {
+const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.ReactNode, benchmark?: GradingBenchmark.AsObject, assignment: Assignment.AsObject }): JSX.Element => {
     const actions = useActions()
 
     const [editing, setEditing] = useState<boolean>(false)
     const [add, setAdd] = useState<boolean>(benchmark ? false : true)
-    const [newBenchmark, setNewBenchmark] = useState<GradingBenchmark>(new GradingBenchmark().setAssignmentid(assignment.getId()))
-    const bm = json(benchmark) ?? newBenchmark
-    const copy = json(benchmark)?.cloneMessage()
+
+    // Clone the criterion, or create a new one if none was passed in
+    const bm = benchmark
+        ? Converter.clone(benchmark)
+        : Converter.create<GradingBenchmark.AsObject>(GradingBenchmark)
 
     const handleBenchmark = (event: React.KeyboardEvent<HTMLInputElement>) => {
         const { value } = event.currentTarget
         if (event.key === "Enter") {
+            // Set the criterion's benchmark ID
+            // This could already be set if a benchmark was passed in
+            bm.assignmentid = assignment.id
             actions.createOrUpdateBenchmark({ benchmark: bm, assignment: assignment })
             setEditing(false)
         } else {
-            benchmark ? bm.setHeading(value) : setNewBenchmark(bm.setHeading(value))
+            bm.heading = value
         }
     }
 
     const handleBlur = () => {
-        if (benchmark && copy) {
+        if (benchmark) {
             // Restore the original criterion
-            bm.setHeading(copy.getHeading())
+            bm.heading = benchmark.heading
         } else {
             // Reset the criterion and enable add button
-            setNewBenchmark(bm.setHeading(""))
+            bm.heading = ""
             setAdd(true)
         }
         setEditing(false)
@@ -47,8 +52,8 @@ const EditBenchmark = ({ children, benchmark, assignment }: { children?: React.R
         <>
             <div className="list-group-item list-group-item-primary">
                 {editing
-                    ? <input className="form-control" type="text" autoFocus defaultValue={bm?.getHeading()} onBlur={() => handleBlur()} onClick={() => setEditing(true)} onKeyUp={e => { handleBenchmark(e) }}></input>
-                    : <span onClick={() => setEditing(true)}>{bm?.getHeading()}<span className="badge badge-danger float-right clickable" onClick={() => actions.deleteBenchmark({ benchmark: benchmark, assignment: assignment })}>Delete</span></span>
+                    ? <input className="form-control" type="text" autoFocus defaultValue={bm?.heading} onBlur={() => handleBlur()} onClick={() => setEditing(true)} onKeyUp={e => { handleBenchmark(e) }} />
+                    : <span onClick={() => setEditing(true)}>{bm?.heading}<span className="badge badge-danger float-right clickable" onClick={() => actions.deleteBenchmark({ benchmark: benchmark, assignment: assignment })}>Delete</span></span>
                 }
             </div>
             {children}

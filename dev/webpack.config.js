@@ -6,14 +6,14 @@ module.exports = {
         filename: "bundle.js",
         path: __dirname + "/dist"
     },
-    mode: "development",
+    mode: "production",
     // watch enables webpack's Watch flag, which means it will run endlessly and recompile on saves
     // use webpack --watch instead
     watch: false,
 
     watchOptions: {
         // Poll for file changes every 1000ms. Required for --watch to function in Docker containers
-        poll: 1000,
+        // poll: 1000,
     },
     // Enable sourcemaps for debugging webpack's output.
     devtool: "source-map",

@@ -9,16 +9,16 @@ const ProfileInfo = ({ setEditing }: { setEditing: Dispatch<SetStateAction<boole
         <>
             <div className='card-text text-center'>
                 <h2 className='mb-4'>
-                    {self.getName()}
+                    {self.name}
                 </h2>
             </div>
             <div className='card-text text-center'>
                 <i className='fa fa-envelope text-muted'></i>
-                <span className='ml-3'>{self.getEmail()}</span>
+                <span className='ml-3'>{self.email}</span>
             </div>
             <div className='card-text text-center'>
                 <i className='fa fa-graduation-cap text-muted'></i>
-                <span className='ml-3'>{self.getStudentid()}</span>
+                <span className='ml-3'>{self.studentid}</span>
             </div>
             <span className="badge float-right clickable" onClick={() => setEditing(true)}><i className='fa fa-edit'></i></span>
         </>
