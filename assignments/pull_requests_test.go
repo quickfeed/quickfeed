@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/autograde/quickfeed/ag"
+
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/scm"
@@ -93,7 +93,7 @@ func TestPublishFeedbackComment(t *testing.T) {
 	// TODO(meling) Fix test to CreateIssue and CreateIssueComment to get commentID
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,
-		Repository:   ag.StudentRepoName(qfTestUser),
+		Repository:   pb.StudentRepoName(qfTestUser),
 		Body:         body,
 		CommentID:    0,
 	}
