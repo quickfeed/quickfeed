@@ -28,7 +28,7 @@ On Windows you can verify by running
 
 ## Configuring the Selenium tests
 
-You can enable the specific browser drivers by editing `dev/src/__tests__/config.json`.
+You can enable the specific browser drivers by editing `public/src/__tests__/config.json`.
 The Selenium tests will try to run in all enabled browsers.
 
 You can also specify a base URL to be used by the tests in the same `config.json` file.
@@ -59,7 +59,7 @@ make selenium
 Or:
 
 ```shell
-cd dev
+cd public
 npm run test:selenium
 ```
 
