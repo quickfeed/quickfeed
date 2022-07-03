@@ -65,8 +65,7 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 }
 
 func (wh GitHubWebHook) handlePullRequestOpened(payload *github.PullRequestEvent) {
-	wh.logger.Debugf("Received pull request opened event for repository: %s, in organization: %s",
-		payload.GetRepo().GetName(), payload.GetOrganization().GetLogin())
+	wh.logger.Debugf("Received pull request opened event for repository: %s", payload.GetRepo().GetFullName())
 
 	repo, err := wh.getRepositoryWithIssues(payload.GetRepo().GetID())
 	if err != nil {
@@ -86,8 +85,7 @@ func (wh GitHubWebHook) handlePullRequestOpened(payload *github.PullRequestEvent
 }
 
 func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent) {
-	wh.logger.Debugf("Received pull request closed event for repository: %s, in organization: %s",
-		payload.GetRepo().GetName(), payload.GetOrganization().GetLogin())
+	wh.logger.Debugf("Received pull request closed event for repository: %s", payload.GetRepo().GetFullName())
 
 	if !payload.PullRequest.GetMerged() {
 		wh.logger.Debugf("Ignoring pull request closed event for unmerged pull request #%d, in %s",
