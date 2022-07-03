@@ -85,7 +85,7 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint
 
 		// Tasks to be created must be sorted since map iteration order is non-deterministic
 		sort.Slice(createdTasks, func(i, j int) bool {
-			return createdTasks[i].Name < createdTasks[j].Name
+			return createdTasks[i].ID < createdTasks[j].ID
 		})
 
 		// Create tasks that are not in the database

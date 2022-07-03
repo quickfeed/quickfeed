@@ -169,7 +169,7 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 
 	sortTasksByName := func(tasks []*pb.Task) {
 		sort.Slice(tasks, func(i, j int) bool {
-			return tasks[i].Name < tasks[j].Name
+			return tasks[i].ID < tasks[j].ID
 		})
 	}
 	getTasksFromAssignments := func(assignments []*pb.Assignment) map[uint32]map[string]*pb.Task {
