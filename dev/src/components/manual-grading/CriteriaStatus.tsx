@@ -3,12 +3,12 @@ import { GradingCriterion } from "../../../proto/ag/ag_pb"
 import { useActions, useAppState } from "../../overmind"
 
 
-const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion }): JSX.Element => {
+const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion.AsObject }): JSX.Element | null => {
     const { setGrade } = useActions().review
     const { isTeacher } = useAppState()
 
     if (!isTeacher) {
-        return <></>
+        return null
     }
 
     const buttons: { icon: string, status: GradingCriterion.Grade, style: string, onClick: () => void }[] = [
@@ -18,7 +18,7 @@ const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion }): JSX.Ele
     ]
 
     const StatusButtons = buttons.map((button, index) => {
-        const style = criterion.getGrade() === button.status ? `col btn-xs btn-${button.style} mr-2 border` : `col btn-xs btn-outline-${button.style} mr-2 border`
+        const style = criterion.grade === button.status ? `col btn-xs btn-${button.style} mr-2 border` : `col btn-xs btn-outline-${button.style} mr-2 border`
         // TODO: Perhaps refactor button into a separate general component to enable reuse
         return (
             <div key={index} className={style} onClick={() => button.onClick()}>

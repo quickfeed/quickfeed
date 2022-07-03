@@ -709,6 +709,63 @@ export namespace Issue {
   }
 }
 
+export class PullRequest extends jspb.Message {
+  getId(): number;
+  setId(value: number): PullRequest;
+
+  getScmrepositoryid(): number;
+  setScmrepositoryid(value: number): PullRequest;
+
+  getTaskid(): number;
+  setTaskid(value: number): PullRequest;
+
+  getIssueid(): number;
+  setIssueid(value: number): PullRequest;
+
+  getUserid(): number;
+  setUserid(value: number): PullRequest;
+
+  getScmcommentid(): number;
+  setScmcommentid(value: number): PullRequest;
+
+  getSourcebranch(): string;
+  setSourcebranch(value: string): PullRequest;
+
+  getNumber(): number;
+  setNumber(value: number): PullRequest;
+
+  getStage(): PullRequest.Stage;
+  setStage(value: PullRequest.Stage): PullRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): PullRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: PullRequest): PullRequest.AsObject;
+  static serializeBinaryToWriter(message: PullRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): PullRequest;
+  static deserializeBinaryFromReader(message: PullRequest, reader: jspb.BinaryReader): PullRequest;
+}
+
+export namespace PullRequest {
+  export type AsObject = {
+    id: number,
+    scmrepositoryid: number,
+    taskid: number,
+    issueid: number,
+    userid: number,
+    scmcommentid: number,
+    sourcebranch: string,
+    number: number,
+    stage: PullRequest.Stage,
+  }
+
+  export enum Stage { 
+    NONE = 0,
+    DRAFT = 1,
+    REVIEW = 2,
+    APPROVED = 3,
+  }
+}
+
 export class Assignments extends jspb.Message {
   getAssignmentsList(): Array<Assignment>;
   setAssignmentsList(value: Array<Assignment>): Assignments;

@@ -7,17 +7,17 @@ import Button, { ButtonType } from "../admin/Button"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
 
 
-const ReviewInfo = ({ review }: { review?: Review }): JSX.Element => {
+const ReviewInfo = ({ review }: { review?: Review.AsObject }): JSX.Element | null => {
     const state = useAppState()
     const actions = useActions()
 
     if (!review) {
-        return <></>
+        return null
     }
 
-    const assignment = state.activeSubmissionLink?.getAssignment()
-    const submission = state.activeSubmissionLink?.getSubmission()
-    const ready = review.getReady()
+    const assignment = state.activeSubmissionLink?.assignment
+    const submission = state.activeSubmissionLink?.submission
+    const ready = review.ready
     const allCriteriaGraded = state.review.graded === state.review.criteriaTotal
 
     const markReadyButton = (
@@ -31,40 +31,40 @@ const ReviewInfo = ({ review }: { review?: Review }): JSX.Element => {
 
     const setReadyOrGradeButton = ready ? <ManageSubmissionStatus /> : markReadyButton
     const releaseButton = (
-        <Button onclick={() => { state.isCourseCreator && actions.review.release(!submission?.getReleased()) }}
+        <Button onclick={() => { state.isCourseCreator && actions.review.release(!submission?.released) }}
             classname={`float-right ${!state.isCourseCreator && "disabled"} `}
-            text={submission?.getReleased() ? "Released" : "Release"}
-            color={submission?.getReleased() ? Color.WHITE : Color.YELLOW}
+            text={submission?.released ? "Released" : "Release"}
+            color={submission?.released ? Color.WHITE : Color.YELLOW}
             type={ButtonType.BUTTON} />
     )
     return (
         <ul className="list-group">
             <li className="list-group-item active">
                 <span className="align-middle">
-                    <span style={{ display: "inline-block" }} className="w-25 mr-5 p-3">{assignment?.getName()}</span>
+                    <span style={{ display: "inline-block" }} className="w-25 mr-5 p-3">{assignment?.name}</span>
                     {releaseButton}
                 </span>
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Reviewer: </span>
-                {state.review.reviewer?.getName()}
+                {state.review.reviewer?.name}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Submission Status: </span>
-                {submission ? SubmissionStatus[submission.getStatus()] : { NoSubmission }}
+                {submission ? SubmissionStatus[submission.status] : { NoSubmission }}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Review Status: </span>
-                <span>{review.getReady() ? "Ready" : "In progress"}</span>
+                <span>{ready ? "Ready" : "In progress"}</span>
                 {ready && markReadyButton}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Score: </span>
-                {review.getScore()}
+                {review.score}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Updated: </span>
-                {review.getEdited()}
+                {review.edited}
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Graded: </span>

@@ -30,33 +30,33 @@ const Lab = (): JSX.Element => {
     }, [lab])
 
     const Lab = () => {
-        let submission: Submission | undefined
-        let assignment: Assignment | undefined
+        let submission: Submission.AsObject | null
+        let assignment: Assignment.AsObject | null
 
         if (state.isTeacher) {
             // If used for grading purposes, retrieve submission from state.currentSubmission
             submission = state.currentSubmission
-            assignment = state.assignments[courseID].find(a => a.getId() === submission?.getAssignmentid())
+            assignment = state.assignments[courseID].find(a => a.id === submission?.assignmentid) ?? null
         } else {
             // Retrieve the student's submission
-            submission = state.submissions[courseID]?.find(s => s.getAssignmentid() === assignmentID)
-            assignment = state.assignments[courseID]?.find(a => a.getId() === assignmentID)
+            submission = state.submissions[courseID]?.find(s => s.assignmentid === assignmentID) ?? null
+            assignment = state.assignments[courseID]?.find(a => a.id === assignmentID) ?? null
         }
 
         if (assignment && submission) {
             // Confirm both assignment and submission exists before attempting to render
-            const review = hasReviews(submission) ? submission.getReviewsList() : []
+            const review = hasReviews(submission) ? submission.reviewsList : []
             let buildLog: JSX.Element[] = []
-            const buildLogRaw = submission.getBuildinfo()?.getBuildlog()
+            const buildLogRaw = submission.buildinfo?.buildlog
             if (buildLogRaw) {
                 buildLog = buildLogRaw.split("\n").map((x: string, i: number) => <span key={i} >{x}<br /></span>)
             }
 
             return (
-                <div key={submission.getId()}>
+                <div key={submission.id}>
                     <LabResultTable submission={submission} assignment={assignment} />
 
-                    {isManuallyGraded(assignment) && submission.getReleased() ? <ReviewResult review={review[0]} /> : null}
+                    {isManuallyGraded(assignment) && submission.released ? <ReviewResult review={review[0]} /> : null}
 
                     <div className="card bg-light">
                         <code className="card-body" style={{ color: "#c7254e" }}>{buildLog}</code>

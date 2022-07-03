@@ -10,10 +10,10 @@ import (
 	"github.com/autograde/quickfeed/scm"
 )
 
-// taskName returns the task name as a combination of assignmentName/filename
+// taskName returns the task name based on the filename
 // excluding the task- prefix and the .md suffix.
-func taskName(basePath string) string {
-	taskName := basePath[len("task-"):]
+func taskName(filename string) string {
+	taskName := filename[len("task-"):]
 	return taskName[:len(taskName)-len(".md")]
 }
 

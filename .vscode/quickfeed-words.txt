@@ -129,6 +129,7 @@ structs
 Studentid
 subtest
 subtests
+testdata
 testdb
 tmpl
 Unexported
