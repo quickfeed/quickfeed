@@ -3,7 +3,7 @@ package sequence
 import (
 	"fmt"
 
-	"github.com/autograde/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/kit/score"
 )
 
 func fibonacciAttack(n uint) uint {

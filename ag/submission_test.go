@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/autograde/quickfeed/ag"
-	score "github.com/autograde/quickfeed/kit/score"
+	pb "github.com/quickfeed/quickfeed/ag"
+	score "github.com/quickfeed/quickfeed/kit/score"
 )
 
 func TestNewestSubmissionDate(t *testing.T) {

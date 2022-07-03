@@ -8,9 +8,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/autograde/quickfeed/internal/rand"
-	"github.com/autograde/quickfeed/web/auth"
-	"github.com/autograde/quickfeed/web/hooks"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -19,6 +16,9 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/gitlab"
+	"github.com/quickfeed/quickfeed/internal/rand"
+	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/hooks"
 	"go.uber.org/zap"
 )
 

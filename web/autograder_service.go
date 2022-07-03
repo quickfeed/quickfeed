@@ -8,11 +8,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/database"
-	scms "github.com/autograde/quickfeed/scm"
-	"github.com/autograde/quickfeed/web/auth"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/database"
+	scms "github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 // AutograderService holds references to the database and

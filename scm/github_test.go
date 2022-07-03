@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/scm"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 )
 

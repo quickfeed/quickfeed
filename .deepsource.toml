@@ -31,7 +31,7 @@ name = "go"
 enabled = true
 
   [analyzers.meta]
-  import_root = "github.com/autograde/quickfeed"
+  import_root = "github.com/quickfeed/quickfeed"
 
 [[analyzers]]
 name = "docker"

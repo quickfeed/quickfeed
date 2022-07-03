@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/log"
-	"github.com/autograde/quickfeed/scm"
-	"github.com/autograde/quickfeed/web/auth"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/log"
+	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc/metadata"
 )
 

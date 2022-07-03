@@ -1,4 +1,4 @@
-package main.java.autograder;
+package main.java.quickfeed;
 
 //Score is an object used to encode/decode a score from a test or tests. When a
 //test is passed or a calculation of partial passed test is found, output a
@@ -25,7 +25,7 @@ public class Score {
 	private int Score;
 	private int MaxScore;
 	private int Weight;
-	
+
 	// GlobalSecret represents the unique course identifier that will be used in
 	// the Score struct constructors. Users of this package should set this
 	// variable appropriately before using any exported
@@ -33,7 +33,7 @@ public class Score {
 	public static void SetGlobalSecret(String secret) {
 		GlobalSecret = secret;
 	}
-	
+
 	public Score(String testname, int weight, int maxscore, int initialscore, String secret) {
 		this.TestName = testname;
 		this.Weight = weight;
@@ -41,7 +41,7 @@ public class Score {
 		this.Score = initialscore;
 		this.Secret = secret;
 	}
-	
+
 	public Score(String testname, int weight, int maxscore, int initialscore) {
 		this.TestName = testname;
 		this.Weight = weight;
@@ -49,28 +49,28 @@ public class Score {
 		this.Score = initialscore;
 		this.Secret = this.GlobalSecret;
 	}
-	
+
 	public Score(String testname, int weight, int maxscore) {
 		this.TestName = testname;
 		this.Weight = weight;
 		this.MaxScore = maxscore;
 		this.Secret = this.GlobalSecret;
 	}
-	
-	// Inc will increase the score with one. 
+
+	// Inc will increase the score with one.
 	public void Inc(){
 		if(this.Score < this.MaxScore){
 			this.Score++;
 		}
 	}
-	
+
 	// Dec will decrease the score with one.
 	public void Dec(){
 		if(this.Score != 0){
 			this.Score--;
 		}
 	}
-	
+
 	// IncBy will increase the score with the given amount.
 	public void IncBy(int points){
 		if(this.Score + points >= this.MaxScore){
@@ -79,8 +79,8 @@ public class Score {
 			this.Score += points;
 		}
 	}
-	
-	// DecBy will decrease the score with given amount. 
+
+	// DecBy will decrease the score with given amount.
 	public void DecBy(int points){
 		if(this.Score - points <= 0){
 			this.Score = 0;
@@ -88,12 +88,12 @@ public class Score {
 			this.Score -= points;
 		}
 	}
-	
-	// PrintJSON will print JSON data representing this object to the output stream.  
+
+	// PrintJSON will print JSON data representing this object to the output stream.
 	public void PrintJSON(){
 		System.out.println(this.toJSON());
 	}
-	
+
 	// toJSON will convert this object to JSON data.
 	public String toJSON(){
 		return "{"
@@ -104,15 +104,14 @@ public class Score {
 					+ "\"Weight\":" + this.Weight
 				+ "}";
 	}
-	
+
 	// Print will print a summary of the score to the output stream.
 	public void Print(){
 		System.out.println(this.toString());
 	}
-	
-	// toString will create a string with a summary of the score. 
+
+	// toString will create a string with a summary of the score.
 	public String toString() {
 		return this.TestName + ": " + this.Score + "/" + this.MaxScore + " cases passed.";
 	}
 }
-

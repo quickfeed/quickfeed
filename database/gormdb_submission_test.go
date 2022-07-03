@@ -4,11 +4,11 @@ import (
 	"errors"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/internal/qtest"
-	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/kit/score"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )

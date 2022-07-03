@@ -3,10 +3,10 @@ package hooks
 import (
 	"net/http"
 
-	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/log"
 	"github.com/google/go-github/v35/github"
+	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/log"
 	"go.uber.org/zap"
 )
 

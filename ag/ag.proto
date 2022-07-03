@@ -1,6 +1,6 @@
 syntax = "proto3";
 package ag;
-option go_package   = "github.com/autograde/quickfeed/ag";
+option go_package   = "github.com/quickfeed/quickfeed/ag";
 option swift_prefix = "";
 
 import "kit/score/score.proto";
@@ -201,20 +201,20 @@ message Issue {
 
 message PullRequest {
     enum Stage {
-        NONE    = 0;
-        DRAFT   = 1;
-        REVIEW  = 2;
+        NONE     = 0;
+        DRAFT    = 1;
+        REVIEW   = 2;
         APPROVED = 3;
     }
-    uint64 ID                   = 1;
-    uint64 scmRepositoryID      = 2; // Represents the scm repository ID
-    uint64 taskID               = 3; // Foreign key
-    uint64 issueID              = 4; // Foreign key
-    uint64 userID               = 5; // The user who owns this PR
-    uint64 scmCommentID         = 6; // Scm ID of the comment used for automatic feedback
-    string sourceBranch         = 7; // The source branch for this pull request
-    uint64 number               = 8; // Pull request number
-    Stage stage                 = 9;
+    uint64 ID              = 1;
+    uint64 scmRepositoryID = 2;  // Represents the scm repository ID
+    uint64 taskID          = 3;  // Foreign key
+    uint64 issueID         = 4;  // Foreign key
+    uint64 userID          = 5;  // The user who owns this PR
+    uint64 scmCommentID    = 6;  // Scm ID of the comment used for automatic feedback
+    string sourceBranch    = 7;  // The source branch for this pull request
+    uint64 number          = 8;  // Pull request number
+    Stage stage            = 9;
 }
 
 message Assignments {

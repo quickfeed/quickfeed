@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/ag"
 	"go.uber.org/zap"
 )
 

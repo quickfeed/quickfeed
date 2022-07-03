@@ -3,10 +3,10 @@ package database_test
 import (
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/google/go-cmp/cmp"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 

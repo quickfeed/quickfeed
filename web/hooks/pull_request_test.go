@@ -3,7 +3,7 @@ package hooks
 import (
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/ag"
 )
 
 const (

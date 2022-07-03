@@ -4,17 +4,17 @@ import (
 	"context"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/internal/qtest"
 	"github.com/google/go-cmp/cmp"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/testing/protocmp"
 
-	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/scm"
-	"github.com/autograde/quickfeed/web"
+	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web"
 )
 
 var allCourses = []*pb.Course{

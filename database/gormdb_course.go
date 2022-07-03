@@ -3,7 +3,7 @@ package database
 import (
 	"errors"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/ag"
 )
 
 // CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
