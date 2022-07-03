@@ -7,7 +7,7 @@ require (
 	github.com/alta/protopatch v0.5.0
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/google/go-cmp v0.5.8
-	github.com/google/go-github/v35 v35.3.0
+	github.com/google/go-github/v45 v45.2.0
 	github.com/gorilla/sessions v1.2.1
 	github.com/gosimple/slug v1.12.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v35/github"
+	"github.com/google/go-github/v45/github"
 	pb "github.com/quickfeed/quickfeed/ag"
 	"gorm.io/gorm"
 )
