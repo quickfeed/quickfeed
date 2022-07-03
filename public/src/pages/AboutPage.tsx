@@ -30,7 +30,7 @@ const AboutPage = (): JSX.Element => {
                     <div key="gh" className="col-lg-4">
                         <img
                             className="img-circle"
-                            src="/static/img/GitHub-Mark-120px-plus.png"
+                            src="/assets/img/GitHub-Mark-120px-plus.png"
                             alt="GitHub logo" style={{ width: "140px", height: "140px" }} />
                         <h2>GitHub Integration</h2>
                         <p>
@@ -47,7 +47,7 @@ const AboutPage = (): JSX.Element => {
 
                         <img
                             className="img-circle"
-                            src="/static/img/overlapping-arrows.png"
+                            src="/assets/img/overlapping-arrows.png"
                             style={{ width: "140px", height: "140px" }}
                         />
                         <h2>Continuous Integration</h2>
@@ -65,7 +65,7 @@ const AboutPage = (): JSX.Element => {
                     <div key="grade" className="col-lg-4">
                         <img
                             className="img-circle"
-                            src="/static/img/Aplus2.png"
+                            src="/assets/img/Aplus2.png"
                             alt="A+ image" style={{ width: "140px", height: "140px" }} />
                         <h2>Fair Grading</h2>
                         <p>
@@ -105,7 +105,7 @@ const AboutPage = (): JSX.Element => {
                         <div key="c2r1" className="col-md-5">
                             <img
                                 className="featurette-image img-responsive about"
-                                src="/static/img/intro1.png"
+                                src="/assets/img/intro1.png"
                                 alt="Generic placeholder image" />
                         </div>
                     </div>
@@ -118,7 +118,7 @@ const AboutPage = (): JSX.Element => {
                         <div key="c1r2" className="col-md-5">
                             <img
                                 className="featurette-image img-responsive about"
-                                src="/static/img/intro3.png"
+                                src="/assets/img/intro3.png"
                                 alt="Generic placeholder image" />
                         </div>
                         <div key="c2r2" className="col-md-7">
@@ -155,7 +155,7 @@ const AboutPage = (): JSX.Element => {
                         <div key="c2r3" className="col-md-5">
                             <img
                                 className="featurette-image img-responsive about"
-                                src="/static/img/intro4.png"
+                                src="/assets/img/intro4.png"
                                 alt="Generic placeholder image" />
                         </div>
                     </div>
@@ -168,7 +168,7 @@ const AboutPage = (): JSX.Element => {
                         <div key="c1r4" className="col-md-5">
                             <img
                                 className="featurette-image img-responsive about"
-                                src="/static/img/intro2.png"
+                                src="/assets/img/intro2.png"
                                 alt="Generic placeholder image" />
                         </div>
                         <div key="c2r4" className="col-md-7">

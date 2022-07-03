@@ -1,4 +1,4 @@
-import { Context } from '../../'
+import { Context } from '../..'
 import { GradingBenchmark, GradingCriterion, Review } from '../../../../proto/ag/ag_pb'
 import { Converter } from '../../../convert'
 import { Color, isAuthor, isCourseCreator } from '../../../Helpers'
