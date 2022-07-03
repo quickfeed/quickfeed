@@ -200,8 +200,8 @@ func AssignmentsWithTasks(courseID uint64) []*pb.Assignment {
 			Order:       1,
 			IsGroupLab:  false,
 			Tasks: []*pb.Task{
-				{Title: "lab1/fib, 1", Name: "lab1/fib", AssignmentOrder: 1, Body: "Implement fibonacci"},
-				{Title: "lab1/luc, 1", Name: "lab1/luc", AssignmentOrder: 1, Body: "Implement lucas numbers"},
+				{Title: "Fibonacci", Name: "fib", AssignmentOrder: 1, Body: "Implement fibonacci"},
+				{Title: "Lucas Numbers", Name: "luc", AssignmentOrder: 1, Body: "Implement lucas numbers"},
 			},
 		},
 		{
@@ -213,9 +213,9 @@ func AssignmentsWithTasks(courseID uint64) []*pb.Assignment {
 			Order:       2,
 			IsGroupLab:  false,
 			Tasks: []*pb.Task{
-				{Title: "lab2/add, 2", Name: "lab2/add", AssignmentOrder: 2, Body: "Implement addition"},
-				{Title: "lab2/sub, 2", Name: "lab2/sub", AssignmentOrder: 2, Body: "Implement subtraction"},
-				{Title: "lab2/mul, 2", Name: "lab2/mul", AssignmentOrder: 2, Body: "Implement multiplication"},
+				{Title: "Addition", Name: "add", AssignmentOrder: 2, Body: "Implement addition"},
+				{Title: "Subtraction", Name: "sub", AssignmentOrder: 2, Body: "Implement subtraction"},
+				{Title: "Multiplication", Name: "mul", AssignmentOrder: 2, Body: "Implement multiplication"},
 			},
 		},
 	}
