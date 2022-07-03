@@ -32,6 +32,16 @@
 //       }
 //   }
 //
+// Tests can also be added with the score.AddWithTask() and score.AddSubWithTask() methods.
+// Adding a task this way lets you associate any given test with a task name, as shown below.
+//   func init() {
+//      score.AddWithTask(TestHelloWorld, "hello_world", 10, 5)
+//      score.AddWithTask(TestFunctions, "functions", 10, 5)
+// 		for _, ft := range functionTests {
+//      	score.AddSubWithTask(TestFunctionSubTest, subTestName("functions", ft.in), "functions" 1, 1)
+//      }
+//   }
+//
 // In addition, TestMain() should call score.PrintTestInfo() before running the tests
 // to ensure that all tests are registered and will be picked up by QuickFeed.
 //
