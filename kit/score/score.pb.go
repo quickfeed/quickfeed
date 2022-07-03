@@ -274,6 +274,7 @@ var (
 		(*BuildInfo)(nil), // 1: score.BuildInfo
 	}
 )
+
 var file_kit_score_score_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
