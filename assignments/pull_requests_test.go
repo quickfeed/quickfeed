@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/autograde/quickfeed/ag"
 	pb "github.com/autograde/quickfeed/ag"
 	"github.com/autograde/quickfeed/kit/score"
 	"github.com/autograde/quickfeed/scm"
@@ -70,7 +71,7 @@ func TestGetNextReviewer(t *testing.T) {
 func TestPublishFeedbackComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
-	repository := scm.GetTestUser(t)
+	qfTestUser := scm.GetTestUser(t)
 	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
@@ -92,7 +93,7 @@ func TestPublishFeedbackComment(t *testing.T) {
 	// TODO(meling) Fix test to CreateIssue and CreateIssueComment to get commentID
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,
-		Repository:   repository,
+		Repository:   ag.StudentRepoName(qfTestUser),
 		Body:         body,
 		CommentID:    0,
 	}
