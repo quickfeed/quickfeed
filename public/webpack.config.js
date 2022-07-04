@@ -71,7 +71,7 @@ module.exports = {
         new HtmlWebpackPlugin({
             // This plugin will generate a HTML file that includes all the webpack bundles.
             // The file will be placed in the dist folder.
-            filename: "index.html",
+            filename: __dirname + "/assets/index.html",
             template: "index.tmpl.html",
             // publicPath is the path the server will serve bundle files from.
             publicPath: "/static/",
