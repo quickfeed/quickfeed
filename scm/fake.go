@@ -27,7 +27,7 @@ func NewFakeSCMClient() *FakeSCM {
 	}
 }
 
-func (FakeSCM) Clone(*CloneOptions) (string, error) {
+func (FakeSCM) Clone(context.Context, *CloneOptions) (string, error) {
 	return "", nil
 }
 

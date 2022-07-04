@@ -25,7 +25,10 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
 	}
-	ctx := context.Background()
+
+	ctx, cancel := context.WithTimeout(context.Background(), pb.MaxWait)
+	defer cancel()
+
 	assignments, dockerfile, err := fetchAssignments(ctx, logger, scm, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
@@ -71,17 +74,14 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 // data from GitHub, processes the yml files and returns the assignments.
 // The TempDir() function ensures that cloning is done in distinct temp
 // directories, should there be concurrent calls to this function.
-func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
-	ctx, cancel := context.WithTimeout(c, pb.MaxWait)
-	defer cancel()
-
+func fetchAssignments(ctx context.Context, logger *zap.SugaredLogger, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
 	dstDir, err := os.MkdirTemp("", pb.TestsRepo)
 	if err != nil {
 		return nil, "", err
 	}
 	defer os.RemoveAll(dstDir)
 
-	cloneDir, err := sc.Clone(&scm.CloneOptions{
+	cloneDir, err := sc.Clone(ctx, &scm.CloneOptions{
 		Organization: course.GetOrganizationPath(),
 		Repository:   pb.TestsRepo,
 		DestDir:      dstDir,

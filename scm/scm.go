@@ -64,7 +64,7 @@ type SCM interface {
 	GetUserScopes(context.Context) *Authorization
 
 	// Clone clones the given repository.
-	Clone(*CloneOptions) (string, error)
+	Clone(context.Context, *CloneOptions) (string, error)
 
 	// CreateIssue creates an issue.
 	CreateIssue(context.Context, *IssueOptions) (*Issue, error)

@@ -22,7 +22,7 @@ func NewGitlabSCMClient(token string) *GitlabSCM {
 	}
 }
 
-func (GitlabSCM) Clone(*CloneOptions) (string, error) {
+func (GitlabSCM) Clone(context.Context, *CloneOptions) (string, error) {
 	return "", nil
 }
 

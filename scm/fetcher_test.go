@@ -23,8 +23,9 @@ func TestClone(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	ctx := context.Background()
 	dstDir := t.TempDir()
-	assignmentDir, err := s.Clone(&scm.CloneOptions{
+	assignmentDir, err := s.Clone(ctx, &scm.CloneOptions{
 		Organization: qfTestOrg,
 		Repository:   pb.StudentRepoName(userName),
 		DestDir:      dstDir,
@@ -32,7 +33,7 @@ func TestClone(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	testsDir, err := s.Clone(&scm.CloneOptions{
+	testsDir, err := s.Clone(ctx, &scm.CloneOptions{
 		Organization: qfTestOrg,
 		Repository:   pb.TestsRepo,
 		DestDir:      dstDir,
