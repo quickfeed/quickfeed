@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/autograde/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/kit/score"
 )
 
 const theSecret = "my secret code"

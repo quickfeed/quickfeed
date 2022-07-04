@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/google/go-github/v35/github"
+	"github.com/google/go-github/v45/github"
+	pb "github.com/quickfeed/quickfeed/ag"
 	"gorm.io/gorm"
 )
 

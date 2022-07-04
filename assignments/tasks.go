@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/scm"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/scm"
 )
 
 // taskName returns the task name based on the filename

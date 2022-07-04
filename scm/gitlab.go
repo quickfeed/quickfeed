@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/ag"
 	gitlab "github.com/xanzy/go-gitlab"
 )
 

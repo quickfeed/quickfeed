@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/kit/score"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/kit/score"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/ag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"

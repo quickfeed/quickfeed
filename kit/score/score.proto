@@ -1,6 +1,6 @@
 syntax = "proto3";
 package score;
-option go_package = "github.com/autograde/quickfeed/kit/score";
+option go_package = "github.com/quickfeed/quickfeed/kit/score";
 
 import "patch/go.proto";
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/ag"
 
 	"gopkg.in/yaml.v2"
 )

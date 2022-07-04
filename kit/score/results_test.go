@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/autograde/quickfeed/kit/score"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/quickfeed/quickfeed/kit/score"
 )
 
 func TestExtractResult(t *testing.T) {

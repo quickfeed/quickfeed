@@ -7,19 +7,19 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/internal/qtest"
-	"github.com/autograde/quickfeed/web"
-	"github.com/autograde/quickfeed/web/auth"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/web"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
 const (
-	grpcAddr = ":9090"
+	grpcAddr = "127.0.0.1:9090"
 	token    = "some-secret-string"
 	// same as quickfeed root user
 	botUserID = 1

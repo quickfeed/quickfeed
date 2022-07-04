@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/autograde/quickfeed/ag"
 	"github.com/google/go-cmp/cmp"
+	pb "github.com/quickfeed/quickfeed/ag"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 

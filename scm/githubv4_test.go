@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 )
 

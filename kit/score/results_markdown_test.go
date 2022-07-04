@@ -3,7 +3,7 @@ package score_test
 import (
 	"testing"
 
-	"github.com/autograde/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/kit/score"
 )
 
 func TestMarkdownComment(t *testing.T) {

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/autograde/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/auth"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/scm"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/scm"
 )
 
 const (

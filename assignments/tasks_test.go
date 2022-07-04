@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/internal/qtest"
-	"github.com/autograde/quickfeed/log"
-	"github.com/autograde/quickfeed/scm"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/log"
+	"github.com/quickfeed/quickfeed/scm"
 )
 
 // TestSynchronizeTasksWithIssues synchronizes tasks with issues on user repositories

@@ -1,7 +1,7 @@
 package web
 
 import (
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/ag"
 )
 
 // getUsers returns all the users in the database.

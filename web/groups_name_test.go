@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/internal/qtest"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"go.uber.org/zap"
 )
 

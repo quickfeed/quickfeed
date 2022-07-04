@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/kit/score"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/kit/score"
 	"gorm.io/gorm"
 )
 

@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/autograde/quickfeed/kit/score/testdata/a"
-	"github.com/autograde/quickfeed/kit/sh"
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/kit/score/testdata/a"
+	"github.com/quickfeed/quickfeed/kit/sh"
 )
 
 func fib() {}

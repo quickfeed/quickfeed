@@ -8,11 +8,11 @@ import (
 	"sync/atomic"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/internal/qtest"
-	"github.com/autograde/quickfeed/scm"
-	"github.com/autograde/quickfeed/web"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web"
 	"go.uber.org/zap"
 )
 

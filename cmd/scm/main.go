@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/scm"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/scm"
 
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
@@ -61,7 +61,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "database",
-			Usage: "Path to the autograder database",
+			Usage: "Path to the quickfeed database",
 			Value: tempFile("ag.db"),
 		},
 		cli.Uint64Flag{

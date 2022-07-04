@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/database"
-	logq "github.com/autograde/quickfeed/log"
-	"github.com/autograde/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/database"
+	logq "github.com/quickfeed/quickfeed/log"
+	"github.com/quickfeed/quickfeed/scm"
 )
 
 const (
