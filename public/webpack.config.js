@@ -1,20 +1,56 @@
 var webpack = require("webpack")
 
 module.exports = {
-    entry: "./src/index.tsx",
+    entry: {
+        index: {
+            import: "./src/index.tsx",
+            dependOn: 'proto',
+            dependOn: 'overmind'
+        },
+        overmind: {
+            import: "./src/overmind/index.tsx",
+            dependOn: 'proto',
+        },
+        proto: {
+            import: "./proto/ag/ag_pb.js",
+            dependOn: "protobuf",
+        },
+        protobuf: "google-protobuf",
+    },
     output: {
-        filename: "bundle.js",
-        path: __dirname + "/dist"
+        // Bundle filenames include hashes based on the contents of the file.
+        // This forces the client to reload the bundle if the file changes.
+        filename: "[name].[contenthash].bundle.js",
+        path: __dirname + "/dist",
+        // clean up the dist folder before building
+        clean: true
     },
     mode: "production",
     // watch enables webpack's Watch flag, which means it will run endlessly and recompile on saves
     // use webpack --watch instead
     watch: false,
 
-    watchOptions: {
-        // Poll for file changes every 1000ms. Required for --watch to function in Docker containers
-        // poll: 1000,
+    optimization: {
+        runtimeChunk: "single",
+        splitChunks: {
+            chunks: "all",
+            minSize: 0,
+            cacheGroups: {
+                vendor: {
+                    test: /[\\/]node_modules[\\/]/,
+                    // Generate a separate bundle file for each vendor.
+                    // Returns the name of the bundle file. "npm.[packageName].[contenthash].js"
+                    name(module) {
+                        // Get the package name from the path.
+                        const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
+                        // Remove @ from the package name.
+                        return `npm.${packageName.replace('@', '')}`;
+                    },
+                }
+            }
+        }
     },
+
     // Enable sourcemaps for debugging webpack's output.
     devtool: "source-map",
 
