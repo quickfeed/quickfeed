@@ -1,4 +1,5 @@
-var webpack = require("webpack")
+const webpack = require("webpack")
+const HtmlWebpackPlugin = require("html-webpack-plugin")
 
 module.exports = {
     entry: {
@@ -67,6 +68,14 @@ module.exports = {
         new webpack.DefinePlugin({
             'process.env.ASSET_PATH': JSON.stringify("static"),
         }),
+        new HtmlWebpackPlugin({
+            // This plugin will generate a HTML file that includes all the webpack bundles.
+            // The file will be placed in the dist folder.
+            filename: "index.html",
+            template: "index.tmpl.html",
+            // publicPath is the path the server will serve bundle files from.
+            publicPath: "/static/",
+        })
     ],
 
     module: {
@@ -76,7 +85,7 @@ module.exports = {
 
             // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
             { enforce: "pre", test: /\.js$/, loader: "source-map-loader" },
-            { test: /\.css$/i,use: ["style-loader", "css-loader"],},
+            { test: /\.css$/i, use: ["style-loader", "css-loader"], },
         ]
     },
     // When importing a module whose path matches one of the following, just
