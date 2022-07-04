@@ -27,6 +27,10 @@ func NewFakeSCMClient() *FakeSCM {
 	}
 }
 
+func (FakeSCM) Clone(*CloneOptions) (string, error) {
+	return "", nil
+}
+
 // CreateOrganization implements the SCM interface.
 func (s *FakeSCM) CreateOrganization(_ context.Context, opt *OrganizationOptions) (*pb.Organization, error) {
 	id := len(s.Organizations) + 1
