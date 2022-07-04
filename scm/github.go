@@ -16,9 +16,10 @@ import (
 
 // GithubSCM implements the SCM interface.
 type GithubSCM struct {
-	logger *zap.SugaredLogger
-	client *github.Client
-	token  string
+	logger      *zap.SugaredLogger
+	client      *github.Client
+	token       string
+	providerURL string
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
@@ -26,9 +27,10 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	client := github.NewClient(oauth2.NewClient(context.Background(), ts))
 	return &GithubSCM{
-		logger: logger,
-		client: client,
-		token:  token,
+		logger:      logger,
+		client:      client,
+		token:       token,
+		providerURL: "github.com",
 	}
 }
 

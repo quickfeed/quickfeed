@@ -16,7 +16,7 @@ func (s GithubSCM) Clone(opt *CloneOptions) (string, error) {
 	cloneDir := filepath.Join(opt.DestDir, repoDir(opt))
 	_, err := git.PlainClone(cloneDir, false, &git.CloneOptions{
 		Auth:     &http.BasicAuth{Username: authUserName, Password: s.token},
-		URL:      cloneURL(opt),
+		URL:      s.cloneURL(opt),
 		Progress: os.Stdout,
 		// ReferenceName: plumbing.ReferenceName(opt.Branch),
 	})
@@ -33,10 +33,9 @@ func repoDir(opt *CloneOptions) string {
 	return pb.TestsRepo
 }
 
-// cloneURL implements the SCM interface.
-func cloneURL(opt *CloneOptions) string {
-	providerURL := "github.com" // TODO fetch from s instead of hardcoding
-	return fmt.Sprintf("https://%s/%s/%s.git", providerURL, opt.Organization, opt.Repository)
+// cloneURL returns the URL to clone the given repository.
+func (s GithubSCM) cloneURL(opt *CloneOptions) string {
+	return fmt.Sprintf("https://%s/%s/%s.git", s.providerURL, opt.Organization, opt.Repository)
 }
 
 type CloneOptions struct {
