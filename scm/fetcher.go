@@ -2,7 +2,6 @@ package scm
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/go-git/go-git/v5"
@@ -12,17 +11,20 @@ import (
 
 const authUserName = "quickfeed" // can be anything except an empty string
 
+// Clone clones the given repository and returns the path to the cloned repository.
 func (s GithubSCM) Clone(opt *CloneOptions) (string, error) {
 	cloneDir := filepath.Join(opt.DestDir, repoDir(opt))
+	s.logger.Debugf("Clone(%s)", s.cloneURL(opt))
 	_, err := git.PlainClone(cloneDir, false, &git.CloneOptions{
-		Auth:     &http.BasicAuth{Username: authUserName, Password: s.token},
-		URL:      s.cloneURL(opt),
-		Progress: os.Stdout,
+		Auth: &http.BasicAuth{Username: authUserName, Password: s.token},
+		URL:  s.cloneURL(opt),
+		// Progress: os.Stdout,
 		// ReferenceName: plumbing.ReferenceName(opt.Branch),
 	})
 	if err != nil {
 		return "", err
 	}
+	s.logger.Debugf("CloneDir = %s", cloneDir)
 	return cloneDir, nil
 }
 
