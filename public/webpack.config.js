@@ -78,6 +78,20 @@ module.exports = {
         })
     ],
 
+    devServer: {
+        static: [
+            __dirname + "/assets",
+            {
+                directory: __dirname + "/assets",
+                publicPath: "/assets/",
+            },
+            {
+                directory: __dirname + "/dist",
+                publicPath: "/static/",
+            }
+        ]
+    },
+
     module: {
         rules: [
             // All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
