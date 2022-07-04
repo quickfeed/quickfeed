@@ -14,6 +14,15 @@ func GetTestOrganization(t *testing.T) string {
 	return qfTestOrg
 }
 
+func GetTestUser(t *testing.T) string {
+	t.Helper()
+	qfTestUser := os.Getenv("QF_TEST_USER")
+	if len(qfTestUser) < 1 {
+		t.Skip("This test requires that the 'QF_TEST_USER' is set and that the corresponding user repository exists in the GitHub organization")
+	}
+	return qfTestUser
+}
+
 func GetAccessToken(t *testing.T) string {
 	t.Helper()
 	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/autograde/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/ci"
 )
 
 func TestLocal(t *testing.T) {

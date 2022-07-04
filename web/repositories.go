@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/scm"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/scm"
 	"gorm.io/gorm"
 )
 

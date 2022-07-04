@@ -8,9 +8,9 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/internal/qtest"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 )
 
 var createGroupTests = []struct {

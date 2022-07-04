@@ -3,8 +3,8 @@ package database_test
 import (
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/internal/qtest"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 )
 
 func TestGetUserByCourse(t *testing.T) {

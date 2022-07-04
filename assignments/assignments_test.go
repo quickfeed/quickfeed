@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/internal/qtest"
-	"github.com/autograde/quickfeed/scm"
 	"github.com/google/go-cmp/cmp"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 )

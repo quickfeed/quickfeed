@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/scm"
 	"github.com/google/go-cmp/cmp"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
@@ -54,7 +54,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	}
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
 
-	if err = handleTasks(ctx, db, scm, course, assignments); err != nil {
+	if err = synchronizeTasksWithIssues(ctx, db, scm, course, assignments); err != nil {
 		logger.Errorf("Failed to create tasks on '%s' repository: %v", pb.TestsRepo, err)
 		return
 	}

@@ -1,7 +1,7 @@
 package database
 
 import (
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/ag"
 )
 
 // CreateRepository creates a new repository record.

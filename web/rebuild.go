@@ -6,8 +6,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/ci"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/ci"
 )
 
 const maxContainers = 10

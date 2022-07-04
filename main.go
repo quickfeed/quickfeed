@@ -9,13 +9,13 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/autograde/quickfeed/ci"
-	logq "github.com/autograde/quickfeed/log"
-	"github.com/autograde/quickfeed/web"
-	"github.com/autograde/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/ci"
+	logq "github.com/quickfeed/quickfeed/log"
+	"github.com/quickfeed/quickfeed/web"
+	"github.com/quickfeed/quickfeed/web/auth"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/database"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/database"
 
 	"google.golang.org/grpc"
 

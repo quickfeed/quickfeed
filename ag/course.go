@@ -23,3 +23,13 @@ func (course *Course) SetSlipDays() {
 		g.SetSlipDays(course)
 	}
 }
+
+func (course *Course) TeacherEnrollments() []*Enrollment {
+	enrolledTeachers := []*Enrollment{}
+	for _, enrollment := range course.Enrollments {
+		if enrollment.IsTeacher() {
+			enrolledTeachers = append(enrolledTeachers, enrollment)
+		}
+	}
+	return enrolledTeachers
+}

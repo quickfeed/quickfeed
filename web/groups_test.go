@@ -8,12 +8,12 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/internal/qtest"
-	"github.com/autograde/quickfeed/log"
-	"github.com/autograde/quickfeed/scm"
-	"github.com/autograde/quickfeed/web"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/log"
+	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web"
 )
 
 func TestNewGroup(t *testing.T) {
@@ -390,17 +390,17 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	// change group to only one student
 	// name must not update because group team and repo already exist
-	updateGroupReqest1 := &pb.Group{ID: gotGroup.ID, Name: "Hein's single member Group", CourseID: course.ID, Users: []*pb.User{user1}}
+	updateGroupRequest1 := &pb.Group{ID: gotGroup.ID, Name: "Hein's single member Group", CourseID: course.ID, Users: []*pb.User{user1}}
 
 	// set teacher ID in context
 	ctx = qtest.WithUserContext(context.Background(), teacher)
-	gotUpdatedGroup, err = ags.UpdateGroup(ctx, updateGroupReqest1)
+	gotUpdatedGroup, err = ags.UpdateGroup(ctx, updateGroupRequest1)
 	if err != nil {
 		t.Error(err)
 	}
 	// check that the group have changed group membership
 	userIDs = make([]uint64, 0)
-	for _, usr := range updateGroupReqest1.Users {
+	for _, usr := range updateGroupRequest1.Users {
 		userIDs = append(userIDs, usr.ID)
 	}
 

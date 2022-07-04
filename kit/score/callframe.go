@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	pkg = "github.com/autograde/quickfeed/kit/score."
+	pkg = "github.com/quickfeed/quickfeed/kit/score."
 )
 
 // callFrame returns the call frame of the Test function that

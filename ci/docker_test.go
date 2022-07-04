@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/internal/qtest"
-	"github.com/autograde/quickfeed/log"
 	"github.com/docker/docker/client"
+	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/log"
 )
 
 var docker bool
