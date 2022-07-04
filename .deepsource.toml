@@ -6,7 +6,6 @@ test_patterns = [
 ]
 
 exclude_patterns = [
-  "public/**",
   "doc/**",
   "**/*.pb.go",
   "**/*_pb.js",
