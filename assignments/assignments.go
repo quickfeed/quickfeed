@@ -3,7 +3,6 @@ package assignments
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -76,34 +75,23 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 	ctx, cancel := context.WithTimeout(c, pb.MaxWait)
 	defer cancel()
 
-	cloneURL := sc.CreateCloneURL(&scm.URLPathOptions{
-		Organization: course.OrganizationPath,
-		Repository:   pb.TestsRepo,
-	})
-	cloneDir, err := ioutil.TempDir("", pb.TestsRepo)
+	dstDir, err := os.MkdirTemp("", pb.TestsRepo)
 	if err != nil {
 		return nil, "", err
 	}
-	defer os.RemoveAll(cloneDir)
+	defer os.RemoveAll(dstDir)
 
-	// clone the tests repository to cloneDir
-	job := &ci.Job{
-		Commands: []string{
-			"cd " + cloneDir,
-			"git clone " + cloneURL,
-		},
-	}
-	logger.Debugf("cd %v", cloneDir)
-	logger.Debugf("git clone %v", cloneURL)
-
-	runner := ci.Local{}
-	_, err = runner.Run(ctx, job)
+	cloneDir, err := sc.Clone(&scm.CloneOptions{
+		Organization: course.GetOrganizationPath(),
+		Repository:   pb.TestsRepo,
+		DestDir:      dstDir,
+	})
 	if err != nil {
 		return nil, "", err
 	}
 
 	// parse assignments found in the cloned tests directory
-	logger.Debugf("readTestsRepositoryContent %v", cloneURL)
+	logger.Debugf("readTestsRepositoryContent %v", cloneDir)
 	assignments, dockerfile, err := readTestsRepositoryContent(cloneDir, course.ID)
 	if err != nil {
 		return nil, "", err
@@ -112,20 +100,24 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 	// if a Dockerfile added/updated, build docker image locally
 	// tag the image with the course code
 	if dockerfile != "" && dockerfile != course.Dockerfile {
-		buildDir := filepath.Join(cloneDir, pb.TestsRepo, scriptFolder)
+		buildDir := filepath.Join(cloneDir, scriptFolder)
 		buildCmd := fmt.Sprintf("docker build -t %s .", strings.ToLower(course.GetCode()))
-		job.Commands = []string{
-			"cd " + buildDir,
-			"ls -la",
-			"cat Dockerfile",
-			buildCmd,
+		job := &ci.Job{
+			Commands: []string{
+				"cd " + buildDir,
+				"ls -la",
+				buildCmd,
+			},
 		}
+		logger.Debugf("%s's Dockerfile:\n%v", course.GetCode(), dockerfile)
 		logger.Debugf("cd %v", buildDir)
-		logger.Debugf(buildCmd)
+		logger.Debugf("Running: %q", buildCmd)
 
-		if out, err := runner.Run(context.Background(), job); err != nil {
+		runner := ci.Local{}
+		out, err := runner.Run(ctx, job)
+		logger.Debug(out)
+		if err != nil {
 			logger.Errorf("Failed to build image from %s's Dockerfile: %s", course.GetCode(), err)
-			logger.Debug(out)
 		}
 	}
 	return assignments, dockerfile, nil

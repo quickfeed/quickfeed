@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -18,23 +19,26 @@ func TestFetchAssignments(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	logger := log.Zap(true).Sugar()
+	s, err := scm.NewSCMClient(logger, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	course := &pb.Course{
 		Name:             "QuickFeed Test Course",
+		Code:             "qf101",
 		OrganizationPath: qfTestOrg,
 	}
 
-	assignments, _, err := fetchAssignments(context.Background(), zap.NewNop().Sugar(), s, course)
+	assignments, _, err := fetchAssignments(context.Background(), logger, s, course)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
 	for _, assignment := range assignments {
-		t.Logf("assignment: %v", assignment)
+		assignment.ScriptFile = "redacted"
+		t.Logf("%+v", assignment)
 	}
 }
 
