@@ -79,8 +79,16 @@ module.exports = {
     ],
 
     devServer: {
+        devMiddleware: {
+            index: true,
+            writeToDisk: true
+        },
+        historyApiFallback: true,
         static: [
-            __dirname + "/assets",
+            {
+                directory: __dirname + "/assets",
+                publicPath: "/"
+            },
             {
                 directory: __dirname + "/assets",
                 publicPath: "/assets/",
