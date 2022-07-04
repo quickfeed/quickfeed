@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/google/go-cmp/cmp"
 	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -29,7 +28,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	ctx, cancel := context.WithTimeout(context.Background(), pb.MaxWait)
 	defer cancel()
 
-	assignments, dockerfile, err := fetchAssignments(ctx, logger, scm, course)
+	assignments, dockerfile, err := fetchAssignments(ctx, scm, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
 		return
@@ -39,7 +38,14 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	}
 
 	if dockerfile != "" && dockerfile != course.Dockerfile {
+		// The course's Dockerfile was added or updated in the tests repository
 		course.Dockerfile = dockerfile
+		// Rebuild the Docker image for the course tagged with the course code
+		if err = buildDockerImage(ctx, logger, course); err != nil {
+			logger.Error(err)
+			return
+		}
+		// Update the course's Dockerfile in the database
 		if err := db.UpdateCourse(course); err != nil {
 			logger.Debugf("Failed to update Dockerfile for course %s: %s", course.GetCode(), err)
 			return
@@ -74,7 +80,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 // data from GitHub, processes the yml files and returns the assignments.
 // The TempDir() function ensures that cloning is done in distinct temp
 // directories, should there be concurrent calls to this function.
-func fetchAssignments(ctx context.Context, logger *zap.SugaredLogger, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
+func fetchAssignments(ctx context.Context, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
 	dstDir, err := os.MkdirTemp("", pb.TestsRepo)
 	if err != nil {
 		return nil, "", err
@@ -89,38 +95,30 @@ func fetchAssignments(ctx context.Context, logger *zap.SugaredLogger, sc scm.SCM
 	if err != nil {
 		return nil, "", err
 	}
+	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
+	return readTestsRepositoryContent(cloneDir, course.ID)
+}
 
-	// parse assignments found in the cloned tests directory
-	logger.Debugf("readTestsRepositoryContent %v", cloneDir)
-	assignments, dockerfile, err := readTestsRepositoryContent(cloneDir, course.ID)
+// buildDockerImage builds the Docker image for the given course.
+func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, course *pb.Course) error {
+	docker, err := ci.NewDockerCI(logger.Desugar())
 	if err != nil {
-		return nil, "", err
+		return fmt.Errorf("failed to set up docker client: %w", err)
 	}
+	defer func() { _ = docker.Close() }()
 
-	// if a Dockerfile added/updated, build docker image locally
-	// tag the image with the course code
-	if dockerfile != "" && dockerfile != course.Dockerfile {
-		buildDir := filepath.Join(cloneDir, scriptFolder)
-		buildCmd := fmt.Sprintf("docker build -t %s .", strings.ToLower(course.GetCode()))
-		job := &ci.Job{
-			Commands: []string{
-				"cd " + buildDir,
-				"ls -la",
-				buildCmd,
-			},
-		}
-		logger.Debugf("%s's Dockerfile:\n%v", course.GetCode(), dockerfile)
-		logger.Debugf("cd %v", buildDir)
-		logger.Debugf("Running: %q", buildCmd)
-
-		runner := ci.Local{}
-		out, err := runner.Run(ctx, job)
-		logger.Debug(out)
-		if err != nil {
-			logger.Errorf("Failed to build image from %s's Dockerfile: %s", course.GetCode(), err)
-		}
+	logger.Debugf("Building %s's Dockerfile:\n%v", course.GetCode(), course.GetDockerfile())
+	out, err := docker.Run(ctx, &ci.Job{
+		Name:       course.GetCode() + "-" + rand.String(),
+		Image:      course.GetCode(),
+		Dockerfile: course.GetDockerfile(),
+		Commands:   []string{`echo -n "Hello from Dockerfile"`},
+	})
+	logger.Debugf("Build completed: %s", out)
+	if err != nil {
+		return fmt.Errorf("failed to build image from %s's Dockerfile: %s", course.GetCode(), err)
 	}
-	return assignments, dockerfile, nil
+	return nil
 }
 
 // updateGradingCriteria will remove old grading criteria and related reviews when criteria.json gets updated

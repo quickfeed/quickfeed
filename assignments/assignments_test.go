@@ -31,14 +31,19 @@ func TestFetchAssignments(t *testing.T) {
 		OrganizationPath: qfTestOrg,
 	}
 
-	assignments, _, err := fetchAssignments(context.Background(), logger, s, course)
+	assignments, dockerfile, err := fetchAssignments(context.Background(), s, course)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
 	for _, assignment := range assignments {
-		assignment.ScriptFile = "redacted"
+		assignment.ScriptFile = "redacted" // too much noise otherwise
 		t.Logf("%+v", assignment)
+	}
+	// This just to simulate the behavior of UpdateFromTestsRepo to confirm that the Dockerfile is built
+	course.Dockerfile = dockerfile
+	if err := buildDockerImage(context.Background(), logger, course); err != nil {
+		t.Fatal(err)
 	}
 }
 
