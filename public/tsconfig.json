@@ -9,7 +9,9 @@
     "preserveConstEnums": true,
     "sourceMap": false,
     "jsx": "react",
-    "newLine": "LF"
+    "newLine": "LF",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
   },
   "include": [
     "src/**/*"
