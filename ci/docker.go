@@ -23,6 +23,7 @@ import (
 
 var (
 	DefaultContainerTimeout = time.Duration(10 * time.Minute)
+	QuickFeedPath           = "/quickfeed"
 	maxToScan               = 1_000_000 // bytes
 	maxLogSize              = 30_000    // bytes
 	lastSegmentSize         = 1_000     // bytes
@@ -116,7 +117,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 					Type:     mount.TypeBind,
 					ReadOnly: true,
 					Source:   job.BindDir,
-					Target:   "/quickfeed",
+					Target:   QuickFeedPath,
 				},
 			},
 		}
