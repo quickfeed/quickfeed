@@ -114,10 +114,9 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 		hostConfig = &container.HostConfig{
 			Mounts: []mount.Mount{
 				{
-					Type:     mount.TypeBind,
-					ReadOnly: true,
-					Source:   job.BindDir,
-					Target:   QuickFeedPath,
+					Type:   mount.TypeBind,
+					Source: job.BindDir,
+					Target: QuickFeedPath,
 				},
 			},
 		}
