@@ -4348,7 +4348,7 @@ proto.ag.UsedSlipDays.toObject = function(includeInstance, msg) {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     enrollmentid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     assignmentid: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    usedslipdays: jspb.Message.getFieldWithDefault(msg, 4, 0)
+    useddays: jspb.Message.getFieldWithDefault(msg, 4, 0)
   };
 
   if (includeInstance) {
@@ -4399,7 +4399,7 @@ proto.ag.UsedSlipDays.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 4:
       var value = /** @type {number} */ (reader.readUint32());
-      msg.setUsedslipdays(value);
+      msg.setUseddays(value);
       break;
     default:
       reader.skipField();
@@ -4451,7 +4451,7 @@ proto.ag.UsedSlipDays.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getUsedslipdays();
+  f = message.getUseddays();
   if (f !== 0) {
     writer.writeUint32(
       4,
@@ -4516,10 +4516,10 @@ proto.ag.UsedSlipDays.prototype.setAssignmentid = function(value) {
 
 
 /**
- * optional uint32 usedSlipDays = 4;
+ * optional uint32 usedDays = 4;
  * @return {number}
  */
-proto.ag.UsedSlipDays.prototype.getUsedslipdays = function() {
+proto.ag.UsedSlipDays.prototype.getUseddays = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
@@ -4528,7 +4528,7 @@ proto.ag.UsedSlipDays.prototype.getUsedslipdays = function() {
  * @param {number} value
  * @return {!proto.ag.UsedSlipDays} returns this
  */
-proto.ag.UsedSlipDays.prototype.setUsedslipdays = function(value) {
+proto.ag.UsedSlipDays.prototype.setUseddays = function(value) {
   return jspb.Message.setProto3IntField(this, 4, value);
 };
 

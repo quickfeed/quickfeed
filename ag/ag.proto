@@ -139,7 +139,7 @@ message UsedSlipDays {
     uint64 ID           = 1;
     uint64 enrollmentID = 2;
     uint64 assignmentID = 3;
-    uint32 usedSlipDays = 4;
+    uint32 usedDays     = 4;
 }
 
 message Enrollments {
