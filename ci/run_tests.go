@@ -3,6 +3,7 @@ package ci
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -10,9 +11,13 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
+
+// pattern to prefix the tmp folder for quickfeed tests
+const quickfeedTestsPath = "quickfeed-tests"
 
 // RunData stores CI data
 type RunData struct {
@@ -36,14 +41,24 @@ func (r RunData) String() string {
 
 // RunTests runs the assignment specified in the provided RunData structure.
 func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, runner Runner) (*score.Results, error) {
-	logger.Debugf("Running tests for %s", r)
+	dstDir, err := os.MkdirTemp("", quickfeedTestsPath)
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(dstDir)
+
+	if err = r.cloneRepositories(ctx, logger, dstDir); err != nil {
+		return nil, err
+	}
 
 	randomSecret := rand.String()
 	job, err := r.parseScriptTemplate(randomSecret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse script template: %w", err)
 	}
+	job.BindDir = dstDir
 
+	logger.Debugf("Running tests for %s", r)
 	start := time.Now()
 	out, err := runner.Run(ctx, job)
 	if err != nil && out == "" {
@@ -55,6 +70,37 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, runner
 	}
 	// return the extracted score and filtered log output
 	return score.ExtractResults(out, randomSecret, time.Since(start))
+}
+
+func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogger, dstDir string) error {
+	logger.Debugf("Cloning repositories for %s", r)
+
+	// TODO(meling): Update this for GitHub web app.
+	// The scm client should ideally be passed in instead of creating another instance.
+	sc, err := scm.NewSCMClient(logger, r.Course.GetProvider(), r.Course.GetAccessToken())
+	if err != nil {
+		return fmt.Errorf("failed to create SCM Client: %w", err)
+	}
+
+	_, err = sc.Clone(ctx, &scm.CloneOptions{
+		Organization: r.Course.GetOrganizationPath(),
+		Repository:   pb.TestsRepo,
+		DestDir:      dstDir,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to clone %q repository: %w", pb.TestsRepo, err)
+	}
+
+	_, err = sc.Clone(ctx, &scm.CloneOptions{
+		Organization: r.Course.GetOrganizationPath(),
+		Repository:   r.Repo.Name(),
+		DestDir:      dstDir,
+		Branch:       r.BranchName,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to clone %q repository: %w", pb.AssignmentRepo, err)
+	}
+	return nil
 }
 
 // RecordResults for the course and assignment given by the run data structure.

@@ -12,6 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -36,8 +37,10 @@ func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *ci.Ru
 	pb.SetAccessToken(courseID, accessToken)
 	runData := &ci.RunData{
 		Course: &pb.Course{
-			ID:   courseID,
-			Code: "DAT320",
+			ID:               courseID,
+			Code:             "QF101",
+			Provider:         "github",
+			OrganizationPath: qfTestOrg,
 		},
 		Assignment: &pb.Assignment{
 			Name:             "lab1",
@@ -80,7 +83,9 @@ func TestRunTests(t *testing.T) {
 		t.Fatal(err)
 	}
 	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
-	t.Logf("%+v\n", results)
+	t.Logf("%+v", results.BuildInfo.BuildLog)
+	results.BuildInfo.BuildLog = "removed"
+	t.Logf("%+v\n", log.IndentJson(results))
 }
 
 func TestRunTestsTimeout(t *testing.T) {
@@ -102,7 +107,8 @@ func TestRunTestsTimeout(t *testing.T) {
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
-	ctx, cancel := context.WithTimeout(context.Background(), 1000*time.Millisecond)
+	// Note that this timeout value is susceptible to variation
+	ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	defer cancel()
 	results, err := runData.RunTests(ctx, qtest.Logger(t), runner)
 	if err != nil {
