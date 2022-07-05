@@ -282,7 +282,7 @@ func TestEnrollmentGetUsedSlipDays(t *testing.T) {
 	wantUsedSlipDays := []*pb.UsedSlipDays{
 		{
 			AssignmentID: 1,
-			UsedSlipDays: 2,
+			UsedDays:     2,
 		},
 	}
 	if diff := cmp.Diff(wantUsedSlipDays, usedSlipDays, protocmp.Transform()); diff != "" {
@@ -353,7 +353,7 @@ func TestSlipDaysWGracePeriod(t *testing.T) {
 			}
 			var usedSlipDays uint32
 			for _, days := range enrol.GetUsedSlipDays() {
-				usedSlipDays += days.UsedSlipDays
+				usedSlipDays += days.UsedDays
 			}
 			if usedSlipDays != test.wantSlipDays {
 				t.Errorf("UpdateSlipDays('%v', '%v', '%v') = %d, want %d", test.delivered, lab, submission, usedSlipDays, test.wantSlipDays)

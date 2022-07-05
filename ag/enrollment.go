@@ -39,7 +39,7 @@ func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, sub
 func (m *Enrollment) updateSlipDays(assignmentID uint64, slipDays uint32) {
 	for _, val := range m.GetUsedSlipDays() {
 		if val.AssignmentID == assignmentID {
-			val.UsedSlipDays = slipDays
+			val.UsedDays = slipDays
 			return
 		}
 	}
@@ -47,7 +47,7 @@ func (m *Enrollment) updateSlipDays(assignmentID uint64, slipDays uint32) {
 	m.UsedSlipDays = append(m.UsedSlipDays, &UsedSlipDays{
 		AssignmentID: assignmentID,
 		EnrollmentID: m.ID,
-		UsedSlipDays: slipDays,
+		UsedDays:     slipDays,
 	})
 }
 
@@ -55,7 +55,7 @@ func (m *Enrollment) updateSlipDays(assignmentID uint64, slipDays uint32) {
 func (m *Enrollment) totalSlipDays() uint32 {
 	var total uint32
 	for _, val := range m.GetUsedSlipDays() {
-		total += val.GetUsedSlipDays()
+		total += val.GetUsedDays()
 	}
 	return total
 }
