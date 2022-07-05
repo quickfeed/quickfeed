@@ -20,7 +20,7 @@ import (
 // To run this test, please see instructions in the developer guide (dev.md).
 
 // This test uses a test course for experimenting with run.sh behavior.
-// The test below will run locally on the test machine, not on the QuickFeed machine.
+// The tests below will run locally on the test machine, not on the QuickFeed machine.
 
 func loadRunScript(t *testing.T) string {
 	t.Helper()
@@ -31,7 +31,20 @@ func loadRunScript(t *testing.T) string {
 	return string(b)
 }
 
-func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *ci.RunData {
+func testRunData(t *testing.T, scriptTemplate string) *ci.RunData {
+	qfTestOrg := scm.GetTestOrganization(t)
+	accessToken := scm.GetAccessToken(t)
+
+	// Only used to fetch the user's GitHub login (user name)
+	s, err := scm.NewSCMClient(qtest.Logger(t), "github", accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userName, err := s.GetUserName(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
 	pb.SetAccessToken(courseID, accessToken)
@@ -58,21 +71,8 @@ func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *ci.Ru
 }
 
 func TestRunTests(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
-	// Only used to fetch the user's GitHub login (user name)
-	s, err := scm.NewSCMClient(qtest.Logger(t), "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
-	userName, err := s.GetUserName(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	scriptTemplate := loadRunScript(t)
-	runData := testRunData(qfTestOrg, userName, accessToken, scriptTemplate)
+	runData := testRunData(t, scriptTemplate)
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
@@ -89,21 +89,8 @@ func TestRunTests(t *testing.T) {
 }
 
 func TestRunTestsTimeout(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
-	// Only used to fetch the user's GitHub login (user name)
-	s, err := scm.NewSCMClient(qtest.Logger(t), "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
-	userName, err := s.GetUserName(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	scriptTemplate := loadRunScript(t)
-	runData := testRunData(qfTestOrg, userName, accessToken, scriptTemplate)
+	runData := testRunData(t, scriptTemplate)
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
