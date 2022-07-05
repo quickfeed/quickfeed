@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/scm"
@@ -23,6 +24,7 @@ func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogge
 		return fmt.Errorf("failed to create SCM Client: %w", err)
 	}
 
+	start := time.Now()
 	testsDir, err := sc.Clone(ctx, &scm.CloneOptions{
 		Organization: r.Course.GetOrganizationPath(),
 		Repository:   pb.TestsRepo,
@@ -41,6 +43,11 @@ func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogge
 	if err != nil {
 		return fmt.Errorf("failed to clone %q repository: %w", pb.AssignmentRepo, err)
 	}
+	logger.Debugf("Cloning time:    %v", time.Since(start))
+	start = time.Now()
+	defer func() {
+		logger.Debugf("Validation time: %v", time.Since(start))
+	}()
 	return r.validate(testsDir, assignmentsDir)
 }
 
@@ -68,7 +75,7 @@ func (r RunData) validate(testsDir, assignmentsDir string) error {
 	const secretEnvName = "QUICKFEED_SESSION_SECRET"
 	for file, content := range files {
 		if strings.Contains(string(content), secretEnvName) {
-			return fmt.Errorf("file %s in %s contains %s environment variable", file, r, secretEnvName)
+			return fmt.Errorf("file %q in %s contains %s environment variable", filepath.Base(file), r, secretEnvName)
 		}
 		// We could add more checks here.
 	}
