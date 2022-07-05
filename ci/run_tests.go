@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/internal/rand"
-	"github.com/autograde/quickfeed/kit/score"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/rand"
+	"github.com/quickfeed/quickfeed/kit/score"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -19,6 +19,7 @@ type RunData struct {
 	Course     *pb.Course
 	Assignment *pb.Assignment
 	Repo       *pb.Repository
+	BranchName string
 	CommitID   string
 	JobOwner   string
 	Rebuild    bool

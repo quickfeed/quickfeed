@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/autograde/quickfeed/kit/sh"
+	"github.com/quickfeed/quickfeed/kit/sh"
 )
 
 const (

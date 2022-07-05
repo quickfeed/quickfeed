@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/autograde/quickfeed/web/auth"
 	"github.com/markbates/goth"
+	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 func TestMain(m *testing.M) {

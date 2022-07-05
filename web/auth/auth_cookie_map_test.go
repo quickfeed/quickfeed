@@ -3,7 +3,7 @@ package auth_test
 import (
 	"testing"
 
-	"github.com/autograde/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 func TestAddGetCookie(t *testing.T) {

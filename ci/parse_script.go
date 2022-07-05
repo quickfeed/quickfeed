@@ -11,6 +11,7 @@ import (
 // and the test repository for an assignment.
 type AssignmentInfo struct {
 	AssignmentName     string
+	BranchName         string
 	CreatorAccessToken string
 	GetURL             string
 	TestURL            string
@@ -25,6 +26,7 @@ type AssignmentInfo struct {
 func (r RunData) parseScriptTemplate(secret string) (*Job, error) {
 	info := &AssignmentInfo{
 		AssignmentName:     r.Assignment.GetName(),
+		BranchName:         r.BranchName,
 		CreatorAccessToken: r.Course.GetAccessToken(),
 		GetURL:             r.Repo.GetHTMLURL(),
 		TestURL:            r.Repo.GetTestURL(),

@@ -1,7 +1,9 @@
 package database
 
 import (
-	pb "github.com/autograde/quickfeed/ag"
+	"errors"
+
+	pb "github.com/quickfeed/quickfeed/ag"
 )
 
 // CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
@@ -162,6 +164,26 @@ func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_User
 		}
 	}
 	return courses, nil
+}
+
+// GetCourseTeachers returns a list of all teachers in a course.
+func (db *GormDB) GetCourseTeachers(query *pb.Course) ([]*pb.User, error) {
+	var course pb.Course
+	if err := db.conn.Where(query).Preload("Enrollments").First(&course).Error; err != nil {
+		return nil, err
+	}
+	teachers := []*pb.User{}
+	for _, teacherEnrollment := range course.TeacherEnrollments() {
+		teacher, err := db.GetUser(teacherEnrollment.GetUserID())
+		if err != nil {
+			return nil, err
+		}
+		teachers = append(teachers, teacher)
+	}
+	if len(teachers) == 0 {
+		return nil, errors.New("course has no teachers")
+	}
+	return teachers, nil
 }
 
 // UpdateCourse updates course information.

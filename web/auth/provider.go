@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/ag"
 
 	"github.com/markbates/goth"
 )

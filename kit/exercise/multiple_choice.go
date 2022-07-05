@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/autograde/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/kit/score"
 )
 
 // compile regular expressions only once

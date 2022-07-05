@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/ag"
 )
 
 const (
@@ -75,8 +75,9 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*pb.Assignment, 
 	// Process other files in tests repository
 	for path, contents := range files {
 		assignmentName := filepath.Base(filepath.Dir(path))
+		filename := filepath.Base(path)
 
-		switch filepath.Base(path) {
+		switch filename {
 		case criteriaFile:
 			var benchmarks []*pb.GradingBenchmark
 			if err := json.Unmarshal(contents, &benchmarks); err != nil {
@@ -96,9 +97,9 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*pb.Assignment, 
 			courseDockerfile = string(contents)
 		}
 
-		if match(filepath.Base(path), taskFilePattern) {
+		if match(filename, taskFilePattern) {
 			assignment := assignmentsMap[assignmentName]
-			taskName := taskName(assignmentName, filepath.Base(path))
+			taskName := taskName(filename)
 			task, err := newTask(contents, assignment.GetOrder(), taskName)
 			if err != nil {
 				return nil, "", err

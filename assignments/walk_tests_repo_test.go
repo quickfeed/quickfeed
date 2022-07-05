@@ -3,8 +3,8 @@ package assignments
 import (
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
 	"github.com/google/go-cmp/cmp"
+	pb "github.com/quickfeed/quickfeed/ag"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -77,17 +77,17 @@ printf "Default script\n"
 				{
 					Title:           "Exercises from Tour of Go",
 					AssignmentOrder: 3,
-					Name:            "lab3/tour-of-go",
+					Name:            "tour-of-go",
 				},
 				{
 					Title:           "Go Exercises",
 					AssignmentOrder: 3,
-					Name:            "lab3/learn-go",
+					Name:            "learn-go",
 				},
 				{
 					Title:           "Multiple Choice Questions about Go Programming",
 					AssignmentOrder: 3,
-					Name:            "lab3/go-questions",
+					Name:            "go-questions",
 				},
 			},
 		},

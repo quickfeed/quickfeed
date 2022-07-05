@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/assignments"
+	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/assignments"
 )
 
 const reviewLayout = "02 Jan 15:04"

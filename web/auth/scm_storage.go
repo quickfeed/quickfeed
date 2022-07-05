@@ -3,7 +3,7 @@ package auth
 import (
 	"sync"
 
-	"github.com/autograde/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 )
 

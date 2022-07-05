@@ -1,5 +1,19 @@
 version = 1
 
+test_patterns = [
+  "**/*_test.go",
+  "**/__test__/*"
+]
+
+exclude_patterns = [
+  "doc/**",
+  "**/*.pb.go",
+  "**/*_pb.js",
+  "**/*_pb.d.ts",
+  "**/*ServiceClientPb.ts",
+  "**/*ServiceClientPb.js"
+]
+
 [[analyzers]]
 name = "shell"
 enabled = true
@@ -16,7 +30,7 @@ name = "go"
 enabled = true
 
   [analyzers.meta]
-  import_root = "github.com/autograde/quickfeed"
+  import_root = "github.com/quickfeed/quickfeed"
 
 [[analyzers]]
 name = "docker"
@@ -28,8 +42,4 @@ enabled = true
 
 [[analyzers]]
 name = "test-coverage"
-enabled = true
-
-[[transformers]]
-name = "gofumpt"
 enabled = true

@@ -5,7 +5,7 @@
 Before releasing the kit module, you may wish to test it locally on a course that uses the various APIs; to do this, use go mod's `replace` directive:
 
 ```shell
-% go mod edit -replace=github.com/autograde/quickfeed/kit=../../quickfeed/kit
+% go mod edit -replace=github.com/quickfeed/quickfeed/kit=../../quickfeed/kit
 ```
 
 ## Install tools needed for release
@@ -58,20 +58,20 @@ Below are the steps needed to prepare a new release of QuickFeed's kit module.
    % git push origin kit/v0.3.0
    ```
 
-   Now other projects can depend on `v0.3.0` of `github.com/autograde/quickfeed/kit`.
+   Now other projects can depend on `v0.3.0` of `github.com/quickfeed/quickfeed/kit`.
 
 4. To check that the new version is available (after a bit of time):
 
     ```shell
-    % go list -m github.com/autograde/quickfeed/kit@v0.3.0
+    % go list -m github.com/quickfeed/quickfeed/kit@v0.3.0
     ```
 
 5. From your course that depend on new features of the kit module:
 
    ```shell
    # if you have used a replace directive
-   % go mod edit -dropreplace=github.com/autograde/quickfeed/kit
-   % go get -u github.com/autograde/quickfeed/kit
+   % go mod edit -dropreplace=github.com/quickfeed/quickfeed/kit
+   % go get -u github.com/quickfeed/quickfeed/kit
    % go mod tidy
    % git add go.mod go.sum
    % git commit -m "Upgraded to latest version of kit module"

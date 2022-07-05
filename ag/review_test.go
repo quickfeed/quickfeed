@@ -3,7 +3,7 @@ package ag_test
 import (
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/ag"
 )
 
 var reviewScoreTests = []struct {
