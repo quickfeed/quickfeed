@@ -7,12 +7,8 @@ ASSIGNMENTS=/quickfeed/assignments
 TESTDIR=/quickfeed/tests
 ASSIGNDIR=$ASSIGNMENTS/{{ .AssignmentName }}/
 
-# Fetch student and test repos
-git clone {{ .GetURL }} $ASSIGNMENTS
-git clone {{ .TestURL }} $TESTDIR
-
 if [ ! -d "$ASSIGNDIR" ]; then
-  printf "Folder %s not found in {{ .GetURL }}" "$ASSIGNDIR"
+  printf "Folder %s not found" "$ASSIGNDIR"
   exit
 fi
 

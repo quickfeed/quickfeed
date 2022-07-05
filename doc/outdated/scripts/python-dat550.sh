@@ -5,9 +5,6 @@ echo "\n\n==Start_CI==\n"
 cd /root/
 export PYTHONPATH="/root"
 
-git clone {{ .GetURL }} user
-git clone {{ .TestURL }} test
-
 history -c
 
 if [ -f "test/{{ .AssignmentName }}/setup.sh" ]; then

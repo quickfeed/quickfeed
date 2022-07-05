@@ -5,8 +5,8 @@ echo "\n=== Preparing for Test Execution ===\n"
 ping -c 4 google.com 2>&1
 ls
 
-git clone  {{ .GetURL }} /home/gradle/user
-git clone  {{ .TestURL }} /home/gradle/test
+ASSIGNDIR=/quickfeed/assignments/{{ .AssignmentName }}/
+TESTDIR=/quickfeed/tests/{{ .AssignmentName }}/
 
 cat <<EOF> /home/gradle/.gradle/gradle.properties
 org.gradle.parallel=true
@@ -14,14 +14,14 @@ org.gradle.daemon=true
 org.gradle.jvmargs=-Xms256m -Xmx1024m
 EOF
 
-# Make sure there are tests in the student repo
-rm -rf user/{{ .AssignmentName }}/src/test/*
+# Make sure there are not tests in the student repo
+rm -rf $ASSIGNDIR/src/test/*
 
 echo "Removed tests folder on user file\n"
 
 # Generate new Secret.java with new secret value for each run
 cd test
-cat <<EOF > /home/gradle/test/{{ .AssignmentName }}/src/test/java/common/SecretClass.java
+cat <<EOF > $TESTDIR/src/test/java/common/SecretClass.java
 package common;
 
 public class SecretClass {
@@ -34,21 +34,21 @@ EOF
 
 
 # Fail student code that attempts to access secret
-#cd /home/gradle/user/{{ .AssignmentName }}/
+#cd $ASSIGNDIR/
 #if grep --quiet -r -e common.Secret -e GlobalSecret * ; then
 #  echo "\n=== Misbehavior Detected: Failed ===\n"
 #  exit
 #fi
 
 # Copy tests into student assignments folder for running tests
-cp -r /home/gradle/test/{{ .AssignmentName }}/src/test/* /home/gradle/user/{{ .AssignmentName }}/src/test/
+cp -r $TESTDIR/src/test/* $ASSIGNDIR/src/test/
 echo "copied test files to user folder \n"
-echo "/home/gradle/user/{{ .AssignmentName }}/src/test/"
-echo `ls /home/gradle/user/{{ .AssignmentName }}/src/test/`
+echo "$ASSIGNDIR/src/test/"
+echo `ls $ASSIGNDIR/src/test/`
 
-cp /home/gradle/test/{{ .AssignmentName }}/build.gradle /home/gradle/user/{{ .AssignmentName }}/build.gradle
-cp /home/gradle/test/{{ .AssignmentName }}/gradlew /home/gradle/user/{{ .AssignmentName }}/gradlew
-cd /home/gradle/user/{{ .AssignmentName }}/
+cp $TESTDIR/build.gradle $ASSIGNDIR/build.gradle
+cp $TESTDIR/gradlew $ASSIGNDIR/gradlew
+cd $ASSIGNDIR/
 
 # Perform lab specific setup
 if [ -f "setup.sh" ]; then

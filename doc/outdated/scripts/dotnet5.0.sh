@@ -3,17 +3,11 @@
 start=$SECONDS
 printf "*** Preparing for Test Execution ***\n"
 
-ASSIGNMENTS=/quickfeed/assignments
-TESTS=/quickfeed/tests
-ASSIGNDIR=$ASSIGNMENTS/{{ .AssignmentName }}/
-TESTDIR=$TESTS/{{ .AssignmentName }}/
-
-# Fetch student and test repos
-git clone {{ .GetURL }} $ASSIGNMENTS
-git clone {{ .TestURL }} $TESTS
+ASSIGNDIR=/quickfeed/assignments/{{ .AssignmentName }}/
+TESTDIR=/quickfeed/tests/{{ .AssignmentName }}/
 
 if [ ! -d "$ASSIGNDIR" ]; then
-  printf "Folder $ASSIGNDIR not found in {{ .GetURL }}"
+  printf "Folder $ASSIGNDIR not found"
   exit
 fi
 
