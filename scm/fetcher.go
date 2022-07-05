@@ -47,28 +47,3 @@ type CloneOptions struct {
 	Branch       string
 	DestDir      string
 }
-
-// TODO return this from Clone()
-type Path struct {
-	Assignments string
-	Tests       string
-}
-
-type TestEnv struct{}
-
-func (TestEnv) TestDir() string {
-	// TODO(meling): return the path to the test directory
-	return "test"
-}
-
-func (TestEnv) Validate() error {
-	// TODO(meling): validate the test environment
-	// validate that assignment folder exists
-	// validate that the tests folder exists
-	// validate that the student code contains code
-	// validate that the student code doesn't contain the secret string
-	// check student code for plagiarism
-	return nil
-}
-
-// TODO(meling): check if {{ .AssignmentName }} exists in both tests and assignment directories
