@@ -441,8 +441,8 @@ export class UsedSlipDays extends jspb.Message {
   getAssignmentid(): number;
   setAssignmentid(value: number): UsedSlipDays;
 
-  getUsedslipdays(): number;
-  setUsedslipdays(value: number): UsedSlipDays;
+  getUseddays(): number;
+  setUseddays(value: number): UsedSlipDays;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): UsedSlipDays.AsObject;
@@ -457,7 +457,7 @@ export namespace UsedSlipDays {
     id: number,
     enrollmentid: number,
     assignmentid: number,
-    usedslipdays: number,
+    useddays: number,
   }
 }
 
