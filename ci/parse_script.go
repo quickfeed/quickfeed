@@ -11,9 +11,6 @@ import (
 // and the test repository for an assignment.
 type AssignmentInfo struct {
 	AssignmentName string
-	BranchName     string
-	GetURL         string
-	TestURL        string
 	RandomSecret   string
 }
 
@@ -25,9 +22,6 @@ type AssignmentInfo struct {
 func (r RunData) parseScriptTemplate(secret string) (*Job, error) {
 	info := &AssignmentInfo{
 		AssignmentName: r.Assignment.GetName(),
-		BranchName:     r.BranchName,
-		GetURL:         r.Repo.GetHTMLURL(),
-		TestURL:        r.Repo.GetTestURL(),
 		RandomSecret:   secret,
 	}
 	// TODO(meling) rename ScriptFile field to ScriptTemplate
@@ -42,11 +36,11 @@ func (r RunData) parseScriptTemplate(secret string) (*Job, error) {
 	}
 	s := strings.Split(buffer.String(), "\n")
 	if len(s) < 2 {
-		return nil, fmt.Errorf("no script template for assignment %s in %s", info.AssignmentName, info.TestURL)
+		return nil, fmt.Errorf("no script template for assignment %s in %s", info.AssignmentName, r.Repo.GetTestURL())
 	}
 	parts := strings.Split(s[0], "#image/")
 	if len(parts) < 2 {
-		return nil, fmt.Errorf("no docker image specified in script template for assignment %s in %s", info.AssignmentName, info.TestURL)
+		return nil, fmt.Errorf("no docker image specified in script template for assignment %s in %s", info.AssignmentName, r.Repo.GetTestURL())
 	}
 	return &Job{Name: r.String(), Image: parts[1], Commands: s[1:]}, nil
 }
