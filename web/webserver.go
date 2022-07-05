@@ -31,7 +31,7 @@ var (
 
 // New starts a new web server
 func New(ags *AutograderService, public, httpAddr string) {
-	entryPoint := filepath.Join(public, "index.html")
+	entryPoint := filepath.Join(public, "assets/index.html")
 	if _, err := os.Stat(entryPoint); os.IsNotExist(err) {
 		ags.logger.Fatalf("file not found %s", entryPoint)
 	}

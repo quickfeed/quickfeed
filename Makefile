@@ -130,9 +130,6 @@ test:
 	@go test ./...
 
 webpack-dev-server:
-	@cd public && mkdir -p public && cp index.html public/index.html && cp styles/styles.css public/styles.css
-	@cd public && $(sedi) 's/\/dev\/dist\/bundle.js/bundle.js/g' public/index.html
-	@cd public && $(sedi) 's/\/dev\/styles\/styles.css/styles.css/g' public/index.html
 	@cd public && npx webpack-dev-server --config webpack.config.js --port 8082 --progress --mode development
 
 # TODO Should check that webpack-dev-server is running.
