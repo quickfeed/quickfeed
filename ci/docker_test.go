@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -57,6 +58,42 @@ func TestDocker(t *testing.T) {
 		Name:       t.Name() + "-" + qtest.RandomString(t),
 		Image:      image,
 		Dockerfile: dockerfile,
+		Commands:   []string{script},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
+	}
+}
+
+// Note that this test will fail if the content of ./testdata changes.
+func TestDockerBindDir(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	const (
+		script     = `ls /quickfeed`
+		wantOut    = "run.sh\n" // content of testdata (or /quickfeed inside the container)
+		image      = "golang:latest"
+		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed"
+	)
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	// bindDir is the ./testdata directory to map into /quickfeed.
+	bindDir, err := filepath.Abs("./testdata")
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:       t.Name() + "-" + qtest.RandomString(t),
+		Image:      image,
+		Dockerfile: dockerfile,
+		BindDir:    bindDir,
 		Commands:   []string{script},
 	})
 	if err != nil {
