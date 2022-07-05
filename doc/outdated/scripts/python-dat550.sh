@@ -1,7 +1,6 @@
 #image/docker.io/eiriksak/school:dat550
 
 echo "\n\n==Start_CI==\n"
-git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 
 cd /root/
 export PYTHONPATH="/root"
@@ -10,7 +9,6 @@ git clone {{ .GetURL }} user
 git clone {{ .TestURL }} test
 
 history -c
-
 
 if [ -f "test/{{ .AssignmentName }}/setup.sh" ]; then
     cd test/{{ .AssignmentName }}/

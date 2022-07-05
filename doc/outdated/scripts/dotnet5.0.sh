@@ -3,8 +3,6 @@
 start=$SECONDS
 printf "*** Preparing for Test Execution ***\n"
 
-git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-
 ASSIGNMENTS=/quickfeed/assignments
 TESTS=/quickfeed/tests
 ASSIGNDIR=$ASSIGNMENTS/{{ .AssignmentName }}/
@@ -27,10 +25,6 @@ if grep -r -e QUICKFEED_SESSION_SECRET * ; then
   printf "\n=== Misbehavior Detected: Failed ===\n"
   exit
 fi
-
-# Clear access token and the shell history to avoid leaking information to student test code.
-git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-history -c
 
 # (ensure) Move to folder for assignment to test.
 cd $TESTDIR

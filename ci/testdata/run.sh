@@ -3,8 +3,6 @@
 start=$SECONDS
 printf "*** Preparing for Test Execution ***\n"
 
-git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-
 ASSIGNMENTS=/quickfeed/assignments
 TESTDIR=/quickfeed/tests
 ASSIGNDIR=$ASSIGNMENTS/{{ .AssignmentName }}/
@@ -32,10 +30,6 @@ find . -name '*_test.go' -exec rm -rf {} \;
 
 # Copy tests into student assignments folder for running tests
 cp -r $TESTDIR/* $ASSIGNMENTS/
-
-# Clear access token and the shell history to avoid leaking information to student test code.
-git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-history -c
 
 # (ensure) Move to folder for assignment to test.
 cd "$ASSIGNDIR"

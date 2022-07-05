@@ -10,12 +10,11 @@ import (
 // AssignmentInfo holds metadata needed to fetch student code
 // and the test repository for an assignment.
 type AssignmentInfo struct {
-	AssignmentName     string
-	BranchName         string
-	CreatorAccessToken string
-	GetURL             string
-	TestURL            string
-	RandomSecret       string
+	AssignmentName string
+	BranchName     string
+	GetURL         string
+	TestURL        string
+	RandomSecret   string
 }
 
 // parseScriptTemplate returns a job specifying the docker image and commands
@@ -25,12 +24,11 @@ type AssignmentInfo struct {
 // {{ .AssignmentName }}, {{ .RandomSecret }}, etc.
 func (r RunData) parseScriptTemplate(secret string) (*Job, error) {
 	info := &AssignmentInfo{
-		AssignmentName:     r.Assignment.GetName(),
-		BranchName:         r.BranchName,
-		CreatorAccessToken: r.Course.GetAccessToken(),
-		GetURL:             r.Repo.GetHTMLURL(),
-		TestURL:            r.Repo.GetTestURL(),
-		RandomSecret:       secret,
+		AssignmentName: r.Assignment.GetName(),
+		BranchName:     r.BranchName,
+		GetURL:         r.Repo.GetHTMLURL(),
+		TestURL:        r.Repo.GetTestURL(),
+		RandomSecret:   secret,
 	}
 	// TODO(meling) rename ScriptFile field to ScriptTemplate
 	// ScriptTemplate contains the script itself with variables in double curly braces

@@ -3,10 +3,9 @@
 echo "\n=== Preparing for Test Execution ===\n"
 
 ping -c 4 google.com 2>&1
-git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 ls
 
-git clone  {{ .GetURL }} /home/gradle/user  
+git clone  {{ .GetURL }} /home/gradle/user
 git clone  {{ .TestURL }} /home/gradle/test
 
 cat <<EOF> /home/gradle/.gradle/gradle.properties
@@ -51,16 +50,11 @@ cp /home/gradle/test/{{ .AssignmentName }}/build.gradle /home/gradle/user/{{ .As
 cp /home/gradle/test/{{ .AssignmentName }}/gradlew /home/gradle/user/{{ .AssignmentName }}/gradlew
 cd /home/gradle/user/{{ .AssignmentName }}/
 
-# Clear access token and the shell history to avoid leaking information to student test code.
-git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-history -c
-
 # Perform lab specific setup
 if [ -f "setup.sh" ]; then
     bash setup.sh
 fi
 
 echo "\n=== Running Tests ===\n"
-gradle clean test 2>&1 
+gradle clean test 2>&1
 echo "\n=== Finished Running Tests ===\n"
-
