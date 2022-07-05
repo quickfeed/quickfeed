@@ -11,7 +11,6 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/kit/score"
-	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -70,37 +69,6 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, runner
 	}
 	// return the extracted score and filtered log output
 	return score.ExtractResults(out, randomSecret, time.Since(start))
-}
-
-func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogger, dstDir string) error {
-	logger.Debugf("Cloning repositories for %s", r)
-
-	// TODO(meling): Update this for GitHub web app.
-	// The scm client should ideally be passed in instead of creating another instance.
-	sc, err := scm.NewSCMClient(logger, r.Course.GetProvider(), r.Course.GetAccessToken())
-	if err != nil {
-		return fmt.Errorf("failed to create SCM Client: %w", err)
-	}
-
-	_, err = sc.Clone(ctx, &scm.CloneOptions{
-		Organization: r.Course.GetOrganizationPath(),
-		Repository:   pb.TestsRepo,
-		DestDir:      dstDir,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to clone %q repository: %w", pb.TestsRepo, err)
-	}
-
-	_, err = sc.Clone(ctx, &scm.CloneOptions{
-		Organization: r.Course.GetOrganizationPath(),
-		Repository:   r.Repo.Name(),
-		DestDir:      dstDir,
-		Branch:       r.BranchName,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to clone %q repository: %w", pb.AssignmentRepo, err)
-	}
-	return nil
 }
 
 // RecordResults for the course and assignment given by the run data structure.
