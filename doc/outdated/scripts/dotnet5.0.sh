@@ -6,21 +6,6 @@ printf "*** Preparing for Test Execution ***\n"
 ASSIGNDIR=/quickfeed/assignments/{{ .AssignmentName }}/
 TESTDIR=/quickfeed/tests/{{ .AssignmentName }}/
 
-if [ ! -d "$ASSIGNDIR" ]; then
-  printf "Folder $ASSIGNDIR not found"
-  exit
-fi
-
-# Move to folder for assignment to test.
-cd $ASSIGNDIR
-
-# Fail student code that attempts to access secret
-if grep -r -e QUICKFEED_SESSION_SECRET * ; then
-  printf "\n=== Misbehavior Detected: Failed ===\n"
-  exit
-fi
-
-# (ensure) Move to folder for assignment to test.
 cd $TESTDIR
 
 # Perform lab specific setup
