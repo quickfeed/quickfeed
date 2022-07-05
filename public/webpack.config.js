@@ -43,9 +43,9 @@ module.exports = {
                     // Returns the name of the bundle file. "npm.[packageName].[contenthash].js"
                     name(module) {
                         // Get the package name from the path.
-                        const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
+                        const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1]
                         // Remove @ from the package name.
-                        return `npm.${packageName.replace('@', '')}`;
+                        return `npm.${packageName.replace('@', '')}`
                     },
                 }
             }
@@ -107,7 +107,7 @@ module.exports = {
 
             // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
             { enforce: "pre", test: /\.js$/, loader: "source-map-loader" },
-            { test: /\.css$/i, use: ["style-loader", "css-loader"], },
+            { test: /\.css$/i, use: ["style-loader", "css-loader"] },
         ]
     },
     // When importing a module whose path matches one of the following, just
@@ -118,4 +118,4 @@ module.exports = {
         "react": "React",
         "react-dom": "ReactDOM",
     },
-};
+}
