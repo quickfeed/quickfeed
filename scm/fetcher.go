@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	pb "github.com/quickfeed/quickfeed/ag"
 )
@@ -16,11 +17,14 @@ const authUserName = "quickfeed" // can be anything except an empty string
 func (s GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
 	cloneDir := filepath.Join(opt.DestDir, repoDir(opt))
 	s.logger.Debugf("Clone(%s)", s.cloneURL(opt))
+	var branch plumbing.ReferenceName
+	if opt.Branch != "" {
+		branch = plumbing.NewBranchReferenceName(opt.Branch)
+	}
 	_, err := git.PlainCloneContext(ctx, cloneDir, false, &git.CloneOptions{
-		Auth: &http.BasicAuth{Username: authUserName, Password: s.token},
-		URL:  s.cloneURL(opt),
-		// Progress: os.Stdout,
-		// ReferenceName: plumbing.ReferenceName(opt.Branch),
+		Auth:          &http.BasicAuth{Username: authUserName, Password: s.token},
+		URL:           s.cloneURL(opt),
+		ReferenceName: branch,
 	})
 	if err != nil {
 		return "", err
