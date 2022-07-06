@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useMemo } from "react"
+import React, { Dispatch, SetStateAction, useMemo, useState } from "react"
 import { hasEnrollment } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import FormInput from "../forms/FormInput"
@@ -11,10 +11,9 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
     const actions = useActions()
     const history = useHistory()
 
-    const signup = useMemo(() => !state.isValid, [state.isValid])
-
     // Create a copy of the user object, so that we can modify it without affecting the original object.
-    const user = Converter.clone(state.self)
+    const [user, setUser] = useState(Converter.clone(state.self))
+    const [isValid, setIsValid] = useState(state.isValid)
 
     // Update the user object when user input changes, and update the state.
     const handleChange = (event: React.FormEvent<HTMLInputElement>) => {
@@ -29,6 +28,12 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
             case "studentid":
                 user.studentid = value
                 break
+        }
+        setUser(user)
+        if (user.name !== "" && user.email !== "" && user.studentid !== "") {
+            setIsValid(true)
+        } else {
+            setIsValid(false)
         }
     }
 
@@ -45,13 +50,13 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
 
     return (
         <div>
-            {signup ? children : null}
+            {!isValid ? children : null}
             <form className="form-group" onSubmit={e => { e.preventDefault(); submitHandler() }}>
                 <FormInput prepend="Name" name="name" defaultValue={user.name} onChange={handleChange} />
                 <FormInput prepend="Email" name="email" defaultValue={user.email} onChange={handleChange} type="email" />
                 <FormInput prepend="Student ID" name="studentid" defaultValue={user.studentid} onChange={handleChange} type="number" />
                 <div className="col input-group mb-3">
-                    <input className="btn btn-primary" disabled={!state.isValid} type="submit" value="Save" style={{ marginTop: "20px" }} />
+                    <input className="btn btn-primary" disabled={!isValid} type="submit" value="Save" style={{ marginTop: "20px" }} />
                 </div>
             </form>
         </div>
