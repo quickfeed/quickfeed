@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/ci"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -92,27 +92,27 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(y1), 0644)
+	err = ioutil.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(y1), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "lab2", "assignment.yaml"), []byte(y2), 0644)
+	err = ioutil.WriteFile(filepath.Join(testsDir, "lab2", "assignment.yaml"), []byte(y2), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "scripts", "run.sh"), []byte(script), 0644)
+	err = ioutil.WriteFile(filepath.Join(testsDir, "scripts", "run.sh"), []byte(script), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "lab1", "run.sh"), []byte(script1), 0644)
+	err = ioutil.WriteFile(filepath.Join(testsDir, "lab1", "run.sh"), []byte(script1), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "scripts", "Dockerfile"), []byte(df), 0644)
+	err = ioutil.WriteFile(filepath.Join(testsDir, "scripts", "Dockerfile"), []byte(df), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "lab2", "criteria.json"), []byte(criteria), 0644)
+	err = ioutil.WriteFile(filepath.Join(testsDir, "lab2", "criteria.json"), []byte(criteria), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -202,7 +202,7 @@ func TestParseUnknownFields(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(yUnknownFields), 0644)
+	err = ioutil.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(yUnknownFields), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}

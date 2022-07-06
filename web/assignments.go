@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/assignments"
+	pb "github.com/quickfeed/quickfeed/qf"
 )
 
 const reviewLayout = "02 Jan 15:04"
 
 // getAssignments lists the assignments for the provided course.
-func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, error) {
+func (s *QuickFeedService) getAssignments(courseID uint64) (*pb.Assignments, error) {
 	allAssignments, err := s.db.GetAssignmentsByCourse(courseID, true)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, er
 }
 
 // updateAssignments updates the assignments for the given course.
-func (s *AutograderService) updateAssignments(courseID uint64) error {
+func (s *QuickFeedService) updateAssignments(courseID uint64) error {
 	course, err := s.db.GetCourse(courseID, false)
 	if err != nil {
 		return fmt.Errorf("could not find course ID %d", courseID)
@@ -35,7 +35,7 @@ func (s *AutograderService) updateAssignments(courseID uint64) error {
 	return nil
 }
 
-func (s *AutograderService) createBenchmark(query *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
+func (s *QuickFeedService) createBenchmark(query *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
 	if _, err := s.db.GetAssignment(&pb.Assignment{
 		ID: query.AssignmentID,
 	}); err != nil {
@@ -47,30 +47,30 @@ func (s *AutograderService) createBenchmark(query *pb.GradingBenchmark) (*pb.Gra
 	return query, nil
 }
 
-func (s *AutograderService) updateBenchmark(query *pb.GradingBenchmark) error {
+func (s *QuickFeedService) updateBenchmark(query *pb.GradingBenchmark) error {
 	return s.db.UpdateBenchmark(query)
 }
 
-func (s *AutograderService) deleteBenchmark(query *pb.GradingBenchmark) error {
+func (s *QuickFeedService) deleteBenchmark(query *pb.GradingBenchmark) error {
 	return s.db.DeleteBenchmark(query)
 }
 
-func (s *AutograderService) createCriterion(query *pb.GradingCriterion) (*pb.GradingCriterion, error) {
+func (s *QuickFeedService) createCriterion(query *pb.GradingCriterion) (*pb.GradingCriterion, error) {
 	if err := s.db.CreateCriterion(query); err != nil {
 		return nil, err
 	}
 	return query, nil
 }
 
-func (s *AutograderService) updateCriterion(query *pb.GradingCriterion) error {
+func (s *QuickFeedService) updateCriterion(query *pb.GradingCriterion) error {
 	return s.db.UpdateCriterion(query)
 }
 
-func (s *AutograderService) deleteCriterion(query *pb.GradingCriterion) error {
+func (s *QuickFeedService) deleteCriterion(query *pb.GradingCriterion) error {
 	return s.db.DeleteCriterion(query)
 }
 
-func (s *AutograderService) createReview(review *pb.Review) (*pb.Review, error) {
+func (s *QuickFeedService) createReview(review *pb.Review) (*pb.Review, error) {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: review.SubmissionID})
 	if err != nil {
 		return nil, err
@@ -105,7 +105,7 @@ func (s *AutograderService) createReview(review *pb.Review) (*pb.Review, error) 
 	return review, nil
 }
 
-func (s *AutograderService) updateReview(review *pb.Review) (*pb.Review, error) {
+func (s *QuickFeedService) updateReview(review *pb.Review) (*pb.Review, error) {
 	if review.ID == 0 {
 		return nil, fmt.Errorf("cannot update review with empty ID")
 	}
@@ -141,7 +141,7 @@ func (s *AutograderService) updateReview(review *pb.Review) (*pb.Review, error) 
 	return review, nil
 }
 
-func (s *AutograderService) getAssignmentWithCourse(query *pb.Assignment, withCourseInfo bool) (*pb.Assignment, *pb.Course, error) {
+func (s *QuickFeedService) getAssignmentWithCourse(query *pb.Assignment, withCourseInfo bool) (*pb.Assignment, *pb.Course, error) {
 	assignment, err := s.db.GetAssignment(query)
 	if err != nil {
 		return nil, nil, err

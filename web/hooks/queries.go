@@ -3,7 +3,7 @@ package hooks
 import (
 	"fmt"
 
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 )
 
 func (wh GitHubWebHook) getRepository(repoID int64) (*pb.Repository, error) {

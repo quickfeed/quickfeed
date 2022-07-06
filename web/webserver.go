@@ -30,7 +30,7 @@ var (
 )
 
 // New starts a new web server
-func New(ags *AutograderService, public, httpAddr string) {
+func New(ags *QuickFeedService, public, httpAddr string) {
 	entryPoint := filepath.Join(public, "assets/index.html")
 	if _, err := os.Stat(entryPoint); os.IsNotExist(err) {
 		ags.logger.Fatalf("file not found %s", entryPoint)
@@ -49,7 +49,7 @@ func New(ags *AutograderService, public, httpAddr string) {
 	runWebServer(ags.logger, e, httpAddr)
 }
 
-func newServer(ags *AutograderService, store sessions.Store) *echo.Echo {
+func newServer(ags *QuickFeedService, store sessions.Store) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(
@@ -105,7 +105,7 @@ func enableProviders(l *zap.SugaredLogger, baseURL string) map[string]bool {
 	return enabled
 }
 
-func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]bool) {
+func registerWebhooks(ags *QuickFeedService, e *echo.Echo, enabled map[string]bool) {
 	if enabled["github"] {
 		ghHook := hooks.NewGitHubWebHook(ags.logger, ags.db, ags.runner, ags.bh.Secret)
 		e.POST("/hook/github/events", func(c echo.Context) error {
@@ -123,7 +123,7 @@ func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]b
 	}
 }
 
-func registerAuth(ags *AutograderService, e *echo.Echo) {
+func registerAuth(ags *QuickFeedService, e *echo.Echo) {
 	// makes the oauth2 provider available in the request query so that
 	// markbates/goth/gothic.GetProviderName can find it.
 	withProvider := func(next echo.HandlerFunc) echo.HandlerFunc {

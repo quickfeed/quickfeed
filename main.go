@@ -14,8 +14,8 @@ import (
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/database"
+	pb "github.com/quickfeed/quickfeed/qf"
 
 	"google.golang.org/grpc"
 
@@ -94,8 +94,8 @@ func main() {
 		log.Println("Added application token")
 	}
 
-	agService := web.NewAutograderService(logger, db, scms, bh, runner)
-	go web.New(agService, *public, *httpAddr)
+	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
+	go web.New(qfService, *public, *httpAddr)
 
 	lis, err := net.Listen("tcp", *grpcAddr)
 	if err != nil {
@@ -114,7 +114,7 @@ func main() {
 		}
 	}()
 
-	pb.RegisterAutograderServiceServer(grpcServer, agService)
+	pb.RegisterQuickFeedServiceServer(grpcServer, qfService)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}

@@ -11,8 +11,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"
 )

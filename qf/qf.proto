@@ -1,6 +1,6 @@
 syntax = "proto3";
-package ag;
-option go_package   = "github.com/quickfeed/quickfeed/ag";
+package qf;
+option go_package   = "github.com/quickfeed/quickfeed/qf";
 option swift_prefix = "";
 
 import "kit/score/score.proto";
@@ -437,7 +437,7 @@ message CourseUserRequest {
 // the server.
 message Void {}
 
-service AutograderService {
+service QuickFeedService {
     // users //
 
     rpc GetUser(Void) returns (User) {}

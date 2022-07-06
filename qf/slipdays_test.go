@@ -1,4 +1,4 @@
-package ag_test
+package qf_test
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 

@@ -1,4 +1,4 @@
-package ag
+package qf
 
 import "github.com/prometheus/client_golang/prometheus"
 

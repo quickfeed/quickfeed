@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/grpc/metadata"
 )
@@ -17,7 +17,7 @@ import (
 // ErrInvalidUserInfo is returned to user if user information in context is invalid.
 var ErrInvalidUserInfo = status.Errorf(codes.PermissionDenied, "authorization failed. please try to logout and sign in again")
 
-func (s *AutograderService) getCurrentUser(ctx context.Context) (*pb.User, error) {
+func (s *QuickFeedService) getCurrentUser(ctx context.Context) (*pb.User, error) {
 	// process user id from context
 	meta, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
@@ -38,7 +38,7 @@ func (s *AutograderService) getCurrentUser(ctx context.Context) (*pb.User, error
 	return s.db.GetUser(userID)
 }
 
-func (s *AutograderService) getSCM(ctx context.Context, user *pb.User, provider string) (scm.SCM, error) {
+func (s *QuickFeedService) getSCM(ctx context.Context, user *pb.User, provider string) (scm.SCM, error) {
 	providers, err := s.GetProviders(ctx, &pb.Void{})
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func (s *AutograderService) getSCM(ctx context.Context, user *pb.User, provider 
 
 // hasCourseAccess returns true if the given user has access to the given course,
 // as defined by the check function.
-func (s *AutograderService) hasCourseAccess(userID, courseID uint64, check func(*pb.Enrollment) bool) bool {
+func (s *QuickFeedService) hasCourseAccess(userID, courseID uint64, check func(*pb.Enrollment) bool) bool {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, userID)
 	if err != nil {
 		s.logger.Error(err)
@@ -72,7 +72,7 @@ func (s *AutograderService) hasCourseAccess(userID, courseID uint64, check func(
 }
 
 // isEnrolled returns true if the given user is enrolled in the given course.
-func (s *AutograderService) isEnrolled(userID, courseID uint64) bool {
+func (s *QuickFeedService) isEnrolled(userID, courseID uint64) bool {
 	return s.hasCourseAccess(userID, courseID, func(e *pb.Enrollment) bool {
 		return e.Status == pb.Enrollment_STUDENT || e.Status == pb.Enrollment_TEACHER
 	})
@@ -80,7 +80,7 @@ func (s *AutograderService) isEnrolled(userID, courseID uint64) bool {
 
 // isValidSubmission returns true if submitting student has active course enrollment or
 // if submitting group belongs to the given course.
-func (s *AutograderService) isValidSubmissionRequest(submission *pb.SubmissionRequest) bool {
+func (s *QuickFeedService) isValidSubmissionRequest(submission *pb.SubmissionRequest) bool {
 	if !submission.IsValid() {
 		return false
 	}
@@ -100,7 +100,7 @@ func (s *AutograderService) isValidSubmissionRequest(submission *pb.SubmissionRe
 
 // isValidSubmission returns true if submission belongs to active lab of the given course
 // and submitted by valid student or group.
-func (s *AutograderService) isValidSubmission(submissionID uint64) bool {
+func (s *QuickFeedService) isValidSubmission(submissionID uint64) bool {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
 	if err != nil {
 		return false
@@ -119,14 +119,14 @@ func (s *AutograderService) isValidSubmission(submissionID uint64) bool {
 }
 
 // isTeacher returns true if the given user is teacher for the given course.
-func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
+func (s *QuickFeedService) isTeacher(userID, courseID uint64) bool {
 	return s.hasCourseAccess(userID, courseID, func(e *pb.Enrollment) bool {
 		return e.Status == pb.Enrollment_TEACHER
 	})
 }
 
 // isCourseCreator returns true if the given user is course creator for the given course.
-func (s *AutograderService) isCourseCreator(courseID, userID uint64) bool {
+func (s *QuickFeedService) isCourseCreator(courseID, userID uint64) bool {
 	course, _ := s.db.GetCourse(courseID, false)
 	return course.GetCourseCreatorID() == userID
 }
@@ -134,7 +134,7 @@ func (s *AutograderService) isCourseCreator(courseID, userID uint64) bool {
 // getUserAndSCM returns the current user and scm for the given provider.
 // All errors are logged, but only a single error is returned to the client.
 // This is a helper method to facilitate consistent treatment of errors and logging.
-func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string) (*pb.User, scm.SCM, error) {
+func (s *QuickFeedService) getUserAndSCM(ctx context.Context, provider string) (*pb.User, scm.SCM, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		return nil, nil, err
@@ -149,7 +149,7 @@ func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string) 
 // getUserAndSCMForCourse returns the current user and scm for the given course.
 // All errors are logged, but only a single error is returned to the client.
 // This is a helper method to facilitate consistent treatment of errors and logging.
-func (s *AutograderService) getUserAndSCMForCourse(ctx context.Context, courseID uint64) (*pb.User, scm.SCM, error) {
+func (s *QuickFeedService) getUserAndSCMForCourse(ctx context.Context, courseID uint64) (*pb.User, scm.SCM, error) {
 	crs, err := s.getCourse(courseID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get course with ID %d: %w", courseID, err)

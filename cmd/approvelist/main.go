@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -35,7 +35,7 @@ var ignoredStudents = map[string]bool{
 
 type QuickFeed struct {
 	cc *grpc.ClientConn
-	pb.AutograderServiceClient
+	pb.QuickFeedServiceClient
 	md metadata.MD
 }
 
@@ -58,9 +58,9 @@ func NewQuickFeed(authToken string) (*QuickFeed, error) {
 		return nil, err
 	}
 	return &QuickFeed{
-		cc:                      cc,
-		AutograderServiceClient: pb.NewAutograderServiceClient(cc),
-		md:                      metadata.New(map[string]string{"cookie": authToken}),
+		cc:                     cc,
+		QuickFeedServiceClient: pb.NewQuickFeedServiceClient(cc),
+		md:                     metadata.New(map[string]string{"cookie": authToken}),
 	}, nil
 }
 
@@ -178,7 +178,7 @@ func getSubmissions(courseCode string, year int, userName string) *pb.CourseSubm
 
 	// TODO(meling) Access control is currently limited for this method, resulting in a message like the one below
 	// Access control should be fixed on QuickFeed to avoid the hack currently used.
-	// ERROR   web/autograder_service.go:541   GetSubmissionsByCourse failed: user quickfeed-uis is not teacher or submission author
+	// ERROR   web/quickfeed_service.go:541   GetSubmissionsByCourse failed: user quickfeed-uis is not teacher or submission author
 	submissions, err := client.GetSubmissionsByCourse(
 		ctx,
 		&pb.SubmissionsForCourseRequest{

@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc"
@@ -48,7 +48,7 @@ func TestGrpcAuth(t *testing.T) {
 	}
 	defer conn.Close()
 
-	client := pb.NewAutograderServiceClient(conn)
+	client := pb.NewQuickFeedServiceClient(conn)
 
 	// create request context with the helpbot's secret token
 	reqCtx := metadata.NewOutgoingContext(ctx,
@@ -96,7 +96,7 @@ func startGrpcAuthServer(t *testing.T, db database.Database) {
 	logger := qtest.Logger(t)
 
 	_, scms := qtest.FakeProviderMap(t)
-	agService := web.NewAutograderService(logger.Desugar(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	agService := web.NewQuickFeedService(logger.Desugar(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	lis, err := net.Listen("tcp", grpcAddr)
 	check(t, err)
@@ -106,7 +106,7 @@ func startGrpcAuthServer(t *testing.T, db database.Database) {
 	)
 	grpcServer := grpc.NewServer(opt)
 
-	pb.RegisterAutograderServiceServer(grpcServer, agService)
+	pb.RegisterQuickFeedServiceServer(grpcServer, agService)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sort"
 
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"gorm.io/gorm"
 )
 

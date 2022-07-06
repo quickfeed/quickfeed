@@ -8,9 +8,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"go.uber.org/zap"
@@ -114,7 +114,7 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})

@@ -6,14 +6,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/ci"
+	pb "github.com/quickfeed/quickfeed/qf"
 )
 
 const maxContainers = 10
 
 // rebuildSubmission rebuilds the given assignment and submission.
-func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.Submission, error) {
+func (s *QuickFeedService) rebuildSubmission(request *pb.RebuildRequest) (*pb.Submission, error) {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (s *AutograderService) rebuildSubmission(request *pb.RebuildRequest) (*pb.S
 	return submission, nil
 }
 
-func (s *AutograderService) rebuildSubmissions(request *pb.RebuildRequest) error {
+func (s *QuickFeedService) rebuildSubmissions(request *pb.RebuildRequest) error {
 	if _, err := s.db.GetAssignment(&pb.Assignment{ID: request.AssignmentID}); err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (s *AutograderService) rebuildSubmissions(request *pb.RebuildRequest) error
 	return nil
 }
 
-func (s *AutograderService) lookupName(submission *pb.Submission) string {
+func (s *QuickFeedService) lookupName(submission *pb.Submission) string {
 	if submission.GetGroupID() > 0 {
 		group, _ := s.db.GetGroup(submission.GetGroupID())
 		return group.GetName()

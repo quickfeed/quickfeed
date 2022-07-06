@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/kit/score"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )

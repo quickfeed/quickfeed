@@ -3,8 +3,8 @@ package ci
 import (
 	"testing"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/internal/rand"
+	pb "github.com/quickfeed/quickfeed/qf"
 )
 
 // Testdata copied from run_tests_test.go (since they are in different packages)

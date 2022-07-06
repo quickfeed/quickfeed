@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
@@ -55,7 +55,7 @@ func TestGetRepo(t *testing.T) {
 	}
 
 	_, scms := qtest.FakeProviderMap(t)
-	ags := NewAutograderService(zap.NewNop(), db, scms, BaseHookOptions{}, &ci.Local{})
+	ags := NewQuickFeedService(zap.NewNop(), db, scms, BaseHookOptions{}, &ci.Local{})
 	gotUserRepo, err := ags.getRepo(course, user.ID, pb.Repository_USER)
 	if err != nil {
 		t.Fatal(err)
@@ -93,7 +93,7 @@ func TestGetRepositories(t *testing.T) {
 	qtest.CreateCourse(t, db, user, course)
 
 	_, scms := qtest.FakeProviderMap(t)
-	ags := NewAutograderService(zap.NewNop(), db, scms, BaseHookOptions{}, &ci.Local{})
+	ags := NewQuickFeedService(zap.NewNop(), db, scms, BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), user)
 
 	// check that no repositories are returned when no repo types are specified

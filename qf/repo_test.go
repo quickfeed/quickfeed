@@ -1,9 +1,9 @@
-package ag_test
+package qf_test
 
 import (
 	"testing"
 
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 )
 
 func TestGetTestURL(t *testing.T) {

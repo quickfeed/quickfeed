@@ -8,27 +8,27 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
+	pb "github.com/quickfeed/quickfeed/qf"
 	scms "github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
 
-// AutograderService holds references to the database and
+// QuickFeedService holds references to the database and
 // other shared data structures.
-type AutograderService struct {
+type QuickFeedService struct {
 	logger *zap.SugaredLogger
 	db     database.Database
 	scms   *auth.Scms
 	bh     BaseHookOptions
 	runner ci.Runner
-	pb.UnimplementedAutograderServiceServer
+	pb.UnimplementedQuickFeedServiceServer
 }
 
-// NewAutograderService returns an AutograderService object.
-func NewAutograderService(logger *zap.Logger, db database.Database, scms *auth.Scms, bh BaseHookOptions, runner ci.Runner) *AutograderService {
-	return &AutograderService{
+// NewQuickFeedService returns a QuickFeedService object.
+func NewQuickFeedService(logger *zap.Logger, db database.Database, scms *auth.Scms, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
+	return &QuickFeedService{
 		logger: logger.Sugar(),
 		db:     db,
 		scms:   scms,
@@ -40,7 +40,7 @@ func NewAutograderService(logger *zap.Logger, db database.Database, scms *auth.S
 // GetUser will return current user with active course enrollments
 // to use in separating teacher and admin roles
 // Access policy: everyone
-func (s *AutograderService) GetUser(ctx context.Context, _ *pb.Void) (*pb.User, error) {
+func (s *QuickFeedService) GetUser(ctx context.Context, _ *pb.Void) (*pb.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetUser failed: authentication error: %v", err)
@@ -56,7 +56,7 @@ func (s *AutograderService) GetUser(ctx context.Context, _ *pb.Void) (*pb.User, 
 // GetUsers returns a list of all users.
 // Access policy: Admin.
 // Frontend note: This method is called from AdminPage.
-func (s *AutograderService) GetUsers(ctx context.Context, _ *pb.Void) (*pb.Users, error) {
+func (s *QuickFeedService) GetUsers(ctx context.Context, _ *pb.Void) (*pb.Users, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetUsers failed: authentication error: %v", err)
@@ -77,7 +77,7 @@ func (s *AutograderService) GetUsers(ctx context.Context, _ *pb.Void) (*pb.Users
 // GetUserByCourse returns the user matching the given course name and GitHub login
 // specified in CourseUserRequest.
 // Access policy: Admins or course teachers
-func (s *AutograderService) GetUserByCourse(ctx context.Context, in *pb.CourseUserRequest) (*pb.User, error) {
+func (s *QuickFeedService) GetUserByCourse(ctx context.Context, in *pb.CourseUserRequest) (*pb.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetUserByCourse failed: authentication error: %v", err)
@@ -95,7 +95,7 @@ func (s *AutograderService) GetUserByCourse(ctx context.Context, in *pb.CourseUs
 // This function can also promote a user to admin or demote a user.
 // Access policy: Admin can update other users's information and promote to Admin;
 // Current User if Owner can update its own information.
-func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Void, error) {
+func (s *QuickFeedService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateUser failed: authentication error: %v", err)
@@ -114,7 +114,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Vo
 
 // IsAuthorizedTeacher checks whether current user has teacher scopes.
 // Access policy: Any User.
-func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, _ *pb.Void) (*pb.AuthorizationResponse, error) {
+func (s *QuickFeedService) IsAuthorizedTeacher(ctx context.Context, _ *pb.Void) (*pb.AuthorizationResponse, error) {
 	// Currently hardcoded for github only
 	_, scm, err := s.getUserAndSCM(ctx, "github")
 	if err != nil {
@@ -128,7 +128,7 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, _ *pb.Void)
 
 // CreateCourse creates a new course.
 // Access policy: Admin.
-func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*pb.Course, error) {
+func (s *QuickFeedService) CreateCourse(ctx context.Context, in *pb.Course) (*pb.Course, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: scm authentication error: %v", err)
@@ -162,7 +162,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 
 // UpdateCourse changes the course information details.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
+func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: scm authentication error: %v", err)
@@ -189,7 +189,7 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 
 // GetCourse returns course information for the given course.
 // Access policy: Any User.
-func (s *AutograderService) GetCourse(ctx context.Context, in *pb.CourseRequest) (*pb.Course, error) {
+func (s *QuickFeedService) GetCourse(ctx context.Context, in *pb.CourseRequest) (*pb.Course, error) {
 	courseID := in.GetCourseID()
 	course, err := s.getCourse(courseID)
 	if err != nil {
@@ -201,7 +201,7 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.CourseRequest)
 
 // GetCourses returns a list of all courses.
 // Access policy: Any User.
-func (s *AutograderService) GetCourses(_ context.Context, _ *pb.Void) (*pb.Courses, error) {
+func (s *QuickFeedService) GetCourses(_ context.Context, _ *pb.Void) (*pb.Courses, error) {
 	courses, err := s.getCourses()
 	if err != nil {
 		s.logger.Errorf("GetCourses failed: %v", err)
@@ -212,7 +212,7 @@ func (s *AutograderService) GetCourses(_ context.Context, _ *pb.Void) (*pb.Cours
 
 // UpdateCourseVisibility allows to edit what courses are visible in the sidebar.
 // Access policy: Any User.
-func (s *AutograderService) UpdateCourseVisibility(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
+func (s *QuickFeedService) UpdateCourseVisibility(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("ChangeCourseVisibility failed: authentication error: %v", err)
@@ -232,7 +232,7 @@ func (s *AutograderService) UpdateCourseVisibility(ctx context.Context, in *pb.E
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
 // Access policy: Any User.
-func (s *AutograderService) CreateEnrollment(_ context.Context, in *pb.Enrollment) (*pb.Void, error) {
+func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	err := s.createEnrollment(in)
 	if err != nil {
 		s.logger.Errorf("CreateEnrollment failed: %v", err)
@@ -244,7 +244,7 @@ func (s *AutograderService) CreateEnrollment(_ context.Context, in *pb.Enrollmen
 // UpdateEnrollments changes status of all pending enrollments for the specified course to approved.
 // If the request contains a single enrollment, it will be updated to the specified status.
 // Access policy: Teacher of CourseID
-func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Enrollments) (*pb.Void, error) {
+func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *pb.Enrollments) (*pb.Void, error) {
 	user, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: scm authentication error: %v", err)
@@ -277,7 +277,7 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Enroll
 
 // GetCoursesByUser returns all courses the given user is enrolled into with the given status.
 // Access policy: Any User.
-func (s *AutograderService) GetCoursesByUser(_ context.Context, in *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
+func (s *QuickFeedService) GetCoursesByUser(_ context.Context, in *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
 	courses, err := s.getCoursesByUser(in)
 	if err != nil {
 		s.logger.Errorf("GetCoursesWithEnrollment failed: %v", err)
@@ -288,7 +288,7 @@ func (s *AutograderService) GetCoursesByUser(_ context.Context, in *pb.Enrollmen
 
 // GetEnrollmentsByUser returns all enrollments for the given user and enrollment status with preloaded courses and groups.
 // Access policy: user with userID or admin
-func (s *AutograderService) GetEnrollmentsByUser(ctx context.Context, in *pb.EnrollmentStatusRequest) (*pb.Enrollments, error) {
+func (s *QuickFeedService) GetEnrollmentsByUser(ctx context.Context, in *pb.EnrollmentStatusRequest) (*pb.Enrollments, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByUser failed: authentication error: %v", err)
@@ -309,7 +309,7 @@ func (s *AutograderService) GetEnrollmentsByUser(ctx context.Context, in *pb.Enr
 
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
 // Access policy: Teacher or student of CourseID.
-func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollments, error) {
+func (s *QuickFeedService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollments, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByCourse failed: authentication error: %v", err)
@@ -330,7 +330,7 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.E
 
 // GetGroup returns information about a group.
 // Access policy: Group members, Teacher of CourseID.
-func (s *AutograderService) GetGroup(ctx context.Context, in *pb.GetGroupRequest) (*pb.Group, error) {
+func (s *QuickFeedService) GetGroup(ctx context.Context, in *pb.GetGroupRequest) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetGroup failed: authentication error: %v", err)
@@ -350,7 +350,7 @@ func (s *AutograderService) GetGroup(ctx context.Context, in *pb.GetGroupRequest
 
 // GetGroupsByCourse returns a list of groups created for the course id in the record request.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) GetGroupsByCourse(ctx context.Context, in *pb.CourseRequest) (*pb.Groups, error) {
+func (s *QuickFeedService) GetGroupsByCourse(ctx context.Context, in *pb.CourseRequest) (*pb.Groups, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetGroups failed: authentication error: %v", err)
@@ -371,7 +371,7 @@ func (s *AutograderService) GetGroupsByCourse(ctx context.Context, in *pb.Course
 
 // GetGroupByUserAndCourse returns the group of the given student for a given course.
 // Access policy: Group members, Teacher of CourseID.
-func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.GroupRequest) (*pb.Group, error) {
+func (s *QuickFeedService) GetGroupByUserAndCourse(ctx context.Context, in *pb.GroupRequest) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetGroupByUserAndCourse failed: authentication error: %v", err)
@@ -393,7 +393,7 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 
 // CreateGroup creates a new group in the database.
 // Access policy: Any User enrolled in course and specified as member of the group or a course teacher.
-func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
+func (s *QuickFeedService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("CreateGroup failed: authentication error: %v", err)
@@ -422,7 +422,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 
 // UpdateGroup updates group information, and returns the updated group.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
+func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: scm authentication error: %v", err)
@@ -457,7 +457,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 
 // DeleteGroup removes group record from the database.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest) (*pb.Void, error) {
+func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *pb.GroupRequest) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: scm authentication error: %v", err)
@@ -491,7 +491,7 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest
 // Current User if Owner of submission,
 // Current User if member of group for group submission,
 // Teacher of CourseID.
-func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.SubmissionRequest) (*pb.Submissions, error) {
+func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *pb.SubmissionRequest) (*pb.Submissions, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetSubmissions failed: authentication error: %v", err)
@@ -531,7 +531,7 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 // GetSubmissionsByCourse returns all the latest submissions
 // for every individual or group course assignment for all course students/groups.
 // Access policy: Admin enrolled in CourseID, Teacher of CourseID.
-func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
+func (s *QuickFeedService) GetSubmissionsByCourse(ctx context.Context, in *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetSubmissionsByCourse failed: authentication error: %v", err)
@@ -569,7 +569,7 @@ func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.S
 
 // UpdateSubmission is called to approve the given submission or to undo approval.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateSubmissionRequest) (*pb.Void, error) {
+func (s *QuickFeedService) UpdateSubmission(ctx context.Context, in *pb.UpdateSubmissionRequest) (*pb.Void, error) {
 	if !s.isValidSubmission(in.SubmissionID) {
 		s.logger.Errorf("UpdateSubmission failed: submission author has no access to the course")
 		return nil, status.Error(codes.PermissionDenied, "submission author has no course access")
@@ -595,7 +595,7 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 // A single submission is executed again if the request specifies a submission ID
 // or all submissions if the request specifies a course ID.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.RebuildRequest) (*pb.Void, error) {
+func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *pb.RebuildRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("RebuildSubmissions failed: authentication error: %v", err)
@@ -627,7 +627,7 @@ func (s *AutograderService) RebuildSubmissions(ctx context.Context, in *pb.Rebui
 
 // CreateBenchmark adds a new grading benchmark for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) CreateBenchmark(_ context.Context, in *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
+func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
 	bm, err := s.createBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("CreateBenchmark failed for %+v: %v", in, err)
@@ -638,7 +638,7 @@ func (s *AutograderService) CreateBenchmark(_ context.Context, in *pb.GradingBen
 
 // UpdateBenchmark edits a grading benchmark for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) UpdateBenchmark(_ context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
+func (s *QuickFeedService) UpdateBenchmark(_ context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
 	err := s.updateBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("UpdateBenchmark failed for %+v: %v", in, err)
@@ -649,7 +649,7 @@ func (s *AutograderService) UpdateBenchmark(_ context.Context, in *pb.GradingBen
 
 // DeleteBenchmark removes a grading benchmark
 // Access policy: Teacher of CourseID
-func (s *AutograderService) DeleteBenchmark(_ context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
+func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
 	err := s.deleteBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("DeleteBenchmark failed for %+v: %v", in, err)
@@ -660,7 +660,7 @@ func (s *AutograderService) DeleteBenchmark(_ context.Context, in *pb.GradingBen
 
 // CreateCriterion adds a new grading criterion for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) CreateCriterion(_ context.Context, in *pb.GradingCriterion) (*pb.GradingCriterion, error) {
+func (s *QuickFeedService) CreateCriterion(_ context.Context, in *pb.GradingCriterion) (*pb.GradingCriterion, error) {
 	c, err := s.createCriterion(in)
 	if err != nil {
 		s.logger.Errorf("CreateCriterion failed for %+v: %v", in, err)
@@ -671,7 +671,7 @@ func (s *AutograderService) CreateCriterion(_ context.Context, in *pb.GradingCri
 
 // UpdateCriterion edits a grading criterion for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) UpdateCriterion(_ context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
+func (s *QuickFeedService) UpdateCriterion(_ context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
 	err := s.updateCriterion(in)
 	if err != nil {
 		s.logger.Errorf("UpdateCriterion failed for %+v: %v", in, err)
@@ -682,7 +682,7 @@ func (s *AutograderService) UpdateCriterion(_ context.Context, in *pb.GradingCri
 
 // DeleteCriterion removes a grading criterion for an assignment
 // Access policy: Teacher of CourseID
-func (s *AutograderService) DeleteCriterion(_ context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
+func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
 	err := s.deleteCriterion(in)
 	if err != nil {
 		s.logger.Errorf("DeleteCriterion failed for %+v: %v", in, err)
@@ -693,7 +693,7 @@ func (s *AutograderService) DeleteCriterion(_ context.Context, in *pb.GradingCri
 
 // CreateReview adds a new submission review
 // Access policy: Teacher of CourseID
-func (s *AutograderService) CreateReview(ctx context.Context, in *pb.ReviewRequest) (*pb.Review, error) {
+func (s *QuickFeedService) CreateReview(ctx context.Context, in *pb.ReviewRequest) (*pb.Review, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("CreateReview failed: authentication error: %v", err)
@@ -717,7 +717,7 @@ func (s *AutograderService) CreateReview(ctx context.Context, in *pb.ReviewReque
 
 // UpdateReview updates a submission review
 // Access policy: Teacher of CourseID, Author of the given Review
-func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewRequest) (*pb.Review, error) {
+func (s *QuickFeedService) UpdateReview(ctx context.Context, in *pb.ReviewRequest) (*pb.Review, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateReview failed: authentication error: %v", err)
@@ -742,7 +742,7 @@ func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewReque
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
 // with the given score.
 // Access policy: Creator of CourseID
-func (s *AutograderService) UpdateSubmissions(ctx context.Context, in *pb.UpdateSubmissionsRequest) (*pb.Void, error) {
+func (s *QuickFeedService) UpdateSubmissions(ctx context.Context, in *pb.UpdateSubmissionsRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateSubmissions failed: authentication error: %v", err)
@@ -762,7 +762,7 @@ func (s *AutograderService) UpdateSubmissions(ctx context.Context, in *pb.Update
 
 // GetReviewers returns names of all active reviewers for a student submission
 // Access policy: Teacher of CourseID
-func (s *AutograderService) GetReviewers(ctx context.Context, in *pb.SubmissionReviewersRequest) (*pb.Reviewers, error) {
+func (s *QuickFeedService) GetReviewers(ctx context.Context, in *pb.SubmissionReviewersRequest) (*pb.Reviewers, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetReviewers failed: authentication error: %v", err)
@@ -782,7 +782,7 @@ func (s *AutograderService) GetReviewers(ctx context.Context, in *pb.SubmissionR
 
 // GetAssignments returns a list of all assignments for the given course.
 // Access policy: Any User.
-func (s *AutograderService) GetAssignments(_ context.Context, in *pb.CourseRequest) (*pb.Assignments, error) {
+func (s *QuickFeedService) GetAssignments(_ context.Context, in *pb.CourseRequest) (*pb.Assignments, error) {
 	courseID := in.GetCourseID()
 	assignments, err := s.getAssignments(courseID)
 	if err != nil {
@@ -795,7 +795,7 @@ func (s *AutograderService) GetAssignments(_ context.Context, in *pb.CourseReque
 // UpdateAssignments updates the assignments record in the database
 // by fetching assignment information from the course's test repository.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.CourseRequest) (*pb.Void, error) {
+func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *pb.CourseRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: scm authentication error: %v", err)
@@ -816,7 +816,7 @@ func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.Course
 
 // GetProviders returns a list of SCM providers supported by the backend.
 // Access policy: Any User.
-func (s *AutograderService) GetProviders(_ context.Context, _ *pb.Void) (*pb.Providers, error) {
+func (s *QuickFeedService) GetProviders(_ context.Context, _ *pb.Void) (*pb.Providers, error) {
 	providers := auth.GetProviders()
 	if len(providers.GetProviders()) < 1 {
 		s.logger.Error("GetProviders failed: found no enabled SCM providers")
@@ -827,7 +827,7 @@ func (s *AutograderService) GetProviders(_ context.Context, _ *pb.Void) (*pb.Pro
 
 // GetOrganization fetches a github organization by name.
 // Access policy: Admin
-func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgRequest) (*pb.Organization, error) {
+func (s *QuickFeedService) GetOrganization(ctx context.Context, in *pb.OrgRequest) (*pb.Organization, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, "github")
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: scm authentication error: %v", err)
@@ -859,7 +859,7 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 
 // GetRepositories returns URL strings for repositories of given type for the given course
 // Access policy: Any User.
-func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLRequest) (*pb.Repositories, error) {
+func (s *QuickFeedService) GetRepositories(ctx context.Context, in *pb.URLRequest) (*pb.Repositories, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetRepositories failed: authentication error: %v", err)
@@ -892,7 +892,7 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 
 // IsEmptyRepo ensures that group repository is empty and can be deleted
 // Access policy: Teacher of Course ID
-func (s *AutograderService) IsEmptyRepo(ctx context.Context, in *pb.RepositoryRequest) (*pb.Void, error) {
+func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *pb.RepositoryRequest) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: scm authentication error: %v", err)

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"regexp"
 
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,7 +23,7 @@ var (
 )
 
 // getGroup returns the group for the given group ID.
-func (s *AutograderService) getGroup(request *pb.GetGroupRequest) (*pb.Group, error) {
+func (s *QuickFeedService) getGroup(request *pb.GetGroupRequest) (*pb.Group, error) {
 	group, err := s.db.GetGroup(request.GetGroupID())
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func (s *AutograderService) getGroup(request *pb.GetGroupRequest) (*pb.Group, er
 }
 
 // getGroups returns all groups for the given course ID.
-func (s *AutograderService) getGroups(request *pb.CourseRequest) (*pb.Groups, error) {
+func (s *QuickFeedService) getGroups(request *pb.CourseRequest) (*pb.Groups, error) {
 	groups, err := s.db.GetGroupsByCourse(request.GetCourseID())
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (s *AutograderService) getGroups(request *pb.CourseRequest) (*pb.Groups, er
 }
 
 // getGroupByUserAndCourse returns the group of the given user and course.
-func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*pb.Group, error) {
+func (s *QuickFeedService) getGroupByUserAndCourse(request *pb.GroupRequest) (*pb.Group, error) {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*
 }
 
 // DeleteGroup deletes group with the provided ID.
-func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request *pb.GroupRequest) error {
+func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request *pb.GroupRequest) error {
 	course, group, err := s.getCourseGroup(request)
 	if err != nil {
 		return err
@@ -86,7 +86,7 @@ func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request
 // This function is typically called by a student when creating
 // a group, which will later be (optionally) edited and approved
 // by a teacher of the course using the updateGroup function below.
-func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
+func (s *QuickFeedService) createGroup(request *pb.Group) (*pb.Group, error) {
 	if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
 // Only teachers can invoke this, and allows the teacher to add or remove
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
-func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request *pb.Group) error {
+func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request *pb.Group) error {
 	course, group, err := s.getCourseGroup(&pb.GroupRequest{
 		CourseID: request.GetCourseID(),
 		GroupID:  request.GetID(),
@@ -184,7 +184,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 // that the group's users are enrolled in the course,
 // that the enrollment has been accepted, and
 // that the group's users are not already enrolled in another group.
-func (s *AutograderService) getGroupUsers(request *pb.Group) ([]*pb.User, error) {
+func (s *QuickFeedService) getGroupUsers(request *pb.Group) ([]*pb.User, error) {
 	if len(request.Users) == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "no users in group")
 	}
@@ -223,7 +223,7 @@ func (s *AutograderService) getGroupUsers(request *pb.Group) ([]*pb.User, error)
 var regexpNonAuthorizedChars = regexp.MustCompile("[^a-zA-Z0-9-_]")
 
 // checkGroupName returns an error if the group name is invalid; otherwise nil is returned.
-func (s *AutograderService) checkGroupName(courseID uint64, groupName string) error {
+func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) error {
 	if len(groupName) > maxGroupNameLength {
 		return errGroupNameTooLong
 	}
@@ -243,7 +243,7 @@ func (s *AutograderService) checkGroupName(courseID uint64, groupName string) er
 }
 
 // getCourseGroup returns the course and group specified in the GroupRequest.
-func (s *AutograderService) getCourseGroup(request *pb.GroupRequest) (*pb.Course, *pb.Group, error) {
+func (s *QuickFeedService) getCourseGroup(request *pb.GroupRequest) (*pb.Course, *pb.Group, error) {
 	group, err := s.db.GetGroup(request.GetGroupID())
 	if err != nil {
 		return nil, nil, err

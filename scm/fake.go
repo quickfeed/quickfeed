@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strconv"
 
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 )
 
 // FakeSCM implements the SCM interface.

@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"gorm.io/gorm"
 )
 
-func (s *AutograderService) getRepo(course *pb.Course, id uint64, repoType pb.Repository_Type) (*pb.Repository, error) {
+func (s *QuickFeedService) getRepo(course *pb.Course, id uint64, repoType pb.Repository_Type) (*pb.Repository, error) {
 	query := &pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		RepoType:       repoType,
@@ -32,7 +32,7 @@ func (s *AutograderService) getRepo(course *pb.Course, id uint64, repoType pb.Re
 
 // isEmptyRepo returns nil if all repositories for the given course and student or group are empty,
 // returns an error otherwise.
-func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *pb.RepositoryRequest) error {
+func (s *QuickFeedService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *pb.RepositoryRequest) error {
 	course, err := s.db.GetCourse(request.GetCourseID(), false)
 	if err != nil {
 		return err

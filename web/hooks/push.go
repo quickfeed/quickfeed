@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/google/go-github/v45/github"
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/log"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"gorm.io/gorm"

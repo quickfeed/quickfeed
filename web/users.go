@@ -1,11 +1,11 @@
 package web
 
 import (
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 )
 
 // getUsers returns all the users in the database.
-func (s *AutograderService) getUsers() (*pb.Users, error) {
+func (s *QuickFeedService) getUsers() (*pb.Users, error) {
 	users, err := s.db.GetUsers()
 	if err != nil {
 		return nil, err
@@ -15,7 +15,7 @@ func (s *AutograderService) getUsers() (*pb.Users, error) {
 
 // getUserByCourse returns the user matching the given GitHub login if
 // the user is enrolled in the given course.
-func (s *AutograderService) getUserByCourse(request *pb.CourseUserRequest, currentUser *pb.User) (*pb.User, error) {
+func (s *QuickFeedService) getUserByCourse(request *pb.CourseUserRequest, currentUser *pb.User) (*pb.User, error) {
 	courseQuery := &pb.Course{Code: request.CourseCode, Year: request.CourseYear}
 	user, course, err := s.db.GetUserByCourse(courseQuery, request.UserLogin)
 	if err != nil {
@@ -30,7 +30,7 @@ func (s *AutograderService) getUserByCourse(request *pb.CourseUserRequest, curre
 // updateUser updates the user profile according to the user data in
 // the request object. If curUser is admin, and the request may also
 // promote the user to admin.
-func (s *AutograderService) updateUser(curUser *pb.User, request *pb.User) (*pb.User, error) {
+func (s *QuickFeedService) updateUser(curUser *pb.User, request *pb.User) (*pb.User, error) {
 	updateUser, err := s.db.GetUser(request.ID)
 	if err != nil {
 		return nil, err

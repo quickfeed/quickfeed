@@ -1,4 +1,4 @@
-package ag
+package qf
 
 func (pr *PullRequest) SetApproved() {
 	pr.Stage = PullRequest_APPROVED

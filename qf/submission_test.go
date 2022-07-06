@@ -1,11 +1,11 @@
-package ag_test
+package qf_test
 
 import (
 	"testing"
 	"time"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	score "github.com/quickfeed/quickfeed/kit/score"
+	pb "github.com/quickfeed/quickfeed/qf"
 )
 
 func TestNewestSubmissionDate(t *testing.T) {

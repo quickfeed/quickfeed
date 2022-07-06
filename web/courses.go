@@ -7,13 +7,13 @@ import (
 	"sort"
 	"time"
 
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"gorm.io/gorm"
 )
 
 // getCourses returns all courses.
-func (s *AutograderService) getCourses() (*pb.Courses, error) {
+func (s *QuickFeedService) getCourses() (*pb.Courses, error) {
 	courses, err := s.db.GetCourses()
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (s *AutograderService) getCourses() (*pb.Courses, error) {
 }
 
 // getCoursesByUser returns all courses that match the provided enrollment status.
-func (s *AutograderService) getCoursesByUser(request *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
+func (s *QuickFeedService) getCoursesByUser(request *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
 	courses, err := s.db.GetCoursesByUser(request.GetUserID(), request.Statuses...)
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func (s *AutograderService) getCoursesByUser(request *pb.EnrollmentStatusRequest
 
 // getEnrollmentsByUser returns all enrollments for the given user with preloaded
 // courses and groups
-func (s *AutograderService) getEnrollmentsByUser(request *pb.EnrollmentStatusRequest) (*pb.Enrollments, error) {
+func (s *QuickFeedService) getEnrollmentsByUser(request *pb.EnrollmentStatusRequest) (*pb.Enrollments, error) {
 	enrollments, err := s.db.GetEnrollmentsByUser(request.UserID, request.Statuses...)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (s *AutograderService) getEnrollmentsByUser(request *pb.EnrollmentStatusReq
 }
 
 // getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
-func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest) (*pb.Enrollments, error) {
+func (s *QuickFeedService) getEnrollmentsByCourse(request *pb.EnrollmentRequest) (*pb.Enrollments, error) {
 	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.Statuses...)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest
 }
 
 // createEnrollment creates a pending enrollment for the given user and course.
-func (s *AutograderService) createEnrollment(request *pb.Enrollment) error {
+func (s *QuickFeedService) createEnrollment(request *pb.Enrollment) error {
 	enrollment := pb.Enrollment{
 		UserID:   request.GetUserID(),
 		CourseID: request.GetCourseID(),
@@ -84,7 +84,7 @@ func (s *AutograderService) createEnrollment(request *pb.Enrollment) error {
 }
 
 // updateEnrollment changes the status of the given course enrollment.
-func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *pb.Enrollment) error {
+func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *pb.Enrollment) error {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
 	if err != nil {
 		return err
@@ -108,7 +108,7 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, cu
 }
 
 // rejectEnrollment rejects a student enrollment, if a student repo exists for the given course, removes it from the SCM and database.
-func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
+func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 	if err := s.db.RejectEnrollment(user.ID, course.ID); err != nil {
@@ -136,7 +136,7 @@ func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, en
 }
 
 // enrollStudent enrolls the given user as a student into the given course.
-func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
+func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 
@@ -186,7 +186,7 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 }
 
 // enrollTeacher promotes the given user to teacher of the given course
-func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
+func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 
@@ -201,7 +201,7 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 	})
 }
 
-func (s *AutograderService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
+func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 	err := revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
@@ -216,12 +216,12 @@ func (s *AutograderService) revokeTeacherStatus(ctx context.Context, sc scm.SCM,
 }
 
 // getCourse returns a course object for the given course id.
-func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
+func (s *QuickFeedService) getCourse(courseID uint64) (*pb.Course, error) {
 	return s.db.GetCourse(courseID, false)
 }
 
 // getSubmissions returns all the latests submissions for a user of the given course.
-func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.Submissions, error) {
+func (s *QuickFeedService) getSubmissions(request *pb.SubmissionRequest) (*pb.Submissions, error) {
 	// only one of user ID and group ID will be set; enforced by IsValid on pb.SubmissionRequest
 	query := &pb.Submission{
 		UserID:  request.GetUserID(),
@@ -235,7 +235,7 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 }
 
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
-func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
+func (s *QuickFeedService) getAllCourseSubmissions(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
 	assignments, err := s.db.GetAssignmentsWithSubmissions(request.GetCourseID(), request.Type, request.GetWithBuildInfo())
 	if err != nil {
 		return nil, err
@@ -333,7 +333,7 @@ func makeSubmissionLinks(assignments []*pb.Assignment, include func(*pb.Submissi
 }
 
 // updateSubmission updates submission status or sets a submission score based on a manual review.
-func (s *AutograderService) updateSubmission(courseID, submissionID uint64, status pb.Submission_Status, released bool, score uint32) error {
+func (s *QuickFeedService) updateSubmission(courseID, submissionID uint64, status pb.Submission_Status, released bool, score uint32) error {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
 	if err != nil {
 		return err
@@ -356,7 +356,7 @@ func (s *AutograderService) updateSubmission(courseID, submissionID uint64, stat
 
 // updateSubmissions updates status and release state of multiple submissions for the
 // given course and assignment ID for all submissions with score equal or above the provided score
-func (s *AutograderService) updateSubmissions(request *pb.UpdateSubmissionsRequest) error {
+func (s *QuickFeedService) updateSubmissions(request *pb.UpdateSubmissionsRequest) error {
 	if _, _, err := s.getAssignmentWithCourse(&pb.Assignment{
 		CourseID: request.CourseID,
 		ID:       request.AssignmentID,
@@ -376,7 +376,7 @@ func (s *AutograderService) updateSubmissions(request *pb.UpdateSubmissionsReque
 	return s.db.UpdateSubmissions(request.CourseID, query)
 }
 
-func (s *AutograderService) getReviewers(submissionID uint64) ([]*pb.User, error) {
+func (s *QuickFeedService) getReviewers(submissionID uint64) ([]*pb.User, error) {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
 	if err != nil {
 		return nil, err
@@ -392,7 +392,7 @@ func (s *AutograderService) getReviewers(submissionID uint64) ([]*pb.User, error
 }
 
 // updateCourse updates an existing course.
-func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, request *pb.Course) error {
+func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request *pb.Course) error {
 	// ensure the course exists
 	_, err := s.db.GetCourse(request.ID, false)
 	if err != nil {
@@ -407,12 +407,12 @@ func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, reques
 	return s.db.UpdateCourse(request)
 }
 
-func (s *AutograderService) changeCourseVisibility(enrollment *pb.Enrollment) error {
+func (s *QuickFeedService) changeCourseVisibility(enrollment *pb.Enrollment) error {
 	return s.db.UpdateEnrollment(enrollment)
 }
 
 // returns all enrollments for the course ID with last activity date and number of approved assignments
-func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.Enrollment, error) {
+func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.Enrollment, error) {
 	allEnrollmentsWithSubmissions, err := s.getAllCourseSubmissions(
 		&pb.SubmissionsForCourseRequest{
 			CourseID: courseID,
@@ -455,7 +455,7 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 	return enrollmentsWithActivity, nil
 }
 
-func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission, courseID uint64) error {
+func (s *QuickFeedService) setLastApprovedAssignment(submission *pb.Submission, courseID uint64) error {
 	query := &pb.Enrollment{
 		CourseID: courseID,
 	}
@@ -481,7 +481,7 @@ func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission,
 }
 
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
-func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, user *pb.User, course *pb.Course) error {
+func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, user *pb.User, course *pb.Course) error {
 	user, err := s.db.GetUser(user.ID)
 	if err != nil {
 		return fmt.Errorf("failed to get user %d: %w", user.ID, err)

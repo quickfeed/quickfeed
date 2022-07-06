@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v45/github"
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"gorm.io/gorm"
 )
 

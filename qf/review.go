@@ -1,4 +1,4 @@
-package ag
+package qf
 
 // ComputeScore computes the total score for the review and assigns it to r.
 // If the grading criteria have predefined points, the score is the sum of these points.

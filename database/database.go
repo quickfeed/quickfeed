@@ -1,7 +1,7 @@
 package database
 
 import (
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 )
 
 // Database contains methods for manipulating the database.

@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/database"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 
 	"github.com/urfave/cli"

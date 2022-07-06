@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/kit/score"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"gorm.io/gorm"
 )
 

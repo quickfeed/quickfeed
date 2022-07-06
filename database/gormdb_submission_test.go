@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )

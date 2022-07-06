@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/log"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"go.uber.org/zap"
@@ -66,7 +66,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	}
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
@@ -302,7 +302,7 @@ func TestApproveSubmission(t *testing.T) {
 	}
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
@@ -361,7 +361,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	student3 := qtest.CreateFakeUser(t, db, 4)
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	if _, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
 		t.Fatal(err)
@@ -631,7 +631,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
@@ -859,7 +859,7 @@ func TestCreateApproveList(t *testing.T) {
 	}
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
@@ -960,7 +960,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	qtest.EnrollStudent(t, db, student3, course)
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {

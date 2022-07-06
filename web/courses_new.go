@@ -6,7 +6,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/web/auth"
 
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
@@ -15,7 +15,7 @@ const (
 	public  = !private
 )
 
-// RepoPaths maps from Autograder repository path names to a boolean indicating
+// RepoPaths maps from QuickFeed repository path names to a boolean indicating
 // whether or not the repository should be create as public or private.
 var RepoPaths = map[string]bool{
 	pb.InfoRepo:       public,
@@ -25,8 +25,8 @@ var RepoPaths = map[string]bool{
 
 // createCourse creates a new course for the directory specified in the request
 // and creates the repositories for the course. Requires that the directory
-// does not contain the Autograder repositories that will be created.
-func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, request *pb.Course) (*pb.Course, error) {
+// does not contain the QuickFeed repositories that will be created.
+func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request *pb.Course) (*pb.Course, error) {
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: request.OrganizationID})
 	if err != nil {
 		return nil, err
@@ -135,7 +135,7 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 }
 
 // isDirty returns true if the list of provided repositories contains
-// any of the repositories that Autograder wants to create.
+// any of the repositories that QuickFeed wants to create.
 func isDirty(repos []*scm.Repository) bool {
 	if len(repos) == 0 {
 		return false

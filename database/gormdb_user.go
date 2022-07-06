@@ -1,7 +1,7 @@
 package database
 
 import (
-	pb "github.com/quickfeed/quickfeed/ag"
+	pb "github.com/quickfeed/quickfeed/qf"
 )
 
 // GetUser fetches a user by ID with remote identities.
