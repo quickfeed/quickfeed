@@ -114,7 +114,7 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(log.Zap(true), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewAutograderService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
