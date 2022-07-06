@@ -3,37 +3,37 @@ package qf_test
 import (
 	"testing"
 
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 var reviewScoreTests = []struct {
 	name   string
 	score  uint32
-	review *pb.Review
+	review *qf.Review
 }{
 	{
 		"Test 25% score",
 		25,
-		&pb.Review{
+		&qf.Review{
 			ID: 1,
-			GradingBenchmarks: []*pb.GradingBenchmark{
+			GradingBenchmarks: []*qf.GradingBenchmark{
 				{
-					Criteria: []*pb.GradingCriterion{
+					Criteria: []*qf.GradingCriterion{
 						{
-							Grade: pb.GradingCriterion_FAILED,
+							Grade: qf.GradingCriterion_FAILED,
 						},
 						{
-							Grade: pb.GradingCriterion_PASSED,
+							Grade: qf.GradingCriterion_PASSED,
 						},
 					},
 				},
 				{
-					Criteria: []*pb.GradingCriterion{
+					Criteria: []*qf.GradingCriterion{
 						{
-							Grade: pb.GradingCriterion_FAILED,
+							Grade: qf.GradingCriterion_FAILED,
 						},
 						{
-							Grade: pb.GradingCriterion_FAILED,
+							Grade: qf.GradingCriterion_FAILED,
 						},
 					},
 				},
@@ -43,26 +43,26 @@ var reviewScoreTests = []struct {
 	{
 		"Test 75% score",
 		75,
-		&pb.Review{
+		&qf.Review{
 			ID: 2,
-			GradingBenchmarks: []*pb.GradingBenchmark{
+			GradingBenchmarks: []*qf.GradingBenchmark{
 				{
-					Criteria: []*pb.GradingCriterion{
+					Criteria: []*qf.GradingCriterion{
 						{
-							Grade: pb.GradingCriterion_PASSED,
+							Grade: qf.GradingCriterion_PASSED,
 						},
 						{
-							Grade: pb.GradingCriterion_PASSED,
+							Grade: qf.GradingCriterion_PASSED,
 						},
 					},
 				},
 				{
-					Criteria: []*pb.GradingCriterion{
+					Criteria: []*qf.GradingCriterion{
 						{
-							Grade: pb.GradingCriterion_FAILED,
+							Grade: qf.GradingCriterion_FAILED,
 						},
 						{
-							Grade: pb.GradingCriterion_PASSED,
+							Grade: qf.GradingCriterion_PASSED,
 						},
 					},
 				},
@@ -72,31 +72,31 @@ var reviewScoreTests = []struct {
 	{
 		"Test 6/10 score",
 		6,
-		&pb.Review{
+		&qf.Review{
 			ID:       3,
 			Feedback: "Test 6/10 score",
-			GradingBenchmarks: []*pb.GradingBenchmark{
+			GradingBenchmarks: []*qf.GradingBenchmark{
 				{
-					Criteria: []*pb.GradingCriterion{
+					Criteria: []*qf.GradingCriterion{
 						{
 							Points: 3,
-							Grade:  pb.GradingCriterion_PASSED,
+							Grade:  qf.GradingCriterion_PASSED,
 						},
 						{
 							Points: 2,
-							Grade:  pb.GradingCriterion_FAILED,
+							Grade:  qf.GradingCriterion_FAILED,
 						},
 					},
 				},
 				{
-					Criteria: []*pb.GradingCriterion{
+					Criteria: []*qf.GradingCriterion{
 						{
 							Points: 2,
-							Grade:  pb.GradingCriterion_FAILED,
+							Grade:  qf.GradingCriterion_FAILED,
 						},
 						{
 							Points: 3,
-							Grade:  pb.GradingCriterion_PASSED,
+							Grade:  qf.GradingCriterion_PASSED,
 						},
 					},
 				},

@@ -243,7 +243,7 @@ func TestRequestReviewers(t *testing.T) {
 	opt := &scm.RequestReviewersOptions{
 		Organization: qfTestOrg,
 		Repository:   "repo-name",
-		Number:       0,
+		Number:       1,
 		Reviewers:    []string{"reviewer-login"},
 	}
 

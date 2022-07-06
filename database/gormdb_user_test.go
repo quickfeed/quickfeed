@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 func TestGetUserByCourse(t *testing.T) {
@@ -12,8 +12,8 @@ func TestGetUserByCourse(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	admin := qtest.CreateUser(t, db, 1, &pb.User{Login: "admin"})
-	course := &pb.Course{
+	admin := qtest.CreateUser(t, db, 1, &qf.User{Login: "admin"})
+	course := &qf.Course{
 		ID:              1,
 		CourseCreatorID: admin.ID,
 		Code:            "DAT320",
@@ -22,7 +22,7 @@ func TestGetUserByCourse(t *testing.T) {
 	}
 	qtest.CreateCourse(t, db, admin, course)
 
-	user := qtest.CreateUser(t, db, 2, &pb.User{Login: username})
+	user := qtest.CreateUser(t, db, 2, &qf.User{Login: username})
 	qtest.EnrollStudent(t, db, user, course)
 
 	u, c, err := db.GetUserByCourse(course, username)

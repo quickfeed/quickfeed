@@ -15,7 +15,7 @@ import (
 	"github.com/quickfeed/quickfeed/web/auth"
 
 	"github.com/quickfeed/quickfeed/database"
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 
 	"google.golang.org/grpc"
 
@@ -46,9 +46,9 @@ func init() {
 
 	reg.MustRegister(
 		grpcMetrics,
-		pb.AgFailedMethodsMetric,
-		pb.AgMethodSuccessRateMetric,
-		pb.AgResponseTimeByMethodsMetric,
+		qf.AgFailedMethodsMetric,
+		qf.AgMethodSuccessRateMetric,
+		qf.AgResponseTimeByMethodsMetric,
 	)
 }
 
@@ -101,7 +101,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to start tcp listener: %v\n", err)
 	}
-	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), pb.Interceptor(logger))
+	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
 	grpcServer := grpc.NewServer(opt)
 	// Create a HTTP server for prometheus.
 	httpServer := &http.Server{
@@ -114,7 +114,7 @@ func main() {
 		}
 	}()
 
-	pb.RegisterQuickFeedServiceServer(grpcServer, qfService)
+	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}

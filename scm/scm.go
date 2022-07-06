@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
 )
 
@@ -12,17 +12,17 @@ import (
 // i.e., GitHub and GitLab.
 type SCM interface {
 	// Creates a new organization.
-	CreateOrganization(context.Context, *OrganizationOptions) (*pb.Organization, error)
+	CreateOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Updates an organization
 	UpdateOrganization(context.Context, *OrganizationOptions) error
 	// Gets an organization.
-	GetOrganization(context.Context, *GetOrgOptions) (*pb.Organization, error)
+	GetOrganization(context.Context, *GetOrgOptions) (*qf.Organization, error)
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repository by ID or name
 	GetRepository(context.Context, *RepositoryOptions) (*Repository, error)
 	// Get repositories within organization.
-	GetRepositories(context.Context, *pb.Organization) ([]*Repository, error)
+	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
 	// Delete repository.
 	DeleteRepository(context.Context, *RepositoryOptions) error
 	// Add user as repository collaborator with provided permissions
@@ -41,7 +41,7 @@ type SCM interface {
 	// Get a single team by ID or name.
 	GetTeam(context.Context, *TeamOptions) (*Team, error)
 	// Fetch all teams for organization.
-	GetTeams(context.Context, *pb.Organization) ([]*Team, error)
+	GetTeams(context.Context, *qf.Organization) ([]*Team, error)
 	// Add repo to team.
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// AddTeamMember adds a member to a team.
@@ -147,7 +147,7 @@ type Hook struct {
 
 // CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
-	Organization *pb.Organization
+	Organization *qf.Organization
 	Path         string
 	Private      bool
 	Owner        string // The owner of an organization's repo is always the organization itself.

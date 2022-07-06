@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/ci"
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -73,7 +73,7 @@ autoapprove: false
 )
 
 func TestParse(t *testing.T) {
-	testsDir, err := ioutil.TempDir("", pb.TestsRepo)
+	testsDir, err := ioutil.TempDir("", qf.TestsRepo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,10 +117,10 @@ func TestParse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantCriteria := []*pb.GradingBenchmark{
+	wantCriteria := []*qf.GradingBenchmark{
 		{
 			Heading: "First benchmark",
-			Criteria: []*pb.GradingCriterion{
+			Criteria: []*qf.GradingCriterion{
 				{
 					Description: "Test 1",
 					Points:      5,
@@ -133,7 +133,7 @@ func TestParse(t *testing.T) {
 		},
 		{
 			Heading: "Second benchmark",
-			Criteria: []*pb.GradingCriterion{
+			Criteria: []*qf.GradingCriterion{
 				{
 					Description: "Test 3",
 					Points:      5,
@@ -144,7 +144,7 @@ func TestParse(t *testing.T) {
 
 	// We expect assignment names to be set based on
 	// assignment folder names.
-	wantAssignment1 := &pb.Assignment{
+	wantAssignment1 := &qf.Assignment{
 		Name:        "lab1",
 		Deadline:    "2017-08-27T12:00:00",
 		ScriptFile:  "Script for Lab1",
@@ -153,7 +153,7 @@ func TestParse(t *testing.T) {
 		ScoreLimit:  80,
 	}
 
-	wantAssignment2 := &pb.Assignment{
+	wantAssignment2 := &qf.Assignment{
 		Name:              "lab2",
 		Deadline:          "2018-08-27T12:00:00",
 		ScriptFile:        "Default script",
@@ -185,7 +185,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestParseUnknownFields(t *testing.T) {
-	testsDir, err := ioutil.TempDir("", pb.TestsRepo)
+	testsDir, err := ioutil.TempDir("", qf.TestsRepo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -209,7 +209,7 @@ func TestParseUnknownFields(t *testing.T) {
 
 	// We expect assignment names to be set based on
 	// assignment folder names.
-	wantAssignment1 := &pb.Assignment{
+	wantAssignment1 := &qf.Assignment{
 		Name:        "lab1",
 		Deadline:    "2017-08-27T12:00:00",
 		AutoApprove: false,

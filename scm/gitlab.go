@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 	gitlab "github.com/xanzy/go-gitlab"
 )
 
@@ -23,7 +23,7 @@ func NewGitlabSCMClient(token string) *GitlabSCM {
 }
 
 // CreateOrganization implements the SCM interface.
-func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*pb.Organization, error) {
+func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*qf.Organization, error) {
 	group, _, err := s.client.Groups.CreateGroup(&gitlab.CreateGroupOptions{
 		Name:       &opt.Name,
 		Path:       &opt.Path,
@@ -33,7 +33,7 @@ func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *OrganizationOpt
 		return nil, err
 	}
 
-	return &pb.Organization{
+	return &qf.Organization{
 		ID:     uint64(group.ID),
 		Path:   group.Path,
 		Avatar: group.AvatarURL,
@@ -49,13 +49,13 @@ func (*GitlabSCM) UpdateOrganization(_ context.Context, _ *OrganizationOptions) 
 }
 
 // GetOrganization implements the SCM interface.
-func (s *GitlabSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*pb.Organization, error) {
+func (s *GitlabSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
 	group, _, err := s.client.Groups.GetGroup(strconv.FormatUint(opt.ID, 10), &gitlab.GetGroupOptions{}, gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.Organization{
+	return &qf.Organization{
 		ID:     uint64(group.ID),
 		Path:   group.Path,
 		Avatar: group.AvatarURL,
@@ -95,7 +95,7 @@ func (*GitlabSCM) GetRepository(_ context.Context, _ *RepositoryOptions) (*Repos
 }
 
 // GetRepositories implements the SCM interface.
-func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *pb.Organization) ([]*Repository, error) {
+func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *qf.Organization) ([]*Repository, error) {
 	var gid interface{}
 	if directory.Path != "" {
 		gid = directory.Path
@@ -184,7 +184,7 @@ func (*GitlabSCM) GetTeam(_ context.Context, _ *TeamOptions) (*Team, error) {
 }
 
 // GetTeams implements the SCM interface
-func (*GitlabSCM) GetTeams(_ context.Context, _ *pb.Organization) ([]*Team, error) {
+func (*GitlabSCM) GetTeams(_ context.Context, _ *qf.Organization) ([]*Team, error) {
 	return nil, ErrNotSupported{
 		SCM:    "gitlab",
 		Method: "GetTeam",

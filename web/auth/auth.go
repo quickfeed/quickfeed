@@ -14,7 +14,7 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/quickfeed/quickfeed/database"
 	lg "github.com/quickfeed/quickfeed/log"
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -311,7 +311,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 			return c.Redirect(http.StatusFound, redirect)
 		}
 
-		remote := &pb.RemoteIdentity{
+		remote := &qf.RemoteIdentity{
 			Provider:    provider,
 			RemoteID:    remoteID,
 			AccessToken: externalUser.AccessToken,
@@ -332,7 +332,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 		case err == gorm.ErrRecordNotFound:
 			logger.Debug("user not found in database; creating new user")
 			// user not in database; create new user
-			user = &pb.User{
+			user = &qf.User{
 				Name:      externalUser.Name,
 				Email:     externalUser.Email,
 				AvatarURL: externalUser.AvatarURL,
@@ -439,7 +439,7 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, scms *Scms) 
 	}
 }
 
-func updateScm(ctx echo.Context, logger *zap.SugaredLogger, scms *Scms, user *pb.User) bool {
+func updateScm(ctx echo.Context, logger *zap.SugaredLogger, scms *Scms, user *qf.User) bool {
 	foundSCMProvider := false
 	for _, remoteID := range user.RemoteIdentities {
 		scm, err := scms.GetOrCreateSCMEntry(logger.Desugar(), remoteID.GetProvider(), remoteID.GetAccessToken())

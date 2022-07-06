@@ -1,152 +1,150 @@
 package database
 
-import (
-	pb "github.com/quickfeed/quickfeed/qf"
-)
+import "github.com/quickfeed/quickfeed/qf"
 
 // Database contains methods for manipulating the database.
 type Database interface {
 	// CreateUserFromRemoteIdentity creates new user record from remote identity, sets user with ID 1 as admin.
-	CreateUserFromRemoteIdentity(*pb.User, *pb.RemoteIdentity) error
+	CreateUserFromRemoteIdentity(*qf.User, *qf.RemoteIdentity) error
 	// AssociateUserWithRemoteIdentity associates user with the given remote identity.
 	AssociateUserWithRemoteIdentity(userID uint64, provider string, remoteID uint64, accessToken string) error
 	// UpdateAccessToken updates the access token for the given remote identity.
 	// The supplied remote identity must contain Provider, RemoteID and AccessToken.
-	UpdateAccessToken(*pb.RemoteIdentity) error
+	UpdateAccessToken(*qf.RemoteIdentity) error
 	// GetUserByRemoteIdentity returns the user for the given remote identity.
 	// The supplied remote identity must contain Provider and RemoteID.
-	GetUserByRemoteIdentity(*pb.RemoteIdentity) (*pb.User, error)
+	GetUserByRemoteIdentity(*qf.RemoteIdentity) (*qf.User, error)
 
 	// GetUser returns the given user, including remote identities.
-	GetUser(uint64) (*pb.User, error)
+	GetUser(uint64) (*qf.User, error)
 	// GetUserByCourse returns the owner of the given login
 	// with preloaded course matching the given query.
-	GetUserByCourse(*pb.Course, string) (*pb.User, *pb.Course, error)
+	GetUserByCourse(*qf.Course, string) (*qf.User, *qf.Course, error)
 	// GetUserWithEnrollments returns the user by ID with preloaded user enrollments.
-	GetUserWithEnrollments(uint64) (*pb.User, error)
+	GetUserWithEnrollments(uint64) (*qf.User, error)
 	// GetUsers returns the users for the given set of user IDs.
-	GetUsers(...uint64) ([]*pb.User, error)
+	GetUsers(...uint64) ([]*qf.User, error)
 	// UpdateUser updates the user's details, excluding remote identities.
-	UpdateUser(*pb.User) error
+	UpdateUser(*qf.User) error
 
 	// CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
-	CreateCourse(uint64, *pb.Course) error
+	CreateCourse(uint64, *qf.Course) error
 	// GetCourse fetches course by ID. If withInfo is true, preloads course
 	// assignments, active enrollments and groups.
-	GetCourse(uint64, bool) (*pb.Course, error)
+	GetCourse(uint64, bool) (*qf.Course, error)
 	// GetCourseByOrganizationID fetches course by organization ID.
-	GetCourseByOrganizationID(organizationID uint64) (*pb.Course, error)
+	GetCourseByOrganizationID(organizationID uint64) (*qf.Course, error)
 	// GetCourses returns a list of courses. If one or more course IDs are provided,
 	// the corresponding courses are returned. Otherwise, all courses are returned.
-	GetCourses(...uint64) ([]*pb.Course, error)
+	GetCourses(...uint64) ([]*qf.Course, error)
 	// GetCoursesByUser returns all courses (with enrollment status)
 	// for the given user id.
 	// If enrollment statuses is provided, the set of courses returned
 	// is filtered according to these enrollment statuses.
-	GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error)
+	GetCoursesByUser(userID uint64, statuses ...qf.Enrollment_UserStatus) ([]*qf.Course, error)
 	// GetCourseTeachers returns a list of all teachers in a course.
-	GetCourseTeachers(query *pb.Course) ([]*pb.User, error)
+	GetCourseTeachers(query *qf.Course) ([]*qf.User, error)
 	// UpdateCourse updates course information.
-	UpdateCourse(*pb.Course) error
+	UpdateCourse(*qf.Course) error
 
 	// CreateEnrollment creates a new pending enrollment.
-	CreateEnrollment(*pb.Enrollment) error
+	CreateEnrollment(*qf.Enrollment) error
 	// RejectEnrollment removes the user enrollment from the database
 	RejectEnrollment(userID, courseID uint64) error
 	// UpdateEnrollmentStatus changes status of the course enrollment for the given user and course.
-	UpdateEnrollment(*pb.Enrollment) error
+	UpdateEnrollment(*qf.Enrollment) error
 	// GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
-	GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*pb.Enrollment, error)
+	GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*qf.Enrollment, error)
 	// GetEnrollmentsByCourse fetches all course enrollments with given statuses.
-	GetEnrollmentsByCourse(courseID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error)
+	GetEnrollmentsByCourse(courseID uint64, statuses ...qf.Enrollment_UserStatus) ([]*qf.Enrollment, error)
 	// GetEnrollmentsByUser fetches all enrollments for the given user
-	GetEnrollmentsByUser(userID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error)
+	GetEnrollmentsByUser(userID uint64, statuses ...qf.Enrollment_UserStatus) ([]*qf.Enrollment, error)
 
 	// CreateGroup creates a new group and assign users to newly created group.
-	CreateGroup(*pb.Group) error
+	CreateGroup(*qf.Group) error
 	// UpdateGroup updates a group with the specified users and enrollments.
-	UpdateGroup(group *pb.Group) error
+	UpdateGroup(group *qf.Group) error
 	// UpdateGroupStatus updates status field of a group.
-	UpdateGroupStatus(*pb.Group) error
+	UpdateGroupStatus(*qf.Group) error
 	// DeleteGroup deletes a group and its corresponding enrollments.
 	DeleteGroup(uint64) error
 	// GetGroup returns the group with the specified group ID.
-	GetGroup(uint64) (*pb.Group, error)
+	GetGroup(uint64) (*qf.Group, error)
 	// GetGroupsByCourse returns the groups for the given course.
-	GetGroupsByCourse(courseID uint64, statuses ...pb.Group_GroupStatus) ([]*pb.Group, error)
+	GetGroupsByCourse(courseID uint64, statuses ...qf.Group_GroupStatus) ([]*qf.Group, error)
 
 	// CreateAssignment creates a new or updates an existing assignment.
-	CreateAssignment(*pb.Assignment) error
+	CreateAssignment(*qf.Assignment) error
 	// GetAssignment returns assignment mathing the given query.
-	GetAssignment(query *pb.Assignment) (*pb.Assignment, error)
+	GetAssignment(query *qf.Assignment) (*qf.Assignment, error)
 	// GetAssignmentsByCourse returns a list of all assignments for the given course ID.
-	GetAssignmentsByCourse(uint64, bool) ([]*pb.Assignment, error)
+	GetAssignmentsByCourse(uint64, bool) ([]*qf.Assignment, error)
 	// UpdateAssignments updates the specified list of assignments.
-	UpdateAssignments([]*pb.Assignment) error
+	UpdateAssignments([]*qf.Assignment) error
 	// CreateBenchmark creates a new grading benchmark.
-	CreateBenchmark(*pb.GradingBenchmark) error
+	CreateBenchmark(*qf.GradingBenchmark) error
 	// UpdateBenchmark updates the given benchmark.
-	UpdateBenchmark(*pb.GradingBenchmark) error
+	UpdateBenchmark(*qf.GradingBenchmark) error
 	// DeleteBenchmark deletes the given benchmark.
-	DeleteBenchmark(*pb.GradingBenchmark) error
+	DeleteBenchmark(*qf.GradingBenchmark) error
 	// CreateCriterion creates a new grading criterion.
-	CreateCriterion(*pb.GradingCriterion) error
+	CreateCriterion(*qf.GradingCriterion) error
 	// UpdateCriterion updates the given criterion.
-	UpdateCriterion(*pb.GradingCriterion) error
+	UpdateCriterion(*qf.GradingCriterion) error
 	// DeleteCriterion deletes the given criterion.
-	DeleteCriterion(*pb.GradingCriterion) error
+	DeleteCriterion(*qf.GradingCriterion) error
 
 	// CreateSubmission creates a new submission record or updates the most
 	// recent submission, as defined by the provided submissionQuery.
 	// The submissionQuery must always specify the assignment, and may specify the ID of
 	// either an individual student or a group, but not both.
-	CreateSubmission(*pb.Submission) error
+	CreateSubmission(*qf.Submission) error
 	// GetSubmission returns a single submission matching the given query.
-	GetSubmission(query *pb.Submission) (*pb.Submission, error)
+	GetSubmission(query *qf.Submission) (*qf.Submission, error)
 	// GetLastSubmissions returns a list of submission entries for the given course, matching the given query.
-	GetLastSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error)
+	GetLastSubmissions(courseID uint64, query *qf.Submission) ([]*qf.Submission, error)
 	// GetSubmissions returns all submissions matching the query.
-	GetSubmissions(*pb.Submission) ([]*pb.Submission, error)
+	GetSubmissions(*qf.Submission) ([]*qf.Submission, error)
 	// GetAssignmentsWithSubmissions returns a list of assignments with the latest submissions for the given course.
-	GetAssignmentsWithSubmissions(courseID uint64, requestType pb.SubmissionsForCourseRequest_Type, withBuildInfo bool) ([]*pb.Assignment, error)
+	GetAssignmentsWithSubmissions(courseID uint64, requestType qf.SubmissionsForCourseRequest_Type, withBuildInfo bool) ([]*qf.Assignment, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
-	UpdateSubmission(*pb.Submission) error
+	UpdateSubmission(*qf.Submission) error
 	// UpdateSubmissions releases and/or approves all submissions with a certain score
-	UpdateSubmissions(uint64, *pb.Submission) error
+	UpdateSubmissions(uint64, *qf.Submission) error
 	// GetReview returns a single review matching the given query.
-	GetReview(query *pb.Review) (*pb.Review, error)
+	GetReview(query *qf.Review) (*qf.Review, error)
 	// CreateReview adds a new submission review.
-	CreateReview(*pb.Review) error
+	CreateReview(*qf.Review) error
 	// UpdateReview updates the given review.
-	UpdateReview(*pb.Review) error
+	UpdateReview(*qf.Review) error
 	// DeleteReview removes all review records matching the query.
-	DeleteReview(*pb.Review) error
+	DeleteReview(*qf.Review) error
 	// GetBenchmarks return all benchmarks and criteria for an assignmend
-	GetBenchmarks(*pb.Assignment) ([]*pb.GradingBenchmark, error)
+	GetBenchmarks(*qf.Assignment) ([]*qf.GradingBenchmark, error)
 	// CreateRepository creates a new repository.
-	CreateRepository(repo *pb.Repository) error
+	CreateRepository(repo *qf.Repository) error
 	// GetRepositories returns repositories that match the given query.
-	GetRepositories(query *pb.Repository) ([]*pb.Repository, error)
+	GetRepositories(query *qf.Repository) ([]*qf.Repository, error)
 	// DeleteRepository deletes repository for the given remote provider's ID.
 	DeleteRepository(remoteID uint64) error
 	// GetRepositoriesWithIssues gets repositories with issues
-	GetRepositoriesWithIssues(query *pb.Repository) ([]*pb.Repository, error)
+	GetRepositoriesWithIssues(query *qf.Repository) ([]*qf.Repository, error)
 
 	// GetTasks returns tasks that match the given query.
-	GetTasks(query *pb.Task) ([]*pb.Task, error)
+	GetTasks(query *qf.Task) ([]*qf.Task, error)
 	// CreateIssues creates a batch of issues
-	CreateIssues(issues []*pb.Issue) error
+	CreateIssues(issues []*qf.Issue) error
 	// SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks
-	SynchronizeAssignmentTasks(course *pb.Course, taskMap map[uint32]map[string]*pb.Task) ([]*pb.Task, []*pb.Task, error)
+	SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint32]map[string]*qf.Task) ([]*qf.Task, []*qf.Task, error)
 	// CreatePullRequest creates a pull request
-	CreatePullRequest(pullRequest *pb.PullRequest) error
+	CreatePullRequest(pullRequest *qf.PullRequest) error
 	// GetPullRequest returns the pull request matching the given query
-	GetPullRequest(query *pb.PullRequest) (*pb.PullRequest, error)
+	GetPullRequest(query *qf.PullRequest) (*qf.PullRequest, error)
 	// HandleMergingPR handles merging a pull request
-	HandleMergingPR(query *pb.PullRequest) error
+	HandleMergingPR(query *qf.PullRequest) error
 	// DeletePullRequest updates the pull request matching the given query
-	UpdatePullRequest(pullRequest *pb.PullRequest) error
+	UpdatePullRequest(pullRequest *qf.PullRequest) error
 
 	// UpdateSlipDays updates used slipdays for the given course enrollment
-	UpdateSlipDays([]*pb.UsedSlipDays) error
+	UpdateSlipDays([]*qf.UsedSlipDays) error
 }

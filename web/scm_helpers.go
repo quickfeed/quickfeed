@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -13,7 +13,7 @@ import (
 
 var (
 	repoNames = fmt.Sprintf("(%s, %s, %s)",
-		pb.InfoRepo, pb.AssignmentRepo, pb.TestsRepo)
+		qf.InfoRepo, qf.AssignmentRepo, qf.TestsRepo)
 
 	// ErrAlreadyExists indicates that one or more QuickFeed repositories
 	// already exists for the directory (or GitHub organization).
@@ -33,7 +33,7 @@ var (
 // is also used as the group name and repository path. The provided user names represent the SCM group members.
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
-func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group *pb.Group) (*pb.Repository, *scm.Team, error) {
+func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, *scm.Team, error) {
 	if course.GetOrganizationPath() == "" {
 		org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.GetOrganizationID()})
 		if err != nil {
@@ -41,7 +41,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group
 		}
 		course.OrganizationPath = org.GetPath()
 	}
-	org := &pb.Organization{ID: course.GetOrganizationID(), Path: course.GetOrganizationPath()}
+	org := &qf.Organization{ID: course.GetOrganizationID(), Path: course.GetOrganizationPath()}
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 		Organization: org,
 		Path:         group.GetName(),
@@ -71,12 +71,12 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to add team to repo: %w", err)
 	}
 
-	groupRepo := &pb.Repository{
+	groupRepo := &qf.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		RepositoryID:   repo.ID,
 		GroupID:        group.GetID(),
 		HTMLURL:        repo.WebURL,
-		RepoType:       pb.Repository_GROUP,
+		RepoType:       qf.Repository_GROUP,
 	}
 	return groupRepo, team, nil
 }
@@ -93,7 +93,7 @@ func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID, teamI
 }
 
 // creates {username}-labs repository and provides pull/push access to it for the given student
-func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, path string, student string) (*scm.Repository, error) {
+func createStudentRepo(ctx context.Context, sc scm.SCM, org *qf.Organization, path string, student string) (*scm.Repository, error) {
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
@@ -149,14 +149,14 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, organizationPath
 	return nil
 }
 
-func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, login string, state pb.Enrollment_UserStatus) (*scm.Repository, error) {
+func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *qf.Course, login string, state qf.Enrollment_UserStatus) (*scm.Repository, error) {
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID})
 	if err != nil {
 		return nil, err
 	}
 
 	switch state {
-	case pb.Enrollment_STUDENT:
+	case qf.Enrollment_STUDENT:
 		// give access to the course's info and assignments repositories
 		if err := grantAccessToCourseRepos(ctx, sc, org.GetPath(), login); err != nil {
 			return nil, err
@@ -167,9 +167,9 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 			return nil, err
 		}
 
-		return createStudentRepo(ctx, sc, org, pb.StudentRepoName(login), login)
+		return createStudentRepo(ctx, sc, org, qf.StudentRepoName(login), login)
 
-	case pb.Enrollment_TEACHER:
+	case qf.Enrollment_TEACHER:
 		// if teacher, promote to owner, remove from students team, add to teachers team
 		orgUpdate := &scm.OrgMembershipOptions{
 			Organization: org.Path,
@@ -186,7 +186,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 }
 
 func grantAccessToCourseRepos(ctx context.Context, sc scm.SCM, org, login string) error {
-	commonRepos := []string{pb.InfoRepo, pb.AssignmentRepo}
+	commonRepos := []string{qf.InfoRepo, qf.AssignmentRepo}
 
 	for _, repoType := range commonRepos {
 		if err := sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: org, Path: repoType}, login, scm.RepoPull); err != nil {
@@ -196,7 +196,7 @@ func grantAccessToCourseRepos(ctx context.Context, sc scm.SCM, org, login string
 	return nil
 }
 
-func updateGroupTeam(ctx context.Context, sc scm.SCM, group *pb.Group, orgID uint64) error {
+func updateGroupTeam(ctx context.Context, sc scm.SCM, group *qf.Group, orgID uint64) error {
 	opt := &scm.UpdateTeamOptions{
 		TeamID:         group.TeamID,
 		OrganizationID: orgID,
@@ -206,7 +206,7 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, group *pb.Group, orgID uin
 }
 
 // remove user from the organization, delete user repository
-func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *pb.Repository) error {
+func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *qf.Repository) error {
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{
 		ID: repo.GetOrganizationID(),
 	})
@@ -249,7 +249,7 @@ func revokeTeacherStatus(ctx context.Context, sc scm.SCM, org, userName string) 
 }
 
 // isEmpty ensured that all of the provided repositories are empty
-func isEmpty(ctx context.Context, sc scm.SCM, repos []*pb.Repository) error {
+func isEmpty(ctx context.Context, sc scm.SCM, repos []*qf.Repository) error {
 	for _, r := range repos {
 		if !sc.RepositoryIsEmpty(ctx, &scm.RepositoryOptions{ID: r.GetRepositoryID()}) {
 			return fmt.Errorf("repository is not empty")

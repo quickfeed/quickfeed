@@ -4,9 +4,8 @@ import (
 	"os"
 	"strings"
 
-	pb "github.com/quickfeed/quickfeed/qf"
-
 	"github.com/markbates/goth"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 // TeacherSuffix is the suffix appended to the provider with the teacher scope.
@@ -42,12 +41,12 @@ func EnableProvider(p *Provider, createProvider func(key, secret, callback strin
 }
 
 // GetProviders returns a list of all providers enabled by goth.
-func GetProviders() *pb.Providers {
+func GetProviders() *qf.Providers {
 	var providers []string
 	for _, provider := range goth.GetProviders() {
 		if !strings.HasSuffix(provider.Name(), TeacherSuffix) {
 			providers = append(providers, provider.Name())
 		}
 	}
-	return &pb.Providers{Providers: providers}
+	return &qf.Providers{Providers: providers}
 }

@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/go-github/v45/github"
 	"github.com/gosimple/slug"
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 	"golang.org/x/oauth2"
 )
 
@@ -33,7 +33,7 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 }
 
 // CreateOrganization implements the SCM interface.
-func (*GithubSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*pb.Organization, error) {
+func (*GithubSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*qf.Organization, error) {
 	return nil, ErrNotSupported{
 		SCM:    "github",
 		Method: "CreateOrganization",
@@ -57,7 +57,7 @@ func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOpt
 }
 
 // GetOrganization implements the SCM interface.
-func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*pb.Organization, error) {
+func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
 	if !opt.valid() {
 		return nil, ErrMissingFields{
 			Method:  "GetOrganization",
@@ -98,7 +98,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*p
 		}
 	}
 
-	return &pb.Organization{
+	return &qf.Organization{
 		ID:          uint64(gitOrg.GetID()),
 		Path:        gitOrg.GetLogin(),
 		Avatar:      gitOrg.GetAvatarURL(),
@@ -167,7 +167,7 @@ func (s *GithubSCM) GetRepository(ctx context.Context, opt *RepositoryOptions) (
 }
 
 // GetRepositories implements the SCM interface.
-func (s *GithubSCM) GetRepositories(ctx context.Context, org *pb.Organization) ([]*Repository, error) {
+func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) ([]*Repository, error) {
 	if !org.IsValid() {
 		return nil, ErrMissingFields{
 			Method:  "GetRepositories",
@@ -450,7 +450,7 @@ func (s *GithubSCM) GetTeam(ctx context.Context, opt *TeamOptions) (scmTeam *Tea
 }
 
 // GetTeams implements the scm interface
-func (s *GithubSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
+func (s *GithubSCM) GetTeams(ctx context.Context, org *qf.Organization) ([]*Team, error) {
 	if !org.IsValid() {
 		return nil, ErrMissingFields{
 			Method:  "GetTeams",

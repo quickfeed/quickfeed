@@ -121,7 +121,7 @@ protoset:
 	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
 	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
 	--proto_path=qf \
-	--descriptor_set_out=qf/aqf.protoset \
+	--descriptor_set_out=qf/qf.protoset \
 	--include_imports \
 	qf/qf.proto
 

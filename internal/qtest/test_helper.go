@@ -12,7 +12,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/log"
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc/metadata"
@@ -50,11 +50,11 @@ func TestDB(t *testing.T) (database.Database, func()) {
 
 // CreateFakeUser is a test helper to create a user in the database
 // with the given remote id and the fake scm provider.
-func CreateFakeUser(t *testing.T, db database.Database, remoteID uint64) *pb.User {
+func CreateFakeUser(t *testing.T, db database.Database, remoteID uint64) *qf.User {
 	t.Helper()
-	var user pb.User
+	var user qf.User
 	err := db.CreateUserFromRemoteIdentity(&user,
-		&pb.RemoteIdentity{
+		&qf.RemoteIdentity{
 			Provider:    "fake",
 			RemoteID:    remoteID,
 			AccessToken: "token",
@@ -65,20 +65,20 @@ func CreateFakeUser(t *testing.T, db database.Database, remoteID uint64) *pb.Use
 	return &user
 }
 
-func CreateUserFromRemoteIdentity(t *testing.T, db database.Database, remoteID *pb.RemoteIdentity) *pb.User {
+func CreateUserFromRemoteIdentity(t *testing.T, db database.Database, remoteID *qf.RemoteIdentity) *qf.User {
 	t.Helper()
-	var user pb.User
+	var user qf.User
 	if err := db.CreateUserFromRemoteIdentity(&user, remoteID); err != nil {
 		t.Fatal(err)
 	}
 	return &user
 }
 
-func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name string) *pb.User {
+func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name string) *qf.User {
 	t.Helper()
-	user := &pb.User{Name: name}
+	user := &qf.User{Name: name}
 	err := db.CreateUserFromRemoteIdentity(user,
-		&pb.RemoteIdentity{
+		&qf.RemoteIdentity{
 			Provider:    "fake",
 			RemoteID:    remoteID,
 			AccessToken: "token",
@@ -89,10 +89,10 @@ func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name s
 	return user
 }
 
-func CreateUser(t *testing.T, db database.Database, remoteID uint64, user *pb.User) *pb.User {
+func CreateUser(t *testing.T, db database.Database, remoteID uint64, user *qf.User) *qf.User {
 	t.Helper()
 	err := db.CreateUserFromRemoteIdentity(user,
-		&pb.RemoteIdentity{
+		&qf.RemoteIdentity{
 			Provider:    "fake",
 			RemoteID:    remoteID,
 			AccessToken: "token",
@@ -103,11 +103,11 @@ func CreateUser(t *testing.T, db database.Database, remoteID uint64, user *pb.Us
 	return user
 }
 
-func CreateAdminUser(t *testing.T, db database.Database, provider string) *pb.User {
+func CreateAdminUser(t *testing.T, db database.Database, provider string) *qf.User {
 	t.Helper()
-	user := &pb.User{}
+	user := &qf.User{}
 	err := db.CreateUserFromRemoteIdentity(user,
-		&pb.RemoteIdentity{
+		&qf.RemoteIdentity{
 			Provider:    provider,
 			RemoteID:    1,
 			AccessToken: scm.GetAccessToken(t),
@@ -118,7 +118,7 @@ func CreateAdminUser(t *testing.T, db database.Database, provider string) *pb.Us
 	return user
 }
 
-func CreateCourse(t *testing.T, db database.Database, user *pb.User, course *pb.Course) {
+func CreateCourse(t *testing.T, db database.Database, user *qf.User, course *qf.Course) {
 	t.Helper()
 	if course.Provider == "" {
 		for _, rid := range user.RemoteIdentities {
@@ -132,29 +132,29 @@ func CreateCourse(t *testing.T, db database.Database, user *pb.User, course *pb.
 	}
 }
 
-func EnrollStudent(t *testing.T, db database.Database, student *pb.User, course *pb.Course) {
+func EnrollStudent(t *testing.T, db database.Database, student *qf.User, course *qf.Course) {
 	t.Helper()
-	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
+	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollment(&pb.Enrollment{
+	if err := db.UpdateEnrollment(&qf.Enrollment{
 		UserID:   student.ID,
 		CourseID: course.ID,
-		Status:   pb.Enrollment_STUDENT,
+		Status:   qf.Enrollment_STUDENT,
 	}); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func EnrollTeacher(t *testing.T, db database.Database, student *pb.User, course *pb.Course) {
+func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course *qf.Course) {
 	t.Helper()
-	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
+	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollment(&pb.Enrollment{
+	if err := db.UpdateEnrollment(&qf.Enrollment{
 		UserID:   student.ID,
 		CourseID: course.ID,
-		Status:   pb.Enrollment_TEACHER,
+		Status:   qf.Enrollment_TEACHER,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -182,15 +182,15 @@ func RandomString(t *testing.T) string {
 
 // WithUserContext is a test helper function to create metadata for the
 // given user mimicking the context coming from the browser.
-func WithUserContext(ctx context.Context, user *pb.User) context.Context {
+func WithUserContext(ctx context.Context, user *qf.User) context.Context {
 	userID := strconv.Itoa(int(user.GetID()))
 	meta := metadata.New(map[string]string{"user": userID})
 	return metadata.NewIncomingContext(ctx, meta)
 }
 
 // AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
-func AssignmentsWithTasks(courseID uint64) []*pb.Assignment {
-	return []*pb.Assignment{
+func AssignmentsWithTasks(courseID uint64) []*qf.Assignment {
+	return []*qf.Assignment{
 		{
 			CourseID:    courseID,
 			Name:        "lab1",
@@ -199,7 +199,7 @@ func AssignmentsWithTasks(courseID uint64) []*pb.Assignment {
 			AutoApprove: false,
 			Order:       1,
 			IsGroupLab:  false,
-			Tasks: []*pb.Task{
+			Tasks: []*qf.Task{
 				{Title: "Fibonacci", Name: "fib", AssignmentOrder: 1, Body: "Implement fibonacci"},
 				{Title: "Lucas Numbers", Name: "luc", AssignmentOrder: 1, Body: "Implement lucas numbers"},
 			},
@@ -212,7 +212,7 @@ func AssignmentsWithTasks(courseID uint64) []*pb.Assignment {
 			AutoApprove: false,
 			Order:       2,
 			IsGroupLab:  false,
-			Tasks: []*pb.Task{
+			Tasks: []*qf.Task{
 				{Title: "Addition", Name: "add", AssignmentOrder: 2, Body: "Implement addition"},
 				{Title: "Subtraction", Name: "sub", AssignmentOrder: 2, Body: "Implement subtraction"},
 				{Title: "Multiplication", Name: "mul", AssignmentOrder: 2, Body: "Implement multiplication"},
@@ -223,7 +223,7 @@ func AssignmentsWithTasks(courseID uint64) []*pb.Assignment {
 
 // PopulateDatabaseWithInitialData creates initial data-records based on organization
 // This function was created with the intent of being used for testing task and pull request related functionality.
-func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.SCM, course *pb.Course) error {
+func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.SCM, course *qf.Course) error {
 	t.Helper()
 
 	ctx := context.Background()
@@ -244,28 +244,28 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 	// Create repositories
 	nxtRemoteID := uint64(2)
 	for _, repo := range repos {
-		dbRepo := &pb.Repository{
+		dbRepo := &qf.Repository{
 			RepositoryID:   repo.ID,
 			OrganizationID: org.GetID(),
 			HTMLURL:        repo.WebURL,
-			RepoType:       pb.RepoType(repo.Path),
+			RepoType:       qf.RepoType(repo.Path),
 		}
 		if dbRepo.IsUserRepo() {
-			user := &pb.User{}
+			user := &qf.User{}
 			CreateUser(t, db, nxtRemoteID, user)
 			nxtRemoteID++
 			EnrollStudent(t, db, user, course)
-			group := &pb.Group{
+			group := &qf.Group{
 				Name:     dbRepo.UserName(),
 				CourseID: course.GetID(),
-				Users:    []*pb.User{user},
+				Users:    []*qf.User{user},
 			}
 			if err := db.CreateGroup(group); err != nil {
 				return err
 			}
 			// For testing purposes, assume all student repositories are group repositories
 			// since tasks and pull requests are only supported for groups anyway.
-			dbRepo.RepoType = pb.Repository_GROUP
+			dbRepo.RepoType = qf.Repository_GROUP
 			dbRepo.GroupID = group.GetID()
 		}
 

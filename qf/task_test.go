@@ -4,20 +4,20 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
 // TestHasChanged tests if HasChanged returns the correct value
 func TestHasChanged(t *testing.T) {
 	tests := map[string]struct {
-		task1, task2 *pb.Task
+		task1, task2 *qf.Task
 		want         bool
 	}{
-		"No change":             {task1: &pb.Task{Title: "Title 1", Body: "Body 1"}, task2: &pb.Task{Title: "Title 1", Body: "Body 1"}, want: false},
-		"Body change":           {task1: &pb.Task{Title: "Title 1", Body: "Body 1"}, task2: &pb.Task{Title: "Title 1", Body: "Body 2"}, want: true},
-		"Title change":          {task1: &pb.Task{Title: "Title 1", Body: "Body 1"}, task2: &pb.Task{Title: "Title 2", Body: "Body 1"}, want: true},
-		"Body and title change": {task1: &pb.Task{Title: "Title 1", Body: "Body 1"}, task2: &pb.Task{Title: "Title 2", Body: "Body 2"}, want: true},
+		"No change":             {task1: &qf.Task{Title: "Title 1", Body: "Body 1"}, task2: &qf.Task{Title: "Title 1", Body: "Body 1"}, want: false},
+		"Body change":           {task1: &qf.Task{Title: "Title 1", Body: "Body 1"}, task2: &qf.Task{Title: "Title 1", Body: "Body 2"}, want: true},
+		"Title change":          {task1: &qf.Task{Title: "Title 1", Body: "Body 1"}, task2: &qf.Task{Title: "Title 2", Body: "Body 1"}, want: true},
+		"Body and title change": {task1: &qf.Task{Title: "Title 1", Body: "Body 1"}, task2: &qf.Task{Title: "Title 2", Body: "Body 2"}, want: true},
 	}
 
 	for name, tt := range tests {
@@ -33,13 +33,13 @@ func TestMarkDeleted(t *testing.T) {
 	const deleteMsg = "\n**The task associated with this issue has been deleted by the teaching staff.**\n"
 
 	tests := map[string]struct {
-		task     *pb.Task
-		wantTask *pb.Task
+		task     *qf.Task
+		wantTask *qf.Task
 		deleted  bool
 	}{
 		"Delete task": {
-			task:     &pb.Task{Title: "Title 1", Body: "Body 1"},
-			wantTask: &pb.Task{Title: "DELETED Title 1", Body: deleteMsg + "Body 1"},
+			task:     &qf.Task{Title: "Title 1", Body: "Body 1"},
+			wantTask: &qf.Task{Title: "DELETED Title 1", Body: deleteMsg + "Body 1"},
 			deleted:  true,
 		},
 	}

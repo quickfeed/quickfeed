@@ -12,7 +12,7 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"
 )
@@ -175,7 +175,7 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 	defer cleanup()
 
 	if existingUser {
-		if err := db.CreateUserFromRemoteIdentity(&pb.User{}, &pb.RemoteIdentity{
+		if err := db.CreateUserFromRemoteIdentity(&qf.User{}, &qf.RemoteIdentity{
 			Provider:    provider,
 			RemoteID:    remoteID,
 			AccessToken: secret,
@@ -306,7 +306,7 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 	defer cleanup()
 
 	if existingUser {
-		if err := db.CreateUserFromRemoteIdentity(&pb.User{}, &pb.RemoteIdentity{
+		if err := db.CreateUserFromRemoteIdentity(&qf.User{}, &qf.RemoteIdentity{
 			Provider:    provider,
 			RemoteID:    remoteID,
 			AccessToken: secret,
@@ -350,7 +350,7 @@ func TestAccessControl(t *testing.T) {
 	defer cleanup()
 
 	// Create a new user.
-	if err := db.CreateUserFromRemoteIdentity(&pb.User{}, &pb.RemoteIdentity{
+	if err := db.CreateUserFromRemoteIdentity(&qf.User{}, &qf.RemoteIdentity{
 		Provider:    provider,
 		RemoteID:    remoteID,
 		AccessToken: secret,

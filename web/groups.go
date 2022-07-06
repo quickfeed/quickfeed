@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"regexp"
 
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,7 +23,7 @@ var (
 )
 
 // getGroup returns the group for the given group ID.
-func (s *QuickFeedService) getGroup(request *pb.GetGroupRequest) (*pb.Group, error) {
+func (s *QuickFeedService) getGroup(request *qf.GetGroupRequest) (*qf.Group, error) {
 	group, err := s.db.GetGroup(request.GetGroupID())
 	if err != nil {
 		return nil, err
@@ -32,16 +32,16 @@ func (s *QuickFeedService) getGroup(request *pb.GetGroupRequest) (*pb.Group, err
 }
 
 // getGroups returns all groups for the given course ID.
-func (s *QuickFeedService) getGroups(request *pb.CourseRequest) (*pb.Groups, error) {
+func (s *QuickFeedService) getGroups(request *qf.CourseRequest) (*qf.Groups, error) {
 	groups, err := s.db.GetGroupsByCourse(request.GetCourseID())
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Groups{Groups: groups}, nil
+	return &qf.Groups{Groups: groups}, nil
 }
 
 // getGroupByUserAndCourse returns the group of the given user and course.
-func (s *QuickFeedService) getGroupByUserAndCourse(request *pb.GroupRequest) (*pb.Group, error) {
+func (s *QuickFeedService) getGroupByUserAndCourse(request *qf.GroupRequest) (*qf.Group, error) {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (s *QuickFeedService) getGroupByUserAndCourse(request *pb.GroupRequest) (*p
 }
 
 // DeleteGroup deletes group with the provided ID.
-func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request *pb.GroupRequest) error {
+func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request *qf.GroupRequest) error {
 	course, group, err := s.getCourseGroup(request)
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request 
 		s.logger.Debugf("Failed to delete %s group %q from database: %v", course.Code, group.Name, err)
 		// continue with other delete operations
 	}
-	repo, err := s.getRepo(course, group.GetID(), pb.Repository_GROUP)
+	repo, err := s.getRepo(course, group.GetID(), qf.Repository_GROUP)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("failed to get %s repository for group %q: %w", course.Code, group.Name, err)
 	}
@@ -86,7 +86,7 @@ func (s *QuickFeedService) deleteGroup(ctx context.Context, sc scm.SCM, request 
 // This function is typically called by a student when creating
 // a group, which will later be (optionally) edited and approved
 // by a teacher of the course using the updateGroup function below.
-func (s *QuickFeedService) createGroup(request *pb.Group) (*pb.Group, error) {
+func (s *QuickFeedService) createGroup(request *qf.Group) (*qf.Group, error) {
 	if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
 		return nil, err
 	}
@@ -106,8 +106,8 @@ func (s *QuickFeedService) createGroup(request *pb.Group) (*pb.Group, error) {
 // Only teachers can invoke this, and allows the teacher to add or remove
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
-func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request *pb.Group) error {
-	course, group, err := s.getCourseGroup(&pb.GroupRequest{
+func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request *qf.Group) error {
+	course, group, err := s.getCourseGroup(&qf.GroupRequest{
 		CourseID: request.GetCourseID(),
 		GroupID:  request.GetID(),
 	})
@@ -123,7 +123,7 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 
 	// allow changing the name of the group only if the group
 	// is not already approved and the new name is valid
-	if group.Name != request.Name && group.Status == pb.Group_PENDING {
+	if group.Name != request.Name && group.Status == qf.Group_PENDING {
 		// return error to user if group name is invalid
 		if err := s.checkGroupName(request.GetCourseID(), request.GetName()); err != nil {
 			return err
@@ -131,7 +131,7 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 		group.Name = request.Name
 	}
 
-	newGroup := &pb.Group{
+	newGroup := &qf.Group{
 		ID:          group.ID,
 		Name:        group.Name,
 		CourseID:    group.CourseID,
@@ -141,7 +141,7 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 		Enrollments: group.Enrollments,
 	}
 
-	repo, err := s.getRepo(course, group.GetID(), pb.Repository_GROUP)
+	repo, err := s.getRepo(course, group.GetID(), qf.Repository_GROUP)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("failed to get %s repository for group %q: %w", course.Code, group.Name, err)
 	}
@@ -176,7 +176,7 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 	}
 
 	// approve and update the group in the database
-	newGroup.Status = pb.Group_APPROVED
+	newGroup.Status = qf.Group_APPROVED
 	return s.db.UpdateGroup(newGroup)
 }
 
@@ -184,7 +184,7 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 // that the group's users are enrolled in the course,
 // that the enrollment has been accepted, and
 // that the group's users are not already enrolled in another group.
-func (s *QuickFeedService) getGroupUsers(request *pb.Group) ([]*pb.User, error) {
+func (s *QuickFeedService) getGroupUsers(request *qf.Group) ([]*qf.User, error) {
 	if len(request.Users) == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "no users in group")
 	}
@@ -202,7 +202,7 @@ func (s *QuickFeedService) getGroupUsers(request *pb.Group) ([]*pb.User, error) 
 		case enrollment.GroupID > 0 && enrollment.GroupID != request.ID:
 			// update group check (request group ID should be non-0)
 			return nil, status.Errorf(codes.InvalidArgument, "user already enrolled in another group")
-		case enrollment.Status < pb.Enrollment_STUDENT:
+		case enrollment.Status < qf.Enrollment_STUDENT:
 			return nil, status.Errorf(codes.InvalidArgument, "user not yet accepted for this course")
 		}
 		userIds = append(userIds, user.ID)
@@ -243,7 +243,7 @@ func (s *QuickFeedService) checkGroupName(courseID uint64, groupName string) err
 }
 
 // getCourseGroup returns the course and group specified in the GroupRequest.
-func (s *QuickFeedService) getCourseGroup(request *pb.GroupRequest) (*pb.Course, *pb.Group, error) {
+func (s *QuickFeedService) getCourseGroup(request *qf.GroupRequest) (*qf.Course, *qf.Group, error) {
 	group, err := s.db.GetGroup(request.GetGroupID())
 	if err != nil {
 		return nil, nil, err

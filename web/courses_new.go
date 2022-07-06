@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 
-	pb "github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
@@ -18,15 +18,15 @@ const (
 // RepoPaths maps from QuickFeed repository path names to a boolean indicating
 // whether or not the repository should be create as public or private.
 var RepoPaths = map[string]bool{
-	pb.InfoRepo:       public,
-	pb.AssignmentRepo: private,
-	pb.TestsRepo:      private,
+	qf.InfoRepo:       public,
+	qf.AssignmentRepo: private,
+	qf.TestsRepo:      private,
 }
 
 // createCourse creates a new course for the directory specified in the request
 // and creates the repositories for the course. Requires that the directory
 // does not contain the QuickFeed repositories that will be created.
-func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request *pb.Course) (*pb.Course, error) {
+func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request *qf.Course) (*qf.Course, error) {
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: request.OrganizationID})
 	if err != nil {
 		return nil, err
@@ -76,11 +76,11 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 			return nil, err
 		}
 
-		dbRepo := pb.Repository{
+		dbRepo := qf.Repository{
 			OrganizationID: org.ID,
 			RepositoryID:   repo.ID,
 			HTMLURL:        repo.WebURL,
-			RepoType:       pb.RepoType(path),
+			RepoType:       qf.RepoType(path),
 		}
 		if err := s.db.CreateRepository(&dbRepo); err != nil {
 			s.logger.Debugf("createCourse: failed to create database record for repository %s: %s", path, err)
@@ -111,16 +111,16 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 	}
 
 	// add student repo for the course creator
-	scmRepo, err := createStudentRepo(ctx, sc, org, pb.StudentRepoName(courseCreator.GetLogin()), courseCreator.GetLogin())
+	scmRepo, err := createStudentRepo(ctx, sc, org, qf.StudentRepoName(courseCreator.GetLogin()), courseCreator.GetLogin())
 	if err != nil {
 		return nil, err
 	}
-	repoQuery := &pb.Repository{
+	repoQuery := &qf.Repository{
 		OrganizationID: org.GetID(),
 		RepositoryID:   scmRepo.ID,
 		UserID:         courseCreator.ID,
 		HTMLURL:        scmRepo.WebURL,
-		RepoType:       pb.Repository_USER,
+		RepoType:       qf.Repository_USER,
 	}
 	if err := s.db.CreateRepository(repoQuery); err != nil {
 		return nil, err

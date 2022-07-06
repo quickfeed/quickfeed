@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	pb "github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -39,7 +39,7 @@ RUN apk update && apk add --no-cache git bash build-base
 WORKDIR /quickfeed
 `
 
-	wantAssignments := []*pb.Assignment{
+	wantAssignments := []*qf.Assignment{
 		{
 			Name:       "lab1",
 			CourseID:   1,
@@ -73,7 +73,7 @@ printf "Default script\n"
 
 printf "Default script\n"
 `,
-			Tasks: []*pb.Task{
+			Tasks: []*qf.Task{
 				{
 					Title:           "Exercises from Tour of Go",
 					AssignmentOrder: 3,
@@ -100,7 +100,7 @@ printf "Default script\n"
 	if gotDockerfile != wantDockerfile {
 		t.Errorf("got Dockerfile %q, want %q", gotDockerfile, wantDockerfile)
 	}
-	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&pb.Task{}, "body")); diff != "" {
+	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&qf.Task{}, "body")); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
 	}
 }

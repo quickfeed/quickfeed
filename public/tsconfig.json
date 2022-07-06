@@ -10,8 +10,8 @@
     "sourceMap": false,
     "jsx": "react",
     "newLine": "LF",
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
   },
   "include": [
     "src/**/*"
