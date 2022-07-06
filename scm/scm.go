@@ -63,7 +63,9 @@ type SCM interface {
 	// Lists all authorizations for authenticated user.
 	GetUserScopes(context.Context) *Authorization
 
-	// Clone clones the given repository.
+	// Clone clones the given repository and returns the path to the cloned repository.
+	// The returned path is the provided destination directory joined with the
+	// repository type, e.g., "assignments" or "tests".
 	Clone(context.Context, *CloneOptions) (string, error)
 
 	// CreateIssue creates an issue.

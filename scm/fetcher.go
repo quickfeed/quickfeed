@@ -14,6 +14,8 @@ import (
 const authUserName = "quickfeed" // can be anything except an empty string
 
 // Clone clones the given repository and returns the path to the cloned repository.
+// The returned path is the provided destination directory joined with the
+// repository type, e.g., "assignments" or "tests".
 func (s GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
 	cloneDir := filepath.Join(opt.DestDir, repoDir(opt))
 	s.logger.Debugf("Clone(%s)", s.cloneURL(opt))
