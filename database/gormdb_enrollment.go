@@ -94,14 +94,14 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...qf.Enrollment_Us
 // UpdateSlipDays updates used slip days for the given course enrollment
 func (db *GormDB) UpdateSlipDays(usedSlipDays []*qf.UsedSlipDays) error {
 	for _, slipDaysForAssignment := range usedSlipDays {
-		if err := db.updateSlipDays(slipDaysForAssignment); err != nil {
+		if err := db.internalUpdateSlipDays(slipDaysForAssignment); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// updateSlipdays updates or creates UsedSlipDays record
-func (db *GormDB) updateSlipDays(query *qf.UsedSlipDays) error {
+// internalUpdateSlipdays updates or creates UsedSlipDays record
+func (db *GormDB) internalUpdateSlipDays(query *qf.UsedSlipDays) error {
 	return db.conn.Save(query).Error
 }
