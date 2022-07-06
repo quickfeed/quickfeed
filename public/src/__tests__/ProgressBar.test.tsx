@@ -1,6 +1,6 @@
 import { configure, render } from "enzyme"
 import React from "react"
-import { Assignment, Submission } from "../../proto/ag/ag_pb"
+import { Assignment, Submission } from "../../proto/qf/qf_pb"
 import ProgressBar, { Progress } from "../components/ProgressBar"
 import { initializeOvermind } from "./TestHelpers"
 import Adapter from "@wojtekmaj/enzyme-adapter-react-17"

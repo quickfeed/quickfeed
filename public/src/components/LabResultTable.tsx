@@ -1,5 +1,5 @@
 import React, { useCallback } from "react"
-import { Assignment, Submission } from "../../proto/ag/ag_pb"
+import { Assignment, Submission } from "../../proto/qf/qf_pb"
 import { Converter } from "../convert"
 import { assignmentStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded } from "../Helpers"
 import { useAppState } from "../overmind"

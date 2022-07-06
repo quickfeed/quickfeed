@@ -1,4 +1,4 @@
-import { User } from "../../proto/ag/ag_pb"
+import { User } from "../../proto/qf/qf_pb"
 import { initializeOvermind } from "./TestHelpers"
 
 

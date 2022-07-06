@@ -1,5 +1,5 @@
 import React from "react"
-import { Enrollment } from "../../proto/ag/ag_pb"
+import { Enrollment } from "../../proto/qf/qf_pb"
 import { isVisible } from "../Helpers"
 import { useActions } from "../overmind"
 

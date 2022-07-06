@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { Enrollment, Group, User } from "../../../proto/ag/ag_pb"
+import { Enrollment, Group, User } from "../../../proto/qf/qf_pb"
 import { Converter } from "../../convert"
 import { getCourseID, isApprovedGroup, isHidden, isStudent, sortByField } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"

@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Course } from "../../../proto/ag/ag_pb"
+import { Course } from "../../../proto/qf/qf_pb"
 import { useAppState } from "../../overmind"
 import DynamicTable, { Row } from "../DynamicTable"
 import CourseForm from "../forms/CourseForm"

@@ -38,8 +38,8 @@ import {
     Users,
     Void,
     Reviewers,
-} from "../proto/ag/ag_pb"
-import { AutograderServiceClient } from "../proto/ag/AgServiceClientPb"
+} from "../proto/qf/qf_pb"
+import { QuickFeedServiceClient } from "../proto/qf/QfServiceClientPb"
 
 export interface IGrpcResponse<T> {
     status: Status
@@ -48,10 +48,10 @@ export interface IGrpcResponse<T> {
 
 export class GrpcManager {
 
-    private agService: AutograderServiceClient
+    private agService: QuickFeedServiceClient
 
     constructor() {
-        this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null)
+        this.agService = new QuickFeedServiceClient("https://" + window.location.hostname, null, null)
     }
 
 
