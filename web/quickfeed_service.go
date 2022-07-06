@@ -189,7 +189,7 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *qf.Course) (*qf
 
 // GetCourse returns course information for the given course.
 // Access policy: Any User.
-func (s *QuickFeedService) GetCourse(ctx context.Context, in *qf.CourseRequest) (*qf.Course, error) {
+func (s *QuickFeedService) GetCourse(_ context.Context, in *qf.CourseRequest) (*qf.Course, error) {
 	courseID := in.GetCourseID()
 	course, err := s.getCourse(courseID)
 	if err != nil {
