@@ -8,7 +8,7 @@ TESTDIR=/quickfeed/tests
 ASSIGNDIR=$ASSIGNMENTS/{{ .AssignmentName }}/
 
 # Move to folder for assignment to test.
-cd $ASSIGNDIR
+cd "$ASSIGNDIR"
 
 # Remove student written tests to avoid interference
 find . -name '*_test.go' -exec rm -rf {} \;
