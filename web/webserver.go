@@ -31,7 +31,7 @@ var (
 
 // New starts a new web server
 func New(ags *AutograderService, public, httpAddr string) {
-	entryPoint := filepath.Join(public, "index.html")
+	entryPoint := filepath.Join(public, "assets/index.html")
 	if _, err := os.Stat(entryPoint); os.IsNotExist(err) {
 		ags.logger.Fatalf("file not found %s", entryPoint)
 	}
@@ -146,19 +146,11 @@ func registerFrontend(e *echo.Echo, entryPoint, public string) {
 		return c.File(entryPoint)
 	}
 
-	// File for serving additional frontend
-	indev := func(c echo.Context) error {
-		return c.File(filepath.Join("dev", "index.html"))
-	}
-
-	// Routes for serving
-	e.GET("/test", indev)
-	e.Static("/dev", "dev")
-
 	e.GET("/", index)
 	e.GET("/*", index)
 	// TODO: Whitelisted files only.
-	e.Static("/static", public)
+	e.Static("/static", filepath.Join(public, "dist"))
+	e.Static("/assets", filepath.Join(public, "assets"))
 }
 
 func runWebServer(l *zap.SugaredLogger, e *echo.Echo, httpAddr string) {

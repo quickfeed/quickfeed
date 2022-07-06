@@ -1,16 +1,16 @@
 # Testing with Jest
 
-To run the frontend tests in `dev/src/__tests__`, make sure to install the required packages:
+To run the frontend tests in `public/src/__tests__`, make sure to install the required packages:
 
 ```shell
-% cd dev
+% cd public
 % npm ci
 ```
 
 To run all tests using:
 
 ```shell
-% cd dev/src/__tests__
+% cd public/src/__tests__
 % npm test
 ```
 
@@ -33,7 +33,7 @@ For more information on running `jest` from the command line, please see the [ge
 To run all tests using `jest`:
 
 ```shell
-% cd dev/src/__tests__
+% cd public/src/__tests__
 % jest
 ```
 

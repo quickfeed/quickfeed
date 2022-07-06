@@ -9,8 +9,7 @@ ARCH				:= $(shell uname -m)
 tmpdir				:= tmp
 proto-swift-path	:= ../quickfeed-swiftui/Quickfeed/Proto
 grpcweb-latest		:= $(shell git ls-remote --tags https://github.com/grpc/grpc-web.git | tail -1 | awk -F"/" '{ print $$3 }')
-grpcweb-ver			:= $(shell cd dev; npm ls grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
-grpcweb-pub			:= $(shell cd public; npm ls grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
+grpcweb-ver			:= $(shell cd public; npm ls --package-lock-only grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
 protoc-grpcweb		:= protoc-gen-grpc-web
 protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
 grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ver)/$(protoc-grpcweb-long)
@@ -36,10 +35,6 @@ version-check:
 	@go run cmd/vercheck/main.go
 ifneq ($(grpcweb-ver), $(grpcweb-latest))
 	@echo WARNING: grpc-web version is not latest: $(grpcweb-ver) != $(grpcweb-latest)
-endif
-ifneq ($(grpcweb-ver), $(grpcweb-pub))
-	@echo grpc-web version differs between dev and public: $(grpcweb-ver) != $(grpcweb-pub)
-	@false
 endif
 
 grpcweb:
@@ -85,13 +80,13 @@ proto_$(1):
 	@cd $(1) && npm run tsc -- proto/ag/AgServiceClientPb.ts
 endef
 
-dirs := dev public
+dirs := public
 $(foreach dir,$(dirs),$(eval $(call ui_target,$(dir))))
 $(foreach dir,$(dirs),$(eval $(call proto_target,$(dir))))
 
-ui: version-check ui_dev ui_public
+ui: version-check ui_public
 
-proto: proto_dev proto_public
+proto: proto_public
 
 proto-swift:
 	@echo "Compiling QuickFeed's proto definitions for Swift"
@@ -135,14 +130,11 @@ test:
 	@go test ./...
 
 webpack-dev-server:
-	@cd dev && mkdir -p public && cp index.html public/index.html && cp styles/styles.css public/styles.css
-	@cd dev && $(sedi) 's/\/dev\/dist\/bundle.js/bundle.js/g' public/index.html
-	@cd dev && $(sedi) 's/\/dev\/styles\/styles.css/styles.css/g' public/index.html
-	@cd dev && npx webpack-dev-server --config webpack.config.js --port 8082 --progress --mode development
+	@cd public && npx webpack-dev-server --config webpack.config.js --port 8082 --progress --mode development
 
 # TODO Should check that webpack-dev-server is running.
 selenium:
-	@cd dev && npm run test:selenium
+	@cd public && npm run test:selenium
 
 scm:
 	@echo "Compiling the scm tool"
