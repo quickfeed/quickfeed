@@ -13,9 +13,8 @@ if [ -f "setup.sh" ]; then
     bash setup.sh
 fi
 
-printf "\n*** Finished Test Setup in $(( SECONDS - start )) seconds ***\n"
-
+printf "\n*** Finished Test Setup in %s seconds ***\n" "$(( SECONDS - start ))"
 start=$SECONDS
 printf "\n*** Running Tests ***\n\n"
 QUICKFEED_SESSION_SECRET={{ .RandomSecret }} dotnet test "--logger:console;verbosity=detailed" 2>&1
-printf "\n*** Finished Running Tests in $(( SECONDS - start )) seconds ***\n"
+printf "\n*** Finished Running Tests in %s seconds ***\n" "$(( SECONDS - start ))"

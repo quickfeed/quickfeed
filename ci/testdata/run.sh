@@ -16,9 +16,8 @@ find . -name '*_test.go' -exec rm -rf {} \;
 # Copy tests into student assignments folder for running tests
 cp -r $TESTDIR/* $ASSIGNMENTS/
 
-printf "\n*** Finished Test Setup in $(( SECONDS - start )) seconds ***\n"
-
+printf "\n*** Finished Test Setup in %s seconds ***\n" "$(( SECONDS - start ))"
 start=$SECONDS
 printf "\n*** Running Tests ***\n\n"
 QUICKFEED_SESSION_SECRET={{ .RandomSecret }} go test -v -timeout 30s ./... 2>&1
-printf "\n*** Finished Running Tests in $(( SECONDS - start )) seconds ***\n"
+printf "\n*** Finished Running Tests in %s seconds ***\n" "$(( SECONDS - start ))"
