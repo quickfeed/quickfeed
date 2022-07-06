@@ -1,18 +1,14 @@
 import { Enrollment, User } from "../../proto/ag/ag_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
-import { configure, render } from "enzyme"
-import Adapter from "@wojtekmaj/enzyme-adapter-react-17"
 import { createMemoryHistory } from "history"
 import React from "react"
 import Members from "../components/Members"
 import { Route, Router } from "react-router"
 import { Provider } from "overmind-react"
 import { initializeOvermind } from "./TestHelpers"
+import { render, screen } from "@testing-library/react"
 
-
-React.useLayoutEffect = React.useEffect
-configure({ adapter: new Adapter() })
 
 describe("UpdateEnrollment", () => {
     const mockedOvermind = initializeOvermind({})
@@ -57,14 +53,15 @@ describe("UpdateEnrollment in webpage", () => {
         history.push("/course/1/members")
 
         React.useState = jest.fn().mockReturnValue("True")
-        const wrapped = render(
+        render(
             <Provider value={mockedOvermind}>
                 <Router history={history} >
                     <Route path="/course/:id/members" component={Members} />
                 </Router>
             </Provider>
         )
-        expect(wrapped.find("i").first().text()).toEqual("Demote")
+        expect(screen.getByText("Demote")).toBeTruthy()
+        expect(screen.queryByText("Promote")).toBeFalsy()
     })
 
     it("If status is student, button should display promote", () => {
@@ -88,6 +85,7 @@ describe("UpdateEnrollment in webpage", () => {
                 </Router>
             </Provider>
         )
-        expect(wrapped.find("i").first().text()).toEqual("Promote")
+        expect(screen.getByText("Promote")).toBeTruthy()
+        expect(screen.queryByText("Demote")).toBeFalsy()
     })
 })

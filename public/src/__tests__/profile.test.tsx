@@ -5,13 +5,9 @@ import { config } from "../overmind"
 import Profile from "../components/profile/Profile"
 import { Router } from "react-router-dom"
 import { createMemoryHistory } from "history"
-import { configure, render } from "enzyme"
-import Adapter from "@wojtekmaj/enzyme-adapter-react-17"
 import React from "react"
+import { render, screen } from "@testing-library/react"
 
-
-configure({ adapter: new Adapter() })
-React.useLayoutEffect = React.useEffect
 
 describe("Profile", () => {
     it("Renders with logged in user", () => {
@@ -19,7 +15,7 @@ describe("Profile", () => {
             state.self = new User().setId(1).setName("Test User").toObject()
         })
         const history = createMemoryHistory()
-        const cheerio = render(
+        render(
             <Provider value={mockedOvermind}>
                 <Router history={history}>
                     <Profile />
@@ -28,7 +24,7 @@ describe("Profile", () => {
         )
         const loggedIn = mockedOvermind.state.isLoggedIn
         expect(loggedIn).toBe(true)
-        expect(cheerio.find("h1").text()).toBe("Hi, Test User")
+        expect(screen.getByRole("heading").textContent).toBe("Hi, Test User")
     })
 
     it("Logged in is false if the user is invalid", () => {
