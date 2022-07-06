@@ -30,13 +30,13 @@ func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, sub
 		if slpHours > gracePeriod {
 			slpDays++
 		}
-		m.updateSlipDays(assignment.GetID(), slpDays)
+		m.internalUpdateSlipDays(assignment.GetID(), slpDays)
 	}
 	return nil
 }
 
-// updateSlipDays updates the number of slipdays for the given assignment.
-func (m *Enrollment) updateSlipDays(assignmentID uint64, slipDays uint32) {
+// internalUpdateSlipDays updates the number of slipdays for the given assignment.
+func (m *Enrollment) internalUpdateSlipDays(assignmentID uint64, slipDays uint32) {
 	for _, val := range m.GetUsedSlipDays() {
 		if val.AssignmentID == assignmentID {
 			val.UsedDays = slipDays
