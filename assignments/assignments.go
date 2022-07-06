@@ -73,15 +73,14 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 // fetchAssignments returns a list of assignments for the given course, by
 // cloning the 'tests' repo for the given course and extracting the assignments
 // from the 'assignment.yml' files, one for each assignment. If there is a Dockerfile
-// in 'tests/script' will also return its contents.
+// in 'tests/script' its content will also be returned.
 //
-// Note: This will typically be called on a push event to the 'tests' repo,
-// which should happen infrequently. It may also be called manually by a
-// teacher/admin from the frontend. However, even if multiple invocations
-// happen concurrently, the function is idempotent. That is, it only reads
-// data from GitHub, processes the yml files and returns the assignments.
-// The TempDir() function ensures that cloning is done in distinct temp
-// directories, should there be concurrent calls to this function.
+// Note: This will typically be called in response to a push event to the 'tests' repo,
+// which should happen infrequently. It may also be called manually by a teacher/admin
+// from the frontend. However, even if multiple invocations happen concurrently,
+// the function is idempotent. That is, it only reads data from GitHub, processes
+// the yml files and returns the assignments. The os.MkdirTemp() function ensures that
+// any concurrent calls to this function will always use distinct temp directories.
 func fetchAssignments(ctx context.Context, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
 	dstDir, err := os.MkdirTemp("", pb.TestsRepo)
 	if err != nil {
