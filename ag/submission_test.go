@@ -11,23 +11,23 @@ import (
 func TestNewestSubmissionDate(t *testing.T) {
 	submission := &pb.Submission{}
 	tim := time.Now()
-	new, err := submission.NewestBuildDate(tim)
+	newSub, err := submission.NewestBuildDate(tim)
 	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, new, pb.ErrMissingBuildInfo)
+		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSub, pb.ErrMissingBuildInfo)
 	}
 
 	submission = &pb.Submission{}
-	new, err = submission.NewestBuildDate(tim)
+	newSub, err = submission.NewestBuildDate(tim)
 	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, new, pb.ErrMissingBuildInfo)
+		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSub, pb.ErrMissingBuildInfo)
 	}
 
 	submission = &pb.Submission{
 		BuildInfo: &score.BuildInfo{},
 	}
-	new, err = submission.NewestBuildDate(tim)
+	newSub, err = submission.NewestBuildDate(tim)
 	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, new, pb.ErrMissingBuildInfo)
+		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSub, pb.ErrMissingBuildInfo)
 	}
 
 	submission = &pb.Submission{
@@ -35,9 +35,9 @@ func TestNewestSubmissionDate(t *testing.T) {
 			BuildDate: "string",
 		},
 	}
-	new, err = submission.NewestBuildDate(tim)
+	newSub, err = submission.NewestBuildDate(tim)
 	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, new, `parsing time "string" as "2006-01-02T15:04:05": cannot parse "string" as "2006"`)
+		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newSub, `parsing time "string" as "2006-01-02T15:04:05": cannot parse "string" as "2006"`)
 	}
 
 	buildDate := time.Now()
@@ -46,12 +46,12 @@ func TestNewestSubmissionDate(t *testing.T) {
 			BuildDate: buildDate.Format(pb.TimeLayout),
 		},
 	}
-	new, err = submission.NewestBuildDate(tim)
+	newSub, err = submission.NewestBuildDate(tim)
 	if err != nil {
 		t.Error(err)
 	}
-	if new.Before(tim) {
-		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, new, buildDate)
+	if newSub.Before(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newSub, buildDate)
 	}
 }
 
