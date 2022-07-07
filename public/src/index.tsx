@@ -5,7 +5,7 @@ import { createOvermind } from 'overmind'
 import { Provider } from 'overmind-react'
 import { config } from './overmind'
 import App from './App'
-import { HashRouter, BrowserRouter } from 'react-router-dom'
+import { BrowserRouter } from 'react-router-dom'
 import DevelopmentMode from './DevelopmentMode'
 
 const overmind = createOvermind(config, {

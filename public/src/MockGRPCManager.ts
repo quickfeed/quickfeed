@@ -236,6 +236,10 @@ export class MockGrpcManager {
     }
 
     public updateAssignments(courseID: number): Promise<IGrpcResponse<Void>> {
+        const course  = this.courses.getCoursesList().find(c => c.getId() === courseID)
+        if (!course) {
+            return this.grpcSend<Void>(null, new Status().setCode(2).setError("Course not found"))
+        }
         return this.grpcSend<Void>(new Void())
     }
 
@@ -274,12 +278,15 @@ export class MockGrpcManager {
         enrollmentList.forEach(e => {
             e.setUser(this.users.getUsersList().find(u => u.getId() === e.getUserid()))
         })
+        // TODO: add group & group members
+        if (withoutGroupMembers) {
+            // TODO
+        }
+        if (withActivity) {
+            // TODO
+        }
         const enrollments = new Enrollments().setEnrollmentsList(enrollmentList)
         return this.grpcSend<Enrollments>(enrollments)
-        // TODO: add group members
-        //request.setIgnoregroupmembers(withoutGroupMembers ?? false)
-        //request.setWithactivity(withActivity ?? false)
-        //request.setStatusesList(statuses ?? [])
     }
 
     public createEnrollment(courseID: number, userID: number): Promise<IGrpcResponse<Void>> {
@@ -521,6 +528,10 @@ export class MockGrpcManager {
                     return
                 }
 
+                if (withBuildInfo) {
+                    // TODO
+                }
+
                 subLink.setSubmission(submission.clone())
                 subs.push(subLink)
             })
@@ -533,6 +544,9 @@ export class MockGrpcManager {
     }
 
     public updateSubmission(courseID: number, s: Submission): Promise<IGrpcResponse<Void>> {
+        if (!this.courses.getCoursesList().find(c => c.getId() === courseID)) {
+            return this.grpcSend<Void>(null, new Status().setCode(2).setError('Course not found'))
+        }
         const submission = this.submissions.getSubmissionsList().find(s => s.getId() === s.getId())
         if (submission) {
             Object.assign(submission, s)
@@ -628,6 +642,9 @@ export class MockGrpcManager {
     }
 
     public createReview(r: Review, courseID: number): Promise<IGrpcResponse<Review>> {
+        if (this.courses.getCoursesList().find(c => c.getId() === courseID)) {
+            return this.grpcSend<Review>(null, new Status().setCode(2).setError('Course not found'))
+        }
         const submission = this.submissions.getSubmissionsList().find(s => s.getId() === r.getSubmissionid())
         if (!submission) {
             return this.grpcSend<Review>(null, new Status().setCode(2).setError('Submission not found'))
@@ -647,6 +664,9 @@ export class MockGrpcManager {
     }
 
     public updateReview(r: Review, courseID: number): Promise<IGrpcResponse<Review>> {
+        if (!this.courses.getCoursesList().find(c => c.getId() === courseID)) {
+            return this.grpcSend<Review>(null, new Status().setCode(2).setError('Course not found'))
+        }
         const submission = this.submissions.getSubmissionsList().find(s => s.getId() === r.getSubmissionid())
         if (!submission) {
             return this.grpcSend<Review>(null, new Status().setCode(2).setError('Submission not found'))
@@ -673,8 +693,11 @@ export class MockGrpcManager {
 
     // /* REPOSITORY */ //
 
-    public getRepositories(courseID: number, types: Repository.Type[]): Promise<IGrpcResponse<Repositories>> {
+    public getRepositories(courseID: number, _types: Repository.Type[]): Promise<IGrpcResponse<Repositories>> {
         // TODO
+        if (!this.courses.getCoursesList().find(c => c.getId() === courseID)) {
+            return this.grpcSend<Repositories>(null, new Status().setCode(2).setError('Course not found'))
+        }
         //const repos = this.repositories.getRepositoriesList().filter(r => r.getCourseid() === courseID && types.includes(r.getType()))
         return this.grpcSend<Repositories>(new Repositories())
     }
@@ -694,9 +717,8 @@ export class MockGrpcManager {
         return this.grpcSend<Providers>(this.providers)
     }
 
-    public isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<IGrpcResponse<Void>> {
+    public isEmptyRepo(_courseID: number, _userID: number, _groupID: number): Promise<IGrpcResponse<Void>> {
         return this.grpcSend<Void>(true)
-
     }
 
     private grpcSend<T>(data: any, status?: Status): Promise<IGrpcResponse<T>> {
