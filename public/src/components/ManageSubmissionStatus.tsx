@@ -1,5 +1,5 @@
 import React from "react"
-import { Submission } from "../../proto/qf/qf_pb"
+import { Submission } from "../../proto/qf/types/types_pb"
 import { isManuallyGraded } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 

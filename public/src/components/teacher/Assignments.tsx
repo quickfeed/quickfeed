@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Assignment } from "../../../proto/qf/qf_pb"
+import { Assignment } from "../../../proto/qf/types/types_pb"
 import { getCourseID, isManuallyGraded, Color, hasBenchmarks, hasCriteria } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"

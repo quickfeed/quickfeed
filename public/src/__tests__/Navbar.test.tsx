@@ -1,6 +1,6 @@
 import NavBar from "../components/NavBar"
 import React from "react"
-import { User } from "../../proto/qf/qf_pb"
+import { User } from "../../proto/qf/types/types_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
 import { createMemoryHistory } from "history"

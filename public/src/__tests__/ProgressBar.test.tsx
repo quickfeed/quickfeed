@@ -1,5 +1,5 @@
 import React from "react"
-import { Assignment, Submission } from "../../proto/qf/qf_pb"
+import { Assignment, Submission } from "../../proto/qf/types/types_pb"
 import ProgressBar, { Progress } from "../components/ProgressBar"
 import { initializeOvermind } from "./TestHelpers"
 import { Provider } from "overmind-react"

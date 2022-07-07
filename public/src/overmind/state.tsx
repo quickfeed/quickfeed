@@ -1,6 +1,7 @@
 import { derived } from "overmind"
 import { Context } from "."
-import { Assignment, Course, Enrollment, Group, Submission, SubmissionLink, User } from "../../proto/qf/qf_pb"
+import { Assignment, Course, Enrollment, Group, Submission, User } from "../../proto/qf/types/types_pb"
+import { SubmissionLink } from "../../proto/qf/types/requests_pb"
 import { Color, getNumApproved, getSubmissionByAssignmentID, getSubmissionsScore, isApproved, isPending, isPendingGroup, isTeacher, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {

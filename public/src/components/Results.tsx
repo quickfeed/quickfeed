@@ -1,5 +1,6 @@
 import React, { useEffect } from "react"
-import { Enrollment, SubmissionLink } from "../../proto/qf/qf_pb"
+import { Enrollment } from "../../proto/qf/types/types_pb"
+import { SubmissionLink } from "../../proto/qf/types/requests_pb"
 import { Color, getCourseID, getSubmissionCellColor, SubmissionSort } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import Button, { ButtonType } from "./admin/Button"

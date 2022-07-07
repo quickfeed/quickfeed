@@ -10,132 +10,133 @@ exports.QuickFeedServiceClient = void 0;
 /* eslint-disable */
 // @ts-nocheck
 var grpcWeb = require("grpc-web");
-var qf_qf_pb = require("../qf/qf_pb");
+var qf_types_types_pb = require("../qf/types/types_pb");
+var qf_types_requests_pb = require("../qf/types/requests_pb");
 var QuickFeedServiceClient = /** @class */ (function () {
     function QuickFeedServiceClient(hostname, credentials, options) {
-        this.methodInfoGetUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetUser', grpcWeb.MethodType.UNARY, qf_qf_pb.Void, qf_qf_pb.User, function (request) {
+        this.methodInfoGetUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetUser', grpcWeb.MethodType.UNARY, qf_types_requests_pb.Void, qf_types_types_pb.User, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.User.deserializeBinary);
-        this.methodInfoGetUsers = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetUsers', grpcWeb.MethodType.UNARY, qf_qf_pb.Void, qf_qf_pb.Users, function (request) {
+        }, qf_types_types_pb.User.deserializeBinary);
+        this.methodInfoGetUsers = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetUsers', grpcWeb.MethodType.UNARY, qf_types_requests_pb.Void, qf_types_types_pb.Users, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Users.deserializeBinary);
-        this.methodInfoGetUserByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetUserByCourse', grpcWeb.MethodType.UNARY, qf_qf_pb.CourseUserRequest, qf_qf_pb.User, function (request) {
+        }, qf_types_types_pb.Users.deserializeBinary);
+        this.methodInfoGetUserByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetUserByCourse', grpcWeb.MethodType.UNARY, qf_types_requests_pb.CourseUserRequest, qf_types_types_pb.User, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.User.deserializeBinary);
-        this.methodInfoUpdateUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateUser', grpcWeb.MethodType.UNARY, qf_qf_pb.User, qf_qf_pb.Void, function (request) {
+        }, qf_types_types_pb.User.deserializeBinary);
+        this.methodInfoUpdateUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateUser', grpcWeb.MethodType.UNARY, qf_types_types_pb.User, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoIsAuthorizedTeacher = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/IsAuthorizedTeacher', grpcWeb.MethodType.UNARY, qf_qf_pb.Void, qf_qf_pb.AuthorizationResponse, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoIsAuthorizedTeacher = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/IsAuthorizedTeacher', grpcWeb.MethodType.UNARY, qf_types_requests_pb.Void, qf_types_requests_pb.AuthorizationResponse, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.AuthorizationResponse.deserializeBinary);
-        this.methodInfoGetGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroup', grpcWeb.MethodType.UNARY, qf_qf_pb.GetGroupRequest, qf_qf_pb.Group, function (request) {
+        }, qf_types_requests_pb.AuthorizationResponse.deserializeBinary);
+        this.methodInfoGetGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroup', grpcWeb.MethodType.UNARY, qf_types_requests_pb.GetGroupRequest, qf_types_types_pb.Group, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Group.deserializeBinary);
-        this.methodInfoGetGroupByUserAndCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroupByUserAndCourse', grpcWeb.MethodType.UNARY, qf_qf_pb.GroupRequest, qf_qf_pb.Group, function (request) {
+        }, qf_types_types_pb.Group.deserializeBinary);
+        this.methodInfoGetGroupByUserAndCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroupByUserAndCourse', grpcWeb.MethodType.UNARY, qf_types_requests_pb.GroupRequest, qf_types_types_pb.Group, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Group.deserializeBinary);
-        this.methodInfoGetGroupsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroupsByCourse', grpcWeb.MethodType.UNARY, qf_qf_pb.CourseRequest, qf_qf_pb.Groups, function (request) {
+        }, qf_types_types_pb.Group.deserializeBinary);
+        this.methodInfoGetGroupsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroupsByCourse', grpcWeb.MethodType.UNARY, qf_types_requests_pb.CourseRequest, qf_types_types_pb.Groups, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Groups.deserializeBinary);
-        this.methodInfoCreateGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateGroup', grpcWeb.MethodType.UNARY, qf_qf_pb.Group, qf_qf_pb.Group, function (request) {
+        }, qf_types_types_pb.Groups.deserializeBinary);
+        this.methodInfoCreateGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateGroup', grpcWeb.MethodType.UNARY, qf_types_types_pb.Group, qf_types_types_pb.Group, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Group.deserializeBinary);
-        this.methodInfoUpdateGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateGroup', grpcWeb.MethodType.UNARY, qf_qf_pb.Group, qf_qf_pb.Group, function (request) {
+        }, qf_types_types_pb.Group.deserializeBinary);
+        this.methodInfoUpdateGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateGroup', grpcWeb.MethodType.UNARY, qf_types_types_pb.Group, qf_types_types_pb.Group, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Group.deserializeBinary);
-        this.methodInfoDeleteGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/DeleteGroup', grpcWeb.MethodType.UNARY, qf_qf_pb.GroupRequest, qf_qf_pb.Void, function (request) {
+        }, qf_types_types_pb.Group.deserializeBinary);
+        this.methodInfoDeleteGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/DeleteGroup', grpcWeb.MethodType.UNARY, qf_types_requests_pb.GroupRequest, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoGetCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetCourse', grpcWeb.MethodType.UNARY, qf_qf_pb.CourseRequest, qf_qf_pb.Course, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoGetCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetCourse', grpcWeb.MethodType.UNARY, qf_types_requests_pb.CourseRequest, qf_types_types_pb.Course, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Course.deserializeBinary);
-        this.methodInfoGetCourses = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetCourses', grpcWeb.MethodType.UNARY, qf_qf_pb.Void, qf_qf_pb.Courses, function (request) {
+        }, qf_types_types_pb.Course.deserializeBinary);
+        this.methodInfoGetCourses = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetCourses', grpcWeb.MethodType.UNARY, qf_types_requests_pb.Void, qf_types_types_pb.Courses, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Courses.deserializeBinary);
-        this.methodInfoGetCoursesByUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetCoursesByUser', grpcWeb.MethodType.UNARY, qf_qf_pb.EnrollmentStatusRequest, qf_qf_pb.Courses, function (request) {
+        }, qf_types_types_pb.Courses.deserializeBinary);
+        this.methodInfoGetCoursesByUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetCoursesByUser', grpcWeb.MethodType.UNARY, qf_types_requests_pb.EnrollmentStatusRequest, qf_types_types_pb.Courses, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Courses.deserializeBinary);
-        this.methodInfoCreateCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateCourse', grpcWeb.MethodType.UNARY, qf_qf_pb.Course, qf_qf_pb.Course, function (request) {
+        }, qf_types_types_pb.Courses.deserializeBinary);
+        this.methodInfoCreateCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateCourse', grpcWeb.MethodType.UNARY, qf_types_types_pb.Course, qf_types_types_pb.Course, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Course.deserializeBinary);
-        this.methodInfoUpdateCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateCourse', grpcWeb.MethodType.UNARY, qf_qf_pb.Course, qf_qf_pb.Void, function (request) {
+        }, qf_types_types_pb.Course.deserializeBinary);
+        this.methodInfoUpdateCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateCourse', grpcWeb.MethodType.UNARY, qf_types_types_pb.Course, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoUpdateCourseVisibility = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateCourseVisibility', grpcWeb.MethodType.UNARY, qf_qf_pb.Enrollment, qf_qf_pb.Void, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoUpdateCourseVisibility = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateCourseVisibility', grpcWeb.MethodType.UNARY, qf_types_types_pb.Enrollment, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoGetAssignments = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetAssignments', grpcWeb.MethodType.UNARY, qf_qf_pb.CourseRequest, qf_qf_pb.Assignments, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoGetAssignments = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetAssignments', grpcWeb.MethodType.UNARY, qf_types_requests_pb.CourseRequest, qf_types_types_pb.Assignments, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Assignments.deserializeBinary);
-        this.methodInfoUpdateAssignments = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateAssignments', grpcWeb.MethodType.UNARY, qf_qf_pb.CourseRequest, qf_qf_pb.Void, function (request) {
+        }, qf_types_types_pb.Assignments.deserializeBinary);
+        this.methodInfoUpdateAssignments = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateAssignments', grpcWeb.MethodType.UNARY, qf_types_requests_pb.CourseRequest, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoGetEnrollmentsByUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetEnrollmentsByUser', grpcWeb.MethodType.UNARY, qf_qf_pb.EnrollmentStatusRequest, qf_qf_pb.Enrollments, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoGetEnrollmentsByUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetEnrollmentsByUser', grpcWeb.MethodType.UNARY, qf_types_requests_pb.EnrollmentStatusRequest, qf_types_types_pb.Enrollments, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Enrollments.deserializeBinary);
-        this.methodInfoGetEnrollmentsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetEnrollmentsByCourse', grpcWeb.MethodType.UNARY, qf_qf_pb.EnrollmentRequest, qf_qf_pb.Enrollments, function (request) {
+        }, qf_types_types_pb.Enrollments.deserializeBinary);
+        this.methodInfoGetEnrollmentsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetEnrollmentsByCourse', grpcWeb.MethodType.UNARY, qf_types_requests_pb.EnrollmentRequest, qf_types_types_pb.Enrollments, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Enrollments.deserializeBinary);
-        this.methodInfoCreateEnrollment = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateEnrollment', grpcWeb.MethodType.UNARY, qf_qf_pb.Enrollment, qf_qf_pb.Void, function (request) {
+        }, qf_types_types_pb.Enrollments.deserializeBinary);
+        this.methodInfoCreateEnrollment = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateEnrollment', grpcWeb.MethodType.UNARY, qf_types_types_pb.Enrollment, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoUpdateEnrollments = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateEnrollments', grpcWeb.MethodType.UNARY, qf_qf_pb.Enrollments, qf_qf_pb.Void, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoUpdateEnrollments = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateEnrollments', grpcWeb.MethodType.UNARY, qf_types_types_pb.Enrollments, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoGetSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmissions', grpcWeb.MethodType.UNARY, qf_qf_pb.SubmissionRequest, qf_qf_pb.Submissions, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoGetSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmissions', grpcWeb.MethodType.UNARY, qf_types_requests_pb.SubmissionRequest, qf_types_types_pb.Submissions, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Submissions.deserializeBinary);
-        this.methodInfoGetSubmissionsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmissionsByCourse', grpcWeb.MethodType.UNARY, qf_qf_pb.SubmissionsForCourseRequest, qf_qf_pb.CourseSubmissions, function (request) {
+        }, qf_types_types_pb.Submissions.deserializeBinary);
+        this.methodInfoGetSubmissionsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmissionsByCourse', grpcWeb.MethodType.UNARY, qf_types_requests_pb.SubmissionsForCourseRequest, qf_types_requests_pb.CourseSubmissions, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.CourseSubmissions.deserializeBinary);
-        this.methodInfoUpdateSubmission = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateSubmission', grpcWeb.MethodType.UNARY, qf_qf_pb.UpdateSubmissionRequest, qf_qf_pb.Void, function (request) {
+        }, qf_types_requests_pb.CourseSubmissions.deserializeBinary);
+        this.methodInfoUpdateSubmission = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateSubmission', grpcWeb.MethodType.UNARY, qf_types_requests_pb.UpdateSubmissionRequest, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoUpdateSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateSubmissions', grpcWeb.MethodType.UNARY, qf_qf_pb.UpdateSubmissionsRequest, qf_qf_pb.Void, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoUpdateSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateSubmissions', grpcWeb.MethodType.UNARY, qf_types_requests_pb.UpdateSubmissionsRequest, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoRebuildSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/RebuildSubmissions', grpcWeb.MethodType.UNARY, qf_qf_pb.RebuildRequest, qf_qf_pb.Void, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoRebuildSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/RebuildSubmissions', grpcWeb.MethodType.UNARY, qf_types_requests_pb.RebuildRequest, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoCreateBenchmark = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateBenchmark', grpcWeb.MethodType.UNARY, qf_qf_pb.GradingBenchmark, qf_qf_pb.GradingBenchmark, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoCreateBenchmark = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateBenchmark', grpcWeb.MethodType.UNARY, qf_types_types_pb.GradingBenchmark, qf_types_types_pb.GradingBenchmark, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.GradingBenchmark.deserializeBinary);
-        this.methodInfoUpdateBenchmark = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateBenchmark', grpcWeb.MethodType.UNARY, qf_qf_pb.GradingBenchmark, qf_qf_pb.Void, function (request) {
+        }, qf_types_types_pb.GradingBenchmark.deserializeBinary);
+        this.methodInfoUpdateBenchmark = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateBenchmark', grpcWeb.MethodType.UNARY, qf_types_types_pb.GradingBenchmark, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoDeleteBenchmark = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/DeleteBenchmark', grpcWeb.MethodType.UNARY, qf_qf_pb.GradingBenchmark, qf_qf_pb.Void, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoDeleteBenchmark = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/DeleteBenchmark', grpcWeb.MethodType.UNARY, qf_types_types_pb.GradingBenchmark, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoCreateCriterion = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateCriterion', grpcWeb.MethodType.UNARY, qf_qf_pb.GradingCriterion, qf_qf_pb.GradingCriterion, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoCreateCriterion = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateCriterion', grpcWeb.MethodType.UNARY, qf_types_types_pb.GradingCriterion, qf_types_types_pb.GradingCriterion, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.GradingCriterion.deserializeBinary);
-        this.methodInfoUpdateCriterion = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateCriterion', grpcWeb.MethodType.UNARY, qf_qf_pb.GradingCriterion, qf_qf_pb.Void, function (request) {
+        }, qf_types_types_pb.GradingCriterion.deserializeBinary);
+        this.methodInfoUpdateCriterion = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateCriterion', grpcWeb.MethodType.UNARY, qf_types_types_pb.GradingCriterion, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoDeleteCriterion = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/DeleteCriterion', grpcWeb.MethodType.UNARY, qf_qf_pb.GradingCriterion, qf_qf_pb.Void, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoDeleteCriterion = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/DeleteCriterion', grpcWeb.MethodType.UNARY, qf_types_types_pb.GradingCriterion, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
-        this.methodInfoCreateReview = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateReview', grpcWeb.MethodType.UNARY, qf_qf_pb.ReviewRequest, qf_qf_pb.Review, function (request) {
+        }, qf_types_requests_pb.Void.deserializeBinary);
+        this.methodInfoCreateReview = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateReview', grpcWeb.MethodType.UNARY, qf_types_requests_pb.ReviewRequest, qf_types_types_pb.Review, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Review.deserializeBinary);
-        this.methodInfoUpdateReview = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateReview', grpcWeb.MethodType.UNARY, qf_qf_pb.ReviewRequest, qf_qf_pb.Review, function (request) {
+        }, qf_types_types_pb.Review.deserializeBinary);
+        this.methodInfoUpdateReview = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateReview', grpcWeb.MethodType.UNARY, qf_types_requests_pb.ReviewRequest, qf_types_types_pb.Review, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Review.deserializeBinary);
-        this.methodInfoGetReviewers = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetReviewers', grpcWeb.MethodType.UNARY, qf_qf_pb.SubmissionReviewersRequest, qf_qf_pb.Reviewers, function (request) {
+        }, qf_types_types_pb.Review.deserializeBinary);
+        this.methodInfoGetReviewers = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetReviewers', grpcWeb.MethodType.UNARY, qf_types_requests_pb.SubmissionReviewersRequest, qf_types_requests_pb.Reviewers, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Reviewers.deserializeBinary);
-        this.methodInfoGetProviders = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetProviders', grpcWeb.MethodType.UNARY, qf_qf_pb.Void, qf_qf_pb.Providers, function (request) {
+        }, qf_types_requests_pb.Reviewers.deserializeBinary);
+        this.methodInfoGetProviders = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetProviders', grpcWeb.MethodType.UNARY, qf_types_requests_pb.Void, qf_types_requests_pb.Providers, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Providers.deserializeBinary);
-        this.methodInfoGetOrganization = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetOrganization', grpcWeb.MethodType.UNARY, qf_qf_pb.OrgRequest, qf_qf_pb.Organization, function (request) {
+        }, qf_types_requests_pb.Providers.deserializeBinary);
+        this.methodInfoGetOrganization = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetOrganization', grpcWeb.MethodType.UNARY, qf_types_requests_pb.OrgRequest, qf_types_requests_pb.Organization, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Organization.deserializeBinary);
-        this.methodInfoGetRepositories = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetRepositories', grpcWeb.MethodType.UNARY, qf_qf_pb.URLRequest, qf_qf_pb.Repositories, function (request) {
+        }, qf_types_requests_pb.Organization.deserializeBinary);
+        this.methodInfoGetRepositories = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetRepositories', grpcWeb.MethodType.UNARY, qf_types_requests_pb.URLRequest, qf_types_requests_pb.Repositories, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Repositories.deserializeBinary);
-        this.methodInfoIsEmptyRepo = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/IsEmptyRepo', grpcWeb.MethodType.UNARY, qf_qf_pb.RepositoryRequest, qf_qf_pb.Void, function (request) {
+        }, qf_types_requests_pb.Repositories.deserializeBinary);
+        this.methodInfoIsEmptyRepo = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/IsEmptyRepo', grpcWeb.MethodType.UNARY, qf_types_requests_pb.RepositoryRequest, qf_types_requests_pb.Void, function (request) {
             return request.serializeBinary();
-        }, qf_qf_pb.Void.deserializeBinary);
+        }, qf_types_requests_pb.Void.deserializeBinary);
         if (!options)
             options = {};
         if (!credentials)

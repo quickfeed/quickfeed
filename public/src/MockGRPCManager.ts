@@ -1,8 +1,6 @@
 import {
     Assignments,
-    AuthorizationResponse,
     Course,
-    CourseSubmissions,
     Courses,
     Enrollment,
     Enrollments,
@@ -10,25 +8,29 @@ import {
     GradingCriterion,
     Group,
     Groups,
+    Repository,
+    Review,
+    Submission,
+    Submissions,
+    User,
+    Users,
+    Assignment,
+} from "../proto/qf/types/types_pb"
+import {
+    AuthorizationResponse,
+    CourseSubmissions,
     Organization,
     Providers,
     Repositories,
-    Repository,
-    Review,
     Status,
     SubmissionsForCourseRequest,
-    Submission,
-    Submissions,
     SubmissionReviewersRequest,
-    User,
-    Users,
     Void,
     Reviewers,
-    Assignment,
     Organizations,
     EnrollmentLink,
     SubmissionLink,
-} from "../proto/qf/qf_pb"
+} from "../proto/qf/types/requests_pb"
 import { delay } from "./Helpers"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
 import { StatusCode } from "grpc-web"

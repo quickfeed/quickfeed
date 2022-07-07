@@ -1,4 +1,4 @@
-import { Assignment, Course, Enrollment, GradingBenchmark, GradingCriterion, Group, Review, Submission, User } from "../proto/qf/qf_pb"
+import { Assignment, Course, Enrollment, GradingBenchmark, GradingCriterion, Group, Review, Submission, User } from "../proto/qf/types/types_pb"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
 
 

@@ -1,6 +1,6 @@
 
 import React, { useState } from "react"
-import { Review } from "../../../proto/qf/qf_pb"
+import { Review } from "../../../proto/qf/types/types_pb"
 import { useActions, useAppState } from "../../overmind"
 
 
