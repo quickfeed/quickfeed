@@ -17,7 +17,7 @@ const StudentPage = (): JSX.Element => {
 
     return (
         <>
-            <RedirectButton to={root}></RedirectButton>
+            <RedirectButton to={root} />
             <CourseBanner />
             <Alert />
             <div className="row" hidden={history.location.pathname != root}>

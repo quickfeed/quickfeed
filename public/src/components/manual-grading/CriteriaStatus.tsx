@@ -22,7 +22,7 @@ const CriteriaStatus = ({ criterion }: { criterion: GradingCriterion.AsObject })
         // TODO: Perhaps refactor button into a separate general component to enable reuse
         return (
             <div key={index} className={style} onClick={() => button.onClick()}>
-                <i className={button.icon}></i>
+                <i className={button.icon} />
             </div>
         )
     })

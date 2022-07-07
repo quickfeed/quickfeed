@@ -31,9 +31,9 @@ const AdminPage = (): JSX.Element => {
             <RedirectButton to={root} />
             <Alert />
             <div className="row" hidden={history.location.pathname != root}>
-                <Card {...manageUsers}></Card>
-                <Card {...createCourse}></Card>
-                <Card {...editCourse}></Card>
+                <Card {...manageUsers} />
+                <Card {...createCourse} />
+                <Card {...editCourse} />
             </div>
             <Switch>
                 <Route path={"/admin/manage"}>

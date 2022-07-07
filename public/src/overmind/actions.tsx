@@ -213,7 +213,7 @@ export const updateCurrentSubmissionStatus = ({ state }: Context, { links, statu
 }
 
 /** updateEnrollment updates an enrollment status with the given status */
-export const updateEnrollment = async ({ state, actions, effects }: Context, { enrollment, status }: { enrollment: Enrollment.AsObject, status: Enrollment.UserStatus }): Promise<void> => {
+export const updateEnrollment = async ({ state, effects }: Context, { enrollment, status }: { enrollment: Enrollment.AsObject, status: Enrollment.UserStatus }): Promise<void> => {
     // Confirm that user really wants to change enrollment status
     let confirmed = false
     switch (status) {

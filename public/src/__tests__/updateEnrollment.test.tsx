@@ -78,7 +78,7 @@ describe("UpdateEnrollment in webpage", () => {
         history.push("/course/1/members")
 
         React.useState = jest.fn().mockReturnValue("True")
-        const wrapped = render(
+        render(
             <Provider value={mockedOvermind}>
                 <Router history={history} >
                     <Route path="/course/:id/members" component={Members} />

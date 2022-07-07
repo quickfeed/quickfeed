@@ -13,14 +13,14 @@ const ProfileInfo = ({ setEditing }: { setEditing: Dispatch<SetStateAction<boole
                 </h2>
             </div>
             <div className='card-text text-center'>
-                <i className='fa fa-envelope text-muted'></i>
+                <i className='fa fa-envelope text-muted' />
                 <span className='ml-3'>{self.email}</span>
             </div>
             <div className='card-text text-center'>
-                <i className='fa fa-graduation-cap text-muted'></i>
+                <i className='fa fa-graduation-cap text-muted' />
                 <span className='ml-3'>{self.studentid}</span>
             </div>
-            <span className="badge float-right clickable" onClick={() => setEditing(true)}><i className='fa fa-edit'></i></span>
+            <span className="badge float-right clickable" onClick={() => setEditing(true)}><i className='fa fa-edit' /></span>
         </>
     )
 }
