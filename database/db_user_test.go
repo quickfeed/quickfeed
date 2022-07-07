@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -21,10 +21,10 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	)
 	admin := true
 	var (
-		wantUser = &qf.User{
+		wantUser = &types.User{
 			ID:      uID,
 			IsAdmin: admin, // first user is always admin
-			RemoteIdentities: []*qf.RemoteIdentity{{
+			RemoteIdentities: []*types.RemoteIdentity{{
 				ID:          rID,
 				Provider:    provider,
 				RemoteID:    remoteID,
@@ -32,7 +32,7 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 				UserID:      uID,
 			}},
 		}
-		updateAccessToken = &qf.RemoteIdentity{
+		updateAccessToken = &types.RemoteIdentity{
 			Provider:    provider,
 			RemoteID:    remoteID,
 			AccessToken: accessToken,
@@ -42,10 +42,10 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	var user qf.User
+	var user types.User
 	if err := db.CreateUserFromRemoteIdentity(
 		&user,
-		&qf.RemoteIdentity{
+		&types.RemoteIdentity{
 			Provider: provider,
 			RemoteID: remoteID,
 		},
@@ -98,7 +98,7 @@ func TestGormDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
 	}
 
 	// Update the access token for the user.
-	if err := db.UpdateAccessToken(&qf.RemoteIdentity{
+	if err := db.UpdateAccessToken(&types.RemoteIdentity{
 		Provider:    provider,
 		RemoteID:    remoteID,
 		AccessToken: newAccessToken,
@@ -125,7 +125,7 @@ func TestGormDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
 	}
 
 	// Update the access token again for the user.
-	if err := db.UpdateAccessToken(&qf.RemoteIdentity{
+	if err := db.UpdateAccessToken(&types.RemoteIdentity{
 		Provider:    provider,
 		RemoteID:    remoteID,
 		AccessToken: anotherToken,
@@ -169,7 +169,7 @@ func TestGormDBUpdateAccessTokenCourseTokenCache(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	course := &qf.Course{
+	course := &types.Course{
 		ID:              1,
 		CourseCreatorID: admin.ID,
 		Code:            "DAT320",
@@ -189,7 +189,7 @@ func TestGormDBUpdateAccessTokenCourseTokenCache(t *testing.T) {
 	}
 
 	// Update the access token for the user.
-	if err := db.UpdateAccessToken(&qf.RemoteIdentity{
+	if err := db.UpdateAccessToken(&types.RemoteIdentity{
 		Provider:    provider,
 		RemoteID:    remoteID,
 		AccessToken: newAccessToken,
@@ -207,7 +207,7 @@ func TestGormDBUpdateAccessTokenCourseTokenCache(t *testing.T) {
 	}
 
 	// Update the access token for the user again.
-	if err := db.UpdateAccessToken(&qf.RemoteIdentity{
+	if err := db.UpdateAccessToken(&types.RemoteIdentity{
 		Provider:    provider,
 		RemoteID:    remoteID,
 		AccessToken: anotherToken,

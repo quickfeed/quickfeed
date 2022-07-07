@@ -1,4 +1,4 @@
-package qf_test
+package types_test
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -17,54 +17,54 @@ const (
 var (
 	testNow = time.Now()
 
-	course = &qf.Course{
+	course = &types.Course{
 		ID:       1,
 		SlipDays: 5,
 		Name:     "opsys",
 	}
 
-	a = func(daysFromNow int32) *qf.Assignment {
-		return &qf.Assignment{
+	a = func(daysFromNow int32) *types.Assignment {
+		return &types.Assignment{
 			CourseID:   course.ID,
 			ScoreLimit: 60,
-			Deadline:   testNow.Add(time.Duration(daysFromNow) * days).Format(qf.TimeLayout),
+			Deadline:   testNow.Add(time.Duration(daysFromNow) * days).Format(types.TimeLayout),
 		}
 	}
 )
 
 var slipTests = []struct {
 	name        string
-	labs        []*qf.Assignment
+	labs        []*types.Assignment
 	submissions [][]int32
 	remaining   [][]int32
 }{
 	{
 		"One assignment with deadline two days ago, two submissions same day",
-		[]*qf.Assignment{a(-2)},
+		[]*types.Assignment{a(-2)},
 		[][]int32{{0, 0}},
 		[][]int32{{3, 3}},
 	},
 	{
 		"One assignment with deadline in two days, two submissions same day",
-		[]*qf.Assignment{a(2)},
+		[]*types.Assignment{a(2)},
 		[][]int32{{0, 0}},
 		[][]int32{{5, 5}},
 	},
 	{
 		"One assignment with deadline in two days, five submissions one day apart",
-		[]*qf.Assignment{a(2)},
+		[]*types.Assignment{a(2)},
 		[][]int32{{0, 1, 1, 1, 1}},
 		[][]int32{{5, 5, 5, 4, 3}},
 	},
 	{
 		"One assignment with deadline in two days, ten submissions one day apart",
-		[]*qf.Assignment{a(2)},
+		[]*types.Assignment{a(2)},
 		[][]int32{{0, 1, 1, 1, 1, 1, 1, 1, 1, 1}},
 		[][]int32{{5, 5, 5, 4, 3, 2, 1, 0, -1, -2}},
 	},
 	{
 		"Four assignments with different deadlines, five or more submissions for each assignment",
-		[]*qf.Assignment{a(0), a(2), a(5), a(20)},
+		[]*types.Assignment{a(0), a(2), a(5), a(20)},
 		[][]int32{ // each number is a submission; if >0 the number is #days since previous submission; they carry over from one line to the next.
 			{0, 0, 0, 0, 0},        // 0 ==> five submissions on the same day
 			{0, 1, 0, 1, 0},        // 0+2 ==> 1 submission on 0th day, two submissions on day 1, and two submissions on day 2.
@@ -83,10 +83,10 @@ var slipTests = []struct {
 func TestSlipDays(t *testing.T) {
 	for _, sd := range slipTests {
 		testNow = time.Now()
-		enrol := &qf.Enrollment{
+		enrol := &types.Enrollment{
 			Course:       course,
 			CourseID:     course.ID,
-			UsedSlipDays: make([]*qf.UsedSlipDays, 0),
+			UsedSlipDays: make([]*types.UsedSlipDays, 0),
 		}
 
 		for i := range sd.labs {
@@ -99,9 +99,9 @@ func TestSlipDays(t *testing.T) {
 					if len(sd.submissions[i]) != len(sd.remaining[i]) {
 						t.Fatalf("faulty test case: len(sd.submissions[%d])=%d != len(sd.remaining[%d])=%d", i, len(sd.submissions[i]), i, len(sd.remaining[i]))
 					}
-					submission := &qf.Submission{
+					submission := &types.Submission{
 						AssignmentID: sd.labs[i].ID,
-						Status:       qf.Submission_NONE,
+						Status:       types.Submission_NONE,
 						Score:        50,
 					}
 					// emulate advancing time for this submission
@@ -114,7 +114,7 @@ func TestSlipDays(t *testing.T) {
 					}
 					remaining := enrol.RemainingSlipDays(course)
 					if remaining != sd.remaining[i][j] {
-						t.Errorf("UpdateSlipdays(%q, %q, %q, %q) == %d, want %d", testNow.Format(qf.TimeLayout), sd.labs[i], submission, enrol, remaining, sd.remaining[i][j])
+						t.Errorf("UpdateSlipdays(%q, %q, %q, %q) == %d, want %d", testNow.Format(types.TimeLayout), sd.labs[i], submission, enrol, remaining, sd.remaining[i][j])
 					}
 				}
 			})
@@ -128,64 +128,64 @@ func TestScoreLimitSlipDays(t *testing.T) {
 
 	scoreLimitSlipDayTests := []struct {
 		name       string
-		assignment *qf.Assignment
-		submission *qf.Submission
+		assignment *types.Assignment
+		submission *types.Submission
 		remaining  uint32
 	}{
 		{
 			name:       "DeadlineNotPassed,NotApproved,NoScoreLimit",
 			assignment: a2,
-			submission: &qf.Submission{AssignmentID: a2.ID, Status: qf.Submission_NONE, Score: 50},
+			submission: &types.Submission{AssignmentID: a2.ID, Status: types.Submission_NONE, Score: 50},
 			remaining:  course.SlipDays,
 		},
 		{
 			name:       "DeadlineNotPassed,NotApproved,ScoreLimit",
 			assignment: a2,
-			submission: &qf.Submission{AssignmentID: a2.ID, Status: qf.Submission_NONE, Score: 60},
+			submission: &types.Submission{AssignmentID: a2.ID, Status: types.Submission_NONE, Score: 60},
 			remaining:  course.SlipDays,
 		},
 		{
 			name:       "DeadlineNotPassed,Approved,NoScoreLimit",
 			assignment: a2,
-			submission: &qf.Submission{AssignmentID: a2.ID, Status: qf.Submission_APPROVED, Score: 50},
+			submission: &types.Submission{AssignmentID: a2.ID, Status: types.Submission_APPROVED, Score: 50},
 			remaining:  course.SlipDays,
 		},
 		{
 			name:       "DeadlineNotPassed,Approved,ScoreLimit",
 			assignment: a2,
-			submission: &qf.Submission{AssignmentID: a2.ID, Status: qf.Submission_APPROVED, Score: 60},
+			submission: &types.Submission{AssignmentID: a2.ID, Status: types.Submission_APPROVED, Score: 60},
 			remaining:  course.SlipDays,
 		},
 		{
 			name:       "DeadlinePassed,NotApproved,NoScoreLimit",
 			assignment: neg2,
-			submission: &qf.Submission{AssignmentID: neg2.ID, Status: qf.Submission_NONE, Score: 50},
+			submission: &types.Submission{AssignmentID: neg2.ID, Status: types.Submission_NONE, Score: 50},
 			remaining:  course.SlipDays - 2,
 		},
 		{
 			name:       "DeadlinePassed,Approved,NoScoreLimit",
 			assignment: neg2,
-			submission: &qf.Submission{AssignmentID: neg2.ID, Status: qf.Submission_APPROVED, Score: 50},
+			submission: &types.Submission{AssignmentID: neg2.ID, Status: types.Submission_APPROVED, Score: 50},
 			remaining:  course.SlipDays,
 		},
 		{
 			name:       "DeadlinePassed,NotApproved,ScoreLimit",
 			assignment: neg2,
-			submission: &qf.Submission{AssignmentID: neg2.ID, Status: qf.Submission_NONE, Score: 60},
+			submission: &types.Submission{AssignmentID: neg2.ID, Status: types.Submission_NONE, Score: 60},
 			remaining:  course.SlipDays,
 		},
 		{
 			name:       "DeadlinePassed,Approved,ScoreLimit",
 			assignment: neg2,
-			submission: &qf.Submission{AssignmentID: neg2.ID, Status: qf.Submission_APPROVED, Score: 60},
+			submission: &types.Submission{AssignmentID: neg2.ID, Status: types.Submission_APPROVED, Score: 60},
 			remaining:  course.SlipDays,
 		},
 	}
 	for _, test := range scoreLimitSlipDayTests {
-		enrol := &qf.Enrollment{
+		enrol := &types.Enrollment{
 			Course:       course,
 			CourseID:     course.ID,
-			UsedSlipDays: make([]*qf.UsedSlipDays, 0),
+			UsedSlipDays: make([]*types.UsedSlipDays, 0),
 		}
 		t.Run(test.name, func(t *testing.T) {
 			err := enrol.UpdateSlipDays(testNow, test.assignment, test.submission)
@@ -194,25 +194,25 @@ func TestScoreLimitSlipDays(t *testing.T) {
 			}
 			remaining := enrol.RemainingSlipDays(course)
 			if uint32(remaining) != test.remaining {
-				t.Errorf("UpdateSlipdays(%q, %q, %q, %q) = %d, want %d", testNow.Format(qf.TimeLayout), test.assignment, test.submission, enrol, remaining, test.remaining)
+				t.Errorf("UpdateSlipdays(%q, %q, %q, %q) = %d, want %d", testNow.Format(types.TimeLayout), test.assignment, test.submission, enrol, remaining, test.remaining)
 			}
 		})
 	}
 }
 
 func TestBadDeadlineFormat(t *testing.T) {
-	enrol := &qf.Enrollment{
+	enrol := &types.Enrollment{
 		Course:       course,
 		CourseID:     course.ID,
-		UsedSlipDays: make([]*qf.UsedSlipDays, 0),
+		UsedSlipDays: make([]*types.UsedSlipDays, 0),
 	}
 	// lab1's deadline is incorrectly formatted
-	lab1 := &qf.Assignment{
+	lab1 := &types.Assignment{
 		CourseID: course.ID,
 		Deadline: "14-Sep-2020",
 	}
 	lab1.ID = 1
-	submission := &qf.Submission{Status: qf.Submission_NONE, AssignmentID: lab1.ID}
+	submission := &types.Submission{Status: types.Submission_NONE, AssignmentID: lab1.ID}
 	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err == nil {
 		t.Errorf("expected parsing error due to incorrect deadline date format")
@@ -220,18 +220,18 @@ func TestBadDeadlineFormat(t *testing.T) {
 }
 
 func TestMismatchingAssignmentID(t *testing.T) {
-	enrol := &qf.Enrollment{
+	enrol := &types.Enrollment{
 		Course:       course,
 		CourseID:     course.ID,
-		UsedSlipDays: make([]*qf.UsedSlipDays, 0),
+		UsedSlipDays: make([]*types.UsedSlipDays, 0),
 	}
 	// lab1's deadline is incorrectly formatted
-	lab1 := &qf.Assignment{
+	lab1 := &types.Assignment{
 		CourseID: course.ID,
-		Deadline: testNow.Add(time.Duration(2) * days).Format(qf.TimeLayout),
+		Deadline: testNow.Add(time.Duration(2) * days).Format(types.TimeLayout),
 	}
 	lab1.ID = 1
-	submission := &qf.Submission{Status: qf.Submission_NONE, AssignmentID: lab1.ID + 1}
+	submission := &types.Submission{Status: types.Submission_NONE, AssignmentID: lab1.ID + 1}
 	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err == nil {
 		t.Errorf("expected invariant violation since (assignment.ID != submission.AssignmentID)")
@@ -239,18 +239,18 @@ func TestMismatchingAssignmentID(t *testing.T) {
 }
 
 func TestMismatchingCourseID(t *testing.T) {
-	enrol := &qf.Enrollment{
+	enrol := &types.Enrollment{
 		Course:       course,
 		CourseID:     course.ID,
-		UsedSlipDays: make([]*qf.UsedSlipDays, 0),
+		UsedSlipDays: make([]*types.UsedSlipDays, 0),
 	}
 	// lab1's deadline is incorrectly formatted
-	lab1 := &qf.Assignment{
+	lab1 := &types.Assignment{
 		CourseID: course.ID + 1,
-		Deadline: testNow.Add(time.Duration(2) * days).Format(qf.TimeLayout),
+		Deadline: testNow.Add(time.Duration(2) * days).Format(types.TimeLayout),
 	}
 	lab1.ID = 1
-	submission := &qf.Submission{Status: qf.Submission_NONE, AssignmentID: lab1.ID}
+	submission := &types.Submission{Status: types.Submission_NONE, AssignmentID: lab1.ID}
 	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err == nil {
 		t.Errorf("expected invariant violation since (enrollment.CourseID != assignment.CourseID)")
@@ -258,15 +258,15 @@ func TestMismatchingCourseID(t *testing.T) {
 }
 
 func TestEnrollmentGetUsedSlipDays(t *testing.T) {
-	enrol := &qf.Enrollment{
+	enrol := &types.Enrollment{
 		Course:       course,
 		CourseID:     course.ID,
-		UsedSlipDays: make([]*qf.UsedSlipDays, 0),
+		UsedSlipDays: make([]*types.UsedSlipDays, 0),
 	}
 	// lab1's deadline passed two days ago
 	lab1 := a(-2)
 	lab1.ID = 1
-	submission := &qf.Submission{Status: qf.Submission_NONE, AssignmentID: lab1.ID}
+	submission := &types.Submission{Status: types.Submission_NONE, AssignmentID: lab1.ID}
 	usedSlipDays := enrol.GetUsedSlipDays()
 	if len(usedSlipDays) != 0 {
 		t.Errorf("len(usedSlipDays) = %d, expected 0", len(usedSlipDays))
@@ -279,7 +279,7 @@ func TestEnrollmentGetUsedSlipDays(t *testing.T) {
 	if len(usedSlipDays) != 1 {
 		t.Errorf("len(usedSlipDays) = %d, expected 1", len(usedSlipDays))
 	}
-	wantUsedSlipDays := []*qf.UsedSlipDays{
+	wantUsedSlipDays := []*types.UsedSlipDays{
 		{
 			AssignmentID: 1,
 			UsedDays:     2,
@@ -293,11 +293,11 @@ func TestEnrollmentGetUsedSlipDays(t *testing.T) {
 func TestSlipDaysWGracePeriod(t *testing.T) {
 	lab := a(0)
 	lab.ID = 1
-	timeOfDeadline, err := time.Parse(qf.TimeLayout, lab.Deadline)
+	timeOfDeadline, err := time.Parse(types.TimeLayout, lab.Deadline)
 	if err != nil {
 		t.Fatal(err)
 	}
-	submission := &qf.Submission{Status: qf.Submission_NONE, AssignmentID: lab.ID}
+	submission := &types.Submission{Status: types.Submission_NONE, AssignmentID: lab.ID}
 	submissionTimes := []struct {
 		delivered    time.Time
 		comment      string
@@ -341,10 +341,10 @@ func TestSlipDaysWGracePeriod(t *testing.T) {
 	}
 
 	for _, test := range submissionTimes {
-		enrol := &qf.Enrollment{
+		enrol := &types.Enrollment{
 			Course:       course,
 			CourseID:     course.ID,
-			UsedSlipDays: make([]*qf.UsedSlipDays, 0),
+			UsedSlipDays: make([]*types.UsedSlipDays, 0),
 		}
 		t.Run(fmt.Sprintf("%s/Want UsedSlipDays:%d", test.comment, test.wantSlipDays), func(t *testing.T) {
 			err := enrol.UpdateSlipDays(test.delivered, lab, submission)

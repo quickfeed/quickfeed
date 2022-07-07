@@ -10,111 +10,111 @@ import (
 
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 )
 
 var createGroupTests = []struct {
 	name        string
 	desc        string
-	getGroup    func(uint64, ...uint64) *qf.Group
+	getGroup    func(uint64, ...uint64) *types.Group
 	enrollments []uint
 	err         error
 }{
 	{
 		name: "course id not set with users",
 		desc: "Should fail with ErrRecordNotFound; cannot create a group that's not connected to a course.",
-		getGroup: func(_ uint64, uids ...uint64) *qf.Group {
-			var users []*qf.User
+		getGroup: func(_ uint64, uids ...uint64) *types.Group {
+			var users []*types.User
 			for _, uid := range uids {
-				users = append(users, &qf.User{ID: uid})
+				users = append(users, &types.User{ID: uid})
 			}
-			return &qf.Group{
+			return &types.Group{
 				Users: users,
 			}
 		},
-		enrollments: []uint{uint(qf.Enrollment_PENDING), uint(qf.Enrollment_PENDING)},
+		enrollments: []uint{uint(types.Enrollment_PENDING), uint(types.Enrollment_PENDING)},
 		err:         gorm.ErrRecordNotFound,
 	},
 	{
 		name: "course not found with users",
 		desc: "Should fail with ErrRecordNotFound; cannot create a group that's not connected to a course.",
-		getGroup: func(_ uint64, uids ...uint64) *qf.Group {
-			var users []*qf.User
+		getGroup: func(_ uint64, uids ...uint64) *types.Group {
+			var users []*types.User
 			for _, uid := range uids {
-				users = append(users, &qf.User{ID: uid})
+				users = append(users, &types.User{ID: uid})
 			}
-			return &qf.Group{
+			return &types.Group{
 				CourseID: 999,
 				Users:    users,
 			}
 		},
-		enrollments: []uint{uint(qf.Enrollment_PENDING), uint(qf.Enrollment_PENDING)},
+		enrollments: []uint{uint(types.Enrollment_PENDING), uint(types.Enrollment_PENDING)},
 		err:         gorm.ErrRecordNotFound,
 	},
 	{
 		name: "course found but without users",
 		desc: "Should fail with ErrEmptyGroup; cannot create a group without any users.",
-		getGroup: func(cid uint64, _ ...uint64) *qf.Group {
-			return &qf.Group{CourseID: cid}
+		getGroup: func(cid uint64, _ ...uint64) *types.Group {
+			return &types.Group{CourseID: cid}
 		},
 		err: database.ErrEmptyGroup,
 	},
 	{
 		name: "with non existing users",
 		desc: "Should fail with ErrUpdateGroup; cannot create group with users that doesn't exist.",
-		getGroup: func(cid uint64, _ ...uint64) *qf.Group {
-			return &qf.Group{
+		getGroup: func(cid uint64, _ ...uint64) *types.Group {
+			return &types.Group{
 				CourseID: cid,
-				Users: []*qf.User{
+				Users: []*types.User{
 					{ID: 101},
 					{ID: 102},
 				},
 			}
 		},
-		enrollments: []uint{uint(qf.Enrollment_PENDING), uint(qf.Enrollment_PENDING)},
+		enrollments: []uint{uint(types.Enrollment_PENDING), uint(types.Enrollment_PENDING)},
 		err:         database.ErrUpdateGroup,
 	},
 	{
 		name:        "with users but without enrollments",
 		desc:        "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
 		getGroup:    groupWithUsers,
-		enrollments: []uint{uint(qf.Enrollment_PENDING), uint(qf.Enrollment_PENDING)},
+		enrollments: []uint{uint(types.Enrollment_PENDING), uint(types.Enrollment_PENDING)},
 		err:         database.ErrUpdateGroup,
 	},
 	{
 		name:        "with users and pending enrollments",
 		desc:        "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
 		getGroup:    groupWithUsers,
-		enrollments: []uint{uint(qf.Enrollment_PENDING), uint(qf.Enrollment_PENDING)},
+		enrollments: []uint{uint(types.Enrollment_PENDING), uint(types.Enrollment_PENDING)},
 		err:         database.ErrUpdateGroup,
 	},
 	{
 		name:        "with users and rejected enrollments",
 		desc:        "Should fail with ErrUpdateGroup; cannot create group with users not enrolled in the course.",
 		getGroup:    groupWithUsers,
-		enrollments: []uint{uint(qf.Enrollment_NONE), uint(qf.Enrollment_NONE)},
+		enrollments: []uint{uint(types.Enrollment_NONE), uint(types.Enrollment_NONE)},
 		err:         database.ErrUpdateGroup,
 	},
 	{
 		name:        "with user and accepted enrollment",
 		desc:        "Should pass as the user exists and is enrolled in the course.",
 		getGroup:    groupWithUsers,
-		enrollments: []uint{uint(qf.Enrollment_STUDENT)},
+		enrollments: []uint{uint(types.Enrollment_STUDENT)},
 	},
 	{
 		name:        "with users and accepted enrollments",
 		desc:        "Should pass as the users exists and are enrolled in the course.",
 		getGroup:    groupWithUsers,
-		enrollments: []uint{uint(qf.Enrollment_STUDENT), uint(qf.Enrollment_STUDENT)},
+		enrollments: []uint{uint(types.Enrollment_STUDENT), uint(types.Enrollment_STUDENT)},
 	},
 }
 
-var groupWithUsers = func(cid uint64, uids ...uint64) *qf.Group {
-	var users []*qf.User
+var groupWithUsers = func(cid uint64, uids ...uint64) *types.Group {
+	var users []*types.User
 	for _, uid := range uids {
-		users = append(users, &qf.User{ID: uid})
+		users = append(users, &types.User{ID: uid})
 	}
-	return &qf.Group{
+	return &types.Group{
 		CourseID: cid,
 		Users:    users,
 	}
@@ -126,7 +126,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			db, cleanup := qtest.TestDB(t)
 
 			admin := qtest.CreateFakeUser(t, db, 10)
-			course := &qf.Course{}
+			course := &types.Course{}
 			qtest.CreateCourse(t, db, admin, course)
 
 			var uids []uint64
@@ -134,12 +134,12 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			for i, enrollment := range test.enrollments {
 				user := qtest.CreateFakeUser(t, db, uint64(i))
 				uids = append(uids, user.ID)
-				if enrollment == uint(qf.Enrollment_PENDING) {
+				if enrollment == uint(types.Enrollment_PENDING) {
 					continue
 				}
 
 				// enroll user in course
-				if err := db.CreateEnrollment(&qf.Enrollment{
+				if err := db.CreateEnrollment(&types.Enrollment{
 					CourseID: course.ID,
 					UserID:   user.GetID(),
 				}); err != nil {
@@ -147,13 +147,13 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				}
 				err := errors.New("enrollment status not implemented")
 				switch test.enrollments[i] {
-				case uint(qf.Enrollment_NONE):
+				case uint(types.Enrollment_NONE):
 					err = db.RejectEnrollment(user.GetID(), course.ID)
-				case uint(qf.Enrollment_STUDENT):
-					query := &qf.Enrollment{
+				case uint(types.Enrollment_STUDENT):
+					query := &types.Enrollment{
 						UserID:   user.ID,
 						CourseID: course.ID,
-						Status:   qf.Enrollment_STUDENT,
+						Status:   types.Enrollment_STUDENT,
 					}
 					err = db.UpdateEnrollment(query)
 				}
@@ -172,14 +172,14 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			}
 
 			// Verify.
-			enrollments, err := db.GetEnrollmentsByCourse(course.ID, qf.Enrollment_STUDENT)
+			enrollments, err := db.GetEnrollmentsByCourse(course.ID, types.Enrollment_STUDENT)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if len(group.Users) > 0 && len(enrollments) != len(group.Users) {
 				t.Errorf("have %d enrollments want %d", len(enrollments), len(group.Users))
 			}
-			sorted := make(map[uint64]*qf.Enrollment)
+			sorted := make(map[uint64]*types.Enrollment)
 			for _, enrollment := range enrollments {
 				enrollment.Course = nil
 				enrollment.Group = nil
@@ -224,21 +224,21 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	course := &qf.Course{}
+	course := &types.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
-	var users []*qf.User
-	enrollments := []qf.Enrollment_UserStatus{qf.Enrollment_STUDENT, qf.Enrollment_STUDENT}
+	var users []*types.User
+	enrollments := []types.Enrollment_UserStatus{types.Enrollment_STUDENT, types.Enrollment_STUDENT}
 	// create as many users as the desired number of enrollments
 	for i := 0; i < len(enrollments); i++ {
 		user := qtest.CreateFakeUser(t, db, uint64(i))
 		users = append(users, user)
-		if enrollments[i] == qf.Enrollment_PENDING {
+		if enrollments[i] == types.Enrollment_PENDING {
 			continue
 		}
 
 		// enroll users in course
-		if err := db.CreateEnrollment(&qf.Enrollment{
+		if err := db.CreateEnrollment(&types.Enrollment{
 			CourseID: course.ID,
 			UserID:   users[i].ID,
 		}); err != nil {
@@ -246,11 +246,11 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 		}
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
-		case qf.Enrollment_STUDENT:
-			query := &qf.Enrollment{
+		case types.Enrollment_STUDENT:
+			query := &types.Enrollment{
 				UserID:   users[i].ID,
 				CourseID: course.ID,
-				Status:   qf.Enrollment_STUDENT,
+				Status:   types.Enrollment_STUDENT,
 			}
 			err = db.UpdateEnrollment(query)
 		}
@@ -261,7 +261,7 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 
 	// Try to create two identical groups. The first should succeed while
 	// further attempts should fail with ErrDuplicateGroup.
-	identical := &qf.Group{
+	identical := &types.Group{
 		Name:     "SameNameGroup",
 		CourseID: course.ID,
 		Users:    users,
@@ -279,27 +279,27 @@ func TestGetGroupsByCourse(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	course := &qf.Course{}
+	course := &types.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
-	var users []*qf.User
-	enrollments := []qf.Enrollment_UserStatus{
-		qf.Enrollment_STUDENT,
-		qf.Enrollment_STUDENT,
-		qf.Enrollment_STUDENT,
-		qf.Enrollment_STUDENT,
-		qf.Enrollment_STUDENT,
+	var users []*types.User
+	enrollments := []types.Enrollment_UserStatus{
+		types.Enrollment_STUDENT,
+		types.Enrollment_STUDENT,
+		types.Enrollment_STUDENT,
+		types.Enrollment_STUDENT,
+		types.Enrollment_STUDENT,
 	}
 	// create as many users as the desired number of enrollments
 	for i := 0; i < len(enrollments); i++ {
 		user := qtest.CreateFakeUser(t, db, uint64(i))
 		users = append(users, user)
-		if enrollments[i] == qf.Enrollment_PENDING {
+		if enrollments[i] == types.Enrollment_PENDING {
 			continue
 		}
 
 		// enroll users in course
-		if err := db.CreateEnrollment(&qf.Enrollment{
+		if err := db.CreateEnrollment(&types.Enrollment{
 			CourseID: course.ID,
 			UserID:   users[i].ID,
 		}); err != nil {
@@ -307,11 +307,11 @@ func TestGetGroupsByCourse(t *testing.T) {
 		}
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
-		case qf.Enrollment_STUDENT:
-			query := &qf.Enrollment{
+		case types.Enrollment_STUDENT:
+			query := &types.Enrollment{
 				UserID:   users[i].ID,
 				CourseID: course.ID,
-				Status:   qf.Enrollment_STUDENT,
+				Status:   types.Enrollment_STUDENT,
 			}
 			err = db.UpdateEnrollment(query)
 		}
@@ -320,16 +320,16 @@ func TestGetGroupsByCourse(t *testing.T) {
 		}
 	}
 
-	group := &qf.Group{Name: "MyGroup", CourseID: course.ID, Users: users[0:2]}
+	group := &types.Group{Name: "MyGroup", CourseID: course.ID, Users: users[0:2]}
 	if err := db.CreateGroup(group); err != nil {
 		t.Fatal(err)
 	}
-	group2 := &qf.Group{Name: "MyOtherGroup", CourseID: course.ID, Users: users[2:5]}
+	group2 := &types.Group{Name: "MyOtherGroup", CourseID: course.ID, Users: users[2:5]}
 	if err := db.CreateGroup(group2); err != nil {
 		t.Fatal(err)
 	}
 
-	group2.Status = qf.Group_APPROVED
+	group2.Status = types.Group_APPROVED
 	if err := db.UpdateGroupStatus(group2); err != nil {
 		t.Fatal(err)
 	}
@@ -348,11 +348,11 @@ func TestGetGroupsByCourse(t *testing.T) {
 		t.Errorf("group users mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
 
-	pendingGroups, err := db.GetGroupsByCourse(course.ID, qf.Group_PENDING)
+	pendingGroups, err := db.GetGroupsByCourse(course.ID, types.Group_PENDING)
 	if err != nil {
 		t.Fatal(err)
 	}
-	approvedGroups, err := db.GetGroupsByCourse(course.ID, qf.Group_APPROVED)
+	approvedGroups, err := db.GetGroupsByCourse(course.ID, types.Group_APPROVED)
 	if err != nil {
 		t.Fatal(err)
 	}

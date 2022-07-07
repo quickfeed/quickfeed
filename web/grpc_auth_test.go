@@ -11,6 +11,7 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc"
@@ -26,7 +27,7 @@ const (
 	userName  = "meling"
 )
 
-var user *qf.User
+var user *types.User
 
 func TestGrpcAuth(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
@@ -55,7 +56,7 @@ func TestGrpcAuth(t *testing.T) {
 		metadata.New(map[string]string{auth.Cookie: token}),
 	)
 
-	request := &qf.CourseUserRequest{
+	request := &types.CourseUserRequest{
 		CourseCode: "DAT320",
 		CourseYear: 2021,
 		UserLogin:  userName,
@@ -80,15 +81,15 @@ func fillDatabase(t *testing.T, db database.Database) {
 		t.Errorf("Expected %v, got %v\n", botUserID, checkCookie)
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
-	// admin := qtest.CreateUser(t, db, 1, &qf.User{Login: "admin"})
-	course := &qf.Course{
+	// admin := qtest.CreateUser(t, db, 1, &types.User{Login: "admin"})
+	course := &types.Course{
 		Code: "DAT320",
 		Name: "Operating Systems and Systems Programming",
 		Year: 2021,
 	}
 	qtest.CreateCourse(t, db, admin, course)
 
-	user = qtest.CreateUser(t, db, 11, &qf.User{Login: userName})
+	user = qtest.CreateUser(t, db, 11, &types.User{Login: userName})
 	qtest.EnrollStudent(t, db, user, course)
 }
 

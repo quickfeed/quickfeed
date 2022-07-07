@@ -1,20 +1,20 @@
 package web
 
-import "github.com/quickfeed/quickfeed/qf"
+import "github.com/quickfeed/quickfeed/qf/types"
 
 // getUsers returns all the users in the database.
-func (s *QuickFeedService) getUsers() (*qf.Users, error) {
+func (s *QuickFeedService) getUsers() (*types.Users, error) {
 	users, err := s.db.GetUsers()
 	if err != nil {
 		return nil, err
 	}
-	return &qf.Users{Users: users}, nil
+	return &types.Users{Users: users}, nil
 }
 
 // getUserByCourse returns the user matching the given GitHub login if
 // the user is enrolled in the given course.
-func (s *QuickFeedService) getUserByCourse(request *qf.CourseUserRequest, currentUser *qf.User) (*qf.User, error) {
-	courseQuery := &qf.Course{Code: request.CourseCode, Year: request.CourseYear}
+func (s *QuickFeedService) getUserByCourse(request *types.CourseUserRequest, currentUser *types.User) (*types.User, error) {
+	courseQuery := &types.Course{Code: request.CourseCode, Year: request.CourseYear}
 	user, course, err := s.db.GetUserByCourse(courseQuery, request.UserLogin)
 	if err != nil {
 		return nil, err
@@ -28,7 +28,7 @@ func (s *QuickFeedService) getUserByCourse(request *qf.CourseUserRequest, curren
 // updateUser updates the user profile according to the user data in
 // the request object. If curUser is admin, and the request may also
 // promote the user to admin.
-func (s *QuickFeedService) updateUser(curUser *qf.User, request *qf.User) (*qf.User, error) {
+func (s *QuickFeedService) updateUser(curUser *types.User, request *types.User) (*types.User, error) {
 	updateUser, err := s.db.GetUser(request.ID)
 	if err != nil {
 		return nil, err

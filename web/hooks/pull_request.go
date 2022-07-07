@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v45/github"
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 	"gorm.io/gorm"
 )
 
@@ -22,7 +22,7 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 		return
 	}
 	// We make sure that the pull request is one that QF has a data record of
-	pullRequest, err := wh.db.GetPullRequest(&qf.PullRequest{
+	pullRequest, err := wh.db.GetPullRequest(&types.PullRequest{
 		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
 		Number:          uint64(payload.GetPullRequest().GetNumber()),
 	})
@@ -41,7 +41,7 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 		wh.logger.Errorf("Failed to get course from database: %v", err)
 		return
 	}
-	user, err := wh.db.GetUserByRemoteIdentity(&qf.RemoteIdentity{
+	user, err := wh.db.GetUserByRemoteIdentity(&types.RemoteIdentity{
 		RemoteID: uint64(payload.GetSender().GetID()),
 		Provider: "github",
 	})
@@ -93,7 +93,7 @@ func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent
 		return
 	}
 
-	pullRequest, err := wh.db.GetPullRequest(&qf.PullRequest{
+	pullRequest, err := wh.db.GetPullRequest(&types.PullRequest{
 		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
 		Number:          uint64(payload.GetPullRequest().GetNumber()),
 	})
@@ -116,7 +116,7 @@ func (wh GitHubWebHook) handlePullRequestClosed(payload *github.PullRequestEvent
 
 // createPullRequest creates a new pull request record from a pull request opened event.
 // When created, it is initially in the "draft" stage, signaling that it is not yet ready for review.
-func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, associatedIssue *qf.Issue) {
+func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, associatedIssue *types.Issue) {
 	wh.logger.Debugf("Creating pull request (issue #%d) for repository: %s",
 		associatedIssue.GetIssueNumber(), payload.GetRepo().GetFullName())
 
@@ -126,7 +126,7 @@ func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, asso
 		return
 	}
 
-	user, err := wh.db.GetUserByRemoteIdentity(&qf.RemoteIdentity{
+	user, err := wh.db.GetUserByRemoteIdentity(&types.RemoteIdentity{
 		RemoteID: uint64(payload.GetSender().GetID()),
 		Provider: "github",
 	})
@@ -135,7 +135,7 @@ func (wh GitHubWebHook) createPullRequest(payload *github.PullRequestEvent, asso
 		return
 	}
 
-	pullRequest := &qf.PullRequest{
+	pullRequest := &types.PullRequest{
 		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
 		TaskID:          associatedTask.GetID(),
 		IssueID:         associatedIssue.GetID(),
@@ -157,7 +157,7 @@ var issueRegExp = regexp.MustCompile(`(?m)((?i:fixes|closes|resolves)\s#(\d+))$`
 // Only a single issue can be linked to a pull request. The body should contain one of the
 // strings "Fixes #<issue number>" or "Closes #<issue number>" or "Resolves #<issue number>".
 // The issue number should not be followed by any other characters.
-func findIssue(body string, issues []*qf.Issue) (*qf.Issue, error) {
+func findIssue(body string, issues []*types.Issue) (*types.Issue, error) {
 	if count := strings.Count(body, "#"); count > 1 {
 		return nil, errors.New("more than one '#' character in pull request body")
 	}

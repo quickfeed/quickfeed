@@ -9,16 +9,16 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/kit/score"
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 // RunData stores CI data
 type RunData struct {
-	Course     *qf.Course
-	Assignment *qf.Assignment
-	Repo       *qf.Repository
+	Course     *types.Course
+	Assignment *types.Assignment
+	Repo       *types.Repository
 	BranchName string
 	CommitID   string
 	JobOwner   string
@@ -59,7 +59,7 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, runner
 
 // RecordResults for the course and assignment given by the run data structure.
 // If the results argument is nil, then the submission is considered to be a manual review.
-func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, results *score.Results) (*qf.Submission, error) {
+func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, results *score.Results) (*types.Submission, error) {
 	logger.Debugf("Fetching (if any) previous submission for %s", r)
 	previous, err := r.previousSubmission(db)
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -86,8 +86,8 @@ func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, 
 	return newSubmission, nil
 }
 
-func (r RunData) previousSubmission(db database.Database) (*qf.Submission, error) {
-	submissionQuery := &qf.Submission{
+func (r RunData) previousSubmission(db database.Database) (*types.Submission, error) {
+	submissionQuery := &types.Submission{
 		AssignmentID: r.Assignment.GetID(),
 		UserID:       r.Repo.GetUserID(),
 		GroupID:      r.Repo.GetGroupID(),
@@ -95,15 +95,15 @@ func (r RunData) previousSubmission(db database.Database) (*qf.Submission, error
 	return db.GetSubmission(submissionQuery)
 }
 
-func (r RunData) newSubmission(previous *qf.Submission, results *score.Results) (string, *qf.Submission) {
+func (r RunData) newSubmission(previous *types.Submission, results *score.Results) (string, *types.Submission) {
 	if results != nil {
 		return "test execution", r.newTestRunSubmission(previous, results)
 	}
 	return "manual review", r.newManualReviewSubmission(previous)
 }
 
-func (r RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submission {
-	return &qf.Submission{
+func (r RunData) newManualReviewSubmission(previous *types.Submission) *types.Submission {
+	return &types.Submission{
 		ID:           previous.GetID(),
 		AssignmentID: r.Assignment.GetID(),
 		UserID:       r.Repo.GetUserID(),
@@ -113,20 +113,20 @@ func (r RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submissi
 		Status:       previous.GetStatus(),
 		Released:     previous.GetReleased(),
 		BuildInfo: &score.BuildInfo{
-			BuildDate: time.Now().Format(qf.TimeLayout),
+			BuildDate: time.Now().Format(types.TimeLayout),
 			BuildLog:  "No automated tests for this assignment",
 			ExecTime:  1,
 		},
 	}
 }
 
-func (r RunData) newTestRunSubmission(previous *qf.Submission, results *score.Results) *qf.Submission {
+func (r RunData) newTestRunSubmission(previous *types.Submission, results *score.Results) *types.Submission {
 	if r.Rebuild && previous != nil && previous.BuildInfo != nil {
 		// Keep previous submission's delivery date if this is a rebuild.
 		results.BuildInfo.BuildDate = previous.BuildInfo.BuildDate
 	}
 	score := results.Sum()
-	return &qf.Submission{
+	return &types.Submission{
 		ID:           previous.GetID(),
 		AssignmentID: r.Assignment.GetID(),
 		UserID:       r.Repo.GetUserID(),
@@ -139,14 +139,14 @@ func (r RunData) newTestRunSubmission(previous *qf.Submission, results *score.Re
 	}
 }
 
-func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission) error {
+func (r RunData) updateSlipDays(db database.Database, submission *types.Submission) error {
 	buildDate := submission.GetBuildInfo().GetBuildDate()
-	buildTime, err := time.Parse(qf.TimeLayout, buildDate)
+	buildTime, err := time.Parse(types.TimeLayout, buildDate)
 	if err != nil {
 		return fmt.Errorf("failed to parse time from build date (%s): %w", buildDate, err)
 	}
 
-	enrollments := make([]*qf.Enrollment, 0)
+	enrollments := make([]*types.Enrollment, 0)
 	if submission.GroupID > 0 {
 		group, err := db.GetGroup(submission.GroupID)
 		if err != nil {

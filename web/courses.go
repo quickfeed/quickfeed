@@ -7,32 +7,32 @@ import (
 	"sort"
 	"time"
 
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 	"github.com/quickfeed/quickfeed/scm"
 	"gorm.io/gorm"
 )
 
 // getCourses returns all courses.
-func (s *QuickFeedService) getCourses() (*qf.Courses, error) {
+func (s *QuickFeedService) getCourses() (*types.Courses, error) {
 	courses, err := s.db.GetCourses()
 	if err != nil {
 		return nil, err
 	}
-	return &qf.Courses{Courses: courses}, nil
+	return &types.Courses{Courses: courses}, nil
 }
 
 // getCoursesByUser returns all courses that match the provided enrollment status.
-func (s *QuickFeedService) getCoursesByUser(request *qf.EnrollmentStatusRequest) (*qf.Courses, error) {
+func (s *QuickFeedService) getCoursesByUser(request *types.EnrollmentStatusRequest) (*types.Courses, error) {
 	courses, err := s.db.GetCoursesByUser(request.GetUserID(), request.Statuses...)
 	if err != nil {
 		return nil, err
 	}
-	return &qf.Courses{Courses: courses}, nil
+	return &types.Courses{Courses: courses}, nil
 }
 
 // getEnrollmentsByUser returns all enrollments for the given user with preloaded
 // courses and groups
-func (s *QuickFeedService) getEnrollmentsByUser(request *qf.EnrollmentStatusRequest) (*qf.Enrollments, error) {
+func (s *QuickFeedService) getEnrollmentsByUser(request *types.EnrollmentStatusRequest) (*types.Enrollments, error) {
 	enrollments, err := s.db.GetEnrollmentsByUser(request.UserID, request.Statuses...)
 	if err != nil {
 		return nil, err
@@ -40,11 +40,11 @@ func (s *QuickFeedService) getEnrollmentsByUser(request *qf.EnrollmentStatusRequ
 	for _, enrollment := range enrollments {
 		enrollment.SetSlipDays(enrollment.Course)
 	}
-	return &qf.Enrollments{Enrollments: enrollments}, nil
+	return &types.Enrollments{Enrollments: enrollments}, nil
 }
 
 // getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
-func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest) (*qf.Enrollments, error) {
+func (s *QuickFeedService) getEnrollmentsByCourse(request *types.EnrollmentRequest) (*types.Enrollments, error) {
 	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.Statuses...)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest)
 
 	// to populate response only with users who are not member of any group, we must filter the result
 	if request.IgnoreGroupMembers {
-		enrollmentsWithoutGroups := make([]*qf.Enrollment, 0)
+		enrollmentsWithoutGroups := make([]*types.Enrollment, 0)
 		for _, enrollment := range enrollments {
 			if enrollment.GroupID == 0 {
 				enrollmentsWithoutGroups = append(enrollmentsWithoutGroups, enrollment)
@@ -70,21 +70,21 @@ func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest)
 	for _, enrollment := range enrollments {
 		enrollment.SetSlipDays(enrollment.Course)
 	}
-	return &qf.Enrollments{Enrollments: enrollments}, nil
+	return &types.Enrollments{Enrollments: enrollments}, nil
 }
 
 // createEnrollment creates a pending enrollment for the given user and course.
-func (s *QuickFeedService) createEnrollment(request *qf.Enrollment) error {
-	enrollment := qf.Enrollment{
+func (s *QuickFeedService) createEnrollment(request *types.Enrollment) error {
+	enrollment := types.Enrollment{
 		UserID:   request.GetUserID(),
 		CourseID: request.GetCourseID(),
-		Status:   qf.Enrollment_PENDING,
+		Status:   types.Enrollment_PENDING,
 	}
 	return s.db.CreateEnrollment(&enrollment)
 }
 
 // updateEnrollment changes the status of the given course enrollment.
-func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *qf.Enrollment) error {
+func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *types.Enrollment) error {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
 	if err != nil {
 		return err
@@ -108,14 +108,14 @@ func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, cur
 }
 
 // rejectEnrollment rejects a student enrollment, if a student repo exists for the given course, removes it from the SCM and database.
-func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
+func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *types.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 	if err := s.db.RejectEnrollment(user.ID, course.ID); err != nil {
 		s.logger.Debugf("Failed to delete %s enrollment for %q from database: %v", course.Code, user.Login, err)
 		// continue with other delete operations
 	}
-	repo, err := s.getRepo(course, user.GetID(), qf.Repository_USER)
+	repo, err := s.getRepo(course, user.GetID(), types.Repository_USER)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("failed to get %s repository for %q: %w", course.Code, user.Login, err)
 	}
@@ -136,13 +136,13 @@ func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enr
 }
 
 // enrollStudent enrolls the given user as a student into the given course.
-func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
+func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enrolled *types.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 
 	// check whether user repo already exists,
 	// which could happen if accepting a previously rejected student
-	repo, err := s.getRepo(course, user.GetID(), qf.Repository_USER)
+	repo, err := s.getRepo(course, user.GetID(), types.Repository_USER)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("failed to get %s repository for %q: %w", course.Code, user.Login, err)
 	}
@@ -150,26 +150,26 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enroll
 	s.logger.Debugf("Enrolling student %q in %s; has database repo: %t", user.Login, course.Code, repo != nil)
 	if repo != nil {
 		// repo already exist, update enrollment in database
-		return s.db.UpdateEnrollment(&qf.Enrollment{
+		return s.db.UpdateEnrollment(&types.Enrollment{
 			UserID:   user.ID,
 			CourseID: course.ID,
-			Status:   qf.Enrollment_STUDENT,
+			Status:   types.Enrollment_STUDENT,
 		})
 	}
 	// create user scmRepo, user team, and add user to students team
-	scmRepo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), qf.Enrollment_STUDENT)
+	scmRepo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), types.Enrollment_STUDENT)
 	if err != nil {
 		return fmt.Errorf("failed to update %s repository or team membership for %q: %w", course.Code, user.Login, err)
 	}
 	s.logger.Debugf("Enrolling student %q in %s; repo and team update done", user.Login, course.Code)
 
 	// add student repo to database if SCM interaction above was successful
-	userRepo := qf.Repository{
+	userRepo := types.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		RepositoryID:   scmRepo.ID,
 		UserID:         user.ID,
 		HTMLURL:        scmRepo.WebURL,
-		RepoType:       qf.Repository_USER,
+		RepoType:       types.Repository_USER,
 	}
 	if err := s.db.CreateRepository(&userRepo); err != nil {
 		return fmt.Errorf("failed to create %s repository for %q: %w", course.Code, user.Login, err)
@@ -178,52 +178,52 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enroll
 		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.Code, user.Login, err)
 	}
 
-	return s.db.UpdateEnrollment(&qf.Enrollment{
+	return s.db.UpdateEnrollment(&types.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
+		Status:   types.Enrollment_STUDENT,
 	})
 }
 
 // enrollTeacher promotes the given user to teacher of the given course
-func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
+func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, enrolled *types.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 
 	// make owner, remove from students, add to teachers
-	if _, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), qf.Enrollment_TEACHER); err != nil {
+	if _, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), types.Enrollment_TEACHER); err != nil {
 		return fmt.Errorf("failed to update %s repository or team membership for teacher %q: %w", course.Code, user.Login, err)
 	}
-	return s.db.UpdateEnrollment(&qf.Enrollment{
+	return s.db.UpdateEnrollment(&types.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
-		Status:   qf.Enrollment_TEACHER,
+		Status:   types.Enrollment_TEACHER,
 	})
 }
 
-func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
+func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, enrolled *types.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 	err := revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
 	if err != nil {
 		s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.Code, user.Login, err)
 	}
-	return s.db.UpdateEnrollment(&qf.Enrollment{
+	return s.db.UpdateEnrollment(&types.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
-		Status:   qf.Enrollment_STUDENT,
+		Status:   types.Enrollment_STUDENT,
 	})
 }
 
 // getCourse returns a course object for the given course id.
-func (s *QuickFeedService) getCourse(courseID uint64) (*qf.Course, error) {
+func (s *QuickFeedService) getCourse(courseID uint64) (*types.Course, error) {
 	return s.db.GetCourse(courseID, false)
 }
 
 // getSubmissions returns all the latests submissions for a user of the given course.
-func (s *QuickFeedService) getSubmissions(request *qf.SubmissionRequest) (*qf.Submissions, error) {
-	// only one of user ID and group ID will be set; enforced by IsValid on qf.SubmissionRequest
-	query := &qf.Submission{
+func (s *QuickFeedService) getSubmissions(request *types.SubmissionRequest) (*types.Submissions, error) {
+	// only one of user ID and group ID will be set; enforced by IsValid on types.SubmissionRequest
+	query := &types.Submission{
 		UserID:  request.GetUserID(),
 		GroupID: request.GetGroupID(),
 	}
@@ -231,11 +231,11 @@ func (s *QuickFeedService) getSubmissions(request *qf.SubmissionRequest) (*qf.Su
 	if err != nil {
 		return nil, err
 	}
-	return &qf.Submissions{Submissions: submissions}, nil
+	return &types.Submissions{Submissions: submissions}, nil
 }
 
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
-func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionsForCourseRequest) (*qf.CourseSubmissions, error) {
+func (s *QuickFeedService) getAllCourseSubmissions(request *types.SubmissionsForCourseRequest) (*types.CourseSubmissions, error) {
 	assignments, err := s.db.GetAssignmentsWithSubmissions(request.GetCourseID(), request.Type, request.GetWithBuildInfo())
 	if err != nil {
 		return nil, err
@@ -248,31 +248,31 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionsForCou
 
 	course.SetSlipDays()
 
-	var enrolLinks []*qf.EnrollmentLink
+	var enrolLinks []*types.EnrollmentLink
 	switch request.Type {
-	case qf.SubmissionsForCourseRequest_GROUP:
+	case types.SubmissionsForCourseRequest_GROUP:
 		enrolLinks = makeGroupResults(course, assignments)
-	case qf.SubmissionsForCourseRequest_INDIVIDUAL:
+	case types.SubmissionsForCourseRequest_INDIVIDUAL:
 		enrolLinks = makeIndividualResults(course, assignments)
-	default: // case qf.SubmissionsForCourseRequest_ALL:
+	default: // case types.SubmissionsForCourseRequest_ALL:
 		enrolLinks = makeAllResults(course, assignments)
 	}
-	return &qf.CourseSubmissions{Course: course, Links: enrolLinks}, nil
+	return &types.CourseSubmissions{Course: course, Links: enrolLinks}, nil
 }
 
 // makeGroupResults generates enrollment to assignment to submissions links
 // for all course groups and all group assignments
-func makeGroupResults(course *qf.Course, assignments []*qf.Assignment) []*qf.EnrollmentLink {
-	enrolLinks := make([]*qf.EnrollmentLink, 0)
+func makeGroupResults(course *types.Course, assignments []*types.Assignment) []*types.EnrollmentLink {
+	enrolLinks := make([]*types.EnrollmentLink, 0)
 	seenGroup := make(map[uint64]bool)
 	for _, enrollment := range course.Enrollments {
 		if seenGroup[enrollment.GroupID] {
 			continue // include group enrollment only once
 		}
 		seenGroup[enrollment.GroupID] = true
-		enrolLinks = append(enrolLinks, &qf.EnrollmentLink{
+		enrolLinks = append(enrolLinks, &types.EnrollmentLink{
 			Enrollment: enrollment,
-			Submissions: makeSubmissionLinks(assignments, func(submission *qf.Submission) bool {
+			Submissions: makeSubmissionLinks(assignments, func(submission *types.Submission) bool {
 				// include group submissions for this enrollment
 				return submission.ByGroup(enrollment.GroupID)
 			}),
@@ -283,12 +283,12 @@ func makeGroupResults(course *qf.Course, assignments []*qf.Assignment) []*qf.Enr
 
 // makeIndividualResults returns enrollment links with submissions
 // for individual assignments for all students in the course.
-func makeIndividualResults(course *qf.Course, assignments []*qf.Assignment) []*qf.EnrollmentLink {
-	enrolLinks := make([]*qf.EnrollmentLink, 0)
+func makeIndividualResults(course *types.Course, assignments []*types.Assignment) []*types.EnrollmentLink {
+	enrolLinks := make([]*types.EnrollmentLink, 0)
 	for _, enrollment := range course.Enrollments {
-		enrolLinks = append(enrolLinks, &qf.EnrollmentLink{
+		enrolLinks = append(enrolLinks, &types.EnrollmentLink{
 			Enrollment: enrollment,
-			Submissions: makeSubmissionLinks(assignments, func(submission *qf.Submission) bool {
+			Submissions: makeSubmissionLinks(assignments, func(submission *types.Submission) bool {
 				// include individual submissions for this enrollment
 				return submission.ByUser(enrollment.UserID)
 			}),
@@ -299,12 +299,12 @@ func makeIndividualResults(course *qf.Course, assignments []*qf.Assignment) []*q
 
 // makeAllResults returns enrollment links with submissions
 // for both individual and group assignments for all students/groups in the course.
-func makeAllResults(course *qf.Course, assignments []*qf.Assignment) []*qf.EnrollmentLink {
-	enrolLinks := make([]*qf.EnrollmentLink, len(course.Enrollments))
+func makeAllResults(course *types.Course, assignments []*types.Assignment) []*types.EnrollmentLink {
+	enrolLinks := make([]*types.EnrollmentLink, len(course.Enrollments))
 	for i, enrollment := range course.Enrollments {
-		enrolLinks[i] = &qf.EnrollmentLink{
+		enrolLinks[i] = &types.EnrollmentLink{
 			Enrollment: enrollment,
-			Submissions: makeSubmissionLinks(assignments, func(submission *qf.Submission) bool {
+			Submissions: makeSubmissionLinks(assignments, func(submission *types.Submission) bool {
 				// include individual and group submissions for this enrollment
 				return submission.ByUser(enrollment.UserID) || submission.ByGroup(enrollment.GroupID)
 			}),
@@ -313,10 +313,10 @@ func makeAllResults(course *qf.Course, assignments []*qf.Assignment) []*qf.Enrol
 	return enrolLinks
 }
 
-func makeSubmissionLinks(assignments []*qf.Assignment, include func(*qf.Submission) bool) []*qf.SubmissionLink {
-	subLinks := make([]*qf.SubmissionLink, len(assignments))
+func makeSubmissionLinks(assignments []*types.Assignment, include func(*types.Submission) bool) []*types.SubmissionLink {
+	subLinks := make([]*types.SubmissionLink, len(assignments))
 	for i, assignment := range assignments {
-		subLinks[i] = &qf.SubmissionLink{
+		subLinks[i] = &types.SubmissionLink{
 			Assignment: assignment.CloneWithoutSubmissions(),
 		}
 		for _, submission := range assignment.Submissions {
@@ -333,15 +333,15 @@ func makeSubmissionLinks(assignments []*qf.Assignment, include func(*qf.Submissi
 }
 
 // updateSubmission updates submission status or sets a submission score based on a manual review.
-func (s *QuickFeedService) updateSubmission(courseID, submissionID uint64, status qf.Submission_Status, released bool, score uint32) error {
-	submission, err := s.db.GetSubmission(&qf.Submission{ID: submissionID})
+func (s *QuickFeedService) updateSubmission(courseID, submissionID uint64, status types.Submission_Status, released bool, score uint32) error {
+	submission, err := s.db.GetSubmission(&types.Submission{ID: submissionID})
 	if err != nil {
 		return err
 	}
 
 	// if approving previously unapproved submission
-	if status == qf.Submission_APPROVED && submission.Status != qf.Submission_APPROVED {
-		submission.ApprovedDate = time.Now().Format(qf.TimeLayout)
+	if status == types.Submission_APPROVED && submission.Status != types.Submission_APPROVED {
+		submission.ApprovedDate = time.Now().Format(types.TimeLayout)
 		if err := s.setLastApprovedAssignment(submission, courseID); err != nil {
 			return err
 		}
@@ -356,32 +356,32 @@ func (s *QuickFeedService) updateSubmission(courseID, submissionID uint64, statu
 
 // updateSubmissions updates status and release state of multiple submissions for the
 // given course and assignment ID for all submissions with score equal or above the provided score
-func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsRequest) error {
-	if _, _, err := s.getAssignmentWithCourse(&qf.Assignment{
+func (s *QuickFeedService) updateSubmissions(request *types.UpdateSubmissionsRequest) error {
+	if _, _, err := s.getAssignmentWithCourse(&types.Assignment{
 		CourseID: request.CourseID,
 		ID:       request.AssignmentID,
 	}, false); err != nil {
 		return err
 	}
 
-	query := &qf.Submission{
+	query := &types.Submission{
 		AssignmentID: request.AssignmentID,
 		Score:        request.ScoreLimit,
 		Released:     request.Release,
 	}
 	if request.Approve {
-		query.Status = qf.Submission_APPROVED
+		query.Status = types.Submission_APPROVED
 	}
 
 	return s.db.UpdateSubmissions(request.CourseID, query)
 }
 
-func (s *QuickFeedService) getReviewers(submissionID uint64) ([]*qf.User, error) {
-	submission, err := s.db.GetSubmission(&qf.Submission{ID: submissionID})
+func (s *QuickFeedService) getReviewers(submissionID uint64) ([]*types.User, error) {
+	submission, err := s.db.GetSubmission(&types.Submission{ID: submissionID})
 	if err != nil {
 		return nil, err
 	}
-	names := make([]*qf.User, 0)
+	names := make([]*types.User, 0)
 	// TODO: make sure to preload reviews here
 	for _, review := range submission.Reviews {
 		// ignore possible error, will just add an empty string
@@ -392,7 +392,7 @@ func (s *QuickFeedService) getReviewers(submissionID uint64) ([]*qf.User, error)
 }
 
 // updateCourse updates an existing course.
-func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request *qf.Course) error {
+func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request *types.Course) error {
 	// ensure the course exists
 	_, err := s.db.GetCourse(request.ID, false)
 	if err != nil {
@@ -407,21 +407,21 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 	return s.db.UpdateCourse(request)
 }
 
-func (s *QuickFeedService) changeCourseVisibility(enrollment *qf.Enrollment) error {
+func (s *QuickFeedService) changeCourseVisibility(enrollment *types.Enrollment) error {
 	return s.db.UpdateEnrollment(enrollment)
 }
 
 // returns all enrollments for the course ID with last activity date and number of approved assignments
-func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.Enrollment, error) {
+func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*types.Enrollment, error) {
 	allEnrollmentsWithSubmissions, err := s.getAllCourseSubmissions(
-		&qf.SubmissionsForCourseRequest{
+		&types.SubmissionsForCourseRequest{
 			CourseID: courseID,
-			Type:     qf.SubmissionsForCourseRequest_ALL,
+			Type:     types.SubmissionsForCourseRequest_ALL,
 		})
 	if err != nil {
 		return nil, err
 	}
-	var enrollmentsWithActivity []*qf.Enrollment
+	var enrollmentsWithActivity []*types.Enrollment
 	for _, enrolLink := range allEnrollmentsWithSubmissions.Links {
 		enrol := enrolLink.Enrollment
 		var totalApproved uint64
@@ -429,7 +429,7 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 		for _, submissionLink := range enrolLink.Submissions {
 			submission := submissionLink.Submission
 			if submission != nil {
-				if submission.Status == qf.Submission_APPROVED {
+				if submission.Status == types.Submission_APPROVED {
 					totalApproved++
 				}
 				if enrol.LastActivityDate == "" {
@@ -446,7 +446,7 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 		}
 		enrollmentsWithActivity = append(enrollmentsWithActivity, enrol)
 	}
-	pending, err := s.db.GetEnrollmentsByCourse(courseID, qf.Enrollment_PENDING)
+	pending, err := s.db.GetEnrollmentsByCourse(courseID, types.Enrollment_PENDING)
 	if err != nil {
 		return nil, err
 	}
@@ -455,8 +455,8 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 	return enrollmentsWithActivity, nil
 }
 
-func (s *QuickFeedService) setLastApprovedAssignment(submission *qf.Submission, courseID uint64) error {
-	query := &qf.Enrollment{
+func (s *QuickFeedService) setLastApprovedAssignment(submission *types.Submission, courseID uint64) error {
+	query := &types.Enrollment{
 		CourseID: courseID,
 	}
 	if submission.GroupID > 0 {
@@ -481,7 +481,7 @@ func (s *QuickFeedService) setLastApprovedAssignment(submission *qf.Submission, 
 }
 
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
-func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, user *qf.User, course *qf.Course) error {
+func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, user *types.User, course *types.Course) error {
 	user, err := s.db.GetUser(user.ID)
 	if err != nil {
 		return fmt.Errorf("failed to get user %d: %w", user.ID, err)

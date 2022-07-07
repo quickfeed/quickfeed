@@ -11,7 +11,7 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -31,22 +31,22 @@ func loadRunScript(t *testing.T) string {
 }
 
 func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *ci.RunData {
-	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
+	repo := types.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
-	qf.SetAccessToken(courseID, accessToken)
+	types.SetAccessToken(courseID, accessToken)
 	runData := &ci.RunData{
-		Course: &qf.Course{
+		Course: &types.Course{
 			ID:   courseID,
 			Code: "DAT320",
 		},
-		Assignment: &qf.Assignment{
+		Assignment: &types.Assignment{
 			Name:             "lab1",
 			ScriptFile:       scriptTemplate,
 			ContainerTimeout: 1, // minutes
 		},
-		Repo: &qf.Repository{
+		Repo: &types.Repository{
 			HTMLURL:  repo.StudentRepoURL(userName),
-			RepoType: qf.Repository_USER,
+			RepoType: types.Repository_USER,
 		},
 		JobOwner: "muggles",
 		CommitID: "deadbeef",
@@ -118,7 +118,7 @@ func TestRecordResults(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	course := &qf.Course{
+	course := &types.Course{
 		Name:           "Test",
 		Code:           "DAT320",
 		OrganizationID: 1,
@@ -127,7 +127,7 @@ func TestRecordResults(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 
-	assignment := &qf.Assignment{
+	assignment := &types.Assignment{
 		CourseID: course.ID,
 		Name:     "lab1",
 		ScriptFile: `#image/quickfeed:go
@@ -167,7 +167,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
-		Repo: &qf.Repository{
+		Repo: &types.Repository{
 			UserID: 1,
 		},
 		JobOwner: "test",
@@ -179,7 +179,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submission.Status == qf.Submission_APPROVED {
+	if submission.Status == types.Submission_APPROVED {
 		t.Error("Submission must not be auto approved")
 	}
 	if diff := cmp.Diff(testScores, submission.Scores, protocmp.Transform(), protocmp.IgnoreFields(&score.Score{}, "Secret")); diff != "" {
@@ -231,7 +231,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	course := &qf.Course{
+	course := &types.Course{
 		Name:           "Test",
 		OrganizationID: 1,
 		SlipDays:       5,
@@ -239,7 +239,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateCourse(t, db, admin, course)
 
-	assignment := &qf.Assignment{
+	assignment := &types.Assignment{
 		Order:      1,
 		CourseID:   course.ID,
 		Name:       "assignment-1",
@@ -251,11 +251,11 @@ func TestRecordResultsForManualReview(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	initialSubmission := &qf.Submission{
+	initialSubmission := &types.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       admin.ID,
 		Score:        80,
-		Status:       qf.Submission_APPROVED,
+		Status:       types.Submission_APPROVED,
 		Released:     true,
 	}
 	if err := db.CreateSubmission(initialSubmission); err != nil {
@@ -265,7 +265,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
-		Repo: &qf.Repository{
+		Repo: &types.Repository{
 			UserID: 1,
 		},
 		JobOwner: "test",
@@ -277,7 +277,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 	}
 
 	// make sure all fields were saved correctly in the database
-	query := &qf.Submission{
+	query := &types.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       admin.ID,
 	}
@@ -291,7 +291,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 	}
 
 	// submission must stay approved, released, with score = 80
-	if diff := cmp.Diff(initialSubmission, updatedSubmission, protocmp.Transform(), protocmp.IgnoreFields(&qf.Submission{}, "BuildInfo", "Scores")); diff != "" {
+	if diff := cmp.Diff(initialSubmission, updatedSubmission, protocmp.Transform(), protocmp.IgnoreFields(&types.Submission{}, "BuildInfo", "Scores")); diff != "" {
 		t.Errorf("Incorrect submission after update. Want: %+v, got %+v", initialSubmission, updatedSubmission)
 	}
 }

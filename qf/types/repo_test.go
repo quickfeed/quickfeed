@@ -1,14 +1,14 @@
-package qf_test
+package types_test
 
 import (
 	"testing"
 
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 )
 
 func TestGetTestURL(t *testing.T) {
-	want := "https://github.com/dat320-2020/" + qf.TestsRepo
-	repo := &qf.Repository{
+	want := "https://github.com/dat320-2020/" + types.TestsRepo
+	repo := &types.Repository{
 		HTMLURL: "https://github.com/dat320-2020/meling-labs",
 	}
 	got := repo.GetTestURL()
@@ -19,7 +19,7 @@ func TestGetTestURL(t *testing.T) {
 
 func TestName(t *testing.T) {
 	want := "meling-labs"
-	repo := &qf.Repository{
+	repo := &types.Repository{
 		HTMLURL: "https://github.com/dat320-2020/" + want,
 	}
 	got := repo.Name()
@@ -30,8 +30,8 @@ func TestName(t *testing.T) {
 
 func TestUserName(t *testing.T) {
 	want := "meling"
-	repo := &qf.Repository{
-		HTMLURL: "https://github.com/dat320-2020/" + qf.StudentRepoName(want),
+	repo := &types.Repository{
+		HTMLURL: "https://github.com/dat320-2020/" + types.StudentRepoName(want),
 	}
 	got := repo.UserName()
 	if got != want {

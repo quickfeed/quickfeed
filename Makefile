@@ -66,7 +66,7 @@ proto_$(1):
 	--go-patch_out=plugin=go-grpc,paths=source_relative:. \
 	--js_out=import_style=commonjs:$(1)/proto \
 	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(1)/proto \
-	qf/qf.proto kit/score/score.proto
+	qf/qf.proto qf/types/types.proto qf/types/requests.proto kit/score/score.proto
 
 	$$(info Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529))
 	@$(sedi) '/patch_go_pb/d' \
@@ -74,7 +74,11 @@ proto_$(1):
 	$(1)/proto/kit/score/score_pb.d.ts \
 	$(1)/proto/qf/qf_pb.js \
 	$(1)/proto/qf/qf_pb.d.ts \
-	$(1)/proto/qf/QfServiceClientPb.ts
+	$(1)/proto/qf/QfServiceClientPb.ts \
+	$(1)/proto/qf/types/types_pb.js \
+	$(1)/proto/qf/types/types_pb.d.ts \
+	$(1)/proto/qf/types/requests_pb.js \
+	$(1)/proto/qf/types/requests_pb.d.ts
 
 	$$(info Compiling proto for $(1))
 	@cd $(1) && npm run tsc -- proto/qf/QfServiceClientPb.ts

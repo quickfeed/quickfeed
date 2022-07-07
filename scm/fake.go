@@ -5,14 +5,14 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 )
 
 // FakeSCM implements the SCM interface.
 // TODO(meling) many of the methods below are not implemented.
 type FakeSCM struct {
 	Repositories  map[uint64]*Repository
-	Organizations map[uint64]*qf.Organization
+	Organizations map[uint64]*types.Organization
 	Hooks         map[uint64]int
 	Teams         map[uint64]*Team
 }
@@ -21,16 +21,16 @@ type FakeSCM struct {
 func NewFakeSCMClient() *FakeSCM {
 	return &FakeSCM{
 		Repositories:  make(map[uint64]*Repository),
-		Organizations: make(map[uint64]*qf.Organization),
+		Organizations: make(map[uint64]*types.Organization),
 		Hooks:         make(map[uint64]int),
 		Teams:         make(map[uint64]*Team),
 	}
 }
 
 // CreateOrganization implements the SCM interface.
-func (s *FakeSCM) CreateOrganization(_ context.Context, opt *OrganizationOptions) (*qf.Organization, error) {
+func (s *FakeSCM) CreateOrganization(_ context.Context, opt *OrganizationOptions) (*types.Organization, error) {
 	id := len(s.Organizations) + 1
-	org := &qf.Organization{
+	org := &types.Organization{
 		ID:     uint64(id),
 		Path:   opt.Path,
 		Avatar: "https://avatars3.githubusercontent.com/u/1000" + strconv.Itoa(id) + "?v=3",
@@ -45,7 +45,7 @@ func (*FakeSCM) UpdateOrganization(_ context.Context, _ *OrganizationOptions) er
 }
 
 // GetOrganization implements the SCM interface.
-func (s *FakeSCM) GetOrganization(_ context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
+func (s *FakeSCM) GetOrganization(_ context.Context, opt *GetOrgOptions) (*types.Organization, error) {
 	org, ok := s.Organizations[opt.ID]
 	if !ok {
 		return nil, errors.New("organization not found")
@@ -73,7 +73,7 @@ func (*FakeSCM) GetRepository(_ context.Context, _ *RepositoryOptions) (*Reposit
 }
 
 // GetRepositories implements the SCM interface.
-func (s *FakeSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*Repository, error) {
+func (s *FakeSCM) GetRepositories(_ context.Context, org *types.Organization) ([]*Repository, error) {
 	var repos []*Repository
 	for _, repo := range s.Repositories {
 		if repo.OrgID == org.ID {
@@ -148,7 +148,7 @@ func (s *FakeSCM) GetTeam(_ context.Context, opt *TeamOptions) (*Team, error) {
 }
 
 // GetTeams implements the SCM interface
-func (s *FakeSCM) GetTeams(_ context.Context, org *qf.Organization) ([]*Team, error) {
+func (s *FakeSCM) GetTeams(_ context.Context, org *types.Organization) ([]*Team, error) {
 	var teams []*Team
 	for _, team := range s.Teams {
 		if team.Organization == org.Path {

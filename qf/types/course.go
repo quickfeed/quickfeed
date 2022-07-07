@@ -1,4 +1,4 @@
-package qf
+package types
 
 // cache of access tokens for courses; they are cached here when fetching from database
 var accessTokens = make(map[uint64]string)

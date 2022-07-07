@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )
@@ -16,10 +16,10 @@ func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	admin := qtest.CreateFakeUser(t, db, uint64(1))
-	course := &qf.Course{}
+	course := &types.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
-	assignments := []*qf.Assignment{
+	assignments := []*types.Assignment{
 		{CourseID: course.GetID(), Name: "Lab1", Order: 1},
 		{CourseID: course.GetID(), Name: "Lab2", Order: 2},
 	}
@@ -39,7 +39,7 @@ func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
 	}
 
 	wantError := gorm.ErrRecordNotFound
-	if _, gotError := db.GetTasks(&qf.Task{AssignmentID: assignments[0].GetID()}); gotError != wantError {
+	if _, gotError := db.GetTasks(&types.Task{AssignmentID: assignments[0].GetID()}); gotError != wantError {
 		t.Errorf("got error '%v' wanted '%v'", gotError, wantError)
 	}
 }
@@ -49,82 +49,82 @@ func TestGormDBNonExistingTasksForAssignment(t *testing.T) {
 // It loops through possible assignment sequences.
 func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 	tests := map[string]struct {
-		foundAssignmentSequence [][]*qf.Assignment
+		foundAssignmentSequence [][]*types.Assignment
 	}{
 		"Create update delete": {
-			foundAssignmentSequence: [][]*qf.Assignment{
+			foundAssignmentSequence: [][]*types.Assignment{
 				{
-					{Name: "Lab1", Order: 1, Tasks: []*qf.Task{
+					{Name: "Lab1", Order: 1, Tasks: []*types.Task{
 						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "1"},
 						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "2"},
 					}},
-					{Name: "Lab2", Order: 2, Tasks: []*qf.Task{
+					{Name: "Lab2", Order: 2, Tasks: []*types.Task{
 						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "1"},
 						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "2"},
 					}},
 				},
 				{
-					{Name: "Lab1", Order: 1, Tasks: []*qf.Task{
+					{Name: "Lab1", Order: 1, Tasks: []*types.Task{
 						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "1"},
 						{AssignmentOrder: 1, Title: "x", Body: "y", Name: "2"},
 						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "3"},
 					}},
-					{Name: "Lab2", Order: 2, Tasks: []*qf.Task{
+					{Name: "Lab2", Order: 2, Tasks: []*types.Task{
 						{AssignmentOrder: 2, Title: "y", Body: "x", Name: "1"},
 					}},
 				},
 			},
 		},
 		"No initial tasks": {
-			foundAssignmentSequence: [][]*qf.Assignment{
+			foundAssignmentSequence: [][]*types.Assignment{
 				{
-					{Name: "Lab1", Order: 1, Tasks: []*qf.Task{}},
-					{Name: "Lab2", Order: 2, Tasks: []*qf.Task{}},
+					{Name: "Lab1", Order: 1, Tasks: []*types.Task{}},
+					{Name: "Lab2", Order: 2, Tasks: []*types.Task{}},
 				},
 				{
-					{Name: "Lab1", Order: 1, Tasks: []*qf.Task{}},
-					{Name: "Lab2", Order: 2, Tasks: []*qf.Task{}},
+					{Name: "Lab1", Order: 1, Tasks: []*types.Task{}},
+					{Name: "Lab2", Order: 2, Tasks: []*types.Task{}},
 				},
 				{
-					{Name: "Lab1", Order: 1, Tasks: []*qf.Task{
+					{Name: "Lab1", Order: 1, Tasks: []*types.Task{
 						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "1"},
 					}},
-					{Name: "Lab2", Order: 2, Tasks: []*qf.Task{
+					{Name: "Lab2", Order: 2, Tasks: []*types.Task{
 						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "1"},
 					}},
 				},
 			},
 		},
 		"Delete and recreate": {
-			foundAssignmentSequence: [][]*qf.Assignment{
+			foundAssignmentSequence: [][]*types.Assignment{
 				{
-					{Name: "Lab1", Order: 1, Tasks: []*qf.Task{
+					{Name: "Lab1", Order: 1, Tasks: []*types.Task{
 						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "1"},
 						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "2"},
 					}},
-					{Name: "Lab2", Order: 2, Tasks: []*qf.Task{
+					{Name: "Lab2", Order: 2, Tasks: []*types.Task{
 						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "1"},
 						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "2"},
 					}},
 				},
 				{
-					{Name: "Lab1", Order: 1, Tasks: []*qf.Task{}},
-					{Name: "Lab2", Order: 2, Tasks: []*qf.Task{}},
+					{Name: "Lab1", Order: 1, Tasks: []*types.Task{}},
+					{Name: "Lab2", Order: 2, Tasks: []*types.Task{}},
 				},
 				{
-					{Name: "Lab1", Order: 1, Tasks: []*qf.Task{}},
-					{Name: "Lab2", Order: 2, Tasks: []*qf.Task{}},
+					{Name: "Lab1", Order: 1, Tasks: []*types.Task{}},
+					{Name: "Lab2", Order: 2, Tasks: []*types.Task{}},
 				},
 				{
-					{Name: "Lab1", Order: 1, Tasks: []*qf.Task{
+					{Name: "Lab1", Order: 1, Tasks: []*types.Task{
 						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "1"},
 						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "2"},
 					}},
-					{Name: "Lab2", Order: 2, Tasks: []*qf.Task{
+					{Name: "Lab2", Order: 2, Tasks: []*types.Task{
 						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "1"},
 						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "2"},
 					}},
-					{Name: "Lab3", Order: 3, Tasks: []*qf.Task{
+					{Name: "Lab3", Order: 3, Tasks: []*types.Task{
 						{AssignmentOrder: 3, Title: "x", Body: "x", Name: "1"},
 						{AssignmentOrder: 3, Title: "x", Body: "x", Name: "2"},
 					}},
@@ -132,34 +132,34 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 			},
 		},
 		"Mirrored tasks": {
-			foundAssignmentSequence: [][]*qf.Assignment{
+			foundAssignmentSequence: [][]*types.Assignment{
 				{
-					{Name: "Lab1", Order: 1, Tasks: []*qf.Task{
+					{Name: "Lab1", Order: 1, Tasks: []*types.Task{
 						{AssignmentOrder: 1, Title: "x", Body: "x", Name: "hello_world"},
 					}},
-					{Name: "Lab2", Order: 2, Tasks: []*qf.Task{
+					{Name: "Lab2", Order: 2, Tasks: []*types.Task{
 						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "hello_world"},
 					}},
 				},
 				{
-					{Name: "Lab1", Order: 1, Tasks: []*qf.Task{
+					{Name: "Lab1", Order: 1, Tasks: []*types.Task{
 						{AssignmentOrder: 1, Title: "y", Body: "y", Name: "hello_world"},
 					}},
-					{Name: "Lab2", Order: 2, Tasks: []*qf.Task{
+					{Name: "Lab2", Order: 2, Tasks: []*types.Task{
 						{AssignmentOrder: 2, Title: "x", Body: "x", Name: "hello_world"},
 					}},
-					{Name: "Lab3", Order: 3, Tasks: []*qf.Task{
+					{Name: "Lab3", Order: 3, Tasks: []*types.Task{
 						{AssignmentOrder: 3, Title: "x", Body: "x", Name: "hello_world"},
 					}},
 				},
 				{
-					{Name: "Lab1", Order: 1, Tasks: []*qf.Task{
+					{Name: "Lab1", Order: 1, Tasks: []*types.Task{
 						{AssignmentOrder: 1, Title: "y", Body: "y", Name: "hello_world"},
 					}},
-					{Name: "Lab2", Order: 2, Tasks: []*qf.Task{
+					{Name: "Lab2", Order: 2, Tasks: []*types.Task{
 						{AssignmentOrder: 2, Title: "y", Body: "y", Name: "hello_world"},
 					}},
-					{Name: "Lab3", Order: 3, Tasks: []*qf.Task{
+					{Name: "Lab3", Order: 3, Tasks: []*types.Task{
 						{AssignmentOrder: 3, Title: "y", Body: "y", Name: "not_hello_world"},
 					}},
 				},
@@ -167,15 +167,15 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 		},
 	}
 
-	sortTasksByName := func(tasks []*qf.Task) {
+	sortTasksByName := func(tasks []*types.Task) {
 		sort.Slice(tasks, func(i, j int) bool {
 			return tasks[i].ID < tasks[j].ID
 		})
 	}
-	getTasksFromAssignments := func(assignments []*qf.Assignment) map[uint32]map[string]*qf.Task {
-		taskMap := make(map[uint32]map[string]*qf.Task)
+	getTasksFromAssignments := func(assignments []*types.Assignment) map[uint32]map[string]*types.Task {
+		taskMap := make(map[uint32]map[string]*types.Task)
 		for _, assignment := range assignments {
-			temp := make(map[string]*qf.Task)
+			temp := make(map[string]*types.Task)
 			for _, task := range assignment.Tasks {
 				temp[task.Name] = task
 			}
@@ -189,13 +189,13 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 			db, cleanup := qtest.TestDB(t)
 			defer cleanup()
 			admin := qtest.CreateFakeUser(t, db, 1)
-			course := &qf.Course{}
+			course := &types.Course{}
 			qtest.CreateCourse(t, db, admin, course)
 
-			previousTasks := make(map[uint32]map[string]*qf.Task)
+			previousTasks := make(map[uint32]map[string]*types.Task)
 
 			for _, foundAssignments := range tt.foundAssignmentSequence {
-				wantTasks := []*qf.Task{}
+				wantTasks := []*types.Task{}
 				for _, assignment := range foundAssignments {
 					assignment.CourseID = course.GetID()
 					if err := db.CreateAssignment(assignment); err != nil {
@@ -207,17 +207,17 @@ func TestGormDBSynchronizeAssignmentTasks(t *testing.T) {
 				if err != nil {
 					t.Error(err)
 				}
-				gotTasks, err := db.GetTasks(&qf.Task{})
+				gotTasks, err := db.GetTasks(&types.Task{})
 				if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 					t.Fatal(err)
 				}
 
-				wantCreatedTasks := []*qf.Task{}
-				wantUpdatedTasks := []*qf.Task{}
+				wantCreatedTasks := []*types.Task{}
+				wantUpdatedTasks := []*types.Task{}
 				for _, wantTask := range wantTasks {
 					taskMap, ok := previousTasks[wantTask.GetAssignmentOrder()]
 					if !ok {
-						previousTasks[wantTask.GetAssignmentOrder()] = make(map[string]*qf.Task)
+						previousTasks[wantTask.GetAssignmentOrder()] = make(map[string]*types.Task)
 					}
 					task, ok := taskMap[wantTask.GetName()]
 					if ok {

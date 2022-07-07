@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -19,8 +19,8 @@ import (
 )
 
 // UpdateFromTestsRepo updates the database record for the course assignments.
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course *qf.Course) {
-	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), qf.TestsRepo)
+func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course *types.Course) {
+	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), types.TestsRepo)
 	scm, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
 	if err != nil {
 		logger.Errorf("Failed to create SCM Client: %v", err)
@@ -29,7 +29,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	ctx := context.Background()
 	assignments, dockerfile, err := fetchAssignments(ctx, logger, scm, course)
 	if err != nil {
-		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", qf.TestsRepo, err)
+		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", types.TestsRepo, err)
 		return
 	}
 	for _, assignment := range assignments {
@@ -52,10 +52,10 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		logger.Errorf("Failed to update assignments in database: %v", err)
 		return
 	}
-	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), qf.TestsRepo)
+	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), types.TestsRepo)
 
 	if err = synchronizeTasksWithIssues(ctx, db, scm, course, assignments); err != nil {
-		logger.Errorf("Failed to create tasks on '%s' repository: %v", qf.TestsRepo, err)
+		logger.Errorf("Failed to create tasks on '%s' repository: %v", types.TestsRepo, err)
 		return
 	}
 }
@@ -72,15 +72,15 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 // data from GitHub, processes the yml files and returns the assignments.
 // The TempDir() function ensures that cloning is done in distinct temp
 // directories, should there be concurrent calls to this function.
-func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course *qf.Course) ([]*qf.Assignment, string, error) {
-	ctx, cancel := context.WithTimeout(c, qf.MaxWait)
+func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, course *types.Course) ([]*types.Assignment, string, error) {
+	ctx, cancel := context.WithTimeout(c, types.MaxWait)
 	defer cancel()
 
 	cloneURL := sc.CreateCloneURL(&scm.URLPathOptions{
 		Organization: course.OrganizationPath,
-		Repository:   qf.TestsRepo,
+		Repository:   types.TestsRepo,
 	})
-	cloneDir, err := ioutil.TempDir("", qf.TestsRepo)
+	cloneDir, err := ioutil.TempDir("", types.TestsRepo)
 	if err != nil {
 		return nil, "", err
 	}
@@ -112,7 +112,7 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 	// if a Dockerfile added/updated, build docker image locally
 	// tag the image with the course code
 	if dockerfile != "" && dockerfile != course.Dockerfile {
-		buildDir := filepath.Join(cloneDir, qf.TestsRepo, scriptFolder)
+		buildDir := filepath.Join(cloneDir, types.TestsRepo, scriptFolder)
 		buildCmd := fmt.Sprintf("docker build -t %s .", strings.ToLower(course.GetCode()))
 		job.Commands = []string{
 			"cd " + buildDir,
@@ -132,9 +132,9 @@ func fetchAssignments(c context.Context, logger *zap.SugaredLogger, sc scm.SCM, 
 }
 
 // updateGradingCriteria will remove old grading criteria and related reviews when criteria.json gets updated
-func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assignment *qf.Assignment) {
+func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assignment *types.Assignment) {
 	if len(assignment.GetGradingBenchmarks()) > 0 {
-		gradingBenchmarks, err := db.GetBenchmarks(&qf.Assignment{
+		gradingBenchmarks, err := db.GetBenchmarks(&types.Assignment{
 			CourseID: assignment.CourseID,
 			Order:    assignment.Order,
 		})
@@ -149,8 +149,8 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 		if len(gradingBenchmarks) > 0 {
 			if !cmp.Equal(assignment.GradingBenchmarks, gradingBenchmarks, cmp.Options{
 				protocmp.Transform(),
-				protocmp.IgnoreFields(&qf.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
-				protocmp.IgnoreFields(&qf.GradingCriterion{}, "ID", "BenchmarkID"),
+				protocmp.IgnoreFields(&types.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
+				protocmp.IgnoreFields(&types.GradingCriterion{}, "ID", "BenchmarkID"),
 				protocmp.IgnoreEnums(),
 			}) {
 				for _, bm := range gradingBenchmarks {

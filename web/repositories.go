@@ -4,20 +4,20 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 	"github.com/quickfeed/quickfeed/scm"
 	"gorm.io/gorm"
 )
 
-func (s *QuickFeedService) getRepo(course *qf.Course, id uint64, repoType qf.Repository_Type) (*qf.Repository, error) {
-	query := &qf.Repository{
+func (s *QuickFeedService) getRepo(course *types.Course, id uint64, repoType types.Repository_Type) (*types.Repository, error) {
+	query := &types.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		RepoType:       repoType,
 	}
 	switch repoType {
-	case qf.Repository_USER:
+	case types.Repository_USER:
 		query.UserID = id
-	case qf.Repository_GROUP:
+	case types.Repository_GROUP:
 		query.GroupID = id
 	}
 	repos, err := s.db.GetRepositories(query)
@@ -32,12 +32,12 @@ func (s *QuickFeedService) getRepo(course *qf.Course, id uint64, repoType qf.Rep
 
 // isEmptyRepo returns nil if all repositories for the given course and student or group are empty,
 // returns an error otherwise.
-func (s *QuickFeedService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *qf.RepositoryRequest) error {
+func (s *QuickFeedService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *types.RepositoryRequest) error {
 	course, err := s.db.GetCourse(request.GetCourseID(), false)
 	if err != nil {
 		return err
 	}
-	repos, err := s.db.GetRepositories(&qf.Repository{
+	repos, err := s.db.GetRepositories(&types.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		UserID:         request.GetUserID(),
 		GroupID:        request.GetGroupID(),

@@ -1,36 +1,36 @@
-package qf_test
+package types_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/quickfeed/quickfeed/kit/score"
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 )
 
 func TestNewestSubmissionDate(t *testing.T) {
-	submission := &qf.Submission{}
+	submission := &types.Submission{}
 	tim := time.Now()
 	newBuildDate, err := submission.NewestBuildDate(tim)
 	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, qf.ErrMissingBuildInfo)
+		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, types.ErrMissingBuildInfo)
 	}
 
-	submission = &qf.Submission{}
+	submission = &types.Submission{}
 	newBuildDate, err = submission.NewestBuildDate(tim)
 	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, qf.ErrMissingBuildInfo)
+		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, types.ErrMissingBuildInfo)
 	}
 
-	submission = &qf.Submission{
+	submission = &types.Submission{
 		BuildInfo: &score.BuildInfo{},
 	}
 	newBuildDate, err = submission.NewestBuildDate(tim)
 	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, qf.ErrMissingBuildInfo)
+		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, types.ErrMissingBuildInfo)
 	}
 
-	submission = &qf.Submission{
+	submission = &types.Submission{
 		BuildInfo: &score.BuildInfo{
 			BuildDate: "string",
 		},
@@ -41,9 +41,9 @@ func TestNewestSubmissionDate(t *testing.T) {
 	}
 
 	buildDate := time.Now()
-	submission = &qf.Submission{
+	submission = &types.Submission{
 		BuildInfo: &score.BuildInfo{
-			BuildDate: buildDate.Format(qf.TimeLayout),
+			BuildDate: buildDate.Format(types.TimeLayout),
 		},
 	}
 	newBuildDate, err = submission.NewestBuildDate(tim)
@@ -56,19 +56,19 @@ func TestNewestSubmissionDate(t *testing.T) {
 }
 
 func TestByUser(t *testing.T) {
-	submission := &qf.Submission{}
+	submission := &types.Submission{}
 	if submission.ByUser(0) {
 		t.Errorf("ByUser(0) = true, expected false\n")
 	}
 
-	submission = &qf.Submission{
+	submission = &types.Submission{
 		UserID: 1,
 	}
 	if !submission.ByUser(1) {
 		t.Errorf("ByUser(1) = false, expected true\n")
 	}
 
-	submission = &qf.Submission{
+	submission = &types.Submission{
 		GroupID: 1,
 	}
 	if submission.ByUser(1) {
@@ -76,7 +76,7 @@ func TestByUser(t *testing.T) {
 	}
 
 	// submissions with both user and group ID are invalid
-	submission = &qf.Submission{
+	submission = &types.Submission{
 		UserID:  1,
 		GroupID: 2,
 	}
@@ -86,19 +86,19 @@ func TestByUser(t *testing.T) {
 }
 
 func TestByGroup(t *testing.T) {
-	submission := &qf.Submission{}
+	submission := &types.Submission{}
 	if submission.ByGroup(0) {
 		t.Errorf("ByGroup(0) = true, expected false\n")
 	}
 
-	submission = &qf.Submission{
+	submission = &types.Submission{
 		GroupID: 1,
 	}
 	if !submission.ByGroup(1) {
 		t.Errorf("ByGroup(1) = false, expected true\n")
 	}
 
-	submission = &qf.Submission{
+	submission = &types.Submission{
 		UserID: 1,
 	}
 	if submission.ByGroup(1) {
@@ -106,7 +106,7 @@ func TestByGroup(t *testing.T) {
 	}
 
 	// submissions with both user and group ID are invalid
-	submission = &qf.Submission{
+	submission = &types.Submission{
 		UserID:  1,
 		GroupID: 2,
 	}

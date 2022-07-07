@@ -6,7 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -26,7 +26,7 @@ func TestGormDBRemoveTest(t *testing.T) {
 		{TestName: "Test2", Score: 0, MaxScore: 5, Weight: 1},
 		{TestName: "Test3", Score: 3, MaxScore: 5, Weight: 1},
 	}
-	if err := db.CreateSubmission(&qf.Submission{
+	if err := db.CreateSubmission(&types.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		BuildInfo:    buildInfo,
@@ -34,7 +34,7 @@ func TestGormDBRemoveTest(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	submissions, err := db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err := db.GetLastSubmissions(course.ID, &types.Submission{UserID: user.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func TestGormDBRemoveTest(t *testing.T) {
 	if err := db.CreateSubmission(submissions[0]); err != nil {
 		t.Fatal(err)
 	}
-	submissions, err = db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
+	submissions, err = db.GetLastSubmissions(course.ID, &types.Submission{UserID: user.ID})
 	if err != nil {
 		t.Fatal(err)
 	}

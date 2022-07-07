@@ -1,4 +1,4 @@
-package qf
+package types
 
 import (
 	"errors"

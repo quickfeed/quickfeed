@@ -1,4 +1,4 @@
-package qf
+package types
 
 import "github.com/prometheus/client_golang/prometheus"
 

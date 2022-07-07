@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/assignments"
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 )
 
 const reviewLayout = "02 Jan 15:04"
 
 // getAssignments lists the assignments for the provided course.
-func (s *QuickFeedService) getAssignments(courseID uint64) (*qf.Assignments, error) {
+func (s *QuickFeedService) getAssignments(courseID uint64) (*types.Assignments, error) {
 	allAssignments, err := s.db.GetAssignmentsByCourse(courseID, true)
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (s *QuickFeedService) getAssignments(courseID uint64) (*qf.Assignments, err
 	for _, assignment := range allAssignments {
 		assignment.Deadline = assignments.FixDeadline(assignment.GetDeadline())
 	}
-	return &qf.Assignments{Assignments: allAssignments}, nil
+	return &types.Assignments{Assignments: allAssignments}, nil
 }
 
 // updateAssignments updates the assignments for the given course.
@@ -35,8 +35,8 @@ func (s *QuickFeedService) updateAssignments(courseID uint64) error {
 	return nil
 }
 
-func (s *QuickFeedService) createBenchmark(query *qf.GradingBenchmark) (*qf.GradingBenchmark, error) {
-	if _, err := s.db.GetAssignment(&qf.Assignment{
+func (s *QuickFeedService) createBenchmark(query *types.GradingBenchmark) (*types.GradingBenchmark, error) {
+	if _, err := s.db.GetAssignment(&types.Assignment{
 		ID: query.AssignmentID,
 	}); err != nil {
 		return nil, err
@@ -47,35 +47,35 @@ func (s *QuickFeedService) createBenchmark(query *qf.GradingBenchmark) (*qf.Grad
 	return query, nil
 }
 
-func (s *QuickFeedService) updateBenchmark(query *qf.GradingBenchmark) error {
+func (s *QuickFeedService) updateBenchmark(query *types.GradingBenchmark) error {
 	return s.db.UpdateBenchmark(query)
 }
 
-func (s *QuickFeedService) deleteBenchmark(query *qf.GradingBenchmark) error {
+func (s *QuickFeedService) deleteBenchmark(query *types.GradingBenchmark) error {
 	return s.db.DeleteBenchmark(query)
 }
 
-func (s *QuickFeedService) createCriterion(query *qf.GradingCriterion) (*qf.GradingCriterion, error) {
+func (s *QuickFeedService) createCriterion(query *types.GradingCriterion) (*types.GradingCriterion, error) {
 	if err := s.db.CreateCriterion(query); err != nil {
 		return nil, err
 	}
 	return query, nil
 }
 
-func (s *QuickFeedService) updateCriterion(query *qf.GradingCriterion) error {
+func (s *QuickFeedService) updateCriterion(query *types.GradingCriterion) error {
 	return s.db.UpdateCriterion(query)
 }
 
-func (s *QuickFeedService) deleteCriterion(query *qf.GradingCriterion) error {
+func (s *QuickFeedService) deleteCriterion(query *types.GradingCriterion) error {
 	return s.db.DeleteCriterion(query)
 }
 
-func (s *QuickFeedService) createReview(review *qf.Review) (*qf.Review, error) {
-	submission, err := s.db.GetSubmission(&qf.Submission{ID: review.SubmissionID})
+func (s *QuickFeedService) createReview(review *types.Review) (*types.Review, error) {
+	submission, err := s.db.GetSubmission(&types.Submission{ID: review.SubmissionID})
 	if err != nil {
 		return nil, err
 	}
-	assignment, err := s.db.GetAssignment(&qf.Assignment{ID: submission.AssignmentID})
+	assignment, err := s.db.GetAssignment(&types.Assignment{ID: submission.AssignmentID})
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (s *QuickFeedService) createReview(review *qf.Review) (*qf.Review, error) {
 	review.Edited = time.Now().Format(reviewLayout)
 	review.ComputeScore()
 
-	benchmarks, err := s.db.GetBenchmarks(&qf.Assignment{ID: submission.AssignmentID})
+	benchmarks, err := s.db.GetBenchmarks(&types.Assignment{ID: submission.AssignmentID})
 	if err != nil {
 		return nil, err
 	}
@@ -105,11 +105,11 @@ func (s *QuickFeedService) createReview(review *qf.Review) (*qf.Review, error) {
 	return review, nil
 }
 
-func (s *QuickFeedService) updateReview(review *qf.Review) (*qf.Review, error) {
+func (s *QuickFeedService) updateReview(review *types.Review) (*types.Review, error) {
 	if review.ID == 0 {
 		return nil, fmt.Errorf("cannot update review with empty ID")
 	}
-	submission, err := s.db.GetSubmission(&qf.Submission{ID: review.SubmissionID})
+	submission, err := s.db.GetSubmission(&types.Submission{ID: review.SubmissionID})
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (s *QuickFeedService) updateReview(review *qf.Review) (*qf.Review, error) {
 	return review, nil
 }
 
-func (s *QuickFeedService) getAssignmentWithCourse(query *qf.Assignment, withCourseInfo bool) (*qf.Assignment, *qf.Course, error) {
+func (s *QuickFeedService) getAssignmentWithCourse(query *types.Assignment, withCourseInfo bool) (*types.Assignment, *types.Course, error) {
 	assignment, err := s.db.GetAssignment(query)
 	if err != nil {
 		return nil, nil, err

@@ -3,7 +3,7 @@ package hooks
 import (
 	"testing"
 
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 )
 
 const (
@@ -12,8 +12,8 @@ const (
 )
 
 func TestFindIssue(t *testing.T) {
-	wantIssue := &qf.Issue{IssueNumber: 30}
-	issues := []*qf.Issue{
+	wantIssue := &types.Issue{IssueNumber: 30}
+	issues := []*types.Issue{
 		{IssueNumber: 10},
 		{IssueNumber: 20},
 		wantIssue,

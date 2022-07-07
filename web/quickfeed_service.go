@@ -11,6 +11,7 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 	scms "github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
@@ -40,7 +41,7 @@ func NewQuickFeedService(logger *zap.Logger, db database.Database, scms *auth.Sc
 // GetUser will return current user with active course enrollments
 // to use in separating teacher and admin roles
 // Access policy: everyone
-func (s *QuickFeedService) GetUser(ctx context.Context, _ *qf.Void) (*qf.User, error) {
+func (s *QuickFeedService) GetUser(ctx context.Context, _ *types.Void) (*types.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetUser failed: authentication error: %v", err)
@@ -56,7 +57,7 @@ func (s *QuickFeedService) GetUser(ctx context.Context, _ *qf.Void) (*qf.User, e
 // GetUsers returns a list of all users.
 // Access policy: Admin.
 // Frontend note: This method is called from AdminPage.
-func (s *QuickFeedService) GetUsers(ctx context.Context, _ *qf.Void) (*qf.Users, error) {
+func (s *QuickFeedService) GetUsers(ctx context.Context, _ *types.Void) (*types.Users, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetUsers failed: authentication error: %v", err)
@@ -77,7 +78,7 @@ func (s *QuickFeedService) GetUsers(ctx context.Context, _ *qf.Void) (*qf.Users,
 // GetUserByCourse returns the user matching the given course name and GitHub login
 // specified in CourseUserRequest.
 // Access policy: Admins or course teachers
-func (s *QuickFeedService) GetUserByCourse(ctx context.Context, in *qf.CourseUserRequest) (*qf.User, error) {
+func (s *QuickFeedService) GetUserByCourse(ctx context.Context, in *types.CourseUserRequest) (*types.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetUserByCourse failed: authentication error: %v", err)
@@ -95,7 +96,7 @@ func (s *QuickFeedService) GetUserByCourse(ctx context.Context, in *qf.CourseUse
 // This function can also promote a user to admin or demote a user.
 // Access policy: Admin can update other users's information and promote to Admin;
 // Current User if Owner can update its own information.
-func (s *QuickFeedService) UpdateUser(ctx context.Context, in *qf.User) (*qf.Void, error) {
+func (s *QuickFeedService) UpdateUser(ctx context.Context, in *types.User) (*types.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateUser failed: authentication error: %v", err)
@@ -109,26 +110,26 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *qf.User) (*qf.Voi
 		s.logger.Errorf("UpdateUser failed to update user %d: %v", in.GetID(), err)
 		err = status.Error(codes.InvalidArgument, "failed to update user")
 	}
-	return &qf.Void{}, err
+	return &types.Void{}, err
 }
 
 // IsAuthorizedTeacher checks whether current user has teacher scopes.
 // Access policy: Any User.
-func (s *QuickFeedService) IsAuthorizedTeacher(ctx context.Context, _ *qf.Void) (*qf.AuthorizationResponse, error) {
+func (s *QuickFeedService) IsAuthorizedTeacher(ctx context.Context, _ *types.Void) (*types.AuthorizationResponse, error) {
 	// Currently hardcoded for github only
 	_, scm, err := s.getUserAndSCM(ctx, "github")
 	if err != nil {
 		s.logger.Errorf("IsAuthorizedTeacher failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
-	return &qf.AuthorizationResponse{
+	return &types.AuthorizationResponse{
 		IsAuthorized: hasTeacherScopes(ctx, scm),
 	}, nil
 }
 
 // CreateCourse creates a new course.
 // Access policy: Admin.
-func (s *QuickFeedService) CreateCourse(ctx context.Context, in *qf.Course) (*qf.Course, error) {
+func (s *QuickFeedService) CreateCourse(ctx context.Context, in *types.Course) (*types.Course, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: scm authentication error: %v", err)
@@ -162,7 +163,7 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *qf.Course) (*qf
 
 // UpdateCourse changes the course information details.
 // Access policy: Teacher of CourseID.
-func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *qf.Course) (*qf.Void, error) {
+func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *types.Course) (*types.Void, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: scm authentication error: %v", err)
@@ -184,12 +185,12 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *qf.Course) (*qf
 		}
 		return nil, status.Error(codes.InvalidArgument, "failed to update course")
 	}
-	return &qf.Void{}, nil
+	return &types.Void{}, nil
 }
 
 // GetCourse returns course information for the given course.
 // Access policy: Any User.
-func (s *QuickFeedService) GetCourse(_ context.Context, in *qf.CourseRequest) (*qf.Course, error) {
+func (s *QuickFeedService) GetCourse(_ context.Context, in *types.CourseRequest) (*types.Course, error) {
 	courseID := in.GetCourseID()
 	course, err := s.getCourse(courseID)
 	if err != nil {
@@ -201,7 +202,7 @@ func (s *QuickFeedService) GetCourse(_ context.Context, in *qf.CourseRequest) (*
 
 // GetCourses returns a list of all courses.
 // Access policy: Any User.
-func (s *QuickFeedService) GetCourses(_ context.Context, _ *qf.Void) (*qf.Courses, error) {
+func (s *QuickFeedService) GetCourses(_ context.Context, _ *types.Void) (*types.Courses, error) {
 	courses, err := s.getCourses()
 	if err != nil {
 		s.logger.Errorf("GetCourses failed: %v", err)
@@ -212,7 +213,7 @@ func (s *QuickFeedService) GetCourses(_ context.Context, _ *qf.Void) (*qf.Course
 
 // UpdateCourseVisibility allows to edit what courses are visible in the sidebar.
 // Access policy: Any User.
-func (s *QuickFeedService) UpdateCourseVisibility(ctx context.Context, in *qf.Enrollment) (*qf.Void, error) {
+func (s *QuickFeedService) UpdateCourseVisibility(ctx context.Context, in *types.Enrollment) (*types.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("ChangeCourseVisibility failed: authentication error: %v", err)
@@ -227,24 +228,24 @@ func (s *QuickFeedService) UpdateCourseVisibility(ctx context.Context, in *qf.En
 		s.logger.Errorf("ChangeCourseVisibility failed: %v", err)
 		err = status.Error(codes.InvalidArgument, "failed to update course visibility")
 	}
-	return &qf.Void{}, err
+	return &types.Void{}, err
 }
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
 // Access policy: Any User.
-func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *qf.Enrollment) (*qf.Void, error) {
+func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *types.Enrollment) (*types.Void, error) {
 	err := s.createEnrollment(in)
 	if err != nil {
 		s.logger.Errorf("CreateEnrollment failed: %v", err)
 		err = status.Error(codes.InvalidArgument, "failed to create enrollment")
 	}
-	return &qf.Void{}, err
+	return &types.Void{}, err
 }
 
 // UpdateEnrollments changes status of all pending enrollments for the specified course to approved.
 // If the request contains a single enrollment, it will be updated to the specified status.
 // Access policy: Teacher of CourseID
-func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *qf.Enrollments) (*qf.Void, error) {
+func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *types.Enrollments) (*types.Void, error) {
 	user, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: scm authentication error: %v", err)
@@ -272,12 +273,12 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *qf.Enrollm
 			return nil, status.Error(codes.InvalidArgument, "failed to update enrollment")
 		}
 	}
-	return &qf.Void{}, err
+	return &types.Void{}, err
 }
 
 // GetCoursesByUser returns all courses the given user is enrolled into with the given status.
 // Access policy: Any User.
-func (s *QuickFeedService) GetCoursesByUser(_ context.Context, in *qf.EnrollmentStatusRequest) (*qf.Courses, error) {
+func (s *QuickFeedService) GetCoursesByUser(_ context.Context, in *types.EnrollmentStatusRequest) (*types.Courses, error) {
 	courses, err := s.getCoursesByUser(in)
 	if err != nil {
 		s.logger.Errorf("GetCoursesWithEnrollment failed: %v", err)
@@ -288,7 +289,7 @@ func (s *QuickFeedService) GetCoursesByUser(_ context.Context, in *qf.Enrollment
 
 // GetEnrollmentsByUser returns all enrollments for the given user and enrollment status with preloaded courses and groups.
 // Access policy: user with userID or admin
-func (s *QuickFeedService) GetEnrollmentsByUser(ctx context.Context, in *qf.EnrollmentStatusRequest) (*qf.Enrollments, error) {
+func (s *QuickFeedService) GetEnrollmentsByUser(ctx context.Context, in *types.EnrollmentStatusRequest) (*types.Enrollments, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByUser failed: authentication error: %v", err)
@@ -309,7 +310,7 @@ func (s *QuickFeedService) GetEnrollmentsByUser(ctx context.Context, in *qf.Enro
 
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
 // Access policy: Teacher or student of CourseID.
-func (s *QuickFeedService) GetEnrollmentsByCourse(ctx context.Context, in *qf.EnrollmentRequest) (*qf.Enrollments, error) {
+func (s *QuickFeedService) GetEnrollmentsByCourse(ctx context.Context, in *types.EnrollmentRequest) (*types.Enrollments, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByCourse failed: authentication error: %v", err)
@@ -330,7 +331,7 @@ func (s *QuickFeedService) GetEnrollmentsByCourse(ctx context.Context, in *qf.En
 
 // GetGroup returns information about a group.
 // Access policy: Group members, Teacher of CourseID.
-func (s *QuickFeedService) GetGroup(ctx context.Context, in *qf.GetGroupRequest) (*qf.Group, error) {
+func (s *QuickFeedService) GetGroup(ctx context.Context, in *types.GetGroupRequest) (*types.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetGroup failed: authentication error: %v", err)
@@ -350,7 +351,7 @@ func (s *QuickFeedService) GetGroup(ctx context.Context, in *qf.GetGroupRequest)
 
 // GetGroupsByCourse returns a list of groups created for the course id in the record request.
 // Access policy: Teacher of CourseID.
-func (s *QuickFeedService) GetGroupsByCourse(ctx context.Context, in *qf.CourseRequest) (*qf.Groups, error) {
+func (s *QuickFeedService) GetGroupsByCourse(ctx context.Context, in *types.CourseRequest) (*types.Groups, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetGroups failed: authentication error: %v", err)
@@ -371,7 +372,7 @@ func (s *QuickFeedService) GetGroupsByCourse(ctx context.Context, in *qf.CourseR
 
 // GetGroupByUserAndCourse returns the group of the given student for a given course.
 // Access policy: Group members, Teacher of CourseID.
-func (s *QuickFeedService) GetGroupByUserAndCourse(ctx context.Context, in *qf.GroupRequest) (*qf.Group, error) {
+func (s *QuickFeedService) GetGroupByUserAndCourse(ctx context.Context, in *types.GroupRequest) (*types.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetGroupByUserAndCourse failed: authentication error: %v", err)
@@ -393,7 +394,7 @@ func (s *QuickFeedService) GetGroupByUserAndCourse(ctx context.Context, in *qf.G
 
 // CreateGroup creates a new group in the database.
 // Access policy: Any User enrolled in course and specified as member of the group or a course teacher.
-func (s *QuickFeedService) CreateGroup(ctx context.Context, in *qf.Group) (*qf.Group, error) {
+func (s *QuickFeedService) CreateGroup(ctx context.Context, in *types.Group) (*types.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("CreateGroup failed: authentication error: %v", err)
@@ -422,7 +423,7 @@ func (s *QuickFeedService) CreateGroup(ctx context.Context, in *qf.Group) (*qf.G
 
 // UpdateGroup updates group information, and returns the updated group.
 // Access policy: Teacher of CourseID.
-func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *qf.Group) (*qf.Group, error) {
+func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *types.Group) (*types.Group, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: scm authentication error: %v", err)
@@ -457,13 +458,13 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *qf.Group) (*qf.G
 
 // DeleteGroup removes group record from the database.
 // Access policy: Teacher of CourseID.
-func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *qf.GroupRequest) (*qf.Void, error) {
+func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *types.GroupRequest) (*types.Void, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
-	grp, err := s.getGroup(&qf.GetGroupRequest{GroupID: in.GetGroupID()})
+	grp, err := s.getGroup(&types.GetGroupRequest{GroupID: in.GetGroupID()})
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: %v", err)
 		return nil, status.Error(codes.NotFound, "failed to get group")
@@ -482,7 +483,7 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *qf.GroupRequest)
 		}
 		return nil, status.Error(codes.InvalidArgument, "failed to delete group")
 	}
-	return &qf.Void{}, nil
+	return &types.Void{}, nil
 }
 
 // GetSubmissions returns the submissions matching the query encoded in the action request.
@@ -491,7 +492,7 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *qf.GroupRequest)
 // Current User if Owner of submission,
 // Current User if member of group for group submission,
 // Teacher of CourseID.
-func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *qf.SubmissionRequest) (*qf.Submissions, error) {
+func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *types.SubmissionRequest) (*types.Submissions, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetSubmissions failed: authentication error: %v", err)
@@ -499,14 +500,14 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *qf.Submission
 	}
 
 	// grp may be nil if there is no group ID in request; this is fine, since the grp.Contains() returns false in this case.
-	grp, _ := s.getGroup(&qf.GetGroupRequest{GroupID: in.GetGroupID()})
+	grp, _ := s.getGroup(&types.GetGroupRequest{GroupID: in.GetGroupID()})
 
 	// ensure that current user is teacher, enrolled admin, or the current user is owner of the submission request
-	if !s.hasCourseAccess(usr.GetID(), in.GetCourseID(), func(e *qf.Enrollment) bool {
+	if !s.hasCourseAccess(usr.GetID(), in.GetCourseID(), func(e *types.Enrollment) bool {
 		switch e.Status {
-		case qf.Enrollment_TEACHER:
+		case types.Enrollment_TEACHER:
 			return true
-		case qf.Enrollment_STUDENT:
+		case types.Enrollment_STUDENT:
 			return usr.IsAdmin || usr.IsOwner(in.GetUserID()) || grp.Contains(usr)
 		}
 		return false
@@ -531,7 +532,7 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *qf.Submission
 // GetSubmissionsByCourse returns all the latest submissions
 // for every individual or group course assignment for all course students/groups.
 // Access policy: Admin enrolled in CourseID, Teacher of CourseID.
-func (s *QuickFeedService) GetSubmissionsByCourse(ctx context.Context, in *qf.SubmissionsForCourseRequest) (*qf.CourseSubmissions, error) {
+func (s *QuickFeedService) GetSubmissionsByCourse(ctx context.Context, in *types.SubmissionsForCourseRequest) (*types.CourseSubmissions, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetSubmissionsByCourse failed: authentication error: %v", err)
@@ -544,11 +545,11 @@ func (s *QuickFeedService) GetSubmissionsByCourse(ctx context.Context, in *qf.Su
 	//	}
 
 	// ensure that current user is teacher or enrolled admin to process the submission request
-	if !s.hasCourseAccess(usr.GetID(), in.GetCourseID(), func(e *qf.Enrollment) bool {
+	if !s.hasCourseAccess(usr.GetID(), in.GetCourseID(), func(e *types.Enrollment) bool {
 		switch e.Status {
-		case qf.Enrollment_TEACHER:
+		case types.Enrollment_TEACHER:
 			return true
-		case qf.Enrollment_STUDENT:
+		case types.Enrollment_STUDENT:
 			return usr.IsAdmin
 		}
 		return false
@@ -569,7 +570,7 @@ func (s *QuickFeedService) GetSubmissionsByCourse(ctx context.Context, in *qf.Su
 
 // UpdateSubmission is called to approve the given submission or to undo approval.
 // Access policy: Teacher of CourseID.
-func (s *QuickFeedService) UpdateSubmission(ctx context.Context, in *qf.UpdateSubmissionRequest) (*qf.Void, error) {
+func (s *QuickFeedService) UpdateSubmission(ctx context.Context, in *types.UpdateSubmissionRequest) (*types.Void, error) {
 	if !s.isValidSubmission(in.SubmissionID) {
 		s.logger.Errorf("UpdateSubmission failed: submission author has no access to the course")
 		return nil, status.Error(codes.PermissionDenied, "submission author has no course access")
@@ -588,14 +589,14 @@ func (s *QuickFeedService) UpdateSubmission(ctx context.Context, in *qf.UpdateSu
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
 		err = status.Error(codes.InvalidArgument, "failed to approve submission")
 	}
-	return &qf.Void{}, err
+	return &types.Void{}, err
 }
 
 // RebuildSubmissions re-runs the tests for the given assignment.
 // A single submission is executed again if the request specifies a submission ID
 // or all submissions if the request specifies a course ID.
 // Access policy: Teacher of CourseID.
-func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *qf.RebuildRequest) (*qf.Void, error) {
+func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *types.RebuildRequest) (*types.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("RebuildSubmissions failed: authentication error: %v", err)
@@ -607,7 +608,7 @@ func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *qf.Rebuil
 	}
 	// RebuildType can be either SubmissionID or CourseID, but not both.
 	switch in.GetRebuildType().(type) {
-	case *qf.RebuildRequest_SubmissionID:
+	case *types.RebuildRequest_SubmissionID:
 		if !s.isValidSubmission(in.GetSubmissionID()) {
 			s.logger.Errorf("RebuildSubmission failed: submitter has no access to the course")
 			return nil, status.Error(codes.PermissionDenied, "submitter has no course access")
@@ -616,18 +617,18 @@ func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *qf.Rebuil
 			s.logger.Errorf("RebuildSubmission failed: %v", err)
 			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission")
 		}
-	case *qf.RebuildRequest_CourseID:
+	case *types.RebuildRequest_CourseID:
 		if err := s.rebuildSubmissions(in); err != nil {
 			s.logger.Errorf("RebuildSubmissions failed: %v", err)
 			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submissions")
 		}
 	}
-	return &qf.Void{}, nil
+	return &types.Void{}, nil
 }
 
 // CreateBenchmark adds a new grading benchmark for an assignment
 // Access policy: Teacher of CourseID
-func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *qf.GradingBenchmark) (*qf.GradingBenchmark, error) {
+func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *types.GradingBenchmark) (*types.GradingBenchmark, error) {
 	bm, err := s.createBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("CreateBenchmark failed for %+v: %v", in, err)
@@ -638,29 +639,29 @@ func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *qf.GradingBenc
 
 // UpdateBenchmark edits a grading benchmark for an assignment
 // Access policy: Teacher of CourseID
-func (s *QuickFeedService) UpdateBenchmark(_ context.Context, in *qf.GradingBenchmark) (*qf.Void, error) {
+func (s *QuickFeedService) UpdateBenchmark(_ context.Context, in *types.GradingBenchmark) (*types.Void, error) {
 	err := s.updateBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("UpdateBenchmark failed for %+v: %v", in, err)
 		err = status.Error(codes.InvalidArgument, "failed to update benchmark")
 	}
-	return &qf.Void{}, err
+	return &types.Void{}, err
 }
 
 // DeleteBenchmark removes a grading benchmark
 // Access policy: Teacher of CourseID
-func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *qf.GradingBenchmark) (*qf.Void, error) {
+func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *types.GradingBenchmark) (*types.Void, error) {
 	err := s.deleteBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("DeleteBenchmark failed for %+v: %v", in, err)
 		err = status.Error(codes.InvalidArgument, "failed to delete benchmark")
 	}
-	return &qf.Void{}, err
+	return &types.Void{}, err
 }
 
 // CreateCriterion adds a new grading criterion for an assignment
 // Access policy: Teacher of CourseID
-func (s *QuickFeedService) CreateCriterion(_ context.Context, in *qf.GradingCriterion) (*qf.GradingCriterion, error) {
+func (s *QuickFeedService) CreateCriterion(_ context.Context, in *types.GradingCriterion) (*types.GradingCriterion, error) {
 	c, err := s.createCriterion(in)
 	if err != nil {
 		s.logger.Errorf("CreateCriterion failed for %+v: %v", in, err)
@@ -671,29 +672,29 @@ func (s *QuickFeedService) CreateCriterion(_ context.Context, in *qf.GradingCrit
 
 // UpdateCriterion edits a grading criterion for an assignment
 // Access policy: Teacher of CourseID
-func (s *QuickFeedService) UpdateCriterion(_ context.Context, in *qf.GradingCriterion) (*qf.Void, error) {
+func (s *QuickFeedService) UpdateCriterion(_ context.Context, in *types.GradingCriterion) (*types.Void, error) {
 	err := s.updateCriterion(in)
 	if err != nil {
 		s.logger.Errorf("UpdateCriterion failed for %+v: %v", in, err)
 		err = status.Error(codes.InvalidArgument, "failed to update criterion")
 	}
-	return &qf.Void{}, err
+	return &types.Void{}, err
 }
 
 // DeleteCriterion removes a grading criterion for an assignment
 // Access policy: Teacher of CourseID
-func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *qf.GradingCriterion) (*qf.Void, error) {
+func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *types.GradingCriterion) (*types.Void, error) {
 	err := s.deleteCriterion(in)
 	if err != nil {
 		s.logger.Errorf("DeleteCriterion failed for %+v: %v", in, err)
 		err = status.Error(codes.InvalidArgument, "failed to delete criterion")
 	}
-	return &qf.Void{}, err
+	return &types.Void{}, err
 }
 
 // CreateReview adds a new submission review
 // Access policy: Teacher of CourseID
-func (s *QuickFeedService) CreateReview(ctx context.Context, in *qf.ReviewRequest) (*qf.Review, error) {
+func (s *QuickFeedService) CreateReview(ctx context.Context, in *types.ReviewRequest) (*types.Review, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("CreateReview failed: authentication error: %v", err)
@@ -717,7 +718,7 @@ func (s *QuickFeedService) CreateReview(ctx context.Context, in *qf.ReviewReques
 
 // UpdateReview updates a submission review
 // Access policy: Teacher of CourseID, Author of the given Review
-func (s *QuickFeedService) UpdateReview(ctx context.Context, in *qf.ReviewRequest) (*qf.Review, error) {
+func (s *QuickFeedService) UpdateReview(ctx context.Context, in *types.ReviewRequest) (*types.Review, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateReview failed: authentication error: %v", err)
@@ -742,7 +743,7 @@ func (s *QuickFeedService) UpdateReview(ctx context.Context, in *qf.ReviewReques
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
 // with the given score.
 // Access policy: Creator of CourseID
-func (s *QuickFeedService) UpdateSubmissions(ctx context.Context, in *qf.UpdateSubmissionsRequest) (*qf.Void, error) {
+func (s *QuickFeedService) UpdateSubmissions(ctx context.Context, in *types.UpdateSubmissionsRequest) (*types.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateSubmissions failed: authentication error: %v", err)
@@ -757,12 +758,12 @@ func (s *QuickFeedService) UpdateSubmissions(ctx context.Context, in *qf.UpdateS
 		s.logger.Errorf("UpdateSubmissions failed for request %+v", in)
 		err = status.Error(codes.InvalidArgument, "failed to update submissions")
 	}
-	return &qf.Void{}, err
+	return &types.Void{}, err
 }
 
 // GetReviewers returns names of all active reviewers for a student submission
 // Access policy: Teacher of CourseID
-func (s *QuickFeedService) GetReviewers(ctx context.Context, in *qf.SubmissionReviewersRequest) (*qf.Reviewers, error) {
+func (s *QuickFeedService) GetReviewers(ctx context.Context, in *types.SubmissionReviewersRequest) (*types.Reviewers, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetReviewers failed: authentication error: %v", err)
@@ -777,12 +778,12 @@ func (s *QuickFeedService) GetReviewers(ctx context.Context, in *qf.SubmissionRe
 		s.logger.Errorf("GetReviewers failed: error fetching from database: %v", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to get reviewers")
 	}
-	return &qf.Reviewers{Reviewers: reviewers}, err
+	return &types.Reviewers{Reviewers: reviewers}, err
 }
 
 // GetAssignments returns a list of all assignments for the given course.
 // Access policy: Any User.
-func (s *QuickFeedService) GetAssignments(_ context.Context, in *qf.CourseRequest) (*qf.Assignments, error) {
+func (s *QuickFeedService) GetAssignments(_ context.Context, in *types.CourseRequest) (*types.Assignments, error) {
 	courseID := in.GetCourseID()
 	assignments, err := s.getAssignments(courseID)
 	if err != nil {
@@ -795,7 +796,7 @@ func (s *QuickFeedService) GetAssignments(_ context.Context, in *qf.CourseReques
 // UpdateAssignments updates the assignments record in the database
 // by fetching assignment information from the course's test repository.
 // Access policy: Teacher of CourseID.
-func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseRequest) (*qf.Void, error) {
+func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *types.CourseRequest) (*types.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: scm authentication error: %v", err)
@@ -811,12 +812,12 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseR
 		s.logger.Errorf("UpdateAssignments failed: %v", err)
 		return nil, status.Error(codes.NotFound, "course not found")
 	}
-	return &qf.Void{}, nil
+	return &types.Void{}, nil
 }
 
 // GetProviders returns a list of SCM providers supported by the backend.
 // Access policy: Any User.
-func (s *QuickFeedService) GetProviders(_ context.Context, _ *qf.Void) (*qf.Providers, error) {
+func (s *QuickFeedService) GetProviders(_ context.Context, _ *types.Void) (*types.Providers, error) {
 	providers := auth.GetProviders()
 	if len(providers.GetProviders()) < 1 {
 		s.logger.Error("GetProviders failed: found no enabled SCM providers")
@@ -827,7 +828,7 @@ func (s *QuickFeedService) GetProviders(_ context.Context, _ *qf.Void) (*qf.Prov
 
 // GetOrganization fetches a github organization by name.
 // Access policy: Admin
-func (s *QuickFeedService) GetOrganization(ctx context.Context, in *qf.OrgRequest) (*qf.Organization, error) {
+func (s *QuickFeedService) GetOrganization(ctx context.Context, in *types.OrgRequest) (*types.Organization, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, "github")
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: scm authentication error: %v", err)
@@ -859,7 +860,7 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *qf.OrgReques
 
 // GetRepositories returns URL strings for repositories of given type for the given course
 // Access policy: Any User.
-func (s *QuickFeedService) GetRepositories(ctx context.Context, in *qf.URLRequest) (*qf.Repositories, error) {
+func (s *QuickFeedService) GetRepositories(ctx context.Context, in *types.URLRequest) (*types.Repositories, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetRepositories failed: authentication error: %v", err)
@@ -878,21 +879,21 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *qf.URLReques
 	for _, repoType := range in.GetRepoTypes() {
 		var id uint64
 		switch repoType {
-		case qf.Repository_USER:
+		case types.Repository_USER:
 			id = usr.GetID()
-		case qf.Repository_GROUP:
+		case types.Repository_GROUP:
 			id = enrol.GetGroupID() // will be 0 if not enrolled in a group
 		}
 		repo, _ := s.getRepo(course, id, repoType)
 		// for repo == nil: will result in an empty URL string, which will be ignored by the frontend
 		urls[repoType.String()] = repo.GetHTMLURL()
 	}
-	return &qf.Repositories{URLs: urls}, nil
+	return &types.Repositories{URLs: urls}, nil
 }
 
 // IsEmptyRepo ensures that group repository is empty and can be deleted
 // Access policy: Teacher of Course ID
-func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *qf.RepositoryRequest) (*qf.Void, error) {
+func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *types.RepositoryRequest) (*types.Void, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: scm authentication error: %v", err)
@@ -914,5 +915,5 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *qf.RepositoryReq
 		}
 		return nil, status.Error(codes.FailedPrecondition, "group repository does not exist or not empty")
 	}
-	return &qf.Void{}, nil
+	return &types.Void{}, nil
 }

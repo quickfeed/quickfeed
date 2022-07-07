@@ -4,13 +4,13 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/types"
 	"gorm.io/gorm"
 )
 
 // GetTasks gets tasks based on query
-func (db *GormDB) GetTasks(query *qf.Task) ([]*qf.Task, error) {
-	var tasks []*qf.Task
+func (db *GormDB) GetTasks(query *types.Task) ([]*types.Task, error) {
+	var tasks []*types.Task
 	err := db.conn.Find(&tasks, query).Error
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (db *GormDB) GetTasks(query *qf.Task) ([]*qf.Task, error) {
 }
 
 // CreateIssues creates a batch of issues
-func (db *GormDB) CreateIssues(issues []*qf.Issue) error {
+func (db *GormDB) CreateIssues(issues []*types.Issue) error {
 	if len(issues) == 0 {
 		return nil
 	}
@@ -30,9 +30,9 @@ func (db *GormDB) CreateIssues(issues []*qf.Issue) error {
 }
 
 // SynchronizeAssignmentTasks synchronizes all tasks of each assignment in a given course. Returns created, updated and deleted tasks
-func (db *GormDB) SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint32]map[string]*qf.Task) (createdTasks, updatedTasks []*qf.Task, err error) {
-	createdTasks = []*qf.Task{}
-	updatedTasks = []*qf.Task{}
+func (db *GormDB) SynchronizeAssignmentTasks(course *types.Course, taskMap map[uint32]map[string]*types.Task) (createdTasks, updatedTasks []*types.Task, err error) {
+	createdTasks = []*types.Task{}
+	updatedTasks = []*types.Task{}
 	assignments, err := db.GetAssignmentsByCourse(course.GetID(), false)
 	if err != nil {
 		return nil, nil, err
@@ -40,16 +40,16 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint
 
 	err = db.conn.Transaction(func(tx *gorm.DB) error {
 		for _, assignment := range assignments {
-			var existingTasks []*qf.Task
-			if err := tx.Find(&existingTasks, &qf.Task{AssignmentID: assignment.GetID()}).Error; err != nil {
+			var existingTasks []*types.Task
+			if err := tx.Find(&existingTasks, &types.Task{AssignmentID: assignment.GetID()}).Error; err != nil {
 				return err // will rollback transaction
 			}
 			for _, existingTask := range existingTasks {
 				task, ok := taskMap[assignment.Order][existingTask.Name]
 				if !ok {
 					// Find issues associated with the existing task and delete them
-					var issues []*qf.Issue
-					if err = tx.Delete(issues, &qf.Issue{TaskID: existingTask.ID}).Error; err != nil {
+					var issues []*types.Issue
+					if err = tx.Delete(issues, &types.Issue{TaskID: existingTask.ID}).Error; err != nil {
 						return err // will rollback transaction
 					}
 					// Existing task in database not among the supplied tasks to synchronize.
@@ -66,8 +66,8 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint
 					existingTask.Title = task.Title
 					existingTask.Body = task.Body
 					updatedTasks = append(updatedTasks, existingTask)
-					err = tx.Model(&qf.Task{}).
-						Where(&qf.Task{ID: existingTask.GetID()}).
+					err = tx.Model(&types.Task{}).
+						Where(&types.Task{ID: existingTask.GetID()}).
 						Updates(existingTask).Error
 					if err != nil {
 						return err // will rollback transaction
@@ -102,7 +102,7 @@ func (db *GormDB) SynchronizeAssignmentTasks(course *qf.Course, taskMap map[uint
 
 // CreatePullRequest creates a pull request.
 // It is initially in the "draft" stage, signaling that it is not yet ready for review
-func (db *GormDB) CreatePullRequest(pullRequest *qf.PullRequest) error {
+func (db *GormDB) CreatePullRequest(pullRequest *types.PullRequest) error {
 	if !pullRequest.Valid() {
 		return errors.New("pull request is not valid for creation")
 	}
@@ -111,8 +111,8 @@ func (db *GormDB) CreatePullRequest(pullRequest *qf.PullRequest) error {
 }
 
 // GetPullRequest returns the pull request matching the given query
-func (db *GormDB) GetPullRequest(query *qf.PullRequest) (*qf.PullRequest, error) {
-	var pullRequest qf.PullRequest
+func (db *GormDB) GetPullRequest(query *types.PullRequest) (*types.PullRequest, error) {
+	var pullRequest types.PullRequest
 	if err := db.conn.Where(query).Last(&pullRequest).Error; err != nil {
 		return nil, err
 	}
@@ -124,12 +124,12 @@ func (db *GormDB) GetPullRequest(query *qf.PullRequest) (*qf.PullRequest, error)
 // We therefore do not delete the associated issue.
 // To resume a working state, students are expected to reopen
 // the issue that was closed from this merging, and create a new PR for it.
-func (db *GormDB) HandleMergingPR(pullRequest *qf.PullRequest) error {
+func (db *GormDB) HandleMergingPR(pullRequest *types.PullRequest) error {
 	if !pullRequest.IsApproved() {
 		return db.conn.Delete(pullRequest).Error
 	}
-	var associatedIssue *qf.Issue
-	if err := db.conn.First(associatedIssue, &qf.Issue{ID: pullRequest.GetIssueID()}).Error; err != nil {
+	var associatedIssue *types.Issue
+	if err := db.conn.First(associatedIssue, &types.Issue{ID: pullRequest.GetIssueID()}).Error; err != nil {
 		return err
 	}
 	_ = db.conn.Delete(associatedIssue).Error
@@ -137,8 +137,8 @@ func (db *GormDB) HandleMergingPR(pullRequest *qf.PullRequest) error {
 }
 
 // DeletePullRequest updates the pull request matching the given query
-func (db *GormDB) UpdatePullRequest(pullRequest *qf.PullRequest) error {
-	return db.conn.Model(&qf.PullRequest{}).
-		Where(&qf.PullRequest{ID: pullRequest.GetID()}).
+func (db *GormDB) UpdatePullRequest(pullRequest *types.PullRequest) error {
+	return db.conn.Model(&types.PullRequest{}).
+		Where(&types.PullRequest{ID: pullRequest.GetID()}).
 		Updates(pullRequest).Error
 }
