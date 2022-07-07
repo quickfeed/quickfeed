@@ -693,11 +693,14 @@ export class MockGrpcManager {
 
     // /* REPOSITORY */ //
 
-    public getRepositories(courseID: number, _types: Repository.Type[]): Promise<IGrpcResponse<Repositories>> {
+    public getRepositories(courseID: number, types: Repository.Type[]): Promise<IGrpcResponse<Repositories>> {
         // TODO
         if (!this.courses.getCoursesList().find(c => c.getId() === courseID)) {
             return this.grpcSend<Repositories>(null, new Status().setCode(2).setError('Course not found'))
         }
+        types.forEach(() => {
+            // TODO 
+        })
         //const repos = this.repositories.getRepositoriesList().filter(r => r.getCourseid() === courseID && types.includes(r.getType()))
         return this.grpcSend<Repositories>(new Repositories())
     }
@@ -717,7 +720,10 @@ export class MockGrpcManager {
         return this.grpcSend<Providers>(this.providers)
     }
 
-    public isEmptyRepo(_courseID: number, _userID: number, _groupID: number): Promise<IGrpcResponse<Void>> {
+    public isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<IGrpcResponse<Void>> {
+        if (courseID <= 0 || userID <= 0 || groupID <= 0) {
+            return this.grpcSend<Void>(null, new Status().setCode(2).setError('Invalid Arguments'))
+        }
         return this.grpcSend<Void>(true)
     }
 

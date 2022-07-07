@@ -52,7 +52,7 @@ export class Converter {
         enrollment.setState(obj.state)
 
         // TODO: handle slipdays
-        for (const _slipdays of obj.usedslipdaysList) {}
+        // for (const slipdays of obj.usedslipdaysList) {}
         if (obj.user) {
             enrollment.setUser(this.toUser(obj.user))
         }
