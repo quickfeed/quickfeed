@@ -95,9 +95,9 @@ const CourseForm = ({ editCourse }: { editCourse?: Course.AsObject }): JSX.Eleme
                     <div className="input-group-prepend">
                         <div className="input-group-text">Organization</div>
                     </div>
-                    <input className="form-control" disabled={orgFound ? true : false} onKeyUp={e => setOrgName(e.currentTarget.value)}></input>
+                    <input className="form-control" disabled={orgFound ? true : false} onKeyUp={e => setOrgName(e.currentTarget.value)} />
                     <span className={orgFound ? "btn btn-success disabled" : "btn btn-primary"} onClick={!orgFound ? () => getOrganization() : () => { return }}>
-                        {orgFound ? <i className="fa fa-check"></i> : "Find"}
+                        {orgFound ? <i className="fa fa-check" />: "Find"}
                     </span>
                 </div>
             </div>

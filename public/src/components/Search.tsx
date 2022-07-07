@@ -18,8 +18,8 @@ const Search = ({ placeholder, setQuery, className, children }: { placeholder?: 
                 type={"text"}
                 className="form-control"
                 placeholder={placeholder ? placeholder : "Search"}
-                onKeyUp={(e) => setQuery ? setQuery(e.currentTarget.value.toLowerCase()) : actions.setQuery(e.currentTarget.value.toLowerCase())}>
-            </input>
+                onKeyUp={(e) => setQuery ? setQuery(e.currentTarget.value.toLowerCase()) : actions.setQuery(e.currentTarget.value.toLowerCase())} 
+            />
             {children}
         </div>
     )
