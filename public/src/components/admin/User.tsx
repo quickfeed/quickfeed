@@ -2,7 +2,7 @@ import React from "react"
 import { User as user } from "../../../proto/qf/qf_pb"
 
 
-const User = ({ user, hidden }: { user: user.AsObject, hidden: boolean }): JSX.Element => {
+const User = ({ user }: { user: user.AsObject, hidden: boolean }): JSX.Element => {
     return (
         <>
             {user.name}

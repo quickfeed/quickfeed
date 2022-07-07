@@ -62,7 +62,7 @@ export const state: ReviewState = {
         return currentReview !== null && rootState.activeSubmission > 0 && rootState.activeCourse > 0 && currentReview.id > 0
     }),
 
-    criteriaTotal: derived((state: ReviewState, rootState: Context["state"]) => {
+    criteriaTotal: derived((_state: ReviewState, rootState: Context["state"]) => {
         let total = 0
         if (rootState.currentSubmission, rootState.activeCourse) {
             const assignment = rootState.assignments[rootState.activeCourse]?.find(a => a.id === rootState.currentSubmission?.assignmentid)

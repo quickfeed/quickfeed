@@ -3,7 +3,7 @@ import { Assignment, Submission } from "../../proto/qf/qf_pb"
 import ProgressBar, { Progress } from "../components/ProgressBar"
 import { initializeOvermind } from "./TestHelpers"
 import { Provider } from "overmind-react"
-import { render, screen } from "@testing-library/react"
+import { render } from "@testing-library/react"
 
 type ProgressBarTest = {
     desc: string,
