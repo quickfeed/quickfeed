@@ -31,7 +31,7 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion.AsObject }): JSX.El
     // manageOrShowPassed renders the ManageCriteriaStatus component if the user is a teacher, otherwise it renders a passed/failed icon
     const criteriaStatusOrPassFailIcon = isTeacher
         ? <CriteriaStatus criterion={criteria} />
-        : <i className={passed ? "fa fa-check" : "fa fa-exclamation-circle"}></i>
+        : <i className={passed ? "fa fa-check" : "fa fa-exclamation-circle"} />
 
     return (
         <>

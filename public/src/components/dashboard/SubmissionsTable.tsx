@@ -54,7 +54,7 @@ const SubmissionsTable = (): JSX.Element => {
                         <td>
                             {assignment.name}
                             {assignment.isgrouplab ?
-                                <span className="badge ml-2 float-right"><i className="fa fa-users" title="Group Assignment"></i></span> : null}
+                                <span className="badge ml-2 float-right"><i className="fa fa-users" title="Group Assignment"  /></span> : null}
                         </td>
                         <td><ProgressBar assignmentIndex={assignment.order - 1} courseID={courseID} submission={submission} type={Progress.OVERVIEW} /></td>
                         <td>{getFormattedTime(assignment.deadline)}</td>

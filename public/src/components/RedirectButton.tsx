@@ -10,7 +10,7 @@ const RedirectButton = ({ to }: { to: string }): JSX.Element => {
 
     return (
         <div className={"btn btn-dark redirectButton"} onClick={() => history.push(to)} hidden={isHidden}>
-            <i className="fa fa-arrow-left"></i>
+            <i className="fa fa-arrow-left" />
         </div>
     )
 }

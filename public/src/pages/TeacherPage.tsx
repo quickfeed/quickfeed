@@ -46,18 +46,18 @@ const TeacherPage = (): JSX.Element => {
             <Alert />
             <div className="row" hidden={history.location.pathname != root}>
                 {courseHasManualGrading && <Card {...review} />}
-                <Card {...results}></Card>
-                <Card {...groups}></Card>
-                <Card {...members}></Card>
-                <Card {...assignments}></Card>
-                <Card {...updateAssignments}></Card>
+                <Card {...results} />
+                <Card {...groups} />
+                <Card {...members} />
+                <Card {...assignments} />
+                <Card {...updateAssignments} />
             </div>
             <Switch>
-                <Route path={`/course/:id/groups`} exact component={GroupPage}></Route>
-                <Route path={"/course/:id/members"} component={Members}></Route>
-                <Route path={"/course/:id/review"} component={ReviewPage}></Route>
-                <Route path={"/course/:id/results"} component={Results}></Route>
-                <Route path={"/course/:id/assignments"} component={Assignments}></Route>
+                <Route path={`/course/:id/groups`} exact component={GroupPage} />
+                <Route path={"/course/:id/members"} component={Members} />
+                <Route path={"/course/:id/review"} component={ReviewPage} />
+                <Route path={"/course/:id/results"} component={Results} />
+                <Route path={"/course/:id/assignments"} component={Assignments} />
             </Switch>
         </div>
     )
