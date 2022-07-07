@@ -1,6 +1,6 @@
 import React from "react"
 import { useAppState } from "../overmind"
-import { Enrollment } from "../../proto/ag/ag_pb"
+import { Enrollment } from "../../proto/qf/qf_pb"
 import CourseCard from "./CourseCard"
 import Button, { ButtonType } from "./admin/Button"
 import { useHistory } from "react-router"

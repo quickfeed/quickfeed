@@ -1,5 +1,5 @@
 import { isValid } from "../Helpers"
-import { User, EnrollmentLink, Enrollment, Submission, SubmissionLink } from "../../proto/ag/ag_pb"
+import { User, EnrollmentLink, Enrollment, Submission, SubmissionLink } from "../../proto/qf/qf_pb"
 
 
 describe("User and enrollment validation", () => {

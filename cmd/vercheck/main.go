@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	pbgo   = "ag/ag.pb.go"
-	grpcpb = "ag/ag_grpc.pb.go"
+	pbgo   = "qf/qf.pb.go"
+	grpcpb = "qf/qf_grpc.pb.go"
 )
 
 func main() {

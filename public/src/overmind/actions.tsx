@@ -2,7 +2,7 @@ import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisib
 import {
     User, Enrollment, Submission, Repository, Course, SubmissionsForCourseRequest, CourseSubmissions,
     Group, GradingCriterion, Assignment, SubmissionLink, Organization, GradingBenchmark,
-} from "../../proto/ag/ag_pb"
+} from "../../proto/qf/qf_pb"
 import { Alert, UserCourseSubmissions } from "./state"
 import { IGrpcResponse } from "../GRPCManager"
 import { StatusCode } from "grpc-web"

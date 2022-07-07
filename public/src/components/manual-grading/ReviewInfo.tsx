@@ -1,5 +1,5 @@
 import React from "react"
-import { Review } from "../../../proto/ag/ag_pb"
+import { Review } from "../../../proto/qf/qf_pb"
 import { NoSubmission } from "../../consts"
 import { Color, SubmissionStatus } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"

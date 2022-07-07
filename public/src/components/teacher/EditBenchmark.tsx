@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Assignment, GradingBenchmark } from "../../../proto/ag/ag_pb"
+import { Assignment, GradingBenchmark } from "../../../proto/qf/qf_pb"
 import { Converter } from "../../convert"
 import { useActions } from "../../overmind"
 

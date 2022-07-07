@@ -28,7 +28,7 @@ import {
     Organizations,
     EnrollmentLink,
     SubmissionLink,
-} from "../proto/ag/ag_pb"
+} from "../proto/qf/qf_pb"
 import { delay } from "./Helpers"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
 import { StatusCode } from "grpc-web"

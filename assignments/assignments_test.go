@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -23,7 +23,7 @@ func TestFetchAssignments(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	course := &pb.Course{
+	course := &qf.Course{
 		Name:             "QuickFeed Test Course",
 		OrganizationPath: qfTestOrg,
 	}
@@ -46,13 +46,13 @@ func TestUpdateCriteria(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	course := &pb.Course{}
+	course := &qf.Course{}
 	admin := qtest.CreateFakeUser(t, db, 10)
 	user := qtest.CreateFakeUser(t, db, 20)
 	qtest.CreateCourse(t, db, admin, course)
 
 	// Assignment that will be updated
-	assignment := &pb.Assignment{
+	assignment := &qf.Assignment{
 		CourseID:    course.ID,
 		Name:        "Assignment 1",
 		ScriptFile:  "go.sh",
@@ -62,7 +62,7 @@ func TestUpdateCriteria(t *testing.T) {
 		IsGroupLab:  false,
 	}
 
-	assignment2 := &pb.Assignment{
+	assignment2 := &qf.Assignment{
 		CourseID:    course.ID,
 		Name:        "Assignment 2",
 		ScriptFile:  "go.sh",
@@ -72,18 +72,18 @@ func TestUpdateCriteria(t *testing.T) {
 		IsGroupLab:  false,
 	}
 
-	for _, a := range []*pb.Assignment{assignment, assignment2} {
+	for _, a := range []*qf.Assignment{assignment, assignment2} {
 		if err := db.CreateAssignment(a); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	benchmarks := []*pb.GradingBenchmark{
+	benchmarks := []*qf.GradingBenchmark{
 		{
 			ID:           1,
 			AssignmentID: assignment.ID,
 			Heading:      "Test benchmark 1",
-			Criteria: []*pb.GradingCriterion{
+			Criteria: []*qf.GradingCriterion{
 				{
 					Description: "Criterion 1",
 					BenchmarkID: 1,
@@ -100,7 +100,7 @@ func TestUpdateCriteria(t *testing.T) {
 			ID:           2,
 			AssignmentID: assignment.ID,
 			Heading:      "Test benchmark 2",
-			Criteria: []*pb.GradingCriterion{
+			Criteria: []*qf.GradingCriterion{
 				{
 					Description: "Criterion 3",
 					BenchmarkID: 2,
@@ -110,12 +110,12 @@ func TestUpdateCriteria(t *testing.T) {
 		},
 	}
 
-	benchmarks2 := []*pb.GradingBenchmark{
+	benchmarks2 := []*qf.GradingBenchmark{
 		{
 			ID:           3,
 			AssignmentID: assignment2.ID,
 			Heading:      "Test benchmark 3",
-			Criteria: []*pb.GradingCriterion{
+			Criteria: []*qf.GradingCriterion{
 				{
 					Description: "Criterion 4",
 					BenchmarkID: 3,
@@ -125,7 +125,7 @@ func TestUpdateCriteria(t *testing.T) {
 		},
 	}
 
-	for _, bms := range [][]*pb.GradingBenchmark{benchmarks, benchmarks2} {
+	for _, bms := range [][]*qf.GradingBenchmark{benchmarks, benchmarks2} {
 		for _, bm := range bms {
 			if err := db.CreateBenchmark(bm); err != nil {
 				t.Fatal(err)
@@ -135,36 +135,36 @@ func TestUpdateCriteria(t *testing.T) {
 
 	assignment.GradingBenchmarks = benchmarks
 
-	submission := &pb.Submission{
+	submission := &qf.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 	}
 
-	submission2 := &pb.Submission{
+	submission2 := &qf.Submission{
 		AssignmentID: assignment2.ID,
 		UserID:       admin.ID,
 	}
 
-	for _, s := range []*pb.Submission{submission, submission2} {
+	for _, s := range []*qf.Submission{submission, submission2} {
 		if err := db.CreateSubmission(s); err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	// Review for assignment that will be updated
-	review := &pb.Review{
+	review := &qf.Review{
 		ReviewerID:   admin.ID,
 		SubmissionID: submission.ID,
-		GradingBenchmarks: []*pb.GradingBenchmark{
+		GradingBenchmarks: []*qf.GradingBenchmark{
 			{
 				AssignmentID: assignment.ID,
 				Heading:      "Test benchmark 2",
 				Comment:      "This is a comment",
-				Criteria: []*pb.GradingCriterion{
+				Criteria: []*qf.GradingCriterion{
 					{
 						Description: "Criterion 3",
 						Comment:     "This is a comment",
-						Grade:       pb.GradingCriterion_PASSED,
+						Grade:       qf.GradingCriterion_PASSED,
 						BenchmarkID: 2,
 						Points:      1,
 					},
@@ -174,19 +174,19 @@ func TestUpdateCriteria(t *testing.T) {
 	}
 
 	// Review for assignment that will *not* be updated
-	review2 := &pb.Review{
+	review2 := &qf.Review{
 		ReviewerID:   user.ID,
 		SubmissionID: submission2.ID,
-		GradingBenchmarks: []*pb.GradingBenchmark{
+		GradingBenchmarks: []*qf.GradingBenchmark{
 			{
 				AssignmentID: assignment2.ID,
 				Heading:      "Test benchmark 2",
 				Comment:      "This is another comment",
-				Criteria: []*pb.GradingCriterion{
+				Criteria: []*qf.GradingCriterion{
 					{
 						Description: "Criterion 3",
 						Comment:     "This is another comment",
-						Grade:       pb.GradingCriterion_PASSED,
+						Grade:       qf.GradingCriterion_PASSED,
 						BenchmarkID: 3,
 						Points:      1,
 					},
@@ -195,7 +195,7 @@ func TestUpdateCriteria(t *testing.T) {
 		},
 	}
 
-	for _, r := range []*pb.Review{review, review2} {
+	for _, r := range []*qf.Review{review, review2} {
 		if err := db.CreateReview(r); err != nil {
 			t.Fatal(err)
 		}
@@ -210,10 +210,10 @@ func TestUpdateCriteria(t *testing.T) {
 	}
 
 	// Update assignments. GradingBenchmarks should not be updated
-	db.UpdateAssignments([]*pb.Assignment{assignment, assignment2})
+	db.UpdateAssignments([]*qf.Assignment{assignment, assignment2})
 
-	for _, wantReview := range []*pb.Review{review, review2} {
-		gotReview, err := db.GetReview(&pb.Review{ID: wantReview.ID})
+	for _, wantReview := range []*qf.Review{review, review2} {
+		gotReview, err := db.GetReview(&qf.Review{ID: wantReview.ID})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -223,26 +223,26 @@ func TestUpdateCriteria(t *testing.T) {
 		}
 	}
 
-	gotBenchmarks, err := db.GetBenchmarks(&pb.Assignment{ID: assignment.ID, CourseID: course.ID})
+	gotBenchmarks, err := db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if diff := cmp.Diff(benchmarks, gotBenchmarks, cmp.Options{
 		protocmp.Transform(),
-		protocmp.IgnoreFields(&pb.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
-		protocmp.IgnoreFields(&pb.GradingCriterion{}, "ID", "BenchmarkID"),
+		protocmp.IgnoreFields(&qf.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
+		protocmp.IgnoreFields(&qf.GradingCriterion{}, "ID", "BenchmarkID"),
 		protocmp.IgnoreEnums(),
 	}); diff != "" {
 		t.Errorf("GetBenchmarks() mismatch (-want +got):\n%s", diff)
 	}
 
-	updatedBenchmarks := []*pb.GradingBenchmark{
+	updatedBenchmarks := []*qf.GradingBenchmark{
 		{
 			ID:           1,
 			AssignmentID: assignment.ID,
 			Heading:      "Test benchmark 1",
-			Criteria: []*pb.GradingCriterion{
+			Criteria: []*qf.GradingCriterion{
 				{
 					Description: "Criterion 1",
 					BenchmarkID: 1,
@@ -257,7 +257,7 @@ func TestUpdateCriteria(t *testing.T) {
 	// This should delete the old benchmarks and criteria existing in the database, and return the new benchmarks
 	updateGradingCriteria(zap.NewNop().Sugar(), db, assignment)
 
-	gotBenchmarks, err = db.GetBenchmarks(&pb.Assignment{ID: assignment.ID, CourseID: course.ID})
+	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -272,10 +272,10 @@ func TestUpdateCriteria(t *testing.T) {
 	}
 
 	// Update assignments. GradingBenchmarks should be updated
-	db.UpdateAssignments([]*pb.Assignment{assignment, assignment2})
+	db.UpdateAssignments([]*qf.Assignment{assignment, assignment2})
 
 	// Benchmarks should have been updated to reflect the removal of a benchmark and a criterion
-	gotBenchmarks, err = db.GetBenchmarks(&pb.Assignment{ID: assignment.ID, CourseID: course.ID})
+	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -285,8 +285,8 @@ func TestUpdateCriteria(t *testing.T) {
 	}
 
 	// Finally check that reviews are unaffected
-	for _, wantReview := range []*pb.Review{review, review2} {
-		gotReview, err := db.GetReview(&pb.Review{ID: wantReview.ID})
+	for _, wantReview := range []*qf.Review{review, review2} {
+		gotReview, err := db.GetReview(&qf.Review{ID: wantReview.ID})
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -1,6 +1,6 @@
 import React from "react"
 import { useAppState } from "../../overmind"
-import { Assignment, Submission } from "../../../proto/ag/ag_pb"
+import { Assignment, Submission } from "../../../proto/qf/qf_pb"
 import ProgressBar, { Progress } from "../ProgressBar"
 import NavBarLink, { NavLink } from "./NavBarLink"
 import { useHistory } from "react-router"

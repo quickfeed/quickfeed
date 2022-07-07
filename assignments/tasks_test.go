@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/log"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
@@ -24,7 +24,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	course := &pb.Course{
+	course := &qf.Course{
 		Name:             "QuickFeed Test Course",
 		OrganizationPath: qfTestOrg,
 		Provider:         "github",
@@ -42,7 +42,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	repos, err := s.GetRepositories(ctx, &pb.Organization{Path: course.OrganizationPath})
+	repos, err := s.GetRepositories(ctx, &qf.Organization{Path: course.OrganizationPath})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +117,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 
 func repoFn(repos []*scm.Repository, fn func(repo *scm.Repository)) {
 	for _, repo := range repos {
-		if pb.RepoType(repo.Path).IsCourseRepo() {
+		if qf.RepoType(repo.Path).IsCourseRepo() {
 			continue
 		}
 		fn(repo)

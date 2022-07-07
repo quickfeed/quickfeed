@@ -66,18 +66,18 @@ proto_$(1):
 	--go-patch_out=plugin=go-grpc,paths=source_relative:. \
 	--js_out=import_style=commonjs:$(1)/proto \
 	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(1)/proto \
-	ag/ag.proto kit/score/score.proto
+	qf/qf.proto kit/score/score.proto
 
 	$$(info Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529))
 	@$(sedi) '/patch_go_pb/d' \
 	$(1)/proto/kit/score/score_pb.js \
 	$(1)/proto/kit/score/score_pb.d.ts \
-	$(1)/proto/ag/ag_pb.js \
-	$(1)/proto/ag/ag_pb.d.ts \
-	$(1)/proto/ag/AgServiceClientPb.ts
+	$(1)/proto/qf/qf_pb.js \
+	$(1)/proto/qf/qf_pb.d.ts \
+	$(1)/proto/qf/QfServiceClientPb.ts
 
 	$$(info Compiling proto for $(1))
-	@cd $(1) && npm run tsc -- proto/ag/AgServiceClientPb.ts
+	@cd $(1) && npm run tsc -- proto/qf/QfServiceClientPb.ts
 endef
 
 dirs := public
@@ -96,7 +96,7 @@ proto-swift:
 	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
 	--swift_out=:$(proto-swift-path) \
 	--grpc-swift_out=$(proto-swift-path) \
-	ag/ag.proto
+	qf/qf.proto
 
 brew:
 ifeq (, $(shell which brew))
@@ -120,10 +120,10 @@ protoset:
 	-I . \
 	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
 	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
-	--proto_path=ag \
-	--descriptor_set_out=ag/ag.protoset \
+	--proto_path=qf \
+	--descriptor_set_out=qf/qf.protoset \
 	--include_imports \
-	ag/ag.proto
+	qf/qf.proto
 
 test:
 	@go clean -testcache ./...

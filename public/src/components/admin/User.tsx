@@ -1,5 +1,5 @@
 import React from "react"
-import { User as user } from "../../../proto/ag/ag_pb"
+import { User as user } from "../../../proto/qf/qf_pb"
 
 
 const User = ({ user, hidden }: { user: user.AsObject, hidden: boolean }): JSX.Element => {

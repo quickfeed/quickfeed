@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 )
@@ -127,7 +127,7 @@ func TestCreateIssue(t *testing.T) {
 	// Creating new Client
 	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
 
-	issue, cleanup := createIssue(t, s, qfTestOrg, ag.StudentRepoName(qfTestUser))
+	issue, cleanup := createIssue(t, s, qfTestOrg, qf.StudentRepoName(qfTestUser))
 	defer cleanup()
 
 	if !(issue.Title == "Test Issue" && issue.Body == "Test Body") {
@@ -147,7 +147,7 @@ func TestGetIssues(t *testing.T) {
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
 		Owner: qfTestOrg,
-		Path:  ag.StudentRepoName(qfTestUser),
+		Path:  qf.StudentRepoName(qfTestUser),
 	}
 
 	wantIssueIDs := []int{}
@@ -183,7 +183,7 @@ func TestGetIssue(t *testing.T) {
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
 		Owner: qfTestOrg,
-		Path:  ag.StudentRepoName(qfTestUser),
+		Path:  qf.StudentRepoName(qfTestUser),
 	}
 
 	wantIssue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
@@ -212,7 +212,7 @@ func TestUpdateIssue(t *testing.T) {
 
 	opt := &scm.IssueOptions{
 		Organization: qfTestOrg,
-		Repository:   ag.StudentRepoName(qfTestUser),
+		Repository:   qf.StudentRepoName(qfTestUser),
 		Title:        "Updated Issue",
 		Body:         "Updated Issue Body",
 	}
@@ -262,7 +262,7 @@ func TestCreateIssueComment(t *testing.T) {
 	body := "Test"
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,
-		Repository:   ag.StudentRepoName(qfTestUser),
+		Repository:   qf.StudentRepoName(qfTestUser),
 		Body:         body,
 	}
 
@@ -285,7 +285,7 @@ func TestUpdateIssueComment(t *testing.T) {
 	body := "Issue Comment"
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,
-		Repository:   ag.StudentRepoName(qfTestUser),
+		Repository:   qf.StudentRepoName(qfTestUser),
 		Body:         body,
 	}
 

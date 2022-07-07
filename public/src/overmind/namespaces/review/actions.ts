@@ -1,5 +1,5 @@
 import { Context } from '../..'
-import { GradingBenchmark, GradingCriterion, Review } from '../../../../proto/ag/ag_pb'
+import { GradingBenchmark, GradingCriterion, Review } from '../../../../proto/qf/qf_pb'
 import { Converter } from '../../../convert'
 import { Color, isAuthor, isCourseCreator } from '../../../Helpers'
 import { success } from '../../actions'

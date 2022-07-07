@@ -1,6 +1,6 @@
 import React from "react"
 import { useHistory } from "react-router"
-import { Enrollment } from "../../../proto/ag/ag_pb"
+import { Enrollment } from "../../../proto/qf/qf_pb"
 import { Status } from "../../consts"
 import { isStudent, isTeacher } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"

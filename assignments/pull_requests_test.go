@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -17,8 +17,8 @@ func TestGetNextReviewer(t *testing.T) {
 	teacherReviewCounter := make(countMap)
 	groupReviewCounter := make(countMap)
 	IDs := []uint64{1, 2, 3, 4}
-	teachers := []*pb.User{{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}}
-	students := []*pb.User{{ID: 1}, {ID: 2}, {ID: 3}}
+	teachers := []*qf.User{{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}}
+	students := []*qf.User{{ID: 1}, {ID: 2}, {ID: 3}}
 	for _, ID := range IDs {
 		for i := 0; i < len(teachers)*5; i++ {
 			teacherReviewCounter.initialize(ID)
@@ -31,7 +31,7 @@ func TestGetNextReviewer(t *testing.T) {
 
 		// Adding a new teacher.
 		// Teacher is expected to be picked as reviewer len(teachers)-1 times.
-		wantTeacher := &pb.User{ID: 6}
+		wantTeacher := &qf.User{ID: 6}
 		teachers = append(teachers, wantTeacher)
 		for i := 0; i < len(teachers)-1; i++ {
 			teacherReviewCounter.initialize(ID)
@@ -53,7 +53,7 @@ func TestGetNextReviewer(t *testing.T) {
 
 		// Adding a new student
 		// Student is expected to be picked as reviewer len(student)-1 times.
-		wantStudent := &pb.User{ID: 4}
+		wantStudent := &qf.User{ID: 4}
 		students = append(students, wantStudent)
 		for i := 0; i < len(students)-1; i++ {
 			groupReviewCounter.initialize(ID)
@@ -92,7 +92,7 @@ func TestPublishFeedbackComment(t *testing.T) {
 	// TODO(meling) Fix test to CreateIssue and CreateIssueComment to get commentID
 	opt := &scm.IssueCommentOptions{
 		Organization: qfTestOrg,
-		Repository:   pb.StudentRepoName(qfTestUser),
+		Repository:   qf.StudentRepoName(qfTestUser),
 		Body:         body,
 		CommentID:    0,
 	}
