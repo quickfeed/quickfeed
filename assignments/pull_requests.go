@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/qf/types"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
@@ -27,7 +27,7 @@ var (
 
 // AssignReviewers assigns reviewers to a group repository pull request.
 // It assigns one other group member and one course teacher as reviewers.
-func AssignReviewers(ctx context.Context, sc scm.SCM, db database.Database, course *types.Course, repo *types.Repository, pullRequest *types.PullRequest) error {
+func AssignReviewers(ctx context.Context, sc scm.SCM, db database.Database, course *qf.Course, repo *qf.Repository, pullRequest *qf.PullRequest) error {
 	teacherReviewer, err := getNextTeacherReviewer(db, course)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func AssignReviewers(ctx context.Context, sc scm.SCM, db database.Database, cour
 // getNextReviewer gets the next reviewer from either teacherReviewCounter or studentReviewCounter,
 // based on whoever in total has been assigned to the least amount of pull requests.
 // It is simple, and does not account for how many current review requests any user has.
-func getNextReviewer(users []*types.User, reviewCounter map[uint64]int) *types.User {
+func getNextReviewer(users []*qf.User, reviewCounter map[uint64]int) *qf.User {
 	userWithLowestCount := users[0]
 	lowestCount := reviewCounter[userWithLowestCount.GetID()]
 	for _, user := range users {
@@ -77,7 +77,7 @@ func getNextReviewer(users []*types.User, reviewCounter map[uint64]int) *types.U
 }
 
 // getNextTeacherReviewer gets the teacher with the least total reviews.
-func getNextTeacherReviewer(db database.Database, course *types.Course) (*types.User, error) {
+func getNextTeacherReviewer(db database.Database, course *qf.Course) (*qf.User, error) {
 	teachers, err := db.GetCourseTeachers(course)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get teachers from database: %w", err)
@@ -88,7 +88,7 @@ func getNextTeacherReviewer(db database.Database, course *types.Course) (*types.
 }
 
 // getNextStudentReviewer gets the student in a group with the least total reviews.
-func getNextStudentReviewer(db database.Database, groupID, ownerID uint64) (*types.User, error) {
+func getNextStudentReviewer(db database.Database, groupID, ownerID uint64) (*qf.User, error) {
 	group, err := db.GetGroup(groupID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get group from database: %w", err)

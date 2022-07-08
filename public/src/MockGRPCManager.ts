@@ -15,7 +15,9 @@ import {
     User,
     Users,
     Assignment,
-} from "../proto/qf/types/types_pb"
+    EnrollmentLink,
+    SubmissionLink,
+} from "../proto/qf/types_pb"
 import {
     AuthorizationResponse,
     CourseSubmissions,
@@ -28,9 +30,7 @@ import {
     Void,
     Reviewers,
     Organizations,
-    EnrollmentLink,
-    SubmissionLink,
-} from "../proto/qf/types/requests_pb"
+} from "../proto/qf/requests_pb"
 import { delay } from "./Helpers"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
 import { StatusCode } from "grpc-web"
@@ -701,7 +701,7 @@ export class MockGrpcManager {
             return this.grpcSend<Repositories>(null, new Status().setCode(2).setError('Course not found'))
         }
         types.forEach(() => {
-            // TODO 
+            // TODO
         })
         //const repos = this.repositories.getRepositoriesList().filter(r => r.getCourseid() === courseID && types.includes(r.getType()))
         return this.grpcSend<Repositories>(new Repositories())

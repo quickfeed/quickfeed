@@ -4,27 +4,27 @@ import (
 	"testing"
 
 	"github.com/quickfeed/quickfeed/internal/rand"
-	"github.com/quickfeed/quickfeed/qf/types"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 // Testdata copied from run_tests_test.go (since they are in different packages)
 func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *RunData {
-	repo := types.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
+	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
-	types.SetAccessToken(courseID, accessToken)
+	qf.SetAccessToken(courseID, accessToken)
 	runData := &RunData{
-		Course: &types.Course{
+		Course: &qf.Course{
 			ID:   courseID,
 			Code: "DAT320",
 		},
-		Assignment: &types.Assignment{
+		Assignment: &qf.Assignment{
 			Name:             "lab1",
 			ScriptFile:       scriptTemplate,
 			ContainerTimeout: 1,
 		},
-		Repo: &types.Repository{
+		Repo: &qf.Repository{
 			HTMLURL:  repo.StudentRepoURL(userName),
-			RepoType: types.Repository_USER,
+			RepoType: qf.Repository_USER,
 		},
 		JobOwner: "muggles",
 		CommitID: "deadbeef",

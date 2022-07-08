@@ -7,32 +7,32 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/ci"
-	"github.com/quickfeed/quickfeed/qf/types"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 const maxContainers = 10
 
 // rebuildSubmission rebuilds the given assignment and submission.
-func (s *QuickFeedService) rebuildSubmission(request *types.RebuildRequest) (*types.Submission, error) {
-	submission, err := s.db.GetSubmission(&types.Submission{ID: request.GetSubmissionID()})
+func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) (*qf.Submission, error) {
+	submission, err := s.db.GetSubmission(&qf.Submission{ID: request.GetSubmissionID()})
 	if err != nil {
 		return nil, err
 	}
-	assignment, course, err := s.getAssignmentWithCourse(&types.Assignment{ID: request.AssignmentID}, false)
+	assignment, course, err := s.getAssignmentWithCourse(&qf.Assignment{ID: request.AssignmentID}, false)
 	if err != nil {
 		return nil, err
 	}
 	name := s.lookupName(submission)
 
-	var repo *types.Repository
+	var repo *qf.Repository
 	if assignment.IsGroupLab {
 		s.logger.Debugf("Rebuilding submission %d for group(%d): %s, assignment: %+v, repo: %s",
 			submission.GetID(), submission.GetGroupID(), name, assignment, repo.GetHTMLURL())
-		repo, err = s.getRepo(course, submission.GetGroupID(), types.Repository_GROUP)
+		repo, err = s.getRepo(course, submission.GetGroupID(), qf.Repository_GROUP)
 	} else {
 		s.logger.Debugf("Rebuilding submission %d for user(%d): %s, assignment: %+v, repo: %s",
 			submission.GetID(), submission.GetUserID(), name, assignment, repo.GetHTMLURL())
-		repo, err = s.getRepo(course, submission.GetUserID(), types.Repository_USER)
+		repo, err = s.getRepo(course, submission.GetUserID(), qf.Repository_USER)
 	}
 	if err != nil {
 		return nil, err
@@ -59,11 +59,11 @@ func (s *QuickFeedService) rebuildSubmission(request *types.RebuildRequest) (*ty
 	return submission, nil
 }
 
-func (s *QuickFeedService) rebuildSubmissions(request *types.RebuildRequest) error {
-	if _, err := s.db.GetAssignment(&types.Assignment{ID: request.AssignmentID}); err != nil {
+func (s *QuickFeedService) rebuildSubmissions(request *qf.RebuildRequest) error {
+	if _, err := s.db.GetAssignment(&qf.Assignment{ID: request.AssignmentID}); err != nil {
 		return err
 	}
-	submissions, err := s.db.GetSubmissions(&types.Submission{AssignmentID: request.AssignmentID})
+	submissions, err := s.db.GetSubmissions(&qf.Submission{AssignmentID: request.AssignmentID})
 	if err != nil {
 		return err
 	}
@@ -76,9 +76,9 @@ func (s *QuickFeedService) rebuildSubmissions(request *types.RebuildRequest) err
 	var wg sync.WaitGroup
 	wg.Add(len(submissions))
 	for _, submission := range submissions {
-		rebuildReq := &types.RebuildRequest{
+		rebuildReq := &qf.RebuildRequest{
 			AssignmentID: request.AssignmentID,
-			RebuildType:  &types.RebuildRequest_SubmissionID{SubmissionID: submission.GetID()},
+			RebuildType:  &qf.RebuildRequest_SubmissionID{SubmissionID: submission.GetID()},
 		}
 		// the counting semaphore limits concurrency to maxContainers
 		go func() {
@@ -101,7 +101,7 @@ func (s *QuickFeedService) rebuildSubmissions(request *types.RebuildRequest) err
 	return nil
 }
 
-func (s *QuickFeedService) lookupName(submission *types.Submission) string {
+func (s *QuickFeedService) lookupName(submission *qf.Submission) string {
 	if submission.GetGroupID() > 0 {
 		group, _ := s.db.GetGroup(submission.GetGroupID())
 		return group.GetName()

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/quickfeed/quickfeed/kit/score"
-	"github.com/quickfeed/quickfeed/qf/types"
+	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -52,21 +52,21 @@ func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 	}
 
 	if err := conn.AutoMigrate(
-		&types.User{},
-		&types.RemoteIdentity{},
-		&types.Course{},
-		&types.Enrollment{},
-		&types.Assignment{},
-		&types.Submission{},
-		&types.Group{},
-		&types.Repository{},
-		&types.UsedSlipDays{},
-		&types.GradingBenchmark{},
-		&types.GradingCriterion{},
-		&types.Review{},
-		&types.Issue{},
-		&types.Task{},
-		&types.PullRequest{},
+		&qf.User{},
+		&qf.RemoteIdentity{},
+		&qf.Course{},
+		&qf.Enrollment{},
+		&qf.Assignment{},
+		&qf.Submission{},
+		&qf.Group{},
+		&qf.Repository{},
+		&qf.UsedSlipDays{},
+		&qf.GradingBenchmark{},
+		&qf.GradingCriterion{},
+		&qf.Review{},
+		&qf.Issue{},
+		&qf.Task{},
+		&qf.PullRequest{},
 		&score.BuildInfo{},
 		&score.Score{},
 	); err != nil {
@@ -79,8 +79,8 @@ func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 ///  Remote Identities ///
 
 // CreateUserFromRemoteIdentity creates new user record from remote identity, sets user with ID 1 as admin.
-func (db *GormDB) CreateUserFromRemoteIdentity(user *types.User, remoteIdentity *types.RemoteIdentity) error {
-	user.RemoteIdentities = []*types.RemoteIdentity{remoteIdentity}
+func (db *GormDB) CreateUserFromRemoteIdentity(user *qf.User, remoteIdentity *qf.RemoteIdentity) error {
+	user.RemoteIdentities = []*qf.RemoteIdentity{remoteIdentity}
 	if err := db.conn.Create(&user).Error; err != nil {
 		return err
 	}
@@ -98,12 +98,12 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *types.User, remoteIdentity 
 func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, remoteID uint64, accessToken string) error {
 	var count int64
 	if err := db.conn.
-		Model(&types.RemoteIdentity{}).
-		Where(&types.RemoteIdentity{
+		Model(&qf.RemoteIdentity{}).
+		Where(&qf.RemoteIdentity{
 			Provider: provider,
 			RemoteID: remoteID,
 		}).
-		Not(&types.RemoteIdentity{
+		Not(&qf.RemoteIdentity{
 			UserID: uid,
 		}).
 		Count(&count).Error; err != nil {
@@ -113,21 +113,21 @@ func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, r
 		return ErrDuplicateIdentity
 	}
 
-	var remoteIdentity types.RemoteIdentity
+	var remoteIdentity qf.RemoteIdentity
 	return db.conn.
-		Where(types.RemoteIdentity{Provider: provider, RemoteID: remoteID, UserID: uid}).
-		Assign(types.RemoteIdentity{AccessToken: accessToken}).
+		Where(qf.RemoteIdentity{Provider: provider, RemoteID: remoteID, UserID: uid}).
+		Assign(qf.RemoteIdentity{AccessToken: accessToken}).
 		FirstOrCreate(&remoteIdentity).Error
 }
 
 // UpdateAccessToken refreshes the token info for the given remote identity.
-func (db *GormDB) UpdateAccessToken(remote *types.RemoteIdentity) error {
+func (db *GormDB) UpdateAccessToken(remote *qf.RemoteIdentity) error {
 	tx := db.conn.Begin()
 
 	// Get the remote identity.
-	var remoteIdentity types.RemoteIdentity
+	var remoteIdentity qf.RemoteIdentity
 	if err := tx.
-		Where(&types.RemoteIdentity{
+		Where(&qf.RemoteIdentity{
 			Provider: remote.Provider,
 			RemoteID: remote.RemoteID,
 		}).
@@ -149,16 +149,16 @@ func (db *GormDB) UpdateAccessToken(remote *types.RemoteIdentity) error {
 
 // Update the access token cache for courses for which the user is course creator.
 // The cache allows easy access to the access token via the Course type.
-func (db *GormDB) updateCourseAccessTokensIfCourseCreator(remoteIdentity *types.RemoteIdentity) error {
+func (db *GormDB) updateCourseAccessTokensIfCourseCreator(remoteIdentity *qf.RemoteIdentity) error {
 	userID := remoteIdentity.GetUserID()
-	enrollments, err := db.GetEnrollmentsByUser(userID, types.Enrollment_TEACHER)
+	enrollments, err := db.GetEnrollmentsByUser(userID, qf.Enrollment_TEACHER)
 	if err != nil {
 		return err
 	}
 	for _, enrollment := range enrollments {
 		course := enrollment.GetCourse()
 		if course.GetCourseCreatorID() == userID {
-			types.SetAccessToken(course.GetID(), remoteIdentity.AccessToken)
+			qf.SetAccessToken(course.GetID(), remoteIdentity.AccessToken)
 		}
 	}
 	return nil
@@ -166,7 +166,7 @@ func (db *GormDB) updateCourseAccessTokensIfCourseCreator(remoteIdentity *types.
 
 // updateCourseAccessTokenIfEmpty updates the access token cache for the course, if the course has no cached access token.
 // The cache allows easy access to the access token via the Course type.
-func (db *GormDB) updateCourseAccessTokenIfEmpty(course *types.Course) error {
+func (db *GormDB) updateCourseAccessTokenIfEmpty(course *qf.Course) error {
 	existingToken := course.GetAccessToken()
 	if existingToken != "" {
 		// already cached
@@ -182,7 +182,7 @@ func (db *GormDB) updateCourseAccessTokenIfEmpty(course *types.Course) error {
 		return fmt.Errorf("failed to get course creator's '%d' access token for %s: %w", course.GetCourseCreatorID(), course.GetProvider(), err)
 	}
 	// update the access token cache
-	types.SetAccessToken(course.GetID(), accessToken)
+	qf.SetAccessToken(course.GetID(), accessToken)
 	return nil
 }
 

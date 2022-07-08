@@ -12,7 +12,6 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	logq "github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qf/types"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 
@@ -36,7 +35,7 @@ func init() {
 	}
 
 	// On Windows, mime types are read from the registry, which often has
-	// outdated content types. This enforces that the correct mime types
+	// outdated content qf. This enforces that the correct mime types
 	// are used on all platforms.
 	mustAddExtensionType(".html", "text/html")
 	mustAddExtensionType(".css", "text/css")
@@ -47,9 +46,9 @@ func init() {
 
 	reg.MustRegister(
 		grpcMetrics,
-		types.AgFailedMethodsMetric,
-		types.AgMethodSuccessRateMetric,
-		types.AgResponseTimeByMethodsMetric,
+		qf.AgFailedMethodsMetric,
+		qf.AgMethodSuccessRateMetric,
+		qf.AgResponseTimeByMethodsMetric,
 	)
 }
 
@@ -102,7 +101,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to start tcp listener: %v\n", err)
 	}
-	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), types.Interceptor(logger))
+	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
 	grpcServer := grpc.NewServer(opt)
 	// Create a HTTP server for prometheus.
 	httpServer := &http.Server{

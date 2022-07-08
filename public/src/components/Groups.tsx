@@ -1,5 +1,5 @@
 import React from "react"
-import { Group } from "../../proto/qf/types/types_pb"
+import { Group } from "../../proto/qf/types_pb"
 import { getCourseID, hasEnrollments, isApprovedGroup, isPendingGroup } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import GroupForm from "./group/GroupForm"

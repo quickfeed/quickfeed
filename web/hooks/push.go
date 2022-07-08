@@ -12,7 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/log"
-	"github.com/quickfeed/quickfeed/qf/types"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -94,7 +94,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 // If successful, it then finds the relevant task, and uses it to retrieve the relevant task score.
 // If a passing score is reached, it assigns reviewers to the pull request.
 // It also uses the test results and task to generate a feedback comment for the pull request.
-func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results *score.Results, assignment *types.Assignment, course *types.Course, repo *types.Repository) {
+func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results *score.Results, assignment *qf.Assignment, course *qf.Course, repo *qf.Repository) {
 	wh.logger.Debugf("Attempting to find pull request for ref: %s, in repository: %s",
 		payload.GetRef(), payload.GetRepo().GetFullName())
 
@@ -153,8 +153,8 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 }
 
 // handlePullRequestPushPayload retrieves the pull request and task name associated with it from an event payload.
-func (wh GitHubWebHook) handlePullRequestPushPayload(payload *github.PushEvent) (*types.PullRequest, string, error) {
-	pullRequest, err := wh.db.GetPullRequest(&types.PullRequest{
+func (wh GitHubWebHook) handlePullRequestPushPayload(payload *github.PushEvent) (*qf.PullRequest, string, error) {
+	pullRequest, err := wh.db.GetPullRequest(&qf.PullRequest{
 		SourceBranch:    branchName(payload.GetRef()),
 		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
 	})
@@ -178,7 +178,7 @@ func (wh GitHubWebHook) handlePullRequestPushPayload(payload *github.PushEvent) 
 // extractAssignments extracts information from the push payload from github
 // and determines the assignments that have been changed in this commit by
 // querying the database based on the lab name.
-func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *types.Course) []*types.Assignment {
+func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *qf.Course) []*qf.Assignment {
 	modifiedAssignments := make(map[string]bool)
 	for _, commit := range payload.Commits {
 		extractChanges(commit.Modified, modifiedAssignments)
@@ -186,10 +186,10 @@ func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *ty
 		extractChanges(commit.Removed, modifiedAssignments)
 	}
 
-	var assignments []*types.Assignment
+	var assignments []*qf.Assignment
 	for name := range modifiedAssignments {
 		// get assignment based on course id and assignment name
-		assignment, err := wh.db.GetAssignment(&types.Assignment{Name: name, CourseID: course.GetID()})
+		assignment, err := wh.db.GetAssignment(&qf.Assignment{Name: name, CourseID: course.GetID()})
 		if err != nil {
 			wh.logger.Errorf("Could not find assignment '%s' for course %d in database: %v", name, course.GetID(), err)
 			continue
@@ -200,7 +200,7 @@ func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *ty
 }
 
 // runAssignmentTests runs the tests for the given assignment pushed to repo.
-func (wh GitHubWebHook) runAssignmentTests(assignment *types.Assignment, repo *types.Repository, course *types.Course, payload *github.PushEvent) *score.Results {
+func (wh GitHubWebHook) runAssignmentTests(assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) *score.Results {
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
@@ -232,7 +232,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *types.Assignment, repo *t
 // updateLastActivityDate sets a current date as a last activity date of the student
 // on each new push to the student repository.
 func (wh GitHubWebHook) updateLastActivityDate(userID, courseID uint64) {
-	query := &types.Enrollment{
+	query := &qf.Enrollment{
 		UserID:           userID,
 		CourseID:         courseID,
 		LastActivityDate: time.Now().Format("02 Jan"),

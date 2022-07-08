@@ -1,4 +1,4 @@
-import { Course, GradingBenchmark } from "../../proto/qf/types/types_pb"
+import { Course, GradingBenchmark } from "../../proto/qf/types_pb"
 import { MockGrpcManager } from "../MockGRPCManager"
 
 // The functionality tested here is only used in the MockGRPCManager class.

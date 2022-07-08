@@ -15,7 +15,7 @@ import {
     Submissions,
     User,
     Users,
-} from "../proto/qf/types/types_pb"
+} from "../proto/qf/types_pb"
 import {
     AuthorizationResponse,
     CourseRequest,
@@ -40,8 +40,8 @@ import {
     URLRequest,
     Void,
     Reviewers,
-} from "../proto/qf/types/requests_pb"
-import { QuickFeedServiceClient } from "../proto/qf/QfServiceClientPb"
+} from "../proto/qf/requests_pb"
+import { QuickFeedServiceClient } from "../proto/qf/QuickfeedServiceClientPb"
 
 export interface IGrpcResponse<T> {
     status: Status

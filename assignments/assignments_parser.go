@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/quickfeed/quickfeed/qf/types"
+	"github.com/quickfeed/quickfeed/qf"
 	"gopkg.in/yaml.v2"
 )
 
@@ -25,7 +25,7 @@ type assignmentData struct {
 	ContainerTimeout uint32 `yaml:"containertimeout"`
 }
 
-func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint64) (*types.Assignment, error) {
+func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint64) (*qf.Assignment, error) {
 	var newAssignment assignmentData
 	err := yaml.Unmarshal(contents, &newAssignment)
 	if err != nil {
@@ -42,7 +42,7 @@ func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint
 	// AssignmentID field from the parsed yaml is used to set Order, not assignment ID,
 	// or it will cause a database constraint violation (IDs must be unique)
 	// The Name field below is the folder name of the assignment.
-	assignment := &types.Assignment{
+	assignment := &qf.Assignment{
 		CourseID:         courseID,
 		Deadline:         FixDeadline(newAssignment.Deadline),
 		Name:             assignmentName,
@@ -57,7 +57,7 @@ func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint
 }
 
 func FixDeadline(in string) string {
-	wantLayout := types.TimeLayout
+	wantLayout := qf.TimeLayout
 	acceptedLayouts := []string{
 		"2006-1-2T15:04:05",
 		"2006-1-2 15:04:05",

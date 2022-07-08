@@ -12,7 +12,6 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qf/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -137,7 +136,7 @@ func main() {
 	saveApproveSheet(*courseCode, sheetName, approvedMap)
 }
 
-func getSubmissions(courseCode string, year int, userName string) *types.CourseSubmissions {
+func getSubmissions(courseCode string, year int, userName string) *qf.CourseSubmissions {
 	authToken := os.Getenv("QUICKFEED_AUTH_TOKEN")
 	if authToken == "" {
 		log.Fatalln("QUICKFEED_AUTH_TOKEN is not set")
@@ -153,7 +152,7 @@ func getSubmissions(courseCode string, year int, userName string) *types.CourseS
 	defer cancel()
 	ctx = metadata.NewOutgoingContext(ctx, client.md)
 
-	request := &types.CourseUserRequest{
+	request := &qf.CourseUserRequest{
 		CourseCode: courseCode,
 		CourseYear: uint32(year),
 		UserLogin:  userName,
@@ -163,7 +162,7 @@ func getSubmissions(courseCode string, year int, userName string) *types.CourseS
 		log.Fatal(err)
 	}
 
-	courses, err := client.GetCoursesByUser(ctx, &types.EnrollmentStatusRequest{UserID: userInfo.GetID()})
+	courses, err := client.GetCoursesByUser(ctx, &qf.EnrollmentStatusRequest{UserID: userInfo.GetID()})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -182,9 +181,9 @@ func getSubmissions(courseCode string, year int, userName string) *types.CourseS
 	// ERROR   web/quickfeed_service.go:541   GetSubmissionsByCourse failed: user quickfeed-uis is not teacher or submission author
 	submissions, err := client.GetSubmissionsByCourse(
 		ctx,
-		&types.SubmissionsForCourseRequest{
+		&qf.SubmissionsForCourseRequest{
 			CourseID: courseID,
-			Type:     types.SubmissionsForCourseRequest_ALL,
+			Type:     qf.SubmissionsForCourseRequest_ALL,
 		},
 	)
 	if err != nil {

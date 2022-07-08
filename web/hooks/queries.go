@@ -3,11 +3,11 @@ package hooks
 import (
 	"fmt"
 
-	"github.com/quickfeed/quickfeed/qf/types"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
-func (wh GitHubWebHook) getRepository(repoID int64) (*types.Repository, error) {
-	repos, err := wh.db.GetRepositories(&types.Repository{RepositoryID: uint64(repoID)})
+func (wh GitHubWebHook) getRepository(repoID int64) (*qf.Repository, error) {
+	repos, err := wh.db.GetRepositories(&qf.Repository{RepositoryID: uint64(repoID)})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repository by remote ID %d: %w", repoID, err)
 	}
@@ -17,8 +17,8 @@ func (wh GitHubWebHook) getRepository(repoID int64) (*types.Repository, error) {
 	return repos[0], nil
 }
 
-func (wh GitHubWebHook) getRepositoryWithIssues(repoID int64) (*types.Repository, error) {
-	repos, err := wh.db.GetRepositoriesWithIssues(&types.Repository{RepositoryID: uint64(repoID)})
+func (wh GitHubWebHook) getRepositoryWithIssues(repoID int64) (*qf.Repository, error) {
+	repos, err := wh.db.GetRepositoriesWithIssues(&qf.Repository{RepositoryID: uint64(repoID)})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repository by remote ID %d: %w", repoID, err)
 	}
@@ -28,8 +28,8 @@ func (wh GitHubWebHook) getRepositoryWithIssues(repoID int64) (*types.Repository
 	return repos[0], nil
 }
 
-func (wh GitHubWebHook) getTask(taskID uint64) (*types.Task, error) {
-	tasks, err := wh.db.GetTasks(&types.Task{ID: taskID})
+func (wh GitHubWebHook) getTask(taskID uint64) (*qf.Task, error) {
+	tasks, err := wh.db.GetTasks(&qf.Task{ID: taskID})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get task by ID %d: %w", taskID, err)
 	}

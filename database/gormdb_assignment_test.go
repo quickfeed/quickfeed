@@ -6,7 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
-	"github.com/quickfeed/quickfeed/qf/types"
+	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
@@ -20,7 +20,7 @@ func TestGormDBGetAssignment(t *testing.T) {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 
-	if _, err := db.GetAssignment(&types.Assignment{ID: 10}); err != gorm.ErrRecordNotFound {
+	if _, err := db.GetAssignment(&qf.Assignment{ID: 10}); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 }
@@ -29,7 +29,7 @@ func TestGormDBCreateAssignmentNoRecord(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	assignment := types.Assignment{
+	assignment := qf.Assignment{
 		CourseID: 1,
 		Name:     "Lab 1",
 	}
@@ -45,9 +45,9 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	qtest.CreateCourse(t, db, admin, &types.Course{})
+	qtest.CreateCourse(t, db, admin, &qf.Course{})
 
-	gotAssignment := &types.Assignment{
+	gotAssignment := &qf.Assignment{
 		CourseID: 1,
 		Order:    1,
 	}
@@ -70,7 +70,7 @@ func TestGormDBCreateAssignment(t *testing.T) {
 		t.Errorf("CreateAssignment() mismatch (-wantAssignment, +gotAssignment):\n%s", diff)
 	}
 
-	if _, err = db.GetAssignment(&types.Assignment{ID: 1}); err != nil {
+	if _, err = db.GetAssignment(&qf.Assignment{ID: 1}); err != nil {
 		t.Errorf("failed to get existing assignment by ID: %s", err)
 	}
 }
@@ -79,11 +79,11 @@ func TestUpdateAssignment(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	course := &types.Course{}
+	course := &qf.Course{}
 	admin := qtest.CreateFakeUser(t, db, 10)
 	qtest.CreateCourse(t, db, admin, course)
 
-	if err := db.CreateAssignment(&types.Assignment{
+	if err := db.CreateAssignment(&qf.Assignment{
 		CourseID:    course.ID,
 		Name:        "lab1",
 		ScriptFile:  "go.sh",
@@ -95,7 +95,7 @@ func TestUpdateAssignment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := db.CreateAssignment(&types.Assignment{
+	if err := db.CreateAssignment(&qf.Assignment{
 		CourseID:    course.ID,
 		Name:        "lab2",
 		ScriptFile:  "go.sh",
@@ -112,7 +112,7 @@ func TestUpdateAssignment(t *testing.T) {
 		t.Error(err)
 	}
 
-	wantAssignments := make([]*types.Assignment, len(assignments))
+	wantAssignments := make([]*qf.Assignment, len(assignments))
 	for i, a := range assignments {
 		// test setting various zero-value entries to check that we can read back the same value
 		a.Deadline = ""
@@ -120,7 +120,7 @@ func TestUpdateAssignment(t *testing.T) {
 		a.Reviewers = 0
 		a.AutoApprove = !a.AutoApprove
 		a.IsGroupLab = !a.IsGroupLab
-		wantAssignments[i] = (proto.Clone(assignments[i])).(*types.Assignment)
+		wantAssignments[i] = (proto.Clone(assignments[i])).(*qf.Assignment)
 	}
 
 	err = db.UpdateAssignments(assignments)
@@ -146,11 +146,11 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	// create teacher, course, user (student) and assignment
 	user, course, assignment := setupCourseAssignment(t, db)
 
-	wantStruct := &types.Submission{
+	wantStruct := &qf.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Score:        42,
-		Reviews:      []*types.Review{},
+		Reviews:      []*qf.Review{},
 		BuildInfo: &score.BuildInfo{
 			BuildDate: "2021-01-21",
 			BuildLog:  "what do you say",
@@ -164,28 +164,28 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(wantStruct); err != nil {
 		t.Fatal(err)
 	}
-	assignments, err := db.GetAssignmentsWithSubmissions(course.ID, types.SubmissionsForCourseRequest_ALL, true)
+	assignments, err := db.GetAssignmentsWithSubmissions(course.ID, qf.SubmissionsForCourseRequest_ALL, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantAssignment := (proto.Clone(assignment)).(*types.Assignment)
+	wantAssignment := (proto.Clone(assignment)).(*qf.Assignment)
 	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct)
 	if diff := cmp.Diff(wantAssignment, assignments[0], protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
 	}
 
 	// Submission with Review
-	wantReview := &types.Submission{
+	wantReview := &qf.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Score:        45,
-		Reviews: []*types.Review{
+		Reviews: []*qf.Review{
 			{
 				ReviewerID: 1, Feedback: "SGTM!", Score: 42, Ready: true,
-				GradingBenchmarks: []*types.GradingBenchmark{
+				GradingBenchmarks: []*qf.GradingBenchmark{
 					{
 						Heading: "Ding Dong", Comment: "Communication",
-						Criteria: []*types.GradingCriterion{
+						Criteria: []*qf.GradingCriterion{
 							{Points: 50, Description: "Loads of ding"},
 						},
 					},
@@ -196,11 +196,11 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(wantReview); err != nil {
 		t.Fatal(err)
 	}
-	assignments, err = db.GetAssignmentsWithSubmissions(course.ID, types.SubmissionsForCourseRequest_ALL, true)
+	assignments, err = db.GetAssignmentsWithSubmissions(course.ID, qf.SubmissionsForCourseRequest_ALL, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantAssignment = (proto.Clone(assignment)).(*types.Assignment)
+	wantAssignment = (proto.Clone(assignment)).(*qf.Assignment)
 	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct, wantReview)
 	if diff := cmp.Diff(wantAssignment, assignments[0], protocmp.Transform()); diff != "" {
 		t.Errorf("GetAssignmentsWithSubmissions() mismatch (-want +got):\n%s", diff)
@@ -211,11 +211,11 @@ func TestUpdateBenchmarks(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	course := &types.Course{}
+	course := &qf.Course{}
 	admin := qtest.CreateFakeUser(t, db, 10)
 	qtest.CreateCourse(t, db, admin, course)
 
-	assignment := &types.Assignment{
+	assignment := &qf.Assignment{
 		CourseID:    course.ID,
 		Name:        "Assignment 1",
 		ScriptFile:  "go.sh",
@@ -228,12 +228,12 @@ func TestUpdateBenchmarks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	benchmarks := []*types.GradingBenchmark{
+	benchmarks := []*qf.GradingBenchmark{
 		{
 			ID:           1,
 			AssignmentID: assignment.ID,
 			Heading:      "Test benchmark 1",
-			Criteria: []*types.GradingCriterion{
+			Criteria: []*qf.GradingCriterion{
 				{
 					ID:          1,
 					Description: "Criterion 1",
@@ -252,7 +252,7 @@ func TestUpdateBenchmarks(t *testing.T) {
 			ID:           2,
 			AssignmentID: assignment.ID,
 			Heading:      "Test benchmark 2",
-			Criteria: []*types.GradingCriterion{
+			Criteria: []*qf.GradingCriterion{
 				{
 					ID:          3,
 					Description: "Criterion 3",

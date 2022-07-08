@@ -10,7 +10,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/qf/types"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"go.uber.org/zap"
@@ -63,52 +63,52 @@ func TestRebuildSubmissions(t *testing.T) {
 	defer cleanup()
 
 	teacher := qtest.CreateFakeUser(t, db, 1)
-	err := db.UpdateUser(&types.User{ID: teacher.ID, IsAdmin: true})
+	err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
 	if err != nil {
 		t.Fatal(err)
 	}
-	var course types.Course
+	var course qf.Course
 	course.Provider = "fake"
 	course.OrganizationID = 1
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 	student1 := qtest.CreateFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&types.Enrollment{UserID: student1.ID, CourseID: course.ID}); err != nil {
+	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student1.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollment(&types.Enrollment{
+	if err := db.UpdateEnrollment(&qf.Enrollment{
 		UserID:   student1.ID,
 		CourseID: course.ID,
-		Status:   types.Enrollment_STUDENT,
+		Status:   qf.Enrollment_STUDENT,
 	}); err != nil {
 		t.Fatal(err)
 	}
 	student2 := qtest.CreateFakeUser(t, db, 4)
-	if err := db.CreateEnrollment(&types.Enrollment{UserID: student2.ID, CourseID: course.ID}); err != nil {
+	if err := db.CreateEnrollment(&qf.Enrollment{UserID: student2.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollment(&types.Enrollment{
+	if err := db.UpdateEnrollment(&qf.Enrollment{
 		UserID:   student2.ID,
 		CourseID: course.ID,
-		Status:   types.Enrollment_STUDENT,
+		Status:   qf.Enrollment_STUDENT,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	repo1 := types.Repository{
+	repo1 := qf.Repository{
 		OrganizationID: 1,
 		RepositoryID:   1,
 		UserID:         student1.ID,
-		RepoType:       types.Repository_USER,
+		RepoType:       qf.Repository_USER,
 	}
 	if err := db.CreateRepository(&repo1); err != nil {
 		t.Fatal(err)
 	}
-	repo2 := types.Repository{
+	repo2 := qf.Repository{
 		OrganizationID: 1,
 		RepositoryID:   2,
 		UserID:         student2.ID,
-		RepoType:       types.Repository_USER,
+		RepoType:       qf.Repository_USER,
 	}
 	if err := db.CreateRepository(&repo2); err != nil {
 		t.Fatal(err)
@@ -121,7 +121,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assignment := &types.Assignment{
+	assignment := &qf.Assignment{
 		CourseID: course.ID,
 		Name:     "lab1",
 		ScriptFile: `#image/quickfeed:go
@@ -139,13 +139,13 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 		t.Fatal(err)
 	}
 
-	if err = db.CreateSubmission(&types.Submission{
+	if err = db.CreateSubmission(&qf.Submission{
 		AssignmentID: 1,
 		UserID:       student1.ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err = db.CreateSubmission(&types.Submission{
+	if err = db.CreateSubmission(&qf.Submission{
 		AssignmentID: 1,
 		UserID:       student2.ID,
 	}); err != nil {
@@ -153,9 +153,9 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	}
 
 	// try to rebuild non-existing submission
-	rebuildRequest := &types.RebuildRequest{
+	rebuildRequest := &qf.RebuildRequest{
 		AssignmentID: assignment.ID,
-		RebuildType:  &types.RebuildRequest_SubmissionID{SubmissionID: 123},
+		RebuildType:  &qf.RebuildRequest_SubmissionID{SubmissionID: 123},
 	}
 	if _, err := ags.RebuildSubmissions(ctx, rebuildRequest); err == nil {
 		t.Errorf("Expected error: record not found")
@@ -165,13 +165,13 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	if _, err := ags.RebuildSubmissions(ctx, rebuildRequest); err != nil {
 		t.Fatalf("Failed to rebuild submission: %s", err)
 	}
-	submissions, err := db.GetSubmissions(&types.Submission{AssignmentID: assignment.ID})
+	submissions, err := db.GetSubmissions(&qf.Submission{AssignmentID: assignment.ID})
 	if err != nil {
 		t.Fatalf("Failed to get created submissions: %s", err)
 	}
 
 	// make sure wrong course ID returns error
-	var request types.RebuildRequest
+	var request qf.RebuildRequest
 	request.SetCourseID(15)
 	if _, err = ags.RebuildSubmissions(ctx, &request); err == nil {
 		t.Fatal("Expected error: record not found")
@@ -188,7 +188,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	if _, err = ags.RebuildSubmissions(ctx, &request); err != nil {
 		t.Fatalf("Failed to rebuild submissions: %s", err)
 	}
-	rebuiltSubmissions, err := db.GetSubmissions(&types.Submission{AssignmentID: assignment.ID})
+	rebuiltSubmissions, err := db.GetSubmissions(&qf.Submission{AssignmentID: assignment.ID})
 	if err != nil {
 		t.Fatalf("Failed to get created submissions: %s", err)
 	}

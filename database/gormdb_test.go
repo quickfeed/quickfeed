@@ -7,7 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
-	"github.com/quickfeed/quickfeed/qf/types"
+	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )
@@ -35,20 +35,20 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 11)
-	course := &types.Course{}
+	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
 	student := qtest.CreateFakeUser(t, db, 13)
-	if err := db.CreateEnrollment(&types.Enrollment{
+	if err := db.CreateEnrollment(&qf.Enrollment{
 		CourseID: course.ID,
 		UserID:   student.ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	query := &types.Enrollment{
+	query := &qf.Enrollment{
 		UserID:   student.ID,
 		CourseID: course.ID,
-		Status:   types.Enrollment_STUDENT,
+		Status:   qf.Enrollment_STUDENT,
 	}
 	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
@@ -56,23 +56,23 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 
 	// user entries from the database will have to be enrolled as
 	// teacher and student respectively
-	admin.Enrollments = append(admin.Enrollments, &types.Enrollment{
+	admin.Enrollments = append(admin.Enrollments, &qf.Enrollment{
 		ID:           1,
 		CourseID:     course.ID,
 		UserID:       admin.ID,
-		Status:       types.Enrollment_TEACHER,
-		State:        types.Enrollment_VISIBLE,
-		UsedSlipDays: []*types.UsedSlipDays{},
+		Status:       qf.Enrollment_TEACHER,
+		State:        qf.Enrollment_VISIBLE,
+		UsedSlipDays: []*qf.UsedSlipDays{},
 	})
 	admin.RemoteIdentities = nil
 
-	student.Enrollments = append(student.Enrollments, &types.Enrollment{
+	student.Enrollments = append(student.Enrollments, &qf.Enrollment{
 		ID:           2,
 		CourseID:     course.ID,
 		UserID:       student.ID,
-		Status:       types.Enrollment_STUDENT,
-		State:        types.Enrollment_VISIBLE,
-		UsedSlipDays: []*types.UsedSlipDays{},
+		Status:       qf.Enrollment_STUDENT,
+		State:        qf.Enrollment_VISIBLE,
+		UsedSlipDays: []*qf.UsedSlipDays{},
 	})
 	student.RemoteIdentities = nil
 
@@ -103,14 +103,14 @@ func TestGormDBUpdateUser(t *testing.T) {
 	)
 	admin := true
 	var (
-		wantUser = &types.User{
+		wantUser = &qf.User{
 			ID:        uID,
 			IsAdmin:   admin, // first user is always admin
 			Name:      "Scrooge McDuck",
 			StudentID: "22",
 			Email:     "scrooge@mc.duck",
 			AvatarURL: "https://github.com",
-			RemoteIdentities: []*types.RemoteIdentity{{
+			RemoteIdentities: []*qf.RemoteIdentity{{
 				ID:          rID,
 				Provider:    provider,
 				RemoteID:    remoteID,
@@ -118,7 +118,7 @@ func TestGormDBUpdateUser(t *testing.T) {
 				UserID:      uID,
 			}},
 		}
-		updates = &types.User{
+		updates = &qf.User{
 			ID:        uID,
 			Name:      "Scrooge McDuck",
 			StudentID: "22",
@@ -131,10 +131,10 @@ func TestGormDBUpdateUser(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	var user types.User
+	var user qf.User
 	if err := db.CreateUserFromRemoteIdentity(
 		&user,
-		&types.RemoteIdentity{
+		&qf.RemoteIdentity{
 			Provider:    provider,
 			RemoteID:    remoteID,
 			AccessToken: secret,
@@ -181,7 +181,7 @@ func TestGormDBCreateEnrollmentNoRecord(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	if err := db.CreateEnrollment(&types.Enrollment{
+	if err := db.CreateEnrollment(&qf.Enrollment{
 		UserID:   userId,
 		CourseID: courseId,
 	}); err != gorm.ErrRecordNotFound {
@@ -194,18 +194,18 @@ func TestGormDBCreateEnrollment(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := &types.Course{}
+	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateEnrollment(&types.Enrollment{
+	if err := db.CreateEnrollment(&qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
 	}); err != nil {
 		t.Error(err)
 	}
 
-	if err := db.CreateEnrollment(&types.Enrollment{
+	if err := db.CreateEnrollment(&qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
 	}); err == nil {
@@ -218,11 +218,11 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := &types.Course{}
+	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
 	user := qtest.CreateFakeUser(t, db, 10)
-	if err := db.CreateEnrollment(&types.Enrollment{
+	if err := db.CreateEnrollment(&qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
 	}); err != nil {
@@ -230,32 +230,32 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 	}
 
 	// Get course's pending enrollments.
-	pendingEnrollments, err := db.GetEnrollmentsByCourse(course.ID, types.Enrollment_PENDING)
+	pendingEnrollments, err := db.GetEnrollmentsByCourse(course.ID, qf.Enrollment_PENDING)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(pendingEnrollments) != 1 && pendingEnrollments[0].Status == types.Enrollment_PENDING {
+	if len(pendingEnrollments) != 1 && pendingEnrollments[0].Status == qf.Enrollment_PENDING {
 		t.Fatalf("have %v want 1 pending enrollment", pendingEnrollments)
 	}
 
 	// Accept enrollment.
-	query := &types.Enrollment{
+	query := &qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
-		Status:   types.Enrollment_STUDENT,
+		Status:   qf.Enrollment_STUDENT,
 	}
 	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
 	// Get course's accepted enrollments.
-	acceptedEnrollments, err := db.GetEnrollmentsByCourse(course.ID, types.Enrollment_STUDENT)
+	acceptedEnrollments, err := db.GetEnrollmentsByCourse(course.ID, qf.Enrollment_STUDENT)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(acceptedEnrollments) != 1 && acceptedEnrollments[0].Status == types.Enrollment_STUDENT {
+	if len(acceptedEnrollments) != 1 && acceptedEnrollments[0].Status == qf.Enrollment_STUDENT {
 		t.Fatalf("have %v want 1 accepted enrollment", acceptedEnrollments)
 	}
 
@@ -282,13 +282,13 @@ func TestGormDBDuplicateIdentity(t *testing.T) {
 	defer cleanup()
 
 	if err := db.CreateUserFromRemoteIdentity(
-		&types.User{}, &types.RemoteIdentity{},
+		&qf.User{}, &qf.RemoteIdentity{},
 	); err != nil {
 		t.Fatal(err)
 	}
 
 	if err := db.CreateUserFromRemoteIdentity(
-		&types.User{}, &types.RemoteIdentity{},
+		&qf.User{}, &qf.RemoteIdentity{},
 	); err == nil {
 		t.Fatal("expected duplicate remote identity creation to fail")
 	}
@@ -312,9 +312,9 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	)
 
 	var (
-		wantUser1 = &types.User{
+		wantUser1 = &qf.User{
 			ID: uID,
-			RemoteIdentities: []*types.RemoteIdentity{{
+			RemoteIdentities: []*qf.RemoteIdentity{{
 				ID:          rID1,
 				Provider:    provider1,
 				RemoteID:    remoteID1,
@@ -323,9 +323,9 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 			}},
 		}
 
-		wantUser2 = &types.User{
+		wantUser2 = &qf.User{
 			ID: uID,
-			RemoteIdentities: []*types.RemoteIdentity{
+			RemoteIdentities: []*qf.RemoteIdentity{
 				{
 					ID:          rID1,
 					Provider:    provider1,
@@ -349,16 +349,16 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 
 	// Create first user (the admin).
 	if err := db.CreateUserFromRemoteIdentity(
-		&types.User{},
-		&types.RemoteIdentity{},
+		&qf.User{},
+		&qf.RemoteIdentity{},
 	); err != nil {
 		t.Fatal(err)
 	}
 
-	gotUser1 := &types.User{}
+	gotUser1 := &qf.User{}
 	if err := db.CreateUserFromRemoteIdentity(
 		gotUser1,
-		&types.RemoteIdentity{
+		&qf.RemoteIdentity{
 			Provider:    provider1,
 			RemoteID:    remoteID1,
 			AccessToken: secret1,
@@ -407,7 +407,7 @@ func TestGormDBSetAdminNoRecord(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	if err := db.UpdateUser(&types.User{ID: id, IsAdmin: true}); err != gorm.ErrRecordNotFound {
+	if err := db.UpdateUser(&qf.User{ID: id, IsAdmin: true}); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 }
@@ -423,18 +423,18 @@ func TestGormDBSetAdmin(t *testing.T) {
 
 	// Create first user (the admin).
 	if err := db.CreateUserFromRemoteIdentity(
-		&types.User{},
-		&types.RemoteIdentity{
+		&qf.User{},
+		&qf.RemoteIdentity{
 			Provider: github,
 		},
 	); err != nil {
 		t.Fatal(err)
 	}
 
-	var user types.User
+	var user qf.User
 	if err := db.CreateUserFromRemoteIdentity(
 		&user,
-		&types.RemoteIdentity{
+		&qf.RemoteIdentity{
 			Provider: gitlab,
 		},
 	); err != nil {
@@ -445,7 +445,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 		t.Error("user should not yet be an administrator")
 	}
 
-	if err := db.UpdateUser(&types.User{ID: user.ID, IsAdmin: true}); err != nil {
+	if err := db.UpdateUser(&qf.User{ID: user.ID, IsAdmin: true}); err != nil {
 		t.Error(err)
 	}
 
@@ -463,7 +463,7 @@ func TestGormDBGetGroupSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	if sub, err := db.GetLastSubmissions(10, &types.Submission{GroupID: 10}); err != gorm.ErrRecordNotFound {
+	if sub, err := db.GetLastSubmissions(10, &qf.Submission{GroupID: 10}); err != gorm.ErrRecordNotFound {
 		t.Errorf("got submission %v", sub)
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
@@ -474,13 +474,13 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	c1 := &types.Course{OrganizationID: 1, Code: "DAT101", Year: 1}
-	c2 := &types.Course{OrganizationID: 2, Code: "DAT101", Year: 2}
+	c1 := &qf.Course{OrganizationID: 1, Code: "DAT101", Year: 1}
+	c2 := &qf.Course{OrganizationID: 2, Code: "DAT101", Year: 2}
 	qtest.CreateCourse(t, db, admin, c1)
 	qtest.CreateCourse(t, db, admin, c2)
 
-	var users []*types.User
-	enrollments := []types.Enrollment_UserStatus{types.Enrollment_STUDENT, types.Enrollment_STUDENT}
+	var users []*qf.User
+	enrollments := []qf.Enrollment_UserStatus{qf.Enrollment_STUDENT, qf.Enrollment_STUDENT}
 	// create as many users as the desired number of enrollments
 	for i := 0; i < len(enrollments); i++ {
 		user := qtest.CreateFakeUser(t, db, uint64(i))
@@ -488,10 +488,10 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	}
 	// enroll users in course
 	for i := 0; i < len(users); i++ {
-		if enrollments[i] == types.Enrollment_PENDING {
+		if enrollments[i] == qf.Enrollment_PENDING {
 			continue
 		}
-		if err := db.CreateEnrollment(&types.Enrollment{
+		if err := db.CreateEnrollment(&qf.Enrollment{
 			CourseID: c1.ID,
 			UserID:   users[i].ID,
 		}); err != nil {
@@ -499,11 +499,11 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		}
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
-		case types.Enrollment_STUDENT:
-			query := &types.Enrollment{
+		case qf.Enrollment_STUDENT:
+			query := &qf.Enrollment{
 				UserID:   users[i].ID,
 				CourseID: c1.ID,
-				Status:   types.Enrollment_STUDENT,
+				Status:   qf.Enrollment_STUDENT,
 			}
 			err = db.UpdateEnrollment(query)
 		}
@@ -513,7 +513,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	}
 
 	// Creating Group
-	group := &types.Group{
+	group := &qf.Group{
 		Name:     "SameNameGroup",
 		CourseID: c1.ID,
 		Users:    users,
@@ -523,7 +523,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	}
 
 	// Create Assignments
-	assignment1 := types.Assignment{
+	assignment1 := qf.Assignment{
 		Order:      1,
 		CourseID:   c1.ID,
 		IsGroupLab: true,
@@ -531,7 +531,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	if err := db.CreateAssignment(&assignment1); err != nil {
 		t.Fatal(err)
 	}
-	assignment2 := types.Assignment{
+	assignment2 := qf.Assignment{
 		Order:      2,
 		CourseID:   c1.ID,
 		IsGroupLab: true,
@@ -539,7 +539,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	if err := db.CreateAssignment(&assignment2); err != nil {
 		t.Fatal(err)
 	}
-	assignment3 := types.Assignment{
+	assignment3 := qf.Assignment{
 		Order:      1,
 		CourseID:   c2.ID,
 		IsGroupLab: false,
@@ -549,37 +549,37 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	}
 
 	// Create some submissions
-	submission1 := types.Submission{
+	submission1 := qf.Submission{
 		GroupID:      group.ID,
 		AssignmentID: assignment1.ID,
-		Reviews:      []*types.Review{},
+		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
 	if err := db.CreateSubmission(&submission1); err != nil {
 		t.Fatal(err)
 	}
-	submission2 := types.Submission{
+	submission2 := qf.Submission{
 		GroupID:      group.ID,
 		AssignmentID: assignment1.ID,
-		Reviews:      []*types.Review{},
+		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
 	}
-	submission3 := types.Submission{
+	submission3 := qf.Submission{
 		GroupID:      group.ID,
 		AssignmentID: assignment2.ID,
-		Reviews:      []*types.Review{},
+		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)
 	}
-	submission4 := types.Submission{
+	submission4 := qf.Submission{
 		UserID:       users[0].ID,
 		AssignmentID: assignment3.ID,
-		Reviews:      []*types.Review{},
+		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
 	if err := db.CreateSubmission(&submission4); err != nil {
@@ -588,22 +588,22 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 
 	// Even if there is three submission, only the latest for each assignment should be returned
 
-	submissions, err := db.GetLastSubmissions(c1.ID, &types.Submission{GroupID: group.ID})
+	submissions, err := db.GetLastSubmissions(c1.ID, &qf.Submission{GroupID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []*types.Submission{&submission2, &submission3}
+	want := []*qf.Submission{&submission2, &submission3}
 	if diff := cmp.Diff(submissions, want, protocmp.Transform()); diff != "" {
 		t.Errorf("Expected same submissions, but got (-sub +want):\n%s", diff)
 	}
-	data, err := db.GetLastSubmissions(c1.ID, &types.Submission{GroupID: group.ID})
+	data, err := db.GetLastSubmissions(c1.ID, &qf.Submission{GroupID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 2 {
 		t.Errorf("Expected '%v' elements in the array, got '%v'", 2, len(data))
 	}
 	// Since there is no submissions, but the course and user exist, an empty array should be returned
-	data, err = db.GetLastSubmissions(c2.ID, &types.Submission{GroupID: group.ID})
+	data, err = db.GetLastSubmissions(c2.ID, &qf.Submission{GroupID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 0 {
@@ -616,11 +616,11 @@ func TestDeleteGroup(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	course := &types.Course{}
+	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 
-	var users []*types.User
-	enrollments := []types.Enrollment_UserStatus{types.Enrollment_STUDENT, types.Enrollment_STUDENT}
+	var users []*qf.User
+	enrollments := []qf.Enrollment_UserStatus{qf.Enrollment_STUDENT, qf.Enrollment_STUDENT}
 	// create as many users as the desired number of enrollments
 	for i := 0; i < len(enrollments); i++ {
 		user := qtest.CreateFakeUser(t, db, uint64(i))
@@ -628,10 +628,10 @@ func TestDeleteGroup(t *testing.T) {
 	}
 	// enroll users in course
 	for i := 0; i < len(users); i++ {
-		if enrollments[i] == types.Enrollment_PENDING {
+		if enrollments[i] == qf.Enrollment_PENDING {
 			continue
 		}
-		if err := db.CreateEnrollment(&types.Enrollment{
+		if err := db.CreateEnrollment(&qf.Enrollment{
 			CourseID: course.ID,
 			UserID:   users[i].ID,
 		}); err != nil {
@@ -639,11 +639,11 @@ func TestDeleteGroup(t *testing.T) {
 		}
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
-		case types.Enrollment_STUDENT:
-			query := &types.Enrollment{
+		case qf.Enrollment_STUDENT:
+			query := &qf.Enrollment{
 				UserID:   users[i].ID,
 				CourseID: course.ID,
-				Status:   types.Enrollment_STUDENT,
+				Status:   qf.Enrollment_STUDENT,
 			}
 			err = db.UpdateEnrollment(query)
 		}
@@ -652,7 +652,7 @@ func TestDeleteGroup(t *testing.T) {
 		}
 	}
 
-	group := &types.Group{
+	group := &qf.Group{
 		Name:     "SameNameGroup",
 		CourseID: course.ID,
 		Users:    users,

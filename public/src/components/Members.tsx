@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortEnrollments } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
-import { Enrollment } from "../../proto/qf/types/types_pb"
+import { Enrollment } from "../../proto/qf/types_pb"
 import Search from "./Search"
 import DynamicTable, { Row } from "./DynamicTable"
 import DynamicButton from "./DynamicButton"

@@ -1,4 +1,4 @@
-import { Enrollment, User } from "../../proto/qf/types/types_pb"
+import { Enrollment, User } from "../../proto/qf/types_pb"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"
 import { createMemoryHistory } from "history"

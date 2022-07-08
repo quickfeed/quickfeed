@@ -6,7 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/qf/types"
+	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -16,14 +16,14 @@ func TestCreateUpdateReview(t *testing.T) {
 
 	user, course, assignment := setupCourseAssignment(t, db)
 
-	if err := db.CreateSubmission(&types.Submission{
+	if err := db.CreateSubmission(&qf.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
 	// confirm that the submission is in the database
-	submissions, err := db.GetLastSubmissions(course.ID, &types.Submission{UserID: user.ID})
+	submissions, err := db.GetLastSubmissions(course.ID, &qf.Submission{UserID: user.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,27 +31,27 @@ func TestCreateUpdateReview(t *testing.T) {
 		t.Fatalf("have %d submissions want %d", len(submissions), 1)
 	}
 
-	review := &types.Review{
+	review := &qf.Review{
 		SubmissionID: 2,
 		ReviewerID:   1,
 		Feedback:     "my very good feedback",
 		Ready:        false,
 		Score:        95,
 		Edited:       "last night",
-		GradingBenchmarks: []*types.GradingBenchmark{
+		GradingBenchmarks: []*qf.GradingBenchmark{
 			{
 				ID:           1,
 				AssignmentID: 1,
 				ReviewID:     1,
 				Heading:      "Major league baseball",
 				Comment:      "wonders of the world",
-				Criteria: []*types.GradingCriterion{
+				Criteria: []*qf.GradingCriterion{
 					{
 						ID:          1,
 						BenchmarkID: 1,
 						Points:      30,
 						Description: "my description",
-						Grade:       types.GradingCriterion_PASSED,
+						Grade:       qf.GradingCriterion_PASSED,
 						Comment:     "another comment",
 					},
 				},
@@ -59,10 +59,10 @@ func TestCreateUpdateReview(t *testing.T) {
 		},
 	}
 
-	submission := &types.Submission{
+	submission := &qf.Submission{
 		AssignmentID: 1,
 		UserID:       1,
-		Reviews:      []*types.Review{review},
+		Reviews:      []*qf.Review{review},
 	}
 	if err := db.CreateSubmission(submission); err != nil {
 		t.Fatal(err)
@@ -80,18 +80,18 @@ func TestCreateUpdateReview(t *testing.T) {
 	updateSubmission(t, db, review)
 }
 
-func updateSubmission(t *testing.T, db database.Database, wantReview *types.Review) {
+func updateSubmission(t *testing.T, db database.Database, wantReview *qf.Review) {
 	if err := db.UpdateReview(wantReview); err != nil {
 		t.Errorf("failed to update review: %v", err)
 	}
-	sub, err := db.GetSubmission(&types.Submission{ID: 2})
+	sub, err := db.GetSubmission(&qf.Submission{ID: 2})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(sub.Reviews) != 1 {
 		t.Fatalf("have %d reviews want %d", len(sub.Reviews), 1)
 	}
-	var gotReview *types.Review
+	var gotReview *qf.Review
 	for _, r := range sub.GetReviews() {
 		gotReview = r
 		// fmt.Printf("sub %d: %+v, score: %d\n", sub.GetID(), r.GetReady(), r.GetScore())

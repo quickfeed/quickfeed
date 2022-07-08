@@ -3,11 +3,11 @@ package web
 import (
 	"context"
 
-	"github.com/quickfeed/quickfeed/qf/types"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
-func (s *QuickFeedService) getOrganization(ctx context.Context, sc scm.SCM, org string, user string) (*types.Organization, error) {
+func (s *QuickFeedService) getOrganization(ctx context.Context, sc scm.SCM, org string, user string) (*qf.Organization, error) {
 	gitOrg, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: org, Username: user})
 	if err != nil {
 		return nil, err

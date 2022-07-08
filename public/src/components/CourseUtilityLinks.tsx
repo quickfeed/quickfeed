@@ -1,6 +1,6 @@
 import React from "react"
 import { Link } from "react-router-dom"
-import { Repository } from "../../proto/qf/types/types_pb"
+import { Repository } from "../../proto/qf/types_pb"
 import { getCourseID } from "../Helpers"
 import { useAppState } from "../overmind"
 
