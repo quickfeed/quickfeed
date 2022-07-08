@@ -1,6 +1,7 @@
 agpath
 allstudents
 allteachers
+ASSIGNDIR
 assignmentid
 autoapprove
 autograde
