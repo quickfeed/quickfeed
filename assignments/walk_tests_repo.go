@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 const (
@@ -49,14 +49,14 @@ func match(filename, pattern string) bool {
 }
 
 // readTestsRepositoryContent reads dir and returns a list of assignments and the course's Dockerfile.
-func readTestsRepositoryContent(dir string, courseID uint64) ([]*pb.Assignment, string, error) {
+func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, string, error) {
 	files, err := walkTestsRepository(dir)
 	if err != nil {
 		return nil, "", err
 	}
 
 	// Process all assignment.yml files first
-	assignmentsMap := make(map[string]*pb.Assignment)
+	assignmentsMap := make(map[string]*qf.Assignment)
 	for path, contents := range files {
 		assignmentName := filepath.Base(filepath.Dir(path))
 		switch filepath.Base(path) {
@@ -79,7 +79,7 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*pb.Assignment, 
 
 		switch filename {
 		case criteriaFile:
-			var benchmarks []*pb.GradingBenchmark
+			var benchmarks []*qf.GradingBenchmark
 			if err := json.Unmarshal(contents, &benchmarks); err != nil {
 				return nil, "", fmt.Errorf("failed to unmarshal %q: %s", criteriaFile, err)
 			}
@@ -118,7 +118,7 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*pb.Assignment, 
 		}
 	}
 
-	assignments := make([]*pb.Assignment, 0)
+	assignments := make([]*qf.Assignment, 0)
 	for _, assignment := range assignmentsMap {
 		assignments = append(assignments, assignment)
 		sort.Slice(assignment.Tasks, func(i, j int) bool {

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/log"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
@@ -28,7 +28,7 @@ func TestClone(t *testing.T) {
 	dstDir := t.TempDir()
 	assignmentDir, err := s.Clone(ctx, &scm.CloneOptions{
 		Organization: qfTestOrg,
-		Repository:   pb.StudentRepoName(userName),
+		Repository:   qf.StudentRepoName(userName),
 		DestDir:      dstDir,
 	})
 	if err != nil {
@@ -36,7 +36,7 @@ func TestClone(t *testing.T) {
 	}
 	testsDir, err := s.Clone(ctx, &scm.CloneOptions{
 		Organization: qfTestOrg,
-		Repository:   pb.TestsRepo,
+		Repository:   qf.TestsRepo,
 		DestDir:      dstDir,
 	})
 	if err != nil {
@@ -86,7 +86,7 @@ func TestCloneBranch(t *testing.T) {
 	dstDir := t.TempDir()
 	assignmentDir, err := s.Clone(ctx, &scm.CloneOptions{
 		Organization: qfTestOrg,
-		Repository:   pb.StudentRepoName(userName),
+		Repository:   qf.StudentRepoName(userName),
 		DestDir:      dstDir,
 		Branch:       "hotfix",
 	})

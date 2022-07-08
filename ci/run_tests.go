@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
 )
 
@@ -18,9 +18,9 @@ const quickfeedTestsPath = "quickfeed-tests"
 
 // RunData stores CI data
 type RunData struct {
-	Course     *pb.Course
-	Assignment *pb.Assignment
-	Repo       *pb.Repository
+	Course     *qf.Course
+	Assignment *qf.Assignment
+	Repo       *qf.Repository
 	BranchName string
 	CommitID   string
 	JobOwner   string

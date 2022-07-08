@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
 )
 
@@ -15,7 +15,7 @@ func TestBadGroupNames(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := &pb.Course{
+	course := &qf.Course{
 		Name: "Distributed Systems",
 		Code: "DAT520",
 		Year: 2018,
@@ -23,18 +23,18 @@ func TestBadGroupNames(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	_, scms := qtest.FakeProviderMap(t)
-	ags := NewAutograderService(zap.NewNop(), db, scms, BaseHookOptions{}, &ci.Local{})
+	ags := NewQuickFeedService(zap.NewNop(), db, scms, BaseHookOptions{}, &ci.Local{})
 	user1 := qtest.CreateFakeUser(t, db, 2)
 	user2 := qtest.CreateFakeUser(t, db, 3)
 	// enroll users in course
 	qtest.EnrollStudent(t, db, user1, course)
 	qtest.EnrollStudent(t, db, user2, course)
 
-	group := &pb.Group{
+	group := &qf.Group{
 		ID:       1,
 		CourseID: course.ID,
 		Name:     "DuplicateGroupName",
-		Users:    []*pb.User{user1, user2},
+		Users:    []*qf.User{user1, user2},
 	}
 	// current user1 (in context) must be in group being created
 	ctx := qtest.WithUserContext(context.Background(), user1)

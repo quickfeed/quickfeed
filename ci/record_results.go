@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"time"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 // RecordResults for the course and assignment given by the run data structure.
 // If the results argument is nil, then the submission is considered to be a manual review.
-func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, results *score.Results) (*pb.Submission, error) {
+func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, results *score.Results) (*qf.Submission, error) {
 	logger.Debugf("Fetching (if any) previous submission for %s", r)
 	previous, err := r.previousSubmission(db)
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -40,8 +40,8 @@ func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, 
 	return newSubmission, nil
 }
 
-func (r RunData) previousSubmission(db database.Database) (*pb.Submission, error) {
-	submissionQuery := &pb.Submission{
+func (r RunData) previousSubmission(db database.Database) (*qf.Submission, error) {
+	submissionQuery := &qf.Submission{
 		AssignmentID: r.Assignment.GetID(),
 		UserID:       r.Repo.GetUserID(),
 		GroupID:      r.Repo.GetGroupID(),
@@ -49,15 +49,15 @@ func (r RunData) previousSubmission(db database.Database) (*pb.Submission, error
 	return db.GetSubmission(submissionQuery)
 }
 
-func (r RunData) newSubmission(previous *pb.Submission, results *score.Results) (string, *pb.Submission) {
+func (r RunData) newSubmission(previous *qf.Submission, results *score.Results) (string, *qf.Submission) {
 	if results != nil {
 		return "test execution", r.newTestRunSubmission(previous, results)
 	}
 	return "manual review", r.newManualReviewSubmission(previous)
 }
 
-func (r RunData) newManualReviewSubmission(previous *pb.Submission) *pb.Submission {
-	return &pb.Submission{
+func (r RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submission {
+	return &qf.Submission{
 		ID:           previous.GetID(),
 		AssignmentID: r.Assignment.GetID(),
 		UserID:       r.Repo.GetUserID(),
@@ -67,20 +67,20 @@ func (r RunData) newManualReviewSubmission(previous *pb.Submission) *pb.Submissi
 		Status:       previous.GetStatus(),
 		Released:     previous.GetReleased(),
 		BuildInfo: &score.BuildInfo{
-			BuildDate: time.Now().Format(pb.TimeLayout),
+			BuildDate: time.Now().Format(qf.TimeLayout),
 			BuildLog:  "No automated tests for this assignment",
 			ExecTime:  1,
 		},
 	}
 }
 
-func (r RunData) newTestRunSubmission(previous *pb.Submission, results *score.Results) *pb.Submission {
+func (r RunData) newTestRunSubmission(previous *qf.Submission, results *score.Results) *qf.Submission {
 	if r.Rebuild && previous != nil && previous.BuildInfo != nil {
 		// Keep previous submission's delivery date if this is a rebuild.
 		results.BuildInfo.BuildDate = previous.BuildInfo.BuildDate
 	}
 	score := results.Sum()
-	return &pb.Submission{
+	return &qf.Submission{
 		ID:           previous.GetID(),
 		AssignmentID: r.Assignment.GetID(),
 		UserID:       r.Repo.GetUserID(),
@@ -93,14 +93,14 @@ func (r RunData) newTestRunSubmission(previous *pb.Submission, results *score.Re
 	}
 }
 
-func (r RunData) updateSlipDays(db database.Database, submission *pb.Submission) error {
+func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission) error {
 	buildDate := submission.GetBuildInfo().GetBuildDate()
-	buildTime, err := time.Parse(pb.TimeLayout, buildDate)
+	buildTime, err := time.Parse(qf.TimeLayout, buildDate)
 	if err != nil {
 		return fmt.Errorf("failed to parse time from build date (%s): %w", buildDate, err)
 	}
 
-	enrollments := make([]*pb.Enrollment, 0)
+	enrollments := make([]*qf.Enrollment, 0)
 	if submission.GroupID > 0 {
 		group, err := db.GetGroup(submission.GroupID)
 		if err != nil {

@@ -6,10 +6,10 @@ import (
 	"os"
 
 	"github.com/google/go-cmp/cmp"
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/rand"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -17,8 +17,8 @@ import (
 )
 
 // UpdateFromTestsRepo updates the database record for the course assignments.
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course *pb.Course) {
-	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), pb.TestsRepo)
+func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course *qf.Course) {
+	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), qf.TestsRepo)
 	// TODO(meling): Update this for GitHub web app.
 	// The scm client should ideally be passed in instead of creating another instance.
 	scm, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
@@ -27,12 +27,12 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), pb.MaxWait)
+	ctx, cancel := context.WithTimeout(context.Background(), qf.MaxWait)
 	defer cancel()
 
 	assignments, dockerfile, err := fetchAssignments(ctx, scm, course)
 	if err != nil {
-		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", pb.TestsRepo, err)
+		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", qf.TestsRepo, err)
 		return
 	}
 	for _, assignment := range assignments {
@@ -62,10 +62,10 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		logger.Errorf("Failed to update assignments in database: %v", err)
 		return
 	}
-	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
+	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), qf.TestsRepo)
 
 	if err = synchronizeTasksWithIssues(ctx, db, scm, course, assignments); err != nil {
-		logger.Errorf("Failed to create tasks on '%s' repository: %v", pb.TestsRepo, err)
+		logger.Errorf("Failed to create tasks on '%s' repository: %v", qf.TestsRepo, err)
 		return
 	}
 }
@@ -81,8 +81,8 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 // the function is idempotent. That is, it only reads data from GitHub, processes
 // the yml files and returns the assignments. The os.MkdirTemp() function ensures that
 // any concurrent calls to this function will always use distinct temp directories.
-func fetchAssignments(ctx context.Context, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, string, error) {
-	dstDir, err := os.MkdirTemp("", pb.TestsRepo)
+func fetchAssignments(ctx context.Context, sc scm.SCM, course *qf.Course) ([]*qf.Assignment, string, error) {
+	dstDir, err := os.MkdirTemp("", qf.TestsRepo)
 	if err != nil {
 		return nil, "", err
 	}
@@ -90,7 +90,7 @@ func fetchAssignments(ctx context.Context, sc scm.SCM, course *pb.Course) ([]*pb
 
 	cloneDir, err := sc.Clone(ctx, &scm.CloneOptions{
 		Organization: course.GetOrganizationPath(),
-		Repository:   pb.TestsRepo,
+		Repository:   qf.TestsRepo,
 		DestDir:      dstDir,
 	})
 	if err != nil {
@@ -101,7 +101,7 @@ func fetchAssignments(ctx context.Context, sc scm.SCM, course *pb.Course) ([]*pb
 }
 
 // buildDockerImage builds the Docker image for the given course.
-func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, course *pb.Course) error {
+func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, course *qf.Course) error {
 	docker, err := ci.NewDockerCI(logger.Desugar())
 	if err != nil {
 		return fmt.Errorf("failed to set up docker client: %w", err)
@@ -123,9 +123,9 @@ func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, course *pb
 }
 
 // updateGradingCriteria will remove old grading criteria and related reviews when criteria.json gets updated
-func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assignment *pb.Assignment) {
+func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assignment *qf.Assignment) {
 	if len(assignment.GetGradingBenchmarks()) > 0 {
-		gradingBenchmarks, err := db.GetBenchmarks(&pb.Assignment{
+		gradingBenchmarks, err := db.GetBenchmarks(&qf.Assignment{
 			CourseID: assignment.CourseID,
 			Order:    assignment.Order,
 		})
@@ -140,8 +140,8 @@ func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assi
 		if len(gradingBenchmarks) > 0 {
 			if !cmp.Equal(assignment.GradingBenchmarks, gradingBenchmarks, cmp.Options{
 				protocmp.Transform(),
-				protocmp.IgnoreFields(&pb.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
-				protocmp.IgnoreFields(&pb.GradingCriterion{}, "ID", "BenchmarkID"),
+				protocmp.IgnoreFields(&qf.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
+				protocmp.IgnoreFields(&qf.GradingCriterion{}, "ID", "BenchmarkID"),
 				protocmp.IgnoreEnums(),
 			}) {
 				for _, bm := range gradingBenchmarks {

@@ -8,7 +8,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 const authUserName = "quickfeed" // can be anything except an empty string
@@ -36,10 +36,10 @@ func (s GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error)
 }
 
 func repoDir(opt *CloneOptions) string {
-	if pb.RepoType(opt.Repository).IsStudentRepo() {
-		return pb.AssignmentRepo
+	if qf.RepoType(opt.Repository).IsStudentRepo() {
+		return qf.AssignmentRepo
 	}
-	return pb.TestsRepo
+	return qf.TestsRepo
 }
 
 // cloneURL returns the URL to clone the given repository.

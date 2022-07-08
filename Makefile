@@ -9,8 +9,7 @@ ARCH				:= $(shell uname -m)
 tmpdir				:= tmp
 proto-swift-path	:= ../quickfeed-swiftui/Quickfeed/Proto
 grpcweb-latest		:= $(shell git ls-remote --tags https://github.com/grpc/grpc-web.git | tail -1 | awk -F"/" '{ print $$3 }')
-grpcweb-ver			:= $(shell cd dev; npm ls grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
-grpcweb-pub			:= $(shell cd public; npm ls grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
+grpcweb-ver			:= $(shell cd public; npm ls --package-lock-only grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
 protoc-grpcweb		:= protoc-gen-grpc-web
 protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
 grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ver)/$(protoc-grpcweb-long)
@@ -36,10 +35,6 @@ version-check:
 	@go run cmd/vercheck/main.go
 ifneq ($(grpcweb-ver), $(grpcweb-latest))
 	@echo WARNING: grpc-web version is not latest: $(grpcweb-ver) != $(grpcweb-latest)
-endif
-ifneq ($(grpcweb-ver), $(grpcweb-pub))
-	@echo grpc-web version differs between dev and public: $(grpcweb-ver) != $(grpcweb-pub)
-	@false
 endif
 
 grpcweb:
@@ -71,27 +66,31 @@ proto_$(1):
 	--go-patch_out=plugin=go-grpc,paths=source_relative:. \
 	--js_out=import_style=commonjs:$(1)/proto \
 	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(1)/proto \
-	ag/ag.proto kit/score/score.proto
+	qf/quickfeed.proto qf/types.proto qf/requests.proto kit/score/score.proto
 
 	$$(info Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529))
 	@$(sedi) '/patch_go_pb/d' \
 	$(1)/proto/kit/score/score_pb.js \
 	$(1)/proto/kit/score/score_pb.d.ts \
-	$(1)/proto/ag/ag_pb.js \
-	$(1)/proto/ag/ag_pb.d.ts \
-	$(1)/proto/ag/AgServiceClientPb.ts
+	$(1)/proto/qf/quickfeed_pb.js \
+	$(1)/proto/qf/quickfeed_pb.d.ts \
+	$(1)/proto/qf/QuickfeedServiceClientPb.ts \
+	$(1)/proto/qf/types_pb.js \
+	$(1)/proto/qf/types_pb.d.ts \
+	$(1)/proto/qf/requests_pb.js \
+	$(1)/proto/qf/requests_pb.d.ts
 
 	$$(info Compiling proto for $(1))
-	@cd $(1) && npm run tsc -- proto/ag/AgServiceClientPb.ts
+	@cd $(1) && npm run tsc -- proto/qf/QuickfeedServiceClientPb.ts
 endef
 
-dirs := dev public
+dirs := public
 $(foreach dir,$(dirs),$(eval $(call ui_target,$(dir))))
 $(foreach dir,$(dirs),$(eval $(call proto_target,$(dir))))
 
-ui: version-check ui_dev ui_public
+ui: version-check ui_public
 
-proto: proto_dev proto_public
+proto: proto_public
 
 proto-swift:
 	@echo "Compiling QuickFeed's proto definitions for Swift"
@@ -101,7 +100,7 @@ proto-swift:
 	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
 	--swift_out=:$(proto-swift-path) \
 	--grpc-swift_out=$(proto-swift-path) \
-	ag/ag.proto
+	qf/quickfeed.proto
 
 brew:
 ifeq (, $(shell which brew))
@@ -125,24 +124,21 @@ protoset:
 	-I . \
 	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
 	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
-	--proto_path=ag \
-	--descriptor_set_out=ag/ag.protoset \
+	--proto_path=qf \
+	--descriptor_set_out=qf/qf.protoset \
 	--include_imports \
-	ag/ag.proto
+	qf/quickfeed.proto
 
 test:
 	@go clean -testcache ./...
 	@go test ./...
 
 webpack-dev-server:
-	@cd dev && mkdir -p public && cp index.html public/index.html && cp styles/styles.css public/styles.css
-	@cd dev && $(sedi) 's/\/dev\/dist\/bundle.js/bundle.js/g' public/index.html
-	@cd dev && $(sedi) 's/\/dev\/styles\/styles.css/styles.css/g' public/index.html
-	@cd dev && npx webpack-dev-server --config webpack.config.js --port 8082 --progress --mode development
+	@cd public && npx webpack-dev-server --config webpack.config.js --port 8082 --progress --mode development
 
 # TODO Should check that webpack-dev-server is running.
 selenium:
-	@cd dev && npm run test:selenium
+	@cd public && npm run test:selenium
 
 scm:
 	@echo "Compiling the scm tool"

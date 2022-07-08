@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 )
@@ -21,7 +21,7 @@ func TestDeleteIssue(t *testing.T) {
 	ctx := context.Background()
 	repo, err := s.GetRepository(ctx, &scm.RepositoryOptions{
 		Owner: qfTestOrg,
-		Path:  ag.StudentRepoName(qfTestUser),
+		Path:  qf.StudentRepoName(qfTestUser),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -84,7 +84,7 @@ func TestDeleteAllIssues(t *testing.T) {
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
 		Owner: qfTestOrg,
-		Path:  ag.StudentRepoName(qfTestUser),
+		Path:  qf.StudentRepoName(qfTestUser),
 	}
 	if err := s.DeleteIssues(ctx, opt); err != nil {
 		t.Fatal(err)

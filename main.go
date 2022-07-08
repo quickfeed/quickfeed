@@ -11,10 +11,10 @@ import (
 
 	"github.com/quickfeed/quickfeed/ci"
 	logq "github.com/quickfeed/quickfeed/log"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/database"
 
 	"google.golang.org/grpc"
@@ -35,7 +35,7 @@ func init() {
 	}
 
 	// On Windows, mime types are read from the registry, which often has
-	// outdated content types. This enforces that the correct mime types
+	// outdated content qf. This enforces that the correct mime types
 	// are used on all platforms.
 	mustAddExtensionType(".html", "text/html")
 	mustAddExtensionType(".css", "text/css")
@@ -46,9 +46,9 @@ func init() {
 
 	reg.MustRegister(
 		grpcMetrics,
-		pb.AgFailedMethodsMetric,
-		pb.AgMethodSuccessRateMetric,
-		pb.AgResponseTimeByMethodsMetric,
+		qf.AgFailedMethodsMetric,
+		qf.AgMethodSuccessRateMetric,
+		qf.AgResponseTimeByMethodsMetric,
 	)
 }
 
@@ -94,14 +94,14 @@ func main() {
 		log.Println("Added application token")
 	}
 
-	agService := web.NewAutograderService(logger, db, scms, bh, runner)
-	go web.New(agService, *public, *httpAddr)
+	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
+	go web.New(qfService, *public, *httpAddr)
 
 	lis, err := net.Listen("tcp", *grpcAddr)
 	if err != nil {
 		log.Fatalf("failed to start tcp listener: %v\n", err)
 	}
-	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), pb.Interceptor(logger))
+	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
 	grpcServer := grpc.NewServer(opt)
 	// Create a HTTP server for prometheus.
 	httpServer := &http.Server{
@@ -114,7 +114,7 @@ func main() {
 		}
 	}()
 
-	pb.RegisterAutograderServiceServer(grpcServer, agService)
+	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}

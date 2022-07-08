@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
-	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -35,7 +35,7 @@ var ignoredStudents = map[string]bool{
 
 type QuickFeed struct {
 	cc *grpc.ClientConn
-	pb.AutograderServiceClient
+	qf.QuickFeedServiceClient
 	md metadata.MD
 }
 
@@ -58,9 +58,9 @@ func NewQuickFeed(authToken string) (*QuickFeed, error) {
 		return nil, err
 	}
 	return &QuickFeed{
-		cc:                      cc,
-		AutograderServiceClient: pb.NewAutograderServiceClient(cc),
-		md:                      metadata.New(map[string]string{"cookie": authToken}),
+		cc:                     cc,
+		QuickFeedServiceClient: qf.NewQuickFeedServiceClient(cc),
+		md:                     metadata.New(map[string]string{"cookie": authToken}),
 	}, nil
 }
 
@@ -136,7 +136,7 @@ func main() {
 	saveApproveSheet(*courseCode, sheetName, approvedMap)
 }
 
-func getSubmissions(courseCode string, year int, userName string) *pb.CourseSubmissions {
+func getSubmissions(courseCode string, year int, userName string) *qf.CourseSubmissions {
 	authToken := os.Getenv("QUICKFEED_AUTH_TOKEN")
 	if authToken == "" {
 		log.Fatalln("QUICKFEED_AUTH_TOKEN is not set")
@@ -152,7 +152,7 @@ func getSubmissions(courseCode string, year int, userName string) *pb.CourseSubm
 	defer cancel()
 	ctx = metadata.NewOutgoingContext(ctx, client.md)
 
-	request := &pb.CourseUserRequest{
+	request := &qf.CourseUserRequest{
 		CourseCode: courseCode,
 		CourseYear: uint32(year),
 		UserLogin:  userName,
@@ -162,7 +162,7 @@ func getSubmissions(courseCode string, year int, userName string) *pb.CourseSubm
 		log.Fatal(err)
 	}
 
-	courses, err := client.GetCoursesByUser(ctx, &pb.EnrollmentStatusRequest{UserID: userInfo.GetID()})
+	courses, err := client.GetCoursesByUser(ctx, &qf.EnrollmentStatusRequest{UserID: userInfo.GetID()})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -178,12 +178,12 @@ func getSubmissions(courseCode string, year int, userName string) *pb.CourseSubm
 
 	// TODO(meling) Access control is currently limited for this method, resulting in a message like the one below
 	// Access control should be fixed on QuickFeed to avoid the hack currently used.
-	// ERROR   web/autograder_service.go:541   GetSubmissionsByCourse failed: user quickfeed-uis is not teacher or submission author
+	// ERROR   web/quickfeed_service.go:541   GetSubmissionsByCourse failed: user quickfeed-uis is not teacher or submission author
 	submissions, err := client.GetSubmissionsByCourse(
 		ctx,
-		&pb.SubmissionsForCourseRequest{
+		&qf.SubmissionsForCourseRequest{
 			CourseID: courseID,
-			Type:     pb.SubmissionsForCourseRequest_ALL,
+			Type:     qf.SubmissionsForCourseRequest_ALL,
 		},
 	)
 	if err != nil {

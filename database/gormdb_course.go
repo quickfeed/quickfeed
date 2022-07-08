@@ -3,13 +3,13 @@ package database
 import (
 	"errors"
 
-	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 // CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
 // The provided course must have a unique (GitHub) OrganizationID not already associated with existing course.
 // Similarly, the course must have a unique course code and year.
-func (db *GormDB) CreateCourse(courseCreatorID uint64, course *pb.Course) error {
+func (db *GormDB) CreateCourse(courseCreatorID uint64, course *qf.Course) error {
 	courseCreator, err := db.GetUser(courseCreatorID)
 	if err != nil {
 		return err
@@ -19,9 +19,9 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *pb.Course) error 
 	}
 
 	var courses int64
-	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
+	if err := db.conn.Model(&qf.Course{}).Where(&qf.Course{
 		OrganizationID: course.OrganizationID,
-	}).Or(&pb.Course{
+	}).Or(&qf.Course{
 		Code: course.Code,
 		Year: course.Year,
 	}).Count(&courses).Error; err != nil {
@@ -40,11 +40,11 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *pb.Course) error 
 	}
 
 	// enroll course creator as teacher for course and mark as visible
-	if err := tx.Create(&pb.Enrollment{
+	if err := tx.Create(&qf.Enrollment{
 		UserID:   courseCreatorID,
 		CourseID: course.ID,
-		Status:   pb.Enrollment_TEACHER,
-		State:    pb.Enrollment_VISIBLE,
+		Status:   qf.Enrollment_TEACHER,
+		State:    qf.Enrollment_VISIBLE,
 	}).Error; err != nil {
 		tx.Rollback()
 		return err
@@ -57,24 +57,24 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *pb.Course) error 
 		return err
 	}
 	// update the access token cache for course
-	pb.SetAccessToken(course.GetID(), accessToken)
+	qf.SetAccessToken(course.GetID(), accessToken)
 	return tx.Commit().Error
 }
 
 // GetCourse fetches course by ID. If withInfo is true, preloads course
 // assignments, active enrollments and groups.
-func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*pb.Course, error) {
+func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*qf.Course, error) {
 	m := db.conn
-	var course pb.Course
+	var course qf.Course
 
 	if withEnrollments {
 		// we only want submission from users enrolled in the course
-		userStates := []pb.Enrollment_UserStatus{
-			pb.Enrollment_STUDENT,
-			pb.Enrollment_TEACHER,
+		userStates := []qf.Enrollment_UserStatus{
+			qf.Enrollment_STUDENT,
+			qf.Enrollment_TEACHER,
 		}
 		// and only group submissions from approved groups
-		modelGroup := &pb.Group{Status: pb.Group_APPROVED, CourseID: courseID}
+		modelGroup := &qf.Group{Status: qf.Group_APPROVED, CourseID: courseID}
 		if err := m.Preload("Assignments").
 			Preload("Enrollments", "status in (?)", userStates).
 			Preload("Enrollments.User").
@@ -96,9 +96,9 @@ func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*pb.Course, 
 }
 
 // GetCourseByOrganizationID fetches course by organization ID.
-func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
-	var course pb.Course
-	if err := db.conn.First(&course, &pb.Course{OrganizationID: did}).Error; err != nil {
+func (db *GormDB) GetCourseByOrganizationID(did uint64) (*qf.Course, error) {
+	var course qf.Course
+	if err := db.conn.First(&course, &qf.Course{OrganizationID: did}).Error; err != nil {
 		return nil, err
 	}
 	if err := db.updateCourseAccessTokenIfEmpty(&course); err != nil {
@@ -109,12 +109,12 @@ func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 
 // GetCourses returns a list of courses. If one or more course ids are provided,
 // the corresponding courses are returned. Otherwise, all courses are returned.
-func (db *GormDB) GetCourses(courseIDs ...uint64) ([]*pb.Course, error) {
+func (db *GormDB) GetCourses(courseIDs ...uint64) ([]*qf.Course, error) {
 	m := db.conn
 	if len(courseIDs) > 0 {
 		m = m.Where(courseIDs)
 	}
-	var courses []*pb.Course
+	var courses []*qf.Course
 	if err := m.Find(&courses).Error; err != nil {
 		return nil, err
 	}
@@ -130,14 +130,14 @@ func (db *GormDB) GetCourses(courseIDs ...uint64) ([]*pb.Course, error) {
 // for the given user id.
 // If enrollment statuses is provided, the set of courses returned
 // is filtered according to these enrollment statuses.
-func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error) {
-	enrollments, err := db.getEnrollments(&pb.User{ID: userID}, statuses...)
+func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...qf.Enrollment_UserStatus) ([]*qf.Course, error) {
+	enrollments, err := db.getEnrollments(&qf.User{ID: userID}, statuses...)
 	if err != nil {
 		return nil, err
 	}
 
 	var courseIDs []uint64
-	m := make(map[uint64]*pb.Enrollment)
+	m := make(map[uint64]*qf.Enrollment)
 	for _, enrollment := range enrollments {
 		m[enrollment.CourseID] = enrollment
 		courseIDs = append(courseIDs, enrollment.CourseID)
@@ -147,7 +147,7 @@ func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_User
 		courseIDs = nil
 	} else if len(courseIDs) == 0 {
 		// No need to query database since user have no enrolled courses.
-		return []*pb.Course{}, nil
+		return []*qf.Course{}, nil
 	}
 	courses, err := db.GetCourses(courseIDs...)
 	if err != nil {
@@ -158,7 +158,7 @@ func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_User
 		if err := db.updateCourseAccessTokenIfEmpty(course); err != nil {
 			return nil, err
 		}
-		course.Enrolled = pb.Enrollment_NONE
+		course.Enrolled = qf.Enrollment_NONE
 		if enrollment, ok := m[course.ID]; ok {
 			course.Enrolled = enrollment.Status
 		}
@@ -167,12 +167,12 @@ func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_User
 }
 
 // GetCourseTeachers returns a list of all teachers in a course.
-func (db *GormDB) GetCourseTeachers(query *pb.Course) ([]*pb.User, error) {
-	var course pb.Course
+func (db *GormDB) GetCourseTeachers(query *qf.Course) ([]*qf.User, error) {
+	var course qf.Course
 	if err := db.conn.Where(query).Preload("Enrollments").First(&course).Error; err != nil {
 		return nil, err
 	}
-	teachers := []*pb.User{}
+	teachers := []*qf.User{}
 	for _, teacherEnrollment := range course.TeacherEnrollments() {
 		teacher, err := db.GetUser(teacherEnrollment.GetUserID())
 		if err != nil {
@@ -187,8 +187,8 @@ func (db *GormDB) GetCourseTeachers(query *pb.Course) ([]*pb.User, error) {
 }
 
 // UpdateCourse updates course information.
-func (db *GormDB) UpdateCourse(course *pb.Course) error {
-	return db.conn.Model(&pb.Course{}).
-		Where(&pb.Course{ID: course.GetID()}).
+func (db *GormDB) UpdateCourse(course *qf.Course) error {
+	return db.conn.Model(&qf.Course{}).
+		Where(&qf.Course{ID: course.GetID()}).
 		Updates(course).Error
 }

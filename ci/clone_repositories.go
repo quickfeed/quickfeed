@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	pb "github.com/quickfeed/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 )
@@ -27,11 +27,11 @@ func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogge
 	start := time.Now()
 	testsDir, err := sc.Clone(ctx, &scm.CloneOptions{
 		Organization: r.Course.GetOrganizationPath(),
-		Repository:   pb.TestsRepo,
+		Repository:   qf.TestsRepo,
 		DestDir:      dstDir,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to clone %q repository: %w", pb.TestsRepo, err)
+		return fmt.Errorf("failed to clone %q repository: %w", qf.TestsRepo, err)
 	}
 
 	assignmentsDir, err := sc.Clone(ctx, &scm.CloneOptions{
@@ -41,7 +41,7 @@ func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogge
 		Branch:       r.BranchName,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to clone %q repository: %w", pb.AssignmentRepo, err)
+		return fmt.Errorf("failed to clone %q repository: %w", qf.AssignmentRepo, err)
 	}
 	logger.Debugf("Cloning time:    %v", time.Since(start))
 	start = time.Now()
@@ -64,7 +64,7 @@ func (r RunData) validate(testsDir, assignmentsDir string) error {
 
 	// Note: The following check may be costly if the student code is large.
 	// Hence, we may consider adding a flag to skip this check. A flag could
-	// be added to pb.Assignment or pb.Course, both accessible via RunData.
+	// be added to qf.Assignment or qf.Course, both accessible via RunData.
 
 	// Walk the student's assignments directory
 	files, err := walk(assignmentsDir)

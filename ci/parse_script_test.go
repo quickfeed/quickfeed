@@ -3,28 +3,28 @@ package ci
 import (
 	"testing"
 
-	pb "github.com/quickfeed/quickfeed/ag"
 	"github.com/quickfeed/quickfeed/internal/rand"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 // Testdata copied from run_tests_test.go (since they are in different packages)
 func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *RunData {
-	repo := pb.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
+	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
-	pb.SetAccessToken(courseID, accessToken)
+	qf.SetAccessToken(courseID, accessToken)
 	runData := &RunData{
-		Course: &pb.Course{
+		Course: &qf.Course{
 			ID:   courseID,
 			Code: "DAT320",
 		},
-		Assignment: &pb.Assignment{
+		Assignment: &qf.Assignment{
 			Name:             "lab1",
 			ScriptFile:       scriptTemplate,
 			ContainerTimeout: 1,
 		},
-		Repo: &pb.Repository{
+		Repo: &qf.Repository{
 			HTMLURL:  repo.StudentRepoURL(userName),
-			RepoType: pb.Repository_USER,
+			RepoType: qf.Repository_USER,
 		},
 		JobOwner: "muggles",
 		CommitID: "deadbeef",
