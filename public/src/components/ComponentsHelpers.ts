@@ -1,4 +1,4 @@
-import { Assignment, Enrollment, SubmissionLink } from "../../proto/qf/qf_pb"
+import { Assignment, Enrollment, SubmissionLink } from "../../proto/qf/types_pb"
 import { groupRepoLink, userLink, userRepoLink } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import { UserCourseSubmissions } from "../overmind/state"

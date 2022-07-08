@@ -170,14 +170,6 @@ func (req *EnrollmentRequest) IsValid() bool {
 	return req.GetCourseID() > 0
 }
 
-// IsValid ensures that provider string is one of implemented providers
-func (req *Provider) IsValid() bool {
-	provider := req.GetProvider()
-	return provider == "github" ||
-		provider == "gitlab" ||
-		provider == "fake"
-}
-
 // IsValid ensures that course ID is provided
 func (req *SubmissionsForCourseRequest) IsValid() bool {
 	return req.GetCourseID() != 0

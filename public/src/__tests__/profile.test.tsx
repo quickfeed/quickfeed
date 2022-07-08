@@ -1,4 +1,4 @@
-import { User } from "../../proto/qf/qf_pb"
+import { User } from "../../proto/qf/types_pb"
 import { Provider } from "overmind-react"
 import { createOvermindMock } from "overmind"
 import { config } from "../overmind"

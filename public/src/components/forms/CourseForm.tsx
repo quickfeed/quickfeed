@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { useActions } from "../../overmind"
-import { Course, Organization } from "../../../proto/qf/qf_pb"
+import { Course } from "../../../proto/qf/types_pb"
+import { Organization } from "../../../proto/qf/requests_pb"
 import FormInput from "./FormInput"
 import CourseCreationInfo from "../admin/CourseCreationInfo"
 import { useHistory } from "react-router"

@@ -1,6 +1,5 @@
 import { isValid } from "../Helpers"
-import { User, EnrollmentLink, Enrollment, Submission, SubmissionLink } from "../../proto/qf/qf_pb"
-
+import { User, Enrollment, Submission, EnrollmentLink, SubmissionLink } from "../../proto/qf/types_pb"
 
 describe("User and enrollment validation", () => {
     it("User should be valid", () => {

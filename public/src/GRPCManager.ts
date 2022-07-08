@@ -1,45 +1,47 @@
 import grpcWeb from "grpc-web"
 import {
     Assignments,
-    AuthorizationResponse,
     Course,
-    CourseRequest,
-    CourseSubmissions,
     Courses,
-    EnrollmentStatusRequest,
     Enrollment,
-    EnrollmentRequest,
     Enrollments,
-    GetGroupRequest,
     GradingBenchmark,
     GradingCriterion,
     Group,
-    GroupRequest,
     Groups,
+    Repository,
+    Review,
+    Submission,
+    Submissions,
+    User,
+    Users,
+} from "../proto/qf/types_pb"
+import {
+    AuthorizationResponse,
+    CourseRequest,
+    CourseSubmissions,
+    EnrollmentStatusRequest,
+    EnrollmentRequest,
+    GetGroupRequest,
+    GroupRequest,
     Organization,
     OrgRequest,
     Providers,
     RebuildRequest,
     Repositories,
-    Repository,
     RepositoryRequest,
-    Review,
     ReviewRequest,
     Status,
     SubmissionRequest,
     SubmissionsForCourseRequest,
-    Submission,
-    Submissions,
     SubmissionReviewersRequest,
     UpdateSubmissionRequest,
     UpdateSubmissionsRequest,
     URLRequest,
-    User,
-    Users,
     Void,
     Reviewers,
-} from "../proto/qf/qf_pb"
-import { QuickFeedServiceClient } from "../proto/qf/QfServiceClientPb"
+} from "../proto/qf/requests_pb"
+import { QuickFeedServiceClient } from "../proto/qf/QuickfeedServiceClientPb"
 
 export interface IGrpcResponse<T> {
     status: Status

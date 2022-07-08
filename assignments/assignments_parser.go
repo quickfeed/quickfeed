@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/qf"
-
 	"gopkg.in/yaml.v2"
 )
 

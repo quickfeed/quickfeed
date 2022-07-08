@@ -13,7 +13,7 @@ module.exports = {
             dependOn: 'proto',
         },
         proto: {
-            import: "./proto/qf/qf_pb.js",
+            import: "./proto/qf/quickfeed_pb.js",
             dependOn: "protobuf",
         },
         protobuf: "google-protobuf",

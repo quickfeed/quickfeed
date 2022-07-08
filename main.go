@@ -11,11 +11,11 @@ import (
 
 	"github.com/quickfeed/quickfeed/ci"
 	logq "github.com/quickfeed/quickfeed/log"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/qf"
 
 	"google.golang.org/grpc"
 
@@ -35,7 +35,7 @@ func init() {
 	}
 
 	// On Windows, mime types are read from the registry, which often has
-	// outdated content types. This enforces that the correct mime types
+	// outdated content qf. This enforces that the correct mime types
 	// are used on all platforms.
 	mustAddExtensionType(".html", "text/html")
 	mustAddExtensionType(".css", "text/css")

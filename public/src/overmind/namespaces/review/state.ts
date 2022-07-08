@@ -1,6 +1,6 @@
 import { derived } from "overmind"
 import { Context } from "../.."
-import { GradingCriterion, Review, User } from "../../../../proto/qf/qf_pb"
+import { GradingCriterion, Review, User } from "../../../../proto/qf/types_pb"
 
 export type ReviewState = {
     /* The index of the selected review */

@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	pbgo   = "qf/qf.pb.go"
-	grpcpb = "qf/qf_grpc.pb.go"
+	pbgo   = "qf/quickfeed.pb.go"
+	grpcpb = "qf/quickfeed_grpc.pb.go"
 )
 
 func main() {

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.20.1
-// source: qf/qf.proto
+// source: qf/quickfeed.proto
 
 package qf
 
@@ -1545,5 +1545,5 @@ var QuickFeedService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "qf/qf.proto",
+	Metadata: "qf/quickfeed.proto",
 }

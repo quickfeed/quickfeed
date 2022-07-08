@@ -1,5 +1,5 @@
 import { useParams } from "react-router"
-import { Assignment, Course, Enrollment, EnrollmentLink, GradingBenchmark, Group, Review, Submission, SubmissionLink, User } from "../proto/qf/qf_pb"
+import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, EnrollmentLink, SubmissionLink } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 
 export enum Color {

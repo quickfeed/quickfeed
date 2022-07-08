@@ -2,7 +2,7 @@ import React from 'react'
 import { useHistory } from 'react-router'
 import { EnrollmentStatus, hasEnrolled, hasNone, hasPending } from '../Helpers'
 import { useActions } from '../overmind'
-import { Course, Enrollment } from '../../proto/qf/qf_pb'
+import { Course, Enrollment } from '../../proto/qf/types_pb'
 import CourseFavoriteButton from './CourseFavoriteButton'
 
 

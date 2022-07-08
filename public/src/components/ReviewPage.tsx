@@ -1,6 +1,6 @@
 import React, { useEffect } from "react"
 import { useActions, useAppState } from "../overmind"
-import { SubmissionLink } from "../../proto/qf/qf_pb"
+import { SubmissionLink } from "../../proto/qf/types_pb"
 import { Color, getCourseID, getSubmissionCellColor, isManuallyGraded, SubmissionSort } from "../Helpers"
 import Search from "./Search"
 import ReviewForm from "./manual-grading/ReviewForm"
