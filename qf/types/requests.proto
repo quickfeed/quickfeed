@@ -7,16 +7,6 @@ import "qf/types/types.proto";
 
 // Message types that are used as requests and responses in API calls.
 
-message SubmissionLink {
-    types.Assignment assignment = 1;
-    types.Submission submission = 2;
-}
-
-message EnrollmentLink {
-    types.Enrollment enrollment         = 2;  // must have course and user/group preloaded
-    repeated SubmissionLink submissions = 3;
-}
-
 message CourseSubmissions {
     types.Course course           = 1;  // preloaded assignments
     repeated EnrollmentLink links = 2;
@@ -43,10 +33,6 @@ message GroupRequest {
     uint64 userID   = 1;
     uint64 groupID  = 2;
     uint64 courseID = 3;
-}
-
-message Provider {
-    string provider = 1;
 }
 
 message OrgRequest {

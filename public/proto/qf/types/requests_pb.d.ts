@@ -3,68 +3,16 @@ import * as jspb from 'google-protobuf'
 import * as qf_types_types_pb from '../../qf/types/types_pb';
 
 
-export class SubmissionLink extends jspb.Message {
-  getAssignment(): qf_types_types_pb.Assignment | undefined;
-  setAssignment(value?: qf_types_types_pb.Assignment): SubmissionLink;
-  hasAssignment(): boolean;
-  clearAssignment(): SubmissionLink;
-
-  getSubmission(): qf_types_types_pb.Submission | undefined;
-  setSubmission(value?: qf_types_types_pb.Submission): SubmissionLink;
-  hasSubmission(): boolean;
-  clearSubmission(): SubmissionLink;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): SubmissionLink.AsObject;
-  static toObject(includeInstance: boolean, msg: SubmissionLink): SubmissionLink.AsObject;
-  static serializeBinaryToWriter(message: SubmissionLink, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): SubmissionLink;
-  static deserializeBinaryFromReader(message: SubmissionLink, reader: jspb.BinaryReader): SubmissionLink;
-}
-
-export namespace SubmissionLink {
-  export type AsObject = {
-    assignment?: qf_types_types_pb.Assignment.AsObject,
-    submission?: qf_types_types_pb.Submission.AsObject,
-  }
-}
-
-export class EnrollmentLink extends jspb.Message {
-  getEnrollment(): qf_types_types_pb.Enrollment | undefined;
-  setEnrollment(value?: qf_types_types_pb.Enrollment): EnrollmentLink;
-  hasEnrollment(): boolean;
-  clearEnrollment(): EnrollmentLink;
-
-  getSubmissionsList(): Array<SubmissionLink>;
-  setSubmissionsList(value: Array<SubmissionLink>): EnrollmentLink;
-  clearSubmissionsList(): EnrollmentLink;
-  addSubmissions(value?: SubmissionLink, index?: number): SubmissionLink;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): EnrollmentLink.AsObject;
-  static toObject(includeInstance: boolean, msg: EnrollmentLink): EnrollmentLink.AsObject;
-  static serializeBinaryToWriter(message: EnrollmentLink, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): EnrollmentLink;
-  static deserializeBinaryFromReader(message: EnrollmentLink, reader: jspb.BinaryReader): EnrollmentLink;
-}
-
-export namespace EnrollmentLink {
-  export type AsObject = {
-    enrollment?: qf_types_types_pb.Enrollment.AsObject,
-    submissionsList: Array<SubmissionLink.AsObject>,
-  }
-}
-
 export class CourseSubmissions extends jspb.Message {
   getCourse(): qf_types_types_pb.Course | undefined;
   setCourse(value?: qf_types_types_pb.Course): CourseSubmissions;
   hasCourse(): boolean;
   clearCourse(): CourseSubmissions;
 
-  getLinksList(): Array<EnrollmentLink>;
-  setLinksList(value: Array<EnrollmentLink>): CourseSubmissions;
+  getLinksList(): Array<qf_types_types_pb.EnrollmentLink>;
+  setLinksList(value: Array<qf_types_types_pb.EnrollmentLink>): CourseSubmissions;
   clearLinksList(): CourseSubmissions;
-  addLinks(value?: EnrollmentLink, index?: number): EnrollmentLink;
+  addLinks(value?: qf_types_types_pb.EnrollmentLink, index?: number): qf_types_types_pb.EnrollmentLink;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): CourseSubmissions.AsObject;
@@ -77,7 +25,7 @@ export class CourseSubmissions extends jspb.Message {
 export namespace CourseSubmissions {
   export type AsObject = {
     course?: qf_types_types_pb.Course.AsObject,
-    linksList: Array<EnrollmentLink.AsObject>,
+    linksList: Array<qf_types_types_pb.EnrollmentLink.AsObject>,
   }
 }
 
@@ -182,24 +130,6 @@ export namespace GroupRequest {
     userid: number,
     groupid: number,
     courseid: number,
-  }
-}
-
-export class Provider extends jspb.Message {
-  getProvider(): string;
-  setProvider(value: string): Provider;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Provider.AsObject;
-  static toObject(includeInstance: boolean, msg: Provider): Provider.AsObject;
-  static serializeBinaryToWriter(message: Provider, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Provider;
-  static deserializeBinaryFromReader(message: Provider, reader: jspb.BinaryReader): Provider;
-}
-
-export namespace Provider {
-  export type AsObject = {
-    provider: string,
   }
 }
 

@@ -955,3 +955,55 @@ export namespace Review {
   }
 }
 
+export class SubmissionLink extends jspb.Message {
+  getAssignment(): Assignment | undefined;
+  setAssignment(value?: Assignment): SubmissionLink;
+  hasAssignment(): boolean;
+  clearAssignment(): SubmissionLink;
+
+  getSubmission(): Submission | undefined;
+  setSubmission(value?: Submission): SubmissionLink;
+  hasSubmission(): boolean;
+  clearSubmission(): SubmissionLink;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): SubmissionLink.AsObject;
+  static toObject(includeInstance: boolean, msg: SubmissionLink): SubmissionLink.AsObject;
+  static serializeBinaryToWriter(message: SubmissionLink, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): SubmissionLink;
+  static deserializeBinaryFromReader(message: SubmissionLink, reader: jspb.BinaryReader): SubmissionLink;
+}
+
+export namespace SubmissionLink {
+  export type AsObject = {
+    assignment?: Assignment.AsObject,
+    submission?: Submission.AsObject,
+  }
+}
+
+export class EnrollmentLink extends jspb.Message {
+  getEnrollment(): Enrollment | undefined;
+  setEnrollment(value?: Enrollment): EnrollmentLink;
+  hasEnrollment(): boolean;
+  clearEnrollment(): EnrollmentLink;
+
+  getSubmissionsList(): Array<SubmissionLink>;
+  setSubmissionsList(value: Array<SubmissionLink>): EnrollmentLink;
+  clearSubmissionsList(): EnrollmentLink;
+  addSubmissions(value?: SubmissionLink, index?: number): SubmissionLink;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): EnrollmentLink.AsObject;
+  static toObject(includeInstance: boolean, msg: EnrollmentLink): EnrollmentLink.AsObject;
+  static serializeBinaryToWriter(message: EnrollmentLink, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): EnrollmentLink;
+  static deserializeBinaryFromReader(message: EnrollmentLink, reader: jspb.BinaryReader): EnrollmentLink;
+}
+
+export namespace EnrollmentLink {
+  export type AsObject = {
+    enrollment?: Enrollment.AsObject,
+    submissionsList: Array<SubmissionLink.AsObject>,
+  }
+}
+
