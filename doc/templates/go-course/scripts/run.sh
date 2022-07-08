@@ -4,7 +4,7 @@ start=$SECONDS
 printf "*** Preparing for Test Execution ***\n"
 
 ASSIGNMENTS=/quickfeed/assignments
-TESTDIR=/quickfeed/tests
+TESTS=/quickfeed/tests
 ASSIGNDIR=$ASSIGNMENTS/{{ .AssignmentName }}/
 
 # Move to folder for assignment to test.
@@ -14,7 +14,7 @@ cd "$ASSIGNDIR"
 find . -name '*_test.go' -exec rm -rf {} \;
 
 # Copy tests into student assignments folder for running tests
-cp -r $TESTDIR/* $ASSIGNMENTS/
+cp -r $TESTS/* $ASSIGNMENTS/
 
 printf "\n*** Finished Test Setup in %s seconds ***\n" "$(( SECONDS - start ))"
 start=$SECONDS

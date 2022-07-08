@@ -4,9 +4,9 @@ start=$SECONDS
 printf "*** Preparing for Test Execution ***\n"
 
 ASSIGNDIR=/quickfeed/assignments/{{ .AssignmentName }}/
-TESTDIR=/quickfeed/tests/{{ .AssignmentName }}/
+TESTS=/quickfeed/tests/{{ .AssignmentName }}/
 
-cd "$TESTDIR"
+cd "$TESTS"
 
 # Perform lab specific setup
 if [ -f "setup.sh" ]; then
