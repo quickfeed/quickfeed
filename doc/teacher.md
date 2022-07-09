@@ -38,7 +38,7 @@ The following concepts are important to understand.
 To use QuickFeed, both teachers and students must have a [GitHub](https://github.com/) account.
 Each course in QuickFeed is based on a separate GitHub organization.
 
-### A course organization has several requirements
+### A Course Organization Has Several Requirements
 
 - Third-party access must not be restricted.
   This is necessary so that QuickFeed can access the organization on your behalf.
@@ -70,7 +70,7 @@ However, it appears there is no per-organization approach to turn off notificati
 
 ## Course
 
-### Course repositories structure
+### Course Repositories Structure
 
 QuickFeed uses the following repository structure.
 These will be created automatically when a course is created.
@@ -80,16 +80,18 @@ These will be created automatically when a course is created.
 | info            | Holds information about the course.                                            | Public                        |
 | assignments     | Contains a separate folder for each assignment.                                | Students, Teachers, QuickFeed |
 | username-labs   | Created for each student username in QuickFeed                                 | Student, Teachers, QuickFeed  |
+| groupname       | Created by a group of students; `groupname` is decided by the students.        | Students, Teachers, QuickFeed |
 | tests           | Contains a separate folder for each assignment with tests for that assignment. | Teachers, QuickFeed           |
 
 *In QuickFeed, Teacher means any teaching staff, including teaching assistants and professors alike.*
 
-The `assignments` folder has a separate folder for each assignment. The short name for each assignment can be provided in the folder name, for example `single-paxos` or `state-machine-replication`. Typically, the assignment id gleaned from the `assignment.yml` file will determine the ordering of the assignments as they appear in lists on QuickFeed. Some courses may simply use short names, such as `lab1`, `lab2`, and so on. These will be sorted by the frontend as expected.
+The `assignments` folder has a separate folder for each assignment.
+See section [The Assignments Repository](#The-Assignments-Repository) for more details.
 
 The `username` is actually the github user name. This repository will initially be empty, and the student will need to set up a remote label called `assignments` pointing to the `assignments` repository, and pull from it to get any template code provided by the teaching staff.
 
 The `tests` folder is used by QuickFeed to run the tests for each of the assignments.
-The folder structure inside `tests` must correspond to the structure in the `assignments` repo.
+The folder structure inside `tests` must correspond to the structure in the `assignments` repository.
 Each `assignment` folder in the tests repository contains one or more test file and an `assignment.yml` configuration file that will be picked up by QuickFeed test runner.
 The format of this file will describe various aspects of an assignment, such as submission deadline, approve: manual or automatic, which script file to run to test the assignment, etc.
 See below for an example.
@@ -100,9 +102,9 @@ A member of the teaching staff can then copy course `info`, the code template fo
 That is, these repositories should not be cloned or forked from an old version of the course.
 This approach prevents accidentally revealing commit history from old course instances.
 
-## Teaching assistants
+## Teaching Assistants
 
-### To give your teaching assistants access to your course you have to
+### To Give Your Teaching Assistants Access To Your Course You Have To
 
 - Accept their enrollments into your course
 - Promote them to your course's teacher on course members page
@@ -110,7 +112,7 @@ This approach prevents accidentally revealing commit history from old course ins
 Assistants will automatically be given organization `owner` role to be able to accept student enrollments, approve student groups and access all course repositories.
 They will also be added to the `allteachers` team.
 
-## Student enrollments
+## Student Enrollments
 
 Students enroll into your course by logging in into QuickFeed with their GitHub accounts, following `Join course` link and choosing to enroll into your course. You can access the full list of students (both already enrolled into your course or waiting for enrollment approval) on the `Members` tab of your course page, and accept their enrollments.
 
@@ -127,7 +129,7 @@ manually and accept the invitations from there. These links are also available f
 
 All students in a course will be added to the `allstudents` team in the course's GitHub organization.
 
-## Student groups
+## Student Groups
 
 Students can create groups with other students on QuickFeed, which later can be approved, rejected or edited by teacher or teacher assistants.
 When approved, the group will have a corresponding GitHub team created on your course organization, along with a repository for group assignments. After that the group name cannot be changed.
@@ -138,22 +140,19 @@ Group names cannot be reused: as long as a group team/repository with a certain 
 
 ### The Assignments Repository
 
-A course's `assignments` repository is used to provide course assignments to students.
-The `assignments` repository would typically be organized as shown below.
+A course's `assignments` repository provides course assignments to students and is typically organized as shown below.
 The `assignments` repository is the basis for each student's individual assignment repository and each group's shared repository.
-Whether or not a specific assignment is an individual assignment or a group assignment is specified in an [assignment information file](#assignment-information).
+A single assignment is represented by a folder containing all assignment files, e.g., `lab1` below.
+Students will need to pull the provided code from the `assignments` repository, and push their solution attempts to their own repositories.
 
-A single assignment is represented as a folder containing all assignment files, e.g. `lab1` below.
-Students will pull the provided code from the `assignments` repository, and push their solution attempts to their own repositories.
+While each assignment folder can be named anything you want, we recommend using the naming convention below to deliver a pleasant user experience in the web frontend.
 
 ```text
 assignments┐
            ├── lab1
            ├── lab2
            ├── lab3
-           ├── lab4
-           ├── lab5
-           └── lab6
+           └── lab4
 ```
 
 ### The Tests Repository
@@ -164,13 +163,17 @@ This is the purpose of the `tests` repository.
 The file system layout of the `tests` repository must match that of the `assignments` repository, as shown below.
 The `assignment.yml` files contains the [assignment information](#assignment-information).
 In addition, each assignment folder should also contain test code for the corresponding assignment.
-The `scripts` folder may contain a `run.sh` script with commands to be executed when running assignment tests.
-An assignment-specific `run.sh` script will only be used when running tests for the specific assignment.
-If the `scripts` folder contains a Dockerfile, a Docker image tagged with the course code will be built locally and used when running tests for the assignment.
 
+The `scripts` folder may contain a course-specific [test runner](#test-runners) template, named `run.sh`, for running the tests.
+If an assignment requires a different test runner, you can supply a custom `run.sh` template for that assignment.
+
+The `scripts` folder may also contain a [custom Dockerfile](#dockerfile) for the course.
+Otherwise, the [test runner](#test-runners) for each assignment specifies which Docker image to use.
+
+**(Beta feature: Issues and Pull Requests)**
 In addition, an assignment folder may contain one or more `task-*.md` files with exercise task descriptions.
 These task files must contain markdown content with a title specified on the first line.
-That is, the first line must start with `# ` followed by the title.
+That is, the first line must start with `#` followed by the title.
 The title must then be followed by a blank line before the task description body text.
 
 Tasks will be used to create issues on the repositories of students and groups.
@@ -179,9 +182,6 @@ Henceforth, if a particular ordering is desired, the teacher may prefix the titl
 
 ```text
 tests┐
-     ├── scripts
-     │   ├── Dockerfile
-     │   └── run.sh
      ├── lab1
      │   ├── assignment.yml
      │   └── run.sh
@@ -195,7 +195,9 @@ tests┐
      ├── lab4
      │   ├── assignment.yml
      │   └── criteria.json
-
+     └── scripts
+         ├── Dockerfile
+         └── run.sh
 ```
 
 ### Assignment Information
@@ -221,13 +223,96 @@ The `title` and `effort` are used by other tooling to create a README.md file fo
 
 | Field              | Description                                                                                    |
 |--------------------|------------------------------------------------------------------------------------------------|
-| `order`            | Assignment's sequence number; used to order the assignments.                                   |
+| `order`            | Assignment's sequence number; used to order the assignments in the frontend.                   |
 | `deadline`         | Submission deadline for the assignment.                                                        |
 | `isgrouplab`       | Assignment is considered a group assignment if true; otherwise it is an individual assignment. |
 | `autoapprove`      | Automatically approve the assignment when `scorelimit` is achieved.                            |
 | `scorelimit`       | Minimal score needed for approval. Default is 80 %.                                            |
 | `reviewers`        | Number of teachers that must review a student submission for manual approval. Default is 1.    |
 | `containertimeout` | Timeout for CI container to finish building and testing submitted code. Default is 10 minutes. |
+
+### Test Runners
+
+A course may specify a test runner that runs the tests for all assignments.
+The course-specific test runner is located in `scripts/run.sh`.
+Assignment-specific test runners are located in the individual assignment folders.
+
+The test runner is a bash script template; an example is shown below.
+
+The first line of the template specifies which Docker image to use for the tests.
+For example, the test runner can specify a publicly available Docker image, such as `#image/mcr.microsoft.com/dotnet/sdk:5.0`.
+However, it is also possible to use a custom Docker image, which is built from the course's `scripts/Dockerfile`.
+In this case, the test runner should specify the course code as the image to use, i.e., `#image/{course_code}`.
+The example below is for our QF101 test course.
+Note that the image will only be built/downloaded once, and will be cached for subsequent test runs.
+
+Further, the test runner can make use of two template variables that will be replaced by QuickFeed before execution:
+
+- `{{ .AssignmentName }}`: the name of the assignment folder (for the current test execution), e.g., `lab1`.
+- `{{ .RandomSecret }}`: a session secret used to match the test execution with the test results.
+
+The specific details regarding the session secret is explained in the `kit` module.
+The short explanation is that the `Score` JSON objects produced by assignment tests should contain the value `{{ .RandomSecret }}` in the `Secret` field.
+
+QuickFeed will clone a student's repository or a group repository, and makes them available via the `/quickfeed/assignments` folder.
+Similarly, QuickFeed will also clone the `tests` repository and make it available via the `/quickfeed/tests` folder.
+
+To prepare a custom test runner, it is recommended to use the `docker run` command to ensure that the code is accessible at the appropriate locations.
+You may use the `ls` command to list the contents of the various `/quickfeed` folders.
+
+```sh
+% docker run -it -v/my/local/path:/quickfeed image bash
+```
+
+Where `/my/local/path` contains the `assignments` and `tests` folders side-by-side.
+
+Note that QuickFeed performs a lightweight sanity check of the cloned student repository before running the tests.
+
+```shell
+#image/qf101
+
+start=$SECONDS
+printf "*** Preparing for Test Execution ***\n"
+
+ASSIGNMENTS=/quickfeed/assignments
+TESTS=/quickfeed/tests
+ASSIGNDIR=$ASSIGNMENTS/{{ .AssignmentName }}/
+
+# Move to folder for assignment to test.
+cd "$ASSIGNDIR"
+
+# Remove student written tests to avoid interference
+find . -name '*_test.go' -exec rm -rf {} \;
+
+# Copy tests into student assignments folder for running tests
+cp -r $TESTS/* $ASSIGNMENTS/
+
+printf "\n*** Finished Test Setup in %s seconds ***\n" "$(( SECONDS - start ))"
+start=$SECONDS
+printf "\n*** Running Tests ***\n\n"
+QUICKFEED_SESSION_SECRET={{ .RandomSecret }} go test -v -timeout 30s ./... 2>&1
+printf "\n*** Finished Running Tests in %s seconds ***\n" "$(( SECONDS - start ))"
+```
+
+## Tasks and Pull Requests (Experimental feature)
+
+As mentioned above, an assignment folder may contain one or more `task-*.md` files with exercise task descriptions.
+These task files must contain markdown content with a title specified on the first line.
+
+```md
+# Task 1: Go Questions
+
+Here are some questions about Go.
+```
+
+These tasks will be used to create issues on group repositories.
+
+The idea is that the students in a group solve the tasks/issues and then submit a pull request.
+The students of the group can then review each other's code and make suggestions for improvements.
+Once all the tests pass for a particular issue, the pull request can be reviewed by one or more teachers.
+Once the pull request is approved, the students of the group can then merge the pull request.
+
+Note: We don't support creating issues on student repositories since we don't have a good way to prevent cheating if we were to give access between student repositories.
 
 ## Reviewing student submissions
 

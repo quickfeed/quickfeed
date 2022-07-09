@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
@@ -18,23 +19,31 @@ func TestFetchAssignments(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	logger := log.Zap(true).Sugar()
+	s, err := scm.NewSCMClient(logger, "github", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	course := &qf.Course{
 		Name:             "QuickFeed Test Course",
+		Code:             "qf101",
 		OrganizationPath: qfTestOrg,
 	}
 
-	assignments, _, err := fetchAssignments(context.Background(), zap.NewNop().Sugar(), s, course)
+	assignments, dockerfile, err := fetchAssignments(context.Background(), s, course)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
 	for _, assignment := range assignments {
-		t.Logf("assignment: %v", assignment)
+		assignment.ScriptFile = "redacted" // too much noise otherwise
+		t.Logf("%+v", assignment)
+	}
+	// This just to simulate the behavior of UpdateFromTestsRepo to confirm that the Dockerfile is built
+	course.Dockerfile = dockerfile
+	if err := buildDockerImage(context.Background(), logger, course); err != nil {
+		t.Fatal(err)
 	}
 }
 

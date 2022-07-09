@@ -15,6 +15,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"go.uber.org/zap"
@@ -22,6 +23,7 @@ import (
 
 var (
 	DefaultContainerTimeout = time.Duration(10 * time.Minute)
+	QuickFeedPath           = "/quickfeed"
 	maxToScan               = 1_000_000 // bytes
 	maxLogSize              = 30_000    // bytes
 	lastSegmentSize         = 1_000     // bytes
@@ -107,12 +109,24 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 		// image name should be specified in a run.sh file in the tests repository
 		return nil, fmt.Errorf("no image name specified for '%s'", job.Name)
 	}
+	var hostConfig *container.HostConfig
+	if job.BindDir != "" {
+		hostConfig = &container.HostConfig{
+			Mounts: []mount.Mount{
+				{
+					Type:   mount.TypeBind,
+					Source: job.BindDir,
+					Target: QuickFeedPath,
+				},
+			},
+		}
+	}
 
 	create := func() (container.ContainerCreateCreatedBody, error) {
 		return d.client.ContainerCreate(ctx, &container.Config{
 			Image: job.Image,
 			Cmd:   []string{"/bin/bash", "-c", strings.Join(job.Commands, "\n")},
-		}, nil, nil, nil, job.Name)
+		}, hostConfig, nil, nil, job.Name)
 	}
 
 	resp, err := create()

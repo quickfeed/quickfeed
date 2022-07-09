@@ -10,14 +10,14 @@ import (
 
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
-	"go.uber.org/zap"
 )
 
-func TestSimulatedRebuildWorkpoolWithErrCount(t *testing.T) {
-	// this tests the workpool logic used in rebuildSubmissions
+func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
+	t.Skip("Disabled: mainly used for testing the work pool logic used in rebuildSubmissions")
 	for _, maxContainers := range []int{3, 5, 6, 8, 10} {
 		for _, errRate := range []int{2, 3, 4, 5, 6} {
 			for _, numSubs := range []int{10, 15, 20, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 150, 500} {
@@ -114,7 +114,7 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})

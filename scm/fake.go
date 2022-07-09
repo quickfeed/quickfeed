@@ -3,6 +3,8 @@ package scm
 import (
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/quickfeed/quickfeed/qf"
@@ -25,6 +27,18 @@ func NewFakeSCMClient() *FakeSCM {
 		Hooks:         make(map[uint64]int),
 		Teams:         make(map[uint64]*Team),
 	}
+}
+
+func (FakeSCM) Clone(_ context.Context, opt *CloneOptions) (string, error) {
+	cloneDir := filepath.Join(opt.DestDir, repoDir(opt))
+	// This is a hack to make sure the lab1 directory exists,
+	// required by the web/rebuild_test.go:TestRebuildSubmissions()
+	lab1Dir := filepath.Join(cloneDir, "lab1")
+	err := os.MkdirAll(lab1Dir, 0o700)
+	if err != nil {
+		return "", err
+	}
+	return cloneDir, err
 }
 
 // CreateOrganization implements the SCM interface.

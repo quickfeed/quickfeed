@@ -1,6 +1,7 @@
 agpath
 allstudents
 allteachers
+ASSIGNDIR
 assignmentid
 autoapprove
 autograde
@@ -124,6 +125,7 @@ skiptests
 slugified
 sqlite
 Stavnes
+stdcopy
 struct
 structs
 Studentid
@@ -132,6 +134,7 @@ subtests
 testdata
 testdb
 tmpl
+Typeflag
 Unexported
 unittests
 unmarshalled
@@ -142,6 +145,7 @@ URL's
 usermod
 webpack's
 wojtekmaj
+WORKDIR
 xanzy
 xargs
 xini

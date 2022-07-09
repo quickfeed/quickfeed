@@ -10,12 +10,8 @@ import (
 // AssignmentInfo holds metadata needed to fetch student code
 // and the test repository for an assignment.
 type AssignmentInfo struct {
-	AssignmentName     string
-	BranchName         string
-	CreatorAccessToken string
-	GetURL             string
-	TestURL            string
-	RandomSecret       string
+	AssignmentName string
+	RandomSecret   string
 }
 
 // parseScriptTemplate returns a job specifying the docker image and commands
@@ -25,12 +21,8 @@ type AssignmentInfo struct {
 // {{ .AssignmentName }}, {{ .RandomSecret }}, etc.
 func (r RunData) parseScriptTemplate(secret string) (*Job, error) {
 	info := &AssignmentInfo{
-		AssignmentName:     r.Assignment.GetName(),
-		BranchName:         r.BranchName,
-		CreatorAccessToken: r.Course.GetAccessToken(),
-		GetURL:             r.Repo.GetHTMLURL(),
-		TestURL:            r.Repo.GetTestURL(),
-		RandomSecret:       secret,
+		AssignmentName: r.Assignment.GetName(),
+		RandomSecret:   secret,
 	}
 	// TODO(meling) rename ScriptFile field to ScriptTemplate
 	// ScriptTemplate contains the script itself with variables in double curly braces
@@ -44,11 +36,11 @@ func (r RunData) parseScriptTemplate(secret string) (*Job, error) {
 	}
 	s := strings.Split(buffer.String(), "\n")
 	if len(s) < 2 {
-		return nil, fmt.Errorf("no script template for assignment %s in %s", info.AssignmentName, info.TestURL)
+		return nil, fmt.Errorf("no script template for assignment %s in %s", info.AssignmentName, r.Repo.GetTestURL())
 	}
 	parts := strings.Split(s[0], "#image/")
 	if len(parts) < 2 {
-		return nil, fmt.Errorf("no docker image specified in script template for assignment %s in %s", info.AssignmentName, info.TestURL)
+		return nil, fmt.Errorf("no docker image specified in script template for assignment %s in %s", info.AssignmentName, r.Repo.GetTestURL())
 	}
 	return &Job{Name: r.String(), Image: parts[1], Commands: s[1:]}, nil
 }

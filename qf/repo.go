@@ -24,19 +24,19 @@ type RepoURL struct {
 }
 
 func (r RepoURL) InfoRepoURL() string {
-	return fmt.Sprintf("https://%s/%s/%s.git", r.ProviderURL, r.Organization, InfoRepo)
+	return fmt.Sprintf("https://%s/%s/%s", r.ProviderURL, r.Organization, InfoRepo)
 }
 
 func (r RepoURL) AssignmentsRepoURL() string {
-	return fmt.Sprintf("https://%s/%s/%s.git", r.ProviderURL, r.Organization, AssignmentRepo)
+	return fmt.Sprintf("https://%s/%s/%s", r.ProviderURL, r.Organization, AssignmentRepo)
 }
 
 func (r RepoURL) StudentRepoURL(userName string) string {
-	return fmt.Sprintf("https://%s/%s/%s.git", r.ProviderURL, r.Organization, StudentRepoName(userName))
+	return fmt.Sprintf("https://%s/%s/%s", r.ProviderURL, r.Organization, StudentRepoName(userName))
 }
 
 func (r RepoURL) TestsRepoURL() string {
-	return fmt.Sprintf("https://%s/%s/%s.git", r.ProviderURL, r.Organization, TestsRepo)
+	return fmt.Sprintf("https://%s/%s/%s", r.ProviderURL, r.Organization, TestsRepo)
 }
 
 // IsCourseRepo returns true if the repository is one of the course repo types.

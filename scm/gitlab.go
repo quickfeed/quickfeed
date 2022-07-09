@@ -22,6 +22,10 @@ func NewGitlabSCMClient(token string) *GitlabSCM {
 	}
 }
 
+func (GitlabSCM) Clone(context.Context, *CloneOptions) (string, error) {
+	return "", nil
+}
+
 // CreateOrganization implements the SCM interface.
 func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*qf.Organization, error) {
 	group, _, err := s.client.Groups.CreateGroup(&gitlab.CreateGroupOptions{
