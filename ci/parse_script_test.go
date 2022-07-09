@@ -1,8 +1,12 @@
 package ci
 
 import (
+	"path/filepath"
+	"sort"
+	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
 )
@@ -32,40 +36,60 @@ func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *RunDa
 	return runData
 }
 
-func TestParseScriptTemplate(t *testing.T) {
+func TestParseTestRunnerScript(t *testing.T) {
 	const (
 		// these are only used in text; no access to qf101 organization or user is needed
-		qfTestOrg      = "qf101"
-		image          = "quickfeed:go"
-		scriptTemplate = `#image/quickfeed:go
-AssignmentName: {{ .AssignmentName }}
-RandomSecret: {{ .RandomSecret }}
+		qfTestOrg        = "qf101"
+		image            = "quickfeed:go"
+		testRunnerScript = `#image/quickfeed:go
+echo $TESTS
+echo $ASSIGNMENTS
+echo $CURRENT
+echo $QUICKFEED_SESSION_SECRET
 `
 		githubUserName = "user"
 		accessToken    = "open sesame"
 	)
 	randomSecret := rand.String()
 
-	runData := testRunData(qfTestOrg, githubUserName, "access_token", scriptTemplate)
-	job, err := runData.parseScriptTemplate(randomSecret)
+	runData := testRunData(qfTestOrg, githubUserName, "access_token", testRunnerScript)
+	job, err := runData.parseTestRunnerScript(randomSecret)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if job.Image != image {
 		t.Errorf("job.Image = %s, want %s", job.Image, image)
 	}
-	if job.Commands[0] != "AssignmentName: lab1" {
-		t.Errorf("job.Commands[0] = %s, want %s", job.Commands[0], "AssignmentName: lab1")
+	gotVars := job.Env
+	wantVars := []string{
+		"TESTS=" + filepath.Join(QuickFeedPath, qf.TestsRepo),
+		"ASSIGNMENTS=" + filepath.Join(QuickFeedPath, qf.AssignmentRepo),
+		"CURRENT=" + runData.Assignment.GetName(),
+		"QUICKFEED_SESSION_SECRET=" + randomSecret,
 	}
-	if job.Commands[1] != "RandomSecret: "+randomSecret {
-		t.Errorf("job.Commands[1] = %s, want %s", job.Commands[1], "RandomSecret: "+randomSecret)
+	trans := cmp.Transformer("Sort", func(in []string) []string {
+		out := append([]string(nil), in...)
+		sort.Strings(out)
+		return out
+	})
+	if diff := cmp.Diff(wantVars, gotVars, trans); diff != "" {
+		t.Errorf("parseTestRunnerScript() mismatch (-want +got):\n%s", diff)
+	}
+	_, after, found := strings.Cut(testRunnerScript, image+"\n")
+	if !found {
+		t.Errorf("No script content found for image: %s", image)
+	}
+	for i, line := range strings.Split(after, "\n") {
+		if line != job.Commands[i] {
+			t.Errorf("job.Commands[%d] = %s, want %s", i, job.Commands[i], line)
+		}
 	}
 	if job.Name != "dat320-lab1-muggles-"+runData.CommitID[:6] {
 		t.Errorf("job.Name = %s, want %s", job.Name, "dat320-lab1-muggles-"+runData.CommitID[:6])
 	}
 }
 
-func TestParseBadScriptTemplate(t *testing.T) {
+func TestParseBadTestRunnerScript(t *testing.T) {
 	const (
 		// these are only used in text; no access to qf101 organization or user is needed
 		qfTestOrg      = "qf101"
@@ -77,7 +101,7 @@ func TestParseBadScriptTemplate(t *testing.T) {
 
 	const scriptTemplate = `#image/quickfeed:go`
 	runData := testRunData(qfTestOrg, githubUserName, "access_token", scriptTemplate)
-	_, err := runData.parseScriptTemplate(randomSecret)
+	_, err := runData.parseTestRunnerScript(randomSecret)
 	const wantMsg = "no script template for assignment lab1 in https://github.com/qf101/tests"
 	if err.Error() != wantMsg {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg)
@@ -89,7 +113,7 @@ printf "*** Preparing for Test Execution ***\n"
 
 `
 	runData = testRunData(qfTestOrg, githubUserName, "access_token", scriptTemplate2)
-	_, err = runData.parseScriptTemplate(randomSecret)
+	_, err = runData.parseTestRunnerScript(randomSecret)
 	const wantMsg2 = "no docker image specified in script template for assignment lab1 in https://github.com/qf101/tests"
 	if err.Error() != wantMsg2 {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg2)

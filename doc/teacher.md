@@ -164,8 +164,8 @@ The file system layout of the `tests` repository must match that of the `assignm
 The `assignment.yml` files contains the [assignment information](#assignment-information).
 In addition, each assignment folder should also contain test code for the corresponding assignment.
 
-The `scripts` folder may contain a course-specific [test runner](#test-runners) template, named `run.sh`, for running the tests.
-If an assignment requires a different test runner, you can supply a custom `run.sh` template for that assignment.
+The `scripts` folder may contain a course-specific [test runner](#test-runners), named `run.sh`, for running the tests.
+If an assignment requires a different test runner, you can supply a custom `run.sh` script for that assignment.
 
 The `scripts` folder may also contain a [custom Dockerfile](#dockerfile) for the course.
 Otherwise, the [test runner](#test-runners) for each assignment specifies which Docker image to use.
@@ -237,7 +237,7 @@ A course may specify a test runner that runs the tests for all assignments.
 The course-specific test runner is located in `scripts/run.sh`.
 Assignment-specific test runners are located in the individual assignment folders.
 
-The test runner is a bash script template; an example is shown below.
+The test runner is a bash script; an example is shown below.
 
 The first line of the template specifies which Docker image to use for the tests.
 For example, the test runner can specify a publicly available Docker image, such as `#image/mcr.microsoft.com/dotnet/sdk:5.0`.
@@ -246,16 +246,29 @@ In this case, the test runner should specify the course code as the image to use
 The example below is for our QF101 test course.
 Note that the image will only be built/downloaded once, and will be cached for subsequent test runs.
 
-Further, the test runner can make use of two template variables that will be replaced by QuickFeed before execution:
-
-- `{{ .AssignmentName }}`: the name of the assignment folder (for the current test execution), e.g., `lab1`.
-- `{{ .RandomSecret }}`: a session secret used to match the test execution with the test results.
-
-The specific details regarding the session secret is explained in the `kit` module.
-The short explanation is that the `Score` JSON objects produced by assignment tests should contain the value `{{ .RandomSecret }}` in the `Secret` field.
-
-QuickFeed will clone a student's repository or a group repository, and makes them available via the `/quickfeed/assignments` folder.
+QuickFeed will clone a student's repository or a group repository, and make them available via the `/quickfeed/assignments` folder inside the docker image.
 Similarly, QuickFeed will also clone the `tests` repository and make it available via the `/quickfeed/tests` folder.
+
+To simplify the test runner script QuickFeed makes the following environment variables available:
+
+- `$TESTS`: Path to the root of the course's `test` repository.
+- `$ASSIGNMENTS`: Path to the root of the course's `assignments` repository.
+- `$CURRENT`: The current assignment folder; this folder should exist in both the `tests` and `assignments` repositories.
+
+The `$TESTS` and `$ASSIGNMENTS` variables are always set to the following paths:
+
+```bash
+TESTS=/quickfeed/tests
+ASSIGNMENTS=/quickfeed/assignments
+```
+
+Whereas the `$CURRENT` variable is set to the current assignment folder, e.g.,:
+
+```bash
+CURRENT=lab1
+```
+
+Thus, the test runner script can use these variables to manipulate the filesystem as needed.
 
 To prepare a custom test runner, it is recommended to use the `docker run` command to ensure that the code is accessible at the appropriate locations.
 You may use the `ls` command to list the contents of the various `/quickfeed` folders.
@@ -274,25 +287,37 @@ Note that QuickFeed performs a lightweight sanity check of the cloned student re
 start=$SECONDS
 printf "*** Preparing for Test Execution ***\n"
 
-ASSIGNMENTS=/quickfeed/assignments
-TESTS=/quickfeed/tests
-ASSIGNDIR=$ASSIGNMENTS/{{ .AssignmentName }}/
-
-# Move to folder for assignment to test.
-cd "$ASSIGNDIR"
+# Move to folder for the current assignment to test.
+cd "$ASSIGNMENTS/$CURRENT"
 
 # Remove student written tests to avoid interference
 find . -name '*_test.go' -exec rm -rf {} \;
 
 # Copy tests into student assignments folder for running tests
-cp -r $TESTS/* $ASSIGNMENTS/
+cp -r "$TESTS"/* "$ASSIGNMENTS"/
 
 printf "\n*** Finished Test Setup in %s seconds ***\n" "$(( SECONDS - start ))"
 start=$SECONDS
 printf "\n*** Running Tests ***\n\n"
-QUICKFEED_SESSION_SECRET={{ .RandomSecret }} go test -v -timeout 30s ./... 2>&1
+go test -v -timeout 30s ./... 2>&1
 printf "\n*** Finished Running Tests in %s seconds ***\n" "$(( SECONDS - start ))"
 ```
+
+## Writing Tests
+
+The test runner script will run the tests for the current assignment.
+However, the teacher must write the tests so that each test emits a `Score` JSON object.
+This `Score` object must be written to `stdout` and must contain the following fields:
+
+```json
+{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":100,"MaxScore":100,"Weight":1}
+```
+
+The session secret is generated by QuickFeed and is used to identify the test run.
+A test execution can read the session secret from the `$QUICKFEED_SESSION_SECRET` environment variable.
+However, once the test code has read the session secret into memory, it should set the environment variable to the empty string `""`.
+
+For additional information about writing tests, please see the Go-based `score` package in the `kit` module.
 
 ## Tasks and Pull Requests (Experimental feature)
 

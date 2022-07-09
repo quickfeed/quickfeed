@@ -125,6 +125,7 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 	create := func() (container.ContainerCreateCreatedBody, error) {
 		return d.client.ContainerCreate(ctx, &container.Config{
 			Image: job.Image,
+			Env:   job.Env, // Set default environment variables
 			Cmd:   []string{"/bin/bash", "-c", strings.Join(job.Commands, "\n")},
 		}, hostConfig, nil, nil, job.Name)
 	}
