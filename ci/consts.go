@@ -1,4 +1,5 @@
 package ci
 
-// Check that the student code files don't contain the secret string
+// Environment variable used by the CI system to pass
+// the session secret from QuickFeed to the test code.
 const secretEnvName = "QUICKFEED_SESSION_SECRET"
