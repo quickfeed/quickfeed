@@ -69,6 +69,38 @@ func TestDocker(t *testing.T) {
 	}
 }
 
+func TestDockerMultilineScript(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	cmds := []string{
+		`echo -n "hello world\n"`,
+		`echo -n "join my world"`,
+	}
+	const (
+		wantOut    = "hello world\\njoin my world"
+		image      = "golang:latest"
+		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed"
+	)
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:       t.Name() + "-" + qtest.RandomString(t),
+		Image:      image,
+		Dockerfile: dockerfile,
+		Commands:   cmds,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", cmds, out, wantOut)
+	}
+}
+
 // Note that this test will fail if the content of ./testdata changes.
 func TestDockerBindDir(t *testing.T) {
 	if !docker {
@@ -102,6 +134,52 @@ func TestDockerBindDir(t *testing.T) {
 
 	if out != wantOut {
 		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
+	}
+}
+
+// Note that this test will fail if the content of ./testdata changes.
+func TestDockerEnvVars(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	envVars := []string{
+		"TESTS=/quickfeed/tests",
+		"ASSIGNMENTS=/quickfeed/assignments",
+	}
+	// check that the default environment variables are accessible from the container
+	cmds := []string{
+		`echo $TESTS`,
+		`echo $ASSIGNMENTS`,
+	}
+
+	const (
+		wantOut    = "/quickfeed/tests\n/quickfeed/assignments\n"
+		image      = "golang:latest"
+		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed"
+	)
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	// dir is the directory to map into /quickfeed in the docker container.
+	dir := t.TempDir()
+	os.Mkdir(filepath.Join(dir, "tests"), 0o700)
+	os.Mkdir(filepath.Join(dir, "assignments"), 0o700)
+
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:       t.Name() + "-" + qtest.RandomString(t),
+		Image:      image,
+		Dockerfile: dockerfile,
+		BindDir:    dir,
+		Env:        envVars,
+		Commands:   cmds,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", cmds, out, wantOut)
 	}
 }
 

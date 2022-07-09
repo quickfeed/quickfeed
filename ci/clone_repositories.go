@@ -71,8 +71,6 @@ func (r RunData) validate(testsDir, assignmentsDir string) error {
 	if err != nil {
 		return err
 	}
-	// Check that the student code files don't contain the secret string
-	const secretEnvName = "QUICKFEED_SESSION_SECRET"
 	for file, content := range files {
 		if strings.Contains(string(content), secretEnvName) {
 			return fmt.Errorf("file %q in %s contains %s environment variable", filepath.Base(file), r, secretEnvName)
