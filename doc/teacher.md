@@ -294,7 +294,7 @@ cd "$ASSIGNMENTS/$CURRENT"
 find . -name '*_test.go' -exec rm -rf {} \;
 
 # Copy tests into student assignments folder for running tests
-cp -r $TESTS/* $ASSIGNMENTS/
+cp -r "$TESTS"/* "$ASSIGNMENTS"/
 
 printf "\n*** Finished Test Setup in %s seconds ***\n" "$(( SECONDS - start ))"
 start=$SECONDS
