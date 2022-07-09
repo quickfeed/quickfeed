@@ -31,7 +31,7 @@ func loadRunScript(t *testing.T) string {
 	return string(b)
 }
 
-func testRunData(t *testing.T, scriptTemplate string) *ci.RunData {
+func testRunData(t *testing.T, runScriptContent string) *ci.RunData {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
@@ -57,7 +57,7 @@ func testRunData(t *testing.T, scriptTemplate string) *ci.RunData {
 		},
 		Assignment: &qf.Assignment{
 			Name:             "lab1",
-			ScriptFile:       scriptTemplate,
+			ScriptFile:       runScriptContent,
 			ContainerTimeout: 1, // minutes
 		},
 		Repo: &qf.Repository{
@@ -71,8 +71,8 @@ func testRunData(t *testing.T, scriptTemplate string) *ci.RunData {
 }
 
 func TestRunTests(t *testing.T) {
-	scriptTemplate := loadRunScript(t)
-	runData := testRunData(t, scriptTemplate)
+	runScriptContent := loadRunScript(t)
+	runData := testRunData(t, runScriptContent)
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
@@ -89,8 +89,8 @@ func TestRunTests(t *testing.T) {
 }
 
 func TestRunTestsTimeout(t *testing.T) {
-	scriptTemplate := loadRunScript(t)
-	runData := testRunData(t, scriptTemplate)
+	runScriptContent := loadRunScript(t)
+	runData := testRunData(t, runScriptContent)
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()

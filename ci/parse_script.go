@@ -20,11 +20,11 @@ import (
 func (r RunData) parseTestRunnerScript(secret string) (*Job, error) {
 	s := strings.Split(r.Assignment.GetScriptFile(), "\n")
 	if len(s) < 2 {
-		return nil, fmt.Errorf("no script template for assignment %s in %s", r.Assignment.GetName(), r.Repo.GetTestURL())
+		return nil, fmt.Errorf("no run script for assignment %s in %s", r.Assignment.GetName(), r.Repo.GetTestURL())
 	}
 	parts := strings.Split(s[0], "#image/")
 	if len(parts) < 2 {
-		return nil, fmt.Errorf("no docker image specified in script template for assignment %s in %s", r.Assignment.GetName(), r.Repo.GetTestURL())
+		return nil, fmt.Errorf("no docker image specified in run script for assignment %s in %s", r.Assignment.GetName(), r.Repo.GetTestURL())
 	}
 	return &Job{
 		Name:     r.String(),

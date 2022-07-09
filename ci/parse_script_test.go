@@ -12,7 +12,7 @@ import (
 )
 
 // Testdata copied from run_tests_test.go (since they are in different packages)
-func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *RunData {
+func testRunData(qfTestOrg, userName, accessToken, runScriptContent string) *RunData {
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
 	qf.SetAccessToken(courseID, accessToken)
@@ -23,7 +23,7 @@ func testRunData(qfTestOrg, userName, accessToken, scriptTemplate string) *RunDa
 		},
 		Assignment: &qf.Assignment{
 			Name:             "lab1",
-			ScriptFile:       scriptTemplate,
+			ScriptFile:       runScriptContent,
 			ContainerTimeout: 1,
 		},
 		Repo: &qf.Repository{
@@ -41,7 +41,7 @@ func TestParseTestRunnerScript(t *testing.T) {
 		// these are only used in text; no access to qf101 organization or user is needed
 		qfTestOrg        = "qf101"
 		image            = "quickfeed:go"
-		testRunnerScript = `#image/quickfeed:go
+		runScriptContent = `#image/quickfeed:go
 echo $TESTS
 echo $ASSIGNMENTS
 echo $CURRENT
@@ -52,7 +52,7 @@ echo $QUICKFEED_SESSION_SECRET
 	)
 	randomSecret := rand.String()
 
-	runData := testRunData(qfTestOrg, githubUserName, "access_token", testRunnerScript)
+	runData := testRunData(qfTestOrg, githubUserName, "access_token", runScriptContent)
 	job, err := runData.parseTestRunnerScript(randomSecret)
 	if err != nil {
 		t.Fatal(err)
@@ -75,7 +75,7 @@ echo $QUICKFEED_SESSION_SECRET
 	if diff := cmp.Diff(wantVars, gotVars, trans); diff != "" {
 		t.Errorf("parseTestRunnerScript() mismatch (-want +got):\n%s", diff)
 	}
-	_, after, found := strings.Cut(testRunnerScript, image+"\n")
+	_, after, found := strings.Cut(runScriptContent, image+"\n")
 	if !found {
 		t.Errorf("No script content found for image: %s", image)
 	}
@@ -99,22 +99,22 @@ func TestParseBadTestRunnerScript(t *testing.T) {
 	)
 	randomSecret := rand.String()
 
-	const scriptTemplate = `#image/quickfeed:go`
-	runData := testRunData(qfTestOrg, githubUserName, "access_token", scriptTemplate)
+	const runScriptContent = `#image/quickfeed:go`
+	runData := testRunData(qfTestOrg, githubUserName, "access_token", runScriptContent)
 	_, err := runData.parseTestRunnerScript(randomSecret)
-	const wantMsg = "no script template for assignment lab1 in https://github.com/qf101/tests"
+	const wantMsg = "no run script for assignment lab1 in https://github.com/qf101/tests"
 	if err.Error() != wantMsg {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg)
 	}
 
-	const scriptTemplate2 = `
+	const runScriptContent2 = `
 start=$SECONDS
 printf "*** Preparing for Test Execution ***\n"
 
 `
-	runData = testRunData(qfTestOrg, githubUserName, "access_token", scriptTemplate2)
+	runData = testRunData(qfTestOrg, githubUserName, "access_token", runScriptContent2)
 	_, err = runData.parseTestRunnerScript(randomSecret)
-	const wantMsg2 = "no docker image specified in script template for assignment lab1 in https://github.com/qf101/tests"
+	const wantMsg2 = "no docker image specified in run script for assignment lab1 in https://github.com/qf101/tests"
 	if err.Error() != wantMsg2 {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg2)
 	}
