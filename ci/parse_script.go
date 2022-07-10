@@ -18,7 +18,7 @@ import (
 //   CURRENT - name of the current assignment folder
 //   QUICKFEED_SESSION_SECRET - typically used by the test code; not the script itself
 func (r RunData) parseTestRunnerScript(secret string) (*Job, error) {
-	s := strings.Split(r.Assignment.GetScriptFile(), "\n")
+	s := strings.Split(r.Assignment.GetRunScriptContent(), "\n")
 	if len(s) < 2 {
 		return nil, fmt.Errorf("no run script for assignment %s in %s", r.Assignment.GetName(), r.Repo.GetTestURL())
 	}

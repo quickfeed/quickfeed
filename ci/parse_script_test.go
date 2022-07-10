@@ -23,7 +23,7 @@ func testRunData(qfTestOrg, userName, accessToken, runScriptContent string) *Run
 		},
 		Assignment: &qf.Assignment{
 			Name:             "lab1",
-			ScriptFile:       runScriptContent,
+			RunScriptContent: runScriptContent,
 			ContainerTimeout: 1,
 		},
 		Repo: &qf.Repository{

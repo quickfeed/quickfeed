@@ -57,7 +57,7 @@ func testRunData(t *testing.T, runScriptContent string) *ci.RunData {
 		},
 		Assignment: &qf.Assignment{
 			Name:             "lab1",
-			ScriptFile:       runScriptContent,
+			RunScriptContent: runScriptContent,
 			ContainerTimeout: 1, // minutes
 		},
 		Repo: &qf.Repository{
@@ -123,7 +123,7 @@ func TestRecordResults(t *testing.T) {
 	assignment := &qf.Assignment{
 		CourseID: course.ID,
 		Name:     "lab1",
-		ScriptFile: `#image/quickfeed:go
+		RunScriptContent: `#image/quickfeed:go
 printf "AssignmentName: {{ .AssignmentName }}\n"
 printf "RandomSecret: {{ .RandomSecret }}\n"
 `,

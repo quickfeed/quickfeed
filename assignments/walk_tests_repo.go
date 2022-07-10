@@ -88,7 +88,7 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 		case scriptFile:
 			if assignmentName != scriptFolder {
 				// Found assignment-specific run script
-				assignmentsMap[assignmentName].ScriptFile = string(contents)
+				assignmentsMap[assignmentName].RunScriptContent = string(contents)
 			} else {
 				defaultScriptContent = string(contents)
 			}
@@ -112,8 +112,8 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 	// assignment that is missing an assignment-specific script.
 	if defaultScriptContent != "" {
 		for _, assignment := range assignmentsMap {
-			if assignment.ScriptFile == "" {
-				assignment.ScriptFile = defaultScriptContent
+			if assignment.RunScriptContent == "" {
+				assignment.RunScriptContent = defaultScriptContent
 			}
 		}
 	}
