@@ -41,7 +41,7 @@ func (r RepoURL) TestsRepoURL() string {
 
 // IsCourseRepo returns true if the repository is one of the course repo types.
 func (t Repository_Type) IsCourseRepo() bool {
-	return t == Repository_COURSEINFO || t == Repository_TESTS || t == Repository_ASSIGNMENTS
+	return t == Repository_INFO || t == Repository_TESTS || t == Repository_ASSIGNMENTS
 }
 
 // IsUserRepo returns true if the repository is a user repo.
@@ -104,7 +104,7 @@ func (t *Repository) UserName() string {
 func RepoType(path string) (repoType Repository_Type) {
 	switch path {
 	case InfoRepo:
-		repoType = Repository_COURSEINFO
+		repoType = Repository_INFO
 	case AssignmentRepo:
 		repoType = Repository_ASSIGNMENTS
 	case TestsRepo:
