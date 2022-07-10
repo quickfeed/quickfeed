@@ -283,7 +283,7 @@ func TestGetRepositories(t *testing.T) {
 	wantAllRepoURLs := &qf.Repositories{
 		URLs: map[string]string{
 			"ASSIGNMENTS": wantAssignmentsRepo.HTMLURL,
-			"COURSEINFO":  wantInfoRepo.HTMLURL,
+			"INFO":        wantInfoRepo.HTMLURL,
 			"TESTS":       wantTestsRepo.HTMLURL,
 			"USER":        wantUserRepo.HTMLURL,
 			"GROUP":       wantGroupRepo.HTMLURL,

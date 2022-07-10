@@ -1,7 +1,8 @@
 import { Color, hasStudent, hasTeacher, isPending, isStudent, isTeacher, isVisible, SubmissionSort, SubmissionStatus } from "../Helpers"
 import {
-    User, Enrollment, Submission, Repository, Course, Group, GradingCriterion, Assignment, GradingBenchmark, SubmissionLink } from "../../proto/qf/types_pb"
-import { SubmissionsForCourseRequest, CourseSubmissions, Organization,} from "../../proto/qf/requests_pb"
+    User, Enrollment, Submission, Repository, Course, Group, GradingCriterion, Assignment, GradingBenchmark, SubmissionLink
+} from "../../proto/qf/types_pb"
+import { SubmissionsForCourseRequest, CourseSubmissions, Organization, } from "../../proto/qf/requests_pb"
 import { Alert, UserCourseSubmissions } from "./state"
 import { IGrpcResponse } from "../GRPCManager"
 import { StatusCode } from "grpc-web"
@@ -776,9 +777,9 @@ export const logout = ({ state }: Context): void => {
 const generateRepositoryList = (enrollment: Enrollment): Repository.Type[] => {
     switch (enrollment.getStatus()) {
         case Enrollment.UserStatus.TEACHER:
-            return [Repository.Type.ASSIGNMENTS, Repository.Type.COURSEINFO, Repository.Type.GROUP, Repository.Type.TESTS, Repository.Type.USER]
+            return [Repository.Type.ASSIGNMENTS, Repository.Type.INFO, Repository.Type.GROUP, Repository.Type.TESTS, Repository.Type.USER]
         case Enrollment.UserStatus.STUDENT:
-            return [Repository.Type.ASSIGNMENTS, Repository.Type.COURSEINFO, Repository.Type.GROUP, Repository.Type.USER]
+            return [Repository.Type.ASSIGNMENTS, Repository.Type.INFO, Repository.Type.GROUP, Repository.Type.USER]
         default:
             return [Repository.Type.NONE]
     }
