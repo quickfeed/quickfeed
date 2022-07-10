@@ -20,7 +20,7 @@ func TestFetchAssignments(t *testing.T) {
 	accessToken := scm.GetAccessToken(t)
 
 	logger := log.Zap(true).Sugar()
-	s, err := scm.NewSCMClient(logger, "github", accessToken)
+	s, err := scm.NewSCMClient(logger, accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

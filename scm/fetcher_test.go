@@ -15,7 +15,7 @@ func TestClone(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
-	s, err := scm.NewSCMClient(log.Zap(true).Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(log.Zap(true).Sugar(), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +73,7 @@ func TestCloneBranch(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
-	s, err := scm.NewSCMClient(log.Zap(true).Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(log.Zap(true).Sugar(), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

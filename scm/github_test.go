@@ -27,7 +27,7 @@ func TestGetOrganization(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestListHooks(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func TestCreateHook(t *testing.T) {
 		t.Skip("Disabled pending support for deleting webhooks")
 	}
 
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -234,7 +234,7 @@ func TestUpdateIssue(t *testing.T) {
 func TestRequestReviewers(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

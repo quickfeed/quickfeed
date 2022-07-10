@@ -164,7 +164,8 @@ func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course 
 func FakeProviderMap(t *testing.T) (scm.SCM, *auth.Scms) {
 	t.Helper()
 	scms := auth.NewScms()
-	scm, err := scms.GetOrCreateSCMEntry(Logger(t).Desugar(), "fake", "token")
+	os.Setenv("SCM_PROVIDER", "fake")
+	scm, err := scms.GetOrCreateSCMEntry(Logger(t).Desugar(), "token")
 	if err != nil {
 		t.Fatal(err)
 	}

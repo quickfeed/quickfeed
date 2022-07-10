@@ -36,7 +36,7 @@ func testRunData(t *testing.T, scriptTemplate string) *ci.RunData {
 	accessToken := scm.GetAccessToken(t)
 
 	// Only used to fetch the user's GitHub login (user name)
-	s, err := scm.NewSCMClient(qtest.Logger(t), "github", accessToken)
+	s, err := scm.NewSCMClient(qtest.Logger(t), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

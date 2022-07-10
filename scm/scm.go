@@ -3,6 +3,7 @@ package scm
 import (
 	"context"
 	"errors"
+	"os"
 
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
@@ -89,8 +90,21 @@ type SCM interface {
 	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
 }
 
+const defaultProvider = "github"
+
+var provider string
+
+// Provider returns the current SCM provider supported by this backend.
+func Provider() string {
+	return provider
+}
+
 // NewSCMClient returns a new provider client implementing the SCM interface.
-func NewSCMClient(logger *zap.SugaredLogger, provider, token string) (SCM, error) {
+func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
+	provider = os.Getenv("SCM_PROVIDER")
+	if provider == "" {
+		provider = defaultProvider
+	}
 	switch provider {
 	case "github":
 		return NewGithubSCMClient(logger, token), nil
