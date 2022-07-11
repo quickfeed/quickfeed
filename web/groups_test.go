@@ -10,8 +10,8 @@ import (
 
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 )
@@ -264,7 +264,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	defer cleanup()
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(qlog.Logger(t).Desugar(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	_, err := fakeProvider.CreateOrganization(context.Background(),
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
 	)
@@ -440,7 +440,7 @@ func TestDeleteGroup(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 
 	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(qlog.Logger(t).Desugar(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {

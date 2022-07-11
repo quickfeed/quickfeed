@@ -78,7 +78,7 @@ func TestGetSelf(t *testing.T) {
 	}{
 		{id: 1, code: codes.Unauthenticated, metadata: false, token: "", wantUser: nil},
 		{id: 6, code: codes.PermissionDenied, metadata: true, token: "", wantUser: nil},
-		{id: 1, code: codes.Unauthenticated, metadata: true, token: "shouldfail", wantUser: nil},
+		{id: 1, code: codes.Unauthenticated, metadata: true, token: "should fail", wantUser: nil},
 		{id: 1, code: codes.OK, metadata: true, token: "", wantUser: adminUser},
 		{id: 2, code: codes.OK, metadata: true, token: "", wantUser: student},
 	}

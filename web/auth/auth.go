@@ -13,8 +13,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/markbates/goth/gothic"
 	"github.com/quickfeed/quickfeed/database"
-	lg "github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -245,7 +245,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 			logger.Error("failed to complete user authentication", zap.Error(err))
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
-		logger.Debugf("externalUser: %v", lg.IndentJson(externalUser))
+		logger.Debugf("externalUser: %v", qlog.IndentJson(externalUser))
 
 		remoteID, err := strconv.ParseUint(externalUser.UserID, 10, 64)
 		if err != nil {

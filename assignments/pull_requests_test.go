@@ -7,8 +7,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -71,7 +71,7 @@ func TestPublishFeedbackComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), accessToken)
+	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

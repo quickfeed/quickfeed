@@ -8,7 +8,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
-	logq "github.com/quickfeed/quickfeed/log"
+	logq "github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
@@ -36,7 +36,7 @@ func TestGitHubWebHook(t *testing.T) {
 	accessToken := scm.GetAccessToken(t)
 	serverURL := scm.GetWebHookServer(t)
 
-	logger := logq.Zap(true).Sugar()
+	logger := logq.Logger(t)
 	defer func() { _ = logger.Sync() }()
 
 	s, err := scm.NewSCMClient(logger, accessToken)

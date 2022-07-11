@@ -102,7 +102,7 @@ func fetchAssignments(ctx context.Context, sc scm.SCM, course *qf.Course) ([]*qf
 
 // buildDockerImage builds the Docker image for the given course.
 func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, course *qf.Course) error {
-	docker, err := ci.NewDockerCI(logger.Desugar())
+	docker, err := ci.NewDockerCI(logger)
 	if err != nil {
 		return fmt.Errorf("failed to set up docker client: %w", err)
 	}

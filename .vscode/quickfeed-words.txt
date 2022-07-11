@@ -7,6 +7,7 @@ autoapprove
 autograde
 Autograder
 backports
+bitlab
 bufconn
 bufnet
 buildid
@@ -74,6 +75,8 @@ jsonpb
 keepalive
 keyout
 killall
+labstack
+Lamport
 letsencrypt
 linuxbrew
 LOGDB
@@ -81,6 +84,7 @@ logq
 logrotate
 longsleep
 lsof
+markbates
 markdownlint
 mattn
 maxage
@@ -103,11 +107,13 @@ pbgo
 pgrep
 pkgs
 privkey
+promhttp
 proto
 protobuf
 protoc
 protocmp
 protoimpl
+qlog
 qtest
 quickfeed
 Repos
@@ -150,3 +156,4 @@ xanzy
 xargs
 xini
 xlsx
+zapcore

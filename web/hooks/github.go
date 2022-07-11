@@ -6,7 +6,7 @@ import (
 	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/log"
+	"github.com/quickfeed/quickfeed/qlog"
 	"go.uber.org/zap"
 )
 
@@ -39,7 +39,7 @@ func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 		wh.logger.Errorf("Could not parse github webhook: %v", err)
 		return
 	}
-	wh.logger.Debug(log.IndentJson(event))
+	wh.logger.Debug(qlog.IndentJson(event))
 	switch e := event.(type) {
 	case *github.PushEvent:
 		wh.handlePush(e)
