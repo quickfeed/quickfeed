@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/sessions"
+	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -17,9 +19,12 @@ import (
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/gitlab"
 	"github.com/quickfeed/quickfeed/internal/rand"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/hooks"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // timeouts for http server
@@ -28,6 +33,68 @@ var (
 	writeTimeout = 10 * time.Second
 	idleTimeout  = 5 * time.Minute
 )
+
+type GrpcMultiplexer struct {
+	*grpcweb.WrappedGrpcServer
+}
+
+// ServerWithCredentials starts a new gRPC server with credentials
+// generated from TLS certificates.
+func ServerWithCredentials(logger *zap.Logger, certFile, certKey string) (*grpc.Server, error) {
+	// Generate TLS credentials from certificates
+
+	cred, err := credentials.NewServerTLSFromFile(certFile, certKey)
+	if err != nil {
+		return nil, err
+	}
+	s := grpc.NewServer(
+		grpc.Creds(cred),
+		grpc.ChainUnaryInterceptor(
+			auth.UserVerifier(),
+			qf.Interceptor(logger),
+		),
+	)
+	return s, nil
+}
+
+// MuxHandler routes HTTP and gRPC requests.
+func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if m.IsGrpcWebRequest(r) {
+			log.Printf("MUX: got GRPC request: %v", r)
+			m.ServeHTTP(w, r)
+			return
+		}
+		log.Printf("MUX: got HTTP request: %v", r)
+		next.ServeHTTP(w, r)
+	})
+}
+
+// RegisterRouter registers http endpoints for authentication API and GitHub webhooks.
+func RegisterRouter(logger *zap.SugaredLogger, mux GrpcMultiplexer, static string) *http.ServeMux {
+	// Register hooks
+
+	// Register HTTP endpoints
+	router := http.NewServeMux()
+	// index := func(w http.ResponseWriter, r *http.Request) {
+	// 	http.ServeFile(w, r, "/public/assets/index.html")
+	// }
+	entrypoint := http.FileServer(http.Dir("/public/assets"))
+	// webApp := http.FileServer(http.Dir("public/assets"))
+	dist := http.FileServer(http.Dir("/public/dist"))
+	// Serve static files
+	router.Handle("/", mux.MuxHandler(http.StripPrefix("/", entrypoint)))
+	// router.Handle("/assets", mux.MuxHandler(webApp))
+	router.Handle("/static", mux.MuxHandler(http.StripPrefix("/static", dist)))
+	// router.HandleFunc("*", index)
+
+	// router.Handle("/", mux.MuxHandler(http.FileServer(http.Dir("public/assets"))))
+	// router.Handle("/", mux.MuxHandler(http.FileServer(http.Dir("assets"))))
+	router.HandleFunc("auth/login/", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("AUTH: login with request: %+v", r)
+	})
+	return router
+}
 
 // New starts a new web server
 func New(ags *QuickFeedService, public, httpAddr string) {

@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"log"
 	"mime"
-	"net"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/quickfeed/quickfeed/ci"
 	logq "github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
@@ -16,8 +17,6 @@ import (
 	"github.com/quickfeed/quickfeed/web/auth"
 
 	"github.com/quickfeed/quickfeed/database"
-
-	"google.golang.org/grpc"
 
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
@@ -57,11 +56,11 @@ var reg = prometheus.NewRegistry()
 
 func main() {
 	var (
-		baseURL  = flag.String("service.url", "", "base service DNS name")
-		dbFile   = flag.String("database.file", "qf.db", "database file")
-		public   = flag.String("http.public", "public", "path to content to serve")
-		httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
-		grpcAddr = flag.String("grpc.addr", ":9090", "gRPC listen address")
+		baseURL = flag.String("service.url", "", "base service DNS name")
+		dbFile  = flag.String("database.file", "qf.db", "database file")
+		public  = flag.String("http.public", "public", "path to content to serve")
+		// httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
+		// grpcAddr = flag.String("grpc.addr", ":9090", "gRPC listen address")
 	)
 	flag.Parse()
 
@@ -95,14 +94,38 @@ func main() {
 	}
 
 	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
-	go web.New(qfService, *public, *httpAddr)
-
-	lis, err := net.Listen("tcp", *grpcAddr)
-	if err != nil {
-		log.Fatalf("failed to start tcp listener: %v\n", err)
+	// TODO(vera): harcoded or command line flags?
+	certFile := os.Getenv("CERT")
+	certKey := os.Getenv("CERT_KEY")
+	if certFile == "" || certKey == "" {
+		log.Fatal("CERT or CERT_KEY is not set")
 	}
-	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
-	grpcServer := grpc.NewServer(opt)
+	grpcServer, err := web.ServerWithCredentials(logger, certFile, certKey)
+	if err != nil {
+		log.Fatalf("failed to generate gRPC server credentials: %v\n", err)
+	}
+
+	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
+	grpcWebServer := grpcweb.WrapServer(grpcServer)
+
+	multiplexer := web.GrpcMultiplexer{
+		grpcWebServer,
+	}
+
+	// Register HTTP endpoints and webhooks
+	router := web.RegisterRouter(logger.Sugar(), multiplexer, *public)
+
+	/////////////////////////////////
+	/////////////////////////////////
+
+	// go web.New(qfService, *public, *httpAddr)
+
+	// lis, err := net.Listen("tcp", *grpcAddr)
+	// if err != nil {
+	// 	log.Fatalf("failed to start tcp listener: %v\n", err)
+	// }
+	// opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
+	// grpcServer := grpc.NewServer(opt)
 	// Create a HTTP server for prometheus.
 	httpServer := &http.Server{
 		Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
@@ -110,12 +133,22 @@ func main() {
 	}
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatal("Unable to start a http server.")
+			log.Fatalf("failed to start a http server: %v\n", err)
 		}
 	}()
 
-	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
-	if err := grpcServer.Serve(lis); err != nil {
+	// qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
+
+	muxServer := &http.Server{
+		Handler:      router,
+		Addr:         "127.0.0.1:8080",
+		WriteTimeout: 2 * time.Minute,
+		ReadTimeout:  2 * time.Minute,
+	}
+	if err := muxServer.ListenAndServeTLS(certFile, certKey); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}
+	// if err := grpcServer.Serve(lis); err != nil {
+	// 	log.Fatalf("failed to start grpc server: %v\n", err)
+	// }
 }
