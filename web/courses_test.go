@@ -7,12 +7,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/testing/protocmp"
 
-	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 )
@@ -57,12 +55,10 @@ var allCourses = []*qf.Course{
 }
 
 func TestGetCourses(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	var wantCourses []*qf.Course
 	for _, course := range allCourses {
@@ -84,13 +80,11 @@ func TestGetCourses(t *testing.T) {
 }
 
 func TestNewCourse(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	for _, wantCourse := range allCourses {
 		// each course needs a separate directory
@@ -120,13 +114,11 @@ func TestNewCourse(t *testing.T) {
 }
 
 func TestNewCourseExistingRepos(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
 	for path, private := range web.RepoPaths {
@@ -147,13 +139,12 @@ func TestNewCourseExistingRepos(t *testing.T) {
 }
 
 func TestEnrollmentProcess(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+
 	_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)
@@ -250,13 +241,11 @@ func TestEnrollmentProcess(t *testing.T) {
 }
 
 func TestListCoursesWithEnrollment(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user := qtest.CreateFakeUser(t, db, 2)
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	var testCourses []*qf.Course
 	for _, course := range allCourses {
@@ -320,7 +309,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 }
 
 func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -334,8 +323,6 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	}
 
 	user := qtest.CreateFakeUser(t, db, 2)
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	if err := db.CreateEnrollment(&qf.Enrollment{
 		UserID:   user.ID,
@@ -387,7 +374,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 }
 
 func TestGetCourse(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -396,8 +383,6 @@ func TestGetCourse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	gotCourse, err := ags.GetCourse(context.Background(), &qf.CourseRequest{CourseID: wantCourse.ID})
 	if err != nil {
@@ -410,7 +395,7 @@ func TestGetCourse(t *testing.T) {
 }
 
 func TestPromoteDemoteRejectTeacher(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	teacher := qtest.CreateFakeUser(t, db, 10)
@@ -423,9 +408,6 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	if err := db.CreateEnrollment(&qf.Enrollment{
 		UserID:   student1.ID,

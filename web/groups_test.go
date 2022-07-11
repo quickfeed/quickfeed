@@ -5,19 +5,15 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 
-	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
-	"github.com/quickfeed/quickfeed/web"
 )
 
 func TestNewGroup(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -41,9 +37,6 @@ func TestNewGroup(t *testing.T) {
 	}
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-
 	_, err := fakeProvider.CreateOrganization(ctx,
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
 	)
@@ -68,7 +61,7 @@ func TestNewGroup(t *testing.T) {
 }
 
 func TestCreateGroupWithMissingFields(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -92,9 +85,6 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	}
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-
 	_, err := fakeProvider.CreateOrganization(ctx,
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
 	)
@@ -124,7 +114,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 }
 
 func TestNewGroupTeacherCreator(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -159,9 +149,6 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	_, err := fakeProvider.CreateOrganization(context.Background(),
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
@@ -203,7 +190,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 }
 
 func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -239,10 +226,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := qtest.FakeProviderMap(t)
 	ctx := qtest.WithUserContext(context.Background(), user)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-
 	_, err := fakeProvider.CreateOrganization(ctx,
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
 	)
@@ -260,11 +244,9 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 }
 
 func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(qlog.Logger(t).Desugar(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	_, err := fakeProvider.CreateOrganization(context.Background(),
 		&scm.OrganizationOptions{Path: "path", Name: "name"},
 	)
@@ -425,7 +407,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 }
 
 func TestDeleteGroup(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	testCourse := qf.Course{
@@ -438,9 +420,6 @@ func TestDeleteGroup(t *testing.T) {
 		ID:             1,
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
-
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(qlog.Logger(t).Desugar(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
@@ -522,7 +501,7 @@ func TestDeleteGroup(t *testing.T) {
 }
 
 func TestGetGroup(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	testCourse := qf.Course{
@@ -551,8 +530,6 @@ func TestGetGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), user)
 
 	group := &qf.Group{Name: "TestGroup", CourseID: testCourse.ID, Users: []*qf.User{user}}
@@ -571,7 +548,7 @@ func TestGetGroup(t *testing.T) {
 }
 
 func TestPatchGroupStatus(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	course := qf.Course{
@@ -605,10 +582,7 @@ func TestPatchGroupStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), teacher)
-
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{
 		Name: course.Code,
 		Path: course.Code,
@@ -674,7 +648,7 @@ func TestPatchGroupStatus(t *testing.T) {
 }
 
 func TestGetGroupByUserAndCourse(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	course := qf.Course{
@@ -693,8 +667,6 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	user1 := qtest.CreateFakeUser(t, db, 2)
@@ -750,7 +722,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 }
 
 func TestDeleteApprovedGroup(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -760,10 +732,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
-
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{
 		Name: course.Code,
 		Path: course.Code,
@@ -867,7 +836,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 }
 
 func TestGetGroups(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	var users []*qf.User
@@ -877,8 +846,6 @@ func TestGetGroups(t *testing.T) {
 	}
 	admin := users[0]
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	// admin will be enrolled as teacher because of course creation below
 	qtest.WithUserContext(context.Background(), admin)
 
