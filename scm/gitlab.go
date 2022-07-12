@@ -83,7 +83,7 @@ func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	return &Repository{
 		ID:      uint64(repo.ID),
 		Path:    repo.Path,
-		WebURL:  repo.WebURL,
+		HTMLURL: repo.WebURL,
 		SSHURL:  repo.SSHURLToRepo,
 		HTTPURL: repo.HTTPURLToRepo,
 		OrgID:   opt.Organization.ID,
@@ -117,7 +117,7 @@ func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *qf.Organizat
 		repositories = append(repositories, &Repository{
 			ID:      uint64(repo.ID),
 			Path:    repo.Path,
-			WebURL:  repo.WebURL,
+			HTMLURL: repo.WebURL,
 			SSHURL:  repo.SSHURLToRepo,
 			HTTPURL: repo.HTTPURLToRepo,
 			OrgID:   directory.ID,

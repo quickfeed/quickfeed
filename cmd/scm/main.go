@@ -302,7 +302,7 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 				if err := (*client).DeleteRepository(ctx, &scm.RepositoryOptions{ID: repo.ID}); err != nil {
 					errs = append(errs, err)
 				} else {
-					fmt.Println("Deleted repository", repo.WebURL)
+					fmt.Println("Deleted repository", repo.HTMLURL)
 				}
 				if len(errs) > 0 {
 					return cli.NewMultiError(errs...)
@@ -377,7 +377,7 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 		if err != nil {
 			return err
 		}
-		fmt.Println("Found repository ", repo.WebURL)
+		fmt.Println("Found repository ", repo.HTMLURL)
 		return nil
 	}
 }
