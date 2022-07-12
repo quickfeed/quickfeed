@@ -25,12 +25,7 @@ const (
 
 func TestGetOrganization(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
-	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 	org, err := s.GetOrganization(context.Background(), &scm.GetOrgOptions{Name: qfTestOrg})
 	if err != nil {
 		t.Fatal(err)
@@ -47,15 +42,9 @@ func TestGetOrganization(t *testing.T) {
 
 func TestListHooks(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
-	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 
 	ctx := context.Background()
-
 	hooks, err := s.ListHooks(ctx, nil, qfTestOrg)
 	if err != nil {
 		t.Fatal(err)
@@ -84,26 +73,21 @@ func TestListHooks(t *testing.T) {
 
 func TestCreateHook(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	serverURL := scm.GetWebHookServer(t)
 	// Only enable this test to add a new webhook to your test course organization
 	if serverURL == "" {
 		t.Skip("Disabled pending support for deleting webhooks")
 	}
 
-	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 
 	ctx := context.Background()
-
 	opt := &scm.CreateHookOptions{
 		URL:        serverURL,
 		Secret:     secret,
 		Repository: &scm.Repository{Owner: qfTestOrg, Path: "tests"},
 	}
-	err = s.CreateHook(ctx, opt)
+	err := s.CreateHook(ctx, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -233,11 +217,7 @@ func TestUpdateIssue(t *testing.T) {
 
 func TestRequestReviewers(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 
 	// Set these when testing
 	opt := &scm.RequestReviewersOptions{
@@ -246,8 +226,7 @@ func TestRequestReviewers(t *testing.T) {
 		Number:       1,
 		Reviewers:    []string{"reviewer-login"},
 	}
-
-	err = s.RequestReviewers(context.Background(), opt)
+	err := s.RequestReviewers(context.Background(), opt)
 	if err != nil {
 		t.Fatal(err)
 	}

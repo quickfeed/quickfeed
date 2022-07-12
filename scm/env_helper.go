@@ -3,6 +3,8 @@ package scm
 import (
 	"os"
 	"testing"
+
+	"github.com/quickfeed/quickfeed/qlog"
 )
 
 func GetTestOrganization(t *testing.T) string {
@@ -41,4 +43,14 @@ func GetWebHookServer(t *testing.T) string {
 		t.Skipf("This test requires that 'QF_WEBHOOK_SERVER' is set and that you have access to the '%v' GitHub organization", qfTestOrg)
 	}
 	return serverURL
+}
+
+func GetTestSCM(t *testing.T) SCM {
+	t.Helper()
+	accessToken := GetAccessToken(t)
+	s, err := NewSCMClient(qlog.Logger(t), accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return s
 }

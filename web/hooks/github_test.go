@@ -33,16 +33,11 @@ const (
 // TestGitHubWebHook tests listening to events from the tests repository.
 func TestGitHubWebHook(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	serverURL := scm.GetWebHookServer(t)
+	s := scm.GetTestSCM(t)
 
 	logger := logq.Logger(t)
 	defer func() { _ = logger.Sync() }()
-
-	s, err := scm.NewSCMClient(logger, accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	ctx := context.Background()
 	opt := &scm.CreateHookOptions{
@@ -50,7 +45,7 @@ func TestGitHubWebHook(t *testing.T) {
 		Secret:     secret,
 		Repository: &scm.Repository{Owner: qfTestOrg, Path: "tests"},
 	}
-	err = s.CreateHook(ctx, opt)
+	err := s.CreateHook(ctx, opt)
 	if err != nil {
 		t.Fatal(err)
 	}

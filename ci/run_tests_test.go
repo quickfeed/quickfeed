@@ -33,13 +33,8 @@ func loadRunScript(t *testing.T) string {
 
 func testRunData(t *testing.T, runScriptContent string) *ci.RunData {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
 	// Only used to fetch the user's GitHub login (user name)
-	s, err := scm.NewSCMClient(qtest.Logger(t), accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 	userName, err := s.GetUserName(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -47,7 +42,7 @@ func testRunData(t *testing.T, runScriptContent string) *ci.RunData {
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
-	qf.SetAccessToken(courseID, accessToken)
+	qf.SetAccessToken(courseID, scm.GetAccessToken(t))
 	runData := &ci.RunData{
 		Course: &qf.Course{
 			ID:               courseID,
