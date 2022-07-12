@@ -75,7 +75,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group
 		OrganizationID: course.GetOrganizationID(),
 		RepositoryID:   repo.ID,
 		GroupID:        group.GetID(),
-		HTMLURL:        repo.WebURL,
+		HTMLURL:        repo.HTMLURL,
 		RepoType:       qf.Repository_GROUP,
 	}
 	return groupRepo, team, nil

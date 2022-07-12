@@ -79,7 +79,7 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 		dbRepo := qf.Repository{
 			OrganizationID: org.ID,
 			RepositoryID:   repo.ID,
-			HTMLURL:        repo.WebURL,
+			HTMLURL:        repo.HTMLURL,
 			RepoType:       qf.RepoType(path),
 		}
 		if err := s.db.CreateRepository(&dbRepo); err != nil {
@@ -119,7 +119,7 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 		OrganizationID: org.GetID(),
 		RepositoryID:   scmRepo.ID,
 		UserID:         courseCreator.ID,
-		HTMLURL:        scmRepo.WebURL,
+		HTMLURL:        scmRepo.HTMLURL,
 		RepoType:       qf.Repository_USER,
 	}
 	if err := s.db.CreateRepository(repoQuery); err != nil {

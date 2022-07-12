@@ -72,9 +72,7 @@ func (s *FakeSCM) CreateRepository(_ context.Context, opt *CreateRepositoryOptio
 	repo := &Repository{
 		ID:      uint64(len(s.Repositories) + 1),
 		Path:    opt.Path,
-		WebURL:  "https://example.com/" + opt.Organization.Path + "/" + opt.Path,
-		SSHURL:  "git@example.com:" + opt.Organization.Path + "/" + opt.Path,
-		HTTPURL: "https://example.com/" + opt.Organization.Path + "/" + opt.Path + ".git",
+		HTMLURL: "https://example.com/" + opt.Organization.Path + "/" + opt.Path,
 		OrgID:   opt.Organization.ID,
 	}
 	s.Repositories[repo.ID] = repo

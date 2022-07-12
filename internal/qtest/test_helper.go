@@ -252,7 +252,7 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 		dbRepo := &qf.Repository{
 			RepositoryID:   repo.ID,
 			OrganizationID: org.GetID(),
-			HTMLURL:        repo.WebURL,
+			HTMLURL:        repo.HTMLURL,
 			RepoType:       qf.RepoType(repo.Path),
 		}
 		if dbRepo.IsUserRepo() {

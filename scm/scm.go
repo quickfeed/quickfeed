@@ -141,9 +141,7 @@ type Repository struct {
 	ID      uint64
 	Path    string
 	Owner   string // Only used by GitHub.
-	WebURL  string // Repository website.
-	SSHURL  string // SSH clone URL, used by GitLab.
-	HTTPURL string // HTTP(S) clone URL.
+	HTMLURL string // Repository website.
 	OrgID   uint64
 	Size    uint64
 }
