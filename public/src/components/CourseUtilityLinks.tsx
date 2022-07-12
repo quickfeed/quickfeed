@@ -35,7 +35,7 @@ const CourseUtilityLinks = (): JSX.Element => {
                     Assignments
                 </a>
 
-                <a href={repo[Repository.Type.COURSEINFO]} target={"_blank"} rel="noopener noreferrer" className="list-group-item list-group-item-action">
+                <a href={repo[Repository.Type.INFO]} target={"_blank"} rel="noopener noreferrer" className="list-group-item list-group-item-action">
                     Course Info
                 </a>
 
