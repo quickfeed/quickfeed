@@ -32,7 +32,11 @@ func TestDB(t *testing.T) (database.Database, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(f.Name(), qlog.Zap())
+	logger, err := qlog.Zap()
+	if err != nil {
+		t.Fatal(err)
+	}
+	db, err := database.NewGormDB(f.Name(), logger)
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)

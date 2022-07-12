@@ -1,7 +1,6 @@
 package qlog
 
 import (
-	"log"
 	"os"
 	"testing"
 
@@ -9,16 +8,12 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func Zap() *zap.Logger {
+func Zap() (*zap.Logger, error) {
 	cfg := zap.NewDevelopmentConfig()
 	// add colorization
 	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	// we only want stack trace enabled for panic level and above
-	logger, err := cfg.Build(zap.AddStacktrace(zapcore.PanicLevel))
-	if err != nil {
-		log.Fatalf("can't initialize logger: %v\n", err)
-	}
-	return logger
+	return cfg.Build(zap.AddStacktrace(zapcore.PanicLevel))
 }
 
 func Logger(t *testing.T) *zap.SugaredLogger {

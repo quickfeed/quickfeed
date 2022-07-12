@@ -239,7 +239,10 @@ func before(client *scm.SCM) cli.BeforeFunc {
 	return func(c *cli.Context) (err error) {
 		provider := c.String("provider")
 		accessToken := os.Getenv(c.String("token"))
-		logger := qlog.Zap()
+		logger, err := qlog.Zap()
+		if err != nil {
+			return err
+		}
 		if accessToken != "" {
 			*client, err = scm.NewSCMClient(logger.Sugar(), accessToken)
 			return

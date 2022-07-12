@@ -65,7 +65,10 @@ func main() {
 	)
 	flag.Parse()
 
-	logger := qlog.Zap()
+	logger, err := qlog.Zap()
+	if err != nil {
+		log.Fatalf("can't initialize logger: %v", err)
+	}
 	defer logger.Sync()
 
 	db, err := database.NewGormDB(*dbFile, logger)
