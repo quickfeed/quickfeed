@@ -73,26 +73,23 @@ func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
 // RegisterRouter registers http endpoints for authentication API and GitHub webhooks.
 func RegisterRouter(logger *zap.SugaredLogger, mux GrpcMultiplexer, static string) *http.ServeMux {
 	// Register hooks
+	// TODO
 
-	// Register HTTP endpoints
-	router := http.NewServeMux()
-	// index := func(w http.ResponseWriter, r *http.Request) {
-	// 	http.ServeFile(w, r, "/public/assets/index.html")
-	// }
-	entrypoint := http.FileServer(http.Dir("/public/assets"))
-	// webApp := http.FileServer(http.Dir("public/assets"))
-	dist := http.FileServer(http.Dir("/public/dist"))
 	// Serve static files
-	router.Handle("/", mux.MuxHandler(http.StripPrefix("/", entrypoint)))
-	// router.Handle("/assets", mux.MuxHandler(webApp))
-	router.Handle("/static", mux.MuxHandler(http.StripPrefix("/static", dist)))
-	// router.HandleFunc("*", index)
+	router := http.NewServeMux()
+	assets := http.FileServer(http.Dir("public/assets"))
+	dist := http.FileServer(http.Dir("public/dist"))
 
-	// router.Handle("/", mux.MuxHandler(http.FileServer(http.Dir("public/assets"))))
-	// router.Handle("/", mux.MuxHandler(http.FileServer(http.Dir("assets"))))
-	router.HandleFunc("auth/login/", func(w http.ResponseWriter, r *http.Request) {
+	router.Handle("/", mux.MuxHandler(http.StripPrefix("/", assets)))
+	router.Handle("/assets/", mux.MuxHandler(http.StripPrefix("/assets/", assets)))
+	router.Handle("/static/", mux.MuxHandler(http.StripPrefix("/static/", dist)))
+
+	// Register auth endpoints
+	router.HandleFunc("/auth/", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("AUTH: login with request: %+v", r)
 	})
+
+	// TODO
 	return router
 }
 
