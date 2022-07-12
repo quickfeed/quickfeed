@@ -115,6 +115,7 @@ protobuf
 protoc
 protocmp
 protoimpl
+protopatch
 qlog
 qtest
 quickfeed
