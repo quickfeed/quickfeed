@@ -6,34 +6,9 @@ import (
 
 	"github.com/google/go-github/v45/github"
 	"github.com/shurcooL/githubv4"
-	"go.uber.org/zap"
-	"golang.org/x/oauth2"
 )
 
-type GithubV4SCM struct {
-	GithubSCM
-	clientV4     *githubv4.Client
-	bypassClient *github.Client
-}
-
-func NewGithubV4SCMClient(logger *zap.SugaredLogger, token string) *GithubV4SCM {
-	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	httpClient := oauth2.NewClient(context.Background(), src)
-	client := github.NewClient(httpClient)
-	return &GithubV4SCM{
-		GithubSCM: GithubSCM{
-			logger: logger,
-			client: client,
-			token:  token,
-		},
-		clientV4:     githubv4.NewClient(httpClient),
-		bypassClient: client,
-	}
-}
-
-func (s *GithubV4SCM) DeleteIssue(ctx context.Context, opt *RepositoryOptions, issueNumber int) error {
+func (s *GithubSCM) DeleteIssue(ctx context.Context, opt *RepositoryOptions, issueNumber int) error {
 	var q struct {
 		Repository struct {
 			Issue struct {
@@ -65,9 +40,9 @@ func (s *GithubV4SCM) DeleteIssue(ctx context.Context, opt *RepositoryOptions, i
 	return s.clientV4.Mutate(ctx, &m, input, nil)
 }
 
-func (s *GithubV4SCM) DeleteIssues(ctx context.Context, opt *RepositoryOptions) error {
+func (s *GithubSCM) DeleteIssues(ctx context.Context, opt *RepositoryOptions) error {
 	// List all open and closed issues (and pull requests)
-	issueList, _, err := s.bypassClient.Issues.ListByRepo(ctx, opt.Owner, opt.Path, &github.IssueListByRepoOptions{State: "all"})
+	issueList, _, err := s.client.Issues.ListByRepo(ctx, opt.Owner, opt.Path, &github.IssueListByRepoOptions{State: "all"})
 	if err != nil {
 		return fmt.Errorf("failed to fetch issues for %s: %w", opt.Path, err)
 	}

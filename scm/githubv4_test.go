@@ -7,16 +7,13 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
 func TestDeleteIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-
-	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
+	s := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	repo, err := s.GetRepository(ctx, &scm.RepositoryOptions{
@@ -76,10 +73,8 @@ func TestDeleteAllIssues(t *testing.T) {
 		t.SkipNow()
 	}
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-
-	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
+	s := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{

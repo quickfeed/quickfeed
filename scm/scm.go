@@ -77,6 +77,10 @@ type SCM interface {
 	GetIssue(ctx context.Context, opt *RepositoryOptions, number int) (*Issue, error)
 	// GetIssues fetches all issues in a repository.
 	GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error)
+	// DeleteIssue deletes the given issue number in the given repository.
+	DeleteIssue(context.Context, *RepositoryOptions, int) error
+	// DeleteIssues deletes all issues in the given repository.
+	DeleteIssues(context.Context, *RepositoryOptions) error
 
 	// CreateIssueComment creates a comment on a SCM issue.
 	CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error)
