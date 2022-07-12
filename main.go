@@ -11,6 +11,7 @@ import (
 
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/rand"
 	logq "github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web"
@@ -78,6 +79,10 @@ func main() {
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
+	scmConfig, err := web.OAuthConfig(*baseURL)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	runner, err := ci.NewDockerCI(logger)
 	if err != nil {
@@ -113,7 +118,8 @@ func main() {
 	}
 
 	// Register HTTP endpoints and webhooks
-	router := web.RegisterRouter(logger.Sugar(), multiplexer, *public)
+	callbackSecret := rand.String()
+	router := web.RegisterRouter(logger.Sugar(), db, scmConfig, multiplexer, *public, callbackSecret)
 
 	/////////////////////////////////
 	/////////////////////////////////
