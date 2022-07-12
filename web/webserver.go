@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -18,11 +19,14 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/gitlab"
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/hooks"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
+	gh "golang.org/x/oauth2/github"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -65,13 +69,13 @@ func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
 			m.ServeHTTP(w, r)
 			return
 		}
-		log.Printf("MUX: got HTTP request: %v", r)
+		// log.Printf("MUX: got HTTP request: %v", r)
 		next.ServeHTTP(w, r)
 	})
 }
 
 // RegisterRouter registers http endpoints for authentication API and GitHub webhooks.
-func RegisterRouter(logger *zap.SugaredLogger, mux GrpcMultiplexer, static string) *http.ServeMux {
+func RegisterRouter(logger *zap.SugaredLogger, db database.Database, scmConfig *oauth2.Config, mux GrpcMultiplexer, static, secret string) *http.ServeMux {
 	// Register hooks
 	// TODO
 
@@ -85,12 +89,27 @@ func RegisterRouter(logger *zap.SugaredLogger, mux GrpcMultiplexer, static strin
 	router.Handle("/static/", mux.MuxHandler(http.StripPrefix("/static/", dist)))
 
 	// Register auth endpoints
-	router.HandleFunc("/auth/", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("AUTH: login with request: %+v", r)
-	})
+	router.HandleFunc("/auth/", auth.OAuth2Login(logger, db, scmConfig, secret))
 
 	// TODO
 	return router
+}
+
+// OAuthConfig creates a new OAuth 2.0 config for an scm provider
+// Currently only works for GitHub.
+func OAuthConfig(baseURL string) (*oauth2.Config, error) {
+	clientID := os.Getenv("GITHUB_KEY")
+	clientSecret := os.Getenv("GITHUB_SECRET")
+	if clientID == "" || clientSecret == "" {
+		return nil, fmt.Errorf("missing GitHub client variables")
+	}
+	return &oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		Endpoint:     gh.Endpoint,
+		RedirectURL:  auth.GetCallbackURL(baseURL, "github"),
+		Scopes:       []string{"repo:invite"},
+	}, nil
 }
 
 // New starts a new web server
@@ -107,7 +126,7 @@ func New(ags *QuickFeedService, public, httpAddr string) {
 
 	enabled := enableProviders(ags.logger, ags.bh.BaseURL)
 	registerWebhooks(ags, e, enabled)
-	registerAuth(ags, e)
+	// registerAuth(ags, e)
 
 	registerFrontend(e, entryPoint, public)
 	runWebServer(ags.logger, e, httpAddr)
@@ -187,23 +206,23 @@ func registerWebhooks(ags *QuickFeedService, e *echo.Echo, enabled map[string]bo
 	}
 }
 
-func registerAuth(ags *QuickFeedService, e *echo.Echo) {
-	// makes the oauth2 provider available in the request query so that
-	// markbates/goth/gothic.GetProviderName can find it.
-	withProvider := func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			qv := c.Request().URL.Query()
-			qv.Set("provider", c.Param("provider"))
-			c.Request().URL.RawQuery = qv.Encode()
-			return next(c)
-		}
-	}
+// func registerAuth(ags *QuickFeedService, e *echo.Echo) {
+// 	// makes the oauth2 provider available in the request query so that
+// 	// markbates/goth/gothic.GetProviderName can find it.
+// 	withProvider := func(next echo.HandlerFunc) echo.HandlerFunc {
+// 		return func(c echo.Context) error {
+// 			qv := c.Request().URL.Query()
+// 			qv.Set("provider", c.Param("provider"))
+// 			c.Request().URL.RawQuery = qv.Encode()
+// 			return next(c)
+// 		}
+// 	}
 
-	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(ags.logger, ags.db))
-	oauth2.GET("", auth.OAuth2Login(ags.logger, ags.db))
-	oauth2.GET("/callback", auth.OAuth2Callback(ags.logger, ags.db, ags.scms))
-	e.GET("/logout", auth.OAuth2Logout(ags.logger))
-}
+// 	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(ags.logger, ags.db))
+// 	oauth2.GET("", auth.OAuth2Login(ags.logger, ags.db))
+// 	oauth2.GET("/callback", auth.OAuth2Callback(ags.logger, ags.db, ags.scms))
+// 	e.GET("/logout", auth.OAuth2Logout(ags.logger))
+// }
 
 func registerFrontend(e *echo.Echo, entryPoint, public string) {
 	index := func(c echo.Context) error {

@@ -13,9 +13,11 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/markbates/goth/gothic"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/rand"
 	lg "github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -39,6 +41,12 @@ const (
 const (
 	State    = "state" // As defined by the OAuth2 RFC.
 	Redirect = "redirect"
+)
+
+// Temporary solution. Will be removed when sessions replaced by JWT.
+var (
+	store         = sessions.NewCookieStore([]byte(rand.String()))
+	teacherScopes = []string{"user", "repo", "delete_repo", "admin:org", "admin:org_hook"}
 )
 
 // UserSession holds user session information.
@@ -126,38 +134,6 @@ func OAuth2Logout(logger *zap.SugaredLogger) echo.HandlerFunc {
 	}
 }
 
-// PreAuth checks the current user session and executes the next handler if none
-// was found for the given provider.
-func PreAuth(logger *zap.SugaredLogger, db database.Database) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			sess, err := session.Get(SessionKey, c)
-			if err != nil {
-				logger.Error(err.Error())
-				if err := sess.Save(c.Request(), c.Response()); err != nil {
-					logger.Error(err.Error())
-					return err
-				}
-				return next(c)
-			}
-			logger.Debug(sessionData(sess))
-
-			if i, ok := sess.Values[UserKey]; ok {
-				// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-				us := i.(*UserSession)
-				logger.Debug(us)
-				user, err := db.GetUser(us.ID)
-				if err != nil {
-					logger.Error(err.Error())
-					return OAuth2Logout(logger)(c)
-				}
-				logger.Debugf("User: %v", user)
-			}
-			return next(c)
-		}
-	}
-}
-
 func sessionData(session *sessions.Session) string {
 	if session == nil {
 		return "<nil>"
@@ -178,39 +154,55 @@ func sessionData(session *sessions.Session) string {
 }
 
 // OAuth2Login tries to authenticate against an oauth2 provider.
-func OAuth2Login(logger *zap.SugaredLogger, db database.Database) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		w := c.Response()
-		r := c.Request()
+func OAuth2Login(logger *zap.SugaredLogger, db database.Database, scmConfig *oauth2.Config, secret string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("AUTH2LOGIN started with: ", r.Method) // tmp
 
-		provider, err := gothic.GetProviderName(r)
+		// Temporary. Will be removed when sessions are replaced with JWT.
+		session, err := store.Get(r, SessionKey)
+		if err != nil {
+			logger.Errorf("Failed to get session: %s", err)
+		} else {
+			logger.Debugf("SESSION: %v", session)
+		}
+
+		if err := store.Save(r, w, session); err != nil {
+			logger.Errorf("Failed to save session: %s", err)
+		}
+
+		if r.Method != "GET" {
+			logger.Errorf("Illegal request method: %s", r.Method)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		// Get provider name.
+		urlPath := strings.Split(r.URL.Path, "/")
+		if len(urlPath) < 3 {
+			logger.Error("Incorrect request URL: %s", r.URL.Path)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		provider := urlPath[2]
+		if provider == "" {
+			logger.Error("Missing provider name.")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		// Check teacher suffix, update scopes if teacher.
+		if strings.Contains(r.URL.Path, TeacherSuffix) {
+			scmConfig.Scopes = append(scmConfig.Scopes, teacherScopes...)
+		}
+
+		redirectURL := scmConfig.AuthCodeURL(secret)
 		if err != nil {
 			logger.Error(err.Error())
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
-		var teacher int
-		if strings.HasSuffix(provider, TeacherSuffix) {
-			teacher = 1
-		}
-		logger.Debugf("Provider: %v ; Teacher: %v", provider, teacher)
-
-		qv := r.URL.Query()
-		logger.Debugf("qv: %v", qv)
-		redirect := extractRedirectURL(r, Redirect)
-		logger.Debugf("redirect: %v", redirect)
-		// TODO: Add a random string to protect against CSRF.
-		qv.Set(State, strconv.Itoa(teacher)+redirect)
-		logger.Debugf("State: %v", strconv.Itoa(teacher)+redirect)
-		r.URL.RawQuery = qv.Encode()
-		logger.Debugf("RawQuery: %v", r.URL.RawQuery)
-
-		url, err := gothic.GetAuthURL(w, r)
-		if err != nil {
-			logger.Error(err.Error())
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		}
-		logger.Debugf("Redirecting to %s to perform authentication; AuthURL: %v", provider, url)
-		return c.Redirect(http.StatusTemporaryRedirect, url)
+		logger.Debugf("Redirecting to %s to perform authentication; AuthURL: %v", provider, redirectURL)
+		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 	}
 }
 
