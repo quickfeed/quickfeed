@@ -154,7 +154,7 @@ message Assignment {
     uint64 ID                       = 1;
     uint64 CourseID                 = 2;  // foreign key
     string name                     = 3;
-    string scriptFile               = 4;
+    string runScriptContent         = 4;  // this assignment's run.sh script (the content)
     string deadline                 = 5;
     bool autoApprove                = 6;
     uint32 order                    = 7;

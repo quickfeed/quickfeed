@@ -74,6 +74,7 @@ jsonpb
 keepalive
 keyout
 killall
+Lamport
 letsencrypt
 linuxbrew
 LOGDB
@@ -102,6 +103,7 @@ paxos
 pbgo
 pgrep
 pkgs
+Preload
 privkey
 proto
 protobuf

@@ -84,25 +84,25 @@ func TestUpdateAssignment(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	if err := db.CreateAssignment(&qf.Assignment{
-		CourseID:    course.ID,
-		Name:        "lab1",
-		ScriptFile:  "go.sh",
-		Deadline:    "11.11.2022",
-		AutoApprove: false,
-		Order:       1,
-		IsGroupLab:  false,
+		CourseID:         course.ID,
+		Name:             "lab1",
+		RunScriptContent: "Script for lab1",
+		Deadline:         "11.11.2022",
+		AutoApprove:      false,
+		Order:            1,
+		IsGroupLab:       false,
 	}); err != nil {
 		t.Fatal(err)
 	}
 
 	if err := db.CreateAssignment(&qf.Assignment{
-		CourseID:    course.ID,
-		Name:        "lab2",
-		ScriptFile:  "go.sh",
-		Deadline:    "11.11.2022",
-		AutoApprove: false,
-		Order:       2,
-		IsGroupLab:  true,
+		CourseID:         course.ID,
+		Name:             "lab2",
+		RunScriptContent: "Script for lab2",
+		Deadline:         "11.11.2022",
+		AutoApprove:      false,
+		Order:            2,
+		IsGroupLab:       true,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -216,13 +216,13 @@ func TestUpdateBenchmarks(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	assignment := &qf.Assignment{
-		CourseID:    course.ID,
-		Name:        "Assignment 1",
-		ScriptFile:  "go.sh",
-		Deadline:    "12.12.2021",
-		AutoApprove: false,
-		Order:       1,
-		IsGroupLab:  false,
+		CourseID:         course.ID,
+		Name:             "Assignment 1",
+		RunScriptContent: "Script for assignment 1",
+		Deadline:         "12.12.2021",
+		AutoApprove:      false,
+		Order:            1,
+		IsGroupLab:       false,
 	}
 	if err := db.CreateAssignment(assignment); err != nil {
 		t.Fatal(err)

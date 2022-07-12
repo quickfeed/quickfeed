@@ -61,7 +61,7 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, runner
 	randomSecret := rand.String()
 	job, err := r.parseTestRunnerScript(randomSecret)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse script template: %w", err)
+		return nil, fmt.Errorf("failed to parse run script: %w", err)
 	}
 	job.BindDir = dstDir
 

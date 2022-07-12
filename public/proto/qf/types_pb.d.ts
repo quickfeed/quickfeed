@@ -491,8 +491,8 @@ export class Assignment extends jspb.Message {
   getName(): string;
   setName(value: string): Assignment;
 
-  getScriptfile(): string;
-  setScriptfile(value: string): Assignment;
+  getRunscriptcontent(): string;
+  setRunscriptcontent(value: string): Assignment;
 
   getDeadline(): string;
   setDeadline(value: string): Assignment;
@@ -543,7 +543,7 @@ export namespace Assignment {
     id: number,
     courseid: number,
     name: string,
-    scriptfile: string,
+    runscriptcontent: string,
     deadline: string,
     autoapprove: boolean,
     order: number,
