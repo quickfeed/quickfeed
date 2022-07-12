@@ -30,16 +30,16 @@ func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
 			Order:    assignment.Order,
 		}).
 		Assign(map[string]interface{}{
-			"name":              assignment.Name,
-			"order":             assignment.Order,
-			"script_file":       assignment.ScriptFile,
-			"deadline":          assignment.Deadline,
-			"auto_approve":      assignment.AutoApprove,
-			"score_limit":       assignment.ScoreLimit,
-			"is_group_lab":      assignment.IsGroupLab,
-			"reviewers":         assignment.Reviewers,
-			"container_timeout": assignment.ContainerTimeout,
-			"tasks":             assignment.Tasks,
+			"name":               assignment.Name,
+			"order":              assignment.Order,
+			"run_script_content": assignment.RunScriptContent,
+			"deadline":           assignment.Deadline,
+			"auto_approve":       assignment.AutoApprove,
+			"score_limit":        assignment.ScoreLimit,
+			"is_group_lab":       assignment.IsGroupLab,
+			"reviewers":          assignment.Reviewers,
+			"container_timeout":  assignment.ContainerTimeout,
+			"tasks":              assignment.Tasks,
 		}).Omit("Tasks").FirstOrCreate(assignment).Error
 }
 

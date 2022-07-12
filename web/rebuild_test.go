@@ -119,7 +119,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	assignment := &qf.Assignment{
 		CourseID: course.ID,
 		Name:     "lab1",
-		ScriptFile: `#image/quickfeed:go
+		RunScriptContent: `#image/quickfeed:go
 printf "AssignmentName: {{ .AssignmentName }}\n"
 printf "RandomSecret: {{ .RandomSecret }}\n"
 `,

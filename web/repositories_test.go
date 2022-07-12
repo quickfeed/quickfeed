@@ -246,7 +246,7 @@ func TestGetRepositories(t *testing.T) {
 	wantInfoRepo := &qf.Repository{
 		OrganizationID: 1,
 		RepositoryID:   4,
-		RepoType:       qf.Repository_COURSEINFO,
+		RepoType:       qf.Repository_INFO,
 		HTMLURL:        "http://info.assignment.com/",
 	}
 	if err := db.CreateRepository(wantInfoRepo); err != nil {
@@ -268,7 +268,7 @@ func TestGetRepositories(t *testing.T) {
 		RepoTypes: []qf.Repository_Type{
 			qf.Repository_USER,
 			qf.Repository_GROUP,
-			qf.Repository_COURSEINFO,
+			qf.Repository_INFO,
 			qf.Repository_ASSIGNMENTS,
 			qf.Repository_TESTS,
 		},
@@ -279,7 +279,7 @@ func TestGetRepositories(t *testing.T) {
 	wantAllRepoURLs := &qf.Repositories{
 		URLs: map[string]string{
 			"ASSIGNMENTS": wantAssignmentsRepo.HTMLURL,
-			"COURSEINFO":  wantInfoRepo.HTMLURL,
+			"INFO":        wantInfoRepo.HTMLURL,
 			"TESTS":       wantTestsRepo.HTMLURL,
 			"USER":        wantUserRepo.HTMLURL,
 			"GROUP":       wantGroupRepo.HTMLURL,
