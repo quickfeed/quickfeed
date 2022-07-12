@@ -71,7 +71,7 @@ func TestPublishFeedbackComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

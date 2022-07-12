@@ -19,7 +19,7 @@ func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogge
 
 	// TODO(meling): Update this for GitHub web app.
 	// The scm client should ideally be passed in instead of creating another instance.
-	sc, err := scm.NewSCMClient(logger, r.Course.GetProvider(), r.Course.GetAccessToken())
+	sc, err := scm.NewSCMClient(logger, r.Course.GetAccessToken())
 	if err != nil {
 		return fmt.Errorf("failed to create SCM Client: %w", err)
 	}

@@ -442,7 +442,7 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, scms *Scms) 
 func updateScm(ctx echo.Context, logger *zap.SugaredLogger, scms *Scms, user *qf.User) bool {
 	foundSCMProvider := false
 	for _, remoteID := range user.RemoteIdentities {
-		scm, err := scms.GetOrCreateSCMEntry(logger.Desugar(), remoteID.GetProvider(), remoteID.GetAccessToken())
+		scm, err := scms.GetOrCreateSCMEntry(logger.Desugar(), remoteID.GetAccessToken())
 		if err != nil {
 			logger.Errorf("Unknown SCM provider: %v", err)
 			continue

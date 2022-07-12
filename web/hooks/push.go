@@ -106,7 +106,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	taskSum := results.TaskSum(taskName)
 
 	// TODO(espeland): Update this for GitHub web app.
-	sc, err := scm.NewSCMClient(wh.logger, course.GetProvider(), course.GetAccessToken())
+	sc, err := scm.NewSCMClient(wh.logger, course.GetAccessToken())
 	if err != nil {
 		wh.logger.Errorf("Failed to create SCM Client: %v", err)
 		return

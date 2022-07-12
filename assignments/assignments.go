@@ -21,7 +21,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), qf.TestsRepo)
 	// TODO(meling): Update this for GitHub web app.
 	// The scm client should ideally be passed in instead of creating another instance.
-	scm, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
+	scm, err := scm.NewSCMClient(logger, course.GetAccessToken())
 	if err != nil {
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
