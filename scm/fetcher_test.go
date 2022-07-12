@@ -7,18 +7,12 @@ import (
 	"testing"
 
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
 func TestClone(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
-	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 	userName, err := s.GetUserName(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -71,12 +65,7 @@ func TestClone(t *testing.T) {
 
 func TestCloneBranch(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
-	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 	userName, err := s.GetUserName(context.Background())
 	if err != nil {
 		t.Fatal(err)

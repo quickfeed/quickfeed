@@ -7,7 +7,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
@@ -25,12 +24,7 @@ const (
 
 func TestGetOrganization(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
-	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 	org, err := s.GetOrganization(context.Background(), &scm.GetOrgOptions{Name: qfTestOrg})
 	if err != nil {
 		t.Fatal(err)
@@ -47,15 +41,9 @@ func TestGetOrganization(t *testing.T) {
 
 func TestListHooks(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
-	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 
 	ctx := context.Background()
-
 	hooks, err := s.ListHooks(ctx, nil, qfTestOrg)
 	if err != nil {
 		t.Fatal(err)
@@ -84,26 +72,21 @@ func TestListHooks(t *testing.T) {
 
 func TestCreateHook(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	serverURL := scm.GetWebHookServer(t)
 	// Only enable this test to add a new webhook to your test course organization
 	if serverURL == "" {
 		t.Skip("Disabled pending support for deleting webhooks")
 	}
 
-	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 
 	ctx := context.Background()
-
 	opt := &scm.CreateHookOptions{
 		URL:        serverURL,
 		Secret:     secret,
 		Repository: &scm.Repository{Owner: qfTestOrg, Path: "tests"},
 	}
-	err = s.CreateHook(ctx, opt)
+	err := s.CreateHook(ctx, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,11 +104,8 @@ func TestCreateHook(t *testing.T) {
 // Test case for Creating new Issue on a git Repository
 func TestCreateIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-
-	// Creating new Client
-	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
+	s := scm.GetTestSCM(t)
 
 	issue, cleanup := createIssue(t, s, qfTestOrg, qf.StudentRepoName(qfTestUser))
 	defer cleanup()
@@ -138,11 +118,8 @@ func TestCreateIssue(t *testing.T) {
 // NOTE: This test only works if the given repository has no previous issues
 func TestGetIssues(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-
-	// Creating new Client
-	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
+	s := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
@@ -174,11 +151,8 @@ func TestGetIssues(t *testing.T) {
 
 func TestGetIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-
-	// Creating new Client
-	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
+	s := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
@@ -202,11 +176,8 @@ func TestGetIssue(t *testing.T) {
 // Test case for Updating existing Issue in a git Repository
 func TestUpdateIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-
-	// Creating new Client
-	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
+	s := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 
@@ -233,11 +204,7 @@ func TestUpdateIssue(t *testing.T) {
 
 func TestRequestReviewers(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 
 	// Set these when testing
 	opt := &scm.RequestReviewersOptions{
@@ -246,8 +213,7 @@ func TestRequestReviewers(t *testing.T) {
 		Number:       1,
 		Reviewers:    []string{"reviewer-login"},
 	}
-
-	err = s.RequestReviewers(context.Background(), opt)
+	err := s.RequestReviewers(context.Background(), opt)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -255,9 +221,8 @@ func TestRequestReviewers(t *testing.T) {
 
 func TestCreateIssueComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
+	s := scm.GetTestSCM(t)
 
 	body := "Test"
 	opt := &scm.IssueCommentOptions{
@@ -278,9 +243,8 @@ func TestCreateIssueComment(t *testing.T) {
 
 func TestUpdateIssueComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
+	s := scm.GetTestSCM(t)
 
 	body := "Issue Comment"
 	opt := &scm.IssueCommentOptions{
@@ -308,7 +272,7 @@ func TestUpdateIssueComment(t *testing.T) {
 }
 
 // createIssue on the given repository; returns the issue and a cleanup function.
-func createIssue(t *testing.T, s *scm.GithubV4SCM, org, repo string) (*scm.Issue, func()) {
+func createIssue(t *testing.T, s scm.SCM, org, repo string) (*scm.Issue, func()) {
 	t.Helper()
 	issue, err := s.CreateIssue(context.Background(), &scm.IssueOptions{
 		Organization: org,

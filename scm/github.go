@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-github/v45/github"
 	"github.com/gosimple/slug"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
 )
 
@@ -18,17 +19,21 @@ import (
 type GithubSCM struct {
 	logger      *zap.SugaredLogger
 	client      *github.Client
+	clientV4    *githubv4.Client
 	token       string
 	providerURL string
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
 func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
-	client := github.NewClient(oauth2.NewClient(context.Background(), ts))
+	src := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	httpClient := oauth2.NewClient(context.Background(), src)
 	return &GithubSCM{
 		logger:      logger,
-		client:      client,
+		client:      github.NewClient(httpClient),
+		clientV4:    githubv4.NewClient(httpClient),
 		token:       token,
 		providerURL: "github.com",
 	}

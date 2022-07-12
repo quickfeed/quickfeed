@@ -16,13 +16,7 @@ import (
 
 func TestFetchAssignments(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
-	logger := qlog.Logger(t)
-	s, err := scm.NewSCMClient(logger, accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 
 	course := &qf.Course{
 		Name:             "QuickFeed Test Course",
@@ -41,7 +35,7 @@ func TestFetchAssignments(t *testing.T) {
 	}
 	// This just to simulate the behavior of UpdateFromTestsRepo to confirm that the Dockerfile is built
 	course.Dockerfile = dockerfile
-	if err := buildDockerImage(context.Background(), logger, course); err != nil {
+	if err := buildDockerImage(context.Background(), qlog.Logger(t), course); err != nil {
 		t.Fatal(err)
 	}
 }

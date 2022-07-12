@@ -257,6 +257,14 @@ func (*FakeSCM) GetIssues(_ context.Context, _ *RepositoryOptions) ([]*Issue, er
 	}
 }
 
+func (*FakeSCM) DeleteIssue(_ context.Context, _ *RepositoryOptions, _ int) error {
+	return nil
+}
+
+func (*FakeSCM) DeleteIssues(_ context.Context, _ *RepositoryOptions) error {
+	return nil
+}
+
 // CreateIssueComment implements the SCM interface
 func (*FakeSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error) {
 	return 0, ErrNotSupported{
