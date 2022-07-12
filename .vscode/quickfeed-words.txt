@@ -59,6 +59,7 @@ grpcweb
 Hein
 Hein's
 Heins
+helpbot
 hoursmax
 hoursmin
 HTMLURL
