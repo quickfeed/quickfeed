@@ -897,7 +897,6 @@ func toRepository(repo *github.Repository) *Repository {
 		Path:    repo.GetName(),
 		Owner:   repo.Owner.GetLogin(),
 		HTMLURL: repo.GetHTMLURL(),
-		SSHURL:  repo.GetSSHURL(),
 		HTTPURL: repo.GetCloneURL(),
 		OrgID:   uint64(repo.Organization.GetID()),
 		Size:    uint64(repo.GetSize()),

@@ -73,7 +73,6 @@ func (s *FakeSCM) CreateRepository(_ context.Context, opt *CreateRepositoryOptio
 		ID:      uint64(len(s.Repositories) + 1),
 		Path:    opt.Path,
 		HTMLURL: "https://example.com/" + opt.Organization.Path + "/" + opt.Path,
-		SSHURL:  "git@example.com:" + opt.Organization.Path + "/" + opt.Path,
 		HTTPURL: "https://example.com/" + opt.Organization.Path + "/" + opt.Path + ".git",
 		OrgID:   opt.Organization.ID,
 	}
