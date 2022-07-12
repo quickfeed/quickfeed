@@ -62,7 +62,7 @@ func TestGormDBGetCourseRepoType(t *testing.T) {
 	repo := qf.Repository{
 		OrganizationID: 120,
 		RepositoryID:   100,
-		RepoType:       qf.Repository_COURSEINFO,
+		RepoType:       qf.Repository_INFO,
 	}
 	if err := db.CreateRepository(&repo); err != nil {
 		t.Fatal(err)
@@ -73,7 +73,7 @@ func TestGormDBGetCourseRepoType(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !gotRepos[0].RepoType.IsCourseRepo() {
-		t.Fatalf("Expected course info repo (%v), but got: %v", qf.Repository_COURSEINFO, gotRepos[0].RepoType)
+		t.Fatalf("Expected course info repo (%v), but got: %v", qf.Repository_INFO, gotRepos[0].RepoType)
 	}
 }
 
@@ -84,7 +84,7 @@ func TestGormDeleteRepo(t *testing.T) {
 	repo := qf.Repository{
 		OrganizationID: 120,
 		RepositoryID:   100,
-		RepoType:       qf.Repository_COURSEINFO,
+		RepoType:       qf.Repository_INFO,
 	}
 	if err := db.CreateRepository(&repo); err != nil {
 		t.Fatal(err)
@@ -124,7 +124,7 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 		OrganizationID: 120,
 		RepositoryID:   100,
 		UserID:         user.ID,
-		RepoType:       qf.Repository_COURSEINFO,
+		RepoType:       qf.Repository_INFO,
 		HTMLURL:        "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
@@ -181,7 +181,7 @@ func TestGetRepoByCourseIdUserIdAndType(t *testing.T) {
 		OrganizationID: 120,
 		RepositoryID:   100,
 		UserID:         user.ID,
-		RepoType:       qf.Repository_COURSEINFO,
+		RepoType:       qf.Repository_INFO,
 		HTMLURL:        "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
@@ -266,7 +266,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 		OrganizationID: 120,
 		RepositoryID:   100,
 		UserID:         user.ID,
-		RepoType:       qf.Repository_COURSEINFO,
+		RepoType:       qf.Repository_INFO,
 		HTMLURL:        "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
@@ -350,7 +350,7 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 		OrganizationID: 1234,
 		RepositoryID:   100,
 		UserID:         user.ID,
-		RepoType:       qf.Repository_COURSEINFO,
+		RepoType:       qf.Repository_INFO,
 		HTMLURL:        "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
@@ -373,7 +373,7 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 
 	repoQuery := &qf.Repository{
 		OrganizationID: course.GetOrganizationID(),
-		RepoType:       qf.Repository_COURSEINFO,
+		RepoType:       qf.Repository_INFO,
 	}
 	gotRepo, err := db.GetRepositories(repoQuery)
 	if err != nil {

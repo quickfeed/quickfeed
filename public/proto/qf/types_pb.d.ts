@@ -331,7 +331,7 @@ export namespace Repository {
 
   export enum Type { 
     NONE = 0,
-    COURSEINFO = 1,
+    INFO = 1,
     ASSIGNMENTS = 2,
     TESTS = 3,
     USER = 4,
