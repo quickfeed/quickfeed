@@ -11,8 +11,8 @@ import (
 	"testing"
 
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc/metadata"
@@ -32,7 +32,11 @@ func TestDB(t *testing.T) (database.Database, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(f.Name(), log.Zap(true))
+	logger, err := qlog.Zap()
+	if err != nil {
+		t.Fatal(err)
+	}
+	db, err := database.NewGormDB(f.Name(), logger)
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)

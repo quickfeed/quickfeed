@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
@@ -18,7 +18,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
-	logger := log.Zap(false).Sugar()
+	logger := qlog.Logger(t)
 	s := scm.NewGithubV4SCMClient(logger, accessToken)
 
 	db, cleanup := qtest.TestDB(t)

@@ -13,8 +13,8 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"go.uber.org/zap"
 )
 
 const (
@@ -32,15 +32,6 @@ func init() {
 	goth.UseProviders(&auth.FakeProvider{
 		Callback: "/auth/fake/callback",
 	})
-}
-
-func logger(t *testing.T) *zap.SugaredLogger {
-	t.Helper()
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		t.Fatal(err)
-	}
-	return logger.Sugar()
 }
 
 func TestOAuth2Logout(t *testing.T) {
@@ -70,7 +61,7 @@ func TestOAuth2Logout(t *testing.T) {
 		t.Errorf("have %d sessions want %d", ns, 2)
 	}
 
-	authHandler := auth.OAuth2Logout(logger(t))
+	authHandler := auth.OAuth2Logout(qlog.Logger(t))
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -97,7 +88,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Login(logger(t), db)
+	authHandler := auth.OAuth2Login(qlog.Logger(t), db)
 	withSession := session.Middleware(store)(authHandler)
 	if err := withSession(c); err != nil {
 		t.Error(err)
@@ -119,7 +110,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Callback(logger(t), db, auth.NewScms())
+	authHandler := auth.OAuth2Callback(qlog.Logger(t), db, auth.NewScms())
 	withSession := session.Middleware(store)(authHandler)
 	err := withSession(c)
 	httpErr, ok := err.(*echo.HTTPError)
@@ -186,7 +177,7 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 		c.SetParamValues(newProvider)
 	}
 
-	authHandler := auth.PreAuth(logger(t), db)(func(c echo.Context) error { return nil })
+	authHandler := auth.PreAuth(qlog.Logger(t), db)(func(c echo.Context) error { return nil })
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -242,7 +233,7 @@ func TestOAuth2LoginAuthenticated(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Login(logger(t), db)
+	authHandler := auth.OAuth2Login(qlog.Logger(t), db)
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -315,7 +306,7 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 		}
 	}
 
-	authHandler := auth.OAuth2Callback(logger(t), db, auth.NewScms())
+	authHandler := auth.OAuth2Callback(qlog.Logger(t), db, auth.NewScms())
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -358,7 +349,7 @@ func TestAccessControl(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	m := auth.AccessControl(logger(t), db, auth.NewScms())
+	m := auth.AccessControl(qlog.Logger(t), db, auth.NewScms())
 	protected := session.Middleware(store)(m(func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	}))

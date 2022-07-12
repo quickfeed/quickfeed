@@ -11,12 +11,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth/gothic"
-	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -27,14 +24,12 @@ import (
 )
 
 func TestGetSelf(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	const (
 		bufSize = 1024 * 1024
 	)
-
-	_, scms := qtest.FakeProviderMap(t)
 
 	adminUser := qtest.CreateFakeUser(t, db, 1)
 	student := qtest.CreateFakeUser(t, db, 56)
@@ -49,7 +44,6 @@ func TestGetSelf(t *testing.T) {
 		return lis.Dial()
 	}
 
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier())
 	s := grpc.NewServer(opt)
 	qf.RegisterQuickFeedServiceServer(s, ags)
@@ -78,7 +72,7 @@ func TestGetSelf(t *testing.T) {
 	}{
 		{id: 1, code: codes.Unauthenticated, metadata: false, token: "", wantUser: nil},
 		{id: 6, code: codes.PermissionDenied, metadata: true, token: "", wantUser: nil},
-		{id: 1, code: codes.Unauthenticated, metadata: true, token: "shouldfail", wantUser: nil},
+		{id: 1, code: codes.Unauthenticated, metadata: true, token: "should fail", wantUser: nil},
 		{id: 1, code: codes.OK, metadata: true, token: "", wantUser: adminUser},
 		{id: 2, code: codes.OK, metadata: true, token: "", wantUser: student},
 	}
@@ -125,11 +119,9 @@ func TestGetSelf(t *testing.T) {
 }
 
 func TestGetUsers(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	unexpectedUsers, err := ags.GetUsers(context.Background(), &qf.Void{})
 	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
 		t.Fatalf("found unexpected users %+v", unexpectedUsers)
@@ -174,7 +166,7 @@ var allUsers = []struct {
 }
 
 func TestGetEnrollmentsByCourse(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	var users []*qf.User
@@ -192,8 +184,6 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	// users to enroll in course DAT520 Distributed Systems
@@ -252,7 +242,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 }
 
 func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	var users []*qf.User
@@ -262,8 +252,6 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	}
 	admin := users[0]
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	course := allCourses[1]
@@ -334,13 +322,11 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 	firstAdminUser := qtest.CreateFakeUser(t, db, 1)
 	nonAdminUser := qtest.CreateFakeUser(t, db, 11)
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), firstAdminUser)
 
 	// we want to update nonAdminUser to become admin
@@ -391,13 +377,10 @@ func TestUpdateUser(t *testing.T) {
 }
 
 func TestUpdateUserFailures(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 	wantAdminUser := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateFakeUser(t, db, 11)
-
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	u := qtest.CreateFakeUser(t, db, 3)
 	if u.IsAdmin {

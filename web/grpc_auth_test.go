@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
@@ -29,7 +28,7 @@ const (
 var user *qf.User
 
 func TestGrpcAuth(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, qfService := testQuickFeedService(t)
 	defer cleanup()
 
 	fillDatabase(t, db)
@@ -38,7 +37,7 @@ func TestGrpcAuth(t *testing.T) {
 	}
 
 	// start gRPC server in background
-	go startGrpcAuthServer(t, db)
+	go startGrpcAuthServer(t, qfService)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -92,12 +91,7 @@ func fillDatabase(t *testing.T, db database.Database) {
 	qtest.EnrollStudent(t, db, user, course)
 }
 
-func startGrpcAuthServer(t *testing.T, db database.Database) {
-	logger := qtest.Logger(t)
-
-	_, scms := qtest.FakeProviderMap(t)
-	agService := web.NewQuickFeedService(logger.Desugar(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-
+func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService) {
 	lis, err := net.Listen("tcp", grpcAddr)
 	check(t, err)
 
@@ -106,7 +100,7 @@ func startGrpcAuthServer(t *testing.T, db database.Database) {
 	)
 	grpcServer := grpc.NewServer(opt)
 
-	qf.RegisterQuickFeedServiceServer(grpcServer, agService)
+	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}

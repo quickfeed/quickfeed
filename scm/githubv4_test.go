@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 )
 
 func TestDeleteIssue(t *testing.T) {
@@ -16,7 +16,7 @@ func TestDeleteIssue(t *testing.T) {
 	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
 
-	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
+	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
 
 	ctx := context.Background()
 	repo, err := s.GetRepository(ctx, &scm.RepositoryOptions{
@@ -79,7 +79,7 @@ func TestDeleteAllIssues(t *testing.T) {
 	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
 
-	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
+	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{

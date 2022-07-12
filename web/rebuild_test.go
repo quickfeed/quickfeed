@@ -8,12 +8,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"github.com/quickfeed/quickfeed/web"
 )
 
 func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
@@ -59,7 +56,7 @@ func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
 }
 
 func TestRebuildSubmissions(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	teacher := qtest.CreateFakeUser(t, db, 1)
@@ -113,10 +110,8 @@ func TestRebuildSubmissions(t *testing.T) {
 	if err := db.CreateRepository(&repo2); err != nil {
 		t.Fatal(err)
 	}
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	ctx := qtest.WithUserContext(context.Background(), teacher)
 
+	ctx := qtest.WithUserContext(context.Background(), teacher)
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)

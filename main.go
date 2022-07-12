@@ -10,8 +10,8 @@ import (
 	"os"
 
 	"github.com/quickfeed/quickfeed/ci"
-	logq "github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 
@@ -65,7 +65,10 @@ func main() {
 	)
 	flag.Parse()
 
-	logger := logq.Zap(true)
+	logger, err := qlog.Zap()
+	if err != nil {
+		log.Fatalf("can't initialize logger: %v", err)
+	}
 	defer logger.Sync()
 
 	db, err := database.NewGormDB(*dbFile, logger)
@@ -80,7 +83,7 @@ func main() {
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
-	runner, err := ci.NewDockerCI(logger)
+	runner, err := ci.NewDockerCI(logger.Sugar())
 	if err != nil {
 		log.Fatalf("failed to set up docker client: %v\n", err)
 	}

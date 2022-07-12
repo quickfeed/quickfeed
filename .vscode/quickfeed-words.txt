@@ -7,6 +7,7 @@ autoapprove
 autograde
 Autograder
 backports
+bitlab
 bufconn
 bufnet
 buildid
@@ -58,6 +59,7 @@ grpcweb
 Hein
 Hein's
 Heins
+helpbot
 hoursmax
 hoursmin
 HTMLURL
@@ -74,6 +76,7 @@ jsonpb
 keepalive
 keyout
 killall
+labstack
 Lamport
 letsencrypt
 linuxbrew
@@ -82,6 +85,7 @@ logq
 logrotate
 longsleep
 lsof
+markbates
 markdownlint
 mattn
 maxage
@@ -105,11 +109,13 @@ pgrep
 pkgs
 Preload
 privkey
+promhttp
 proto
 protobuf
 protoc
 protocmp
 protoimpl
+qlog
 qtest
 quickfeed
 Repos
@@ -152,3 +158,4 @@ xanzy
 xargs
 xini
 xlsx
+zapcore

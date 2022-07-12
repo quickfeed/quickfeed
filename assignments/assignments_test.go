@@ -6,10 +6,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -19,7 +18,7 @@ func TestFetchAssignments(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
-	logger := log.Zap(true).Sugar()
+	logger := qlog.Logger(t)
 	s, err := scm.NewSCMClient(logger, accessToken)
 	if err != nil {
 		t.Fatal(err)
@@ -211,7 +210,7 @@ func TestUpdateCriteria(t *testing.T) {
 	}
 
 	// If assignment.GradingBenchmarks is empty beyond this point, it means that there were no added / removed benchmarks / criteria
-	updateGradingCriteria(zap.NewNop().Sugar(), db, assignment)
+	updateGradingCriteria(qlog.Logger(t), db, assignment)
 
 	// Assignment has no added or removed benchmarks, expect nil
 	if assignment.GradingBenchmarks != nil {
@@ -264,7 +263,7 @@ func TestUpdateCriteria(t *testing.T) {
 	assignment.GradingBenchmarks = updatedBenchmarks
 
 	// This should delete the old benchmarks and criteria existing in the database, and return the new benchmarks
-	updateGradingCriteria(zap.NewNop().Sugar(), db, assignment)
+	updateGradingCriteria(qlog.Logger(t), db, assignment)
 
 	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})
 	if err != nil {

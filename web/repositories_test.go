@@ -6,17 +6,16 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )
 
 func TestGetRepo(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
+
 	user := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{
 		OrganizationID: 1,
@@ -54,8 +53,6 @@ func TestGetRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := NewQuickFeedService(zap.NewNop(), db, scms, BaseHookOptions{}, &ci.Local{})
 	gotUserRepo, err := ags.getRepo(course, user.ID, qf.Repository_USER)
 	if err != nil {
 		t.Fatal(err)
@@ -83,8 +80,9 @@ func TestGetRepo(t *testing.T) {
 }
 
 func TestGetRepositories(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
+
 	user := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{
 		OrganizationID: 1,
@@ -92,8 +90,6 @@ func TestGetRepositories(t *testing.T) {
 	}
 	qtest.CreateCourse(t, db, user, course)
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := NewQuickFeedService(zap.NewNop(), db, scms, BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), user)
 
 	// check that no repositories are returned when no repo types are specified

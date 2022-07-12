@@ -11,8 +11,8 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
-	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -85,7 +85,7 @@ func TestRunTests(t *testing.T) {
 	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
 	t.Logf("%+v", results.BuildInfo.BuildLog)
 	results.BuildInfo.BuildLog = "removed"
-	t.Logf("%+v\n", log.IndentJson(results))
+	t.Logf("%+v\n", qlog.IndentJson(results))
 }
 
 func TestRunTestsTimeout(t *testing.T) {

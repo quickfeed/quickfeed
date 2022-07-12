@@ -7,8 +7,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 )
 
 const (
@@ -27,7 +27,7 @@ func TestGetOrganization(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), accessToken)
+	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestListHooks(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), accessToken)
+	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func TestCreateHook(t *testing.T) {
 		t.Skip("Disabled pending support for deleting webhooks")
 	}
 
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), accessToken)
+	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +125,7 @@ func TestCreateIssue(t *testing.T) {
 	qfTestUser := scm.GetTestUser(t)
 
 	// Creating new Client
-	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
+	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
 
 	issue, cleanup := createIssue(t, s, qfTestOrg, qf.StudentRepoName(qfTestUser))
 	defer cleanup()
@@ -142,7 +142,7 @@ func TestGetIssues(t *testing.T) {
 	qfTestUser := scm.GetTestUser(t)
 
 	// Creating new Client
-	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
+	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
@@ -178,7 +178,7 @@ func TestGetIssue(t *testing.T) {
 	qfTestUser := scm.GetTestUser(t)
 
 	// Creating new Client
-	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
+	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
@@ -206,7 +206,7 @@ func TestUpdateIssue(t *testing.T) {
 	qfTestUser := scm.GetTestUser(t)
 
 	// Creating new Client
-	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
+	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
 
 	ctx := context.Background()
 
@@ -234,7 +234,7 @@ func TestUpdateIssue(t *testing.T) {
 func TestRequestReviewers(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), accessToken)
+	s, err := scm.NewSCMClient(qlog.Logger(t), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -257,7 +257,7 @@ func TestCreateIssueComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
+	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
 
 	body := "Test"
 	opt := &scm.IssueCommentOptions{
@@ -280,7 +280,7 @@ func TestUpdateIssueComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
+	s := scm.NewGithubV4SCMClient(qlog.Logger(t), accessToken)
 
 	body := "Issue Comment"
 	opt := &scm.IssueCommentOptions{
