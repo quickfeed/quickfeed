@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -25,8 +24,6 @@ import (
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/hooks"
 	"go.uber.org/zap"
-	"golang.org/x/oauth2"
-	gh "golang.org/x/oauth2/github"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -75,7 +72,7 @@ func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
 }
 
 // RegisterRouter registers http endpoints for authentication API and GitHub webhooks.
-func RegisterRouter(logger *zap.SugaredLogger, db database.Database, scmConfig *oauth2.Config, mux GrpcMultiplexer, static, secret string) *http.ServeMux {
+func RegisterRouter(logger *zap.SugaredLogger, db database.Database, authConfig *auth.AuthConfig, mux GrpcMultiplexer, static, secret string) *http.ServeMux {
 	// Register hooks
 	// TODO
 
@@ -89,27 +86,11 @@ func RegisterRouter(logger *zap.SugaredLogger, db database.Database, scmConfig *
 	router.Handle("/static/", mux.MuxHandler(http.StripPrefix("/static/", dist)))
 
 	// Register auth endpoints
-	router.HandleFunc("/auth/", auth.OAuth2Login(logger, db, scmConfig, secret))
+	router.HandleFunc("/auth/", auth.OAuth2Login(logger, db, authConfig, secret))
+	// callback
+	// logout
 
-	// TODO
 	return router
-}
-
-// OAuthConfig creates a new OAuth 2.0 config for an scm provider
-// Currently only works for GitHub.
-func OAuthConfig(baseURL string) (*oauth2.Config, error) {
-	clientID := os.Getenv("GITHUB_KEY")
-	clientSecret := os.Getenv("GITHUB_SECRET")
-	if clientID == "" || clientSecret == "" {
-		return nil, fmt.Errorf("missing GitHub client variables")
-	}
-	return &oauth2.Config{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-		Endpoint:     gh.Endpoint,
-		RedirectURL:  auth.GetCallbackURL(baseURL, "github"),
-		Scopes:       []string{"repo:invite"},
-	}, nil
 }
 
 // New starts a new web server

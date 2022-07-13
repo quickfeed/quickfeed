@@ -17,7 +17,6 @@ import (
 	lg "github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
-	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -154,7 +153,7 @@ func sessionData(session *sessions.Session) string {
 }
 
 // OAuth2Login tries to authenticate against an oauth2 provider.
-func OAuth2Login(logger *zap.SugaredLogger, db database.Database, scmConfig *oauth2.Config, secret string) http.HandlerFunc {
+func OAuth2Login(logger *zap.SugaredLogger, db database.Database, authConfig *AuthConfig, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("AUTH2LOGIN started with: ", r.Method) // tmp
 
@@ -189,13 +188,17 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database, scmConfig *oau
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		providerConfig, ok := authConfig.providers[provider]
+		if !ok {
+			logger.Error("Provider %s is not enabled", provider)
+		}
 
 		// Check teacher suffix, update scopes if teacher.
 		if strings.Contains(r.URL.Path, TeacherSuffix) {
-			scmConfig.Scopes = append(scmConfig.Scopes, teacherScopes...)
+			providerConfig.Scopes = append(providerConfig.Scopes, teacherScopes...)
 		}
 
-		redirectURL := scmConfig.AuthCodeURL(secret)
+		redirectURL := providerConfig.AuthCodeURL(secret)
 		if err != nil {
 			logger.Error(err.Error())
 			w.WriteHeader(http.StatusBadRequest)
@@ -207,11 +210,9 @@ func OAuth2Login(logger *zap.SugaredLogger, db database.Database, scmConfig *oau
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
-func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms) echo.HandlerFunc {
-	return func(c echo.Context) error {
+func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("OAuth2Callback: started")
-		w := c.Response()
-		r := c.Request()
 
 		qv := r.URL.Query()
 		logger.Debugf("qv: %v", qv)
