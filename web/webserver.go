@@ -72,7 +72,7 @@ func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
 }
 
 // RegisterRouter registers http endpoints for authentication API and GitHub webhooks.
-func RegisterRouter(logger *zap.SugaredLogger, db database.Database, authConfig *auth.AuthConfig, mux GrpcMultiplexer, static, secret string) *http.ServeMux {
+func RegisterRouter(logger *zap.SugaredLogger, db database.Database, authConfig *auth.AuthConfig, scms *auth.Scms, mux GrpcMultiplexer, static, secret string) *http.ServeMux {
 	// Register hooks
 	// TODO
 
@@ -87,7 +87,7 @@ func RegisterRouter(logger *zap.SugaredLogger, db database.Database, authConfig 
 
 	// Register auth endpoints
 	router.HandleFunc("/auth/", auth.OAuth2Login(logger, db, authConfig, secret))
-	// callback
+	router.HandleFunc("/auth/callback/", auth.OAuth2Callback(logger, db, authConfig, scms, secret))
 	// logout
 
 	return router
@@ -121,7 +121,6 @@ func newServer(ags *QuickFeedService, store sessions.Store) *echo.Echo {
 		Logger(ags.logger.Desugar()),
 		middleware.Secure(),
 		session.Middleware(store),
-		auth.AccessControl(ags.logger, ags.db, ags.scms),
 	)
 	return e
 }

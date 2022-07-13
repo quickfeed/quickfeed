@@ -79,7 +79,7 @@ func main() {
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
-	// TODO(vera): if needs immediate compatibility with GitLab, create a
+
 	authConfig, err := auth.NewAuthConfig(*baseURL)
 	if err != nil {
 		log.Fatal(err)
@@ -120,7 +120,7 @@ func main() {
 
 	// Register HTTP endpoints and webhooks
 	callbackSecret := rand.String()
-	router := web.RegisterRouter(logger.Sugar(), db, authConfig, multiplexer, *public, callbackSecret)
+	router := web.RegisterRouter(logger.Sugar(), db, authConfig, scms, multiplexer, *public, callbackSecret)
 
 	/////////////////////////////////
 	/////////////////////////////////
