@@ -3,7 +3,6 @@ package web
 import (
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/quickfeed/quickfeed/internal/rand"
@@ -13,13 +12,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-)
-
-// timeouts for http server
-var (
-	readTimeout  = 10 * time.Second
-	writeTimeout = 10 * time.Second
-	idleTimeout  = 5 * time.Minute
 )
 
 type GrpcMultiplexer struct {

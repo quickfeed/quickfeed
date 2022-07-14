@@ -174,7 +174,7 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *AuthConfig, secret strin
 		}
 		providerConfig, ok := authConfig.providers[provider]
 		if !ok {
-			authenticationError(logger, w, fmt.Sprintf("provider %s is not enabled", provider))
+			authenticationError(logger, w, "provider is not enabled")
 			return
 		}
 
@@ -188,7 +188,7 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *AuthConfig, secret strin
 		}
 		logger.Debugf("Provider callback URL: %s", providerConfig.RedirectURL)
 		redirectURL := providerConfig.AuthCodeURL(secret)
-		logger.Debugf("redirecting to %s to perform authentication; AuthURL: %v", provider, redirectURL)
+		logger.Debugf("redirecting to AuthURL: %v", redirectURL)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 	}
 }
@@ -212,7 +212,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 
 		providerConfig, ok := authConfig.providers[provider]
 		if !ok {
-			authenticationError(logger, w, fmt.Sprintf("provider %s is not enabled", provider))
+			authenticationError(logger, w, "provider is not enabled")
 			return
 		}
 
