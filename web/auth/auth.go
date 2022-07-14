@@ -310,13 +310,13 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 			}
 			err = db.CreateUserFromRemoteIdentity(user, remote)
 			if err != nil {
-				authenticationError(logger, w, fmt.Sprintf("failed to create remote identity for user %s with %s: %s", externalUser.Login, provider, err))
+				authenticationError(logger, w, fmt.Sprintf("failed to create remote identity for user %s : %s", externalUser.Login, err))
 				return
 			}
 			logger.Debugf("New user created: %v, remote: %v", user, remote)
 
 		default:
-			authenticationError(logger, w, fmt.Sprintf("failed to fetch user %s for remote identity from %s: %s", externalUser.Login, provider, err))
+			authenticationError(logger, w, fmt.Sprintf("failed to fetch user %s for remote identity: %s", externalUser.Login, err))
 			return
 		}
 
@@ -324,7 +324,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		// otherwise frontend will get user object where only name, email and url are set.
 		user, err = db.GetUserByRemoteIdentity(remote)
 		if err != nil {
-			authenticationError(logger, w, fmt.Sprintf("failed to fetch user %s for remote identity from %s: %s", externalUser.Login, provider, err))
+			authenticationError(logger, w, fmt.Sprintf("failed to fetch user %s for remote identity: %s", externalUser.Login, err))
 			return
 		}
 		logger.Debugf("Fetching full user info for %v, user: %v", remote, user)
