@@ -97,7 +97,6 @@ export class Converter {
         assignment.setId(obj.id)
         assignment.setCourseid(obj.courseid)
         assignment.setName(obj.name)
-        assignment.setScriptfile(obj.scriptfile)
         assignment.setDeadline(obj.deadline)
         assignment.setAutoapprove(obj.autoapprove)
         assignment.setOrder(obj.order)

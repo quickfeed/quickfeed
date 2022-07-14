@@ -6,10 +6,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -17,13 +16,7 @@ import (
 
 func TestFetchAssignments(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
-	logger := log.Zap(true).Sugar()
-	s, err := scm.NewSCMClient(logger, "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 
 	course := &qf.Course{
 		Name:             "QuickFeed Test Course",
@@ -37,12 +30,12 @@ func TestFetchAssignments(t *testing.T) {
 	}
 	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
 	for _, assignment := range assignments {
-		assignment.ScriptFile = "redacted" // too much noise otherwise
+		assignment.RunScriptContent = "redacted" // too much noise otherwise
 		t.Logf("%+v", assignment)
 	}
 	// This just to simulate the behavior of UpdateFromTestsRepo to confirm that the Dockerfile is built
 	course.Dockerfile = dockerfile
-	if err := buildDockerImage(context.Background(), logger, course); err != nil {
+	if err := buildDockerImage(context.Background(), qlog.Logger(t), course); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -62,23 +55,23 @@ func TestUpdateCriteria(t *testing.T) {
 
 	// Assignment that will be updated
 	assignment := &qf.Assignment{
-		CourseID:    course.ID,
-		Name:        "Assignment 1",
-		ScriptFile:  "go.sh",
-		Deadline:    "12.12.2021",
-		AutoApprove: false,
-		Order:       1,
-		IsGroupLab:  false,
+		CourseID:         course.ID,
+		Name:             "Assignment 1",
+		RunScriptContent: "Script for assignment 1",
+		Deadline:         "12.12.2021",
+		AutoApprove:      false,
+		Order:            1,
+		IsGroupLab:       false,
 	}
 
 	assignment2 := &qf.Assignment{
-		CourseID:    course.ID,
-		Name:        "Assignment 2",
-		ScriptFile:  "go.sh",
-		Deadline:    "12.01.2022",
-		AutoApprove: false,
-		Order:       2,
-		IsGroupLab:  false,
+		CourseID:         course.ID,
+		Name:             "Assignment 2",
+		RunScriptContent: "Script for assignment 1",
+		Deadline:         "12.01.2022",
+		AutoApprove:      false,
+		Order:            2,
+		IsGroupLab:       false,
 	}
 
 	for _, a := range []*qf.Assignment{assignment, assignment2} {
@@ -211,7 +204,7 @@ func TestUpdateCriteria(t *testing.T) {
 	}
 
 	// If assignment.GradingBenchmarks is empty beyond this point, it means that there were no added / removed benchmarks / criteria
-	updateGradingCriteria(zap.NewNop().Sugar(), db, assignment)
+	updateGradingCriteria(qlog.Logger(t), db, assignment)
 
 	// Assignment has no added or removed benchmarks, expect nil
 	if assignment.GradingBenchmarks != nil {
@@ -264,7 +257,7 @@ func TestUpdateCriteria(t *testing.T) {
 	assignment.GradingBenchmarks = updatedBenchmarks
 
 	// This should delete the old benchmarks and criteria existing in the database, and return the new benchmarks
-	updateGradingCriteria(zap.NewNop().Sugar(), db, assignment)
+	updateGradingCriteria(qlog.Logger(t), db, assignment)
 
 	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})
 	if err != nil {

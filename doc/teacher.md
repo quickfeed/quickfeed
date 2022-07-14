@@ -239,7 +239,7 @@ Assignment-specific test runners are located in the individual assignment folder
 
 The test runner is a bash script; an example is shown below.
 
-The first line of the template specifies which Docker image to use for the tests.
+The first line of the script specifies which Docker image to use for the tests.
 For example, the test runner can specify a publicly available Docker image, such as `#image/mcr.microsoft.com/dotnet/sdk:5.0`.
 However, it is also possible to use a custom Docker image, which is built from the course's `scripts/Dockerfile`.
 In this case, the test runner should specify the course code as the image to use, i.e., `#image/{course_code}`.

@@ -168,7 +168,7 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enroll
 		OrganizationID: course.GetOrganizationID(),
 		RepositoryID:   scmRepo.ID,
 		UserID:         user.ID,
-		HTMLURL:        scmRepo.WebURL,
+		HTMLURL:        scmRepo.HTMLURL,
 		RepoType:       qf.Repository_USER,
 	}
 	if err := s.db.CreateRepository(&userRepo); err != nil {

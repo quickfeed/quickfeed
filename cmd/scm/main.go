@@ -11,10 +11,10 @@ import (
 
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 
 	"github.com/urfave/cli"
-	"go.uber.org/zap"
 )
 
 // To use this tool, there are two options:
@@ -239,13 +239,17 @@ func before(client *scm.SCM) cli.BeforeFunc {
 	return func(c *cli.Context) (err error) {
 		provider := c.String("provider")
 		accessToken := os.Getenv(c.String("token"))
+		logger, err := qlog.Zap()
+		if err != nil {
+			return err
+		}
 		if accessToken != "" {
-			*client, err = scm.NewSCMClient(zap.NewNop().Sugar(), provider, accessToken)
+			*client, err = scm.NewSCMClient(logger.Sugar(), accessToken)
 			return
 		}
 
 		// access token not provided in env variable; check if database holds access token
-		db, err := database.NewGormDB(c.String("database"), zap.NewNop())
+		db, err := database.NewGormDB(c.String("database"), logger)
 		if err != nil {
 			return err
 		}
@@ -263,7 +267,7 @@ func before(client *scm.SCM) cli.BeforeFunc {
 		if accessToken == "" {
 			return fmt.Errorf("access token not found in database for provider %s", provider)
 		}
-		*client, err = scm.NewSCMClient(zap.NewNop().Sugar(), provider, accessToken)
+		*client, err = scm.NewSCMClient(logger.Sugar(), accessToken)
 		return
 	}
 }
@@ -298,7 +302,7 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 				if err := (*client).DeleteRepository(ctx, &scm.RepositoryOptions{ID: repo.ID}); err != nil {
 					errs = append(errs, err)
 				} else {
-					fmt.Println("Deleted repository", repo.WebURL)
+					fmt.Println("Deleted repository", repo.HTMLURL)
 				}
 				if len(errs) > 0 {
 					return cli.NewMultiError(errs...)
@@ -373,7 +377,7 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 		if err != nil {
 			return err
 		}
-		fmt.Println("Found repository ", repo.WebURL)
+		fmt.Println("Found repository ", repo.HTMLURL)
 		return nil
 	}
 }

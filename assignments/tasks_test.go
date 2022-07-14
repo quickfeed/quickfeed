@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
@@ -16,10 +15,7 @@ import (
 // behind newly created issues on the user repositories for manual inspection.
 func TestSynchronizeTasksWithIssues(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
-	logger := log.Zap(false).Sugar()
-	s := scm.NewGithubV4SCMClient(logger, accessToken)
+	s := scm.GetTestSCM(t)
 
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()

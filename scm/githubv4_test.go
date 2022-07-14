@@ -8,15 +8,12 @@ import (
 
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 )
 
 func TestDeleteIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-
-	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
+	s := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	repo, err := s.GetRepository(ctx, &scm.RepositoryOptions{
@@ -76,10 +73,8 @@ func TestDeleteAllIssues(t *testing.T) {
 		t.SkipNow()
 	}
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-
-	s := scm.NewGithubV4SCMClient(zap.NewNop().Sugar(), accessToken)
+	s := scm.GetTestSCM(t)
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{

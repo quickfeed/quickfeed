@@ -11,8 +11,8 @@ import (
 	"testing"
 
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc/metadata"
@@ -32,7 +32,11 @@ func TestDB(t *testing.T) (database.Database, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(f.Name(), log.Zap(true))
+	logger, err := qlog.Zap()
+	if err != nil {
+		t.Fatal(err)
+	}
+	db, err := database.NewGormDB(f.Name(), logger)
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)
@@ -164,7 +168,8 @@ func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course 
 func FakeProviderMap(t *testing.T) (scm.SCM, *auth.Scms) {
 	t.Helper()
 	scms := auth.NewScms()
-	scm, err := scms.GetOrCreateSCMEntry(Logger(t).Desugar(), "fake", "token")
+	os.Setenv("SCM_PROVIDER", "fake")
+	scm, err := scms.GetOrCreateSCMEntry(Logger(t).Desugar(), "token")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -192,26 +197,26 @@ func WithUserContext(ctx context.Context, user *qf.User) context.Context {
 func AssignmentsWithTasks(courseID uint64) []*qf.Assignment {
 	return []*qf.Assignment{
 		{
-			CourseID:    courseID,
-			Name:        "lab1",
-			ScriptFile:  "go.sh",
-			Deadline:    "12.01.2022",
-			AutoApprove: false,
-			Order:       1,
-			IsGroupLab:  false,
+			CourseID:         courseID,
+			Name:             "lab1",
+			RunScriptContent: "Script for lab1",
+			Deadline:         "12.01.2022",
+			AutoApprove:      false,
+			Order:            1,
+			IsGroupLab:       false,
 			Tasks: []*qf.Task{
 				{Title: "Fibonacci", Name: "fib", AssignmentOrder: 1, Body: "Implement fibonacci"},
 				{Title: "Lucas Numbers", Name: "luc", AssignmentOrder: 1, Body: "Implement lucas numbers"},
 			},
 		},
 		{
-			CourseID:    courseID,
-			Name:        "lab2",
-			ScriptFile:  "go.sh",
-			Deadline:    "12.12.2021",
-			AutoApprove: false,
-			Order:       2,
-			IsGroupLab:  false,
+			CourseID:         courseID,
+			Name:             "lab2",
+			RunScriptContent: "Script for lab2",
+			Deadline:         "12.12.2021",
+			AutoApprove:      false,
+			Order:            2,
+			IsGroupLab:       false,
 			Tasks: []*qf.Task{
 				{Title: "Addition", Name: "add", AssignmentOrder: 2, Body: "Implement addition"},
 				{Title: "Subtraction", Name: "sub", AssignmentOrder: 2, Body: "Implement subtraction"},
@@ -247,7 +252,7 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 		dbRepo := &qf.Repository{
 			RepositoryID:   repo.ID,
 			OrganizationID: org.GetID(),
-			HTMLURL:        repo.WebURL,
+			HTMLURL:        repo.HTMLURL,
 			RepoType:       qf.RepoType(repo.Path),
 		}
 		if dbRepo.IsUserRepo() {

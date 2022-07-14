@@ -8,7 +8,6 @@ import (
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -69,12 +68,9 @@ func TestGetNextReviewer(t *testing.T) {
 // TestPublishFeedbackComment tests creating a feedback comment on a pull request, with the given result.
 func TestPublishFeedbackComment(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
 	qfTestUser := scm.GetTestUser(t)
-	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
+
 	results := &score.Results{
 		Scores: []*score.Score{
 			{TestName: "Test1", TaskName: "1", Score: 5, MaxScore: 7, Weight: 2},

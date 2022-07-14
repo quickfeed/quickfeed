@@ -11,8 +11,8 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
-	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -31,15 +31,10 @@ func loadRunScript(t *testing.T) string {
 	return string(b)
 }
 
-func testRunData(t *testing.T, scriptTemplate string) *ci.RunData {
+func testRunData(t *testing.T, runScriptContent string) *ci.RunData {
 	qfTestOrg := scm.GetTestOrganization(t)
-	accessToken := scm.GetAccessToken(t)
-
 	// Only used to fetch the user's GitHub login (user name)
-	s, err := scm.NewSCMClient(qtest.Logger(t), "github", accessToken)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := scm.GetTestSCM(t)
 	userName, err := s.GetUserName(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -47,7 +42,7 @@ func testRunData(t *testing.T, scriptTemplate string) *ci.RunData {
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
-	qf.SetAccessToken(courseID, accessToken)
+	qf.SetAccessToken(courseID, scm.GetAccessToken(t))
 	runData := &ci.RunData{
 		Course: &qf.Course{
 			ID:               courseID,
@@ -57,7 +52,7 @@ func testRunData(t *testing.T, scriptTemplate string) *ci.RunData {
 		},
 		Assignment: &qf.Assignment{
 			Name:             "lab1",
-			ScriptFile:       scriptTemplate,
+			RunScriptContent: runScriptContent,
 			ContainerTimeout: 1, // minutes
 		},
 		Repo: &qf.Repository{
@@ -71,8 +66,8 @@ func testRunData(t *testing.T, scriptTemplate string) *ci.RunData {
 }
 
 func TestRunTests(t *testing.T) {
-	scriptTemplate := loadRunScript(t)
-	runData := testRunData(t, scriptTemplate)
+	runScriptContent := loadRunScript(t)
+	runData := testRunData(t, runScriptContent)
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
@@ -85,12 +80,12 @@ func TestRunTests(t *testing.T) {
 	// We don't actually test anything here since we don't know how many assignments are in QF_TEST_ORG
 	t.Logf("%+v", results.BuildInfo.BuildLog)
 	results.BuildInfo.BuildLog = "removed"
-	t.Logf("%+v\n", log.IndentJson(results))
+	t.Logf("%+v\n", qlog.IndentJson(results))
 }
 
 func TestRunTestsTimeout(t *testing.T) {
-	scriptTemplate := loadRunScript(t)
-	runData := testRunData(t, scriptTemplate)
+	runScriptContent := loadRunScript(t)
+	runData := testRunData(t, runScriptContent)
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
@@ -123,7 +118,7 @@ func TestRecordResults(t *testing.T) {
 	assignment := &qf.Assignment{
 		CourseID: course.ID,
 		Name:     "lab1",
-		ScriptFile: `#image/quickfeed:go
+		RunScriptContent: `#image/quickfeed:go
 printf "AssignmentName: {{ .AssignmentName }}\n"
 printf "RandomSecret: {{ .RandomSecret }}\n"
 `,

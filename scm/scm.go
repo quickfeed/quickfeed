@@ -3,6 +3,7 @@ package scm
 import (
 	"context"
 	"errors"
+	"os"
 
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
@@ -76,6 +77,10 @@ type SCM interface {
 	GetIssue(ctx context.Context, opt *RepositoryOptions, number int) (*Issue, error)
 	// GetIssues fetches all issues in a repository.
 	GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error)
+	// DeleteIssue deletes the given issue number in the given repository.
+	DeleteIssue(context.Context, *RepositoryOptions, int) error
+	// DeleteIssues deletes all issues in the given repository.
+	DeleteIssues(context.Context, *RepositoryOptions) error
 
 	// CreateIssueComment creates a comment on a SCM issue.
 	CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error)
@@ -89,8 +94,21 @@ type SCM interface {
 	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
 }
 
+const defaultProvider = "github"
+
+var provider string
+
+// Provider returns the current SCM provider supported by this backend.
+func Provider() string {
+	return provider
+}
+
 // NewSCMClient returns a new provider client implementing the SCM interface.
-func NewSCMClient(logger *zap.SugaredLogger, provider, token string) (SCM, error) {
+func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
+	provider = os.Getenv("SCM_PROVIDER")
+	if provider == "" {
+		provider = defaultProvider
+	}
 	switch provider {
 	case "github":
 		return NewGithubSCMClient(logger, token), nil
@@ -127,9 +145,7 @@ type Repository struct {
 	ID      uint64
 	Path    string
 	Owner   string // Only used by GitHub.
-	WebURL  string // Repository website.
-	SSHURL  string // SSH clone URL, used by GitLab.
-	HTTPURL string // HTTP(S) clone URL.
+	HTMLURL string // Repository website.
 	OrgID   uint64
 	Size    uint64
 }

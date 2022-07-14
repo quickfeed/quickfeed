@@ -21,7 +21,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), qf.TestsRepo)
 	// TODO(meling): Update this for GitHub web app.
 	// The scm client should ideally be passed in instead of creating another instance.
-	scm, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
+	scm, err := scm.NewSCMClient(logger, course.GetAccessToken())
 	if err != nil {
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
@@ -102,7 +102,7 @@ func fetchAssignments(ctx context.Context, sc scm.SCM, course *qf.Course) ([]*qf
 
 // buildDockerImage builds the Docker image for the given course.
 func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, course *qf.Course) error {
-	docker, err := ci.NewDockerCI(logger.Desugar())
+	docker, err := ci.NewDockerCI(logger)
 	if err != nil {
 		return fmt.Errorf("failed to set up docker client: %w", err)
 	}

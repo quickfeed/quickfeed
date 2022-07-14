@@ -14,7 +14,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/log"
+	"github.com/quickfeed/quickfeed/qlog"
 )
 
 var docker bool
@@ -33,7 +33,8 @@ func init() {
 }
 
 func dockerClient(t *testing.T) (*ci.Docker, func()) {
-	docker, err := ci.NewDockerCI(log.Zap(true))
+	t.Helper()
+	docker, err := ci.NewDockerCI(qlog.Logger(t))
 	if err != nil {
 		t.Fatalf("Failed to set up docker client: %v", err)
 	}

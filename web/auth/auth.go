@@ -15,8 +15,8 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/rand"
-	lg "github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -282,7 +282,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 			authenticationError(logger, w, fmt.Sprintf("failed to decode user information: %v", err))
 			return
 		}
-		logger.Debugf("externalUser: %v", lg.IndentJson(externalUser))
+		logger.Debugf("externalUser: %v", qlog.IndentJson(externalUser))
 
 		accessToken := authToken.AccessToken
 
@@ -431,7 +431,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 func updateScm(logger *zap.SugaredLogger, scms *Scms, user *qf.User) bool {
 	foundSCMProvider := false
 	for _, remoteID := range user.RemoteIdentities {
-		if _, err := scms.GetOrCreateSCMEntry(logger.Desugar(), remoteID.GetProvider(), remoteID.GetAccessToken()); err != nil {
+		if _, err := scms.GetOrCreateSCMEntry(logger.Desugar(), remoteID.GetAccessToken()); err != nil {
 			logger.Errorf("Unknown SCM provider: %v", err)
 			continue
 		}

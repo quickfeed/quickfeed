@@ -5,19 +5,15 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
-	"github.com/quickfeed/quickfeed/log"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"github.com/quickfeed/quickfeed/web"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestSubmissionsAccess(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -65,10 +61,7 @@ func TestSubmissionsAccess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), teacher)
-
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)
@@ -86,25 +79,25 @@ func TestSubmissionsAccess(t *testing.T) {
 	// and one student and admin not affiliated with the course
 
 	if err = db.CreateAssignment(&qf.Assignment{
-		CourseID:    course.ID,
-		Name:        "lab1",
-		ScriptFile:  "go.sh",
-		Deadline:    "11.11.2022",
-		AutoApprove: false,
-		Order:       1,
-		IsGroupLab:  false,
+		CourseID:         course.ID,
+		Name:             "lab1",
+		RunScriptContent: "Script for lab1",
+		Deadline:         "11.11.2022",
+		AutoApprove:      false,
+		Order:            1,
+		IsGroupLab:       false,
 	}); err != nil {
 		t.Fatal(err)
 	}
 
 	if err = db.CreateAssignment(&qf.Assignment{
-		CourseID:    course.ID,
-		Name:        "lab2",
-		ScriptFile:  "go.sh",
-		Deadline:    "11.11.2022",
-		AutoApprove: false,
-		Order:       2,
-		IsGroupLab:  true,
+		CourseID:         course.ID,
+		Name:             "lab2",
+		RunScriptContent: "Script for lab2",
+		Deadline:         "11.11.2022",
+		AutoApprove:      false,
+		Order:            2,
+		IsGroupLab:       true,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -259,7 +252,7 @@ func TestSubmissionsAccess(t *testing.T) {
 }
 
 func TestApproveSubmission(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -283,10 +276,10 @@ func TestApproveSubmission(t *testing.T) {
 	}
 
 	lab := &qf.Assignment{
-		CourseID:   course.ID,
-		Name:       "test lab",
-		ScriptFile: "go.sh",
-		Order:      1,
+		CourseID:         course.ID,
+		Name:             "test lab",
+		RunScriptContent: "Script for test lab",
+		Order:            1,
 	}
 	if err = db.CreateAssignment(lab); err != nil {
 		t.Fatal(err)
@@ -301,10 +294,7 @@ func TestApproveSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
-
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)
@@ -350,7 +340,7 @@ func TestApproveSubmission(t *testing.T) {
 }
 
 func TestGetSubmissionsByCourse(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -360,8 +350,6 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	student2 := qtest.CreateFakeUser(t, db, 3)
 	student3 := qtest.CreateFakeUser(t, db, 4)
 
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	if _, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
 		t.Fatal(err)
@@ -530,7 +518,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 }
 
 func TestGetCourseLabSubmissions(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -552,7 +540,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab1c1 := &qf.Assignment{
 		CourseID:          course1.ID,
 		Name:              "lab 1",
-		ScriptFile:        "go.sh",
+		RunScriptContent:  "Script for lab1",
 		Deadline:          "2020-02-23T18:00:00",
 		Order:             1,
 		GradingBenchmarks: []*qf.GradingBenchmark{},
@@ -561,7 +549,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab2c1 := &qf.Assignment{
 		CourseID:          course1.ID,
 		Name:              "lab 2",
-		ScriptFile:        "go.sh",
+		RunScriptContent:  "Script for lab2",
 		Deadline:          "2020-03-23T18:00:00",
 		Order:             2,
 		GradingBenchmarks: []*qf.GradingBenchmark{},
@@ -569,7 +557,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab1c2 := &qf.Assignment{
 		CourseID:          course2.ID,
 		Name:              "lab 1",
-		ScriptFile:        "go.sh",
+		RunScriptContent:  "Script for lab1",
 		Deadline:          "2020-04-23T18:00:00",
 		Order:             1,
 		GradingBenchmarks: []*qf.GradingBenchmark{},
@@ -577,7 +565,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	lab2c2 := &qf.Assignment{
 		CourseID:          course2.ID,
 		Name:              "lab 2",
-		ScriptFile:        "go.sh",
+		RunScriptContent:  "Script for lab2",
 		Deadline:          "2020-05-23T18:00:00",
 		Order:             2,
 		GradingBenchmarks: []*qf.GradingBenchmark{},
@@ -630,10 +618,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(log.Zap(false), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
-
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)
@@ -748,7 +733,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 }
 
 func TestCreateApproveList(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -766,32 +751,32 @@ func TestCreateApproveList(t *testing.T) {
 
 	assignments := []*qf.Assignment{
 		{
-			CourseID:   course.ID,
-			Name:       "lab 1",
-			ScriptFile: "go.sh",
-			Deadline:   "2020-02-23T18:00:00",
-			Order:      1,
+			CourseID:         course.ID,
+			Name:             "lab 1",
+			RunScriptContent: "Script for lab1",
+			Deadline:         "2020-02-23T18:00:00",
+			Order:            1,
 		},
 		{
-			CourseID:   course.ID,
-			Name:       "lab 2",
-			ScriptFile: "go.sh",
-			Deadline:   "2020-03-23T18:00:00",
-			Order:      2,
+			CourseID:         course.ID,
+			Name:             "lab 2",
+			RunScriptContent: "Script for lab2",
+			Deadline:         "2020-03-23T18:00:00",
+			Order:            2,
 		},
 		{
-			CourseID:   course.ID,
-			Name:       "lab 3",
-			ScriptFile: "go.sh",
-			Deadline:   "2020-04-23T18:00:00",
-			Order:      3,
+			CourseID:         course.ID,
+			Name:             "lab 3",
+			RunScriptContent: "Script for lab3",
+			Deadline:         "2020-04-23T18:00:00",
+			Order:            3,
 		},
 		{
-			CourseID:   course.ID,
-			Name:       "lab 4",
-			ScriptFile: "go.sh",
-			Deadline:   "2020-05-23T18:00:00",
-			Order:      4,
+			CourseID:         course.ID,
+			Name:             "lab 4",
+			RunScriptContent: "Script for lab4",
+			Deadline:         "2020-05-23T18:00:00",
+			Order:            4,
 		},
 	}
 	for _, a := range assignments {
@@ -858,8 +843,6 @@ func TestCreateApproveList(t *testing.T) {
 		}
 	}
 
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
@@ -943,7 +926,7 @@ func TestCreateApproveList(t *testing.T) {
 }
 
 func TestReleaseApproveAll(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -959,8 +942,6 @@ func TestReleaseApproveAll(t *testing.T) {
 	qtest.EnrollStudent(t, db, student2, course)
 	qtest.EnrollStudent(t, db, student3, course)
 
-	fakeProvider, scms := qtest.FakeProviderMap(t)
-	ags := web.NewQuickFeedService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
@@ -969,20 +950,20 @@ func TestReleaseApproveAll(t *testing.T) {
 
 	assignments := []*qf.Assignment{
 		{
-			CourseID:   course.ID,
-			Name:       "lab 1",
-			ScriptFile: "go.sh",
-			Deadline:   "2020-02-23T18:00:00",
-			Order:      1,
-			Reviewers:  1,
+			CourseID:         course.ID,
+			Name:             "lab 1",
+			RunScriptContent: "Script for lab1",
+			Deadline:         "2020-02-23T18:00:00",
+			Order:            1,
+			Reviewers:        1,
 		},
 		{
-			CourseID:   course.ID,
-			Name:       "lab 2",
-			ScriptFile: "go.sh",
-			Deadline:   "2020-03-23T18:00:00",
-			Order:      2,
-			Reviewers:  1,
+			CourseID:         course.ID,
+			Name:             "lab 2",
+			RunScriptContent: "Script for lab2",
+			Deadline:         "2020-03-23T18:00:00",
+			Order:            2,
+			Reviewers:        1,
 		},
 	}
 

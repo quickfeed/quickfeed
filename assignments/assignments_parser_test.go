@@ -145,18 +145,18 @@ func TestParse(t *testing.T) {
 	// We expect assignment names to be set based on
 	// assignment folder names.
 	wantAssignment1 := &qf.Assignment{
-		Name:        "lab1",
-		Deadline:    "2017-08-27T12:00:00",
-		ScriptFile:  "Script for Lab1",
-		AutoApprove: false,
-		Order:       1,
-		ScoreLimit:  80,
+		Name:             "lab1",
+		Deadline:         "2017-08-27T12:00:00",
+		RunScriptContent: "Script for Lab1",
+		AutoApprove:      false,
+		Order:            1,
+		ScoreLimit:       80,
 	}
 
 	wantAssignment2 := &qf.Assignment{
 		Name:              "lab2",
 		Deadline:          "2018-08-27T12:00:00",
-		ScriptFile:        "Default script",
+		RunScriptContent:  "Default script",
 		AutoApprove:       false,
 		Order:             2,
 		ScoreLimit:        80,

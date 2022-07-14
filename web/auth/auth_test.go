@@ -2,7 +2,6 @@ package auth_test
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/gorilla/sessions"
@@ -10,7 +9,6 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"go.uber.org/zap"
 )
 
 const (
@@ -28,15 +26,6 @@ func init() {
 	goth.UseProviders(&auth.FakeProvider{
 		Callback: "/auth/fake/callback",
 	})
-}
-
-func logger(t *testing.T) *zap.SugaredLogger {
-	t.Helper()
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		t.Fatal(err)
-	}
-	return logger.Sugar()
 }
 
 // func TestOAuth2Logout(t *testing.T) {
@@ -66,12 +55,69 @@ func logger(t *testing.T) *zap.SugaredLogger {
 // 		t.Errorf("have %d sessions want %d", ns, 2)
 // 	}
 
-// 	authHandler := auth.OAuth2Logout(logger(t))
+// 	authHandler := auth.OAuth2Logout(qlog.Logger(t))
 // 	withSession := session.Middleware(store)(authHandler)
 
 // 	if err := withSession(c); err != nil {
 // 		t.Error(err)
 // 	}
+
+// 	ns = len(store.store[r].Values)
+// 	// Sessions should be cleared.
+// 	if ns != 0 {
+// 		t.Errorf("have %d sessions want %d", ns, 0)
+// 	}
+// }
+
+// func TestOAuth2LoginRedirect(t *testing.T) {
+// 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
+// 	w := httptest.NewRecorder()
+
+// 	store := newStore()
+// 	gothic.Store = store
+
+// 	e := echo.New()
+// 	c := e.NewContext(r, w)
+
+// 	db, cleanup := qtest.TestDB(t)
+// 	defer cleanup()
+
+// 	authHandler := auth.OAuth2Login(qlog.Logger(t), db)
+// 	withSession := session.Middleware(store)(authHandler)
+// 	if err := withSession(c); err != nil {
+// 		t.Error(err)
+// 	}
+
+// 	e := echo.New()
+// 	c := e.NewContext(r, w)
+
+// 	fakeSession := auth.FakeSession{}
+// 	s, _ := store.Get(r, fakeSessionName)
+// 	s.Values[fakeSessionKey] = fakeSession.Marshal()
+// 	if err := s.Save(r, w); err != nil {
+// 		t.Error(err)
+// 	}
+
+// 	if err := store.login(c); err != nil {
+// 		t.Error(err)
+// 	}
+
+// 	ns := len(store.store[r].Values)
+// 	// Want gothic session and user session.
+// 	if ns != 2 {
+// 		t.Errorf("have %d sessions want %d", ns, 2)
+// 	}
+
+// 	authHandler := auth.OAuth2Logout(logger(t))
+// 	withSession := session.Middleware(store)(authHandler)
+
+// authHandler := auth.OAuth2Callback(qlog.Logger(t), db, auth.NewScms())
+// withSession := session.Middleware(store)(authHandler)
+// err := withSession(c)
+// httpErr, ok := err.(*echo.HTTPError)
+// if !ok {
+// 	t.Errorf("unexpected error type: %v", reflect.TypeOf(err))
+// }
 
 // 	ns = len(store.store[r].Values)
 // 	// Sessions should be cleared.
@@ -115,59 +161,54 @@ func logger(t *testing.T) *zap.SugaredLogger {
 // 	db, cleanup := qtest.TestDB(t)
 // 	defer cleanup()
 
-// 	authHandler := auth.OAuth2Callback(logger(t), db, auth.NewScms())
-// 	withSession := session.Middleware(store)(authHandler)
-// 	err := withSession(c)
-// 	httpErr, ok := err.(*echo.HTTPError)
-// 	if !ok {
-// 		t.Errorf("unexpected error type: %v", reflect.TypeOf(err))
-// 	}
+// authHandler := auth.PreAuth(qlog.Logger(t), db)(func(c echo.Context) error { return nil })
+// withSession := session.Middleware(store)(authHandler)
 
 // 	assertCode(t, httpErr.Code, http.StatusBadRequest)
 // }
 
-func TestOAuth2LoginAuthenticated(t *testing.T) {
-	// TODO(vera): update tests
-	t.Skip("needs update")
-	const userID = "1"
+// func TestOAuth2LoginAuthenticated(t *testing.T) {
+// 	// TODO(vera): update tests
+// 	t.Skip("needs update")
+// 	const userID = "1"
 
-	r := httptest.NewRequest(http.MethodGet, authURL, nil)
-	w := httptest.NewRecorder()
+// 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
+// 	w := httptest.NewRecorder()
 
-	qv := r.URL.Query()
-	qv.Set(auth.State, r.URL.Query().Get(auth.Redirect))
-	r.URL.RawQuery = qv.Encode()
+// 	qv := r.URL.Query()
+// 	qv.Set(auth.State, r.URL.Query().Get(auth.Redirect))
+// 	r.URL.RawQuery = qv.Encode()
 
-	store := newStore()
-	gothic.Store = store
+// 	store := newStore()
+// 	gothic.Store = store
 
-	fakeSession := auth.FakeSession{ID: userID}
-	s, _ := store.Get(r, fakeSessionName)
-	s.Values[fakeSessionKey] = fakeSession.Marshal()
-	if err := s.Save(r, w); err != nil {
-		t.Error(err)
-	}
+// 	fakeSession := auth.FakeSession{ID: userID}
+// 	s, _ := store.Get(r, fakeSessionName)
+// 	s.Values[fakeSessionKey] = fakeSession.Marshal()
+// 	if err := s.Save(r, w); err != nil {
+// 		t.Error(err)
+// 	}
 
-	_, err := gothic.GetAuthURL(w, r)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	_, err := gothic.GetAuthURL(w, r)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	// e := echo.New()
-	// c := e.NewContext(r, w)
+// 	// e := echo.New()
+// 	// c := e.NewContext(r, w)
 
-	// db, cleanup := qtest.TestDB(t)
-	// defer cleanup()
+// 	// db, cleanup := qtest.TestDB(t)
+// 	// defer cleanup()
 
-	// authHandler := auth.OAuth2Login(logger(t), db)
-	// withSession := session.Middleware(store)(authHandler)
+// 	authHandler := auth.OAuth2Login(qlog.Logger(t), db)
+// 	withSession := session.Middleware(store)(authHandler)
 
-	// if err := withSession(c); err != nil {
-	// 	t.Error(err)
-	// }
+// 	// if err := withSession(c); err != nil {
+// 	// 	t.Error(err)
+// 	// }
 
-	assertCode(t, w.Code, http.StatusTemporaryRedirect)
-}
+// 	assertCode(t, w.Code, http.StatusTemporaryRedirect)
+// }
 
 // func TestOAuth2CallbackNoSession(t *testing.T) {
 // 	testOAuth2Callback(t, false, false)
@@ -232,7 +273,7 @@ func TestOAuth2LoginAuthenticated(t *testing.T) {
 // 		}
 // 	}
 
-// 	authHandler := auth.OAuth2Callback(logger(t), db, auth.NewScms())
+// 	authHandler := auth.OAuth2Callback(qlog.Logger(t), db, auth.NewScms())
 // 	withSession := session.Middleware(store)(authHandler)
 
 // 	if err := withSession(c); err != nil {
@@ -275,7 +316,7 @@ func TestOAuth2LoginAuthenticated(t *testing.T) {
 // 		t.Fatal(err)
 // 	}
 
-// 	m := auth.AccessControl(logger(t), db, auth.NewScms())
+// 	m := auth.AccessControl(qlog.Logger(t), db, auth.NewScms())
 // 	protected := session.Middleware(store)(m(func(c echo.Context) error {
 // 		return c.NoContent(http.StatusOK)
 // 	}))
