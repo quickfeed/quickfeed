@@ -20,7 +20,7 @@ const StudentPage = (): JSX.Element => {
             <RedirectButton to={root} />
             <CourseBanner />
             <Alert />
-            <div className="row" hidden={history.location.pathname != root}>
+            <div className="row" hidden={history.location.pathname !== root}>
                 <div className="col-md-9" >
                     <CourseLabs />
                 </div>
