@@ -46,6 +46,7 @@ golangci
 googleapis
 gopath
 gopb
+gopls
 Gorm
 gosecret
 gosimple
@@ -116,6 +117,7 @@ protoc
 protocmp
 protoimpl
 protopatch
+protoreflect
 qlog
 qtest
 quickfeed
@@ -133,6 +135,7 @@ signup
 skiptests
 slugified
 sqlite
+staticcheck
 Stavnes
 stdcopy
 struct
