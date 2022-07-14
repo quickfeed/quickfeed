@@ -169,7 +169,7 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *AuthConfig, secret strin
 		// Get provider name.
 		provider := GetProviderName(r.URL.Path, 2)
 		if provider == "" {
-			authenticationError(logger, w, fmt.Sprintf("incorrect request URL: %s", r.URL.Path))
+			authenticationError(logger, w, "incorrect request URL")
 			return
 		}
 		providerConfig, ok := authConfig.providers[provider]
@@ -206,7 +206,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		// Get provider.
 		provider := GetProviderName(r.URL.Path, 3)
 		if provider == "" {
-			authenticationError(logger, w, fmt.Sprintf("incorrect request URL: %s", r.URL.Path))
+			authenticationError(logger, w, "incorrect request URL")
 			return
 		}
 
@@ -224,14 +224,14 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		// Validate redirect state to make sure the request is in fact coming from the oauth provider.
 		callbackSecret := r.FormValue("state")
 		if callbackSecret != secret {
-			authenticationError(logger, w, fmt.Sprintf("mismatching secrets: expected %s, got %s", secret, callbackSecret))
+			authenticationError(logger, w, "incorrect callback secret")
 			return
 		}
 
 		// Exchange code for access token.
 		code := r.FormValue("code")
 		if code == "" {
-			authenticationError(logger, w, fmt.Sprintf("got empty code on callback from %s", provider))
+			authenticationError(logger, w, "got empty code on callback")
 			return
 		}
 
@@ -262,7 +262,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		}
 		responseBody, err := io.ReadAll(resp.Body)
 		if err != nil {
-			authenticationError(logger, w, fmt.Sprintf("failed to read response from %s: %v", provider, err))
+			authenticationError(logger, w, fmt.Sprintf("failed to read uthentication response: %v", err))
 			return
 		}
 
