@@ -116,35 +116,12 @@ func OAuth2Logout(logger *zap.SugaredLogger) http.HandlerFunc {
 			logger.Error(err.Error())
 		}
 		logger.Debug(sessionData(sess))
-
-		// if i, ok := sess.Values[UserKey]; ok {
-		// 	// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		// 	us := i.(*UserSession)
-		// 	logger.Debug(us)
-		// 	// Invalidate gothic user sessions.
-		// 	for provider := range us.Providers {
-		// 		sess, err := session.Get(provider+gothic.SessionName, c)
-		// 		if err != nil {
-		// 			logger.Error(err.Error())
-		// 			return err
-		// 		}
-		// 		logger.Debug(sessionData(sess))
-
-		// 		sess.Options.MaxAge = -1
-		// 		sess.Values = make(map[interface{}]interface{})
-		// 		if err := sess.Save(r, w); err != nil {
-		// 			logger.Error(err.Error())
-		// 		}
-		// 	}
-		// }
-		// Invalidate our user session.
 		sess.Options.MaxAge = -1
 		sess.Values = make(map[interface{}]interface{})
 		if err := sess.Save(r, w); err != nil {
 			logger.Error(err.Error())
 		}
 		http.Redirect(w, r, "/", http.StatusFound)
-		// return c.Redirect(http.StatusFound, extractRedirectURL(r, Redirect))
 	}
 }
 
@@ -167,13 +144,26 @@ func sessionData(session *sessions.Session) string {
 	return fmt.Sprintf("Session: ID=%s, IsNew=%t, %s", session.ID, session.IsNew, out)
 }
 
-// OAuth2Login tries to authenticate against an oauth2 provider.
+// OAuth2Login redirects user to the provider's sign in page or, if user is already signed in with provider,
+// authenticates the user in the background.
 func OAuth2Login(logger *zap.SugaredLogger, db database.Database, authConfig *AuthConfig, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("AUTH2LOGIN started with: ", r.Method) // tmp
 		if r.Method != "GET" {
 			authenticationError(logger, w, fmt.Sprintf("illegal request method: %s", r.Method))
 			return
+		}
+
+		// Start or refresh the session.
+		// Issue: server generates a new random key to encode sessions on each restart.
+		// A session from before the restart will be detected, but cannot be decoded with
+		// the new key, resulting in an error. Instead of returning, we attempt to refresh the session first.
+		s, err := sessionStore.Get(r, SessionKey)
+		if err != nil {
+			if err := sessionStore.Save(r, w, s); err != nil {
+				authenticationError(logger, w, fmt.Sprintf("failed to create new session (%s): %s", SessionKey, err))
+				return
+			}
 		}
 
 		// Get provider name.
@@ -342,10 +332,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		// Register user session.
 		// Temporary. Will be removed when sessions are replaced with JWT.
 		s, err := sessionStore.Get(r, SessionKey)
-		if err != nil {
-			authenticationError(logger, w, fmt.Sprintf("failed to create new session (%s): %s", SessionKey, err))
-			return
-		}
+
 		us := newUserSession(user.ID)
 		us.enableProvider(provider)
 		s.Values[UserKey] = us
@@ -356,7 +343,6 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 			return
 		}
 		logger.Debugf("Session.Save: %v", s)
-		// TODO(Needs rework if still needed)
 
 		if ok := updateScm(logger, scms, user); !ok {
 			logger.Debugf("Failed to update SCM for User: %v", user)
@@ -374,59 +360,6 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }
-
-// AccessControl returns an access control middleware. Given a valid context
-// with sufficient access the next handler is called. Missing or invalid
-// credentials results in a 401 unauthorized response.
-// func AccessControl(logger *zap.SugaredLogger, db database.Database, scms *Scms) echo.MiddlewareFunc {
-// 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-// 		return func(c echo.Context) error {
-// 			sess, err := session.Get(SessionKey, c)
-// 			if err != nil {
-// 				logger.Error(err.Error())
-// 				// Save fixes the session if it has been modified
-// 				// or it is no longer valid due to newUserSess change of keys.
-// 				if err := sess.Save(c.Request(), c.Response()); err != nil {
-// 					logger.Error(err.Error())
-// 					return err
-// 				}
-// 				return next(c)
-// 			}
-// 			logger.Debug(sessionData(sess))
-
-// 			i, ok := sess.Values[UserKey]
-// 			if !ok {
-// 				return next(c)
-// 			}
-
-// 			// If type assertion fails, the recover middleware will catch the panic and log a stack trace.
-// 			us := i.(*UserSession)
-// 			logger.Debug(us)
-// 			user, err := db.GetUser(us.ID)
-// 			if err != nil {
-// 				logger.Error(err.Error())
-// 				// Invalidate session. This could happen if the user has been entirely remove
-// 				// from the database, but a valid session still exists.
-// 				if err == gorm.ErrRecordNotFound {
-// 					logger.Error(err.Error())
-// 					return OAuth2Logout(logger)(c)
-// 				}
-// 				logger.Error(echo.ErrUnauthorized.Error())
-// 				return next(c)
-// 			}
-// 			c.Set(UserKey, user)
-
-// 			// TODO: Add access control list.
-// 			// - Extract endpoint.
-// 			// - Verify whether the user has sufficient rights. This
-// 			//   can be a simple hash map. A user should be able to
-// 			//   access /users/:uid if the user's id is uid.
-// 			//   - Not authorized: return c.NoContent(http.StatusUnauthorized)
-// 			//   - Authorized: return next(c)
-// 			return next(c)
-// 		}
-// 	}
-// }
 
 func updateScm(logger *zap.SugaredLogger, scms *Scms, user *qf.User) bool {
 	foundSCMProvider := false

@@ -88,7 +88,7 @@ func RegisterRouter(logger *zap.SugaredLogger, db database.Database, authConfig 
 	// Register auth endpoints
 	router.HandleFunc("/auth/", auth.OAuth2Login(logger, db, authConfig, secret))
 	router.HandleFunc("/auth/callback/", auth.OAuth2Callback(logger, db, authConfig, scms, secret))
-	// logout
+	router.HandleFunc("/logout", auth.OAuth2Logout(logger))
 
 	return router
 }
