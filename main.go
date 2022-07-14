@@ -123,7 +123,7 @@ func main() {
 
 	// Register HTTP endpoints and webhooks
 	callbackSecret := rand.String()
-	router := web.RegisterRouter(logger.Sugar(), db, authConfig, scms, multiplexer, *public, callbackSecret)
+	router := qfService.RegisterRouter(authConfig, scms, multiplexer, *public, callbackSecret)
 
 	/////////////////////////////////
 	/////////////////////////////////
