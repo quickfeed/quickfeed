@@ -11,7 +11,6 @@ import (
 
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/quickfeed/quickfeed/ci"
-	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
@@ -118,24 +117,12 @@ func main() {
 	grpcWebServer := grpcweb.WrapServer(grpcServer)
 
 	multiplexer := web.GrpcMultiplexer{
-		grpcWebServer,
+		MuxServer: grpcWebServer,
 	}
 
 	// Register HTTP endpoints and webhooks
-	callbackSecret := rand.String()
-	router := qfService.RegisterRouter(authConfig, scms, multiplexer, *public, callbackSecret)
+	router := qfService.RegisterRouter(authConfig, scms, multiplexer, *public)
 
-	/////////////////////////////////
-	/////////////////////////////////
-
-	// go web.New(qfService, *public, *httpAddr)
-
-	// lis, err := net.Listen("tcp", *grpcAddr)
-	// if err != nil {
-	// 	log.Fatalf("failed to start tcp listener: %v\n", err)
-	// }
-	// opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
-	// grpcServer := grpc.NewServer(opt)
 	// Create a HTTP server for prometheus.
 	httpServer := &http.Server{
 		Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),

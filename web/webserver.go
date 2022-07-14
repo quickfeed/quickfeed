@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/hooks"
@@ -22,7 +23,7 @@ var (
 )
 
 type GrpcMultiplexer struct {
-	*grpcweb.WrappedGrpcServer
+	MuxServer *grpcweb.WrappedGrpcServer
 }
 
 // ServerWithCredentials starts a new gRPC server with credentials
@@ -47,9 +48,9 @@ func ServerWithCredentials(logger *zap.Logger, certFile, certKey string) (*grpc.
 // MuxHandler routes HTTP and gRPC requests.
 func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if m.IsGrpcWebRequest(r) {
+		if m.MuxServer.IsGrpcWebRequest(r) {
 			log.Printf("MUX: got GRPC request: %v", r)
-			m.ServeHTTP(w, r)
+			m.MuxServer.ServeHTTP(w, r)
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -57,7 +58,7 @@ func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
 }
 
 // RegisterRouter registers http endpoints for authentication API and scm provider webhooks.
-func (s *QuickFeedService) RegisterRouter(authConfig *auth.AuthConfig, scms *auth.Scms, mux GrpcMultiplexer, public, secret string) *http.ServeMux {
+func (s *QuickFeedService) RegisterRouter(authConfig *auth.AuthConfig, scms *auth.Scms, mux GrpcMultiplexer, public string) *http.ServeMux {
 	// Serve static files.
 	router := http.NewServeMux()
 	assets := http.FileServer(http.Dir(public + "/assets"))
@@ -68,8 +69,9 @@ func (s *QuickFeedService) RegisterRouter(authConfig *auth.AuthConfig, scms *aut
 	router.Handle("/static/", mux.MuxHandler(http.StripPrefix("/static/", dist)))
 
 	// Register auth endpoints.
-	router.HandleFunc("/auth/", auth.OAuth2Login(s.logger, s.db, authConfig, secret))
-	router.HandleFunc("/auth/callback/", auth.OAuth2Callback(s.logger, s.db, authConfig, scms, secret))
+	callbackSecret := rand.String()
+	router.HandleFunc("/auth/", auth.OAuth2Login(s.logger, authConfig, callbackSecret))
+	router.HandleFunc("/auth/callback/", auth.OAuth2Callback(s.logger, s.db, authConfig, scms, callbackSecret))
 	router.HandleFunc("/logout", auth.OAuth2Logout(s.logger))
 
 	// Register hooks.

@@ -146,7 +146,7 @@ func sessionData(session *sessions.Session) string {
 
 // OAuth2Login redirects user to the provider's sign in page or, if user is already signed in with provider,
 // authenticates the user in the background.
-func OAuth2Login(logger *zap.SugaredLogger, db database.Database, authConfig *AuthConfig, secret string) http.HandlerFunc {
+func OAuth2Login(logger *zap.SugaredLogger, authConfig *AuthConfig, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("AUTH2LOGIN started with: ", r.Method) // tmp
 		if r.Method != "GET" {
@@ -332,6 +332,10 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		// Register user session.
 		// Temporary. Will be removed when sessions are replaced with JWT.
 		s, err := sessionStore.Get(r, SessionKey)
+		if err != nil {
+			authenticationError(logger, w, fmt.Sprintf("failed to get user session (%s): %s", SessionKey, err))
+			return
+		}
 
 		us := newUserSession(user.ID)
 		us.enableProvider(provider)
@@ -375,27 +379,6 @@ func updateScm(logger *zap.SugaredLogger, scms *Scms, user *qf.User) bool {
 		logger.Debugf("No SCM provider found for user %v", user)
 	}
 	return foundSCMProvider
-}
-
-func extractRedirectURL(r *http.Request, key string) string {
-	// TODO: Validate redirect URL.
-
-	url := r.URL.Query().Get(key)
-	if url == "" {
-		url = "/"
-	}
-	return url
-}
-
-func extractState(r *http.Request, key string) (redirect string, teacher bool) {
-	// TODO: Validate redirect URL.
-	url := r.URL.Query().Get(key)
-	teacher = url != "" && url[:1] == "1"
-
-	if url == "" || url[1:] == "" {
-		return "/", teacher
-	}
-	return url[1:], teacher
 }
 
 func extractSessionCookie(w http.ResponseWriter) string {
