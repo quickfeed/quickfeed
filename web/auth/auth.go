@@ -113,13 +113,13 @@ func OAuth2Logout(logger *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sess, err := sessionStore.Get(r, SessionKey)
 		if err != nil {
-			logger.Error(err.Error())
+			logger.Error(err)
 		}
 		logger.Debug(sessionData(sess))
 		sess.Options.MaxAge = -1
 		sess.Values = make(map[interface{}]interface{})
 		if err := sess.Save(r, w); err != nil {
-			logger.Error(err.Error())
+			logger.Error(err)
 		}
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
@@ -181,14 +181,14 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *AuthConfig, secret strin
 		// Check teacher suffix, update scopes if teacher.
 		// Won't be necessary with GitHub App.
 		if strings.Contains(r.URL.Path, TeacherSuffix) {
-			logger.Debug("found teacher suffix on login")
+			logger.Debug("Found teacher suffix on login")
 			providerConfig.Scopes = teacherScopes
 		} else {
 			providerConfig.Scopes = studentScopes
 		}
 		logger.Debugf("Provider callback URL: %s", providerConfig.RedirectURL)
 		redirectURL := providerConfig.AuthCodeURL(secret)
-		logger.Debugf("redirecting to AuthURL: %v", redirectURL)
+		logger.Debugf("Redirecting to AuthURL: %v", redirectURL)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 	}
 }
@@ -262,7 +262,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		}
 		responseBody, err := io.ReadAll(resp.Body)
 		if err != nil {
-			authenticationError(logger, w, fmt.Sprintf("failed to read uthentication response: %v", err))
+			authenticationError(logger, w, fmt.Sprintf("failed to read authentication response: %v", err))
 			return
 		}
 
@@ -277,7 +277,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		accessToken := authToken.AccessToken
 
 		// There is no need to check for existing session here because a user with a valid session
-		// will be logged in authomatically and will never see the login button. Only a user without
+		// will be logged in automatically and will never see the login button. Only a user without
 		// a valid session can be redirected to this endpoint. (Same will hold for JWT-based authentication).
 
 		remote := &qf.RemoteIdentity{
