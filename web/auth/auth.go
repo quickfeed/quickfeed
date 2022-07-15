@@ -187,7 +187,7 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *AuthConfig, secret strin
 			providerConfig.Scopes = studentScopes
 		}
 		logger.Debugf("Provider callback URL: %s", providerConfig.RedirectURL)
-		redirectURL := providerConfig.AuthCodeURL(secret)
+		redirectURL := authConfig.GetRedirectURL(provider, secret)
 		logger.Debugf("redirecting to AuthURL: %v", redirectURL)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 	}
@@ -260,6 +260,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 			authenticationError(logger, w, fmt.Sprintf("unexpected OAuth provider response: %d (%s)", resp.StatusCode, resp.Status))
 			return
 		}
+
 		responseBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			authenticationError(logger, w, fmt.Sprintf("failed to read uthentication response: %v", err))

@@ -35,3 +35,14 @@ func NewAuthConfig(baseURL string) (*AuthConfig, error) {
 		providers: providers,
 	}, nil
 }
+
+func (c *AuthConfig) GetRedirectURL(provider, secret string) string {
+	if provider == "fake" {
+		return "/test/callback"
+	}
+	conf, ok := c.providers[provider]
+	if !ok {
+		return ""
+	}
+	return conf.AuthCodeURL(secret)
+}
