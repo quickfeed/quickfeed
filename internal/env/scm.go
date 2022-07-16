@@ -1,6 +1,9 @@
 package env
 
-import "os"
+import (
+	"os"
+	"testing"
+)
 
 const (
 	defaultProvider = "github"
@@ -18,4 +21,11 @@ func init() {
 // ScmProvider returns the current SCM provider supported by this backend.
 func ScmProvider() string {
 	return provider
+}
+
+// SetFakeProvider sets the provider to fake. This is only for testing.
+// The t argument is added as a reminder that this is only for testing.
+func SetFakeProvider(t *testing.T) {
+	t.Helper()
+	provider = "fake"
 }

@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
@@ -168,7 +169,7 @@ func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course 
 func FakeProviderMap(t *testing.T) (scm.SCM, *auth.Scms) {
 	t.Helper()
 	scms := auth.NewScms()
-	os.Setenv("SCM_PROVIDER", "fake")
+	env.SetFakeProvider(t)
 	scm, err := scms.GetOrCreateSCMEntry(Logger(t).Desugar(), "token")
 	if err != nil {
 		t.Fatal(err)
