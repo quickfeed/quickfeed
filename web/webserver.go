@@ -50,7 +50,7 @@ func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
 }
 
 // RegisterRouter registers http endpoints for authentication API and scm provider webhooks.
-func (s *QuickFeedService) RegisterRouter(authConfig *auth.AuthConfig, scms *auth.Scms, mux GrpcMultiplexer, public string) *http.ServeMux {
+func (s *QuickFeedService) RegisterRouter(authConfig *auth.Config, scms *auth.Scms, mux GrpcMultiplexer, public string) *http.ServeMux {
 	// Serve static files.
 	router := http.NewServeMux()
 	assets := http.FileServer(http.Dir(public + "/assets"))

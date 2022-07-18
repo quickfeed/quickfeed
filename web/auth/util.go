@@ -19,7 +19,7 @@ func GetProviderURL(baseURL, route, provider string) string {
 	return "https://" + baseURL + "/" + route + "/" + provider // + "/" + endpoint
 }
 
-func GetProviderName(url string, index int) string {
+func getProviderName(url string, index int) string {
 	urlPath := strings.Split(url, "/")
 	if len(urlPath) < (index + 1) {
 		return ""

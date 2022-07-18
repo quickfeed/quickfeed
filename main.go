@@ -59,8 +59,6 @@ func main() {
 		baseURL = flag.String("service.url", "", "base service DNS name")
 		dbFile  = flag.String("database.file", "qf.db", "database file")
 		public  = flag.String("http.public", "public", "path to content to serve")
-		// httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
-		// grpcAddr = flag.String("grpc.addr", ":9090", "gRPC listen address")
 	)
 	flag.Parse()
 
@@ -82,7 +80,7 @@ func main() {
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
-	authConfig, err := auth.NewAuthConfig(*baseURL)
+	authConfig, err := auth.NewConfig(*baseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -102,7 +100,6 @@ func main() {
 	}
 
 	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
-	// TODO(vera): harcoded or command line flags?
 	certFile := os.Getenv("CERT")
 	certKey := os.Getenv("CERT_KEY")
 	if certFile == "" || certKey == "" {
@@ -126,26 +123,20 @@ func main() {
 	// Create a HTTP server for prometheus.
 	httpServer := &http.Server{
 		Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
-		Addr:    fmt.Sprintf("0.0.0.0:%d", 9097),
+		Addr:    fmt.Sprintf("127.0.0.1:%d", 9097),
 	}
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil {
 			log.Fatalf("failed to start a http server: %v\n", err)
 		}
 	}()
-
-	// qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
-
 	muxServer := &http.Server{
 		Handler:      router,
-		Addr:         "127.0.0.1:8080",
+		Addr:         *baseURL,
 		WriteTimeout: 2 * time.Minute,
 		ReadTimeout:  2 * time.Minute,
 	}
 	if err := muxServer.ListenAndServeTLS(certFile, certKey); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}
-	// if err := grpcServer.Serve(lis); err != nil {
-	// 	log.Fatalf("failed to start grpc server: %v\n", err)
-	// }
 }
