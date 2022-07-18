@@ -24,6 +24,7 @@ enabled = true
 
   [analyzers.meta]
   plugins = ["react"]
+  dependency_file_path = ["/public"]
 
 [[analyzers]]
 name = "go"
