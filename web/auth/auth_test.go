@@ -29,9 +29,10 @@ func TestOAuth2Login(t *testing.T) {
 		"/auth/wrong-provider": http.StatusUnauthorized,
 		"/github":              http.StatusUnauthorized,
 		"/auth/github":         http.StatusTemporaryRedirect,
+		"/auth/github/":        http.StatusTemporaryRedirect,
 	}
 	logger := qlog.Logger(t)
-	authConfig, err := auth.NewAuthConfig("")
+	authConfig, err := auth.NewConfig("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +52,7 @@ func TestOAuth2Login(t *testing.T) {
 
 func TestOAuth2LoginRedirect(t *testing.T) {
 	logger := qlog.Logger(t)
-	authConfig, err := auth.NewAuthConfig("")
+	authConfig, err := auth.NewConfig("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +63,6 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 		Expect(t).
 		Status(http.StatusTemporaryRedirect).
 		Assert(func(res *http.Response, req *http.Request) error {
-			// Check redirect URL.
 			fullURL, err := res.Location()
 			if err != nil {
 				return err
@@ -77,7 +77,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 func TestOAuth2Callback(t *testing.T) {
 	userJSON := `{"id": 1, "email": "mail", "name": "Noname Lastname", "login": "test"}`
 	logger := qtest.Logger(t)
-	authConfig, err := auth.NewAuthConfig("")
+	authConfig, err := auth.NewConfig("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,12 +87,10 @@ func TestOAuth2Callback(t *testing.T) {
 
 	mockTokenExchange := apitest.NewMock().
 		Post("/login/oauth/access_token").
-		//Header("Location", "/test").
 		RespondWith().
 		Body(`{"access_token": "test_token"}`).
 		Status(http.StatusOK).
 		End()
-
 	mockUserExchange := apitest.NewMock().
 		Get("/user").
 		RespondWith().
@@ -117,6 +115,44 @@ func TestOAuth2Callback(t *testing.T) {
 	if user.Login != "test" {
 		t.Fatalf("incorrect user login: expected 'test', got %s", user.Name)
 	}
+}
+
+func TestOAuth2CallbackBadRequest(t *testing.T) {
+	logger := qtest.Logger(t)
+	authConfig, err := auth.NewConfig("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	scms := auth.NewScms()
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	// Wrong request method.
+	apitest.New().Debug().
+		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
+		Post("/auth/callback/github").
+		Query("state", testSecret).
+		Query("code", "testcode").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		End()
+	// Incorrect secret code.
+	apitest.New().Debug().
+		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
+		Get("/auth/callback/github").
+		Query("state", "not a secret").
+		Query("code", "testcode").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		End()
+	// Empty exchange code.
+	apitest.New().Debug().
+		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
+		Get("/auth/callback/github").
+		Query("state", testSecret).
+		Query("code", "").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		End()
 }
 
 func TestOAuth2Logout(t *testing.T) {
