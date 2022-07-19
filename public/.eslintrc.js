@@ -3,8 +3,9 @@ module.exports = {
 	"plugins": ["@typescript-eslint"],
 	"extends": [
 		"eslint:recommended",
-		"plugin:react/all"
-    ],
+		"plugin:@typescript-eslint/eslint-recommended",
+		"plugin:react/all",
+	],
 	"parserOptions": {
 		"ecmaVersion": 6,
 		"ecmaFeatures": {
@@ -20,6 +21,5 @@ module.exports = {
 		"react/jsx-newline": ["off"],
 		"no-undef": ["off"],
 		"react/jsx-max-depth": [2, { "max": 4 }]
-
 	}
 }
