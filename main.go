@@ -11,6 +11,7 @@ import (
 
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
@@ -64,13 +65,13 @@ func main() {
 
 	logger, err := qlog.Zap()
 	if err != nil {
-		log.Fatalf("can't initialize logger: %v", err)
+		log.Fatalf("Can't initialize logger: %v", err)
 	}
 	defer logger.Sync()
 
 	db, err := database.NewGormDB(*dbFile, logger)
 	if err != nil {
-		log.Fatalf("can't connect to database: %v\n", err)
+		log.Fatalf("Can't connect to database: %v\n", err)
 	}
 
 	// holds references for activated providers for current user token
@@ -80,14 +81,20 @@ func main() {
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
-	authConfig, err := auth.NewConfig(*baseURL)
+	clientID, err := env.ClientKey()
+	if err != nil {
+		log.Fatal(err)
+	}
+	clientSecret, err := env.ClientSecret()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	authConfig := auth.NewGitHubConfig(*baseURL, clientID, clientSecret)
+
 	runner, err := ci.NewDockerCI(logger.Sugar())
 	if err != nil {
-		log.Fatalf("failed to set up docker client: %v\n", err)
+		log.Fatalf("Failed to set up docker client: %v\n", err)
 	}
 	defer runner.Close()
 
@@ -100,14 +107,14 @@ func main() {
 	}
 
 	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
-	certFile := os.Getenv("CERT")
-	certKey := os.Getenv("CERT_KEY")
+	certFile := env.CertFile()
+	certKey := env.CertKey()
 	if certFile == "" || certKey == "" {
-		log.Fatal("CERT or CERT_KEY is not set")
+		log.Fatal("Environmental variables (QUICKFEED_CERT_FILE, QUICKFEED_CERT_KEY) not set")
 	}
 	grpcServer, err := web.ServerWithCredentials(logger, certFile, certKey)
 	if err != nil {
-		log.Fatalf("failed to generate gRPC server credentials: %v\n", err)
+		log.Fatalf("Failed to generate gRPC server credentials: %v\n", err)
 	}
 
 	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
@@ -127,7 +134,7 @@ func main() {
 	}
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatalf("failed to start a http server: %v\n", err)
+			log.Fatalf("Failed to start a http server: %v\n", err)
 		}
 	}()
 	muxServer := &http.Server{
@@ -137,6 +144,6 @@ func main() {
 		ReadTimeout:  2 * time.Minute,
 	}
 	if err := muxServer.ListenAndServeTLS(certFile, certKey); err != nil {
-		log.Fatalf("failed to start grpc server: %v\n", err)
+		log.Fatalf("Failed to start grpc server: %v\n", err)
 	}
 }
