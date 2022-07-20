@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/markbates/goth"
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -111,7 +112,7 @@ func TestOAuth2Callback(t *testing.T) {
 	}
 }
 
-func TestOAuth2CallbackEmptyUserInfo(t *testing.T) {
+func TestOAuth2CallbackUserExchange(t *testing.T) {
 	logger := qtest.Logger(t)
 	authConfig := auth.NewGitHubConfig("", "TEST", "TEST")
 	scms := auth.NewScms()
@@ -127,8 +128,19 @@ func TestOAuth2CallbackEmptyUserInfo(t *testing.T) {
 	mockEmptyUserInfo := apitest.NewMock().
 		Get("/user").
 		RespondWith().
-		Body(`userID: "none`).
+		Body(`userID: "none"`).
 		Status(http.StatusOK).
+		End()
+	mockEmptyResponseBody := apitest.NewMock().
+		Get("/user").
+		RespondWith().
+		Status(http.StatusOK).
+		End()
+	mockBadRequestStatus := apitest.NewMock().
+		Get("/user").
+		RespondWith().
+		Body(`userID: "none"`).
+		Status(http.StatusBadRequest).
 		End()
 
 	apitest.New().Debug().
@@ -141,10 +153,31 @@ func TestOAuth2CallbackEmptyUserInfo(t *testing.T) {
 		Status(http.StatusUnauthorized).
 		HeaderNotPresent("Set-Cookie").
 		End()
+	apitest.New().Debug().
+		Mocks(mockTokenExchange, mockEmptyResponseBody).
+		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
+		Get("/auth/callback/github").
+		Query("state", testSecret).
+		Query("code", "testcode").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		HeaderNotPresent("Set-Cookie").
+		End()
+	apitest.New().Debug().
+		Mocks(mockTokenExchange, mockBadRequestStatus).
+		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
+		Get("/auth/callback/github").
+		Query("state", testSecret).
+		Query("code", "testcode").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		HeaderNotPresent("Set-Cookie").
+		End()
 
+	checkNoUsersInDB(db, t)
 }
 
-func TestOAuth2CallbackEmptyToken(t *testing.T) {
+func TestOAuth2CallbackTokenExchange(t *testing.T) {
 	logger := qtest.Logger(t)
 	authConfig := auth.NewGitHubConfig("", "TEST", "TEST")
 	scms := auth.NewScms()
@@ -157,7 +190,12 @@ func TestOAuth2CallbackEmptyToken(t *testing.T) {
 		Body(`{"access_token": ""}`).
 		Status(http.StatusOK).
 		End()
-
+	mockEmptyResponseBody := apitest.NewMock().
+		Post("/login/oauth/access_token").
+		RespondWith().
+		Status(http.StatusOK).
+		End()
+	// Token value is an empty string.
 	apitest.New().Debug().
 		Mocks(mockEmptyAccessToken).
 		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
@@ -168,6 +206,19 @@ func TestOAuth2CallbackEmptyToken(t *testing.T) {
 		Status(http.StatusUnauthorized).
 		HeaderNotPresent("Set-Cookie").
 		End()
+	// No values in the request body.
+	apitest.New().Debug().
+		Mocks(mockEmptyResponseBody).
+		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
+		Get("/auth/callback/github").
+		Query("state", testSecret).
+		Query("code", "testcode").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		HeaderNotPresent("Set-Cookie").
+		End()
+
+	checkNoUsersInDB(db, t)
 }
 
 func TestOAuth2CallbackBadRequest(t *testing.T) {
@@ -203,6 +254,15 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 		Expect(t).
 		Status(http.StatusUnauthorized).
 		End()
+	// Request with empty body content.
+	apitest.New().Debug().
+		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
+		Get("/auth/callback/github").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		End()
+
+	checkNoUsersInDB(db, t)
 }
 
 func TestOAuth2Logout(t *testing.T) {
@@ -217,4 +277,14 @@ func TestOAuth2Logout(t *testing.T) {
 			apitest.NewCookie("session").MaxAge(-1),
 		).
 		End()
+}
+
+func checkNoUsersInDB(db database.Database, t *testing.T) {
+	users, err := db.GetUsers()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(users) > 0 {
+		t.Fatalf("Expected empty database, got %d users", len(users))
+	}
 }
