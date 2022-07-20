@@ -9,7 +9,7 @@ import (
 )
 
 // TeacherSuffix is the suffix appended to the provider with the teacher scope.
-const TeacherSuffix = "-teacher"
+const TeacherSuffix = "teacher"
 
 // Provider contains information about how to enable the same authentication
 // provider with different scopes. The provider will be registered under Name

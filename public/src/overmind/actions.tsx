@@ -701,7 +701,7 @@ export const fetchUserData = async ({ state, actions, effects }: Context): Promi
             // Require teacher scopes if the user is a teacher.
             const response = await effects.grpcMan.isAuthorizedTeacher()
             if (!response.data?.getIsauthorized()) {
-                window.location.href = "https://" + window.location.hostname + "/auth/github-teacher"
+                window.location.href = "https://" + window.location.hostname + "/auth/teacher"
             }
 
         }

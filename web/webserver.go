@@ -23,7 +23,6 @@ type GrpcMultiplexer struct {
 // generated from TLS certificates.
 func ServerWithCredentials(logger *zap.Logger, certFile, certKey string) (*grpc.Server, error) {
 	// Generate TLS credentials from certificates
-
 	cred, err := credentials.NewServerTLSFromFile(certFile, certKey)
 	if err != nil {
 		return nil, err
@@ -42,10 +41,11 @@ func ServerWithCredentials(logger *zap.Logger, certFile, certKey string) (*grpc.
 func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if m.MuxServer.IsGrpcWebRequest(r) {
-			log.Printf("MUX: got GRPC request: %v", r)
+			log.Printf("MUX: got GRPC request: %v", r.URL)
 			m.MuxServer.ServeHTTP(w, r)
 			return
 		}
+		log.Printf("MUX: got HTTP request: %v", r.URL)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -64,6 +64,8 @@ func (s *QuickFeedService) RegisterRouter(authConfig *oauth2.Config, scms *auth.
 	// Register auth endpoints.
 	callbackSecret := rand.String()
 	router.HandleFunc("/auth/", auth.OAuth2Login(s.logger, authConfig, callbackSecret))
+	// TODO(vera): temporary hack to support teacher scopes, will be removed when OAuth app replaced with GitHub app.
+	router.HandleFunc("/auth/teacher/", auth.OAuth2Login(s.logger, authConfig, callbackSecret))
 	router.HandleFunc("/auth/callback/", auth.OAuth2Callback(s.logger, s.db, authConfig, scms, callbackSecret))
 	router.HandleFunc("/logout", auth.OAuth2Logout(s.logger))
 
