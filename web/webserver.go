@@ -1,7 +1,6 @@
 package web
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
@@ -41,11 +40,9 @@ func ServerWithCredentials(logger *zap.Logger, certFile, certKey string) (*grpc.
 func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if m.MuxServer.IsGrpcWebRequest(r) {
-			log.Printf("MUX: got GRPC request: %v", r.URL)
 			m.MuxServer.ServeHTTP(w, r)
 			return
 		}
-		log.Printf("MUX: got HTTP request: %v", r.URL)
 		next.ServeHTTP(w, r)
 	})
 }
