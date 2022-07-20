@@ -12,7 +12,7 @@ func GetEventsURL(baseURL, provider string) string {
 
 // GetProviderURL returns a URL endpoint given a base URL and a provider.
 func GetProviderURL(baseURL, route, provider string) string {
-	return "https://" + baseURL + "/" + route + "/" + provider // + "/" + endpoint
+	return "https://" + baseURL + "/" + route + "/" + provider
 }
 
 // externalUser is used to decode the user authentication response from OAuth providers.
