@@ -121,13 +121,13 @@ func main() {
 	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
 	if *dev {
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
-		grpcServer, err = web.GRPCServerWithCredentials(logger, opt, certFile, certKey)
+		grpcServer, err = web.GRPCServerWithCredentials(opt, certFile, certKey)
 		if err != nil {
 			log.Fatalf("Failed to generate gRPC server credentials: %v\n", err)
 		}
 	} else {
 		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
-		grpcServer = web.GRPCServer(logger, opt)
+		grpcServer = web.GRPCServer(opt)
 	}
 
 	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
