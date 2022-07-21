@@ -118,15 +118,16 @@ func main() {
 	// In production, envoy proxy will manage TLS and gRPC server has to be started without credentials.
 	// In development, the server itself has to maintaint TLS session.
 	var grpcServer *grpc.Server
+	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
 	if *dev {
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
-		grpcServer, err = web.GRPCServerWithCredentials(logger, certFile, certKey)
+		grpcServer, err = web.GRPCServerWithCredentials(logger, opt, certFile, certKey)
 		if err != nil {
 			log.Fatalf("Failed to generate gRPC server credentials: %v\n", err)
 		}
 	} else {
 		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
-		grpcServer = web.GRPCServer(logger)
+		grpcServer = web.GRPCServer(logger, opt)
 	}
 
 	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)

@@ -5,7 +5,6 @@ import (
 
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/quickfeed/quickfeed/internal/rand"
-	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/hooks"
 	"go.uber.org/zap"
@@ -20,7 +19,7 @@ type GrpcMultiplexer struct {
 
 // GRPCServerWithCredentials starts a new gRPC server with credentials
 // generated from TLS certificates.
-func GRPCServerWithCredentials(logger *zap.Logger, certFile, certKey string) (*grpc.Server, error) {
+func GRPCServerWithCredentials(logger *zap.Logger, opt grpc.ServerOption, certFile, certKey string) (*grpc.Server, error) {
 	// Generate TLS credentials from certificates
 	cred, err := credentials.NewServerTLSFromFile(certFile, certKey)
 	if err != nil {
@@ -28,10 +27,7 @@ func GRPCServerWithCredentials(logger *zap.Logger, certFile, certKey string) (*g
 	}
 	s := grpc.NewServer(
 		grpc.Creds(cred),
-		grpc.ChainUnaryInterceptor(
-			auth.UserVerifier(),
-			qf.Interceptor(logger),
-		),
+		opt,
 	)
 	return s, nil
 }
@@ -39,13 +35,8 @@ func GRPCServerWithCredentials(logger *zap.Logger, certFile, certKey string) (*g
 // GRPCServer starts a new server without TLS.
 // This server is only used in combination with envoy proxy
 // that  manages the TLS session.
-func GRPCServer(logger *zap.Logger) *grpc.Server {
-	return grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			auth.UserVerifier(),
-			qf.Interceptor(logger),
-		),
-	)
+func GRPCServer(logger *zap.Logger, opt grpc.ServerOption) *grpc.Server {
+	return grpc.NewServer(opt)
 }
 
 // MuxHandler routes HTTP and gRPC requests.
