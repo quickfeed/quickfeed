@@ -18,9 +18,9 @@ type GrpcMultiplexer struct {
 	MuxServer *grpcweb.WrappedGrpcServer
 }
 
-// ServerWithCredentials starts a new gRPC server with credentials
+// GRPCServerWithCredentials starts a new gRPC server with credentials
 // generated from TLS certificates.
-func ServerWithCredentials(logger *zap.Logger, certFile, certKey string) (*grpc.Server, error) {
+func GRPCServerWithCredentials(logger *zap.Logger, certFile, certKey string) (*grpc.Server, error) {
 	// Generate TLS credentials from certificates
 	cred, err := credentials.NewServerTLSFromFile(certFile, certKey)
 	if err != nil {
@@ -34,6 +34,18 @@ func ServerWithCredentials(logger *zap.Logger, certFile, certKey string) (*grpc.
 		),
 	)
 	return s, nil
+}
+
+// GRPCServer starts a new server without TLS.
+// This server is only used in combination with envoy proxy
+// that  manages the TLS session.
+func GRPCServer(logger *zap.Logger) *grpc.Server {
+	return grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			auth.UserVerifier(),
+			qf.Interceptor(logger),
+		),
+	)
 }
 
 // MuxHandler routes HTTP and gRPC requests.
