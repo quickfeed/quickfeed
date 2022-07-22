@@ -110,6 +110,7 @@ pgrep
 pkgs
 Preload
 privkey
+promgrpc
 promhttp
 proto
 protobuf

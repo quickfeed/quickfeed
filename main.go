@@ -82,7 +82,7 @@ func main() {
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
-	clientID, err := env.ClientKey()
+	clientID, err := env.ClientID()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func main() {
 		log.Fatal("Environmental variables (QUICKFEED_CERT_FILE, QUICKFEED_CERT_KEY) not set")
 	}
 	// In production, envoy proxy will manage TLS and gRPC server has to be started without credentials.
-	// In development, the server itself has to maintaint TLS session.
+	// In development, the server itself has to maintain a TLS session.
 	var grpcServer *grpc.Server
 	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
 	if *dev {
