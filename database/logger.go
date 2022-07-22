@@ -100,7 +100,7 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, i
 
 var (
 	gormPackage      = filepath.Join("gorm.io", "gorm")
-	quickfeedPackage = filepath.Join("github.com", "autograde", "quickfeed", "log")
+	quickfeedPackage = filepath.Join("github.com", "quickfeed", "quickfeed", "log")
 )
 
 func (l Logger) logger() *zap.Logger {

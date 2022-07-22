@@ -3,7 +3,7 @@ package auth
 import (
 	"sync"
 
-	"github.com/autograde/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 )
 
@@ -28,16 +28,16 @@ func (s *Scms) GetSCM(accessToken string) (sc scm.SCM, ok bool) {
 }
 
 // GetOrCreateSCMEntry returns an scm client for the given remote identity
-// (provider, access token) pair. If no scm client exists for the given
-// remote identity, one will be created and stored for later retrival.
-func (s *Scms) GetOrCreateSCMEntry(logger *zap.Logger, provider, accessToken string) (scm.SCM, error) {
+// (access token). If no scm client exists for the given remote identity,
+// one will be created and stored for later retrieval.
+func (s *Scms) GetOrCreateSCMEntry(logger *zap.Logger, accessToken string) (scm.SCM, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	client, ok := s.scms[accessToken]
 	if ok {
 		return client, nil
 	}
-	client, err := scm.NewSCMClient(logger.Sugar(), provider, accessToken)
+	client, err := scm.NewSCMClient(logger.Sugar(), accessToken)
 	if err != nil {
 		return nil, err
 	}

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/qf"
 	"gorm.io/gorm"
 )
 
@@ -20,7 +20,7 @@ var (
 // recent submission, as defined by the provided submissionQuery.
 // The submissionQuery must always specify the assignment, and may specify the ID of
 // either an individual student or a group, but not both.
-func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
+func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 	if err := db.check(submission); err != nil {
 		return err
 	}
@@ -30,7 +30,7 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	// already exists. We cannot reuse the incoming submission
 	// because the query would attempt to match all the test result
 	// fields as well.
-	query := &pb.Submission{
+	query := &qf.Submission{
 		AssignmentID: submission.GetAssignmentID(),
 		UserID:       submission.GetUserID(),
 		GroupID:      submission.GetGroupID(),
@@ -43,7 +43,7 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 			return err // will rollback transaction
 		}
 		if submission.ID != 0 {
-			if err := tx.First(&pb.Submission{}, &pb.Submission{ID: submission.ID}).Error; err != nil {
+			if err := tx.First(&qf.Submission{}, &qf.Submission{ID: submission.ID}).Error; err != nil {
 				return err // will rollback transaction
 			}
 			if err := tx.Where("submission_id = ?", submission.ID).Delete(&score.Score{}).Error; err != nil {
@@ -67,7 +67,7 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 }
 
 // check returns an error if the submission query is invalid; otherwise nil is returned.
-func (db *GormDB) check(submission *pb.Submission) error {
+func (db *GormDB) check(submission *qf.Submission) error {
 	// Foreign key must be greater than 0.
 	if submission.AssignmentID < 1 {
 		return ErrInvalidAssignmentID
@@ -79,9 +79,9 @@ func (db *GormDB) check(submission *pb.Submission) error {
 	case submission.UserID > 0 && submission.GroupID > 0:
 		return ErrInvalidSubmission
 	case submission.UserID > 0:
-		m = db.conn.First(&pb.User{ID: submission.UserID})
+		m = db.conn.First(&qf.User{ID: submission.UserID})
 	case submission.GroupID > 0:
-		m = db.conn.First(&pb.Group{ID: submission.GroupID})
+		m = db.conn.First(&qf.Group{ID: submission.GroupID})
 	default:
 		// neither UserID nor GroupID are not set
 		return ErrInvalidSubmission
@@ -99,7 +99,7 @@ func (db *GormDB) check(submission *pb.Submission) error {
 
 	// Checks that the assignment exists.
 	var assignment int64
-	if err := db.conn.Model(&pb.Assignment{}).Where(&pb.Assignment{
+	if err := db.conn.Model(&qf.Assignment{}).Where(&qf.Assignment{
 		ID: submission.AssignmentID,
 	}).Count(&assignment).Error; err != nil {
 		return fmt.Errorf("assignment %d not found: %w", submission.AssignmentID, err)
@@ -113,8 +113,8 @@ func (db *GormDB) check(submission *pb.Submission) error {
 }
 
 // GetSubmission fetches a submission record.
-func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
-	var submission pb.Submission
+func (db *GormDB) GetSubmission(query *qf.Submission) (*qf.Submission, error) {
+	var submission qf.Submission
 	if err := db.conn.Preload("Reviews").
 		Preload("BuildInfo").
 		Preload("Scores").
@@ -129,13 +129,13 @@ func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 
 // GetLastSubmissions returns all submissions for the active assignment for the given course.
 // The query may specify both UserID and GroupID to fetch both user and group submissions.
-func (db *GormDB) GetLastSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error) {
-	var course pb.Course
+func (db *GormDB) GetLastSubmissions(courseID uint64, query *qf.Submission) ([]*qf.Submission, error) {
+	var course qf.Course
 	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
 		return nil, err
 	}
 
-	var latestSubs []*pb.Submission
+	var latestSubs []*qf.Submission
 	for _, a := range course.Assignments {
 		query.AssignmentID = a.GetID()
 		temp, err := db.GetSubmission(query)
@@ -151,8 +151,8 @@ func (db *GormDB) GetLastSubmissions(courseID uint64, query *pb.Submission) ([]*
 }
 
 // GetSubmissions returns all submissions matching the query.
-func (db *GormDB) GetSubmissions(query *pb.Submission) ([]*pb.Submission, error) {
-	var submissions []*pb.Submission
+func (db *GormDB) GetSubmissions(query *qf.Submission) ([]*qf.Submission, error) {
+	var submissions []*qf.Submission
 	if err := db.conn.Find(&submissions, &query).Error; err != nil {
 		return nil, err
 	}
@@ -160,26 +160,26 @@ func (db *GormDB) GetSubmissions(query *pb.Submission) ([]*pb.Submission, error)
 }
 
 // UpdateSubmission updates submission with the given approved status.
-func (db *GormDB) UpdateSubmission(query *pb.Submission) error {
+func (db *GormDB) UpdateSubmission(query *qf.Submission) error {
 	return db.conn.Save(query).Error
 }
 
 // UpdateSubmissions approves and/or releases all submissions that have score
 // equal or above the provided score for the given assignment ID
-func (db *GormDB) UpdateSubmissions(courseID uint64, query *pb.Submission) error {
+func (db *GormDB) UpdateSubmissions(courseID uint64, query *qf.Submission) error {
 	return db.conn.
 		Model(query).
 		Where("assignment_id = ?", query.AssignmentID).
 		Where("score >= ?", query.Score).
-		Updates(&pb.Submission{
+		Updates(&qf.Submission{
 			Status:   query.Status,
 			Released: query.Released,
 		}).Error
 }
 
 // GetReview fetches a review
-func (db *GormDB) GetReview(query *pb.Review) (*pb.Review, error) {
-	var review pb.Review
+func (db *GormDB) GetReview(query *qf.Review) (*qf.Review, error) {
+	var review qf.Review
 	if err := db.conn.Where(query).
 		Preload("GradingBenchmarks", "review_id = (?)", query.ID).
 		Preload("GradingBenchmarks.Criteria").
@@ -190,16 +190,16 @@ func (db *GormDB) GetReview(query *pb.Review) (*pb.Review, error) {
 }
 
 // CreateReview creates a new submission review
-func (db *GormDB) CreateReview(query *pb.Review) error {
+func (db *GormDB) CreateReview(query *qf.Review) error {
 	return db.conn.Create(query).Error
 }
 
 // UpdateReview updates feedback text, review and ready status
-func (db *GormDB) UpdateReview(query *pb.Review) error {
+func (db *GormDB) UpdateReview(query *qf.Review) error {
 	// By default, Gorm will not update zero value fields; such as the Ready bool field.
 	// Therefore we use Select before the Updates call. For additional context, see
 	// https://github.com/quickfeed/quickfeed/issues/569#issuecomment-1013729572
-	return db.conn.Model(&query).Select("*").Updates(&pb.Review{
+	return db.conn.Model(&query).Select("*").Updates(&qf.Review{
 		ID:           query.ID,
 		SubmissionID: query.SubmissionID,
 		Feedback:     query.Feedback,
@@ -211,6 +211,6 @@ func (db *GormDB) UpdateReview(query *pb.Review) error {
 }
 
 // DeleteReview removes all reviews matching the query
-func (db *GormDB) DeleteReview(query *pb.Review) error {
-	return db.conn.Delete(&pb.Review{}, &query).Error
+func (db *GormDB) DeleteReview(query *qf.Review) error {
+	return db.conn.Delete(&qf.Review{}, &query).Error
 }

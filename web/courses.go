@@ -7,32 +7,32 @@ import (
 	"sort"
 	"time"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 	"gorm.io/gorm"
 )
 
 // getCourses returns all courses.
-func (s *AutograderService) getCourses() (*pb.Courses, error) {
+func (s *QuickFeedService) getCourses() (*qf.Courses, error) {
 	courses, err := s.db.GetCourses()
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Courses{Courses: courses}, nil
+	return &qf.Courses{Courses: courses}, nil
 }
 
 // getCoursesByUser returns all courses that match the provided enrollment status.
-func (s *AutograderService) getCoursesByUser(request *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
+func (s *QuickFeedService) getCoursesByUser(request *qf.EnrollmentStatusRequest) (*qf.Courses, error) {
 	courses, err := s.db.GetCoursesByUser(request.GetUserID(), request.Statuses...)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Courses{Courses: courses}, nil
+	return &qf.Courses{Courses: courses}, nil
 }
 
 // getEnrollmentsByUser returns all enrollments for the given user with preloaded
 // courses and groups
-func (s *AutograderService) getEnrollmentsByUser(request *pb.EnrollmentStatusRequest) (*pb.Enrollments, error) {
+func (s *QuickFeedService) getEnrollmentsByUser(request *qf.EnrollmentStatusRequest) (*qf.Enrollments, error) {
 	enrollments, err := s.db.GetEnrollmentsByUser(request.UserID, request.Statuses...)
 	if err != nil {
 		return nil, err
@@ -40,11 +40,11 @@ func (s *AutograderService) getEnrollmentsByUser(request *pb.EnrollmentStatusReq
 	for _, enrollment := range enrollments {
 		enrollment.SetSlipDays(enrollment.Course)
 	}
-	return &pb.Enrollments{Enrollments: enrollments}, nil
+	return &qf.Enrollments{Enrollments: enrollments}, nil
 }
 
 // getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
-func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest) (*pb.Enrollments, error) {
+func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest) (*qf.Enrollments, error) {
 	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.Statuses...)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest
 
 	// to populate response only with users who are not member of any group, we must filter the result
 	if request.IgnoreGroupMembers {
-		enrollmentsWithoutGroups := make([]*pb.Enrollment, 0)
+		enrollmentsWithoutGroups := make([]*qf.Enrollment, 0)
 		for _, enrollment := range enrollments {
 			if enrollment.GroupID == 0 {
 				enrollmentsWithoutGroups = append(enrollmentsWithoutGroups, enrollment)
@@ -70,21 +70,21 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest
 	for _, enrollment := range enrollments {
 		enrollment.SetSlipDays(enrollment.Course)
 	}
-	return &pb.Enrollments{Enrollments: enrollments}, nil
+	return &qf.Enrollments{Enrollments: enrollments}, nil
 }
 
 // createEnrollment creates a pending enrollment for the given user and course.
-func (s *AutograderService) createEnrollment(request *pb.Enrollment) error {
-	enrollment := pb.Enrollment{
+func (s *QuickFeedService) createEnrollment(request *qf.Enrollment) error {
+	enrollment := qf.Enrollment{
 		UserID:   request.GetUserID(),
 		CourseID: request.GetCourseID(),
-		Status:   pb.Enrollment_PENDING,
+		Status:   qf.Enrollment_PENDING,
 	}
 	return s.db.CreateEnrollment(&enrollment)
 }
 
 // updateEnrollment changes the status of the given course enrollment.
-func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *pb.Enrollment) error {
+func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *qf.Enrollment) error {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
 	if err != nil {
 		return err
@@ -108,14 +108,14 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, cu
 }
 
 // rejectEnrollment rejects a student enrollment, if a student repo exists for the given course, removes it from the SCM and database.
-func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
+func (s *QuickFeedService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 	if err := s.db.RejectEnrollment(user.ID, course.ID); err != nil {
 		s.logger.Debugf("Failed to delete %s enrollment for %q from database: %v", course.Code, user.Login, err)
 		// continue with other delete operations
 	}
-	repo, err := s.getRepo(course, user.GetID(), pb.Repository_USER)
+	repo, err := s.getRepo(course, user.GetID(), qf.Repository_USER)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("failed to get %s repository for %q: %w", course.Code, user.Login, err)
 	}
@@ -136,13 +136,13 @@ func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, en
 }
 
 // enrollStudent enrolls the given user as a student into the given course.
-func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
+func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 
 	// check whether user repo already exists,
 	// which could happen if accepting a previously rejected student
-	repo, err := s.getRepo(course, user.GetID(), pb.Repository_USER)
+	repo, err := s.getRepo(course, user.GetID(), qf.Repository_USER)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("failed to get %s repository for %q: %w", course.Code, user.Login, err)
 	}
@@ -150,26 +150,26 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 	s.logger.Debugf("Enrolling student %q in %s; has database repo: %t", user.Login, course.Code, repo != nil)
 	if repo != nil {
 		// repo already exist, update enrollment in database
-		return s.db.UpdateEnrollment(&pb.Enrollment{
+		return s.db.UpdateEnrollment(&qf.Enrollment{
 			UserID:   user.ID,
 			CourseID: course.ID,
-			Status:   pb.Enrollment_STUDENT,
+			Status:   qf.Enrollment_STUDENT,
 		})
 	}
 	// create user scmRepo, user team, and add user to students team
-	scmRepo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
+	scmRepo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), qf.Enrollment_STUDENT)
 	if err != nil {
 		return fmt.Errorf("failed to update %s repository or team membership for %q: %w", course.Code, user.Login, err)
 	}
 	s.logger.Debugf("Enrolling student %q in %s; repo and team update done", user.Login, course.Code)
 
 	// add student repo to database if SCM interaction above was successful
-	userRepo := pb.Repository{
+	userRepo := qf.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		RepositoryID:   scmRepo.ID,
 		UserID:         user.ID,
-		HTMLURL:        scmRepo.WebURL,
-		RepoType:       pb.Repository_USER,
+		HTMLURL:        scmRepo.HTMLURL,
+		RepoType:       qf.Repository_USER,
 	}
 	if err := s.db.CreateRepository(&userRepo); err != nil {
 		return fmt.Errorf("failed to create %s repository for %q: %w", course.Code, user.Login, err)
@@ -178,52 +178,52 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.Code, user.Login, err)
 	}
 
-	return s.db.UpdateEnrollment(&pb.Enrollment{
+	return s.db.UpdateEnrollment(&qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
-		Status:   pb.Enrollment_STUDENT,
+		Status:   qf.Enrollment_STUDENT,
 	})
 }
 
 // enrollTeacher promotes the given user to teacher of the given course
-func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
+func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 
 	// make owner, remove from students, add to teachers
-	if _, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_TEACHER); err != nil {
+	if _, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), qf.Enrollment_TEACHER); err != nil {
 		return fmt.Errorf("failed to update %s repository or team membership for teacher %q: %w", course.Code, user.Login, err)
 	}
-	return s.db.UpdateEnrollment(&pb.Enrollment{
+	return s.db.UpdateEnrollment(&qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
-		Status:   pb.Enrollment_TEACHER,
+		Status:   qf.Enrollment_TEACHER,
 	})
 }
 
-func (s *AutograderService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
+func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
 	err := revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
 	if err != nil {
 		s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.Code, user.Login, err)
 	}
-	return s.db.UpdateEnrollment(&pb.Enrollment{
+	return s.db.UpdateEnrollment(&qf.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
-		Status:   pb.Enrollment_STUDENT,
+		Status:   qf.Enrollment_STUDENT,
 	})
 }
 
 // getCourse returns a course object for the given course id.
-func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
+func (s *QuickFeedService) getCourse(courseID uint64) (*qf.Course, error) {
 	return s.db.GetCourse(courseID, false)
 }
 
 // getSubmissions returns all the latests submissions for a user of the given course.
-func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.Submissions, error) {
-	// only one of user ID and group ID will be set; enforced by IsValid on pb.SubmissionRequest
-	query := &pb.Submission{
+func (s *QuickFeedService) getSubmissions(request *qf.SubmissionRequest) (*qf.Submissions, error) {
+	// only one of user ID and group ID will be set; enforced by IsValid on qf.SubmissionRequest
+	query := &qf.Submission{
 		UserID:  request.GetUserID(),
 		GroupID: request.GetGroupID(),
 	}
@@ -231,11 +231,11 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Submissions{Submissions: submissions}, nil
+	return &qf.Submissions{Submissions: submissions}, nil
 }
 
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
-func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
+func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionsForCourseRequest) (*qf.CourseSubmissions, error) {
 	assignments, err := s.db.GetAssignmentsWithSubmissions(request.GetCourseID(), request.Type, request.GetWithBuildInfo())
 	if err != nil {
 		return nil, err
@@ -248,31 +248,31 @@ func (s *AutograderService) getAllCourseSubmissions(request *pb.SubmissionsForCo
 
 	course.SetSlipDays()
 
-	var enrolLinks []*pb.EnrollmentLink
+	var enrolLinks []*qf.EnrollmentLink
 	switch request.Type {
-	case pb.SubmissionsForCourseRequest_GROUP:
+	case qf.SubmissionsForCourseRequest_GROUP:
 		enrolLinks = makeGroupResults(course, assignments)
-	case pb.SubmissionsForCourseRequest_INDIVIDUAL:
+	case qf.SubmissionsForCourseRequest_INDIVIDUAL:
 		enrolLinks = makeIndividualResults(course, assignments)
-	default: // case pb.SubmissionsForCourseRequest_ALL:
+	default: // case qf.SubmissionsForCourseRequest_ALL:
 		enrolLinks = makeAllResults(course, assignments)
 	}
-	return &pb.CourseSubmissions{Course: course, Links: enrolLinks}, nil
+	return &qf.CourseSubmissions{Course: course, Links: enrolLinks}, nil
 }
 
 // makeGroupResults generates enrollment to assignment to submissions links
 // for all course groups and all group assignments
-func makeGroupResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
-	enrolLinks := make([]*pb.EnrollmentLink, 0)
+func makeGroupResults(course *qf.Course, assignments []*qf.Assignment) []*qf.EnrollmentLink {
+	enrolLinks := make([]*qf.EnrollmentLink, 0)
 	seenGroup := make(map[uint64]bool)
 	for _, enrollment := range course.Enrollments {
 		if seenGroup[enrollment.GroupID] {
 			continue // include group enrollment only once
 		}
 		seenGroup[enrollment.GroupID] = true
-		enrolLinks = append(enrolLinks, &pb.EnrollmentLink{
+		enrolLinks = append(enrolLinks, &qf.EnrollmentLink{
 			Enrollment: enrollment,
-			Submissions: makeSubmissionLinks(assignments, func(submission *pb.Submission) bool {
+			Submissions: makeSubmissionLinks(assignments, func(submission *qf.Submission) bool {
 				// include group submissions for this enrollment
 				return submission.ByGroup(enrollment.GroupID)
 			}),
@@ -283,12 +283,12 @@ func makeGroupResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enr
 
 // makeIndividualResults returns enrollment links with submissions
 // for individual assignments for all students in the course.
-func makeIndividualResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
-	enrolLinks := make([]*pb.EnrollmentLink, 0)
+func makeIndividualResults(course *qf.Course, assignments []*qf.Assignment) []*qf.EnrollmentLink {
+	enrolLinks := make([]*qf.EnrollmentLink, 0)
 	for _, enrollment := range course.Enrollments {
-		enrolLinks = append(enrolLinks, &pb.EnrollmentLink{
+		enrolLinks = append(enrolLinks, &qf.EnrollmentLink{
 			Enrollment: enrollment,
-			Submissions: makeSubmissionLinks(assignments, func(submission *pb.Submission) bool {
+			Submissions: makeSubmissionLinks(assignments, func(submission *qf.Submission) bool {
 				// include individual submissions for this enrollment
 				return submission.ByUser(enrollment.UserID)
 			}),
@@ -299,12 +299,12 @@ func makeIndividualResults(course *pb.Course, assignments []*pb.Assignment) []*p
 
 // makeAllResults returns enrollment links with submissions
 // for both individual and group assignments for all students/groups in the course.
-func makeAllResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
-	enrolLinks := make([]*pb.EnrollmentLink, len(course.Enrollments))
+func makeAllResults(course *qf.Course, assignments []*qf.Assignment) []*qf.EnrollmentLink {
+	enrolLinks := make([]*qf.EnrollmentLink, len(course.Enrollments))
 	for i, enrollment := range course.Enrollments {
-		enrolLinks[i] = &pb.EnrollmentLink{
+		enrolLinks[i] = &qf.EnrollmentLink{
 			Enrollment: enrollment,
-			Submissions: makeSubmissionLinks(assignments, func(submission *pb.Submission) bool {
+			Submissions: makeSubmissionLinks(assignments, func(submission *qf.Submission) bool {
 				// include individual and group submissions for this enrollment
 				return submission.ByUser(enrollment.UserID) || submission.ByGroup(enrollment.GroupID)
 			}),
@@ -313,10 +313,10 @@ func makeAllResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrol
 	return enrolLinks
 }
 
-func makeSubmissionLinks(assignments []*pb.Assignment, include func(*pb.Submission) bool) []*pb.SubmissionLink {
-	subLinks := make([]*pb.SubmissionLink, len(assignments))
+func makeSubmissionLinks(assignments []*qf.Assignment, include func(*qf.Submission) bool) []*qf.SubmissionLink {
+	subLinks := make([]*qf.SubmissionLink, len(assignments))
 	for i, assignment := range assignments {
-		subLinks[i] = &pb.SubmissionLink{
+		subLinks[i] = &qf.SubmissionLink{
 			Assignment: assignment.CloneWithoutSubmissions(),
 		}
 		for _, submission := range assignment.Submissions {
@@ -333,15 +333,15 @@ func makeSubmissionLinks(assignments []*pb.Assignment, include func(*pb.Submissi
 }
 
 // updateSubmission updates submission status or sets a submission score based on a manual review.
-func (s *AutograderService) updateSubmission(courseID, submissionID uint64, status pb.Submission_Status, released bool, score uint32) error {
-	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
+func (s *QuickFeedService) updateSubmission(courseID, submissionID uint64, status qf.Submission_Status, released bool, score uint32) error {
+	submission, err := s.db.GetSubmission(&qf.Submission{ID: submissionID})
 	if err != nil {
 		return err
 	}
 
 	// if approving previously unapproved submission
-	if status == pb.Submission_APPROVED && submission.Status != pb.Submission_APPROVED {
-		submission.ApprovedDate = time.Now().Format(pb.TimeLayout)
+	if status == qf.Submission_APPROVED && submission.Status != qf.Submission_APPROVED {
+		submission.ApprovedDate = time.Now().Format(qf.TimeLayout)
 		if err := s.setLastApprovedAssignment(submission, courseID); err != nil {
 			return err
 		}
@@ -356,32 +356,32 @@ func (s *AutograderService) updateSubmission(courseID, submissionID uint64, stat
 
 // updateSubmissions updates status and release state of multiple submissions for the
 // given course and assignment ID for all submissions with score equal or above the provided score
-func (s *AutograderService) updateSubmissions(request *pb.UpdateSubmissionsRequest) error {
-	if _, _, err := s.getAssignmentWithCourse(&pb.Assignment{
+func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsRequest) error {
+	if _, _, err := s.getAssignmentWithCourse(&qf.Assignment{
 		CourseID: request.CourseID,
 		ID:       request.AssignmentID,
 	}, false); err != nil {
 		return err
 	}
 
-	query := &pb.Submission{
+	query := &qf.Submission{
 		AssignmentID: request.AssignmentID,
 		Score:        request.ScoreLimit,
 		Released:     request.Release,
 	}
 	if request.Approve {
-		query.Status = pb.Submission_APPROVED
+		query.Status = qf.Submission_APPROVED
 	}
 
 	return s.db.UpdateSubmissions(request.CourseID, query)
 }
 
-func (s *AutograderService) getReviewers(submissionID uint64) ([]*pb.User, error) {
-	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
+func (s *QuickFeedService) getReviewers(submissionID uint64) ([]*qf.User, error) {
+	submission, err := s.db.GetSubmission(&qf.Submission{ID: submissionID})
 	if err != nil {
 		return nil, err
 	}
-	names := make([]*pb.User, 0)
+	names := make([]*qf.User, 0)
 	// TODO: make sure to preload reviews here
 	for _, review := range submission.Reviews {
 		// ignore possible error, will just add an empty string
@@ -392,7 +392,7 @@ func (s *AutograderService) getReviewers(submissionID uint64) ([]*pb.User, error
 }
 
 // updateCourse updates an existing course.
-func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, request *pb.Course) error {
+func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request *qf.Course) error {
 	// ensure the course exists
 	_, err := s.db.GetCourse(request.ID, false)
 	if err != nil {
@@ -407,21 +407,21 @@ func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, reques
 	return s.db.UpdateCourse(request)
 }
 
-func (s *AutograderService) changeCourseVisibility(enrollment *pb.Enrollment) error {
+func (s *QuickFeedService) changeCourseVisibility(enrollment *qf.Enrollment) error {
 	return s.db.UpdateEnrollment(enrollment)
 }
 
 // returns all enrollments for the course ID with last activity date and number of approved assignments
-func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.Enrollment, error) {
+func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.Enrollment, error) {
 	allEnrollmentsWithSubmissions, err := s.getAllCourseSubmissions(
-		&pb.SubmissionsForCourseRequest{
+		&qf.SubmissionsForCourseRequest{
 			CourseID: courseID,
-			Type:     pb.SubmissionsForCourseRequest_ALL,
+			Type:     qf.SubmissionsForCourseRequest_ALL,
 		})
 	if err != nil {
 		return nil, err
 	}
-	var enrollmentsWithActivity []*pb.Enrollment
+	var enrollmentsWithActivity []*qf.Enrollment
 	for _, enrolLink := range allEnrollmentsWithSubmissions.Links {
 		enrol := enrolLink.Enrollment
 		var totalApproved uint64
@@ -429,7 +429,7 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 		for _, submissionLink := range enrolLink.Submissions {
 			submission := submissionLink.Submission
 			if submission != nil {
-				if submission.Status == pb.Submission_APPROVED {
+				if submission.Status == qf.Submission_APPROVED {
 					totalApproved++
 				}
 				if enrol.LastActivityDate == "" {
@@ -446,7 +446,7 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 		}
 		enrollmentsWithActivity = append(enrollmentsWithActivity, enrol)
 	}
-	pending, err := s.db.GetEnrollmentsByCourse(courseID, pb.Enrollment_PENDING)
+	pending, err := s.db.GetEnrollmentsByCourse(courseID, qf.Enrollment_PENDING)
 	if err != nil {
 		return nil, err
 	}
@@ -455,8 +455,8 @@ func (s *AutograderService) getEnrollmentsWithActivity(courseID uint64) ([]*pb.E
 	return enrollmentsWithActivity, nil
 }
 
-func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission, courseID uint64) error {
-	query := &pb.Enrollment{
+func (s *QuickFeedService) setLastApprovedAssignment(submission *qf.Submission, courseID uint64) error {
+	query := &qf.Enrollment{
 		CourseID: courseID,
 	}
 	if submission.GroupID > 0 {
@@ -481,7 +481,7 @@ func (s *AutograderService) setLastApprovedAssignment(submission *pb.Submission,
 }
 
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
-func (s *AutograderService) acceptRepositoryInvites(ctx context.Context, user *pb.User, course *pb.Course) error {
+func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, user *qf.User, course *qf.Course) error {
 	user, err := s.db.GetUser(user.ID)
 	if err != nil {
 		return fmt.Errorf("failed to get user %d: %w", user.ID, err)

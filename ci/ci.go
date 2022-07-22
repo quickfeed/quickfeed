@@ -10,8 +10,12 @@ type Job struct {
 	Name string
 	// Image names the image to use to run the job.
 	Image string
-	// Dockerfile contents
+	// Dockerfile contents.
 	Dockerfile string
+	// BindDir is the directory to bind to the container's /quickfeed directory.
+	BindDir string
+	// Env is a list of environment variables to set for the job.
+	Env []string
 	// Commands is a list of shell commands to run as part of the job.
 	Commands []string
 }

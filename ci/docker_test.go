@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/internal/qtest"
-	"github.com/autograde/quickfeed/log"
 	"github.com/docker/docker/client"
+	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/qlog"
 )
 
 var docker bool
@@ -32,7 +33,8 @@ func init() {
 }
 
 func dockerClient(t *testing.T) (*ci.Docker, func()) {
-	docker, err := ci.NewDockerCI(log.Zap(true))
+	t.Helper()
+	docker, err := ci.NewDockerCI(qlog.Logger(t))
 	if err != nil {
 		t.Fatalf("Failed to set up docker client: %v", err)
 	}
@@ -65,6 +67,120 @@ func TestDocker(t *testing.T) {
 
 	if out != wantOut {
 		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
+	}
+}
+
+func TestDockerMultilineScript(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	cmds := []string{
+		`echo -n "hello world\n"`,
+		`echo -n "join my world"`,
+	}
+	const (
+		wantOut    = "hello world\\njoin my world"
+		image      = "golang:latest"
+		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed"
+	)
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:       t.Name() + "-" + qtest.RandomString(t),
+		Image:      image,
+		Dockerfile: dockerfile,
+		Commands:   cmds,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", cmds, out, wantOut)
+	}
+}
+
+// Note that this test will fail if the content of ./testdata changes.
+func TestDockerBindDir(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	const (
+		script     = `ls /quickfeed`
+		wantOut    = "run.sh\n" // content of testdata (or /quickfeed inside the container)
+		image      = "golang:latest"
+		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed"
+	)
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	// bindDir is the ./testdata directory to map into /quickfeed.
+	bindDir, err := filepath.Abs("./testdata")
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:       t.Name() + "-" + qtest.RandomString(t),
+		Image:      image,
+		Dockerfile: dockerfile,
+		BindDir:    bindDir,
+		Commands:   []string{script},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
+	}
+}
+
+// Note that this test will fail if the content of ./testdata changes.
+func TestDockerEnvVars(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	envVars := []string{
+		"TESTS=/quickfeed/tests",
+		"ASSIGNMENTS=/quickfeed/assignments",
+	}
+	// check that the default environment variables are accessible from the container
+	cmds := []string{
+		`echo $TESTS`,
+		`echo $ASSIGNMENTS`,
+	}
+
+	const (
+		wantOut    = "/quickfeed/tests\n/quickfeed/assignments\n"
+		image      = "golang:latest"
+		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed"
+	)
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	// dir is the directory to map into /quickfeed in the docker container.
+	dir := t.TempDir()
+	os.Mkdir(filepath.Join(dir, "tests"), 0o700)
+	os.Mkdir(filepath.Join(dir, "assignments"), 0o700)
+
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:       t.Name() + "-" + qtest.RandomString(t),
+		Image:      image,
+		Dockerfile: dockerfile,
+		BindDir:    dir,
+		Env:        envVars,
+		Commands:   cmds,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("docker.Run(%#v) = %#v, want %#v", cmds, out, wantOut)
 	}
 }
 

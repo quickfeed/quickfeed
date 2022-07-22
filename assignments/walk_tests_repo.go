@@ -8,14 +8,14 @@ import (
 	"path/filepath"
 	"sort"
 
-	pb "github.com/autograde/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 const (
 	assignmentFile     = "assignment.yml"
 	assignmentFileYaml = "assignment.yaml"
 	criteriaFile       = "criteria.json"
-	scriptTemplateFile = "run.sh"
+	scriptFile         = "run.sh"
 	scriptFolder       = "scripts"
 	dockerfile         = "Dockerfile"
 	taskFilePattern    = "task-*.md"
@@ -25,7 +25,7 @@ var patterns = []string{
 	assignmentFile,
 	assignmentFileYaml,
 	criteriaFile,
-	scriptTemplateFile,
+	scriptFile,
 	dockerfile,
 	taskFilePattern,
 }
@@ -49,14 +49,14 @@ func match(filename, pattern string) bool {
 }
 
 // readTestsRepositoryContent reads dir and returns a list of assignments and the course's Dockerfile.
-func readTestsRepositoryContent(dir string, courseID uint64) ([]*pb.Assignment, string, error) {
+func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, string, error) {
 	files, err := walkTestsRepository(dir)
 	if err != nil {
 		return nil, "", err
 	}
 
 	// Process all assignment.yml files first
-	assignmentsMap := make(map[string]*pb.Assignment)
+	assignmentsMap := make(map[string]*qf.Assignment)
 	for path, contents := range files {
 		assignmentName := filepath.Base(filepath.Dir(path))
 		switch filepath.Base(path) {
@@ -69,36 +69,37 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*pb.Assignment, 
 		}
 	}
 
-	var defaultScriptTemplate string
+	var defaultScriptContent string
 	var courseDockerfile string
 
 	// Process other files in tests repository
 	for path, contents := range files {
 		assignmentName := filepath.Base(filepath.Dir(path))
+		filename := filepath.Base(path)
 
-		switch filepath.Base(path) {
+		switch filename {
 		case criteriaFile:
-			var benchmarks []*pb.GradingBenchmark
+			var benchmarks []*qf.GradingBenchmark
 			if err := json.Unmarshal(contents, &benchmarks); err != nil {
 				return nil, "", fmt.Errorf("failed to unmarshal %q: %s", criteriaFile, err)
 			}
 			assignmentsMap[assignmentName].GradingBenchmarks = benchmarks
 
-		case scriptTemplateFile:
+		case scriptFile:
 			if assignmentName != scriptFolder {
-				// Found assignment-specific script template
-				assignmentsMap[assignmentName].ScriptFile = string(contents)
+				// Found assignment-specific run script
+				assignmentsMap[assignmentName].RunScriptContent = string(contents)
 			} else {
-				defaultScriptTemplate = string(contents)
+				defaultScriptContent = string(contents)
 			}
 
 		case dockerfile:
 			courseDockerfile = string(contents)
 		}
 
-		if match(filepath.Base(path), taskFilePattern) {
+		if match(filename, taskFilePattern) {
 			assignment := assignmentsMap[assignmentName]
-			taskName := taskName(assignmentName, filepath.Base(path))
+			taskName := taskName(filename)
 			task, err := newTask(contents, assignment.GetOrder(), taskName)
 			if err != nil {
 				return nil, "", err
@@ -107,17 +108,17 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*pb.Assignment, 
 		}
 	}
 
-	// If there is a run.sh script template in the scripts folder, save it
-	// for each assignment that is missing an assignment-specific script template.
-	if defaultScriptTemplate != "" {
+	// If there is a run.sh script in the scripts folder, save it for each
+	// assignment that is missing an assignment-specific script.
+	if defaultScriptContent != "" {
 		for _, assignment := range assignmentsMap {
-			if assignment.ScriptFile == "" {
-				assignment.ScriptFile = defaultScriptTemplate
+			if assignment.RunScriptContent == "" {
+				assignment.RunScriptContent = defaultScriptContent
 			}
 		}
 	}
 
-	assignments := make([]*pb.Assignment, 0)
+	assignments := make([]*qf.Assignment, 0)
 	for _, assignment := range assignmentsMap {
 		assignments = append(assignments, assignment)
 		sort.Slice(assignment.Tasks, func(i, j int) bool {

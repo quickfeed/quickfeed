@@ -1,15 +1,16 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
-	pb "github.com/autograde/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/qf"
 	"gorm.io/gorm"
 )
 
 // CreateGroup creates a new group and assign users to newly created group.
-func (db *GormDB) CreateGroup(group *pb.Group) error {
+func (db *GormDB) CreateGroup(group *qf.Group) error {
 	if len(group.Users) == 0 {
 		return ErrEmptyGroup
 	}
@@ -17,8 +18,8 @@ func (db *GormDB) CreateGroup(group *pb.Group) error {
 		return gorm.ErrRecordNotFound
 	}
 	var course int64
-	if err := db.conn.Model(&pb.Course{}).
-		Where(&pb.Course{ID: group.CourseID}).
+	if err := db.conn.Model(&qf.Course{}).
+		Where(&qf.Course{ID: group.CourseID}).
 		Count(&course).Error; err != nil {
 		return err
 	}
@@ -27,7 +28,7 @@ func (db *GormDB) CreateGroup(group *pb.Group) error {
 	}
 
 	tx := db.conn.Begin()
-	if err := tx.Model(&pb.Group{}).Create(group).Error; err != nil {
+	if err := tx.Model(&qf.Group{}).Create(group).Error; err != nil {
 		tx.Rollback()
 		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
 			return ErrDuplicateGroup
@@ -39,11 +40,11 @@ func (db *GormDB) CreateGroup(group *pb.Group) error {
 	for _, u := range group.Users {
 		userids = append(userids, u.ID)
 	}
-	query := tx.Model(&pb.Enrollment{}).
-		Where(&pb.Enrollment{CourseID: group.CourseID}).
+	query := tx.Model(&qf.Enrollment{}).
+		Where(&qf.Enrollment{CourseID: group.CourseID}).
 		Where("user_id IN (?) AND status IN (?)", userids,
-			[]pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_TEACHER}).
-		Updates(&pb.Enrollment{GroupID: group.ID})
+			[]qf.Enrollment_UserStatus{qf.Enrollment_STUDENT, qf.Enrollment_TEACHER}).
+		Updates(&qf.Enrollment{GroupID: group.ID})
 	if query.Error != nil {
 		tx.Rollback()
 		return query.Error
@@ -58,13 +59,13 @@ func (db *GormDB) CreateGroup(group *pb.Group) error {
 }
 
 // UpdateGroup updates a group with the specified users and enrollments.
-func (db *GormDB) UpdateGroup(group *pb.Group) error {
+func (db *GormDB) UpdateGroup(group *qf.Group) error {
 	if group.CourseID == 0 {
 		return gorm.ErrRecordNotFound
 	}
 	var course int64
-	if err := db.conn.Model(&pb.Course{}).
-		Where(&pb.Course{ID: group.CourseID}).
+	if err := db.conn.Model(&qf.Course{}).
+		Where(&qf.Course{ID: group.CourseID}).
 		Count(&course).Error; err != nil {
 		return err
 	}
@@ -89,11 +90,11 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 	for _, u := range group.Users {
 		userids = append(userids, u.ID)
 	}
-	query := tx.Model(&pb.Enrollment{}).
-		Where(&pb.Enrollment{CourseID: group.CourseID}).
+	query := tx.Model(&qf.Enrollment{}).
+		Where(&qf.Enrollment{CourseID: group.CourseID}).
 		Where("user_id IN (?) AND status IN (?)", userids,
-			[]pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_TEACHER}).
-		Updates(&pb.Enrollment{GroupID: group.ID})
+			[]qf.Enrollment_UserStatus{qf.Enrollment_STUDENT, qf.Enrollment_TEACHER}).
+		Updates(&qf.Enrollment{GroupID: group.ID})
 	if query.Error != nil {
 		tx.Rollback()
 		return query.Error
@@ -108,7 +109,7 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 }
 
 // UpdateGroupStatus updates status field of a group.
-func (db *GormDB) UpdateGroupStatus(group *pb.Group) error {
+func (db *GormDB) UpdateGroupStatus(group *qf.Group) error {
 	return db.conn.Model(group).Update("status", group.Status).Error
 }
 
@@ -133,14 +134,16 @@ func (db *GormDB) DeleteGroup(groupID uint64) error {
 }
 
 // GetGroup returns the group with the specified group id.
-func (db *GormDB) GetGroup(groupID uint64) (*pb.Group, error) {
-	var group pb.Group
+func (db *GormDB) GetGroup(groupID uint64) (*qf.Group, error) {
+	var group qf.Group
 	if err := db.conn.Preload("Enrollments").Preload("Enrollments.UsedSlipDays").First(&group, groupID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, err
 		}
 		return nil, fmt.Errorf("error fetching group record for group with ID %d: %w", groupID, err)
 	}
+
+	// TODO(espeland): I do not understand all this logic. Can't we just simply preload users, as we do with enrollments?
 	var userIds []uint64
 	for _, enrollment := range group.Enrollments {
 		userIds = append(userIds, enrollment.UserID)
@@ -150,29 +153,30 @@ func (db *GormDB) GetGroup(groupID uint64) (*pb.Group, error) {
 		}
 		enrollment.User = u
 	}
-	if len(userIds) > 0 {
-		users, err := db.GetUsers(userIds...)
-		if err != nil {
-			return nil, err
-		}
-		group.Users = users
+	if len(userIds) == 0 {
+		return nil, errors.New("failed to get next student reviewer: no users in group")
 	}
+	users, err := db.GetUsers(userIds...)
+	if err != nil {
+		return nil, err
+	}
+	group.Users = users
 	return &group, nil
 }
 
 // GetGroupsByCourse returns the groups for the given course.
-func (db *GormDB) GetGroupsByCourse(courseID uint64, statuses ...pb.Group_GroupStatus) ([]*pb.Group, error) {
+func (db *GormDB) GetGroupsByCourse(courseID uint64, statuses ...qf.Group_GroupStatus) ([]*qf.Group, error) {
 	if len(statuses) == 0 {
-		statuses = []pb.Group_GroupStatus{
-			pb.Group_PENDING,
-			pb.Group_APPROVED,
+		statuses = []qf.Group_GroupStatus{
+			qf.Group_PENDING,
+			qf.Group_APPROVED,
 		}
 	}
-	var groups []*pb.Group
+	var groups []*qf.Group
 	if err := db.conn.
 		Preload("Enrollments").
 		Preload("Enrollments.UsedSlipDays").
-		Where(&pb.Group{CourseID: courseID}).
+		Where(&qf.Group{CourseID: courseID}).
 		Where("status in (?)", statuses).
 		Find(&groups).Error; err != nil {
 		return nil, err

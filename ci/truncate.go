@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/autograde/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/kit/score"
 )
 
 const truncateMsg = `

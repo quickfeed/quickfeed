@@ -1,0 +1,78 @@
+syntax = "proto3";
+package qf;
+option go_package   = "github.com/quickfeed/quickfeed/qf";
+option swift_prefix = "";
+
+import "qf/types.proto";
+import "qf/requests.proto";
+
+service QuickFeedService {
+    // users //
+
+    rpc GetUser(qf.Void) returns (qf.User) {}
+    rpc GetUsers(qf.Void) returns (qf.Users) {}
+    rpc GetUserByCourse(qf.CourseUserRequest) returns (qf.User) {}
+    rpc UpdateUser(qf.User) returns (qf.Void) {}
+    rpc IsAuthorizedTeacher(qf.Void) returns (qf.AuthorizationResponse) {}
+
+    // groups //
+
+    rpc GetGroup(qf.GetGroupRequest) returns (qf.Group) {}
+    rpc GetGroupByUserAndCourse(qf.GroupRequest) returns (qf.Group) {}
+    rpc GetGroupsByCourse(qf.CourseRequest) returns (qf.Groups) {}
+    rpc CreateGroup(qf.Group) returns (qf.Group) {}
+    rpc UpdateGroup(qf.Group) returns (qf.Group) {}
+    rpc DeleteGroup(qf.GroupRequest) returns (qf.Void) {}
+
+    // courses //
+
+    rpc GetCourse(qf.CourseRequest) returns (qf.Course) {}
+    rpc GetCourses(qf.Void) returns (qf.Courses) {}
+    rpc GetCoursesByUser(qf.EnrollmentStatusRequest) returns (qf.Courses) {}
+    rpc CreateCourse(qf.Course) returns (qf.Course) {}
+    rpc UpdateCourse(qf.Course) returns (qf.Void) {}
+    rpc UpdateCourseVisibility(qf.Enrollment) returns (qf.Void) {}
+
+    // assignments //
+
+    rpc GetAssignments(qf.CourseRequest) returns (qf.Assignments) {}
+    rpc UpdateAssignments(qf.CourseRequest) returns (qf.Void) {}
+
+    // enrollments //
+
+    rpc GetEnrollmentsByUser(qf.EnrollmentStatusRequest) returns (qf.Enrollments) {}
+    rpc GetEnrollmentsByCourse(qf.EnrollmentRequest) returns (qf.Enrollments) {}
+    rpc CreateEnrollment(qf.Enrollment) returns (qf.Void) {}
+    rpc UpdateEnrollments(qf.Enrollments) returns (qf.Void) {}
+
+    // submissions //
+
+    // Get latest submissions for all course assignments for a user or a group.
+    rpc GetSubmissions(qf.SubmissionRequest) returns (qf.Submissions) {}
+    // Get lab submissions for every course user or every course group
+    rpc GetSubmissionsByCourse(qf.SubmissionsForCourseRequest) returns (qf.CourseSubmissions) {}
+    rpc UpdateSubmission(qf.UpdateSubmissionRequest) returns (qf.Void) {}
+    rpc UpdateSubmissions(qf.UpdateSubmissionsRequest) returns (qf.Void) {}
+    rpc RebuildSubmissions(qf.RebuildRequest) returns (qf.Void) {}
+
+    // manual grading //
+
+    rpc CreateBenchmark(qf.GradingBenchmark) returns (qf.GradingBenchmark) {}
+    rpc UpdateBenchmark(qf.GradingBenchmark) returns (qf.Void) {}
+    rpc DeleteBenchmark(qf.GradingBenchmark) returns (qf.Void) {}
+
+    rpc CreateCriterion(qf.GradingCriterion) returns (qf.GradingCriterion) {}
+    rpc UpdateCriterion(qf.GradingCriterion) returns (qf.Void) {}
+    rpc DeleteCriterion(qf.GradingCriterion) returns (qf.Void) {}
+
+    rpc CreateReview(qf.ReviewRequest) returns (qf.Review) {}
+    rpc UpdateReview(qf.ReviewRequest) returns (qf.Review) {}
+    rpc GetReviewers(qf.SubmissionReviewersRequest) returns (qf.Reviewers) {}
+
+    // misc //
+
+    rpc GetProviders(qf.Void) returns (qf.Providers) {}
+    rpc GetOrganization(qf.OrgRequest) returns (qf.Organization) {}
+    rpc GetRepositories(qf.URLRequest) returns (qf.Repositories) {}
+    rpc IsEmptyRepo(qf.RepositoryRequest) returns (qf.Void) {}
+}

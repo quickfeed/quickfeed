@@ -3,15 +3,18 @@ package scm
 import (
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"strconv"
 
-	pb "github.com/autograde/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 // FakeSCM implements the SCM interface.
+// TODO(meling) many of the methods below are not implemented.
 type FakeSCM struct {
 	Repositories  map[uint64]*Repository
-	Organizations map[uint64]*pb.Organization
+	Organizations map[uint64]*qf.Organization
 	Hooks         map[uint64]int
 	Teams         map[uint64]*Team
 }
@@ -20,16 +23,28 @@ type FakeSCM struct {
 func NewFakeSCMClient() *FakeSCM {
 	return &FakeSCM{
 		Repositories:  make(map[uint64]*Repository),
-		Organizations: make(map[uint64]*pb.Organization),
+		Organizations: make(map[uint64]*qf.Organization),
 		Hooks:         make(map[uint64]int),
 		Teams:         make(map[uint64]*Team),
 	}
 }
 
+func (FakeSCM) Clone(_ context.Context, opt *CloneOptions) (string, error) {
+	cloneDir := filepath.Join(opt.DestDir, repoDir(opt))
+	// This is a hack to make sure the lab1 directory exists,
+	// required by the web/rebuild_test.go:TestRebuildSubmissions()
+	lab1Dir := filepath.Join(cloneDir, "lab1")
+	err := os.MkdirAll(lab1Dir, 0o700)
+	if err != nil {
+		return "", err
+	}
+	return cloneDir, err
+}
+
 // CreateOrganization implements the SCM interface.
-func (s *FakeSCM) CreateOrganization(_ context.Context, opt *OrganizationOptions) (*pb.Organization, error) {
+func (s *FakeSCM) CreateOrganization(_ context.Context, opt *OrganizationOptions) (*qf.Organization, error) {
 	id := len(s.Organizations) + 1
-	org := &pb.Organization{
+	org := &qf.Organization{
 		ID:     uint64(id),
 		Path:   opt.Path,
 		Avatar: "https://avatars3.githubusercontent.com/u/1000" + strconv.Itoa(id) + "?v=3",
@@ -40,12 +55,11 @@ func (s *FakeSCM) CreateOrganization(_ context.Context, opt *OrganizationOptions
 
 // UpdateOrganization implements the SCM interface.
 func (*FakeSCM) UpdateOrganization(_ context.Context, _ *OrganizationOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // GetOrganization implements the SCM interface.
-func (s *FakeSCM) GetOrganization(_ context.Context, opt *GetOrgOptions) (*pb.Organization, error) {
+func (s *FakeSCM) GetOrganization(_ context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
 	org, ok := s.Organizations[opt.ID]
 	if !ok {
 		return nil, errors.New("organization not found")
@@ -58,9 +72,7 @@ func (s *FakeSCM) CreateRepository(_ context.Context, opt *CreateRepositoryOptio
 	repo := &Repository{
 		ID:      uint64(len(s.Repositories) + 1),
 		Path:    opt.Path,
-		WebURL:  "https://example.com/" + opt.Organization.Path + "/" + opt.Path,
-		SSHURL:  "git@example.com:" + opt.Organization.Path + "/" + opt.Path,
-		HTTPURL: "https://example.com/" + opt.Organization.Path + "/" + opt.Path + ".git",
+		HTMLURL: "https://example.com/" + opt.Organization.Path + "/" + opt.Path,
 		OrgID:   opt.Organization.ID,
 	}
 	s.Repositories[repo.ID] = repo
@@ -69,12 +81,11 @@ func (s *FakeSCM) CreateRepository(_ context.Context, opt *CreateRepositoryOptio
 
 // GetRepository implements the SCM interface.
 func (*FakeSCM) GetRepository(_ context.Context, _ *RepositoryOptions) (*Repository, error) {
-	// TODO no implementation provided yet
 	return nil, nil
 }
 
 // GetRepositories implements the SCM interface.
-func (s *FakeSCM) GetRepositories(_ context.Context, org *pb.Organization) ([]*Repository, error) {
+func (s *FakeSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*Repository, error) {
 	var repos []*Repository
 	for _, repo := range s.Repositories {
 		if repo.OrgID == org.ID {
@@ -95,19 +106,16 @@ func (s *FakeSCM) DeleteRepository(_ context.Context, opt *RepositoryOptions) er
 
 // UpdateRepoAccess implements the SCM interface.
 func (*FakeSCM) UpdateRepoAccess(_ context.Context, _ *Repository, _, _ string) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // RepositoryIsEmpty implements the SCM interface
 func (*FakeSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool {
-	// TODO no implementation provided yet
 	return false
 }
 
 // ListHooks implements the SCM interface.
 func (*FakeSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook, error) {
-	// TODO no implementation provided yet
 	return nil, nil
 }
 
@@ -152,7 +160,7 @@ func (s *FakeSCM) GetTeam(_ context.Context, opt *TeamOptions) (*Team, error) {
 }
 
 // GetTeams implements the SCM interface
-func (s *FakeSCM) GetTeams(_ context.Context, org *pb.Organization) ([]*Team, error) {
+func (s *FakeSCM) GetTeams(_ context.Context, org *qf.Organization) ([]*Team, error) {
 	var teams []*Team
 	for _, team := range s.Teams {
 		if team.Organization == org.Path {
@@ -164,19 +172,16 @@ func (s *FakeSCM) GetTeams(_ context.Context, org *pb.Organization) ([]*Team, er
 
 // AddTeamMember implements the scm interface
 func (*FakeSCM) AddTeamMember(_ context.Context, _ *TeamMembershipOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // RemoveTeamMember implements the scm interface
 func (*FakeSCM) RemoveTeamMember(_ context.Context, _ *TeamMembershipOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // UpdateTeamMembers implements the SCM interface.
 func (*FakeSCM) UpdateTeamMembers(_ context.Context, _ *UpdateTeamOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
@@ -202,60 +207,84 @@ func (*FakeSCM) GetUserNameByID(_ context.Context, _ uint64) (string, error) {
 
 // UpdateOrgMembership implements the SCM interface
 func (*FakeSCM) UpdateOrgMembership(_ context.Context, _ *OrgMembershipOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // RemoveMember implements the SCM interface
 func (*FakeSCM) RemoveMember(_ context.Context, _ *OrgMembershipOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // GetUserScopes implements the SCM interface
 func (*FakeSCM) GetUserScopes(_ context.Context) *Authorization {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // AcceptRepositoryInvite implements the SCM interface
 func (*FakeSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // CreateIssue implements the SCM interface
-func (*FakeSCM) CreateIssue(_ context.Context, _ *CreateIssueOptions) (*Issue, error) {
-	// TODO no implementation provided yet
+func (*FakeSCM) CreateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
 	return nil, ErrNotSupported{
 		SCM:    "FakeSCM",
 		Method: "CreateIssue",
 	}
 }
 
-// GetRepoIssue implements the SCM interface
-func (*FakeSCM) GetRepoIssue(_ context.Context, _ int, _ *RepositoryOptions) (*Issue, error) {
-	// TODO no implementation provided yet
+// UpdateIssue implements the SCM interface
+func (*FakeSCM) UpdateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
 	return nil, ErrNotSupported{
 		SCM:    "FakeSCM",
-		Method: "GetRepoIssue",
+		Method: "UpdateIssue",
 	}
 }
 
-// GetRepoIssues implements the SCM interface
-func (*FakeSCM) GetRepoIssues(_ context.Context, _ *RepositoryOptions) ([]*Issue, error) {
-	// TODO no implementation provided yet
+// GetIssue implements the SCM interface
+func (*FakeSCM) GetIssue(_ context.Context, _ *RepositoryOptions, _ int) (*Issue, error) {
 	return nil, ErrNotSupported{
 		SCM:    "FakeSCM",
-		Method: "GetRepoIssues",
+		Method: "GetIssue",
 	}
 }
 
-// EditRepoIssue implements the SCM interface
-func (*FakeSCM) EditRepoIssue(_ context.Context, _ int, _ *CreateIssueOptions) (*Issue, error) {
-	// TODO no implementation provided yet
+// GetIssues implements the SCM interface
+func (*FakeSCM) GetIssues(_ context.Context, _ *RepositoryOptions) ([]*Issue, error) {
 	return nil, ErrNotSupported{
 		SCM:    "FakeSCM",
-		Method: "EditRepoIssue",
+		Method: "GetIssues",
+	}
+}
+
+func (*FakeSCM) DeleteIssue(_ context.Context, _ *RepositoryOptions, _ int) error {
+	return nil
+}
+
+func (*FakeSCM) DeleteIssues(_ context.Context, _ *RepositoryOptions) error {
+	return nil
+}
+
+// CreateIssueComment implements the SCM interface
+func (*FakeSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error) {
+	return 0, ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "CreateIssueComment",
+	}
+}
+
+// UpdateIssueComment implements the SCM interface
+func (*FakeSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOptions) error {
+	return ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "UpdateIssueComment",
+	}
+}
+
+// RequestReviewers implements the SCM interface
+func (*FakeSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error {
+	return ErrNotSupported{
+		SCM:    "FakeSCM",
+		Method: "RequestReviewers",
 	}
 }

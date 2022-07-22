@@ -7,29 +7,28 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/internal/qtest"
-	"github.com/autograde/quickfeed/web"
-	"github.com/autograde/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
 const (
-	grpcAddr = ":9090"
+	grpcAddr = "127.0.0.1:9090"
 	token    = "some-secret-string"
 	// same as quickfeed root user
 	botUserID = 1
 	userName  = "meling"
 )
 
-var user *pb.User
+var user *qf.User
 
 func TestGrpcAuth(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, qfService := testQuickFeedService(t)
 	defer cleanup()
 
 	fillDatabase(t, db)
@@ -38,7 +37,7 @@ func TestGrpcAuth(t *testing.T) {
 	}
 
 	// start gRPC server in background
-	go startGrpcAuthServer(t, db)
+	go startGrpcAuthServer(t, qfService)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -48,14 +47,14 @@ func TestGrpcAuth(t *testing.T) {
 	}
 	defer conn.Close()
 
-	client := pb.NewAutograderServiceClient(conn)
+	client := qf.NewQuickFeedServiceClient(conn)
 
 	// create request context with the helpbot's secret token
 	reqCtx := metadata.NewOutgoingContext(ctx,
 		metadata.New(map[string]string{auth.Cookie: token}),
 	)
 
-	request := &pb.CourseUserRequest{
+	request := &qf.CourseUserRequest{
 		CourseCode: "DAT320",
 		CourseYear: 2021,
 		UserLogin:  userName,
@@ -80,24 +79,19 @@ func fillDatabase(t *testing.T, db database.Database) {
 		t.Errorf("Expected %v, got %v\n", botUserID, checkCookie)
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
-	// admin := qtest.CreateUser(t, db, 1, &pb.User{Login: "admin"})
-	course := &pb.Course{
+	// admin := qtest.CreateUser(t, db, 1, &qf.User{Login: "admin"})
+	course := &qf.Course{
 		Code: "DAT320",
 		Name: "Operating Systems and Systems Programming",
 		Year: 2021,
 	}
 	qtest.CreateCourse(t, db, admin, course)
 
-	user = qtest.CreateUser(t, db, 11, &pb.User{Login: userName})
+	user = qtest.CreateUser(t, db, 11, &qf.User{Login: userName})
 	qtest.EnrollStudent(t, db, user, course)
 }
 
-func startGrpcAuthServer(t *testing.T, db database.Database) {
-	logger := qtest.Logger(t)
-
-	_, scms := qtest.FakeProviderMap(t)
-	agService := web.NewAutograderService(logger.Desugar(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-
+func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService) {
 	lis, err := net.Listen("tcp", grpcAddr)
 	check(t, err)
 
@@ -106,7 +100,7 @@ func startGrpcAuthServer(t *testing.T, db database.Database) {
 	)
 	grpcServer := grpc.NewServer(opt)
 
-	pb.RegisterAutograderServiceServer(grpcServer, agService)
+	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}

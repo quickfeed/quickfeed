@@ -66,7 +66,7 @@ static_resources:
               domains:
                 - "{{ .Domain }}"
               routes:
-              - match: { prefix: "/ag.AutograderService/"}
+              - match: { prefix: "/qf.QuickFeedService/"}
                 route:
                   cluster: grpc_service
               - match: { prefix: "/"}
