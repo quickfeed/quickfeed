@@ -72,7 +72,7 @@ func main() {
 
 	db, err := database.NewGormDB(*dbFile, logger)
 	if err != nil {
-		log.Fatalf("Can't connect to database: %v\n", err)
+		log.Fatalf("Can't connect to database: %v", err)
 	}
 
 	// Holds references for activated providers for current user token
@@ -95,7 +95,7 @@ func main() {
 
 	runner, err := ci.NewDockerCI(logger.Sugar())
 	if err != nil {
-		log.Fatalf("Failed to set up docker client: %v\n", err)
+		log.Fatalf("Failed to set up docker client: %v", err)
 	}
 	defer runner.Close()
 
@@ -116,7 +116,7 @@ func main() {
 		// In development, the server itself must maintain a TLS session.
 		grpcServer, err = web.GRPCServerWithCredentials(opt, certFile, certKey)
 		if err != nil {
-			log.Fatalf("Failed to generate gRPC server credentials: %v\n", err)
+			log.Fatalf("Failed to generate gRPC server credentials: %v", err)
 		}
 	} else {
 		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
@@ -141,7 +141,7 @@ func main() {
 	}
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatalf("Failed to start a http server: %v\n", err)
+			log.Fatalf("Failed to start a http server: %v", err)
 		}
 	}()
 	muxServer := &http.Server{
@@ -152,11 +152,11 @@ func main() {
 	}
 	if *dev {
 		if err := muxServer.ListenAndServeTLS(certFile, certKey); err != nil {
-			log.Fatalf("Failed to start grpc server: %v\n", err)
+			log.Fatalf("Failed to start grpc server: %v", err)
 			return
 		}
 	}
 	if err := muxServer.ListenAndServe(); err != nil {
-		log.Fatalf("Failed to start grpc server: %v\n", err)
+		log.Fatalf("Failed to start grpc server: %v", err)
 	}
 }
