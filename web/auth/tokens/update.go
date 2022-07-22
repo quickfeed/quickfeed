@@ -5,11 +5,6 @@ import (
 	"time"
 )
 
-// Get returns the list with tokens that require update
-func (tm *TokenManager) GetTokens() []uint64 {
-	return tm.updateTokens
-}
-
 // UpdateRequired returns true if JWT update is needed for this user ID
 // because the user's role has changed or the JWT is about to expire.
 func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
@@ -19,11 +14,6 @@ func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 		}
 	}
 	if claims.ExpiresAt-time.Now().Unix() < int64(refreshTime.Seconds()) {
-		fmt.Println("Time now: ", time.Now().Unix())
-		fmt.Println("Manager expiration time: ", tm.expireAfter)
-		fmt.Println("Expiration time: ", claims.ExpiresAt)
-		fmt.Println("Refresh time: ", refreshTime.Milliseconds())
-		fmt.Println("Updating token, expires after ", claims.ExpiresAt-time.Now().Unix()) // tmp
 		return true
 	}
 	return false
@@ -59,8 +49,8 @@ func (tm *TokenManager) Add(userID uint64) error {
 	return nil
 }
 
-// Update fetches IDs of users who need token updates from the database
-func (tm *TokenManager) Update() error {
+// updateTokenList fetches IDs of users who need token updates from the database
+func (tm *TokenManager) updateTokenList() error {
 	users, err := tm.db.GetUsers()
 	if err != nil {
 		return fmt.Errorf("failed to update JWT tokens from database: %w", err)

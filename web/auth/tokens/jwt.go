@@ -13,7 +13,7 @@ import (
 
 var (
 	authCookieName = "auth"
-	// Time left till expiration to trigger auto update.
+	// Will refresh token when it is less then refreshTime till token expiration.
 	refreshTime = 1 * time.Minute
 	alg         = "HS256"
 )
@@ -49,7 +49,7 @@ func NewTokenManager(db database.Database, expireAfter time.Duration, secret, do
 		domain:      domain,
 		cookieName:  authCookieName,
 	}
-	if err := manager.Update(); err != nil {
+	if err := manager.updateTokenList(); err != nil {
 		return nil, err
 	}
 	return manager, nil
@@ -57,11 +57,11 @@ func NewTokenManager(db database.Database, expireAfter time.Duration, secret, do
 
 // NewAuthCookie creates a signed JWT cookie from user ID.
 func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
-	claims, err := tm.NewClaims(userID)
+	claims, err := tm.newClaims(userID)
 	if err != nil {
 		return nil, err
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := token.SignedString([]byte(tm.secret))
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign token: %s", err)
@@ -105,8 +105,8 @@ func (tm *TokenManager) GetAuthCookieName() string {
 	return tm.cookieName
 }
 
-// NewClaims creates new JWT claims for user ID.
-func (tm *TokenManager) NewClaims(userID uint64) (*Claims, error) {
+// newClaims creates new JWT claims for user ID.
+func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 	usr, err := tm.db.GetUserWithEnrollments(userID)
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (tm *TokenManager) NewClaims(userID uint64) (*Claims, error) {
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(tm.expireAfter).Unix(),
 			IssuedAt:  time.Now().Unix(),
-			Issuer:    "Quickfeed",
+			Issuer:    "QuickFeed",
 		},
 		UserID: userID,
 		Admin:  usr.IsAdmin,
