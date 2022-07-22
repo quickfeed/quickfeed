@@ -1,10 +1,10 @@
-module.exports = {
+{
 	"parser": "@typescript-eslint/parser",
 	"plugins": ["@typescript-eslint"],
 	"extends": [
 		"eslint:recommended",
 		"plugin:@typescript-eslint/eslint-recommended",
-		"plugin:react/all",
+		"plugin:react/all"
 	],
 	"parserOptions": {
 		"ecmaVersion": 6,
