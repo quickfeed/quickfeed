@@ -31,7 +31,7 @@ func GRPCServerWithCredentials(opt grpc.ServerOption, certFile, certKey string) 
 // This server should only be used in combination with an envoy proxy
 // that manages the TLS session.
 func GRPCServer(opt grpc.ServerOption) *grpc.Server {
-	return grpc.NewServer(opt)
+	return grpc.NewServer(opt) // skipcq: GO-S0902
 }
 
 // MuxHandler routes HTTP and gRPC requests.
