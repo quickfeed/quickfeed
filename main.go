@@ -107,36 +107,32 @@ func main() {
 		log.Println("Added application token")
 	}
 
-	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
 	certFile := env.CertFile()
 	certKey := env.CertKey()
-	if certFile == "" || certKey == "" {
-		log.Fatal("Environmental variables (QUICKFEED_CERT_FILE, QUICKFEED_CERT_KEY) not set")
-	}
-	// In production, envoy proxy will manage TLS and gRPC server has to be started without credentials.
-	// In development, the server itself has to maintain a TLS session.
 	var grpcServer *grpc.Server
 	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
 	if *dev {
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
+		// In development, the server itself must maintain a TLS session.
 		grpcServer, err = web.GRPCServerWithCredentials(opt, certFile, certKey)
 		if err != nil {
 			log.Fatalf("Failed to generate gRPC server credentials: %v\n", err)
 		}
 	} else {
 		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
+		// In production, the envoy proxy will manage TLS certificates, and
+		// the gRPC server must be started without credentials.
 		grpcServer = web.GRPCServer(opt)
 	}
 
+	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
 	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
-	grpcWebServer := grpcweb.WrapServer(grpcServer)
-
 	multiplexer := web.GrpcMultiplexer{
-		MuxServer: grpcWebServer,
+		MuxServer: grpcweb.WrapServer(grpcServer),
 	}
 
 	// Register HTTP endpoints and webhooks
-	router := qfService.RegisterRouter(authConfig, scms, multiplexer, *public)
+	router := qfService.RegisterRouter(authConfig, multiplexer, *public)
 
 	// Create an HTTP server for prometheus.
 	httpServer := &http.Server{
