@@ -7,6 +7,7 @@ import { generateAssignmentsHeader, generateSubmissionRows } from "./ComponentsH
 import DynamicTable, { CellElement, Row, RowElement } from "./DynamicTable"
 import TableSort from "./forms/TableSort"
 import LabResult from "./LabResult"
+import ReviewForm from "./manual-grading/ReviewForm"
 import Search from "./Search"
 
 
@@ -33,7 +34,6 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
 
 
     const generateReviewCell = (submissionLink: SubmissionLink.AsObject): RowElement => {
-
         const submission = submissionLink.submission
         const assignment = submissionLink.assignment
         if (submission && assignment && isManuallyGraded(assignment)) {
@@ -109,7 +109,7 @@ const Results = ({ review }: { review: boolean }): JSX.Element => {
                 <DynamicTable header={header} data={rows} />
             </div>
             <div className="col reviewLab">
-                <LabResult />
+                {review ? <ReviewForm /> : <LabResult />}
             </div>
         </div>
     )
