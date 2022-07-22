@@ -1,7 +1,7 @@
 package env
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -33,7 +33,7 @@ func ScmProvider() string {
 // ClientKey returns client ID for the current SCM provider.
 func ClientKey() (string, error) {
 	if clientKey == "" {
-		return "", errors.New("missing client ID for SCM provider")
+		return "", fmt.Errorf("missing client ID for %s", provider)
 	}
 	return clientKey, nil
 }
@@ -41,7 +41,7 @@ func ClientKey() (string, error) {
 // ClientSecret returns secret for the current SCM provider.
 func ClientSecret() (string, error) {
 	if clientSecret == "" {
-		return "", errors.New("missing client secret for SCM provider")
+		return "", fmt.Errorf("missing client secret for %s", provider)
 	}
 	return clientSecret, nil
 }
