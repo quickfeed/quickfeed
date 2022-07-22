@@ -2,6 +2,7 @@ package tokens
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -54,9 +55,9 @@ func NewTokenManager(db database.Database, expireAfter time.Duration, secret, do
 	return manager, nil
 }
 
-// NewAuthCookie creates a cookie with signed JWT from user ID.
+// NewAuthCookie creates a signed JWT cookie from user ID.
 func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
-	claims, err := tm.newClaims(userID)
+	claims, err := tm.NewClaims(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -77,10 +78,12 @@ func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
 	}, nil
 }
 
-// GetClaims returns user claims after parsing and validating a signed token string
+// GetClaims returns validated user claims.
 func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
+		// It is necessary to check for correct signing algorithm in the header due to JWT vulnerability
+		//  (ref https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/).
 		if t.Header["alg"] != alg {
 			return nil, fmt.Errorf("incorect signing algorithm, expected %s, got %s", alg, t.Header["alg"])
 		}
@@ -91,22 +94,24 @@ func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 	}
 	fmt.Printf("Signing algorithm in header: %+v", token.Header["alg"]) // tmp
 
-	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
-		return claims, nil
+	claims, ok := token.Claims.(*Claims)
+	if !ok || !token.Valid {
+		return nil, fmt.Errorf("failed to parse token: validation error")
 	}
-	return nil, fmt.Errorf("failed to parse token: validation error")
+	return claims, nil
 }
 
 func (tm *TokenManager) GetAuthCookieName() string {
 	return tm.cookieName
 }
 
-// newClaims creates new JWT claims for user ID
-func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
+// NewClaims creates new JWT claims for user ID.
+func (tm *TokenManager) NewClaims(userID uint64) (*Claims, error) {
 	usr, err := tm.db.GetUserWithEnrollments(userID)
 	if err != nil {
 		return nil, err
 	}
+	log.Println("Making new claims with expiration time: ", time.Now().Add(tm.expireAfter).Unix())
 	newClaims := &Claims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(tm.expireAfter).Unix(),

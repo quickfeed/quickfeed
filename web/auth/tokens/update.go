@@ -18,8 +18,12 @@ func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 			return true
 		}
 	}
-	if claims.ExpiresAt-time.Now().Unix() < refreshTime.Milliseconds() {
-		fmt.Println("Updating token, expires after ", claims.ExpiresAt-time.Now().Unix() < refreshTime.Milliseconds()) // tmp
+	if claims.ExpiresAt-time.Now().Unix() < int64(refreshTime.Seconds()) {
+		fmt.Println("Time now: ", time.Now().Unix())
+		fmt.Println("Manager expiration time: ", tm.expireAfter)
+		fmt.Println("Expiration time: ", claims.ExpiresAt)
+		fmt.Println("Refresh time: ", refreshTime.Milliseconds())
+		fmt.Println("Updating token, expires after ", claims.ExpiresAt-time.Now().Unix()) // tmp
 		return true
 	}
 	return false
