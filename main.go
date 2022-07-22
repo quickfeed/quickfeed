@@ -9,25 +9,23 @@ import (
 	"os"
 	"time"
 
+	promgrpc "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc"
-
-	"github.com/quickfeed/quickfeed/database"
-
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func init() {
 	// Create some standard server metrics.
-	grpcMetrics := grpc_prometheus.NewServerMetrics()
+	grpcMetrics := promgrpc.NewServerMetrics()
 
 	mustAddExtensionType := func(ext, typ string) {
 		if err := mime.AddExtensionType(ext, typ); err != nil {
@@ -77,7 +75,7 @@ func main() {
 		log.Fatalf("Can't connect to database: %v\n", err)
 	}
 
-	// holds references for activated providers for current user token
+	// Holds references for activated providers for current user token
 	scms := auth.NewScms()
 	bh := web.BaseHookOptions{
 		BaseURL: *baseURL,
@@ -165,5 +163,4 @@ func main() {
 	if err := muxServer.ListenAndServe(); err != nil {
 		log.Fatalf("Failed to start grpc server: %v\n", err)
 	}
-
 }
