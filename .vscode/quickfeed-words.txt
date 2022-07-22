@@ -1,6 +1,7 @@
 agpath
 allstudents
 allteachers
+apitest
 ASSIGNDIR
 assignmentid
 autoapprove
@@ -50,6 +51,7 @@ gopls
 Gorm
 gosecret
 gosimple
+gotest
 goveralls
 Grafana
 Grafana's
@@ -140,6 +142,7 @@ sqlite
 staticcheck
 Stavnes
 stdcopy
+steinfletcher
 struct
 structs
 Studentid

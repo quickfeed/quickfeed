@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	testSecret = "topsecret"
+	testSecret = "top-secret"
 )
 
 func init() {
@@ -72,7 +72,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 }
 
 func TestOAuth2Callback(t *testing.T) {
-	userJSON := `{"id": 1, "email": "mail", "name": "Noname Lastname", "login": "test"}`
+	userJSON := `{"id": 1, "email": "mail", "name": "No name Last name", "login": "test"}`
 	logger := qtest.Logger(t)
 	authConfig := auth.NewGitHubConfig("", "TEST", "TEST")
 	scms := auth.NewScms()
@@ -97,7 +97,7 @@ func TestOAuth2Callback(t *testing.T) {
 		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
 		Get("/auth/callback/github").
 		Query("state", testSecret).
-		Query("code", "testcode").
+		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusFound).
 		HeaderPresent("Set-Cookie").
@@ -148,7 +148,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
 		Get("/auth/callback/github").
 		Query("state", testSecret).
-		Query("code", "testcode").
+		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
 		HeaderNotPresent("Set-Cookie").
@@ -158,7 +158,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
 		Get("/auth/callback/github").
 		Query("state", testSecret).
-		Query("code", "testcode").
+		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
 		HeaderNotPresent("Set-Cookie").
@@ -168,7 +168,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
 		Get("/auth/callback/github").
 		Query("state", testSecret).
-		Query("code", "testcode").
+		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
 		HeaderNotPresent("Set-Cookie").
@@ -201,7 +201,7 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
 		Get("/auth/callback/github").
 		Query("state", testSecret).
-		Query("code", "testcode").
+		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
 		HeaderNotPresent("Set-Cookie").
@@ -212,7 +212,7 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
 		Get("/auth/callback/github").
 		Query("state", testSecret).
-		Query("code", "testcode").
+		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
 		HeaderNotPresent("Set-Cookie").
@@ -232,7 +232,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
 		Post("/auth/callback/github").
 		Query("state", testSecret).
-		Query("code", "testcode").
+		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
 		End()
@@ -241,7 +241,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 		HandlerFunc(auth.OAuth2Callback(logger, db, authConfig, scms, testSecret)).
 		Get("/auth/callback/github").
 		Query("state", "not a secret").
-		Query("code", "testcode").
+		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
 		End()
