@@ -159,7 +159,7 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 		s, err := sessionStore.New(r, SessionKey)
 		if err != nil {
 			if err := sessionStore.Save(r, w, s); err != nil {
-				authenticationError(logger, w, fmt.Errorf("failed to create new session (%s): %s", SessionKey, err))
+				authenticationError(logger, w, fmt.Errorf("failed to create new session (%s): %w", SessionKey, err))
 				return
 			}
 		}
@@ -205,7 +205,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		// otherwise frontend will get user object where only name, email and url are set.
 		user, err := fetchUser(logger, db, remote, externalUser)
 		if err != nil {
-			authenticationError(logger, w, fmt.Errorf("failed to fetch user %s for remote identity: %s", externalUser.Login, err))
+			authenticationError(logger, w, fmt.Errorf("failed to fetch user %s for remote identity: %w", externalUser.Login, err))
 			return
 		}
 		logger.Debugf("Fetching full user info for %v, user: %v", remote, user)
@@ -214,7 +214,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		// Temporary. Will be removed when sessions are replaced with JWT.
 		s, err := sessionStore.Get(r, SessionKey)
 		if err != nil {
-			authenticationError(logger, w, fmt.Errorf("failed to get user session (%s): %s", SessionKey, err))
+			authenticationError(logger, w, fmt.Errorf("failed to get user session (%s): %w", SessionKey, err))
 			return
 		}
 		us := newUserSession(user.ID)
@@ -222,7 +222,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		logger.Debugf("New Session: %s", us)
 		// save the session to a store in addition to adding an outgoing ('set-cookie') session cookie to the response.
 		if err := sessionStore.Save(r, w, s); err != nil {
-			authenticationError(logger, w, fmt.Errorf("failed to save session: %s", err))
+			authenticationError(logger, w, fmt.Errorf("failed to save session: %w", err))
 			return
 		}
 		logger.Debugf("Session.Save: %v", s)
@@ -258,7 +258,7 @@ func extractAccessToken(r *http.Request, authConfig *oauth2.Config, secret strin
 	}
 	authToken, err := authConfig.Exchange(r.Context(), code)
 	if err != nil {
-		return "", fmt.Errorf("failed to exchange access token: %s", err)
+		return "", fmt.Errorf("failed to exchange access token: %w", err)
 	}
 	return authToken.AccessToken, nil
 }
@@ -267,13 +267,13 @@ func extractAccessToken(r *http.Request, authConfig *oauth2.Config, secret strin
 func fetchExternalUser(accessToken string) (*externalUser, error) {
 	req, err := http.NewRequest("GET", githubUserAPI, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create user request: %s", err)
+		return nil, fmt.Errorf("failed to create user request: %w", err)
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send user request: %v", err)
+		return nil, fmt.Errorf("failed to send user request: %w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
@@ -281,11 +281,11 @@ func fetchExternalUser(accessToken string) (*externalUser, error) {
 	}
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read authentication response: %v", err)
+		return nil, fmt.Errorf("failed to read authentication response: %w", err)
 	}
 	externalUser := &externalUser{}
 	if err := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&externalUser); err != nil {
-		return nil, fmt.Errorf("failed to decode user information: %v", err)
+		return nil, fmt.Errorf("failed to decode user information: %w", err)
 	}
 	return externalUser, nil
 }
@@ -299,7 +299,7 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, remote *qf.Remot
 		// found user in database; update access token
 		err = db.UpdateAccessToken(remote)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update access token for user %s: %s", externalUser.Login, err)
+			return nil, fmt.Errorf("failed to update access token for user %s: %w", externalUser.Login, err)
 		}
 		logger.Debugf("access token updated: %v", remote)
 
@@ -314,16 +314,16 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, remote *qf.Remot
 		}
 		err = db.CreateUserFromRemoteIdentity(user, remote)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create remote identity for user %s : %s", externalUser.Login, err)
+			return nil, fmt.Errorf("failed to create remote identity for user %s : %w", externalUser.Login, err)
 		}
 		logger.Debugf("New user created: %v, remote: %v", user, remote)
 
 	default:
-		return nil, fmt.Errorf("failed to fetch user %s for remote identity: %s", externalUser.Login, err)
+		return nil, fmt.Errorf("failed to fetch user %s for remote identity: %w", externalUser.Login, err)
 	}
 	user, err = db.GetUserByRemoteIdentity(remote)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch user %s for remote identity: %s", externalUser.Login, err)
+		return nil, fmt.Errorf("failed to fetch user %s for remote identity: %w", externalUser.Login, err)
 	}
 	return user, nil
 }
