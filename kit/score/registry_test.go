@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/autograde/quickfeed/kit/score/testdata/a"
-	"github.com/autograde/quickfeed/kit/sh"
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/kit/score/testdata/a"
+	"github.com/quickfeed/quickfeed/kit/sh"
 )
 
 func fib() {}
@@ -43,7 +43,7 @@ func TestTestNamePanic(t *testing.T) {
 					if !strings.HasSuffix(out, test.want) {
 						t.Errorf("testName('%s')='%s', expected '%s'", test.inName, out, test.want)
 					}
-					if len(test.want) == 0 {
+					if test.want == "" {
 						t.Errorf("testName('%s')='%s', not expected to fail", test.inName, out)
 					}
 				}

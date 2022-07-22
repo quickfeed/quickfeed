@@ -4,25 +4,23 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"path/filepath"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/database"
-	"github.com/autograde/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 )
 
-// taskName returns the task name as a combination of assignmentName/filename
+// taskName returns the task name based on the filename
 // excluding the task- prefix and the .md suffix.
-func taskName(assignmentName, basePath string) string {
-	taskName := basePath[len("task-"):]
-	taskName = taskName[:len(taskName)-len(".md")]
-	return filepath.Join(assignmentName, taskName)
+func taskName(filename string) string {
+	taskName := filename[len("task-"):]
+	return taskName[:len(taskName)-len(".md")]
 }
 
 // newTask returns a task from markdown contents and associates it with the given assignment.
 // The provided markdown contents must contain a title specified on the first line,
 // starting with the "# " character sequence, followed by two new line characters.
-func newTask(contents []byte, assignmentOrder uint32, name string) (*pb.Task, error) {
+func newTask(contents []byte, assignmentOrder uint32, name string) (*qf.Task, error) {
 	if !bytes.HasPrefix(contents, []byte("# ")) {
 		return nil, fmt.Errorf("task with name: %s, does not start with a # title marker", name)
 	}
@@ -31,7 +29,7 @@ func newTask(contents []byte, assignmentOrder uint32, name string) (*pb.Task, er
 		return nil, fmt.Errorf("failed to find task body in task: %s", name)
 	}
 
-	return &pb.Task{
+	return &qf.Task{
 		AssignmentOrder: assignmentOrder,
 		Title:           string(contents[2:bodyIndex]),
 		Body:            string(contents[bodyIndex+2:]),
@@ -40,10 +38,10 @@ func newTask(contents []byte, assignmentOrder uint32, name string) (*pb.Task, er
 }
 
 // tasksFromAssignments returns a map, mapping each assignment-order to a map of tasks.
-func tasksFromAssignments(assignments []*pb.Assignment) map[uint32]map[string]*pb.Task {
-	taskMap := make(map[uint32]map[string]*pb.Task)
+func tasksFromAssignments(assignments []*qf.Assignment) map[uint32]map[string]*qf.Task {
+	taskMap := make(map[uint32]map[string]*qf.Task)
 	for _, assignment := range assignments {
-		temp := make(map[string]*pb.Task)
+		temp := make(map[string]*qf.Task)
 		for _, task := range assignment.Tasks {
 			temp[task.Name] = task
 		}
@@ -53,30 +51,36 @@ func tasksFromAssignments(assignments []*pb.Assignment) map[uint32]map[string]*p
 }
 
 // mapTasksByID transforms the given tasks to a map from taskID to task.
-func mapTasksByID(tasks []*pb.Task) map[uint64]*pb.Task {
-	taskMap := make(map[uint64]*pb.Task)
+func mapTasksByID(tasks []*qf.Task) map[uint64]*qf.Task {
+	taskMap := make(map[uint64]*qf.Task)
 	for _, task := range tasks {
 		taskMap[task.ID] = task
 	}
 	return taskMap
 }
 
-func handleTasks(ctx context.Context, db database.Database, sc scm.SCM, course *pb.Course, assignments []*pb.Assignment) error {
+// synchronizeTasksWithIssues synchronizes tasks with issues on SCM's group repositories.
+func synchronizeTasksWithIssues(ctx context.Context, db database.Database, sc scm.SCM, course *qf.Course, assignments []*qf.Assignment) error {
 	tasksFromTestsRepo := tasksFromAssignments(assignments)
 	createdTasks, updatedTasks, err := db.SynchronizeAssignmentTasks(course, tasksFromTestsRepo)
 	if err != nil {
 		return err
 	}
 
-	repos, err := db.GetRepositoriesWithIssues(&pb.Repository{
+	repos, err := db.GetRepositoriesWithIssues(&qf.Repository{
 		OrganizationID: course.GetOrganizationID(),
 	})
 	if err != nil {
 		return err
 	}
 
+	// TODO(espeland): Update this for GitHub web app.
+	// Currently this will create all tasks in the course creator's name.
+	// A possible workaround is to create a new scm client for every repo, and create the issues in one of the students name.
+	// See Espeland's report for discussion about these topics.
+
 	// Creates, updates and deletes issues on all group repositories, based on how tasks differ from last push.
-	createdIssues := []*pb.Issue{}
+	createdIssues := []*qf.Issue{}
 	for _, repo := range repos {
 		if !repo.IsGroupRepo() {
 			continue
@@ -95,10 +99,10 @@ func handleTasks(ctx context.Context, db database.Database, sc scm.SCM, course *
 }
 
 // createIssues creates issues on scm based on repository, course and tasks. Returns created issues.
-func createIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.Repository, tasks []*pb.Task) ([]*pb.Issue, error) {
-	createdIssues := []*pb.Issue{}
+func createIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.Repository, tasks []*qf.Task) ([]*qf.Issue, error) {
+	createdIssues := []*qf.Issue{}
 	for _, task := range tasks {
-		issueOptions := &scm.CreateIssueOptions{
+		issueOptions := &scm.IssueOptions{
 			Organization: course.GetOrganizationPath(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
@@ -108,17 +112,17 @@ func createIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 		if err != nil {
 			return nil, err
 		}
-		createdIssues = append(createdIssues, &pb.Issue{
+		createdIssues = append(createdIssues, &qf.Issue{
 			RepositoryID: repo.ID,
 			TaskID:       task.ID,
-			IssueNumber:  uint64(scmIssue.IssueNumber),
+			IssueNumber:  uint64(scmIssue.Number),
 		})
 	}
 	return createdIssues, nil
 }
 
 // updateIssues updates issues based on repository, course and tasks. It handles deleted tasks by closing them and inserting a statement into the body.
-func updateIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.Repository, tasks []*pb.Task) error {
+func updateIssues(ctx context.Context, sc scm.SCM, course *qf.Course, repo *qf.Repository, tasks []*qf.Task) error {
 	taskMap := mapTasksByID(tasks)
 	for _, issue := range repo.Issues {
 		task, ok := taskMap[issue.TaskID]
@@ -126,16 +130,18 @@ func updateIssues(ctx context.Context, sc scm.SCM, course *pb.Course, repo *pb.R
 			// Issue does not need to be updated
 			continue
 		}
-		issueOptions := &scm.CreateIssueOptions{
+		issueOptions := &scm.IssueOptions{
 			Organization: course.GetOrganizationPath(),
 			Repository:   repo.Name(),
 			Title:        task.Title,
 			Body:         task.Body,
+			Number:       int(issue.IssueNumber),
 		}
 		if task.IsDeleted() {
 			issueOptions.State = "closed"
 		}
-		if _, err := sc.EditRepoIssue(ctx, int(issue.IssueNumber), issueOptions); err != nil {
+
+		if _, err := sc.UpdateIssue(ctx, issueOptions); err != nil {
 			return err
 		}
 	}

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/autograde/quickfeed/kit/sh"
+	"github.com/quickfeed/quickfeed/kit/sh"
 )
 
 func TestRun(t *testing.T) {

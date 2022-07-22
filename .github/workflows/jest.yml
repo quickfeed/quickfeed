@@ -16,9 +16,9 @@ jobs:
           node-version: 12
 
       - name: Install modules
-        working-directory: ./dev
+        working-directory: ./public
         run: npm i
 
       - name: Run tests
-        working-directory: ./dev/src/__tests__
-        run: npm test
+        working-directory: ./public/src/__tests__
+        run: npm test -- --testPathIgnorePatterns="/e2e/|/testHelpers/"

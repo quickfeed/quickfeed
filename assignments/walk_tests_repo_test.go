@@ -3,8 +3,8 @@ package assignments
 import (
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -39,14 +39,14 @@ RUN apk update && apk add --no-cache git bash build-base
 WORKDIR /quickfeed
 `
 
-	wantAssignments := []*pb.Assignment{
+	wantAssignments := []*qf.Assignment{
 		{
 			Name:       "lab1",
 			CourseID:   1,
 			Order:      1,
 			ScoreLimit: 80,
 			Deadline:   "2019-01-24T14:00:00",
-			ScriptFile: `#image/quickfeed:go
+			RunScriptContent: `#image/quickfeed:go
 
 printf "Custom lab1 script\n"
 `,
@@ -57,7 +57,7 @@ printf "Custom lab1 script\n"
 			Order:      2,
 			ScoreLimit: 80,
 			Deadline:   "2019-01-31T16:00:00",
-			ScriptFile: `#image/quickfeed:go
+			RunScriptContent: `#image/quickfeed:go
 
 printf "Default script\n"
 `,
@@ -69,25 +69,25 @@ printf "Default script\n"
 			ScoreLimit: 80,
 			Deadline:   "2019-02-14T23:00:00",
 			IsGroupLab: true,
-			ScriptFile: `#image/quickfeed:go
+			RunScriptContent: `#image/quickfeed:go
 
 printf "Default script\n"
 `,
-			Tasks: []*pb.Task{
+			Tasks: []*qf.Task{
 				{
 					Title:           "Exercises from Tour of Go",
 					AssignmentOrder: 3,
-					Name:            "lab3/tour-of-go",
+					Name:            "tour-of-go",
 				},
 				{
 					Title:           "Go Exercises",
 					AssignmentOrder: 3,
-					Name:            "lab3/learn-go",
+					Name:            "learn-go",
 				},
 				{
 					Title:           "Multiple Choice Questions about Go Programming",
 					AssignmentOrder: 3,
-					Name:            "lab3/go-questions",
+					Name:            "go-questions",
 				},
 			},
 		},
@@ -100,7 +100,7 @@ printf "Default script\n"
 	if gotDockerfile != wantDockerfile {
 		t.Errorf("got Dockerfile %q, want %q", gotDockerfile, wantDockerfile)
 	}
-	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&pb.Task{}, "body")); diff != "" {
+	if diff := cmp.Diff(wantAssignments, gotAssignments, protocmp.Transform(), protocmp.IgnoreFields(&qf.Task{}, "body")); diff != "" {
 		t.Errorf("readTestsRepositoryContent() mismatch (-wantAssignments +gotAssignments):\n%s", diff)
 	}
 }

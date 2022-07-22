@@ -140,7 +140,7 @@ Moving the PR out of draft mode could be automatic, but students can do it manua
   all the checks that need to be fulfilled, in order to be closed.
 - Many of the comments above highlight a reoccurring issue; what if a pull request is closed when it is not supposed to? When this happens, it is very important that quickfeed handles the event correctly, and that it does
   not corrupt the state of the pull request in question.
-- If a teacher sets the assignment to automatically assign assigners, how is this handled? Internally we could have a data record of each pull request, with a list of users as assigners.
+- If a teacher sets the assignment to automatically assign reviewers, how is this handled? Internally we could have a data record of each pull request, with a list of users as reviewers.
   How would this be communicated to the students in question? The most logical solution would be that quickfeed automatically sets reviewers on the pull request on github.
   This information would still have to be somehow communicated to students. Probably the easiest way of doing this would simply be to state in the assignment that users should check reviewers on their pull request.
 - If we now are going for a group only implementation, what should happen with issues/tasks? Should issues now only be created on group repositories?

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/autograde/quickfeed/kit/score"
+	"github.com/quickfeed/quickfeed/kit/score"
 )
 
 func fibonacci(n uint) uint {
@@ -165,7 +165,7 @@ func TestStudentAttackCode(t *testing.T) {
 					if !strings.HasSuffix(out, test.want) {
 						t.Errorf("%s('%s')='%s', expected '%s'", test.name, test.test, out, test.want)
 					}
-					if len(test.want) == 0 {
+					if test.want == "" {
 						t.Errorf("%s('%s')='%s', not expected to fail", test.name, test.test, out)
 					}
 				}

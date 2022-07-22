@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/autograde/quickfeed/kit/exercise"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/quickfeed/quickfeed/kit/exercise"
 )
 
 func init() {

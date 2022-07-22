@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 
-	pb "github.com/autograde/quickfeed/ag"
+	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
 )
 
@@ -12,17 +13,17 @@ import (
 // i.e., GitHub and GitLab.
 type SCM interface {
 	// Creates a new organization.
-	CreateOrganization(context.Context, *OrganizationOptions) (*pb.Organization, error)
+	CreateOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Updates an organization
 	UpdateOrganization(context.Context, *OrganizationOptions) error
 	// Gets an organization.
-	GetOrganization(context.Context, *GetOrgOptions) (*pb.Organization, error)
+	GetOrganization(context.Context, *GetOrgOptions) (*qf.Organization, error)
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repository by ID or name
 	GetRepository(context.Context, *RepositoryOptions) (*Repository, error)
 	// Get repositories within organization.
-	GetRepositories(context.Context, *pb.Organization) ([]*Repository, error)
+	GetRepositories(context.Context, *qf.Organization) ([]*Repository, error)
 	// Delete repository.
 	DeleteRepository(context.Context, *RepositoryOptions) error
 	// Add user as repository collaborator with provided permissions
@@ -41,7 +42,7 @@ type SCM interface {
 	// Get a single team by ID or name.
 	GetTeam(context.Context, *TeamOptions) (*Team, error)
 	// Fetch all teams for organization.
-	GetTeams(context.Context, *pb.Organization) ([]*Team, error)
+	GetTeams(context.Context, *qf.Organization) ([]*Team, error)
 	// Add repo to team.
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// AddTeamMember adds a member to a team.
@@ -56,28 +57,46 @@ type SCM interface {
 	GetUserNameByID(context.Context, uint64) (string, error)
 	// Returns a provider specific clone path.
 	CreateCloneURL(*URLPathOptions) string
-	// Promotes or demotes organization member, based on Role field in OrgMembership.
+	// Promote or demote organization member based on Role field in OrgMembership.
 	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
-	// RevokeOrgMembership removes user from the organization.
+	// RemoveMember removes user from the organization.
 	RemoveMember(context.Context, *OrgMembershipOptions) error
 	// Lists all authorizations for authenticated user.
 	GetUserScopes(context.Context) *Authorization
 
-	// CreateIssue on a Repository
-	CreateIssue(context.Context, *CreateIssueOptions) (*Issue, error)
-	// GetRepoIssue a particular issue in a Repository
-	GetRepoIssue(ctx context.Context, issueNumber int, opt *RepositoryOptions) (*Issue, error)
-	// List all the issues in a Repository
-	GetRepoIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error)
-	// Edit a particular issue in a Repository
-	EditRepoIssue(ctx context.Context, issueNumber int, opt *CreateIssueOptions) (*Issue, error)
+	// Clone clones the given repository and returns the path to the cloned repository.
+	// The returned path is the provided destination directory joined with the
+	// repository type, e.g., "assignments" or "tests".
+	Clone(context.Context, *CloneOptions) (string, error)
+
+	// CreateIssue creates an issue.
+	CreateIssue(context.Context, *IssueOptions) (*Issue, error)
+	// UpdateIssue edits an existing issue.
+	UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error)
+	// GetIssue fetches a specific issue.
+	GetIssue(ctx context.Context, opt *RepositoryOptions, number int) (*Issue, error)
+	// GetIssues fetches all issues in a repository.
+	GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error)
+	// DeleteIssue deletes the given issue number in the given repository.
+	DeleteIssue(context.Context, *RepositoryOptions, int) error
+	// DeleteIssues deletes all issues in the given repository.
+	DeleteIssues(context.Context, *RepositoryOptions) error
+
+	// CreateIssueComment creates a comment on a SCM issue.
+	CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error)
+	// UpdateIssueComment edits a comment on a SCM issue.
+	UpdateIssueComment(ctx context.Context, opt *IssueCommentOptions) error
+
+	// RequestReviewers requests reviewers for a pull request.
+	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
 
 	// Accepts repository invite.
 	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
-func NewSCMClient(logger *zap.SugaredLogger, provider, token string) (SCM, error) {
+func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
+	provider := env.ScmProvider()
 	switch provider {
 	case "github":
 		return NewGithubSCMClient(logger, token), nil
@@ -114,9 +133,7 @@ type Repository struct {
 	ID      uint64
 	Path    string
 	Owner   string // Only used by GitHub.
-	WebURL  string // Repository website.
-	SSHURL  string // SSH clone URL, used by GitLab.
-	HTTPURL string // HTTP(S) clone URL.
+	HTMLURL string // Repository website.
 	OrgID   uint64
 	Size    uint64
 }
@@ -139,7 +156,7 @@ type Hook struct {
 
 // CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
-	Organization *pb.Organization
+	Organization *qf.Organization
 	Path         string
 	Private      bool
 	Owner        string // The owner of an organization's repo is always the organization itself.
@@ -227,16 +244,7 @@ type Authorization struct {
 	Scopes []string
 }
 
-// CreateNewIssueOptions contains information on how to create an Issue.
-//type NewIssue struct {
-//	Title string
-//	Body   *Repository
-//	Labels *[]string
-//	Assignee *string
-//	Assignees *[]string
-//}
-
-// Repository represents a git remote repository.
+// Issue represents an SCM issue.
 type Issue struct {
 	ID         uint64
 	Title      string
@@ -244,12 +252,11 @@ type Issue struct {
 	Repository string
 	Assignee   string
 	Status     string
-	//	Assignees string
-	IssueNumber int
+	Number     int
 }
 
-// CreateIssueOptions contains information on how to create an Issue.
-type CreateIssueOptions struct {
+// IssueOptions contains information for creating or updating an Issue.
+type IssueOptions struct {
 	Organization string
 	Repository   string
 	Title        string
@@ -258,6 +265,24 @@ type CreateIssueOptions struct {
 	Labels       *[]string
 	Assignee     *string
 	Assignees    *[]string
+	Number       int
+}
+
+// RequestReviewersOptions contains information on how to create or edit a pull request comment.
+type IssueCommentOptions struct {
+	Organization string
+	Repository   string
+	Body         string
+	Number       int
+	CommentID    int64
+}
+
+// RequestReviewersOptions contains information on how to assign reviewers to a pull request.
+type RequestReviewersOptions struct {
+	Organization string
+	Repository   string
+	Number       int
+	Reviewers    []string // Reviewers is a slice of github usernames
 }
 
 // RepositoryInvitationOptions contains information on which organization and user to accept invitations for.

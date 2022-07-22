@@ -15,6 +15,9 @@ export class Score extends jspb.Message {
   getTestname(): string;
   setTestname(value: string): Score;
 
+  getTaskname(): string;
+  setTaskname(value: string): Score;
+
   getScore(): number;
   setScore(value: number): Score;
 
@@ -41,6 +44,7 @@ export namespace Score {
     submissionid: number,
     secret: string,
     testname: string,
+    taskname: string,
     score: number,
     maxscore: number,
     weight: number,

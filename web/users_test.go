@@ -8,15 +8,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/ci"
-	"github.com/autograde/quickfeed/internal/qtest"
-	"github.com/autograde/quickfeed/web"
-	"github.com/autograde/quickfeed/web/auth"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth/gothic"
-	"go.uber.org/zap"
+	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -27,14 +24,12 @@ import (
 )
 
 func TestGetSelf(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	const (
 		bufSize = 1024 * 1024
 	)
-
-	_, scms := qtest.FakeProviderMap(t)
 
 	adminUser := qtest.CreateFakeUser(t, db, 1)
 	student := qtest.CreateFakeUser(t, db, 56)
@@ -49,10 +44,9 @@ func TestGetSelf(t *testing.T) {
 		return lis.Dial()
 	}
 
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	opt := grpc.ChainUnaryInterceptor(auth.UnaryUserVerifier())
 	s := grpc.NewServer(opt)
-	pb.RegisterAutograderServiceServer(s, ags)
+	qf.RegisterQuickFeedServiceServer(s, ags)
 
 	go func() {
 		if err := s.Serve(lis); err != nil {
@@ -67,18 +61,18 @@ func TestGetSelf(t *testing.T) {
 	}
 	defer conn.Close()
 
-	client := pb.NewAutograderServiceClient(conn)
+	client := qf.NewQuickFeedServiceClient(conn)
 
 	userTest := []struct {
 		id       uint64
 		code     codes.Code
 		metadata bool
 		token    string
-		wantUser *pb.User
+		wantUser *qf.User
 	}{
 		{id: 1, code: codes.Unauthenticated, metadata: false, token: "", wantUser: nil},
 		{id: 6, code: codes.PermissionDenied, metadata: true, token: "", wantUser: nil},
-		{id: 1, code: codes.Unauthenticated, metadata: true, token: "shouldfail", wantUser: nil},
+		{id: 1, code: codes.Unauthenticated, metadata: true, token: "should fail", wantUser: nil},
 		{id: 1, code: codes.OK, metadata: true, token: "", wantUser: adminUser},
 		{id: 2, code: codes.OK, metadata: true, token: "", wantUser: student},
 	}
@@ -107,7 +101,7 @@ func TestGetSelf(t *testing.T) {
 			meta.Set(auth.Cookie, token)
 			ctx = metadata.NewOutgoingContext(ctx, meta)
 		}
-		gotUser, err := client.GetUser(ctx, &pb.Void{})
+		gotUser, err := client.GetUser(ctx, &qf.Void{})
 		if s, ok := status.FromError(err); ok {
 			if s.Code() != user.code {
 				t.Errorf("GetUser().Code(): %v, want: %v", s.Code(), user.code)
@@ -125,12 +119,10 @@ func TestGetSelf(t *testing.T) {
 }
 
 func TestGetUsers(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
-	unexpectedUsers, err := ags.GetUsers(context.Background(), &pb.Void{})
+	unexpectedUsers, err := ags.GetUsers(context.Background(), &qf.Void{})
 	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
 		t.Fatalf("found unexpected users %+v", unexpectedUsers)
 	}
@@ -138,18 +130,18 @@ func TestGetUsers(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user2 := qtest.CreateFakeUser(t, db, 2)
 	ctx := qtest.WithUserContext(context.Background(), user2)
-	_, err = ags.GetUsers(ctx, &pb.Void{})
+	_, err = ags.GetUsers(ctx, &qf.Void{})
 	if err == nil {
 		t.Fatal("expected 'rpc error: code = PermissionDenied desc = only admin can access other users'")
 	}
 	// now switch to use admin as the user; this should pass
 	ctx = qtest.WithUserContext(context.Background(), admin)
-	foundUsers, err := ags.GetUsers(ctx, &pb.Void{})
+	foundUsers, err := ags.GetUsers(ctx, &qf.Void{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	wantUsers := make([]*pb.User, 0)
+	wantUsers := make([]*qf.User, 0)
 	wantUsers = append(wantUsers, admin, user2)
 	gotUsers := foundUsers.GetUsers()
 	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
@@ -174,10 +166,10 @@ var allUsers = []struct {
 }
 
 func TestGetEnrollmentsByCourse(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
-	var users []*pb.User
+	var users []*qf.User
 	for _, u := range allUsers {
 		user := qtest.CreateFakeUser(t, db, u.remoteID)
 		// remote identities should not be loaded.
@@ -192,8 +184,6 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	// users to enroll in course DAT520 Distributed Systems
@@ -204,16 +194,16 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 			// skip enrolling admin as student
 			continue
 		}
-		if err := db.CreateEnrollment(&pb.Enrollment{
+		if err := db.CreateEnrollment(&qf.Enrollment{
 			UserID:   user.ID,
 			CourseID: allCourses[0].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.UpdateEnrollment(&pb.Enrollment{
+		if err := db.UpdateEnrollment(&qf.Enrollment{
 			UserID:   user.ID,
 			CourseID: allCourses[0].ID,
-			Status:   pb.Enrollment_STUDENT,
+			Status:   qf.Enrollment_STUDENT,
 		}); err != nil {
 			t.Fatal(err)
 		}
@@ -223,26 +213,26 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	// (excluding admin because admin is enrolled on creation)
 	osUsers := users[3:7]
 	for _, user := range osUsers {
-		if err := db.CreateEnrollment(&pb.Enrollment{
+		if err := db.CreateEnrollment(&qf.Enrollment{
 			UserID:   user.ID,
 			CourseID: allCourses[1].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.UpdateEnrollment(&pb.Enrollment{
+		if err := db.UpdateEnrollment(&qf.Enrollment{
 			UserID:   user.ID,
 			CourseID: allCourses[1].ID,
-			Status:   pb.Enrollment_STUDENT,
+			Status:   qf.Enrollment_STUDENT,
 		}); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	gotEnrollments, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: allCourses[0].ID})
+	gotEnrollments, err := ags.GetEnrollmentsByCourse(ctx, &qf.EnrollmentRequest{CourseID: allCourses[0].ID})
 	if err != nil {
 		t.Error(err)
 	}
-	var gotUsers []*pb.User
+	var gotUsers []*qf.User
 	for _, e := range gotEnrollments.Enrollments {
 		gotUsers = append(gotUsers, e.User)
 	}
@@ -252,18 +242,16 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 }
 
 func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
-	var users []*pb.User
+	var users []*qf.User
 	for _, u := range allUsers {
 		user := qtest.CreateFakeUser(t, db, u.remoteID)
 		users = append(users, user)
 	}
 	admin := users[0]
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	course := allCourses[1]
@@ -272,12 +260,12 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var wantEnrollments []*pb.Enrollment
+	var wantEnrollments []*qf.Enrollment
 	for i, user := range users {
-		query := &pb.Enrollment{
+		query := &qf.Enrollment{
 			UserID:   user.ID,
 			CourseID: course.ID,
-			Status:   pb.Enrollment_STUDENT,
+			Status:   qf.Enrollment_STUDENT,
 		}
 		if i == 0 {
 			// we want to skip enrolling admin, as he must have been enrolled when creating course
@@ -290,7 +278,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 			wantEnrollments = append(wantEnrollments, enr)
 		} else if i%3 != 0 {
 			// enroll every third student as a group member
-			if err := db.CreateEnrollment(&pb.Enrollment{
+			if err := db.CreateEnrollment(&qf.Enrollment{
 				UserID: user.ID, CourseID: course.ID, GroupID: 1,
 			}); err != nil {
 				t.Fatal(err)
@@ -300,7 +288,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 			}
 		} else {
 			// enroll rest of the students and add them to the list to check against
-			if err := db.CreateEnrollment(&pb.Enrollment{
+			if err := db.CreateEnrollment(&qf.Enrollment{
 				UserID: user.ID, CourseID: course.ID,
 			}); err != nil {
 				t.Fatal(err)
@@ -318,7 +306,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 		}
 	}
 
-	enrollments, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: course.ID, IgnoreGroupMembers: true})
+	enrollments, err := ags.GetEnrollmentsByCourse(ctx, &qf.EnrollmentRequest{CourseID: course.ID, IgnoreGroupMembers: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -334,13 +322,11 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 	firstAdminUser := qtest.CreateFakeUser(t, db, 1)
 	nonAdminUser := qtest.CreateFakeUser(t, db, 11)
 
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 	ctx := qtest.WithUserContext(context.Background(), firstAdminUser)
 
 	// we want to update nonAdminUser to become admin
@@ -359,7 +345,7 @@ func TestUpdateUser(t *testing.T) {
 		t.Error("expected nonAdminUser to have become admin")
 	}
 
-	nameChangeRequest := &pb.User{
+	nameChangeRequest := &qf.User{
 		ID:        nonAdminUser.ID,
 		IsAdmin:   nonAdminUser.IsAdmin,
 		Name:      "Scrooge McDuck",
@@ -376,7 +362,7 @@ func TestUpdateUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantUser := &pb.User{
+	wantUser := &qf.User{
 		ID:               gotUser.ID,
 		Name:             "Scrooge McDuck",
 		IsAdmin:          true,
@@ -391,13 +377,10 @@ func TestUpdateUser(t *testing.T) {
 }
 
 func TestUpdateUserFailures(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 	wantAdminUser := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateFakeUser(t, db, 11)
-
-	_, scms := qtest.FakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
 	u := qtest.CreateFakeUser(t, db, 3)
 	if u.IsAdmin {
@@ -407,7 +390,7 @@ func TestUpdateUserFailures(t *testing.T) {
 	ctx := qtest.WithUserContext(context.Background(), u)
 
 	// trying to demote current adminUser by setting IsAdmin to false
-	nameChangeRequest := &pb.User{
+	nameChangeRequest := &qf.User{
 		ID:        wantAdminUser.ID,
 		IsAdmin:   false,
 		Name:      "Scrooge McDuck",
@@ -429,7 +412,7 @@ func TestUpdateUserFailures(t *testing.T) {
 		t.Errorf("ags.UpdateUser() mismatch (-wantAdminUser +gotAdminUserWithoutChanges):\n%s", diff)
 	}
 
-	nameChangeRequest = &pb.User{
+	nameChangeRequest = &qf.User{
 		ID:        u.ID,
 		IsAdmin:   true,
 		Name:      "Scrooge McDuck",
@@ -445,7 +428,7 @@ func TestUpdateUserFailures(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantUser := &pb.User{
+	wantUser := &qf.User{
 		ID:               gotUser.ID,
 		Name:             "Scrooge McDuck",
 		IsAdmin:          false, // we want that the current user u cannot promote himself to admin

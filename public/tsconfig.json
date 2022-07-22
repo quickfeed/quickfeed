@@ -1,21 +1,19 @@
 {
-    "compilerOptions": {
-        "outDir": "./dist/",
-        "module": "commonjs",
-        "target": "es2015",
-        // "forceConsistentCasingInFileNames": true,
-        // "noImplicitReturns": true,
-        // "strict": true,
-        // "noUnusedLocals": true,
-        "noImplicitAny": true,
-        "strictNullChecks": true,
-        "removeComments": true,
-        "preserveConstEnums": true,
-        "sourceMap": false,
-        "jsx": "react",
-        "newLine": "LF"
-    },
-    "include": [
-        "src/**/*"
-    ]
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "strictNullChecks": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": false,
+    "jsx": "react",
+    "newLine": "LF",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+  },
+  "include": [
+    "src/**/*"
+  ]
 }

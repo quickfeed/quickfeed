@@ -108,7 +108,7 @@ npm install --save-dev webpack
 Make sure to comment these lines in `main.go` (line number might differ, but should be nearby).
 
 ```bash
-14. "github.com/autograde/quickfeed/envoy"
+14. "github.com/quickfeed/quickfeed/envoy"
 109. go envoy.StartEnvoy(logger)
 ```
 

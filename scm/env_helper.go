@@ -3,6 +3,8 @@ package scm
 import (
 	"os"
 	"testing"
+
+	"github.com/quickfeed/quickfeed/qlog"
 )
 
 func GetTestOrganization(t *testing.T) string {
@@ -12,6 +14,15 @@ func GetTestOrganization(t *testing.T) string {
 		t.Skip("This test requires that the 'QF_TEST_ORG' is set and that you have access to said GitHub organization")
 	}
 	return qfTestOrg
+}
+
+func GetTestUser(t *testing.T) string {
+	t.Helper()
+	qfTestUser := os.Getenv("QF_TEST_USER")
+	if len(qfTestUser) < 1 {
+		t.Skip("This test requires that the 'QF_TEST_USER' is set and that the corresponding user repository exists in the GitHub organization")
+	}
+	return qfTestUser
 }
 
 func GetAccessToken(t *testing.T) string {
@@ -32,4 +43,14 @@ func GetWebHookServer(t *testing.T) string {
 		t.Skipf("This test requires that 'QF_WEBHOOK_SERVER' is set and that you have access to the '%v' GitHub organization", qfTestOrg)
 	}
 	return serverURL
+}
+
+func GetTestSCM(t *testing.T) SCM {
+	t.Helper()
+	accessToken := GetAccessToken(t)
+	s, err := NewSCMClient(qlog.Logger(t), accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return s
 }

@@ -8,13 +8,13 @@ import (
 	"strconv"
 	"strings"
 
-	pb "github.com/autograde/quickfeed/ag"
-	"github.com/autograde/quickfeed/database"
-	lg "github.com/autograde/quickfeed/log"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/markbates/goth/gothic"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -245,7 +245,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 			logger.Error("failed to complete user authentication", zap.Error(err))
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
-		logger.Debugf("externalUser: %v", lg.IndentJson(externalUser))
+		logger.Debugf("externalUser: %v", qlog.IndentJson(externalUser))
 
 		remoteID, err := strconv.ParseUint(externalUser.UserID, 10, 64)
 		if err != nil {
@@ -311,7 +311,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 			return c.Redirect(http.StatusFound, redirect)
 		}
 
-		remote := &pb.RemoteIdentity{
+		remote := &qf.RemoteIdentity{
 			Provider:    provider,
 			RemoteID:    remoteID,
 			AccessToken: externalUser.AccessToken,
@@ -332,7 +332,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, scms *Scms)
 		case err == gorm.ErrRecordNotFound:
 			logger.Debug("user not found in database; creating new user")
 			// user not in database; create new user
-			user = &pb.User{
+			user = &qf.User{
 				Name:      externalUser.Name,
 				Email:     externalUser.Email,
 				AvatarURL: externalUser.AvatarURL,
@@ -439,10 +439,10 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, scms *Scms) 
 	}
 }
 
-func updateScm(ctx echo.Context, logger *zap.SugaredLogger, scms *Scms, user *pb.User) bool {
+func updateScm(ctx echo.Context, logger *zap.SugaredLogger, scms *Scms, user *qf.User) bool {
 	foundSCMProvider := false
 	for _, remoteID := range user.RemoteIdentities {
-		scm, err := scms.GetOrCreateSCMEntry(logger.Desugar(), remoteID.GetProvider(), remoteID.GetAccessToken())
+		scm, err := scms.GetOrCreateSCMEntry(logger.Desugar(), remoteID.GetAccessToken())
 		if err != nil {
 			logger.Errorf("Unknown SCM provider: %v", err)
 			continue

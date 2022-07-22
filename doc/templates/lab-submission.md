@@ -97,7 +97,7 @@ Here are two videos describing these steps: [Part 1 (~10 minutes)](https://youtu
 9. You can check the output by going to the [QuickFeed web interface](http://uis.itest.run/).
    The results (scores and build log) should be available under the assignment's menu item.
 
-10. If some of the autograder tests fail, you may make changes to your code/answers as many times as you like up until the deadline.
+10. If some of the quickfeed tests fail, you may make changes to your code/answers as many times as you like up until the deadline.
     Changes after the deadline will count against the slip days.
 
 ## Final Submission of LabX
