@@ -17,9 +17,6 @@ import (
 )
 
 var (
-	withTLS         bool
-	certFile        string
-	keyFile         string
 	_, pwd, _, _    = runtime.Caller(0)
 	codePath        = path.Join(path.Dir(pwd), "../..")
 	dotEnv          = filepath.Join(codePath, ".env")
@@ -42,37 +39,6 @@ type EnvoyConfig struct {
 	HTTPPort   string             // The http port listened by quickfeed.
 	TLSEnabled bool               // Whether TLS should be configured.
 	CertConfig *CertificateConfig // The certificate to be used when using TLS.
-}
-
-func newEnvoyConfig(domain, serverHost, GRPCPort, HTTPPort string, withTLS bool, certConfig *CertificateConfig) (*EnvoyConfig, error) {
-	config := &EnvoyConfig{
-		Domain:     strings.Trim(domain, "\""),
-		ServerHost: serverHost,
-		GRPCPort:   GRPCPort,
-		HTTPPort:   HTTPPort,
-		TLSEnabled: withTLS,
-	}
-
-	if withTLS {
-		if certConfig.CertFile != "" && certConfig.KeyFile != "" {
-			config.CertConfig = certConfig
-			return config, nil
-		}
-		if err := cert.GenerateSelfSignedCert(cert.Options{
-			Path:  certsDir,
-			Hosts: fmt.Sprintf("%s,%s", config.ServerHost, domain),
-		}); err != nil {
-			return nil, err
-		}
-		log.Printf("certificates successfully generated at: %s", certsDir)
-
-		config.CertConfig = &CertificateConfig{
-			CertFile: "fullchain.pem",
-			KeyFile:  "privkey.pem",
-		}
-	}
-
-	return config, nil
 }
 
 //go:embed envoy.tmpl
@@ -103,41 +69,54 @@ func createEnvoyConfigFile(config *EnvoyConfig) error {
 	return nil
 }
 
-// loadConfigEnv loads the  envoy config from the environment variables.
-// It will not override a variable that already exists.
-// Consider the .env file to set development vars or defaults.
-func loadConfigEnv(withTLS bool, config *CertificateConfig) (*EnvoyConfig, error) {
-	if err := env.Load(dotEnv); err != nil {
-		return nil, err
-	}
-	return newEnvoyConfig(
-		os.Getenv("DOMAIN"),
-		os.Getenv("SERVER_HOST"),
-		os.Getenv("GRPC_PORT"),
-		os.Getenv("HTTP_PORT"),
-		withTLS,
-		config,
-	)
-}
-
 // TODO: improve parameter handling when generating certificates (keyType, etc).
 // TODO: save certs at: /etc/ssl/certs and private keys at: /etc/ssl/private by default.
 func main() {
-	flag.BoolVar(&withTLS, "tls", false, "enable TLS configuration")
-	flag.StringVar(&certFile, "cert", "", "certificate file")
-	flag.StringVar(&keyFile, "key", "", "private key file")
-	flag.Parse()
-
-	config, err := loadConfigEnv(withTLS, &CertificateConfig{
-		CertFile: certFile,
-		KeyFile:  keyFile,
-	})
-	if err != nil {
+	// Load environment variables from the .env file.
+	// It will not override a variable that already exists in the environment.
+	if err := env.Load(dotEnv); err != nil {
 		log.Fatal(err)
 	}
+	var (
+		withTLS = flag.Bool("tls", false, "enable TLS configuration")
+		// Defaults are from the environment.
+		certFile = flag.String("cert", env.CertFile(), "certificate file path")
+		keyFile  = flag.String("key", env.CertKey(), "private key file path") // TODO: rename CertKey to KeyFile
+	)
+	flag.Parse()
 
-	err = createEnvoyConfigFile(config)
-	if err != nil {
+	// TODO replace with env.Domain() and env.ServerHost()
+	serverHost := os.Getenv("SERVER_HOST")
+	domain := strings.Trim(os.Getenv("DOMAIN"), `"`)
+
+	config := &EnvoyConfig{
+		Domain:     domain,
+		ServerHost: serverHost,
+		GRPCPort:   os.Getenv("GRPC_PORT"),
+		HTTPPort:   os.Getenv("HTTP_PORT"),
+		TLSEnabled: *withTLS,
+		CertConfig: &CertificateConfig{
+			CertFile: *certFile,
+			KeyFile:  *keyFile,
+		},
+	}
+	// TODO check if credential files can be loaded
+	// cred, err := credentials.NewServerTLSFromFile(*certFile, *certKey)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	if *withTLS {
+		if err := cert.GenerateSelfSignedCert(cert.Options{
+			Path:  certsDir,
+			Hosts: fmt.Sprintf("%s,%s", serverHost, domain),
+		}); err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("certificates successfully generated at: %s", certsDir)
+	}
+
+	if err := createEnvoyConfigFile(config); err != nil {
 		log.Fatal(err)
 	}
 }
