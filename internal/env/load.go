@@ -30,7 +30,12 @@ func Load(filename string) error {
 		if !found {
 			continue
 		}
-		os.Setenv(strings.TrimSpace(key), strings.TrimSpace(val))
+		k := strings.TrimSpace(key)
+		if os.Getenv(k) != "" {
+			// Ignore .env entries already set in the environment.
+			continue
+		}
+		os.Setenv(k, strings.TrimSpace(val))
 	}
 
 	return scanner.Err()
