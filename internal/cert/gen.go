@@ -83,24 +83,22 @@ func GenerateSelfSignedCert(opts Options) error {
 	})
 }
 
-func generateKeys(opts Options) (any, any, error) {
-	var caKey, serverKey any
-	var err error
+func generateKeys(opts Options) (caKey, serverKey any, err error) {
 	switch opts.KeyType {
 	case "rsa":
 		caKey, err = rsa.GenerateKey(rand.Reader, 2048)
 		if err != nil {
-			return nil, nil, err
+			return
 		}
 		serverKey, err = rsa.GenerateKey(rand.Reader, 2048)
 	default:
 		caKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 		if err != nil {
-			return nil, nil, err
+			return
 		}
 		serverKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	}
-	return caKey, serverKey, err
+	return
 }
 
 func certPeriod(opts Options) (notBefore time.Time, notAfter time.Time, err error) {
