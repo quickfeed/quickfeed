@@ -16,8 +16,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/env"
 )
 
-const defaultFileFlags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
-
 var (
 	withTLS         bool
 	certFile        string
@@ -26,7 +24,7 @@ var (
 	codePath        = path.Join(path.Dir(pwd), "../..")
 	dotEnv          = filepath.Join(codePath, ".env")
 	envoyDockerRoot = filepath.Join(codePath, "ci/docker/envoy")
-	certsDir        = path.Join(envoyDockerRoot, "certs")
+	certsDir        = filepath.Join("internal", "cert", "certs")
 )
 
 // CertificateConfig holds certificate information
@@ -60,10 +58,10 @@ func newEnvoyConfig(domain, serverHost, GRPCPort, HTTPPort string, withTLS bool,
 			config.CertConfig = certConfig
 			return config, nil
 		}
-		err := cert.GenerateSelfSignedCert(cert.Options{
+		if err := cert.GenerateSelfSignedCert(cert.Options{
+			Path:  certsDir,
 			Hosts: fmt.Sprintf("%s,%s", config.ServerHost, domain),
-		})
-		if err != nil {
+		}); err != nil {
 			return nil, err
 		}
 		log.Printf("certificates successfully generated at: %s", certsDir)

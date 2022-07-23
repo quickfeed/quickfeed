@@ -18,10 +18,9 @@ import (
 	"time"
 )
 
-var certsDir = filepath.Join("internal", "cert", "certs")
-
 // Options for generating a self-signed certificate.
 type Options struct {
+	Path      string        // path to the certs directory
 	Hosts     string        // comma-separated hostnames and IPs to generate a certificate for.
 	ValidFrom time.Time     // creation date (default duration is 1 year)
 	ValidFor  time.Duration // for how long the certificate is valid.
@@ -35,7 +34,7 @@ func GenerateSelfSignedCert(opts Options) (err error) {
 	if opts.Hosts == "" {
 		return errors.New("at least one hostname must be specified")
 	}
-	if err = os.MkdirAll(certsDir, 0o700); err != nil {
+	if err = os.MkdirAll(opts.Path, 0o700); err != nil {
 		return err
 	}
 
@@ -99,14 +98,14 @@ func GenerateSelfSignedCert(opts Options) (err error) {
 	}
 
 	// save server private key
-	if err = savePEM(certsDir, "privkey.pem", []*pem.Block{
+	if err = savePEM(opts.Path, "privkey.pem", []*pem.Block{
 		{Type: "PRIVATE KEY", Bytes: serverKeyBytes},
 	}); err != nil {
 		return err
 	}
 
 	// save fullchain (server certificate and CA certificate)
-	if err = savePEM(certsDir, "fullchain.pem", []*pem.Block{
+	if err = savePEM(opts.Path, "fullchain.pem", []*pem.Block{
 		{Type: "CERTIFICATE", Bytes: serverCertBytes},
 		{Type: "CERTIFICATE", Bytes: caCertBytes},
 	}); err != nil {
