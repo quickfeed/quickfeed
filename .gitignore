@@ -18,9 +18,10 @@ quickfeed-env.sh
 .env*
 !.env-template
 
-# Configuration files
+# Configuration and certificate files
 ci/docker/envoy/*.yaml
 ci/docker/envoy/certs
+internal/cert/certs
 
 # Database and Log files
 *.db
