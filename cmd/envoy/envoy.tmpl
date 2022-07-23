@@ -92,9 +92,9 @@ static_resources:
             # Replace certificate with your certificates
             tls_certificates:
               certificate_chain:
-                filename: /etc/letsencrypt/live/{{ .Domain }}/{{ .CertConfig.CertFile }}
+                filename: {{ .CertConfig.CertFile }}
               private_key:
-                filename: /etc/letsencrypt/live/{{ .Domain }}/{{ .CertConfig.KeyFile }}
+                filename: {{ .CertConfig.KeyFile }}
 {{- end }}
   clusters:
   - name: grpc_service

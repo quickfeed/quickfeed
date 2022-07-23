@@ -101,7 +101,7 @@ func main() {
 		},
 	}
 	// TODO check if credential files can be loaded
-	// cred, err := credentials.NewServerTLSFromFile(*certFile, *certKey)
+	// cred, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
