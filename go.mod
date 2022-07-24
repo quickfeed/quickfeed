@@ -13,7 +13,6 @@ require (
 	github.com/gosimple/slug v1.12.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/improbable-eng/grpc-web v0.15.0
-	github.com/markbates/goth v1.73.0
 	github.com/prometheus/client_golang v1.12.2
 	github.com/quickfeed/quickfeed/kit v0.6.0
 	github.com/shurcooL/githubv4 v0.0.0-20220520033151-0b4e3294ff00

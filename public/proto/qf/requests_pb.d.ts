@@ -393,26 +393,6 @@ export namespace SubmissionReviewersRequest {
   }
 }
 
-export class Providers extends jspb.Message {
-  getProvidersList(): Array<string>;
-  setProvidersList(value: Array<string>): Providers;
-  clearProvidersList(): Providers;
-  addProviders(value: string, index?: number): Providers;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Providers.AsObject;
-  static toObject(includeInstance: boolean, msg: Providers): Providers.AsObject;
-  static serializeBinaryToWriter(message: Providers, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Providers;
-  static deserializeBinaryFromReader(message: Providers, reader: jspb.BinaryReader): Providers;
-}
-
-export namespace Providers {
-  export type AsObject = {
-    providersList: Array<string>,
-  }
-}
-
 export class URLRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): URLRequest;

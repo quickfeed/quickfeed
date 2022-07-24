@@ -814,17 +814,6 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseR
 	return &qf.Void{}, nil
 }
 
-// GetProviders returns a list of SCM providers supported by the backend.
-// Access policy: Any User.
-func (s *QuickFeedService) GetProviders(_ context.Context, _ *qf.Void) (*qf.Providers, error) {
-	providers := auth.GetProviders()
-	if len(providers.GetProviders()) < 1 {
-		s.logger.Error("GetProviders failed: found no enabled SCM providers")
-		return nil, status.Error(codes.NotFound, "found no enabled SCM providers")
-	}
-	return providers, nil
-}
-
 // GetOrganization fetches a github organization by name.
 // Access policy: Admin
 func (s *QuickFeedService) GetOrganization(ctx context.Context, in *qf.OrgRequest) (*qf.Organization, error) {

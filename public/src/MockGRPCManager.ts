@@ -22,7 +22,6 @@ import {
     AuthorizationResponse,
     CourseSubmissions,
     Organization,
-    Providers,
     Repositories,
     Status,
     SubmissionsForCourseRequest,
@@ -67,7 +66,6 @@ enum Generate {
 export class MockGrpcManager {
 
     constructor(id?: number) {
-        this.initProviders()
         this.initUsers()
         this.initAssignments()
         this.initCourses()
@@ -87,7 +85,6 @@ export class MockGrpcManager {
     }
 
 
-    private providers: Providers
     private groups: Groups
     private users: Users
     private enrollments: Enrollments
@@ -718,10 +715,6 @@ export class MockGrpcManager {
         return this.grpcSend<Organization>(org)
     }
 
-    public getProviders(): Promise<IGrpcResponse<Providers>> {
-        return this.grpcSend<Providers>(this.providers)
-    }
-
     public isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<IGrpcResponse<Void>> {
         if (courseID <= 0 || userID <= 0 || groupID <= 0) {
             return this.grpcSend<Void>(null, new Status().setCode(2).setError('Invalid Arguments'))
@@ -738,13 +731,6 @@ export class MockGrpcManager {
             resolve(temp)
         })
         return grpcPromise
-    }
-
-    private initProviders(): void {
-        this.providers = new Providers()
-        this.providers.setProvidersList([
-            "github",
-        ])
     }
 
     private initUsers(): void {

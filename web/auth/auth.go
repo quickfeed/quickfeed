@@ -36,6 +36,7 @@ func init() {
 const (
 	SessionKey     = "session"
 	UserKey        = "user"
+	TeacherSuffix  = "teacher"
 	Cookie         = "cookie"
 	OutgoingCookie = "Set-Cookie"
 	githubUserAPI  = "https://api.github.com/user"
