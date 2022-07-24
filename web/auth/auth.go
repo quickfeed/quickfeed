@@ -191,7 +191,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 			authenticationError(logger, w, err)
 			return
 		}
-		logger.Debugf("externalUser: %v", qlog.IndentJson(externalUser))
+		logger.Debugf("ExternalUser: %v", qlog.IndentJson(externalUser))
 
 		// There is no need to check for existing session here because a user with a valid session
 		// will be logged in automatically and will never see the login button. Only a user without
@@ -205,7 +205,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		// otherwise frontend will get user object where only name, email and url are set.
 		user, err := fetchUser(logger, db, remote, externalUser)
 		if err != nil {
-			authenticationError(logger, w, fmt.Errorf("failed to fetch user %s for remote identity: %w", externalUser.Login, err))
+			authenticationError(logger, w, fmt.Errorf("failed to fetch user %q for remote identity: %w", externalUser.Login, err))
 			return
 		}
 		logger.Debugf("Fetching full user info for %v, user: %v", remote, user)
@@ -233,7 +233,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 
 		// Register session and associated user ID to enable gRPC requests for this session.
 		if token := extractSessionCookie(w); len(token) > 0 {
-			logger.Debugf("extractSessionCookie: %v", token)
+			logger.Debugf("SessionCookie: %v", token)
 			Add(token, us.ID)
 		} else {
 			authenticationError(logger, w, fmt.Errorf("no session cookie found in %v", w.Header()))
@@ -295,37 +295,30 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, remote *qf.Remot
 	user, err := db.GetUserByRemoteIdentity(remote)
 	switch {
 	case err == nil:
-		logger.Debugf("found user: %v", user)
-		// found user in database; update access token
-		err = db.UpdateAccessToken(remote)
-		if err != nil {
-			return nil, fmt.Errorf("failed to update access token for user %s: %w", externalUser.Login, err)
+		logger.Debugf("Found user: %v in database", user)
+		if err = db.UpdateAccessToken(remote); err != nil {
+			return nil, fmt.Errorf("failed to update access token for user %q: %w", externalUser.Login, err)
 		}
-		logger.Debugf("access token updated: %v", remote)
+		logger.Debugf("Access token updated: %v", remote)
 
 	case err == gorm.ErrRecordNotFound:
-		logger.Debug("user not found in database; creating new user")
-		// user not in database; create new user
+		logger.Debugf("User %q not found in database; creating new user", externalUser.Login)
 		user = &qf.User{
 			Name:      externalUser.Name,
 			Email:     externalUser.Email,
 			AvatarURL: externalUser.AvatarURL,
 			Login:     externalUser.Login,
 		}
-		err = db.CreateUserFromRemoteIdentity(user, remote)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create remote identity for user %s : %w", externalUser.Login, err)
+		if err = db.CreateUserFromRemoteIdentity(user, remote); err != nil {
+			return nil, fmt.Errorf("failed to create remote identity for user %q: %w", externalUser.Login, err)
 		}
 		logger.Debugf("New user created: %v, remote: %v", user, remote)
 
 	default:
-		return nil, fmt.Errorf("failed to fetch user %s for remote identity: %w", externalUser.Login, err)
+		return nil, fmt.Errorf("failed to fetch user %q for remote identity: %w", externalUser.Login, err)
 	}
-	user, err = db.GetUserByRemoteIdentity(remote)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch user %s for remote identity: %w", externalUser.Login, err)
-	}
-	return user, nil
+	logger.Debugf("Retry database lookup for user %q", externalUser.Login)
+	return db.GetUserByRemoteIdentity(remote)
 }
 
 // setScopes sets student or teacher scopes for user authentication.
@@ -365,8 +358,8 @@ func extractSessionCookie(w http.ResponseWriter) string {
 }
 
 var (
-	ErrInvalidSessionCookie = status.Errorf(codes.Unauthenticated, "Request does not contain a valid session cookie.")
-	ErrContextMetadata      = status.Errorf(codes.Unauthenticated, "Could not obtain metadata from context")
+	ErrInvalidSessionCookie = status.Errorf(codes.Unauthenticated, "request does not contain a valid session cookie.")
+	ErrContextMetadata      = status.Errorf(codes.Unauthenticated, "could not obtain metadata from context")
 )
 
 func UserVerifier() grpc.UnaryServerInterceptor {
@@ -381,8 +374,7 @@ func UserVerifier() grpc.UnaryServerInterceptor {
 		}
 		// create new context with user id instead of cookie for use internally
 		newCtx := metadata.NewIncomingContext(ctx, newMeta)
-		resp, err := handler(newCtx, req)
-		return resp, err
+		return handler(newCtx, req)
 	}
 }
 
