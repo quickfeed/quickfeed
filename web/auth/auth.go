@@ -159,7 +159,7 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 		s, err := sessionStore.New(r, SessionKey)
 		if err != nil {
 			if err := sessionStore.Save(r, w, s); err != nil {
-				authenticationError(logger, w, fmt.Errorf("failed to create new session (%s): %w", SessionKey, err))
+				authenticationError(logger, w, fmt.Errorf("failed to create new session: %w", err))
 				return
 			}
 		}
@@ -181,12 +181,12 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 			authenticationError(logger, w, fmt.Errorf("illegal request method: %s", r.Method))
 			return
 		}
-		accessToken, err := extractAccessToken(r, authConfig, secret)
+		token, err := extractAccessToken(r, authConfig, secret)
 		if err != nil {
 			authenticationError(logger, w, err)
 			return
 		}
-		externalUser, err := fetchExternalUser(accessToken)
+		externalUser, err := fetchExternalUser(token)
 		if err != nil {
 			authenticationError(logger, w, err)
 			return
@@ -199,7 +199,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		remote := &qf.RemoteIdentity{
 			Provider:    env.ScmProvider(),
 			RemoteID:    externalUser.ID,
-			AccessToken: accessToken,
+			AccessToken: token.AccessToken,
 		}
 		// in case this is a new user we need a user object with full information,
 		// otherwise frontend will get user object where only name, email and url are set.
@@ -214,7 +214,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 		// Temporary. Will be removed when sessions are replaced with JWT.
 		s, err := sessionStore.Get(r, SessionKey)
 		if err != nil {
-			authenticationError(logger, w, fmt.Errorf("failed to get user session (%s): %w", SessionKey, err))
+			authenticationError(logger, w, fmt.Errorf("failed to get user session for %q: %w", externalUser.Login, err))
 			return
 		}
 		us := newUserSession(user.ID)
@@ -244,32 +244,32 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig 
 }
 
 // extractAccessToken exchanges code received from OAuth provider for the user's access token.
-func extractAccessToken(r *http.Request, authConfig *oauth2.Config, secret string) (string, error) {
+func extractAccessToken(r *http.Request, authConfig *oauth2.Config, secret string) (*oauth2.Token, error) {
 	if err := r.ParseForm(); err != nil {
-		return "", err
+		return nil, err
 	}
 	callbackSecret := r.FormValue("state")
 	if callbackSecret != secret {
-		return "", errors.New("incorrect callback secret")
+		return nil, errors.New("incorrect callback secret")
 	}
 	code := r.FormValue("code")
 	if code == "" {
-		return "", errors.New("got empty code on callback")
+		return nil, errors.New("got empty code on callback")
 	}
-	authToken, err := authConfig.Exchange(r.Context(), code)
+	token, err := authConfig.Exchange(r.Context(), code)
 	if err != nil {
-		return "", fmt.Errorf("failed to exchange access token: %w", err)
+		return nil, fmt.Errorf("failed to exchange access token: %w", err)
 	}
-	return authToken.AccessToken, nil
+	return token, nil
 }
 
 // fetchExternalUser fetches information about the user from the provider.
-func fetchExternalUser(accessToken string) (*externalUser, error) {
+func fetchExternalUser(token *oauth2.Token) (*externalUser, error) {
 	req, err := http.NewRequest("GET", githubUserAPI, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user request: %w", err)
 	}
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+	token.SetAuthHeader(req)
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -292,6 +292,7 @@ func fetchExternalUser(accessToken string) (*externalUser, error) {
 
 // fetchUser saves or updates user information fetched from the OAuth provider in the database.
 func fetchUser(logger *zap.SugaredLogger, db database.Database, remote *qf.RemoteIdentity, externalUser *externalUser) (*qf.User, error) {
+	logger.Debugf("Lookup user: %q in database with: %v", externalUser.Login, remote)
 	user, err := db.GetUserByRemoteIdentity(remote)
 	switch {
 	case err == nil:
