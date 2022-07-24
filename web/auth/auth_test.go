@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/markbates/goth"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qlog"
@@ -21,12 +20,6 @@ const (
 	callbackGithub = "/auth/callback/github"
 	loginToken     = "/login/oauth/access_token"
 )
-
-func init() {
-	goth.UseProviders(&auth.FakeProvider{
-		Callback: web.Callback + "fake",
-	})
-}
 
 func TestOAuth2Login(t *testing.T) {
 	logger := qlog.Logger(t)
