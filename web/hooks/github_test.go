@@ -63,6 +63,6 @@ func TestGitHubWebHook(t *testing.T) {
 	webhook := NewGitHubWebHook(logger, db, runner, secret)
 
 	log.Println("starting webhook server")
-	http.HandleFunc("/webhook", webhook.Handle)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	http.HandleFunc("/webhook", webhook.Handle())
+	t.Fatal(http.ListenAndServe(":8080", nil))
 }

@@ -97,10 +97,6 @@ message SubmissionReviewersRequest {
     uint64 courseID     = 2;
 }
 
-message Providers {
-    repeated string providers = 1;
-}
-
 message URLRequest {
     uint64 courseID                    = 1;
     repeated Repository.Type repoTypes = 2;

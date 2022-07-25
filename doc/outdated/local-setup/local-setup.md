@@ -211,7 +211,7 @@ server {
         listen 443 ssl http2;
         listen [::]:443 ssl http2;
 
-        server_name https://127.0.0.1/auth/github/callback;
+        server_name https://127.0.0.1/auth/github/github;
         location / {
                 proxy_pass http://127.0.0.1:8081;
                 proxy_redirect off;
@@ -268,7 +268,7 @@ sudo nginx -s reload
 
 Create a new Github app by following the instructions on this [page](https://docs.github.com/en/developers/apps/creating-a-github-app).
 
-Ensure that homepage URL is `127.0.0.1` and callback URL is `127.0.0.1/auth/github/callback` like in the photo.
+Ensure that homepage URL is `127.0.0.1` and callback URL is `127.0.0.1/auth/callback/github` like in the photo.
 
 ![Adding URL](./figures/github_app_url.png)
 
