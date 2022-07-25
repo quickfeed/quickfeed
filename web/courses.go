@@ -486,7 +486,7 @@ func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, user *qf
 	if err != nil {
 		return fmt.Errorf("failed to get user %d: %w", user.ID, err)
 	}
-	userSCM, err := s.getSCM(ctx, user, "github")
+	userSCM, err := s.getSCM(user, "github")
 	if err != nil {
 		return fmt.Errorf("failed to get SCM for user %d: %w", user.ID, err)
 	}

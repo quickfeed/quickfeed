@@ -56,7 +56,7 @@ static_resources:
               - match: { prefix: "/"}
                 route:
                   cluster: web_service
-              - match: {prefix: "/auth/github/callback"}
+              - match: {prefix: "/auth/callback/github"}
                 route: { cluster: web_service }
               cors:
                 allow_origin_string_match:
