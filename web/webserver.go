@@ -6,6 +6,7 @@ import (
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/auth/tokens"
 	"github.com/quickfeed/quickfeed/web/hooks"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
@@ -46,7 +47,7 @@ func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
 }
 
 // RegisterRouter registers http endpoints for authentication API and scm provider webhooks.
-func (s *QuickFeedService) RegisterRouter(authConfig *oauth2.Config, mux GrpcMultiplexer, public string) *http.ServeMux {
+func (s *QuickFeedService) RegisterRouter(tm *tokens.TokenManager, authConfig *oauth2.Config, mux GrpcMultiplexer, public string) *http.ServeMux {
 	// Serve static files.
 	router := http.NewServeMux()
 	assets := http.FileServer(http.Dir(public + "/assets"))
@@ -61,7 +62,7 @@ func (s *QuickFeedService) RegisterRouter(authConfig *oauth2.Config, mux GrpcMul
 	router.HandleFunc(Auth, auth.OAuth2Login(s.logger, authConfig, callbackSecret))
 	// TODO(vera): temporary hack to support teacher scopes, will be removed when OAuth app replaced with GitHub app.
 	router.HandleFunc(Teacher, auth.OAuth2Login(s.logger, authConfig, callbackSecret))
-	router.HandleFunc(Callback, auth.OAuth2Callback(s.logger, s.db, authConfig, s.scms, callbackSecret))
+	router.HandleFunc(Callback, auth.OAuth2Callback(s.logger, s.db, tm, authConfig, s.scms, callbackSecret))
 	router.HandleFunc(Logout, auth.OAuth2Logout(s.logger))
 
 	// Register hooks.

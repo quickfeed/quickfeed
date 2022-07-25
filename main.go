@@ -20,6 +20,7 @@ import (
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/auth/tokens"
 	"google.golang.org/grpc"
 )
 
@@ -91,6 +92,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	tokenManager, err := tokens.NewTokenManager(db, *baseURL)
+	if err != nil {
+		log.Fatal(err)
+	}
 	authConfig := auth.NewGitHubConfig(*baseURL, clientID, clientSecret)
 
 	runner, err := ci.NewDockerCI(logger.Sugar())
@@ -132,7 +137,7 @@ func main() {
 	}
 
 	// Register HTTP endpoints and webhooks
-	router := qfService.RegisterRouter(authConfig, multiplexer, *public)
+	router := qfService.RegisterRouter(tokenManager, authConfig, multiplexer, *public)
 
 	// Create an HTTP server for prometheus.
 	httpServer := &http.Server{

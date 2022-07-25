@@ -1,6 +1,7 @@
 package tokens
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,11 +9,13 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
 var (
 	authCookieName = "auth"
+	expirationTime = 15 * time.Minute
 	// Will refresh token when it is less then refreshTime till token expiration.
 	refreshTime = 1 * time.Minute
 	alg         = "HS256"
@@ -38,14 +41,14 @@ type TokenManager struct {
 }
 
 // NewTokenManager starts a new token manager. Will create a list with all tokens that need update.
-func NewTokenManager(db database.Database, expireAfter time.Duration, secret, domain string) (*TokenManager, error) {
-	if secret == "" || domain == "" {
-		return nil, fmt.Errorf("failed to create a new token manager: missing secret (%s) or domain (%s)", secret, domain)
+func NewTokenManager(db database.Database, domain string) (*TokenManager, error) {
+	if domain == "" {
+		return nil, errors.New("failed to create a new token manager: missing domain")
 	}
 	manager := &TokenManager{
 		db:          db,
-		expireAfter: expireAfter,
-		secret:      secret,
+		expireAfter: expirationTime,
+		secret:      rand.String(),
 		domain:      domain,
 		cookieName:  authCookieName,
 	}

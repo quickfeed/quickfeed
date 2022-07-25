@@ -22,15 +22,11 @@ func TestNewManager(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Create manager with missing required parameters.
-	manager, err := tokens.NewTokenManager(db, time.Minute*15, "notasecret", "")
+	manager, err := tokens.NewTokenManager(db, "")
 	if err == nil {
-		t.Fatal("Expected error: missing secret or domain variable")
+		t.Fatal("Expected error: missing domain variable")
 	}
-	manager, err = tokens.NewTokenManager(db, time.Minute*15, "", "localhost")
-	if err == nil {
-		t.Fatal("Expected error: missing secret or domain variable")
-	}
-	manager, err = tokens.NewTokenManager(db, time.Minute*15, "notasecret", "test")
+	manager, err = tokens.NewTokenManager(db, "test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,13 +61,12 @@ func TestNewManager(t *testing.T) {
 }
 
 func TestNewCookie(t *testing.T) {
-	secret := qtest.RandomString(t)
 	domain := "test"
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	user := qtest.CreateFakeUser(t, db, 1)
-	manager, err := tokens.NewTokenManager(db, time.Minute*15, secret, domain)
+	manager, err := tokens.NewTokenManager(db, domain)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +91,7 @@ func TestUserClaims(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
-	manager, err := tokens.NewTokenManager(db, time.Minute*15, "notasecret", "localhost")
+	manager, err := tokens.NewTokenManager(db, "localhost")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,7 +128,7 @@ func TestUpdateTokenList(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	admin := qtest.CreateFakeUser(t, db, 1)
-	manager, err := tokens.NewTokenManager(db, time.Minute*15, "notasecret", "localhost")
+	manager, err := tokens.NewTokenManager(db, "localhost")
 	if err != nil {
 		t.Fatal(err)
 	}
