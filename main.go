@@ -9,25 +9,23 @@ import (
 	"os"
 	"time"
 
+	promgrpc "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc"
-
-	"github.com/quickfeed/quickfeed/database"
-
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func init() {
 	// Create some standard server metrics.
-	grpcMetrics := grpc_prometheus.NewServerMetrics()
+	grpcMetrics := promgrpc.NewServerMetrics()
 
 	mustAddExtensionType := func(ext, typ string) {
 		if err := mime.AddExtensionType(ext, typ); err != nil {
@@ -74,17 +72,17 @@ func main() {
 
 	db, err := database.NewGormDB(*dbFile, logger)
 	if err != nil {
-		log.Fatalf("Can't connect to database: %v\n", err)
+		log.Fatalf("Can't connect to database: %v", err)
 	}
 
-	// holds references for activated providers for current user token
+	// Holds references for activated providers for current user token
 	scms := auth.NewScms()
 	bh := web.BaseHookOptions{
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
-	clientID, err := env.ClientKey()
+	clientID, err := env.ClientID()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -97,7 +95,7 @@ func main() {
 
 	runner, err := ci.NewDockerCI(logger.Sugar())
 	if err != nil {
-		log.Fatalf("Failed to set up docker client: %v\n", err)
+		log.Fatalf("Failed to set up docker client: %v", err)
 	}
 	defer runner.Close()
 
@@ -109,36 +107,32 @@ func main() {
 		log.Println("Added application token")
 	}
 
-	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
 	certFile := env.CertFile()
 	certKey := env.CertKey()
-	if certFile == "" || certKey == "" {
-		log.Fatal("Environmental variables (QUICKFEED_CERT_FILE, QUICKFEED_CERT_KEY) not set")
-	}
-	// In production, envoy proxy will manage TLS and gRPC server has to be started without credentials.
-	// In development, the server itself has to maintaint TLS session.
 	var grpcServer *grpc.Server
 	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
 	if *dev {
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
+		// In development, the server itself must maintain a TLS session.
 		grpcServer, err = web.GRPCServerWithCredentials(opt, certFile, certKey)
 		if err != nil {
-			log.Fatalf("Failed to generate gRPC server credentials: %v\n", err)
+			log.Fatalf("Failed to generate gRPC server credentials: %v", err)
 		}
 	} else {
 		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
+		// In production, the envoy proxy will manage TLS certificates, and
+		// the gRPC server must be started without credentials.
 		grpcServer = web.GRPCServer(opt)
 	}
 
+	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
 	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
-	grpcWebServer := grpcweb.WrapServer(grpcServer)
-
 	multiplexer := web.GrpcMultiplexer{
-		MuxServer: grpcWebServer,
+		MuxServer: grpcweb.WrapServer(grpcServer),
 	}
 
 	// Register HTTP endpoints and webhooks
-	router := qfService.RegisterRouter(authConfig, scms, multiplexer, *public)
+	router := qfService.RegisterRouter(authConfig, multiplexer, *public)
 
 	// Create an HTTP server for prometheus.
 	httpServer := &http.Server{
@@ -147,7 +141,7 @@ func main() {
 	}
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatalf("Failed to start a http server: %v\n", err)
+			log.Fatalf("Failed to start a http server: %v", err)
 		}
 	}()
 	muxServer := &http.Server{
@@ -158,12 +152,11 @@ func main() {
 	}
 	if *dev {
 		if err := muxServer.ListenAndServeTLS(certFile, certKey); err != nil {
-			log.Fatalf("Failed to start grpc server: %v\n", err)
+			log.Fatalf("Failed to start grpc server: %v", err)
 			return
 		}
 	}
 	if err := muxServer.ListenAndServe(); err != nil {
-		log.Fatalf("Failed to start grpc server: %v\n", err)
+		log.Fatalf("Failed to start grpc server: %v", err)
 	}
-
 }

@@ -14,8 +14,6 @@ require (
 	github.com/gosimple/slug v1.12.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/improbable-eng/grpc-web v0.15.0
-	github.com/joho/godotenv v1.4.0
-	github.com/markbates/goth v1.73.0
 	github.com/prometheus/client_golang v1.12.2
 	github.com/quickfeed/quickfeed/kit v0.6.0
 	github.com/shurcooL/githubv4 v0.0.0-20220520033151-0b4e3294ff00
@@ -53,7 +51,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect

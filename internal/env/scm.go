@@ -1,7 +1,7 @@
 package env
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -12,7 +12,7 @@ const (
 
 var (
 	provider     string
-	clientKey    string
+	clientID     string
 	clientSecret string
 )
 
@@ -21,7 +21,7 @@ func init() {
 	if provider == "" {
 		provider = defaultProvider
 	}
-	clientKey = os.Getenv("QUICKFEED_CLIENT_KEY")
+	clientID = os.Getenv("QUICKFEED_CLIENT_ID")
 	clientSecret = os.Getenv("QUICKFEED_CLIENT_SECRET")
 }
 
@@ -30,18 +30,18 @@ func ScmProvider() string {
 	return provider
 }
 
-// ClientKey returns client ID for the current SCM provider.
-func ClientKey() (string, error) {
-	if clientKey == "" {
-		return "", errors.New("missing client ID for SCM provider")
+// ClientID returns the client ID for the current SCM provider.
+func ClientID() (string, error) {
+	if clientID == "" {
+		return "", fmt.Errorf("missing client ID for %s", provider)
 	}
-	return clientKey, nil
+	return clientID, nil
 }
 
-// ClientSecret returns secret for the current SCM provider.
+// ClientSecret returns the client secret for the current SCM provider.
 func ClientSecret() (string, error) {
 	if clientSecret == "" {
-		return "", errors.New("missing client secret for SCM provider")
+		return "", fmt.Errorf("missing client secret for %s", provider)
 	}
 	return clientSecret, nil
 }

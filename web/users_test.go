@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/sessions"
-	"github.com/markbates/goth/gothic"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -37,7 +36,6 @@ func TestGetSelf(t *testing.T) {
 	store := sessions.NewCookieStore([]byte("secret"))
 	store.Options.HttpOnly = true
 	store.Options.Secure = true
-	gothic.Store = store
 
 	lis := bufconn.Listen(bufSize)
 	bufDialer := func(context.Context, string) (net.Conn, error) {

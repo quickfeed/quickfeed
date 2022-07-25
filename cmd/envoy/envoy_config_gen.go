@@ -24,7 +24,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/joho/godotenv"
+	"github.com/quickfeed/quickfeed/internal/env"
 )
 
 const defaultFileFlags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
@@ -35,7 +35,7 @@ var (
 	keyFile         string
 	_, pwd, _, _    = runtime.Caller(0)
 	codePath        = path.Join(path.Dir(pwd), "../..")
-	env             = filepath.Join(codePath, ".env")
+	dotEnv          = filepath.Join(codePath, ".env")
 	envoyDockerRoot = filepath.Join(codePath, "ci/docker/envoy")
 	certsDir        = path.Join(envoyDockerRoot, "certs")
 )
@@ -339,12 +339,17 @@ func generateSelfSignedCert(opts certOptions) (err error) {
 // It will not override a variable that already exists.
 // Consider the .env file to set development vars or defaults.
 func loadConfigEnv(withTLS bool, config *CertificateConfig) (*EnvoyConfig, error) {
-	err := godotenv.Load(env)
-	if err != nil {
+	if err := env.Load(dotEnv); err != nil {
 		return nil, err
 	}
-
-	return newEnvoyConfig(os.Getenv("DOMAIN"), os.Getenv("SERVER_HOST"), os.Getenv("GRPC_PORT"), os.Getenv("HTTP_PORT"), withTLS, config)
+	return newEnvoyConfig(
+		os.Getenv("DOMAIN"),
+		os.Getenv("SERVER_HOST"),
+		os.Getenv("GRPC_PORT"),
+		os.Getenv("HTTP_PORT"),
+		withTLS,
+		config,
+	)
 }
 
 // TODO: improve parameter handling when generating certificates (keyType, etc).

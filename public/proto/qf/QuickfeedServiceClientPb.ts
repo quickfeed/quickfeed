@@ -1627,49 +1627,6 @@ export class QuickFeedServiceClient {
     this.methodInfoGetReviewers);
   }
 
-  methodInfoGetProviders = new grpcWeb.MethodDescriptor(
-    '/qf.QuickFeedService/GetProviders',
-    grpcWeb.MethodType.UNARY,
-    qf_requests_pb.Void,
-    qf_requests_pb.Providers,
-    (request: qf_requests_pb.Void) => {
-      return request.serializeBinary();
-    },
-    qf_requests_pb.Providers.deserializeBinary
-  );
-
-  getProviders(
-    request: qf_requests_pb.Void,
-    metadata: grpcWeb.Metadata | null): Promise<qf_requests_pb.Providers>;
-
-  getProviders(
-    request: qf_requests_pb.Void,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: qf_requests_pb.Providers) => void): grpcWeb.ClientReadableStream<qf_requests_pb.Providers>;
-
-  getProviders(
-    request: qf_requests_pb.Void,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: qf_requests_pb.Providers) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/qf.QuickFeedService/GetProviders',
-        request,
-        metadata || {},
-        this.methodInfoGetProviders,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/qf.QuickFeedService/GetProviders',
-    request,
-    metadata || {},
-    this.methodInfoGetProviders);
-  }
-
   methodInfoGetOrganization = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetOrganization',
     grpcWeb.MethodType.UNARY,

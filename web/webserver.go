@@ -24,18 +24,14 @@ func GRPCServerWithCredentials(opt grpc.ServerOption, certFile, certKey string) 
 	if err != nil {
 		return nil, err
 	}
-	s := grpc.NewServer(
-		grpc.Creds(cred),
-		opt,
-	)
-	return s, nil
+	return grpc.NewServer(grpc.Creds(cred), opt), nil
 }
 
-// GRPCServer starts a new server without TLS.
-// This server is only used in combination with envoy proxy
-// that  manages the TLS session.
+// GRPCServer starts a new server without TLS certificates.
+// This server should only be used in combination with an envoy proxy
+// that manages the TLS session.
 func GRPCServer(opt grpc.ServerOption) *grpc.Server {
-	return grpc.NewServer(opt)
+	return grpc.NewServer(opt) // skipcq: GO-S0902
 }
 
 // MuxHandler routes HTTP and gRPC requests.
@@ -50,27 +46,27 @@ func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
 }
 
 // RegisterRouter registers http endpoints for authentication API and scm provider webhooks.
-func (s *QuickFeedService) RegisterRouter(authConfig *oauth2.Config, scms *auth.Scms, mux GrpcMultiplexer, public string) *http.ServeMux {
+func (s *QuickFeedService) RegisterRouter(authConfig *oauth2.Config, mux GrpcMultiplexer, public string) *http.ServeMux {
 	// Serve static files.
 	router := http.NewServeMux()
 	assets := http.FileServer(http.Dir(public + "/assets"))
 	dist := http.FileServer(http.Dir(public + "/dist"))
 
 	router.Handle("/", mux.MuxHandler(http.StripPrefix("/", assets)))
-	router.Handle("/assets/", mux.MuxHandler(http.StripPrefix("/assets/", assets)))
-	router.Handle("/static/", mux.MuxHandler(http.StripPrefix("/static/", dist)))
+	router.Handle(Assets, mux.MuxHandler(http.StripPrefix(Assets, assets)))
+	router.Handle(Static, mux.MuxHandler(http.StripPrefix(Static, dist)))
 
 	// Register auth endpoints.
 	callbackSecret := rand.String()
-	router.HandleFunc("/auth/", auth.OAuth2Login(s.logger, authConfig, callbackSecret))
+	router.HandleFunc(Auth, auth.OAuth2Login(s.logger, authConfig, callbackSecret))
 	// TODO(vera): temporary hack to support teacher scopes, will be removed when OAuth app replaced with GitHub app.
-	router.HandleFunc("/auth/teacher/", auth.OAuth2Login(s.logger, authConfig, callbackSecret))
-	router.HandleFunc("/auth/callback/", auth.OAuth2Callback(s.logger, s.db, authConfig, scms, callbackSecret))
-	router.HandleFunc("/logout", auth.OAuth2Logout(s.logger))
+	router.HandleFunc(Teacher, auth.OAuth2Login(s.logger, authConfig, callbackSecret))
+	router.HandleFunc(Callback, auth.OAuth2Callback(s.logger, s.db, authConfig, s.scms, callbackSecret))
+	router.HandleFunc(Logout, auth.OAuth2Logout(s.logger))
 
 	// Register hooks.
 	ghHook := hooks.NewGitHubWebHook(s.logger, s.db, s.runner, s.bh.Secret)
-	router.HandleFunc("/hook/", ghHook.Handle())
+	router.HandleFunc(Hook, ghHook.Handle())
 
 	return router
 }
