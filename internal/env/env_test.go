@@ -24,11 +24,16 @@ func TestScmProviderEnv(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	fi, err := os.Create(".env")
+	fi, err := os.CreateTemp("", ".env")
 	if err != nil {
-		t.Errorf("os.Create() = %v", err)
+		t.Fatal(err)
 	}
-	defer fi.Close()
+	defer func() {
+		fi.Close()
+		if err = os.Remove(fi.Name()); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	want := map[string]string{
 		"QUICKFEED":           os.Getenv("QUICKFEED"),
@@ -60,7 +65,7 @@ QUICKFEED_KEY_FILE=$QUICKFEED/cert/fullchain.pem
 		t.Fatal(err)
 	}
 
-	if err = env.Load(".env"); err != nil {
+	if err = env.Load(fi.Name()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -68,9 +73,5 @@ QUICKFEED_KEY_FILE=$QUICKFEED/cert/fullchain.pem
 		if got := os.Getenv(k); got != v {
 			t.Errorf("os.Getenv(%q) = %q, wanted %q", k, got, v)
 		}
-	}
-
-	if err = os.Remove(".env"); err != nil {
-		t.Fatal(err)
 	}
 }
