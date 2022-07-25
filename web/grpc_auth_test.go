@@ -12,6 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/auth/interceptors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -70,14 +71,15 @@ func TestGrpcAuth(t *testing.T) {
 }
 
 func fillDatabase(t *testing.T, db database.Database) {
+	// TODO(vera): fix bot compatibility.
 	// Add secret token for the helpbot application (to allow it to invoke gRPC methods)
-	auth.Add(token, botUserID)
+	//auth.Add(token, botUserID)
 
 	// Check that token was stored and maps to correct user
-	checkCookie := auth.Get(token)
-	if checkCookie != botUserID {
-		t.Errorf("Expected %v, got %v\n", botUserID, checkCookie)
-	}
+	// checkCookie := auth.Get(token)
+	// if checkCookie != botUserID {
+	// 	t.Errorf("Expected %v, got %v\n", botUserID, checkCookie)
+	// }
 	admin := qtest.CreateFakeUser(t, db, 1)
 	// admin := qtest.CreateUser(t, db, 1, &qf.User{Login: "admin"})
 	course := &qf.Course{
@@ -95,8 +97,9 @@ func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService) {
 	lis, err := net.Listen("tcp", grpcAddr)
 	check(t, err)
 
+	// TODO(vera): needs update.
 	opt := grpc.ChainUnaryInterceptor(
-		auth.UserVerifier(),
+		interceptors.UserValidator(nil, nil),
 	)
 	grpcServer := grpc.NewServer(opt)
 

@@ -20,6 +20,7 @@ import (
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/auth/interceptors"
 	"github.com/quickfeed/quickfeed/web/auth/tokens"
 	"google.golang.org/grpc"
 )
@@ -106,16 +107,20 @@ func main() {
 
 	// Add application token for external applications (to allow invoking gRPC methods)
 	// TODO(meling): this is a temporary solution, and we should find a better way to do this
-	token := os.Getenv("QUICKFEED_AUTH_TOKEN")
-	if len(token) > 16 {
-		auth.Add(token, 1)
-		log.Println("Added application token")
-	}
+	// TODO(vera): fix bot compatibility.
+	// token := os.Getenv("QUICKFEED_AUTH_TOKEN")
+	// if len(token) > 16 {
+	// 	auth.Add(token, 1)
+	// 	log.Println("Added application token")
+	// }
 
 	certFile := env.CertFile()
 	certKey := env.CertKey()
 	var grpcServer *grpc.Server
-	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
+	opt := grpc.ChainUnaryInterceptor(
+		interceptors.UserValidator(logger.Sugar(), tokenManager),
+		interceptors.RequestValidator(logger),
+	)
 	if *dev {
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
 		// In development, the server itself must maintain a TLS session.

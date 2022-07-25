@@ -2,13 +2,11 @@ package auth
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -19,27 +17,19 @@ import (
 	"github.com/quickfeed/quickfeed/web/auth/tokens"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
 const (
-	UserKey        = "user"
-	TeacherSuffix  = "teacher"
-	Cookie         = "cookie"
-	OutgoingCookie = "Set-Cookie"
-	githubUserAPI  = "https://api.github.com/user"
+	Cookie        = "cookie"
+	TeacherSuffix = "teacher"
+	githubUserAPI = "https://api.github.com/user"
 )
 
 var (
 	teacherScopes = []string{"repo:invite", "user", "repo", "delete_repo", "admin:org", "admin:org_hook"}
 	studentScopes = []string{"repo:invite"}
-	// map from session cookies to user IDs.
-	cookieStore = make(map[string]uint64)
-	httpClient  *http.Client
+	httpClient    *http.Client
 )
 
 func init() {
@@ -51,20 +41,6 @@ func init() {
 func authenticationError(logger *zap.SugaredLogger, w http.ResponseWriter, err error) {
 	logger.Error(err)
 	w.WriteHeader(http.StatusUnauthorized)
-}
-
-// Add adds cookie for userID, replacing userID's current cookie, if any.
-func Add(cookie string, userID uint64) {
-	for currentCookie, id := range cookieStore {
-		if id == userID && currentCookie != cookie {
-			delete(cookieStore, currentCookie)
-		}
-	}
-	cookieStore[cookie] = userID
-}
-
-func Get(cookie string) uint64 {
-	return cookieStore[cookie]
 }
 
 // OAuth2Logout invalidates the session for the logged in user.
@@ -250,37 +226,4 @@ func updateScm(logger *zap.SugaredLogger, scms *Scms, user *qf.User) bool {
 		logger.Debugf("No SCM provider found for user %v", user)
 	}
 	return foundSCMProvider
-}
-
-var (
-	ErrInvalidAuthCookie = status.Errorf(codes.Unauthenticated, "request does not contain a valid authentication cookie.")
-	ErrContextMetadata   = status.Errorf(codes.Unauthenticated, "could not obtain metadata from context")
-)
-
-func UserVerifier() grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		meta, ok := metadata.FromIncomingContext(ctx)
-		if !ok {
-			return nil, ErrContextMetadata
-		}
-		newMeta, err := userValidation(meta)
-		if err != nil {
-			return nil, err
-		}
-		// create new context with user id instead of cookie for use internally
-		newCtx := metadata.NewIncomingContext(ctx, newMeta)
-		return handler(newCtx, req)
-	}
-}
-
-// userValidation returns modified metadata containing a valid user.
-// An error is returned if the user is not authenticated.
-func userValidation(meta metadata.MD) (metadata.MD, error) {
-	for _, cookie := range meta.Get(Cookie) {
-		if user := Get(cookie); user > 0 {
-			meta.Set(UserKey, strconv.FormatUint(user, 10))
-			return meta, nil
-		}
-	}
-	return nil, ErrInvalidAuthCookie
 }
