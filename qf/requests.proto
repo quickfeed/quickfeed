@@ -81,7 +81,7 @@ message UpdateSubmissionRequest {
     uint64 courseID             = 2;
     uint32 score                = 3;
     bool released               = 4;
-    qf.Submission.Status status = 5;
+    qf.Grades grades            = 5;
 }
 
 message UpdateSubmissionsRequest {
