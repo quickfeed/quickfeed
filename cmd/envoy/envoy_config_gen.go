@@ -8,20 +8,11 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
-	"strings"
 	"text/template"
 
 	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
-)
-
-var (
-	_, pwd, _, _    = runtime.Caller(0)
-	codePath        = path.Join(path.Dir(pwd), "../..")
-	dotEnv          = filepath.Join(codePath, ".env")
-	envoyDockerRoot = filepath.Join(codePath, "ci/docker/envoy")
-	certsDir        = filepath.Join("internal", "cert", "certs")
+	"google.golang.org/grpc/credentials"
 )
 
 // CertificateConfig holds certificate information
@@ -46,48 +37,45 @@ var envoyTmpl embed.FS
 
 // createEnvoyConfigFile creates the envoy.yaml config file.
 func createEnvoyConfigFile(config *EnvoyConfig) error {
-	envoyConfigFile := path.Join(envoyDockerRoot, fmt.Sprintf("envoy-%s.yaml", config.Domain))
-
-	if err := os.MkdirAll(path.Dir(envoyConfigFile), 0o600); err != nil {
+	envoyConfigFile := os.Getenv("ENVOY_CONFIG")
+	if err := os.MkdirAll(path.Dir(envoyConfigFile), 0o700); err != nil {
 		return err
 	}
-
 	f, err := os.Create(envoyConfigFile)
 	if err != nil {
 		return err
 	}
-
 	tmpl, err := template.ParseFS(envoyTmpl, "envoy.tmpl")
 	if err != nil {
 		return err
 	}
-
 	if err = tmpl.ExecuteTemplate(f, "envoy", config); err != nil {
 		return err
 	}
-	log.Println("envoy config file created at:", envoyConfigFile)
+	log.Println("Envoy config file created at:", envoyConfigFile)
 	return nil
 }
 
-// TODO: improve parameter handling when generating certificates (keyType, etc).
-// TODO: save certs at: /etc/ssl/certs and private keys at: /etc/ssl/private by default.
 func main() {
-	// Load environment variables from the .env file.
+	// Load environment variables from $QUICKFEED/.env.
 	// It will not override a variable that already exists in the environment.
-	if err := env.Load(dotEnv); err != nil {
+	if err := env.Load(""); err != nil {
 		log.Fatal(err)
 	}
+
+	// Default certificate directory; used when generating certificates and -cert-dir not specified.
+	defaultCertDir := filepath.Join(os.Getenv("QUICKFEED"), "internal", "config", "certs")
 	var (
 		withTLS = flag.Bool("tls", false, "enable TLS configuration")
 		// Defaults are from the environment.
 		certFile = flag.String("cert", env.CertFile(), "certificate file path")
-		keyFile  = flag.String("key", env.CertKey(), "private key file path") // TODO: rename CertKey to KeyFile
+		keyFile  = flag.String("key", env.KeyFile(), "private key file path")
+		certDir  = flag.String("cert-dir", defaultCertDir, "certificate directory path")
 	)
 	flag.Parse()
 
-	// TODO replace with env.Domain() and env.ServerHost()
 	serverHost := os.Getenv("SERVER_HOST")
-	domain := strings.Trim(os.Getenv("DOMAIN"), `"`)
+	domain := env.Domain()
 
 	config := &EnvoyConfig{
 		Domain:     domain,
@@ -100,20 +88,22 @@ func main() {
 			KeyFile:  *keyFile,
 		},
 	}
-	// TODO check if credential files can be loaded
-	// cred, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 
 	if *withTLS {
-		if err := cert.GenerateSelfSignedCert(cert.Options{
-			Path:  certsDir,
-			Hosts: fmt.Sprintf("%s,%s", serverHost, domain),
-		}); err != nil {
-			log.Fatal(err)
+		// Check if the certificate files exist.
+		if _, err := credentials.NewServerTLSFromFile(*certFile, *keyFile); err != nil {
+			// Couldn't load credentials; generate self-signed certificates.
+			log.Println("Generating self-signed certificates.")
+			if err := cert.GenerateSelfSignedCert(cert.Options{
+				Path:  *certDir,
+				Hosts: fmt.Sprintf("%s,%s", serverHost, domain),
+			}); err != nil {
+				log.Fatal(err)
+			}
+			log.Printf("Certificates successfully generated at: %s", *certDir)
+		} else {
+			log.Println("Existing credentials successfully loaded.")
 		}
-		log.Printf("certificates successfully generated at: %s", certsDir)
 	}
 
 	if err := createEnvoyConfigFile(config); err != nil {

@@ -108,7 +108,7 @@ func main() {
 	}
 
 	certFile := env.CertFile()
-	certKey := env.CertKey()
+	certKey := env.KeyFile()
 	var grpcServer *grpc.Server
 	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
 	if *dev {
