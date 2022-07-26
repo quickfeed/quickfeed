@@ -110,7 +110,7 @@ func main() {
 	certFile := env.CertFile()
 	certKey := env.CertKey()
 	var grpcServer *grpc.Server
-	unaryOptions := grpc.ChainUnaryInterceptor(qf.MetricsInterceptor(logger), auth.UnaryUserVerifier(), qf.ValidationInterceptor(logger))
+	unaryOptions := grpc.ChainUnaryInterceptor(qf.MetricsInterceptor(), auth.UnaryUserVerifier(), qf.ValidationInterceptor(logger))
 	streamOptions := grpc.ChainStreamInterceptor(auth.StreamUserVerifier())
 	if *dev {
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)

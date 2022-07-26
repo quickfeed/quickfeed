@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/zap"
 	grpc "google.golang.org/grpc"
 )
 
@@ -27,7 +26,7 @@ var (
 	}, []string{"method", "result"})
 )
 
-func MetricsInterceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
+func MetricsInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		methodName := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
 		defer metricsTimer(methodName)()
@@ -42,7 +41,7 @@ func metricsTimer(methodName string) func() {
 		AgResponseTimeByMethodsMetric.WithLabelValues(methodName).Set),
 	)
 	return func() {
-		responseTimer.ObserveDuration().Milliseconds()
+		responseTimer.ObserveDuration()
 	}
 }
 

@@ -24,8 +24,8 @@ func GRPCServerWithCredentials(certFile, certKey string, opts ...grpc.ServerOpti
 	if err != nil {
 		return nil, err
 	}
-	serverOpts := append(opts, grpc.Creds(cred))
-	return grpc.NewServer(serverOpts...), nil
+	opts = append(opts, grpc.Creds(cred))
+	return grpc.NewServer(opts...), nil
 }
 
 // GRPCServer starts a new server without TLS certificates.
