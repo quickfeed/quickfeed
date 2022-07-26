@@ -96,10 +96,10 @@ func main() {
 	var grpcServer *grpc.Server
 	unaryOptions := grpc.ChainUnaryInterceptor(
 		interceptor.Metrics(),
-		auth.UnaryUserVerifier(),
+		interceptor.UnaryUserVerifier(),
 		qf.ValidationInterceptor(logger),
 	)
-	streamOptions := grpc.ChainStreamInterceptor(auth.StreamUserVerifier())
+	streamOptions := grpc.ChainStreamInterceptor(interceptor.StreamUserVerifier())
 	if *dev {
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
 		// In development, the server itself must maintain a TLS session.
