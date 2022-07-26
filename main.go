@@ -2,17 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"mime"
 	"net/http"
 	"os"
 	"time"
 
-	promgrpc "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
@@ -20,13 +16,11 @@ import (
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/grpc"
 )
 
 func init() {
-	// Create some standard server metrics.
-	grpcMetrics := promgrpc.NewServerMetrics()
-
 	mustAddExtensionType := func(ext, typ string) {
 		if err := mime.AddExtensionType(ext, typ); err != nil {
 			panic(err)
@@ -42,17 +36,7 @@ func init() {
 	mustAddExtensionType(".jsx", "application/javascript")
 	mustAddExtensionType(".map", "application/json")
 	mustAddExtensionType(".ts", "application/x-typescript")
-
-	reg.MustRegister(
-		grpcMetrics,
-		qf.AgFailedMethodsMetric,
-		qf.AgMethodSuccessRateMetric,
-		qf.AgResponseTimeByMethodsMetric,
-	)
 }
-
-// Create a metrics registry.
-var reg = prometheus.NewRegistry()
 
 func main() {
 	var (
@@ -110,7 +94,11 @@ func main() {
 	certFile := env.CertFile()
 	certKey := env.CertKey()
 	var grpcServer *grpc.Server
-	unaryOptions := grpc.ChainUnaryInterceptor(qf.MetricsInterceptor(), auth.UnaryUserVerifier(), qf.ValidationInterceptor(logger))
+	unaryOptions := grpc.ChainUnaryInterceptor(
+		interceptor.Metrics(),
+		auth.UnaryUserVerifier(),
+		qf.ValidationInterceptor(logger),
+	)
 	streamOptions := grpc.ChainStreamInterceptor(auth.StreamUserVerifier())
 	if *dev {
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
@@ -136,10 +124,7 @@ func main() {
 	router := qfService.RegisterRouter(authConfig, multiplexer, *public)
 
 	// Create an HTTP server for prometheus.
-	httpServer := &http.Server{
-		Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
-		Addr:    fmt.Sprintf("127.0.0.1:%d", 9097),
-	}
+	httpServer := interceptor.MetricsServer(9097)
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil {
 			log.Fatalf("Failed to start a http server: %v", err)
