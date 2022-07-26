@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/ci"
@@ -16,6 +17,10 @@ import (
 	"gorm.io/gorm"
 )
 
+// MaxWait is the maximum time allowed for updating a course's assignments
+// and docker image before aborting.
+const MaxWait = 5 * time.Minute
+
 // UpdateFromTestsRepo updates the database record for the course assignments.
 func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course *qf.Course) {
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), qf.TestsRepo)
@@ -27,7 +32,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), qf.MaxWait)
+	ctx, cancel := context.WithTimeout(context.Background(), MaxWait)
 	defer cancel()
 
 	assignments, dockerfile, err := fetchAssignments(ctx, scm, course)

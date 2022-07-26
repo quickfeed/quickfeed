@@ -97,7 +97,7 @@ func main() {
 	unaryOptions := grpc.ChainUnaryInterceptor(
 		interceptor.Metrics(),
 		interceptor.UnaryUserVerifier(),
-		qf.ValidationInterceptor(logger),
+		interceptor.Validation(logger),
 	)
 	streamOptions := grpc.ChainStreamInterceptor(interceptor.StreamUserVerifier())
 	if *dev {
