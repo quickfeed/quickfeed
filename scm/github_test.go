@@ -24,14 +24,18 @@ const (
 
 func TestGetOrganization(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
+	qfTestUser := scm.GetTestUser(t)
 	s := scm.GetTestSCM(t)
-	org, err := s.GetOrganization(context.Background(), &scm.GetOrgOptions{Name: qfTestOrg})
+	org, err := s.GetOrganization(context.Background(), &scm.GetOrgOptions{
+		Name:     qfTestOrg,
+		Username: qfTestUser,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if qfTestOrg == qf101Org {
 		if org.ID != qf101OrdID {
-			t.Errorf("scm.GetOrganization('%s') = %d, expected %d", qfTestOrg, org.ID, qf101OrdID)
+			t.Errorf("GetOrganization(%q) = %d, expected %d", qfTestOrg, org.ID, qf101OrdID)
 		}
 	} else {
 		// Otherwise, we just print the organization result

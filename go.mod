@@ -12,7 +12,6 @@ require (
 	github.com/gorilla/sessions v1.2.1
 	github.com/gosimple/slug v1.12.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
-	github.com/joho/godotenv v1.4.0
 	github.com/labstack/echo-contrib v0.12.0
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/markbates/goth v1.73.0
