@@ -283,7 +283,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 
 func TestOAuth2Logout(t *testing.T) {
 	apitest.New().Debug().
-		HandlerFunc(auth.OAuth2Logout(qlog.Logger(t))).
+		HandlerFunc(auth.OAuth2Logout()).
 		Get(web.Logout).
 		// Make sure an outdated auth cookie with a correct name does not break API.
 		Cookie("auth", "empty").
