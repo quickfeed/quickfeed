@@ -69,7 +69,7 @@ The `$DOMAIN` should be set to your public landing page for QuickFeed, e.g., `ww
 
 The `$SERVER_HOST` should be set to the ip, hostname or container name where the quickfeed service will run.
 
-The authorization callback URL is unique for each instance of QuickFeed, e.g., `https://www.my-quickfeed.com/auth/github/callback`.
+The authorization callback URL is unique for each instance of QuickFeed, e.g., `https://www.my-quickfeed.com/auth/callback/github`.
 
 ### Generate Envoy Configuration File
 
@@ -136,7 +136,7 @@ For this tutorial, we use the following domain:
 
 ```text
 Homepage URL: https://www.my-quickfeed.com
-Authorization callback URL: https://www.my-quickfeed.com/auth/github/callback
+Authorization callback URL: https://www.my-quickfeed.com/auth/callback/github/
 ```
 
 ### Configure Fixed IP and Router

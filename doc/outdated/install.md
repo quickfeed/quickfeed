@@ -78,7 +78,7 @@ First you must install any Let's Encrypt client, for example [Certbot](https://c
 To run Certbot with NGINX and QuickFeed:
 
 ```sh
-sudo certbot-auto --nginx -d https://uis.itest.run/auth/github/callback
+sudo certbot-auto --nginx -d https://uis.itest.run/auth/callback/github
 ```
 
 Replace the URL for your deployment, according to the callback URL you specified for [GitHub's OAuth2 application](./github.md).

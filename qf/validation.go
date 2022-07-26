@@ -183,17 +183,6 @@ func (org *Organization) IsValid() bool {
 	return id > 0 || path != ""
 }
 
-// IsValidProvider validates provider string coming from front end
-func (l *Providers) IsValidProvider(provider string) bool {
-	isValid := false
-	for _, p := range l.GetProviders() {
-		if p == provider {
-			isValid = true
-		}
-	}
-	return isValid
-}
-
 // IsValid ensures that course ID and submission ID are present.
 func (req *SubmissionReviewersRequest) IsValid() bool {
 	return req.CourseID > 0 && req.SubmissionID > 0

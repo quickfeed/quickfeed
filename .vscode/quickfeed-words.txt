@@ -1,6 +1,7 @@
 agpath
 allstudents
 allteachers
+apitest
 ASSIGNDIR
 assignmentid
 autoapprove
@@ -50,6 +51,7 @@ gopls
 Gorm
 gosecret
 gosimple
+gotest
 goveralls
 Grafana
 Grafana's
@@ -110,6 +112,7 @@ pgrep
 pkgs
 Preload
 privkey
+promgrpc
 promhttp
 proto
 protobuf
@@ -132,12 +135,14 @@ SGTM
 shogo
 shurcoo
 signup
+skipcq
 skiptests
 slugified
 sqlite
 staticcheck
 Stavnes
 stdcopy
+steinfletcher
 struct
 structs
 Studentid

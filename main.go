@@ -5,28 +5,27 @@ import (
 	"fmt"
 	"log"
 	"mime"
-	"net"
 	"net/http"
 	"os"
+	"time"
 
+	promgrpc "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-
-	"github.com/quickfeed/quickfeed/database"
-
 	"google.golang.org/grpc"
-
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func init() {
 	// Create some standard server metrics.
-	grpcMetrics := grpc_prometheus.NewServerMetrics()
+	grpcMetrics := promgrpc.NewServerMetrics()
 
 	mustAddExtensionType := func(ext, typ string) {
 		if err := mime.AddExtensionType(ext, typ); err != nil {
@@ -61,31 +60,42 @@ func main() {
 		dbFile   = flag.String("database.file", "qf.db", "database file")
 		public   = flag.String("http.public", "public", "path to content to serve")
 		httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
-		grpcAddr = flag.String("grpc.addr", ":9090", "gRPC listen address")
+		dev      = flag.Bool("dev", false, "running server locally")
 	)
 	flag.Parse()
 
 	logger, err := qlog.Zap()
 	if err != nil {
-		log.Fatalf("can't initialize logger: %v", err)
+		log.Fatalf("Can't initialize logger: %v", err)
 	}
 	defer logger.Sync()
 
 	db, err := database.NewGormDB(*dbFile, logger)
 	if err != nil {
-		log.Fatalf("can't connect to database: %v\n", err)
+		log.Fatalf("Can't connect to database: %v", err)
 	}
 
-	// holds references for activated providers for current user token
+	// Holds references for activated providers for current user token
 	scms := auth.NewScms()
 	bh := web.BaseHookOptions{
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
+	clientID, err := env.ClientID()
+	if err != nil {
+		log.Fatal(err)
+	}
+	clientSecret, err := env.ClientSecret()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	authConfig := auth.NewGitHubConfig(*baseURL, clientID, clientSecret)
+
 	runner, err := ci.NewDockerCI(logger.Sugar())
 	if err != nil {
-		log.Fatalf("failed to set up docker client: %v\n", err)
+		log.Fatalf("Failed to set up docker client: %v", err)
 	}
 	defer runner.Close()
 
@@ -97,29 +107,57 @@ func main() {
 		log.Println("Added application token")
 	}
 
-	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
-	go web.New(qfService, *public, *httpAddr)
-
-	lis, err := net.Listen("tcp", *grpcAddr)
-	if err != nil {
-		log.Fatalf("failed to start tcp listener: %v\n", err)
-	}
+	certFile := env.CertFile()
+	certKey := env.CertKey()
+	var grpcServer *grpc.Server
 	unaryOptions := grpc.ChainUnaryInterceptor(qf.MetricsInterceptor(logger), auth.UnaryUserVerifier(), qf.ValidationInterceptor(logger))
 	streamOptions := grpc.ChainStreamInterceptor(auth.StreamUserVerifier())
-	grpcServer := grpc.NewServer(unaryOptions, streamOptions)
-	// Create a HTTP server for prometheus.
+	if *dev {
+		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
+		// In development, the server itself must maintain a TLS session.
+		grpcServer, err = web.GRPCServerWithCredentials(certFile, certKey, unaryOptions, streamOptions)
+		if err != nil {
+			log.Fatalf("Failed to generate gRPC server credentials: %v", err)
+		}
+	} else {
+		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
+		// In production, the envoy proxy will manage TLS certificates, and
+		// the gRPC server must be started without credentials.
+		grpcServer = web.GRPCServer(unaryOptions, streamOptions)
+	}
+
+	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
+	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
+	multiplexer := web.GrpcMultiplexer{
+		MuxServer: grpcweb.WrapServer(grpcServer),
+	}
+
+	// Register HTTP endpoints and webhooks
+	router := qfService.RegisterRouter(authConfig, multiplexer, *public)
+
+	// Create an HTTP server for prometheus.
 	httpServer := &http.Server{
 		Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
-		Addr:    fmt.Sprintf("0.0.0.0:%d", 9097),
+		Addr:    fmt.Sprintf("127.0.0.1:%d", 9097),
 	}
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatal("Unable to start a http server.")
+			log.Fatalf("Failed to start a http server: %v", err)
 		}
 	}()
-
-	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to start grpc server: %v\n", err)
+	muxServer := &http.Server{
+		Handler:      router,
+		Addr:         *httpAddr,
+		WriteTimeout: 2 * time.Minute,
+		ReadTimeout:  2 * time.Minute,
+	}
+	if *dev {
+		if err := muxServer.ListenAndServeTLS(certFile, certKey); err != nil {
+			log.Fatalf("Failed to start grpc server: %v", err)
+			return
+		}
+	}
+	if err := muxServer.ListenAndServe(); err != nil {
+		log.Fatalf("Failed to start grpc server: %v", err)
 	}
 }

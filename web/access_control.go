@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/grpc/metadata"
@@ -38,15 +39,11 @@ func (s *QuickFeedService) getCurrentUser(ctx context.Context) (*qf.User, error)
 	return s.db.GetUser(userID)
 }
 
-func (s *QuickFeedService) getSCM(ctx context.Context, user *qf.User, provider string) (scm.SCM, error) {
-	providers, err := s.GetProviders(ctx, &qf.Void{})
-	if err != nil {
-		return nil, err
+func (s *QuickFeedService) getSCM(user *qf.User, provider string) (scm.SCM, error) {
+	currentProvider := env.ScmProvider()
+	if provider != currentProvider {
+		return nil, fmt.Errorf("invalid provider (%s), active scm provider is %s", provider, currentProvider)
 	}
-	if !providers.IsValidProvider(provider) {
-		return nil, fmt.Errorf("invalid provider(%s)", provider)
-	}
-
 	for _, remoteID := range user.RemoteIdentities {
 		if remoteID.Provider == provider {
 			scm, ok := s.scms.GetSCM(remoteID.GetAccessToken())
@@ -139,7 +136,7 @@ func (s *QuickFeedService) getUserAndSCM(ctx context.Context, provider string) (
 	if err != nil {
 		return nil, nil, err
 	}
-	scm, err := s.getSCM(ctx, usr, provider)
+	scm, err := s.getSCM(usr, provider)
 	if err != nil {
 		return nil, nil, err
 	}

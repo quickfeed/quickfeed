@@ -61,7 +61,6 @@ type QuickFeedServiceClient interface {
 	CreateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error)
 	UpdateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error)
 	GetReviewers(ctx context.Context, in *SubmissionReviewersRequest, opts ...grpc.CallOption) (*Reviewers, error)
-	GetProviders(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Providers, error)
 	GetOrganization(ctx context.Context, in *OrgRequest, opts ...grpc.CallOption) (*Organization, error)
 	GetRepositories(ctx context.Context, in *URLRequest, opts ...grpc.CallOption) (*Repositories, error)
 	IsEmptyRepo(ctx context.Context, in *RepositoryRequest, opts ...grpc.CallOption) (*Void, error)
@@ -408,15 +407,6 @@ func (c *quickFeedServiceClient) GetReviewers(ctx context.Context, in *Submissio
 	return out, nil
 }
 
-func (c *quickFeedServiceClient) GetProviders(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Providers, error) {
-	out := new(Providers)
-	err := c.cc.Invoke(ctx, "/qf.QuickFeedService/GetProviders", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *quickFeedServiceClient) GetOrganization(ctx context.Context, in *OrgRequest, opts ...grpc.CallOption) (*Organization, error) {
 	out := new(Organization)
 	err := c.cc.Invoke(ctx, "/qf.QuickFeedService/GetOrganization", in, out, opts...)
@@ -487,7 +477,6 @@ type QuickFeedServiceServer interface {
 	CreateReview(context.Context, *ReviewRequest) (*Review, error)
 	UpdateReview(context.Context, *ReviewRequest) (*Review, error)
 	GetReviewers(context.Context, *SubmissionReviewersRequest) (*Reviewers, error)
-	GetProviders(context.Context, *Void) (*Providers, error)
 	GetOrganization(context.Context, *OrgRequest) (*Organization, error)
 	GetRepositories(context.Context, *URLRequest) (*Repositories, error)
 	IsEmptyRepo(context.Context, *RepositoryRequest) (*Void, error)
@@ -608,9 +597,6 @@ func (UnimplementedQuickFeedServiceServer) UpdateReview(context.Context, *Review
 }
 func (UnimplementedQuickFeedServiceServer) GetReviewers(context.Context, *SubmissionReviewersRequest) (*Reviewers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReviewers not implemented")
-}
-func (UnimplementedQuickFeedServiceServer) GetProviders(context.Context, *Void) (*Providers, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetProviders not implemented")
 }
 func (UnimplementedQuickFeedServiceServer) GetOrganization(context.Context, *OrgRequest) (*Organization, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOrganization not implemented")
@@ -1300,24 +1286,6 @@ func _QuickFeedService_GetReviewers_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _QuickFeedService_GetProviders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Void)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QuickFeedServiceServer).GetProviders(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/qf.QuickFeedService/GetProviders",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QuickFeedServiceServer).GetProviders(ctx, req.(*Void))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _QuickFeedService_GetOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OrgRequest)
 	if err := dec(in); err != nil {
@@ -1526,10 +1494,6 @@ var QuickFeedService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReviewers",
 			Handler:    _QuickFeedService_GetReviewers_Handler,
-		},
-		{
-			MethodName: "GetProviders",
-			Handler:    _QuickFeedService_GetProviders_Handler,
 		},
 		{
 			MethodName: "GetOrganization",

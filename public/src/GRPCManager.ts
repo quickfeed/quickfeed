@@ -26,7 +26,6 @@ import {
     GroupRequest,
     Organization,
     OrgRequest,
-    Providers,
     RebuildRequest,
     Repositories,
     RepositoryRequest,
@@ -53,7 +52,7 @@ export class GrpcManager {
     private agService: QuickFeedServiceClient
 
     constructor() {
-        this.agService = new QuickFeedServiceClient("https://" + window.location.hostname, null, null)
+        this.agService = new QuickFeedServiceClient("https://" + window.location.host, null, null)
     }
 
 
@@ -331,10 +330,6 @@ export class GrpcManager {
         const request = new OrgRequest()
         request.setOrgname(orgName)
         return this.grpcSend<Organization>(this.agService.getOrganization, request)
-    }
-
-    public getProviders(): Promise<IGrpcResponse<Providers>> {
-        return this.grpcSend<Providers>(this.agService.getProviders, new Void())
     }
 
     public isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<IGrpcResponse<Void>> {
