@@ -42,7 +42,6 @@ func UserValidator(logger *zap.SugaredLogger, tokens *tokens.TokenManager) grpc.
 			if err := setCookie(ctx, updatedToken.String()); err != nil {
 				logger.Errorf("Failed to set auth cookie: %s", err)
 			}
-			token = updatedToken.Value
 		}
 
 		ctx, err = setToMetadata(ctx, "user", fmt.Sprintf("%d", claims.UserID))

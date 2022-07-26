@@ -63,7 +63,7 @@ func (s *QuickFeedService) RegisterRouter(tm *tokens.TokenManager, authConfig *o
 	// TODO(vera): temporary hack to support teacher scopes, will be removed when OAuth app replaced with GitHub app.
 	router.HandleFunc(Teacher, auth.OAuth2Login(s.logger, authConfig, callbackSecret))
 	router.HandleFunc(Callback, auth.OAuth2Callback(s.logger, s.db, tm, authConfig, s.scms, callbackSecret))
-	router.HandleFunc(Logout, auth.OAuth2Logout(s.logger))
+	router.HandleFunc(Logout, auth.OAuth2Logout())
 
 	// Register hooks.
 	ghHook := hooks.NewGitHubWebHook(s.logger, s.db, s.runner, s.bh.Secret)

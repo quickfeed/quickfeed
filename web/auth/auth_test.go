@@ -3,7 +3,6 @@ package auth_test
 import (
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
@@ -22,7 +21,6 @@ const (
 	authGithub     = "/auth/github"
 	callbackGithub = "/auth/callback/github"
 	loginToken     = "/login/oauth/access_token"
-	testExpireTime = time.Minute * 1
 )
 
 func TestOAuth2Login(t *testing.T) {

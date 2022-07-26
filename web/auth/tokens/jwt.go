@@ -64,14 +64,13 @@ func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
 	if err != nil {
 		return nil, err
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signed, err := token.SignedString([]byte(tm.secret))
+	signedToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(tm.secret))
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign token: %s", err)
 	}
 	return &http.Cookie{
 		Name:     tm.cookieName,
-		Value:    signed,
+		Value:    signedToken,
 		Domain:   tm.domain, // TODO(vera): looks like you have to omit this field when working on localhost
 		Path:     "/",
 		HttpOnly: true,

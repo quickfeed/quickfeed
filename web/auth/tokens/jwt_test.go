@@ -22,11 +22,11 @@ func TestNewManager(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Create manager with missing required parameters.
-	manager, err := tokens.NewTokenManager(db, "")
+	_, err := tokens.NewTokenManager(db, "")
 	if err == nil {
 		t.Fatal("Expected error: missing domain variable")
 	}
-	manager, err = tokens.NewTokenManager(db, "test")
+	manager, err := tokens.NewTokenManager(db, "test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,7 +144,9 @@ func TestUpdateTokenList(t *testing.T) {
 		t.Error("JWT update required is true, expected false")
 	}
 	// Adding user must update manager's update list and database record.
-	manager.Add(admin.ID)
+	if err := manager.Add(admin.ID); err != nil {
+		t.Fatal(err)
+	}
 	if !manager.UpdateRequired(claims) {
 		t.Error("JWT update required is false, expected true")
 	}
@@ -156,7 +158,9 @@ func TestUpdateTokenList(t *testing.T) {
 		t.Error("User's 'UpdateToken' field not updated in the database")
 	}
 	// Removing user must update token list and user record in the database.
-	manager.Remove(admin.ID)
+	if err := manager.Remove(admin.ID); err != nil {
+		t.Fatal(err)
+	}
 	if manager.UpdateRequired(claims) {
 		t.Error("JWT update required is true, expected false")
 	}

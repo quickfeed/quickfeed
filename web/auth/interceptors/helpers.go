@@ -35,12 +35,11 @@ func GetFromMetadata(ctx context.Context, field, key string) (string, error) {
 	}
 	for _, c := range content {
 		_, metadataValue, ok := strings.Cut(c, key+"=")
-		if !ok {
-			return "", fmt.Errorf("missing %s cookie", key)
+		if ok {
+			return strings.TrimSpace(metadataValue), nil
 		}
-		return strings.TrimSpace(metadataValue), nil
 	}
-	return "", fmt.Errorf("missing metadata field %s", field)
+	return "", fmt.Errorf("missing %s (%s) in metadata", field, key)
 }
 
 // setToMetadata sets a new metadata field to the incoming context.

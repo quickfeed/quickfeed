@@ -13,10 +13,7 @@ func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 			return true
 		}
 	}
-	if claims.ExpiresAt-time.Now().Unix() < int64(refreshTime.Seconds()) {
-		return true
-	}
-	return false
+	return claims.ExpiresAt-time.Now().Unix() < int64(refreshTime.Seconds())
 }
 
 // Update removes user ID from the manager and updates user record in the database
@@ -72,10 +69,7 @@ func (tm *TokenManager) update(userID uint64, updateToken bool) error {
 		return err
 	}
 	user.UpdateToken = updateToken
-	if err := tm.db.UpdateUser(user); err != nil {
-		return err
-	}
-	return nil
+	return tm.db.UpdateUser(user)
 }
 
 // exists checks if the ID is in the list.

@@ -44,7 +44,7 @@ func authenticationError(logger *zap.SugaredLogger, w http.ResponseWriter, err e
 }
 
 // OAuth2Logout invalidates the session for the logged in user.
-func OAuth2Logout(logger *zap.SugaredLogger) http.HandlerFunc {
+func OAuth2Logout() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		newCookie := &http.Cookie{
 			Name:     "auth",
