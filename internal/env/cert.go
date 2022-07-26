@@ -9,46 +9,45 @@ const (
 	defaultCertPath = "/etc/letsencrypt/live"
 	defaultDomain   = "localhost"
 	defaultCertFile = "fullchain.pem"
-	defaultCertKey  = "privkey.pem"
+	defaultKeyFile  = "privkey.pem"
 )
 
-var (
-	domain   string
-	certPath string
-	certFile string
-	certKey  string
-)
-
-func init() {
-	// Domain should not include the server name.
-	domain = os.Getenv("DOMAIN")
+// Domain returns the domain name where quickfeed will be served.
+// Domain should not include the server name.
+func Domain() string {
+	domain := os.Getenv("DOMAIN")
 	if domain == "" {
 		domain = defaultDomain
 	}
-	certPath = os.Getenv("QUICKFEED_CERT_PATH")
-	if certPath == "" {
-		certPath = defaultCertPath
-	}
-	certFile = os.Getenv("QUICKFEED_CERT_FILE")
-	if certFile == "" {
-		// If cert file is not specified, use the default cert file.
-		certFile = filepath.Join(defaultCertPath, domain, defaultCertFile)
-	}
-	certKey = os.Getenv("QUICKFEED_CERT_KEY")
-	if certKey == "" {
-		// If cert key is not specified, use the default cert key.
-		certFile = filepath.Join(defaultCertPath, domain, defaultCertKey)
-	}
+	return domain
 }
 
 // CertFile returns the full path to the certificate file.
 // To specify a different file, use the QUICKFEED_CERT_FILE environment variable.
 func CertFile() string {
+	certFile := os.Getenv("QUICKFEED_CERT_FILE")
+	if certFile == "" {
+		// If cert file is not specified, use the default cert file.
+		certFile = filepath.Join(certPath(), Domain(), defaultCertFile)
+	}
 	return certFile
 }
 
-// CertKey returns the full path to the certificate key file.
-// To specify a different key, use the QUICKFEED_CERT_KEY environment variable.
-func CertKey() string {
-	return certKey
+// KeyFile returns the full path to the certificate key file.
+// To specify a different key, use the QUICKFEED_KEY_FILE environment variable.
+func KeyFile() string {
+	keyFile := os.Getenv("QUICKFEED_KEY_FILE")
+	if keyFile == "" {
+		// If cert key is not specified, use the default cert key.
+		keyFile = filepath.Join(certPath(), Domain(), defaultKeyFile)
+	}
+	return keyFile
+}
+
+func certPath() string {
+	certPath := os.Getenv("QUICKFEED_CERT_PATH")
+	if certPath == "" {
+		certPath = defaultCertPath
+	}
+	return certPath
 }

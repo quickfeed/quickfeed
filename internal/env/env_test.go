@@ -2,6 +2,7 @@ package env_test
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/quickfeed/quickfeed/internal/env"
@@ -23,18 +24,27 @@ func TestScmProviderEnv(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	fi, err := os.Create(".env")
+	fi, err := os.CreateTemp("", ".env")
 	if err != nil {
-		t.Errorf("os.Create() = %v", err)
+		t.Fatal(err)
 	}
-	defer fi.Close()
+	defer func() {
+		fi.Close()
+		if err = os.Remove(fi.Name()); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	want := map[string]string{
+		"QUICKFEED":           os.Getenv("QUICKFEED"),
+		"SOME_PATH":           "/quickfeed/root",
 		"QUICKFEED_TEST_ENV":  "test",
 		"QUICKFEED_TEST_ENV2": "test2",
 		"QUICKFEED_TEST_ENV3": "test3",
 		"QUICKFEED_TEST_ENV4": "test4 xyz",
 		"QUICKFEED_TEST_ENV5": "test5 = zyx",
+		"SOME_CERT_FILE":      "/quickfeed/root/cert/fullchain.pem",
+		"SOME_KEY_FILE":       filepath.Join(os.Getenv("QUICKFEED"), "cert/fullchain.pem"),
 	}
 
 	input := `QUICKFEED_TEST_ENV=test
@@ -45,12 +55,17 @@ QUICKFEED_TEST_ENV3=test3
 QUICKFEED_TEST_ENV4=test4 xyz
 ## Another comment
 QUICKFEED_TEST_ENV5=test5 = zyx
+# Variable to be expanded into other vars
+SOME_PATH=/quickfeed/root
+# Cert file and key file expanded
+SOME_CERT_FILE=$SOME_PATH/cert/fullchain.pem
+SOME_KEY_FILE=$QUICKFEED/cert/fullchain.pem
 `
 	if _, err = fi.WriteString(input); err != nil {
 		t.Fatal(err)
 	}
 
-	if err = env.Load(""); err != nil {
+	if err = env.Load(fi.Name()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -58,9 +73,5 @@ QUICKFEED_TEST_ENV5=test5 = zyx
 		if got := os.Getenv(k); got != v {
 			t.Errorf("os.Getenv(%q) = %q, wanted %q", k, got, v)
 		}
-	}
-
-	if err = os.Remove(".env"); err != nil {
-		t.Fatal(err)
 	}
 }
