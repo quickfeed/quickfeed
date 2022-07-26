@@ -81,8 +81,5 @@
 			"editor.tabSize": 2,
 			"editor.formatOnSave": true,
 		},
-		"go.inlayHints.functionTypeParameters": true,
-		"go.inlayHints.parameterNames": true,
-		"go.inlayHints.constantValues": true,
 	},
 }

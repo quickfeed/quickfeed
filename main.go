@@ -92,7 +92,7 @@ func main() {
 	}
 
 	certFile := env.CertFile()
-	certKey := env.CertKey()
+	certKey := env.KeyFile()
 	var grpcServer *grpc.Server
 	unaryOptions := grpc.ChainUnaryInterceptor(
 		interceptor.Metrics(),
