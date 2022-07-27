@@ -93,8 +93,6 @@ func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("Signing algorithm in header: %+v", token.Header["alg"]) // tmp
-
 	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
 		return nil, fmt.Errorf("failed to parse token: validation error")

@@ -84,7 +84,6 @@ func TestGetSelf(t *testing.T) {
 	}
 
 	for _, user := range userTest {
-		t.Log("USER:", user)
 		if user.metadata {
 			meta := metadata.MD{}
 			meta.Set(auth.Cookie, user.token)
