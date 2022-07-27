@@ -2,110 +2,111 @@ package web_test
 
 import (
 	"context"
+	"log"
+	"net"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/auth/tokens"
+	"github.com/quickfeed/quickfeed/web/interceptor"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
-// TODO(vera): needs rewrite
-// func TestGetSelf(t *testing.T) {
-// 	db, cleanup, _, ags := testQuickFeedService(t)
-// 	defer cleanup()
+func TestGetSelf(t *testing.T) {
+	db, cleanup, _, ags := testQuickFeedService(t)
+	defer cleanup()
 
-// 	const (
-// 		bufSize = 1024 * 1024
-// 	)
+	tm, err := tokens.NewTokenManager(db, "test")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	adminUser := qtest.CreateFakeUser(t, db, 1)
-// 	student := qtest.CreateFakeUser(t, db, 56)
+	const (
+		bufSize = 1024 * 1024
+	)
 
-// 	store := sessions.NewCookieStore([]byte("secret"))
-// 	store.Options.HttpOnly = true
-// 	store.Options.Secure = true
+	adminUser := qtest.CreateFakeUser(t, db, 1)
+	student := qtest.CreateFakeUser(t, db, 56)
 
-// 	lis := bufconn.Listen(bufSize)
-// 	bufDialer := func(context.Context, string) (net.Conn, error) {
-// 		return lis.Dial()
-// 	}
+	adminToken, err := tm.NewAuthCookie(adminUser.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	studentToken, err := tm.NewAuthCookie(student.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	opt := grpc.ChainUnaryInterceptor(
-// 		interceptor.UnaryUserVerifier(),
-// 	)
-// 	s := grpc.NewServer(opt)
-// 	qf.RegisterQuickFeedServiceServer(s, ags)
+	lis := bufconn.Listen(bufSize)
+	bufDialer := func(context.Context, string) (net.Conn, error) {
+		return lis.Dial()
+	}
+	opt := grpc.ChainUnaryInterceptor(
+		interceptor.UnaryUserVerifier(qtest.Logger(t), tm),
+	)
+	s := grpc.NewServer(opt)
+	qf.RegisterQuickFeedServiceServer(s, ags)
 
-// 	go func() {
-// 		if err := s.Serve(lis); err != nil {
-// 			log.Fatalf("Server exited with error: %v", err)
-// 		}
-// 	}()
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("Server exited with error: %v", err)
+		}
+	}()
 
-// 	ctx := context.Background()
-// 	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
-// 	if err != nil {
-// 		t.Fatalf("Failed to dial bufnet: %v", err)
-// 	}
-// 	defer conn.Close()
+	ctx := context.Background()
+	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		t.Fatalf("Failed to dial bufnet: %v", err)
+	}
+	defer conn.Close()
 
-// 	client := qf.NewQuickFeedServiceClient(conn)
+	client := qf.NewQuickFeedServiceClient(conn)
 
-// 	userTest := []struct {
-// 		id       uint64
-// 		code     codes.Code
-// 		metadata bool
-// 		token    string
-// 		wantUser *qf.User
-// 	}{
-// 		{id: 1, code: codes.Unauthenticated, metadata: false, token: "", wantUser: nil},
-// 		{id: 6, code: codes.PermissionDenied, metadata: true, token: "", wantUser: nil},
-// 		{id: 1, code: codes.Unauthenticated, metadata: true, token: "should fail", wantUser: nil},
-// 		{id: 1, code: codes.OK, metadata: true, token: "", wantUser: adminUser},
-// 		{id: 2, code: codes.OK, metadata: true, token: "", wantUser: student},
-// 	}
+	userTest := []struct {
+		code     codes.Code
+		metadata bool
+		token    string
+		wantUser *qf.User
+	}{
+		{code: codes.Unauthenticated, metadata: false, token: "", wantUser: nil},
+		{code: codes.Unauthenticated, metadata: true, token: "should fail", wantUser: nil},
+		{code: codes.OK, metadata: true, token: "auth=" + adminToken.Value, wantUser: adminUser},
+		{code: codes.OK, metadata: true, token: "auth=" + studentToken.Value, wantUser: student},
+	}
 
-// 	for _, user := range userTest {
-// 		r := httptest.NewRequest(http.MethodGet, "/", nil)
-// 		w := httptest.NewRecorder()
-// 		sess := sessions.NewSession(store, auth.SessionKey)
+	for _, user := range userTest {
+		t.Log("USER:", user)
+		if user.metadata {
+			meta := metadata.MD{}
+			meta.Set(auth.Cookie, user.token)
+			ctx = metadata.NewOutgoingContext(ctx, meta)
+		}
 
-// 		sess.Values[auth.UserKey] = &auth.UserSession{
-// 			ID:        user.id,
-// 			Providers: map[string]struct{}{"github": {}},
-// 		}
-// 		if err := sess.Save(r, w); err != nil {
-// 			t.Errorf("sess.Save(): %v", err)
-// 		}
-
-// 		token := w.Result().Header.Get(auth.OutgoingCookie)
-// 		auth.Add(token, user.id)
-
-// 		if user.metadata {
-// 			meta := metadata.MD{}
-// 			if len(user.token) > 0 {
-// 				token = user.token
-// 			}
-// 			meta.Set(auth.Cookie, token)
-// 			ctx = metadata.NewOutgoingContext(ctx, meta)
-// 		}
-// 		gotUser, err := client.GetUser(ctx, &qf.Void{})
-// 		if s, ok := status.FromError(err); ok {
-// 			if s.Code() != user.code {
-// 				t.Errorf("GetUser().Code(): %v, want: %v", s.Code(), user.code)
-// 			}
-// 		}
-// 		if user.wantUser != nil {
-// 			// ignore comparing remote identity
-// 			user.wantUser.RemoteIdentities = nil
-// 		}
-// 		wantUser := user.wantUser
-// 		if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-// 			t.Errorf("GetSelf() mismatch (-wantUser +gotUser):\n%s", diff)
-// 		}
-// 	}
-// }
+		gotUser, err := client.GetUser(ctx, &qf.Void{})
+		if s, ok := status.FromError(err); ok {
+			if s.Code() != user.code {
+				t.Errorf("GetUser().Code(): %v, want: %v", s.Code(), user.code)
+			}
+		}
+		if user.wantUser != nil {
+			// ignore comparing remote identity
+			user.wantUser.RemoteIdentities = nil
+		}
+		wantUser := user.wantUser
+		if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
+			t.Errorf("GetSelf() mismatch (-wantUser +gotUser):\n%s", diff)
+		}
+	}
+}
 
 func TestGetUsers(t *testing.T) {
 	db, cleanup, _, ags := testQuickFeedService(t)

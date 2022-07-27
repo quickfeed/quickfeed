@@ -26,7 +26,7 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 	}
 	newMeta, err := userValidation(ctx, logger, meta, tm)
 	if err != nil {
-		return nil, err
+		return nil, ErrContextMetadata
 	}
 	return metadata.NewIncomingContext(ctx, newMeta), nil
 }
@@ -58,7 +58,7 @@ func userValidation(ctx context.Context, logger *zap.SugaredLogger, meta metadat
 func extractToken(meta metadata.MD) (string, error) {
 	cookies := meta.Get(auth.Cookie)
 	for _, cookie := range cookies {
-		_, cookievalue, ok := strings.Cut(cookie, auth.CookieName)
+		_, cookievalue, ok := strings.Cut(cookie, auth.CookieName+"=")
 		if ok {
 			return strings.TrimSpace(cookievalue), nil
 		}
