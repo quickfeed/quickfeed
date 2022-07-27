@@ -13,6 +13,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -42,7 +43,9 @@ func TestGetSelf(t *testing.T) {
 		return lis.Dial()
 	}
 
-	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier())
+	opt := grpc.ChainUnaryInterceptor(
+		interceptor.UnaryUserVerifier(),
+	)
 	s := grpc.NewServer(opt)
 	qf.RegisterQuickFeedServiceServer(s, ags)
 

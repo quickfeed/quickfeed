@@ -2,14 +2,12 @@ package auth
 
 import (
 	"bytes"
-	"context"
 	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -21,10 +19,6 @@ import (
 	"github.com/quickfeed/quickfeed/qlog"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
@@ -357,37 +351,4 @@ func extractSessionCookie(w http.ResponseWriter) string {
 		}
 	}
 	return ""
-}
-
-var (
-	ErrInvalidSessionCookie = status.Errorf(codes.Unauthenticated, "request does not contain a valid session cookie.")
-	ErrContextMetadata      = status.Errorf(codes.Unauthenticated, "could not obtain metadata from context")
-)
-
-func UserVerifier() grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		meta, ok := metadata.FromIncomingContext(ctx)
-		if !ok {
-			return nil, ErrContextMetadata
-		}
-		newMeta, err := userValidation(meta)
-		if err != nil {
-			return nil, err
-		}
-		// create new context with user id instead of cookie for use internally
-		newCtx := metadata.NewIncomingContext(ctx, newMeta)
-		return handler(newCtx, req)
-	}
-}
-
-// userValidation returns modified metadata containing a valid user.
-// An error is returned if the user is not authenticated.
-func userValidation(meta metadata.MD) (metadata.MD, error) {
-	for _, cookie := range meta.Get(Cookie) {
-		if user := Get(cookie); user > 0 {
-			meta.Set(UserKey, strconv.FormatUint(user, 10))
-			return meta, nil
-		}
-	}
-	return nil, ErrInvalidSessionCookie
 }

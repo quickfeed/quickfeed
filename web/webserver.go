@@ -18,20 +18,21 @@ type GrpcMultiplexer struct {
 
 // GRPCServerWithCredentials starts a new gRPC server with credentials
 // generated from TLS certificates.
-func GRPCServerWithCredentials(opt grpc.ServerOption, certFile, certKey string) (*grpc.Server, error) {
+func GRPCServerWithCredentials(certFile, certKey string, opts ...grpc.ServerOption) (*grpc.Server, error) {
 	// Generate TLS credentials from certificates
 	cred, err := credentials.NewServerTLSFromFile(certFile, certKey)
 	if err != nil {
 		return nil, err
 	}
-	return grpc.NewServer(grpc.Creds(cred), opt), nil
+	opts = append(opts, grpc.Creds(cred))
+	return grpc.NewServer(opts...), nil
 }
 
 // GRPCServer starts a new server without TLS certificates.
 // This server should only be used in combination with an envoy proxy
 // that manages the TLS session.
-func GRPCServer(opt grpc.ServerOption) *grpc.Server {
-	return grpc.NewServer(opt) // skipcq: GO-S0902
+func GRPCServer(opts ...grpc.ServerOption) *grpc.Server {
+	return grpc.NewServer(opts...) // skipcq: GO-S0902
 }
 
 // MuxHandler routes HTTP and gRPC requests.
