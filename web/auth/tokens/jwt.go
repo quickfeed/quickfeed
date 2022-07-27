@@ -3,7 +3,6 @@ package tokens
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -113,7 +112,6 @@ func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println("Making new claims with expiration time: ", time.Now().Add(tm.expireAfter).Unix())
 	newClaims := &Claims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(tm.expireAfter).Unix(),
