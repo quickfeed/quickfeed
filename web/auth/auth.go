@@ -22,6 +22,8 @@ import (
 
 const (
 	Cookie        = "cookie"
+	CookieName    = "auth"
+	UserKey       = "user"
 	TeacherSuffix = "teacher"
 	githubUserAPI = "https://api.github.com/user"
 )

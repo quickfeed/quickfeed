@@ -16,12 +16,8 @@ import (
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-<<<<<<< HEAD
-	"github.com/quickfeed/quickfeed/web/auth/interceptors"
 	"github.com/quickfeed/quickfeed/web/auth/tokens"
-=======
 	"github.com/quickfeed/quickfeed/web/interceptor"
->>>>>>> master
 	"google.golang.org/grpc"
 )
 
@@ -104,19 +100,12 @@ func main() {
 	certFile := env.CertFile()
 	certKey := env.KeyFile()
 	var grpcServer *grpc.Server
-<<<<<<< HEAD
-	opt := grpc.ChainUnaryInterceptor(
-		interceptors.UserValidator(logger.Sugar(), tokenManager),
-		interceptors.RequestValidator(logger),
-	)
-=======
 	unaryOptions := grpc.ChainUnaryInterceptor(
 		interceptor.Metrics(),
-		interceptor.UnaryUserVerifier(),
+		interceptor.UnaryUserVerifier(logger.Sugar(), tokenManager),
 		interceptor.Validation(logger),
 	)
-	streamOptions := grpc.ChainStreamInterceptor(interceptor.StreamUserVerifier())
->>>>>>> master
+	streamOptions := grpc.ChainStreamInterceptor(interceptor.StreamUserVerifier(logger.Sugar(), tokenManager))
 	if *dev {
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
 		// In development, the server itself must maintain a TLS session.
