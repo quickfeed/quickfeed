@@ -2,17 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"mime"
 	"net/http"
 	"os"
 	"time"
 
-	promgrpc "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
@@ -20,15 +16,16 @@ import (
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
+<<<<<<< HEAD
 	"github.com/quickfeed/quickfeed/web/auth/interceptors"
 	"github.com/quickfeed/quickfeed/web/auth/tokens"
+=======
+	"github.com/quickfeed/quickfeed/web/interceptor"
+>>>>>>> master
 	"google.golang.org/grpc"
 )
 
 func init() {
-	// Create some standard server metrics.
-	grpcMetrics := promgrpc.NewServerMetrics()
-
 	mustAddExtensionType := func(ext, typ string) {
 		if err := mime.AddExtensionType(ext, typ); err != nil {
 			panic(err)
@@ -44,17 +41,7 @@ func init() {
 	mustAddExtensionType(".jsx", "application/javascript")
 	mustAddExtensionType(".map", "application/json")
 	mustAddExtensionType(".ts", "application/x-typescript")
-
-	reg.MustRegister(
-		grpcMetrics,
-		qf.AgFailedMethodsMetric,
-		qf.AgMethodSuccessRateMetric,
-		qf.AgResponseTimeByMethodsMetric,
-	)
 }
-
-// Create a metrics registry.
-var reg = prometheus.NewRegistry()
 
 func main() {
 	var (
@@ -115,16 +102,25 @@ func main() {
 	// }
 
 	certFile := env.CertFile()
-	certKey := env.CertKey()
+	certKey := env.KeyFile()
 	var grpcServer *grpc.Server
+<<<<<<< HEAD
 	opt := grpc.ChainUnaryInterceptor(
 		interceptors.UserValidator(logger.Sugar(), tokenManager),
 		interceptors.RequestValidator(logger),
 	)
+=======
+	unaryOptions := grpc.ChainUnaryInterceptor(
+		interceptor.Metrics(),
+		interceptor.UnaryUserVerifier(),
+		interceptor.Validation(logger),
+	)
+	streamOptions := grpc.ChainStreamInterceptor(interceptor.StreamUserVerifier())
+>>>>>>> master
 	if *dev {
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
 		// In development, the server itself must maintain a TLS session.
-		grpcServer, err = web.GRPCServerWithCredentials(opt, certFile, certKey)
+		grpcServer, err = web.GRPCServerWithCredentials(certFile, certKey, unaryOptions, streamOptions)
 		if err != nil {
 			log.Fatalf("Failed to generate gRPC server credentials: %v", err)
 		}
@@ -132,7 +128,7 @@ func main() {
 		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
 		// In production, the envoy proxy will manage TLS certificates, and
 		// the gRPC server must be started without credentials.
-		grpcServer = web.GRPCServer(opt)
+		grpcServer = web.GRPCServer(unaryOptions, streamOptions)
 	}
 
 	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
@@ -145,10 +141,7 @@ func main() {
 	router := qfService.RegisterRouter(tokenManager, authConfig, multiplexer, *public)
 
 	// Create an HTTP server for prometheus.
-	httpServer := &http.Server{
-		Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
-		Addr:    fmt.Sprintf("127.0.0.1:%d", 9097),
-	}
+	httpServer := interceptor.MetricsServer(9097)
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil {
 			log.Fatalf("Failed to start a http server: %v", err)

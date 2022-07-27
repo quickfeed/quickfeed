@@ -63,6 +63,7 @@ Hein
 Hein's
 Heins
 helpbot
+hostnames
 hoursmax
 hoursmin
 HTMLURL

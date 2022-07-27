@@ -1,10 +1,5 @@
 package qf
 
-import "time"
-
-// MaxWait is the maximum time a request is allowed to stay open before aborting.
-const MaxWait = 2 * time.Minute
-
 // IsValid on void message always returns true.
 func (*Void) IsValid() bool {
 	return true

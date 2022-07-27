@@ -12,7 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/auth/interceptors"
+	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -99,7 +99,7 @@ func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService) {
 
 	// TODO(vera): needs update.
 	opt := grpc.ChainUnaryInterceptor(
-		interceptors.UserValidator(nil, nil),
+		interceptor.UnaryUserVerifier(),
 	)
 	grpcServer := grpc.NewServer(opt)
 

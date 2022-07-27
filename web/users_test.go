@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
-// TODO(vera): needs rewrite with JWTs
+// TODO(vera): needs rewrite
 // func TestGetSelf(t *testing.T) {
 // 	db, cleanup, _, ags := testQuickFeedService(t)
 // 	defer cleanup()
@@ -31,7 +31,9 @@ import (
 // 		return lis.Dial()
 // 	}
 
-// 	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier())
+// 	opt := grpc.ChainUnaryInterceptor(
+// 		interceptor.UnaryUserVerifier(),
+// 	)
 // 	s := grpc.NewServer(opt)
 // 	qf.RegisterQuickFeedServiceServer(s, ags)
 
