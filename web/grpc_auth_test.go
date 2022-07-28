@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	grpcAddr = "127.0.0.1:9090"
+	grpcAddr = "127.0.0.1:8081"
 	token    = "some-secret-string"
 	// same as quickfeed root user
 	//botUserID = 1
@@ -44,7 +44,6 @@ func TestGrpcAuth(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create token manager: %v", err)
 	}
-
 	// start gRPC server in background
 	go startGrpcAuthServer(t, qfService, tm)
 
@@ -79,15 +78,8 @@ func TestGrpcAuth(t *testing.T) {
 }
 
 func fillDatabase(t *testing.T, db database.Database) {
-	// TODO(vera): fix bot compatibility.
 	// Add secret token for the helpbot application (to allow it to invoke gRPC methods)
-	//auth.Add(token, botUserID)
 
-	// Check that token was stored and maps to correct user
-	// checkCookie := auth.Get(token)
-	// if checkCookie != botUserID {
-	// 	t.Errorf("Expected %v, got %v\n", botUserID, checkCookie)
-	// }
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{
 		Code: "DAT320",
@@ -104,7 +96,6 @@ func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService, tm *toke
 	lis, err := net.Listen("tcp", grpcAddr)
 	check(t, err)
 
-	// TODO(vera): needs update.
 	opt := grpc.ChainUnaryInterceptor(
 		interceptor.UnaryUserVerifier(qlog.Logger(t), tm),
 	)

@@ -70,7 +70,7 @@ func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
 	return &http.Cookie{
 		Name:     tm.cookieName,
 		Value:    signedToken,
-		Domain:   tm.domain, // TODO(vera): looks like you have to omit this field when working on localhost
+		Domain:   tm.domain,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,

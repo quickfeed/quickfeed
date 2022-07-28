@@ -49,6 +49,10 @@ func main() {
 	)
 	flag.Parse()
 
+	if *dev {
+		*baseURL = "127.0.0.1" + *httpAddr
+	}
+
 	logger, err := qlog.Zap()
 	if err != nil {
 		log.Fatalf("Can't initialize logger: %v", err)
@@ -87,15 +91,6 @@ func main() {
 		log.Fatalf("Failed to set up docker client: %v", err)
 	}
 	defer runner.Close()
-
-	// Add application token for external applications (to allow invoking gRPC methods)
-	// TODO(meling): this is a temporary solution, and we should find a better way to do this
-	// TODO(vera): fix bot compatibility.
-	// token := os.Getenv("QUICKFEED_AUTH_TOKEN")
-	// if len(token) > 16 {
-	// 	auth.Add(token, 1)
-	// 	log.Println("Added application token")
-	// }
 
 	certFile := env.CertFile()
 	certKey := env.KeyFile()
