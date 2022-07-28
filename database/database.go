@@ -147,4 +147,11 @@ type Database interface {
 
 	// UpdateSlipDays updates used slipdays for the given course enrollment
 	UpdateSlipDays([]*qf.UsedSlipDays) error
+
+	// CreateAPIKey creates a new API key
+	CreateApplication(*qf.Application) (*qf.Application, error)
+	DeleteApplication(*qf.Application) error
+	GetApplications(uint64) (*qf.Applications, error)
+	// GetApplication returns a single application matching the given query.
+	GetApplication(uint64, string, string) (*qf.Application, error)
 }
