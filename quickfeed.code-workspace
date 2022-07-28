@@ -25,7 +25,9 @@
 		},
 		"cSpell.enabled": true,
 		"cSpell.enableFiletypes": [
-			"plaintext"
+			"plaintext",
+			"!javascript",
+			"!typescript",
 		],
 		"files.insertFinalNewline": true,
 		"files.trimFinalNewlines": true,
@@ -81,5 +83,6 @@
 			"editor.tabSize": 2,
 			"editor.formatOnSave": true,
 		},
+		"json.format.enable": false,
 	},
 }
