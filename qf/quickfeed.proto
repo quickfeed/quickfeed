@@ -74,4 +74,10 @@ service QuickFeedService {
     rpc GetOrganization(OrgRequest) returns (Organization) {}
     rpc GetRepositories(URLRequest) returns (Repositories) {}
     rpc IsEmptyRepo(RepositoryRequest) returns (Void) {}
+
+    // application //
+    rpc AuthenticateApplication(Void) returns (Void) {}
+    rpc CreateApplication(ApplicationRequest) returns (Application) {}
+    rpc GetApplications(Void) returns (Applications) {}
+    rpc DeleteApplication(Application) returns (Void) {}
 }
