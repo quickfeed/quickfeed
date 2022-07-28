@@ -7,6 +7,7 @@ import Card from "../components/Card"
 import CourseForm from "../components/forms/CourseForm"
 import RedirectButton from "../components/RedirectButton"
 import Alert from "../components/Alert"
+import AppManagement from "../components/admin/AppView"
 
 
 // AdminPage is the page containing the admin-only components.
@@ -19,6 +20,7 @@ const AdminPage = (): JSX.Element => {
     const manageUsers = { title: "Manage Users", text: "View and manage all users.", buttonText: "Manage Users", to: "/admin/manage" }
     const createCourse = { title: "Create Course", text: "Create a new course.", buttonText: "Create Course", to: "/admin/create" }
     const editCourse = { title: "Edit Course", text: "Edit an existing course.", buttonText: "Edit Course", to: "/admin/edit" }
+    const appManagement = { title: "App Management", text: "View and manage the registered applications.", buttonText: "App Management", to: "/admin/apps" }
 
     // If the user is not an admin, redirect to the home page.
     if (!state.self.isadmin) {
@@ -34,6 +36,7 @@ const AdminPage = (): JSX.Element => {
                 <Card {...manageUsers} />
                 <Card {...createCourse} />
                 <Card {...editCourse} />
+                <Card {...appManagement} />
             </div>
             
             <Switch>
@@ -45,6 +48,9 @@ const AdminPage = (): JSX.Element => {
                 </Route>
                 <Route path="/admin/edit">
                     <EditCourse />
+                </Route>
+                <Route path="/admin/apps">
+                    <AppManagement />
                 </Route>
             </Switch>
         </div>
