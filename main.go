@@ -14,6 +14,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
@@ -60,7 +61,7 @@ func main() {
 	}
 
 	// Holds references for activated providers for current user token
-	scms := auth.NewScms()
+	scms := scm.NewScms()
 	bh := web.BaseHookOptions{
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),

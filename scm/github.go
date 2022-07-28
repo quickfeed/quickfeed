@@ -24,6 +24,17 @@ type GithubSCM struct {
 	providerURL string
 }
 
+// GithubAppSCM implements the SCM interface for GitHub App client.
+// There is only one  GithubAppSCM client per QuickFeed course.
+type GithubAppSCM struct {
+	logger *zap.SugaredLogger
+	client *github.Client
+}
+
+func NewGithubAppClient(logger *zap.SugaredLogger, courseID uint64) {
+	// Needs app config to generate an installation client for a  ourse organization
+}
+
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
 func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 	src := oauth2.StaticTokenSource(

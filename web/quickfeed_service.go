@@ -11,8 +11,8 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 	scms "github.com/quickfeed/quickfeed/scm"
-	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 // QuickFeedService holds references to the database and
@@ -20,14 +20,14 @@ import (
 type QuickFeedService struct {
 	logger *zap.SugaredLogger
 	db     database.Database
-	scms   *auth.Scms
+	scms   *scm.Scms
 	bh     BaseHookOptions
 	runner ci.Runner
 	qf.UnimplementedQuickFeedServiceServer
 }
 
 // NewQuickFeedService returns a QuickFeedService object.
-func NewQuickFeedService(logger *zap.Logger, db database.Database, scms *auth.Scms, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
+func NewQuickFeedService(logger *zap.Logger, db database.Database, scms *scm.Scms, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
 	return &QuickFeedService{
 		logger: logger.Sugar(),
 		db:     db,

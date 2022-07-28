@@ -17,6 +17,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
+	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
@@ -169,7 +170,7 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
-func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig *oauth2.Config, scms *Scms, secret string) http.HandlerFunc {
+func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, authConfig *oauth2.Config, scms *scm.Scms, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("OAuth2Callback: started")
 		if r.Method != "GET" {
@@ -326,7 +327,7 @@ func setScopes(authConfig *oauth2.Config, url string) {
 	}
 }
 
-func updateScm(logger *zap.SugaredLogger, scms *Scms, user *qf.User) bool {
+func updateScm(logger *zap.SugaredLogger, scms *scm.Scms, user *qf.User) bool {
 	foundSCMProvider := false
 	for _, remoteID := range user.RemoteIdentities {
 		if _, err := scms.GetOrCreateSCMEntry(logger.Desugar(), remoteID.GetAccessToken()); err != nil {
