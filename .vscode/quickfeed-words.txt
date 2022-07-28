@@ -151,6 +151,7 @@ subtest
 subtests
 testdata
 testdb
+timestamppb
 tmpl
 Typeflag
 Unexported
