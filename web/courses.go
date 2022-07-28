@@ -9,6 +9,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -341,7 +342,7 @@ func (s *QuickFeedService) updateSubmission(courseID, submissionID uint64, statu
 
 	// if approving previously unapproved submission
 	if status == qf.Submission_APPROVED && submission.Status != qf.Submission_APPROVED {
-		submission.ApprovedDate = time.Now().Format(qf.TimeLayout)
+		submission.ApprovedDate = timestamppb.Now()
 		if err := s.setLastApprovedAssignment(submission, courseID); err != nil {
 			return err
 		}

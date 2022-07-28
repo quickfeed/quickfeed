@@ -15,6 +15,8 @@ var jspb = require('google-protobuf');
 var goog = jspb;
 var global = (function() { return this || window || global || self || Function('return this')(); }).call(null);
 
+var google_protobuf_timestamp_pb = require('google-protobuf/google/protobuf/timestamp_pb.js');
+goog.object.extend(proto, google_protobuf_timestamp_pb);
 var kit_score_score_pb = require('../kit/score/score_pb.js');
 goog.object.extend(proto, kit_score_score_pb);
 goog.exportSymbol('proto.qf.Assignment', null, global);
@@ -5840,7 +5842,7 @@ proto.qf.Submission.toObject = function(includeInstance, msg) {
     commithash: jspb.Message.getFieldWithDefault(msg, 6, ""),
     released: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
     status: jspb.Message.getFieldWithDefault(msg, 8, 0),
-    approveddate: jspb.Message.getFieldWithDefault(msg, 9, ""),
+    approveddate: (f = msg.getApproveddate()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
     reviewsList: jspb.Message.toObjectList(msg.getReviewsList(),
     proto.qf.Review.toObject, includeInstance),
     buildinfo: (f = msg.getBuildinfo()) && kit_score_score_pb.BuildInfo.toObject(includeInstance, f),
@@ -5915,7 +5917,8 @@ proto.qf.Submission.deserializeBinaryFromReader = function(msg, reader) {
       msg.setStatus(value);
       break;
     case 9:
-      var value = /** @type {string} */ (reader.readString());
+      var value = new google_protobuf_timestamp_pb.Timestamp;
+      reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
       msg.setApproveddate(value);
       break;
     case 10:
@@ -6019,10 +6022,11 @@ proto.qf.Submission.serializeBinaryToWriter = function(message, writer) {
     );
   }
   f = message.getApproveddate();
-  if (f.length > 0) {
-    writer.writeString(
+  if (f != null) {
+    writer.writeMessage(
       9,
-      f
+      f,
+      google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
   }
   f = message.getReviewsList();
@@ -6207,20 +6211,39 @@ proto.qf.Submission.prototype.setStatus = function(value) {
 
 
 /**
- * optional string approvedDate = 9;
- * @return {string}
+ * optional google.protobuf.Timestamp approvedDate = 9;
+ * @return {?proto.google.protobuf.Timestamp}
  */
 proto.qf.Submission.prototype.getApproveddate = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
+  return /** @type{?proto.google.protobuf.Timestamp} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 9));
 };
 
 
 /**
- * @param {string} value
+ * @param {?proto.google.protobuf.Timestamp|undefined} value
+ * @return {!proto.qf.Submission} returns this
+*/
+proto.qf.Submission.prototype.setApproveddate = function(value) {
+  return jspb.Message.setWrapperField(this, 9, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
  * @return {!proto.qf.Submission} returns this
  */
-proto.qf.Submission.prototype.setApproveddate = function(value) {
-  return jspb.Message.setProto3StringField(this, 9, value);
+proto.qf.Submission.prototype.clearApproveddate = function() {
+  return this.setApproveddate(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.qf.Submission.prototype.hasApproveddate = function() {
+  return jspb.Message.getField(this, 9) != null;
 };
 
 

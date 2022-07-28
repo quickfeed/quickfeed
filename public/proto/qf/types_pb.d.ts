@@ -1,5 +1,6 @@
 import * as jspb from 'google-protobuf'
 
+import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
 import * as kit_score_score_pb from '../kit/score/score_pb';
 
 
@@ -733,8 +734,10 @@ export class Submission extends jspb.Message {
   getStatus(): Submission.Status;
   setStatus(value: Submission.Status): Submission;
 
-  getApproveddate(): string;
-  setApproveddate(value: string): Submission;
+  getApproveddate(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setApproveddate(value?: google_protobuf_timestamp_pb.Timestamp): Submission;
+  hasApproveddate(): boolean;
+  clearApproveddate(): Submission;
 
   getReviewsList(): Array<Review>;
   setReviewsList(value: Array<Review>): Submission;
@@ -769,7 +772,7 @@ export namespace Submission {
     commithash: string,
     released: boolean,
     status: Submission.Status,
-    approveddate: string,
+    approveddate?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     reviewsList: Array<Review.AsObject>,
     buildinfo?: kit_score_score_pb.BuildInfo.AsObject,
     scoresList: Array<kit_score_score_pb.Score.AsObject>,
