@@ -1,5 +1,6 @@
 import { Assignment, Course, Enrollment, GradingBenchmark, GradingCriterion, Group, Review, Submission, User } from "../proto/qf/types_pb"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
+import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb"
 
 
 // Class with converter functions for the different proto types
@@ -125,7 +126,9 @@ export class Converter {
         submission.setCommithash(obj.commithash)
         submission.setReleased(obj.released)
         submission.setStatus(obj.status)
-        submission.setApproveddate(obj.approveddate)
+        if (obj.approveddate) {
+            submission.setApproveddate(this.toTimestamp(obj.approveddate))
+        }
 
         const reviews = obj.reviewsList.map(r => this.toReview(r))
         submission.setReviewsList(reviews)
@@ -138,6 +141,13 @@ export class Converter {
         submission.setScoresList(scores)
 
         return submission
+    }
+
+    public static toTimestamp = (obj: Timestamp.AsObject): Timestamp => {
+        const timestamp = new Timestamp()
+        timestamp.setSeconds(obj.seconds)
+        timestamp.setNanos(obj.nanos)
+        return timestamp
     }
 
     public static toBuildInfo = (obj: BuildInfo.AsObject): BuildInfo => {

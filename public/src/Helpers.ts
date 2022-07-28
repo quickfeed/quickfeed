@@ -1,6 +1,7 @@
 import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, EnrollmentLink, SubmissionLink } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
+import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb"
 
 export enum Color {
     RED = "danger",
@@ -16,6 +17,10 @@ export enum Sort {
     NAME,
     STATUS,
     ID
+}
+
+export const formattedDate = (date: Timestamp): string => {
+    return date.toString()
 }
 
 /** Returns a string with a prettier format for a deadline */
