@@ -905,3 +905,45 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *qf.RepositoryReq
 	}
 	return &qf.Void{}, nil
 }
+
+func (s *QuickFeedService) CreateApplication(ctx context.Context, in *qf.ApplicationRequest) (*qf.Application, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("CreateApplication failed: authentication error: %v", err)
+		return nil, ErrInvalidUserInfo
+	}
+
+	if !usr.IsAdmin {
+		s.logger.Error("CreateApplication failed: user is not admin")
+		return nil, status.Error(codes.PermissionDenied, "only admins can create applications")
+	}
+
+	app, err := s.db.CreateApplication(&qf.Application{UserID: usr.GetID(), Name: in.GetName(), Description: in.GetDescription()})
+	if err != nil {
+		s.logger.Errorf("CreateApplication failed: %v", err)
+		return nil, status.Error(codes.Internal, "failed to create application")
+	}
+
+	return app, nil
+}
+
+func (s *QuickFeedService) GetApplications(ctx context.Context, _ *qf.Void) (*qf.Applications, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("GetAppsForUser failed: authentication error: %v", err)
+		return nil, ErrInvalidUserInfo
+	}
+
+	if !usr.IsAdmin {
+		s.logger.Error("GetAppsForUser failed: user is not admin")
+		return nil, status.Error(codes.PermissionDenied, "only admin can access API keys")
+	}
+
+	apps, err := s.db.GetApplications(usr.GetID())
+	if err != nil {
+		s.logger.Errorf("GetAppsForUser failed: %v", err)
+		return nil, status.Error(codes.Internal, "failed to get API applications")
+	}
+
+	return apps, nil
+}
