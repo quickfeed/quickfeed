@@ -21,5 +21,15 @@
 		"react/jsx-newline": ["off"],
 		"no-undef": ["off"],
 		"react/jsx-max-depth": [2, { "max": 4 }]
-	}
+	},
+	"overrides": [
+		{
+			"files": ["**/*_pb.*"],
+			"rules": {
+				"no-unused-vars": ["off"],
+				"no-use-before-define": ["off"],
+				"max-lines-per-function": ["off"]
+			}
+		}
+	]
 }
