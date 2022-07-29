@@ -1,7 +1,7 @@
 import React, { useCallback } from "react"
 import { Assignment, Submission } from "../../proto/qf/types_pb"
 import { Converter } from "../convert"
-import { assignmentStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded } from "../Helpers"
+import { assignmentStatusText, getFormattedTime, formattedDate, getPassedTestsCount, isManuallyGraded } from "../Helpers"
 import { useAppState } from "../overmind"
 import ProgressBar, { Progress } from "./ProgressBar"
 import SubmissionScore from "./SubmissionScore"
@@ -80,7 +80,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
                             submission.approveddate ?
                                 <tr>
                                     <th colSpan={2}>Approved</th>
-                                    <td>{getFormattedTime(submission.approveddate)}</td>
+                                    <td>{formattedDate(submission.approveddate)}</td>
                                 </tr>
                                 : null
                         }

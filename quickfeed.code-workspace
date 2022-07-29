@@ -28,6 +28,7 @@
 			"plaintext",
 			"!javascript",
 			"!typescript",
+			"!typescriptreact",
 		],
 		"files.insertFinalNewline": true,
 		"files.trimFinalNewlines": true,

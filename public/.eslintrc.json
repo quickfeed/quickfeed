@@ -4,7 +4,7 @@
 	"extends": [
 		"eslint:recommended",
 		"plugin:@typescript-eslint/eslint-recommended",
-		"plugin:react/all"
+		"plugin:react/recommended"
 	],
 	"parserOptions": {
 		"ecmaVersion": 6,

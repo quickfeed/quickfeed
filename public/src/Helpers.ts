@@ -2,6 +2,7 @@ import { useParams } from "react-router"
 import { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, User, EnrollmentLink, SubmissionLink } from "../proto/qf/types_pb"
 import { Score } from "../proto/kit/score/score_pb"
 import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb"
+import { Converter } from "./convert"
 
 export enum Color {
     RED = "danger",
@@ -19,15 +20,19 @@ export enum Sort {
     ID
 }
 
-export const formattedDate = (date: Timestamp): string => {
-    return date.toString()
+/** Returns a string with a prettier format for a timestamp object. */
+export const formattedDate = (timestamp: Timestamp.AsObject): string => {
+    return dateToString(Converter.toTimestamp(timestamp).toDate())
 }
 
-/** Returns a string with a prettier format for a deadline */
-export const getFormattedTime = (deadline_string: string): string => {
+/** Returns a string with a prettier format for a date string. */
+export const getFormattedTime = (dateString: string): string => {
+    return dateToString(new Date(dateString))
+}
+
+const dateToString = (date: Date): string => {
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-    const deadline = new Date(deadline_string)
-    return `${deadline.getDate()} ${months[deadline.getMonth()]} ${deadline.getFullYear()} ${deadline.getHours()}:${deadline.getMinutes() < 10 ? "0" + deadline.getMinutes() : deadline.getMinutes()}`
+    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()} ${date.getHours()}:${date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes()}`
 }
 
 export interface Deadline {
