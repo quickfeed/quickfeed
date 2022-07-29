@@ -21,7 +21,10 @@ export enum Sort {
 }
 
 /** Returns a string with a prettier format for a timestamp object. */
-export const formattedDate = (timestamp: Timestamp.AsObject): string => {
+export const formattedDate = (timestamp: Timestamp.AsObject | undefined): string => {
+    if (!timestamp) {
+        return "N/A"
+    }
     return dateToString(Converter.toTimestamp(timestamp).toDate())
 }
 

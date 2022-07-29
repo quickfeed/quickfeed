@@ -6,6 +6,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestNewestSubmissionDate(t *testing.T) {
@@ -32,18 +33,23 @@ func TestNewestSubmissionDate(t *testing.T) {
 
 	submission = &qf.Submission{
 		BuildInfo: &score.BuildInfo{
-			BuildDate: "string",
+			BuildDate: &timestamppb.Timestamp{},
 		},
 	}
 	newBuildDate, err = submission.NewestBuildDate(tim)
-	if err == nil {
-		t.Errorf("NewestBuildDate(%v) = %v, expected error '%v'\n", tim, newBuildDate, `parsing time "string" as "2006-01-02T15:04:05": cannot parse "string" as "2006"`)
+	if err != nil {
+		t.Error(err)
+	}
+	if !newBuildDate.Equal(tim) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v' = '%v'\n", tim, newBuildDate, tim, newBuildDate)
+	}
+	if newBuildDate.Before(submission.BuildInfo.BuildDate.AsTime()) {
+		t.Errorf("NewestBuildDate(%v) = %v, expected tim '%v' to be after submission.BuildDate '%v'\n", tim, newBuildDate, tim, submission.BuildInfo.BuildDate.AsTime())
 	}
 
-	buildDate := time.Now()
 	submission = &qf.Submission{
 		BuildInfo: &score.BuildInfo{
-			BuildDate: buildDate.Format(qf.TimeLayout),
+			BuildDate: timestamppb.Now(),
 		},
 	}
 	newBuildDate, err = submission.NewestBuildDate(tim)
@@ -51,7 +57,7 @@ func TestNewestSubmissionDate(t *testing.T) {
 		t.Error(err)
 	}
 	if newBuildDate.Before(tim) {
-		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newBuildDate, buildDate)
+		t.Errorf("NewestBuildDate(%v) = %v, expected '%v'\n", tim, newBuildDate, submission.BuildInfo.BuildDate)
 	}
 }
 

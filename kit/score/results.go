@@ -5,10 +5,8 @@ import (
 	"math"
 	"strings"
 	"time"
-)
 
-const (
-	layout = "2006-01-02T15:04:05"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func NewResults(scores ...*Score) *Results {
@@ -77,7 +75,7 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 	}
 	res := &Results{
 		BuildInfo: &BuildInfo{
-			BuildDate: time.Now().Format(layout),
+			BuildDate: timestamppb.Now(),
 			BuildLog:  strings.Join(filteredLog, "\n"),
 			ExecTime:  execTime.Milliseconds(),
 		},

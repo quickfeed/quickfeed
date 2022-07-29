@@ -33,6 +33,7 @@ import {
 import { delay } from "./Helpers"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
 import { StatusCode } from "grpc-web"
+import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb"
 
 export interface IGrpcResponse<T> {
     status: Status
@@ -1046,7 +1047,7 @@ export class MockGrpcManager {
                         .setId(1)
                         .setSubmissionid(1)
                         .setExectime(1)
-                        .setBuilddate(new Date(2017, 6, 4).toISOString())
+                        .setBuilddate(Timestamp.fromDate(new Date(2017, 6, 4)))
                         .setBuildlog("Build log for build 1")
                 )
                 .setScore(100)
@@ -1159,7 +1160,7 @@ export class MockGrpcManager {
                 .setBuildinfo(
                     new BuildInfo()
                         .setId(3)
-                        .setBuilddate(new Date(2022, 6, 4).toISOString())
+                        .setBuilddate(Timestamp.fromDate(new Date(2022, 6, 4)))
                         .setBuildlog("Build log for test student")
                         .setExectime(1)
                 )

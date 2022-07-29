@@ -1,5 +1,6 @@
 import * as jspb from 'google-protobuf'
 
+import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
 
 
 export class Score extends jspb.Message {
@@ -59,8 +60,10 @@ export class BuildInfo extends jspb.Message {
   getSubmissionid(): number;
   setSubmissionid(value: number): BuildInfo;
 
-  getBuilddate(): string;
-  setBuilddate(value: string): BuildInfo;
+  getBuilddate(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setBuilddate(value?: google_protobuf_timestamp_pb.Timestamp): BuildInfo;
+  hasBuilddate(): boolean;
+  clearBuilddate(): BuildInfo;
 
   getBuildlog(): string;
   setBuildlog(value: string): BuildInfo;
@@ -80,7 +83,7 @@ export namespace BuildInfo {
   export type AsObject = {
     id: number,
     submissionid: number,
-    builddate: string,
+    builddate?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     buildlog: string,
     exectime: number,
   }

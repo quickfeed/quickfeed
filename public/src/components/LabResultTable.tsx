@@ -51,7 +51,7 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
     if (submission && assignment) {
         const enrollment = state.activeEnrollment ?? state.enrollmentsByCourseID[assignment.courseid]
         const buildInfo = submission.buildinfo
-        const delivered = buildInfo ? getFormattedTime(buildInfo.builddate) : "N/A"
+        const delivered = buildInfo ? formattedDate(buildInfo.builddate) : "N/A"
         const executionTime = buildInfo ? `${buildInfo.exectime / 1000} seconds` : ""
 
         const className = (submission.status === Submission.Status.APPROVED) ? "passed" : "failed"

@@ -152,7 +152,7 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 		Score:        42,
 		Reviews:      []*qf.Review{},
 		BuildInfo: &score.BuildInfo{
-			BuildDate: "2021-01-21",
+			BuildDate: qtest.Timestamp(t, "2021-01-21T18:00:00"),
 			BuildLog:  "what do you say",
 			ExecTime:  50,
 		},

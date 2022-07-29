@@ -2,12 +2,12 @@ package ci
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -67,7 +67,7 @@ func (r RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submissi
 		Status:       previous.GetStatus(),
 		Released:     previous.GetReleased(),
 		BuildInfo: &score.BuildInfo{
-			BuildDate: time.Now().Format(qf.TimeLayout),
+			BuildDate: timestamppb.Now(),
 			BuildLog:  "No automated tests for this assignment",
 			ExecTime:  1,
 		},
@@ -94,11 +94,7 @@ func (r RunData) newTestRunSubmission(previous *qf.Submission, results *score.Re
 }
 
 func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission) error {
-	buildDate := submission.GetBuildInfo().GetBuildDate()
-	buildTime, err := time.Parse(qf.TimeLayout, buildDate)
-	if err != nil {
-		return fmt.Errorf("failed to parse time from build date (%s): %w", buildDate, err)
-	}
+	buildTime := submission.GetBuildInfo().GetBuildDate().AsTime()
 
 	enrollments := make([]*qf.Enrollment, 0)
 	if submission.GroupID > 0 {

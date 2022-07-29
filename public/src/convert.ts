@@ -154,10 +154,11 @@ export class Converter {
         const buildInfo = new BuildInfo()
         buildInfo.setId(obj.id)
         buildInfo.setSubmissionid(obj.submissionid)
-        buildInfo.setBuilddate(obj.builddate)
+        if (obj.builddate) {
+            buildInfo.setBuilddate(this.toTimestamp(obj.builddate))
+        }
         buildInfo.setBuildlog(obj.buildlog)
         buildInfo.setExectime(obj.exectime)
-
         return buildInfo
     }
 

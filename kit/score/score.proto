@@ -2,26 +2,27 @@ syntax = "proto3";
 package score;
 option go_package = "github.com/quickfeed/quickfeed/kit/score";
 
+import "google/protobuf/timestamp.proto";
 import "patch/go.proto";
 
 // Score give the score for a single test named TestName.
 message Score {
-    uint64 ID = 1;
-    uint64 SubmissionID = 2 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
-    string Secret = 3 [(go.field) = {tags: 'gorm:"-"'}]; // the unique identifier for a scoring session
-    string TestName = 4;     // name of the test
-    string TaskName = 5;     // name of task this score belongs to
-    int32 Score = 6;         // the score obtained
-    int32 MaxScore = 7;      // max score possible to get on this specific test
-    int32 Weight = 8;        // the weight of this test; used to compute final grade
-    string TestDetails = 9;  // if populated, the frontend may display additional details (TODO(meling) adapt to output from go test -json)
+    uint64 ID           = 1;
+    uint64 SubmissionID = 2 [(go.field) = { tags: 'gorm:"foreignKey:ID"' }];
+    string Secret       = 3 [(go.field) = { tags: 'gorm:"-"' }];  // the unique identifier for a scoring session
+    string TestName     = 4;                                      // name of the test
+    string TaskName     = 5;                                      // name of task this score belongs to
+    int32 Score         = 6;                                      // the score obtained
+    int32 MaxScore      = 7;                                      // max score possible to get on this specific test
+    int32 Weight        = 8;  // the weight of this test; used to compute final grade
+    string TestDetails  = 9;  // currently unused
 }
 
 // BuildInfo holds build data for an assignment's test execution.
 message BuildInfo {
-    uint64 ID = 1;
-    uint64 SubmissionID = 2 [(go.field) = {tags: 'gorm:"foreignKey:ID"'}];
-    string BuildDate = 3;
-    string BuildLog = 4;
-    int64 ExecTime = 5;
+    uint64 ID                           = 1;
+    uint64 SubmissionID                 = 2 [(go.field) = { tags: 'gorm:"foreignKey:ID"' }];
+    google.protobuf.Timestamp BuildDate = 3 [(go.field) = { tags: 'gorm:"serializer:timestamp"' }];
+    string BuildLog                     = 4;
+    int64 ExecTime                      = 5;
 }

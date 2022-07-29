@@ -15,6 +15,8 @@ var jspb = require('google-protobuf');
 var goog = jspb;
 var global = (function() { return this || window || global || self || Function('return this')(); }).call(null);
 
+var google_protobuf_timestamp_pb = require('google-protobuf/google/protobuf/timestamp_pb.js');
+goog.object.extend(proto, google_protobuf_timestamp_pb);
 goog.exportSymbol('proto.score.BuildInfo', null, global);
 goog.exportSymbol('proto.score.Score', null, global);
 /**
@@ -463,7 +465,7 @@ proto.score.BuildInfo.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     submissionid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    builddate: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    builddate: (f = msg.getBuilddate()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
     buildlog: jspb.Message.getFieldWithDefault(msg, 4, ""),
     exectime: jspb.Message.getFieldWithDefault(msg, 5, 0)
   };
@@ -511,7 +513,8 @@ proto.score.BuildInfo.deserializeBinaryFromReader = function(msg, reader) {
       msg.setSubmissionid(value);
       break;
     case 3:
-      var value = /** @type {string} */ (reader.readString());
+      var value = new google_protobuf_timestamp_pb.Timestamp;
+      reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
       msg.setBuilddate(value);
       break;
     case 4:
@@ -566,10 +569,11 @@ proto.score.BuildInfo.serializeBinaryToWriter = function(message, writer) {
     );
   }
   f = message.getBuilddate();
-  if (f.length > 0) {
-    writer.writeString(
+  if (f != null) {
+    writer.writeMessage(
       3,
-      f
+      f,
+      google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
   }
   f = message.getBuildlog();
@@ -626,20 +630,39 @@ proto.score.BuildInfo.prototype.setSubmissionid = function(value) {
 
 
 /**
- * optional string BuildDate = 3;
- * @return {string}
+ * optional google.protobuf.Timestamp BuildDate = 3;
+ * @return {?proto.google.protobuf.Timestamp}
  */
 proto.score.BuildInfo.prototype.getBuilddate = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+  return /** @type{?proto.google.protobuf.Timestamp} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 3));
 };
 
 
 /**
- * @param {string} value
+ * @param {?proto.google.protobuf.Timestamp|undefined} value
+ * @return {!proto.score.BuildInfo} returns this
+*/
+proto.score.BuildInfo.prototype.setBuilddate = function(value) {
+  return jspb.Message.setWrapperField(this, 3, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
  * @return {!proto.score.BuildInfo} returns this
  */
-proto.score.BuildInfo.prototype.setBuilddate = function(value) {
-  return jspb.Message.setProto3StringField(this, 3, value);
+proto.score.BuildInfo.prototype.clearBuilddate = function() {
+  return this.setBuilddate(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.score.BuildInfo.prototype.hasBuilddate = function() {
+  return jspb.Message.getField(this, 3) != null;
 };
 
 

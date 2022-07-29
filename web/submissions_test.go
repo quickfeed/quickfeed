@@ -584,13 +584,13 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	buildInfo1 := &score.BuildInfo{
-		BuildDate: "2020-02-23T18:00:00",
+		BuildDate: qtest.Timestamp(t, "2020-02-23T18:00:00"),
 		BuildLog:  "runtime error",
 		ExecTime:  3,
 	}
 
 	buildInfo2 := &score.BuildInfo{
-		BuildDate: "2020-02-23T18:00:00",
+		BuildDate: qtest.Timestamp(t, "2020-02-23T18:00:00"),
 		BuildLog:  "runtime error",
 		ExecTime:  3,
 	}
