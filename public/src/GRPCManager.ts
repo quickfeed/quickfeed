@@ -69,10 +69,6 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateUser, user)
     }
 
-    public isAuthorizedTeacher(): Promise<IGrpcResponse<AuthorizationResponse>> {
-        return this.grpcSend<AuthorizationResponse>(this.agService.isAuthorizedTeacher, new Void())
-    }
-
     // /* COURSES */ //
 
     public createCourse(course: Course): Promise<IGrpcResponse<Course>> {

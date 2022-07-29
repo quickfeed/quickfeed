@@ -352,9 +352,6 @@ export class Enrollment extends jspb.Message {
   getGroupid(): number;
   setGroupid(value: number): Enrollment;
 
-  getHasteacherscopes(): boolean;
-  setHasteacherscopes(value: boolean): Enrollment;
-
   getUser(): User | undefined;
   setUser(value?: User): Enrollment;
   hasUser(): boolean;
@@ -404,7 +401,6 @@ export namespace Enrollment {
     courseid: number,
     userid: number,
     groupid: number,
-    hasteacherscopes: boolean,
     user?: User.AsObject,
     course?: Course.AsObject,
     group?: Group.AsObject,

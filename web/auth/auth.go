@@ -31,7 +31,6 @@ func init() {
 const (
 	SessionKey     = "session"
 	UserKey        = "user"
-	TeacherSuffix  = "teacher"
 	Cookie         = "cookie"
 	OutgoingCookie = "Set-Cookie"
 	githubUserAPI  = "https://api.github.com/user"
@@ -47,7 +46,6 @@ const (
 var (
 	// Gothic http cookie sessionStore
 	sessionStore  *sessions.CookieStore
-	teacherScopes = []string{"repo:invite", "user", "repo", "delete_repo", "admin:org", "admin:org_hook"}
 	studentScopes = []string{"repo:invite"}
 	// map from session cookies to user IDs.
 	cookieStore = make(map[string]uint64)
@@ -159,9 +157,6 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 				return
 			}
 		}
-		// Check teacher suffix, update scopes.
-		// Won't be necessary with GitHub App.
-		setScopes(authConfig, r.URL.Path)
 		logger.Debugf("Provider callback URL: %s", authConfig.RedirectURL)
 		redirectURL := authConfig.AuthCodeURL(secret)
 		logger.Debugf("Redirecting to AuthURL: %v", redirectURL)
@@ -316,15 +311,6 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, remote *qf.Remot
 	}
 	logger.Debugf("Retry database lookup for user %q", externalUser.Login)
 	return db.GetUserByRemoteIdentity(remote)
-}
-
-// setScopes sets student or teacher scopes for user authentication.
-func setScopes(authConfig *oauth2.Config, url string) {
-	if strings.Contains(url, TeacherSuffix) {
-		authConfig.Scopes = teacherScopes
-	} else {
-		authConfig.Scopes = studentScopes
-	}
 }
 
 func updateScm(logger *zap.SugaredLogger, scms *scm.Scms, user *qf.User) bool {

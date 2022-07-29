@@ -125,16 +125,15 @@ message Enrollment {
     uint64 courseID                    = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_enrollment"' }];
     uint64 userID                      = 3 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_enrollment"' }];
     uint64 groupID                     = 4;
-    bool hasTeacherScopes              = 5;
-    User user                          = 6;
-    Course course                      = 7;
-    Group group                        = 8;
-    UserStatus status                  = 9;
-    DisplayState state                 = 10;
-    uint32 slipDaysRemaining           = 11 [(go.field) = { tags: 'gorm:"-"' }];
-    string lastActivityDate            = 12;
-    uint64 totalApproved               = 13;
-    repeated UsedSlipDays usedSlipDays = 14;
+    User user                          = 5;
+    Course course                      = 6;
+    Group group                        = 7;
+    UserStatus status                  = 8;
+    DisplayState state                 = 9;
+    uint32 slipDaysRemaining           = 10 [(go.field) = { tags: 'gorm:"-"' }];
+    string lastActivityDate            = 11;
+    uint64 totalApproved               = 12;
+    repeated UsedSlipDays usedSlipDays = 13;
 }
 
 message UsedSlipDays {

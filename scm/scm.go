@@ -61,8 +61,6 @@ type SCM interface {
 	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
 	// RemoveMember removes user from the organization.
 	RemoveMember(context.Context, *OrgMembershipOptions) error
-	// Lists all authorizations for authenticated user.
-	GetUserScopes(context.Context) *Authorization
 
 	// Clone clones the given repository and returns the path to the cloned repository.
 	// The returned path is the provided destination directory joined with the

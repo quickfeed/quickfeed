@@ -13,7 +13,6 @@ service QuickFeedService {
     rpc GetUsers(Void) returns (Users) {}
     rpc GetUserByCourse(CourseUserRequest) returns (User) {}
     rpc UpdateUser(User) returns (Void) {}
-    rpc IsAuthorizedTeacher(Void) returns (AuthorizationResponse) {}
 
     // groups //
 

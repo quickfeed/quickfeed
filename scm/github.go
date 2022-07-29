@@ -678,28 +678,6 @@ func (s *GithubSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions)
 	return nil
 }
 
-// GetUserScopes implements the SCM interface
-func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
-	// Users.Get method will always return nil, response struct and error,
-	// we are only interested in response. Its header will contain all scopes for the current user.
-	_, resp, _ := s.client.Users.Get(ctx, "")
-	if resp == nil {
-		s.logger.Errorf("GetUserScopes: got no scopes: no authorized user")
-		tmpScopes := make([]string, 0)
-		return &Authorization{Scopes: tmpScopes}
-	}
-	// header contains a single string with all GitHub scopes for the authenticated user
-	stringScopes := resp.Header.Get("X-OAuth-Scopes")
-	if stringScopes == "" {
-		s.logger.Errorf("GetUserScopes: header was empty")
-		tmpScopes := make([]string, 0)
-		return &Authorization{Scopes: tmpScopes}
-	}
-
-	gitScopes := strings.Split(stringScopes, ", ")
-	return &Authorization{Scopes: gitScopes}
-}
-
 // CreateIssue implements the SCM interface
 func (s *GithubSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
 	if !opt.valid() {

@@ -135,10 +135,6 @@ export class MockGrpcManager {
         return this.grpcSend<Void>(new Void())
     }
 
-    public isAuthorizedTeacher(): Promise<IGrpcResponse<AuthorizationResponse>> {
-        return this.grpcSend<AuthorizationResponse>(new AuthorizationResponse().setIsauthorized(true))
-    }
-
     // /* COURSES */ //
 
     public createCourse(course: Course): Promise<IGrpcResponse<Course>> {

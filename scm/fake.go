@@ -215,11 +215,6 @@ func (*FakeSCM) RemoveMember(_ context.Context, _ *OrgMembershipOptions) error {
 	return nil
 }
 
-// GetUserScopes implements the SCM interface
-func (*FakeSCM) GetUserScopes(_ context.Context) *Authorization {
-	return nil
-}
-
 // AcceptRepositoryInvite implements the SCM interface
 func (*FakeSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
 	return nil

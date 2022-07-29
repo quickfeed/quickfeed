@@ -15,7 +15,7 @@ func GetProviderURL(baseURL, route, provider string) string {
 	return "https://" + baseURL + "/" + route + "/" + provider
 }
 
-// externalUser is used to decode the user authentication response from OAuth providers.
+// externalUser is used to decode user authentication JSON sent as response by OAuth providers.
 type externalUser struct {
 	ID        uint64 `json:"id"`
 	Email     string `json:"email"`
