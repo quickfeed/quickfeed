@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gopkg.in/yaml.v2"
 )
 
@@ -38,13 +39,17 @@ func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint
 	if newAssignment.AssignmentID > 0 && newAssignment.Order == 0 {
 		newAssignment.Order = uint32(newAssignment.AssignmentID)
 	}
+	deadline, err := FixDeadline(newAssignment.Deadline)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing deadline: %w", err)
+	}
 
 	// AssignmentID field from the parsed yaml is used to set Order, not assignment ID,
 	// or it will cause a database constraint violation (IDs must be unique)
 	// The Name field below is the folder name of the assignment.
 	assignment := &qf.Assignment{
 		CourseID:         courseID,
-		Deadline:         FixDeadline(newAssignment.Deadline),
+		Deadline:         deadline,
 		Name:             assignmentName,
 		Order:            newAssignment.Order,
 		IsGroupLab:       newAssignment.IsGroupLab,
@@ -56,8 +61,7 @@ func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint
 	return assignment, nil
 }
 
-func FixDeadline(in string) string {
-	wantLayout := qf.TimeLayout
+func FixDeadline(in string) (*timestamppb.Timestamp, error) {
 	acceptedLayouts := []string{
 		"2006-1-2T15:04:05",
 		"2006-1-2 15:04:05",
@@ -87,7 +91,7 @@ func FixDeadline(in string) string {
 		if err != nil {
 			continue
 		}
-		return t.Format(wantLayout)
+		return timestamppb.New(t), nil
 	}
-	return "Invalid date format: " + in
+	return nil, fmt.Errorf("invalid date format: %s", in)
 }

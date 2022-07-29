@@ -152,19 +152,19 @@ message Enrollments {
 //   LABS    //
 
 message Assignment {
-    uint64 ID                       = 1;
-    uint64 CourseID                 = 2;  // foreign key
-    string name                     = 3;
-    string runScriptContent         = 4;  // this assignment's run.sh script (the content)
-    string deadline                 = 5;
-    bool autoApprove                = 6;
-    uint32 order                    = 7;
-    bool isGroupLab                 = 8;
-    uint32 scoreLimit               = 9;   // minimal score limit for auto approval
-    uint32 reviewers                = 10;  // number of reviewers that will review submissions for this assignment
-    uint32 containerTimeout         = 11;  // container timeout for this assignment
-    repeated Submission submissions = 12;  // submissions produced for this assignment
-    repeated Task tasks             = 13;  // tasks associated with this assignment
+    uint64 ID                          = 1;
+    uint64 CourseID                    = 2;  // foreign key
+    string Name                        = 3;
+    string RunScriptContent            = 4;  // this assignment's run.sh script (the content)
+    google.protobuf.Timestamp Deadline = 5 [(go.field) = { tags: 'gorm:"serializer:timestamp"' }];
+    bool AutoApprove                   = 6;
+    uint32 Order                       = 7;
+    bool IsGroupLab                    = 8;
+    uint32 ScoreLimit                  = 9;   // minimal score limit for auto approval
+    uint32 Reviewers                   = 10;  // number of reviewers that will review submissions for this assignment
+    uint32 ContainerTimeout            = 11;  // container timeout for this assignment
+    repeated Submission submissions    = 12;  // submissions produced for this assignment
+    repeated Task tasks                = 13;  // tasks associated with this assignment
     repeated GradingBenchmark gradingBenchmarks = 14;  // grading benchmarks for this assignment
 }
 
@@ -216,14 +216,14 @@ message Submission {
     }
     uint64 ID                              = 1;
     uint64 AssignmentID                    = 2;  // foreign key
-    uint64 userID                          = 3;
-    uint64 groupID                         = 4;
-    uint32 score                           = 5;
-    string commitHash                      = 6;
-    bool released                          = 7;  // true => feedback is visible to the student or group members
+    uint64 UserID                          = 3;
+    uint64 GroupID                         = 4;
+    uint32 Score                           = 5;
+    string CommitHash                      = 6;
+    bool Released                          = 7;  // true => feedback is visible to the student or group members
     Status status                          = 8;
-    google.protobuf.Timestamp approvedDate = 9 [(go.field) = { tags: 'gorm:"serializer:timestamp"' }];
-    repeated Review reviews                = 10;  // reviews produced for this submission
+    google.protobuf.Timestamp ApprovedDate = 9 [(go.field) = { tags: 'gorm:"serializer:timestamp"' }];
+    repeated Review Reviews                = 10;  // reviews produced for this submission
     score.BuildInfo BuildInfo              = 11;  // build info for tests
     repeated score.Score Scores            = 12;  // list of scores for different tests
 }

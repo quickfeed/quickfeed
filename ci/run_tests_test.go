@@ -122,7 +122,7 @@ func TestRecordResults(t *testing.T) {
 printf "AssignmentName: {{ .AssignmentName }}\n"
 printf "RandomSecret: {{ .RandomSecret }}\n"
 `,
-		Deadline:         "2022-11-11T13:00:00",
+		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
 		AutoApprove:      true,
 		ScoreLimit:       70,
 		Order:            1,
@@ -231,7 +231,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 		Order:      1,
 		CourseID:   course.ID,
 		Name:       "assignment-1",
-		Deadline:   "2022-11-11T13:00:00",
+		Deadline:   qtest.Timestamp(t, "2022-11-11T13:00:00"),
 		IsGroupLab: false,
 		Reviewers:  1,
 	}

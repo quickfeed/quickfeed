@@ -87,7 +87,7 @@ func TestUpdateAssignment(t *testing.T) {
 		CourseID:         course.ID,
 		Name:             "lab1",
 		RunScriptContent: "Script for lab1",
-		Deadline:         "11.11.2022",
+		Deadline:         qtest.Timestamp(t, "2022-11-11T23:59:00"),
 		AutoApprove:      false,
 		Order:            1,
 		IsGroupLab:       false,
@@ -99,7 +99,7 @@ func TestUpdateAssignment(t *testing.T) {
 		CourseID:         course.ID,
 		Name:             "lab2",
 		RunScriptContent: "Script for lab2",
-		Deadline:         "11.11.2022",
+		Deadline:         qtest.Timestamp(t, "2022-11-11T23:59:00"),
 		AutoApprove:      false,
 		Order:            2,
 		IsGroupLab:       true,
@@ -115,7 +115,7 @@ func TestUpdateAssignment(t *testing.T) {
 	wantAssignments := make([]*qf.Assignment, len(assignments))
 	for i, a := range assignments {
 		// test setting various zero-value entries to check that we can read back the same value
-		a.Deadline = ""
+		a.Deadline = nil
 		a.ScoreLimit = 0
 		a.Reviewers = 0
 		a.AutoApprove = !a.AutoApprove
@@ -123,8 +123,7 @@ func TestUpdateAssignment(t *testing.T) {
 		wantAssignments[i] = (proto.Clone(assignments[i])).(*qf.Assignment)
 	}
 
-	err = db.UpdateAssignments(assignments)
-	if err != nil {
+	if err = db.UpdateAssignments(assignments); err != nil {
 		t.Error(err)
 	}
 	gotAssignments, err := db.GetAssignmentsByCourse(course.ID, false)
@@ -219,7 +218,7 @@ func TestUpdateBenchmarks(t *testing.T) {
 		CourseID:         course.ID,
 		Name:             "Assignment 1",
 		RunScriptContent: "Script for assignment 1",
-		Deadline:         "12.12.2021",
+		Deadline:         qtest.Timestamp(t, "2021-12-12T19:00:00"),
 		AutoApprove:      false,
 		Order:            1,
 		IsGroupLab:       false,

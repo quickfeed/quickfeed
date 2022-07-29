@@ -495,8 +495,10 @@ export class Assignment extends jspb.Message {
   getRunscriptcontent(): string;
   setRunscriptcontent(value: string): Assignment;
 
-  getDeadline(): string;
-  setDeadline(value: string): Assignment;
+  getDeadline(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setDeadline(value?: google_protobuf_timestamp_pb.Timestamp): Assignment;
+  hasDeadline(): boolean;
+  clearDeadline(): Assignment;
 
   getAutoapprove(): boolean;
   setAutoapprove(value: boolean): Assignment;
@@ -545,7 +547,7 @@ export namespace Assignment {
     courseid: number,
     name: string,
     runscriptcontent: string,
-    deadline: string,
+    deadline?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     autoapprove: boolean,
     order: number,
     isgrouplab: boolean,

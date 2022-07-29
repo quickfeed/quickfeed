@@ -58,7 +58,7 @@ func TestUpdateCriteria(t *testing.T) {
 		CourseID:         course.ID,
 		Name:             "Assignment 1",
 		RunScriptContent: "Script for assignment 1",
-		Deadline:         "12.12.2021",
+		Deadline:         qtest.Timestamp(t, "2021-12-12T19:00:00"),
 		AutoApprove:      false,
 		Order:            1,
 		IsGroupLab:       false,
@@ -67,8 +67,8 @@ func TestUpdateCriteria(t *testing.T) {
 	assignment2 := &qf.Assignment{
 		CourseID:         course.ID,
 		Name:             "Assignment 2",
-		RunScriptContent: "Script for assignment 1",
-		Deadline:         "12.01.2022",
+		RunScriptContent: "Script for assignment 2",
+		Deadline:         qtest.Timestamp(t, "2022-01-12T19:00:00"),
 		AutoApprove:      false,
 		Order:            2,
 		IsGroupLab:       false,
@@ -208,11 +208,13 @@ func TestUpdateCriteria(t *testing.T) {
 
 	// Assignment has no added or removed benchmarks, expect nil
 	if assignment.GradingBenchmarks != nil {
-		t.Fatalf("Expected assignment.GradingBenchmarks to be nil, got %v", assignment.GradingBenchmarks)
+		t.Errorf("Expected nil, got %v", qlog.IndentJson(assignment.GradingBenchmarks))
 	}
 
 	// Update assignments. GradingBenchmarks should not be updated
-	db.UpdateAssignments([]*qf.Assignment{assignment, assignment2})
+	if err := db.UpdateAssignments([]*qf.Assignment{assignment, assignment2}); err != nil {
+		t.Fatal(err)
+	}
 
 	for _, wantReview := range []*qf.Review{review, review2} {
 		gotReview, err := db.GetReview(&qf.Review{ID: wantReview.ID})
@@ -274,7 +276,9 @@ func TestUpdateCriteria(t *testing.T) {
 	}
 
 	// Update assignments. GradingBenchmarks should be updated
-	db.UpdateAssignments([]*qf.Assignment{assignment, assignment2})
+	if err := db.UpdateAssignments([]*qf.Assignment{assignment, assignment2}); err != nil {
+		t.Error(err)
+	}
 
 	// Benchmarks should have been updated to reflect the removal of a benchmark and a criterion
 	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})

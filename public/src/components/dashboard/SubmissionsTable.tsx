@@ -4,6 +4,7 @@ import { assignmentStatusText, getFormattedTime, SubmissionStatus, timeFormatter
 import { useAppState } from "../../overmind"
 import { Assignment, Submission } from "../../../proto/qf/types_pb"
 import ProgressBar, { Progress } from "../ProgressBar"
+import { Converter } from "../../convert"
 
 
 /* SubmissionsTable is a component that displays a table of assignments and their submissions for all courses. */
@@ -17,10 +18,12 @@ const SubmissionsTable = (): JSX.Element => {
             assignments.push(...state.assignments[courseID])
         }
         assignments.sort((a, b) => {
-            if (b.deadline > a.deadline) {
+            const aDeadline = Converter.toTimestamp(a.deadline).toDate()
+            const bDeadline = Converter.toTimestamp(b.deadline).toDate()
+            if (bDeadline > aDeadline) {
                 return -1
             }
-            if (a.deadline > b.deadline) {
+            if (aDeadline > bDeadline) {
                 return 1
             }
             return 0
@@ -54,7 +57,7 @@ const SubmissionsTable = (): JSX.Element => {
                         <td>
                             {assignment.name}
                             {assignment.isgrouplab ?
-                                <span className="badge ml-2 float-right"><i className="fa fa-users" title="Group Assignment"  /></span> : null}
+                                <span className="badge ml-2 float-right"><i className="fa fa-users" title="Group Assignment" /></span> : null}
                         </td>
                         <td><ProgressBar assignmentIndex={assignment.order - 1} courseID={courseID} submission={submission} type={Progress.OVERVIEW} /></td>
                         <td>{getFormattedTime(assignment.deadline)}</td>

@@ -123,7 +123,7 @@ func TestRebuildSubmissions(t *testing.T) {
 printf "AssignmentName: {{ .AssignmentName }}\n"
 printf "RandomSecret: {{ .RandomSecret }}\n"
 `,
-		Deadline:         "2022-11-11T13:00:00",
+		Deadline:         qtest.Timestamp(t, "2022-11-11T13:00:00"),
 		AutoApprove:      true,
 		ScoreLimit:       70,
 		Order:            1,

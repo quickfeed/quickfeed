@@ -4142,7 +4142,7 @@ proto.qf.Assignment.toObject = function(includeInstance, msg) {
     courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     name: jspb.Message.getFieldWithDefault(msg, 3, ""),
     runscriptcontent: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    deadline: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    deadline: (f = msg.getDeadline()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
     autoapprove: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
     order: jspb.Message.getFieldWithDefault(msg, 7, 0),
     isgrouplab: jspb.Message.getBooleanFieldWithDefault(msg, 8, false),
@@ -4208,7 +4208,8 @@ proto.qf.Assignment.deserializeBinaryFromReader = function(msg, reader) {
       msg.setRunscriptcontent(value);
       break;
     case 5:
-      var value = /** @type {string} */ (reader.readString());
+      var value = new google_protobuf_timestamp_pb.Timestamp;
+      reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
       msg.setDeadline(value);
       break;
     case 6:
@@ -4308,10 +4309,11 @@ proto.qf.Assignment.serializeBinaryToWriter = function(message, writer) {
     );
   }
   f = message.getDeadline();
-  if (f.length > 0) {
-    writer.writeString(
+  if (f != null) {
+    writer.writeMessage(
       5,
-      f
+      f,
+      google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
   }
   f = message.getAutoapprove();
@@ -4420,7 +4422,7 @@ proto.qf.Assignment.prototype.setCourseid = function(value) {
 
 
 /**
- * optional string name = 3;
+ * optional string Name = 3;
  * @return {string}
  */
 proto.qf.Assignment.prototype.getName = function() {
@@ -4438,7 +4440,7 @@ proto.qf.Assignment.prototype.setName = function(value) {
 
 
 /**
- * optional string runScriptContent = 4;
+ * optional string RunScriptContent = 4;
  * @return {string}
  */
 proto.qf.Assignment.prototype.getRunscriptcontent = function() {
@@ -4456,25 +4458,44 @@ proto.qf.Assignment.prototype.setRunscriptcontent = function(value) {
 
 
 /**
- * optional string deadline = 5;
- * @return {string}
+ * optional google.protobuf.Timestamp Deadline = 5;
+ * @return {?proto.google.protobuf.Timestamp}
  */
 proto.qf.Assignment.prototype.getDeadline = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+  return /** @type{?proto.google.protobuf.Timestamp} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 5));
 };
 
 
 /**
- * @param {string} value
+ * @param {?proto.google.protobuf.Timestamp|undefined} value
+ * @return {!proto.qf.Assignment} returns this
+*/
+proto.qf.Assignment.prototype.setDeadline = function(value) {
+  return jspb.Message.setWrapperField(this, 5, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
  * @return {!proto.qf.Assignment} returns this
  */
-proto.qf.Assignment.prototype.setDeadline = function(value) {
-  return jspb.Message.setProto3StringField(this, 5, value);
+proto.qf.Assignment.prototype.clearDeadline = function() {
+  return this.setDeadline(undefined);
 };
 
 
 /**
- * optional bool autoApprove = 6;
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.qf.Assignment.prototype.hasDeadline = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * optional bool AutoApprove = 6;
  * @return {boolean}
  */
 proto.qf.Assignment.prototype.getAutoapprove = function() {
@@ -4492,7 +4513,7 @@ proto.qf.Assignment.prototype.setAutoapprove = function(value) {
 
 
 /**
- * optional uint32 order = 7;
+ * optional uint32 Order = 7;
  * @return {number}
  */
 proto.qf.Assignment.prototype.getOrder = function() {
@@ -4510,7 +4531,7 @@ proto.qf.Assignment.prototype.setOrder = function(value) {
 
 
 /**
- * optional bool isGroupLab = 8;
+ * optional bool IsGroupLab = 8;
  * @return {boolean}
  */
 proto.qf.Assignment.prototype.getIsgrouplab = function() {
@@ -4528,7 +4549,7 @@ proto.qf.Assignment.prototype.setIsgrouplab = function(value) {
 
 
 /**
- * optional uint32 scoreLimit = 9;
+ * optional uint32 ScoreLimit = 9;
  * @return {number}
  */
 proto.qf.Assignment.prototype.getScorelimit = function() {
@@ -4546,7 +4567,7 @@ proto.qf.Assignment.prototype.setScorelimit = function(value) {
 
 
 /**
- * optional uint32 reviewers = 10;
+ * optional uint32 Reviewers = 10;
  * @return {number}
  */
 proto.qf.Assignment.prototype.getReviewers = function() {
@@ -4564,7 +4585,7 @@ proto.qf.Assignment.prototype.setReviewers = function(value) {
 
 
 /**
- * optional uint32 containerTimeout = 11;
+ * optional uint32 ContainerTimeout = 11;
  * @return {number}
  */
 proto.qf.Assignment.prototype.getContainertimeout = function() {
@@ -6103,7 +6124,7 @@ proto.qf.Submission.prototype.setAssignmentid = function(value) {
 
 
 /**
- * optional uint64 userID = 3;
+ * optional uint64 UserID = 3;
  * @return {number}
  */
 proto.qf.Submission.prototype.getUserid = function() {
@@ -6121,7 +6142,7 @@ proto.qf.Submission.prototype.setUserid = function(value) {
 
 
 /**
- * optional uint64 groupID = 4;
+ * optional uint64 GroupID = 4;
  * @return {number}
  */
 proto.qf.Submission.prototype.getGroupid = function() {
@@ -6139,7 +6160,7 @@ proto.qf.Submission.prototype.setGroupid = function(value) {
 
 
 /**
- * optional uint32 score = 5;
+ * optional uint32 Score = 5;
  * @return {number}
  */
 proto.qf.Submission.prototype.getScore = function() {
@@ -6157,7 +6178,7 @@ proto.qf.Submission.prototype.setScore = function(value) {
 
 
 /**
- * optional string commitHash = 6;
+ * optional string CommitHash = 6;
  * @return {string}
  */
 proto.qf.Submission.prototype.getCommithash = function() {
@@ -6175,7 +6196,7 @@ proto.qf.Submission.prototype.setCommithash = function(value) {
 
 
 /**
- * optional bool released = 7;
+ * optional bool Released = 7;
  * @return {boolean}
  */
 proto.qf.Submission.prototype.getReleased = function() {
@@ -6211,7 +6232,7 @@ proto.qf.Submission.prototype.setStatus = function(value) {
 
 
 /**
- * optional google.protobuf.Timestamp approvedDate = 9;
+ * optional google.protobuf.Timestamp ApprovedDate = 9;
  * @return {?proto.google.protobuf.Timestamp}
  */
 proto.qf.Submission.prototype.getApproveddate = function() {
@@ -6248,7 +6269,7 @@ proto.qf.Submission.prototype.hasApproveddate = function() {
 
 
 /**
- * repeated Review reviews = 10;
+ * repeated Review Reviews = 10;
  * @return {!Array<!proto.qf.Review>}
  */
 proto.qf.Submission.prototype.getReviewsList = function() {

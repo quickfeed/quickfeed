@@ -94,8 +94,6 @@ func (r RunData) newTestRunSubmission(previous *qf.Submission, results *score.Re
 }
 
 func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission) error {
-	buildTime := submission.GetBuildInfo().GetBuildDate().AsTime()
-
 	enrollments := make([]*qf.Enrollment, 0)
 	if submission.GroupID > 0 {
 		group, err := db.GetGroup(submission.GroupID)
@@ -112,7 +110,7 @@ func (r RunData) updateSlipDays(db database.Database, submission *qf.Submission)
 	}
 
 	for _, enrol := range enrollments {
-		if err := enrol.UpdateSlipDays(buildTime, r.Assignment, submission); err != nil {
+		if err := enrol.UpdateSlipDays(r.Assignment, submission); err != nil {
 			return fmt.Errorf("failed to update slip days for user %d in course %d: %w", enrol.UserID, r.Assignment.CourseID, err)
 		}
 		if err := db.UpdateSlipDays(enrol.UsedSlipDays); err != nil {

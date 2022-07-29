@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -146,7 +147,7 @@ func TestParse(t *testing.T) {
 	// assignment folder names.
 	wantAssignment1 := &qf.Assignment{
 		Name:             "lab1",
-		Deadline:         "2017-08-27T12:00:00",
+		Deadline:         qtest.Timestamp(t, "2017-08-27T12:00:00"),
 		RunScriptContent: "Script for Lab1",
 		AutoApprove:      false,
 		Order:            1,
@@ -155,7 +156,7 @@ func TestParse(t *testing.T) {
 
 	wantAssignment2 := &qf.Assignment{
 		Name:              "lab2",
-		Deadline:          "2018-08-27T12:00:00",
+		Deadline:          qtest.Timestamp(t, "2018-08-27T12:00:00"),
 		RunScriptContent:  "Default script",
 		AutoApprove:       false,
 		Order:             2,
@@ -211,7 +212,7 @@ func TestParseUnknownFields(t *testing.T) {
 	// assignment folder names.
 	wantAssignment1 := &qf.Assignment{
 		Name:        "lab1",
-		Deadline:    "2017-08-27T12:00:00",
+		Deadline:    qtest.Timestamp(t, "2017-08-27T12:00:00"),
 		AutoApprove: false,
 		Order:       1,
 		ScoreLimit:  80,
@@ -313,7 +314,12 @@ func TestFixDeadline(t *testing.T) {
 		{"1-12-2020 6:59:30pm", "2020-12-01T18:59:30"},
 	}
 	for _, c := range deadlineTests {
-		got := FixDeadline(c.in)
+		fixed, err := FixDeadline(c.in)
+		if err != nil {
+			t.Errorf("FixDeadline(%q) returned error %v", c.in, err)
+		}
+		// format deadline to match wanted layout
+		got := fixed.AsTime().Format(qf.TimeLayout)
 		if got != c.want {
 			t.Errorf("FixDeadline(%q) == %q, want %q", c.in, got, c.want)
 		}

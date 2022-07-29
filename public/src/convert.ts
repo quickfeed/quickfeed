@@ -98,7 +98,7 @@ export class Converter {
         assignment.setId(obj.id)
         assignment.setCourseid(obj.courseid)
         assignment.setName(obj.name)
-        assignment.setDeadline(obj.deadline)
+        assignment.setDeadline(this.toTimestamp(obj.deadline))
         assignment.setAutoapprove(obj.autoapprove)
         assignment.setOrder(obj.order)
         assignment.setIsgrouplab(obj.isgrouplab)
@@ -126,9 +126,7 @@ export class Converter {
         submission.setCommithash(obj.commithash)
         submission.setReleased(obj.released)
         submission.setStatus(obj.status)
-        if (obj.approveddate) {
-            submission.setApproveddate(this.toTimestamp(obj.approveddate))
-        }
+        submission.setApproveddate(this.toTimestamp(obj.approveddate))
 
         const reviews = obj.reviewsList.map(r => this.toReview(r))
         submission.setReviewsList(reviews)
@@ -143,10 +141,12 @@ export class Converter {
         return submission
     }
 
-    public static toTimestamp = (obj: Timestamp.AsObject): Timestamp => {
+    public static toTimestamp = (obj?: Timestamp.AsObject): Timestamp => {
         const timestamp = new Timestamp()
-        timestamp.setSeconds(obj.seconds)
-        timestamp.setNanos(obj.nanos)
+        if (obj) {
+            timestamp.setSeconds(obj.seconds)
+            timestamp.setNanos(obj.nanos)
+        }
         return timestamp
     }
 
@@ -154,9 +154,7 @@ export class Converter {
         const buildInfo = new BuildInfo()
         buildInfo.setId(obj.id)
         buildInfo.setSubmissionid(obj.submissionid)
-        if (obj.builddate) {
-            buildInfo.setBuilddate(this.toTimestamp(obj.builddate))
-        }
+        buildInfo.setBuilddate(this.toTimestamp(obj.builddate))
         buildInfo.setBuildlog(obj.buildlog)
         buildInfo.setExectime(obj.exectime)
         return buildInfo

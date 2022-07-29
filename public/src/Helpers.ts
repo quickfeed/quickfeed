@@ -21,7 +21,7 @@ export enum Sort {
 }
 
 /** Returns a string with a prettier format for a timestamp object. */
-export const formattedDate = (timestamp: Timestamp.AsObject | undefined): string => {
+export const getFormattedTime = (timestamp: Timestamp.AsObject | undefined): string => {
     if (!timestamp) {
         return "N/A"
     }
@@ -29,7 +29,7 @@ export const formattedDate = (timestamp: Timestamp.AsObject | undefined): string
 }
 
 /** Returns a string with a prettier format for a date string. */
-export const getFormattedTime = (dateString: string): string => {
+export const oldFormattedTime = (dateString: string): string => {
     return dateToString(new Date(dateString))
 }
 
@@ -44,10 +44,14 @@ export interface Deadline {
     daysUntil: number,
 }
 
-/** Utility function for LandingpageTable functionality. To format the output string and class/css based on how far the deadline is in the future */
-// layoutTime = "2021-03-20T23:59:00"
-export const timeFormatter = (deadline: string): Deadline => {
-    const timeToDeadline = new Date(deadline).getTime() - new Date().getTime()
+/**
+ * Utility function for LandingPageTable to format the output string and class/css
+ * depending on how far into the future the deadline is.
+ *
+ * layoutTime = "2021-03-20T23:59:00"
+ */
+export const timeFormatter = (deadline: Timestamp.AsObject | undefined): Deadline => {
+    const timeToDeadline = Converter.toTimestamp(deadline).toDate().getTime() - new Date().getTime()
     const days = Math.floor(timeToDeadline / (1000 * 3600 * 24))
     const hours = Math.floor(timeToDeadline / (1000 * 3600))
     const minutes = Math.floor((timeToDeadline % (1000 * 3600)) / (1000 * 60))

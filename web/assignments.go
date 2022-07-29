@@ -16,12 +16,6 @@ func (s *QuickFeedService) getAssignments(courseID uint64) (*qf.Assignments, err
 	if err != nil {
 		return nil, err
 	}
-	// Hack to ensure that assignments stored in database with wrong format
-	// is displayed correctly in the frontend. This should ideally be removed
-	// when the database no longer contains any incorrectly formatted dates.
-	for _, assignment := range allAssignments {
-		assignment.Deadline = assignments.FixDeadline(assignment.GetDeadline())
-	}
 	return &qf.Assignments{Assignments: allAssignments}, nil
 }
 

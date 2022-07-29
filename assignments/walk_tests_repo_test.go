@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -45,7 +46,7 @@ WORKDIR /quickfeed
 			CourseID:   1,
 			Order:      1,
 			ScoreLimit: 80,
-			Deadline:   "2019-01-24T14:00:00",
+			Deadline:   qtest.Timestamp(t, "2019-01-24T14:00:00"),
 			RunScriptContent: `#image/quickfeed:go
 
 printf "Custom lab1 script\n"
@@ -56,7 +57,7 @@ printf "Custom lab1 script\n"
 			CourseID:   1,
 			Order:      2,
 			ScoreLimit: 80,
-			Deadline:   "2019-01-31T16:00:00",
+			Deadline:   qtest.Timestamp(t, "2019-01-31T16:00:00"),
 			RunScriptContent: `#image/quickfeed:go
 
 printf "Default script\n"
@@ -67,7 +68,7 @@ printf "Default script\n"
 			CourseID:   1,
 			Order:      3,
 			ScoreLimit: 80,
-			Deadline:   "2019-02-14T23:00:00",
+			Deadline:   qtest.Timestamp(t, "2019-02-14T23:00:00"),
 			IsGroupLab: true,
 			RunScriptContent: `#image/quickfeed:go
 
