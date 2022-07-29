@@ -20,14 +20,14 @@ import (
 type QuickFeedService struct {
 	logger *zap.SugaredLogger
 	db     database.Database
-	scms   *scm.Scms
+	scms   *scm.SCMManager
 	bh     BaseHookOptions
 	runner ci.Runner
 	qf.UnimplementedQuickFeedServiceServer
 }
 
 // NewQuickFeedService returns a QuickFeedService object.
-func NewQuickFeedService(logger *zap.Logger, db database.Database, scms *scm.Scms, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
+func NewQuickFeedService(logger *zap.Logger, db database.Database, scms *scm.SCMManager, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
 	return &QuickFeedService{
 		logger: logger.Sugar(),
 		db:     db,
@@ -110,20 +110,6 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *qf.User) (*qf.Voi
 		err = status.Error(codes.InvalidArgument, "failed to update user")
 	}
 	return &qf.Void{}, err
-}
-
-// IsAuthorizedTeacher checks whether current user has teacher scopes.
-// Access policy: Any User.
-func (s *QuickFeedService) IsAuthorizedTeacher(ctx context.Context, _ *qf.Void) (*qf.AuthorizationResponse, error) {
-	// Currently hardcoded for github only
-	_, scm, err := s.getUserAndSCM(ctx, "github")
-	if err != nil {
-		s.logger.Errorf("IsAuthorizedTeacher failed: scm authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
-	}
-	return &qf.AuthorizationResponse{
-		IsAuthorized: hasTeacherScopes(ctx, scm),
-	}, nil
 }
 
 // CreateCourse creates a new course.

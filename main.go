@@ -61,12 +61,19 @@ func main() {
 	}
 
 	// Holds references for activated providers for current user token
-	scms := scm.NewScms()
 	bh := web.BaseHookOptions{
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
+	appID, err := env.AppID()
+	if err != nil {
+		log.Fatal(err)
+	}
+	appKey, err := env.AppKey()
+	if err != nil {
+		log.Fatal(err)
+	}
 	clientID, err := env.ClientID()
 	if err != nil {
 		log.Fatal(err)
@@ -77,6 +84,10 @@ func main() {
 	}
 
 	authConfig := auth.NewGitHubConfig(*baseURL, clientID, clientSecret)
+	scmManager, err := scm.NewSCMManager(appID, clientID, clientSecret, appKey)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	runner, err := ci.NewDockerCI(logger.Sugar())
 	if err != nil {
@@ -115,7 +126,7 @@ func main() {
 		grpcServer = web.GRPCServer(unaryOptions, streamOptions)
 	}
 
-	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
+	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
 	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
 	multiplexer := web.GrpcMultiplexer{
 		MuxServer: grpcweb.WrapServer(grpcServer),

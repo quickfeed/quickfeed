@@ -28,7 +28,7 @@ type GithubConfig struct {
 // SCMManager keeps provider-specific configs (currently only for GitHub)
 // and a map of scm clients for each course.
 type SCMManager struct {
-	scms         *Scms
+	Scms         *Scms
 	githubConfig *GithubConfig
 }
 
@@ -68,7 +68,7 @@ func NewSCMManager(appID, appKey, appSecret, appKeyFile string) (*SCMManager, er
 	config.appConfig = appClientConfig
 	return &SCMManager{
 		githubConfig: config,
-		scms:         NewScms(),
+		Scms:         NewScms(),
 	}, nil
 }
 

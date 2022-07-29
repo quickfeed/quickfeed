@@ -46,7 +46,8 @@ func (s *QuickFeedService) getSCM(user *qf.User, provider string) (scm.SCM, erro
 	}
 	for _, remoteID := range user.RemoteIdentities {
 		if remoteID.Provider == provider {
-			scm, ok := s.scms.GetSCM(remoteID.GetAccessToken())
+			// TODO(vera): must add methods on the SCMManger to get/create scms
+			scm, ok := s.scms.Scms.GetSCM(remoteID.GetAccessToken())
 			if !ok {
 				return nil, fmt.Errorf("invalid token for user(%d) provider(%s)", user.ID, provider)
 			}
@@ -152,25 +153,4 @@ func (s *QuickFeedService) getUserAndSCMForCourse(ctx context.Context, courseID 
 		return nil, nil, fmt.Errorf("failed to get course with ID %d: %w", courseID, err)
 	}
 	return s.getUserAndSCM(ctx, crs.GetProvider())
-}
-
-// teacherScopes defines scopes that must be enabled for a teacher token to be valid.
-var teacherScopes = map[string]bool{
-	"admin:org":      true,
-	"delete_repo":    true,
-	"repo":           true,
-	"user":           true,
-	"admin:org_hook": true,
-}
-
-// hasTeacherScopes checks whether current user has upgraded scopes on provided scm client.
-func hasTeacherScopes(ctx context.Context, sc scm.SCM) bool {
-	authorization := sc.GetUserScopes(ctx)
-	scopesFound := 0
-	for _, scope := range authorization.Scopes {
-		if teacherScopes[scope] {
-			scopesFound++
-		}
-	}
-	return scopesFound == len(teacherScopes)
 }
