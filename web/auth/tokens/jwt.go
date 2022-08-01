@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -43,6 +44,10 @@ type TokenManager struct {
 func NewTokenManager(db database.Database, domain string) (*TokenManager, error) {
 	if domain == "" {
 		return nil, errors.New("failed to create a new token manager: missing domain")
+	}
+	hostname, _, ok := strings.Cut(domain, ":")
+	if ok {
+		domain = hostname
 	}
 	manager := &TokenManager{
 		db:          db,
