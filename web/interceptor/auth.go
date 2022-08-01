@@ -50,6 +50,7 @@ func UnaryUserVerifier(logger *zap.SugaredLogger, tm *tokens.TokenManager) grpc.
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		newCtx, err := getAuthenticatedContext(ctx, logger, tm)
 		if err != nil {
+			logger.Errorf("Unary User Verifier failed: %v", err)
 			return nil, err
 		}
 		return handler(newCtx, req)

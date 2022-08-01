@@ -2,7 +2,6 @@ package interceptor
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -10,32 +9,20 @@ import (
 	"github.com/quickfeed/quickfeed/web/auth/tokens"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 )
-
-var ErrAccessDenied = status.Errorf(codes.Unauthenticated, "access denied")
 
 // getAuthenticatedContext returns a new context with the user ID attached to it.
 // If the context does not contain a valid session cookie, it returns an error.
 func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm *tokens.TokenManager) (context.Context, error) {
 	meta, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
+		logger.Error("Failed to extract metadata")
 		return nil, ErrContextMetadata
 	}
-	newMeta, err := userValidation(ctx, logger, meta, tm)
-	if err != nil {
-		return nil, ErrContextMetadata
-	}
-	return metadata.NewIncomingContext(ctx, newMeta), nil
-}
-
-// userValidation returns modified metadata containing a valid user.
-// An error is returned if the user is not authenticated.
-func userValidation(ctx context.Context, logger *zap.SugaredLogger, meta metadata.MD, tm *tokens.TokenManager) (metadata.MD, error) {
 	token, err := extractToken(meta)
 	if err != nil {
+		logger.Errorf("Failed to extract token: %v", err)
 		return nil, ErrInvalidAuthCookie
 	}
 	claims, err := tm.GetClaims(token)
@@ -44,14 +31,18 @@ func userValidation(ctx context.Context, logger *zap.SugaredLogger, meta metadat
 		return nil, ErrInvalidAuthCookie
 	}
 	if tm.UpdateRequired(claims) {
-		logger.Debugf("Updating token for user %d", claims.UserID)
-		if err := refreshAuthCookie(ctx, tm, claims); err != nil {
-			logger.Errorf("Failed to update authentication token: %v", err)
+		logger.Debug("Updating token for user ", claims.UserID)
+		updatedToken, err := tm.NewAuthCookie(claims.UserID)
+		if err != nil {
+			logger.Errorf("Failed to update cookie: %v", err)
+		}
+		if err := grpc.SendHeader(ctx, metadata.Pairs("Set-Cookie", updatedToken.String())); err != nil {
+			logger.Errorf("Failed to set grpc header: %v", err)
 			return nil, ErrInvalidAuthCookie
 		}
 	}
 	meta.Set(auth.UserKey, strconv.FormatUint(claims.UserID, 10))
-	return meta, nil
+	return metadata.NewIncomingContext(ctx, meta), nil
 }
 
 // extractToken extracts a JWT authentication token from metadata.
@@ -64,32 +55,4 @@ func extractToken(meta metadata.MD) (string, error) {
 		}
 	}
 	return "", ErrInvalidAuthCookie
-}
-
-// refreshAuthCookie sets cookie with an updated JWT authentication token.
-func refreshAuthCookie(ctx context.Context, tm *tokens.TokenManager, claims *tokens.Claims) error {
-	updatedToken, err := tm.NewAuthCookie(claims.UserID)
-	if err != nil {
-		return err
-	}
-	if err := tm.Remove(claims.UserID); err != nil {
-		return err
-	}
-	return setCookie(ctx, updatedToken.String())
-}
-
-// setCookie sets a "Set-Cookie" header with JWT token to the outgoing context.
-func setCookie(ctx context.Context, cookie string) error {
-	if cookie == "" {
-		return fmt.Errorf("empty cookie")
-	}
-	meta, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return fmt.Errorf("failed to read metadata")
-	}
-	ctx = metadata.AppendToOutgoingContext(ctx, "Set-Cookie", cookie)
-	if err := grpc.SetHeader(ctx, meta); err != nil {
-		return fmt.Errorf("failed to set grpc header: %w", err)
-	}
-	return nil
 }

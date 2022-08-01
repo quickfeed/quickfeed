@@ -14,11 +14,10 @@ import (
 )
 
 var (
-	authCookieName = "auth"
-	expirationTime = 15 * time.Minute
-	// Will refresh token when it is less then refreshTime till token expiration.
-	refreshTime = 1 * time.Minute
-	alg         = "HS256"
+	authCookieName       = "auth"
+	tokenExpirationTime  = 15 * time.Minute
+	cookieExpirationTime = 12 * time.Hour
+	alg                  = "HS256"
 )
 
 // Claims contain the bearer information.
@@ -34,7 +33,6 @@ type Claims struct {
 type TokenManager struct {
 	updateTokens []uint64
 	db           database.Database
-	expireAfter  time.Duration
 	secret       string
 	domain       string
 	cookieName   string
@@ -50,11 +48,10 @@ func NewTokenManager(db database.Database, domain string) (*TokenManager, error)
 		domain = hostname
 	}
 	manager := &TokenManager{
-		db:          db,
-		expireAfter: expirationTime,
-		secret:      rand.String(),
-		domain:      domain,
-		cookieName:  authCookieName,
+		db:         db,
+		secret:     rand.String(),
+		domain:     domain,
+		cookieName: authCookieName,
 	}
 	if err := manager.updateTokenList(); err != nil {
 		return nil, err
@@ -79,7 +76,7 @@ func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		Expires:  time.Now().Add(tm.expireAfter),
+		Expires:  time.Now().Add(cookieExpirationTime),
 		SameSite: http.SameSiteStrictMode,
 	}, nil
 }
@@ -96,6 +93,11 @@ func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 		return []byte(tm.secret), nil
 	})
 	if err != nil {
+		if isTokenExpiredError(err) {
+			if err = tm.validSignature(token); err == nil {
+				return claims, nil
+			}
+		}
 		return nil, err
 	}
 	claims, ok := token.Claims.(*Claims)
@@ -117,7 +119,7 @@ func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 	}
 	newClaims := &Claims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(tm.expireAfter).Unix(),
+			ExpiresAt: time.Now().Add(tokenExpirationTime).Unix(),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    "QuickFeed",
 		},
@@ -130,4 +132,22 @@ func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 	}
 	newClaims.Courses = userCourses
 	return newClaims, nil
+}
+
+// isTokenExpiredError checks if the error from JWT validation
+// is because of an expired token.
+func isTokenExpiredError(err error) bool {
+	v, ok := err.(*jwt.ValidationError)
+	if ok {
+		return v.Errors == jwt.ValidationErrorExpired
+	}
+	return ok
+}
+
+func (tm *TokenManager) validSignature(token *jwt.Token) error {
+	signingString, err := token.SigningString()
+	if err != nil {
+		return err
+	}
+	return token.Method.Verify(signingString, token.Signature, []byte(tm.secret))
 }
