@@ -53,7 +53,9 @@ func (s *QuickFeedService) RegisterRouter(authConfig *oauth2.Config, mux GrpcMul
 	assets := http.FileServer(http.Dir(public + "/assets"))
 	dist := http.FileServer(http.Dir(public + "/dist"))
 
-	router.Handle("/", mux.MuxHandler(http.StripPrefix("/", assets)))
+	router.Handle("/", mux.MuxHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, public+"/assets/index.html")
+	})))
 	router.Handle(Assets, mux.MuxHandler(http.StripPrefix(Assets, assets)))
 	router.Handle(Static, mux.MuxHandler(http.StripPrefix(Static, dist)))
 
