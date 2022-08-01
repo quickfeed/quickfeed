@@ -43,7 +43,7 @@ func TestNewManager(t *testing.T) {
 		t.Error("JWT update required is true, expected false")
 	}
 	// But must require update if claims are about to expire.
-	user1claims.StandardClaims.ExpiresAt = time.Now().Add(time.Second * 10).Unix()
+	user1claims.StandardClaims.ExpiresAt = time.Now().Unix() - 10
 	if !manager.UpdateRequired(&user1claims) {
 		t.Error("JWT update required is false for expiring token, expected true")
 	}

@@ -94,7 +94,7 @@ func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 	})
 	if err != nil {
 		if isTokenExpiredError(err) {
-			if err = tm.validSignature(token); err == nil {
+			if err = tm.validateSignature(token); err == nil {
 				return claims, nil
 			}
 		}
@@ -144,7 +144,10 @@ func isTokenExpiredError(err error) bool {
 	return ok
 }
 
-func (tm *TokenManager) validSignature(token *jwt.Token) error {
+// validateSignature checks the validity of the signature.
+// This makes it possible to update expired JWTs. The built in methods
+// will return an error for an expired JWT before validating the signature.
+func (tm *TokenManager) validateSignature(token *jwt.Token) error {
 	signingString, err := token.SigningString()
 	if err != nil {
 		return err

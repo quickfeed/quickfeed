@@ -13,7 +13,7 @@ func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 			return true
 		}
 	}
-	return claims.ExpiresAt < time.Now().Unix()
+	return claims.ExpiresAt <= time.Now().Unix()
 }
 
 // Update removes user ID from the manager and updates user record in the database
