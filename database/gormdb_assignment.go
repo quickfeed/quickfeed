@@ -1,7 +1,11 @@
 package database
 
 import (
+	"fmt"
+
+	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/testing/protocmp"
 	"gorm.io/gorm"
 )
 
@@ -59,6 +63,9 @@ func (db *GormDB) GetAssignmentsByCourse(courseID uint64, withBenchmarkTemplate 
 func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 	return db.conn.Transaction(func(tx *gorm.DB) error {
 		for _, v := range assignments {
+			if err := db.updateGradingCriteria(v); err != nil {
+				return err // will rollback transaction
+			}
 			if err := tx.Model(v).Select("*").
 				Where(&qf.Assignment{
 					ID: v.ID,
@@ -84,6 +91,45 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 		}
 		return nil
 	})
+}
+
+// updateGradingCriteria will remove old grading criteria and related reviews when criteria.json gets updated.
+func (db *GormDB) updateGradingCriteria(assignment *qf.Assignment) error {
+	if len(assignment.GetGradingBenchmarks()) > 0 {
+		gradingBenchmarks, err := db.GetBenchmarks(&qf.Assignment{
+			CourseID: assignment.CourseID,
+			Order:    assignment.Order,
+		})
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				// a new assignment, no actions required
+				return nil
+			}
+			return fmt.Errorf("failed to fetch assignment %s from database: %w", assignment.Name, err)
+		}
+		if len(gradingBenchmarks) > 0 {
+			if !cmp.Equal(assignment.GradingBenchmarks, gradingBenchmarks, cmp.Options{
+				protocmp.Transform(),
+				protocmp.IgnoreFields(&qf.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
+				protocmp.IgnoreFields(&qf.GradingCriterion{}, "ID", "BenchmarkID"),
+				protocmp.IgnoreEnums(),
+			}) {
+				for _, bm := range gradingBenchmarks {
+					for _, c := range bm.Criteria {
+						if err := db.DeleteCriterion(c); err != nil {
+							return fmt.Errorf("failed to delete criterion %d: %w", c.GetID(), err)
+						}
+					}
+					if err := db.DeleteBenchmark(bm); err != nil {
+						return fmt.Errorf("failed to delete benchmark %d: %w", bm.GetID(), err)
+					}
+				}
+			} else {
+				assignment.GradingBenchmarks = nil
+			}
+		}
+	}
+	return nil
 }
 
 // GetAssignmentsWithSubmissions returns all course assignments
@@ -168,10 +214,11 @@ func (db *GormDB) DeleteCriterion(query *qf.GradingCriterion) error {
 	return db.conn.Delete(query).Error
 }
 
-// GetBenchmarks returns all benchmarks and associated criteria without reviews for a given assignment ID.
+// GetBenchmarks returns all benchmarks and associated criteria without reviews for a given assignment.
 func (db *GormDB) GetBenchmarks(query *qf.Assignment) ([]*qf.GradingBenchmark, error) {
 	var benchmarks []*qf.GradingBenchmark
 	err := db.conn.Transaction(func(tx *gorm.DB) error {
+		// Lookup the assignment; may be based on e.g., CourseID and Order fields.
 		var assignment qf.Assignment
 		if err := tx.Where(query).First(&assignment).Error; err != nil {
 			return err // will rollback transaction

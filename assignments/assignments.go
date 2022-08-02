@@ -6,15 +6,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/testing/protocmp"
-	"gorm.io/gorm"
 )
 
 // MaxWait is the maximum time allowed for updating a course's assignments
@@ -39,9 +36,6 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", qf.TestsRepo, err)
 		return
-	}
-	for _, assignment := range assignments {
-		updateGradingCriteria(logger, db, assignment)
 	}
 
 	if dockerfile != "" && dockerfile != course.Dockerfile {
@@ -125,45 +119,4 @@ func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, course *qf
 		return fmt.Errorf("failed to build image from %s's Dockerfile: %s", course.GetCode(), err)
 	}
 	return nil
-}
-
-// updateGradingCriteria will remove old grading criteria and related reviews when criteria.json gets updated
-func updateGradingCriteria(logger *zap.SugaredLogger, db database.Database, assignment *qf.Assignment) {
-	if len(assignment.GetGradingBenchmarks()) > 0 {
-		gradingBenchmarks, err := db.GetBenchmarks(&qf.Assignment{
-			CourseID: assignment.CourseID,
-			Order:    assignment.Order,
-		})
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				// a new assignment, no actions required
-				return
-			}
-			logger.Debugf("Failed to fetch assignment %s from database: %s", assignment.Name, err)
-			return
-		}
-		if len(gradingBenchmarks) > 0 {
-			if !cmp.Equal(assignment.GradingBenchmarks, gradingBenchmarks, cmp.Options{
-				protocmp.Transform(),
-				protocmp.IgnoreFields(&qf.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
-				protocmp.IgnoreFields(&qf.GradingCriterion{}, "ID", "BenchmarkID"),
-				protocmp.IgnoreEnums(),
-			}) {
-				for _, bm := range gradingBenchmarks {
-					for _, c := range bm.Criteria {
-						if err := db.DeleteCriterion(c); err != nil {
-							logger.Errorf("Failed to delete criteria %v: %s\n", c, err)
-							return
-						}
-					}
-					if err := db.DeleteBenchmark(bm); err != nil {
-						logger.Errorf("Failed to delete benchmark %v: %s\n", bm, err)
-						return
-					}
-				}
-			} else {
-				assignment.GradingBenchmarks = nil
-			}
-		}
-	}
 }

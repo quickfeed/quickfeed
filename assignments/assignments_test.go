@@ -137,6 +137,10 @@ func TestUpdateCriteria(t *testing.T) {
 
 	assignment.GradingBenchmarks = benchmarks
 
+	if diff := cmp.Diff(benchmarks, assignment.GradingBenchmarks, protocmp.Transform()); diff != "" {
+		t.Errorf("Sanity check: mismatch (-want +got):\n%s", diff)
+	}
+
 	submission := &qf.Submission{
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
@@ -203,17 +207,17 @@ func TestUpdateCriteria(t *testing.T) {
 		}
 	}
 
-	// If assignment.GradingBenchmarks is empty beyond this point, it means that there were no added / removed benchmarks / criteria
-	updateGradingCriteria(qlog.Logger(t), db, assignment)
-
-	// Assignment has no added or removed benchmarks, expect nil
-	if assignment.GradingBenchmarks != nil {
-		t.Errorf("Expected nil, got %v", qlog.IndentJson(assignment.GradingBenchmarks))
+	if diff := cmp.Diff(benchmarks, assignment.GradingBenchmarks, protocmp.Transform()); diff != "" {
+		t.Errorf("Sanity check: mismatch (-want +got):\n%s", diff)
 	}
 
 	// Update assignments. GradingBenchmarks should not be updated
 	if err := db.UpdateAssignments([]*qf.Assignment{assignment, assignment2}); err != nil {
 		t.Fatal(err)
+	}
+	// Assignment has no added or removed benchmarks, expect nil
+	if assignment.GradingBenchmarks != nil {
+		t.Errorf("Expected nil, got %v", assignment.GradingBenchmarks)
 	}
 
 	for _, wantReview := range []*qf.Review{review, review2} {
@@ -223,7 +227,7 @@ func TestUpdateCriteria(t *testing.T) {
 		}
 		// Review should not have changed
 		if diff := cmp.Diff(wantReview, gotReview, protocmp.Transform()); diff != "" {
-			t.Fatalf("GetReview() mismatch (-want +got):\n%s", diff)
+			t.Errorf("GetReview() mismatch (-want +got):\n%s", diff)
 		}
 	}
 
@@ -232,12 +236,7 @@ func TestUpdateCriteria(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if diff := cmp.Diff(benchmarks, gotBenchmarks, cmp.Options{
-		protocmp.Transform(),
-		protocmp.IgnoreFields(&qf.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
-		protocmp.IgnoreFields(&qf.GradingCriterion{}, "ID", "BenchmarkID"),
-		protocmp.IgnoreEnums(),
-	}); diff != "" {
+	if diff := cmp.Diff(benchmarks, gotBenchmarks, protocmp.Transform()); diff != "" {
 		t.Errorf("GetBenchmarks() mismatch (-want +got):\n%s", diff)
 	}
 
@@ -258,34 +257,32 @@ func TestUpdateCriteria(t *testing.T) {
 
 	assignment.GradingBenchmarks = updatedBenchmarks
 
-	// This should delete the old benchmarks and criteria existing in the database, and return the new benchmarks
-	updateGradingCriteria(qlog.Logger(t), db, assignment)
-
-	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})
-	if err != nil {
-		t.Fatal(err)
-	}
-	// updateGradingCriteria should have deleted the old benchmarks and criteria
-	if len(gotBenchmarks) > 0 {
-		t.Fatalf("Expected no benchmarks, got %v", gotBenchmarks)
+	if diff := cmp.Diff(updatedBenchmarks, assignment.GradingBenchmarks, protocmp.Transform()); diff != "" {
+		t.Errorf("Sanity check: mismatch (-want +got):\n%s", diff)
 	}
 
-	// Assignment has been modified, expect benchmarks to not be nil
-	if assignment.GradingBenchmarks == nil {
-		t.Fatal("Expected assignment.GradingBenchmarks to not be nil")
-	}
-
-	// Update assignments. GradingBenchmarks should be updated
+	// Update assignments. GradingBenchmarks should be updated.
+	// This should also delete the old benchmarks in the database, and return the new benchmarks.
 	if err := db.UpdateAssignments([]*qf.Assignment{assignment, assignment2}); err != nil {
 		t.Error(err)
 	}
+	// Assignment should still reflect the updated benchmark
+	if assignment.GradingBenchmarks == nil {
+		t.Error("Expected assignment.GradingBenchmarks to be non-nil")
+	}
+	if diff := cmp.Diff(updatedBenchmarks, assignment.GradingBenchmarks, protocmp.Transform()); diff != "" {
+		t.Errorf("Sanity check: mismatch (-want +got):\n%s", diff)
+	}
 
-	// Benchmarks should have been updated to reflect the removal of a benchmark and a criterion
+	// Benchmarks should have been updated to reflect the removal of two benchmarks and the addition of a new one.
 	gotBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: assignment.ID, CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	// UpdateAssignments should have deleted the old benchmarks and added a single new one.
+	if len(gotBenchmarks) != 1 {
+		t.Errorf("Expected 1 benchmark, got %d", len(gotBenchmarks))
+	}
 	if diff := cmp.Diff(updatedBenchmarks, gotBenchmarks, protocmp.Transform()); diff != "" {
 		t.Errorf("GetBenchmarks() mismatch (-want +got):\n%s", diff)
 	}
@@ -298,7 +295,7 @@ func TestUpdateCriteria(t *testing.T) {
 		}
 		// Review should not have changed
 		if diff := cmp.Diff(wantReview, gotReview, protocmp.Transform()); diff != "" {
-			t.Fatalf("GetReview() mismatch (-want +got):\n%s", diff)
+			t.Errorf("GetReview() mismatch (-want +got):\n%s", diff)
 		}
 	}
 }
