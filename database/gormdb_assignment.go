@@ -137,29 +137,28 @@ func (db *GormDB) updateGradingCriteria(assignment *qf.Assignment) error {
 
 // GetAssignmentsWithSubmissions returns all course assignments
 // of requested type with preloaded submissions.
-func (db *GormDB) GetAssignmentsWithSubmissions(courseID uint64, submissionType qf.SubmissionsForCourseRequest_Type, withBuildInfo bool) ([]*qf.Assignment, error) {
+func (db *GormDB) GetAssignmentsWithSubmissions(request *qf.SubmissionsForCourseRequest) ([]*qf.Assignment, error) {
 	m := db.conn.Preload("Submissions").
 		Preload("Submissions.Reviews").
 		Preload("Submissions.Reviews.GradingBenchmarks").
 		Preload("Submissions.Reviews.GradingBenchmarks.Criteria").
 		Preload("Submissions.Scores")
-	if withBuildInfo {
+	if request.GetWithBuildInfo() {
 		m.Preload("Submissions.BuildInfo")
 	}
 	// the 'order' field must be in 'quotes', otherwise it will be interpreted as SQL.
 	var assignments []*qf.Assignment
-	if err := m.Where(&qf.Assignment{CourseID: courseID}).
+	if err := m.Where(&qf.Assignment{CourseID: request.GetCourseID()}).
 		Order("'order'").
 		Find(&assignments).Error; err != nil {
 		return nil, err
 	}
-	if submissionType == qf.SubmissionsForCourseRequest_ALL {
+	if request.IncludeAll() {
 		return assignments, nil
 	}
-	wantGroupLabs := submissionType == qf.SubmissionsForCourseRequest_GROUP
 	filteredAssignments := make([]*qf.Assignment, 0)
 	for _, a := range assignments {
-		if a.IsGroupLab == wantGroupLabs {
+		if request.Include(a) {
 			filteredAssignments = append(filteredAssignments, a)
 		}
 	}

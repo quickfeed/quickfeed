@@ -163,7 +163,12 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(wantStruct); err != nil {
 		t.Fatal(err)
 	}
-	assignments, err := db.GetAssignmentsWithSubmissions(course.ID, qf.SubmissionsForCourseRequest_ALL, true)
+	req := &qf.SubmissionsForCourseRequest{
+		CourseID:      course.ID,
+		Type:          qf.SubmissionsForCourseRequest_ALL,
+		WithBuildInfo: true,
+	}
+	assignments, err := db.GetAssignmentsWithSubmissions(req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,7 +200,12 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(wantReview); err != nil {
 		t.Fatal(err)
 	}
-	assignments, err = db.GetAssignmentsWithSubmissions(course.ID, qf.SubmissionsForCourseRequest_ALL, true)
+	req = &qf.SubmissionsForCourseRequest{
+		CourseID:      course.ID,
+		Type:          qf.SubmissionsForCourseRequest_ALL,
+		WithBuildInfo: true,
+	}
+	assignments, err = db.GetAssignmentsWithSubmissions(req)
 	if err != nil {
 		t.Fatal(err)
 	}
