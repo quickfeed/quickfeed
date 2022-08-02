@@ -108,12 +108,17 @@ func (db *GormDB) updateGradingCriteria(assignment *qf.Assignment) error {
 			return fmt.Errorf("failed to fetch assignment %s from database: %w", assignment.Name, err)
 		}
 		if len(gradingBenchmarks) > 0 {
-			if !cmp.Equal(assignment.GradingBenchmarks, gradingBenchmarks, cmp.Options{
+			if cmp.Equal(assignment.GradingBenchmarks, gradingBenchmarks, cmp.Options{
 				protocmp.Transform(),
 				protocmp.IgnoreFields(&qf.GradingBenchmark{}, "ID", "AssignmentID", "ReviewID"),
 				protocmp.IgnoreFields(&qf.GradingCriterion{}, "ID", "BenchmarkID"),
 				protocmp.IgnoreEnums(),
 			}) {
+				// no changes in the grading criteria for this assignment (from the tests repository)
+				// we set this to nil to avoid duplicates in the database
+				assignment.GradingBenchmarks = nil
+			} else {
+				// grading criteria changed for this assignment, remove old criteria and reviews
 				for _, bm := range gradingBenchmarks {
 					for _, c := range bm.Criteria {
 						if err := db.DeleteCriterion(c); err != nil {
@@ -124,8 +129,6 @@ func (db *GormDB) updateGradingCriteria(assignment *qf.Assignment) error {
 						return fmt.Errorf("failed to delete benchmark %d: %w", bm.GetID(), err)
 					}
 				}
-			} else {
-				assignment.GradingBenchmarks = nil
 			}
 		}
 	}
