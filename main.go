@@ -84,7 +84,7 @@ func main() {
 	}
 
 	authConfig := auth.NewGitHubConfig(*baseURL, clientID, clientSecret)
-	scmManager, err := scm.NewSCMManager(appID, clientID, clientSecret, appKey)
+	scmManager, err := scm.NewSCMManager(appID, appKey)
 	if err != nil {
 		log.Fatal(err)
 	}
