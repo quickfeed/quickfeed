@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"mime"
@@ -127,6 +128,10 @@ func main() {
 	}
 
 	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
+	if err := qfService.MakeSCMs(context.Background()); err != nil {
+		log.Fatalf("Failed to create SCM clients: %v", err)
+	}
+
 	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
 	multiplexer := web.GrpcMultiplexer{
 		MuxServer: grpcweb.WrapServer(grpcServer),

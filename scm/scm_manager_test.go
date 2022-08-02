@@ -25,7 +25,7 @@ func TestSCMManager(t *testing.T) {
 	}
 	qfTestOrg := scm.GetTestOrganization(t)
 	ctx := context.Background()
-	_, err = tm.NewSCMClient(ctx, qtest.Logger(t), qfTestOrg)
+	_, err = tm.GetOrCreateSCM(ctx, qtest.Logger(t), qfTestOrg)
 	if err != nil {
 		t.Fatal(err)
 	}

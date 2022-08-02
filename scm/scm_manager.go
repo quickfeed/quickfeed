@@ -32,7 +32,7 @@ func NewSCMManager(appID, appKeyFile string) (*SCMManager, error) {
 	}
 	appConfig, err := app.NewConfig(appID, createAppKey)
 	if err != nil {
-		return nil, fmt.Errorf("error creating GitHub application client: %s", err)
+		return nil, fmt.Errorf("error creating GitHub application client: %w", err)
 	}
 	return &SCMManager{
 		appID:     appID,
@@ -73,16 +73,19 @@ func (sm *SCMManager) newInstallationClient(ctx context.Context, organization st
 	return github.NewClient(install.Client(ctx)), nil
 }
 
-// NewSCMClient creates a new SCM client for a course organization.
-func (sm *SCMManager) NewSCMClient(ctx context.Context, logger *zap.SugaredLogger, organization string) (*GithubSCM, error) {
-	client, err := sm.newInstallationClient(ctx, organization)
-	if err != nil {
-		return nil, err
+// SCMClient gets an existing SCM client by organization name or creates a new client for course organization.
+func (s *SCMManager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
+	client, ok := s.Scms.scms[organization]
+	if !ok {
+		client, err := s.newInstallationClient(ctx, organization)
+		if err != nil {
+			return nil, err
+		}
+		cli := &GithubSCM{
+			logger: logger,
+			client: client,
+		}
+		s.Scms.scms[organization] = cli
 	}
-	cli := &GithubSCM{
-		logger: logger,
-		client: client,
-	}
-	sm.Scms.scms[organization] = cli
-	return cli, nil
+	return client, nil
 }

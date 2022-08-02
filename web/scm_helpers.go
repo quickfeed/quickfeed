@@ -28,6 +28,26 @@ var (
 	FreeOrgPlan = "free"
 )
 
+// MakeSCMs creates and saves SCM clients for each course without an active SCM client.
+func (q *QuickFeedService) MakeSCMs(ctx context.Context) error {
+	courses, err := q.db.GetCourses()
+	if err != nil {
+		return err
+	}
+	for _, course := range courses {
+		_, err := q.scms.GetOrCreateSCM(ctx, q.logger, course.OrganizationPath)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// GetSCM fetches an SCM client for the course organization.
+func (q *QuickFeedService) GetSCM(ctx context.Context, organization string) (scm.SCM, error) {
+	return q.scms.GetOrCreateSCM(ctx, q.logger, organization)
+}
+
 // createRepoAndTeam invokes the SCM to create a repository and team for the
 // specified course (represented with organization ID). The SCM team name
 // is also used as the group name and repository path. The provided user names represent the SCM group members.
