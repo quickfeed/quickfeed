@@ -225,10 +225,11 @@ func (db *GormDB) GetBenchmarks(query *qf.Assignment) ([]*qf.GradingBenchmark, e
 		}
 		// SELECT * FROM grading_benchmarks WHERE assignment_id = 1 AND review_id = 0
 		// Note that review_id = 0 ensures that only benchmarks without reviews are returned.
-		if err := tx.Where(&qf.GradingBenchmark{
-			AssignmentID: assignment.ID,
-			ReviewID:     0,
-		}, "assignment_id", "review_id").Find(&benchmarks).Error; err != nil {
+		if err := tx.
+			Where("review_id = ?", 0).
+			Where(&qf.GradingBenchmark{
+				AssignmentID: assignment.ID,
+			}, "assignment_id").Find(&benchmarks).Error; err != nil {
 			return err // will rollback transaction
 		}
 		for _, b := range benchmarks {
