@@ -31,14 +31,10 @@ const (
 var (
 	teacherScopes = []string{"repo:invite", "user", "repo", "delete_repo", "admin:org", "admin:org_hook"}
 	studentScopes = []string{"repo:invite"}
-	httpClient    *http.Client
-)
-
-func init() {
-	httpClient = &http.Client{
+	httpClient    = &http.Client{
 		Timeout: time.Second * 30,
 	}
-}
+)
 
 func authenticationError(logger *zap.SugaredLogger, w http.ResponseWriter, err error) {
 	logger.Error(err)
