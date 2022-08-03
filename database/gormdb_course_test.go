@@ -304,7 +304,7 @@ func TestGormDBGetCourseByOrganization(t *testing.T) {
 	}
 }
 
-func TestGormDBCourseUniqueContraint(t *testing.T) {
+func TestGormDBCourseUniqueConstraint(t *testing.T) {
 	// Test that a course with the same organization ID or code and year cannot be created.
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()

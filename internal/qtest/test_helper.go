@@ -196,6 +196,7 @@ func WithUserContext(ctx context.Context, user *qf.User) context.Context {
 
 // AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
 func AssignmentsWithTasks(t *testing.T, courseID uint64) []*qf.Assignment {
+	t.Helper()
 	return []*qf.Assignment{
 		{
 			CourseID:         courseID,

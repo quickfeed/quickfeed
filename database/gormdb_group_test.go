@@ -23,9 +23,9 @@ var createGroupTests = []struct {
 	{
 		name: "course id not set with users",
 		desc: "Should fail with ErrRecordNotFound; cannot create a group that's not connected to a course.",
-		getGroup: func(_ uint64, uids ...uint64) *qf.Group {
+		getGroup: func(_ uint64, userIDs ...uint64) *qf.Group {
 			var users []*qf.User
-			for _, uid := range uids {
+			for _, uid := range userIDs {
 				users = append(users, &qf.User{ID: uid})
 			}
 			return &qf.Group{
@@ -38,9 +38,9 @@ var createGroupTests = []struct {
 	{
 		name: "course not found with users",
 		desc: "Should fail with ErrRecordNotFound; cannot create a group that's not connected to a course.",
-		getGroup: func(_ uint64, uids ...uint64) *qf.Group {
+		getGroup: func(_ uint64, userIDs ...uint64) *qf.Group {
 			var users []*qf.User
-			for _, uid := range uids {
+			for _, uid := range userIDs {
 				users = append(users, &qf.User{ID: uid})
 			}
 			return &qf.Group{
@@ -109,9 +109,9 @@ var createGroupTests = []struct {
 	},
 }
 
-var groupWithUsers = func(cid uint64, uids ...uint64) *qf.Group {
+var groupWithUsers = func(cid uint64, userIDs ...uint64) *qf.Group {
 	var users []*qf.User
-	for _, uid := range uids {
+	for _, uid := range userIDs {
 		users = append(users, &qf.User{ID: uid})
 	}
 	return &qf.Group{
@@ -129,11 +129,11 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			course := &qf.Course{}
 			qtest.CreateCourse(t, db, admin, course)
 
-			var uids []uint64
+			var userIDs []uint64
 			// create as many users as the desired number of enrollments
 			for i, enrollment := range test.enrollments {
 				user := qtest.CreateFakeUser(t, db, uint64(i))
-				uids = append(uids, user.ID)
+				userIDs = append(userIDs, user.ID)
 				if enrollment == uint(qf.Enrollment_PENDING) {
 					continue
 				}
@@ -163,7 +163,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			}
 
 			// Test.
-			group := test.getGroup(course.ID, uids...)
+			group := test.getGroup(course.ID, userIDs...)
 			if err := db.CreateGroup(group); err != test.err {
 				t.Errorf("have error '%v' want '%v'", err, test.err)
 			}
@@ -195,8 +195,8 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if len(uids) > 0 {
-				group.Users, err = db.GetUsers(uids...)
+			if len(userIDs) > 0 {
+				group.Users, err = db.GetUsers(userIDs...)
 				if err != nil {
 					t.Fatal(err)
 				}
