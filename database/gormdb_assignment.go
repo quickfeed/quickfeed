@@ -43,17 +43,15 @@ func (db *GormDB) GetAssignment(query *qf.Assignment) (*qf.Assignment, error) {
 }
 
 // GetAssignmentsByCourse fetches all assignments for the given course ID.
-func (db *GormDB) GetAssignmentsByCourse(courseID uint64, withBenchmarkTemplate bool) (_ []*qf.Assignment, err error) {
+func (db *GormDB) GetAssignmentsByCourse(courseID uint64) (_ []*qf.Assignment, err error) {
 	var course qf.Course
 	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
 		return nil, err
 	}
-	if withBenchmarkTemplate {
-		for _, a := range course.Assignments {
-			a.GradingBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: a.ID})
-			if err != nil {
-				return nil, err
-			}
+	for _, a := range course.Assignments {
+		a.GradingBenchmarks, err = db.GetBenchmarks(&qf.Assignment{ID: a.ID})
+		if err != nil {
+			return nil, err
 		}
 	}
 	return course.Assignments, nil
