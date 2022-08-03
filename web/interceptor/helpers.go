@@ -49,9 +49,9 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 func extractToken(meta metadata.MD) (string, error) {
 	cookies := meta.Get(auth.Cookie)
 	for _, cookie := range cookies {
-		_, cookievalue, ok := strings.Cut(cookie, auth.CookieName+"=")
+		_, cookieValue, ok := strings.Cut(cookie, auth.CookieName+"=")
 		if ok {
-			return strings.TrimSpace(cookievalue), nil
+			return strings.TrimSpace(cookieValue), nil
 		}
 	}
 	return "", ErrInvalidAuthCookie

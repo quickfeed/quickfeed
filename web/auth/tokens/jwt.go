@@ -88,12 +88,13 @@ func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 		// It is necessary to check for correct signing algorithm in the header due to JWT vulnerability
 		//  (ref https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/).
 		if t.Header["alg"] != alg {
-			return nil, fmt.Errorf("incorect signing algorithm, expected %s, got %s", alg, t.Header["alg"])
+			return nil, fmt.Errorf("incorrect signing algorithm, expected %s, got %s", alg, t.Header["alg"])
 		}
 		return []byte(tm.secret), nil
 	})
 	if err != nil {
-		if isTokenExpiredError(err) {
+		if tokenExpired(err) {
+			// token has expired; if signature is valid, update it.
 			if err = tm.validateSignature(token); err == nil {
 				return claims, nil
 			}
@@ -134,9 +135,8 @@ func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 	return newClaims, nil
 }
 
-// isTokenExpiredError checks if the error from JWT validation
-// is because of an expired token.
-func isTokenExpiredError(err error) bool {
+// tokenExpired returns true if the given JWT validation error is due to an expired token.
+func tokenExpired(err error) bool {
 	v, ok := err.(*jwt.ValidationError)
 	if ok {
 		return v.Errors == jwt.ValidationErrorExpired
