@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, isPending, isTeacher, sortEnrollments } from "../Helpers"
+import { Color, EnrollmentSort, EnrollmentStatus, EnrollmentStatusBadge, getCourseID, getFormattedTime, isPending, isTeacher, sortEnrollments } from "../Helpers"
 import { useAppState, useActions } from "../overmind"
 import { Enrollment } from "../../proto/qf/types_pb"
 import Search from "./Search"
@@ -47,7 +47,7 @@ const Members = (): JSX.Element => {
         data.push(enrollment.user ? enrollment.user.name : "")
         data.push(enrollment.user ? enrollment.user.email : "")
         data.push(enrollment.user ? enrollment.user.studentid : "")
-        data.push(enrollment.lastactivitydate)
+        data.push(getFormattedTime(enrollment.lastactivitydate))
         data.push(enrollment.totalapproved.toString())
         data.push(enrollment.slipdaysremaining.toString())
 

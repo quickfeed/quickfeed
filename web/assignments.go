@@ -2,13 +2,11 @@ package web
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
-
-const reviewLayout = "02 Jan 15:04"
 
 // getAssignments lists the assignments for the provided course.
 func (s *QuickFeedService) getAssignments(courseID uint64) (*qf.Assignments, error) {
@@ -77,7 +75,7 @@ func (s *QuickFeedService) createReview(review *qf.Review) (*qf.Review, error) {
 		return nil, fmt.Errorf("failed to create a new review for submission %d to assignment %s: all %d reviews already created",
 			submission.ID, assignment.Name, assignment.Reviewers)
 	}
-	review.Edited = time.Now().Format(reviewLayout)
+	review.Edited = timestamppb.Now()
 	review.ComputeScore()
 
 	benchmarks, err := s.db.GetBenchmarks(&qf.Assignment{ID: submission.AssignmentID})
@@ -108,7 +106,7 @@ func (s *QuickFeedService) updateReview(review *qf.Review) (*qf.Review, error) {
 		return nil, err
 	}
 
-	review.Edited = time.Now().Format(reviewLayout)
+	review.Edited = timestamppb.Now()
 	review.ComputeScore()
 
 	if err := s.db.UpdateReview(review); err != nil {

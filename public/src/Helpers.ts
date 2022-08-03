@@ -359,7 +359,7 @@ const enrollmentCompare = (a: Enrollment.AsObject, b: Enrollment.AsObject, sortB
             const emailB = b.user?.email ?? ""
             return sortOrder * (emailA.localeCompare(emailB))
         case EnrollmentSort.Activity:
-            return sortOrder * (new Date(a.lastactivitydate).getTime() - new Date(b.lastactivitydate).getTime())
+            return sortOrder * (Converter.toTimestamp(a.lastactivitydate).getSeconds() - Converter.toTimestamp(b.lastactivitydate).getSeconds())
         case EnrollmentSort.Slipdays:
             return sortOrder * (a.slipdaysremaining - b.slipdaysremaining)
         case EnrollmentSort.Approved:

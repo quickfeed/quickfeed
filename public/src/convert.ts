@@ -43,7 +43,7 @@ export class Converter {
         const enrollment = new Enrollment()
         enrollment.setId(obj.id)
         enrollment.setStatus(obj.status)
-        enrollment.setLastactivitydate(obj.lastactivitydate)
+        enrollment.setLastactivitydate(this.toTimestamp(obj.lastactivitydate))
         enrollment.setSlipdaysremaining(obj.slipdaysremaining)
         enrollment.setTotalapproved(obj.totalapproved)
         enrollment.setCourseid(obj.courseid)
@@ -186,7 +186,7 @@ export class Converter {
         const gradingBenchmarks = obj.gradingbenchmarksList.map(g => this.toGradingBenchmark(g))
         review.setGradingbenchmarksList(gradingBenchmarks)
 
-        review.setEdited(obj.edited)
+        review.setEdited(this.toTimestamp(obj.edited))
 
         return review
     }

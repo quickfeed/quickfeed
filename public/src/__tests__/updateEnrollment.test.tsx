@@ -8,6 +8,7 @@ import { Route, Router } from "react-router"
 import { Provider } from "overmind-react"
 import { initializeOvermind } from "./TestHelpers"
 import { render, screen } from "@testing-library/react"
+import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb"
 
 
 describe("UpdateEnrollment", () => {
@@ -42,7 +43,7 @@ describe("UpdateEnrollment in webpage", () => {
     it("If status is teacher, button should display demote", () => {
         const user = new User().setId(1).setName("Test User").setStudentid("6583969706").setEmail("test@gmail.com")
         const enrollment = new Enrollment().setId(2).setCourseid(1).setStatus(3).setUser(user)
-            .setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0).toObject()
+            .setSlipdaysremaining(3).setLastactivitydate(Timestamp.fromDate(new Date("10 Mar"))).setTotalapproved(0).toObject()
 
         const mockedOvermind = createOvermindMock(config, (state) => {
             state.self = user.toObject()
@@ -67,7 +68,7 @@ describe("UpdateEnrollment in webpage", () => {
     it("If status is student, button should display promote", () => {
         const user = new User().setId(1).setName("Test User").setStudentid("6583969706").setEmail("test@gmail.com")
         const enrollment = new Enrollment().setId(2).setCourseid(1).setStatus(2).setUser(user)
-            .setSlipdaysremaining(3).setLastactivitydate("10 Mar").setTotalapproved(0).toObject()
+            .setSlipdaysremaining(3).setLastactivitydate(Timestamp.fromDate(new Date("10 Mar"))).setTotalapproved(0).toObject()
 
         const mockedOvermind = createOvermindMock(config, (state) => {
             state.self = user.toObject()

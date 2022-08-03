@@ -122,20 +122,20 @@ message Enrollment {
         VISIBLE  = 2;
         FAVORITE = 3;
     }
-    uint64 ID                          = 1;
-    uint64 courseID                    = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_enrollment"' }];
-    uint64 userID                      = 3 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_enrollment"' }];
-    uint64 groupID                     = 4;
-    bool hasTeacherScopes              = 5;
-    User user                          = 6;
-    Course course                      = 7;
-    Group group                        = 8;
-    UserStatus status                  = 9;
-    DisplayState state                 = 10;
-    uint32 slipDaysRemaining           = 11 [(go.field) = { tags: 'gorm:"-"' }];
-    string lastActivityDate            = 12;
-    uint64 totalApproved               = 13;
-    repeated UsedSlipDays usedSlipDays = 14;
+    uint64 ID                                  = 1;
+    uint64 courseID                            = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_enrollment"' }];
+    uint64 userID                              = 3 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_enrollment"' }];
+    uint64 groupID                             = 4;
+    bool hasTeacherScopes                      = 5;
+    User user                                  = 6;
+    Course course                              = 7;
+    Group group                                = 8;
+    UserStatus status                          = 9;
+    DisplayState state                         = 10;
+    uint32 slipDaysRemaining                   = 11 [(go.field) = { tags: 'gorm:"-"' }];
+    google.protobuf.Timestamp lastActivityDate = 12 [(go.field) = { tags: 'gorm:"serializer:timestamp"' }];
+    uint64 totalApproved                       = 13;
+    repeated UsedSlipDays usedSlipDays         = 14;
 }
 
 message UsedSlipDays {
@@ -269,7 +269,7 @@ message Review {
     bool ready                                  = 5;
     uint32 score                                = 6;
     repeated GradingBenchmark gradingBenchmarks = 7 [(go.field) = { tags: 'gorm:"foreignKey:ReviewID"' }];
-    string edited                               = 8;
+    google.protobuf.Timestamp edited            = 8 [(go.field) = { tags: 'gorm:"serializer:timestamp"' }];
 }
 
 message SubmissionLink {

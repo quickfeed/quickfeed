@@ -3136,7 +3136,7 @@ proto.qf.Enrollment.toObject = function(includeInstance, msg) {
     status: jspb.Message.getFieldWithDefault(msg, 9, 0),
     state: jspb.Message.getFieldWithDefault(msg, 10, 0),
     slipdaysremaining: jspb.Message.getFieldWithDefault(msg, 11, 0),
-    lastactivitydate: jspb.Message.getFieldWithDefault(msg, 12, ""),
+    lastactivitydate: (f = msg.getLastactivitydate()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
     totalapproved: jspb.Message.getFieldWithDefault(msg, 13, 0),
     usedslipdaysList: jspb.Message.toObjectList(msg.getUsedslipdaysList(),
     proto.qf.UsedSlipDays.toObject, includeInstance)
@@ -3224,7 +3224,8 @@ proto.qf.Enrollment.deserializeBinaryFromReader = function(msg, reader) {
       msg.setSlipdaysremaining(value);
       break;
     case 12:
-      var value = /** @type {string} */ (reader.readString());
+      var value = new google_protobuf_timestamp_pb.Timestamp;
+      reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
       msg.setLastactivitydate(value);
       break;
     case 13:
@@ -3346,10 +3347,11 @@ proto.qf.Enrollment.serializeBinaryToWriter = function(message, writer) {
     );
   }
   f = message.getLastactivitydate();
-  if (f.length > 0) {
-    writer.writeString(
+  if (f != null) {
+    writer.writeMessage(
       12,
-      f
+      f,
+      google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
   }
   f = message.getTotalapproved();
@@ -3646,20 +3648,39 @@ proto.qf.Enrollment.prototype.setSlipdaysremaining = function(value) {
 
 
 /**
- * optional string lastActivityDate = 12;
- * @return {string}
+ * optional google.protobuf.Timestamp lastActivityDate = 12;
+ * @return {?proto.google.protobuf.Timestamp}
  */
 proto.qf.Enrollment.prototype.getLastactivitydate = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 12, ""));
+  return /** @type{?proto.google.protobuf.Timestamp} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 12));
 };
 
 
 /**
- * @param {string} value
+ * @param {?proto.google.protobuf.Timestamp|undefined} value
+ * @return {!proto.qf.Enrollment} returns this
+*/
+proto.qf.Enrollment.prototype.setLastactivitydate = function(value) {
+  return jspb.Message.setWrapperField(this, 12, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
  * @return {!proto.qf.Enrollment} returns this
  */
-proto.qf.Enrollment.prototype.setLastactivitydate = function(value) {
-  return jspb.Message.setProto3StringField(this, 12, value);
+proto.qf.Enrollment.prototype.clearLastactivitydate = function() {
+  return this.setLastactivitydate(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.qf.Enrollment.prototype.hasLastactivitydate = function() {
+  return jspb.Message.getField(this, 12) != null;
 };
 
 
@@ -7347,7 +7368,7 @@ proto.qf.Review.toObject = function(includeInstance, msg) {
     score: jspb.Message.getFieldWithDefault(msg, 6, 0),
     gradingbenchmarksList: jspb.Message.toObjectList(msg.getGradingbenchmarksList(),
     proto.qf.GradingBenchmark.toObject, includeInstance),
-    edited: jspb.Message.getFieldWithDefault(msg, 8, "")
+    edited: (f = msg.getEdited()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -7414,7 +7435,8 @@ proto.qf.Review.deserializeBinaryFromReader = function(msg, reader) {
       msg.addGradingbenchmarks(value);
       break;
     case 8:
-      var value = /** @type {string} */ (reader.readString());
+      var value = new google_protobuf_timestamp_pb.Timestamp;
+      reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
       msg.setEdited(value);
       break;
     default:
@@ -7497,10 +7519,11 @@ proto.qf.Review.serializeBinaryToWriter = function(message, writer) {
     );
   }
   f = message.getEdited();
-  if (f.length > 0) {
-    writer.writeString(
+  if (f != null) {
+    writer.writeMessage(
       8,
-      f
+      f,
+      google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
   }
 };
@@ -7653,20 +7676,39 @@ proto.qf.Review.prototype.clearGradingbenchmarksList = function() {
 
 
 /**
- * optional string edited = 8;
- * @return {string}
+ * optional google.protobuf.Timestamp edited = 8;
+ * @return {?proto.google.protobuf.Timestamp}
  */
 proto.qf.Review.prototype.getEdited = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+  return /** @type{?proto.google.protobuf.Timestamp} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 8));
 };
 
 
 /**
- * @param {string} value
+ * @param {?proto.google.protobuf.Timestamp|undefined} value
+ * @return {!proto.qf.Review} returns this
+*/
+proto.qf.Review.prototype.setEdited = function(value) {
+  return jspb.Message.setWrapperField(this, 8, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
  * @return {!proto.qf.Review} returns this
  */
-proto.qf.Review.prototype.setEdited = function(value) {
-  return jspb.Message.setProto3StringField(this, 8, value);
+proto.qf.Review.prototype.clearEdited = function() {
+  return this.setEdited(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.qf.Review.prototype.hasEdited = function() {
+  return jspb.Message.getField(this, 8) != null;
 };
 
 

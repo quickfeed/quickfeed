@@ -380,8 +380,10 @@ export class Enrollment extends jspb.Message {
   getSlipdaysremaining(): number;
   setSlipdaysremaining(value: number): Enrollment;
 
-  getLastactivitydate(): string;
-  setLastactivitydate(value: string): Enrollment;
+  getLastactivitydate(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setLastactivitydate(value?: google_protobuf_timestamp_pb.Timestamp): Enrollment;
+  hasLastactivitydate(): boolean;
+  clearLastactivitydate(): Enrollment;
 
   getTotalapproved(): number;
   setTotalapproved(value: number): Enrollment;
@@ -412,7 +414,7 @@ export namespace Enrollment {
     status: Enrollment.UserStatus,
     state: Enrollment.DisplayState,
     slipdaysremaining: number,
-    lastactivitydate: string,
+    lastactivitydate?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     totalapproved: number,
     usedslipdaysList: Array<UsedSlipDays.AsObject>,
   }
@@ -936,8 +938,10 @@ export class Review extends jspb.Message {
   clearGradingbenchmarksList(): Review;
   addGradingbenchmarks(value?: GradingBenchmark, index?: number): GradingBenchmark;
 
-  getEdited(): string;
-  setEdited(value: string): Review;
+  getEdited(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setEdited(value?: google_protobuf_timestamp_pb.Timestamp): Review;
+  hasEdited(): boolean;
+  clearEdited(): Review;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Review.AsObject;
@@ -956,7 +960,7 @@ export namespace Review {
     ready: boolean,
     score: number,
     gradingbenchmarksList: Array<GradingBenchmark.AsObject>,
-    edited: string,
+    edited?: google_protobuf_timestamp_pb.Timestamp.AsObject,
   }
 }
 

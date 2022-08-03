@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/assignments"
@@ -15,6 +14,7 @@ import (
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -235,9 +235,8 @@ func (wh GitHubWebHook) updateLastActivityDate(userID, courseID uint64) {
 	query := &qf.Enrollment{
 		UserID:           userID,
 		CourseID:         courseID,
-		LastActivityDate: time.Now().Format("02 Jan"),
+		LastActivityDate: timestamppb.Now(),
 	}
-
 	if err := wh.db.UpdateEnrollment(query); err != nil {
 		wh.logger.Errorf("Failed to update the last activity date for user %d: %v", userID, err)
 	}

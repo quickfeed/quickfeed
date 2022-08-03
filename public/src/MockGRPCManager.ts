@@ -658,7 +658,7 @@ export class MockGrpcManager {
             bm.getAssignmentid() === submission.getAssignmentid()
         )
         review.setGradingbenchmarksList(benchmarks)
-        review.setEdited(new Date().getTime().toString())
+        review.setEdited(Timestamp.fromDate(new Date()))
         submission.setReviewsList(submission.getReviewsList().concat([review]))
         return this.grpcSend<Review>(review)
     }
@@ -672,7 +672,7 @@ export class MockGrpcManager {
             return this.grpcSend<Review>(null, new Status().setCode(2).setError('Submission not found'))
         }
         r.setScore(this.computeScore(r))
-        r.setEdited(new Date().getTime().toString())
+        r.setEdited(Timestamp.fromDate(new Date()))
         submission.setReviewsList(submission.getReviewsList().map(rev => {
             if (rev.getId() === r.getId()) {
                 // Return the updated review
