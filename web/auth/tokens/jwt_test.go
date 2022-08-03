@@ -104,7 +104,7 @@ func TestUserClaims(t *testing.T) {
 		t.Fatal(err)
 	}
 	if adminClaims.UserID != admin.ID {
-		t.Errorf("Incorrect user ID: expexted %d, got %d", admin.ID, adminClaims.UserID)
+		t.Errorf("Incorrect user ID: expected %d, got %d", admin.ID, adminClaims.UserID)
 	}
 	if adminClaims.Issuer != "QuickFeed" {
 		t.Errorf("Incorrect claims issuer: expecter 'QuickFeed', got %s", adminClaims.Issuer)

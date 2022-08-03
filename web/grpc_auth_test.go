@@ -2,7 +2,6 @@ package web_test
 
 import (
 	"context"
-	"log"
 	"net"
 	"testing"
 	"time"
@@ -24,7 +23,7 @@ const (
 	grpcAddr = "127.0.0.1:8081"
 	token    = "some-secret-string"
 	// same as quickfeed root user
-	//botUserID = 1
+	// botUserID = 1
 	userName = "meling"
 )
 
@@ -45,7 +44,8 @@ func TestGrpcAuth(t *testing.T) {
 		t.Fatalf("failed to create token manager: %v", err)
 	}
 	// start gRPC server in background
-	go startGrpcAuthServer(t, qfService, tm)
+	serveFn := startGrpcAuthServer(t, qfService, tm)
+	go serveFn()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -78,8 +78,8 @@ func TestGrpcAuth(t *testing.T) {
 }
 
 func fillDatabase(t *testing.T, db database.Database) {
+	t.Helper()
 	// Add secret token for the helpbot application (to allow it to invoke gRPC methods)
-
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{
 		Code: "DAT320",
@@ -92,7 +92,8 @@ func fillDatabase(t *testing.T, db database.Database) {
 	qtest.EnrollStudent(t, db, user, course)
 }
 
-func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService, tm *tokens.TokenManager) {
+func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService, tm *tokens.TokenManager) func() {
+	t.Helper()
 	lis, err := net.Listen("tcp", grpcAddr)
 	check(t, err)
 
@@ -102,8 +103,10 @@ func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService, tm *toke
 	grpcServer := grpc.NewServer(opt)
 
 	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to start grpc server: %v\n", err)
+	return func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			t.Fatalf("failed to start grpc server: %v\n", err)
+		}
 	}
 }
 
