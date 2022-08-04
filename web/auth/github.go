@@ -11,7 +11,7 @@ func NewGitHubConfig(baseURL, clientID, clientSecret string) *oauth2.Config {
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		Endpoint:     github.Endpoint,
-		RedirectURL:  GetCallbackURL(baseURL, "github"),
+		RedirectURL:  GetCallbackURL(baseURL),
 		Scopes:       []string{"repo:invite"},
 	}
 }

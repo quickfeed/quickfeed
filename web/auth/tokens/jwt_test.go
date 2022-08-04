@@ -77,8 +77,8 @@ func TestNewCookie(t *testing.T) {
 	if !(cookie.Secure && cookie.HttpOnly) {
 		t.Error("Cookie not secure")
 	}
-	if cookie.Name != manager.GetAuthCookieName() {
-		t.Errorf("Incorrect cookie name. Expected %s, got %s", manager.GetAuthCookieName(), cookie.Name)
+	if cookie.Name != tokens.AuthCookieName {
+		t.Errorf("Incorrect cookie name. Expected %s, got %s", tokens.AuthCookieName, cookie.Name)
 	}
 	if cookie.Domain != domain {
 		t.Errorf("Incorrect cookie domain. Expected %s, got %s", domain, cookie.Domain)

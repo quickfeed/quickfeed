@@ -85,8 +85,8 @@ func TestUserVerifier(t *testing.T) {
 	}{
 		{code: codes.Unauthenticated, metadata: false, token: "", wantUser: nil},
 		{code: codes.Unauthenticated, metadata: true, token: "should fail", wantUser: nil},
-		{code: codes.OK, metadata: true, token: "auth=" + adminToken.Value, wantUser: adminUser},
-		{code: codes.OK, metadata: true, token: "auth=" + studentToken.Value, wantUser: student},
+		{code: codes.OK, metadata: true, token: tokens.AuthCookieName + "=" + adminToken.Value, wantUser: adminUser},
+		{code: codes.OK, metadata: true, token: tokens.AuthCookieName + "=" + studentToken.Value, wantUser: student},
 	}
 
 	for _, user := range userTest {

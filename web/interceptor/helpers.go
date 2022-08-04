@@ -36,7 +36,7 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 		if err != nil {
 			logger.Errorf("Failed to update cookie: %v", err)
 		}
-		if err := grpc.SendHeader(ctx, metadata.Pairs("Set-Cookie", updatedToken.String())); err != nil {
+		if err := grpc.SendHeader(ctx, metadata.Pairs(tokens.SetCookie, updatedToken.String())); err != nil {
 			logger.Errorf("Failed to set grpc header: %v", err)
 			return nil, ErrInvalidAuthCookie
 		}
@@ -49,7 +49,7 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 func extractToken(meta metadata.MD) (string, error) {
 	cookies := meta.Get(auth.Cookie)
 	for _, cookie := range cookies {
-		_, cookieValue, ok := strings.Cut(cookie, auth.CookieName+"=")
+		_, cookieValue, ok := strings.Cut(cookie, tokens.AuthCookieName+"=")
 		if ok {
 			return strings.TrimSpace(cookieValue), nil
 		}

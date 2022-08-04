@@ -22,7 +22,6 @@ import (
 
 const (
 	Cookie        = "cookie"
-	CookieName    = "auth"
 	UserKey       = "user"
 	TeacherSuffix = "teacher"
 	githubUserAPI = "https://api.github.com/user"
@@ -45,7 +44,7 @@ func authenticationError(logger *zap.SugaredLogger, w http.ResponseWriter, err e
 func OAuth2Logout() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		newCookie := &http.Cookie{
-			Name:     "auth",
+			Name:     tokens.AuthCookieName,
 			Value:    "",
 			MaxAge:   -1,
 			Expires:  time.Unix(0, 0),

@@ -7,7 +7,6 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qlog"
-	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/auth/tokens"
 	"github.com/steinfletcher/apitest"
@@ -29,22 +28,22 @@ func TestOAuth2Login(t *testing.T) {
 	// Incorrect request method.
 	apitest.New().Debug().
 		HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
-		Post(web.Auth).
+		Post(auth.Auth).
 		Expect(t).
 		Status(http.StatusUnauthorized).
 		End()
 	// No existing auth cookie.
 	apitest.New().Debug().
 		HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
-		Get(web.Auth).
+		Get(auth.Auth).
 		Expect(t).
 		Status(http.StatusTemporaryRedirect).
 		End()
 	// Outdated auth cookie with expected name should not break API.
 	apitest.New().Debug().
 		HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
-		Get(web.Auth).
-		Cookie("auth", "empty").
+		Get(auth.Auth).
+		Cookie(tokens.AuthCookieName, "empty").
 		Expect(t).
 		Status(http.StatusTemporaryRedirect).
 		End()
@@ -104,7 +103,7 @@ func TestOAuth2Callback(t *testing.T) {
 		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusFound).
-		HeaderPresent("Set-Cookie").
+		HeaderPresent(tokens.SetCookie).
 		End()
 
 	user, err := db.GetUser(1)
@@ -159,7 +158,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
-		HeaderNotPresent("Set-Cookie").
+		HeaderNotPresent(tokens.SetCookie).
 		End()
 	apitest.New().Debug().
 		Mocks(mockTokenExchange, mockEmptyResponseBody).
@@ -169,7 +168,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
-		HeaderNotPresent("Set-Cookie").
+		HeaderNotPresent(tokens.SetCookie).
 		End()
 	apitest.New().Debug().
 		Mocks(mockTokenExchange, mockBadRequestStatus).
@@ -179,7 +178,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
-		HeaderNotPresent("Set-Cookie").
+		HeaderNotPresent(tokens.SetCookie).
 		End()
 
 	checkNoUsersInDB(db, t)
@@ -216,7 +215,7 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
-		HeaderNotPresent("Set-Cookie").
+		HeaderNotPresent(tokens.SetCookie).
 		End()
 	// No values in the request body.
 	apitest.New().Debug().
@@ -227,7 +226,7 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
-		HeaderNotPresent("Set-Cookie").
+		HeaderNotPresent(tokens.SetCookie).
 		End()
 
 	checkNoUsersInDB(db, t)
@@ -284,13 +283,13 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 func TestOAuth2Logout(t *testing.T) {
 	apitest.New().Debug().
 		HandlerFunc(auth.OAuth2Logout()).
-		Get(web.Logout).
+		Get(auth.Logout).
 		// Make sure an outdated auth cookie with a correct name does not break API.
-		Cookie("auth", "empty").
+		Cookie(tokens.AuthCookieName, "empty").
 		Expect(t).
 		Status(http.StatusFound).
 		Cookies(
-			apitest.NewCookie("auth").
+			apitest.NewCookie(tokens.AuthCookieName).
 				Value("").
 				MaxAge(-1),
 		).
