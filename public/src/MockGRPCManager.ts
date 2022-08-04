@@ -19,7 +19,6 @@ import {
     SubmissionLink,
 } from "../proto/qf/types_pb"
 import {
-    AuthorizationResponse,
     CourseSubmissions,
     Organization,
     Repositories,

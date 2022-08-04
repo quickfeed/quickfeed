@@ -17,7 +17,6 @@ import {
     Users,
 } from "../proto/qf/types_pb"
 import {
-    AuthorizationResponse,
     CourseRequest,
     CourseSubmissions,
     EnrollmentStatusRequest,
