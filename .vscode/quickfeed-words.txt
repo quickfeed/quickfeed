@@ -9,6 +9,7 @@ autograde
 Autograder
 backports
 bitlab
+bufbuild
 bufconn
 bufnet
 buildid
@@ -98,6 +99,7 @@ meling
 mkdir
 newkey
 ngrok
+nocheck
 npmtools
 npmwebpack
 NTNU

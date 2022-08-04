@@ -107,7 +107,7 @@ ifeq (, $(shell which brew))
 	$(error "No brew command in $(PATH)")
 endif
 	@echo "Installing homebrew packages needed for development and deployment"
-	@brew install go protobuf webpack npm node docker certbot envoy
+	@brew install go protobuf node docker certbot envoy golangci-lint bufbuild/buf/buf
 
 envoy-config:
 ifeq ($(DOMAIN),)
