@@ -3,6 +3,7 @@ package web_test
 import (
 	"context"
 	"net"
+	"os"
 	"testing"
 	"time"
 
@@ -29,7 +30,9 @@ const (
 var user *qf.User
 
 func TestGrpcAuth(t *testing.T) {
-	t.Skip("Needs update for helpbot compatibility")
+	if os.Getenv("HELPBOT_TEST") == "" {
+		t.Skip("Needs update for helpbot compatibility")
+	}
 	db, cleanup, _, qfService := testQuickFeedService(t)
 	defer cleanup()
 
