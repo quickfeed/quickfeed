@@ -47,7 +47,7 @@ func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
 }
 
 // RegisterRouter registers http endpoints for authentication API and scm provider webhooks.
-func (s *QuickFeedService) RegisterRouter(authConfig *oauth2.Config, mux GrpcMultiplexer, public string) *http.ServeMux {
+func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oauth2.Config, mux GrpcMultiplexer, public string) *http.ServeMux {
 	// Serve static files.
 	router := http.NewServeMux()
 	assets := http.FileServer(http.Dir(public + "/assets"))
@@ -56,20 +56,20 @@ func (s *QuickFeedService) RegisterRouter(authConfig *oauth2.Config, mux GrpcMul
 	router.Handle("/", mux.MuxHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, public+"/assets/index.html")
 	})))
-	router.Handle(Assets, mux.MuxHandler(http.StripPrefix(Assets, assets)))
-	router.Handle(Static, mux.MuxHandler(http.StripPrefix(Static, dist)))
+	router.Handle(auth.Assets, mux.MuxHandler(http.StripPrefix(auth.Assets, assets)))
+	router.Handle(auth.Static, mux.MuxHandler(http.StripPrefix(auth.Static, dist)))
 
 	// Register auth endpoints.
 	callbackSecret := rand.String()
-	router.HandleFunc(Auth, auth.OAuth2Login(s.logger, authConfig, callbackSecret))
+	router.HandleFunc(auth.Auth, auth.OAuth2Login(s.logger, authConfig, callbackSecret))
 	// TODO(vera): temporary hack to support teacher scopes, will be removed when OAuth app replaced with GitHub app.
-	router.HandleFunc(Teacher, auth.OAuth2Login(s.logger, authConfig, callbackSecret))
-	router.HandleFunc(Callback, auth.OAuth2Callback(s.logger, s.db, authConfig, s.scms, callbackSecret))
-	router.HandleFunc(Logout, auth.OAuth2Logout(s.logger))
+	router.HandleFunc(auth.Teacher, auth.OAuth2Login(s.logger, authConfig, callbackSecret))
+	router.HandleFunc(auth.Callback, auth.OAuth2Callback(s.logger, s.db, tm, authConfig, s.scms, callbackSecret))
+	router.HandleFunc(auth.Logout, auth.OAuth2Logout())
 
 	// Register hooks.
 	ghHook := hooks.NewGitHubWebHook(s.logger, s.db, s.runner, s.bh.Secret)
-	router.HandleFunc(Hook, ghHook.Handle())
+	router.HandleFunc(auth.Hook, ghHook.Handle())
 
 	return router
 }

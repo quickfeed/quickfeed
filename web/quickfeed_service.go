@@ -49,6 +49,7 @@ func (s *QuickFeedService) GetUser(ctx context.Context, _ *qf.Void) (*qf.User, e
 	userInfo, err := s.db.GetUserWithEnrollments(usr.GetID())
 	if err != nil {
 		s.logger.Errorf("GetUser failed to get user with enrollments: %v ", err)
+		return nil, ErrInvalidUserInfo
 	}
 	return userInfo, nil
 }

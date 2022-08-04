@@ -48,6 +48,10 @@ func main() {
 	)
 	flag.Parse()
 
+	if *dev {
+		*baseURL = "127.0.0.1" + *httpAddr
+	}
+
 	logger, err := qlog.Zap()
 	if err != nil {
 		log.Fatalf("Can't initialize logger: %v", err)
@@ -75,6 +79,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	tokenManager, err := auth.NewTokenManager(db, *baseURL)
+	if err != nil {
+		log.Fatal(err)
+	}
 	authConfig := auth.NewGitHubConfig(*baseURL, clientID, clientSecret)
 
 	runner, err := ci.NewDockerCI(logger.Sugar())
@@ -83,23 +91,15 @@ func main() {
 	}
 	defer runner.Close()
 
-	// Add application token for external applications (to allow invoking gRPC methods)
-	// TODO(meling): this is a temporary solution, and we should find a better way to do this
-	token := os.Getenv("QUICKFEED_AUTH_TOKEN")
-	if len(token) > 16 {
-		auth.Add(token, 1)
-		log.Println("Added application token")
-	}
-
 	certFile := env.CertFile()
 	certKey := env.KeyFile()
 	var grpcServer *grpc.Server
 	unaryOptions := grpc.ChainUnaryInterceptor(
 		interceptor.Metrics(),
-		interceptor.UnaryUserVerifier(),
+		interceptor.UnaryUserVerifier(logger.Sugar(), tokenManager),
 		interceptor.Validation(logger),
 	)
-	streamOptions := grpc.ChainStreamInterceptor(interceptor.StreamUserVerifier())
+	streamOptions := grpc.ChainStreamInterceptor(interceptor.StreamUserVerifier(logger.Sugar(), tokenManager))
 	if *dev {
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
 		// In development, the server itself must maintain a TLS session.
@@ -121,7 +121,7 @@ func main() {
 	}
 
 	// Register HTTP endpoints and webhooks
-	router := qfService.RegisterRouter(authConfig, multiplexer, *public)
+	router := qfService.RegisterRouter(tokenManager, authConfig, multiplexer, *public)
 
 	// Create an HTTP server for prometheus.
 	httpServer := interceptor.MetricsServer(9097)

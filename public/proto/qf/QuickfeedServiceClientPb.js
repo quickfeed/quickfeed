@@ -14,124 +14,124 @@ var qf_types_pb = require("../qf/types_pb");
 var qf_requests_pb = require("../qf/requests_pb");
 var QuickFeedServiceClient = /** @class */ (function () {
     function QuickFeedServiceClient(hostname, credentials, options) {
-        this.methodDescriptorGetUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetUser', grpcWeb.MethodType.UNARY, qf_requests_pb.Void, qf_types_pb.User, function (request) {
+        this.methodInfoGetUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetUser', grpcWeb.MethodType.UNARY, qf_requests_pb.Void, qf_types_pb.User, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.User.deserializeBinary);
-        this.methodDescriptorGetUsers = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetUsers', grpcWeb.MethodType.UNARY, qf_requests_pb.Void, qf_types_pb.Users, function (request) {
+        this.methodInfoGetUsers = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetUsers', grpcWeb.MethodType.UNARY, qf_requests_pb.Void, qf_types_pb.Users, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Users.deserializeBinary);
-        this.methodDescriptorGetUserByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetUserByCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.CourseUserRequest, qf_types_pb.User, function (request) {
+        this.methodInfoGetUserByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetUserByCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.CourseUserRequest, qf_types_pb.User, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.User.deserializeBinary);
-        this.methodDescriptorUpdateUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateUser', grpcWeb.MethodType.UNARY, qf_types_pb.User, qf_requests_pb.Void, function (request) {
+        this.methodInfoUpdateUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateUser', grpcWeb.MethodType.UNARY, qf_types_pb.User, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorIsAuthorizedTeacher = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/IsAuthorizedTeacher', grpcWeb.MethodType.UNARY, qf_requests_pb.Void, qf_requests_pb.AuthorizationResponse, function (request) {
+        this.methodInfoIsAuthorizedTeacher = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/IsAuthorizedTeacher', grpcWeb.MethodType.UNARY, qf_requests_pb.Void, qf_requests_pb.AuthorizationResponse, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.AuthorizationResponse.deserializeBinary);
-        this.methodDescriptorGetGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroup', grpcWeb.MethodType.UNARY, qf_requests_pb.GetGroupRequest, qf_types_pb.Group, function (request) {
+        this.methodInfoGetGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroup', grpcWeb.MethodType.UNARY, qf_requests_pb.GetGroupRequest, qf_types_pb.Group, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Group.deserializeBinary);
-        this.methodDescriptorGetGroupByUserAndCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroupByUserAndCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.GroupRequest, qf_types_pb.Group, function (request) {
+        this.methodInfoGetGroupByUserAndCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroupByUserAndCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.GroupRequest, qf_types_pb.Group, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Group.deserializeBinary);
-        this.methodDescriptorGetGroupsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroupsByCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.CourseRequest, qf_types_pb.Groups, function (request) {
+        this.methodInfoGetGroupsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroupsByCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.CourseRequest, qf_types_pb.Groups, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Groups.deserializeBinary);
-        this.methodDescriptorCreateGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateGroup', grpcWeb.MethodType.UNARY, qf_types_pb.Group, qf_types_pb.Group, function (request) {
+        this.methodInfoCreateGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateGroup', grpcWeb.MethodType.UNARY, qf_types_pb.Group, qf_types_pb.Group, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Group.deserializeBinary);
-        this.methodDescriptorUpdateGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateGroup', grpcWeb.MethodType.UNARY, qf_types_pb.Group, qf_types_pb.Group, function (request) {
+        this.methodInfoUpdateGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateGroup', grpcWeb.MethodType.UNARY, qf_types_pb.Group, qf_types_pb.Group, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Group.deserializeBinary);
-        this.methodDescriptorDeleteGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/DeleteGroup', grpcWeb.MethodType.UNARY, qf_requests_pb.GroupRequest, qf_requests_pb.Void, function (request) {
+        this.methodInfoDeleteGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/DeleteGroup', grpcWeb.MethodType.UNARY, qf_requests_pb.GroupRequest, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorGetCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.CourseRequest, qf_types_pb.Course, function (request) {
+        this.methodInfoGetCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.CourseRequest, qf_types_pb.Course, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Course.deserializeBinary);
-        this.methodDescriptorGetCourses = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetCourses', grpcWeb.MethodType.UNARY, qf_requests_pb.Void, qf_types_pb.Courses, function (request) {
+        this.methodInfoGetCourses = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetCourses', grpcWeb.MethodType.UNARY, qf_requests_pb.Void, qf_types_pb.Courses, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Courses.deserializeBinary);
-        this.methodDescriptorGetCoursesByUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetCoursesByUser', grpcWeb.MethodType.UNARY, qf_requests_pb.EnrollmentStatusRequest, qf_types_pb.Courses, function (request) {
+        this.methodInfoGetCoursesByUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetCoursesByUser', grpcWeb.MethodType.UNARY, qf_requests_pb.EnrollmentStatusRequest, qf_types_pb.Courses, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Courses.deserializeBinary);
-        this.methodDescriptorCreateCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateCourse', grpcWeb.MethodType.UNARY, qf_types_pb.Course, qf_types_pb.Course, function (request) {
+        this.methodInfoCreateCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateCourse', grpcWeb.MethodType.UNARY, qf_types_pb.Course, qf_types_pb.Course, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Course.deserializeBinary);
-        this.methodDescriptorUpdateCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateCourse', grpcWeb.MethodType.UNARY, qf_types_pb.Course, qf_requests_pb.Void, function (request) {
+        this.methodInfoUpdateCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateCourse', grpcWeb.MethodType.UNARY, qf_types_pb.Course, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorUpdateCourseVisibility = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateCourseVisibility', grpcWeb.MethodType.UNARY, qf_types_pb.Enrollment, qf_requests_pb.Void, function (request) {
+        this.methodInfoUpdateCourseVisibility = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateCourseVisibility', grpcWeb.MethodType.UNARY, qf_types_pb.Enrollment, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorGetAssignments = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetAssignments', grpcWeb.MethodType.UNARY, qf_requests_pb.CourseRequest, qf_types_pb.Assignments, function (request) {
+        this.methodInfoGetAssignments = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetAssignments', grpcWeb.MethodType.UNARY, qf_requests_pb.CourseRequest, qf_types_pb.Assignments, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Assignments.deserializeBinary);
-        this.methodDescriptorUpdateAssignments = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateAssignments', grpcWeb.MethodType.UNARY, qf_requests_pb.CourseRequest, qf_requests_pb.Void, function (request) {
+        this.methodInfoUpdateAssignments = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateAssignments', grpcWeb.MethodType.UNARY, qf_requests_pb.CourseRequest, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorGetEnrollmentsByUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetEnrollmentsByUser', grpcWeb.MethodType.UNARY, qf_requests_pb.EnrollmentStatusRequest, qf_types_pb.Enrollments, function (request) {
+        this.methodInfoGetEnrollmentsByUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetEnrollmentsByUser', grpcWeb.MethodType.UNARY, qf_requests_pb.EnrollmentStatusRequest, qf_types_pb.Enrollments, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Enrollments.deserializeBinary);
-        this.methodDescriptorGetEnrollmentsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetEnrollmentsByCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.EnrollmentRequest, qf_types_pb.Enrollments, function (request) {
+        this.methodInfoGetEnrollmentsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetEnrollmentsByCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.EnrollmentRequest, qf_types_pb.Enrollments, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Enrollments.deserializeBinary);
-        this.methodDescriptorCreateEnrollment = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateEnrollment', grpcWeb.MethodType.UNARY, qf_types_pb.Enrollment, qf_requests_pb.Void, function (request) {
+        this.methodInfoCreateEnrollment = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateEnrollment', grpcWeb.MethodType.UNARY, qf_types_pb.Enrollment, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorUpdateEnrollments = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateEnrollments', grpcWeb.MethodType.UNARY, qf_types_pb.Enrollments, qf_requests_pb.Void, function (request) {
+        this.methodInfoUpdateEnrollments = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateEnrollments', grpcWeb.MethodType.UNARY, qf_types_pb.Enrollments, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorGetSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmissions', grpcWeb.MethodType.UNARY, qf_requests_pb.SubmissionRequest, qf_types_pb.Submissions, function (request) {
+        this.methodInfoGetSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmissions', grpcWeb.MethodType.UNARY, qf_requests_pb.SubmissionRequest, qf_types_pb.Submissions, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Submissions.deserializeBinary);
-        this.methodDescriptorGetSubmissionsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmissionsByCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.SubmissionsForCourseRequest, qf_requests_pb.CourseSubmissions, function (request) {
+        this.methodInfoGetSubmissionsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmissionsByCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.SubmissionsForCourseRequest, qf_requests_pb.CourseSubmissions, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.CourseSubmissions.deserializeBinary);
-        this.methodDescriptorUpdateSubmission = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateSubmission', grpcWeb.MethodType.UNARY, qf_requests_pb.UpdateSubmissionRequest, qf_requests_pb.Void, function (request) {
+        this.methodInfoUpdateSubmission = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateSubmission', grpcWeb.MethodType.UNARY, qf_requests_pb.UpdateSubmissionRequest, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorUpdateSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateSubmissions', grpcWeb.MethodType.UNARY, qf_requests_pb.UpdateSubmissionsRequest, qf_requests_pb.Void, function (request) {
+        this.methodInfoUpdateSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateSubmissions', grpcWeb.MethodType.UNARY, qf_requests_pb.UpdateSubmissionsRequest, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorRebuildSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/RebuildSubmissions', grpcWeb.MethodType.UNARY, qf_requests_pb.RebuildRequest, qf_requests_pb.Void, function (request) {
+        this.methodInfoRebuildSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/RebuildSubmissions', grpcWeb.MethodType.UNARY, qf_requests_pb.RebuildRequest, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorCreateBenchmark = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateBenchmark', grpcWeb.MethodType.UNARY, qf_types_pb.GradingBenchmark, qf_types_pb.GradingBenchmark, function (request) {
+        this.methodInfoCreateBenchmark = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateBenchmark', grpcWeb.MethodType.UNARY, qf_types_pb.GradingBenchmark, qf_types_pb.GradingBenchmark, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.GradingBenchmark.deserializeBinary);
-        this.methodDescriptorUpdateBenchmark = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateBenchmark', grpcWeb.MethodType.UNARY, qf_types_pb.GradingBenchmark, qf_requests_pb.Void, function (request) {
+        this.methodInfoUpdateBenchmark = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateBenchmark', grpcWeb.MethodType.UNARY, qf_types_pb.GradingBenchmark, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorDeleteBenchmark = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/DeleteBenchmark', grpcWeb.MethodType.UNARY, qf_types_pb.GradingBenchmark, qf_requests_pb.Void, function (request) {
+        this.methodInfoDeleteBenchmark = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/DeleteBenchmark', grpcWeb.MethodType.UNARY, qf_types_pb.GradingBenchmark, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorCreateCriterion = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateCriterion', grpcWeb.MethodType.UNARY, qf_types_pb.GradingCriterion, qf_types_pb.GradingCriterion, function (request) {
+        this.methodInfoCreateCriterion = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateCriterion', grpcWeb.MethodType.UNARY, qf_types_pb.GradingCriterion, qf_types_pb.GradingCriterion, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.GradingCriterion.deserializeBinary);
-        this.methodDescriptorUpdateCriterion = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateCriterion', grpcWeb.MethodType.UNARY, qf_types_pb.GradingCriterion, qf_requests_pb.Void, function (request) {
+        this.methodInfoUpdateCriterion = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateCriterion', grpcWeb.MethodType.UNARY, qf_types_pb.GradingCriterion, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorDeleteCriterion = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/DeleteCriterion', grpcWeb.MethodType.UNARY, qf_types_pb.GradingCriterion, qf_requests_pb.Void, function (request) {
+        this.methodInfoDeleteCriterion = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/DeleteCriterion', grpcWeb.MethodType.UNARY, qf_types_pb.GradingCriterion, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorCreateReview = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateReview', grpcWeb.MethodType.UNARY, qf_requests_pb.ReviewRequest, qf_types_pb.Review, function (request) {
+        this.methodInfoCreateReview = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/CreateReview', grpcWeb.MethodType.UNARY, qf_requests_pb.ReviewRequest, qf_types_pb.Review, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Review.deserializeBinary);
-        this.methodDescriptorUpdateReview = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateReview', grpcWeb.MethodType.UNARY, qf_requests_pb.ReviewRequest, qf_types_pb.Review, function (request) {
+        this.methodInfoUpdateReview = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateReview', grpcWeb.MethodType.UNARY, qf_requests_pb.ReviewRequest, qf_types_pb.Review, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Review.deserializeBinary);
-        this.methodDescriptorGetReviewers = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetReviewers', grpcWeb.MethodType.UNARY, qf_requests_pb.SubmissionReviewersRequest, qf_requests_pb.Reviewers, function (request) {
+        this.methodInfoGetReviewers = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetReviewers', grpcWeb.MethodType.UNARY, qf_requests_pb.SubmissionReviewersRequest, qf_requests_pb.Reviewers, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Reviewers.deserializeBinary);
-        this.methodDescriptorGetOrganization = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetOrganization', grpcWeb.MethodType.UNARY, qf_requests_pb.OrgRequest, qf_requests_pb.Organization, function (request) {
+        this.methodInfoGetOrganization = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetOrganization', grpcWeb.MethodType.UNARY, qf_requests_pb.OrgRequest, qf_requests_pb.Organization, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Organization.deserializeBinary);
-        this.methodDescriptorGetRepositories = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetRepositories', grpcWeb.MethodType.UNARY, qf_requests_pb.URLRequest, qf_requests_pb.Repositories, function (request) {
+        this.methodInfoGetRepositories = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetRepositories', grpcWeb.MethodType.UNARY, qf_requests_pb.URLRequest, qf_requests_pb.Repositories, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Repositories.deserializeBinary);
-        this.methodDescriptorIsEmptyRepo = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/IsEmptyRepo', grpcWeb.MethodType.UNARY, qf_requests_pb.RepositoryRequest, qf_requests_pb.Void, function (request) {
+        this.methodInfoIsEmptyRepo = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/IsEmptyRepo', grpcWeb.MethodType.UNARY, qf_requests_pb.RepositoryRequest, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
         if (!options)
@@ -147,322 +147,322 @@ var QuickFeedServiceClient = /** @class */ (function () {
     QuickFeedServiceClient.prototype.getUser = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetUser', request, metadata || {}, this.methodDescriptorGetUser, callback);
+                '/qf.QuickFeedService/GetUser', request, metadata || {}, this.methodInfoGetUser, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetUser', request, metadata || {}, this.methodDescriptorGetUser);
+            '/qf.QuickFeedService/GetUser', request, metadata || {}, this.methodInfoGetUser);
     };
     QuickFeedServiceClient.prototype.getUsers = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetUsers', request, metadata || {}, this.methodDescriptorGetUsers, callback);
+                '/qf.QuickFeedService/GetUsers', request, metadata || {}, this.methodInfoGetUsers, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetUsers', request, metadata || {}, this.methodDescriptorGetUsers);
+            '/qf.QuickFeedService/GetUsers', request, metadata || {}, this.methodInfoGetUsers);
     };
     QuickFeedServiceClient.prototype.getUserByCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetUserByCourse', request, metadata || {}, this.methodDescriptorGetUserByCourse, callback);
+                '/qf.QuickFeedService/GetUserByCourse', request, metadata || {}, this.methodInfoGetUserByCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetUserByCourse', request, metadata || {}, this.methodDescriptorGetUserByCourse);
+            '/qf.QuickFeedService/GetUserByCourse', request, metadata || {}, this.methodInfoGetUserByCourse);
     };
     QuickFeedServiceClient.prototype.updateUser = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/UpdateUser', request, metadata || {}, this.methodDescriptorUpdateUser, callback);
+                '/qf.QuickFeedService/UpdateUser', request, metadata || {}, this.methodInfoUpdateUser, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/UpdateUser', request, metadata || {}, this.methodDescriptorUpdateUser);
+            '/qf.QuickFeedService/UpdateUser', request, metadata || {}, this.methodInfoUpdateUser);
     };
     QuickFeedServiceClient.prototype.isAuthorizedTeacher = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/IsAuthorizedTeacher', request, metadata || {}, this.methodDescriptorIsAuthorizedTeacher, callback);
+                '/qf.QuickFeedService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/IsAuthorizedTeacher', request, metadata || {}, this.methodDescriptorIsAuthorizedTeacher);
+            '/qf.QuickFeedService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher);
     };
     QuickFeedServiceClient.prototype.getGroup = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetGroup', request, metadata || {}, this.methodDescriptorGetGroup, callback);
+                '/qf.QuickFeedService/GetGroup', request, metadata || {}, this.methodInfoGetGroup, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetGroup', request, metadata || {}, this.methodDescriptorGetGroup);
+            '/qf.QuickFeedService/GetGroup', request, metadata || {}, this.methodInfoGetGroup);
     };
     QuickFeedServiceClient.prototype.getGroupByUserAndCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetGroupByUserAndCourse', request, metadata || {}, this.methodDescriptorGetGroupByUserAndCourse, callback);
+                '/qf.QuickFeedService/GetGroupByUserAndCourse', request, metadata || {}, this.methodInfoGetGroupByUserAndCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetGroupByUserAndCourse', request, metadata || {}, this.methodDescriptorGetGroupByUserAndCourse);
+            '/qf.QuickFeedService/GetGroupByUserAndCourse', request, metadata || {}, this.methodInfoGetGroupByUserAndCourse);
     };
     QuickFeedServiceClient.prototype.getGroupsByCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetGroupsByCourse', request, metadata || {}, this.methodDescriptorGetGroupsByCourse, callback);
+                '/qf.QuickFeedService/GetGroupsByCourse', request, metadata || {}, this.methodInfoGetGroupsByCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetGroupsByCourse', request, metadata || {}, this.methodDescriptorGetGroupsByCourse);
+            '/qf.QuickFeedService/GetGroupsByCourse', request, metadata || {}, this.methodInfoGetGroupsByCourse);
     };
     QuickFeedServiceClient.prototype.createGroup = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/CreateGroup', request, metadata || {}, this.methodDescriptorCreateGroup, callback);
+                '/qf.QuickFeedService/CreateGroup', request, metadata || {}, this.methodInfoCreateGroup, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/CreateGroup', request, metadata || {}, this.methodDescriptorCreateGroup);
+            '/qf.QuickFeedService/CreateGroup', request, metadata || {}, this.methodInfoCreateGroup);
     };
     QuickFeedServiceClient.prototype.updateGroup = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/UpdateGroup', request, metadata || {}, this.methodDescriptorUpdateGroup, callback);
+                '/qf.QuickFeedService/UpdateGroup', request, metadata || {}, this.methodInfoUpdateGroup, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/UpdateGroup', request, metadata || {}, this.methodDescriptorUpdateGroup);
+            '/qf.QuickFeedService/UpdateGroup', request, metadata || {}, this.methodInfoUpdateGroup);
     };
     QuickFeedServiceClient.prototype.deleteGroup = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/DeleteGroup', request, metadata || {}, this.methodDescriptorDeleteGroup, callback);
+                '/qf.QuickFeedService/DeleteGroup', request, metadata || {}, this.methodInfoDeleteGroup, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/DeleteGroup', request, metadata || {}, this.methodDescriptorDeleteGroup);
+            '/qf.QuickFeedService/DeleteGroup', request, metadata || {}, this.methodInfoDeleteGroup);
     };
     QuickFeedServiceClient.prototype.getCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetCourse', request, metadata || {}, this.methodDescriptorGetCourse, callback);
+                '/qf.QuickFeedService/GetCourse', request, metadata || {}, this.methodInfoGetCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetCourse', request, metadata || {}, this.methodDescriptorGetCourse);
+            '/qf.QuickFeedService/GetCourse', request, metadata || {}, this.methodInfoGetCourse);
     };
     QuickFeedServiceClient.prototype.getCourses = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetCourses', request, metadata || {}, this.methodDescriptorGetCourses, callback);
+                '/qf.QuickFeedService/GetCourses', request, metadata || {}, this.methodInfoGetCourses, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetCourses', request, metadata || {}, this.methodDescriptorGetCourses);
+            '/qf.QuickFeedService/GetCourses', request, metadata || {}, this.methodInfoGetCourses);
     };
     QuickFeedServiceClient.prototype.getCoursesByUser = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetCoursesByUser', request, metadata || {}, this.methodDescriptorGetCoursesByUser, callback);
+                '/qf.QuickFeedService/GetCoursesByUser', request, metadata || {}, this.methodInfoGetCoursesByUser, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetCoursesByUser', request, metadata || {}, this.methodDescriptorGetCoursesByUser);
+            '/qf.QuickFeedService/GetCoursesByUser', request, metadata || {}, this.methodInfoGetCoursesByUser);
     };
     QuickFeedServiceClient.prototype.createCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/CreateCourse', request, metadata || {}, this.methodDescriptorCreateCourse, callback);
+                '/qf.QuickFeedService/CreateCourse', request, metadata || {}, this.methodInfoCreateCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/CreateCourse', request, metadata || {}, this.methodDescriptorCreateCourse);
+            '/qf.QuickFeedService/CreateCourse', request, metadata || {}, this.methodInfoCreateCourse);
     };
     QuickFeedServiceClient.prototype.updateCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/UpdateCourse', request, metadata || {}, this.methodDescriptorUpdateCourse, callback);
+                '/qf.QuickFeedService/UpdateCourse', request, metadata || {}, this.methodInfoUpdateCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/UpdateCourse', request, metadata || {}, this.methodDescriptorUpdateCourse);
+            '/qf.QuickFeedService/UpdateCourse', request, metadata || {}, this.methodInfoUpdateCourse);
     };
     QuickFeedServiceClient.prototype.updateCourseVisibility = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/UpdateCourseVisibility', request, metadata || {}, this.methodDescriptorUpdateCourseVisibility, callback);
+                '/qf.QuickFeedService/UpdateCourseVisibility', request, metadata || {}, this.methodInfoUpdateCourseVisibility, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/UpdateCourseVisibility', request, metadata || {}, this.methodDescriptorUpdateCourseVisibility);
+            '/qf.QuickFeedService/UpdateCourseVisibility', request, metadata || {}, this.methodInfoUpdateCourseVisibility);
     };
     QuickFeedServiceClient.prototype.getAssignments = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetAssignments', request, metadata || {}, this.methodDescriptorGetAssignments, callback);
+                '/qf.QuickFeedService/GetAssignments', request, metadata || {}, this.methodInfoGetAssignments, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetAssignments', request, metadata || {}, this.methodDescriptorGetAssignments);
+            '/qf.QuickFeedService/GetAssignments', request, metadata || {}, this.methodInfoGetAssignments);
     };
     QuickFeedServiceClient.prototype.updateAssignments = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/UpdateAssignments', request, metadata || {}, this.methodDescriptorUpdateAssignments, callback);
+                '/qf.QuickFeedService/UpdateAssignments', request, metadata || {}, this.methodInfoUpdateAssignments, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/UpdateAssignments', request, metadata || {}, this.methodDescriptorUpdateAssignments);
+            '/qf.QuickFeedService/UpdateAssignments', request, metadata || {}, this.methodInfoUpdateAssignments);
     };
     QuickFeedServiceClient.prototype.getEnrollmentsByUser = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetEnrollmentsByUser', request, metadata || {}, this.methodDescriptorGetEnrollmentsByUser, callback);
+                '/qf.QuickFeedService/GetEnrollmentsByUser', request, metadata || {}, this.methodInfoGetEnrollmentsByUser, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetEnrollmentsByUser', request, metadata || {}, this.methodDescriptorGetEnrollmentsByUser);
+            '/qf.QuickFeedService/GetEnrollmentsByUser', request, metadata || {}, this.methodInfoGetEnrollmentsByUser);
     };
     QuickFeedServiceClient.prototype.getEnrollmentsByCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetEnrollmentsByCourse', request, metadata || {}, this.methodDescriptorGetEnrollmentsByCourse, callback);
+                '/qf.QuickFeedService/GetEnrollmentsByCourse', request, metadata || {}, this.methodInfoGetEnrollmentsByCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetEnrollmentsByCourse', request, metadata || {}, this.methodDescriptorGetEnrollmentsByCourse);
+            '/qf.QuickFeedService/GetEnrollmentsByCourse', request, metadata || {}, this.methodInfoGetEnrollmentsByCourse);
     };
     QuickFeedServiceClient.prototype.createEnrollment = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/CreateEnrollment', request, metadata || {}, this.methodDescriptorCreateEnrollment, callback);
+                '/qf.QuickFeedService/CreateEnrollment', request, metadata || {}, this.methodInfoCreateEnrollment, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/CreateEnrollment', request, metadata || {}, this.methodDescriptorCreateEnrollment);
+            '/qf.QuickFeedService/CreateEnrollment', request, metadata || {}, this.methodInfoCreateEnrollment);
     };
     QuickFeedServiceClient.prototype.updateEnrollments = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/UpdateEnrollments', request, metadata || {}, this.methodDescriptorUpdateEnrollments, callback);
+                '/qf.QuickFeedService/UpdateEnrollments', request, metadata || {}, this.methodInfoUpdateEnrollments, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/UpdateEnrollments', request, metadata || {}, this.methodDescriptorUpdateEnrollments);
+            '/qf.QuickFeedService/UpdateEnrollments', request, metadata || {}, this.methodInfoUpdateEnrollments);
     };
     QuickFeedServiceClient.prototype.getSubmissions = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetSubmissions', request, metadata || {}, this.methodDescriptorGetSubmissions, callback);
+                '/qf.QuickFeedService/GetSubmissions', request, metadata || {}, this.methodInfoGetSubmissions, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetSubmissions', request, metadata || {}, this.methodDescriptorGetSubmissions);
+            '/qf.QuickFeedService/GetSubmissions', request, metadata || {}, this.methodInfoGetSubmissions);
     };
     QuickFeedServiceClient.prototype.getSubmissionsByCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetSubmissionsByCourse', request, metadata || {}, this.methodDescriptorGetSubmissionsByCourse, callback);
+                '/qf.QuickFeedService/GetSubmissionsByCourse', request, metadata || {}, this.methodInfoGetSubmissionsByCourse, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetSubmissionsByCourse', request, metadata || {}, this.methodDescriptorGetSubmissionsByCourse);
+            '/qf.QuickFeedService/GetSubmissionsByCourse', request, metadata || {}, this.methodInfoGetSubmissionsByCourse);
     };
     QuickFeedServiceClient.prototype.updateSubmission = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/UpdateSubmission', request, metadata || {}, this.methodDescriptorUpdateSubmission, callback);
+                '/qf.QuickFeedService/UpdateSubmission', request, metadata || {}, this.methodInfoUpdateSubmission, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/UpdateSubmission', request, metadata || {}, this.methodDescriptorUpdateSubmission);
+            '/qf.QuickFeedService/UpdateSubmission', request, metadata || {}, this.methodInfoUpdateSubmission);
     };
     QuickFeedServiceClient.prototype.updateSubmissions = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/UpdateSubmissions', request, metadata || {}, this.methodDescriptorUpdateSubmissions, callback);
+                '/qf.QuickFeedService/UpdateSubmissions', request, metadata || {}, this.methodInfoUpdateSubmissions, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/UpdateSubmissions', request, metadata || {}, this.methodDescriptorUpdateSubmissions);
+            '/qf.QuickFeedService/UpdateSubmissions', request, metadata || {}, this.methodInfoUpdateSubmissions);
     };
     QuickFeedServiceClient.prototype.rebuildSubmissions = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/RebuildSubmissions', request, metadata || {}, this.methodDescriptorRebuildSubmissions, callback);
+                '/qf.QuickFeedService/RebuildSubmissions', request, metadata || {}, this.methodInfoRebuildSubmissions, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/RebuildSubmissions', request, metadata || {}, this.methodDescriptorRebuildSubmissions);
+            '/qf.QuickFeedService/RebuildSubmissions', request, metadata || {}, this.methodInfoRebuildSubmissions);
     };
     QuickFeedServiceClient.prototype.createBenchmark = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/CreateBenchmark', request, metadata || {}, this.methodDescriptorCreateBenchmark, callback);
+                '/qf.QuickFeedService/CreateBenchmark', request, metadata || {}, this.methodInfoCreateBenchmark, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/CreateBenchmark', request, metadata || {}, this.methodDescriptorCreateBenchmark);
+            '/qf.QuickFeedService/CreateBenchmark', request, metadata || {}, this.methodInfoCreateBenchmark);
     };
     QuickFeedServiceClient.prototype.updateBenchmark = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/UpdateBenchmark', request, metadata || {}, this.methodDescriptorUpdateBenchmark, callback);
+                '/qf.QuickFeedService/UpdateBenchmark', request, metadata || {}, this.methodInfoUpdateBenchmark, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/UpdateBenchmark', request, metadata || {}, this.methodDescriptorUpdateBenchmark);
+            '/qf.QuickFeedService/UpdateBenchmark', request, metadata || {}, this.methodInfoUpdateBenchmark);
     };
     QuickFeedServiceClient.prototype.deleteBenchmark = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/DeleteBenchmark', request, metadata || {}, this.methodDescriptorDeleteBenchmark, callback);
+                '/qf.QuickFeedService/DeleteBenchmark', request, metadata || {}, this.methodInfoDeleteBenchmark, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/DeleteBenchmark', request, metadata || {}, this.methodDescriptorDeleteBenchmark);
+            '/qf.QuickFeedService/DeleteBenchmark', request, metadata || {}, this.methodInfoDeleteBenchmark);
     };
     QuickFeedServiceClient.prototype.createCriterion = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/CreateCriterion', request, metadata || {}, this.methodDescriptorCreateCriterion, callback);
+                '/qf.QuickFeedService/CreateCriterion', request, metadata || {}, this.methodInfoCreateCriterion, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/CreateCriterion', request, metadata || {}, this.methodDescriptorCreateCriterion);
+            '/qf.QuickFeedService/CreateCriterion', request, metadata || {}, this.methodInfoCreateCriterion);
     };
     QuickFeedServiceClient.prototype.updateCriterion = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/UpdateCriterion', request, metadata || {}, this.methodDescriptorUpdateCriterion, callback);
+                '/qf.QuickFeedService/UpdateCriterion', request, metadata || {}, this.methodInfoUpdateCriterion, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/UpdateCriterion', request, metadata || {}, this.methodDescriptorUpdateCriterion);
+            '/qf.QuickFeedService/UpdateCriterion', request, metadata || {}, this.methodInfoUpdateCriterion);
     };
     QuickFeedServiceClient.prototype.deleteCriterion = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/DeleteCriterion', request, metadata || {}, this.methodDescriptorDeleteCriterion, callback);
+                '/qf.QuickFeedService/DeleteCriterion', request, metadata || {}, this.methodInfoDeleteCriterion, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/DeleteCriterion', request, metadata || {}, this.methodDescriptorDeleteCriterion);
+            '/qf.QuickFeedService/DeleteCriterion', request, metadata || {}, this.methodInfoDeleteCriterion);
     };
     QuickFeedServiceClient.prototype.createReview = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/CreateReview', request, metadata || {}, this.methodDescriptorCreateReview, callback);
+                '/qf.QuickFeedService/CreateReview', request, metadata || {}, this.methodInfoCreateReview, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/CreateReview', request, metadata || {}, this.methodDescriptorCreateReview);
+            '/qf.QuickFeedService/CreateReview', request, metadata || {}, this.methodInfoCreateReview);
     };
     QuickFeedServiceClient.prototype.updateReview = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/UpdateReview', request, metadata || {}, this.methodDescriptorUpdateReview, callback);
+                '/qf.QuickFeedService/UpdateReview', request, metadata || {}, this.methodInfoUpdateReview, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/UpdateReview', request, metadata || {}, this.methodDescriptorUpdateReview);
+            '/qf.QuickFeedService/UpdateReview', request, metadata || {}, this.methodInfoUpdateReview);
     };
     QuickFeedServiceClient.prototype.getReviewers = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetReviewers', request, metadata || {}, this.methodDescriptorGetReviewers, callback);
+                '/qf.QuickFeedService/GetReviewers', request, metadata || {}, this.methodInfoGetReviewers, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetReviewers', request, metadata || {}, this.methodDescriptorGetReviewers);
+            '/qf.QuickFeedService/GetReviewers', request, metadata || {}, this.methodInfoGetReviewers);
     };
     QuickFeedServiceClient.prototype.getOrganization = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetOrganization', request, metadata || {}, this.methodDescriptorGetOrganization, callback);
+                '/qf.QuickFeedService/GetOrganization', request, metadata || {}, this.methodInfoGetOrganization, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetOrganization', request, metadata || {}, this.methodDescriptorGetOrganization);
+            '/qf.QuickFeedService/GetOrganization', request, metadata || {}, this.methodInfoGetOrganization);
     };
     QuickFeedServiceClient.prototype.getRepositories = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetRepositories', request, metadata || {}, this.methodDescriptorGetRepositories, callback);
+                '/qf.QuickFeedService/GetRepositories', request, metadata || {}, this.methodInfoGetRepositories, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetRepositories', request, metadata || {}, this.methodDescriptorGetRepositories);
+            '/qf.QuickFeedService/GetRepositories', request, metadata || {}, this.methodInfoGetRepositories);
     };
     QuickFeedServiceClient.prototype.isEmptyRepo = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/IsEmptyRepo', request, metadata || {}, this.methodDescriptorIsEmptyRepo, callback);
+                '/qf.QuickFeedService/IsEmptyRepo', request, metadata || {}, this.methodInfoIsEmptyRepo, callback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/IsEmptyRepo', request, metadata || {}, this.methodDescriptorIsEmptyRepo);
+            '/qf.QuickFeedService/IsEmptyRepo', request, metadata || {}, this.methodInfoIsEmptyRepo);
     };
     return QuickFeedServiceClient;
 }());

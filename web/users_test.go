@@ -2,122 +2,13 @@ package web_test
 
 import (
 	"context"
-	"log"
-	"net"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/gorilla/sessions"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/interceptor"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
-	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/testing/protocmp"
 )
-
-func TestGetSelf(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
-	defer cleanup()
-
-	const (
-		bufSize = 1024 * 1024
-	)
-
-	adminUser := qtest.CreateFakeUser(t, db, 1)
-	student := qtest.CreateFakeUser(t, db, 56)
-
-	store := sessions.NewCookieStore([]byte("secret"))
-	store.Options.HttpOnly = true
-	store.Options.Secure = true
-
-	lis := bufconn.Listen(bufSize)
-	bufDialer := func(context.Context, string) (net.Conn, error) {
-		return lis.Dial()
-	}
-
-	opt := grpc.ChainUnaryInterceptor(
-		interceptor.UnaryUserVerifier(),
-	)
-	s := grpc.NewServer(opt)
-	qf.RegisterQuickFeedServiceServer(s, ags)
-
-	go func() {
-		if err := s.Serve(lis); err != nil {
-			log.Fatalf("Server exited with error: %v", err)
-		}
-	}()
-
-	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		t.Fatalf("Failed to dial bufnet: %v", err)
-	}
-	defer conn.Close()
-
-	client := qf.NewQuickFeedServiceClient(conn)
-
-	userTest := []struct {
-		id       uint64
-		code     codes.Code
-		metadata bool
-		token    string
-		wantUser *qf.User
-	}{
-		{id: 1, code: codes.Unauthenticated, metadata: false, token: "", wantUser: nil},
-		{id: 6, code: codes.PermissionDenied, metadata: true, token: "", wantUser: nil},
-		{id: 1, code: codes.Unauthenticated, metadata: true, token: "should fail", wantUser: nil},
-		{id: 1, code: codes.OK, metadata: true, token: "", wantUser: adminUser},
-		{id: 2, code: codes.OK, metadata: true, token: "", wantUser: student},
-	}
-
-	for _, user := range userTest {
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		w := httptest.NewRecorder()
-		sess := sessions.NewSession(store, auth.SessionKey)
-
-		sess.Values[auth.UserKey] = &auth.UserSession{
-			ID:        user.id,
-			Providers: map[string]struct{}{"github": {}},
-		}
-		if err := sess.Save(r, w); err != nil {
-			t.Errorf("sess.Save(): %v", err)
-		}
-
-		token := w.Result().Header.Get(auth.OutgoingCookie)
-		auth.Add(token, user.id)
-
-		if user.metadata {
-			meta := metadata.MD{}
-			if len(user.token) > 0 {
-				token = user.token
-			}
-			meta.Set(auth.Cookie, token)
-			ctx = metadata.NewOutgoingContext(ctx, meta)
-		}
-		gotUser, err := client.GetUser(ctx, &qf.Void{})
-		if s, ok := status.FromError(err); ok {
-			if s.Code() != user.code {
-				t.Errorf("GetUser().Code(): %v, want: %v", s.Code(), user.code)
-			}
-		}
-		if user.wantUser != nil {
-			// ignore comparing remote identity
-			user.wantUser.RemoteIdentities = nil
-		}
-		wantUser := user.wantUser
-		if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-			t.Errorf("GetSelf() mismatch (-wantUser +gotUser):\n%s", diff)
-		}
-	}
-}
 
 func TestGetUsers(t *testing.T) {
 	db, cleanup, _, ags := testQuickFeedService(t)
