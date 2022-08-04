@@ -77,15 +77,15 @@ func (sm *SCMManager) newInstallationClient(ctx context.Context, organization st
 func (s *SCMManager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
 	client, ok := s.Scms.scms[organization]
 	if !ok {
-		client, err := s.newInstallationClient(ctx, organization)
+		cli, err := s.newInstallationClient(ctx, organization)
 		if err != nil {
 			return nil, err
 		}
-		cli := &GithubSCM{
+		client = &GithubSCM{
 			logger: logger,
-			client: client,
+			client: cli,
 		}
-		s.Scms.scms[organization] = cli
 	}
+	s.Scms.scms[organization] = client
 	return client, nil
 }

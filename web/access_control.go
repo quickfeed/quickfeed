@@ -16,7 +16,10 @@ import (
 )
 
 // ErrInvalidUserInfo is returned to user if user information in context is invalid.
-var ErrInvalidUserInfo = status.Errorf(codes.PermissionDenied, "authorization failed. please try to logout and sign in again")
+var (
+	ErrInvalidUserInfo     = status.Errorf(codes.PermissionDenied, "authorization failed. please try to logout and sign in again")
+	ErrMissingInstallation = status.Error(codes.PermissionDenied, "github application is not installed on the course organization")
+)
 
 func (s *QuickFeedService) getCurrentUser(ctx context.Context) (*qf.User, error) {
 	// process user id from context

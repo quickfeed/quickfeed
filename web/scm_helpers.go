@@ -48,6 +48,14 @@ func (q *QuickFeedService) GetSCM(ctx context.Context, organization string) (scm
 	return q.scms.GetOrCreateSCM(ctx, q.logger, organization)
 }
 
+func (q *QuickFeedService) GetSCMByCourse(ctx context.Context, courseID uint64) (scm.SCM, error) {
+	course, err := q.db.GetCourse(courseID, false)
+	if err != nil {
+		return nil, err
+	}
+	return q.GetSCM(ctx, course.OrganizationPath)
+}
+
 // createRepoAndTeam invokes the SCM to create a repository and team for the
 // specified course (represented with organization ID). The SCM team name
 // is also used as the group name and repository path. The provided user names represent the SCM group members.

@@ -115,19 +115,25 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *qf.User) (*qf.Voi
 // CreateCourse creates a new course.
 // Access policy: Admin.
 func (s *QuickFeedService) CreateCourse(ctx context.Context, in *qf.Course) (*qf.Course, error) {
-	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
+	// TODO(vera): Getting a current user will be unnecessary with the new access control, this
+	// is why I leave it as a separate, repeating method.
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("CreateCourse failed: scm authentication error: %v", err)
+		s.logger.Errorf("CreateCourse failed: user authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !usr.IsAdmin {
 		s.logger.Error("CreateCourse failed: user is not admin")
 		return nil, status.Error(codes.PermissionDenied, "user must be admin to create course")
 	}
-
+	sc, err := s.GetSCM(ctx, in.OrganizationPath)
+	if err != nil {
+		s.logger.Errorf("CreateCourse failed: could not create scm client for the course %s: %v", in.Name, err)
+		return nil, ErrMissingInstallation
+	}
 	// make sure that the current user is set as course creator
 	in.CourseCreatorID = usr.GetID()
-	course, err := s.createCourse(ctx, scm, in)
+	course, err := s.createCourse(ctx, sc, in)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: %v", err)
 		// errors informing about requested organization state will have code 9: FailedPrecondition
@@ -149,10 +155,15 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *qf.Course) (*qf
 // UpdateCourse changes the course information details.
 // Access policy: Teacher of CourseID.
 func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *qf.Course) (*qf.Void, error) {
-	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
+	}
+	sc, err := s.GetSCM(ctx, in.OrganizationPath)
+	if err != nil {
+		s.logger.Errorf("CreateCourse failed: could not create scm client for the course %s: %v", in.Name, err)
+		return nil, ErrMissingInstallation
 	}
 	courseID := in.GetID()
 	if !s.isTeacher(usr.GetID(), courseID) {
@@ -160,7 +171,7 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *qf.Course) (*qf
 		return nil, status.Error(codes.PermissionDenied, "only teachers can update course")
 	}
 
-	if err = s.updateCourse(ctx, scm, in); err != nil {
+	if err = s.updateCourse(ctx, sc, in); err != nil {
 		s.logger.Errorf("UpdateCourse failed: %v", err)
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)

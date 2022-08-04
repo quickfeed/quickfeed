@@ -153,9 +153,6 @@ run:
 	@quickfeed -service.url $(DOMAIN) -database.file ./tmp.db
 
 runlocal:
-	@quickfeed -service.url 127.0.0.1
-
-rundev:
 	@quickfeed -dev -service.url 127.0.0.1:8081
 
 prometheus:
