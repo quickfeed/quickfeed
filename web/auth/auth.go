@@ -14,7 +14,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
-	"github.com/quickfeed/quickfeed/web/auth/tokens"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
@@ -44,7 +43,7 @@ func authenticationError(logger *zap.SugaredLogger, w http.ResponseWriter, err e
 func OAuth2Logout() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		newCookie := &http.Cookie{
-			Name:     tokens.AuthCookieName,
+			Name:     CookieName,
 			Value:    "",
 			MaxAge:   -1,
 			Expires:  time.Unix(0, 0),
@@ -76,7 +75,7 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
-func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *tokens.TokenManager, authConfig *oauth2.Config, scms *Scms, secret string) http.HandlerFunc {
+func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenManager, authConfig *oauth2.Config, scms *Scms, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("OAuth2Callback: started")
 		if r.Method != "GET" {

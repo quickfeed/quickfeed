@@ -6,7 +6,6 @@ import (
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/auth/tokens"
 	"github.com/quickfeed/quickfeed/web/hooks"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
@@ -48,7 +47,7 @@ func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
 }
 
 // RegisterRouter registers http endpoints for authentication API and scm provider webhooks.
-func (s *QuickFeedService) RegisterRouter(tm *tokens.TokenManager, authConfig *oauth2.Config, mux GrpcMultiplexer, public string) *http.ServeMux {
+func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oauth2.Config, mux GrpcMultiplexer, public string) *http.ServeMux {
 	// Serve static files.
 	router := http.NewServeMux()
 	assets := http.FileServer(http.Dir(public + "/assets"))

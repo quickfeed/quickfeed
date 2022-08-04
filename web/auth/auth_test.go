@@ -8,7 +8,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/auth/tokens"
 	"github.com/steinfletcher/apitest"
 	"gotest.tools/assert"
 )
@@ -43,7 +42,7 @@ func TestOAuth2Login(t *testing.T) {
 	apitest.New().Debug().
 		HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
 		Get(auth.Auth).
-		Cookie(tokens.AuthCookieName, "empty").
+		Cookie(auth.CookieName, "empty").
 		Expect(t).
 		Status(http.StatusTemporaryRedirect).
 		End()
@@ -77,7 +76,7 @@ func TestOAuth2Callback(t *testing.T) {
 	scms := auth.NewScms()
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	tm, err := tokens.NewTokenManager(db, testDomain)
+	tm, err := auth.NewTokenManager(db, testDomain)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +102,7 @@ func TestOAuth2Callback(t *testing.T) {
 		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusFound).
-		HeaderPresent(tokens.SetCookie).
+		HeaderPresent(auth.SetCookie).
 		End()
 
 	user, err := db.GetUser(1)
@@ -121,7 +120,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 	scms := auth.NewScms()
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	tm, err := tokens.NewTokenManager(db, testDomain)
+	tm, err := auth.NewTokenManager(db, testDomain)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +157,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
-		HeaderNotPresent(tokens.SetCookie).
+		HeaderNotPresent(auth.SetCookie).
 		End()
 	apitest.New().Debug().
 		Mocks(mockTokenExchange, mockEmptyResponseBody).
@@ -168,7 +167,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
-		HeaderNotPresent(tokens.SetCookie).
+		HeaderNotPresent(auth.SetCookie).
 		End()
 	apitest.New().Debug().
 		Mocks(mockTokenExchange, mockBadRequestStatus).
@@ -178,7 +177,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
-		HeaderNotPresent(tokens.SetCookie).
+		HeaderNotPresent(auth.SetCookie).
 		End()
 
 	checkNoUsersInDB(db, t)
@@ -190,7 +189,7 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 	scms := auth.NewScms()
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	tm, err := tokens.NewTokenManager(db, testDomain)
+	tm, err := auth.NewTokenManager(db, testDomain)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -215,7 +214,7 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
-		HeaderNotPresent(tokens.SetCookie).
+		HeaderNotPresent(auth.SetCookie).
 		End()
 	// No values in the request body.
 	apitest.New().Debug().
@@ -226,7 +225,7 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 		Query("code", "test code").
 		Expect(t).
 		Status(http.StatusUnauthorized).
-		HeaderNotPresent(tokens.SetCookie).
+		HeaderNotPresent(auth.SetCookie).
 		End()
 
 	checkNoUsersInDB(db, t)
@@ -238,7 +237,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 	scms := auth.NewScms()
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	tm, err := tokens.NewTokenManager(db, testDomain)
+	tm, err := auth.NewTokenManager(db, testDomain)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -285,11 +284,11 @@ func TestOAuth2Logout(t *testing.T) {
 		HandlerFunc(auth.OAuth2Logout()).
 		Get(auth.Logout).
 		// Make sure an outdated auth cookie with a correct name does not break API.
-		Cookie(tokens.AuthCookieName, "empty").
+		Cookie(auth.CookieName, "empty").
 		Expect(t).
 		Status(http.StatusFound).
 		Cookies(
-			apitest.NewCookie(tokens.AuthCookieName).
+			apitest.NewCookie(auth.CookieName).
 				Value("").
 				MaxAge(-1),
 		).

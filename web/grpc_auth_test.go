@@ -12,7 +12,6 @@ import (
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/auth/tokens"
 	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -39,7 +38,7 @@ func TestGrpcAuth(t *testing.T) {
 		t.Errorf("Expected %v, got %v\n", userName, user.Login)
 	}
 
-	tm, err := tokens.NewTokenManager(db, "test")
+	tm, err := auth.NewTokenManager(db, "test")
 	if err != nil {
 		t.Fatalf("failed to create token manager: %v", err)
 	}
@@ -92,7 +91,7 @@ func fillDatabase(t *testing.T, db database.Database) {
 	qtest.EnrollStudent(t, db, user, course)
 }
 
-func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService, tm *tokens.TokenManager) func() {
+func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService, tm *auth.TokenManager) func() {
 	t.Helper()
 	lis, err := net.Listen("tcp", grpcAddr)
 	check(t, err)

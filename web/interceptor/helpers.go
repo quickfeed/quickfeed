@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/auth/tokens"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -14,7 +13,7 @@ import (
 
 // getAuthenticatedContext returns a new context with the user ID attached to it.
 // If the context does not contain a valid session cookie, it returns an error.
-func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm *tokens.TokenManager) (context.Context, error) {
+func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm *auth.TokenManager) (context.Context, error) {
 	meta, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		logger.Error("Failed to extract metadata")
@@ -23,7 +22,7 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 	token, err := extractToken(meta)
 	if err != nil {
 		logger.Errorf("Failed to extract token: %v", err)
-		return nil, ErrInvalidAuthCookie
+		return nil, err
 	}
 	claims, err := tm.GetClaims(token)
 	if err != nil {
@@ -35,8 +34,9 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 		updatedToken, err := tm.NewAuthCookie(claims.UserID)
 		if err != nil {
 			logger.Errorf("Failed to update cookie: %v", err)
+			return nil, ErrInvalidAuthCookie
 		}
-		if err := grpc.SendHeader(ctx, metadata.Pairs(tokens.SetCookie, updatedToken.String())); err != nil {
+		if err := grpc.SendHeader(ctx, metadata.Pairs(auth.SetCookie, updatedToken.String())); err != nil {
 			logger.Errorf("Failed to set grpc header: %v", err)
 			return nil, ErrInvalidAuthCookie
 		}
@@ -49,7 +49,7 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 func extractToken(meta metadata.MD) (string, error) {
 	cookies := meta.Get(auth.Cookie)
 	for _, cookie := range cookies {
-		_, cookieValue, ok := strings.Cut(cookie, tokens.AuthCookieName+"=")
+		_, cookieValue, ok := strings.Cut(cookie, auth.CookieName+"=")
 		if ok {
 			return strings.TrimSpace(cookieValue), nil
 		}

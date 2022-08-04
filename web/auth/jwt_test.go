@@ -1,4 +1,4 @@
-package tokens_test
+package auth_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/web/auth/tokens"
+	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 func TestNewManager(t *testing.T) {
@@ -22,16 +22,16 @@ func TestNewManager(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Create manager with missing required parameters.
-	_, err := tokens.NewTokenManager(db, "")
+	_, err := auth.NewTokenManager(db, "")
 	if err == nil {
 		t.Fatal("Expected error: missing domain variable")
 	}
-	manager, err := tokens.NewTokenManager(db, "test")
+	manager, err := auth.NewTokenManager(db, "test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	// User 1 should not be in the update list.
-	user1claims := tokens.Claims{
+	user1claims := auth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
 		},
@@ -48,7 +48,7 @@ func TestNewManager(t *testing.T) {
 		t.Error("JWT update required is false for expiring token, expected true")
 	}
 	// User 2 must be in the update list.
-	user2claims := tokens.Claims{
+	user2claims := auth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
 		},
@@ -66,7 +66,7 @@ func TestNewCookie(t *testing.T) {
 	defer cleanup()
 
 	user := qtest.CreateFakeUser(t, db, 1)
-	manager, err := tokens.NewTokenManager(db, domain)
+	manager, err := auth.NewTokenManager(db, domain)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,8 +77,8 @@ func TestNewCookie(t *testing.T) {
 	if !(cookie.Secure && cookie.HttpOnly) {
 		t.Error("Cookie not secure")
 	}
-	if cookie.Name != tokens.AuthCookieName {
-		t.Errorf("Incorrect cookie name. Expected %s, got %s", tokens.AuthCookieName, cookie.Name)
+	if cookie.Name != auth.CookieName {
+		t.Errorf("Incorrect cookie name. Expected %s, got %s", auth.CookieName, cookie.Name)
 	}
 	if cookie.Domain != domain {
 		t.Errorf("Incorrect cookie domain. Expected %s, got %s", domain, cookie.Domain)
@@ -91,7 +91,7 @@ func TestUserClaims(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
-	manager, err := tokens.NewTokenManager(db, "localhost")
+	manager, err := auth.NewTokenManager(db, "localhost")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,11 +128,11 @@ func TestUpdateTokenList(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	admin := qtest.CreateFakeUser(t, db, 1)
-	manager, err := tokens.NewTokenManager(db, "localhost")
+	manager, err := auth.NewTokenManager(db, "localhost")
 	if err != nil {
 		t.Fatal(err)
 	}
-	claims := &tokens.Claims{
+	claims := &auth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
 		},

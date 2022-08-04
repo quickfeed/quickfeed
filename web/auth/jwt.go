@@ -1,4 +1,4 @@
-package tokens
+package auth
 
 import (
 	"errors"
@@ -15,7 +15,7 @@ import (
 
 var (
 	SetCookie            = "Set-Cookie"
-	AuthCookieName       = "auth"
+	CookieName           = "auth"
 	tokenExpirationTime  = 15 * time.Minute
 	cookieExpirationTime = 12 * time.Hour
 	alg                  = "HS256"
@@ -32,10 +32,10 @@ type Claims struct {
 
 // TokenManager creates and updates JWTs.
 type TokenManager struct {
-	updateTokens []uint64
-	db           database.Database
-	secret       string
-	domain       string
+	tokensToUpdate []uint64 // User IDs for user who need a token update.
+	db             database.Database
+	secret         string
+	domain         string
 }
 
 // NewTokenManager starts a new token manager. Will create a list with all tokens that need update.
@@ -69,7 +69,7 @@ func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
 		return nil, fmt.Errorf("failed to sign token: %s", err)
 	}
 	return &http.Cookie{
-		Name:     AuthCookieName,
+		Name:     CookieName,
 		Value:    signedToken,
 		Domain:   tm.domain,
 		Path:     "/",

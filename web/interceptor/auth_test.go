@@ -13,7 +13,6 @@ import (
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/auth/tokens"
 	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -31,7 +30,7 @@ func TestUserVerifier(t *testing.T) {
 	logger := qlog.Logger(t).Desugar()
 	ags := web.NewQuickFeedService(logger, db, scms, web.BaseHookOptions{}, &ci.Local{})
 
-	tm, err := tokens.NewTokenManager(db, "test")
+	tm, err := auth.NewTokenManager(db, "test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,8 +84,8 @@ func TestUserVerifier(t *testing.T) {
 	}{
 		{code: codes.Unauthenticated, metadata: false, token: "", wantUser: nil},
 		{code: codes.Unauthenticated, metadata: true, token: "should fail", wantUser: nil},
-		{code: codes.OK, metadata: true, token: tokens.AuthCookieName + "=" + adminToken.Value, wantUser: adminUser},
-		{code: codes.OK, metadata: true, token: tokens.AuthCookieName + "=" + studentToken.Value, wantUser: student},
+		{code: codes.OK, metadata: true, token: auth.CookieName + "=" + adminToken.Value, wantUser: adminUser},
+		{code: codes.OK, metadata: true, token: auth.CookieName + "=" + studentToken.Value, wantUser: student},
 	}
 
 	for _, user := range userTest {
@@ -108,7 +107,7 @@ func TestUserVerifier(t *testing.T) {
 		}
 		wantUser := user.wantUser
 		if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-			t.Errorf("GetSelf() mismatch (-wantUser +gotUser):\n%s", diff)
+			t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
 		}
 	}
 }

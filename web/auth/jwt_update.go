@@ -1,4 +1,4 @@
-package tokens
+package auth
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 // UpdateRequired returns true if JWT update is needed for this user ID
 // because the user's role has changed or the JWT is about to expire.
 func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
-	for _, token := range tm.updateTokens {
+	for _, token := range tm.tokensToUpdate {
 		if claims.UserID == token {
 			return true
 		}
@@ -16,7 +16,7 @@ func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 	return claims.ExpiresAt <= time.Now().Unix()
 }
 
-// Update removes user ID from the manager and updates user record in the database
+// Update removes user ID from the manager and updates user record in the database.
 func (tm *TokenManager) Remove(userID uint64) error {
 	if !tm.exists(userID) {
 		return nil
@@ -25,12 +25,12 @@ func (tm *TokenManager) Remove(userID uint64) error {
 		return err
 	}
 	var updatedTokenList []uint64
-	for _, id := range tm.updateTokens {
+	for _, id := range tm.tokensToUpdate {
 		if id != userID {
 			updatedTokenList = append(updatedTokenList, id)
 		}
 	}
-	tm.updateTokens = updatedTokenList
+	tm.tokensToUpdate = updatedTokenList
 	return nil
 }
 
@@ -42,7 +42,7 @@ func (tm *TokenManager) Add(userID uint64) error {
 	if err := tm.update(userID, true); err != nil {
 		return err
 	}
-	tm.updateTokens = append(tm.updateTokens, userID)
+	tm.tokensToUpdate = append(tm.tokensToUpdate, userID)
 	return nil
 }
 
@@ -58,7 +58,7 @@ func (tm *TokenManager) updateTokenList() error {
 			tokens = append(tokens, user.ID)
 		}
 	}
-	tm.updateTokens = tokens
+	tm.tokensToUpdate = tokens
 	return nil
 }
 
@@ -74,7 +74,7 @@ func (tm *TokenManager) update(userID uint64, updateToken bool) error {
 
 // exists checks if the ID is in the list.
 func (tm *TokenManager) exists(id uint64) bool {
-	for _, token := range tm.updateTokens {
+	for _, token := range tm.tokensToUpdate {
 		if id == token {
 			return true
 		}

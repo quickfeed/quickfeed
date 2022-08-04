@@ -16,7 +16,6 @@ import (
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/auth/tokens"
 	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/grpc"
 )
@@ -80,7 +79,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	tokenManager, err := tokens.NewTokenManager(db, *baseURL)
+	tokenManager, err := auth.NewTokenManager(db, *baseURL)
 	if err != nil {
 		log.Fatal(err)
 	}

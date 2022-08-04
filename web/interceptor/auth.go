@@ -3,7 +3,7 @@ package interceptor
 import (
 	"context"
 
-	"github.com/quickfeed/quickfeed/web/auth/tokens"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -28,7 +28,7 @@ func (s *StreamWrapper) Context() context.Context {
 
 // StreamUserVerifier returns a gRPC stream server interceptor that verifies
 // the user is authenticated.
-func StreamUserVerifier(logger *zap.SugaredLogger, tm *tokens.TokenManager) grpc.StreamServerInterceptor {
+func StreamUserVerifier(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.StreamServerInterceptor {
 	return func(req interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		inCtx := stream.Context()
 		context, err := getAuthenticatedContext(inCtx, logger, tm)
@@ -46,7 +46,7 @@ func StreamUserVerifier(logger *zap.SugaredLogger, tm *tokens.TokenManager) grpc
 // the user is authenticated. This is done by checking the context metadata
 // and verifying the session cookie. The context is modified to contain the
 // the user ID if the session cookie is valid.
-func UnaryUserVerifier(logger *zap.SugaredLogger, tm *tokens.TokenManager) grpc.UnaryServerInterceptor {
+func UnaryUserVerifier(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		newCtx, err := getAuthenticatedContext(ctx, logger, tm)
 		if err != nil {
