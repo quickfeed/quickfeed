@@ -299,3 +299,84 @@ func TestUpdateCriteria(t *testing.T) {
 		}
 	}
 }
+
+func TestCreateAndUpdateAssignments(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	course := &qf.Course{}
+	admin := qtest.CreateFakeUser(t, db, 10)
+	qtest.CreateCourse(t, db, admin, course)
+
+	// Assignments that are created and updated in this test
+	// do not have IDs set. They will be assigned IDs by the database.
+	// Both assignments should have the same ID after the test.
+
+	// This assignment will be created.
+	assignment := &qf.Assignment{
+		CourseID:         course.ID,
+		Name:             "Assignment 1",
+		RunScriptContent: "Script for assignment 1",
+		Deadline:         qtest.Timestamp(t, "2021-12-12T19:00:00"),
+		AutoApprove:      false,
+		Order:            1,
+		IsGroupLab:       true,
+		ScoreLimit:       20,
+	}
+
+	// This assignment will update the previous assignment.
+	assignment2 := &qf.Assignment{
+		CourseID:         course.ID,
+		Name:             "Updated Assignment 1",
+		RunScriptContent: "Script for assignment 1",
+		Deadline:         qtest.Timestamp(t, "2022-01-12T19:00:00"),
+		AutoApprove:      false,
+		Order:            1,
+		IsGroupLab:       false,
+		ScoreLimit:       75,
+	}
+
+	// Creates the assignment
+	if err := db.UpdateAssignments([]*qf.Assignment{assignment}); err != nil {
+		t.Fatal(err)
+	}
+
+	if assignment.ID == 0 {
+		t.Error("Expected assignment.ID to be non-zero")
+	}
+
+	gotAssignment, err := db.GetAssignment(&qf.Assignment{ID: assignment.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(assignment, gotAssignment, protocmp.Transform()); diff != "" {
+		t.Errorf("GetAssignment() mismatch (-want +got):\n%s", diff)
+	}
+
+	if err := db.UpdateAssignments([]*qf.Assignment{assignment2}); err != nil {
+		t.Fatal(err)
+	}
+
+	if assignment2.ID != gotAssignment.ID {
+		// The updated assignment should have the same ID as the assignment we created earlier.
+		t.Errorf("Expected assignment2.ID to be %d, got %d", gotAssignment.ID, assignment2.ID)
+	}
+
+	gotAssignment2, err := db.GetAssignment(&qf.Assignment{ID: assignment.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(assignment2, gotAssignment2, protocmp.Transform()); diff != "" {
+		t.Errorf("GetAssignment() mismatch (-want +got):\n%s", diff)
+	}
+
+	assignments, err := db.GetAssignmentsByCourse(course.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(assignments) != 1 {
+		// We should only have one assignment in the database
+		t.Fatalf("Expected 1 assignment, got %d", len(assignments))
+	}
+}
