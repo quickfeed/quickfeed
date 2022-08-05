@@ -558,7 +558,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<number>}
  * @const
  */
-proto.qf.User.repeatedFields_ = [8,9];
+proto.qf.User.repeatedFields_ = [9,10];
 
 
 
@@ -598,6 +598,7 @@ proto.qf.User.toObject = function(includeInstance, msg) {
     email: jspb.Message.getFieldWithDefault(msg, 5, ""),
     avatarurl: jspb.Message.getFieldWithDefault(msg, 6, ""),
     login: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    updatetoken: jspb.Message.getBooleanFieldWithDefault(msg, 8, false),
     remoteidentitiesList: jspb.Message.toObjectList(msg.getRemoteidentitiesList(),
     proto.qf.RemoteIdentity.toObject, includeInstance),
     enrollmentsList: jspb.Message.toObjectList(msg.getEnrollmentsList(),
@@ -667,11 +668,15 @@ proto.qf.User.deserializeBinaryFromReader = function(msg, reader) {
       msg.setLogin(value);
       break;
     case 8:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setUpdatetoken(value);
+      break;
+    case 9:
       var value = new proto.qf.RemoteIdentity;
       reader.readMessage(value,proto.qf.RemoteIdentity.deserializeBinaryFromReader);
       msg.addRemoteidentities(value);
       break;
-    case 9:
+    case 10:
       var value = new proto.qf.Enrollment;
       reader.readMessage(value,proto.qf.Enrollment.deserializeBinaryFromReader);
       msg.addEnrollments(value);
@@ -754,10 +759,17 @@ proto.qf.User.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getUpdatetoken();
+  if (f) {
+    writer.writeBool(
+      8,
+      f
+    );
+  }
   f = message.getRemoteidentitiesList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      8,
+      9,
       f,
       proto.qf.RemoteIdentity.serializeBinaryToWriter
     );
@@ -765,7 +777,7 @@ proto.qf.User.serializeBinaryToWriter = function(message, writer) {
   f = message.getEnrollmentsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      9,
+      10,
       f,
       proto.qf.Enrollment.serializeBinaryToWriter
     );
@@ -900,12 +912,30 @@ proto.qf.User.prototype.setLogin = function(value) {
 
 
 /**
- * repeated RemoteIdentity remoteIdentities = 8;
+ * optional bool updateToken = 8;
+ * @return {boolean}
+ */
+proto.qf.User.prototype.getUpdatetoken = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 8, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.qf.User} returns this
+ */
+proto.qf.User.prototype.setUpdatetoken = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 8, value);
+};
+
+
+/**
+ * repeated RemoteIdentity remoteIdentities = 9;
  * @return {!Array<!proto.qf.RemoteIdentity>}
  */
 proto.qf.User.prototype.getRemoteidentitiesList = function() {
   return /** @type{!Array<!proto.qf.RemoteIdentity>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.qf.RemoteIdentity, 8));
+    jspb.Message.getRepeatedWrapperField(this, proto.qf.RemoteIdentity, 9));
 };
 
 
@@ -914,7 +944,7 @@ proto.qf.User.prototype.getRemoteidentitiesList = function() {
  * @return {!proto.qf.User} returns this
 */
 proto.qf.User.prototype.setRemoteidentitiesList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 8, value);
+  return jspb.Message.setRepeatedWrapperField(this, 9, value);
 };
 
 
@@ -924,7 +954,7 @@ proto.qf.User.prototype.setRemoteidentitiesList = function(value) {
  * @return {!proto.qf.RemoteIdentity}
  */
 proto.qf.User.prototype.addRemoteidentities = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 8, opt_value, proto.qf.RemoteIdentity, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 9, opt_value, proto.qf.RemoteIdentity, opt_index);
 };
 
 
@@ -938,12 +968,12 @@ proto.qf.User.prototype.clearRemoteidentitiesList = function() {
 
 
 /**
- * repeated Enrollment enrollments = 9;
+ * repeated Enrollment enrollments = 10;
  * @return {!Array<!proto.qf.Enrollment>}
  */
 proto.qf.User.prototype.getEnrollmentsList = function() {
   return /** @type{!Array<!proto.qf.Enrollment>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.qf.Enrollment, 9));
+    jspb.Message.getRepeatedWrapperField(this, proto.qf.Enrollment, 10));
 };
 
 
@@ -952,7 +982,7 @@ proto.qf.User.prototype.getEnrollmentsList = function() {
  * @return {!proto.qf.User} returns this
 */
 proto.qf.User.prototype.setEnrollmentsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 9, value);
+  return jspb.Message.setRepeatedWrapperField(this, 10, value);
 };
 
 
@@ -962,7 +992,7 @@ proto.qf.User.prototype.setEnrollmentsList = function(value) {
  * @return {!proto.qf.Enrollment}
  */
 proto.qf.User.prototype.addEnrollments = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 9, opt_value, proto.qf.Enrollment, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 10, opt_value, proto.qf.Enrollment, opt_index);
 };
 
 

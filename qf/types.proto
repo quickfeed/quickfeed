@@ -28,9 +28,10 @@ message User {
     string email     = 5;
     string avatarURL = 6;
     string login     = 7;
+    bool updateToken = 8;
 
-    repeated RemoteIdentity remoteIdentities = 8;
-    repeated Enrollment enrollments          = 9;
+    repeated RemoteIdentity remoteIdentities = 9;
+    repeated Enrollment enrollments          = 10;
 }
 
 message Users {

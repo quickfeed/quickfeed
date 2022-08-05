@@ -25,6 +25,9 @@ export class User extends jspb.Message {
   getLogin(): string;
   setLogin(value: string): User;
 
+  getUpdatetoken(): boolean;
+  setUpdatetoken(value: boolean): User;
+
   getRemoteidentitiesList(): Array<RemoteIdentity>;
   setRemoteidentitiesList(value: Array<RemoteIdentity>): User;
   clearRemoteidentitiesList(): User;
@@ -52,6 +55,7 @@ export namespace User {
     email: string,
     avatarurl: string,
     login: string,
+    updatetoken: boolean,
     remoteidentitiesList: Array<RemoteIdentity.AsObject>,
     enrollmentsList: Array<Enrollment.AsObject>,
   }
