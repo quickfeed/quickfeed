@@ -169,7 +169,7 @@ func FakeProviderMap(t *testing.T) (scm.SCM, *scm.Scms) {
 	t.Helper()
 	scms := scm.NewScms()
 	env.SetFakeProvider(t)
-	scm, err := scms.GetOrCreateSCMEntry(Logger(t).Desugar(), "token")
+	scm, err := scms.GetOrCreateSCMEntry(Logger(t).Desugar(), "test")
 	if err != nil {
 		t.Fatal(err)
 	}

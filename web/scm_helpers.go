@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/grpc/codes"
@@ -43,17 +44,27 @@ func (q *QuickFeedService) MakeSCMs(ctx context.Context) error {
 	return nil
 }
 
-// GetSCM fetches an SCM client for the course organization.
-func (q *QuickFeedService) GetSCM(ctx context.Context, organization string) (scm.SCM, error) {
+// GetSCM returns an SCM client for the course organization.
+func (q *QuickFeedService) getSCM(ctx context.Context, organization string) (scm.SCM, error) {
 	return q.scms.GetOrCreateSCM(ctx, q.logger, organization)
 }
 
-func (q *QuickFeedService) GetSCMByCourse(ctx context.Context, courseID uint64) (scm.SCM, error) {
+// getSCMForCourse returns an SCM client for the course organization.
+func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64) (scm.SCM, error) {
 	course, err := q.db.GetCourse(courseID, false)
 	if err != nil {
 		return nil, err
 	}
-	return q.GetSCM(ctx, course.OrganizationPath)
+	return q.getSCM(ctx, course.OrganizationPath)
+}
+
+// getSCMForUser returns an SCM client based on the user's personal access token.
+func (q *QuickFeedService) getSCMForUser(ctx context.Context, user *qf.User) (scm.SCM, error) {
+	accessToken, err := user.GetAccessToken(env.ScmProvider())
+	if err != nil {
+		return nil, err
+	}
+	return scm.NewSCMClient(q.logger, accessToken)
 }
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the

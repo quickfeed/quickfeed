@@ -17,40 +17,44 @@ import (
 
 var allCourses = []*qf.Course{
 	{
-		Name:            "Distributed Systems",
-		CourseCreatorID: 1,
-		Code:            "DAT520",
-		Year:            2018,
-		Tag:             "Spring",
-		Provider:        "fake",
-		OrganizationID:  1,
+		Name:             "Distributed Systems",
+		CourseCreatorID:  1,
+		Code:             "DAT520",
+		Year:             2018,
+		Tag:              "Spring",
+		Provider:         "fake",
+		OrganizationID:   1,
+		OrganizationPath: "test",
 	},
 	{
-		Name:            "Operating Systems",
-		CourseCreatorID: 1,
-		Code:            "DAT320",
-		Year:            2017,
-		Tag:             "Fall",
-		Provider:        "fake",
-		OrganizationID:  2,
+		Name:             "Operating Systems",
+		CourseCreatorID:  1,
+		Code:             "DAT320",
+		Year:             2017,
+		Tag:              "Fall",
+		Provider:         "fake",
+		OrganizationID:   2,
+		OrganizationPath: "test",
 	},
 	{
-		Name:            "New Systems",
-		CourseCreatorID: 1,
-		Code:            "DATx20",
-		Year:            2019,
-		Tag:             "Fall",
-		Provider:        "fake",
-		OrganizationID:  3,
+		Name:             "New Systems",
+		CourseCreatorID:  1,
+		Code:             "DATx20",
+		Year:             2019,
+		Tag:              "Fall",
+		Provider:         "fake",
+		OrganizationID:   3,
+		OrganizationPath: "test",
 	},
 	{
-		Name:            "Hyped Systems",
-		CourseCreatorID: 1,
-		Code:            "DATx20",
-		Year:            2020,
-		Tag:             "Fall",
-		Provider:        "fake",
-		OrganizationID:  4,
+		Name:             "Hyped Systems",
+		CourseCreatorID:  1,
+		Code:             "DATx20",
+		Year:             2020,
+		Tag:              "Fall",
+		Provider:         "fake",
+		OrganizationID:   4,
+		OrganizationPath: "test",
 	},
 }
 
@@ -80,8 +84,6 @@ func TestGetCourses(t *testing.T) {
 }
 
 func TestNewCourse(t *testing.T) {
-	// TODO(vera): needs update to work with apps
-	t.Skip("disabled waiting for update")
 	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
@@ -90,11 +92,11 @@ func TestNewCourse(t *testing.T) {
 
 	for _, wantCourse := range allCourses {
 		// each course needs a separate directory
-		_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
+		_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"})
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		t.Log("COURSE ORG: ", wantCourse.OrganizationPath)
 		gotCourse, err := ags.CreateCourse(ctx, wantCourse)
 		if err != nil {
 			t.Fatal(err)
@@ -116,15 +118,13 @@ func TestNewCourse(t *testing.T) {
 }
 
 func TestNewCourseExistingRepos(t *testing.T) {
-	// TODO(vera): update all API tests that use scm
-	t.Skip("updating")
 	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
-	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
+	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"})
 	for path, private := range web.RepoPaths {
 		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: directory, Private: private}
 		_, err := fakeProvider.CreateRepository(ctx, repoOptions)
@@ -143,14 +143,13 @@ func TestNewCourseExistingRepos(t *testing.T) {
 }
 
 func TestEnrollmentProcess(t *testing.T) {
-	t.Skip("updating tests with scms")
 	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
-	_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
+	_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"})
 	if err != nil {
 		t.Fatal(err)
 	}
