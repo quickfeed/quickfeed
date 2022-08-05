@@ -3,15 +3,12 @@ package web
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -40,24 +37,6 @@ func (s *QuickFeedService) getCurrentUser(ctx context.Context) (*qf.User, error)
 	}
 	// return the user corresponding to userID, or an error.
 	return s.db.GetUser(userID)
-}
-
-func (s *QuickFeedService) getSCM(user *qf.User, provider string) (scm.SCM, error) {
-	currentProvider := env.ScmProvider()
-	if provider != currentProvider {
-		return nil, fmt.Errorf("invalid provider (%s), active scm provider is %s", provider, currentProvider)
-	}
-	for _, remoteID := range user.RemoteIdentities {
-		if remoteID.Provider == provider {
-			// TODO(vera): must add methods on the SCMManger to get/create scms
-			scm, ok := s.scms.Scms.GetSCM(remoteID.GetAccessToken())
-			if !ok {
-				return nil, fmt.Errorf("invalid token for user(%d) provider(%s)", user.ID, provider)
-			}
-			return scm, nil
-		}
-	}
-	return nil, errors.New("no SCM found")
 }
 
 // hasCourseAccess returns true if the given user has access to the given course,
@@ -130,30 +109,4 @@ func (s *QuickFeedService) isTeacher(userID, courseID uint64) bool {
 func (s *QuickFeedService) isCourseCreator(courseID, userID uint64) bool {
 	course, _ := s.db.GetCourse(courseID, false)
 	return course.GetCourseCreatorID() == userID
-}
-
-// getUserAndSCM returns the current user and scm for the given provider.
-// All errors are logged, but only a single error is returned to the client.
-// This is a helper method to facilitate consistent treatment of errors and logging.
-func (s *QuickFeedService) getUserAndSCM(ctx context.Context, provider string) (*qf.User, scm.SCM, error) {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-	scm, err := s.getSCM(usr, provider)
-	if err != nil {
-		return nil, nil, err
-	}
-	return usr, scm, nil
-}
-
-// getUserAndSCMForCourse returns the current user and scm for the given course.
-// All errors are logged, but only a single error is returned to the client.
-// This is a helper method to facilitate consistent treatment of errors and logging.
-func (s *QuickFeedService) getUserAndSCMForCourse(ctx context.Context, courseID uint64) (*qf.User, scm.SCM, error) {
-	crs, err := s.getCourse(courseID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get course with ID %d: %w", courseID, err)
-	}
-	return s.getUserAndSCM(ctx, crs.GetProvider())
 }

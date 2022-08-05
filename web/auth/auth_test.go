@@ -7,7 +7,6 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qlog"
-	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/steinfletcher/apitest"
 	"gotest.tools/assert"
@@ -74,7 +73,6 @@ func TestOAuth2Callback(t *testing.T) {
 	userJSON := `{"id": 1, "email": "mail", "name": "No name Last name", "login": "test"}`
 	logger := qtest.Logger(t)
 	authConfig := auth.NewGitHubConfig("", "TEST", "TEST")
-	scms := scm.NewScms()
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db, testDomain)
@@ -97,7 +95,7 @@ func TestOAuth2Callback(t *testing.T) {
 
 	apitest.New().Debug().
 		Mocks(mockTokenExchange, mockUserExchange).
-		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, scms, testSecret)).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
 		Get(callbackGithub).
 		Query("state", testSecret).
 		Query("code", "test code").
@@ -118,7 +116,6 @@ func TestOAuth2Callback(t *testing.T) {
 func TestOAuth2CallbackUserExchange(t *testing.T) {
 	logger := qtest.Logger(t)
 	authConfig := auth.NewGitHubConfig("", "TEST", "TEST")
-	scms := scm.NewScms()
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db, testDomain)
@@ -152,7 +149,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 
 	apitest.New().Debug().
 		Mocks(mockTokenExchange, mockEmptyUserInfo).
-		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, scms, testSecret)).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
 		Get(callbackGithub).
 		Query("state", testSecret).
 		Query("code", "test code").
@@ -162,7 +159,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 		End()
 	apitest.New().Debug().
 		Mocks(mockTokenExchange, mockEmptyResponseBody).
-		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, scms, testSecret)).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
 		Get(callbackGithub).
 		Query("state", testSecret).
 		Query("code", "test code").
@@ -172,7 +169,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 		End()
 	apitest.New().Debug().
 		Mocks(mockTokenExchange, mockBadRequestStatus).
-		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, scms, testSecret)).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
 		Get(callbackGithub).
 		Query("state", testSecret).
 		Query("code", "test code").
@@ -187,7 +184,6 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 func TestOAuth2CallbackTokenExchange(t *testing.T) {
 	logger := qtest.Logger(t)
 	authConfig := auth.NewGitHubConfig("", "TEST", "TEST")
-	scms := scm.NewScms()
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db, testDomain)
@@ -209,7 +205,7 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 	// Token value is an empty string.
 	apitest.New().Debug().
 		Mocks(mockEmptyAccessToken).
-		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, scms, testSecret)).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
 		Get(callbackGithub).
 		Query("state", testSecret).
 		Query("code", "test code").
@@ -220,7 +216,7 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 	// No values in the request body.
 	apitest.New().Debug().
 		Mocks(mockEmptyResponseBody).
-		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, scms, testSecret)).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
 		Get(callbackGithub).
 		Query("state", testSecret).
 		Query("code", "test code").
@@ -235,7 +231,6 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 func TestOAuth2CallbackBadRequest(t *testing.T) {
 	logger := qtest.Logger(t)
 	authConfig := auth.NewGitHubConfig("", "TEST", "TEST")
-	scms := scm.NewScms()
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db, testDomain)
@@ -244,7 +239,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 	}
 	// Wrong request method.
 	apitest.New().Debug().
-		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, scms, testSecret)).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
 		Post(callbackGithub).
 		Query("state", testSecret).
 		Query("code", "test code").
@@ -253,7 +248,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 		End()
 	// Incorrect secret code.
 	apitest.New().Debug().
-		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, scms, testSecret)).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
 		Get(callbackGithub).
 		Query("state", "not a secret").
 		Query("code", "test code").
@@ -262,7 +257,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 		End()
 	// Empty exchange code.
 	apitest.New().Debug().
-		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, scms, testSecret)).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
 		Get(callbackGithub).
 		Query("state", testSecret).
 		Query("code", "").
@@ -271,7 +266,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 		End()
 	// Request with empty body content.
 	apitest.New().Debug().
-		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, scms, testSecret)).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
 		Get(callbackGithub).
 		Expect(t).
 		Status(http.StatusUnauthorized).
