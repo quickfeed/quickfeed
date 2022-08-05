@@ -93,6 +93,7 @@ func main() {
 		log.Fatal(err)
 	}
 	authConfig := auth.NewGitHubConfig(*baseURL, clientID, clientSecret)
+	logger.Sugar().Debug("CALLBACK: ", authConfig.RedirectURL)
 	scmManager, err := scm.NewSCMManager(appID, appKey)
 	if err != nil {
 		log.Fatal(err)

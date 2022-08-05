@@ -18,20 +18,9 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	Cookie        = "cookie"
-	UserKey       = "user"
-	TeacherSuffix = "teacher"
-	githubUserAPI = "https://api.github.com/user"
-)
-
-var (
-	teacherScopes = []string{"repo:invite", "user", "repo", "delete_repo", "admin:org", "admin:org_hook"}
-	studentScopes = []string{"repo:invite"}
-	httpClient    = &http.Client{
-		Timeout: time.Second * 30,
-	}
-)
+var httpClient = &http.Client{
+	Timeout: time.Second * 30,
+}
 
 func authenticationError(logger *zap.SugaredLogger, w http.ResponseWriter, err error) {
 	logger.Error(err)

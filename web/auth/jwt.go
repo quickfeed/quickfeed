@@ -13,14 +13,6 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 )
 
-var (
-	SetCookie            = "Set-Cookie"
-	CookieName           = "auth"
-	tokenExpirationTime  = 15 * time.Minute
-	cookieExpirationTime = 12 * time.Hour
-	alg                  = "HS256"
-)
-
 // Claims contain the bearer information.
 type Claims struct {
 	jwt.StandardClaims

@@ -62,8 +62,6 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 	// Register auth endpoints.
 	callbackSecret := rand.String()
 	router.HandleFunc(auth.Auth, auth.OAuth2Login(s.logger, authConfig, callbackSecret))
-	// TODO(vera): temporary hack to support teacher scopes, will be removed when OAuth app replaced with GitHub app.
-	router.HandleFunc(auth.Teacher, auth.OAuth2Login(s.logger, authConfig, callbackSecret))
 	router.HandleFunc(auth.Callback, auth.OAuth2Callback(s.logger, s.db, tm, authConfig, callbackSecret))
 	router.HandleFunc(auth.Logout, auth.OAuth2Logout())
 
