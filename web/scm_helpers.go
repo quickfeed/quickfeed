@@ -59,7 +59,7 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 }
 
 // getSCMForUser returns an SCM client based on the user's personal access token.
-func (q *QuickFeedService) getSCMForUser(ctx context.Context, user *qf.User) (scm.SCM, error) {
+func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCM, error) {
 	accessToken, err := user.GetAccessToken(env.ScmProvider())
 	if err != nil {
 		return nil, err

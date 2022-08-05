@@ -12,7 +12,6 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	scms "github.com/quickfeed/quickfeed/scm"
 )
 
 // QuickFeedService holds references to the database and
@@ -850,10 +849,10 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *qf.OrgReques
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
 		}
-		if err == scms.ErrNotMember {
+		if err == scm.ErrNotMember {
 			return nil, status.Error(codes.NotFound, "organization membership not confirmed, please enable third-party access")
 		}
-		if err == ErrFreePlan || err == ErrAlreadyExists || err == scms.ErrNotOwner {
+		if err == ErrFreePlan || err == ErrAlreadyExists || err == scm.ErrNotOwner {
 			return nil, status.Error(codes.FailedPrecondition, err.Error())
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
