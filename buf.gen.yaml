@@ -10,12 +10,15 @@ plugins:
     path: public/node_modules/.bin/protoc-gen-connect-web
     out: public/gen
     opt: target=ts
+  # - name: go
+  #   out: ./
+  #   opt: paths=source_relative
+  # - name: connect-go
+  #   out: ./
+  #   opt: paths=source_relative
   - name: go-patch
     out: ./
     opt: plugin=go,paths=source_relative
   - name: go-patch
     out: ./
     opt: plugin=go-grpc,paths=source_relative
-  # - name: connect-go
-  #   out: qf/gen
-  #   opt: paths=source_relative
