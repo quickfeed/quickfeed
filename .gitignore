@@ -9,6 +9,7 @@ public/dist/bundle.js.map
 backups
 scratchpad
 proto-include
+bin
 
 # Environment and shell scripts
 cyclone.sh

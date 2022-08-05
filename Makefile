@@ -17,19 +17,27 @@ grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 testorg				:= ag-test-course
 envoy-config-gen	:= ./cmd/envoy/envoy_config_gen.go
+toolsdir			:= bin
+tool-pkgs			:= $(shell go list -f '{{join .Imports " "}}' tools.go)
+tool-cmds			:= $(foreach tool,$(notdir ${tool-pkgs}),${toolsdir}/${tool}) $(foreach cmd,${tool-cmds},$(eval $(notdir ${cmd})Cmd := ${cmd}))
 
-# necessary when target is not tied to a file
-.PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm version-check
+# necessary when target is not tied to a specific file
+.PHONY: devtools download tools grpcweb install ui proto envoy-build envoy-run scm version-check
 
-devtools: grpcweb go-tools
+devtools: grpcweb tools
 
 download:
 	@echo "Download go.mod dependencies"
 	@go mod download
 
-go-tools:
-	@echo "Installing tools from tools.go"
-	@go install `go list -f "{{range .Imports}}{{.}} {{end}}" tools.go`
+go.mod: tools.go
+	go mod tidy
+	touch go.mod
+
+${tool-cmds}: go.mod
+	go build -o $@ $(filter %/$(@F),${tool-pkgs})
+
+tools: ${tool-cmds}
 
 version-check:
 	@go run cmd/vercheck/main.go
@@ -107,7 +115,7 @@ ifeq (, $(shell which brew))
 	$(error "No brew command in $(PATH)")
 endif
 	@echo "Installing homebrew packages needed for development and deployment"
-	@brew install go protobuf webpack npm node docker certbot envoy
+	@brew install go protobuf node docker certbot envoy golangci-lint bufbuild/buf/buf grpcurl
 
 envoy-config:
 ifeq ($(DOMAIN),)
