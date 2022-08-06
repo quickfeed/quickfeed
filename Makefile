@@ -6,14 +6,11 @@
 
 OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
-tmpdir				:= tmp
 proto-swift-path	:= ../quickfeed-swiftui/Quickfeed/Proto
 grpcweb-latest		:= $(shell git ls-remote --tags https://github.com/grpc/grpc-web.git | tail -1 | awk -F"/" '{ print $$3 }')
 grpcweb-ver			:= $(shell cd public; npm ls --package-lock-only grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
 protoc-grpcweb		:= protoc-gen-grpc-web
 protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
-grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ver)/$(protoc-grpcweb-long)
-grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 testorg				:= ag-test-course
 envoy-config-gen	:= ./cmd/envoy/envoy_config_gen.go
@@ -46,12 +43,11 @@ ifneq ($(grpcweb-ver), $(grpcweb-latest))
 endif
 
 grpcweb:
-	@echo "Fetch and install grpcweb protoc plugin (may require sudo access on some systems)"
-	@mkdir -p $(tmpdir)
-	@cd $(tmpdir); curl -LOs $(grpcweb-url)
-	@sudo mv $(tmpdir)/$(protoc-grpcweb-long) $(grpcweb-path)
-	@chmod +x $(grpcweb-path)
-	@rm -rf $(tmpdir)
+	@echo "Fetch and install grpcweb protoc plugin"
+	@mkdir -p $(toolsdir)
+	@cd $(toolsdir); gh release download --repo grpc/grpc-web $(grpcweb-ver) --pattern \*$(OS)\*
+	@cd $(toolsdir); shasum -c *.sha256 && rm *.sha256
+	@cd $(toolsdir); mv $(protoc-grpcweb-long) $(protoc-grpcweb) && chmod +x $(protoc-grpcweb)
 
 install:
 	@echo go install
@@ -115,7 +111,7 @@ ifeq (, $(shell which brew))
 	$(error "No brew command in $(PATH)")
 endif
 	@echo "Installing homebrew packages needed for development and deployment"
-	@brew install go protobuf node docker certbot envoy golangci-lint bufbuild/buf/buf grpcurl
+	@brew install gh go protobuf node docker certbot envoy clang-format golangci-lint bufbuild/buf/buf grpcurl
 
 envoy-config:
 ifeq ($(DOMAIN),)
