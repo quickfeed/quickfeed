@@ -8,6 +8,7 @@ import (
 
 const (
 	defaultProvider = "github"
+	defaultKeyPath  = "internal/config/quickfeed.pem"
 )
 
 var (
@@ -59,13 +60,13 @@ func AppID() (string, error) {
 }
 
 // AppKey returns path to the file with .pem private key.
-// For GitHub apps a key must be generated from the App's
-// settings page and saved in a file.
-func AppKey() (string, error) {
+// For GitHub apps a key must be generated on the App's
+// settings page and saved into a file.
+func AppKey() string {
 	if appKey == "" {
-		return "", fmt.Errorf("missing path to private key for provider %s", provider)
+		return defaultKeyPath
 	}
-	return appKey, nil
+	return appKey
 }
 
 // SetFakeProvider sets the provider to fake. This is only for testing.

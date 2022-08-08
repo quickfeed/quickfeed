@@ -4,22 +4,17 @@ import (
 	"context"
 	"testing"
 
-	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/scm"
 )
 
 func TestSCMManager(t *testing.T) {
-	appID, err := env.AppID()
+	scmConfig, err := scm.NewSCMConfig()
 	if err != nil {
-		t.Fatal(err)
-	}
-	appKey, err := env.AppKey()
-	if err != nil {
-		t.Fatal(err)
+		t.Skip("This test needs a valid GitHub App")
 	}
 
-	tm, err := scm.NewSCMManager(appID, appKey)
+	tm, err := scm.NewSCMManager(scmConfig)
 	if err != nil {
 		t.Fatal(err)
 	}

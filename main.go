@@ -71,19 +71,7 @@ func main() {
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
-	appID, err := env.AppID()
-	if err != nil {
-		log.Fatal(err)
-	}
-	appKey, err := env.AppKey()
-	if err != nil {
-		log.Fatal(err)
-	}
-	clientID, err := env.ClientID()
-	if err != nil {
-		log.Fatal(err)
-	}
-	clientSecret, err := env.ClientSecret()
+	scmConfig, err := scm.NewSCMConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -92,9 +80,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	authConfig := auth.NewGitHubConfig(*baseURL, clientID, clientSecret)
+	authConfig := auth.NewGitHubConfig(*baseURL, scmConfig)
 	logger.Sugar().Debug("CALLBACK: ", authConfig.RedirectURL)
-	scmManager, err := scm.NewSCMManager(appID, appKey)
+	scmManager, err := scm.NewSCMManager(scmConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
