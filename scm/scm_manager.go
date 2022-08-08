@@ -107,10 +107,10 @@ func (s *SCMManager) getInstallationToken(ctx context.Context, organization stri
 	}
 	tokenURL := fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", inst.GetID())
 	resp, err := s.appConfig.Client().Post(tokenURL, "application/vnd.github.v3+json", nil)
-	defer resp.Body.Close()
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 	var tokenResponse struct {
 		Token       string    `json:"token"`
 		ExpiresAt   time.Time `json:"expires_at"`
