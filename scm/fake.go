@@ -286,5 +286,4 @@ func (*FakeSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptio
 
 // SetToken implements the SCM interface
 func (*FakeSCM) SetToken(_ string) {
-	return
 }

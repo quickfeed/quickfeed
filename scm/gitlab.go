@@ -335,5 +335,4 @@ func (*GitlabSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvita
 
 // SetToken implements the SCM interface
 func (*GitlabSCM) SetToken(_ string) {
-	return
 }
