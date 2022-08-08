@@ -8,6 +8,7 @@ autoapprove
 autograde
 Autograder
 backports
+beatlabs
 bitlab
 bufconn
 bufnet

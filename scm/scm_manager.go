@@ -21,7 +21,7 @@ type SCMManager struct {
 	appConfig *app.Config
 }
 
-// SCMConfig stores SCM varibles.
+// SCMConfig stores SCM variables.
 type SCMConfig struct {
 	AppID        string
 	AppKey       string
