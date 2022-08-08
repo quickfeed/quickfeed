@@ -877,6 +877,11 @@ func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *Repository
 	return nil
 }
 
+// SetToken sets a new access token.
+func (s *GithubSCM) SetToken(token string) {
+	s.token = token
+}
+
 func toRepository(repo *github.Repository) *Repository {
 	return &Repository{
 		ID:      uint64(repo.GetID()),

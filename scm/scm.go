@@ -90,6 +90,9 @@ type SCM interface {
 
 	// Accepts repository invite.
 	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
+
+	// Sets a new token
+	SetToken(string)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.

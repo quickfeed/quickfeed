@@ -31,7 +31,7 @@ func (s *QuickFeedService) updateAssignments(courseID uint64) error {
 	if err != nil {
 		return fmt.Errorf("could not find course ID %d", courseID)
 	}
-	assignments.UpdateFromTestsRepo(s.logger, s.db, course)
+	assignments.UpdateFromTestsRepo(s.logger, s.db, s.scms, course)
 	return nil
 }
 

@@ -8,7 +8,7 @@ import (
 
 const (
 	defaultProvider = "github"
-	defaultKeyPath  = "internal/config/quickfeed.pem"
+	defaultKeyPath  = "internal/config/github/quickfeed.pem"
 )
 
 var (
