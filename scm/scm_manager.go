@@ -21,8 +21,8 @@ type Manager struct {
 	appConfig *app.Config
 }
 
-// SCMConfig stores SCM variables.
-type SCMConfig struct {
+// Config stores SCM variables.
+type Config struct {
 	AppID        string
 	AppKey       string
 	ClientID     string
@@ -30,7 +30,7 @@ type SCMConfig struct {
 }
 
 // NewSCMConfig creates a new SCMConfig.
-func NewSCMConfig() (*SCMConfig, error) {
+func NewSCMConfig() (*Config, error) {
 	appID, err := env.AppID()
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func NewSCMConfig() (*SCMConfig, error) {
 		return nil, err
 	}
 	appKey := env.AppKey()
-	return &SCMConfig{
+	return &Config{
 		AppID:        appID,
 		AppKey:       appKey,
 		ClientID:     clientID,
@@ -54,7 +54,7 @@ func NewSCMConfig() (*SCMConfig, error) {
 
 // NewSCMManager creates base client for the QuickFeed GitHub Application.
 // This client can be used to install API clients for each course organization.
-func NewSCMManager(c *SCMConfig) (*Manager, error) {
+func NewSCMManager(c *Config) (*Manager, error) {
 	createAppKey, err := key.FromFile(c.AppKey)
 	if err != nil {
 		return nil, fmt.Errorf("error reading key from file: %w", err)

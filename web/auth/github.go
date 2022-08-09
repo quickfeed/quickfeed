@@ -7,7 +7,7 @@ import (
 )
 
 // newGitHubConfig creates a new OAuth config for GitHub.
-func NewGitHubConfig(baseURL string, c *scm.SCMConfig) *oauth2.Config {
+func NewGitHubConfig(baseURL string, c *scm.Config) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     c.ClientID,
 		ClientSecret: c.ClientSecret,

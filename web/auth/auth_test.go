@@ -24,7 +24,7 @@ const (
 
 func TestOAuth2Login(t *testing.T) {
 	logger := qlog.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.SCMConfig{})
+	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 	// Incorrect request method.
 	apitest.New().Debug().
 		HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
@@ -51,7 +51,7 @@ func TestOAuth2Login(t *testing.T) {
 
 func TestOAuth2LoginRedirect(t *testing.T) {
 	logger := qlog.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.SCMConfig{})
+	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 
 	apitest.New().Debug().
 		HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
@@ -73,7 +73,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 func TestOAuth2Callback(t *testing.T) {
 	userJSON := `{"id": 1, "email": "mail", "name": "No name Last name", "login": "test"}`
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.SCMConfig{})
+	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db, testDomain)
@@ -116,7 +116,7 @@ func TestOAuth2Callback(t *testing.T) {
 
 func TestOAuth2CallbackUserExchange(t *testing.T) {
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.SCMConfig{})
+	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db, testDomain)
@@ -184,7 +184,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 
 func TestOAuth2CallbackTokenExchange(t *testing.T) {
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.SCMConfig{})
+	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db, testDomain)
@@ -231,7 +231,7 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 
 func TestOAuth2CallbackBadRequest(t *testing.T) {
 	logger := qtest.Logger(t)
-	authConfig := auth.NewGitHubConfig("", &scm.SCMConfig{})
+	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	tm, err := auth.NewTokenManager(db, testDomain)
