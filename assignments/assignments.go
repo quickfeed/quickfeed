@@ -22,12 +22,12 @@ import (
 const MaxWait = 5 * time.Minute
 
 // UpdateFromTestsRepo updates the database record for the course assignments.
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, s *scm.Manager, course *qf.Course) {
+func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, course *qf.Course) {
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), qf.TestsRepo)
 	ctx, cancel := context.WithTimeout(context.Background(), MaxWait)
 	defer cancel()
 
-	scm, err := s.SCMWithToken(ctx, logger, course.OrganizationPath)
+	scm, err := mgr.SCMWithToken(ctx, logger, course.OrganizationPath)
 	if err != nil {
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
