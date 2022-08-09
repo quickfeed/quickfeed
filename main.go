@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"log"
 	"mime"
@@ -17,6 +18,7 @@ import (
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
+	"golang.org/x/crypto/acme/autocert"
 	"google.golang.org/grpc"
 )
 
@@ -142,7 +144,24 @@ func main() {
 			return
 		}
 	}
-	if err := muxServer.ListenAndServe(); err != nil {
+	whitelist, err := env.WhiteList()
+	if err != nil {
+		log.Fatalf("Failed to get whitelist: %v", err)
+	}
+	certManager := autocert.Manager{
+		Prompt: autocert.AcceptTOS,
+		Cache:  autocert.DirCache("certs"),
+		HostPolicy: autocert.HostWhitelist(
+			whitelist...,
+		),
+	}
+	muxServer.TLSConfig = &tls.Config{
+		GetCertificate: certManager.GetCertificate,
+	}
+	// Redirect all HTTP traffic to HTTPS.
+	go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
+	// Start the HTTPS server.
+	if err := muxServer.ListenAndServeTLS("", ""); err != nil {
 		log.Fatalf("Failed to start grpc server: %v", err)
 	}
 }

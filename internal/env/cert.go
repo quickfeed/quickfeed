@@ -1,8 +1,11 @@
 package env
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 )
 
 const (
@@ -20,6 +23,21 @@ func Domain() string {
 		domain = defaultDomain
 	}
 	return domain
+}
+
+// WhiteList returns a list of domains that the server will create certificates for.
+func WhiteList() ([]string, error) {
+	domains := os.Getenv("WHITELIST")
+	if domains == "" {
+		return []string{}, errors.New("no domains in whitelist. Please set the WHITELIST environment variable")
+	}
+	// Check if domains contain any IP addresses or localhost.
+	if strings.Contains(domains, "localhost") || regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`).MatchString(domains) {
+		return []string{}, errors.New("whitelist contains IP addresses or localhost")
+	}
+
+	// Split domains by comma and remove whitespace.
+	return strings.Split(strings.ReplaceAll(domains, " ", ""), ","), nil
 }
 
 // CertFile returns the full path to the certificate file.
