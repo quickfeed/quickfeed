@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	defaultCertPath = "/etc/letsencrypt/live"
+	defaultCertPath = "internal/config/certs"
 	defaultDomain   = "localhost"
 	defaultCertFile = "fullchain.pem"
 	defaultKeyFile  = "privkey.pem"
@@ -49,7 +49,7 @@ func CertFile() string {
 	certFile := os.Getenv("QUICKFEED_CERT_FILE")
 	if certFile == "" {
 		// If cert file is not specified, use the default cert file.
-		certFile = filepath.Join(certPath(), Domain(), defaultCertFile)
+		certFile = filepath.Join(CertPath(), Domain(), defaultCertFile)
 	}
 	return certFile
 }
@@ -60,12 +60,12 @@ func KeyFile() string {
 	keyFile := os.Getenv("QUICKFEED_KEY_FILE")
 	if keyFile == "" {
 		// If cert key is not specified, use the default cert key.
-		keyFile = filepath.Join(certPath(), Domain(), defaultKeyFile)
+		keyFile = filepath.Join(CertPath(), Domain(), defaultKeyFile)
 	}
 	return keyFile
 }
 
-func certPath() string {
+func CertPath() string {
 	certPath := os.Getenv("QUICKFEED_CERT_PATH")
 	if certPath == "" {
 		certPath = defaultCertPath

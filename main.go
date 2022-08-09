@@ -150,7 +150,7 @@ func main() {
 	}
 	certManager := autocert.Manager{
 		Prompt: autocert.AcceptTOS,
-		Cache:  autocert.DirCache("certs"),
+		Cache:  autocert.DirCache(env.CertPath()),
 		HostPolicy: autocert.HostWhitelist(
 			whitelist...,
 		),
