@@ -14,9 +14,9 @@ import (
 	"go.uber.org/zap"
 )
 
-// SCMManager keeps provider-specific configs (currently only for GitHub)
+// Manager keeps provider-specific configs (currently only for GitHub)
 // and a map of scm clients for each course.
-type SCMManager struct {
+type Manager struct {
 	Scms      *Scms
 	appConfig *app.Config
 }
@@ -54,7 +54,7 @@ func NewSCMConfig() (*SCMConfig, error) {
 
 // NewSCMManager creates base client for the QuickFeed GitHub Application.
 // This client can be used to install API clients for each course organization.
-func NewSCMManager(c *SCMConfig) (*SCMManager, error) {
+func NewSCMManager(c *SCMConfig) (*Manager, error) {
 	createAppKey, err := key.FromFile(c.AppKey)
 	if err != nil {
 		return nil, fmt.Errorf("error reading key from file: %w", err)
@@ -63,13 +63,13 @@ func NewSCMManager(c *SCMConfig) (*SCMManager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error creating GitHub application client: %w", err)
 	}
-	return &SCMManager{
+	return &Manager{
 		appConfig: appConfig,
 		Scms:      NewScms(),
 	}, nil
 }
 
-func (s *SCMManager) SCMWithToken(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
+func (s *Manager) SCMWithToken(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
 	scmClient, err := s.GetOrCreateSCM(ctx, logger, organization)
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func (s *SCMManager) SCMWithToken(ctx context.Context, logger *zap.SugaredLogger
 }
 
 // SCMClient gets an existing SCM client by organization name or creates a new client for course organization.
-func (s *SCMManager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
+func (s *Manager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
 	client, ok := s.Scms.scms[organization]
 	if !ok {
 		cli, err := s.newInstallationClient(ctx, organization)
@@ -100,7 +100,7 @@ func (s *SCMManager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogg
 	return client, nil
 }
 
-func (s *SCMManager) getInstallationToken(ctx context.Context, organization string) (string, error) {
+func (s *Manager) getInstallationToken(ctx context.Context, organization string) (string, error) {
 	inst, err := s.getInstallation(ctx, organization)
 	if err != nil {
 		return "", err
@@ -131,7 +131,7 @@ func (s *SCMManager) getInstallationToken(ctx context.Context, organization stri
 	return tokenResponse.Token, nil
 }
 
-func (s *SCMManager) getInstallation(ctx context.Context, organization string) (*github.Installation, error) {
+func (s *Manager) getInstallation(ctx context.Context, organization string) (*github.Installation, error) {
 	installationURL := "https://api.github.com/app/installations"
 	var installations []*github.Installation
 	resp, err := s.appConfig.Client().Get(installationURL)
@@ -160,7 +160,7 @@ func (s *SCMManager) getInstallation(ctx context.Context, organization string) (
 }
 
 // newInstallationClient creates a new client for a course organization.
-func (s *SCMManager) newInstallationClient(ctx context.Context, organization string) (*github.Client, error) {
+func (s *Manager) newInstallationClient(ctx context.Context, organization string) (*github.Client, error) {
 	inst, err := s.getInstallation(ctx, organization)
 	if err != nil {
 		return nil, err

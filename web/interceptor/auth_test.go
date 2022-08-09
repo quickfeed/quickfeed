@@ -28,7 +28,7 @@ func TestUserVerifier(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	logger := qlog.Logger(t).Desugar()
-	ags := web.NewQuickFeedService(logger, db, &scm.SCMManager{}, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(logger, db, &scm.Manager{}, web.BaseHookOptions{}, &ci.Local{})
 
 	tm, err := auth.NewTokenManager(db, "test")
 	if err != nil {

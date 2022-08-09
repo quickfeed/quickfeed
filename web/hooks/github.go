@@ -15,13 +15,13 @@ import (
 type GitHubWebHook struct {
 	logger *zap.SugaredLogger
 	db     database.Database
-	scms   *scm.SCMManager
+	scms   *scm.Manager
 	runner ci.Runner
 	secret string
 }
 
 // NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the QuickFeed server.
-func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, s *scm.SCMManager, runner ci.Runner, secret string) *GitHubWebHook {
+func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, s *scm.Manager, runner ci.Runner, secret string) *GitHubWebHook {
 	return &GitHubWebHook{logger: logger, db: db, scms: s, runner: runner, secret: secret}
 }
 

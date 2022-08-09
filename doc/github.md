@@ -9,20 +9,27 @@ The first step is to create a new API key for your QuickFeed application.
    - For deployment, we recommend creating a separate GitHub account.
 2. Log in to your chosen GitHub account.
 3. Click your profile picture and select Settings.
-4. In Settings, click Developer Settings and create a [New OAuth App](https://docs.github.com/en/developers/apps/building-oauth-apps/creating-an-oauth-app).
+4. In Settings, click Developer Settings and create a [New GitHub App](https://docs.github.com/en/enterprise-cloud@latest/developers/apps/building-github-apps/creating-a-github-app).
     1. Name your application, e.g., `QuickFeed Development`.
     2. Homepage URL should be your public landing page for QuickFeed, e.g., `https://uis.itest.run/`.
-    3. Authorization callback URL must be unique for each instance of QuickFeed, e.g., `https://uis.itest.run/auth/callback/github`.
-5. When you click Register application, you will be able to retrieve your Client ID and Client Secret.
+    3. Authorization callback URL must be unique for each instance of QuickFeed, e.g., `https://uis.itest.run/auth/callback/`.
+5. When you click Register application, you will be able to retrieve your Application ID, Client ID and Client Secret. 
    These are necessary for QuickFeed to access GitHub, and for GitHub to communicate back to the QuickFeed server.
-   Create a shell script `quickfeed-env.sh` and copy the Client ID and Client Secret values as shown below:
+   In `Private keys` section click the `Generate private key` button and save the generated key to a file. The default path for the key file is `quickfeed/internal/config/github/quickfeed.pem`.
+   Create a shell script `quickfeed-env.sh` and copy the App ID, Client ID and Client Secret values, and path to the generated key (if you wish to store it outside of the default path) as shown below:
 
    ```sh
-   export GITHUB_KEY="Client ID"
-   export GITHUB_SECRET="Client Secret"
+   export QUICKFEED_APP_ID="Application ID"
+   export QUICKFEED_APP_KEY="Path to the application's private key"
+   export QUICKFEED_CLIENT_ID="Client ID"
+   export QUICKFEED_CLIENT_SECRET="Client secret"
    ```
 
-6. Then, to start the QuickFeed server:
+6. A public link will be generated on the application's main page. This link allows users to install this application on their organizations. Installing the application creates an installation that can access the organization according to the application's permissions.
+7. Permissions can be set up when the application is created or later, in the `Permissions & events` tab. QuickFeed requires the following set of permissions:
+
+
+8. Then, to start the QuickFeed server:
 
    ```sh
    % source quickfeed-env.sh
