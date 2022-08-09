@@ -73,7 +73,7 @@ func (s *Manager) SCMWithToken(ctx context.Context, logger *zap.SugaredLogger, o
 	if err != nil {
 		return nil, err
 	}
-	if err := scmClient.refreshToken(ctx, s.Config, organization); err != nil {
+	if err := scmClient.refreshToken(s.Config, organization); err != nil {
 		return nil, err
 	}
 	return scmClient, err

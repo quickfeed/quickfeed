@@ -108,7 +108,7 @@ func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
 
 type scmRefresher interface {
 	SCM
-	refreshToken(ctx context.Context, config *Config, organization string) error
+	refreshToken(config *Config, organization string) error
 }
 
 func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Config, organization string) (scmRefresher, error) {

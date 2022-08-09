@@ -14,7 +14,7 @@ import (
 )
 
 func newGithubAppClient(ctx context.Context, logger *zap.SugaredLogger, cfg *Config, organization string) (*GithubSCM, error) {
-	inst, err := cfg.fetchInstallation(ctx, organization)
+	inst, err := cfg.fetchInstallation(organization)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func newGithubAppClient(ctx context.Context, logger *zap.SugaredLogger, cfg *Con
 	}, nil
 }
 
-func (cfg *Config) fetchInstallation(ctx context.Context, organization string) (*github.Installation, error) {
+func (cfg *Config) fetchInstallation(organization string) (*github.Installation, error) {
 	const installationURL = "https://api.github.com/app/installations"
 	resp, err := cfg.Client().Get(installationURL)
 	if err != nil {
@@ -55,7 +55,7 @@ func (cfg *Config) fetchInstallation(ctx context.Context, organization string) (
 	return nil, fmt.Errorf("could not find GitHub app installation for organization %s", organization)
 }
 
-func (s *GithubSCM) refreshToken(ctx context.Context, cfg *Config, organization string) error {
+func (s *GithubSCM) refreshToken(cfg *Config, organization string) error {
 	resp, err := cfg.Client().Post(s.tokenURL, "application/vnd.github.v3+json", nil)
 	if err != nil {
 		// Note: If the installation was deleted on GitHub, the installation ID will be invalid.

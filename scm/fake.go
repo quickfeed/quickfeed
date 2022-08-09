@@ -284,6 +284,6 @@ func (*FakeSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptio
 	}
 }
 
-func (FakeSCM) refreshToken(_ context.Context, _ *Config, _ string) error {
+func (FakeSCM) refreshToken(_ *Config, _ string) error {
 	return nil
 }
