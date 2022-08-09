@@ -35,7 +35,7 @@ func TestMakeSCMs(t *testing.T) {
 	if err := q.MakeSCMs(ctx); err != nil {
 		t.Fatal(err)
 	}
-	_, ok := mgr.Scms.GetSCM(course.OrganizationPath)
+	_, ok := mgr.GetSCM(course.OrganizationPath)
 	if !ok {
 		t.Fatalf("Missing scm client for organization %s", course.OrganizationPath)
 	}

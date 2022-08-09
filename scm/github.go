@@ -22,6 +22,7 @@ type GithubSCM struct {
 	clientV4    *githubv4.Client
 	token       string
 	providerURL string
+	tokenURL    string
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
@@ -875,11 +876,6 @@ func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *Repository
 		}
 	}
 	return nil
-}
-
-// SetToken sets a new access token.
-func (s *GithubSCM) SetToken(token string) {
-	s.token = token
 }
 
 func toRepository(repo *github.Repository) *Repository {

@@ -20,7 +20,7 @@ func TestSCMManager(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, ok := mgr.Scms.GetSCM(qfTestOrg)
+	_, ok := mgr.GetSCM(qfTestOrg)
 	if !ok {
 		t.Errorf("Scm client for organization %s not found", qfTestOrg)
 	}
