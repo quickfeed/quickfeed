@@ -48,7 +48,11 @@ func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) (*qf.Su
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
-	results, err := runData.RunTests(ctx, s.logger, s.runner)
+	sc, err := s.scmMgr.SCMWithToken(ctx, s.logger, course.OrganizationPath)
+	if err != nil {
+		return nil, err
+	}
+	results, err := runData.RunTests(ctx, s.logger, sc, s.runner)
 	if err != nil {
 		return nil, err
 	}

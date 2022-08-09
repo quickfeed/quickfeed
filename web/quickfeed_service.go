@@ -626,12 +626,12 @@ func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *qf.Rebuil
 		}
 		if _, err := s.rebuildSubmission(in); err != nil {
 			s.logger.Errorf("RebuildSubmission failed: %v", err)
-			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission")
+			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission "+err.Error())
 		}
 	case *qf.RebuildRequest_CourseID:
 		if err := s.rebuildSubmissions(in); err != nil {
 			s.logger.Errorf("RebuildSubmissions failed: %v", err)
-			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submissions")
+			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submissions "+err.Error())
 		}
 	}
 	return &qf.Void{}, nil
