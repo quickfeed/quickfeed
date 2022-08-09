@@ -99,6 +99,10 @@ func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
+func (tm *TokenManager) Database() database.Database {
+	return tm.db
+}
+
 // newClaims creates new JWT claims for user ID.
 func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 	usr, err := tm.db.GetUserWithEnrollments(userID)
