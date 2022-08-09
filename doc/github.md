@@ -13,7 +13,7 @@ The first step is to create a new API key for your QuickFeed application.
     1. Name your application, e.g., `QuickFeed Development`.
     2. Homepage URL should be your public landing page for QuickFeed, e.g., `https://uis.itest.run/`.
     3. Authorization callback URL must be unique for each instance of QuickFeed, e.g., `https://uis.itest.run/auth/callback/`.
-5. When you click Register application, you will be able to retrieve your Application ID, Client ID and Client Secret. 
+5. When you click Register application, you will be able to retrieve your Application ID, Client ID and Client Secret.
    These are necessary for QuickFeed to access GitHub, and for GitHub to communicate back to the QuickFeed server.
    In `Private keys` section click the `Generate private key` button and save the generated key to a file. The default path for the key file is `quickfeed/internal/config/github/quickfeed.pem`.
    Create a shell script `quickfeed-env.sh` and copy the App ID, Client ID and Client Secret values, and path to the generated key (if you wish to store it outside of the default path) as shown below:
@@ -28,6 +28,16 @@ The first step is to create a new API key for your QuickFeed application.
 6. A public link will be generated on the application's main page. This link allows users to install this application on their organizations. Installing the application creates an installation that can access the organization according to the application's permissions.
 7. Permissions can be set up when the application is created or later, in the `Permissions & events` tab. QuickFeed requires the following set of permissions:
 
+   - Repository permissions:
+      - Administration: read & write
+      - Contents: read & write
+      - Issues: read & write
+      - Pull requests: read & write
+   - Organization permissions:
+      - Administration: read & write
+      - Members: read & write
+
+   Note that changing the permissions later will not update them automatically for existing installations. Organization owners will need to accept changes manually in the organization settings.
 
 8. Then, to start the QuickFeed server:
 
