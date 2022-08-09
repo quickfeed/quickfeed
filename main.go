@@ -144,7 +144,7 @@ func main() {
 			return
 		}
 	}
-	whitelist, err := env.WhiteList()
+	whitelist, err := env.Whitelist()
 	if err != nil {
 		log.Fatalf("Failed to get whitelist: %v", err)
 	}
