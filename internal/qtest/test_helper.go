@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
@@ -23,7 +22,7 @@ import (
 func TestDB(t *testing.T) (database.Database, func()) {
 	t.Helper()
 
-	f, err := ioutil.TempFile(t.TempDir(), "test.db")
+	f, err := os.CreateTemp(t.TempDir(), "test.db")
 	if err != nil {
 		t.Fatal(err)
 	}
