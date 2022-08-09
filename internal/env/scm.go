@@ -51,7 +51,7 @@ func ClientSecret() (string, error) {
 	return clientSecret, nil
 }
 
-// AppID returns the appliction ID for the current SCM provider.
+// AppID returns the application ID for the current SCM provider.
 func AppID() (string, error) {
 	if appID == "" {
 		return "", fmt.Errorf("missing application ID for provider %s", provider)
