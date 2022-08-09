@@ -17,16 +17,15 @@ import (
 // Manager keeps provider-specific configs (currently only for GitHub)
 // and a map of scm clients for each course.
 type Manager struct {
-	Scms      *Scms
-	appConfig *app.Config
+	Scms *Scms
+	*Config
 }
 
 // Config stores SCM variables.
 type Config struct {
-	AppID        string
-	AppKey       string
 	ClientID     string
 	ClientSecret string
+	*app.Config
 }
 
 // NewSCMConfig creates a new SCMConfig.
@@ -44,29 +43,28 @@ func NewSCMConfig() (*Config, error) {
 		return nil, err
 	}
 	appKey := env.AppKey()
+	createAppKey, err := key.FromFile(appKey)
+	if err != nil {
+		return nil, fmt.Errorf("error reading key from file: %w", err)
+	}
+	appConfig, err := app.NewConfig(appID, createAppKey)
+	if err != nil {
+		return nil, fmt.Errorf("error creating GitHub application client: %w", err)
+	}
 	return &Config{
-		AppID:        appID,
-		AppKey:       appKey,
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
+		Config:       appConfig,
 	}, nil
 }
 
 // NewSCMManager creates base client for the QuickFeed GitHub Application.
 // This client can be used to install API clients for each course organization.
-func NewSCMManager(c *Config) (*Manager, error) {
-	createAppKey, err := key.FromFile(c.AppKey)
-	if err != nil {
-		return nil, fmt.Errorf("error reading key from file: %w", err)
-	}
-	appConfig, err := app.NewConfig(c.AppID, createAppKey)
-	if err != nil {
-		return nil, fmt.Errorf("error creating GitHub application client: %w", err)
-	}
+func NewSCMManager(c *Config) *Manager {
 	return &Manager{
-		appConfig: appConfig,
-		Scms:      NewScms(),
-	}, nil
+		Scms:   NewScms(),
+		Config: c,
+	}
 }
 
 func (s *Manager) SCMWithToken(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
@@ -106,7 +104,7 @@ func (s *Manager) getInstallationToken(ctx context.Context, organization string)
 		return "", err
 	}
 	tokenURL := fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", inst.GetID())
-	resp, err := s.appConfig.Client().Post(tokenURL, "application/vnd.github.v3+json", nil)
+	resp, err := s.Client().Post(tokenURL, "application/vnd.github.v3+json", nil)
 	if err != nil {
 		return "", err
 	}
@@ -134,7 +132,7 @@ func (s *Manager) getInstallationToken(ctx context.Context, organization string)
 func (s *Manager) getInstallation(ctx context.Context, organization string) (*github.Installation, error) {
 	installationURL := "https://api.github.com/app/installations"
 	var installations []*github.Installation
-	resp, err := s.appConfig.Client().Get(installationURL)
+	resp, err := s.Client().Get(installationURL)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching app installation for course organization %s: %w", organization, err)
 	}
@@ -165,7 +163,7 @@ func (s *Manager) newInstallationClient(ctx context.Context, organization string
 	if err != nil {
 		return nil, err
 	}
-	install, err := s.appConfig.InstallationConfig(fmt.Sprintf("%d", inst.GetID()))
+	install, err := s.InstallationConfig(fmt.Sprintf("%d", inst.GetID()))
 	if err != nil {
 		return nil, fmt.Errorf("error configuring github client for installation: %w", err)
 	}
