@@ -26,18 +26,17 @@ func Domain() string {
 }
 
 // WhiteList returns a list of domains that the server will create certificates for.
-func WhiteList() ([]string, error) {
+func Whitelist() ([]string, error) {
 	domains := os.Getenv("QUICKFEED_WHITELIST")
 	if domains == "" {
-		return []string{}, errors.New("no domains in whitelist. Please set the WHITELIST environment variable")
+		return nil, errors.New("required whitelist is undefined.")
 	}
-	// Check if domains contain any IP addresses or localhost.
 	if strings.Contains(domains, "localhost") {
-		return []string{}, errors.New("whitelist contains localhost")
+		return nil, errors.New("whitelist contains localhost")
 
 	}
 	if regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`).MatchString(domains) {
-		return []string{}, errors.New("whitelist contains IP addresses")
+		return nil, errors.New("whitelist contains IP addresses")
 	}
 
 	// Split domains by comma and remove whitespace.
