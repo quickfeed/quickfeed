@@ -19,18 +19,18 @@ import (
 type QuickFeedService struct {
 	logger *zap.SugaredLogger
 	db     database.Database
-	scms   *scm.Manager
+	scmMgr *scm.Manager
 	bh     BaseHookOptions
 	runner ci.Runner
 	qf.UnimplementedQuickFeedServiceServer
 }
 
 // NewQuickFeedService returns a QuickFeedService object.
-func NewQuickFeedService(logger *zap.Logger, db database.Database, scms *scm.Manager, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
+func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
 	return &QuickFeedService{
 		logger: logger.Sugar(),
 		db:     db,
-		scms:   scms,
+		scmMgr: mgr,
 		bh:     bh,
 		runner: runner,
 	}

@@ -36,7 +36,7 @@ func (q *QuickFeedService) MakeSCMs(ctx context.Context) error {
 		return err
 	}
 	for _, course := range courses {
-		_, err := q.scms.GetOrCreateSCM(ctx, q.logger, course.OrganizationPath)
+		_, err := q.scmMgr.GetOrCreateSCM(ctx, q.logger, course.OrganizationPath)
 		if err != nil {
 			return err
 		}
@@ -46,7 +46,7 @@ func (q *QuickFeedService) MakeSCMs(ctx context.Context) error {
 
 // GetSCM returns an SCM client for the course organization.
 func (q *QuickFeedService) getSCM(ctx context.Context, organization string) (scm.SCM, error) {
-	return q.scms.GetOrCreateSCM(ctx, q.logger, organization)
+	return q.scmMgr.GetOrCreateSCM(ctx, q.logger, organization)
 }
 
 // getSCMForCourse returns an SCM client for the course organization.
