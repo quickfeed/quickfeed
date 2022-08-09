@@ -29,7 +29,7 @@ func Domain() string {
 func Whitelist() ([]string, error) {
 	domains := os.Getenv("QUICKFEED_WHITELIST")
 	if domains == "" {
-		return nil, errors.New("required whitelist is undefined.")
+		return nil, errors.New("required whitelist is undefined")
 	}
 	if strings.Contains(domains, "localhost") {
 		return nil, errors.New("whitelist contains localhost")

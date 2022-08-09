@@ -157,6 +157,8 @@ func main() {
 	}
 	muxServer.TLSConfig = &tls.Config{
 		GetCertificate: certManager.GetCertificate,
+		MaxVersion:     tls.VersionTLS13,
+		MinVersion:     tls.VersionTLS12,
 	}
 	// Redirect all HTTP traffic to HTTPS.
 	go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
