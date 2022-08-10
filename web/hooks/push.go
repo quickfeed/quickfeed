@@ -219,7 +219,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *qf.Assignment, repo *qf.R
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
-	sc, err := wh.scms.SCMWithToken(ctx, wh.logger, course.OrganizationPath)
+	sc, err := wh.scms.GetOrCreateSCM(ctx, wh.logger, course.OrganizationPath)
 	if err != nil {
 		wh.logger.Errorf("Failed to create scm client: %v", err)
 		return nil

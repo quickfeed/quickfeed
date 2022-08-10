@@ -20,6 +20,7 @@ type GithubSCM struct {
 	logger      *zap.SugaredLogger
 	client      *github.Client
 	clientV4    *githubv4.Client
+	config      *Config
 	token       string
 	providerURL string
 	tokenURL    string

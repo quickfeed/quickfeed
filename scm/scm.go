@@ -106,12 +106,7 @@ func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
 	return nil, errors.New("invalid provider: " + provider)
 }
 
-type scmRefresher interface {
-	SCM
-	refreshToken(config *Config, organization string) error
-}
-
-func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Config, organization string) (scmRefresher, error) {
+func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Config, organization string) (SCM, error) {
 	provider := env.ScmProvider()
 	switch provider {
 	case "github":
