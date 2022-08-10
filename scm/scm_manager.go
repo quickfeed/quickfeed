@@ -2,14 +2,11 @@ package scm
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"time"
+	"sync"
 
 	"github.com/beatlabs/github-auth/app"
 	"github.com/beatlabs/github-auth/key"
-	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"go.uber.org/zap"
 )
@@ -17,16 +14,16 @@ import (
 // Manager keeps provider-specific configs (currently only for GitHub)
 // and a map of scm clients for each course.
 type Manager struct {
-	Scms      *Scms
-	appConfig *app.Config
+	scms map[string]scmRefresher
+	mu   sync.RWMutex
+	*Config
 }
 
 // Config stores SCM variables.
 type Config struct {
-	AppID        string
-	AppKey       string
 	ClientID     string
 	ClientSecret string
+	*app.Config
 }
 
 // NewSCMConfig creates a new SCMConfig.
@@ -44,130 +41,69 @@ func NewSCMConfig() (*Config, error) {
 		return nil, err
 	}
 	appKey := env.AppKey()
+	createAppKey, err := key.FromFile(appKey)
+	if err != nil {
+		return nil, fmt.Errorf("error reading key from file: %w", err)
+	}
+	appConfig, err := app.NewConfig(appID, createAppKey)
+	if err != nil {
+		return nil, fmt.Errorf("error creating GitHub application client: %w", err)
+	}
 	return &Config{
-		AppID:        appID,
-		AppKey:       appKey,
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
+		Config:       appConfig,
 	}, nil
 }
 
 // NewSCMManager creates base client for the QuickFeed GitHub Application.
 // This client can be used to install API clients for each course organization.
-func NewSCMManager(c *Config) (*Manager, error) {
-	createAppKey, err := key.FromFile(c.AppKey)
-	if err != nil {
-		return nil, fmt.Errorf("error reading key from file: %w", err)
-	}
-	appConfig, err := app.NewConfig(c.AppID, createAppKey)
-	if err != nil {
-		return nil, fmt.Errorf("error creating GitHub application client: %w", err)
-	}
+func NewSCMManager(c *Config) *Manager {
 	return &Manager{
-		appConfig: appConfig,
-		Scms:      NewScms(),
-	}, nil
+		scms:   make(map[string]scmRefresher),
+		Config: c,
+	}
 }
 
+// TODO(meling): Add doc comment. Decide naming.
+// TODO(meling): Should this always be called instead of GetOrCreateSCM?
+// TODO(meling): Do we need all three "Get" methods?
 func (s *Manager) SCMWithToken(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
-	scmClient, err := s.GetOrCreateSCM(ctx, logger, organization)
+	scmClient, err := s.internalGetOrCreateSCM(ctx, logger, organization)
 	if err != nil {
 		return nil, err
 	}
-	token, err := s.getInstallationToken(ctx, organization)
-	if err != nil {
+	if err := scmClient.refreshToken(s.Config, organization); err != nil {
 		return nil, err
 	}
-	scmClient.SetToken(token)
 	return scmClient, err
 }
 
-// SCMClient gets an existing SCM client by organization name or creates a new client for course organization.
+// GetOrCreateSCM returns an SCM client for the given organization, or creates a new SCM client if non exists.
 func (s *Manager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
-	client, ok := s.Scms.scms[organization]
+	return s.internalGetOrCreateSCM(ctx, logger, organization)
+}
+
+// GetSCM returns an SCM client for the given organization if exists;
+// otherwise, nil and false is returned.
+func (s *Manager) GetSCM(organization string) (sc SCM, ok bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	sc, ok = s.scms[organization]
+	return
+}
+
+func (s *Manager) internalGetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger, organization string) (scmRefresher, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	client, ok := s.scms[organization]
 	if !ok {
-		cli, err := s.newInstallationClient(ctx, organization)
+		var err error
+		client, err = newSCMAppClient(ctx, logger, s.Config, organization)
 		if err != nil {
 			return nil, err
 		}
-		client = &GithubSCM{
-			logger:      logger,
-			client:      cli,
-			providerURL: "github.com",
-		}
 	}
-	s.Scms.scms[organization] = client
+	s.scms[organization] = client
 	return client, nil
-}
-
-func (s *Manager) getInstallationToken(ctx context.Context, organization string) (string, error) {
-	inst, err := s.getInstallation(ctx, organization)
-	if err != nil {
-		return "", err
-	}
-	tokenURL := fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", inst.GetID())
-	resp, err := s.appConfig.Client().Post(tokenURL, "application/vnd.github.v3+json", nil)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	var tokenResponse struct {
-		Token       string    `json:"token"`
-		ExpiresAt   time.Time `json:"expires_at"`
-		Permissions struct {
-			Contents     string `json:"contents"`
-			Metadata     string `json:"metadata"`
-			PullRequests string `json:"pull_requests"`
-		} `json:"permissions"`
-		RepositorySelection string `json:"repository_selection"`
-	}
-	body, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode < 200 || resp.StatusCode > 300 {
-		return "", fmt.Errorf("failed to fetch installation access token for %s (response status %s): %s", organization, resp.Status, string(body))
-	}
-	if err := json.Unmarshal(body, &tokenResponse); err != nil {
-		return "", err
-	}
-	return tokenResponse.Token, nil
-}
-
-func (s *Manager) getInstallation(ctx context.Context, organization string) (*github.Installation, error) {
-	installationURL := "https://api.github.com/app/installations"
-	var installations []*github.Installation
-	resp, err := s.appConfig.Client().Get(installationURL)
-	if err != nil {
-		return nil, fmt.Errorf("error fetching app installation for course organization %s: %w", organization, err)
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading installation response: %w", err)
-	}
-	if err := json.Unmarshal(body, &installations); err != nil {
-		return nil, fmt.Errorf("error unmarshalling installation response: %w", err)
-	}
-	var installation *github.Installation
-	for _, inst := range installations {
-		if *inst.Account.Login == organization {
-			installation = inst
-			break
-		}
-	}
-	if installation == nil {
-		return nil, fmt.Errorf("cannot find GitHub app installation for organization %s", organization)
-	}
-	return installation, err
-}
-
-// newInstallationClient creates a new client for a course organization.
-func (s *Manager) newInstallationClient(ctx context.Context, organization string) (*github.Client, error) {
-	inst, err := s.getInstallation(ctx, organization)
-	if err != nil {
-		return nil, err
-	}
-	install, err := s.appConfig.InstallationConfig(fmt.Sprintf("%d", inst.GetID()))
-	if err != nil {
-		return nil, fmt.Errorf("error configuring github client for installation: %w", err)
-	}
-	return github.NewClient(install.Client(ctx)), nil
 }

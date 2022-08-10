@@ -13,17 +13,14 @@ func TestSCMManager(t *testing.T) {
 	if err != nil {
 		t.Skip("Requires a valid SCM app")
 	}
-	tm, err := scm.NewSCMManager(scmConfig)
-	if err != nil {
-		t.Skip("Requires a valid application key")
-	}
+	mgr := scm.NewSCMManager(scmConfig)
 	qfTestOrg := scm.GetTestOrganization(t)
 	ctx := context.Background()
-	_, err = tm.GetOrCreateSCM(ctx, qtest.Logger(t), qfTestOrg)
+	_, err = mgr.GetOrCreateSCM(ctx, qtest.Logger(t), qfTestOrg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, ok := tm.Scms.GetSCM(qfTestOrg)
+	_, ok := mgr.GetSCM(qfTestOrg)
 	if !ok {
 		t.Errorf("Scm client for organization %s not found", qfTestOrg)
 	}

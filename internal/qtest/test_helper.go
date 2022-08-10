@@ -164,15 +164,15 @@ func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course 
 }
 
 // FakeProviderMap is a test helper function to create an SCM map.
-func FakeProviderMap(t *testing.T) (scm.SCM, *scm.Scms) {
+func FakeProviderMap(t *testing.T) (scm.SCM, *scm.Manager) {
 	t.Helper()
-	scms := scm.NewScms()
 	env.SetFakeProvider(t)
-	scm, err := scms.GetOrCreateSCMEntry(Logger(t).Desugar(), "test")
+	mgr := scm.NewSCMManager(&scm.Config{})
+	scm, err := mgr.GetOrCreateSCM(context.Background(), Logger(t), "test")
 	if err != nil {
 		t.Fatal(err)
 	}
-	return scm, scms
+	return scm, mgr
 }
 
 func RandomString(t *testing.T) string {
