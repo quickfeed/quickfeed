@@ -32,7 +32,7 @@ func TestMakeSCMs(t *testing.T) {
 	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Fatal(err)
 	}
-	if err := q.MakeSCMs(ctx); err != nil {
+	if err := q.InitSCMs(ctx); err != nil {
 		t.Fatal(err)
 	}
 	_, ok := mgr.GetSCM(course.OrganizationPath)

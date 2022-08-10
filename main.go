@@ -114,8 +114,8 @@ func main() {
 	}
 
 	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
-	if err := qfService.MakeSCMs(context.Background()); err != nil {
-		log.Fatalf("Failed to create SCM clients: %v", err)
+	if err := qfService.InitSCMs(context.Background()); err != nil {
+		log.Fatalf("Failed to initialize SCM clients: %v", err)
 	}
 
 	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)

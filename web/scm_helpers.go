@@ -29,8 +29,8 @@ var (
 	FreeOrgPlan = "free"
 )
 
-// MakeSCMs creates and saves SCM clients for each course without an active SCM client.
-func (q *QuickFeedService) MakeSCMs(ctx context.Context) error {
+// InitSCMs creates and saves SCM clients for each course without an active SCM client.
+func (q *QuickFeedService) InitSCMs(ctx context.Context) error {
 	courses, err := q.db.GetCourses()
 	if err != nil {
 		return err
