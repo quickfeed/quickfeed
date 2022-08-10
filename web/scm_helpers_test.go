@@ -12,7 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/web"
 )
 
-func TestMakeSCMs(t *testing.T) {
+func TestInitSCMs(t *testing.T) {
 	scmConfig, err := scm.NewSCMConfig()
 	if err != nil {
 		t.Skip("Requires a valid SCM app")
@@ -30,13 +30,12 @@ func TestMakeSCMs(t *testing.T) {
 		Provider:         "fake",
 	}
 	if err := db.CreateCourse(admin.ID, course); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if err := q.InitSCMs(ctx); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-	_, ok := mgr.GetSCM(course.OrganizationPath)
-	if !ok {
-		t.Fatalf("Missing scm client for organization %s", course.OrganizationPath)
+	if _, ok := mgr.GetSCM(course.OrganizationPath); !ok {
+		t.Errorf("Missing scm client for organization %s", course.OrganizationPath)
 	}
 }
