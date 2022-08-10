@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -82,8 +83,57 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tm *auth.Tok
 				return handler(ctx, req)
 			}
 			logger.Debug("Got user claims: ", claims) // tmp
-		}
+			for _, role := range roles {
+				switch role {
+				case user:
+					if m, ok := req.(requestID); ok {
+						if m.FetchID("user") == claims.UserID {
+							return handler(ctx, req)
+						}
+					}
+				case group:
+					if m, ok := req.(requestID); ok {
+						groupID := m.FetchID("group")
+						logger.Debug("Group ID in request: ", groupID) // tmp
 
+					}
+				case student:
+					if m, ok := req.(requestID); ok {
+						courseID := m.FetchID("course")
+						status, ok := claims.Courses[courseID]
+						if ok && status == qf.Enrollment_STUDENT {
+							return handler(ctx, req)
+						}
+					}
+				case teacher:
+					// TODO(vera): needs different handling for "GetUserByCourse"
+					if m, ok := req.(requestID); ok {
+						courseID := m.FetchID("course")
+						status, ok := claims.Courses[courseID]
+						if ok && status == qf.Enrollment_TEACHER {
+							return handler(ctx, req)
+						}
+					}
+				case courseAdmin:
+					if claims.Admin {
+						if m, ok := req.(requestID); ok {
+							courseID := m.FetchID("course")
+							status, ok := claims.Courses[courseID]
+							if ok && status == qf.Enrollment_TEACHER {
+								return handler(ctx, req)
+							}
+						} else {
+							logger.Debugf("Method %s does not implement FetchID method", method)
+						}
+					}
+				case admin:
+					if claims.Admin {
+						return handler(ctx, req)
+					}
+				}
+			}
+
+		}
 		return handler(ctx, req)
 	}
 }
