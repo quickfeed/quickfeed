@@ -94,8 +94,11 @@ func AccessControl(logger *zap.SugaredLogger, db database.Database, tm *auth.Tok
 				case group:
 					if m, ok := req.(requestID); ok {
 						groupID := m.FetchID("group")
-						logger.Debug("Group ID in request: ", groupID) // tmp
-
+						for _, group := range claims.Groups {
+							if group == groupID {
+								return handler(ctx, req)
+							}
+						}
 					}
 				case student:
 					if m, ok := req.(requestID); ok {
