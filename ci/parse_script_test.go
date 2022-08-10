@@ -15,7 +15,7 @@ import (
 func testRunData(qfTestOrg, userName, accessToken, runScriptContent string) *RunData {
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
-	qf.SetAccessToken(courseID, accessToken)
+	qf.SetAccessTokenForCourse(courseID, accessToken)
 	runData := &RunData{
 		Course: &qf.Course{
 			ID:   courseID,

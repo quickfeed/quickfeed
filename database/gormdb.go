@@ -158,7 +158,7 @@ func (db *GormDB) updateCourseAccessTokensIfCourseCreator(remoteIdentity *qf.Rem
 	for _, enrollment := range enrollments {
 		course := enrollment.GetCourse()
 		if course.GetCourseCreatorID() == userID {
-			qf.SetAccessToken(course.GetID(), remoteIdentity.AccessToken)
+			qf.SetAccessTokenForCourse(course.GetID(), remoteIdentity.AccessToken)
 		}
 	}
 	return nil
@@ -167,7 +167,7 @@ func (db *GormDB) updateCourseAccessTokensIfCourseCreator(remoteIdentity *qf.Rem
 // updateCourseAccessTokenIfEmpty updates the access token cache for the course, if the course has no cached access token.
 // The cache allows easy access to the access token via the Course type.
 func (db *GormDB) updateCourseAccessTokenIfEmpty(course *qf.Course) error {
-	existingToken := course.GetAccessToken()
+	existingToken := course.GetAccessTokenForCourse()
 	if existingToken != "" {
 		// already cached
 		return nil
@@ -182,7 +182,7 @@ func (db *GormDB) updateCourseAccessTokenIfEmpty(course *qf.Course) error {
 		return fmt.Errorf("failed to get course creator's '%d' access token for %s: %w", course.GetCourseCreatorID(), course.GetProvider(), err)
 	}
 	// update the access token cache
-	qf.SetAccessToken(course.GetID(), accessToken)
+	qf.SetAccessTokenForCourse(course.GetID(), accessToken)
 	return nil
 }
 

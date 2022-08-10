@@ -57,7 +57,7 @@ func (db *GormDB) CreateCourse(courseCreatorID uint64, course *qf.Course) error 
 		return err
 	}
 	// update the access token cache for course
-	qf.SetAccessToken(course.GetID(), accessToken)
+	qf.SetAccessTokenForCourse(course.GetID(), accessToken)
 	return tx.Commit().Error
 }
 

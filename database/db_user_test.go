@@ -183,7 +183,7 @@ func TestGormDBUpdateAccessTokenCourseTokenCache(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cachedToken := cr.GetAccessToken()
+	cachedToken := cr.GetAccessTokenForCourse()
 	if cachedToken != initialAdminToken {
 		t.Errorf("cached token different from expected initial token: %s != %s", cachedToken, initialAdminToken)
 	}
@@ -201,7 +201,7 @@ func TestGormDBUpdateAccessTokenCourseTokenCache(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cachedToken = cr.GetAccessToken()
+	cachedToken = cr.GetAccessTokenForCourse()
 	if cachedToken != newAccessToken {
 		t.Errorf("cached token different from expected updated token: %s != %s", cachedToken, newAccessToken)
 	}
@@ -219,7 +219,7 @@ func TestGormDBUpdateAccessTokenCourseTokenCache(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cachedToken = cr.GetAccessToken()
+	cachedToken = cr.GetAccessTokenForCourse()
 	if cachedToken != anotherToken {
 		t.Errorf("cached token different from expected updated token: %s != %s", cachedToken, anotherToken)
 	}
