@@ -54,6 +54,12 @@ func main() {
 		*baseURL = "127.0.0.1" + *httpAddr
 	}
 
+	// Load environment variables from $QUICKFEED/.env.
+	// Will not override variables already defined in the environment.
+	if err := env.Load(""); err != nil {
+		log.Fatal(err)
+	}
+
 	logger, err := qlog.Zap()
 	if err != nil {
 		log.Fatalf("Can't initialize logger: %v", err)
