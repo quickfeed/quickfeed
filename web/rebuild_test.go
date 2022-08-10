@@ -63,15 +63,12 @@ func TestRebuildSubmissions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sc, err := scm.NewSCMManager(scmConfig)
-	if err != nil {
-		t.Fatal(err)
-	}
+	mgr := scm.NewSCMManager(scmConfig)
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	ctx := context.Background()
 	logger := qlog.Logger(t).Desugar()
-	q := web.NewQuickFeedService(logger, db, sc, web.BaseHookOptions{}, &ci.Local{})
+	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 
 	teacher := qtest.CreateFakeUser(t, db, 1)
 	err = db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
