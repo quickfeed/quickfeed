@@ -8,16 +8,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
-	"google.golang.org/grpc"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 )
 
 func init() {
@@ -93,35 +92,10 @@ func main() {
 
 	certFile := env.CertFile()
 	certKey := env.KeyFile()
-	var grpcServer *grpc.Server
-	unaryOptions := grpc.ChainUnaryInterceptor(
-		interceptor.Metrics(),
-		interceptor.UnaryUserVerifier(logger.Sugar(), tokenManager),
-		interceptor.Validation(logger),
-	)
-	streamOptions := grpc.ChainStreamInterceptor(interceptor.StreamUserVerifier(logger.Sugar(), tokenManager))
-	if *dev {
-		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
-		// In development, the server itself must maintain a TLS session.
-		grpcServer, err = web.GRPCServerWithCredentials(certFile, certKey, unaryOptions, streamOptions)
-		if err != nil {
-			log.Fatalf("Failed to generate gRPC server credentials: %v", err)
-		}
-	} else {
-		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
-		// In production, the envoy proxy will manage TLS certificates, and
-		// the gRPC server must be started without credentials.
-		grpcServer = web.GRPCServer(unaryOptions, streamOptions)
-	}
-
 	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
-	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
-	multiplexer := web.GrpcMultiplexer{
-		MuxServer: grpcweb.WrapServer(grpcServer),
-	}
 
 	// Register HTTP endpoints and webhooks
-	router := qfService.RegisterRouter(tokenManager, authConfig, multiplexer, *public)
+	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
 
 	// Create an HTTP server for prometheus.
 	httpServer := interceptor.MetricsServer(9097)
@@ -131,16 +105,20 @@ func main() {
 		}
 	}()
 	muxServer := &http.Server{
-		Handler:      router,
+		Handler:      h2c.NewHandler(router, &http2.Server{}),
 		Addr:         *httpAddr,
 		WriteTimeout: 2 * time.Minute,
 		ReadTimeout:  2 * time.Minute,
 	}
 	if *dev {
+
+		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
 		if err := muxServer.ListenAndServeTLS(certFile, certKey); err != nil {
 			log.Fatalf("Failed to start grpc server: %v", err)
 			return
 		}
+	} else {
+		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
 	}
 	if err := muxServer.ListenAndServe(); err != nil {
 		log.Fatalf("Failed to start grpc server: %v", err)

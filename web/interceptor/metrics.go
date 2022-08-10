@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/bufbuild/connect-go"
 	promgrpc "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"google.golang.org/grpc"
 )
 
 // Create a metrics registry.
@@ -50,14 +50,17 @@ var (
 	}, []string{"method", "result"})
 )
 
-func Metrics() grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		methodName := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
-		defer metricsTimer(methodName)()
-		resp, err := handler(ctx, req)
-		handleMetrics(methodName, resp, err)
-		return resp, err
-	}
+func Metrics() connect.Interceptor {
+	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
+		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
+			procedure := request.Spec().Procedure
+			methodName := procedure[strings.LastIndex(procedure, "/")+1:]
+			defer metricsTimer(methodName)()
+			resp, err := next(ctx, request)
+			handleMetrics(methodName, resp, err)
+			return resp, err
+		})
+	})
 }
 
 func metricsTimer(methodName string) func() {

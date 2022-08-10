@@ -3,61 +3,37 @@ package web
 import (
 	"net/http"
 
-	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/internal/rand"
+	"github.com/quickfeed/quickfeed/qfconnect"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/hooks"
+	"github.com/quickfeed/quickfeed/web/interceptor"
 	"golang.org/x/oauth2"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
-type GrpcMultiplexer struct {
-	MuxServer *grpcweb.WrappedGrpcServer
-}
-
-// GRPCServerWithCredentials starts a new gRPC server with credentials
-// generated from TLS certificates.
-func GRPCServerWithCredentials(certFile, certKey string, opts ...grpc.ServerOption) (*grpc.Server, error) {
-	// Generate TLS credentials from certificates
-	cred, err := credentials.NewServerTLSFromFile(certFile, certKey)
-	if err != nil {
-		return nil, err
-	}
-	opts = append(opts, grpc.Creds(cred))
-	return grpc.NewServer(opts...), nil
-}
-
-// GRPCServer starts a new server without TLS certificates.
-// This server should only be used in combination with an envoy proxy
-// that manages the TLS session.
-func GRPCServer(opts ...grpc.ServerOption) *grpc.Server {
-	return grpc.NewServer(opts...) // skipcq: GO-S0902
-}
-
-// MuxHandler routes HTTP and gRPC requests.
-func (m *GrpcMultiplexer) MuxHandler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if m.MuxServer.IsGrpcWebRequest(r) {
-			m.MuxServer.ServeHTTP(w, r)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
+func (s *QuickFeedService) NewQuickFeedHandler(tm *auth.TokenManager) (string, http.Handler) {
+	interceptors := connect.WithInterceptors(
+		interceptor.Metrics(),
+		interceptor.UnaryUserVerifier(s.logger, tm),
+		interceptor.Validation(s.logger),
+	)
+	return qfconnect.NewQuickFeedServiceHandler(s, interceptors)
 }
 
 // RegisterRouter registers http endpoints for authentication API and scm provider webhooks.
-func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oauth2.Config, mux GrpcMultiplexer, public string) *http.ServeMux {
+func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oauth2.Config, public string) *http.ServeMux {
 	// Serve static files.
 	router := http.NewServeMux()
 	assets := http.FileServer(http.Dir(public + "/assets"))
 	dist := http.FileServer(http.Dir(public + "/dist"))
 
-	router.Handle("/", mux.MuxHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, public+"/assets/index.html")
-	})))
-	router.Handle(auth.Assets, mux.MuxHandler(http.StripPrefix(auth.Assets, assets)))
-	router.Handle(auth.Static, mux.MuxHandler(http.StripPrefix(auth.Static, dist)))
+	}))
+	router.Handle(s.NewQuickFeedHandler(tm))
+	router.Handle(auth.Assets, http.StripPrefix(auth.Assets, assets))
+	router.Handle(auth.Static, http.StripPrefix(auth.Static, dist))
 
 	// Register auth endpoints.
 	callbackSecret := rand.String()
