@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
 
@@ -44,18 +45,18 @@ func TestNewGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	createGroupRequest := &qf.Group{Name: "Heins-Group", CourseID: course.ID, Users: []*qf.User{{ID: user.ID}}}
+	createGroupRequest := connect.NewRequest(&qf.Group{Name: "Heins-Group", CourseID: course.ID, Users: []*qf.User{{ID: user.ID}}})
 	// current user (in context) must be in group being created
 	ctx = qtest.WithUserContext(context.Background(), user)
 	wantGroup, err := ags.CreateGroup(ctx, createGroupRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
-	gotGroup, err := ags.GetGroup(ctx, &qf.GetGroupRequest{GroupID: wantGroup.ID})
+	gotGroup, err := ags.GetGroup(ctx, connect.NewRequest(&qf.GetGroupRequest{GroupID: wantGroup.Msg.ID}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(wantGroup, gotGroup, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, protocmp.Transform()); diff != "" {
 		t.Errorf("ags.CreateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
@@ -93,9 +94,9 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	}
 
 	users := []*qf.User{{ID: user.ID}}
-	group_wo_course_id := &qf.Group{Name: "Hein's Group", Users: users}
-	group_wo_name := &qf.Group{CourseID: course.ID, Users: users}
-	group_wo_users := &qf.Group{Name: "Hein's Group", CourseID: course.ID}
+	group_wo_course_id := connect.NewRequest(&qf.Group{Name: "Hein's Group", Users: users})
+	group_wo_name := connect.NewRequest(&qf.Group{CourseID: course.ID, Users: users})
+	group_wo_users := connect.NewRequest(&qf.Group{Name: "Hein's Group", CourseID: course.ID})
 
 	// current user (in context) must be in group being created
 	ctx = qtest.WithUserContext(context.Background(), user)
@@ -103,7 +104,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected CreateGroup to fail without a course ID")
 	}
-	if group_wo_name.IsValid() {
+	if group_wo_name.Msg.IsValid() {
 		// emulate CreateGroup check without name
 		t.Fatal("expected CreateGroup to fail without group name")
 	}
@@ -158,7 +159,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	}
 
 	users := []*qf.User{{ID: user.ID}}
-	createGroupRequest := &qf.Group{Name: "HeinsGroup", CourseID: course.ID, Users: users}
+	createGroupRequest := connect.NewRequest(&qf.Group{Name: "HeinsGroup", CourseID: course.ID, Users: users})
 
 	ctx := qtest.WithUserContext(context.Background(), user)
 	wantGroup, err := ags.CreateGroup(ctx, createGroupRequest)
@@ -167,24 +168,24 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	}
 
 	// check that gotGroup member can access gotGroup
-	gotGroup, err := ags.GetGroup(ctx, &qf.GetGroupRequest{GroupID: wantGroup.ID})
+	gotGroup, err := ags.GetGroup(ctx, connect.NewRequest(&qf.GetGroupRequest{GroupID: wantGroup.Msg.ID}))
 	if err != nil {
 		t.Fatal(err)
 	}
 	// check that teacher can access group
 	ctx = qtest.WithUserContext(context.Background(), teacher)
-	_, err = ags.GetGroup(ctx, &qf.GetGroupRequest{GroupID: wantGroup.ID})
+	_, err = ags.GetGroup(ctx, connect.NewRequest(&qf.GetGroupRequest{GroupID: wantGroup.Msg.ID}))
 	if err != nil {
 		t.Fatal(err)
 	}
 	// check that admin can access group
 	ctx = qtest.WithUserContext(context.Background(), admin)
-	_, err = ags.GetGroup(ctx, &qf.GetGroupRequest{GroupID: wantGroup.ID})
+	_, err = ags.GetGroup(ctx, connect.NewRequest(&qf.GetGroupRequest{GroupID: wantGroup.Msg.ID}))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if diff := cmp.Diff(wantGroup, gotGroup, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, protocmp.Transform()); diff != "" {
 		t.Errorf("ags.CreateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
@@ -234,7 +235,11 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	group_req := &qf.Group{Name: "HeinsGroup", CourseID: course.ID, Users: []*qf.User{{ID: user.ID}, {ID: teacher.ID}}}
+	group_req := connect.NewRequest(&qf.Group{
+		Name:     "HeinsGroup",
+		CourseID: course.ID,
+		Users:    []*qf.User{{ID: user.ID}, {ID: teacher.ID}},
+	})
 	_, err = ags.CreateGroup(ctx, group_req)
 	if err != nil {
 		t.Fatal(err)
@@ -307,7 +312,11 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	}
 
 	// group with two students
-	createGroupRequest := &qf.Group{Name: "HeinsTwoMemberGroup", CourseID: course.ID, Users: []*qf.User{user1, user2}}
+	createGroupRequest := connect.NewRequest(&qf.Group{
+		Name:     "HeinsTwoMemberGroup",
+		CourseID: course.ID,
+		Users:    []*qf.User{user1, user2},
+	})
 
 	// set ID of user3 to context, user3 is not member of group (should fail)
 	ctx := qtest.WithUserContext(context.Background(), user3)
@@ -322,19 +331,26 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotGroup, err := ags.GetGroup(ctx, &qf.GetGroupRequest{GroupID: wantGroup.ID})
+	gotGroup, err := ags.GetGroup(ctx, connect.NewRequest(&qf.GetGroupRequest{
+		GroupID: wantGroup.Msg.ID},
+	))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if diff := cmp.Diff(wantGroup, gotGroup, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, protocmp.Transform()); diff != "" {
 		t.Errorf("ags.CreateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 
 	// ******************* Teacher UpdateGroup *******************
 
 	// group with three students
-	updateGroupRequest := &qf.Group{ID: gotGroup.ID, Name: "Heins3MemberGroup", CourseID: course.ID, Users: []*qf.User{user1, user2, user3}}
+	updateGroupRequest := connect.NewRequest(&qf.Group{
+		ID:       gotGroup.Msg.ID,
+		Name:     "Heins3MemberGroup",
+		CourseID: course.ID,
+		Users:    []*qf.User{user1, user2, user3},
+	})
 
 	// set teacher ID in context
 	ctx = qtest.WithUserContext(context.Background(), teacher)
@@ -345,7 +361,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	// check that the group have changed group membership
 	userIDs := make([]uint64, 0)
-	for _, usr := range updateGroupRequest.Users {
+	for _, usr := range updateGroupRequest.Msg.Users {
 		userIDs = append(userIDs, usr.ID)
 	}
 
@@ -355,16 +371,16 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	}
 
 	wantGroup = gotGroup
-	wantGroup.Name = updateGroupRequest.Name
-	wantGroup.Users = grpUsers
-	wantGroup.TeamID = 1
+	wantGroup.Msg.Name = updateGroupRequest.Msg.Name
+	wantGroup.Msg.Users = grpUsers
+	wantGroup.Msg.TeamID = 1
 	// UpdateGroup will autoApprove group on update
-	wantGroup.Status = qf.Group_APPROVED
+	wantGroup.Msg.Status = qf.Group_APPROVED
 	// Ignore enrollments in check
-	gotUpdatedGroup.Enrollments = nil
-	wantGroup.Enrollments = nil
+	gotUpdatedGroup.Msg.Enrollments = nil
+	wantGroup.Msg.Enrollments = nil
 
-	if diff := cmp.Diff(wantGroup, gotUpdatedGroup, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotUpdatedGroup.Msg, protocmp.Transform()); diff != "" {
 		t.Errorf("ags.UpdateGroup() mismatch (-wantGroup +gotUpdatedGroup):\n%s", diff)
 	}
 
@@ -372,7 +388,12 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	// change group to only one student
 	// name must not update because group team and repo already exist
-	updateGroupRequest1 := &qf.Group{ID: gotGroup.ID, Name: "Hein's single member Group", CourseID: course.ID, Users: []*qf.User{user1}}
+	updateGroupRequest1 := connect.NewRequest(&qf.Group{
+		ID:       gotGroup.Msg.ID,
+		Name:     "Hein's single member Group",
+		CourseID: course.ID,
+		Users:    []*qf.User{user1},
+	})
 
 	// set teacher ID in context
 	ctx = qtest.WithUserContext(context.Background(), teacher)
@@ -382,7 +403,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	}
 	// check that the group have changed group membership
 	userIDs = make([]uint64, 0)
-	for _, usr := range updateGroupRequest1.Users {
+	for _, usr := range updateGroupRequest1.Msg.Users {
 		userIDs = append(userIDs, usr.ID)
 	}
 
@@ -390,18 +411,18 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(gotUpdatedGroup.Users) != 1 {
-		t.Errorf("Expected only single member group, got %d members", len(gotUpdatedGroup.Users))
+	if len(gotUpdatedGroup.Msg.Users) != 1 {
+		t.Errorf("Expected only single member group, got %d members", len(gotUpdatedGroup.Msg.Users))
 	}
-	wantGroup = updateGroupRequest
-	wantGroup.Users = grpUsers
-	wantGroup.TeamID = 1
+	wantGroup.Msg = updateGroupRequest.Msg
+	wantGroup.Msg.Users = grpUsers
+	wantGroup.Msg.TeamID = 1
 	// UpdateGroup will autoApprove group on update
-	wantGroup.Status = qf.Group_APPROVED
-	gotUpdatedGroup.Enrollments = nil
-	wantGroup.Enrollments = nil
+	wantGroup.Msg.Status = qf.Group_APPROVED
+	gotUpdatedGroup.Msg.Enrollments = nil
+	wantGroup.Msg.Enrollments = nil
 
-	if diff := cmp.Diff(wantGroup, gotUpdatedGroup, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotUpdatedGroup.Msg, protocmp.Transform()); diff != "" {
 		t.Errorf("ags.UpdateGroup() mismatch (-wantGroup +gotUpdatedGroup):\n%s", diff)
 	}
 }
@@ -425,20 +446,23 @@ func TestDeleteGroup(t *testing.T) {
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ags.CreateCourse(ctx, &testCourse); err != nil {
+	if _, err := ags.CreateCourse(ctx, connect.NewRequest(&testCourse)); err != nil {
 		t.Fatal(err)
 	}
 
 	// create user and enroll as pending (teacher)
 	teacher := qtest.CreateFakeUser(t, db, 3)
 	ctx = qtest.WithUserContext(context.Background(), teacher)
-	if _, err := ags.CreateEnrollment(ctx, &qf.Enrollment{UserID: teacher.ID, CourseID: testCourse.ID}); err != nil {
+	if _, err := ags.CreateEnrollment(ctx, connect.NewRequest(&qf.Enrollment{
+		UserID:   teacher.ID,
+		CourseID: testCourse.ID,
+	})); err != nil {
 		t.Fatal(err)
 	}
 
 	// update enrollment from pending->student->teacher; must be done by admin
 	ctx = qtest.WithUserContext(context.Background(), admin)
-	if _, err := ags.UpdateEnrollments(ctx, &qf.Enrollments{
+	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{
 			{
 				UserID:   teacher.ID,
@@ -446,12 +470,12 @@ func TestDeleteGroup(t *testing.T) {
 				Status:   qf.Enrollment_STUDENT,
 			},
 		},
-	}); err != nil {
+	})); err != nil {
 		t.Fatal(err)
 	}
 
 	// update enrollment to teacher
-	if _, err := ags.UpdateEnrollments(ctx, &qf.Enrollments{
+	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{
 			{
 				UserID:   teacher.ID,
@@ -459,20 +483,23 @@ func TestDeleteGroup(t *testing.T) {
 				Status:   qf.Enrollment_TEACHER,
 			},
 		},
-	}); err != nil {
+	})); err != nil {
 		t.Fatal(err)
 	}
 
 	// create user and enroll as pending (student)
 	user := qtest.CreateFakeUser(t, db, 2)
 	ctx = qtest.WithUserContext(context.Background(), user)
-	if _, err := ags.CreateEnrollment(ctx, &qf.Enrollment{UserID: user.ID, CourseID: testCourse.ID}); err != nil {
+	if _, err := ags.CreateEnrollment(ctx, connect.NewRequest(&qf.Enrollment{
+		UserID:   user.ID,
+		CourseID: testCourse.ID,
+	})); err != nil {
 		t.Fatal(err)
 	}
 
 	// update pending enrollment to student; must be done by teacher
 	ctx = qtest.WithUserContext(context.Background(), teacher)
-	if _, err := ags.UpdateEnrollments(ctx, &qf.Enrollments{
+	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{
 			{
 				UserID:   user.ID,
@@ -480,21 +507,24 @@ func TestDeleteGroup(t *testing.T) {
 				Status:   qf.Enrollment_STUDENT,
 			},
 		},
-	}); err != nil {
+	})); err != nil {
 		t.Fatal(err)
 	}
 
 	// create group as student user
 	group := &qf.Group{Name: "TestDeleteGroup", CourseID: testCourse.ID, Users: []*qf.User{user}}
 	ctx = qtest.WithUserContext(context.Background(), user)
-	respGroup, err := ags.CreateGroup(ctx, group)
+	respGroup, err := ags.CreateGroup(ctx, connect.NewRequest(group))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// delete group as teacher
 	ctx = qtest.WithUserContext(context.Background(), teacher)
-	_, err = ags.DeleteGroup(ctx, &qf.GroupRequest{GroupID: respGroup.ID, CourseID: testCourse.ID})
+	_, err = ags.DeleteGroup(ctx, connect.NewRequest(&qf.GroupRequest{
+		GroupID:  respGroup.Msg.ID,
+		CourseID: testCourse.ID,
+	}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -533,16 +563,18 @@ func TestGetGroup(t *testing.T) {
 	ctx := qtest.WithUserContext(context.Background(), user)
 
 	group := &qf.Group{Name: "TestGroup", CourseID: testCourse.ID, Users: []*qf.User{user}}
-	wantGroup, err := ags.CreateGroup(ctx, group)
+	wantGroup, err := ags.CreateGroup(ctx, connect.NewRequest(group))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	gotGroup, err := ags.GetGroup(ctx, &qf.GetGroupRequest{GroupID: wantGroup.ID})
+	gotGroup, err := ags.GetGroup(ctx, connect.NewRequest(&qf.GetGroupRequest{
+		GroupID: wantGroup.Msg.ID,
+	}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(wantGroup, gotGroup, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, protocmp.Transform()); diff != "" {
 		t.Errorf("ags.CreateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
@@ -637,12 +669,12 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	wantGroup.Status = qf.Group_APPROVED
-	gotGroup, err := ags.UpdateGroup(ctx, wantGroup)
+	gotGroup, err := ags.UpdateGroup(ctx, connect.NewRequest(wantGroup))
 	if err != nil {
 		t.Error(err)
 	}
 
-	if diff := cmp.Diff(wantGroup, gotGroup, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup, gotGroup.Msg, protocmp.Transform()); diff != "" {
 		t.Errorf("ags.UpdateGroup() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
@@ -708,15 +740,20 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantGroup, err := ags.GetGroupByUserAndCourse(ctx, &qf.GroupRequest{UserID: user1.ID, CourseID: course.ID})
+	wantGroup, err := ags.GetGroupByUserAndCourse(ctx, connect.NewRequest(&qf.GroupRequest{
+		UserID:   user1.ID,
+		CourseID: course.ID,
+	}))
 	if err != nil {
 		t.Error(err)
 	}
-	gotGroup, err := ags.GetGroup(ctx, &qf.GetGroupRequest{GroupID: group.ID})
+	gotGroup, err := ags.GetGroup(ctx, connect.NewRequest(&qf.GetGroupRequest{
+		GroupID: group.ID,
+	}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(wantGroup, gotGroup, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroup.Msg, gotGroup.Msg, protocmp.Transform()); diff != "" {
 		t.Errorf("ags.GetGroupByUserAndCourse() mismatch (-wantGroup +gotGroup):\n%s", diff)
 	}
 }
@@ -784,16 +821,16 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	}
 	// current user1 (in context) must be in group being created
 	ctx = qtest.WithUserContext(context.Background(), user1)
-	createdGroup, err := ags.CreateGroup(ctx, group)
+	createdGroup, err := ags.CreateGroup(ctx, connect.NewRequest(group))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// first approve the group
-	createdGroup.Status = qf.Group_APPROVED
+	createdGroup.Msg.Status = qf.Group_APPROVED
 	// current user (in context) must be teacher for the course
 	ctx = qtest.WithUserContext(context.Background(), admin)
-	if _, err = ags.UpdateGroup(ctx, createdGroup); err != nil {
+	if _, err = ags.UpdateGroup(ctx, connect.NewRequest(createdGroup.Msg)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -808,7 +845,10 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	}
 
 	// delete the group
-	if _, err = ags.DeleteGroup(ctx, &qf.GroupRequest{CourseID: course.ID, GroupID: createdGroup.ID}); err != nil {
+	if _, err = ags.DeleteGroup(ctx, connect.NewRequest(&qf.GroupRequest{
+		CourseID: course.ID,
+		GroupID:  createdGroup.Msg.ID,
+	})); err != nil {
 		t.Fatal(err)
 	}
 
@@ -873,16 +913,24 @@ func TestGetGroups(t *testing.T) {
 	// place some students in groups
 	// current user (in context) must be in group being created
 	ctx := qtest.WithUserContext(context.Background(), users[2])
-	group1, err := ags.CreateGroup(ctx, &qf.Group{Name: "Group1", CourseID: course.ID, Users: []*qf.User{users[1], users[2]}})
+	group1, err := ags.CreateGroup(ctx, connect.NewRequest(&qf.Group{
+		Name:     "Group1",
+		CourseID: course.ID,
+		Users:    []*qf.User{users[1], users[2]},
+	}))
 	if err != nil {
 		t.Fatal(err)
 	}
 	ctx = qtest.WithUserContext(context.Background(), users[5])
-	group2, err := ags.CreateGroup(ctx, &qf.Group{Name: "Group2", CourseID: course.ID, Users: []*qf.User{users[4], users[5]}})
+	group2, err := ags.CreateGroup(ctx, connect.NewRequest(&qf.Group{
+		Name:     "Group2",
+		CourseID: course.ID,
+		Users:    []*qf.User{users[4], users[5]},
+	}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantGroups := &qf.Groups{Groups: []*qf.Group{group1, group2}}
+	wantGroups := &qf.Groups{Groups: []*qf.Group{group1.Msg, group2.Msg}}
 	for _, grp := range wantGroups.Groups {
 		for _, grpEnrol := range grp.Enrollments {
 			grpEnrol.UsedSlipDays = []*qf.UsedSlipDays{}
@@ -890,20 +938,24 @@ func TestGetGroups(t *testing.T) {
 	}
 
 	// check that request on non-existent course returns error
-	_, err = ags.GetGroupsByCourse(ctx, &qf.CourseRequest{CourseID: 15})
+	_, err = ags.GetGroupsByCourse(ctx, connect.NewRequest(&qf.CourseRequest{
+		CourseID: 15,
+	}))
 	if err == nil {
 		t.Error("expected error; no groups should be returned")
 	}
 
 	// get groups from the database; admin is in ctx, which is also teacher
 	ctx = qtest.WithUserContext(context.Background(), admin)
-	gotGroups, err := ags.GetGroupsByCourse(ctx, &qf.CourseRequest{CourseID: course.ID})
+	gotGroups, err := ags.GetGroupsByCourse(ctx, connect.NewRequest(&qf.CourseRequest{
+		CourseID: course.ID,
+	}))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// check that the method returns expected groups
-	if diff := cmp.Diff(wantGroups, gotGroups, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantGroups, gotGroups.Msg, protocmp.Transform()); diff != "" {
 		t.Errorf("ags.GetGroupsByCourse() mismatch (-wantGroups +gotGroups):\n%s", diff)
 	}
 }

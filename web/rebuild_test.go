@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -148,16 +149,16 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	}
 
 	// try to rebuild non-existing submission
-	rebuildRequest := &qf.RebuildRequest{
+	rebuildRequest := connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
 		AssignmentID: assignment.ID,
 		RebuildType:  &qf.RebuildRequest_SubmissionID{SubmissionID: 123},
-	}
-	if _, err := ags.RebuildSubmissions(ctx, rebuildRequest); err == nil {
+	}}
+	if _, err := ags.RebuildSubmissions(ctx, &rebuildRequest); err == nil {
 		t.Errorf("Expected error: record not found")
 	}
 	// rebuild existing submission
-	rebuildRequest.SetSubmissionID(1)
-	if _, err := ags.RebuildSubmissions(ctx, rebuildRequest); err != nil {
+	rebuildRequest.Msg.SetSubmissionID(1)
+	if _, err := ags.RebuildSubmissions(ctx, &rebuildRequest); err != nil {
 		t.Fatalf("Failed to rebuild submission: %s", err)
 	}
 	submissions, err := db.GetSubmissions(&qf.Submission{AssignmentID: assignment.ID})
@@ -166,21 +167,22 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	}
 
 	// make sure wrong course ID returns error
-	var request qf.RebuildRequest
-	request.SetCourseID(15)
-	if _, err = ags.RebuildSubmissions(ctx, &request); err == nil {
+	request := &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{}}
+	request.Msg.SetCourseID(15)
+
+	if _, err = ags.RebuildSubmissions(ctx, request); err == nil {
 		t.Fatal("Expected error: record not found")
 	}
 
 	// make sure wrong assignment ID returns error
-	request.SetCourseID(course.ID)
-	request.AssignmentID = 1337
-	if _, err = ags.RebuildSubmissions(ctx, &request); err == nil {
+	request.Msg.SetCourseID(course.ID)
+	request.Msg.AssignmentID = 1337
+	if _, err = ags.RebuildSubmissions(ctx, request); err == nil {
 		t.Fatal("Expected error: record not found")
 	}
 
-	request.AssignmentID = assignment.ID
-	if _, err = ags.RebuildSubmissions(ctx, &request); err != nil {
+	request.Msg.AssignmentID = assignment.ID
+	if _, err = ags.RebuildSubmissions(ctx, request); err != nil {
 		t.Fatalf("Failed to rebuild submissions: %s", err)
 	}
 	rebuiltSubmissions, err := db.GetSubmissions(&qf.Submission{AssignmentID: assignment.ID})
@@ -193,7 +195,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 
 	// check access control
 	ctx = qtest.WithUserContext(ctx, student1)
-	if _, err = ags.RebuildSubmissions(ctx, &request); err == nil {
+	if _, err = ags.RebuildSubmissions(ctx, request); err == nil {
 		t.Fatal("Expected error: authentication failed")
 	}
 }
