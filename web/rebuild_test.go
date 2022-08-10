@@ -59,11 +59,7 @@ func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
 }
 
 func TestRebuildSubmissions(t *testing.T) {
-	scmConfig, err := scm.NewSCMConfig()
-	if err != nil {
-		t.Fatal(err)
-	}
-	mgr := scm.NewSCMManager(scmConfig)
+	mgr := scm.NewSCMManager(&scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	ctx := context.Background()
@@ -71,7 +67,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 
 	teacher := qtest.CreateFakeUser(t, db, 1)
-	err = db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
+	err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
 	if err != nil {
 		t.Fatal(err)
 	}
