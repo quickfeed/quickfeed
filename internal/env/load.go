@@ -55,7 +55,7 @@ func Load(filename string) error {
 			// Ignore .env entries already set in the environment.
 			continue
 		}
-		val = os.ExpandEnv(strings.TrimSpace(val))
+		val = os.ExpandEnv(strings.Trim(strings.TrimSpace(val), `"`))
 		os.Setenv(k, val)
 	}
 
