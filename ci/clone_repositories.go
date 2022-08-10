@@ -14,16 +14,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogger, dstDir string) error {
+func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogger, sc scm.SCM, dstDir string) error {
 	logger.Debugf("Cloning repositories for %s", r)
-
-	// TODO(meling): Update this for GitHub web app.
-	// The scm client should ideally be passed in instead of creating another instance.
-	sc, err := scm.NewSCMClient(logger, r.Course.GetAccessToken())
-	if err != nil {
-		return fmt.Errorf("failed to create SCM Client: %w", err)
-	}
-
 	start := time.Now()
 	testsDir, err := sc.Clone(ctx, &scm.CloneOptions{
 		Organization: r.Course.GetOrganizationPath(),

@@ -17,15 +17,12 @@ func TestMakeSCMs(t *testing.T) {
 	if err != nil {
 		t.Skip("Requires a valid SCM app")
 	}
-	sc, err := scm.NewSCMManager(scmConfig)
-	if err != nil {
-		t.Skip("Requires a valid application key")
-	}
+	mgr := scm.NewSCMManager(scmConfig)
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	ctx := context.Background()
 	logger := qlog.Logger(t).Desugar()
-	q := web.NewQuickFeedService(logger, db, sc, web.BaseHookOptions{}, &ci.Local{})
+	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{
 		Name:             "Test course",
@@ -38,7 +35,7 @@ func TestMakeSCMs(t *testing.T) {
 	if err := q.MakeSCMs(ctx); err != nil {
 		t.Fatal(err)
 	}
-	_, ok := sc.Scms.GetSCM(course.OrganizationPath)
+	_, ok := mgr.GetSCM(course.OrganizationPath)
 	if !ok {
 		t.Fatalf("Missing scm client for organization %s", course.OrganizationPath)
 	}

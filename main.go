@@ -82,10 +82,7 @@ func main() {
 	}
 	authConfig := auth.NewGitHubConfig(*baseURL, scmConfig)
 	logger.Sugar().Debug("CALLBACK: ", authConfig.RedirectURL)
-	scmManager, err := scm.NewSCMManager(scmConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
+	scmManager := scm.NewSCMManager(scmConfig)
 
 	runner, err := ci.NewDockerCI(logger.Sugar())
 	if err != nil {

@@ -90,9 +90,6 @@ type SCM interface {
 
 	// Accepts repository invite.
 	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
-
-	// Sets a new token
-	SetToken(string)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -103,6 +100,22 @@ func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
 		return NewGithubSCMClient(logger, token), nil
 	case "gitlab":
 		return NewGitlabSCMClient(token), nil
+	case "fake":
+		return NewFakeSCMClient(), nil
+	}
+	return nil, errors.New("invalid provider: " + provider)
+}
+
+type scmRefresher interface {
+	SCM
+	refreshToken(config *Config, organization string) error
+}
+
+func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Config, organization string) (scmRefresher, error) {
+	provider := env.ScmProvider()
+	switch provider {
+	case "github":
+		return newGithubAppClient(ctx, logger, config, organization)
 	case "fake":
 		return NewFakeSCMClient(), nil
 	}
