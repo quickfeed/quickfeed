@@ -32,7 +32,7 @@ func (r *GroupRequest) FetchID(role string) uint64 {
 }
 
 // FetchID returns group ID
-func (r *GetGroupRequest) FetchID(role string) uint64 {
+func (r *GetGroupRequest) FetchID(_ string) uint64 {
 	return r.GetGroupID()
 }
 

@@ -95,8 +95,10 @@ func main() {
 	var grpcServer *grpc.Server
 	unaryOptions := grpc.ChainUnaryInterceptor(
 		interceptor.Metrics(),
-		interceptor.UnaryUserVerifier(logger.Sugar(), tokenManager),
 		interceptor.Validation(logger),
+		interceptor.UnaryUserVerifier(logger.Sugar(), tokenManager),
+		interceptor.AccessControl(logger.Sugar(), tokenManager),
+		interceptor.TokenRefresher(logger.Sugar(), tokenManager),
 	)
 	streamOptions := grpc.ChainStreamInterceptor(interceptor.StreamUserVerifier(logger.Sugar(), tokenManager))
 	if *dev {

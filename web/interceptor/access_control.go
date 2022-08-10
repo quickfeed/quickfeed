@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"
@@ -70,7 +69,7 @@ var access = map[string]roles{
 	"CreateCourse":            {admin},
 }
 
-func AccessControl(logger *zap.SugaredLogger, db database.Database, tm *auth.TokenManager) grpc.UnaryServerInterceptor {
+func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		method := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
 		logger.Debugf("ACCESS CONTROL for method %s", method) // tmp

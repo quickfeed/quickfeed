@@ -26,7 +26,7 @@ func init() {
 // TokenManager updates list of users who need a new JWT next time they send a request to the server.
 // The list is updated only if the called method is in the list and has been successful (no error has been returned by the server).
 // This method only logs errors to avoid overwriting the gRPC error messages returned by the server.
-func TokenInterceptor(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryServerInterceptor {
+func TokenRefresher(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		method := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
 		idx := sort.SearchStrings(methods, method)
