@@ -72,7 +72,10 @@ func (s *GithubSCM) refreshToken(cfg *Config, organization string) error {
 		} `json:"permissions"`
 		RepositorySelection string `json:"repository_selection"`
 	}
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 	if resp.StatusCode < 200 || resp.StatusCode > 300 {
 		return fmt.Errorf("failed to fetch installation access token for %s (response status %s): %s", organization, resp.Status, string(body))
 	}
