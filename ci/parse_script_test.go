@@ -12,7 +12,7 @@ import (
 )
 
 // Testdata copied from run_tests_test.go (since they are in different packages)
-func testRunData(qfTestOrg, userName, accessToken, runScriptContent string) *RunData {
+func testRunData(qfTestOrg, userName, runScriptContent string) *RunData {
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
 	runData := &RunData{
@@ -51,7 +51,7 @@ echo $QUICKFEED_SESSION_SECRET
 	)
 	randomSecret := rand.String()
 
-	runData := testRunData(qfTestOrg, githubUserName, "access_token", runScriptContent)
+	runData := testRunData(qfTestOrg, githubUserName, runScriptContent)
 	job, err := runData.parseTestRunnerScript(randomSecret)
 	if err != nil {
 		t.Fatal(err)
@@ -99,7 +99,7 @@ func TestParseBadTestRunnerScript(t *testing.T) {
 	randomSecret := rand.String()
 
 	const runScriptContent = `#image/quickfeed:go`
-	runData := testRunData(qfTestOrg, githubUserName, "access_token", runScriptContent)
+	runData := testRunData(qfTestOrg, githubUserName, runScriptContent)
 	_, err := runData.parseTestRunnerScript(randomSecret)
 	const wantMsg = "no run script for assignment lab1 in https://github.com/qf101/tests"
 	if err.Error() != wantMsg {
@@ -111,7 +111,7 @@ start=$SECONDS
 printf "*** Preparing for Test Execution ***\n"
 
 `
-	runData = testRunData(qfTestOrg, githubUserName, "access_token", runScriptContent2)
+	runData = testRunData(qfTestOrg, githubUserName, runScriptContent2)
 	_, err = runData.parseTestRunnerScript(randomSecret)
 	const wantMsg2 = "no docker image specified in run script for assignment lab1 in https://github.com/qf101/tests"
 	if err.Error() != wantMsg2 {
