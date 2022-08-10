@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
 	github.com/alta/protopatch v0.5.0
+	github.com/beatlabs/github-auth v0.0.0-20220721134423-2b8d98e205d1
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible

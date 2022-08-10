@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
@@ -15,7 +14,6 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
-	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -24,7 +22,7 @@ import (
 func TestDB(t *testing.T) (database.Database, func()) {
 	t.Helper()
 
-	f, err := ioutil.TempFile(t.TempDir(), "test.db")
+	f, err := os.CreateTemp(t.TempDir(), "test.db")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,15 +164,15 @@ func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course 
 }
 
 // FakeProviderMap is a test helper function to create an SCM map.
-func FakeProviderMap(t *testing.T) (scm.SCM, *auth.Scms) {
+func FakeProviderMap(t *testing.T) (scm.SCM, *scm.Manager) {
 	t.Helper()
-	scms := auth.NewScms()
 	env.SetFakeProvider(t)
-	scm, err := scms.GetOrCreateSCMEntry(Logger(t).Desugar(), "token")
+	mgr := scm.NewSCMManager(&scm.Config{})
+	scm, err := mgr.GetOrCreateSCM(context.Background(), Logger(t), "test")
 	if err != nil {
 		t.Fatal(err)
 	}
-	return scm, scms
+	return scm, mgr
 }
 
 func RandomString(t *testing.T) string {

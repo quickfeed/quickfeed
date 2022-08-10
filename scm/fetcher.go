@@ -16,7 +16,12 @@ const authUserName = "quickfeed" // can be anything except an empty string
 // Clone clones the given repository and returns the path to the cloned repository.
 // The returned path is the provided destination directory joined with the
 // repository type, e.g., "assignments" or "tests".
-func (s GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
+func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
+	// The go-git library requires token-based authentication,
+	// so we must refresh the token first since it may have expired.
+	if err := s.refreshToken(opt.Organization); err != nil {
+		return "", err
+	}
 	cloneDir := filepath.Join(opt.DestDir, repoDir(opt))
 	s.logger.Debugf("Clone(%s)", s.cloneURL(opt))
 	var branch plumbing.ReferenceName

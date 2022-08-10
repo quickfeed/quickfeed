@@ -21,6 +21,7 @@ func TestNewGroup(t *testing.T) {
 	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2
 	course.OrganizationID = 1
+	course.OrganizationPath = "test"
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +39,7 @@ func TestNewGroup(t *testing.T) {
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	_, err := fakeProvider.CreateOrganization(ctx,
-		&scm.OrganizationOptions{Path: "path", Name: "name"},
+		&scm.OrganizationOptions{Path: "test", Name: "test"},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -248,14 +249,14 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	defer cleanup()
 
 	_, err := fakeProvider.CreateOrganization(context.Background(),
-		&scm.OrganizationOptions{Path: "path", Name: "name"},
+		&scm.OrganizationOptions{Path: "test", Name: "test"},
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := qf.Course{Provider: "fake", OrganizationID: 1}
+	course := qf.Course{Provider: "fake", OrganizationID: 1, OrganizationPath: "test"}
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -411,18 +412,19 @@ func TestDeleteGroup(t *testing.T) {
 	defer cleanup()
 
 	testCourse := qf.Course{
-		Name:           "Distributed Systems",
-		Code:           "DAT520",
-		Year:           2018,
-		Tag:            "Spring",
-		Provider:       "fake",
-		OrganizationID: 1,
-		ID:             1,
+		Name:             "Distributed Systems",
+		Code:             "DAT520",
+		Year:             2018,
+		Tag:              "Spring",
+		Provider:         "fake",
+		OrganizationID:   1,
+		OrganizationPath: "test",
+		ID:               1,
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
+	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ags.CreateCourse(ctx, &testCourse); err != nil {
@@ -552,13 +554,14 @@ func TestPatchGroupStatus(t *testing.T) {
 	defer cleanup()
 
 	course := qf.Course{
-		Name:           "Distributed Systems",
-		Code:           "DAT520",
-		Year:           2018,
-		Tag:            "Spring",
-		Provider:       "fake",
-		OrganizationID: 1,
-		ID:             1,
+		Name:             "Distributed Systems",
+		Code:             "DAT520",
+		Year:             2018,
+		Tag:              "Spring",
+		Provider:         "fake",
+		OrganizationID:   1,
+		OrganizationPath: "test",
+		ID:               1,
 	}
 
 	admin := qtest.CreateFakeUser(t, db, 1)

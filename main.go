@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"mime"
@@ -14,6 +15,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
@@ -52,6 +54,12 @@ func main() {
 		*baseURL = "127.0.0.1" + *httpAddr
 	}
 
+	// Load environment variables from $QUICKFEED/.env.
+	// Will not override variables already defined in the environment.
+	if err := env.Load(""); err != nil {
+		log.Fatal(err)
+	}
+
 	logger, err := qlog.Zap()
 	if err != nil {
 		log.Fatalf("Can't initialize logger: %v", err)
@@ -64,17 +72,12 @@ func main() {
 	}
 
 	// Holds references for activated providers for current user token
-	scms := auth.NewScms()
 	bh := web.BaseHookOptions{
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
-	clientID, err := env.ClientID()
-	if err != nil {
-		log.Fatal(err)
-	}
-	clientSecret, err := env.ClientSecret()
+	scmConfig, err := scm.NewSCMConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -83,7 +86,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	authConfig := auth.NewGitHubConfig(*baseURL, clientID, clientSecret)
+	authConfig := auth.NewGitHubConfig(*baseURL, scmConfig)
+	logger.Sugar().Debug("CALLBACK: ", authConfig.RedirectURL)
+	scmManager := scm.NewSCMManager(scmConfig)
 
 	runner, err := ci.NewDockerCI(logger.Sugar())
 	if err != nil {
@@ -114,7 +119,11 @@ func main() {
 		grpcServer = web.GRPCServer(unaryOptions, streamOptions)
 	}
 
-	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
+	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
+	if err := qfService.InitSCMs(context.Background()); err != nil {
+		log.Fatalf("Failed to initialize SCM clients: %v", err)
+	}
+
 	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
 	multiplexer := web.GrpcMultiplexer{
 		MuxServer: grpcweb.WrapServer(grpcServer),

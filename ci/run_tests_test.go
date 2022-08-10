@@ -73,7 +73,9 @@ func TestRunTests(t *testing.T) {
 	defer closeFn()
 	ctx, cancel := runData.Assignment.WithTimeout(2 * time.Minute)
 	defer cancel()
-	results, err := runData.RunTests(ctx, qtest.Logger(t), runner)
+
+	scm, _ := qtest.FakeProviderMap(t)
+	results, err := runData.RunTests(ctx, qtest.Logger(t), scm, runner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +94,8 @@ func TestRunTestsTimeout(t *testing.T) {
 	// Note that this timeout value is susceptible to variation
 	ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	defer cancel()
-	results, err := runData.RunTests(ctx, qtest.Logger(t), runner)
+	scm, _ := qtest.FakeProviderMap(t)
+	results, err := runData.RunTests(ctx, qtest.Logger(t), scm, runner)
 	if err != nil {
 		t.Fatal(err)
 	}

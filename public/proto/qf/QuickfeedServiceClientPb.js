@@ -26,9 +26,6 @@ var QuickFeedServiceClient = /** @class */ (function () {
         this.methodInfoUpdateUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateUser', grpcWeb.MethodType.UNARY, qf_types_pb.User, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodInfoIsAuthorizedTeacher = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/IsAuthorizedTeacher', grpcWeb.MethodType.UNARY, qf_requests_pb.Void, qf_requests_pb.AuthorizationResponse, function (request) {
-            return request.serializeBinary();
-        }, qf_requests_pb.AuthorizationResponse.deserializeBinary);
         this.methodInfoGetGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroup', grpcWeb.MethodType.UNARY, qf_requests_pb.GetGroupRequest, qf_types_pb.Group, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Group.deserializeBinary);
@@ -175,14 +172,6 @@ var QuickFeedServiceClient = /** @class */ (function () {
         }
         return this.client_.unaryCall(this.hostname_ +
             '/qf.QuickFeedService/UpdateUser', request, metadata || {}, this.methodInfoUpdateUser);
-    };
-    QuickFeedServiceClient.prototype.isAuthorizedTeacher = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher);
     };
     QuickFeedServiceClient.prototype.getGroup = function (request, metadata, callback) {
         if (callback !== undefined) {

@@ -11,8 +11,7 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
-	scms "github.com/quickfeed/quickfeed/scm"
-	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/scm"
 )
 
 // QuickFeedService holds references to the database and
@@ -20,18 +19,18 @@ import (
 type QuickFeedService struct {
 	logger *zap.SugaredLogger
 	db     database.Database
-	scms   *auth.Scms
+	scmMgr *scm.Manager
 	bh     BaseHookOptions
 	runner ci.Runner
 	qf.UnimplementedQuickFeedServiceServer
 }
 
 // NewQuickFeedService returns a QuickFeedService object.
-func NewQuickFeedService(logger *zap.Logger, db database.Database, scms *auth.Scms, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
+func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
 	return &QuickFeedService{
 		logger: logger.Sugar(),
 		db:     db,
-		scms:   scms,
+		scmMgr: mgr,
 		bh:     bh,
 		runner: runner,
 	}
@@ -113,36 +112,28 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *qf.User) (*qf.Voi
 	return &qf.Void{}, err
 }
 
-// IsAuthorizedTeacher checks whether current user has teacher scopes.
-// Access policy: Any User.
-func (s *QuickFeedService) IsAuthorizedTeacher(ctx context.Context, _ *qf.Void) (*qf.AuthorizationResponse, error) {
-	// Currently hardcoded for github only
-	_, scm, err := s.getUserAndSCM(ctx, "github")
-	if err != nil {
-		s.logger.Errorf("IsAuthorizedTeacher failed: scm authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
-	}
-	return &qf.AuthorizationResponse{
-		IsAuthorized: hasTeacherScopes(ctx, scm),
-	}, nil
-}
-
 // CreateCourse creates a new course.
 // Access policy: Admin.
 func (s *QuickFeedService) CreateCourse(ctx context.Context, in *qf.Course) (*qf.Course, error) {
-	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
+	// TODO(vera): Getting a current user will be unnecessary with the new access control, this
+	// is why I leave it as a separate, repeating method.
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("CreateCourse failed: scm authentication error: %v", err)
+		s.logger.Errorf("CreateCourse failed: user authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !usr.IsAdmin {
 		s.logger.Error("CreateCourse failed: user is not admin")
 		return nil, status.Error(codes.PermissionDenied, "user must be admin to create course")
 	}
-
+	scmClient, err := s.getSCM(ctx, in.OrganizationPath)
+	if err != nil {
+		s.logger.Errorf("CreateCourse failed: could not create scm client for the course %s: %v", in.Name, err)
+		return nil, ErrMissingInstallation
+	}
 	// make sure that the current user is set as course creator
 	in.CourseCreatorID = usr.GetID()
-	course, err := s.createCourse(ctx, scm, in)
+	course, err := s.createCourse(ctx, scmClient, in)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: %v", err)
 		// errors informing about requested organization state will have code 9: FailedPrecondition
@@ -164,10 +155,15 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *qf.Course) (*qf
 // UpdateCourse changes the course information details.
 // Access policy: Teacher of CourseID.
 func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *qf.Course) (*qf.Void, error) {
-	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
+	}
+	scmClient, err := s.getSCM(ctx, in.OrganizationPath)
+	if err != nil {
+		s.logger.Errorf("CreateCourse failed: could not create scm client for the course %s: %v", in.Name, err)
+		return nil, ErrMissingInstallation
 	}
 	courseID := in.GetID()
 	if !s.isTeacher(usr.GetID(), courseID) {
@@ -175,7 +171,7 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *qf.Course) (*qf
 		return nil, status.Error(codes.PermissionDenied, "only teachers can update course")
 	}
 
-	if err = s.updateCourse(ctx, scm, in); err != nil {
+	if err = s.updateCourse(ctx, scmClient, in); err != nil {
 		s.logger.Errorf("UpdateCourse failed: %v", err)
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
@@ -246,23 +242,28 @@ func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *qf.Enrollment
 // If the request contains a single enrollment, it will be updated to the specified status.
 // Access policy: Teacher of CourseID
 func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *qf.Enrollments) (*qf.Void, error) {
-	user, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
-	if !s.isTeacher(user.GetID(), in.GetCourseID()) {
-		s.logger.Errorf("UpdateEnrollments failed: user %d is not teacher of course %d", user.GetID(), in.GetCourseID())
+	scmClient, err := s.getSCMForCourse(ctx, in.Enrollments[0].GetCourseID())
+	if err != nil {
+		s.logger.Errorf("UpdateEnrollments failed: could not create scm client: %v", err)
+		return nil, ErrMissingInstallation
+	}
+	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
+		s.logger.Errorf("UpdateEnrollments failed: user %d is not teacher of course %d", usr.GetID(), in.GetCourseID())
 		return nil, status.Error(codes.PermissionDenied, "only teachers can update enrollments")
 	}
 
 	for _, enrollment := range in.GetEnrollments() {
 		if s.isCourseCreator(enrollment.CourseID, enrollment.UserID) {
-			s.logger.Errorf("UpdateEnrollments failed: user %s attempted to demote course creator", user.GetName())
+			s.logger.Errorf("UpdateEnrollments failed: user %s attempted to demote course creator", usr.GetName())
 			return nil, status.Error(codes.PermissionDenied, "course creator cannot be demoted")
 		}
 
-		if err = s.updateEnrollment(ctx, scm, user.GetLogin(), enrollment); err != nil {
+		if err = s.updateEnrollment(ctx, scmClient, usr.GetLogin(), enrollment); err != nil {
 			s.logger.Errorf("UpdateEnrollments failed: %v", err)
 			if contextCanceled(ctx) {
 				return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
@@ -424,16 +425,21 @@ func (s *QuickFeedService) CreateGroup(ctx context.Context, in *qf.Group) (*qf.G
 // UpdateGroup updates group information, and returns the updated group.
 // Access policy: Teacher of CourseID.
 func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *qf.Group) (*qf.Group, error) {
-	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
+	}
+	scmClient, err := s.getSCMForCourse(ctx, in.GetCourseID())
+	if err != nil {
+		s.logger.Errorf("UpdateGroup failed: could not create scm client for group %s and course %d: %v", in.GetName(), in.GetCourseID(), err)
+		return nil, ErrMissingInstallation
 	}
 	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
 		s.logger.Error("UpdateGroup failed: user is not teacher")
 		return nil, status.Error(codes.PermissionDenied, "only teachers can update groups")
 	}
-	err = s.updateGroup(ctx, scm, in)
+	err = s.updateGroup(ctx, scmClient, in)
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: %v", err)
 		if contextCanceled(ctx) {
@@ -459,10 +465,15 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *qf.Group) (*qf.G
 // DeleteGroup removes group record from the database.
 // Access policy: Teacher of CourseID.
 func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *qf.GroupRequest) (*qf.Void, error) {
-	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
+	}
+	scmClient, err := s.getSCMForCourse(ctx, in.GetCourseID())
+	if err != nil {
+		s.logger.Errorf("DeleteGroup failed: could not create scm client for group %d and course %d: %v", in.GetGroupID(), in.GetCourseID(), err)
+		return nil, ErrMissingInstallation
 	}
 	grp, err := s.getGroup(&qf.GetGroupRequest{GroupID: in.GetGroupID()})
 	if err != nil {
@@ -473,7 +484,7 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *qf.GroupRequest)
 		s.logger.Error("DeleteGroup failed: user is not teacher")
 		return nil, status.Error(codes.PermissionDenied, "only teachers can delete groups")
 	}
-	if err = s.deleteGroup(ctx, scm, in); err != nil {
+	if err = s.deleteGroup(ctx, scmClient, in); err != nil {
 		s.logger.Errorf("DeleteGroup failed: %v", err)
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
@@ -615,12 +626,12 @@ func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *qf.Rebuil
 		}
 		if _, err := s.rebuildSubmission(in); err != nil {
 			s.logger.Errorf("RebuildSubmission failed: %v", err)
-			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission")
+			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission "+err.Error())
 		}
 	case *qf.RebuildRequest_CourseID:
 		if err := s.rebuildSubmissions(in); err != nil {
 			s.logger.Errorf("RebuildSubmissions failed: %v", err)
-			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submissions")
+			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submissions "+err.Error())
 		}
 	}
 	return &qf.Void{}, nil
@@ -818,25 +829,30 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseR
 // GetOrganization fetches a github organization by name.
 // Access policy: Admin
 func (s *QuickFeedService) GetOrganization(ctx context.Context, in *qf.OrgRequest) (*qf.Organization, error) {
-	usr, scm, err := s.getUserAndSCM(ctx, "github")
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: scm authentication error: %v", err)
 		return nil, err
+	}
+	scmClient, err := s.getSCM(ctx, in.GetOrgName())
+	if err != nil {
+		s.logger.Errorf("GetOrganization failed: could not create scm client for organization %s: %v", in.GetOrgName(), err)
+		return nil, ErrMissingInstallation
 	}
 	if !usr.IsAdmin {
 		s.logger.Error("GetOrganization failed: user is not admin")
 		return nil, status.Error(codes.PermissionDenied, "only admin can access organizations")
 	}
-	org, err := s.getOrganization(ctx, scm, in.GetOrgName(), usr.GetLogin())
+	org, err := s.getOrganization(ctx, scmClient, in.GetOrgName(), usr.GetLogin())
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %v", err)
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
 		}
-		if err == scms.ErrNotMember {
+		if err == scm.ErrNotMember {
 			return nil, status.Error(codes.NotFound, "organization membership not confirmed, please enable third-party access")
 		}
-		if err == ErrFreePlan || err == ErrAlreadyExists || err == scms.ErrNotOwner {
+		if err == ErrFreePlan || err == ErrAlreadyExists || err == scm.ErrNotOwner {
 			return nil, status.Error(codes.FailedPrecondition, err.Error())
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
@@ -883,10 +899,15 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *qf.URLReques
 // IsEmptyRepo ensures that group repository is empty and can be deleted
 // Access policy: Teacher of Course ID
 func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *qf.RepositoryRequest) (*qf.Void, error) {
-	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: scm authentication error: %v", err)
 		return nil, err
+	}
+	scmClient, err := s.getSCMForCourse(ctx, in.GetCourseID())
+	if err != nil {
+		s.logger.Errorf("IsEmptyRepo failed: could not create scm client for course %d: %v", in.GetCourseID(), err)
+		return nil, ErrMissingInstallation
 	}
 
 	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
@@ -894,7 +915,7 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *qf.RepositoryReq
 		return nil, status.Error(codes.PermissionDenied, "only teachers can access repository info")
 	}
 
-	if err := s.isEmptyRepo(ctx, scm, in); err != nil {
+	if err := s.isEmptyRepo(ctx, scmClient, in); err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: %v", err)
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)

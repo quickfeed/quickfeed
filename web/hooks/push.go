@@ -44,7 +44,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		}
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		assignments.UpdateFromTestsRepo(wh.logger, wh.db, course)
+		assignments.UpdateFromTestsRepo(wh.logger, wh.db, wh.scmMgr, course)
 
 	case repo.IsUserRepo():
 		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
@@ -105,13 +105,13 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	}
 	taskSum := results.TaskSum(taskName)
 
-	// TODO(espeland): Update this for GitHub web app.
-	sc, err := scm.NewSCMClient(wh.logger, course.GetAccessToken())
+	ctx := context.Background()
+	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.OrganizationPath)
 	if err != nil {
 		wh.logger.Errorf("Failed to create SCM Client: %v", err)
 		return
 	}
-	ctx := context.Background()
+
 	// We assign reviewers to a pull request when the tests associated with it score above the assignment score limit
 	// We do not assign reviewers if the pull request has already been assigned reviewers
 	scoreLimit := assignment.GetScoreLimit()
@@ -218,7 +218,12 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *qf.Assignment, repo *qf.R
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
-	results, err := runData.RunTests(ctx, wh.logger, wh.runner)
+	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.OrganizationPath)
+	if err != nil {
+		wh.logger.Errorf("Failed to create scm client: %v", err)
+		return nil
+	}
+	results, err := runData.RunTests(ctx, wh.logger, sc, wh.runner)
 	if err != nil {
 		wh.logger.Errorf("Failed to run tests for assignment %s for course %s: %v", assignment.Name, course.Name, err)
 	}

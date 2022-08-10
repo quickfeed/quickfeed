@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/quickfeed/quickfeed/database"
@@ -19,20 +18,9 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	Cookie        = "cookie"
-	UserKey       = "user"
-	TeacherSuffix = "teacher"
-	githubUserAPI = "https://api.github.com/user"
-)
-
-var (
-	teacherScopes = []string{"repo:invite", "user", "repo", "delete_repo", "admin:org", "admin:org_hook"}
-	studentScopes = []string{"repo:invite"}
-	httpClient    = &http.Client{
-		Timeout: time.Second * 30,
-	}
-)
+var httpClient = &http.Client{
+	Timeout: time.Second * 30,
+}
 
 func authenticationError(logger *zap.SugaredLogger, w http.ResponseWriter, err error) {
 	logger.Error(err)
@@ -64,10 +52,6 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 			authenticationError(logger, w, fmt.Errorf("illegal request method: %s", r.Method))
 			return
 		}
-		// Check teacher suffix, update scopes.
-		// Won't be necessary with GitHub App.
-		setScopes(authConfig, r.URL.Path)
-		logger.Debugf("Provider callback URL: %s", authConfig.RedirectURL)
 		redirectURL := authConfig.AuthCodeURL(secret)
 		logger.Debugf("Redirecting to AuthURL: %v", redirectURL)
 		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
@@ -75,7 +59,7 @@ func OAuth2Login(logger *zap.SugaredLogger, authConfig *oauth2.Config, secret st
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
-func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenManager, authConfig *oauth2.Config, scms *Scms, secret string) http.HandlerFunc {
+func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenManager, authConfig *oauth2.Config, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("OAuth2Callback: started")
 		if r.Method != "GET" {
@@ -110,10 +94,6 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 		cookie, err := tm.NewAuthCookie(user.ID)
 		if err != nil {
 			authenticationError(logger, w, fmt.Errorf("failed to create authentication cookie for user %q: %w", externalUser.Login, err))
-			return
-		}
-		if ok := updateScm(logger, scms, user); !ok {
-			authenticationError(logger, w, fmt.Errorf("failed to update SCM for user %q: %w", externalUser.Login, err))
 			return
 		}
 		http.SetCookie(w, cookie)
@@ -198,28 +178,4 @@ func fetchUser(logger *zap.SugaredLogger, db database.Database, remote *qf.Remot
 	}
 	logger.Debugf("Retry database lookup for user %q", externalUser.Login)
 	return db.GetUserByRemoteIdentity(remote)
-}
-
-// setScopes sets student or teacher scopes for user authentication.
-func setScopes(authConfig *oauth2.Config, url string) {
-	if strings.Contains(url, TeacherSuffix) {
-		authConfig.Scopes = teacherScopes
-	} else {
-		authConfig.Scopes = studentScopes
-	}
-}
-
-func updateScm(logger *zap.SugaredLogger, scms *Scms, user *qf.User) bool {
-	foundSCMProvider := false
-	for _, remoteID := range user.RemoteIdentities {
-		if _, err := scms.GetOrCreateSCMEntry(logger.Desugar(), remoteID.GetAccessToken()); err != nil {
-			logger.Errorf("Unknown SCM provider: %v", err)
-			continue
-		}
-		foundSCMProvider = true
-	}
-	if !foundSCMProvider {
-		logger.Debugf("No SCM provider found for user %v", user)
-	}
-	return foundSCMProvider
 }
