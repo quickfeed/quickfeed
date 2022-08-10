@@ -14,8 +14,9 @@ import (
 // Manager keeps provider-specific configs (currently only for GitHub)
 // and a map of scm clients for each course.
 type Manager struct {
+	// map: [course organization] -> scm client
 	scms map[string]SCM
-	mu   sync.RWMutex
+	mu   sync.Mutex
 	*Config
 }
 
@@ -68,24 +69,25 @@ func NewSCMManager(c *Config) *Manager {
 // GetOrCreateSCM returns an SCM client for the given organization, or creates a new SCM client if non exists.
 func (s *Manager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	client, ok := s.scms[organization]
+	s.mu.Unlock()
 	if !ok {
-		var err error
-		client, err = newSCMAppClient(ctx, logger, s.Config, organization)
+		client, err := newSCMAppClient(ctx, logger, s.Config, organization)
 		if err != nil {
 			return nil, err
 		}
+		s.mu.Lock()
+		s.scms[organization] = client
+		s.mu.Unlock()
 	}
-	s.scms[organization] = client
 	return client, nil
 }
 
 // GetSCM returns an SCM client for the given organization if exists;
 // otherwise, nil and false is returned.
 func (s *Manager) GetSCM(organization string) (sc SCM, ok bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	sc, ok = s.scms[organization]
 	return
 }
