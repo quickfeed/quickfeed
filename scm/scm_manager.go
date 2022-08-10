@@ -71,15 +71,17 @@ func (s *Manager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger,
 	s.mu.Lock()
 	client, ok := s.scms[organization]
 	s.mu.Unlock()
-	if !ok {
-		client, err := newSCMAppClient(ctx, logger, s.Config, organization)
-		if err != nil {
-			return nil, err
-		}
-		s.mu.Lock()
-		s.scms[organization] = client
-		s.mu.Unlock()
+	if ok {
+		return client, nil
 	}
+
+	client, err := newSCMAppClient(ctx, logger, s.Config, organization)
+	if err != nil {
+		return nil, err
+	}
+	s.mu.Lock()
+	s.scms[organization] = client
+	s.mu.Unlock()
 	return client, nil
 }
 
