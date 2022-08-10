@@ -1,5 +1,15 @@
 package interceptor
 
+import (
+	"context"
+	"strings"
+
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/web/auth"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
+)
+
 type (
 	role      int
 	roles     []role
@@ -35,11 +45,12 @@ var access = map[string]roles{
 	"GetGroup":                {group, teacher},
 	"UpdateGroup":             {teacher},
 	"DeleteGroup":             {teacher},
-	"IsEmptyRepo":             {teacher},
 	"GetGroupsByCourse":       {teacher},
 	"UpdateCourse":            {teacher},
 	"UpdateEnrollments":       {teacher},
+	"UpdateAssignments":       {teacher},
 	"UpdateSubmission":        {teacher},
+	"UpdateSubmissions":       {teacher},
 	"RebuildSubmissions":      {teacher},
 	"CreateBenchmark":         {teacher},
 	"UpdateBenchmark":         {teacher},
@@ -49,11 +60,30 @@ var access = map[string]roles{
 	"DeleteCriterion":         {teacher},
 	"CreateReview":            {teacher},
 	"UpdateReview":            {teacher},
-	"UpdateSubmissions":       {teacher},
 	"GetReviewers":            {teacher},
-	"UpdateAssignments":       {teacher},
+	"IsEmptyRepo":             {teacher},
 	"GetSubmissionsByCourse":  {teacher, courseAdmin},
 	"GetUserByCourse":         {teacher, admin},
+	"GetUsets":                {admin},
 	"GetOrganization":         {admin},
 	"CreateCourse":            {admin},
+}
+
+func AccessControl(logger *zap.SugaredLogger, db database.Database, tm *auth.TokenManager) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		method := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
+		logger.Debugf("ACCESS CONTROL for method %s", method) // tmp
+		roles, ok := access[method]
+		if ok {
+			logger.Debug("Got roles: ", roles) // tmp
+			claims, err := tm.GetClaims(ctx)
+			if err != nil {
+				logger.Error("Access control: failed to get claims from request context: %v", err)
+				return handler(ctx, req)
+			}
+			logger.Debug("Got user claims: ", claims) // tmp
+		}
+
+		return handler(ctx, req)
+	}
 }

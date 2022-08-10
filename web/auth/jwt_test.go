@@ -1,6 +1,7 @@
 package auth_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -99,7 +100,8 @@ func TestUserClaims(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	adminClaims, err := manager.GetClaims(adminCookie.Value)
+	ctx := context.WithValue(context.Background(), "auth", adminCookie.Value)
+	adminClaims, err := manager.GetClaims(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}

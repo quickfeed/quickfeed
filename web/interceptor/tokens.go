@@ -9,7 +9,6 @@ import (
 	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 var methods = []string{
@@ -46,17 +45,7 @@ func TokenInterceptor(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.Una
 					}
 				// The signed in user gets the teacher role in the new course.
 				case "CreateCourse":
-					meta, ok := metadata.FromIncomingContext(ctx)
-					if !ok {
-						logger.Error("TokenInterceptor: failed to extract metadata")
-						return resp, grpcErr
-					}
-					token, err := extractToken(meta)
-					if err != nil {
-						logger.Errorf("TokenInterceptor: failed to extract authentication token: %v", err)
-						return resp, grpcErr
-					}
-					claims, err := tm.GetClaims(token)
+					claims, err := tm.GetClaims(ctx)
 					if err != nil {
 						logger.Error(err)
 						return resp, grpcErr

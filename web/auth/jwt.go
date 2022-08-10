@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
+	"google.golang.org/grpc/metadata"
 )
 
 // Claims contain the bearer information.
@@ -73,7 +75,15 @@ func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
 }
 
 // GetClaims returns validated user claims.
-func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
+func (tm *TokenManager) GetClaims(ctx context.Context) (*Claims, error) {
+	meta, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("failed to extract metadata from context")
+	}
+	tokenString, err := extractToken(meta)
+	if err != nil {
+		return nil, err
+	}
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 		// It is necessary to check for correct signing algorithm in the header due to JWT vulnerability
@@ -92,7 +102,7 @@ func (tm *TokenManager) GetClaims(tokenString string) (*Claims, error) {
 		}
 		return nil, err
 	}
-	claims, ok := token.Claims.(*Claims)
+	claims, ok = token.Claims.(*Claims)
 	if !ok || !token.Valid {
 		return nil, fmt.Errorf("failed to parse token: validation error")
 	}
@@ -144,4 +154,16 @@ func (tm *TokenManager) validateSignature(token *jwt.Token) error {
 		return err
 	}
 	return token.Method.Verify(signingString, token.Signature, []byte(tm.secret))
+}
+
+// extractToken extracts a JWT authentication token from metadata.
+func extractToken(meta metadata.MD) (string, error) {
+	cookies := meta.Get(Cookie)
+	for _, cookie := range cookies {
+		_, cookieValue, ok := strings.Cut(cookie, CookieName+"=")
+		if ok {
+			return strings.TrimSpace(cookieValue), nil
+		}
+	}
+	return "", errors.New("failed to get authentication cookie from metadata")
 }

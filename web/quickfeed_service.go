@@ -753,7 +753,7 @@ func (s *QuickFeedService) UpdateReview(ctx context.Context, in *qf.ReviewReques
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
 // with the given score.
-// Access policy: Creator of CourseID
+// Access policy: Teacher of CourseID
 func (s *QuickFeedService) UpdateSubmissions(ctx context.Context, in *qf.UpdateSubmissionsRequest) (*qf.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
@@ -772,7 +772,7 @@ func (s *QuickFeedService) UpdateSubmissions(ctx context.Context, in *qf.UpdateS
 	return &qf.Void{}, err
 }
 
-// GetReviewers returns names of all active reviewers for a student submission
+// GetReviewers returns names of all active reviewers for a student submission.
 // Access policy: Teacher of CourseID
 func (s *QuickFeedService) GetReviewers(ctx context.Context, in *qf.SubmissionReviewersRequest) (*qf.Reviewers, error) {
 	usr, err := s.getCurrentUser(ctx)

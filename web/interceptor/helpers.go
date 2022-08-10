@@ -3,7 +3,6 @@ package interceptor
 import (
 	"context"
 	"strconv"
-	"strings"
 
 	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"
@@ -14,17 +13,7 @@ import (
 // getAuthenticatedContext returns a new context with the user ID attached to it.
 // If the context does not contain a valid session cookie, it returns an error.
 func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm *auth.TokenManager) (context.Context, error) {
-	meta, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		logger.Error("Failed to extract metadata")
-		return nil, ErrContextMetadata
-	}
-	token, err := extractToken(meta)
-	if err != nil {
-		logger.Errorf("Failed to extract token: %v", err)
-		return nil, err
-	}
-	claims, err := tm.GetClaims(token)
+	claims, err := tm.GetClaims(ctx)
 	if err != nil {
 		logger.Errorf("Failed to extract claims from JWT: %v", err)
 		return nil, ErrInvalidAuthCookie
@@ -41,18 +30,11 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 			return nil, ErrInvalidAuthCookie
 		}
 	}
+	meta, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		logger.Error("Failed to extract metadata")
+		return nil, ErrContextMetadata
+	}
 	meta.Set(auth.UserKey, strconv.FormatUint(claims.UserID, 10))
 	return metadata.NewIncomingContext(ctx, meta), nil
-}
-
-// extractToken extracts a JWT authentication token from metadata.
-func extractToken(meta metadata.MD) (string, error) {
-	cookies := meta.Get(auth.Cookie)
-	for _, cookie := range cookies {
-		_, cookieValue, ok := strings.Cut(cookie, auth.CookieName+"=")
-		if ok {
-			return strings.TrimSpace(cookieValue), nil
-		}
-	}
-	return "", ErrInvalidAuthCookie
 }
