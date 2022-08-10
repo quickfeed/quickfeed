@@ -17,10 +17,12 @@ const authUserName = "quickfeed" // can be anything except an empty string
 // The returned path is the provided destination directory joined with the
 // repository type, e.g., "assignments" or "tests".
 func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
-	// The go-git library requires token-based authentication,
-	// so we must refresh the token first since it may have expired.
-	if err := s.refreshToken(opt.Organization); err != nil {
-		return "", err
+	if s.config != nil {
+		// GitHubSCM is being used as a GitHub App, and since the go-git library requires
+		// token-based authentication, we first refresh the token since it may have expired.
+		if err := s.refreshToken(opt.Organization); err != nil {
+			return "", err
+		}
 	}
 	cloneDir := filepath.Join(opt.DestDir, repoDir(opt))
 	s.logger.Debugf("Clone(%s)", s.cloneURL(opt))
