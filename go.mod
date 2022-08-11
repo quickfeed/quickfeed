@@ -1,6 +1,6 @@
 module github.com/quickfeed/quickfeed
 
-go 1.18
+go 1.19
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
