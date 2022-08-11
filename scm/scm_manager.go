@@ -14,8 +14,9 @@ import (
 // Manager keeps provider-specific configs (currently only for GitHub)
 // and a map of scm clients for each course.
 type Manager struct {
-	scms map[string]scmRefresher
-	mu   sync.RWMutex
+	// map: [course organization] -> scm client
+	scms map[string]SCM
+	mu   sync.Mutex
 	*Config
 }
 
@@ -60,50 +61,35 @@ func NewSCMConfig() (*Config, error) {
 // This client can be used to install API clients for each course organization.
 func NewSCMManager(c *Config) *Manager {
 	return &Manager{
-		scms:   make(map[string]scmRefresher),
+		scms:   make(map[string]SCM),
 		Config: c,
 	}
 }
 
-// TODO(meling): Add doc comment. Decide naming.
-// TODO(meling): Should this always be called instead of GetOrCreateSCM?
-// TODO(meling): Do we need all three "Get" methods?
-func (s *Manager) SCMWithToken(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
-	scmClient, err := s.internalGetOrCreateSCM(ctx, logger, organization)
+// GetOrCreateSCM returns an SCM client for the given organization, or creates a new SCM client if non exists.
+func (s *Manager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
+	s.mu.Lock()
+	client, ok := s.scms[organization]
+	s.mu.Unlock()
+	if ok {
+		return client, nil
+	}
+
+	client, err := newSCMAppClient(ctx, logger, s.Config, organization)
 	if err != nil {
 		return nil, err
 	}
-	if err := scmClient.refreshToken(s.Config, organization); err != nil {
-		return nil, err
-	}
-	return scmClient, err
-}
-
-// GetOrCreateSCM returns an SCM client for the given organization, or creates a new SCM client if non exists.
-func (s *Manager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger, organization string) (SCM, error) {
-	return s.internalGetOrCreateSCM(ctx, logger, organization)
+	s.mu.Lock()
+	s.scms[organization] = client
+	s.mu.Unlock()
+	return client, nil
 }
 
 // GetSCM returns an SCM client for the given organization if exists;
 // otherwise, nil and false is returned.
 func (s *Manager) GetSCM(organization string) (sc SCM, ok bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	sc, ok = s.scms[organization]
-	return
-}
-
-func (s *Manager) internalGetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger, organization string) (scmRefresher, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	client, ok := s.scms[organization]
-	if !ok {
-		var err error
-		client, err = newSCMAppClient(ctx, logger, s.Config, organization)
-		if err != nil {
-			return nil, err
-		}
-	}
-	s.scms[organization] = client
-	return client, nil
+	sc, ok = s.scms[organization]
+	return
 }

@@ -3,6 +3,7 @@ package scm
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -27,6 +28,7 @@ func newGithubAppClient(ctx context.Context, logger *zap.SugaredLogger, cfg *Con
 		logger:      logger,
 		client:      github.NewClient(httpClient),
 		clientV4:    githubv4.NewClient(httpClient),
+		config:      cfg,
 		providerURL: "github.com",
 		tokenURL:    fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", inst.GetID()),
 	}, nil
@@ -55,8 +57,11 @@ func (cfg *Config) fetchInstallation(organization string) (*github.Installation,
 	return nil, fmt.Errorf("could not find GitHub app installation for organization %s", organization)
 }
 
-func (s *GithubSCM) refreshToken(cfg *Config, organization string) error {
-	resp, err := cfg.Client().Post(s.tokenURL, "application/vnd.github.v3+json", nil)
+func (s *GithubSCM) refreshToken(organization string) error {
+	if s.config == nil {
+		return errors.New("cannot refresh token without config")
+	}
+	resp, err := s.config.Client().Post(s.tokenURL, "application/vnd.github.v3+json", nil)
 	if err != nil {
 		// Note: If the installation was deleted on GitHub, the installation ID will be invalid.
 		return err

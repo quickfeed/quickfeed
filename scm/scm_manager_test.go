@@ -16,12 +16,15 @@ func TestSCMManager(t *testing.T) {
 	mgr := scm.NewSCMManager(scmConfig)
 	qfTestOrg := scm.GetTestOrganization(t)
 	ctx := context.Background()
-	_, err = mgr.GetOrCreateSCM(ctx, qtest.Logger(t), qfTestOrg)
+	createdSCM, err := mgr.GetOrCreateSCM(ctx, qtest.Logger(t), qfTestOrg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, ok := mgr.GetSCM(qfTestOrg)
+	gotSCM, ok := mgr.GetSCM(qfTestOrg)
 	if !ok {
 		t.Errorf("Scm client for organization %s not found", qfTestOrg)
+	}
+	if gotSCM != createdSCM {
+		t.Errorf("Expected scm client %v, got %v", createdSCM, gotSCM)
 	}
 }

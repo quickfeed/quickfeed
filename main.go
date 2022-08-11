@@ -54,6 +54,12 @@ func main() {
 		*baseURL = "127.0.0.1" + *httpAddr
 	}
 
+	// Load environment variables from $QUICKFEED/.env.
+	// Will not override variables already defined in the environment.
+	if err := env.Load(""); err != nil {
+		log.Fatal(err)
+	}
+
 	logger, err := qlog.Zap()
 	if err != nil {
 		log.Fatalf("Can't initialize logger: %v", err)
@@ -116,8 +122,8 @@ func main() {
 	}
 
 	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
-	if err := qfService.MakeSCMs(context.Background()); err != nil {
-		log.Fatalf("Failed to create SCM clients: %v", err)
+	if err := qfService.InitSCMs(context.Background()); err != nil {
+		log.Fatalf("Failed to initialize SCM clients: %v", err)
 	}
 
 	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)

@@ -27,7 +27,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, mgr *s
 	ctx, cancel := context.WithTimeout(context.Background(), MaxWait)
 	defer cancel()
 
-	scm, err := mgr.SCMWithToken(ctx, logger, course.OrganizationPath)
+	scm, err := mgr.GetOrCreateSCM(ctx, logger, course.OrganizationPath)
 	if err != nil {
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
