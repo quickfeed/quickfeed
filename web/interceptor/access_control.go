@@ -36,7 +36,15 @@ const (
 // If there are several roles that can call a method, a role with the least privilege must come first.
 // If method is not in the map, there is no restrictions to call it.
 var access = map[string]roles{
-	"UpdateCourseVisibility":  {user},
+	"GetUser":                {},
+	"GetCourse":              {},
+	"GetCourses":             {},
+	"CreateEnrollment":       {},
+	"GetCoursesByUser":       {},
+	"GetAssignments":         {},
+	"GetRepositories":        {},
+	"UpdateCourseVisibility": {user},
+	// TODO(vera): needs a specific check: if request attempts to change admin role, user role is not sufficien.
 	"UpdateUser":              {user, admin},
 	"GetEnrollmentsByUser":    {user, admin},
 	"GetSubmissions":          {user, group, teacher, courseAdmin},
