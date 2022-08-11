@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -112,7 +113,7 @@ func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, course *qf
 	logger.Debugf("Building %s's Dockerfile:\n%v", course.GetCode(), course.GetDockerfile())
 	out, err := docker.Run(ctx, &ci.Job{
 		Name:       course.GetCode() + "-" + rand.String(),
-		Image:      course.GetCode(),
+		Image:      strings.ToLower(course.GetCode()),
 		Dockerfile: course.GetDockerfile(),
 		Commands:   []string{`echo -n "Hello from Dockerfile"`},
 	})

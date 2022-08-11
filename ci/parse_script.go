@@ -28,7 +28,7 @@ func (r RunData) parseTestRunnerScript(secret string) (*Job, error) {
 	}
 	return &Job{
 		Name:     r.String(),
-		Image:    parts[1],
+		Image:    strings.ToLower(parts[1]),
 		Env:      r.envVars(secret),
 		Commands: s[1:],
 	}, nil
