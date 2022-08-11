@@ -15,12 +15,9 @@ func (s *QuickFeedService) getUsers() (*qf.Users, error) {
 // the user is enrolled in the given course.
 func (s *QuickFeedService) getUserByCourse(request *qf.CourseUserRequest, currentUser *qf.User) (*qf.User, error) {
 	courseQuery := &qf.Course{Code: request.CourseCode, Year: request.CourseYear}
-	user, course, err := s.db.GetUserByCourse(courseQuery, request.UserLogin)
+	user, _, err := s.db.GetUserByCourse(courseQuery, request.UserLogin)
 	if err != nil {
 		return nil, err
-	}
-	if !(currentUser.IsAdmin || s.isTeacher(currentUser.ID, course.ID)) {
-		return nil, ErrInvalidUserInfo
 	}
 	return user, nil
 }

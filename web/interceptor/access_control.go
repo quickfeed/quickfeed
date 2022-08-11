@@ -36,13 +36,14 @@ const (
 // If there are several roles that can call a method, a role with the least privilege must come first.
 // If method is not in the map, there is no restrictions to call it.
 var access = map[string]roles{
-	"GetEnrollmentsByCourse":  {student, teacher},
+	"UpdateCourseVisibility":  {user},
 	"UpdateUser":              {user, admin},
 	"GetEnrollmentsByUser":    {user, admin},
 	"GetSubmissions":          {user, group, teacher, courseAdmin},
 	"GetGroupByUserAndCourse": {group, teacher},
 	"CreateGroup":             {group, teacher},
 	"GetGroup":                {group, teacher},
+	"GetEnrollmentsByCourse":  {student, teacher},
 	"UpdateGroup":             {teacher},
 	"DeleteGroup":             {teacher},
 	"GetGroupsByCourse":       {teacher},
@@ -64,7 +65,7 @@ var access = map[string]roles{
 	"IsEmptyRepo":             {teacher},
 	"GetSubmissionsByCourse":  {teacher, courseAdmin},
 	"GetUserByCourse":         {teacher, admin},
-	"GetUsets":                {admin},
+	"GetUsers":                {admin},
 	"GetOrganization":         {admin},
 	"CreateCourse":            {admin},
 }
