@@ -38,3 +38,8 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 	meta.Set(auth.UserKey, strconv.FormatUint(claims.UserID, 10))
 	return metadata.NewIncomingContext(ctx, meta), nil
 }
+
+// GetAccessTable returns the current access table for tests.
+func GetAccessTable() map[string]roles {
+	return access
+}
