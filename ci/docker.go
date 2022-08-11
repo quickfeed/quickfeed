@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"strings"
 	"time"
 
@@ -94,7 +93,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	}
 
 	var stdout bytes.Buffer
-	if _, err := stdcopy.StdCopy(&stdout, ioutil.Discard, logReader); err != nil {
+	if _, err := stdcopy.StdCopy(&stdout, io.Discard, logReader); err != nil {
 		return "", err
 	}
 	if stdout.Len() > maxLogSize+lastSegmentSize {
@@ -189,7 +188,7 @@ func (d *Docker) pullImage(ctx context.Context, image string) error {
 	}
 	defer progress.Close()
 
-	_, err = io.Copy(ioutil.Discard, progress)
+	_, err = io.Copy(io.Discard, progress)
 	return err
 }
 

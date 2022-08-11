@@ -140,6 +140,7 @@ shurcoo
 signup
 skipcq
 skiptests
+Skylar
 slugified
 sqlite
 staticcheck
