@@ -2,6 +2,7 @@ package interceptor
 
 import (
 	"context"
+	"log"
 	"strings"
 
 	"github.com/quickfeed/quickfeed/qf"
@@ -40,19 +41,19 @@ var access = map[string]roles{
 	"GetUser":                {none},
 	"GetCourse":              {none},
 	"GetCourses":             {none},
-	"CreateEnrollment":       {none},
-	"GetCoursesByUser":       {none},
-	"GetAssignments":         {none},
-	"GetRepositories":        {none},
+	"CreateEnrollment":       {user},
 	"UpdateCourseVisibility": {user},
+	"GetCoursesByUser":       {user},
 	// TODO(vera): needs a specific check: if request attempts to change admin role, user role is not sufficien.
 	"UpdateUser":              {user, admin},
 	"GetEnrollmentsByUser":    {user, admin},
-	"GetSubmissions":          {user, group, teacher, courseAdmin},
+	"GetSubmissions":          {group, student, teacher, courseAdmin},
 	"GetGroupByUserAndCourse": {group, teacher},
 	"CreateGroup":             {group, teacher},
 	"GetGroup":                {group, teacher},
+	"GetAssignments":          {student, teacher},
 	"GetEnrollmentsByCourse":  {student, teacher},
+	"GetRepositories":         {student, teacher},
 	"UpdateGroup":             {teacher},
 	"DeleteGroup":             {teacher},
 	"GetGroupsByCourse":       {teacher},
@@ -99,7 +100,10 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				case user:
 					if m, ok := req.(requestID); ok {
 						if m.IDFor("user") == claims.UserID {
+							log.Printf("IDs match:%d, %d", m.IDFor("user"), claims.UserID)
 							return handler(ctx, req)
+						} else {
+							log.Printf("IDs don't match:%d, %d", m.IDFor("user"), claims.UserID)
 						}
 					}
 				case group:
@@ -146,7 +150,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 					}
 				}
 			}
-
+			return nil, ErrAccessDenied
 		}
 		return handler(ctx, req)
 	}
