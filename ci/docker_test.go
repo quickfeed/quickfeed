@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -112,7 +113,7 @@ func TestDockerBindDir(t *testing.T) {
 
 	const (
 		script     = `ls /quickfeed`
-		wantOut    = "Dockerfile\nrun.sh\n" // content of testdata (or /quickfeed inside the container)
+		wantOut    = "Dockerfile\nrun.sh\ntests\n" // content of testdata (or /quickfeed inside the container)
 		image      = "golang:latest"
 		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed" // TODO(meling) this is not needed when using a public image like golang:latest; remove this, and in other tests
 	)
@@ -234,18 +235,32 @@ func TestDockerRunAsNonRoot(t *testing.T) {
 	}
 
 	envVars := []string{
+		"HOME=/quickfeed",
 		"TESTS=/quickfeed/tests",
 		"ASSIGNMENTS=/quickfeed/assignments",
 	}
+	wantOut := []string{
+		"HOME: /quickfeed",
+		"/quickfeed/tests",
+		"/quickfeed/.cache/go-build",
+		"=== RUN   TestX",
+		"x_test.go:10: hallo",
+		"--- PASS: TestX ",
+	}
 
 	const (
-		script = `whoami
-id
-pwd
+		script = `echo "HOME: $HOME"
 echo "hello" > hello.txt
-ls -la
+cd tests
+cat << EOF > go.mod
+module tests
+
+go 1.19
+EOF
+pwd
+go env GOCACHE
+go test -v
 `
-		wantOut    = "hello world"
 		image      = "quickfeed:go"
 		dockerfile = `FROM golang:latest
 WORKDIR /quickfeed
@@ -264,6 +279,14 @@ WORKDIR /quickfeed
 	dir := t.TempDir()
 	os.Mkdir(filepath.Join(dir, "tests"), 0o700)
 	os.Mkdir(filepath.Join(dir, "assignments"), 0o700)
+
+	xTestGo, err := os.ReadFile("testdata/tests/x_test.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(filepath.Join(dir, "tests", "x_test.go"), xTestGo, 0o600); err != nil {
+		t.Fatal(err)
+	}
 
 	out, err := docker.Run(context.Background(), &ci.Job{
 		Name:       t.Name() + "-" + qtest.RandomString(t),
@@ -288,11 +311,17 @@ WORKDIR /quickfeed
 		t.Errorf("hello.txt has group %d, expected %d", stat.Gid, os.Getgid())
 	}
 
+	for _, line := range wantOut {
+		if !strings.Contains(out, line) {
+			t.Errorf("Expected %q not found in output: %q", line, out)
+		}
+	}
+
 	if t.Failed() {
 		// Print output from container.
 		t.Log(out)
 		// Print output from local filesystem (non-container).
-		out2, err := sh.Output("ls -la " + dir)
+		out2, err := sh.Output("ls -l " + dir)
 		if err != nil {
 			t.Fatal(err)
 		}

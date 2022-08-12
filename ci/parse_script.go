@@ -13,10 +13,11 @@ import (
 // the test runner script (run.sh) associated with the RunData's assignment.
 //
 // The script may use the following environment variables:
-//   TESTS - to access the tests (cloned from the tests repository)
-//   ASSIGNMENTS - to access the assignments (cloned from the assignments repository)
-//   CURRENT - name of the current assignment folder
-//   QUICKFEED_SESSION_SECRET - typically used by the test code; not the script itself
+//
+//	TESTS - to access the tests (cloned from the tests repository)
+//	ASSIGNMENTS - to access the assignments (cloned from the assignments repository)
+//	CURRENT - name of the current assignment folder
+//	QUICKFEED_SESSION_SECRET - typically used by the test code; not the script itself
 func (r RunData) parseTestRunnerScript(secret string) (*Job, error) {
 	s := strings.Split(r.Assignment.GetRunScriptContent(), "\n")
 	if len(s) < 2 {
@@ -36,6 +37,7 @@ func (r RunData) parseTestRunnerScript(secret string) (*Job, error) {
 
 func (r RunData) envVars(sessionSecret string) []string {
 	envMap := map[string]string{
+		"HOME":        QuickFeedPath,
 		"TESTS":       filepath.Join(QuickFeedPath, qf.TestsRepo),
 		"ASSIGNMENTS": filepath.Join(QuickFeedPath, qf.AssignmentRepo),
 		"CURRENT":     r.Assignment.GetName(),
