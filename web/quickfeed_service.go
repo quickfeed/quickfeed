@@ -54,7 +54,7 @@ func (s *QuickFeedService) GetUser(ctx context.Context, _ *qf.Void) (*qf.User, e
 
 // GetUsers returns a list of all users.
 // Frontend note: This method is called from AdminPage.
-func (s *QuickFeedService) GetUsers(ctx context.Context, _ *qf.Void) (*qf.Users, error) {
+func (s *QuickFeedService) GetUsers(_ context.Context, _ *qf.Void) (*qf.Users, error) {
 	users, err := s.getUsers()
 	if err != nil {
 		s.logger.Errorf("GetUsers failed: %v", err)
@@ -66,12 +66,7 @@ func (s *QuickFeedService) GetUsers(ctx context.Context, _ *qf.Void) (*qf.Users,
 // GetUserByCourse returns the user matching the given course name and GitHub login
 // specified in CourseUserRequest.
 func (s *QuickFeedService) GetUserByCourse(ctx context.Context, in *qf.CourseUserRequest) (*qf.User, error) {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Errorf("GetUserByCourse failed: authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
-	}
-	userInfo, err := s.getUserByCourse(in, usr)
+	userInfo, err := s.getUserByCourse(in)
 	if err != nil {
 		s.logger.Errorf("GetUserByCourse failed: %+v", err)
 		return nil, status.Error(codes.FailedPrecondition, "failed to get student information")
@@ -169,7 +164,7 @@ func (s *QuickFeedService) GetCourses(_ context.Context, _ *qf.Void) (*qf.Course
 }
 
 // UpdateCourseVisibility allows to edit what courses are visible in the sidebar.
-func (s *QuickFeedService) UpdateCourseVisibility(ctx context.Context, in *qf.Enrollment) (*qf.Void, error) {
+func (s *QuickFeedService) UpdateCourseVisibility(_ context.Context, in *qf.Enrollment) (*qf.Void, error) {
 	err := s.changeCourseVisibility(in)
 	if err != nil {
 		s.logger.Errorf("ChangeCourseVisibility failed: %v", err)
@@ -231,7 +226,7 @@ func (s *QuickFeedService) GetCoursesByUser(_ context.Context, in *qf.Enrollment
 }
 
 // GetEnrollmentsByUser returns all enrollments for the given user and enrollment status with preloaded courses and groups.
-func (s *QuickFeedService) GetEnrollmentsByUser(ctx context.Context, in *qf.EnrollmentStatusRequest) (*qf.Enrollments, error) {
+func (s *QuickFeedService) GetEnrollmentsByUser(_ context.Context, in *qf.EnrollmentStatusRequest) (*qf.Enrollments, error) {
 	// get all enrollments from the db (no scm)
 	enrols, err := s.getEnrollmentsByUser(in)
 	if err != nil {
@@ -241,7 +236,7 @@ func (s *QuickFeedService) GetEnrollmentsByUser(ctx context.Context, in *qf.Enro
 }
 
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
-func (s *QuickFeedService) GetEnrollmentsByCourse(ctx context.Context, in *qf.EnrollmentRequest) (*qf.Enrollments, error) {
+func (s *QuickFeedService) GetEnrollmentsByCourse(_ context.Context, in *qf.EnrollmentRequest) (*qf.Enrollments, error) {
 	enrolls, err := s.getEnrollmentsByCourse(in)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByCourse failed: %v", err)
@@ -251,7 +246,7 @@ func (s *QuickFeedService) GetEnrollmentsByCourse(ctx context.Context, in *qf.En
 }
 
 // GetGroup returns information about a group.
-func (s *QuickFeedService) GetGroup(ctx context.Context, in *qf.GetGroupRequest) (*qf.Group, error) {
+func (s *QuickFeedService) GetGroup(_ context.Context, in *qf.GetGroupRequest) (*qf.Group, error) {
 	group, err := s.getGroup(in)
 	if err != nil {
 		s.logger.Errorf("GetGroup failed: %v", err)
@@ -261,7 +256,7 @@ func (s *QuickFeedService) GetGroup(ctx context.Context, in *qf.GetGroupRequest)
 }
 
 // GetGroupsByCourse returns a list of groups created for the course id in the record request.
-func (s *QuickFeedService) GetGroupsByCourse(ctx context.Context, in *qf.CourseRequest) (*qf.Groups, error) {
+func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *qf.CourseRequest) (*qf.Groups, error) {
 	groups, err := s.getGroups(in)
 	if err != nil {
 		s.logger.Errorf("GetGroups failed: %v", err)
@@ -271,7 +266,7 @@ func (s *QuickFeedService) GetGroupsByCourse(ctx context.Context, in *qf.CourseR
 }
 
 // GetGroupByUserAndCourse returns the group of the given student for a given course.
-func (s *QuickFeedService) GetGroupByUserAndCourse(ctx context.Context, in *qf.GroupRequest) (*qf.Group, error) {
+func (s *QuickFeedService) GetGroupByUserAndCourse(_ context.Context, in *qf.GroupRequest) (*qf.Group, error) {
 	group, err := s.getGroupByUserAndCourse(in)
 	if err != nil {
 		if err != errUserNotInGroup {
@@ -284,7 +279,7 @@ func (s *QuickFeedService) GetGroupByUserAndCourse(ctx context.Context, in *qf.G
 
 // CreateGroup creates a new group in the database.
 // Access policy: Any User enrolled in course and specified as member of the group or a course teacher.
-func (s *QuickFeedService) CreateGroup(ctx context.Context, in *qf.Group) (*qf.Group, error) {
+func (s *QuickFeedService) CreateGroup(_ context.Context, in *qf.Group) (*qf.Group, error) {
 	group, err := s.createGroup(in)
 	if err != nil {
 		s.logger.Errorf("CreateGroup failed: %v", err)
@@ -370,7 +365,7 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *qf.Submission
 
 // GetSubmissionsByCourse returns all the latest submissions
 // for every individual or group course assignment for all course students/groups.
-func (s *QuickFeedService) GetSubmissionsByCourse(ctx context.Context, in *qf.SubmissionsForCourseRequest) (*qf.CourseSubmissions, error) {
+func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *qf.SubmissionsForCourseRequest) (*qf.CourseSubmissions, error) {
 	s.logger.Debugf("GetSubmissionsByCourse: %v", in)
 	courseLinks, err := s.getAllCourseSubmissions(in)
 	if err != nil {
@@ -381,7 +376,7 @@ func (s *QuickFeedService) GetSubmissionsByCourse(ctx context.Context, in *qf.Su
 }
 
 // UpdateSubmission is called to approve the given submission or to undo approval.
-func (s *QuickFeedService) UpdateSubmission(ctx context.Context, in *qf.UpdateSubmissionRequest) (*qf.Void, error) {
+func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *qf.UpdateSubmissionRequest) (*qf.Void, error) {
 	if !s.isValidSubmission(in.SubmissionID) {
 		s.logger.Errorf("UpdateSubmission failed: submission author has no access to the course")
 		return nil, status.Error(codes.PermissionDenied, "submission author has no course access")
@@ -479,7 +474,7 @@ func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *qf.GradingCrit
 }
 
 // CreateReview adds a new submission review.
-func (s *QuickFeedService) CreateReview(ctx context.Context, in *qf.ReviewRequest) (*qf.Review, error) {
+func (s *QuickFeedService) CreateReview(_ context.Context, in *qf.ReviewRequest) (*qf.Review, error) {
 	review, err := s.createReview(in.Review)
 	if err != nil {
 		s.logger.Errorf("CreateReview failed for review %+v: %v", in, err)
@@ -489,7 +484,7 @@ func (s *QuickFeedService) CreateReview(ctx context.Context, in *qf.ReviewReques
 }
 
 // UpdateReview updates a submission review.
-func (s *QuickFeedService) UpdateReview(ctx context.Context, in *qf.ReviewRequest) (*qf.Review, error) {
+func (s *QuickFeedService) UpdateReview(_ context.Context, in *qf.ReviewRequest) (*qf.Review, error) {
 	review, err := s.updateReview(in.Review)
 	if err != nil {
 		s.logger.Errorf("UpdateReview failed for review %+v: %v", in, err)
@@ -500,7 +495,7 @@ func (s *QuickFeedService) UpdateReview(ctx context.Context, in *qf.ReviewReques
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
 // with the given score.
-func (s *QuickFeedService) UpdateSubmissions(ctx context.Context, in *qf.UpdateSubmissionsRequest) (*qf.Void, error) {
+func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *qf.UpdateSubmissionsRequest) (*qf.Void, error) {
 	err := s.updateSubmissions(in)
 	if err != nil {
 		s.logger.Errorf("UpdateSubmissions failed for request %+v", in)
@@ -510,7 +505,7 @@ func (s *QuickFeedService) UpdateSubmissions(ctx context.Context, in *qf.UpdateS
 }
 
 // GetReviewers returns names of all active reviewers for a student submission.
-func (s *QuickFeedService) GetReviewers(ctx context.Context, in *qf.SubmissionReviewersRequest) (*qf.Reviewers, error) {
+func (s *QuickFeedService) GetReviewers(_ context.Context, in *qf.SubmissionReviewersRequest) (*qf.Reviewers, error) {
 	reviewers, err := s.getReviewers(in.SubmissionID)
 	if err != nil {
 		s.logger.Errorf("GetReviewers failed: error fetching from database: %v", err)
@@ -532,7 +527,7 @@ func (s *QuickFeedService) GetAssignments(_ context.Context, in *qf.CourseReques
 
 // UpdateAssignments updates the assignments record in the database
 // by fetching assignment information from the course's test repository.
-func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseRequest) (*qf.Void, error) {
+func (s *QuickFeedService) UpdateAssignments(_ context.Context, in *qf.CourseRequest) (*qf.Void, error) {
 	err := s.updateAssignments(in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: %v", err)

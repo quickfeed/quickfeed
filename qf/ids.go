@@ -1,32 +1,32 @@
 package qf
 
 // FetchID returns course ID.
-func (r *Course) FetchID(_ string) uint64 {
+func (r *Course) IDFor(_ string) uint64 {
 	return r.GetID()
 }
 
 // FetchID returns user ID.
-func (r *User) FetchID(_ string) uint64 {
+func (r *User) IDFor(_ string) uint64 {
 	return r.GetID()
 }
 
 // FetchID returns user ID.
-func (r *Enrollment) FetchID(_ string) uint64 {
+func (r *Enrollment) IDFor(_ string) uint64 {
 	return r.GetUserID()
 }
 
 // FetchID returns course ID.
-func (r *Enrollments) FetchID(_ string) uint64 {
+func (r *Enrollments) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }
 
 // FetchID returns course ID.
-func (r *Group) FetchID(_ string) uint64 {
+func (r *Group) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }
 
 // FetchID returns user or course ID.
-func (r *GroupRequest) FetchID(role string) uint64 {
+func (r *GroupRequest) IDFor(role string) uint64 {
 	switch role {
 	case "user":
 		return r.GetUserID()
@@ -37,27 +37,27 @@ func (r *GroupRequest) FetchID(role string) uint64 {
 }
 
 // FetchID returns group ID.
-func (r *GetGroupRequest) FetchID(_ string) uint64 {
+func (r *GetGroupRequest) IDFor(_ string) uint64 {
 	return r.GetGroupID()
 }
 
 // FetchID returns course ID.
-func (r *CourseRequest) FetchID(_ string) uint64 {
+func (r *CourseRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }
 
 // FetchID returns course ID.
-func (r *EnrollmentRequest) FetchID(_ string) uint64 {
+func (r *EnrollmentRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }
 
 // FetchID returns user ID.
-func (r *EnrollmentStatusRequest) FetchID(_ string) uint64 {
+func (r *EnrollmentStatusRequest) IDFor(_ string) uint64 {
 	return r.GetUserID()
 }
 
 // FetchID returns user, group, or course ID.
-func (r *SubmissionRequest) FetchID(role string) uint64 {
+func (r *SubmissionRequest) IDFor(role string) uint64 {
 	switch role {
 	case "user":
 		return r.GetUserID()
@@ -70,31 +70,31 @@ func (r *SubmissionRequest) FetchID(role string) uint64 {
 }
 
 // FetchID returns course ID.
-func (r *SubmissionsForCourseRequest) FetchID(_ string) uint64 {
+func (r *SubmissionsForCourseRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }
 
 // FetchID returns course ID.
-func (r *UpdateSubmissionRequest) FetchID(_ string) uint64 {
+func (r *UpdateSubmissionRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }
 
 // FetchID returns course ID.
-func (r *RebuildRequest) FetchID(_ string) uint64 {
+func (r *RebuildRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }
 
 // FetchID returns course ID.
-func (r *RepositoryRequest) FetchID(_ string) uint64 {
+func (r *RepositoryRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }
 
 // FetchID returns course ID.
-func (r *ReviewRequest) FetchID(_ string) uint64 {
+func (r *ReviewRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }
 
 // FetchID returns course ID.
-func (r *SubmissionReviewersRequest) FetchID(_ string) uint64 {
+func (r *SubmissionReviewersRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }

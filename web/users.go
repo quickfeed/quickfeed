@@ -13,7 +13,7 @@ func (s *QuickFeedService) getUsers() (*qf.Users, error) {
 
 // getUserByCourse returns the user matching the given GitHub login if
 // the user is enrolled in the given course.
-func (s *QuickFeedService) getUserByCourse(request *qf.CourseUserRequest, currentUser *qf.User) (*qf.User, error) {
+func (s *QuickFeedService) getUserByCourse(request *qf.CourseUserRequest) (*qf.User, error) {
 	courseQuery := &qf.Course{Code: request.CourseCode, Year: request.CourseYear}
 	user, _, err := s.db.GetUserByCourse(courseQuery, request.UserLogin)
 	if err != nil {

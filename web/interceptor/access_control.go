@@ -14,13 +14,14 @@ type (
 	role      int
 	roles     []role
 	requestID interface {
-		FetchID(string) uint64
+		IDFor(string) uint64
 	}
 )
 
 const (
+	none role = iota
 	// user role implies that user attempts to access information about himself.
-	user role = iota
+	user
 	// group role implies that the user is a course student + a member of the given group.
 	group
 	// student role implies that the user is enrolled in the course with any role.
@@ -36,13 +37,13 @@ const (
 // If there are several roles that can call a method, a role with the least privilege must come first.
 // If method is not in the map, there is no restrictions to call it.
 var access = map[string]roles{
-	"GetUser":                {},
-	"GetCourse":              {},
-	"GetCourses":             {},
-	"CreateEnrollment":       {},
-	"GetCoursesByUser":       {},
-	"GetAssignments":         {},
-	"GetRepositories":        {},
+	"GetUser":                {none},
+	"GetCourse":              {none},
+	"GetCourses":             {none},
+	"CreateEnrollment":       {none},
+	"GetCoursesByUser":       {none},
+	"GetAssignments":         {none},
+	"GetRepositories":        {none},
 	"UpdateCourseVisibility": {user},
 	// TODO(vera): needs a specific check: if request attempts to change admin role, user role is not sufficien.
 	"UpdateUser":              {user, admin},
@@ -93,15 +94,17 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 			logger.Debug("Got user claims: ", claims) // tmp
 			for _, role := range roles {
 				switch role {
+				case none:
+					return handler(ctx, req)
 				case user:
 					if m, ok := req.(requestID); ok {
-						if m.FetchID("user") == claims.UserID {
+						if m.IDFor("user") == claims.UserID {
 							return handler(ctx, req)
 						}
 					}
 				case group:
 					if m, ok := req.(requestID); ok {
-						groupID := m.FetchID("group")
+						groupID := m.IDFor("group")
 						for _, group := range claims.Groups {
 							if group == groupID {
 								return handler(ctx, req)
@@ -110,7 +113,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 					}
 				case student:
 					if m, ok := req.(requestID); ok {
-						courseID := m.FetchID("course")
+						courseID := m.IDFor("course")
 						status, ok := claims.Courses[courseID]
 						if ok && status == qf.Enrollment_STUDENT {
 							return handler(ctx, req)
@@ -119,7 +122,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				case teacher:
 					// TODO(vera): needs different handling for "GetUserByCourse"
 					if m, ok := req.(requestID); ok {
-						courseID := m.FetchID("course")
+						courseID := m.IDFor("course")
 						status, ok := claims.Courses[courseID]
 						if ok && status == qf.Enrollment_TEACHER {
 							return handler(ctx, req)
@@ -128,7 +131,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				case courseAdmin:
 					if claims.Admin {
 						if m, ok := req.(requestID); ok {
-							courseID := m.FetchID("course")
+							courseID := m.IDFor("course")
 							status, ok := claims.Courses[courseID]
 							if ok && status == qf.Enrollment_TEACHER {
 								return handler(ctx, req)
