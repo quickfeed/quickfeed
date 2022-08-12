@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"syscall"
 	"testing"
 	"time"
 
@@ -239,14 +240,10 @@ func TestDockerRunAsNonRoot(t *testing.T) {
 
 	const (
 		script = `whoami
-echo $TESTS
-echo $ASSIGNMENTS
 id
-ls -la /
-ls -la
-echo "hello" > hello.txt
 pwd
-
+echo "hello" > hello.txt
+ls -la
 `
 		wantOut    = "hello world"
 		image      = "quickfeed:go"
@@ -264,13 +261,7 @@ WORKDIR /quickfeed
 	defer closeFn()
 
 	// dir is the directory to map into /quickfeed in the docker container.
-	// dir := t.TempDir()
-	const d = "test-quickfeed"
-	os.Mkdir(d, 0o700)
-	dir, err := filepath.Abs(d)
-	if err != nil {
-		t.Fatal(err)
-	}
+	dir := t.TempDir()
 	os.Mkdir(filepath.Join(dir, "tests"), 0o700)
 	os.Mkdir(filepath.Join(dir, "assignments"), 0o700)
 
@@ -285,12 +276,28 @@ WORKDIR /quickfeed
 	if err != nil {
 		t.Fatal(err)
 	}
+	fInfo, err := os.Stat(filepath.Join(dir, "hello.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	stat := fInfo.Sys().(*syscall.Stat_t)
+	if int(stat.Uid) != os.Getuid() {
+		t.Errorf("hello.txt has owner %d, expected %d", stat.Uid, os.Getuid())
+	}
+	if int(stat.Gid) != os.Getgid() {
+		t.Errorf("hello.txt has group %d, expected %d", stat.Gid, os.Getgid())
+	}
 
-	t.Log(out)
-
-	// if out != wantOut {
-	// 	t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
-	// }
+	if t.Failed() {
+		// Print output from container.
+		t.Log(out)
+		// Print output from local filesystem (non-container).
+		out2, err := sh.Output("ls -la " + dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(out2)
+	}
 }
 
 func TestDockerPull(t *testing.T) {

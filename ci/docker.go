@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"time"
 
@@ -124,7 +125,8 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 	create := func() (container.ContainerCreateCreatedBody, error) {
 		return d.client.ContainerCreate(ctx, &container.Config{
 			Image: job.Image,
-			Env:   job.Env, // Set default environment variables
+			User:  fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()), // Run the image as the current user, e.g., quickfeed
+			Env:   job.Env,                                        // Set default environment variables
 			Cmd:   []string{"/bin/bash", "-c", strings.Join(job.Commands, "\n")},
 		}, hostConfig, nil, nil, job.Name)
 	}
