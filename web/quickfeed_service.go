@@ -249,7 +249,7 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 		s.logger.Errorf("UpdateEnrollments failed: scm authentication error: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
-	scmClient, err := s.getSCMForCourse(ctx, in.Msg.Enrollments[0].GetCourseID())
+	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: could not create scm client: %v", err)
 		return nil, ErrMissingInstallation
