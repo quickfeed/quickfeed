@@ -14,6 +14,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/kit/sh"
 	"github.com/quickfeed/quickfeed/qlog"
 )
 
@@ -112,7 +113,7 @@ func TestDockerBindDir(t *testing.T) {
 		script     = `ls /quickfeed`
 		wantOut    = "run.sh\n" // content of testdata (or /quickfeed inside the container)
 		image      = "golang:latest"
-		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed"
+		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed" // TODO(meling) this is not needed when using a public image like golang:latest; remove this, and in other tests
 	)
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
@@ -189,6 +190,7 @@ func TestDockerBuild(t *testing.T) {
 		t.SkipNow()
 	}
 
+	// TODO(meling) we should avoid using quickfeed:go in tests; we should instead build as a quickfeed:go_test or something to prevent that we overwrite a production image
 	const (
 		script     = `echo -n "hello world"`
 		wantOut    = "hello world"
@@ -199,8 +201,7 @@ func TestDockerBuild(t *testing.T) {
 		RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.41.1
 		WORKDIR /quickfeed`
 	)
-	cmd := exec.Command("docker", "image", "rm", "--force", image, image2)
-	dockerOut, err := cmd.CombinedOutput()
+	dockerOut, err := sh.OutputA("docker", "image", "rm", "--force", image, image2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -224,6 +225,72 @@ func TestDockerBuild(t *testing.T) {
 	if out != wantOut {
 		t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
 	}
+}
+
+func TestDockerRunAsNonRoot(t *testing.T) {
+	if !docker {
+		t.SkipNow()
+	}
+
+	envVars := []string{
+		"TESTS=/quickfeed/tests",
+		"ASSIGNMENTS=/quickfeed/assignments",
+	}
+
+	const (
+		script = `whoami
+echo $TESTS
+echo $ASSIGNMENTS
+id
+ls -la /
+ls -la
+echo "hello" > hello.txt
+pwd
+
+`
+		wantOut    = "hello world"
+		image      = "quickfeed:go"
+		dockerfile = `FROM golang:latest
+WORKDIR /quickfeed
+`
+	)
+	dockerOut, err := sh.Output("docker image rm --force quickfeed:go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(dockerOut))
+
+	docker, closeFn := dockerClient(t)
+	defer closeFn()
+
+	// dir is the directory to map into /quickfeed in the docker container.
+	// dir := t.TempDir()
+	const d = "test-quickfeed"
+	os.Mkdir(d, 0o700)
+	dir, err := filepath.Abs(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Mkdir(filepath.Join(dir, "tests"), 0o700)
+	os.Mkdir(filepath.Join(dir, "assignments"), 0o700)
+
+	out, err := docker.Run(context.Background(), &ci.Job{
+		Name:       t.Name() + "-" + qtest.RandomString(t),
+		Image:      image,
+		Dockerfile: dockerfile,
+		BindDir:    dir,
+		Env:        envVars,
+		Commands:   []string{script},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(out)
+
+	// if out != wantOut {
+	// 	t.Errorf("docker.Run(%#v) = %#v, want %#v", script, out, wantOut)
+	// }
 }
 
 func TestDockerPull(t *testing.T) {

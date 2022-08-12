@@ -31,7 +31,19 @@ func loadRunScript(t *testing.T) string {
 	return string(b)
 }
 
-func testRunData(t *testing.T, runScriptContent string) *ci.RunData {
+func loadDockerfile(t *testing.T) string {
+	t.Helper()
+	b, err := os.ReadFile("testdata/Dockerfile")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}
+
+func testRunData(t *testing.T) *ci.RunData {
+	runScriptContent := loadRunScript(t)
+	dockerfileContent := loadDockerfile(t)
+
 	qfTestOrg := scm.GetTestOrganization(t)
 	// Only used to fetch the user's GitHub login (user name)
 	s := scm.GetTestSCM(t)
@@ -49,6 +61,7 @@ func testRunData(t *testing.T, runScriptContent string) *ci.RunData {
 			Code:             "QF101",
 			Provider:         "github",
 			OrganizationPath: qfTestOrg,
+			Dockerfile:       dockerfileContent,
 		},
 		Assignment: &qf.Assignment{
 			Name:             "lab1",
@@ -66,8 +79,7 @@ func testRunData(t *testing.T, runScriptContent string) *ci.RunData {
 }
 
 func TestRunTests(t *testing.T) {
-	runScriptContent := loadRunScript(t)
-	runData := testRunData(t, runScriptContent)
+	runData := testRunData(t)
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
@@ -86,8 +98,7 @@ func TestRunTests(t *testing.T) {
 }
 
 func TestRunTestsTimeout(t *testing.T) {
-	runScriptContent := loadRunScript(t)
-	runData := testRunData(t, runScriptContent)
+	runData := testRunData(t)
 
 	runner, closeFn := dockerClient(t)
 	defer closeFn()
