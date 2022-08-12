@@ -112,7 +112,7 @@ func TestDockerBindDir(t *testing.T) {
 
 	const (
 		script     = `ls /quickfeed`
-		wantOut    = "run.sh\n" // content of testdata (or /quickfeed inside the container)
+		wantOut    = "Dockerfile\nrun.sh\n" // content of testdata (or /quickfeed inside the container)
 		image      = "golang:latest"
 		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed" // TODO(meling) this is not needed when using a public image like golang:latest; remove this, and in other tests
 	)
