@@ -13,8 +13,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-const qfServiceName = "qf.QuickFeedService"
-
 func TestAccessControlMethods(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -25,9 +23,9 @@ func TestAccessControlMethods(t *testing.T) {
 	qf.RegisterQuickFeedServiceServer(s, ags)
 
 	access := interceptor.GetAccessTable()
-	qfServiceInfo, ok := s.GetServiceInfo()[qfServiceName]
+	qfServiceInfo, ok := s.GetServiceInfo()[web.QuickFeedServiceName]
 	if !ok {
-		t.Fatalf("failed to read service info (%s)", qfServiceName)
+		t.Fatalf("failed to read service info (%s)", web.QuickFeedServiceName)
 	}
 
 	for _, method := range qfServiceInfo.Methods {

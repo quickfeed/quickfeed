@@ -120,13 +120,16 @@ func main() {
 		// the gRPC server must be started without credentials.
 		grpcServer = web.GRPCServer(unaryOptions, streamOptions)
 	}
-
 	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
 	if err := qfService.InitSCMs(context.Background()); err != nil {
 		log.Fatalf("Failed to initialize SCM clients: %v", err)
 	}
 
 	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
+	if err = web.VerifyAccessControlMethods(grpcServer); err != nil {
+		log.Fatal(err)
+	}
+
 	multiplexer := web.GrpcMultiplexer{
 		MuxServer: grpcweb.WrapServer(grpcServer),
 	}
