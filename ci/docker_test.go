@@ -44,6 +44,18 @@ func dockerClient(t *testing.T) (*ci.Docker, func()) {
 	return docker, func() { _ = docker.Close() }
 }
 
+// deleteDockerImages deletes the given images.
+// Used for tests that need fresh start, e.g., for pulling or building and image.
+func deleteDockerImages(t *testing.T, images ...string) {
+	t.Helper()
+	args := append([]string{"image", "rm", "--force"}, images...)
+	dockerOut, err := sh.OutputA("docker", args...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(dockerOut))
+}
+
 func TestDocker(t *testing.T) {
 	if !docker {
 		t.SkipNow()
@@ -135,7 +147,6 @@ func TestDockerBindDir(t *testing.T) {
 	}
 }
 
-// Note that this test will fail if the content of ./testdata changes.
 func TestDockerEnvVars(t *testing.T) {
 	if !docker {
 		t.SkipNow()
@@ -184,7 +195,6 @@ func TestDockerBuild(t *testing.T) {
 		t.SkipNow()
 	}
 
-	// TODO(meling) we should avoid using quickfeed:go in tests; we should instead build as a quickfeed:go_test or something to prevent that we overwrite a production image
 	const (
 		script     = `echo -n "hello world"`
 		wantOut    = "hello world"
@@ -195,11 +205,7 @@ func TestDockerBuild(t *testing.T) {
 		RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.41.1
 		WORKDIR /quickfeed`
 	)
-	dockerOut, err := sh.OutputA("docker", "image", "rm", "--force", image, image2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(string(dockerOut))
+	deleteDockerImages(t, image, image2)
 
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
@@ -258,11 +264,7 @@ go test -v
 WORKDIR /quickfeed
 `
 	)
-	dockerOut, err := sh.Output("docker image rm --force quickfeed:go")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(string(dockerOut))
+	deleteDockerImages(t, image)
 
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
@@ -331,12 +333,7 @@ func TestDockerPull(t *testing.T) {
 		wantOut = "Hello, world!\n"
 		image   = "python:latest"
 	)
-	cmd := exec.Command("docker", "image", "rm", "--force", image)
-	dockerOut, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(string(dockerOut))
+	deleteDockerImages(t, image)
 
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
