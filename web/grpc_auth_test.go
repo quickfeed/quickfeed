@@ -2,7 +2,8 @@ package web_test
 
 import (
 	"context"
-	"net"
+	"log"
+	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -10,10 +11,10 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/interceptor"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -96,18 +97,17 @@ func fillDatabase(t *testing.T, db database.Database) {
 
 func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService, tm *auth.TokenManager) func() {
 	t.Helper()
-	lis, err := net.Listen("tcp", grpcAddr)
-	check(t, err)
 
-	opt := grpc.ChainUnaryInterceptor(
-		interceptor.UnaryUserVerifier(qlog.Logger(t), tm),
-	)
-	grpcServer := grpc.NewServer(opt)
+	router := http.NewServeMux()
+	router.Handle(qfService.NewQuickFeedHandler(tm))
+	muxServer := &http.Server{
+		Handler: h2c.NewHandler(router, &http2.Server{}),
+		Addr:    "127.0.0.1:8081",
+	}
 
-	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
 	return func() {
-		if err := grpcServer.Serve(lis); err != nil {
-			t.Fatalf("failed to start grpc server: %v\n", err)
+		if err := muxServer.ListenAndServe(); err != nil {
+			log.Fatalf("Server exited with error: %v", err)
 		}
 	}
 }

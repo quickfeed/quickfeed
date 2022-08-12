@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -22,19 +23,16 @@ import (
 const MaxWait = 5 * time.Minute
 
 // UpdateFromTestsRepo updates the database record for the course assignments.
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, course *qf.Course) {
+func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, course *qf.Course) {
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), qf.TestsRepo)
-	// TODO(meling): Update this for GitHub web app.
-	// The scm client should ideally be passed in instead of creating another instance.
-	scm, err := scm.NewSCMClient(logger, course.GetAccessToken())
+	ctx, cancel := context.WithTimeout(context.Background(), MaxWait)
+	defer cancel()
+
+	scm, err := mgr.GetOrCreateSCM(ctx, logger, course.OrganizationPath)
 	if err != nil {
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), MaxWait)
-	defer cancel()
-
 	assignments, dockerfile, err := fetchAssignments(ctx, scm, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", qf.TestsRepo, err)
@@ -92,7 +90,6 @@ func fetchAssignments(ctx context.Context, sc scm.SCM, course *qf.Course) ([]*qf
 		return nil, "", err
 	}
 	defer os.RemoveAll(dstDir)
-
 	cloneDir, err := sc.Clone(ctx, &scm.CloneOptions{
 		Organization: course.GetOrganizationPath(),
 		Repository:   qf.TestsRepo,
@@ -116,7 +113,7 @@ func buildDockerImage(ctx context.Context, logger *zap.SugaredLogger, course *qf
 	logger.Debugf("Building %s's Dockerfile:\n%v", course.GetCode(), course.GetDockerfile())
 	out, err := docker.Run(ctx, &ci.Job{
 		Name:       course.GetCode() + "-" + rand.String(),
-		Image:      course.GetCode(),
+		Image:      strings.ToLower(course.GetCode()),
 		Dockerfile: course.GetDockerfile(),
 		Commands:   []string{`echo -n "Hello from Dockerfile"`},
 	})

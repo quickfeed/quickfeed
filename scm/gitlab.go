@@ -261,11 +261,6 @@ func (*GitlabSCM) RemoveMember(_ context.Context, _ *OrgMembershipOptions) error
 	}
 }
 
-// GetUserScopes implements the SCM interface
-func (*GitlabSCM) GetUserScopes(_ context.Context) *Authorization {
-	return nil
-}
-
 // CreateIssue implements the SCM interface
 func (*GitlabSCM) CreateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
 	return nil, ErrNotSupported{

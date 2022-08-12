@@ -208,49 +208,6 @@ export class QuickFeedServiceClient {
     this.methodInfoUpdateUser);
   }
 
-  methodInfoIsAuthorizedTeacher = new grpcWeb.MethodDescriptor(
-    '/qf.QuickFeedService/IsAuthorizedTeacher',
-    grpcWeb.MethodType.UNARY,
-    qf_requests_pb.Void,
-    qf_requests_pb.AuthorizationResponse,
-    (request: qf_requests_pb.Void) => {
-      return request.serializeBinary();
-    },
-    qf_requests_pb.AuthorizationResponse.deserializeBinary
-  );
-
-  isAuthorizedTeacher(
-    request: qf_requests_pb.Void,
-    metadata: grpcWeb.Metadata | null): Promise<qf_requests_pb.AuthorizationResponse>;
-
-  isAuthorizedTeacher(
-    request: qf_requests_pb.Void,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: qf_requests_pb.AuthorizationResponse) => void): grpcWeb.ClientReadableStream<qf_requests_pb.AuthorizationResponse>;
-
-  isAuthorizedTeacher(
-    request: qf_requests_pb.Void,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: qf_requests_pb.AuthorizationResponse) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/qf.QuickFeedService/IsAuthorizedTeacher',
-        request,
-        metadata || {},
-        this.methodInfoIsAuthorizedTeacher,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/qf.QuickFeedService/IsAuthorizedTeacher',
-    request,
-    metadata || {},
-    this.methodInfoIsAuthorizedTeacher);
-  }
-
   methodInfoGetGroup = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetGroup',
     grpcWeb.MethodType.UNARY,

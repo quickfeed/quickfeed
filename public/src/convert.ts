@@ -48,7 +48,6 @@ export class Converter {
         enrollment.setCourseid(obj.courseid)
         enrollment.setUserid(obj.userid)
         enrollment.setGroupid(obj.groupid)
-        enrollment.setHasteacherscopes(obj.hasteacherscopes)
         enrollment.setState(obj.state)
 
         // TODO: handle slipdays

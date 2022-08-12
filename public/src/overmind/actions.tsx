@@ -668,7 +668,7 @@ export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment.A
 
 /* fetchUserData is called when the user enters the app. It fetches all data that is needed for the user to be able to use the app. */
 /* If the user is not logged in, i.e does not have a valid token, the process is aborted. */
-export const fetchUserData = async ({ state, actions, effects }: Context): Promise<boolean> => {
+export const fetchUserData = async ({ state, actions }: Context): Promise<boolean> => {
     let success = await actions.getSelf()
     // If getSelf returns false, the user is not logged in. Abort.
     if (!success) { state.isLoading = false; return false }
@@ -697,14 +697,6 @@ export const fetchUserData = async ({ state, actions, effects }: Context): Promi
         success = await actions.getRepositories()
         success = await actions.getCourses()
 
-        if (state.enrollments.some(enrollment => isTeacher(enrollment))) {
-            // Require teacher scopes if the user is a teacher.
-            const response = await effects.grpcMan.isAuthorizedTeacher()
-            if (!response.data?.getIsauthorized()) {
-                window.location.href = "https://" + window.location.host + "/auth/teacher"
-            }
-
-        }
         // End loading screen.
         state.isLoading = false
     }
@@ -741,14 +733,6 @@ export const setSelectedUser = ({ state }: Context, user: User.AsObject | null):
     state.activeUser = user
 }
 
-/** Returns whether or not the current user is an authorized teacher with teacher scopes */
-export const isAuthorizedTeacher = async ({ effects }: Context): Promise<boolean> => {
-    const response = await effects.grpcMan.isAuthorizedTeacher()
-    if (response.data) {
-        return response.data.getIsauthorized()
-    }
-    return false
-}
 
 export const alertHandler = ({ state }: Context, response: IGrpcResponse<unknown>): void => {
     if (response.status.getCode() === StatusCode.UNAUTHENTICATED) {

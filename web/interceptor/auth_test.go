@@ -3,41 +3,36 @@ package interceptor_test
 import (
 	"context"
 	"log"
-	"net"
+	"net/http"
 	"testing"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/qlog"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/interceptor"
-	"google.golang.org/grpc"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestUserVerifier(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	_, scms := qtest.FakeProviderMap(t)
 	logger := qlog.Logger(t).Desugar()
-	ags := web.NewQuickFeedService(logger, db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(logger, db, &scm.Manager{}, web.BaseHookOptions{}, &ci.Local{})
 
 	tm, err := auth.NewTokenManager(db, "test")
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	const (
-		bufSize = 1024 * 1024
-	)
 
 	adminUser := qtest.CreateFakeUser(t, db, 1)
 	student := qtest.CreateFakeUser(t, db, 56)
@@ -51,30 +46,20 @@ func TestUserVerifier(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lis := bufconn.Listen(bufSize)
-	bufDialer := func(context.Context, string) (net.Conn, error) {
-		return lis.Dial()
+	router := http.NewServeMux()
+	router.Handle(ags.NewQuickFeedHandler(tm))
+	muxServer := &http.Server{
+		Handler: h2c.NewHandler(router, &http2.Server{}),
+		Addr:    "127.0.0.1:8081",
 	}
-	opt := grpc.ChainUnaryInterceptor(
-		interceptor.UnaryUserVerifier(qtest.Logger(t), tm),
-	)
-	s := grpc.NewServer(opt)
-	qf.RegisterQuickFeedServiceServer(s, ags)
 
 	go func() {
-		if err := s.Serve(lis); err != nil {
+		if err := muxServer.ListenAndServe(); err != nil {
 			log.Fatalf("Server exited with error: %v", err)
 		}
 	}()
 
-	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		t.Fatalf("Failed to dial bufnet: %v", err)
-	}
-	defer conn.Close()
-
-	client := qf.NewQuickFeedServiceClient(conn)
+	client := qfconnect.NewQuickFeedServiceClient(http.DefaultClient, "http://127.0.0.1:8081/")
 
 	userTest := []struct {
 		code     codes.Code
@@ -88,26 +73,33 @@ func TestUserVerifier(t *testing.T) {
 		{code: codes.OK, metadata: true, token: auth.CookieName + "=" + studentToken.Value, wantUser: student},
 	}
 
+	ctx := context.Background()
 	for _, user := range userTest {
+		req := connect.NewRequest(&qf.Void{})
 		if user.metadata {
-			meta := metadata.MD{}
-			meta.Set(auth.Cookie, user.token)
-			ctx = metadata.NewOutgoingContext(ctx, meta)
+			req.Header().Set(auth.Cookie, user.token)
 		}
 
-		gotUser, err := client.GetUser(ctx, &qf.Void{})
-		if s, ok := status.FromError(err); ok {
-			if s.Code() != user.code {
-				t.Errorf("GetUser().Code(): %v, want: %v", s.Code(), user.code)
+		gotUser, err := client.GetUser(ctx, req)
+		if err, ok := status.FromError(err); ok {
+			if err.Code() != user.code {
+				t.Fatalf("got code %v, want %v", err.Code(), user.code)
 			}
 		}
-		if user.wantUser != nil {
+		wantUser := user.wantUser
+		if wantUser != nil {
 			// ignore comparing remote identity
 			user.wantUser.RemoteIdentities = nil
 		}
-		wantUser := user.wantUser
-		if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-			t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
+
+		if gotUser == nil {
+			if wantUser != nil {
+				t.Fatalf("GetUser(): %v, want: %v", gotUser, wantUser)
+			}
+		} else {
+			if diff := cmp.Diff(wantUser, gotUser.Msg, protocmp.Transform()); diff != "" {
+				t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
+			}
 		}
 	}
 }

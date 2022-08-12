@@ -18,40 +18,44 @@ import (
 
 var allCourses = []*qf.Course{
 	{
-		Name:            "Distributed Systems",
-		CourseCreatorID: 1,
-		Code:            "DAT520",
-		Year:            2018,
-		Tag:             "Spring",
-		Provider:        "fake",
-		OrganizationID:  1,
+		Name:             "Distributed Systems",
+		CourseCreatorID:  1,
+		Code:             "DAT520",
+		Year:             2018,
+		Tag:              "Spring",
+		Provider:         "fake",
+		OrganizationID:   1,
+		OrganizationPath: "test",
 	},
 	{
-		Name:            "Operating Systems",
-		CourseCreatorID: 1,
-		Code:            "DAT320",
-		Year:            2017,
-		Tag:             "Fall",
-		Provider:        "fake",
-		OrganizationID:  2,
+		Name:             "Operating Systems",
+		CourseCreatorID:  1,
+		Code:             "DAT320",
+		Year:             2017,
+		Tag:              "Fall",
+		Provider:         "fake",
+		OrganizationID:   2,
+		OrganizationPath: "test",
 	},
 	{
-		Name:            "New Systems",
-		CourseCreatorID: 1,
-		Code:            "DATx20",
-		Year:            2019,
-		Tag:             "Fall",
-		Provider:        "fake",
-		OrganizationID:  3,
+		Name:             "New Systems",
+		CourseCreatorID:  1,
+		Code:             "DATx20",
+		Year:             2019,
+		Tag:              "Fall",
+		Provider:         "fake",
+		OrganizationID:   3,
+		OrganizationPath: "test",
 	},
 	{
-		Name:            "Hyped Systems",
-		CourseCreatorID: 1,
-		Code:            "DATx20",
-		Year:            2020,
-		Tag:             "Fall",
-		Provider:        "fake",
-		OrganizationID:  4,
+		Name:             "Hyped Systems",
+		CourseCreatorID:  1,
+		Code:             "DATx20",
+		Year:             2020,
+		Tag:              "Fall",
+		Provider:         "fake",
+		OrganizationID:   4,
+		OrganizationPath: "test",
 	},
 }
 
@@ -89,11 +93,11 @@ func TestNewCourse(t *testing.T) {
 
 	for _, wantCourse := range allCourses {
 		// each course needs a separate directory
-		_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
+		_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"})
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		t.Log("COURSE ORG: ", wantCourse.OrganizationPath)
 		gotCourse, err := ags.CreateCourse(ctx, connect.NewRequest(wantCourse))
 		if err != nil {
 			t.Fatal(err)
@@ -121,7 +125,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 10)
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
-	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
+	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"})
 	for path, private := range web.RepoPaths {
 		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: directory, Private: private}
 		_, err := fakeProvider.CreateRepository(ctx, repoOptions)
@@ -146,7 +150,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
-	_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
+	_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"})
 	if err != nil {
 		t.Fatal(err)
 	}

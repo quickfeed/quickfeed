@@ -8,6 +8,7 @@ autoapprove
 autograde
 Autograder
 backports
+beatlabs
 bitlab
 bufbuild
 bufconn
@@ -141,6 +142,7 @@ shurcoo
 signup
 skipcq
 skiptests
+Skylar
 slugified
 sqlite
 staticcheck
