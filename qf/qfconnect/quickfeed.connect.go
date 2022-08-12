@@ -31,7 +31,6 @@ type QuickFeedServiceClient interface {
 	GetUsers(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Users], error)
 	GetUserByCourse(context.Context, *connect_go.Request[qf.CourseUserRequest]) (*connect_go.Response[qf.User], error)
 	UpdateUser(context.Context, *connect_go.Request[qf.User]) (*connect_go.Response[qf.Void], error)
-	IsAuthorizedTeacher(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.AuthorizationResponse], error)
 	GetGroup(context.Context, *connect_go.Request[qf.GetGroupRequest]) (*connect_go.Response[qf.Group], error)
 	GetGroupByUserAndCourse(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error)
 	GetGroupsByCourse(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Groups], error)
@@ -99,11 +98,6 @@ func NewQuickFeedServiceClient(httpClient connect_go.HTTPClient, baseURL string,
 		updateUser: connect_go.NewClient[qf.User, qf.Void](
 			httpClient,
 			baseURL+"/qf.QuickFeedService/UpdateUser",
-			opts...,
-		),
-		isAuthorizedTeacher: connect_go.NewClient[qf.Void, qf.AuthorizationResponse](
-			httpClient,
-			baseURL+"/qf.QuickFeedService/IsAuthorizedTeacher",
 			opts...,
 		),
 		getGroup: connect_go.NewClient[qf.GetGroupRequest, qf.Group](
@@ -290,7 +284,6 @@ type quickFeedServiceClient struct {
 	getUsers                *connect_go.Client[qf.Void, qf.Users]
 	getUserByCourse         *connect_go.Client[qf.CourseUserRequest, qf.User]
 	updateUser              *connect_go.Client[qf.User, qf.Void]
-	isAuthorizedTeacher     *connect_go.Client[qf.Void, qf.AuthorizationResponse]
 	getGroup                *connect_go.Client[qf.GetGroupRequest, qf.Group]
 	getGroupByUserAndCourse *connect_go.Client[qf.GroupRequest, qf.Group]
 	getGroupsByCourse       *connect_go.Client[qf.CourseRequest, qf.Groups]
@@ -346,11 +339,6 @@ func (c *quickFeedServiceClient) GetUserByCourse(ctx context.Context, req *conne
 // UpdateUser calls qf.QuickFeedService.UpdateUser.
 func (c *quickFeedServiceClient) UpdateUser(ctx context.Context, req *connect_go.Request[qf.User]) (*connect_go.Response[qf.Void], error) {
 	return c.updateUser.CallUnary(ctx, req)
-}
-
-// IsAuthorizedTeacher calls qf.QuickFeedService.IsAuthorizedTeacher.
-func (c *quickFeedServiceClient) IsAuthorizedTeacher(ctx context.Context, req *connect_go.Request[qf.Void]) (*connect_go.Response[qf.AuthorizationResponse], error) {
-	return c.isAuthorizedTeacher.CallUnary(ctx, req)
 }
 
 // GetGroup calls qf.QuickFeedService.GetGroup.
@@ -534,7 +522,6 @@ type QuickFeedServiceHandler interface {
 	GetUsers(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.Users], error)
 	GetUserByCourse(context.Context, *connect_go.Request[qf.CourseUserRequest]) (*connect_go.Response[qf.User], error)
 	UpdateUser(context.Context, *connect_go.Request[qf.User]) (*connect_go.Response[qf.Void], error)
-	IsAuthorizedTeacher(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.AuthorizationResponse], error)
 	GetGroup(context.Context, *connect_go.Request[qf.GetGroupRequest]) (*connect_go.Response[qf.Group], error)
 	GetGroupByUserAndCourse(context.Context, *connect_go.Request[qf.GroupRequest]) (*connect_go.Response[qf.Group], error)
 	GetGroupsByCourse(context.Context, *connect_go.Request[qf.CourseRequest]) (*connect_go.Response[qf.Groups], error)
@@ -599,11 +586,6 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect_go.
 	mux.Handle("/qf.QuickFeedService/UpdateUser", connect_go.NewUnaryHandler(
 		"/qf.QuickFeedService/UpdateUser",
 		svc.UpdateUser,
-		opts...,
-	))
-	mux.Handle("/qf.QuickFeedService/IsAuthorizedTeacher", connect_go.NewUnaryHandler(
-		"/qf.QuickFeedService/IsAuthorizedTeacher",
-		svc.IsAuthorizedTeacher,
 		opts...,
 	))
 	mux.Handle("/qf.QuickFeedService/GetGroup", connect_go.NewUnaryHandler(
@@ -801,10 +783,6 @@ func (UnimplementedQuickFeedServiceHandler) GetUserByCourse(context.Context, *co
 
 func (UnimplementedQuickFeedServiceHandler) UpdateUser(context.Context, *connect_go.Request[qf.User]) (*connect_go.Response[qf.Void], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.UpdateUser is not implemented"))
-}
-
-func (UnimplementedQuickFeedServiceHandler) IsAuthorizedTeacher(context.Context, *connect_go.Request[qf.Void]) (*connect_go.Response[qf.AuthorizationResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.IsAuthorizedTeacher is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) GetGroup(context.Context, *connect_go.Request[qf.GetGroupRequest]) (*connect_go.Response[qf.Group], error) {
