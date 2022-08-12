@@ -50,19 +50,17 @@ func TestDocker(t *testing.T) {
 	}
 
 	const (
-		script     = `echo -n "hello world"`
-		wantOut    = "hello world"
-		image      = "golang:latest"
-		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed"
+		script  = `echo -n "hello world"`
+		wantOut = "hello world"
+		image   = "golang:latest"
 	)
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
 
 	out, err := docker.Run(context.Background(), &ci.Job{
-		Name:       t.Name() + "-" + qtest.RandomString(t),
-		Image:      image,
-		Dockerfile: dockerfile,
-		Commands:   []string{script},
+		Name:     t.Name() + "-" + qtest.RandomString(t),
+		Image:    image,
+		Commands: []string{script},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -83,18 +81,16 @@ func TestDockerMultilineScript(t *testing.T) {
 		`echo -n "join my world"`,
 	}
 	const (
-		wantOut    = "hello world\\njoin my world"
-		image      = "golang:latest"
-		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed"
+		wantOut = "hello world\\njoin my world"
+		image   = "golang:latest"
 	)
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
 
 	out, err := docker.Run(context.Background(), &ci.Job{
-		Name:       t.Name() + "-" + qtest.RandomString(t),
-		Image:      image,
-		Dockerfile: dockerfile,
-		Commands:   cmds,
+		Name:     t.Name() + "-" + qtest.RandomString(t),
+		Image:    image,
+		Commands: cmds,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -112,10 +108,9 @@ func TestDockerBindDir(t *testing.T) {
 	}
 
 	const (
-		script     = `ls /quickfeed`
-		wantOut    = "Dockerfile\nrun.sh\ntests\n" // content of testdata (or /quickfeed inside the container)
-		image      = "golang:latest"
-		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed" // TODO(meling) this is not needed when using a public image like golang:latest; remove this, and in other tests
+		script  = `ls /quickfeed`
+		wantOut = "Dockerfile\nrun.sh\ntests\n" // content of testdata (or /quickfeed inside the container)
+		image   = "golang:latest"
 	)
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
@@ -126,11 +121,10 @@ func TestDockerBindDir(t *testing.T) {
 		t.Fatal(err)
 	}
 	out, err := docker.Run(context.Background(), &ci.Job{
-		Name:       t.Name() + "-" + qtest.RandomString(t),
-		Image:      image,
-		Dockerfile: dockerfile,
-		BindDir:    bindDir,
-		Commands:   []string{script},
+		Name:     t.Name() + "-" + qtest.RandomString(t),
+		Image:    image,
+		BindDir:  bindDir,
+		Commands: []string{script},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -158,9 +152,8 @@ func TestDockerEnvVars(t *testing.T) {
 	}
 
 	const (
-		wantOut    = "/quickfeed/tests\n/quickfeed/assignments\n"
-		image      = "golang:latest"
-		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed"
+		wantOut = "/quickfeed/tests\n/quickfeed/assignments\n"
+		image   = "golang:latest"
 	)
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
@@ -171,12 +164,11 @@ func TestDockerEnvVars(t *testing.T) {
 	os.Mkdir(filepath.Join(dir, "assignments"), 0o700)
 
 	out, err := docker.Run(context.Background(), &ci.Job{
-		Name:       t.Name() + "-" + qtest.RandomString(t),
-		Image:      image,
-		Dockerfile: dockerfile,
-		BindDir:    dir,
-		Env:        envVars,
-		Commands:   cmds,
+		Name:     t.Name() + "-" + qtest.RandomString(t),
+		Image:    image,
+		BindDir:  dir,
+		Env:      envVars,
+		Commands: cmds,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -371,10 +363,9 @@ func TestDockerTimeout(t *testing.T) {
 	}
 
 	const (
-		script     = `echo -n "hello," && sleep 10`
-		wantOut    = `Container timeout. Please check for infinite loops or other slowness.`
-		image      = "golang:latest"
-		dockerfile = "FROM golang:latest\n WORKDIR /quickfeed"
+		script  = `echo -n "hello," && sleep 10`
+		wantOut = `Container timeout. Please check for infinite loops or other slowness.`
+		image   = "golang:latest"
 	)
 
 	// Note that the timeout value below is sensitive to startup time of the container.
@@ -387,10 +378,9 @@ func TestDockerTimeout(t *testing.T) {
 	defer closeFn()
 
 	out, err := docker.Run(ctx, &ci.Job{
-		Name:       t.Name() + "-" + qtest.RandomString(t),
-		Image:      image,
-		Dockerfile: dockerfile,
-		Commands:   []string{script},
+		Name:     t.Name() + "-" + qtest.RandomString(t),
+		Image:    image,
+		Commands: []string{script},
 	})
 	t.Log("Expecting ERROR line above; not test failure")
 	if out != wantOut {
@@ -415,7 +405,6 @@ func TestDockerOpenFileDescriptors(t *testing.T) {
 		wantOut       = "hello, world!"
 		image         = "golang:latest"
 		numContainers = 5
-		dockerfile    = "FROM golang:latest\n WORKDIR /quickfeed"
 	)
 	docker, closeFn := dockerClient(t)
 	defer closeFn()
@@ -425,10 +414,9 @@ func TestDockerOpenFileDescriptors(t *testing.T) {
 		go func(j int) {
 			name := fmt.Sprintf(t.Name()+"-%d-%s", j, qtest.RandomString(t))
 			out, err := docker.Run(context.Background(), &ci.Job{
-				Name:       name,
-				Image:      image,
-				Dockerfile: dockerfile,
-				Commands:   []string{script},
+				Name:     name,
+				Image:    image,
+				Commands: []string{script},
 			})
 			if err != nil {
 				errCh <- err
