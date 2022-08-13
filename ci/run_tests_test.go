@@ -54,7 +54,6 @@ func testRunData(t *testing.T) *ci.RunData {
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
-	qf.SetAccessToken(courseID, scm.GetAccessToken(t))
 	runData := &ci.RunData{
 		Course: &qf.Course{
 			ID:               courseID,
