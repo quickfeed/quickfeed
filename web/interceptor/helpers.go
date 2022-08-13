@@ -2,6 +2,7 @@ package interceptor
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -39,7 +40,29 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 	return metadata.NewIncomingContext(ctx, meta), nil
 }
 
-// GetAccessTable returns the current access table for tests.
-func GetAccessTable() map[string]roles {
-	return access
+func has(method string) bool {
+	_, ok := access[method]
+	return ok
+}
+
+func CheckAccessMethods(expectedMethodNames map[string]bool) error {
+	missingMethods := []string{}
+	superfluousMethods := []string{}
+	for method := range expectedMethodNames {
+		if !has(method) {
+			missingMethods = append(missingMethods, method)
+		}
+	}
+	for method := range access {
+		if !expectedMethodNames[method] {
+			superfluousMethods = append(superfluousMethods, method)
+		}
+	}
+	if len(missingMethods) > 0 {
+		return fmt.Errorf("missing required method(s) in access control table: %v", missingMethods)
+	}
+	if len(superfluousMethods) > 0 {
+		return fmt.Errorf("superfluous method(s) in access control table: %v", superfluousMethods)
+	}
+	return nil
 }

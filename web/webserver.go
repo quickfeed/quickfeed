@@ -81,14 +81,9 @@ func VerifyAccessControlMethods(s *grpc.Server) error {
 	if !ok {
 		return fmt.Errorf("gRPC server missing %s service", QuickFeedServiceName)
 	}
-	access := interceptor.GetAccessTable()
-	if len(qfServiceInfo.Methods) != len(access) {
-		return fmt.Errorf("incorrect number of methods in access control table. Expected: %d, got %d", len(qfServiceInfo.Methods), len(access))
+	serviceMethods := make(map[string]bool)
+	for _, m := range qfServiceInfo.Methods {
+		serviceMethods[m.Name] = true
 	}
-	for _, method := range qfServiceInfo.Methods {
-		if _, ok := access[method.Name]; !ok {
-			return fmt.Errorf("missing method in access control table: %s", method.Name)
-		}
-	}
-	return nil
+	return interceptor.CheckAccessMethods(serviceMethods)
 }

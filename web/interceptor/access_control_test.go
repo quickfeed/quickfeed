@@ -28,18 +28,8 @@ func TestAccessControlMethods(t *testing.T) {
 
 	s := grpc.NewServer()
 	qf.RegisterQuickFeedServiceServer(s, ags)
-
-	access := interceptor.GetAccessTable()
-	qfServiceInfo, ok := s.GetServiceInfo()[web.QuickFeedServiceName]
-	if !ok {
-		t.Fatalf("failed to read service info (%s)", web.QuickFeedServiceName)
-	}
-
-	for _, method := range qfServiceInfo.Methods {
-		_, ok := access[method.Name]
-		if !ok {
-			t.Errorf("access control table missing method %s", method.Name)
-		}
+	if err := web.VerifyAccessControlMethods(s); err != nil {
+		t.Error(err)
 	}
 }
 
