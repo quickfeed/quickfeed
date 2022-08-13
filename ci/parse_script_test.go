@@ -62,6 +62,7 @@ echo $QUICKFEED_SESSION_SECRET
 	}
 	gotVars := job.Env
 	wantVars := []string{
+		"HOME=" + QuickFeedPath,
 		"TESTS=" + filepath.Join(QuickFeedPath, qf.TestsRepo),
 		"ASSIGNMENTS=" + filepath.Join(QuickFeedPath, qf.AssignmentRepo),
 		"CURRENT=" + runData.Assignment.GetName(),
