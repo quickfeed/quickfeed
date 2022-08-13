@@ -87,9 +87,16 @@ type SCM interface {
 
 	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
+}
 
+type SCMInvite interface {
 	// Accepts repository invite.
 	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
+}
+
+// NewInviteOnlySCMClient returns a new provider client implementing the SCM interface.
+func NewInviteOnlySCMClient(logger *zap.SugaredLogger, token string) SCMInvite {
+	return NewGithubSCMClient(logger, token)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
