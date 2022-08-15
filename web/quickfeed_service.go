@@ -65,7 +65,7 @@ func (s *QuickFeedService) GetUsers(_ context.Context, _ *qf.Void) (*qf.Users, e
 
 // GetUserByCourse returns the user matching the given course name and GitHub login
 // specified in CourseUserRequest.
-func (s *QuickFeedService) GetUserByCourse(ctx context.Context, in *qf.CourseUserRequest) (*qf.User, error) {
+func (s *QuickFeedService) GetUserByCourse(_ context.Context, in *qf.CourseUserRequest) (*qf.User, error) {
 	userInfo, err := s.getUserByCourse(in)
 	if err != nil {
 		s.logger.Errorf("GetUserByCourse failed: %+v", err)
@@ -392,7 +392,7 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *qf.UpdateSubm
 // RebuildSubmissions re-runs the tests for the given assignment.
 // A single submission is executed again if the request specifies a submission ID
 // or all submissions if the request specifies a course ID.
-func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *qf.RebuildRequest) (*qf.Void, error) {
+func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *qf.RebuildRequest) (*qf.Void, error) {
 	// RebuildType can be either SubmissionID or CourseID, but not both.
 	switch in.GetRebuildType().(type) {
 	case *qf.RebuildRequest_SubmissionID:

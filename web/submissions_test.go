@@ -13,7 +13,7 @@ import (
 )
 
 func TestSubmissionsAccess(t *testing.T) {
-	t.Skip("TODO(vera): disabled for access control update")
+	t.Skip("TODO(vera): disabled for access control update, should be updated and moved to the interceptor package")
 	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
@@ -519,7 +519,6 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 }
 
 func TestGetCourseLabSubmissions(t *testing.T) {
-	t.Skip("TODO(vera): disabled for access control update")
 	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
 	defer cleanup()
 
@@ -714,23 +713,6 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	// check that no submissions will be returned for a wrong course ID
 	if _, err = ags.GetSubmissionsByCourse(ctx, &qf.SubmissionsForCourseRequest{CourseID: 234}); err == nil {
 		t.Error("Expected 'no submissions found'")
-	}
-
-	// check that method fails with empty context
-	if _, err = ags.GetSubmissionsByCourse(context.Background(), &qf.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
-		t.Error("Expected 'authorization failed. please try to logout and sign in again'")
-	}
-
-	// check that method fails for unenrolled student user
-	unenrolledStudent := qtest.CreateFakeUser(t, db, 3)
-	ctx = qtest.WithUserContext(ctx, unenrolledStudent)
-	if _, err := ags.GetSubmissionsByCourse(ctx, &qf.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
-		t.Error("Expected 'only teachers can get all lab submissions'")
-	}
-	// check that method fails for non-teacher user
-	ctx = qtest.WithUserContext(ctx, student)
-	if _, err = ags.GetSubmissionsByCourse(ctx, &qf.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
-		t.Error("Expected 'only teachers can get all lab submissions'")
 	}
 }
 

@@ -129,7 +129,6 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 }
 
 func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
-	t.Skip("TODO(vera): disabled for access control update")
 	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
