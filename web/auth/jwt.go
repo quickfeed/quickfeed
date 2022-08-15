@@ -129,10 +129,15 @@ func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 		Admin:  usr.IsAdmin,
 	}
 	userCourses := make(map[uint64]qf.Enrollment_UserStatus)
+	userGroups := make([]uint64, 0)
 	for _, enrol := range usr.Enrollments {
 		userCourses[enrol.GetCourseID()] = enrol.GetStatus()
+		if enrol.GroupID != 0 {
+			userGroups = append(userGroups, enrol.GroupID)
+		}
 	}
 	newClaims.Courses = userCourses
+	newClaims.Groups = userGroups
 	return newClaims, nil
 }
 

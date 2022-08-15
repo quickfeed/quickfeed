@@ -37,6 +37,8 @@ func (r *GroupRequest) IDFor(role string) uint64 {
 		return r.GetUserID()
 	case "course":
 		return r.GetCourseID()
+	case "group":
+		return r.GetGroupID()
 	}
 	return 0
 }
@@ -101,5 +103,10 @@ func (r *ReviewRequest) IDFor(_ string) uint64 {
 
 // IDFor returns course ID.
 func (r *SubmissionReviewersRequest) IDFor(_ string) uint64 {
+	return r.GetCourseID()
+}
+
+// IDFor returns course ID.
+func (r *URLRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }

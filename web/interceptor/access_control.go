@@ -47,7 +47,7 @@ var access = map[string]roles{
 	"GetCoursesByUser":        {user},
 	"UpdateUser":              {user, admin},
 	"GetEnrollmentsByUser":    {user, admin},
-	"GetSubmissions":          {group, student, teacher, courseAdmin},
+	"GetSubmissions":          {student, group, teacher, courseAdmin},
 	"GetGroupByUserAndCourse": {group, teacher},
 	"CreateGroup":             {group, teacher},
 	"GetGroup":                {group, teacher},
@@ -103,8 +103,9 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 			logger.Errorf("Access control: failed to get claims from request context: %v", err)
 			return handler(ctx, request)
 		}
-		logger.Debug("Got user claims: ", claims) // tmp
+		logger.Debugf("Got claims for user %d\n  courses (%v)\n groups (%v)\n: ", claims.UserID, claims.Courses, claims.Groups) // tmp
 		for _, role := range roles {
+			logger.Debugf("Checking role: %v", role) // tmp
 			switch role {
 			case none:
 				return handler(ctx, request)
@@ -120,11 +121,29 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 					return handler(ctx, request)
 				}
 			case student:
+				// GetSubmissions is used to fetch individual and group submissions.
+				// For individual submissions needs an extra check for user ID in request.
+				if method == "GetSubmissions" && req.IDFor("group") == 0 {
+					if claims.UserID != req.IDFor("user") {
+						logger.Errorf("AccessControl: ID mismatch for %s in claims (%s) and request (%s)",
+							method, claims.UserID, req.IDFor("user"))
+						return nil, ErrAccessDenied
+					}
+				}
 				courseID := req.IDFor("course")
 				if hasCourseStatus(claims, courseID, qf.Enrollment_STUDENT) {
 					return handler(ctx, request)
 				}
 			case group:
+				// Request for CreateGroup will not have ID yet, need to ckeck
+				// if the user is in the group unless teacher.
+				if method == "CreateGroup" &&
+					!(hasCourseStatus(claims, req.IDFor("course"), qf.Enrollment_TEACHER) ||
+						req.(*qf.Group).Contains(&qf.User{ID: claims.UserID})) {
+					logger.Errorf("AccessControl: user %d creates a new group while not teacher or group member")
+					return nil, ErrAccessDenied
+				}
+				//return nil, fmt.Errorf("Group ID: %d, im claims: %v", req.IDFor("group"), claims.Groups)
 				groupID := req.IDFor("group")
 				for _, group := range claims.Groups {
 					if group == groupID {
