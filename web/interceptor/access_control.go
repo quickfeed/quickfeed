@@ -121,8 +121,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				}
 			case student:
 				courseID := req.IDFor("course")
-				status, ok := claims.Courses[courseID]
-				if ok && status == qf.Enrollment_STUDENT {
+				if hasCourseStatus(claims, courseID, qf.Enrollment_STUDENT) {
 					return handler(ctx, request)
 				}
 			case group:
@@ -134,19 +133,22 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				}
 			case teacher:
 				courseID := req.IDFor("course")
-				status, ok := claims.Courses[courseID]
-				if ok && status == qf.Enrollment_TEACHER {
+				if hasCourseStatus(claims, courseID, qf.Enrollment_TEACHER) {
 					return handler(ctx, request)
 				}
-			// This role has a single use case: the GetUserByCourse method wich sends a CourseUserRequest
-			// that does not include any IDs.
 			case courseAdmin:
 				if claims.Admin {
-					if err := isCourseTeacher(tm.Database(), request.(*qf.CourseUserRequest), claims.Courses); err != nil {
-						logger.Errorf("AccessControl: %v", err)
-						return nil, ErrAccessDenied
+					if method == "GetUserByCourse" {
+						if err := isCourseTeacher(tm.Database(), request.(*qf.CourseUserRequest), claims.Courses); err != nil {
+							logger.Errorf("AccessControl: %v", err)
+							return nil, ErrAccessDenied
+						}
+						return handler(ctx, request)
 					}
-					return handler(ctx, request)
+					courseID := req.IDFor("course")
+					if hasCourseStatus(claims, courseID, qf.Enrollment_TEACHER) {
+						return handler(ctx, request)
+					}
 				}
 			case admin:
 				if claims.Admin {
@@ -157,6 +159,15 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 		logger.Errorf("%f failed for user %d: insufficient user privileges. Required roles: %v", method, claims.UserID, roles)
 		return nil, ErrAccessDenied
 	}
+}
+
+// hasCourseStatus checks if user is enrolled in a course with a specific status.
+func hasCourseStatus(claims *auth.Claims, courseID uint64, status qf.Enrollment_UserStatus) bool {
+	currentStatus, ok := claims.Courses[courseID]
+	if ok && currentStatus == status {
+		return true
+	}
+	return false
 }
 
 // isCourseTeacher checks if the user is a teacher in the course in the CourseUserRequest.
