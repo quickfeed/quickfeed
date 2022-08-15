@@ -60,11 +60,10 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm
 	}
 
 	randomSecret := rand.String()
-	job, err := r.parseTestRunnerScript(randomSecret)
+	job, err := r.parseTestRunnerScript(randomSecret, dstDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse run script: %w", err)
 	}
-	job.BindDir = dstDir
 
 	logger.Debugf("Running tests for %s", r)
 	start := time.Now()

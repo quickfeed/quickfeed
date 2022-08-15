@@ -52,7 +52,7 @@ echo $QUICKFEED_SESSION_SECRET
 	randomSecret := rand.String()
 
 	runData := testRunData(qfTestOrg, githubUserName, runScriptContent)
-	job, err := runData.parseTestRunnerScript(randomSecret)
+	job, err := runData.parseTestRunnerScript(randomSecret, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +101,7 @@ func TestParseBadTestRunnerScript(t *testing.T) {
 
 	const runScriptContent = `#image/quickfeed:go`
 	runData := testRunData(qfTestOrg, githubUserName, runScriptContent)
-	_, err := runData.parseTestRunnerScript(randomSecret)
+	_, err := runData.parseTestRunnerScript(randomSecret, "")
 	const wantMsg = "no run script for assignment lab1 in https://github.com/qf101/tests"
 	if err.Error() != wantMsg {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg)
@@ -113,7 +113,7 @@ printf "*** Preparing for Test Execution ***\n"
 
 `
 	runData = testRunData(qfTestOrg, githubUserName, runScriptContent2)
-	_, err = runData.parseTestRunnerScript(randomSecret)
+	_, err = runData.parseTestRunnerScript(randomSecret, "")
 	const wantMsg2 = "no docker image specified in run script for assignment lab1 in https://github.com/qf101/tests"
 	if err.Error() != wantMsg2 {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg2)
