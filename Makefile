@@ -63,7 +63,6 @@ define proto_target
 proto_$(1):
 	$$(info Compiling proto definitions for Go and TypeScript for $(1))
 	@protoc --fatal_warnings -I . \
-	-I ./proto-include \
 	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
 	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
 	--go-patch_out=plugin=go,paths=source_relative:. \
