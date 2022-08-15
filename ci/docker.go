@@ -122,6 +122,9 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 		}
 	}
 
+	// Log first line of Dockerfile
+	d.logger.Infof("[%s] Dockerfile: %s ...", job.Image, job.Dockerfile[:strings.Index(job.Dockerfile, "\n")+1])
+
 	create := func() (container.ContainerCreateCreatedBody, error) {
 		return d.client.ContainerCreate(ctx, &container.Config{
 			Image: job.Image,
