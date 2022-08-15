@@ -3,7 +3,7 @@
 /* eslint-disable */
 /* @ts-nocheck */
 
-import {AuthorizationResponse, CourseRequest, CourseSubmissions, CourseUserRequest, EnrollmentRequest, EnrollmentStatusRequest, GetGroupRequest, GroupRequest, Organization, OrgRequest, RebuildRequest, Repositories, RepositoryRequest, Reviewers, ReviewRequest, SubmissionRequest, SubmissionReviewersRequest, SubmissionsForCourseRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, URLRequest, Void} from "./requests_pb.js";
+import {CourseRequest, CourseSubmissions, CourseUserRequest, EnrollmentRequest, EnrollmentStatusRequest, GetGroupRequest, GroupRequest, Organization, OrgRequest, RebuildRequest, Repositories, RepositoryRequest, Reviewers, ReviewRequest, SubmissionRequest, SubmissionReviewersRequest, SubmissionsForCourseRequest, UpdateSubmissionRequest, UpdateSubmissionsRequest, URLRequest, Void} from "./requests_pb.js";
 import {Assignments, Course, Courses, Enrollment, Enrollments, GradingBenchmark, GradingCriterion, Group, Groups, Review, Submissions, User, Users} from "./types_pb.js";
 import {MethodKind} from "@bufbuild/protobuf";
 
@@ -49,15 +49,6 @@ export const QuickFeedService = {
       name: "UpdateUser",
       I: User,
       O: Void,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc qf.QuickFeedService.IsAuthorizedTeacher
-     */
-    isAuthorizedTeacher: {
-      name: "IsAuthorizedTeacher",
-      I: Void,
-      O: AuthorizationResponse,
       kind: MethodKind.Unary,
     },
     /**

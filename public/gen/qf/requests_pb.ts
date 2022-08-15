@@ -871,43 +871,6 @@ export class Repositories extends Message<Repositories> {
 }
 
 /**
- * @generated from message qf.AuthorizationResponse
- */
-export class AuthorizationResponse extends Message<AuthorizationResponse> {
-  /**
-   * @generated from field: bool IsAuthorized = 1;
-   */
-  IsAuthorized = false;
-
-  constructor(data?: PartialMessage<AuthorizationResponse>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "qf.AuthorizationResponse";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "IsAuthorized", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AuthorizationResponse {
-    return new AuthorizationResponse().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AuthorizationResponse {
-    return new AuthorizationResponse().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AuthorizationResponse {
-    return new AuthorizationResponse().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: AuthorizationResponse | PlainMessage<AuthorizationResponse> | undefined, b: AuthorizationResponse | PlainMessage<AuthorizationResponse> | undefined): boolean {
-    return proto3.util.equals(AuthorizationResponse, a, b);
-  }
-}
-
-/**
  * @generated from message qf.Status
  */
 export class Status extends Message<Status> {

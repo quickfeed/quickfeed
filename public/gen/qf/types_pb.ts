@@ -638,52 +638,47 @@ export class Enrollment extends Message<Enrollment> {
   groupID = protoInt64.zero;
 
   /**
-   * @generated from field: bool hasTeacherScopes = 5;
-   */
-  hasTeacherScopes = false;
-
-  /**
-   * @generated from field: qf.User user = 6;
+   * @generated from field: qf.User user = 5;
    */
   user?: User;
 
   /**
-   * @generated from field: qf.Course course = 7;
+   * @generated from field: qf.Course course = 6;
    */
   course?: Course;
 
   /**
-   * @generated from field: qf.Group group = 8;
+   * @generated from field: qf.Group group = 7;
    */
   group?: Group;
 
   /**
-   * @generated from field: qf.Enrollment.UserStatus status = 9;
+   * @generated from field: qf.Enrollment.UserStatus status = 8;
    */
   status = Enrollment_UserStatus.NONE;
 
   /**
-   * @generated from field: qf.Enrollment.DisplayState state = 10;
+   * @generated from field: qf.Enrollment.DisplayState state = 9;
    */
   state = Enrollment_DisplayState.UNSET;
 
   /**
-   * @generated from field: uint32 slipDaysRemaining = 11;
+   * @generated from field: uint32 slipDaysRemaining = 10;
    */
   slipDaysRemaining = 0;
 
   /**
-   * @generated from field: string lastActivityDate = 12;
+   * @generated from field: string lastActivityDate = 11;
    */
   lastActivityDate = "";
 
   /**
-   * @generated from field: uint64 totalApproved = 13;
+   * @generated from field: uint64 totalApproved = 12;
    */
   totalApproved = protoInt64.zero;
 
   /**
-   * @generated from field: repeated qf.UsedSlipDays usedSlipDays = 14;
+   * @generated from field: repeated qf.UsedSlipDays usedSlipDays = 13;
    */
   usedSlipDays: UsedSlipDays[] = [];
 
@@ -699,16 +694,15 @@ export class Enrollment extends Message<Enrollment> {
     { no: 2, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 3, name: "userID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 4, name: "groupID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 5, name: "hasTeacherScopes", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 6, name: "user", kind: "message", T: User },
-    { no: 7, name: "course", kind: "message", T: Course },
-    { no: 8, name: "group", kind: "message", T: Group },
-    { no: 9, name: "status", kind: "enum", T: proto3.getEnumType(Enrollment_UserStatus) },
-    { no: 10, name: "state", kind: "enum", T: proto3.getEnumType(Enrollment_DisplayState) },
-    { no: 11, name: "slipDaysRemaining", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 12, name: "lastActivityDate", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 13, name: "totalApproved", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 14, name: "usedSlipDays", kind: "message", T: UsedSlipDays, repeated: true },
+    { no: 5, name: "user", kind: "message", T: User },
+    { no: 6, name: "course", kind: "message", T: Course },
+    { no: 7, name: "group", kind: "message", T: Group },
+    { no: 8, name: "status", kind: "enum", T: proto3.getEnumType(Enrollment_UserStatus) },
+    { no: 9, name: "state", kind: "enum", T: proto3.getEnumType(Enrollment_DisplayState) },
+    { no: 10, name: "slipDaysRemaining", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
+    { no: 11, name: "lastActivityDate", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 12, name: "totalApproved", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 13, name: "usedSlipDays", kind: "message", T: UsedSlipDays, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Enrollment {
