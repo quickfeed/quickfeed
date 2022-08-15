@@ -41,6 +41,7 @@ fullchain
 Getwd
 githubv
 GOBIN
+GOCACHE
 Godkjent
 gofumports
 gofumpt
