@@ -16,6 +16,6 @@ plugins:
   - name: go-patch
     out: ./
     opt: plugin=go-grpc,paths=source_relative
-  # - name: connect-go
-  #   out: qf/gen
-  #   opt: paths=source_relative
+  - name: connect-go
+    out: qf/gen
+    opt: paths=source_relative
