@@ -2,9 +2,11 @@ package interceptor
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"reflect"
 	"strings"
 
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"
@@ -36,15 +38,13 @@ const (
 )
 
 // If there are several roles that can call a method, a role with the least privilege must come first.
-// If method is not in the map, there is no restrictions to call it.
 var access = map[string]roles{
-	"GetUser":                {none},
-	"GetCourse":              {none},
-	"GetCourses":             {none},
-	"CreateEnrollment":       {user},
-	"UpdateCourseVisibility": {user},
-	"GetCoursesByUser":       {user},
-	// TODO(vera): needs a specific check: if request attempts to change admin role, user role is not sufficien.
+	"GetUser":                 {none},
+	"GetCourse":               {none},
+	"GetCourses":              {none},
+	"CreateEnrollment":        {user},
+	"UpdateCourseVisibility":  {user},
+	"GetCoursesByUser":        {user},
 	"UpdateUser":              {user, admin},
 	"GetEnrollmentsByUser":    {user, admin},
 	"GetSubmissions":          {group, student, teacher, courseAdmin},
@@ -73,85 +73,104 @@ var access = map[string]roles{
 	"UpdateReview":            {teacher},
 	"GetReviewers":            {teacher},
 	"IsEmptyRepo":             {teacher},
-	"GetSubmissionsByCourse":  {teacher, courseAdmin},
+	"GetSubmissionsByCourse":  {courseAdmin},
 	"GetUserByCourse":         {teacher, admin},
 	"GetUsers":                {admin},
 	"GetOrganization":         {admin},
 	"CreateCourse":            {admin},
 }
 
+// AccessControl checks user information stored in the JWT claims agains the list of roles required to call the method.
 func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(ctx context.Context, request interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		method := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
 		logger.Debugf("ACCESS CONTROL for method %s", method) // tmp
-		roles, ok := access[method]
-		if ok {
-			logger.Debug("Got roles: ", roles) // tmp
-			claims, err := tm.GetClaims(ctx)
-			if err != nil {
-				logger.Error("Access control: failed to get claims from request context: %v", err)
-				return handler(ctx, req)
-			}
-			logger.Debug("Got user claims: ", claims) // tmp
-			for _, role := range roles {
-				switch role {
-				case none:
-					return handler(ctx, req)
-				case user:
-					if m, ok := req.(requestID); ok {
-						if m.IDFor("user") == claims.UserID {
-							log.Printf("IDs match:%d, %d", m.IDFor("user"), claims.UserID)
-							return handler(ctx, req)
-						} else {
-							log.Printf("IDs don't match:%d, %d", m.IDFor("user"), claims.UserID)
-						}
-					}
-				case group:
-					if m, ok := req.(requestID); ok {
-						groupID := m.IDFor("group")
-						for _, group := range claims.Groups {
-							if group == groupID {
-								return handler(ctx, req)
-							}
-						}
-					}
-				case student:
-					if m, ok := req.(requestID); ok {
-						courseID := m.IDFor("course")
-						status, ok := claims.Courses[courseID]
-						if ok && status == qf.Enrollment_STUDENT {
-							return handler(ctx, req)
-						}
-					}
-				case teacher:
-					// TODO(vera): needs different handling for "GetUserByCourse"
-					if m, ok := req.(requestID); ok {
-						courseID := m.IDFor("course")
-						status, ok := claims.Courses[courseID]
-						if ok && status == qf.Enrollment_TEACHER {
-							return handler(ctx, req)
-						}
-					}
-				case courseAdmin:
-					if claims.Admin {
-						if m, ok := req.(requestID); ok {
-							courseID := m.IDFor("course")
-							status, ok := claims.Courses[courseID]
-							if ok && status == qf.Enrollment_TEACHER {
-								return handler(ctx, req)
-							}
-						} else {
-							logger.Debugf("Method %s does not implement FetchID method", method)
-						}
-					}
-				case admin:
-					if claims.Admin {
-						return handler(ctx, req)
-					}
-				}
-			}
+		req, ok := request.(requestID)
+		// The GetUserByCourse method sends a CourseUserRequest which has no IDs and needs a database query.
+		if !ok && method != "GetUserByCourse" {
+			logger.Errorf("%s failed: message type '%s' does not implement IDFor interface",
+				method, reflect.TypeOf(request).String())
 			return nil, ErrAccessDenied
 		}
-		return handler(ctx, req)
+		roles, ok := access[method]
+		if !ok {
+			logger.Errorf("No access roles defined for %s", method)
+			return nil, ErrAccessDenied
+		}
+		logger.Debug("Got roles: ", roles) // tmp
+		claims, err := tm.GetClaims(ctx)
+		if err != nil {
+			logger.Errorf("Access control: failed to get claims from request context: %v", err)
+			return handler(ctx, request)
+		}
+		logger.Debug("Got user claims: ", claims) // tmp
+		for _, role := range roles {
+			switch role {
+			case none:
+				return handler(ctx, request)
+			case user:
+				if req.IDFor("user") == claims.UserID {
+					// Make sure the user is not updating own admin status.
+					if method == "UpdateUser" {
+						if req.(*qf.User).GetIsAdmin() != claims.Admin {
+							logger.Errorf("Access control: user %d attempted to change admin status from %v to %v",
+								claims.UserID, claims.Admin, req.(*qf.User).GetIsAdmin())
+						}
+					}
+					return handler(ctx, request)
+				}
+			case student:
+				courseID := req.IDFor("course")
+				status, ok := claims.Courses[courseID]
+				if ok && status == qf.Enrollment_STUDENT {
+					return handler(ctx, request)
+				}
+			case group:
+				groupID := req.IDFor("group")
+				for _, group := range claims.Groups {
+					if group == groupID {
+						return handler(ctx, request)
+					}
+				}
+			case teacher:
+				courseID := req.IDFor("course")
+				status, ok := claims.Courses[courseID]
+				if ok && status == qf.Enrollment_TEACHER {
+					return handler(ctx, request)
+				}
+			// This role has a single use case: the GetUserByCourse method wich sends a CourseUserRequest
+			// that does not include any IDs.
+			case courseAdmin:
+				if claims.Admin {
+					if err := isCourseTeacher(tm.Database(), request.(*qf.CourseUserRequest), claims.Courses); err != nil {
+						logger.Errorf("AccessControl: %v", err)
+						return nil, ErrAccessDenied
+					}
+					return handler(ctx, request)
+				}
+			case admin:
+				if claims.Admin {
+					return handler(ctx, request)
+				}
+			}
+		}
+		logger.Errorf("%f failed for user %d: insufficient user privileges. Required roles: %v", method, claims.UserID, roles)
+		return nil, ErrAccessDenied
 	}
+}
+
+// isCourseTeacher checks if the user is a teacher in the course in the CourseUserRequest.
+func isCourseTeacher(db database.Database, request *qf.CourseUserRequest, courses map[uint64]qf.Enrollment_UserStatus) error {
+	for courseID, status := range courses {
+		if status == qf.Enrollment_TEACHER {
+			course, err := db.GetCourse(courseID, false)
+			if err != nil {
+				return err
+			}
+			if course.GetCode() == request.GetCourseCode() && course.GetYear() == request.GetCourseYear() {
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("user is not teacher of the %s course", request.GetCourseCode())
 }
