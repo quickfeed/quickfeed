@@ -1,7 +1,7 @@
 package qf
 
 // IDFor returns zero.
-func (r *Void) IDFor(_ string) uint64 {
+func (*Void) IDFor(_ string) uint64 {
 	return 0
 }
 
@@ -127,11 +127,11 @@ func (r *GradingCriterion) IDFor(_ string) uint64 {
 }
 
 // IDFor returns 0, this request is only used by admins.
-func (r *OrgRequest) IDFor(_ string) uint64 {
+func (*OrgRequest) IDFor(_ string) uint64 {
 	return 0
 }
 
 // IDFor returns 0.
-func (r *CourseUserRequest) IDFor(_ string) uint64 {
+func (*CourseUserRequest) IDFor(_ string) uint64 {
 	return 0
 }

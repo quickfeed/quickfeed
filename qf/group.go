@@ -55,6 +55,6 @@ func (g *Group) UserIDs() []uint64 {
 }
 
 // Marker to indicate that a token may need to be refreshed.
-func (gr *GroupRequest) UserIDs() []uint64 {
+func (*GroupRequest) UserIDs() []uint64 {
 	return []uint64{}
 }
