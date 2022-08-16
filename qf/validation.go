@@ -154,6 +154,9 @@ func (r *CourseUserRequest) IsValid() bool {
 }
 
 func (m *Enrollments) IsValid() bool {
+	if len(m.Enrollments) == 0 {
+		return false
+	}
 	for _, e := range m.Enrollments {
 		if !e.IsValid() {
 			return false

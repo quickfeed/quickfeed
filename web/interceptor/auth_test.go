@@ -11,6 +11,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
@@ -26,9 +27,8 @@ import (
 func TestUserVerifier(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	_, scms := qtest.FakeProviderMap(t)
 	logger := qlog.Logger(t).Desugar()
-	ags := web.NewQuickFeedService(logger, db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(logger, db, &scm.Manager{}, web.BaseHookOptions{}, &ci.Local{})
 
 	tm, err := auth.NewTokenManager(db, "test")
 	if err != nil {

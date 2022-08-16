@@ -8,9 +8,12 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web"
 )
 
 func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
@@ -56,8 +59,12 @@ func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
 }
 
 func TestRebuildSubmissions(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	mgr := scm.NewSCMManager(&scm.Config{})
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	ctx := context.Background()
+	logger := qlog.Logger(t).Desugar()
+	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 
 	teacher := qtest.CreateFakeUser(t, db, 1)
 	err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
@@ -67,6 +74,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	var course qf.Course
 	course.Provider = "fake"
 	course.OrganizationID = 1
+	course.OrganizationPath = scm.GetTestOrganization(t)
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +119,8 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := qtest.WithUserContext(context.Background(), teacher)
+	ctx = qtest.WithUserContext(ctx, teacher)
+	fakeProvider, _ := qtest.FakeProviderMap(t)
 	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
 		t.Fatal(err)
@@ -152,12 +161,12 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 		AssignmentID: assignment.ID,
 		RebuildType:  &qf.RebuildRequest_SubmissionID{SubmissionID: 123},
 	}
-	if _, err := ags.RebuildSubmissions(ctx, rebuildRequest); err == nil {
+	if _, err := q.RebuildSubmissions(ctx, rebuildRequest); err == nil {
 		t.Errorf("Expected error: record not found")
 	}
 	// rebuild existing submission
 	rebuildRequest.SetSubmissionID(1)
-	if _, err := ags.RebuildSubmissions(ctx, rebuildRequest); err != nil {
+	if _, err := q.RebuildSubmissions(ctx, rebuildRequest); err != nil {
 		t.Fatalf("Failed to rebuild submission: %s", err)
 	}
 	submissions, err := db.GetSubmissions(&qf.Submission{AssignmentID: assignment.ID})
@@ -168,19 +177,19 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	// make sure wrong course ID returns error
 	var request qf.RebuildRequest
 	request.SetCourseID(15)
-	if _, err = ags.RebuildSubmissions(ctx, &request); err == nil {
+	if _, err = q.RebuildSubmissions(ctx, &request); err == nil {
 		t.Fatal("Expected error: record not found")
 	}
 
 	// make sure wrong assignment ID returns error
 	request.SetCourseID(course.ID)
 	request.AssignmentID = 1337
-	if _, err = ags.RebuildSubmissions(ctx, &request); err == nil {
+	if _, err = q.RebuildSubmissions(ctx, &request); err == nil {
 		t.Fatal("Expected error: record not found")
 	}
 
 	request.AssignmentID = assignment.ID
-	if _, err = ags.RebuildSubmissions(ctx, &request); err != nil {
+	if _, err = q.RebuildSubmissions(ctx, &request); err != nil {
 		t.Fatalf("Failed to rebuild submissions: %s", err)
 	}
 	rebuiltSubmissions, err := db.GetSubmissions(&qf.Submission{AssignmentID: assignment.ID})
@@ -193,7 +202,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 
 	// check access control
 	ctx = qtest.WithUserContext(ctx, student1)
-	if _, err = ags.RebuildSubmissions(ctx, &request); err == nil {
+	if _, err = q.RebuildSubmissions(ctx, &request); err == nil {
 		t.Fatal("Expected error: authentication failed")
 	}
 }

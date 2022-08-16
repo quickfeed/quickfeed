@@ -9,7 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -94,7 +94,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	}
 
 	var stdout bytes.Buffer
-	if _, err := stdcopy.StdCopy(&stdout, ioutil.Discard, logReader); err != nil {
+	if _, err := stdcopy.StdCopy(&stdout, io.Discard, logReader); err != nil {
 		return "", err
 	}
 	if stdout.Len() > maxLogSize+lastSegmentSize {
@@ -122,10 +122,14 @@ func (d *Docker) createImage(ctx context.Context, job *Job) (*container.Containe
 		}
 	}
 
+	// Log first line of Dockerfile
+	d.logger.Infof("[%s] Dockerfile: %s ...", job.Image, job.Dockerfile[:strings.Index(job.Dockerfile, "\n")+1])
+
 	create := func() (container.ContainerCreateCreatedBody, error) {
 		return d.client.ContainerCreate(ctx, &container.Config{
 			Image: job.Image,
-			Env:   job.Env, // Set default environment variables
+			User:  fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()), // Run the image as the current user, e.g., quickfeed
+			Env:   job.Env,                                        // Set default environment variables
 			Cmd:   []string{"/bin/bash", "-c", strings.Join(job.Commands, "\n")},
 		}, hostConfig, nil, nil, job.Name)
 	}
@@ -189,7 +193,7 @@ func (d *Docker) pullImage(ctx context.Context, image string) error {
 	}
 	defer progress.Close()
 
-	_, err = io.Copy(ioutil.Discard, progress)
+	_, err = io.Copy(io.Discard, progress)
 	return err
 }
 

@@ -17,7 +17,6 @@ import {
     Users,
 } from "../proto/qf/types_pb"
 import {
-    AuthorizationResponse,
     CourseRequest,
     CourseSubmissions,
     EnrollmentStatusRequest,
@@ -67,10 +66,6 @@ export class GrpcManager {
 
     public updateUser(user: User): Promise<IGrpcResponse<Void>> {
         return this.grpcSend<Void>(this.agService.updateUser, user)
-    }
-
-    public isAuthorizedTeacher(): Promise<IGrpcResponse<AuthorizationResponse>> {
-        return this.grpcSend<AuthorizationResponse>(this.agService.isAuthorizedTeacher, new Void())
     }
 
     // /* COURSES */ //

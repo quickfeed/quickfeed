@@ -906,7 +906,7 @@ func TestCreateApproveList(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, el := range gotSubmissions.GetLinks() {
-		if el.Enrollment.User.IsAdmin || el.Enrollment.GetHasTeacherScopes() {
+		if el.Enrollment.User.IsAdmin {
 			continue
 		}
 		approved := make([]bool, len(el.Submissions))

@@ -113,10 +113,6 @@ message Repositories {
     map<string, string> URLs = 1;
 }
 
-message AuthorizationResponse {
-    bool IsAuthorized = 1;
-}
-
 message Status {
     uint64 Code  = 1;
     string Error = 2;

@@ -5,9 +5,11 @@ apitest
 ASSIGNDIR
 assignmentid
 autoapprove
+autocert
 autograde
 Autograder
 backports
+beatlabs
 bitlab
 bufconn
 bufnet
@@ -40,6 +42,7 @@ fullchain
 Getwd
 githubv
 GOBIN
+GOCACHE
 Godkjent
 gofumports
 gofumpt
@@ -139,6 +142,7 @@ shurcoo
 signup
 skipcq
 skiptests
+Skylar
 slugified
 sqlite
 staticcheck

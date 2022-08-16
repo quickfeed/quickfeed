@@ -221,9 +221,9 @@ func partialMatch(name string, studentMap map[string]int) (int, error) {
 	}
 	switch {
 	case len(possibleNames[name]) == 0:
-		return 0, fmt.Errorf("Not found: %s", name)
+		return 0, fmt.Errorf("not found: %s", name)
 	case len(possibleNames[name]) > 1:
-		return 0, fmt.Errorf("Multiple possibilities found for: %s --> %v", name, possibleNames[name])
+		return 0, fmt.Errorf("multiple possibilities found for: %s --> %v", name, possibleNames[name])
 	}
 	return studentMap[possibleNames[name][0]], nil
 }
