@@ -84,7 +84,6 @@ var access = map[string]roles{
 func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, request interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		method := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
-		logger.Debugf("ACCESS CONTROL for method %s", method) // tmp
 		req, ok := request.(requestID)
 		// The GetUserByCourse method sends a CourseUserRequest which has no IDs and needs a database query.
 		if !ok {
@@ -97,15 +96,12 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 			logger.Errorf("No access roles defined for %s", method)
 			return nil, ErrAccessDenied
 		}
-		logger.Debug("Got roles: ", roles) // tmp
 		claims, err := tm.GetClaims(ctx)
 		if err != nil {
 			logger.Errorf("Access control: failed to get claims from request context: %v", err)
 			return handler(ctx, request)
 		}
-		logger.Debugf("Got claims for user %d\n  courses (%v)\n groups (%v)\n: ", claims.UserID, claims.Courses, claims.Groups) // tmp
 		for _, role := range roles {
-			logger.Debugf("Checking role: %v", role) // tmp
 			switch role {
 			case none:
 				return handler(ctx, request)
@@ -184,6 +180,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				}
 			}
 		}
+		logger.Errorf("Access denied (%s), required roles %v, user claims %v", method, access[method], claims)
 		return nil, ErrAccessDenied
 	}
 }
