@@ -3,7 +3,6 @@ package interceptor_test
 import (
 	"context"
 	"errors"
-	"log"
 	"net"
 	"testing"
 
@@ -39,7 +38,7 @@ func TestAccessControlMethods(t *testing.T) {
 	logger := qlog.Logger(t)
 	ags := web.NewQuickFeedService(logger.Desugar(), db, scm.TestSCMManager(), web.BaseHookOptions{}, &ci.Local{})
 
-	s := grpc.NewServer()
+	s := grpc.NewServer() // skipcq: GO-S0902
 	qf.RegisterQuickFeedServiceServer(s, ags)
 	if err := web.VerifyAccessControlMethods(s); err != nil {
 		t.Error(err)
@@ -65,12 +64,13 @@ func TestAccessControl(t *testing.T) {
 		interceptor.UnaryUserVerifier(logger, tm),
 		interceptor.AccessControl(logger, tm),
 	)
-	s := grpc.NewServer(opt)
+	s := grpc.NewServer(opt) // skipcq: GO-S0902
 	qf.RegisterQuickFeedServiceServer(s, ags)
 
 	go func() {
 		if err := s.Serve(lis); err != nil {
-			log.Fatalf("Server exited with error: %v", err)
+			t.Errorf("Server exited with error: %v", err)
+			return
 		}
 	}()
 
@@ -327,7 +327,8 @@ func testTeacherAccess(client qf.QuickFeedServiceClient, t *testing.T, tests acc
 			AssignmentID: 1,
 			RebuildType: &qf.RebuildRequest_CourseID{
 				CourseID: testCase.courseID,
-			}})
+			},
+		})
 		verifyAccess(t, err, testCase.access, "RebuildSubmissions", testCase.name)
 		_, err = client.CreateBenchmark(testCase.ctx, &qf.GradingBenchmark{CourseID: testCase.courseID, AssignmentID: 1})
 		verifyAccess(t, err, testCase.access, "CreateBenchmark", testCase.name)
@@ -340,13 +341,14 @@ func testTeacherAccess(client qf.QuickFeedServiceClient, t *testing.T, tests acc
 		_, err = client.UpdateCriterion(testCase.ctx, &qf.GradingCriterion{CourseID: testCase.courseID, BenchmarkID: 1})
 		verifyAccess(t, err, testCase.access, "UpdateCriterion", testCase.name)
 		_, err = client.DeleteCriterion(testCase.ctx, &qf.GradingCriterion{CourseID: testCase.courseID, BenchmarkID: 1})
-		verifyAccess(t, err, testCase.access, "DeletCriterion", testCase.name)
+		verifyAccess(t, err, testCase.access, "DeleteCriterion", testCase.name)
 		_, err = client.CreateReview(testCase.ctx, &qf.ReviewRequest{
 			CourseID: testCase.courseID,
 			Review: &qf.Review{
 				SubmissionID: 1,
 				ReviewerID:   1,
-			}})
+			},
+		})
 		verifyAccess(t, err, testCase.access, "CreateReview", testCase.name)
 		_, err = client.UpdateReview(testCase.ctx, &qf.ReviewRequest{
 			CourseID: testCase.courseID,

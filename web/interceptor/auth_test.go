@@ -2,7 +2,6 @@ package interceptor_test
 
 import (
 	"context"
-	"log"
 	"net"
 	"testing"
 
@@ -63,7 +62,8 @@ func TestUserVerifier(t *testing.T) {
 
 	go func() {
 		if err := s.Serve(lis); err != nil {
-			log.Fatalf("Server exited with error: %v", err)
+			t.Errorf("Server exited with error: %v", err)
+			return
 		}
 	}()
 
