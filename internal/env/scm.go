@@ -24,10 +24,6 @@ func init() {
 	if provider == "" {
 		provider = defaultProvider
 	}
-	appID = os.Getenv("QUICKFEED_APP_ID")
-	appKey = os.Getenv("QUICKFEED_APP_KEY")
-	clientID = os.Getenv("QUICKFEED_CLIENT_ID")
-	clientSecret = os.Getenv("QUICKFEED_CLIENT_SECRET")
 }
 
 // ScmProvider returns the current SCM provider supported by this backend.
@@ -37,6 +33,7 @@ func ScmProvider() string {
 
 // ClientID returns the client ID for the current SCM provider.
 func ClientID() (string, error) {
+	clientID = os.Getenv("QUICKFEED_CLIENT_ID")
 	if clientID == "" {
 		return "", fmt.Errorf("missing client ID for %s", provider)
 	}
@@ -45,6 +42,7 @@ func ClientID() (string, error) {
 
 // ClientSecret returns the client secret for the current SCM provider.
 func ClientSecret() (string, error) {
+	clientSecret = os.Getenv("QUICKFEED_CLIENT_SECRET")
 	if clientSecret == "" {
 		return "", fmt.Errorf("missing client secret for %s", provider)
 	}
@@ -53,6 +51,7 @@ func ClientSecret() (string, error) {
 
 // AppID returns the application ID for the current SCM provider.
 func AppID() (string, error) {
+	appID = os.Getenv("QUICKFEED_APP_ID")
 	if appID == "" {
 		return "", fmt.Errorf("missing application ID for provider %s", provider)
 	}
@@ -63,6 +62,7 @@ func AppID() (string, error) {
 // For GitHub apps a key must be generated on the App's
 // settings page and saved into a file.
 func AppKey() string {
+	appKey = os.Getenv("QUICKFEED_APP_KEY")
 	if appKey == "" {
 		return defaultKeyPath
 	}
@@ -74,4 +74,8 @@ func AppKey() string {
 func SetFakeProvider(t *testing.T) {
 	t.Helper()
 	provider = "fake"
+}
+
+func HasAppEnvs() bool {
+	return appID != "" || appKey != ""
 }

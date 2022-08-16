@@ -19,6 +19,7 @@ import (
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
+	"github.com/quickfeed/quickfeed/web/manifest"
 	"google.golang.org/grpc"
 )
 
@@ -47,6 +48,7 @@ func main() {
 		public   = flag.String("http.public", "public", "path to content to serve")
 		httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
 		dev      = flag.Bool("dev", false, "running server locally")
+		new      = flag.Bool("new", false, "create new GitHub app")
 	)
 	flag.Parse()
 
@@ -58,6 +60,12 @@ func main() {
 	// Will not override variables already defined in the environment.
 	if err := env.Load(""); err != nil {
 		log.Fatal(err)
+	}
+
+	if *new {
+		if err := manifest.StartFlow(*httpAddr); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	logger, err := qlog.Zap()
