@@ -119,15 +119,6 @@ func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 	if err != nil {
 		return nil, err
 	}
-	newClaims := &Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(tokenExpirationTime).Unix(),
-			IssuedAt:  time.Now().Unix(),
-			Issuer:    "QuickFeed",
-		},
-		UserID: userID,
-		Admin:  usr.IsAdmin,
-	}
 	userCourses := make(map[uint64]qf.Enrollment_UserStatus)
 	userGroups := make([]uint64, 0)
 	for _, enrol := range usr.Enrollments {
@@ -136,9 +127,18 @@ func (tm *TokenManager) newClaims(userID uint64) (*Claims, error) {
 			userGroups = append(userGroups, enrol.GroupID)
 		}
 	}
-	newClaims.Courses = userCourses
-	newClaims.Groups = userGroups
-	return newClaims, nil
+
+	return &Claims{
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(tokenExpirationTime).Unix(),
+			IssuedAt:  time.Now().Unix(),
+			Issuer:    "QuickFeed",
+		},
+		UserID:  userID,
+		Admin:   usr.IsAdmin,
+		Courses: userCourses,
+		Groups:  userGroups,
+	}, nil
 }
 
 // tokenExpired returns true if the given JWT validation error is due to an expired token.
