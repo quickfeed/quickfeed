@@ -57,7 +57,7 @@ func TestUserVerifier(t *testing.T) {
 	opt := grpc.ChainUnaryInterceptor(
 		interceptor.UnaryUserVerifier(qtest.Logger(t), tm),
 	)
-	s := grpc.NewServer(opt)
+	s := grpc.NewServer(opt) // skipcq: GO-S0902
 	qf.RegisterQuickFeedServiceServer(s, ags)
 
 	go func() {
