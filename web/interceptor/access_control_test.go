@@ -130,32 +130,18 @@ func TestAccessControl(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	courseAdminToken, err := tm.NewAuthCookie(courseAdmin.ID)
-	if err != nil {
-		t.Fatal(err)
+	f := func(t *testing.T, id uint64) context.Context {
+		token, err := tm.NewAuthCookie(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return qtest.WithAuthCookie(ctx, token.Value)
 	}
-	groupStudentToken, err := tm.NewAuthCookie(groupStudent.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	studentToken, err := tm.NewAuthCookie(student.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	userToken, err := tm.NewAuthCookie(user.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	adminToken, err := tm.NewAuthCookie(admin.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	courseAdminContext := qtest.WithAuthCookie(ctx, courseAdminToken.Value)
-	groupStudentContext := qtest.WithAuthCookie(ctx, groupStudentToken.Value)
-	studentContext := qtest.WithAuthCookie(ctx, studentToken.Value)
-	userContext := qtest.WithAuthCookie(ctx, userToken.Value)
-	adminContext := qtest.WithAuthCookie(ctx, adminToken.Value)
+	courseAdminContext := f(t, courseAdmin.ID)
+	groupStudentContext := f(t, groupStudent.ID)
+	studentContext := f(t, student.ID)
+	userContext := f(t, user.ID)
+	adminContext := f(t, admin.ID)
 
 	freeAccessTest := accessTests{
 		{"admin", courseAdminContext, 0, course.ID, 0, true},
