@@ -30,14 +30,14 @@ type accessTests []struct {
 	userID   uint64
 	courseID uint64
 	groupID  uint64
-	err      error
+	access   bool
 }
 
 func TestAccessControlMethods(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	logger := qlog.Logger(t)
-	ags := web.NewQuickFeedService(logger.Desugar(), db, &scm.Manager{}, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(logger.Desugar(), db, scm.TestSCMManager(), web.BaseHookOptions{}, &ci.Local{})
 
 	s := grpc.NewServer()
 	qf.RegisterQuickFeedServiceServer(s, ags)
@@ -50,7 +50,7 @@ func TestAccessControl(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	logger := qtest.Logger(t)
-	ags := web.NewQuickFeedService(logger.Desugar(), db, &scm.Manager{}, web.BaseHookOptions{}, &ci.Local{})
+	ags := web.NewQuickFeedService(logger.Desugar(), db, scm.TestSCMManager(), web.BaseHookOptions{}, &ci.Local{})
 
 	tm, err := auth.NewTokenManager(db, "test")
 	if err != nil {
@@ -98,7 +98,8 @@ func TestAccessControl(t *testing.T) {
 		Year:             2022,
 		Provider:         "fake",
 		OrganizationID:   1,
-		OrganizationPath: "test",
+		OrganizationPath: "testorg",
+		CourseCreatorID:  courseAdmin.ID,
 	}
 	if err := db.CreateCourse(courseAdmin.ID, course); err != nil {
 		t.Fatal(err)
@@ -157,202 +158,88 @@ func TestAccessControl(t *testing.T) {
 	adminContext := qtest.WithAuthCookie(ctx, adminToken.Value)
 
 	freeAccessTest := accessTests{
-		{"admin", courseAdminContext, 0, course.ID, 0, nil},
-		{"student", studentContext, 0, course.ID, 0, nil},
-		{"student", groupStudentContext, 0, course.ID, 0, nil},
-		{"user", userContext, 0, course.ID, 0, nil},
-		{"non-teacher admin", adminContext, 0, course.ID, 0, nil},
+		{"admin", courseAdminContext, 0, course.ID, 0, true},
+		{"student", studentContext, 0, course.ID, 0, true},
+		{"student", groupStudentContext, 0, course.ID, 0, true},
+		{"user", userContext, 0, course.ID, 0, true},
+		{"non-teacher admin", adminContext, 0, course.ID, 0, true},
 	}
 	testUnrestrictedAccess(client, t, freeAccessTest)
 
 	userAccessTests := accessTests{
-		{"correct user ID", userContext, user.ID, course.ID, 0, nil},
-		{"incorrect user ID", userContext, groupStudent.ID, course.ID, 0, interceptor.ErrAccessDenied},
+		{"correct user ID", userContext, user.ID, course.ID, 0, true},
+		{"incorrect user ID", userContext, groupStudent.ID, course.ID, 0, false},
 	}
 	testUserAccess(client, t, course, userAccessTests)
 
 	studentAccessTests := accessTests{
-		{"course admin", courseAdminContext, courseAdmin.ID, course.ID, 0, nil},
-		{"admin, not enrolled in a course", adminContext, admin.ID, course.ID, 0, interceptor.ErrAccessDenied},
-		{"user, not enrolled in the course", userContext, user.ID, course.ID, 0, interceptor.ErrAccessDenied},
-		{"student", studentContext, student.ID, course.ID, 0, nil},
-		{"student of another course", studentContext, student.ID, 123, 0, interceptor.ErrAccessDenied},
+		{"course admin", courseAdminContext, courseAdmin.ID, course.ID, 0, true},
+		{"admin, not enrolled in a course", adminContext, admin.ID, course.ID, 0, false},
+		{"user, not enrolled in the course", userContext, user.ID, course.ID, 0, false},
+		{"student", studentContext, student.ID, course.ID, 0, true},
+		{"student of another course", studentContext, student.ID, 123, 0, false},
 	}
 	testStudentAccess(client, t, studentAccessTests)
 
 	groupAccessTests := accessTests{
-		{"student in a group", groupStudentContext, groupStudent.ID, course.ID, group.ID, nil},
-		{"student, not in a group", studentContext, student.ID, course.ID, group.ID, interceptor.ErrAccessDenied},
-		{"student in a group, wrong group ID in request", studentContext, student.ID, course.ID, 123, interceptor.ErrAccessDenied},
+		{"student in a group", groupStudentContext, groupStudent.ID, course.ID, group.ID, true},
+		{"student, not in a group", studentContext, student.ID, course.ID, group.ID, false},
+		{"student in a group, wrong group ID in request", studentContext, student.ID, course.ID, 123, false},
 	}
 	testGroupAccess(client, t, groupAccessTests)
 
+	teacherAccessTests := accessTests{
+		{"course teacher", courseAdminContext, groupStudent.ID, course.ID, group.ID, true},
+		{"student", studentContext, student.ID, course.ID, group.ID, false},
+		{"admin, not enrolled in the course", adminContext, admin.ID, course.ID, group.ID, false},
+	}
+	testTeacherAccess(client, t, teacherAccessTests, course)
+
 	adminAccessTests := accessTests{
-		{"admin (accessing own info)", courseAdminContext, courseAdmin.ID, course.ID, group.ID, nil},
-		{"admin (accessing other user's info)", courseAdminContext, user.ID, course.ID, group.ID, nil},
-		{"non admin (accessing admin's info)", studentContext, courseAdmin.ID, course.ID, group.ID, interceptor.ErrAccessDenied},
-		{"non admin (accessing other user's info)", studentContext, user.ID, course.ID, group.ID, interceptor.ErrAccessDenied},
+		{"admin (accessing own info)", courseAdminContext, courseAdmin.ID, course.ID, group.ID, true},
+		{"admin (accessing other user's info)", courseAdminContext, user.ID, course.ID, group.ID, true},
+		{"non admin (accessing admin's info)", studentContext, courseAdmin.ID, course.ID, group.ID, false},
+		{"non admin (accessing other user's info)", studentContext, user.ID, course.ID, group.ID, false},
 	}
 	testAdminAccess(client, t, course, adminAccessTests)
 
-	teacherAccessTests := accessTests{
-		{"course teacher", courseAdminContext, courseAdmin.ID, course.ID, group.ID, nil},
-		{"student", studentContext, student.ID, course.ID, group.ID, interceptor.ErrAccessDenied},
-		{"admin, not enrolled in the course", adminContext, admin.ID, course.ID, group.ID, interceptor.ErrAccessDenied},
+	createGroupTests := []struct {
+		name   string
+		ctx    context.Context
+		group  *qf.Group
+		access bool
+	}{
+		{"valid student, not in the request group", studentContext, &qf.Group{
+			CourseID: course.ID,
+		}, false},
+		{"valid student", studentContext, &qf.Group{
+			Name:     "test",
+			CourseID: course.ID,
+			Users:    []*qf.User{student},
+		}, true},
+		{"course teacher", courseAdminContext, &qf.Group{
+			CourseID: course.ID,
+			Users:    []*qf.User{courseAdmin},
+		}, true},
+		{"admin, not a teacher", adminContext, &qf.Group{
+			CourseID: course.ID,
+		}, false},
 	}
-	testTeacherAccess(client, t, teacherAccessTests)
 
-}
-
-func testTeacherAccess(client qf.QuickFeedServiceClient, t *testing.T, tests accessTests) {
-	for _, testCase := range tests {
-		if _, err := client.GetGroupByUserAndCourse(testCase.ctx, &qf.GroupRequest{
-			GroupID:  testCase.groupID,
-			CourseID: testCase.courseID,
-		}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetGroupByUserAndCourse", err, testCase.err)
-		}
-		if _, err := client.GetGroup(testCase.ctx, &qf.GetGroupRequest{GroupID: testCase.groupID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetGroup", err, testCase.err)
-		}
-		if _, err := client.GetAssignments(testCase.ctx, &qf.CourseRequest{CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetAssignments", err, testCase.err)
-		}
-		if _, err := client.GetEnrollmentsByCourse(testCase.ctx, &qf.EnrollmentRequest{CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetEnrollmentsByCourse", err, testCase.err)
-		}
-		if _, err := client.GetRepositories(testCase.ctx, &qf.URLRequest{CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetRepositories", err, testCase.err)
-		}
-		if _, err := client.UpdateGroup(testCase.ctx, &qf.Group{ID: testCase.groupID, CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "UpdateGroup", err, testCase.err)
-		}
-		if _, err := client.DeleteGroup(testCase.ctx, &qf.GroupRequest{GroupID: testCase.groupID, CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "DeleteGroup", err, testCase.err)
-		}
-		if _, err := client.GetGroupsByCourse(testCase.ctx, &qf.CourseRequest{CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetGroupsByCourse", err, testCase.err)
-		}
-		if _, err := client.UpdateCourse(testCase.ctx, &qf.Course{ID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "UpdateCourse", err, testCase.err)
-		}
-		if _, err := client.UpdateEnrollments(testCase.ctx, &qf.Enrollments{
-			Enrollments: []*qf.Enrollment{{ID: 1}},
-		}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "UpdateEnrollments", err, testCase.err)
-		}
-		if _, err := client.UpdateAssignments(testCase.ctx, &qf.CourseRequest{CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "UpdateAssignments", err, testCase.err)
-		}
-		if _, err := client.UpdateSubmission(testCase.ctx, &qf.UpdateSubmissionRequest{SubmissionID: 1, CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "UpdateSubmission", err, testCase.err)
-		}
-		if _, err := client.UpdateSubmissions(testCase.ctx, &qf.UpdateSubmissionsRequest{AssignmentID: 1, CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "UpdateSubmissions", err, testCase.err)
-		}
-		if _, err := client.RebuildSubmissions(testCase.ctx, &qf.RebuildRequest{
-			AssignmentID: 1,
-			RebuildType: &qf.RebuildRequest_CourseID{
-				CourseID: testCase.courseID,
-			}}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "RebuildSubmissions", err, testCase.err)
-		}
-		if _, err := client.CreateBenchmark(testCase.ctx, &qf.GradingBenchmark{AssignmentID: 1}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "CreateBenchmark", err, testCase.err)
-		}
-		if _, err := client.UpdateBenchmark(testCase.ctx, &qf.GradingBenchmark{AssignmentID: 1}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "UpdateBenchmark", err, testCase.err)
-		}
-		if _, err := client.DeleteBenchmark(testCase.ctx, &qf.GradingBenchmark{AssignmentID: 1}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "DeleteBenchmark", err, testCase.err)
-		}
-		if _, err := client.CreateCriterion(testCase.ctx, &qf.GradingCriterion{BenchmarkID: 1}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "CreateCriterion", err, testCase.err)
-		}
-		if _, err := client.UpdateCriterion(testCase.ctx, &qf.GradingCriterion{BenchmarkID: 1}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "UpdateCriterion", err, testCase.err)
-		}
-		if _, err := client.DeleteCriterion(testCase.ctx, &qf.GradingCriterion{BenchmarkID: 1}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "DeleteCriterion", err, testCase.err)
-		}
-		if _, err := client.CreateReview(testCase.ctx, &qf.ReviewRequest{CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "CreateReview", err, testCase.err)
-		}
-		if _, err := client.UpdateReview(testCase.ctx, &qf.ReviewRequest{CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "UpdateReview", err, testCase.err)
-		}
-		if _, err := client.GetReviewers(testCase.ctx, &qf.SubmissionReviewersRequest{
-			CourseID:     testCase.courseID,
-			SubmissionID: 1,
-		}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetReviewers", err, testCase.err)
-		}
-		if _, err := client.IsEmptyRepo(testCase.ctx, &qf.RepositoryRequest{CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "IsEmptyRepo", err, testCase.err)
-		}
-	}
-}
-
-func testGroupAccess(client qf.QuickFeedServiceClient, t *testing.T, tests accessTests) {
-	for _, testCase := range tests {
-		if _, err := client.GetGroupByUserAndCourse(testCase.ctx, &qf.GroupRequest{
-			CourseID: testCase.courseID,
-			UserID:   testCase.userID,
-			GroupID:  testCase.groupID,
-		}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetGroupByUserAndCourse", err, testCase.err)
-		}
-		if _, err := client.GetGroup(testCase.ctx, &qf.GetGroupRequest{GroupID: testCase.groupID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetGroup", err, testCase.err)
-		}
-
-		// TODO(vera): CreateGroup needs a separate set of test cases
-		// to account for backend errors (user who already in a group will pass
-		// access control but the request will result in error because already in a group)
-		// if _, err := client.CreateGroup(testCase.ctx, &qf.Group{
-		// 	CourseID: testCase.courseID,
-		// 	Users: []*qf.User{
-		// 		{
-		// 			ID: testCase.userID,
-		// 		},
-		// 	},
-		// }); !errors.Is(err, testCase.err) {
-		// 	logError(t, testCase.name, "CreateGroup", err, testCase.err)
-		//}
-	}
-}
-
-func testStudentAccess(client qf.QuickFeedServiceClient, t *testing.T, tests accessTests) {
-	for _, testCase := range tests {
-		if _, err := client.GetSubmissions(testCase.ctx, &qf.SubmissionRequest{
-			UserID:   testCase.userID,
-			CourseID: testCase.courseID,
-		}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetSubmissions", err, testCase.err)
-		}
-		if _, err := client.GetAssignments(testCase.ctx, &qf.CourseRequest{CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetAssignments", err, testCase.err)
-		}
-		if _, err := client.GetEnrollmentsByCourse(testCase.ctx, &qf.EnrollmentRequest{CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetEnrollmentsByCourse", err, testCase.err)
-		}
-		if _, err := client.GetRepositories(testCase.ctx, &qf.URLRequest{CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetRepositories", err, testCase.err)
-		}
+	for _, testCase := range createGroupTests {
+		_, err := client.CreateGroup(testCase.ctx, testCase.group)
+		verifyAccess(t, err, testCase.access, "CreateGroup", testCase.name)
 	}
 }
 
 func testUnrestrictedAccess(client qf.QuickFeedServiceClient, t *testing.T, tests accessTests) {
 	for _, testCase := range tests {
-		if _, err := client.GetUser(testCase.ctx, &qf.Void{}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetUser", err, testCase.err)
-		}
-		if _, err := client.GetCourse(testCase.ctx, &qf.CourseRequest{CourseID: testCase.courseID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetCourse", err, testCase.err)
-		}
-		if _, err := client.GetCourses(testCase.ctx, &qf.Void{}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetCourses", err, testCase.err)
-		}
+		_, err := client.GetUser(testCase.ctx, &qf.Void{})
+		verifyAccess(t, err, testCase.access, "GetUser", testCase.name)
+		_, err = client.GetCourse(testCase.ctx, &qf.CourseRequest{CourseID: testCase.courseID})
+		verifyAccess(t, err, testCase.access, "GetCourse", testCase.name)
+		_, err = client.GetCourses(testCase.ctx, &qf.Void{})
+		verifyAccess(t, err, testCase.access, "GetCourses", testCase.name)
 	}
 }
 
@@ -365,51 +252,143 @@ func testUserAccess(client qf.QuickFeedServiceClient, t *testing.T, course *qf.C
 		enrolRequest := &qf.EnrollmentStatusRequest{
 			UserID: testCase.userID,
 		}
-		if _, err := client.CreateEnrollment(testCase.ctx, enrol); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "CreateEnrollment", err, testCase.err)
-		}
-		if _, err := client.UpdateCourseVisibility(testCase.ctx, enrol); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "UpdateCourseVisibility", err, testCase.err)
-		}
-		if _, err := client.GetCoursesByUser(testCase.ctx, enrolRequest); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetCoursesByUser", err, testCase.err)
-		}
-		if _, err := client.UpdateUser(testCase.ctx, &qf.User{ID: testCase.userID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "UpdateUser", err, testCase.err)
-		}
-		if _, err := client.GetEnrollmentsByUser(testCase.ctx, enrolRequest); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetEnrollmentsByUser", err, testCase.err)
-		}
+		_, err := client.CreateEnrollment(testCase.ctx, enrol)
+		verifyAccess(t, err, testCase.access, "CreateEnrollment", testCase.name)
+		_, err = client.UpdateCourseVisibility(testCase.ctx, enrol)
+		verifyAccess(t, err, testCase.access, "UpdateCourseVisibility", testCase.name)
+		_, err = client.GetCoursesByUser(testCase.ctx, enrolRequest)
+		verifyAccess(t, err, testCase.access, "GetCoursesByUser", testCase.name)
+		_, err = client.UpdateUser(testCase.ctx, &qf.User{ID: testCase.userID})
+		verifyAccess(t, err, testCase.access, "UpdateUser", testCase.name)
+		_, err = client.GetEnrollmentsByUser(testCase.ctx, enrolRequest)
+		verifyAccess(t, err, testCase.access, "GetEnrollmentsByCourse", testCase.name)
+	}
+}
+
+func testStudentAccess(client qf.QuickFeedServiceClient, t *testing.T, tests accessTests) {
+	for _, testCase := range tests {
+		_, err := client.GetSubmissions(testCase.ctx, &qf.SubmissionRequest{
+			UserID:   testCase.userID,
+			CourseID: testCase.courseID,
+		})
+		verifyAccess(t, err, testCase.access, "GetSubmissions", testCase.name)
+		_, err = client.GetAssignments(testCase.ctx, &qf.CourseRequest{CourseID: testCase.courseID})
+		verifyAccess(t, err, testCase.access, "GetAssignments", testCase.name)
+		_, err = client.GetEnrollmentsByCourse(testCase.ctx, &qf.EnrollmentRequest{CourseID: testCase.courseID})
+		verifyAccess(t, err, testCase.access, "GetEnrollmentsByCourse", testCase.name)
+		_, err = client.GetRepositories(testCase.ctx, &qf.URLRequest{CourseID: testCase.courseID})
+		verifyAccess(t, err, testCase.access, "GetRepositories", testCase.name)
+	}
+}
+
+func testGroupAccess(client qf.QuickFeedServiceClient, t *testing.T, tests accessTests) {
+	for _, testCase := range tests {
+		_, err := client.GetGroupByUserAndCourse(testCase.ctx, &qf.GroupRequest{
+			CourseID: testCase.courseID,
+			UserID:   testCase.userID,
+			GroupID:  testCase.groupID,
+		})
+		verifyAccess(t, err, testCase.access, "GetGroupByUserAndCourse", testCase.name)
+		_, err = client.GetGroup(testCase.ctx, &qf.GetGroupRequest{GroupID: testCase.groupID})
+		verifyAccess(t, err, testCase.access, "GetGroup", testCase.name)
+	}
+}
+
+func testTeacherAccess(client qf.QuickFeedServiceClient, t *testing.T, tests accessTests, course *qf.Course) {
+	for _, testCase := range tests {
+		_, err := client.GetGroupByUserAndCourse(testCase.ctx, &qf.GroupRequest{
+			UserID:   testCase.userID,
+			CourseID: testCase.courseID,
+		})
+		verifyAccess(t, err, testCase.access, "GetGroupByUserAndCourse", testCase.name)
+		_, err = client.GetGroup(testCase.ctx, &qf.GetGroupRequest{GroupID: testCase.groupID})
+		verifyAccess(t, err, testCase.access, "GetGroup", testCase.name)
+		_, err = client.DeleteGroup(testCase.ctx, &qf.GroupRequest{
+			GroupID:  testCase.groupID,
+			CourseID: testCase.courseID,
+			UserID:   testCase.userID,
+		})
+		verifyAccess(t, err, testCase.access, "DeleteGroup", testCase.name)
+		_, err = client.UpdateGroup(testCase.ctx, &qf.Group{CourseID: testCase.courseID})
+		verifyAccess(t, err, testCase.access, "UpdateGroup", testCase.name)
+		_, err = client.UpdateCourse(testCase.ctx, course)
+		verifyAccess(t, err, testCase.access, "UpdateCourse", testCase.name)
+		_, err = client.UpdateEnrollments(testCase.ctx, &qf.Enrollments{
+			Enrollments: []*qf.Enrollment{{ID: 1, CourseID: testCase.courseID}},
+		})
+		verifyAccess(t, err, testCase.access, "UpdateEnrollments", testCase.name)
+		_, err = client.UpdateAssignments(testCase.ctx, &qf.CourseRequest{CourseID: testCase.courseID})
+		verifyAccess(t, err, testCase.access, "UpdateAssignments", testCase.name)
+		_, err = client.UpdateSubmission(testCase.ctx, &qf.UpdateSubmissionRequest{SubmissionID: 1, CourseID: testCase.courseID})
+		verifyAccess(t, err, testCase.access, "UpdateSubmission", testCase.name)
+		_, err = client.UpdateSubmissions(testCase.ctx, &qf.UpdateSubmissionsRequest{AssignmentID: 1, CourseID: testCase.courseID})
+		verifyAccess(t, err, testCase.access, "UpdateSubmissions", testCase.name)
+		_, err = client.RebuildSubmissions(testCase.ctx, &qf.RebuildRequest{
+			AssignmentID: 1,
+			RebuildType: &qf.RebuildRequest_CourseID{
+				CourseID: testCase.courseID,
+			}})
+		verifyAccess(t, err, testCase.access, "RebuildSubmissions", testCase.name)
+		_, err = client.CreateBenchmark(testCase.ctx, &qf.GradingBenchmark{CourseID: testCase.courseID, AssignmentID: 1})
+		verifyAccess(t, err, testCase.access, "CreateBenchmark", testCase.name)
+		_, err = client.UpdateBenchmark(testCase.ctx, &qf.GradingBenchmark{CourseID: testCase.courseID, AssignmentID: 1})
+		verifyAccess(t, err, testCase.access, "UpdateBenchmark", testCase.name)
+		_, err = client.DeleteBenchmark(testCase.ctx, &qf.GradingBenchmark{CourseID: testCase.courseID, AssignmentID: 1})
+		verifyAccess(t, err, testCase.access, "DeleteBenchmark", testCase.name)
+		_, err = client.CreateCriterion(testCase.ctx, &qf.GradingCriterion{CourseID: testCase.courseID, BenchmarkID: 1})
+		verifyAccess(t, err, testCase.access, "CreateCriterion", testCase.name)
+		_, err = client.UpdateCriterion(testCase.ctx, &qf.GradingCriterion{CourseID: testCase.courseID, BenchmarkID: 1})
+		verifyAccess(t, err, testCase.access, "UpdateCriterion", testCase.name)
+		_, err = client.DeleteCriterion(testCase.ctx, &qf.GradingCriterion{CourseID: testCase.courseID, BenchmarkID: 1})
+		verifyAccess(t, err, testCase.access, "DeletCriterion", testCase.name)
+		_, err = client.CreateReview(testCase.ctx, &qf.ReviewRequest{
+			CourseID: testCase.courseID,
+			Review: &qf.Review{
+				SubmissionID: 1,
+				ReviewerID:   1,
+			}})
+		verifyAccess(t, err, testCase.access, "CreateReview", testCase.name)
+		_, err = client.UpdateReview(testCase.ctx, &qf.ReviewRequest{
+			CourseID: testCase.courseID,
+			Review: &qf.Review{
+				SubmissionID: 1,
+				ReviewerID:   1,
+			},
+		})
+		verifyAccess(t, err, testCase.access, "UpdateReview", testCase.name)
+		_, err = client.GetReviewers(testCase.ctx, &qf.SubmissionReviewersRequest{
+			CourseID:     testCase.courseID,
+			SubmissionID: 1,
+		})
+		verifyAccess(t, err, testCase.access, "GetReviewers", testCase.name)
+		_, err = client.IsEmptyRepo(testCase.ctx, &qf.RepositoryRequest{CourseID: testCase.courseID})
+		verifyAccess(t, err, testCase.access, "IsEmptyRepo", testCase.name)
 	}
 }
 
 func testAdminAccess(client qf.QuickFeedServiceClient, t *testing.T, course *qf.Course, tests accessTests) {
 	for _, testCase := range tests {
-		if _, err := client.UpdateUser(testCase.ctx, &qf.User{ID: testCase.userID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "UpdateUser", err, testCase.err)
-		}
-		if _, err := client.GetEnrollmentsByUser(testCase.ctx, &qf.EnrollmentStatusRequest{UserID: testCase.userID}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetEnrollmentsByUser", err, testCase.err)
-		}
-		if _, err := client.GetUsers(testCase.ctx, &qf.Void{}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetUsers", err, testCase.err)
-		}
-		if _, err := client.GetOrganization(testCase.ctx, &qf.OrgRequest{OrgName: scm.GetTestOrganization(t)}); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "GetOrganization", err, testCase.err)
-		}
-		if _, err := client.CreateCourse(testCase.ctx, course); !errors.Is(err, testCase.err) {
-			logError(t, testCase.name, "UpdateUser", err, testCase.err)
-		}
-		if _, err := client.GetUserByCourse(testCase.ctx, &qf.CourseUserRequest{
+		_, err := client.UpdateUser(testCase.ctx, &qf.User{ID: testCase.userID})
+		verifyAccess(t, err, testCase.access, "UpdateUser", testCase.name)
+		_, err = client.GetEnrollmentsByUser(testCase.ctx, &qf.EnrollmentStatusRequest{UserID: testCase.userID})
+		verifyAccess(t, err, testCase.access, "GetEnrollmentsByUser", testCase.name)
+		_, err = client.GetUsers(testCase.ctx, &qf.Void{})
+		verifyAccess(t, err, testCase.access, "GetUsers", testCase.name)
+		_, err = client.GetOrganization(testCase.ctx, &qf.OrgRequest{OrgName: "testorg"})
+		verifyAccess(t, err, testCase.access, "GetOrganization", testCase.name)
+		_, err = client.CreateCourse(testCase.ctx, course)
+		verifyAccess(t, err, testCase.access, "CreateCourse", testCase.name)
+		_, err = client.GetUserByCourse(testCase.ctx, &qf.CourseUserRequest{
 			CourseCode: course.Code,
 			CourseYear: course.Year,
 			UserLogin:  "student",
-		}); !errors.Is(err, interceptor.ErrAccessDenied) {
-			logError(t, testCase.name, "GetUserByCourse", err, testCase.err)
-		}
+		})
+		verifyAccess(t, err, testCase.access, "GetUserByCourse", testCase.name)
 	}
 }
 
-func logError(t *testing.T, name, method string, got, want error) {
-	t.Errorf("unexpected error for %s calling %s: expected %v, got %v", name, method, want, got)
+func verifyAccess(t *testing.T, err error, expected bool, method, name string) {
+	if errors.Is(err, interceptor.ErrAccessDenied) == expected {
+		t.Errorf("unexpected access control response for %s (%s): expected access: %v, got error: %v", name, method, expected, err)
+	}
 }

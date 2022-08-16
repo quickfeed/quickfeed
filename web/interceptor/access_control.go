@@ -87,7 +87,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 		logger.Debugf("ACCESS CONTROL for method %s", method) // tmp
 		req, ok := request.(requestID)
 		// The GetUserByCourse method sends a CourseUserRequest which has no IDs and needs a database query.
-		if !ok && method != "GetUserByCourse" {
+		if !ok {
 			logger.Errorf("%s failed: message type '%s' does not implement IDFor interface",
 				method, reflect.TypeOf(request).String())
 			return nil, ErrAccessDenied
@@ -135,15 +135,17 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 					return handler(ctx, request)
 				}
 			case group:
-				// Request for CreateGroup will not have ID yet, need to ckeck
-				// if the user is in the group unless teacher.
-				if method == "CreateGroup" &&
-					!(hasCourseStatus(claims, req.IDFor("course"), qf.Enrollment_TEACHER) ||
-						req.(*qf.Group).Contains(&qf.User{ID: claims.UserID})) {
-					logger.Errorf("AccessControl: user %d creates a new group while not teacher or group member")
-					return nil, ErrAccessDenied
+				// Request for CreateGroup will not have ID yet, need to check
+				// if the user is in the group (unless teacher).
+				if method == "CreateGroup" {
+					if hasCourseStatus(claims, req.IDFor("course"), qf.Enrollment_TEACHER) ||
+						req.(*qf.Group).Contains(&qf.User{ID: claims.UserID}) {
+						return handler(ctx, request)
+					} else {
+						logger.Errorf("AccessControl: user %d creates a new group while not teacher or group member")
+						return nil, ErrAccessDenied
+					}
 				}
-				//return nil, fmt.Errorf("Group ID: %d, im claims: %v", req.IDFor("group"), claims.Groups)
 				groupID := req.IDFor("group")
 				for _, group := range claims.Groups {
 					if group == groupID {
@@ -151,6 +153,13 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 					}
 				}
 			case teacher:
+				if method == "GetUserByCourse" {
+					if err := isCourseTeacher(tm.Database(), request.(*qf.CourseUserRequest), claims.Courses); err != nil {
+						logger.Errorf("AccessControl: %v", err)
+						return nil, ErrAccessDenied
+					}
+					return handler(ctx, request)
+				}
 				courseID := req.IDFor("course")
 				if hasCourseStatus(claims, courseID, qf.Enrollment_TEACHER) {
 					return handler(ctx, request)
@@ -175,7 +184,6 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				}
 			}
 		}
-		logger.Errorf("%f failed for user %d: insufficient user privileges. Required roles: %v", method, claims.UserID, roles)
 		return nil, ErrAccessDenied
 	}
 }

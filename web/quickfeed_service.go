@@ -209,7 +209,7 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *qf.Enrollm
 			if ok, parsedErr := parseSCMError(err); ok {
 				return nil, parsedErr
 			}
-			return nil, status.Error(codes.InvalidArgument, "failed to update enrollment")
+			return nil, err // status.Error(codes.InvalidArgument, "failed to update enrollments")
 		}
 	}
 	return &qf.Void{}, err
