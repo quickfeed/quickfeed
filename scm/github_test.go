@@ -8,8 +8,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/quickfeed/quickfeed/kit/score"
+	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -208,21 +210,72 @@ func TestUpdateIssue(t *testing.T) {
 	}
 }
 
+// TestRequestReviewers tests the ability to request reviewers for a pull request.
+// It will first create a pull request, then request reviewers for it and then closes the pull request.
+//
+// Note: This test requires manual steps before execution:
+// 1. Create branch test-request-reviewers on the qfTestUser repo
+// 2. Make edits on the test-request-reviewers branch
+// 3. Push the changes to the qfTestUser repo
+//
+// The test is skipped unless run with: SCM_TESTS=1 go test -v -run TestRequestReviewers
 func TestRequestReviewers(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	s := scm.GetTestSCM(t)
-
-	// Set these when testing
-	opt := &scm.RequestReviewersOptions{
-		Organization: qfTestOrg,
-		Repository:   "repo-name",
-		Number:       1,
-		Reviewers:    []string{"reviewer-login"},
+	if os.Getenv("SCM_TESTS") == "" {
+		t.SkipNow()
 	}
-	err := s.RequestReviewers(context.Background(), opt)
+	qfTestOrg := scm.GetTestOrganization(t)
+	qfTestUser := scm.GetTestUser(t)
+	s := scm.GetTestSCM(t)
+	repo := qf.StudentRepoName(qfTestUser)
+
+	testReqReviewersBranch := "test-request-reviewers"
+
+	client := githubTestClient(t)
+	ctx := context.Background()
+	pullReq, _, err := client.PullRequests.Create(ctx, qfTestOrg, repo, &github.NewPullRequest{
+		Title: github.String("Test Request Reviewers"),
+		Body:  github.String("Test Request Reviewers Body"),
+		Head:  github.String(testReqReviewersBranch),
+		Base:  github.String("master"),
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Logf("PullRequest %d opened", *pullReq.Number)
+
+	// Pick a reviewer that is not the current user (that created the PR above).
+	var reviewer string
+	for _, r := range []string{"meling", "JosteinLindhom"} {
+		if r != qfTestUser {
+			reviewer = r
+			break
+		}
+	}
+
+	opt := &scm.RequestReviewersOptions{
+		Organization: qfTestOrg,
+		Repository:   repo,
+		Number:       *pullReq.Number,
+		Reviewers:    []string{reviewer},
+	}
+	if err := s.RequestReviewers(ctx, opt); err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("PullRequest %d created with reviewer %v", *pullReq.Number, reviewer)
+
+	_, _, err = client.PullRequests.Edit(ctx, qfTestOrg, repo, *pullReq.Number, &github.PullRequest{
+		State: github.String("closed"),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("PullRequest %d closed", *pullReq.Number)
+}
+
+func githubTestClient(t *testing.T) *github.Client {
+	t.Helper()
+	src := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: scm.GetAccessToken(t)})
+	return github.NewClient(oauth2.NewClient(context.Background(), src))
 }
 
 func TestCreateIssueComment(t *testing.T) {
