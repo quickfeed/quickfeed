@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/env"
 )
 
@@ -74,6 +75,35 @@ WITHOUT_QUOTES="$QUICKFEED/cert/fullchain.pem"
 	for k, v := range want {
 		if got := os.Getenv(k); got != v {
 			t.Errorf("os.Getenv(%q) = %q, wanted %q", k, got, v)
+		}
+	}
+}
+
+func TestWhitelist(t *testing.T) {
+	test := []struct {
+		domains string
+		want    []string
+		err     bool
+	}{
+		{"localhost", nil, true},
+		{"localhost,example.com", nil, true},
+		{"123.12.1.1", nil, true},
+		{"example.com, www.example.com, localhost", nil, true},
+		{"example.com, www.example.com,127.0.0.1:8080", nil, true},
+		{"a.com, b.com, c.com", []string{"a.com", "b.com", "c.com"}, false},
+		{"a.com,b.com,c.com", []string{"a.com", "b.com", "c.com"}, false},
+		{"example.com, www.example.com", []string{"example.com", "www.example.com"}, false},
+		//{"example.com, www.example.com,", []string{"example.com", "www.example.com"}, false},
+	}
+
+	for _, tc := range test {
+		t.Setenv("QUICKFEED_WHITELIST", tc.domains)
+		got, err := env.Whitelist()
+		if err != nil && !tc.err {
+			t.Errorf("Whitelist() = %v", err)
+		}
+		if diff := cmp.Diff(tc.want, got); diff != "" {
+			t.Errorf("Whitelist() mismatch (-want +got):\n%s", diff)
 		}
 	}
 }

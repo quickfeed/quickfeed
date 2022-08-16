@@ -5,6 +5,7 @@ apitest
 ASSIGNDIR
 assignmentid
 autoapprove
+autocert
 autograde
 Autograder
 backports
