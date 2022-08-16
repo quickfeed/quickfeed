@@ -1,13 +1,10 @@
 package assignments
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -62,37 +59,5 @@ func TestGetNextReviewer(t *testing.T) {
 			}
 		}
 		students = students[:len(students)-1]
-	}
-}
-
-// TestPublishFeedbackComment tests creating a feedback comment on a pull request, with the given result.
-func TestPublishFeedbackComment(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
-
-	results := &score.Results{
-		Scores: []*score.Score{
-			{TestName: "Test1", TaskName: "1", Score: 5, MaxScore: 7, Weight: 2},
-			{TestName: "Test2", TaskName: "1", Score: 3, MaxScore: 9, Weight: 3},
-			{TestName: "Test3", TaskName: "1", Score: 8, MaxScore: 8, Weight: 5},
-			{TestName: "Test4", TaskName: "1", Score: 2, MaxScore: 5, Weight: 1},
-			{TestName: "Test5", TaskName: "1", Score: 5, MaxScore: 7, Weight: 1},
-			{TestName: "Test6", TaskName: "2", Score: 5, MaxScore: 7, Weight: 1},
-			{TestName: "Test7", TaskName: "3", Score: 5, MaxScore: 7, Weight: 1},
-		},
-	}
-	body := results.MarkdownComment("1", 80)
-
-	// To use this test, the CommentID have to be set manually.
-	// TODO(meling) Fix test to CreateIssue and CreateIssueComment to get commentID
-	opt := &scm.IssueCommentOptions{
-		Organization: qfTestOrg,
-		Repository:   qf.StudentRepoName(qfTestUser),
-		Body:         body,
-		CommentID:    0,
-	}
-	if err := s.UpdateIssueComment(context.Background(), opt); err != nil {
-		t.Fatal(err)
 	}
 }
