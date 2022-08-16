@@ -30,15 +30,15 @@ func (r *Group) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }
 
-// IDFor returns user or course ID.
+// IDFor returns user, group, or course ID.
 func (r *GroupRequest) IDFor(role string) uint64 {
 	switch role {
 	case "user":
 		return r.GetUserID()
-	case "course":
-		return r.GetCourseID()
 	case "group":
 		return r.GetGroupID()
+	case "course":
+		return r.GetCourseID()
 	}
 	return 0
 }
@@ -77,6 +77,11 @@ func (r *SubmissionRequest) IDFor(role string) uint64 {
 }
 
 // IDFor returns course ID.
+func (r *UpdateSubmissionsRequest) IDFor(_ string) uint64 {
+	return r.GetCourseID()
+}
+
+// IDFor returns course ID.
 func (r *SubmissionsForCourseRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()
 }
@@ -109,4 +114,24 @@ func (r *SubmissionReviewersRequest) IDFor(_ string) uint64 {
 // IDFor returns course ID.
 func (r *URLRequest) IDFor(_ string) uint64 {
 	return r.GetCourseID()
+}
+
+// IDFor returns course ID.
+func (r *GradingBenchmark) IDFor(_ string) uint64 {
+	return r.GetCourseID()
+}
+
+// IDFor returns course ID.
+func (r *GradingCriterion) IDFor(_ string) uint64 {
+	return r.GetCourseID()
+}
+
+// IDFor returns 0, this request is only used by admins.
+func (r *OrgRequest) IDFor(_ string) uint64 {
+	return 0
+}
+
+// IDFor returns 0.
+func (r *CourseUserRequest) IDFor(_ string) uint64 {
+	return 0
 }
