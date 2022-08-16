@@ -35,3 +35,8 @@ func (u *User) SetSlipDays(c *Course) {
 		e.SetSlipDays(c)
 	}
 }
+
+// UserIDs returns the user ID of this user.
+func (u *User) UserIDs() []uint64 {
+	return []uint64{u.GetID()}
+}

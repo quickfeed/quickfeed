@@ -44,3 +44,17 @@ func (g *Group) GetUsersExcept(userID uint64) []*User {
 	}
 	return subset
 }
+
+// UserIDs returns the user IDs of this group.
+func (g *Group) UserIDs() []uint64 {
+	userIDs := make([]uint64, 0, len(g.Users))
+	for _, user := range g.Users {
+		userIDs = append(userIDs, user.GetID())
+	}
+	return userIDs
+}
+
+// Marker to indicate that a token may need to be refreshed.
+func (gr *GroupRequest) UserIDs() []uint64 {
+	return []uint64{}
+}
