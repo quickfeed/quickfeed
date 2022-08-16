@@ -2,11 +2,9 @@ package interceptor
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strings"
 
-	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"
@@ -126,15 +124,14 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 						return nil, ErrAccessDenied
 					}
 				}
-				courseID := req.IDFor("course")
-				if hasCourseStatus(claims, courseID, qf.Enrollment_STUDENT) {
+				if claims.HasCourseStatus(req, qf.Enrollment_STUDENT) {
 					return handler(ctx, request)
 				}
 			case group:
 				// Request for CreateGroup will not have ID yet, need to check
 				// if the user is in the group (unless teacher).
 				if method == "CreateGroup" {
-					if hasCourseStatus(claims, req.IDFor("course"), qf.Enrollment_TEACHER) ||
+					if claims.HasCourseStatus(req, qf.Enrollment_TEACHER) ||
 						req.(*qf.Group).Contains(&qf.User{ID: claims.UserID}) {
 						return handler(ctx, request)
 					} else {
@@ -150,27 +147,25 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				}
 			case teacher:
 				if method == "GetUserByCourse" {
-					if err := isCourseTeacher(tm.Database(), request.(*qf.CourseUserRequest), claims.Courses); err != nil {
+					if err := claims.IsCourseTeacher(tm.Database(), request.(*qf.CourseUserRequest)); err != nil {
 						logger.Errorf("AccessControl: %v", err)
 						return nil, ErrAccessDenied
 					}
 					return handler(ctx, request)
 				}
-				courseID := req.IDFor("course")
-				if hasCourseStatus(claims, courseID, qf.Enrollment_TEACHER) {
+				if claims.HasCourseStatus(req, qf.Enrollment_TEACHER) {
 					return handler(ctx, request)
 				}
 			case courseAdmin:
 				if claims.Admin {
 					if method == "GetUserByCourse" {
-						if err := isCourseTeacher(tm.Database(), request.(*qf.CourseUserRequest), claims.Courses); err != nil {
+						if err := claims.IsCourseTeacher(tm.Database(), request.(*qf.CourseUserRequest)); err != nil {
 							logger.Errorf("AccessControl: %v", err)
 							return nil, ErrAccessDenied
 						}
 						return handler(ctx, request)
 					}
-					courseID := req.IDFor("course")
-					if hasCourseStatus(claims, courseID, qf.Enrollment_TEACHER) {
+					if claims.HasCourseStatus(req, qf.Enrollment_TEACHER) {
 						return handler(ctx, request)
 					}
 				}
@@ -183,29 +178,4 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 		logger.Errorf("Access denied (%s), required roles %v, user claims %v", method, access[method], claims)
 		return nil, ErrAccessDenied
 	}
-}
-
-// hasCourseStatus checks if user is enrolled in a course with a specific status.
-func hasCourseStatus(claims *auth.Claims, courseID uint64, status qf.Enrollment_UserStatus) bool {
-	currentStatus, ok := claims.Courses[courseID]
-	if ok && currentStatus == status {
-		return true
-	}
-	return false
-}
-
-// isCourseTeacher checks if the user is a teacher in the course in the CourseUserRequest.
-func isCourseTeacher(db database.Database, request *qf.CourseUserRequest, courses map[uint64]qf.Enrollment_UserStatus) error {
-	for courseID, status := range courses {
-		if status == qf.Enrollment_TEACHER {
-			course, err := db.GetCourse(courseID, false)
-			if err != nil {
-				return err
-			}
-			if course.GetCode() == request.GetCourseCode() && course.GetYear() == request.GetCourseYear() {
-				return nil
-			}
-		}
-	}
-	return fmt.Errorf("user is not teacher of the %s course", request.GetCourseCode())
 }

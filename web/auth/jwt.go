@@ -15,6 +15,10 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+type requestID interface {
+	IDFor(string) uint64
+}
+
 // Claims contain the bearer information.
 type Claims struct {
 	jwt.StandardClaims
@@ -171,4 +175,25 @@ func extractToken(meta metadata.MD) (string, error) {
 		}
 	}
 	return "", errors.New("failed to get authentication cookie from metadata")
+}
+
+// HasCourseStatus returns true if user has enrollment with given status in the course.
+func (c *Claims) HasCourseStatus(req requestID, status qf.Enrollment_UserStatus) bool {
+	courseID := req.IDFor("course")
+	return c.Courses[courseID] == status
+}
+
+func (c *Claims) IsCourseTeacher(db database.Database, req *qf.CourseUserRequest) error {
+	for courseID, status := range c.Courses {
+		if status == qf.Enrollment_TEACHER {
+			course, err := db.GetCourse(courseID, false)
+			if err != nil {
+				return err
+			}
+			if course.GetCode() == req.GetCourseCode() && course.GetYear() == req.GetCourseYear() {
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("user is not teacher of the %s course", req.GetCourseCode())
 }
