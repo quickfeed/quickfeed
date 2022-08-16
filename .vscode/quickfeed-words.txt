@@ -79,6 +79,7 @@ Isadmin
 isgrouplab
 itest
 jinzhu
+Jostein
 jsonpb
 JWTs
 keepalive
@@ -87,6 +88,7 @@ killall
 labstack
 Lamport
 letsencrypt
+Lindhom
 linuxbrew
 LOGDB
 logq
