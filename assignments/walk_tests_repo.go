@@ -83,6 +83,12 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 			if err := json.Unmarshal(contents, &benchmarks); err != nil {
 				return nil, "", fmt.Errorf("failed to unmarshal %q: %s", criteriaFile, err)
 			}
+			for _, bm := range benchmarks {
+				bm.CourseID = courseID
+				for _, c := range bm.Criteria {
+					c.CourseID = courseID
+				}
+			}
 			assignmentsMap[assignmentName].GradingBenchmarks = benchmarks
 
 		case scriptFile:
