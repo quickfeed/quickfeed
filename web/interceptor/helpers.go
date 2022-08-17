@@ -46,7 +46,7 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 }
 
 func has(method string) bool {
-	_, ok := access[method]
+	_, ok := accessRolesFor[method]
 	return ok
 }
 
@@ -58,7 +58,7 @@ func CheckAccessMethods(expectedMethodNames map[string]bool) error {
 			missingMethods = append(missingMethods, method)
 		}
 	}
-	for method := range access {
+	for method := range accessRolesFor {
 		if !expectedMethodNames[method] {
 			superfluousMethods = append(superfluousMethods, method)
 		}

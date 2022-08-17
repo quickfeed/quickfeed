@@ -36,7 +36,7 @@ const (
 )
 
 // If there are several roles that can call a method, a role with the least privilege must come first.
-var access = map[string]roles{
+var accessRolesFor = map[string]roles{
 	"GetUser":                 {none},
 	"GetCourse":               {none},
 	"GetCourses":              {none},
@@ -89,17 +89,12 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				method, reflect.TypeOf(request).String())
 			return nil, ErrAccessDenied
 		}
-		roles, ok := access[method]
-		if !ok {
-			logger.Errorf("No access roles defined for %s", method)
-			return nil, ErrAccessDenied
-		}
 		claims, err := tm.GetClaims(ctx)
 		if err != nil {
 			logger.Errorf("Access control: failed to get claims from request context: %v", err)
 			return handler(ctx, request)
 		}
-		for _, role := range roles {
+		for _, role := range accessRolesFor[method] {
 			switch role {
 			case none:
 				return handler(ctx, request)
@@ -175,7 +170,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				}
 			}
 		}
-		logger.Errorf("Access denied (%s), required roles %v, user claims %s", method, access[method], claims)
+		logger.Errorf("Access denied (%s), required roles %v, user claims %s", method, accessRolesFor[method], claims)
 		return nil, ErrAccessDenied
 	}
 }
