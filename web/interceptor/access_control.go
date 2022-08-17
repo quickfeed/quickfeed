@@ -127,13 +127,14 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				// Request for CreateGroup will not have ID yet, need to check
 				// if the user is in the group (unless teacher).
 				if method == "CreateGroup" {
-					if claims.HasCourseStatus(req, qf.Enrollment_TEACHER) ||
-						req.(*qf.Group).Contains(&qf.User{ID: claims.UserID}) {
-						return handler(ctx, request)
-					} else {
+					notMember := !req.(*qf.Group).Contains(&qf.User{ID: claims.UserID})
+					notTeacher := !claims.HasCourseStatus(req, qf.Enrollment_TEACHER)
+					if notMember && notTeacher {
 						logger.Errorf("AccessControl(%s): user %d tried to create group while not teacher or group member", method, claims.UserID)
 						return nil, ErrAccessDenied
 					}
+					// Otherwise, create the group.
+					return handler(ctx, request)
 				}
 				groupID := req.IDFor("group")
 				for _, group := range claims.Groups {
