@@ -99,7 +99,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 			case none:
 				return handler(ctx, request)
 			case user:
-				if req.IDFor("user") == claims.UserID {
+				if claims.SameUser(req) {
 					// Make sure the user is not updating own admin status.
 					if method == "UpdateUser" {
 						if req.(*qf.User).GetIsAdmin() && !claims.Admin {
@@ -114,7 +114,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				// GetSubmissions is used to fetch individual and group submissions.
 				// For individual submissions needs an extra check for user ID in request.
 				if method == "GetSubmissions" && req.IDFor("group") == 0 {
-					if claims.UserID != req.IDFor("user") {
+					if !claims.SameUser(req) {
 						logger.Errorf("AccessControl: ID mismatch for %s in claims (%s) and request (%s)",
 							method, claims.UserID, req.IDFor("user"))
 						return nil, ErrAccessDenied
