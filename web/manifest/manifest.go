@@ -6,10 +6,16 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/internal/env"
 )
+
+const defaultPath = "internal/config/github/quickfeed.pem"
+const clientID = "QUICKFEED_APP_ID"
+const clientSecret = "QUICKFEED_APP_KEY"
 
 type Manifest struct {
 	http.Server
@@ -68,12 +74,41 @@ func (m *Manifest) Conversion() http.HandlerFunc {
 			fmt.Fprintf(w, "Error: %s", err)
 			return
 		}
+		// GitHub returns 201 Created on success
 		if resp.StatusCode != http.StatusCreated {
 			w.WriteHeader(resp.StatusCode)
 			fmt.Fprintf(w, "Error: %s", resp.Status)
 			return
 		}
-		env.Save("", *config.PEM, *config.ClientID)
+
+		// Save PEM file to default location
+		if err := os.MkdirAll(filepath.Dir(defaultPath), 0700); err != nil {
+			fmt.Println("Failed to create directory:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error: %s", err)
+			return
+		}
+
+		// Write PEM file
+		if err := os.WriteFile(defaultPath, []byte(*config.PEM), 0644); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error: %s", err)
+			return
+		}
+
+		// Save the application configuration to file
+		quickfeedRoot := os.Getenv("QUICKFEED")
+		env.Save("", clientSecret, filepath.Join(quickfeedRoot, defaultPath), clientID, *config.ClientID)
+
+		// Refresh enviroment variables
+		if err := env.Load(""); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error: %s", err)
+			return
+		}
+
+		// Print success message
+		fmt.Fprintf(w, "Successfully created app")
 	}
 }
 

@@ -2,12 +2,11 @@ package env
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/quickfeed/quickfeed/kit/sh"
@@ -72,36 +71,38 @@ func open(filename string, write bool) (*os.File, error) {
 	return os.Open(filename)
 }
 
-func Save(filename, key, id string) {
-	file, err := open(filename, true)
-	if err != nil {
-		log.Fatalf("Failed to open %s: %v", filename, err)
+func Save(filename string, kv ...string) {
+	if len(kv)%2 != 0 {
+		log.Fatalf("Save: invalid number of arguments: %d", len(kv))
 	}
-	defer file.Close()
 
-	// Replace lines with new values.
-	content, err := ioutil.ReadFile(file.Name())
+	content, err := os.ReadFile(dotEnvPath)
 	if err != nil {
-		log.Fatalf("Failed to read %s: %v", file.Name(), err)
+		log.Fatalf("Failed to read %s: %v", dotEnvPath, err)
 	}
-	lines := strings.Split(string(content), "\n")
-	for i, line := range lines {
-		if strings.HasPrefix(line, "QUICKFEED_APP_ID") || strings.HasPrefix(line, "QUICKFEED_APP_KEY") {
-			lines[i] = ""
+	for i := 0; i < len(kv); i += 2 {
+		// Regexp to match key=value lines.
+		re := regexp.MustCompile(fmt.Sprintf("(?m)^%s=.*$", kv[i]))
+		key := kv[i]
+		val := kv[i+1]
+		if re.Match(content) {
+			fmt.Println("Match")
 		}
-	}
-	lines = append(lines, fmt.Sprintf("QUICKFEED_APP_ID=%s", id))
-	lines = append(lines, fmt.Sprintf("QUICKFEED_APP_KEY=%s", filepath.Join(quickfeedRoot, defaultKeyPath)))
-	if _, err := os.Stat(defaultKeyPath); errors.Is(err, os.ErrNotExist) {
-		if err := os.MkdirAll(filepath.Dir(defaultKeyPath), 0755); err != nil {
-			log.Fatalf("Failed to create directory for %s: %v", defaultKeyPath, err)
+		if strings.Contains(string(content), key) {
+			fmt.Println("Replacing", key, "with", val)
+			// replace existing previous value
+			fmt.Println(re.Match(content))
+			content = re.ReplaceAll(content, []byte(key+"="+val+"\n"))
+			continue
 		}
+		// append new value
+		content = append(content, []byte("\n"+key+"="+val)...)
 	}
-	if err := os.WriteFile(defaultKeyPath, []byte(key), 0644); err != nil {
-		log.Fatalf("Failed to write %s: %v", filepath.Join(quickfeedRoot, defaultKeyPath), err)
+	if err := os.Rename(dotEnvPath, dotEnvPath+".bak"); err != nil {
+		log.Fatalf("Failed to rename %s: %v", dotEnvPath, err)
 	}
-	if err := os.WriteFile(".env", []byte(strings.Join(lines, "\n")), 0644); err != nil {
-		log.Fatalf("Failed to write %s: %v", file.Name(), err)
+	if err := os.WriteFile(dotEnvPath, content, 0644); err != nil {
+		log.Fatalf("Failed to write %s: %v", dotEnvPath, err)
 	}
 }
 
