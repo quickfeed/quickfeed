@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	bufSize = 1024 * 1024
+	BufSize = 1024 * 1024
 )
 
 type accessTests []struct {
@@ -56,7 +56,7 @@ func TestAccessControl(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lis := bufconn.Listen(bufSize)
+	lis := bufconn.Listen(BufSize)
 	bufDialer := func(context.Context, string) (net.Conn, error) {
 		return lis.Dial()
 	}

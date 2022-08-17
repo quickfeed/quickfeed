@@ -34,10 +34,6 @@ func TestUserVerifier(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	const (
-		bufSize = 1024 * 1024
-	)
-
 	adminUser := qtest.CreateFakeUser(t, db, 1)
 	student := qtest.CreateFakeUser(t, db, 56)
 
@@ -50,7 +46,7 @@ func TestUserVerifier(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lis := bufconn.Listen(bufSize)
+	lis := bufconn.Listen(BufSize)
 	bufDialer := func(context.Context, string) (net.Conn, error) {
 		return lis.Dial()
 	}

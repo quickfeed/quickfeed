@@ -2,6 +2,7 @@ package interceptor
 
 import (
 	"context"
+	"log"
 	"strings"
 
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -60,6 +61,8 @@ func TokenRefresher(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.Unary
 		method := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
 		if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
 			if msg, ok := req.(userIDs); ok {
+				log.Println("REFRESHER: ", method) // tmp
+
 				if err := tokenUpdateFn(ctx, tm, msg); err != nil {
 					logger.Error(err)
 				}
