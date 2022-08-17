@@ -118,12 +118,12 @@ func (db *GormDB) GetSubmission(query *qf.Submission) (*qf.Submission, error) {
 	if err := db.conn.Preload("Reviews").
 		Preload("BuildInfo").
 		Preload("Scores").
+		Preload("Grades").
 		Preload("Reviews.GradingBenchmarks").
 		Preload("Reviews.GradingBenchmarks.Criteria").
 		Where(query).Last(&submission).Error; err != nil {
 		return nil, err
 	}
-
 	return &submission, nil
 }
 
