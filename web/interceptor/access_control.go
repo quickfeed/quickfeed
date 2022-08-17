@@ -2,7 +2,6 @@ package interceptor
 
 import (
 	"context"
-	"reflect"
 	"strings"
 
 	"github.com/quickfeed/quickfeed/qf"
@@ -85,8 +84,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 		req, ok := request.(requestID)
 		// The GetUserByCourse method sends a CourseUserRequest which has no IDs and needs a database query.
 		if !ok {
-			logger.Errorf("%s failed: message type '%s' does not implement IDFor interface",
-				method, reflect.TypeOf(request).String())
+			logger.Errorf("%s failed: message type %T does not implement IDFor interface", method, request)
 			return nil, ErrAccessDenied
 		}
 		claims, err := tm.GetClaims(ctx)
