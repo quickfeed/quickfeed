@@ -206,7 +206,7 @@ func (c *Claims) SameUser(req requestID) bool {
 func (c *Claims) String() string {
 	admin := ""
 	if c.Admin {
-		admin = "admin"
+		admin = " (admin)"
 	}
-	return fmt.Sprintf("UserID: %d (%s)\n Courses: %v\n Groups: %v\n", c.UserID, admin, c.Courses, c.Groups)
+	return fmt.Sprintf("UserID: %d%s: Courses: %v, Groups: %v", c.UserID, admin, c.Courses, c.Groups)
 }
