@@ -195,9 +195,13 @@ func (c *Claims) IsCourseTeacher(db database.Database, req *qf.CourseUserRequest
 			}
 		}
 	}
-	return fmt.Errorf("user is not teacher of the %s course", req.GetCourseCode())
+	return fmt.Errorf("user %d is not teacher of the %s course", c.UserID, req.GetCourseCode())
 }
 
 func (c *Claims) String() string {
-	return fmt.Sprintf("User ID: %d\n Admin status: %v\n Courses: %v\n Groups: %v\n", c.UserID, c.Admin, c.Courses, c.Groups)
+	admin := ""
+	if c.Admin {
+		admin = "admin"
+	}
+	return fmt.Sprintf("UserID: %d (%s)\n Courses: %v\n Groups: %v\n", c.UserID, admin, c.Courses, c.Groups)
 }
