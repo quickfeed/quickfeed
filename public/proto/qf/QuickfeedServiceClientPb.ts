@@ -36,7 +36,7 @@ export class QuickFeedServiceClient {
     this.options_ = options;
   }
 
-  methodInfoGetUser = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetUser = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetUser',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.Void,
@@ -68,7 +68,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetUser',
         request,
         metadata || {},
-        this.methodInfoGetUser,
+        this.methodDescriptorGetUser,
         callback);
     }
     return this.client_.unaryCall(
@@ -76,10 +76,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetUser',
     request,
     metadata || {},
-    this.methodInfoGetUser);
+    this.methodDescriptorGetUser);
   }
 
-  methodInfoGetUsers = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetUsers = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetUsers',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.Void,
@@ -111,7 +111,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetUsers',
         request,
         metadata || {},
-        this.methodInfoGetUsers,
+        this.methodDescriptorGetUsers,
         callback);
     }
     return this.client_.unaryCall(
@@ -119,10 +119,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetUsers',
     request,
     metadata || {},
-    this.methodInfoGetUsers);
+    this.methodDescriptorGetUsers);
   }
 
-  methodInfoGetUserByCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetUserByCourse = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetUserByCourse',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.CourseUserRequest,
@@ -154,7 +154,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetUserByCourse',
         request,
         metadata || {},
-        this.methodInfoGetUserByCourse,
+        this.methodDescriptorGetUserByCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -162,10 +162,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetUserByCourse',
     request,
     metadata || {},
-    this.methodInfoGetUserByCourse);
+    this.methodDescriptorGetUserByCourse);
   }
 
-  methodInfoUpdateUser = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateUser = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/UpdateUser',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.User,
@@ -197,7 +197,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/UpdateUser',
         request,
         metadata || {},
-        this.methodInfoUpdateUser,
+        this.methodDescriptorUpdateUser,
         callback);
     }
     return this.client_.unaryCall(
@@ -205,10 +205,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/UpdateUser',
     request,
     metadata || {},
-    this.methodInfoUpdateUser);
+    this.methodDescriptorUpdateUser);
   }
 
-  methodInfoGetGroup = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetGroup = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetGroup',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.GetGroupRequest,
@@ -240,7 +240,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetGroup',
         request,
         metadata || {},
-        this.methodInfoGetGroup,
+        this.methodDescriptorGetGroup,
         callback);
     }
     return this.client_.unaryCall(
@@ -248,10 +248,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetGroup',
     request,
     metadata || {},
-    this.methodInfoGetGroup);
+    this.methodDescriptorGetGroup);
   }
 
-  methodInfoGetGroupByUserAndCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetGroupByUserAndCourse = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetGroupByUserAndCourse',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.GroupRequest,
@@ -283,7 +283,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetGroupByUserAndCourse',
         request,
         metadata || {},
-        this.methodInfoGetGroupByUserAndCourse,
+        this.methodDescriptorGetGroupByUserAndCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -291,10 +291,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetGroupByUserAndCourse',
     request,
     metadata || {},
-    this.methodInfoGetGroupByUserAndCourse);
+    this.methodDescriptorGetGroupByUserAndCourse);
   }
 
-  methodInfoGetGroupsByCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetGroupsByCourse = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetGroupsByCourse',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.CourseRequest,
@@ -326,7 +326,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetGroupsByCourse',
         request,
         metadata || {},
-        this.methodInfoGetGroupsByCourse,
+        this.methodDescriptorGetGroupsByCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -334,10 +334,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetGroupsByCourse',
     request,
     metadata || {},
-    this.methodInfoGetGroupsByCourse);
+    this.methodDescriptorGetGroupsByCourse);
   }
 
-  methodInfoCreateGroup = new grpcWeb.MethodDescriptor(
+  methodDescriptorCreateGroup = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/CreateGroup',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.Group,
@@ -369,7 +369,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/CreateGroup',
         request,
         metadata || {},
-        this.methodInfoCreateGroup,
+        this.methodDescriptorCreateGroup,
         callback);
     }
     return this.client_.unaryCall(
@@ -377,10 +377,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/CreateGroup',
     request,
     metadata || {},
-    this.methodInfoCreateGroup);
+    this.methodDescriptorCreateGroup);
   }
 
-  methodInfoUpdateGroup = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateGroup = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/UpdateGroup',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.Group,
@@ -412,7 +412,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/UpdateGroup',
         request,
         metadata || {},
-        this.methodInfoUpdateGroup,
+        this.methodDescriptorUpdateGroup,
         callback);
     }
     return this.client_.unaryCall(
@@ -420,10 +420,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/UpdateGroup',
     request,
     metadata || {},
-    this.methodInfoUpdateGroup);
+    this.methodDescriptorUpdateGroup);
   }
 
-  methodInfoDeleteGroup = new grpcWeb.MethodDescriptor(
+  methodDescriptorDeleteGroup = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/DeleteGroup',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.GroupRequest,
@@ -455,7 +455,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/DeleteGroup',
         request,
         metadata || {},
-        this.methodInfoDeleteGroup,
+        this.methodDescriptorDeleteGroup,
         callback);
     }
     return this.client_.unaryCall(
@@ -463,10 +463,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/DeleteGroup',
     request,
     metadata || {},
-    this.methodInfoDeleteGroup);
+    this.methodDescriptorDeleteGroup);
   }
 
-  methodInfoGetCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetCourse = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetCourse',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.CourseRequest,
@@ -498,7 +498,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetCourse',
         request,
         metadata || {},
-        this.methodInfoGetCourse,
+        this.methodDescriptorGetCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -506,10 +506,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetCourse',
     request,
     metadata || {},
-    this.methodInfoGetCourse);
+    this.methodDescriptorGetCourse);
   }
 
-  methodInfoGetCourses = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetCourses = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetCourses',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.Void,
@@ -541,7 +541,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetCourses',
         request,
         metadata || {},
-        this.methodInfoGetCourses,
+        this.methodDescriptorGetCourses,
         callback);
     }
     return this.client_.unaryCall(
@@ -549,10 +549,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetCourses',
     request,
     metadata || {},
-    this.methodInfoGetCourses);
+    this.methodDescriptorGetCourses);
   }
 
-  methodInfoGetCoursesByUser = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetCoursesByUser = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetCoursesByUser',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.EnrollmentStatusRequest,
@@ -584,7 +584,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetCoursesByUser',
         request,
         metadata || {},
-        this.methodInfoGetCoursesByUser,
+        this.methodDescriptorGetCoursesByUser,
         callback);
     }
     return this.client_.unaryCall(
@@ -592,10 +592,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetCoursesByUser',
     request,
     metadata || {},
-    this.methodInfoGetCoursesByUser);
+    this.methodDescriptorGetCoursesByUser);
   }
 
-  methodInfoCreateCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorCreateCourse = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/CreateCourse',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.Course,
@@ -627,7 +627,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/CreateCourse',
         request,
         metadata || {},
-        this.methodInfoCreateCourse,
+        this.methodDescriptorCreateCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -635,10 +635,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/CreateCourse',
     request,
     metadata || {},
-    this.methodInfoCreateCourse);
+    this.methodDescriptorCreateCourse);
   }
 
-  methodInfoUpdateCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateCourse = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/UpdateCourse',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.Course,
@@ -670,7 +670,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/UpdateCourse',
         request,
         metadata || {},
-        this.methodInfoUpdateCourse,
+        this.methodDescriptorUpdateCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -678,10 +678,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/UpdateCourse',
     request,
     metadata || {},
-    this.methodInfoUpdateCourse);
+    this.methodDescriptorUpdateCourse);
   }
 
-  methodInfoUpdateCourseVisibility = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateCourseVisibility = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/UpdateCourseVisibility',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.Enrollment,
@@ -713,7 +713,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/UpdateCourseVisibility',
         request,
         metadata || {},
-        this.methodInfoUpdateCourseVisibility,
+        this.methodDescriptorUpdateCourseVisibility,
         callback);
     }
     return this.client_.unaryCall(
@@ -721,10 +721,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/UpdateCourseVisibility',
     request,
     metadata || {},
-    this.methodInfoUpdateCourseVisibility);
+    this.methodDescriptorUpdateCourseVisibility);
   }
 
-  methodInfoGetAssignments = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetAssignments = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetAssignments',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.CourseRequest,
@@ -756,7 +756,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetAssignments',
         request,
         metadata || {},
-        this.methodInfoGetAssignments,
+        this.methodDescriptorGetAssignments,
         callback);
     }
     return this.client_.unaryCall(
@@ -764,10 +764,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetAssignments',
     request,
     metadata || {},
-    this.methodInfoGetAssignments);
+    this.methodDescriptorGetAssignments);
   }
 
-  methodInfoUpdateAssignments = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateAssignments = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/UpdateAssignments',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.CourseRequest,
@@ -799,7 +799,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/UpdateAssignments',
         request,
         metadata || {},
-        this.methodInfoUpdateAssignments,
+        this.methodDescriptorUpdateAssignments,
         callback);
     }
     return this.client_.unaryCall(
@@ -807,10 +807,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/UpdateAssignments',
     request,
     metadata || {},
-    this.methodInfoUpdateAssignments);
+    this.methodDescriptorUpdateAssignments);
   }
 
-  methodInfoGetEnrollmentsByUser = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetEnrollmentsByUser = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetEnrollmentsByUser',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.EnrollmentStatusRequest,
@@ -842,7 +842,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetEnrollmentsByUser',
         request,
         metadata || {},
-        this.methodInfoGetEnrollmentsByUser,
+        this.methodDescriptorGetEnrollmentsByUser,
         callback);
     }
     return this.client_.unaryCall(
@@ -850,10 +850,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetEnrollmentsByUser',
     request,
     metadata || {},
-    this.methodInfoGetEnrollmentsByUser);
+    this.methodDescriptorGetEnrollmentsByUser);
   }
 
-  methodInfoGetEnrollmentsByCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetEnrollmentsByCourse = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetEnrollmentsByCourse',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.EnrollmentRequest,
@@ -885,7 +885,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetEnrollmentsByCourse',
         request,
         metadata || {},
-        this.methodInfoGetEnrollmentsByCourse,
+        this.methodDescriptorGetEnrollmentsByCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -893,10 +893,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetEnrollmentsByCourse',
     request,
     metadata || {},
-    this.methodInfoGetEnrollmentsByCourse);
+    this.methodDescriptorGetEnrollmentsByCourse);
   }
 
-  methodInfoCreateEnrollment = new grpcWeb.MethodDescriptor(
+  methodDescriptorCreateEnrollment = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/CreateEnrollment',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.Enrollment,
@@ -928,7 +928,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/CreateEnrollment',
         request,
         metadata || {},
-        this.methodInfoCreateEnrollment,
+        this.methodDescriptorCreateEnrollment,
         callback);
     }
     return this.client_.unaryCall(
@@ -936,10 +936,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/CreateEnrollment',
     request,
     metadata || {},
-    this.methodInfoCreateEnrollment);
+    this.methodDescriptorCreateEnrollment);
   }
 
-  methodInfoUpdateEnrollments = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateEnrollments = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/UpdateEnrollments',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.Enrollments,
@@ -971,7 +971,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/UpdateEnrollments',
         request,
         metadata || {},
-        this.methodInfoUpdateEnrollments,
+        this.methodDescriptorUpdateEnrollments,
         callback);
     }
     return this.client_.unaryCall(
@@ -979,10 +979,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/UpdateEnrollments',
     request,
     metadata || {},
-    this.methodInfoUpdateEnrollments);
+    this.methodDescriptorUpdateEnrollments);
   }
 
-  methodInfoGetSubmissions = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetSubmissions = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetSubmissions',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.SubmissionRequest,
@@ -1014,7 +1014,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetSubmissions',
         request,
         metadata || {},
-        this.methodInfoGetSubmissions,
+        this.methodDescriptorGetSubmissions,
         callback);
     }
     return this.client_.unaryCall(
@@ -1022,10 +1022,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetSubmissions',
     request,
     metadata || {},
-    this.methodInfoGetSubmissions);
+    this.methodDescriptorGetSubmissions);
   }
 
-  methodInfoGetSubmissionsByCourse = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetSubmissionsByCourse = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetSubmissionsByCourse',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.SubmissionsForCourseRequest,
@@ -1057,7 +1057,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetSubmissionsByCourse',
         request,
         metadata || {},
-        this.methodInfoGetSubmissionsByCourse,
+        this.methodDescriptorGetSubmissionsByCourse,
         callback);
     }
     return this.client_.unaryCall(
@@ -1065,10 +1065,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetSubmissionsByCourse',
     request,
     metadata || {},
-    this.methodInfoGetSubmissionsByCourse);
+    this.methodDescriptorGetSubmissionsByCourse);
   }
 
-  methodInfoUpdateSubmission = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateSubmission = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/UpdateSubmission',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.UpdateSubmissionRequest,
@@ -1100,7 +1100,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/UpdateSubmission',
         request,
         metadata || {},
-        this.methodInfoUpdateSubmission,
+        this.methodDescriptorUpdateSubmission,
         callback);
     }
     return this.client_.unaryCall(
@@ -1108,10 +1108,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/UpdateSubmission',
     request,
     metadata || {},
-    this.methodInfoUpdateSubmission);
+    this.methodDescriptorUpdateSubmission);
   }
 
-  methodInfoUpdateSubmissions = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateSubmissions = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/UpdateSubmissions',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.UpdateSubmissionsRequest,
@@ -1143,7 +1143,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/UpdateSubmissions',
         request,
         metadata || {},
-        this.methodInfoUpdateSubmissions,
+        this.methodDescriptorUpdateSubmissions,
         callback);
     }
     return this.client_.unaryCall(
@@ -1151,10 +1151,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/UpdateSubmissions',
     request,
     metadata || {},
-    this.methodInfoUpdateSubmissions);
+    this.methodDescriptorUpdateSubmissions);
   }
 
-  methodInfoRebuildSubmissions = new grpcWeb.MethodDescriptor(
+  methodDescriptorRebuildSubmissions = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/RebuildSubmissions',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.RebuildRequest,
@@ -1186,7 +1186,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/RebuildSubmissions',
         request,
         metadata || {},
-        this.methodInfoRebuildSubmissions,
+        this.methodDescriptorRebuildSubmissions,
         callback);
     }
     return this.client_.unaryCall(
@@ -1194,10 +1194,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/RebuildSubmissions',
     request,
     metadata || {},
-    this.methodInfoRebuildSubmissions);
+    this.methodDescriptorRebuildSubmissions);
   }
 
-  methodInfoCreateBenchmark = new grpcWeb.MethodDescriptor(
+  methodDescriptorCreateBenchmark = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/CreateBenchmark',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.GradingBenchmark,
@@ -1229,7 +1229,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/CreateBenchmark',
         request,
         metadata || {},
-        this.methodInfoCreateBenchmark,
+        this.methodDescriptorCreateBenchmark,
         callback);
     }
     return this.client_.unaryCall(
@@ -1237,10 +1237,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/CreateBenchmark',
     request,
     metadata || {},
-    this.methodInfoCreateBenchmark);
+    this.methodDescriptorCreateBenchmark);
   }
 
-  methodInfoUpdateBenchmark = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateBenchmark = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/UpdateBenchmark',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.GradingBenchmark,
@@ -1272,7 +1272,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/UpdateBenchmark',
         request,
         metadata || {},
-        this.methodInfoUpdateBenchmark,
+        this.methodDescriptorUpdateBenchmark,
         callback);
     }
     return this.client_.unaryCall(
@@ -1280,10 +1280,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/UpdateBenchmark',
     request,
     metadata || {},
-    this.methodInfoUpdateBenchmark);
+    this.methodDescriptorUpdateBenchmark);
   }
 
-  methodInfoDeleteBenchmark = new grpcWeb.MethodDescriptor(
+  methodDescriptorDeleteBenchmark = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/DeleteBenchmark',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.GradingBenchmark,
@@ -1315,7 +1315,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/DeleteBenchmark',
         request,
         metadata || {},
-        this.methodInfoDeleteBenchmark,
+        this.methodDescriptorDeleteBenchmark,
         callback);
     }
     return this.client_.unaryCall(
@@ -1323,10 +1323,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/DeleteBenchmark',
     request,
     metadata || {},
-    this.methodInfoDeleteBenchmark);
+    this.methodDescriptorDeleteBenchmark);
   }
 
-  methodInfoCreateCriterion = new grpcWeb.MethodDescriptor(
+  methodDescriptorCreateCriterion = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/CreateCriterion',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.GradingCriterion,
@@ -1358,7 +1358,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/CreateCriterion',
         request,
         metadata || {},
-        this.methodInfoCreateCriterion,
+        this.methodDescriptorCreateCriterion,
         callback);
     }
     return this.client_.unaryCall(
@@ -1366,10 +1366,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/CreateCriterion',
     request,
     metadata || {},
-    this.methodInfoCreateCriterion);
+    this.methodDescriptorCreateCriterion);
   }
 
-  methodInfoUpdateCriterion = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateCriterion = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/UpdateCriterion',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.GradingCriterion,
@@ -1401,7 +1401,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/UpdateCriterion',
         request,
         metadata || {},
-        this.methodInfoUpdateCriterion,
+        this.methodDescriptorUpdateCriterion,
         callback);
     }
     return this.client_.unaryCall(
@@ -1409,10 +1409,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/UpdateCriterion',
     request,
     metadata || {},
-    this.methodInfoUpdateCriterion);
+    this.methodDescriptorUpdateCriterion);
   }
 
-  methodInfoDeleteCriterion = new grpcWeb.MethodDescriptor(
+  methodDescriptorDeleteCriterion = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/DeleteCriterion',
     grpcWeb.MethodType.UNARY,
     qf_types_pb.GradingCriterion,
@@ -1444,7 +1444,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/DeleteCriterion',
         request,
         metadata || {},
-        this.methodInfoDeleteCriterion,
+        this.methodDescriptorDeleteCriterion,
         callback);
     }
     return this.client_.unaryCall(
@@ -1452,10 +1452,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/DeleteCriterion',
     request,
     metadata || {},
-    this.methodInfoDeleteCriterion);
+    this.methodDescriptorDeleteCriterion);
   }
 
-  methodInfoCreateReview = new grpcWeb.MethodDescriptor(
+  methodDescriptorCreateReview = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/CreateReview',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.ReviewRequest,
@@ -1487,7 +1487,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/CreateReview',
         request,
         metadata || {},
-        this.methodInfoCreateReview,
+        this.methodDescriptorCreateReview,
         callback);
     }
     return this.client_.unaryCall(
@@ -1495,10 +1495,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/CreateReview',
     request,
     metadata || {},
-    this.methodInfoCreateReview);
+    this.methodDescriptorCreateReview);
   }
 
-  methodInfoUpdateReview = new grpcWeb.MethodDescriptor(
+  methodDescriptorUpdateReview = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/UpdateReview',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.ReviewRequest,
@@ -1530,7 +1530,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/UpdateReview',
         request,
         metadata || {},
-        this.methodInfoUpdateReview,
+        this.methodDescriptorUpdateReview,
         callback);
     }
     return this.client_.unaryCall(
@@ -1538,10 +1538,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/UpdateReview',
     request,
     metadata || {},
-    this.methodInfoUpdateReview);
+    this.methodDescriptorUpdateReview);
   }
 
-  methodInfoGetReviewers = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetReviewers = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetReviewers',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.SubmissionReviewersRequest,
@@ -1573,7 +1573,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetReviewers',
         request,
         metadata || {},
-        this.methodInfoGetReviewers,
+        this.methodDescriptorGetReviewers,
         callback);
     }
     return this.client_.unaryCall(
@@ -1581,10 +1581,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetReviewers',
     request,
     metadata || {},
-    this.methodInfoGetReviewers);
+    this.methodDescriptorGetReviewers);
   }
 
-  methodInfoGetOrganization = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetOrganization = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetOrganization',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.OrgRequest,
@@ -1616,7 +1616,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetOrganization',
         request,
         metadata || {},
-        this.methodInfoGetOrganization,
+        this.methodDescriptorGetOrganization,
         callback);
     }
     return this.client_.unaryCall(
@@ -1624,10 +1624,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetOrganization',
     request,
     metadata || {},
-    this.methodInfoGetOrganization);
+    this.methodDescriptorGetOrganization);
   }
 
-  methodInfoGetRepositories = new grpcWeb.MethodDescriptor(
+  methodDescriptorGetRepositories = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetRepositories',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.URLRequest,
@@ -1659,7 +1659,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/GetRepositories',
         request,
         metadata || {},
-        this.methodInfoGetRepositories,
+        this.methodDescriptorGetRepositories,
         callback);
     }
     return this.client_.unaryCall(
@@ -1667,10 +1667,10 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/GetRepositories',
     request,
     metadata || {},
-    this.methodInfoGetRepositories);
+    this.methodDescriptorGetRepositories);
   }
 
-  methodInfoIsEmptyRepo = new grpcWeb.MethodDescriptor(
+  methodDescriptorIsEmptyRepo = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/IsEmptyRepo',
     grpcWeb.MethodType.UNARY,
     qf_requests_pb.RepositoryRequest,
@@ -1702,7 +1702,7 @@ export class QuickFeedServiceClient {
           '/qf.QuickFeedService/IsEmptyRepo',
         request,
         metadata || {},
-        this.methodInfoIsEmptyRepo,
+        this.methodDescriptorIsEmptyRepo,
         callback);
     }
     return this.client_.unaryCall(
@@ -1710,7 +1710,7 @@ export class QuickFeedServiceClient {
       '/qf.QuickFeedService/IsEmptyRepo',
     request,
     metadata || {},
-    this.methodInfoIsEmptyRepo);
+    this.methodDescriptorIsEmptyRepo);
   }
 
 }
