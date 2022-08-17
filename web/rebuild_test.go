@@ -174,14 +174,9 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 		t.Fatalf("Failed to get created submissions: %s", err)
 	}
 
-	// make sure wrong course ID returns error
-	var request qf.RebuildRequest
-	request.SetCourseID(15)
-	if _, err = q.RebuildSubmissions(ctx, &request); err == nil {
-		t.Fatal("Expected error: record not found")
-	}
-
 	// make sure wrong assignment ID returns error
+	var request qf.RebuildRequest
+
 	request.SetCourseID(course.ID)
 	request.AssignmentID = 1337
 	if _, err = q.RebuildSubmissions(ctx, &request); err == nil {
@@ -198,11 +193,5 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	}
 	if len(submissions) != len(rebuiltSubmissions) {
 		t.Errorf("Incorrect number of submissions after rebuild: expected %d, got %d", len(submissions), len(rebuiltSubmissions))
-	}
-
-	// check access control
-	ctx = qtest.WithUserContext(ctx, student1)
-	if _, err = q.RebuildSubmissions(ctx, &request); err == nil {
-		t.Fatal("Expected error: authentication failed")
 	}
 }
