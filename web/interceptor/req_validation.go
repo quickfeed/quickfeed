@@ -2,7 +2,6 @@ package interceptor
 
 import (
 	"context"
-	"reflect"
 	"time"
 
 	"go.uber.org/zap"
@@ -51,8 +50,7 @@ func validate(logger *zap.Logger, req interface{}) error {
 		}
 	} else {
 		// just logging, but still handling the call
-		logger.Sugar().Debugf("message type '%s' does not implement validator interface",
-			reflect.TypeOf(req).String())
+		logger.Sugar().Debugf("message type %T does not implement validator interface", req)
 	}
 	return nil
 }
