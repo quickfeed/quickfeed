@@ -91,7 +91,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 		}
 		claims, err := tm.GetClaims(ctx)
 		if err != nil {
-			logger.Errorf("Access control: failed to get claims from request context: %v", err)
+			logger.Errorf("AccessControl(%s): failed to get claims from request context: %v", method, err)
 			return handler(ctx, request)
 		}
 		for _, role := range accessRolesFor[method] {
@@ -103,8 +103,8 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 					// Make sure the user is not updating own admin status.
 					if method == "UpdateUser" {
 						if req.(*qf.User).GetIsAdmin() && !claims.Admin {
-							logger.Errorf("Access control: user %d attempted to change admin status from %v to %v",
-								claims.UserID, claims.Admin, req.(*qf.User).GetIsAdmin())
+							logger.Errorf("AccessControl(%s): user %d attempted to change admin status from %v to %v",
+								method, claims.UserID, claims.Admin, req.(*qf.User).GetIsAdmin())
 							return nil, ErrAccessDenied
 						}
 					}
@@ -115,7 +115,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				// For individual submissions needs an extra check for user ID in request.
 				if method == "GetSubmissions" && req.IDFor("group") == 0 {
 					if !claims.SameUser(req) {
-						logger.Errorf("AccessControl: ID mismatch for %s in claims (%s) and request (%s)",
+						logger.Errorf("AccessControl(%s): ID mismatch in claims (%s) and request (%s)",
 							method, claims.UserID, req.IDFor("user"))
 						return nil, ErrAccessDenied
 					}
@@ -131,7 +131,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 						req.(*qf.Group).Contains(&qf.User{ID: claims.UserID}) {
 						return handler(ctx, request)
 					} else {
-						logger.Errorf("AccessControl: user %d creates a new group while not teacher or group member")
+						logger.Errorf("AccessControl(%s): user %d tried to create group while not teacher or group member", method, claims.UserID)
 						return nil, ErrAccessDenied
 					}
 				}
@@ -144,7 +144,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 			case teacher:
 				if method == "GetUserByCourse" {
 					if err := claims.IsCourseTeacher(tm.Database(), request.(*qf.CourseUserRequest)); err != nil {
-						logger.Errorf("AccessControl: %v", err)
+						logger.Errorf("AccessControl(%s): %v", method, err)
 						return nil, ErrAccessDenied
 					}
 					return handler(ctx, request)
@@ -156,7 +156,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				if claims.Admin {
 					if method == "GetUserByCourse" {
 						if err := claims.IsCourseTeacher(tm.Database(), request.(*qf.CourseUserRequest)); err != nil {
-							logger.Errorf("AccessControl: %v", err)
+							logger.Errorf("AccessControl(%s): %v", method, err)
 							return nil, ErrAccessDenied
 						}
 						return handler(ctx, request)
@@ -171,7 +171,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				}
 			}
 		}
-		logger.Errorf("Access denied (%s), required roles %v, user claims %s", method, accessRolesFor[method], claims)
+		logger.Errorf("AccessDenied(%s): required roles %v not satisfied by claims: %s", method, accessRolesFor[method], claims)
 		return nil, ErrAccessDenied
 	}
 }
