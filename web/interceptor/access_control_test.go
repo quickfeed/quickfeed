@@ -135,7 +135,7 @@ func TestAccessControl(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		return qtest.WithAuthCookie(ctx, token.Value)
+		return qtest.WithAuthCookie(ctx, interceptor.AuthTokenString(token.Value))
 	}
 	courseAdminContext := f(t, courseAdmin.ID)
 	groupStudentContext := f(t, groupStudent.ID)

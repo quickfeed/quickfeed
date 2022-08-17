@@ -196,7 +196,7 @@ func WithUserContext(ctx context.Context, user *qf.User) context.Context {
 // WithAuthCookie returns context containing an authentication cookie with JWT.
 func WithAuthCookie(ctx context.Context, token string) context.Context {
 	meta := metadata.MD{}
-	meta.Set(auth.Cookie, auth.CookieName+"="+token)
+	meta.Set(auth.Cookie, token)
 	return metadata.NewOutgoingContext(ctx, meta)
 }
 

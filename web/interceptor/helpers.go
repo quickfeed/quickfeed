@@ -19,6 +19,11 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 		logger.Errorf("Failed to extract claims from JWT: %v", err)
 		return nil, ErrInvalidAuthCookie
 	}
+	meta, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		logger.Error("Failed to extract metadata")
+		return nil, ErrContextMetadata
+	}
 	if tm.UpdateRequired(claims) {
 		logger.Debug("Updating token for user ", claims.UserID)
 		updatedToken, err := tm.NewAuthCookie(claims.UserID)
@@ -34,12 +39,7 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 			logger.Errorf("Failed to set grpc header: %v", err)
 			return nil, ErrInvalidAuthCookie
 		}
-
-	}
-	meta, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		logger.Error("Failed to extract metadata")
-		return nil, ErrContextMetadata
+		meta = metadata.New(map[string]string{auth.Cookie: AuthTokenString(updatedToken.Value)})
 	}
 	meta.Set(auth.UserKey, strconv.FormatUint(claims.UserID, 10))
 	return metadata.NewIncomingContext(ctx, meta), nil
@@ -70,4 +70,9 @@ func CheckAccessMethods(expectedMethodNames map[string]bool) error {
 		return fmt.Errorf("superfluous method(s) in access control table: %v", superfluousMethods)
 	}
 	return nil
+}
+
+// AuthTokenString returns a string with JWT with correct format ("auth=JWT").
+func AuthTokenString(token string) string {
+	return auth.CookieName + "=" + token
 }
