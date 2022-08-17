@@ -156,7 +156,7 @@ func TestAccessControl(t *testing.T) {
 		{"correct user ID", userContext, user.ID, course.ID, 0, true},
 		{"incorrect user ID", userContext, groupStudent.ID, course.ID, 0, false},
 	}
-	testUserAccess(client, t, course, userAccessTests)
+	testUserAccess(client, t, userAccessTests)
 
 	studentAccessTests := accessTests{
 		{"course admin", courseAdminContext, courseAdmin.ID, course.ID, 0, true},
@@ -216,6 +216,39 @@ func TestAccessControl(t *testing.T) {
 		_, err := client.CreateGroup(testCase.ctx, testCase.group)
 		verifyAccess(t, err, testCase.access, "CreateGroup", testCase.name)
 	}
+
+	adminStatusChangeTests := []struct {
+		name   string
+		ctx    context.Context
+		user   *qf.User
+		access bool
+	}{
+		{"admin demoting a user", courseAdminContext, &qf.User{
+			ID:      admin.ID,
+			IsAdmin: false,
+		}, true},
+		{"admin promoting a user", courseAdminContext, &qf.User{
+			ID:      admin.ID,
+			IsAdmin: true,
+		}, true},
+		{"admin demoting self", courseAdminContext, &qf.User{
+			ID:      courseAdmin.ID,
+			IsAdmin: false,
+		}, true},
+		{"user promoting another user", userContext, &qf.User{
+			ID:      groupStudent.ID,
+			IsAdmin: true,
+		}, false},
+		{"user promoting self", userContext, &qf.User{
+			ID:      user.ID,
+			IsAdmin: true,
+		}, false},
+	}
+
+	for _, testCase := range adminStatusChangeTests {
+		_, err := client.UpdateUser(testCase.ctx, testCase.user)
+		verifyAccess(t, err, testCase.access, "UpdateUser", testCase.name)
+	}
 }
 
 func testUnrestrictedAccess(client qf.QuickFeedServiceClient, t *testing.T, tests accessTests) {
@@ -229,10 +262,10 @@ func testUnrestrictedAccess(client qf.QuickFeedServiceClient, t *testing.T, test
 	}
 }
 
-func testUserAccess(client qf.QuickFeedServiceClient, t *testing.T, course *qf.Course, tests accessTests) {
+func testUserAccess(client qf.QuickFeedServiceClient, t *testing.T, tests accessTests) {
 	for _, testCase := range tests {
 		enrol := &qf.Enrollment{
-			CourseID: course.ID,
+			CourseID: testCase.courseID,
 			UserID:   testCase.userID,
 		}
 		enrolRequest := &qf.EnrollmentStatusRequest{
@@ -248,6 +281,8 @@ func testUserAccess(client qf.QuickFeedServiceClient, t *testing.T, course *qf.C
 		verifyAccess(t, err, testCase.access, "UpdateUser", testCase.name)
 		_, err = client.GetEnrollmentsByUser(testCase.ctx, enrolRequest)
 		verifyAccess(t, err, testCase.access, "GetEnrollmentsByCourse", testCase.name)
+		_, err = client.UpdateUser(testCase.ctx, &qf.User{ID: testCase.userID})
+		verifyAccess(t, err, testCase.access, "UpdateUser", testCase.name)
 	}
 }
 

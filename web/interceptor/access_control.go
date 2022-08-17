@@ -102,9 +102,10 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				if req.IDFor("user") == claims.UserID {
 					// Make sure the user is not updating own admin status.
 					if method == "UpdateUser" {
-						if req.(*qf.User).GetIsAdmin() != claims.Admin {
+						if req.(*qf.User).GetIsAdmin() && !claims.Admin {
 							logger.Errorf("Access control: user %d attempted to change admin status from %v to %v",
 								claims.UserID, claims.Admin, req.(*qf.User).GetIsAdmin())
+							return nil, ErrAccessDenied
 						}
 					}
 					return handler(ctx, request)
