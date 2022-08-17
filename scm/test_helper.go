@@ -17,10 +17,10 @@ func TestSCMManager() *Manager {
 		Name: "testorg",
 		Path: "testorg",
 	})
-	scms := make(map[string]SCM)
-	scms["testorg"] = sc
 	return &Manager{
-		scms:   scms,
+		scms: map[string]SCM{
+			"testorg": sc,
+		},
 		Config: conf,
 	}
 }
