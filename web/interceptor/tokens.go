@@ -40,7 +40,7 @@ var tokenUpdateMethods = map[string]func(context.Context, *auth.TokenManager, us
 		return tm.Add(claims.UserID)
 	},
 
-	"DeleteGroup": // TODO(meling) missing comment
+	"DeleteGroup": // Group members removed from the group.
 	func(ctx context.Context, tm *auth.TokenManager, msg userIDs) error {
 		if grp, ok := msg.(isGroup); ok {
 			group, err := tm.Database().GetGroup(grp.GetGroupID())

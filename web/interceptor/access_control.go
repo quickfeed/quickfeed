@@ -175,7 +175,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				}
 			}
 		}
-		logger.Errorf("Access denied (%s), required roles %v, user claims %v", method, access[method], claims)
+		logger.Errorf("Access denied (%s), required roles %v, user claims %s", method, access[method], claims)
 		return nil, ErrAccessDenied
 	}
 }
