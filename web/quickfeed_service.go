@@ -523,7 +523,7 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *qf.Submission
 	}
 	// If the user is not a teacher, remove score and reviews from submissions that are not released.
 	if !s.isTeacher(usr.ID, in.CourseID) {
-		submissions.Clean()
+		submissions.Clean(usr.GetID())
 	}
 	return submissions, nil
 }
