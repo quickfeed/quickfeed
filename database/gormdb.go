@@ -58,6 +58,7 @@ func NewGormDB(path string, logger *zap.Logger) (*GormDB, error) {
 		&qf.Enrollment{},
 		&qf.Assignment{},
 		&qf.Submission{},
+		&qf.Grade{},
 		&qf.Group{},
 		&qf.Repository{},
 		&qf.UsedSlipDays{},
