@@ -54,7 +54,8 @@ func (g *Group) UserIDs() []uint64 {
 	return userIDs
 }
 
-// Marker to indicate that a token may need to be refreshed.
+// Dummy implementation of the interceptor.userIDs interface.
+// Marks this message type to be evaluated for token refresh.
 func (*GroupRequest) UserIDs() []uint64 {
 	return []uint64{}
 }
