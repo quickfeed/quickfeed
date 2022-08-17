@@ -78,7 +78,7 @@ var accessRolesFor = map[string]roles{
 	"CreateCourse":            {admin},
 }
 
-// AccessControl checks user information stored in the JWT claims agains the list of roles required to call the method.
+// AccessControl checks user information stored in the JWT claims against the list of roles required to call the method.
 func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, request interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		method := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
