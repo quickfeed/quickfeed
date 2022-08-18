@@ -84,9 +84,9 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *qf.User) (*qf.Voi
 	}
 	if _, err = s.updateUser(usr, in); err != nil {
 		s.logger.Errorf("UpdateUser failed to update user %d: %v", in.GetID(), err)
-		err = status.Error(codes.InvalidArgument, "failed to update user")
+		return nil, status.Error(codes.InvalidArgument, "failed to update user")
 	}
-	return &qf.Void{}, err
+	return &qf.Void{}, nil
 }
 
 // CreateCourse creates a new course.
@@ -167,9 +167,9 @@ func (s *QuickFeedService) UpdateCourseVisibility(_ context.Context, in *qf.Enro
 	err := s.changeCourseVisibility(in)
 	if err != nil {
 		s.logger.Errorf("ChangeCourseVisibility failed: %v", err)
-		err = status.Error(codes.InvalidArgument, "failed to update course visibility")
+		return nil, status.Error(codes.InvalidArgument, "failed to update course visibility")
 	}
-	return &qf.Void{}, err
+	return &qf.Void{}, nil
 }
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
@@ -177,9 +177,9 @@ func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *qf.Enrollment
 	err := s.createEnrollment(in)
 	if err != nil {
 		s.logger.Errorf("CreateEnrollment failed: %v", err)
-		err = status.Error(codes.InvalidArgument, "failed to create enrollment")
+		return nil, status.Error(codes.InvalidArgument, "failed to create enrollment")
 	}
-	return &qf.Void{}, err
+	return &qf.Void{}, nil
 }
 
 // UpdateEnrollments changes status of all pending enrollments for the specified course to approved.
@@ -208,17 +208,17 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *qf.Enrollm
 			if ok, parsedErr := parseSCMError(err); ok {
 				return nil, parsedErr
 			}
-			return nil, err // status.Error(codes.InvalidArgument, "failed to update enrollments")
+			return nil, status.Error(codes.InvalidArgument, "failed to update enrollments")
 		}
 	}
-	return &qf.Void{}, err
+	return &qf.Void{}, nil
 }
 
 // GetCoursesByUser returns all courses the given user is enrolled into with the given status.
 func (s *QuickFeedService) GetCoursesByUser(_ context.Context, in *qf.EnrollmentStatusRequest) (*qf.Courses, error) {
 	courses, err := s.getCoursesByUser(in)
 	if err != nil {
-		s.logger.Errorf("GetCoursesWithEnrollment failed: %v", err)
+		s.logger.Errorf("GetCoursesByUser failed: %v", err)
 		return nil, status.Error(codes.NotFound, "no courses with enrollment found")
 	}
 	return courses, nil
@@ -229,7 +229,8 @@ func (s *QuickFeedService) GetEnrollmentsByUser(_ context.Context, in *qf.Enroll
 	// get all enrollments from the db (no scm)
 	enrols, err := s.getEnrollmentsByUser(in)
 	if err != nil {
-		s.logger.Errorf("Get enrollments for user %d failed: %v", in.GetUserID(), err)
+		s.logger.Errorf("GetEnrollmentsByUser failed: user %d: %v", in.GetUserID(), err)
+		return nil, status.Error(codes.NotFound, "no enrollments found for user")
 	}
 	return enrols, nil
 }
@@ -238,7 +239,7 @@ func (s *QuickFeedService) GetEnrollmentsByUser(_ context.Context, in *qf.Enroll
 func (s *QuickFeedService) GetEnrollmentsByCourse(_ context.Context, in *qf.EnrollmentRequest) (*qf.Enrollments, error) {
 	enrolls, err := s.getEnrollmentsByCourse(in)
 	if err != nil {
-		s.logger.Errorf("GetEnrollmentsByCourse failed: %v", err)
+		s.logger.Errorf("GetEnrollmentsByCourse failed: course %d: %v", in.GetCourseID(), err)
 		return nil, status.Error(codes.InvalidArgument, "failed to get enrollments for given course")
 	}
 	return enrolls, nil
@@ -248,7 +249,7 @@ func (s *QuickFeedService) GetEnrollmentsByCourse(_ context.Context, in *qf.Enro
 func (s *QuickFeedService) GetGroup(_ context.Context, in *qf.GetGroupRequest) (*qf.Group, error) {
 	group, err := s.getGroup(in)
 	if err != nil {
-		s.logger.Errorf("GetGroup failed: %v", err)
+		s.logger.Errorf("GetGroup failed: group %d: %v", in.GetGroupID(), err)
 		return nil, status.Error(codes.NotFound, "failed to get group")
 	}
 	return group, nil
@@ -383,9 +384,9 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *qf.UpdateSubm
 	err := s.updateSubmission(in.GetCourseID(), in.GetSubmissionID(), in.GetStatus(), in.GetReleased(), in.GetScore())
 	if err != nil {
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
-		err = status.Error(codes.InvalidArgument, "failed to approve submission")
+		return nil, status.Error(codes.InvalidArgument, "failed to approve submission")
 	}
-	return &qf.Void{}, err
+	return &qf.Void{}, nil
 }
 
 // RebuildSubmissions re-runs the tests for the given assignment.
@@ -427,9 +428,9 @@ func (s *QuickFeedService) UpdateBenchmark(_ context.Context, in *qf.GradingBenc
 	err := s.updateBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("UpdateBenchmark failed for %+v: %v", in, err)
-		err = status.Error(codes.InvalidArgument, "failed to update benchmark")
+		return nil, status.Error(codes.InvalidArgument, "failed to update benchmark")
 	}
-	return &qf.Void{}, err
+	return &qf.Void{}, nil
 }
 
 // DeleteBenchmark removes a grading benchmark.
@@ -437,9 +438,9 @@ func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *qf.GradingBenc
 	err := s.deleteBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("DeleteBenchmark failed for %+v: %v", in, err)
-		err = status.Error(codes.InvalidArgument, "failed to delete benchmark")
+		return nil, status.Error(codes.InvalidArgument, "failed to delete benchmark")
 	}
-	return &qf.Void{}, err
+	return &qf.Void{}, nil
 }
 
 // CreateCriterion adds a new grading criterion for an assignment.
@@ -457,9 +458,9 @@ func (s *QuickFeedService) UpdateCriterion(_ context.Context, in *qf.GradingCrit
 	err := s.updateCriterion(in)
 	if err != nil {
 		s.logger.Errorf("UpdateCriterion failed for %+v: %v", in, err)
-		err = status.Error(codes.InvalidArgument, "failed to update criterion")
+		return nil, status.Error(codes.InvalidArgument, "failed to update criterion")
 	}
-	return &qf.Void{}, err
+	return &qf.Void{}, nil
 }
 
 // DeleteCriterion removes a grading criterion for an assignment.
@@ -467,9 +468,9 @@ func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *qf.GradingCrit
 	err := s.deleteCriterion(in)
 	if err != nil {
 		s.logger.Errorf("DeleteCriterion failed for %+v: %v", in, err)
-		err = status.Error(codes.InvalidArgument, "failed to delete criterion")
+		return nil, status.Error(codes.InvalidArgument, "failed to delete criterion")
 	}
-	return &qf.Void{}, err
+	return &qf.Void{}, nil
 }
 
 // CreateReview adds a new submission review.
@@ -487,9 +488,9 @@ func (s *QuickFeedService) UpdateReview(_ context.Context, in *qf.ReviewRequest)
 	review, err := s.updateReview(in.Review)
 	if err != nil {
 		s.logger.Errorf("UpdateReview failed for review %+v: %v", in, err)
-		err = status.Error(codes.InvalidArgument, "failed to update review")
+		return nil, status.Error(codes.InvalidArgument, "failed to update review")
 	}
-	return review, err
+	return review, nil
 }
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
@@ -498,9 +499,9 @@ func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *qf.UpdateSub
 	err := s.updateSubmissions(in)
 	if err != nil {
 		s.logger.Errorf("UpdateSubmissions failed for request %+v", in)
-		err = status.Error(codes.InvalidArgument, "failed to update submissions")
+		return nil, status.Error(codes.InvalidArgument, "failed to update submissions")
 	}
-	return &qf.Void{}, err
+	return &qf.Void{}, nil
 }
 
 // GetReviewers returns names of all active reviewers for a student submission.
@@ -510,7 +511,7 @@ func (s *QuickFeedService) GetReviewers(_ context.Context, in *qf.SubmissionRevi
 		s.logger.Errorf("GetReviewers failed: error fetching from database: %v", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to get reviewers")
 	}
-	return &qf.Reviewers{Reviewers: reviewers}, err
+	return &qf.Reviewers{Reviewers: reviewers}, nil
 }
 
 // GetAssignments returns a list of all assignments for the given course.
