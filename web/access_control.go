@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -24,7 +25,7 @@ func (s *QuickFeedService) getCurrentUser(ctx context.Context) (*qf.User, error)
 	if !ok {
 		return nil, errors.New("malformed request")
 	}
-	userValues := meta.Get("user")
+	userValues := meta.Get(auth.UserKey)
 	if len(userValues) == 0 {
 		return nil, errors.New("no user metadata in context")
 	}
