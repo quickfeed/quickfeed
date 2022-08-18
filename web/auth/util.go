@@ -1,5 +1,7 @@
 package auth
 
+import "net/http"
+
 // GetCallbackURL returns the callback URL for a given base URL and a provider.
 func GetCallbackURL(baseURL string) string {
 	return getURL(baseURL, Callback)
@@ -22,4 +24,9 @@ type externalUser struct {
 	Name      string `json:"name"`
 	Login     string `json:"login"`
 	AvatarURL string `json:"avatar_url"`
+}
+
+// TokenString returns a string with JWT with correct format ("auth=JWT").
+func TokenString(cookie *http.Cookie) string {
+	return CookieName + "=" + cookie.Value
 }

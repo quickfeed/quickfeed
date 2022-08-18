@@ -9,7 +9,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -103,7 +102,7 @@ func TestUserClaims(t *testing.T) {
 		t.Fatal(err)
 	}
 	ctx := metadata.NewIncomingContext(context.Background(),
-		metadata.New(map[string]string{auth.Cookie: interceptor.AuthTokenString(adminCookie.Value)}),
+		metadata.New(map[string]string{auth.Cookie: auth.TokenString(adminCookie)}),
 	)
 	adminClaims, err := manager.GetClaims(ctx)
 	if err != nil {

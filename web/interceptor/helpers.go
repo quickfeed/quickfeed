@@ -25,8 +25,8 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 		return nil, ErrContextMetadata
 	}
 	if tm.UpdateRequired(claims) {
-		logger.Debug("Updating token for user ", claims.UserID)
-		updatedToken, err := tm.NewAuthCookie(claims.UserID)
+		logger.Debug("Updating cookie for user ", claims.UserID)
+		updatedCookie, err := tm.NewAuthCookie(claims.UserID)
 		if err != nil {
 			logger.Errorf("Failed to update cookie: %v", err)
 			return nil, ErrInvalidAuthCookie
@@ -35,11 +35,11 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 			logger.Error(err)
 			return nil, ErrInvalidAuthCookie
 		}
-		if err := grpc.SendHeader(ctx, metadata.Pairs(auth.SetCookie, updatedToken.String())); err != nil {
+		if err := grpc.SendHeader(ctx, metadata.Pairs(auth.SetCookie, updatedCookie.String())); err != nil {
 			logger.Errorf("Failed to set grpc header: %v", err)
 			return nil, ErrInvalidAuthCookie
 		}
-		meta = metadata.New(map[string]string{auth.Cookie: AuthTokenString(updatedToken.Value)})
+		meta = metadata.New(map[string]string{auth.Cookie: auth.TokenString(updatedCookie)})
 	}
 	meta.Set(auth.UserKey, strconv.FormatUint(claims.UserID, 10))
 	return metadata.NewIncomingContext(ctx, meta), nil
@@ -70,9 +70,4 @@ func CheckAccessMethods(expectedMethodNames map[string]bool) error {
 		return fmt.Errorf("superfluous method(s) in access control table: %v", superfluousMethods)
 	}
 	return nil
-}
-
-// AuthTokenString returns a string with JWT with correct format ("auth=JWT").
-func AuthTokenString(token string) string {
-	return auth.CookieName + "=" + token
 }

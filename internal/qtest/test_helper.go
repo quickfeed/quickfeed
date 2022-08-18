@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"testing"
@@ -194,9 +195,9 @@ func WithUserContext(ctx context.Context, user *qf.User) context.Context {
 }
 
 // WithAuthCookie returns context containing an authentication cookie with JWT.
-func WithAuthCookie(ctx context.Context, token string) context.Context {
+func WithAuthCookie(ctx context.Context, cookie *http.Cookie) context.Context {
 	meta := metadata.MD{}
-	meta.Set(auth.Cookie, token)
+	meta.Set(auth.Cookie, auth.TokenString(cookie))
 	return metadata.NewOutgoingContext(ctx, meta)
 }
 
