@@ -52,13 +52,6 @@ func (s *QuickFeedService) hasCourseAccess(userID, courseID uint64, check func(*
 	return check(enrollment)
 }
 
-// isEnrolled returns true if the given user is enrolled in the given course.
-func (s *QuickFeedService) isEnrolled(userID, courseID uint64) bool {
-	return s.hasCourseAccess(userID, courseID, func(e *qf.Enrollment) bool {
-		return e.Status == qf.Enrollment_STUDENT || e.Status == qf.Enrollment_TEACHER
-	})
-}
-
 // isValidSubmission returns true if submitting student has active course enrollment or
 // if submitting group belongs to the given course.
 func (s *QuickFeedService) isValidSubmissionRequest(submission *qf.SubmissionRequest) bool {
