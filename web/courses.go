@@ -174,7 +174,16 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enroll
 	if err := s.db.CreateRepository(&userRepo); err != nil {
 		return fmt.Errorf("failed to create %s repository for %q: %w", course.Code, user.Login, err)
 	}
-	if err := s.acceptRepositoryInvites(ctx, user, course); err != nil {
+
+	invites, err := sc.GetRepositoryInvites(ctx, &scm.RepositoryInvitationOptions{
+		Login: user.GetLogin(),
+		Owner: course.GetOrganizationPath(),
+	})
+	if err != nil {
+		s.logger.Errorf("Failed to get repository invites for %q: %v", user.Login, err)
+	}
+
+	if err := s.acceptRepositoryInvites(ctx, user, invites); err != nil {
 		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.Code, user.Login, err)
 	}
 
@@ -481,7 +490,7 @@ func (s *QuickFeedService) setLastApprovedAssignment(submission *qf.Submission, 
 }
 
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
-func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, user *qf.User, course *qf.Course) error {
+func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, user *qf.User, invites []*scm.RepositoryInvitation) error {
 	user, err := s.db.GetUser(user.ID)
 	if err != nil {
 		return fmt.Errorf("failed to get user %d: %w", user.ID, err)
@@ -490,11 +499,7 @@ func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, user *qf
 	if err != nil {
 		return fmt.Errorf("failed to get SCM for user %d: %w", user.ID, err)
 	}
-	opts := &scm.RepositoryInvitationOptions{
-		Login: user.Login,
-		Owner: course.GetOrganizationPath(),
-	}
-	if err := userSCM.AcceptRepositoryInvites(ctx, opts); err != nil {
+	if err := userSCM.AcceptRepositoryInvites(ctx, invites); err != nil {
 		return fmt.Errorf("failed to get repository invites for %s: %w", user.Login, err)
 	}
 	return nil

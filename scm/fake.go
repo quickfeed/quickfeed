@@ -216,7 +216,7 @@ func (*FakeSCM) RemoveMember(_ context.Context, _ *OrgMembershipOptions) error {
 }
 
 // AcceptRepositoryInvite implements the SCM interface
-func (*FakeSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
+func (*FakeSCM) AcceptRepositoryInvites(_ context.Context, _ []*RepositoryInvitation) error {
 	return nil
 }
 
@@ -281,5 +281,12 @@ func (*FakeSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptio
 	return ErrNotSupported{
 		SCM:    "FakeSCM",
 		Method: "RequestReviewers",
+	}
+}
+
+func (*FakeSCM) GetRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) ([]*RepositoryInvitation, error) {
+	return nil, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "GetRepositoryInvites",
 	}
 }

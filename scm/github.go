@@ -840,43 +840,50 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 }
 
 // GetRepositoryInvites implements the SCM interface
-func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "GetRepositoryInvites",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	invites, _, err := s.client.Users.ListInvitations(ctx, &github.ListOptions{})
-	if err != nil {
-		return ErrFailedSCM{
-			GitError: fmt.Errorf("failed to fetch GitHub repository invitations: %w", err),
-			Method:   "GetRepositoryInvites",
-			Message:  "failed to fetch GitHub repository invitations",
-		}
-	}
-
-	for _, invite := range invites {
-		// The list of invitations contain all the invitations for the authenticated user.
-		// We only want to accept invitations from the owner specified in the options.
-		// For our courses, the owner is the organization.
-		// For invitations originating from an organization, the owner login is the organization path.
-		if invite.Repo.Owner.GetLogin() != opt.Owner || invite.Invitee.GetLogin() != opt.Login {
-			// Ignore unrelated invites
-			continue
-		}
-
-		_, err := s.client.Users.AcceptInvitation(ctx, invite.GetID())
+func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt []*RepositoryInvitation) error {
+	for _, invite := range opt {
+		_, err := s.client.Users.AcceptInvitation(ctx, invite.ID)
 		if err != nil {
 			return ErrFailedSCM{
 				GitError: fmt.Errorf("failed to accept GitHub repository invitation: %w", err),
 				Method:   "GetRepositoryInvites",
-				Message:  fmt.Sprintf("failed to accept invitation for user: %s, to repo: %s", opt.Login, invite.Repo.GetName()),
+				Message:  fmt.Sprintf("failed to accept invitation for repo: %s", invite.Name),
 			}
 		}
 	}
 	return nil
+}
+
+func (s *GithubSCM) GetRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) ([]*RepositoryInvitation, error) {
+	if !opt.valid() {
+		return nil, ErrMissingFields{
+			Method:  "GetRepositoryInvites",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
+	invites := []*RepositoryInvitation{}
+	for _, repo := range []string{"info", "assignments", fmt.Sprintf("%s-labs", opt.Login)} {
+		repoInvites, _, err := s.client.Repositories.ListInvitations(ctx, opt.Owner, repo, &github.ListOptions{})
+		if err != nil {
+			return nil, ErrFailedSCM{
+				GitError: fmt.Errorf("failed to fetch GitHub repository invitations: %w", err),
+				Method:   "GetRepositoryInvites",
+				Message:  "failed to fetch GitHub repository invitations",
+			}
+		}
+		for _, invite := range repoInvites {
+			if invite.Invitee.GetLogin() != opt.Login {
+				// Ignore unrelated invites
+				continue
+			}
+			invites = append(invites, &RepositoryInvitation{
+				ID:   invite.GetID(),
+				Name: invite.Repo.GetName(),
+			})
+		}
+
+	}
+	return invites, nil
 }
 
 func toRepository(repo *github.Repository) *Repository {

@@ -326,9 +326,16 @@ func (*GitlabSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOpt
 }
 
 // AcceptRepositoryInvite implements the SCM interface
-func (*GitlabSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
+func (*GitlabSCM) AcceptRepositoryInvites(_ context.Context, _ []*RepositoryInvitation) error {
 	return ErrNotSupported{
 		SCM:    "gitlab",
 		Method: "AcceptRepositoryInvite",
+	}
+}
+
+func (*GitlabSCM) GetRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) ([]*RepositoryInvitation, error) {
+	return nil, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "GetRepositoryInvites",
 	}
 }
