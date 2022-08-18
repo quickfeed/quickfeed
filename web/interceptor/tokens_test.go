@@ -49,9 +49,6 @@ func TestRefreshTokens(t *testing.T) {
 		}
 	}()
 
-	admin := qtest.CreateFakeUser(t, db, 1)
-	user := qtest.CreateFakeUser(t, db, 56)
-
 	ctx := context.Background()
 	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -60,17 +57,18 @@ func TestRefreshTokens(t *testing.T) {
 	defer conn.Close()
 
 	client := qf.NewQuickFeedServiceClient(conn)
+	f := func(t *testing.T, id uint64) context.Context {
+		token, err := tm.NewAuthCookie(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return qtest.WithAuthCookie(ctx, token)
+	}
 
-	adminCookie, err := tm.NewAuthCookie(admin.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	userCookie, err := tm.NewAuthCookie(user.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	adminCtx := qtest.WithAuthCookie(ctx, interceptor.AuthTokenString(adminCookie.Value))
-	userCtx := qtest.WithAuthCookie(ctx, interceptor.AuthTokenString(userCookie.Value))
+	admin := qtest.CreateFakeUser(t, db, 1)
+	user := qtest.CreateFakeUser(t, db, 56)
+	adminCtx := f(t, admin.ID)
+	userCtx := f(t, user.ID)
 	adminClaims := &auth.Claims{
 		UserID: admin.ID,
 		Admin:  true,
@@ -90,14 +88,14 @@ func TestRefreshTokens(t *testing.T) {
 	if _, err := client.GetUsers(adminCtx, &qf.Void{}); err != nil {
 		t.Fatal(err)
 	}
-	if tm.UpdateRequired(userClaims) {
+	if tm.UpdateRequired(adminClaims) || tm.UpdateRequired(userClaims) {
 		t.Error("No users should be in the token update list")
 	}
 	if _, err := client.UpdateUser(adminCtx, user); err != nil {
 		t.Fatal(err)
 	}
 	if !tm.UpdateRequired(userClaims) {
-		t.Error("User must be in the token update list")
+		t.Error("User must be in the token update list after admin has updated the user's information")
 	}
 	if _, err := client.GetUser(userCtx, &qf.Void{}); err != nil {
 		t.Fatal(err)
@@ -130,7 +128,7 @@ func TestRefreshTokens(t *testing.T) {
 		t.Fatal(err)
 	}
 	if tm.UpdateRequired(userClaims) {
-		t.Error("User should not be in the token update list")
+		t.Error("User should not be in the token update list after methods that don't affect the user's information")
 	}
 	if _, err := client.UpdateGroup(adminCtx, group); err != nil {
 		t.Fatal(err)
@@ -142,7 +140,7 @@ func TestRefreshTokens(t *testing.T) {
 		t.Fatal(err)
 	}
 	if tm.UpdateRequired(userClaims) {
-		t.Error("User should be removed from the token update list")
+		t.Error("User should be removed from the token update list after the user's token has been updated")
 	}
 	if _, err := client.DeleteGroup(adminCtx, &qf.GroupRequest{
 		GroupID:  group.ID,

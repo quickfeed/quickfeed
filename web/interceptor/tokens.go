@@ -2,7 +2,6 @@ package interceptor
 
 import (
 	"context"
-	"log"
 	"strings"
 
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -50,7 +49,7 @@ var tokenUpdateMethods = map[string]func(context.Context, *auth.TokenManager, us
 			}
 			return defaultTokenUpdater(ctx, tm, group)
 		}
-		return nil // TODO(meling) This should probably be an error??
+		return ErrAccessDenied
 	},
 }
 
@@ -61,13 +60,13 @@ func TokenRefresher(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.Unary
 		method := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
 		if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
 			if msg, ok := req.(userIDs); ok {
-				log.Println("REFRESHER: ", method) // tmp
-
 				if err := tokenUpdateFn(ctx, tm, msg); err != nil {
 					logger.Error(err)
+					return nil, ErrAccessDenied
 				}
 			} else {
 				logger.Errorf("%s's argument is missing 'userIDs' interface", method)
+				return nil, ErrAccessDenied
 			}
 		}
 		return handler(ctx, req)

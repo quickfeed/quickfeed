@@ -45,7 +45,7 @@ var accessRolesFor = map[string]roles{
 	"UpdateUser":              {user, admin},
 	"GetEnrollmentsByUser":    {user, admin},
 	"GetSubmissions":          {student, group, teacher, courseAdmin},
-	"GetGroupByUserAndCourse": {group, teacher},
+	"GetGroupByUserAndCourse": {student, teacher},
 	"CreateGroup":             {group, teacher},
 	"GetGroup":                {group, teacher},
 	"GetAssignments":          {student, teacher},
@@ -90,7 +90,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 		claims, err := tm.GetClaims(ctx)
 		if err != nil {
 			logger.Errorf("AccessControl(%s): failed to get claims from request context: %v", method, err)
-			return handler(ctx, request)
+			return nil, ErrAccessDenied
 		}
 		for _, role := range accessRolesFor[method] {
 			switch role {
@@ -112,7 +112,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				// GetSubmissions is used to fetch individual and group submissions.
 				// For individual submissions needs an extra check for user ID in request.
 				if method == "GetSubmissions" && req.IDFor("group") == 0 {
-					if !claims.SameUser(req) {
+					if !claims.SameUser(req) && !claims.Admin {
 						logger.Errorf("AccessControl(%s): ID mismatch in claims (%s) and request (%s)",
 							method, claims.UserID, req.IDFor("user"))
 						return nil, ErrAccessDenied
@@ -152,17 +152,8 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 					return handler(ctx, request)
 				}
 			case courseAdmin:
-				if claims.Admin {
-					if method == "GetUserByCourse" {
-						if err := claims.IsCourseTeacher(tm.Database(), request.(*qf.CourseUserRequest)); err != nil {
-							logger.Errorf("AccessControl(%s): %v", method, err)
-							return nil, ErrAccessDenied
-						}
-						return handler(ctx, request)
-					}
-					if claims.HasCourseStatus(req, qf.Enrollment_TEACHER) {
-						return handler(ctx, request)
-					}
+				if claims.IsCourseAdmin(req) {
+					return handler(ctx, request)
 				}
 			case admin:
 				if claims.Admin {

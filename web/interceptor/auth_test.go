@@ -80,8 +80,8 @@ func TestUserVerifier(t *testing.T) {
 	}{
 		{code: codes.Unauthenticated, metadata: false, token: "", wantUser: nil},
 		{code: codes.Unauthenticated, metadata: true, token: "should fail", wantUser: nil},
-		{code: codes.OK, metadata: true, token: interceptor.AuthTokenString(adminToken.Value), wantUser: adminUser},
-		{code: codes.OK, metadata: true, token: interceptor.AuthTokenString(studentToken.Value), wantUser: student},
+		{code: codes.OK, metadata: true, token: auth.TokenString(adminToken), wantUser: adminUser},
+		{code: codes.OK, metadata: true, token: auth.TokenString(studentToken), wantUser: student},
 	}
 
 	for _, user := range userTest {
