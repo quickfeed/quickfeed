@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -60,11 +61,55 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 
 // getSCMForUser returns an SCM client based on the user's personal access token.
 func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCMInvite, error) {
-	accessToken, err := user.GetAccessToken(env.ScmProvider())
+	refreshToken, err := user.GetAccessToken(env.ScmProvider())
 	if err != nil {
 		return nil, err
 	}
+
+	accessToken, err := q.getAccessToken(refreshToken, user)
+	if err != nil {
+		return nil, err
+	}
+
 	return scm.NewInviteOnlySCMClient(q.logger, accessToken), nil
+}
+
+// getAccessToken exchanges a refresh token for an access token.
+// The new refresh token is saved in the database.
+func (q *QuickFeedService) getAccessToken(refreshToken string, user *qf.User) (string, error) {
+	form := map[string][]string{
+		"client_id":     {q.scmMgr.ClientID},
+		"client_secret": {q.scmMgr.ClientSecret},
+		"refresh_token": {refreshToken},
+		"grant_type":    {"refresh_token"},
+	}
+
+	resp, err := q.scmMgr.Client().PostForm("https://github.com/login/oauth/access_token", form)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("getAccessToken(): failed to get access token: %s", resp.Status)
+	}
+	var token struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&token); err != nil {
+		return "", err
+	}
+
+	if token.AccessToken == "" || token.RefreshToken == "" {
+		return "", fmt.Errorf("getAccessToken(): failed to get access token: tokens are empty")
+	}
+	// update user's refresh token
+	remoteIdentity := user.GetRemoteIDFor(env.ScmProvider())
+	remoteIdentity.AccessToken = token.RefreshToken
+	if err := q.db.UpdateAccessToken(remoteIdentity); err != nil {
+		return "", err
+	}
+	return token.AccessToken, nil
 }
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
