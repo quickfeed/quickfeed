@@ -118,3 +118,12 @@ func (m *Enrollments) HasCourseID() bool {
 	}
 	return true
 }
+
+// UserIDs returns the user IDs in these enrollments.
+func (m *Enrollments) UserIDs() []uint64 {
+	userIDs := make([]uint64, 0)
+	for _, enrollment := range m.GetEnrollments() {
+		userIDs = append(userIDs, enrollment.GetUserID())
+	}
+	return userIDs
+}

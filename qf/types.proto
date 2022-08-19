@@ -235,11 +235,12 @@ message Submissions {
 
 message GradingBenchmark {
     uint64 ID                          = 1;
-    uint64 AssignmentID                = 2;  // foreign key
-    uint64 ReviewID                    = 3;  // foreign key
-    string heading                     = 4;
-    string comment                     = 5;
-    repeated GradingCriterion criteria = 6 [(go.field) = { tags: 'gorm:"foreignKey:BenchmarkID"' }];
+    uint64 CourseID                    = 2;  // foreign key
+    uint64 AssignmentID                = 3;  // foreign key
+    uint64 ReviewID                    = 4;  // foreign key
+    string heading                     = 5;
+    string comment                     = 6;
+    repeated GradingCriterion criteria = 7 [(go.field) = { tags: 'gorm:"foreignKey:BenchmarkID"' }];
 }
 
 message Benchmarks {
@@ -254,10 +255,11 @@ message GradingCriterion {
     }
     uint64 ID          = 1;
     uint64 BenchmarkID = 2;  // foreign key
-    uint64 points      = 3;
-    string description = 4;
-    Grade grade        = 5;
-    string comment     = 6;
+    uint64 CourseID    = 3;  // foreign key
+    uint64 points      = 4;
+    string description = 5;
+    Grade grade        = 6;
+    string comment     = 7;
 }
 
 message Review {

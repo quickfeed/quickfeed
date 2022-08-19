@@ -44,3 +44,18 @@ func (g *Group) GetUsersExcept(userID uint64) []*User {
 	}
 	return subset
 }
+
+// UserIDs returns the user IDs of this group.
+func (g *Group) UserIDs() []uint64 {
+	userIDs := make([]uint64, 0, len(g.Users))
+	for _, user := range g.Users {
+		userIDs = append(userIDs, user.GetID())
+	}
+	return userIDs
+}
+
+// Dummy implementation of the interceptor.userIDs interface.
+// Marks this message type to be evaluated for token refresh.
+func (*GroupRequest) UserIDs() []uint64 {
+	return []uint64{}
+}

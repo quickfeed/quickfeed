@@ -13,6 +13,7 @@ import (
 var (
 	ErrInvalidAuthCookie = status.Errorf(codes.Unauthenticated, "request does not contain a valid authentication cookie.")
 	ErrContextMetadata   = status.Errorf(codes.Unauthenticated, "could not obtain metadata from context")
+	ErrAccessDenied      = status.Error(codes.PermissionDenied, "access denied")
 )
 
 // StreamWrapper wraps a stream with a context.

@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"testing"
@@ -14,6 +15,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -79,7 +81,7 @@ func CreateUserFromRemoteIdentity(t *testing.T, db database.Database, remoteID *
 
 func CreateNamedUser(t *testing.T, db database.Database, remoteID uint64, name string) *qf.User {
 	t.Helper()
-	user := &qf.User{Name: name}
+	user := &qf.User{Name: name, Login: name}
 	err := db.CreateUserFromRemoteIdentity(user,
 		&qf.RemoteIdentity{
 			Provider:    "fake",
@@ -108,7 +110,7 @@ func CreateUser(t *testing.T, db database.Database, remoteID uint64, user *qf.Us
 
 func CreateAdminUser(t *testing.T, db database.Database, provider string) *qf.User {
 	t.Helper()
-	user := &qf.User{}
+	user := &qf.User{Name: "admin", Login: "admin"}
 	err := db.CreateUserFromRemoteIdentity(user,
 		&qf.RemoteIdentity{
 			Provider:    provider,
@@ -190,6 +192,13 @@ func WithUserContext(ctx context.Context, user *qf.User) context.Context {
 	userID := strconv.Itoa(int(user.GetID()))
 	meta := metadata.New(map[string]string{"user": userID})
 	return metadata.NewIncomingContext(ctx, meta)
+}
+
+// WithAuthCookie returns context containing an authentication cookie with JWT.
+func WithAuthCookie(ctx context.Context, cookie *http.Cookie) context.Context {
+	meta := metadata.MD{}
+	meta.Set(auth.Cookie, auth.TokenString(cookie))
+	return metadata.NewOutgoingContext(ctx, meta)
 }
 
 // AssignmentsWithTasks returns a list of test assignments with tasks for the given course.

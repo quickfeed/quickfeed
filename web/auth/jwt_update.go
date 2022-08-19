@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -14,6 +15,17 @@ func (tm *TokenManager) UpdateRequired(claims *Claims) bool {
 		}
 	}
 	return claims.ExpiresAt <= time.Now().Unix()
+}
+
+func (tm *TokenManager) UpdateCookie(claims *Claims) (*http.Cookie, error) {
+	updatedCookie, err := tm.NewAuthCookie(claims.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update cookie for user %d: %w", claims.UserID, err)
+	}
+	if err := tm.Remove(claims.UserID); err != nil {
+		return nil, err
+	}
+	return updatedCookie, nil
 }
 
 // Update removes user ID from the manager and updates user record in the database.
