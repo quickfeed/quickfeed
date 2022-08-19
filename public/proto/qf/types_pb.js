@@ -6503,7 +6503,7 @@ proto.qf.Submissions.prototype.clearSubmissionsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.qf.GradingBenchmark.repeatedFields_ = [6];
+proto.qf.GradingBenchmark.repeatedFields_ = [7];
 
 
 
@@ -6537,10 +6537,11 @@ proto.qf.GradingBenchmark.prototype.toObject = function(opt_includeInstance) {
 proto.qf.GradingBenchmark.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    assignmentid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    reviewid: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    heading: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    comment: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    assignmentid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    reviewid: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    heading: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    comment: jspb.Message.getFieldWithDefault(msg, 6, ""),
     criteriaList: jspb.Message.toObjectList(msg.getCriteriaList(),
     proto.qf.GradingCriterion.toObject, includeInstance)
   };
@@ -6585,21 +6586,25 @@ proto.qf.GradingBenchmark.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setAssignmentid(value);
+      msg.setCourseid(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setReviewid(value);
+      msg.setAssignmentid(value);
       break;
     case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setHeading(value);
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setReviewid(value);
       break;
     case 5:
       var value = /** @type {string} */ (reader.readString());
-      msg.setComment(value);
+      msg.setHeading(value);
       break;
     case 6:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setComment(value);
+      break;
+    case 7:
       var value = new proto.qf.GradingCriterion;
       reader.readMessage(value,proto.qf.GradingCriterion.deserializeBinaryFromReader);
       msg.addCriteria(value);
@@ -6640,38 +6645,45 @@ proto.qf.GradingBenchmark.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getAssignmentid();
+  f = message.getCourseid();
   if (f !== 0) {
     writer.writeUint64(
       2,
       f
     );
   }
-  f = message.getReviewid();
+  f = message.getAssignmentid();
   if (f !== 0) {
     writer.writeUint64(
       3,
       f
     );
   }
-  f = message.getHeading();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getReviewid();
+  if (f !== 0) {
+    writer.writeUint64(
       4,
       f
     );
   }
-  f = message.getComment();
+  f = message.getHeading();
   if (f.length > 0) {
     writer.writeString(
       5,
       f
     );
   }
+  f = message.getComment();
+  if (f.length > 0) {
+    writer.writeString(
+      6,
+      f
+    );
+  }
   f = message.getCriteriaList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      6,
+      7,
       f,
       proto.qf.GradingCriterion.serializeBinaryToWriter
     );
@@ -6698,10 +6710,10 @@ proto.qf.GradingBenchmark.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 AssignmentID = 2;
+ * optional uint64 CourseID = 2;
  * @return {number}
  */
-proto.qf.GradingBenchmark.prototype.getAssignmentid = function() {
+proto.qf.GradingBenchmark.prototype.getCourseid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -6710,16 +6722,16 @@ proto.qf.GradingBenchmark.prototype.getAssignmentid = function() {
  * @param {number} value
  * @return {!proto.qf.GradingBenchmark} returns this
  */
-proto.qf.GradingBenchmark.prototype.setAssignmentid = function(value) {
+proto.qf.GradingBenchmark.prototype.setCourseid = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional uint64 ReviewID = 3;
+ * optional uint64 AssignmentID = 3;
  * @return {number}
  */
-proto.qf.GradingBenchmark.prototype.getReviewid = function() {
+proto.qf.GradingBenchmark.prototype.getAssignmentid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -6728,34 +6740,34 @@ proto.qf.GradingBenchmark.prototype.getReviewid = function() {
  * @param {number} value
  * @return {!proto.qf.GradingBenchmark} returns this
  */
-proto.qf.GradingBenchmark.prototype.setReviewid = function(value) {
+proto.qf.GradingBenchmark.prototype.setAssignmentid = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional string heading = 4;
+ * optional uint64 ReviewID = 4;
+ * @return {number}
+ */
+proto.qf.GradingBenchmark.prototype.getReviewid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.qf.GradingBenchmark} returns this
+ */
+proto.qf.GradingBenchmark.prototype.setReviewid = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional string heading = 5;
  * @return {string}
  */
 proto.qf.GradingBenchmark.prototype.getHeading = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.qf.GradingBenchmark} returns this
- */
-proto.qf.GradingBenchmark.prototype.setHeading = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
-};
-
-
-/**
- * optional string comment = 5;
- * @return {string}
- */
-proto.qf.GradingBenchmark.prototype.getComment = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
@@ -6764,18 +6776,36 @@ proto.qf.GradingBenchmark.prototype.getComment = function() {
  * @param {string} value
  * @return {!proto.qf.GradingBenchmark} returns this
  */
-proto.qf.GradingBenchmark.prototype.setComment = function(value) {
+proto.qf.GradingBenchmark.prototype.setHeading = function(value) {
   return jspb.Message.setProto3StringField(this, 5, value);
 };
 
 
 /**
- * repeated GradingCriterion criteria = 6;
+ * optional string comment = 6;
+ * @return {string}
+ */
+proto.qf.GradingBenchmark.prototype.getComment = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.qf.GradingBenchmark} returns this
+ */
+proto.qf.GradingBenchmark.prototype.setComment = function(value) {
+  return jspb.Message.setProto3StringField(this, 6, value);
+};
+
+
+/**
+ * repeated GradingCriterion criteria = 7;
  * @return {!Array<!proto.qf.GradingCriterion>}
  */
 proto.qf.GradingBenchmark.prototype.getCriteriaList = function() {
   return /** @type{!Array<!proto.qf.GradingCriterion>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.qf.GradingCriterion, 6));
+    jspb.Message.getRepeatedWrapperField(this, proto.qf.GradingCriterion, 7));
 };
 
 
@@ -6784,7 +6814,7 @@ proto.qf.GradingBenchmark.prototype.getCriteriaList = function() {
  * @return {!proto.qf.GradingBenchmark} returns this
 */
 proto.qf.GradingBenchmark.prototype.setCriteriaList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 6, value);
+  return jspb.Message.setRepeatedWrapperField(this, 7, value);
 };
 
 
@@ -6794,7 +6824,7 @@ proto.qf.GradingBenchmark.prototype.setCriteriaList = function(value) {
  * @return {!proto.qf.GradingCriterion}
  */
 proto.qf.GradingBenchmark.prototype.addCriteria = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 6, opt_value, proto.qf.GradingCriterion, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 7, opt_value, proto.qf.GradingCriterion, opt_index);
 };
 
 
@@ -7001,10 +7031,11 @@ proto.qf.GradingCriterion.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     benchmarkid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    points: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    description: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    grade: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    comment: jspb.Message.getFieldWithDefault(msg, 6, "")
+    courseid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    points: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    description: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    grade: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    comment: jspb.Message.getFieldWithDefault(msg, 7, "")
   };
 
   if (includeInstance) {
@@ -7051,17 +7082,21 @@ proto.qf.GradingCriterion.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setPoints(value);
+      msg.setCourseid(value);
       break;
     case 4:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setPoints(value);
+      break;
+    case 5:
       var value = /** @type {string} */ (reader.readString());
       msg.setDescription(value);
       break;
-    case 5:
+    case 6:
       var value = /** @type {!proto.qf.GradingCriterion.Grade} */ (reader.readEnum());
       msg.setGrade(value);
       break;
-    case 6:
+    case 7:
       var value = /** @type {string} */ (reader.readString());
       msg.setComment(value);
       break;
@@ -7108,31 +7143,38 @@ proto.qf.GradingCriterion.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getPoints();
+  f = message.getCourseid();
   if (f !== 0) {
     writer.writeUint64(
       3,
       f
     );
   }
+  f = message.getPoints();
+  if (f !== 0) {
+    writer.writeUint64(
+      4,
+      f
+    );
+  }
   f = message.getDescription();
   if (f.length > 0) {
     writer.writeString(
-      4,
+      5,
       f
     );
   }
   f = message.getGrade();
   if (f !== 0.0) {
     writer.writeEnum(
-      5,
+      6,
       f
     );
   }
   f = message.getComment();
   if (f.length > 0) {
     writer.writeString(
-      6,
+      7,
       f
     );
   }
@@ -7185,10 +7227,10 @@ proto.qf.GradingCriterion.prototype.setBenchmarkid = function(value) {
 
 
 /**
- * optional uint64 points = 3;
+ * optional uint64 CourseID = 3;
  * @return {number}
  */
-proto.qf.GradingCriterion.prototype.getPoints = function() {
+proto.qf.GradingCriterion.prototype.getCourseid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -7197,17 +7239,35 @@ proto.qf.GradingCriterion.prototype.getPoints = function() {
  * @param {number} value
  * @return {!proto.qf.GradingCriterion} returns this
  */
-proto.qf.GradingCriterion.prototype.setPoints = function(value) {
+proto.qf.GradingCriterion.prototype.setCourseid = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional string description = 4;
+ * optional uint64 points = 4;
+ * @return {number}
+ */
+proto.qf.GradingCriterion.prototype.getPoints = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.qf.GradingCriterion} returns this
+ */
+proto.qf.GradingCriterion.prototype.setPoints = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional string description = 5;
  * @return {string}
  */
 proto.qf.GradingCriterion.prototype.getDescription = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
 
@@ -7216,16 +7276,16 @@ proto.qf.GradingCriterion.prototype.getDescription = function() {
  * @return {!proto.qf.GradingCriterion} returns this
  */
 proto.qf.GradingCriterion.prototype.setDescription = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
+  return jspb.Message.setProto3StringField(this, 5, value);
 };
 
 
 /**
- * optional Grade grade = 5;
+ * optional Grade grade = 6;
  * @return {!proto.qf.GradingCriterion.Grade}
  */
 proto.qf.GradingCriterion.prototype.getGrade = function() {
-  return /** @type {!proto.qf.GradingCriterion.Grade} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+  return /** @type {!proto.qf.GradingCriterion.Grade} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
 
@@ -7234,16 +7294,16 @@ proto.qf.GradingCriterion.prototype.getGrade = function() {
  * @return {!proto.qf.GradingCriterion} returns this
  */
 proto.qf.GradingCriterion.prototype.setGrade = function(value) {
-  return jspb.Message.setProto3EnumField(this, 5, value);
+  return jspb.Message.setProto3EnumField(this, 6, value);
 };
 
 
 /**
- * optional string comment = 6;
+ * optional string comment = 7;
  * @return {string}
  */
 proto.qf.GradingCriterion.prototype.getComment = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
 };
 
 
@@ -7252,7 +7312,7 @@ proto.qf.GradingCriterion.prototype.getComment = function() {
  * @return {!proto.qf.GradingCriterion} returns this
  */
 proto.qf.GradingCriterion.prototype.setComment = function(value) {
-  return jspb.Message.setProto3StringField(this, 6, value);
+  return jspb.Message.setProto3StringField(this, 7, value);
 };
 
 

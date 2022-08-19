@@ -9,12 +9,13 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc/metadata"
 )
 
 // ErrInvalidUserInfo is returned to user if user information in context is invalid.
 var (
-	ErrInvalidUserInfo     = status.Errorf(codes.PermissionDenied, "authorization failed. please try to logout and sign in again")
+	ErrInvalidUserInfo     = status.Error(codes.PermissionDenied, "authorization failed. please try to logout and sign in again")
 	ErrMissingInstallation = status.Error(codes.PermissionDenied, "github application is not installed on the course organization")
 )
 
@@ -24,7 +25,7 @@ func (s *QuickFeedService) getCurrentUser(ctx context.Context) (*qf.User, error)
 	if !ok {
 		return nil, errors.New("malformed request")
 	}
-	userValues := meta.Get("user")
+	userValues := meta.Get(auth.UserKey)
 	if len(userValues) == 0 {
 		return nil, errors.New("no user metadata in context")
 	}
@@ -49,13 +50,6 @@ func (s *QuickFeedService) hasCourseAccess(userID, courseID uint64, check func(*
 	}
 	s.logger.Debugf("(user=%d, course=%d) has enrollment status %+v", userID, courseID, enrollment.GetStatus())
 	return check(enrollment)
-}
-
-// isEnrolled returns true if the given user is enrolled in the given course.
-func (s *QuickFeedService) isEnrolled(userID, courseID uint64) bool {
-	return s.hasCourseAccess(userID, courseID, func(e *qf.Enrollment) bool {
-		return e.Status == qf.Enrollment_STUDENT || e.Status == qf.Enrollment_TEACHER
-	})
 }
 
 // isValidSubmission returns true if submitting student has active course enrollment or

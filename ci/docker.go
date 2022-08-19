@@ -230,10 +230,10 @@ func (d *Docker) buildImage(ctx context.Context, job *Job) error {
 	}
 	defer res.Body.Close()
 
-	return print(d.logger, res.Body)
+	return printInfo(d.logger, res.Body)
 }
 
-func print(logger *zap.SugaredLogger, rd io.Reader) error {
+func printInfo(logger *zap.SugaredLogger, rd io.Reader) error {
 	scanner := bufio.NewScanner(rd)
 	for scanner.Scan() {
 		out := &dockerJSON{}

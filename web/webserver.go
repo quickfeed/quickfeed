@@ -1,16 +1,20 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/hooks"
+	"github.com/quickfeed/quickfeed/web/interceptor"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
+
+const QuickFeedServiceName = "qf.QuickFeedService"
 
 type GrpcMultiplexer struct {
 	MuxServer *grpcweb.WrappedGrpcServer
@@ -70,4 +74,16 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 	router.HandleFunc(auth.Hook, ghHook.Handle())
 
 	return router
+}
+
+func VerifyAccessControlMethods(s *grpc.Server) error {
+	qfServiceInfo, ok := s.GetServiceInfo()[QuickFeedServiceName]
+	if !ok {
+		return fmt.Errorf("gRPC server missing %s service", QuickFeedServiceName)
+	}
+	serviceMethods := make(map[string]bool)
+	for _, m := range qfServiceInfo.Methods {
+		serviceMethods[m.Name] = true
+	}
+	return interceptor.CheckAccessMethods(serviceMethods)
 }

@@ -310,14 +310,8 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	// group with two students
 	createGroupRequest := &qf.Group{Name: "HeinsTwoMemberGroup", CourseID: course.ID, Users: []*qf.User{user1, user2}}
 
-	// set ID of user3 to context, user3 is not member of group (should fail)
-	ctx := qtest.WithUserContext(context.Background(), user3)
-	if _, err := ags.CreateGroup(ctx, createGroupRequest); err == nil {
-		t.Error("expected error 'student must be member of new group'")
-	}
-
 	// set ID of user1, which is group member
-	ctx = qtest.WithUserContext(context.Background(), user1)
+	ctx := qtest.WithUserContext(context.Background(), user1)
 	wantGroup, err := ags.CreateGroup(ctx, createGroupRequest)
 	if err != nil {
 		t.Fatal(err)
@@ -890,12 +884,6 @@ func TestGetGroups(t *testing.T) {
 		for _, grpEnrol := range grp.Enrollments {
 			grpEnrol.UsedSlipDays = []*qf.UsedSlipDays{}
 		}
-	}
-
-	// check that request on non-existent course returns error
-	_, err = ags.GetGroupsByCourse(ctx, &qf.CourseRequest{CourseID: 15})
-	if err == nil {
-		t.Error("expected error; no groups should be returned")
 	}
 
 	// get groups from the database; admin is in ctx, which is also teacher
