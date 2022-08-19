@@ -318,12 +318,6 @@ func TestAccessControl(t *testing.T) {
 	}
 	for _, tt := range courseAdminTests {
 		t.Run("CourseAdminAccess/"+tt.name, func(t *testing.T) {
-			_, err := client.GetSubmissions(tt.ctx, &qf.SubmissionRequest{
-				UserID:   tt.userID,
-				CourseID: tt.courseID,
-				GroupID:  tt.groupID,
-			})
-			verifyAccess(t, err, tt.access, "GetSubmissions")
 			_, err = client.GetSubmissionsByCourse(tt.ctx, &qf.SubmissionsForCourseRequest{
 				CourseID: tt.courseID,
 			})

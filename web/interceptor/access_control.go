@@ -44,7 +44,7 @@ var accessRolesFor = map[string]roles{
 	"GetCoursesByUser":        {user},
 	"UpdateUser":              {user, admin},
 	"GetEnrollmentsByUser":    {user, admin},
-	"GetSubmissions":          {student, group, teacher, courseAdmin},
+	"GetSubmissions":          {student, group, teacher},
 	"GetGroupByUserAndCourse": {student, teacher},
 	"CreateGroup":             {group, teacher},
 	"GetGroup":                {group, teacher},
@@ -111,7 +111,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 				// GetSubmissions is used to fetch individual and group submissions.
 				// For individual submissions needs an extra check for user ID in request.
 				if method == "GetSubmissions" && req.IDFor("group") == 0 {
-					if !claims.SameUser(req) && !claims.Admin {
+					if !claims.SameUser(req) {
 						logger.Errorf("AccessControl(%s): ID mismatch in claims (%s) and request (%s)",
 							method, claims.UserID, req.IDFor("user"))
 						return nil, ErrAccessDenied
