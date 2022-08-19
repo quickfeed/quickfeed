@@ -494,6 +494,7 @@ func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, appSCM s
 	if err := userSCM.AcceptRepositoryInvites(ctx, &scm.RepositoryInvitationOptions{
 		Login: user.GetLogin(),
 		Owner: organizationPath,
+		Scm:   appSCM,
 	}); err != nil {
 		return fmt.Errorf("failed to get repository invites for %s: %w", user.Login, err)
 	}
