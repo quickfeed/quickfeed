@@ -30,8 +30,6 @@ type SCM interface {
 	UpdateRepoAccess(context.Context, *Repository, string, string) error
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
-	// Returns a list of all invitations for the given repository
-	GetRepositoryInvites(context.Context, *RepositoryInvitationOptions) ([]*RepositoryInvitation, error)
 	// List the webhooks associated with the provided repository or organization.
 	ListHooks(context.Context, *Repository, string) ([]*Hook, error)
 	// Creates a new webhook for organization if the name of organization
@@ -89,16 +87,6 @@ type SCM interface {
 
 	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
-}
-
-type SCMInvite interface {
-	// Accepts repository invites.
-	AcceptRepositoryInvites(context.Context, []*RepositoryInvitation) error
-}
-
-// NewInviteOnlySCMClient returns a new provider client implementing the SCM interface.
-func NewInviteOnlySCMClient(logger *zap.SugaredLogger, token string) SCMInvite {
-	return NewGithubSCMClient(logger, token)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -301,15 +289,4 @@ type RequestReviewersOptions struct {
 	Repository   string
 	Number       int
 	Reviewers    []string // Reviewers is a slice of github usernames
-}
-
-// RepositoryInvitationOptions contains information on which organization and user to accept invitations for.
-type RepositoryInvitationOptions struct {
-	Login string // GitHub username.
-	Owner string // Name of the organization.
-}
-
-type RepositoryInvitation struct {
-	ID   int64
-	Name string
 }
