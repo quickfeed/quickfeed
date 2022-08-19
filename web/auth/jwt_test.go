@@ -210,5 +210,4 @@ func TestUpdateCookie(t *testing.T) {
 	if newClaims.Admin {
 		t.Error("Admin status in user claims for demoted user")
 	}
-
 }
