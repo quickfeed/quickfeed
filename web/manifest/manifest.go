@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -171,7 +170,7 @@ func form(w http.ResponseWriter) {
 	}
 
 	if err := t.Execute(w, data); err != nil {
-		log.Fatalf("Failed to execute template: %v", err)
+		fmt.Printf("Failed to execute template: %v", err)
 	}
 }
 
