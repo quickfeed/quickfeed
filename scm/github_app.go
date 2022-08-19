@@ -64,6 +64,9 @@ type ExchangeToken struct {
 
 // ExchangeToken exchanges a refresh token for an access token.
 func (cfg *Config) ExchangeToken(refreshToken string) (*ExchangeToken, error) {
+	if cfg == nil {
+		return nil, errors.New("cannot exchange refresh token without config")
+	}
 	form := map[string][]string{
 		"client_id":     {cfg.ClientID},
 		"client_secret": {cfg.ClientSecret},
