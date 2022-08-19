@@ -482,7 +482,7 @@ func (s *QuickFeedService) setLastApprovedAssignment(submission *qf.Submission, 
 }
 
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
-func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, appSCM scm.SCM, user *qf.User, organizationPath string) error {
+func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp scm.SCM, user *qf.User, organizationPath string) error {
 	user, err := s.db.GetUser(user.ID)
 	if err != nil {
 		return fmt.Errorf("failed to get user %d: %w", user.ID, err)
@@ -492,9 +492,9 @@ func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, appSCM s
 		return fmt.Errorf("failed to get SCM for user %d: %w", user.ID, err)
 	}
 	if err := userSCM.AcceptRepositoryInvites(ctx, &scm.RepositoryInvitationOptions{
-		Login: user.GetLogin(),
-		Owner: organizationPath,
-		Scm:   appSCM,
+		Login:  user.GetLogin(),
+		Owner:  organizationPath,
+		ScmApp: scmApp,
 	}); err != nil {
 		return fmt.Errorf("failed to get repository invites for %s: %w", user.Login, err)
 	}
