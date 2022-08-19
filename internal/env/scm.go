@@ -3,6 +3,7 @@ package env
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -64,7 +65,7 @@ func AppID() (string, error) {
 func AppKey() string {
 	appKey = os.Getenv("QUICKFEED_APP_KEY")
 	if appKey == "" {
-		return defaultKeyPath
+		return filepath.Join(Root(), defaultKeyPath)
 	}
 	return appKey
 }

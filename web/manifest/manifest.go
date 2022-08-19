@@ -8,14 +8,20 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/internal/env"
 )
 
-const defaultPath = "internal/config/github/quickfeed.pem"
-const clientID = "QUICKFEED_APP_ID"
-const clientSecret = "QUICKFEED_APP_KEY"
+// TODO(meling) Should reuse those in env package.
+const (
+	defaultPath  = "internal/config/github/quickfeed.pem"
+	appID        = "QUICKFEED_APP_ID"
+	appKey       = "QUICKFEED_APP_KEY"
+	clientID     = "QUICKFEED_CLIENT_ID"
+	clientSecret = "QUICKFEED_CLIENT_SECRET"
+)
 
 type Manifest struct {
 	http.Server
@@ -52,7 +58,7 @@ func StartFlow(addr string) error {
 	fmt.Printf("Go to https://%s/manifest to create an app.\n", env.Domain())
 
 	<-m.done
-	// Refresh enviroment variables
+	// Refresh environment variables
 	return env.Load("")
 }
 
@@ -82,7 +88,7 @@ func (m *Manifest) Conversion() http.HandlerFunc {
 		}
 
 		// Save PEM file to default location
-		if err := os.MkdirAll(filepath.Dir(defaultPath), 0700); err != nil {
+		if err := os.MkdirAll(filepath.Dir(defaultPath), 0o700); err != nil {
 			fmt.Println("Failed to create directory:", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
@@ -90,17 +96,22 @@ func (m *Manifest) Conversion() http.HandlerFunc {
 		}
 
 		// Write PEM file
-		if err := os.WriteFile(defaultPath, []byte(*config.PEM), 0644); err != nil {
+		if err := os.WriteFile(defaultPath, []byte(*config.PEM), 0o644); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			return
 		}
 
-		// Save the application configuration to file
-		quickfeedRoot := os.Getenv("QUICKFEED")
-		env.Save("", clientSecret, filepath.Join(quickfeedRoot, defaultPath), clientID, *config.ClientID)
+		// Save the application configuration to the .env file
+		envToUpdate := map[string]string{
+			appID:        strconv.FormatInt(*config.ID, 10),
+			appKey:       env.AppKey(),
+			clientID:     *config.ClientID,
+			clientSecret: *config.ClientSecret,
+		}
+		env.Save("", envToUpdate)
 
-		// Refresh enviroment variables
+		// Refresh environment variables
 		if err := env.Load(""); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
