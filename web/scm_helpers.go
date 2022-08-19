@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -77,34 +76,14 @@ func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCMInvite, error) {
 // getAccessToken exchanges a refresh token for an access token.
 // The new refresh token is saved in the database.
 func (q *QuickFeedService) getAccessToken(refreshToken string, user *qf.User) (string, error) {
-	form := map[string][]string{
-		"client_id":     {q.scmMgr.ClientID},
-		"client_secret": {q.scmMgr.ClientSecret},
-		"refresh_token": {refreshToken},
-		"grant_type":    {"refresh_token"},
-	}
-
-	resp, err := q.scmMgr.Client().PostForm("https://github.com/login/oauth/access_token", form)
+	token, err := q.scmMgr.ExchangeToken(refreshToken)
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("getAccessToken(): failed to get access token: %s", resp.Status)
-	}
-	var token struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&token); err != nil {
-		return "", err
-	}
-
-	if token.AccessToken == "" || token.RefreshToken == "" {
-		return "", fmt.Errorf("getAccessToken(): failed to get access token: tokens are empty")
-	}
 	// update user's refresh token
 	remoteIdentity := user.GetRemoteIDFor(env.ScmProvider())
+	// TODO(meling) we should rename the UpdateAccessToken database method to UpdateRefreshToken
+	// and the new method should operate on the User type directly (requires updating the User proto message)
 	remoteIdentity.AccessToken = token.RefreshToken
 	if err := q.db.UpdateAccessToken(remoteIdentity); err != nil {
 		return "", err
