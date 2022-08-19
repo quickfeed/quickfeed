@@ -34,7 +34,7 @@ func NewManifest(addr string) *Manifest {
 		done: make(chan bool),
 	}
 	router.Handle("/manifest/callback", m.Conversion())
-	router.Handle("/manifest", m.CreateApp())
+	router.Handle("/manifest", CreateApp())
 	m.Server = http.Server{
 		Addr:    addr,
 		Handler: router,
@@ -43,10 +43,10 @@ func NewManifest(addr string) *Manifest {
 }
 
 func StartFlow(addr string) error {
-	m := NewManifest(addr)
-	if err := m.check(); err != nil {
+	if err := check(); err != nil {
 		return err
 	}
+	m := NewManifest(addr)
 	go func() {
 		if err := m.ListenAndServe(); err != nil {
 			fmt.Printf("Failed to start web server: %v\n", err)
@@ -123,14 +123,14 @@ func (m *Manifest) Conversion() http.HandlerFunc {
 	}
 }
 
-func (m *Manifest) CreateApp() http.HandlerFunc {
+func CreateApp() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		m.form(w)
+		form(w)
 	}
 }
 
-func (m Manifest) form(w http.ResponseWriter) {
+func form(w http.ResponseWriter) {
 	const tpl = `
 	<html>
 		<form id="create" action="https://github.com/settings/apps/new" method="post">
@@ -175,7 +175,7 @@ func (m Manifest) form(w http.ResponseWriter) {
 	}
 }
 
-func (m Manifest) check() error {
+func check() error {
 	if env.HasAppEnvs() {
 		fmt.Println("WARNING: Backup any existing app configuration. Continuing will delete all existing app configuration.")
 		if !answer() {
@@ -183,12 +183,11 @@ func (m Manifest) check() error {
 		}
 	}
 	if env.Domain() == "localhost" || env.Domain() == "127.0.0.1" {
-		fmt.Printf("WARNING: You are creating an app on %s. Only do this for development purposes.\n", env.Domain())
+		fmt.Printf("WARNING: You are creating an app on %s. Only for development purposes.\n", env.Domain())
 		if !answer() {
 			return fmt.Errorf("aborting GitHub app creation")
 		}
 	}
-
 	return nil
 }
 
