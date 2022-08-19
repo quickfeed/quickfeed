@@ -9,6 +9,7 @@ import (
 
 const (
 	defaultProvider = "github"
+	defaultAppName  = "QuickFeed"
 	defaultKeyPath  = "internal/config/github/quickfeed.pem"
 )
 
@@ -16,6 +17,7 @@ var (
 	provider     string
 	appID        string
 	appKey       string
+	appName      string
 	clientID     string
 	clientSecret string
 )
@@ -68,6 +70,15 @@ func AppKey() string {
 		return filepath.Join(Root(), defaultKeyPath)
 	}
 	return appKey
+}
+
+// AppName returns the name of the QuickFeed app on GitHub.
+func AppName() string {
+	appName = os.Getenv("QUICKFEED_APP_NAME")
+	if appName == "" {
+		return defaultAppName
+	}
+	return appName
 }
 
 // SetFakeProvider sets the provider to fake. This is only for testing.

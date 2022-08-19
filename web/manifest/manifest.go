@@ -141,7 +141,7 @@ func form(w http.ResponseWriter) {
 	<script>
 		input = document.getElementById("manifest")
 		input.value = JSON.stringify({
-			"name": "QuickFeed",
+			"name": "{{.Name}}",
 			"url": "{{.URL}}",
 			"hook_attributes": {
 				"active": false,
@@ -164,9 +164,11 @@ func form(w http.ResponseWriter) {
 	t := template.Must(template.New("form").Parse(tpl))
 
 	data := struct {
-		URL string
+		URL  string
+		Name string
 	}{
-		URL: "https://" + env.Domain(),
+		URL:  "https://" + env.Domain(),
+		Name: env.AppName(),
 	}
 
 	if err := t.Execute(w, data); err != nil {
