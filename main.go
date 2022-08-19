@@ -50,7 +50,7 @@ func main() {
 		public   = flag.String("http.public", "public", "path to content to serve")
 		httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
 		dev      = flag.Bool("dev", false, "running server locally")
-		new      = flag.Bool("new", false, "create new GitHub app")
+		newApp   = flag.Bool("new", false, "create new GitHub app")
 	)
 	flag.Parse()
 
@@ -64,7 +64,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if *new {
+	if *newApp {
 		if err := manifest.StartFlow(*httpAddr); err != nil {
 			log.Fatal(err)
 		}
