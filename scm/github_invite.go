@@ -18,7 +18,8 @@ func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *Repository
 	}
 
 	for _, repo := range []string{qf.InfoRepo, qf.AssignmentRepo, qf.StudentRepoName(opt.Login)} {
-		repoInvites, _, err := s.client.Repositories.ListInvitations(ctx, opt.Owner, repo, &github.ListOptions{})
+		// Important: Get repository invitations using the GitHub App client.
+		repoInvites, _, err := opt.appClient().client.Repositories.ListInvitations(ctx, opt.Owner, repo, &github.ListOptions{})
 		if err != nil {
 			return ErrFailedSCM{
 				GitError: fmt.Errorf("failed to fetch GitHub repository invitations: %w", err),
@@ -32,6 +33,7 @@ func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *Repository
 				// Ignore unrelated invites
 				continue
 			}
+			// Important: Accept repository invitations using the user-specific GitHub client.
 			_, err := s.client.Users.AcceptInvitation(ctx, invite.GetID())
 			if err != nil {
 				return ErrFailedSCM{

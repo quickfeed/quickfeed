@@ -15,6 +15,11 @@ type SCMInvite interface {
 type RepositoryInvitationOptions struct {
 	Login string // GitHub username.
 	Owner string // Name of the organization.
+	Scm   SCM
+}
+
+func (r *RepositoryInvitationOptions) appClient() *GithubSCM {
+	return r.Scm.(*GithubSCM)
 }
 
 // NewInviteOnlySCMClient returns a new provider client implementing the SCM interface.
