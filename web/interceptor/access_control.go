@@ -82,7 +82,6 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryS
 	return func(ctx context.Context, request interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		method := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
 		req, ok := request.(requestID)
-		// The GetUserByCourse method sends a CourseUserRequest which has no IDs and needs a database query.
 		if !ok {
 			logger.Errorf("%s failed: message type %T does not implement IDFor interface", method, request)
 			return nil, ErrAccessDenied

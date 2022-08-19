@@ -26,13 +26,9 @@ func getAuthenticatedContext(ctx context.Context, logger *zap.SugaredLogger, tm 
 	}
 	if tm.UpdateRequired(claims) {
 		logger.Debug("Updating cookie for user ", claims.UserID)
-		updatedCookie, err := tm.NewAuthCookie(claims.UserID)
+		updatedCookie, err := tm.UpdateCookie(claims)
 		if err != nil {
 			logger.Errorf("Failed to update cookie: %v", err)
-			return nil, ErrInvalidAuthCookie
-		}
-		if err := tm.Remove(claims.UserID); err != nil {
-			logger.Error(err)
 			return nil, ErrInvalidAuthCookie
 		}
 		if err := grpc.SendHeader(ctx, metadata.Pairs(auth.SetCookie, updatedCookie.String())); err != nil {

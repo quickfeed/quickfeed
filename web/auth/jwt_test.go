@@ -177,3 +177,38 @@ func TestUpdateTokenList(t *testing.T) {
 		t.Error("User's 'UpdateToken' field not updated in the database")
 	}
 }
+
+func TestUpdateCookie(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	user := qtest.CreateFakeUser(t, db, 1)
+	tm, err := auth.NewTokenManager(db, "localhost")
+	if err != nil {
+		t.Fatal(err)
+	}
+	claims := &auth.Claims{
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Minute * 3).Unix(),
+		},
+		UserID: user.ID,
+		Admin:  false,
+	}
+	user.IsAdmin = false
+	if err := db.UpdateUser(user); err != nil {
+		t.Fatal(err)
+	}
+	newCookie, err := tm.UpdateCookie(claims)
+	if err != nil {
+		t.Fatal(err)
+	}
+	meta := metadata.MD{}
+	meta.Set(auth.Cookie, auth.TokenString(newCookie))
+	newClaims, err := tm.GetClaims(metadata.NewIncomingContext(context.Background(), meta))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if newClaims.Admin {
+		t.Error("Admin status in user claims for demoted user")
+	}
+
+}
