@@ -154,12 +154,12 @@ func (s *QuickFeedService) GetCourse(_ context.Context, in *qf.CourseRequest) (*
 
 // GetCourses returns a list of all courses.
 func (s *QuickFeedService) GetCourses(_ context.Context, _ *qf.Void) (*qf.Courses, error) {
-	courses, err := s.getCourses()
+	courses, err := s.db.GetCourses()
 	if err != nil {
 		s.logger.Errorf("GetCourses failed: %v", err)
 		return nil, status.Error(codes.NotFound, "no courses found")
 	}
-	return courses, nil
+	return &qf.Courses{Courses: courses}, nil
 }
 
 // UpdateCourseVisibility allows to edit what courses are visible in the sidebar.
