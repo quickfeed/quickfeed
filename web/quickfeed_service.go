@@ -250,9 +250,9 @@ func (s *QuickFeedService) GetEnrollmentsByCourse(_ context.Context, in *qf.Enro
 	return enrolls, nil
 }
 
-// GetGroup returns information about a group.
+// GetGroup returns information about the given group.
 func (s *QuickFeedService) GetGroup(_ context.Context, in *qf.GetGroupRequest) (*qf.Group, error) {
-	group, err := s.getGroup(in)
+	group, err := s.db.GetGroup(in.GetGroupID())
 	if err != nil {
 		s.logger.Errorf("GetGroup failed: group %d: %v", in.GetGroupID(), err)
 		return nil, status.Error(codes.NotFound, "failed to get group")
