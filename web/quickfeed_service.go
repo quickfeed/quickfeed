@@ -229,13 +229,15 @@ func (s *QuickFeedService) GetCoursesByUser(_ context.Context, in *qf.Enrollment
 
 // GetEnrollmentsByUser returns all enrollments for the given user and enrollment status with preloaded courses and groups.
 func (s *QuickFeedService) GetEnrollmentsByUser(_ context.Context, in *qf.EnrollmentStatusRequest) (*qf.Enrollments, error) {
-	// get all enrollments from the db (no scm)
-	enrols, err := s.getEnrollmentsByUser(in)
+	enrollments, err := s.db.GetEnrollmentsByUser(in.GetUserID(), in.GetStatuses()...)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByUser failed: user %d: %v", in.GetUserID(), err)
 		return nil, status.Error(codes.NotFound, "no enrollments found for user")
 	}
-	return enrols, nil
+	for _, enrollment := range enrollments {
+		enrollment.SetSlipDays(enrollment.Course)
+	}
+	return &qf.Enrollments{Enrollments: enrollments}, nil
 }
 
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
