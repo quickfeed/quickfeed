@@ -164,8 +164,7 @@ func (s *QuickFeedService) GetCourses(_ context.Context, _ *qf.Void) (*qf.Course
 
 // UpdateCourseVisibility allows to edit what courses are visible in the sidebar.
 func (s *QuickFeedService) UpdateCourseVisibility(_ context.Context, in *qf.Enrollment) (*qf.Void, error) {
-	err := s.changeCourseVisibility(in)
-	if err != nil {
+	if err := s.db.UpdateEnrollment(in); err != nil {
 		s.logger.Errorf("ChangeCourseVisibility failed: %v", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to update course visibility")
 	}

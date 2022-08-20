@@ -393,10 +393,6 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 	return s.db.UpdateCourse(request)
 }
 
-func (s *QuickFeedService) changeCourseVisibility(enrollment *qf.Enrollment) error {
-	return s.db.UpdateEnrollment(enrollment)
-}
-
 // returns all enrollments for the course ID with last activity date and number of approved assignments
 func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.Enrollment, error) {
 	allEnrollmentsWithSubmissions, err := s.getAllCourseSubmissions(
