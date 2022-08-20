@@ -173,8 +173,12 @@ func (s *QuickFeedService) UpdateCourseVisibility(_ context.Context, in *qf.Enro
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
 func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *qf.Enrollment) (*qf.Void, error) {
-	err := s.createEnrollment(in)
-	if err != nil {
+	enrollment := &qf.Enrollment{
+		UserID:   in.GetUserID(),
+		CourseID: in.GetCourseID(),
+		Status:   qf.Enrollment_PENDING,
+	}
+	if err := s.db.CreateEnrollment(enrollment); err != nil {
 		s.logger.Errorf("CreateEnrollment failed: %v", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to create enrollment")
 	}

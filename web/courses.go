@@ -64,16 +64,6 @@ func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest)
 	return &qf.Enrollments{Enrollments: enrollments}, nil
 }
 
-// createEnrollment creates a pending enrollment for the given user and course.
-func (s *QuickFeedService) createEnrollment(request *qf.Enrollment) error {
-	enrollment := qf.Enrollment{
-		UserID:   request.GetUserID(),
-		CourseID: request.GetCourseID(),
-		Status:   qf.Enrollment_PENDING,
-	}
-	return s.db.CreateEnrollment(&enrollment)
-}
-
 // updateEnrollment changes the status of the given course enrollment.
 func (s *QuickFeedService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *qf.Enrollment) error {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
