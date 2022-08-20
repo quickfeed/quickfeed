@@ -215,11 +215,6 @@ func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, 
 	})
 }
 
-// getCourse returns a course object for the given course id.
-func (s *QuickFeedService) getCourse(courseID uint64) (*qf.Course, error) {
-	return s.db.GetCourse(courseID, false)
-}
-
 // getSubmissions returns all the latests submissions for a user of the given course.
 func (s *QuickFeedService) getSubmissions(request *qf.SubmissionRequest) (*qf.Submissions, error) {
 	// only one of user ID and group ID will be set; enforced by IsValid on qf.SubmissionRequest

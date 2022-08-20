@@ -144,7 +144,7 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *qf.Course) (*qf
 
 // GetCourse returns course information for the given course.
 func (s *QuickFeedService) GetCourse(_ context.Context, in *qf.CourseRequest) (*qf.Course, error) {
-	course, err := s.getCourse(in.GetCourseID())
+	course, err := s.db.GetCourse(in.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("GetCourse failed: %v", err)
 		return nil, status.Error(codes.NotFound, "course not found")
@@ -576,7 +576,7 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *qf.URLReques
 		return nil, ErrInvalidUserInfo
 	}
 
-	course, err := s.getCourse(in.GetCourseID())
+	course, err := s.db.GetCourse(in.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("GetRepositories failed: course %d not found: %v", in.GetCourseID(), err)
 		return nil, status.Error(codes.NotFound, "course not found")
