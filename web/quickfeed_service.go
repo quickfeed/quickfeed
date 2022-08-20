@@ -63,15 +63,15 @@ func (s *QuickFeedService) GetUsers(_ context.Context, _ *qf.Void) (*qf.Users, e
 	return &qf.Users{Users: users}, nil
 }
 
-// GetUserByCourse returns the user matching the given course name and GitHub login
-// specified in CourseUserRequest.
+// GetUserByCourse returns the user for the given SCM login name if enrolled in the given course.
 func (s *QuickFeedService) GetUserByCourse(_ context.Context, in *qf.CourseUserRequest) (*qf.User, error) {
-	userInfo, err := s.getUserByCourse(in)
+	query := &qf.Course{Code: in.CourseCode, Year: in.CourseYear}
+	user, _, err := s.db.GetUserByCourse(query, in.UserLogin)
 	if err != nil {
-		s.logger.Errorf("GetUserByCourse failed: %+v", err)
+		s.logger.Errorf("GetUserByCourse failed: %v", err)
 		return nil, status.Error(codes.FailedPrecondition, "failed to get student information")
 	}
-	return userInfo, nil
+	return user, nil
 }
 
 // UpdateUser updates the current users's information and returns the updated user.

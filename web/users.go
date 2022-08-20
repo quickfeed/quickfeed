@@ -2,17 +2,6 @@ package web
 
 import "github.com/quickfeed/quickfeed/qf"
 
-// getUserByCourse returns the user matching the given GitHub login if
-// the user is enrolled in the given course.
-func (s *QuickFeedService) getUserByCourse(request *qf.CourseUserRequest) (*qf.User, error) {
-	courseQuery := &qf.Course{Code: request.CourseCode, Year: request.CourseYear}
-	user, _, err := s.db.GetUserByCourse(courseQuery, request.UserLogin)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
 // updateUser updates the user profile according to the user data in
 // the request object. If curUser is admin, and the request may also
 // promote the user to admin.
