@@ -221,7 +221,7 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *qf.Enrollm
 func (s *QuickFeedService) GetCoursesByUser(_ context.Context, in *qf.EnrollmentStatusRequest) (*qf.Courses, error) {
 	courses, err := s.db.GetCoursesByUser(in.GetUserID(), in.GetStatuses()...)
 	if err != nil {
-		s.logger.Errorf("GetCoursesByUser failed: %v", err)
+		s.logger.Errorf("GetCoursesByUser failed: user %d: %v", in.GetUserID(), err)
 		return nil, status.Error(codes.NotFound, "no courses with enrollment found")
 	}
 	return &qf.Courses{Courses: courses}, nil
@@ -260,14 +260,14 @@ func (s *QuickFeedService) GetGroup(_ context.Context, in *qf.GetGroupRequest) (
 	return group, nil
 }
 
-// GetGroupsByCourse returns a list of groups created for the course id in the record request.
+// GetGroupsByCourse returns groups created for the given course.
 func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *qf.CourseRequest) (*qf.Groups, error) {
-	groups, err := s.getGroups(in)
+	groups, err := s.db.GetGroupsByCourse(in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("GetGroups failed: %v", err)
+		s.logger.Errorf("GetGroups failed: course %d: %v", in.GetCourseID(), err)
 		return nil, status.Error(codes.NotFound, "failed to get groups")
 	}
-	return groups, nil
+	return &qf.Groups{Groups: groups}, nil
 }
 
 // GetGroupByUserAndCourse returns the group of the given student for a given course.
