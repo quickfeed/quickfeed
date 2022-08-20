@@ -217,14 +217,14 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *qf.Enrollm
 	return &qf.Void{}, nil
 }
 
-// GetCoursesByUser returns all courses the given user is enrolled into with the given status.
+// GetCoursesByUser returns all courses for the given user that match the provided enrollment status.
 func (s *QuickFeedService) GetCoursesByUser(_ context.Context, in *qf.EnrollmentStatusRequest) (*qf.Courses, error) {
-	courses, err := s.getCoursesByUser(in)
+	courses, err := s.db.GetCoursesByUser(in.GetUserID(), in.GetStatuses()...)
 	if err != nil {
 		s.logger.Errorf("GetCoursesByUser failed: %v", err)
 		return nil, status.Error(codes.NotFound, "no courses with enrollment found")
 	}
-	return courses, nil
+	return &qf.Courses{Courses: courses}, nil
 }
 
 // GetEnrollmentsByUser returns all enrollments for the given user and enrollment status with preloaded courses and groups.

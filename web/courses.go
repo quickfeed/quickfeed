@@ -12,15 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// getCoursesByUser returns all courses that match the provided enrollment status.
-func (s *QuickFeedService) getCoursesByUser(request *qf.EnrollmentStatusRequest) (*qf.Courses, error) {
-	courses, err := s.db.GetCoursesByUser(request.GetUserID(), request.Statuses...)
-	if err != nil {
-		return nil, err
-	}
-	return &qf.Courses{Courses: courses}, nil
-}
-
 // getEnrollmentsByUser returns all enrollments for the given user with preloaded
 // courses and groups
 func (s *QuickFeedService) getEnrollmentsByUser(request *qf.EnrollmentStatusRequest) (*qf.Enrollments, error) {
