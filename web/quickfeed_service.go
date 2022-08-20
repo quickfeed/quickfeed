@@ -55,12 +55,12 @@ func (s *QuickFeedService) GetUser(ctx context.Context, _ *qf.Void) (*qf.User, e
 // GetUsers returns a list of all users.
 // Frontend note: This method is called from AdminPage.
 func (s *QuickFeedService) GetUsers(_ context.Context, _ *qf.Void) (*qf.Users, error) {
-	users, err := s.getUsers()
+	users, err := s.db.GetUsers()
 	if err != nil {
 		s.logger.Errorf("GetUsers failed: %v", err)
 		return nil, status.Error(codes.NotFound, "failed to get users")
 	}
-	return users, nil
+	return &qf.Users{Users: users}, nil
 }
 
 // GetUserByCourse returns the user matching the given course name and GitHub login
