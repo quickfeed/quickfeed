@@ -57,6 +57,40 @@ func (cfg *Config) fetchInstallation(organization string) (*github.Installation,
 	return nil, fmt.Errorf("could not find GitHub app installation for organization %s", organization)
 }
 
+type ExchangeToken struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+// ExchangeToken exchanges a refresh token for an access token.
+func (cfg *Config) ExchangeToken(refreshToken string) (*ExchangeToken, error) {
+	if cfg == nil {
+		return nil, errors.New("cannot exchange refresh token without config")
+	}
+	form := map[string][]string{
+		"client_id":     {cfg.ClientID},
+		"client_secret": {cfg.ClientSecret},
+		"refresh_token": {refreshToken},
+		"grant_type":    {"refresh_token"},
+	}
+	resp, err := cfg.Client().PostForm("https://github.com/login/oauth/access_token", form)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("failed to get access token: %s", resp.Status)
+	}
+	var token ExchangeToken
+	if err := json.NewDecoder(resp.Body).Decode(&token); err != nil {
+		return nil, err
+	}
+	if token.AccessToken == "" || token.RefreshToken == "" {
+		return nil, fmt.Errorf("tokens are empty")
+	}
+	return &token, nil
+}
+
 func (s *GithubSCM) refreshToken(organization string) error {
 	if s.config == nil {
 		return errors.New("cannot refresh token without config")

@@ -215,11 +215,6 @@ func (*FakeSCM) RemoveMember(_ context.Context, _ *OrgMembershipOptions) error {
 	return nil
 }
 
-// AcceptRepositoryInvite implements the SCM interface
-func (*FakeSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
-	return nil
-}
-
 // CreateIssue implements the SCM interface
 func (*FakeSCM) CreateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
 	return nil, ErrNotSupported{
@@ -281,5 +276,13 @@ func (*FakeSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptio
 	return ErrNotSupported{
 		SCM:    "FakeSCM",
 		Method: "RequestReviewers",
+	}
+}
+
+// AcceptRepositoryInvite implements the SCMInvite interface
+func (*FakeSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
+	return ErrNotSupported{
+		SCM:    "fake",
+		Method: "AcceptRepositoryInvites",
 	}
 }

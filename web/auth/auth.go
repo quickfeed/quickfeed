@@ -80,7 +80,7 @@ func OAuth2Callback(logger *zap.SugaredLogger, db database.Database, tm *TokenMa
 		remote := &qf.RemoteIdentity{
 			Provider:    env.ScmProvider(),
 			RemoteID:    externalUser.ID,
-			AccessToken: token.AccessToken,
+			AccessToken: token.RefreshToken,
 		}
 		// in case this is a new user we need a user object with full information,
 		// otherwise frontend will get user object where only name, email and url are set.
