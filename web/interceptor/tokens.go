@@ -4,9 +4,9 @@ import (
 	"context"
 	"strings"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
 )
 
 type (
@@ -55,20 +55,23 @@ var tokenUpdateMethods = map[string]func(context.Context, *auth.TokenManager, us
 
 // TokenRefresher updates list of users who need a new JWT next time they send a request to the server.
 // This method only logs errors to avoid overwriting the gRPC error messages returned by the server.
-func TokenRefresher(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		method := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
-		if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
-			if msg, ok := req.(userIDs); ok {
-				if err := tokenUpdateFn(ctx, tm, msg); err != nil {
-					logger.Error(err)
+func TokenRefresher(logger *zap.SugaredLogger, tm *auth.TokenManager) connect.Interceptor {
+	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
+		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
+			procedure := request.Spec().Procedure
+			method := procedure[strings.LastIndex(procedure, "/")+1:]
+			if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
+				if msg, ok := request.Any().(userIDs); ok {
+					if err := tokenUpdateFn(ctx, tm, msg); err != nil {
+						logger.Error(err)
+						return nil, ErrAccessDenied
+					}
+				} else {
+					logger.Errorf("%s's argument is missing 'userIDs' interface", method)
 					return nil, ErrAccessDenied
 				}
-			} else {
-				logger.Errorf("%s's argument is missing 'userIDs' interface", method)
-				return nil, ErrAccessDenied
 			}
-		}
-		return handler(ctx, req)
-	}
+			return next(ctx, request)
+		})
+	})
 }
