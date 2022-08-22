@@ -439,7 +439,7 @@ func (s *QuickFeedService) UpdateBenchmark(_ context.Context, in *qf.GradingBenc
 
 // DeleteBenchmark removes a grading benchmark.
 func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *qf.GradingBenchmark) (*qf.Void, error) {
-	err := s.deleteBenchmark(in)
+	err := s.db.DeleteBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("DeleteBenchmark failed for %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to delete benchmark")
