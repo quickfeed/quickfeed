@@ -47,10 +47,6 @@ func (s *QuickFeedService) createBenchmark(query *qf.GradingBenchmark) (*qf.Grad
 	return query, nil
 }
 
-func (s *QuickFeedService) updateCriterion(query *qf.GradingCriterion) error {
-	return s.db.UpdateCriterion(query)
-}
-
 func (s *QuickFeedService) deleteCriterion(query *qf.GradingCriterion) error {
 	return s.db.DeleteCriterion(query)
 }

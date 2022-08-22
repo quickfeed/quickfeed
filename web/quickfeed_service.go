@@ -457,8 +457,7 @@ func (s *QuickFeedService) CreateCriterion(_ context.Context, in *qf.GradingCrit
 
 // UpdateCriterion edits a grading criterion for an assignment.
 func (s *QuickFeedService) UpdateCriterion(_ context.Context, in *qf.GradingCriterion) (*qf.Void, error) {
-	err := s.updateCriterion(in)
-	if err != nil {
+	if err := s.db.UpdateCriterion(in); err != nil {
 		s.logger.Errorf("UpdateCriterion failed for %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to update criterion")
 	}
