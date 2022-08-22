@@ -87,16 +87,9 @@ type SCM interface {
 
 	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
-}
 
-type SCMInvite interface {
-	// Accepts repository invite.
+	// Accepts repository invites.
 	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
-}
-
-// NewInviteOnlySCMClient returns a new provider client implementing the SCM interface.
-func NewInviteOnlySCMClient(logger *zap.SugaredLogger, token string) SCMInvite {
-	return NewGithubSCMClient(logger, token)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -299,10 +292,4 @@ type RequestReviewersOptions struct {
 	Repository   string
 	Number       int
 	Reviewers    []string // Reviewers is a slice of github usernames
-}
-
-// RepositoryInvitationOptions contains information on which organization and user to accept invitations for.
-type RepositoryInvitationOptions struct {
-	Login string // GitHub username.
-	Owner string // Name of the organization.
 }

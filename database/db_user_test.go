@@ -92,7 +92,7 @@ func TestGormDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
 	defer cleanup()
 	wantUser := qtest.CreateFakeUser(t, db, remoteID)
 
-	cachedAccessToken, err := wantUser.GetAccessToken(provider)
+	cachedAccessToken, err := wantUser.GetRefreshToken(provider)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +115,7 @@ func TestGormDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
-	cachedAccessToken2, err := gotUser.GetAccessToken(provider)
+	cachedAccessToken2, err := gotUser.GetRefreshToken(provider)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,7 +142,7 @@ func TestGormDBUpdateAccessTokenUserGetAccessToken(t *testing.T) {
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
 		t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
-	cachedAccessToken3, err := gotUser.GetAccessToken(provider)
+	cachedAccessToken3, err := gotUser.GetRefreshToken(provider)
 	if err != nil {
 		t.Fatal(err)
 	}

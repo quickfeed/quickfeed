@@ -20,8 +20,8 @@ func (u *User) GetRemoteIDFor(provider string) *RemoteIdentity {
 	return remoteID
 }
 
-// GetAccessToken returns the user's access token for the given provider.
-func (u *User) GetAccessToken(provider string) (string, error) {
+// GetRefreshToken returns the user's refresh token for the given provider.
+func (u *User) GetRefreshToken(provider string) (string, error) {
 	remoteID := u.GetRemoteIDFor(provider)
 	if remoteID == nil {
 		return "", fmt.Errorf("found no %s access token for user %s", provider, u.GetName())
