@@ -12,10 +12,9 @@ import (
 // GithubSCM implements the SCM interface.
 type GithubInviteSCM struct {
 	client *github.Client
-	token  string
 }
 
-// NewGithubSCMClient returns a new Github client implementing the SCM interface.
+// newGithubSCMClient returns a new Github client implementing the SCMInvite interface.
 func newGithubInviteClient(token string) *GithubInviteSCM {
 	src := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
@@ -23,7 +22,6 @@ func newGithubInviteClient(token string) *GithubInviteSCM {
 	httpClient := oauth2.NewClient(context.Background(), src)
 	return &GithubInviteSCM{
 		client: github.NewClient(httpClient),
-		token:  token,
 	}
 }
 
