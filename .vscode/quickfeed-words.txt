@@ -130,6 +130,7 @@ protocmp
 protoimpl
 protopatch
 protoreflect
+qfconnect
 qlog
 qtest
 quickfeed
