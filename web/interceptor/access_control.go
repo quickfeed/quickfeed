@@ -87,7 +87,8 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) connect.Int
 				logger.Errorf("%s failed: message type %T does not implement IDFor interface", method, request)
 				return nil, ErrAccessDenied
 			}
-			claims, err := tm.GetClaims(ctx)
+			cookies := request.Header().Get(auth.Cookie)
+			claims, err := tm.GetClaims(cookies)
 			if err != nil {
 				logger.Errorf("AccessControl(%s): failed to get claims from request context: %v", method, err)
 				return nil, ErrAccessDenied
