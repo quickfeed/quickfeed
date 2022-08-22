@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/bufbuild/connect-go"
+	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
@@ -57,23 +58,25 @@ func (s *QuickFeedService) GetUser(ctx context.Context, _ *connect.Request[qf.Vo
 // GetUsers returns a list of all users.
 // Frontend note: This method is called from AdminPage.
 func (s *QuickFeedService) GetUsers(_ context.Context, _ *connect.Request[qf.Void]) (*connect.Response[qf.Users], error) {
-	users, err := s.getUsers()
+	users, err := s.db.GetUsers()
 	if err != nil {
 		s.logger.Errorf("GetUsers failed: %v", err)
 		return nil, status.Error(codes.NotFound, "failed to get users")
 	}
-	return connect.NewResponse(users), nil
+	return connect.NewResponse(&qf.Users{
+		Users: users,
+	}), nil
 }
 
-// GetUserByCourse returns the user matching the given course name and GitHub login
-// specified in CourseUserRequest.
+// GetUserByCourse returns the user for the given SCM login name if enrolled in the given course.
 func (s *QuickFeedService) GetUserByCourse(_ context.Context, in *connect.Request[qf.CourseUserRequest]) (*connect.Response[qf.User], error) {
-	userInfo, err := s.getUserByCourse(in.Msg)
+	query := &qf.Course{Code: in.Msg.CourseCode, Year: in.Msg.CourseYear}
+	user, _, err := s.db.GetUserByCourse(query, in.Msg.UserLogin)
 	if err != nil {
-		s.logger.Errorf("GetUserByCourse failed: %+v", err)
+		s.logger.Errorf("GetUserByCourse failed: %v", err)
 		return nil, status.Error(codes.FailedPrecondition, "failed to get student information")
 	}
-	return connect.NewResponse(userInfo), nil
+	return connect.NewResponse(user), nil
 }
 
 // UpdateUser updates the current users's information and returns the updated user.
@@ -146,7 +149,7 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 
 // GetCourse returns course information for the given course.
 func (s *QuickFeedService) GetCourse(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Course], error) {
-	course, err := s.getCourse(in.Msg.GetCourseID())
+	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("GetCourse failed: %v", err)
 		return nil, status.Error(codes.NotFound, "course not found")
@@ -156,32 +159,37 @@ func (s *QuickFeedService) GetCourse(_ context.Context, in *connect.Request[qf.C
 
 // GetCourses returns a list of all courses.
 func (s *QuickFeedService) GetCourses(_ context.Context, _ *connect.Request[qf.Void]) (*connect.Response[qf.Courses], error) {
-	courses, err := s.getCourses()
+	courses, err := s.db.GetCourses()
 	if err != nil {
 		s.logger.Errorf("GetCourses failed: %v", err)
 		return nil, status.Error(codes.NotFound, "no courses found")
 	}
-	return connect.NewResponse(courses), nil
+	return connect.NewResponse(&qf.Courses{
+		Courses: courses,
+	}), nil
 }
 
 // UpdateCourseVisibility allows to edit what courses are visible in the sidebar.
 func (s *QuickFeedService) UpdateCourseVisibility(_ context.Context, in *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
-	err := s.changeCourseVisibility(in.Msg)
-	if err != nil {
+	if err := s.db.UpdateEnrollment(in.Msg); err != nil {
 		s.logger.Errorf("ChangeCourseVisibility failed: %v", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to update course visibility")
 	}
-	return &connect.Response[qf.Void]{}, err
+	return &connect.Response[qf.Void]{}, nil
 }
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
 func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
-	err := s.createEnrollment(in.Msg)
-	if err != nil {
+	enrollment := &qf.Enrollment{
+		UserID:   in.Msg.GetUserID(),
+		CourseID: in.Msg.GetCourseID(),
+		Status:   qf.Enrollment_PENDING,
+	}
+	if err := s.db.CreateEnrollment(enrollment); err != nil {
 		s.logger.Errorf("CreateEnrollment failed: %v", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to create enrollment")
 	}
-	return &connect.Response[qf.Void]{}, err
+	return &connect.Response[qf.Void]{}, nil
 }
 
 // UpdateEnrollments changes status of all pending enrollments for the specified course to approved.
@@ -216,25 +224,31 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 	return &connect.Response[qf.Void]{}, err
 }
 
-// GetCoursesByUser returns all courses the given user is enrolled into with the given status.
+// GetCoursesByUser returns all courses for the given user that match the provided enrollment status.
 func (s *QuickFeedService) GetCoursesByUser(_ context.Context, in *connect.Request[qf.EnrollmentStatusRequest]) (*connect.Response[qf.Courses], error) {
-	courses, err := s.getCoursesByUser(in.Msg)
+	courses, err := s.db.GetCoursesByUser(in.Msg.GetUserID(), in.Msg.GetStatuses()...)
 	if err != nil {
-		s.logger.Errorf("GetCoursesByUser failed: %v", err)
+		s.logger.Errorf("GetCoursesByUser failed: user %d: %v", in.Msg.GetUserID(), err)
 		return nil, status.Error(codes.NotFound, "no courses with enrollment found")
 	}
-	return connect.NewResponse(courses), nil
+	return connect.NewResponse(&qf.Courses{
+		Courses: courses,
+	}), nil
 }
 
 // GetEnrollmentsByUser returns all enrollments for the given user and enrollment status with preloaded courses and groups.
 func (s *QuickFeedService) GetEnrollmentsByUser(ctx context.Context, in *connect.Request[qf.EnrollmentStatusRequest]) (*connect.Response[qf.Enrollments], error) {
-	// get all enrollments from the db (no scm)
-	enrols, err := s.getEnrollmentsByUser(in.Msg)
+	enrollments, err := s.db.GetEnrollmentsByUser(in.Msg.GetUserID(), in.Msg.GetStatuses()...)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByUser failed: user %d: %v", in.Msg.GetUserID(), err)
 		return nil, status.Error(codes.NotFound, "no enrollments found for user")
 	}
-	return connect.NewResponse(enrols), nil
+	for _, enrollment := range enrollments {
+		enrollment.SetSlipDays(enrollment.Course)
+	}
+	return connect.NewResponse(&qf.Enrollments{
+		Enrollments: enrollments,
+	}), nil
 }
 
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
@@ -247,9 +261,9 @@ func (s *QuickFeedService) GetEnrollmentsByCourse(ctx context.Context, in *conne
 	return connect.NewResponse(enrolls), nil
 }
 
-// GetGroup returns information about a group.
+// GetGroup returns information about the given group.
 func (s *QuickFeedService) GetGroup(_ context.Context, in *connect.Request[qf.GetGroupRequest]) (*connect.Response[qf.Group], error) {
-	group, err := s.getGroup(in.Msg)
+	group, err := s.db.GetGroup(in.Msg.GetGroupID())
 	if err != nil {
 		s.logger.Errorf("GetGroup failed: group %d: %v", in.Msg.GetGroupID(), err)
 		return nil, status.Error(codes.NotFound, "failed to get group")
@@ -257,14 +271,16 @@ func (s *QuickFeedService) GetGroup(_ context.Context, in *connect.Request[qf.Ge
 	return connect.NewResponse(group), nil
 }
 
-// GetGroupsByCourse returns a list of groups created for the course id in the record request.
+// GetGroupsByCourse returns groups created for the given course.
 func (s *QuickFeedService) GetGroupsByCourse(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Groups], error) {
-	groups, err := s.getGroups(in.Msg)
+	groups, err := s.db.GetGroupsByCourse(in.Msg.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("GetGroups failed: %v", err)
+		s.logger.Errorf("GetGroups failed: course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, status.Error(codes.NotFound, "failed to get groups")
 	}
-	return connect.NewResponse(groups), nil
+	return connect.NewResponse(&qf.Groups{
+		Groups: groups,
+	}), nil
 }
 
 // GetGroupByUserAndCourse returns the group of the given student for a given course.
@@ -428,52 +444,47 @@ func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *connect.Reques
 
 // UpdateBenchmark edits a grading benchmark for an assignment.
 func (s *QuickFeedService) UpdateBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
-	err := s.updateBenchmark(in.Msg)
-	if err != nil {
+	if err := s.db.UpdateBenchmark(in.Msg); err != nil {
 		s.logger.Errorf("UpdateBenchmark failed for %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to update benchmark")
 	}
-	return &connect.Response[qf.Void]{}, err
+	return &connect.Response[qf.Void]{}, nil
 }
 
 // DeleteBenchmark removes a grading benchmark.
 func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
-	err := s.deleteBenchmark(in.Msg)
-	if err != nil {
+	if err := s.db.DeleteBenchmark(in.Msg); err != nil {
 		s.logger.Errorf("DeleteBenchmark failed for %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to delete benchmark")
 	}
-	return &connect.Response[qf.Void]{}, err
+	return &connect.Response[qf.Void]{}, nil
 }
 
 // CreateCriterion adds a new grading criterion for an assignment.
 func (s *QuickFeedService) CreateCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error) {
-	c, err := s.createCriterion(in.Msg)
-	if err != nil {
+	if err := s.db.CreateCriterion(in.Msg); err != nil {
 		s.logger.Errorf("CreateCriterion failed for %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to add criterion")
 	}
-	return connect.NewResponse(c), nil
+	return connect.NewResponse(in.Msg), nil
 }
 
 // UpdateCriterion edits a grading criterion for an assignment.
 func (s *QuickFeedService) UpdateCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
-	err := s.updateCriterion(in.Msg)
-	if err != nil {
+	if err := s.db.UpdateCriterion(in.Msg); err != nil {
 		s.logger.Errorf("UpdateCriterion failed for %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to update criterion")
 	}
-	return &connect.Response[qf.Void]{}, err
+	return &connect.Response[qf.Void]{}, nil
 }
 
 // DeleteCriterion removes a grading criterion for an assignment.
 func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
-	err := s.deleteCriterion(in.Msg)
-	if err != nil {
+	if err := s.db.DeleteCriterion(in.Msg); err != nil {
 		s.logger.Errorf("DeleteCriterion failed for %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to delete criterion")
 	}
-	return &connect.Response[qf.Void]{}, err
+	return &connect.Response[qf.Void]{}, nil
 }
 
 // CreateReview adds a new submission review.
@@ -519,8 +530,7 @@ func (s *QuickFeedService) GetReviewers(ctx context.Context, in *connect.Request
 
 // GetAssignments returns a list of all assignments for the given course.
 func (s *QuickFeedService) GetAssignments(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Assignments], error) {
-	courseID := in.Msg.GetCourseID()
-	assignments, err := s.getAssignments(courseID)
+	assignments, err := s.getAssignments(in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("GetAssignments failed: %v", err)
 		return nil, status.Error(codes.NotFound, "no assignments found for course")
@@ -528,14 +538,15 @@ func (s *QuickFeedService) GetAssignments(_ context.Context, in *connect.Request
 	return connect.NewResponse(assignments), nil
 }
 
-// UpdateAssignments updates the assignments record in the database
+// UpdateAssignments updates the course's assignments record in the database
 // by fetching assignment information from the course's test repository.
 func (s *QuickFeedService) UpdateAssignments(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error) {
-	err := s.updateAssignments(in.Msg.GetCourseID())
+	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
-		s.logger.Errorf("UpdateAssignments failed: %v", err)
+		s.logger.Errorf("UpdateAssignments failed: course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, status.Error(codes.NotFound, "course not found")
 	}
+	assignments.UpdateFromTestsRepo(s.logger, s.db, s.scmMgr, course)
 	return &connect.Response[qf.Void]{}, nil
 }
 
@@ -579,7 +590,7 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 		return nil, ErrInvalidUserInfo
 	}
 
-	course, err := s.getCourse(in.Msg.GetCourseID())
+	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("GetRepositories failed: course %d not found: %v", in.Msg.GetCourseID(), err)
 		return nil, status.Error(codes.NotFound, "course not found")

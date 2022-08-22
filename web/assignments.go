@@ -25,16 +25,6 @@ func (s *QuickFeedService) getAssignments(courseID uint64) (*qf.Assignments, err
 	return &qf.Assignments{Assignments: allAssignments}, nil
 }
 
-// updateAssignments updates the assignments for the given course.
-func (s *QuickFeedService) updateAssignments(courseID uint64) error {
-	course, err := s.db.GetCourse(courseID, false)
-	if err != nil {
-		return fmt.Errorf("could not find course ID %d", courseID)
-	}
-	assignments.UpdateFromTestsRepo(s.logger, s.db, s.scmMgr, course)
-	return nil
-}
-
 func (s *QuickFeedService) createBenchmark(query *qf.GradingBenchmark) (*qf.GradingBenchmark, error) {
 	if _, err := s.db.GetAssignment(&qf.Assignment{
 		ID: query.AssignmentID,
@@ -45,29 +35,6 @@ func (s *QuickFeedService) createBenchmark(query *qf.GradingBenchmark) (*qf.Grad
 		return nil, err
 	}
 	return query, nil
-}
-
-func (s *QuickFeedService) updateBenchmark(query *qf.GradingBenchmark) error {
-	return s.db.UpdateBenchmark(query)
-}
-
-func (s *QuickFeedService) deleteBenchmark(query *qf.GradingBenchmark) error {
-	return s.db.DeleteBenchmark(query)
-}
-
-func (s *QuickFeedService) createCriterion(query *qf.GradingCriterion) (*qf.GradingCriterion, error) {
-	if err := s.db.CreateCriterion(query); err != nil {
-		return nil, err
-	}
-	return query, nil
-}
-
-func (s *QuickFeedService) updateCriterion(query *qf.GradingCriterion) error {
-	return s.db.UpdateCriterion(query)
-}
-
-func (s *QuickFeedService) deleteCriterion(query *qf.GradingCriterion) error {
-	return s.db.DeleteCriterion(query)
 }
 
 func (s *QuickFeedService) createReview(review *qf.Review) (*qf.Review, error) {
