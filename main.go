@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"log"
 	"mime"
@@ -16,6 +17,7 @@ import (
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
+	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -124,7 +126,22 @@ func main() {
 	} else {
 		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
 	}
-	if err := muxServer.ListenAndServe(); err != nil {
+	certManager := autocert.Manager{
+		Prompt: autocert.AcceptTOS,
+		Cache:  autocert.DirCache(env.CertPath()),
+		HostPolicy: autocert.HostWhitelist(
+			whitelist...,
+		),
+	}
+	muxServer.TLSConfig = &tls.Config{
+		GetCertificate: certManager.GetCertificate,
+		MaxVersion:     tls.VersionTLS13,
+		MinVersion:     tls.VersionTLS12,
+	}
+	// Redirect all HTTP traffic to HTTPS.
+	go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
+	// Start the HTTPS server.
+	if err := muxServer.ListenAndServeTLS("", ""); err != nil {
 		log.Fatalf("Failed to start grpc server: %v", err)
 	}
 }

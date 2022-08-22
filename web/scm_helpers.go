@@ -59,12 +59,12 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 }
 
 // getSCMForUser returns an SCM client based on the user's personal access token.
-func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCM, error) {
+func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCMInvite, error) {
 	accessToken, err := user.GetAccessToken(env.ScmProvider())
 	if err != nil {
 		return nil, err
 	}
-	return scm.NewSCMClient(q.logger, accessToken)
+	return scm.NewInviteOnlySCMClient(q.logger, accessToken), nil
 }
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the

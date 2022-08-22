@@ -22,13 +22,8 @@ func TestGetUsers(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user2 := qtest.CreateFakeUser(t, db, 2)
-	ctx := qtest.WithUserContext(context.Background(), user2)
-	_, err = ags.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
-	if err == nil {
-		t.Fatal("expected 'rpc error: code = PermissionDenied desc = only admin can access other users'")
-	}
-	// now switch to use admin as the user; this should pass
-	ctx = qtest.WithUserContext(context.Background(), admin)
+
+	ctx := qtest.WithUserContext(context.Background(), admin)
 	foundUsers, err := ags.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
 	if err != nil {
 		t.Fatal(err)

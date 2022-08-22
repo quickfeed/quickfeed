@@ -2,9 +2,9 @@ package interceptor
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"
@@ -27,8 +27,8 @@ func getAuthenticatedContext(ctx context.Context, header http.Header, logger *za
 	}
 	newCtx := metadata.NewIncomingContext(ctx, metadata.Pairs(auth.UserKey, strconv.FormatUint(claims.UserID, 10)))
 	if tm.UpdateRequired(claims) {
-		logger.Debug("Updating token for user ", claims.UserID)
-		updatedCookie, err := tm.NewAuthCookie(claims.UserID)
+		logger.Debug("Updating cookie for user ", claims.UserID)
+		updatedCookie, err := tm.UpdateCookie(claims)
 		if err != nil {
 			logger.Errorf("Failed to update cookie: %v", err)
 			return nil, nil, ErrInvalidAuthCookie
@@ -38,14 +38,29 @@ func getAuthenticatedContext(ctx context.Context, header http.Header, logger *za
 	return newCtx, nil, nil
 }
 
-// extractToken extracts a JWT authentication token from metadata.
-func extractToken(cookieString string) (string, error) {
-	cookies := strings.Split(cookieString, ";")
-	for _, cookie := range cookies {
-		_, cookieValue, ok := strings.Cut(cookie, auth.CookieName+"=")
-		if ok {
-			return strings.TrimSpace(cookieValue), nil
+func has(method string) bool {
+	_, ok := accessRolesFor[method]
+	return ok
+}
+
+func CheckAccessMethods(expectedMethodNames map[string]bool) error {
+	missingMethods := []string{}
+	superfluousMethods := []string{}
+	for method := range expectedMethodNames {
+		if !has(method) {
+			missingMethods = append(missingMethods, method)
 		}
 	}
-	return "", ErrInvalidAuthCookie
+	for method := range accessRolesFor {
+		if !expectedMethodNames[method] {
+			superfluousMethods = append(superfluousMethods, method)
+		}
+	}
+	if len(missingMethods) > 0 {
+		return fmt.Errorf("missing required method(s) in access control table: %v", missingMethods)
+	}
+	if len(superfluousMethods) > 0 {
+		return fmt.Errorf("superfluous method(s) in access control table: %v", superfluousMethods)
+	}
+	return nil
 }

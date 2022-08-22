@@ -2,7 +2,6 @@ package interceptor
 
 import (
 	"context"
-	"reflect"
 	"time"
 
 	"github.com/bufbuild/connect-go"
@@ -59,8 +58,7 @@ func validate(logger *zap.SugaredLogger, req interface{}) error {
 		}
 	} else {
 		// just logging, but still handling the call
-		logger.Debugf("message type '%s' does not implement validator interface",
-			reflect.TypeOf(req).String())
+		logger.Debugf("message type %T does not implement validator interface", req)
 	}
 	return nil
 }

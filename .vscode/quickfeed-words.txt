@@ -5,6 +5,7 @@ apitest
 ASSIGNDIR
 assignmentid
 autoapprove
+autocert
 autograde
 Autograder
 backports
@@ -42,6 +43,7 @@ fullchain
 Getwd
 githubv
 GOBIN
+GOCACHE
 Godkjent
 gofumports
 gofumpt
@@ -78,6 +80,7 @@ Isadmin
 isgrouplab
 itest
 jinzhu
+Jostein
 jsonpb
 JWTs
 keepalive
@@ -86,6 +89,7 @@ killall
 labstack
 Lamport
 letsencrypt
+Lindhom
 linuxbrew
 LOGDB
 logq
@@ -156,6 +160,7 @@ subtest
 subtests
 testdata
 testdb
+testorg
 tmpl
 Typeflag
 Unexported
