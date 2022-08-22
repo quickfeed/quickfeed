@@ -11,7 +11,6 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
@@ -59,7 +58,7 @@ func TestUserVerifier(t *testing.T) {
 		}
 	}()
 
-	client := qfconnect.NewQuickFeedServiceClient(http.DefaultClient, "http://127.0.0.1:8081/")
+	client := qtest.QuickFeedClient("")
 
 	userTest := []struct {
 		code     codes.Code
@@ -77,7 +76,7 @@ func TestUserVerifier(t *testing.T) {
 	for _, user := range userTest {
 		req := connect.NewRequest(&qf.Void{})
 		if user.metadata {
-			req.Header().Set(auth.Cookie, user.token)
+			ctx = context.WithValue(ctx, auth.Cookie, user.token)
 		}
 
 		gotUser, err := client.GetUser(ctx, req)

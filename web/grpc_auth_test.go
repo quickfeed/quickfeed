@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
@@ -58,25 +59,25 @@ func TestGrpcAuth(t *testing.T) {
 	}
 	defer conn.Close()
 
-	client := qf.NewQuickFeedServiceClient(conn)
+	client := qtest.QuickFeedClient("")
 
 	// create request context with the helpbot's secret token
 	reqCtx := metadata.NewOutgoingContext(ctx,
 		metadata.New(map[string]string{auth.Cookie: token}),
 	)
 
-	request := &qf.CourseUserRequest{
+	request := connect.NewRequest(&qf.CourseUserRequest{
 		CourseCode: "DAT320",
 		CourseYear: 2021,
 		UserLogin:  userName,
-	}
+	})
 	userInfo, err := client.GetUserByCourse(reqCtx, request)
 	check(t, err)
-	if userInfo.ID != user.ID {
-		t.Errorf("expected user id %d, got %d", user.ID, userInfo.ID)
+	if userInfo.Msg.ID != user.ID {
+		t.Errorf("expected user id %d, got %d", user.ID, userInfo.Msg.ID)
 	}
-	if userInfo.Login != user.Login {
-		t.Errorf("expected user login %s, got %s", user.Login, userInfo.Login)
+	if userInfo.Msg.Login != user.Login {
+		t.Errorf("expected user login %s, got %s", user.Login, userInfo.Msg.Login)
 	}
 }
 
