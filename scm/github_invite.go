@@ -16,7 +16,7 @@ type GithubInviteSCM struct {
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
-func NewGithubInviteClient(token string) *GithubInviteSCM {
+func newGithubInviteClient(token string) *GithubInviteSCM {
 	src := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)

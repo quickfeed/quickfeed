@@ -17,5 +17,5 @@ type RepositoryInvitationOptions struct {
 
 // NewInviteOnlySCMClient returns a new provider client implementing the SCM interface.
 func NewInviteOnlySCMClient(token string) SCMInvite {
-	return NewGithubInviteClient(token)
+	return newGithubInviteClient(token)
 }
