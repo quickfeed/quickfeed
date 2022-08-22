@@ -60,33 +60,25 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 
 // getSCMForUser returns an SCM client based on the user's personal access token.
 func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCMInvite, error) {
-	refreshToken, err := user.GetAccessToken(env.ScmProvider())
+	refreshToken, err := user.GetRefreshToken(env.ScmProvider())
 	if err != nil {
 		return nil, err
 	}
-	accessToken, err := q.getAccessToken(refreshToken, user)
-	if err != nil {
-		return nil, err
-	}
-	return scm.NewInviteOnlySCMClient(accessToken), nil
-}
-
-// getAccessToken exchanges a refresh token for an access token.
-// The new refresh token is saved in the database.
-func (q *QuickFeedService) getAccessToken(refreshToken string, user *qf.User) (string, error) {
+	// Exchange a refresh token for an access token.
 	token, err := q.scmMgr.ExchangeToken(refreshToken)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	// update user's refresh token
+	// Save user's refresh token in the database.
 	remoteIdentity := user.GetRemoteIDFor(env.ScmProvider())
-	// TODO(meling) we should rename the UpdateAccessToken database method to UpdateRefreshToken
-	// and the new method should operate on the User type directly (requires updating the User proto message)
+	// TODO(meling) rename UpdateAccessToken() database method to UpdateRefreshToken()
+	// TODO(meling) later: move RefreshToken and ScmRemoteID directly into User type (requires updating the User proto message)
+	// TODO(meling) rename RemoteIdentity.AccessToken to RemoteIdentity.RefreshToken
 	remoteIdentity.AccessToken = token.RefreshToken
 	if err := q.db.UpdateAccessToken(remoteIdentity); err != nil {
-		return "", err
+		return nil, err
 	}
-	return token.AccessToken, nil
+	return scm.NewInviteOnlySCMClient(token.AccessToken), nil
 }
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
