@@ -117,7 +117,6 @@ func main() {
 		ReadTimeout:  2 * time.Minute,
 	}
 	if *dev {
-
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
 		if err := muxServer.ListenAndServeTLS(certFile, certKey); err != nil {
 			log.Fatalf("Failed to start grpc server: %v", err)
@@ -125,6 +124,10 @@ func main() {
 		}
 	} else {
 		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
+	}
+	whitelist, err := env.Whitelist()
+	if err != nil {
+		log.Fatalf("Failed to get whitelist: %v", err)
 	}
 	certManager := autocert.Manager{
 		Prompt: autocert.AcceptTOS,
