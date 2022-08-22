@@ -466,8 +466,7 @@ func (s *QuickFeedService) UpdateCriterion(_ context.Context, in *qf.GradingCrit
 
 // DeleteCriterion removes a grading criterion for an assignment.
 func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *qf.GradingCriterion) (*qf.Void, error) {
-	err := s.deleteCriterion(in)
-	if err != nil {
+	if err := s.db.DeleteCriterion(in); err != nil {
 		s.logger.Errorf("DeleteCriterion failed for %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to delete criterion")
 	}
