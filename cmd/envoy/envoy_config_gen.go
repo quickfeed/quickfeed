@@ -95,8 +95,9 @@ func main() {
 			// Couldn't load credentials; generate self-signed certificates.
 			log.Println("Generating self-signed certificates.")
 			if err := cert.GenerateSelfSignedCert(cert.Options{
-				Path:  *certDir,
-				Hosts: fmt.Sprintf("%s,%s", serverHost, domain),
+				CertFile: *certFile,
+				KeyFile:  *keyFile,
+				Hosts:    fmt.Sprintf("%s,%s", serverHost, domain),
 			}); err != nil {
 				log.Fatal(err)
 			}

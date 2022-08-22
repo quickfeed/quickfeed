@@ -33,12 +33,10 @@ func Whitelist() ([]string, error) {
 	}
 	if strings.Contains(domains, "localhost") {
 		return nil, errors.New("whitelist contains localhost")
-
 	}
 	if regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`).MatchString(domains) {
 		return nil, errors.New("whitelist contains IP addresses")
 	}
-
 	// Split domains by comma and remove whitespace.
 	return strings.Split(strings.ReplaceAll(domains, " ", ""), ","), nil
 }

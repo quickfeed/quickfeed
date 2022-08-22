@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"flag"
+	"fmt"
 	"log"
 	"mime"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
@@ -188,4 +190,55 @@ func main() {
 	if err := muxServer.ListenAndServeTLS("", ""); err != nil {
 		log.Fatalf("Failed to start grpc server: %v", err)
 	}
+}
+
+func prodServer(addr string) (*http.Server, error) {
+	whitelist, err := env.Whitelist()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get whitelist: %w", err)
+	}
+	certManager := autocert.Manager{
+		Prompt: autocert.AcceptTOS,
+		Cache:  autocert.DirCache(env.CertPath()),
+		HostPolicy: autocert.HostWhitelist(
+			whitelist...,
+		),
+	}
+	return &http.Server{
+		Addr:         addr,
+		WriteTimeout: 2 * time.Minute,
+		ReadTimeout:  2 * time.Minute,
+		TLSConfig: &tls.Config{
+			GetCertificate: certManager.GetCertificate,
+			MaxVersion:     tls.VersionTLS13,
+			MinVersion:     tls.VersionTLS12,
+		},
+	}, nil
+}
+
+// devServer returns a http.Server with self-signed certificates for development-use only.
+func devServer(addr string) (*http.Server, error) {
+	certificate, err := tls.LoadX509KeyPair(env.CertFile(), env.KeyFile())
+	if err != nil {
+		// Couldn't load credentials; generate self-signed certificates.
+		log.Println("Generating self-signed certificates.")
+		if err := cert.GenerateSelfSignedCert(cert.Options{
+			KeyFile:  env.KeyFile(),
+			CertFile: env.CertFile(),
+			Hosts:    env.Domain(),
+		}); err != nil {
+			return nil, fmt.Errorf("failed to generate self-signed certificates: %w", err)
+		}
+		log.Printf("Certificates successfully generated at: %s", env.CertPath())
+	} else {
+		log.Println("Existing credentials successfully loaded.")
+	}
+	return &http.Server{
+		Addr:         addr,
+		WriteTimeout: 2 * time.Minute,
+		ReadTimeout:  2 * time.Minute,
+		TLSConfig: &tls.Config{
+			Certificates: []tls.Certificate{certificate},
+		},
+	}, nil
 }
