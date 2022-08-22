@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -12,7 +11,6 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
-	"google.golang.org/grpc/metadata"
 )
 
 type requestID interface {
@@ -79,12 +77,8 @@ func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
 }
 
 // GetClaims returns validated user claims.
-func (tm *TokenManager) GetClaims(ctx context.Context) (*Claims, error) {
-	meta, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New("failed to extract metadata from context")
-	}
-	tokenString, err := extractToken(meta)
+func (tm *TokenManager) GetClaims(cookie string) (*Claims, error) {
+	tokenString, err := extractToken(cookie)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +100,7 @@ func (tm *TokenManager) GetClaims(ctx context.Context) (*Claims, error) {
 		}
 		return nil, err
 	}
-	claims, ok = token.Claims.(*Claims)
+	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
 		return nil, fmt.Errorf("failed to parse token: validation error")
 	}
@@ -166,8 +160,8 @@ func (tm *TokenManager) validateSignature(token *jwt.Token) error {
 }
 
 // extractToken extracts a JWT authentication token from metadata.
-func extractToken(meta metadata.MD) (string, error) {
-	cookies := meta.Get(Cookie)
+func extractToken(cookieString string) (string, error) {
+	cookies := strings.Split(cookieString, ";")
 	for _, cookie := range cookies {
 		_, cookieValue, ok := strings.Cut(cookie, CookieName+"=")
 		if ok {
