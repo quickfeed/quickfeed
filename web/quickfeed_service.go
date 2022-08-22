@@ -439,8 +439,7 @@ func (s *QuickFeedService) UpdateBenchmark(_ context.Context, in *qf.GradingBenc
 
 // DeleteBenchmark removes a grading benchmark.
 func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *qf.GradingBenchmark) (*qf.Void, error) {
-	err := s.db.DeleteBenchmark(in)
-	if err != nil {
+	if err := s.db.DeleteBenchmark(in); err != nil {
 		s.logger.Errorf("DeleteBenchmark failed for %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to delete benchmark")
 	}
@@ -449,12 +448,11 @@ func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *qf.GradingBenc
 
 // CreateCriterion adds a new grading criterion for an assignment.
 func (s *QuickFeedService) CreateCriterion(_ context.Context, in *qf.GradingCriterion) (*qf.GradingCriterion, error) {
-	c, err := s.createCriterion(in)
-	if err != nil {
+	if err := s.db.CreateCriterion(in); err != nil {
 		s.logger.Errorf("CreateCriterion failed for %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to add criterion")
 	}
-	return c, nil
+	return in, nil
 }
 
 // UpdateCriterion edits a grading criterion for an assignment.
