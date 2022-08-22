@@ -87,6 +87,9 @@ type SCM interface {
 
 	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
+
+	// Accepts repository invites.
+	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.

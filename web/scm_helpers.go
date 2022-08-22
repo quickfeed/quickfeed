@@ -64,13 +64,11 @@ func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCMInvite, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	accessToken, err := q.getAccessToken(refreshToken, user)
 	if err != nil {
 		return nil, err
 	}
-
-	return scm.NewInviteOnlySCMClient(q.logger, accessToken), nil
+	return scm.NewInviteOnlySCMClient(accessToken), nil
 }
 
 // getAccessToken exchanges a refresh token for an access token.
