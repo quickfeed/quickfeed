@@ -25,16 +25,6 @@ func (s *QuickFeedService) getAssignments(courseID uint64) (*qf.Assignments, err
 	return &qf.Assignments{Assignments: allAssignments}, nil
 }
 
-// updateAssignments updates the assignments for the given course.
-func (s *QuickFeedService) updateAssignments(courseID uint64) error {
-	course, err := s.db.GetCourse(courseID, false)
-	if err != nil {
-		return fmt.Errorf("could not find course ID %d", courseID)
-	}
-	assignments.UpdateFromTestsRepo(s.logger, s.db, s.scmMgr, course)
-	return nil
-}
-
 func (s *QuickFeedService) createBenchmark(query *qf.GradingBenchmark) (*qf.GradingBenchmark, error) {
 	if _, err := s.db.GetAssignment(&qf.Assignment{
 		ID: query.AssignmentID,

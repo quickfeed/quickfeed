@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
@@ -516,8 +517,7 @@ func (s *QuickFeedService) GetReviewers(_ context.Context, in *qf.SubmissionRevi
 
 // GetAssignments returns a list of all assignments for the given course.
 func (s *QuickFeedService) GetAssignments(_ context.Context, in *qf.CourseRequest) (*qf.Assignments, error) {
-	courseID := in.GetCourseID()
-	assignments, err := s.getAssignments(courseID)
+	assignments, err := s.getAssignments(in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("GetAssignments failed: %v", err)
 		return nil, status.Error(codes.NotFound, "no assignments found for course")
@@ -525,14 +525,15 @@ func (s *QuickFeedService) GetAssignments(_ context.Context, in *qf.CourseReques
 	return assignments, nil
 }
 
-// UpdateAssignments updates the assignments record in the database
+// UpdateAssignments updates the course's assignments record in the database
 // by fetching assignment information from the course's test repository.
 func (s *QuickFeedService) UpdateAssignments(_ context.Context, in *qf.CourseRequest) (*qf.Void, error) {
-	err := s.updateAssignments(in.GetCourseID())
+	course, err := s.db.GetCourse(in.GetCourseID(), false)
 	if err != nil {
-		s.logger.Errorf("UpdateAssignments failed: %v", err)
+		s.logger.Errorf("UpdateAssignments failed: course %d: %v", in.GetCourseID(), err)
 		return nil, status.Error(codes.NotFound, "course not found")
 	}
+	assignments.UpdateFromTestsRepo(s.logger, s.db, s.scmMgr, course)
 	return &qf.Void{}, nil
 }
 
