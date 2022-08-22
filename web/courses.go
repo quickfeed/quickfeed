@@ -12,37 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// getCourses returns all courses.
-func (s *QuickFeedService) getCourses() (*qf.Courses, error) {
-	courses, err := s.db.GetCourses()
-	if err != nil {
-		return nil, err
-	}
-	return &qf.Courses{Courses: courses}, nil
-}
-
-// getCoursesByUser returns all courses that match the provided enrollment status.
-func (s *QuickFeedService) getCoursesByUser(request *qf.EnrollmentStatusRequest) (*qf.Courses, error) {
-	courses, err := s.db.GetCoursesByUser(request.GetUserID(), request.Statuses...)
-	if err != nil {
-		return nil, err
-	}
-	return &qf.Courses{Courses: courses}, nil
-}
-
-// getEnrollmentsByUser returns all enrollments for the given user with preloaded
-// courses and groups
-func (s *QuickFeedService) getEnrollmentsByUser(request *qf.EnrollmentStatusRequest) (*qf.Enrollments, error) {
-	enrollments, err := s.db.GetEnrollmentsByUser(request.UserID, request.Statuses...)
-	if err != nil {
-		return nil, err
-	}
-	for _, enrollment := range enrollments {
-		enrollment.SetSlipDays(enrollment.Course)
-	}
-	return &qf.Enrollments{Enrollments: enrollments}, nil
-}
-
 // getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
 func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest) (*qf.Enrollments, error) {
 	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.Statuses...)
@@ -71,16 +40,6 @@ func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest)
 		enrollment.SetSlipDays(enrollment.Course)
 	}
 	return &qf.Enrollments{Enrollments: enrollments}, nil
-}
-
-// createEnrollment creates a pending enrollment for the given user and course.
-func (s *QuickFeedService) createEnrollment(request *qf.Enrollment) error {
-	enrollment := qf.Enrollment{
-		UserID:   request.GetUserID(),
-		CourseID: request.GetCourseID(),
-		Status:   qf.Enrollment_PENDING,
-	}
-	return s.db.CreateEnrollment(&enrollment)
 }
 
 // updateEnrollment changes the status of the given course enrollment.
@@ -214,11 +173,6 @@ func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, 
 		CourseID: course.ID,
 		Status:   qf.Enrollment_STUDENT,
 	})
-}
-
-// getCourse returns a course object for the given course id.
-func (s *QuickFeedService) getCourse(courseID uint64) (*qf.Course, error) {
-	return s.db.GetCourse(courseID, false)
 }
 
 // getSubmissions returns all the latests submissions for a user of the given course.
@@ -406,10 +360,6 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 	}
 	request.OrganizationPath = org.GetPath()
 	return s.db.UpdateCourse(request)
-}
-
-func (s *QuickFeedService) changeCourseVisibility(enrollment *qf.Enrollment) error {
-	return s.db.UpdateEnrollment(enrollment)
 }
 
 // returns all enrollments for the course ID with last activity date and number of approved assignments
