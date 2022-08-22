@@ -3,7 +3,7 @@ package interceptor_test
 import (
 	"context"
 	"errors"
-	"net"
+	"reflect"
 	"testing"
 
 	"github.com/quickfeed/quickfeed/ci"
@@ -33,14 +33,12 @@ type accessTests []struct {
 }
 
 func TestAccessControlMethods(t *testing.T) {
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-	logger := qlog.Logger(t)
-	ags := web.NewQuickFeedService(logger.Desugar(), db, scm.TestSCMManager(), web.BaseHookOptions{}, &ci.Local{})
-
-	s := grpc.NewServer() // skipcq: GO-S0902
-	qf.RegisterQuickFeedServiceServer(s, ags)
-	if err := web.VerifyAccessControlMethods(s); err != nil {
+	service := reflect.TypeOf(qfconnect.UnimplementedQuickFeedServiceHandler{})
+	methods := make([]string, 0, service.NumMethod())
+	for i := 0; i < service.NumMethod(); i++ {
+		methods = append(methods, service.Method(i).Name)
+	}
+	if err := web.VerifyAccessControlMethods(methods); err != nil {
 		t.Error(err)
 	}
 }
