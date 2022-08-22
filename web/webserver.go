@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/bufbuild/connect-go"
@@ -11,7 +10,6 @@ import (
 	"github.com/quickfeed/quickfeed/web/hooks"
 	"github.com/quickfeed/quickfeed/web/interceptor"
 	"golang.org/x/oauth2"
-	"google.golang.org/grpc"
 )
 
 func (s *QuickFeedService) NewQuickFeedHandler(tm *auth.TokenManager) (string, http.Handler) {
@@ -50,14 +48,10 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 	return router
 }
 
-func VerifyAccessControlMethods(s *grpc.Server) error {
-	qfServiceInfo, ok := s.GetServiceInfo()[QuickFeedServiceName]
-	if !ok {
-		return fmt.Errorf("gRPC server missing %s service", QuickFeedServiceName)
-	}
+func VerifyAccessControlMethods(methods []string) error {
 	serviceMethods := make(map[string]bool)
-	for _, m := range qfServiceInfo.Methods {
-		serviceMethods[m.Name] = true
+	for _, m := range methods {
+		serviceMethods[m] = true
 	}
 	return interceptor.CheckAccessMethods(serviceMethods)
 }
