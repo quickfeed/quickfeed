@@ -430,8 +430,7 @@ func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *qf.GradingBenc
 
 // UpdateBenchmark edits a grading benchmark for an assignment.
 func (s *QuickFeedService) UpdateBenchmark(_ context.Context, in *qf.GradingBenchmark) (*qf.Void, error) {
-	err := s.updateBenchmark(in)
-	if err != nil {
+	if err := s.db.UpdateBenchmark(in); err != nil {
 		s.logger.Errorf("UpdateBenchmark failed for %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to update benchmark")
 	}
