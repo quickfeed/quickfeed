@@ -8,13 +8,6 @@ import (
 
 	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-)
-
-var (
-	ErrInvalidAuthCookie = status.Errorf(codes.Unauthenticated, "request does not contain a valid authentication cookie.")
-	ErrContextMetadata   = status.Errorf(codes.Unauthenticated, "could not obtain metadata from context")
 )
 
 // StreamWrapper wraps a stream with a context.
