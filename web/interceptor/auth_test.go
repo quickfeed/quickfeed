@@ -2,7 +2,7 @@ package interceptor_test
 
 import (
 	"context"
-	"log"
+	"errors"
 	"net/http"
 	"testing"
 
@@ -54,7 +54,10 @@ func TestUserVerifier(t *testing.T) {
 
 	go func() {
 		if err := muxServer.ListenAndServe(); err != nil {
-			log.Fatalf("Server exited with error: %v", err)
+			if !errors.Is(err, http.ErrServerClosed) {
+				t.Errorf("Server exited with unexpected error: %v", err)
+			}
+			return
 		}
 	}()
 
@@ -100,5 +103,8 @@ func TestUserVerifier(t *testing.T) {
 				t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
 			}
 		}
+	}
+	if err = muxServer.Shutdown(ctx); err != nil {
+		t.Fatal(err)
 	}
 }

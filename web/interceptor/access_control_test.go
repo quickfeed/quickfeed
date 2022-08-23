@@ -3,7 +3,6 @@ package interceptor_test
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"reflect"
 	"testing"
@@ -68,11 +67,13 @@ func TestAccessControl(t *testing.T) {
 
 	go func() {
 		if err := muxServer.ListenAndServe(); err != nil {
-			log.Fatalf("Server exited with error: %v", err)
+			if !errors.Is(err, http.ErrServerClosed) {
+				t.Errorf("Server exited with unexpected error: %v", err)
+			}
+			return
 		}
 	}()
 
-	ctx := context.Background()
 	client := qtest.QuickFeedClient("")
 
 	courseAdmin := qtest.CreateAdminUser(t, db, "fake")
@@ -128,6 +129,7 @@ func TestAccessControl(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	ctx := context.Background()
 	f := func(t *testing.T, id uint64) context.Context {
 		token, err := tm.NewAuthCookie(id)
 		if err != nil {
@@ -409,9 +411,14 @@ func TestAccessControl(t *testing.T) {
 			verifyAccess(t, err, tt.access, "UpdateUser")
 		})
 	}
+
+	if err = muxServer.Shutdown(ctx); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func verifyAccess(t *testing.T, err error, expected bool, method string) {
+	t.Helper()
 	if errors.Is(err, interceptor.ErrAccessDenied) == expected {
 		t.Errorf("%s() = %v, want %v", method, err, expected)
 	}

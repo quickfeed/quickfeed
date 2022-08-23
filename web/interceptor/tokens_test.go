@@ -2,7 +2,7 @@ package interceptor_test
 
 import (
 	"context"
-	"log"
+	"errors"
 	"net/http"
 	"testing"
 	"time"
@@ -46,7 +46,10 @@ func TestRefreshTokens(t *testing.T) {
 	}
 	go func() {
 		if err := muxServer.ListenAndServe(); err != nil {
-			log.Fatalf("Server exited with error: %v", err)
+			if !errors.Is(err, http.ErrServerClosed) {
+				t.Errorf("Server exited with unexpected error: %v", err)
+			}
+			return
 		}
 	}()
 
@@ -148,5 +151,8 @@ func TestRefreshTokens(t *testing.T) {
 	}
 	if tm.UpdateRequired(adminClaims) {
 		t.Error("Admin should not be in the token update list")
+	}
+	if err = muxServer.Shutdown(ctx); err != nil {
+		t.Fatal(err)
 	}
 }
