@@ -35,7 +35,7 @@ func TestRefreshTokens(t *testing.T) {
 
 	interceptors := connect.WithInterceptors(
 		interceptor.UnaryUserVerifier(logger, tm),
-		interceptor.TokenRefresher(logger, tm),
+		interceptor.TokenRefresher(tm),
 	)
 
 	router := http.NewServeMux()

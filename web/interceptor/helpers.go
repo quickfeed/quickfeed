@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
@@ -17,16 +18,14 @@ func getAuthenticatedContext(ctx context.Context, header http.Header, logger *za
 	cookies := header.Get(auth.Cookie)
 	claims, err := tm.GetClaims(cookies)
 	if err != nil {
-		logger.Errorf("Failed to extract claims from JWT: %v", err)
-		return nil, nil, ErrInvalidAuthCookie
+		return nil, nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("UnaryUserVerifier(): failed to extract claims from JWT: %w", err))
 	}
 	newCtx := metadata.NewIncomingContext(ctx, metadata.Pairs(auth.UserKey, strconv.FormatUint(claims.UserID, 10)))
 	if tm.UpdateRequired(claims) {
 		logger.Debug("Updating cookie for user ", claims.UserID)
 		updatedCookie, err := tm.UpdateCookie(claims)
 		if err != nil {
-			logger.Errorf("Failed to update cookie: %v", err)
-			return nil, nil, ErrInvalidAuthCookie
+			return nil, nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("UnaryUserVerifier(): failed to update cookie: %w", err))
 		}
 		return newCtx, updatedCookie, nil
 	}

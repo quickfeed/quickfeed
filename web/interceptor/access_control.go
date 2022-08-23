@@ -2,12 +2,12 @@ package interceptor
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"go.uber.org/zap"
 )
 
 type (
@@ -78,20 +78,20 @@ var accessRolesFor = map[string]roles{
 }
 
 // AccessControl checks user information stored in the JWT claims against the list of roles required to call the method.
-func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) connect.Interceptor {
+func AccessControl(tm *auth.TokenManager) connect.Interceptor {
 	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
 		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 			method := request.Spec().Procedure[strings.LastIndex(request.Spec().Procedure, "/")+1:]
 			req, ok := request.Any().(requestID)
 			if !ok {
-				logger.Errorf("%s failed: message type %T does not implement IDFor interface", method, request)
-				return nil, ErrAccessDenied
+				return nil, connect.NewError(connect.CodeUnimplemented,
+					fmt.Errorf("%s failed: message type %T does not implement IDFor interface", method, request))
 			}
 			cookies := request.Header().Get(auth.Cookie)
 			claims, err := tm.GetClaims(cookies)
 			if err != nil {
-				logger.Errorf("AccessControl(%s): failed to get claims from request context: %v", method, err)
-				return nil, ErrAccessDenied
+				return nil, connect.NewError(connect.CodePermissionDenied,
+					fmt.Errorf("AccessControl(%s): failed to get claims from request context: %w", method, err))
 			}
 			for _, role := range accessRolesFor[method] {
 				switch role {
@@ -102,9 +102,9 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) connect.Int
 						// Make sure the user is not updating own admin status.
 						if method == "UpdateUser" {
 							if req.(*qf.User).GetIsAdmin() && !claims.Admin {
-								logger.Errorf("AccessControl(%s): user %d attempted to change admin status from %v to %v",
-									method, claims.UserID, claims.Admin, req.(*qf.User).GetIsAdmin())
-								return nil, ErrAccessDenied
+								return nil, connect.NewError(connect.CodePermissionDenied,
+									fmt.Errorf("AccessControl(%s): user %d attempted to change admin status from %v to %v",
+										method, claims.UserID, claims.Admin, req.(*qf.User).GetIsAdmin()))
 							}
 						}
 						return next(ctx, request)
@@ -114,9 +114,9 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) connect.Int
 					// For individual submissions needs an extra check for user ID in request.
 					if method == "GetSubmissions" && req.IDFor("group") == 0 {
 						if !claims.SameUser(req) {
-							logger.Errorf("AccessControl(%s): ID mismatch in claims (%s) and request (%s)",
-								method, claims.UserID, req.IDFor("user"))
-							return nil, ErrAccessDenied
+							return nil, connect.NewError(connect.CodePermissionDenied,
+								fmt.Errorf("AccessControl(%s): ID mismatch in claims (%d) and request (%d)",
+									method, claims.UserID, req.IDFor("user")))
 						}
 					}
 					if claims.HasCourseStatus(req, qf.Enrollment_STUDENT) {
@@ -129,8 +129,8 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) connect.Int
 						notMember := !req.(*qf.Group).Contains(&qf.User{ID: claims.UserID})
 						notTeacher := !claims.HasCourseStatus(req, qf.Enrollment_TEACHER)
 						if notMember && notTeacher {
-							logger.Errorf("AccessControl(%s): user %d tried to create group while not teacher or group member", method, claims.UserID)
-							return nil, ErrAccessDenied
+							return nil, connect.NewError(connect.CodePermissionDenied,
+								fmt.Errorf("AccessControl(%s): user %d tried to create group while not teacher or group member", method, claims.UserID))
 						}
 						// Otherwise, create the group.
 						return next(ctx, request)
@@ -144,8 +144,8 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) connect.Int
 				case teacher:
 					if method == "GetUserByCourse" {
 						if err := claims.IsCourseTeacher(tm.Database(), request.Any().(*qf.CourseUserRequest)); err != nil {
-							logger.Errorf("AccessControl(%s): %v", method, err)
-							return nil, ErrAccessDenied
+							return nil, connect.NewError(connect.CodePermissionDenied,
+								fmt.Errorf("AccessControl(%s): %w", method, err))
 						}
 						return next(ctx, request)
 					}
@@ -162,8 +162,8 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) connect.Int
 					}
 				}
 			}
-			logger.Errorf("AccessDenied(%s): required roles %v not satisfied by claims: %s", method, accessRolesFor[method], claims)
-			return nil, ErrAccessDenied
+			return nil, connect.NewError(connect.CodePermissionDenied,
+				fmt.Errorf("AccessDenied(%s): required roles %v not satisfied by claims: %s", method, accessRolesFor[method], claims))
 		})
 	})
 }

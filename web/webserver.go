@@ -15,8 +15,10 @@ import (
 func (s *QuickFeedService) NewQuickFeedHandler(tm *auth.TokenManager) (string, http.Handler) {
 	interceptors := connect.WithInterceptors(
 		interceptor.Metrics(),
-		interceptor.UnaryUserVerifier(s.logger, tm),
 		interceptor.Validation(s.logger),
+		interceptor.UnaryUserVerifier(s.logger, tm),
+		interceptor.AccessControl(tm),
+		interceptor.TokenRefresher(tm),
 	)
 	return qfconnect.NewQuickFeedServiceHandler(s, interceptors)
 }

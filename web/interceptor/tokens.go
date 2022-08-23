@@ -2,11 +2,11 @@ package interceptor
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"go.uber.org/zap"
 )
 
 type (
@@ -49,13 +49,13 @@ var tokenUpdateMethods = map[string]func(string, *auth.TokenManager, userIDs) er
 			}
 			return defaultTokenUpdater(cookies, tm, group)
 		}
-		return ErrAccessDenied
+		return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s):", "DeleteGroup"))
 	},
 }
 
 // TokenRefresher updates list of users who need a new JWT next time they send a request to the server.
 // This method only logs errors to avoid overwriting the gRPC error messages returned by the server.
-func TokenRefresher(logger *zap.SugaredLogger, tm *auth.TokenManager) connect.Interceptor {
+func TokenRefresher(tm *auth.TokenManager) connect.Interceptor {
 	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
 		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 			procedure := request.Spec().Procedure
@@ -64,12 +64,10 @@ func TokenRefresher(logger *zap.SugaredLogger, tm *auth.TokenManager) connect.In
 				if msg, ok := request.Any().(userIDs); ok {
 					cookies := request.Header().Get(auth.Cookie)
 					if err := tokenUpdateFn(cookies, tm, msg); err != nil {
-						logger.Error(err)
-						return nil, ErrAccessDenied
+						return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): %v", method, err))
 					}
 				} else {
-					logger.Errorf("%s's argument is missing 'userIDs' interface", method)
-					return nil, ErrAccessDenied
+					return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): missing 'userIDs' interface", method))
 				}
 			}
 			return next(ctx, request)

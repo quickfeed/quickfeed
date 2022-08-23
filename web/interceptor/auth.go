@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/bufbuild/connect-go"
+	"go.uber.org/zap"
 
 	"github.com/quickfeed/quickfeed/web/auth"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,7 +15,6 @@ import (
 var (
 	ErrInvalidAuthCookie = status.Errorf(codes.Unauthenticated, "request does not contain a valid authentication cookie.")
 	ErrContextMetadata   = status.Errorf(codes.Unauthenticated, "could not obtain metadata from context")
-	ErrAccessDenied      = status.Error(codes.PermissionDenied, "access denied")
 )
 
 // StreamWrapper wraps a stream with a context.
@@ -55,7 +54,6 @@ func UnaryUserVerifier(logger *zap.SugaredLogger, tm *auth.TokenManager) connect
 		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 			newCtx, cookie, err := getAuthenticatedContext(ctx, request.Header(), logger, tm)
 			if err != nil {
-				logger.Errorf("Unary User Verifier failed: %v", err)
 				return nil, err
 			}
 			response, err := next(newCtx, request)
