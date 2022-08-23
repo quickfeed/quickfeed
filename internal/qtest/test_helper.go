@@ -117,7 +117,7 @@ func CreateAdminUser(t *testing.T, db database.Database, provider string) *qf.Us
 		&qf.RemoteIdentity{
 			Provider:    provider,
 			RemoteID:    1,
-			AccessToken: scm.GetAccessToken(t),
+			AccessToken: "token",
 		})
 	if err != nil {
 		t.Fatal(err)
