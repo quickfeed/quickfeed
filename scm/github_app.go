@@ -47,7 +47,7 @@ func (cfg *Config) fetchInstallation(organization string) (*github.Installation,
 	}
 	var installations []*github.Installation
 	if err := json.Unmarshal(body, &installations); err != nil {
-		return nil, fmt.Errorf("error unmarshalling installation response: %w", err)
+		return nil, fmt.Errorf("error unmarshalling installation response: %s: %w", body, err)
 	}
 	for _, inst := range installations {
 		if *inst.Account.Login == organization {
