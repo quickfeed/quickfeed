@@ -417,9 +417,17 @@ func TestAccessControl(t *testing.T) {
 	}
 }
 
-func verifyAccess(t *testing.T, err error, expected bool, method string) {
+func verifyAccess(t *testing.T, err error, wantAccess bool, method string) {
 	t.Helper()
-	if errors.Is(err, interceptor.ErrAccessDenied) == expected {
-		t.Errorf("%23s: errors.Is(%+v, %+v) = %t, want %t", method, err, interceptor.ErrAccessDenied, errors.Is(err, interceptor.ErrAccessDenied), !expected)
+	if connErr, ok := err.(*connect.Error); ok {
+		gotCode := connErr.Code()
+		wantCode := connect.CodePermissionDenied
+		gotAccess := gotCode == wantCode
+		if gotAccess == wantAccess {
+			t.Errorf("%23s: (%v == %v) = %t, want %t", method, gotCode, wantCode, gotAccess, !wantAccess)
+		}
+	} else if err != nil && wantAccess {
+		// got error and want access; expected non-error or not access
+		t.Errorf("%23s: got %v (%t), want <nil> (%t)", method, err, wantAccess, !wantAccess)
 	}
 }
