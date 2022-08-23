@@ -82,7 +82,7 @@ func AccessControl(logger *zap.SugaredLogger, tm *auth.TokenManager) connect.Int
 	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
 		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 			method := request.Spec().Procedure[strings.LastIndex(request.Spec().Procedure, "/")+1:]
-			req, ok := request.(requestID)
+			req, ok := request.Any().(requestID)
 			if !ok {
 				logger.Errorf("%s failed: message type %T does not implement IDFor interface", method, request)
 				return nil, ErrAccessDenied
