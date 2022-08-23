@@ -155,11 +155,11 @@ func TestAccessControl(t *testing.T) {
 	for _, tt := range freeAccessTest {
 		t.Run("UnrestrictedAccess/"+tt.name, func(t *testing.T) {
 			_, err := client.GetUser(tt.ctx, connect.NewRequest(&qf.Void{}))
-			verifyAccess(t, err, tt.access, "GetUser")
+			checkAccess(t, err, tt.access, "GetUser")
 			_, err = client.GetCourse(tt.ctx, connect.NewRequest(&qf.CourseRequest{CourseID: tt.courseID}))
-			verifyAccess(t, err, tt.access, "GetCourse")
+			checkAccess(t, err, tt.access, "GetCourse")
 			_, err = client.GetCourses(tt.ctx, connect.NewRequest(&qf.Void{}))
-			verifyAccess(t, err, tt.access, "GetCourses")
+			checkAccess(t, err, tt.access, "GetCourses")
 		})
 	}
 
@@ -177,17 +177,17 @@ func TestAccessControl(t *testing.T) {
 				UserID: tt.userID,
 			}
 			_, err := client.CreateEnrollment(tt.ctx, connect.NewRequest(enrol))
-			verifyAccess(t, err, tt.access, "CreateEnrollment")
+			checkAccess(t, err, tt.access, "CreateEnrollment")
 			_, err = client.UpdateCourseVisibility(tt.ctx, connect.NewRequest(enrol))
-			verifyAccess(t, err, tt.access, "UpdateCourseVisibility")
+			checkAccess(t, err, tt.access, "UpdateCourseVisibility")
 			_, err = client.GetCoursesByUser(tt.ctx, connect.NewRequest(enrolRequest))
-			verifyAccess(t, err, tt.access, "GetCoursesByUser")
+			checkAccess(t, err, tt.access, "GetCoursesByUser")
 			_, err = client.UpdateUser(tt.ctx, connect.NewRequest(&qf.User{ID: tt.userID}))
-			verifyAccess(t, err, tt.access, "UpdateUser")
+			checkAccess(t, err, tt.access, "UpdateUser")
 			_, err = client.GetEnrollmentsByUser(tt.ctx, connect.NewRequest(enrolRequest))
-			verifyAccess(t, err, tt.access, "GetEnrollmentsByCourse")
+			checkAccess(t, err, tt.access, "GetEnrollmentsByCourse")
 			_, err = client.UpdateUser(tt.ctx, connect.NewRequest(&qf.User{ID: tt.userID}))
-			verifyAccess(t, err, tt.access, "UpdateUser")
+			checkAccess(t, err, tt.access, "UpdateUser")
 		})
 	}
 
@@ -204,19 +204,19 @@ func TestAccessControl(t *testing.T) {
 				UserID:   tt.userID,
 				CourseID: tt.courseID,
 			}))
-			verifyAccess(t, err, tt.access, "GetSubmissions")
+			checkAccess(t, err, tt.access, "GetSubmissions")
 			_, err = client.GetAssignments(tt.ctx, connect.NewRequest(&qf.CourseRequest{CourseID: tt.courseID}))
-			verifyAccess(t, err, tt.access, "GetAssignments")
+			checkAccess(t, err, tt.access, "GetAssignments")
 			_, err = client.GetEnrollmentsByCourse(tt.ctx, connect.NewRequest(&qf.EnrollmentRequest{CourseID: tt.courseID}))
-			verifyAccess(t, err, tt.access, "GetEnrollmentsByCourse")
+			checkAccess(t, err, tt.access, "GetEnrollmentsByCourse")
 			_, err = client.GetRepositories(tt.ctx, connect.NewRequest(&qf.URLRequest{CourseID: tt.courseID}))
-			verifyAccess(t, err, tt.access, "GetRepositories")
+			checkAccess(t, err, tt.access, "GetRepositories")
 			_, err = client.GetGroupByUserAndCourse(tt.ctx, connect.NewRequest(&qf.GroupRequest{
 				CourseID: tt.courseID,
 				UserID:   tt.userID,
 				GroupID:  0,
 			}))
-			verifyAccess(t, err, tt.access, "GetGroupByUserAndCourse")
+			checkAccess(t, err, tt.access, "GetGroupByUserAndCourse")
 		})
 	}
 
@@ -228,7 +228,7 @@ func TestAccessControl(t *testing.T) {
 	for _, tt := range groupAccessTests {
 		t.Run("GroupAccess/"+tt.name, func(t *testing.T) {
 			_, err := client.GetGroup(tt.ctx, connect.NewRequest(&qf.GetGroupRequest{GroupID: tt.groupID}))
-			verifyAccess(t, err, tt.access, "GetGroup")
+			checkAccess(t, err, tt.access, "GetGroup")
 		})
 	}
 
@@ -240,46 +240,46 @@ func TestAccessControl(t *testing.T) {
 	for _, tt := range teacherAccessTests {
 		t.Run("TeacherAccess/"+tt.name, func(t *testing.T) {
 			_, err := client.GetGroup(tt.ctx, connect.NewRequest(&qf.GetGroupRequest{GroupID: tt.groupID}))
-			verifyAccess(t, err, tt.access, "GetGroup")
+			checkAccess(t, err, tt.access, "GetGroup")
 			_, err = client.DeleteGroup(tt.ctx, connect.NewRequest(&qf.GroupRequest{
 				GroupID:  tt.groupID,
 				CourseID: tt.courseID,
 				UserID:   tt.userID,
 			}))
-			verifyAccess(t, err, tt.access, "DeleteGroup")
+			checkAccess(t, err, tt.access, "DeleteGroup")
 			_, err = client.UpdateGroup(tt.ctx, connect.NewRequest(&qf.Group{CourseID: tt.courseID}))
-			verifyAccess(t, err, tt.access, "UpdateGroup")
+			checkAccess(t, err, tt.access, "UpdateGroup")
 			_, err = client.UpdateCourse(tt.ctx, connect.NewRequest(course))
-			verifyAccess(t, err, tt.access, "UpdateCourse")
+			checkAccess(t, err, tt.access, "UpdateCourse")
 			_, err = client.UpdateEnrollments(tt.ctx, connect.NewRequest(&qf.Enrollments{
 				Enrollments: []*qf.Enrollment{{ID: 1, CourseID: tt.courseID}},
 			}))
-			verifyAccess(t, err, tt.access, "UpdateEnrollments")
+			checkAccess(t, err, tt.access, "UpdateEnrollments")
 			_, err = client.UpdateAssignments(tt.ctx, connect.NewRequest(&qf.CourseRequest{CourseID: tt.courseID}))
-			verifyAccess(t, err, tt.access, "UpdateAssignments")
+			checkAccess(t, err, tt.access, "UpdateAssignments")
 			_, err = client.UpdateSubmission(tt.ctx, connect.NewRequest(&qf.UpdateSubmissionRequest{SubmissionID: 1, CourseID: tt.courseID}))
-			verifyAccess(t, err, tt.access, "UpdateSubmission")
+			checkAccess(t, err, tt.access, "UpdateSubmission")
 			_, err = client.UpdateSubmissions(tt.ctx, connect.NewRequest(&qf.UpdateSubmissionsRequest{AssignmentID: 1, CourseID: tt.courseID}))
-			verifyAccess(t, err, tt.access, "UpdateSubmissions")
+			checkAccess(t, err, tt.access, "UpdateSubmissions")
 			_, err = client.RebuildSubmissions(tt.ctx, connect.NewRequest(&qf.RebuildRequest{
 				AssignmentID: 1,
 				RebuildType: &qf.RebuildRequest_CourseID{
 					CourseID: tt.courseID,
 				},
 			}))
-			verifyAccess(t, err, tt.access, "RebuildSubmissions")
+			checkAccess(t, err, tt.access, "RebuildSubmissions")
 			_, err = client.CreateBenchmark(tt.ctx, connect.NewRequest(&qf.GradingBenchmark{CourseID: tt.courseID, AssignmentID: 1}))
-			verifyAccess(t, err, tt.access, "CreateBenchmark")
+			checkAccess(t, err, tt.access, "CreateBenchmark")
 			_, err = client.UpdateBenchmark(tt.ctx, connect.NewRequest(&qf.GradingBenchmark{CourseID: tt.courseID, AssignmentID: 1}))
-			verifyAccess(t, err, tt.access, "UpdateBenchmark")
+			checkAccess(t, err, tt.access, "UpdateBenchmark")
 			_, err = client.DeleteBenchmark(tt.ctx, connect.NewRequest(&qf.GradingBenchmark{CourseID: tt.courseID, AssignmentID: 1}))
-			verifyAccess(t, err, tt.access, "DeleteBenchmark")
+			checkAccess(t, err, tt.access, "DeleteBenchmark")
 			_, err = client.CreateCriterion(tt.ctx, connect.NewRequest(&qf.GradingCriterion{CourseID: tt.courseID, BenchmarkID: 1}))
-			verifyAccess(t, err, tt.access, "CreateCriterion")
+			checkAccess(t, err, tt.access, "CreateCriterion")
 			_, err = client.UpdateCriterion(tt.ctx, connect.NewRequest(&qf.GradingCriterion{CourseID: tt.courseID, BenchmarkID: 1}))
-			verifyAccess(t, err, tt.access, "UpdateCriterion")
+			checkAccess(t, err, tt.access, "UpdateCriterion")
 			_, err = client.DeleteCriterion(tt.ctx, connect.NewRequest(&qf.GradingCriterion{CourseID: tt.courseID, BenchmarkID: 1}))
-			verifyAccess(t, err, tt.access, "DeleteCriterion")
+			checkAccess(t, err, tt.access, "DeleteCriterion")
 			_, err = client.CreateReview(tt.ctx, connect.NewRequest(&qf.ReviewRequest{
 				CourseID: tt.courseID,
 				Review: &qf.Review{
@@ -287,7 +287,7 @@ func TestAccessControl(t *testing.T) {
 					ReviewerID:   1,
 				},
 			}))
-			verifyAccess(t, err, tt.access, "CreateReview")
+			checkAccess(t, err, tt.access, "CreateReview")
 			_, err = client.UpdateReview(tt.ctx, connect.NewRequest(&qf.ReviewRequest{
 				CourseID: tt.courseID,
 				Review: &qf.Review{
@@ -295,14 +295,14 @@ func TestAccessControl(t *testing.T) {
 					ReviewerID:   1,
 				},
 			}))
-			verifyAccess(t, err, tt.access, "UpdateReview")
+			checkAccess(t, err, tt.access, "UpdateReview")
 			_, err = client.GetReviewers(tt.ctx, connect.NewRequest(&qf.SubmissionReviewersRequest{
 				CourseID:     tt.courseID,
 				SubmissionID: 1,
 			}))
-			verifyAccess(t, err, tt.access, "GetReviewers")
+			checkAccess(t, err, tt.access, "GetReviewers")
 			_, err = client.IsEmptyRepo(tt.ctx, connect.NewRequest(&qf.RepositoryRequest{CourseID: tt.courseID}))
-			verifyAccess(t, err, tt.access, "IsEmptyRepo")
+			checkAccess(t, err, tt.access, "IsEmptyRepo")
 		})
 	}
 
@@ -316,7 +316,7 @@ func TestAccessControl(t *testing.T) {
 			_, err = client.GetSubmissionsByCourse(tt.ctx, connect.NewRequest(&qf.SubmissionsForCourseRequest{
 				CourseID: tt.courseID,
 			}))
-			verifyAccess(t, err, tt.access, "GetSubmissionsByCourse")
+			checkAccess(t, err, tt.access, "GetSubmissionsByCourse")
 		})
 	}
 
@@ -329,21 +329,21 @@ func TestAccessControl(t *testing.T) {
 	for _, tt := range adminAccessTests {
 		t.Run("AdminAccess/"+tt.name, func(t *testing.T) {
 			_, err := client.UpdateUser(tt.ctx, connect.NewRequest(&qf.User{ID: tt.userID}))
-			verifyAccess(t, err, tt.access, "UpdateUser")
+			checkAccess(t, err, tt.access, "UpdateUser")
 			_, err = client.GetEnrollmentsByUser(tt.ctx, connect.NewRequest(&qf.EnrollmentStatusRequest{UserID: tt.userID}))
-			verifyAccess(t, err, tt.access, "GetEnrollmentsByUser")
+			checkAccess(t, err, tt.access, "GetEnrollmentsByUser")
 			_, err = client.GetUsers(tt.ctx, connect.NewRequest(&qf.Void{}))
-			verifyAccess(t, err, tt.access, "GetUsers")
+			checkAccess(t, err, tt.access, "GetUsers")
 			_, err = client.GetOrganization(tt.ctx, connect.NewRequest(&qf.OrgRequest{OrgName: "testorg"}))
-			verifyAccess(t, err, tt.access, "GetOrganization")
+			checkAccess(t, err, tt.access, "GetOrganization")
 			_, err = client.CreateCourse(tt.ctx, connect.NewRequest(course))
-			verifyAccess(t, err, tt.access, "CreateCourse")
+			checkAccess(t, err, tt.access, "CreateCourse")
 			_, err = client.GetUserByCourse(tt.ctx, connect.NewRequest(&qf.CourseUserRequest{
 				CourseCode: course.Code,
 				CourseYear: course.Year,
 				UserLogin:  "student",
 			}))
-			verifyAccess(t, err, tt.access, "GetUserByCourse")
+			checkAccess(t, err, tt.access, "GetUserByCourse")
 		})
 	}
 
@@ -373,7 +373,7 @@ func TestAccessControl(t *testing.T) {
 	for _, tt := range createGroupTests {
 		t.Run("CreateGroupAccess/"+tt.name, func(t *testing.T) {
 			_, err := client.CreateGroup(tt.ctx, connect.NewRequest(tt.group))
-			verifyAccess(t, err, tt.access, "CreateGroup")
+			checkAccess(t, err, tt.access, "CreateGroup")
 		})
 	}
 
@@ -408,7 +408,7 @@ func TestAccessControl(t *testing.T) {
 	for _, tt := range adminStatusChangeTests {
 		t.Run("AdminStatusChange/"+tt.name, func(t *testing.T) {
 			_, err := client.UpdateUser(tt.ctx, connect.NewRequest(tt.user))
-			verifyAccess(t, err, tt.access, "UpdateUser")
+			checkAccess(t, err, tt.access, "UpdateUser")
 		})
 	}
 
@@ -417,7 +417,7 @@ func TestAccessControl(t *testing.T) {
 	}
 }
 
-func verifyAccess(t *testing.T, err error, wantAccess bool, method string) {
+func checkAccess(t *testing.T, err error, wantAccess bool, method string) {
 	t.Helper()
 	if connErr, ok := err.(*connect.Error); ok {
 		gotCode := connErr.Code()
