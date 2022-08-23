@@ -420,6 +420,6 @@ func TestAccessControl(t *testing.T) {
 func verifyAccess(t *testing.T, err error, expected bool, method string) {
 	t.Helper()
 	if errors.Is(err, interceptor.ErrAccessDenied) == expected {
-		t.Errorf("%s() = %v, want %v", method, err, expected)
+		t.Errorf("%23s: errors.Is(%+v, %+v) = %t, want %t", method, err, interceptor.ErrAccessDenied, errors.Is(err, interceptor.ErrAccessDenied), !expected)
 	}
 }
