@@ -33,7 +33,10 @@ func Validation(logger *zap.SugaredLogger) connect.Interceptor {
 	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
 		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 			if request.Any() != nil {
-				validate(logger, request.Any())
+				if err := validate(logger, request.Any()); err != nil {
+					// Reject the request if it is invalid.
+					return nil, err
+				}
 			}
 			resp, err := next(ctx, request)
 			if err != nil {
