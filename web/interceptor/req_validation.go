@@ -40,9 +40,7 @@ func Validation(logger *zap.SugaredLogger) connect.Interceptor {
 				// Do not return the message to the client if an error occurs.
 				// We log the error and return an empty response.
 				logger.Errorf("Method '%s' failed: %v", request.Spec().Procedure, err)
-				logger.Errorf("Request Message: %v", request.Any())
-				logger.Errorf("Request Headers: %v", request.Header())
-				logger.Errorf("Request Spec: %v", request.Spec())
+				logger.Errorf("Request Message: %T: %v", request.Any(), request.Any())
 				return nil, err
 			}
 			clean(resp.Any())
