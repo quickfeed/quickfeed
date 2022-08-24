@@ -283,6 +283,10 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
 export const getAssignments = async ({ state, effects }: Context): Promise<boolean> => {
     let success = true
     for (const enrollment of state.enrollments) {
+        if (isPending(enrollment)) {
+            // No need to get assignments for pending enrollments
+            continue
+        }
         const response = await effects.grpcMan.getAssignments(enrollment.courseid)
         if (response.data) {
             // Store assignments in state by course ID
