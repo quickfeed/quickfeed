@@ -28,8 +28,6 @@ const (
 	student
 	// teacher: user enrolled in the course with teacher status.
 	teacher
-	// courseAdmin: an admin user who is also enrolled into the course.
-	courseAdmin
 	// admin is the user with admin privileges.
 	admin
 )
@@ -70,7 +68,7 @@ var accessRolesFor = map[string]roles{
 	"UpdateReview":            {teacher},
 	"GetReviewers":            {teacher},
 	"IsEmptyRepo":             {teacher},
-	"GetSubmissionsByCourse":  {courseAdmin},
+	"GetSubmissionsByCourse":  {teacher},
 	"GetUserByCourse":         {teacher, admin},
 	"GetUsers":                {admin},
 	"GetOrganization":         {admin},
@@ -150,10 +148,6 @@ func AccessControl(tm *auth.TokenManager) connect.Interceptor {
 						return next(ctx, request)
 					}
 					if claims.HasCourseStatus(req, qf.Enrollment_TEACHER) {
-						return next(ctx, request)
-					}
-				case courseAdmin:
-					if claims.IsCourseAdmin(req) {
 						return next(ctx, request)
 					}
 				case admin:

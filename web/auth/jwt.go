@@ -192,12 +192,6 @@ func (c *Claims) IsCourseTeacher(db database.Database, req *qf.CourseUserRequest
 	return fmt.Errorf("user %d is not teacher of the %s course", c.UserID, req.GetCourseCode())
 }
 
-func (c *Claims) IsCourseAdmin(req requestID) bool {
-	courseID := req.IDFor("course")
-	_, ok := c.Courses[courseID]
-	return c.Admin && ok
-}
-
 // SameUser returns true if user ID in request is the same as in claims.
 func (c *Claims) SameUser(req requestID) bool {
 	return req.IDFor("user") == c.UserID
