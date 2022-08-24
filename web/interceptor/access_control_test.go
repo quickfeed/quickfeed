@@ -80,14 +80,9 @@ func TestAccessControl(t *testing.T) {
 	groupStudent := qtest.CreateNamedUser(t, db, 2, "group student")
 	student := qtest.CreateNamedUser(t, db, 3, "student")
 	user := qtest.CreateNamedUser(t, db, 4, "user")
-	studentCourseAdmin := qtest.CreateFakeUser(t, db, 5)
 	admin := qtest.CreateFakeUser(t, db, 6)
 	admin.IsAdmin = true
-	studentCourseAdmin.IsAdmin = true
 	if err := db.UpdateUser(admin); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateUser(studentCourseAdmin); err != nil {
 		t.Fatal(err)
 	}
 
@@ -104,7 +99,6 @@ func TestAccessControl(t *testing.T) {
 	}
 	qtest.EnrollStudent(t, db, groupStudent, course)
 	qtest.EnrollStudent(t, db, student, course)
-	qtest.EnrollStudent(t, db, studentCourseAdmin, course)
 	group := &qf.Group{
 		CourseID: course.ID,
 		Name:     "Test",
@@ -141,7 +135,6 @@ func TestAccessControl(t *testing.T) {
 	groupStudentContext := f(t, groupStudent.ID)
 	studentContext := f(t, student.ID)
 	userContext := f(t, user.ID)
-	studentAdminContext := f(t, studentCourseAdmin.ID)
 	adminContext := f(t, admin.ID)
 
 	freeAccessTest := accessTests{
@@ -308,8 +301,6 @@ func TestAccessControl(t *testing.T) {
 
 	courseAdminTests := accessTests{
 		{"admin, not enrolled", adminContext, 0, course.ID, 0, false},
-		{"course admin, not a teacher", studentAdminContext, 0, course.ID, 0, true},
-		{"course admin, wrong course in request", studentAdminContext, 0, 123, 0, false},
 	}
 	for _, tt := range courseAdminTests {
 		t.Run("CourseAdminAccess/"+tt.name, func(t *testing.T) {
