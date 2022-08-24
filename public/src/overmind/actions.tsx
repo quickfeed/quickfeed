@@ -313,9 +313,12 @@ type RepoKey = keyof typeof Repository.Type
 export const getRepositories = async ({ state, effects }: Context): Promise<boolean> => {
     let success = true
     for (const enrollment of state.enrollments) {
+        if (isPending(enrollment)) {
+            // No need to get repositories for pending enrollments
+            continue
+        }
         const courseID = enrollment.courseid
         state.repositories[courseID] = {}
-
         const response = await effects.grpcMan.getRepositories(courseID, generateRepositoryList(Converter.toEnrollment(enrollment)))
         if (response.data) {
             response.data.getUrlsMap().forEach((entry, key) => {
