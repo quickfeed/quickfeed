@@ -1,6 +1,6 @@
 module github.com/quickfeed/quickfeed/kit
 
-go 1.18
+go 1.19
 
 require (
 	github.com/alta/protopatch v0.5.0
