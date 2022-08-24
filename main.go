@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"flag"
 	"log"
 	"mime"
@@ -136,11 +135,8 @@ func main() {
 			whitelist...,
 		),
 	}
-	muxServer.TLSConfig = &tls.Config{
-		GetCertificate: certManager.GetCertificate,
-		MaxVersion:     tls.VersionTLS13,
-		MinVersion:     tls.VersionTLS12,
-	}
+	muxServer.TLSConfig = certManager.TLSConfig()
+
 	// Redirect all HTTP traffic to HTTPS.
 	go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
 	// Start the HTTPS server.
