@@ -535,6 +535,9 @@ export const getSubmission = async ({ state, effects }: Context, { courseID, sub
         const sub = link.submissions?.find(submission => submission.submission?.id === submissionID)
         if (sub?.submission && response.data) {
             sub.submission = response.data.toObject()
+            if (state.activeSubmissionLink) {
+                state.activeSubmissionLink.submission = response.data?.toObject()
+            }
         }
     })
 }
