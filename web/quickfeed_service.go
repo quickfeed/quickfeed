@@ -413,8 +413,7 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Reque
 // or all submissions if the request specifies a course ID.
 func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
 	// RebuildType can be either SubmissionID or CourseID, but not both.
-	switch in.Msg.GetRebuildType().(type) {
-	case *qf.RebuildRequest_SubmissionID:
+	if in.Msg.GetSubmissionID() > 0 {
 		if !s.isValidSubmission(in.Msg.GetSubmissionID()) {
 			s.logger.Errorf("RebuildSubmission failed: submitter has no access to the course")
 			return nil, status.Error(codes.PermissionDenied, "submitter has no course access")
@@ -423,7 +422,7 @@ func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *connect.R
 			s.logger.Errorf("RebuildSubmission failed: %v", err)
 			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission "+err.Error())
 		}
-	case *qf.RebuildRequest_CourseID:
+	} else {
 		if err := s.rebuildSubmissions(in.Msg); err != nil {
 			s.logger.Errorf("RebuildSubmissions failed: %v", err)
 			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submissions "+err.Error())

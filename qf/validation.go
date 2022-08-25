@@ -111,8 +111,8 @@ func (req *SubmissionsForCourseRequest) IsValid() bool {
 
 // IsValid ensures that both course and submission IDs are set
 func (req *RebuildRequest) IsValid() bool {
-	aid, sid, cid := req.GetAssignmentID(), req.GetSubmissionID(), req.GetCourseID()
-	return aid > 0 && (sid > 0 || cid > 0)
+	aid, cid := req.GetAssignmentID(), req.GetCourseID()
+	return aid > 0 && cid > 0
 }
 
 // IsValid checks that either ID or path field is set

@@ -153,13 +153,13 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	// try to rebuild non-existing submission
 	rebuildRequest := connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
 		AssignmentID: assignment.ID,
-		RebuildType:  &qf.RebuildRequest_SubmissionID{SubmissionID: 123},
+		SubmissionID: 123,
 	}}
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err == nil {
 		t.Errorf("Expected error: record not found")
 	}
 	// rebuild existing submission
-	rebuildRequest.Msg.SetSubmissionID(1)
+	rebuildRequest.Msg.SubmissionID = 1
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err != nil {
 		t.Fatalf("Failed to rebuild submission: %s", err)
 	}
@@ -171,7 +171,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	// make sure wrong assignment ID returns error
 	request := &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{}}
 
-	request.Msg.SetCourseID(course.ID)
+	request.Msg.SubmissionID = course.ID
 	request.Msg.AssignmentID = 1337
 	if _, err = q.RebuildSubmissions(ctx, request); err == nil {
 		t.Fatal("Expected error: record not found")

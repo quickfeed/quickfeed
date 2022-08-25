@@ -256,9 +256,7 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, err, tt.access, "UpdateSubmissions")
 			_, err = client.RebuildSubmissions(tt.ctx, connect.NewRequest(&qf.RebuildRequest{
 				AssignmentID: 1,
-				RebuildType: &qf.RebuildRequest_CourseID{
-					CourseID: tt.courseID,
-				},
+				CourseID:     tt.courseID,
 			}))
 			checkAccess(t, err, tt.access, "RebuildSubmissions")
 			_, err = client.CreateBenchmark(tt.ctx, connect.NewRequest(&qf.GradingBenchmark{CourseID: tt.courseID, AssignmentID: 1}))
