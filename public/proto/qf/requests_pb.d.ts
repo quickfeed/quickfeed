@@ -516,16 +516,14 @@ export namespace SubmissionsForCourseRequest {
 }
 
 export class RebuildRequest extends jspb.Message {
-  getSubmissionid(): number;
-  setSubmissionid(value: number): RebuildRequest;
-
   getCourseid(): number;
   setCourseid(value: number): RebuildRequest;
 
   getAssignmentid(): number;
   setAssignmentid(value: number): RebuildRequest;
 
-  getRebuildtypeCase(): RebuildRequest.RebuildtypeCase;
+  getSubmissionid(): number;
+  setSubmissionid(value: number): RebuildRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): RebuildRequest.AsObject;
@@ -537,15 +535,9 @@ export class RebuildRequest extends jspb.Message {
 
 export namespace RebuildRequest {
   export type AsObject = {
-    submissionid: number,
     courseid: number,
     assignmentid: number,
-  }
-
-  export enum RebuildtypeCase { 
-    REBUILDTYPE_NOT_SET = 0,
-    SUBMISSIONID = 1,
-    COURSEID = 2,
+    submissionid: number,
   }
 }
 
