@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { Enrollment, Group, User } from "../../../proto/qf/types_pb"
 import { Converter } from "../../convert"
-import { getCourseID, isApprovedGroup, isHidden, isStudent, sortByField } from "../../Helpers"
+import { getCourseID, isApprovedGroup, isHidden, isPending, isStudent, sortByField } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Search from "../Search"
 
@@ -44,6 +44,9 @@ const GroupForm = (): JSX.Element | null => {
 
     const AvailableUser = ({ enrollment }: { enrollment: Enrollment.AsObject }) => {
         const id = enrollment.userid
+        if (isPending(enrollment)) {
+            return null
+        }
         if (id !== state.self.id && !userIds.includes(id)) {
             return (
                 <li hidden={search(enrollment)} key={id} className="list-group-item">
