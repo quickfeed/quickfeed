@@ -51,6 +51,7 @@ type QuickFeedServiceClient interface {
 	UpdateEnrollments(context.Context, *connect_go.Request[qf.Enrollments]) (*connect_go.Response[qf.Void], error)
 	// Get latest submissions for all course assignments for a user or a group.
 	GetSubmissions(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Submissions], error)
+	GetSubmission(context.Context, *connect_go.Request[qf.SubmissionReviewersRequest]) (*connect_go.Response[qf.Submission], error)
 	// Get lab submissions for every course user or every course group
 	GetSubmissionsByCourse(context.Context, *connect_go.Request[qf.SubmissionsForCourseRequest]) (*connect_go.Response[qf.CourseSubmissions], error)
 	UpdateSubmission(context.Context, *connect_go.Request[qf.UpdateSubmissionRequest]) (*connect_go.Response[qf.Void], error)
@@ -195,6 +196,11 @@ func NewQuickFeedServiceClient(httpClient connect_go.HTTPClient, baseURL string,
 			baseURL+"/qf.QuickFeedService/GetSubmissions",
 			opts...,
 		),
+		getSubmission: connect_go.NewClient[qf.SubmissionReviewersRequest, qf.Submission](
+			httpClient,
+			baseURL+"/qf.QuickFeedService/GetSubmission",
+			opts...,
+		),
 		getSubmissionsByCourse: connect_go.NewClient[qf.SubmissionsForCourseRequest, qf.CourseSubmissions](
 			httpClient,
 			baseURL+"/qf.QuickFeedService/GetSubmissionsByCourse",
@@ -303,6 +309,7 @@ type quickFeedServiceClient struct {
 	createEnrollment        *connect_go.Client[qf.Enrollment, qf.Void]
 	updateEnrollments       *connect_go.Client[qf.Enrollments, qf.Void]
 	getSubmissions          *connect_go.Client[qf.SubmissionRequest, qf.Submissions]
+	getSubmission           *connect_go.Client[qf.SubmissionReviewersRequest, qf.Submission]
 	getSubmissionsByCourse  *connect_go.Client[qf.SubmissionsForCourseRequest, qf.CourseSubmissions]
 	updateSubmission        *connect_go.Client[qf.UpdateSubmissionRequest, qf.Void]
 	updateSubmissions       *connect_go.Client[qf.UpdateSubmissionsRequest, qf.Void]
@@ -436,6 +443,11 @@ func (c *quickFeedServiceClient) GetSubmissions(ctx context.Context, req *connec
 	return c.getSubmissions.CallUnary(ctx, req)
 }
 
+// GetSubmission calls qf.QuickFeedService.GetSubmission.
+func (c *quickFeedServiceClient) GetSubmission(ctx context.Context, req *connect_go.Request[qf.SubmissionReviewersRequest]) (*connect_go.Response[qf.Submission], error) {
+	return c.getSubmission.CallUnary(ctx, req)
+}
+
 // GetSubmissionsByCourse calls qf.QuickFeedService.GetSubmissionsByCourse.
 func (c *quickFeedServiceClient) GetSubmissionsByCourse(ctx context.Context, req *connect_go.Request[qf.SubmissionsForCourseRequest]) (*connect_go.Response[qf.CourseSubmissions], error) {
 	return c.getSubmissionsByCourse.CallUnary(ctx, req)
@@ -542,6 +554,7 @@ type QuickFeedServiceHandler interface {
 	UpdateEnrollments(context.Context, *connect_go.Request[qf.Enrollments]) (*connect_go.Response[qf.Void], error)
 	// Get latest submissions for all course assignments for a user or a group.
 	GetSubmissions(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Submissions], error)
+	GetSubmission(context.Context, *connect_go.Request[qf.SubmissionReviewersRequest]) (*connect_go.Response[qf.Submission], error)
 	// Get lab submissions for every course user or every course group
 	GetSubmissionsByCourse(context.Context, *connect_go.Request[qf.SubmissionsForCourseRequest]) (*connect_go.Response[qf.CourseSubmissions], error)
 	UpdateSubmission(context.Context, *connect_go.Request[qf.UpdateSubmissionRequest]) (*connect_go.Response[qf.Void], error)
@@ -681,6 +694,11 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect_go.
 	mux.Handle("/qf.QuickFeedService/GetSubmissions", connect_go.NewUnaryHandler(
 		"/qf.QuickFeedService/GetSubmissions",
 		svc.GetSubmissions,
+		opts...,
+	))
+	mux.Handle("/qf.QuickFeedService/GetSubmission", connect_go.NewUnaryHandler(
+		"/qf.QuickFeedService/GetSubmission",
+		svc.GetSubmission,
 		opts...,
 	))
 	mux.Handle("/qf.QuickFeedService/GetSubmissionsByCourse", connect_go.NewUnaryHandler(
@@ -859,6 +877,10 @@ func (UnimplementedQuickFeedServiceHandler) UpdateEnrollments(context.Context, *
 
 func (UnimplementedQuickFeedServiceHandler) GetSubmissions(context.Context, *connect_go.Request[qf.SubmissionRequest]) (*connect_go.Response[qf.Submissions], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetSubmissions is not implemented"))
+}
+
+func (UnimplementedQuickFeedServiceHandler) GetSubmission(context.Context, *connect_go.Request[qf.SubmissionReviewersRequest]) (*connect_go.Response[qf.Submission], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("qf.QuickFeedService.GetSubmission is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) GetSubmissionsByCourse(context.Context, *connect_go.Request[qf.SubmissionsForCourseRequest]) (*connect_go.Response[qf.CourseSubmissions], error) {

@@ -43,6 +43,7 @@ var accessRolesFor = map[string]roles{
 	"UpdateUser":              {user, admin},
 	"GetEnrollmentsByUser":    {user, admin},
 	"GetSubmissions":          {student, group, teacher},
+	"GetSubmission":           {teacher},
 	"GetGroupByUserAndCourse": {student, teacher},
 	"CreateGroup":             {group, teacher},
 	"GetGroup":                {group, teacher},
