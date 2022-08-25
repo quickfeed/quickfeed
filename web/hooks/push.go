@@ -12,9 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -225,11 +223,12 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *qf.Assignment, repo *qf.R
 	}
 	results, err := runData.RunTests(ctx, wh.logger, sc, wh.runner)
 	if err != nil {
-		wh.logger.Errorf("Failed to run tests for assignment %s for course %s: %v", assignment.Name, course.Name, err)
+		wh.logger.Error(err)
+		return nil
 	}
-	wh.logger.Debug("ci.RunTests", zap.Any("Results", qlog.IndentJson(results)))
 	if _, err = runData.RecordResults(wh.logger, wh.db, results); err != nil {
 		wh.logger.Error(err)
+		return nil
 	}
 	return results
 }
