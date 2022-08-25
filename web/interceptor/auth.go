@@ -50,6 +50,9 @@ func UnaryUserVerifier(logger *zap.SugaredLogger, tm *auth.TokenManager) connect
 				return nil, err
 			}
 			response, err := next(newCtx, request)
+			if err != nil {
+				return nil, err
+			}
 			if cookie != nil {
 				response.Header().Set(auth.SetCookie, cookie.String())
 			}
