@@ -523,7 +523,6 @@ export const setActiveAssignment = ({ state }: Context, assignmentID: number): v
 }
 
 export const getSubmission = async ({ state, effects }: Context, { courseID, submissionID }: { courseID: number, submissionID: number }): Promise<void> => {
-    state.isLoading = true
     const response = await effects.grpcMan.getSubmission(courseID, submissionID)
     if (!response.data || !success(response)) {
         return
