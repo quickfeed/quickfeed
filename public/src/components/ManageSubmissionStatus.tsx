@@ -8,14 +8,24 @@ const ManageSubmissionStatus = (): JSX.Element => {
     const state = useAppState()
     const assignment = state.activeSubmissionLink?.assignment
 
+    const [rebuildText, setRebuildText] = React.useState("Rebuild")
+
     const buttons: { text: string, status: Submission.Status, style: string, onClick?: () => void }[] = [
         { text: "Approve", status: Submission.Status.APPROVED, style: "primary" },
         { text: "Revision", status: Submission.Status.REVISION, style: "warning" },
         { text: "Reject", status: Submission.Status.REJECTED, style: "danger" },
     ]
 
+
+    const handleRebuild = async () => {
+        setRebuildText("Rebuilding...")
+        await actions.rebuildSubmission()
+        setRebuildText("Rebuild")
+    }
+
+
     if (assignment && !isManuallyGraded(assignment)) {
-        buttons.push({ text: "Rebuild", status: Submission.Status.NONE, style: "primary", onClick: () => actions.rebuildSubmission() })
+        buttons.push({ text: rebuildText, status: Submission.Status.NONE, style: "primary", onClick: handleRebuild})
     }
 
     const StatusButtons = buttons.map((button, index) => {
