@@ -60,9 +60,9 @@ func TestGitHubWebHook(t *testing.T) {
 
 	var db database.Database
 	var runner ci.Runner
-	webhook := NewGitHubWebHook(logger, db, runner, secret)
+	webhook := NewGitHubWebHook(logger, db, &scm.Manager{}, runner, secret)
 
 	log.Println("starting webhook server")
-	http.HandleFunc("/webhook", webhook.Handle)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	http.HandleFunc("/webhook", webhook.Handle())
+	t.Fatal(http.ListenAndServe(":8080", nil))
 }

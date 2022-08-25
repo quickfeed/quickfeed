@@ -20,8 +20,10 @@ type GithubSCM struct {
 	logger      *zap.SugaredLogger
 	client      *github.Client
 	clientV4    *githubv4.Client
+	config      *Config
 	token       string
 	providerURL string
+	tokenURL    string
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
@@ -96,8 +98,11 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 		// fetch user membership in that organization, if exists
 		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, slug.Make(opt.Name))
 		if err != nil {
-			s.logger.Debug("User ", opt.Username, " is not a member of ", slug.Make(opt.Name))
-			return nil, ErrNotMember
+			return nil, ErrFailedSCM{
+				Method:   "GetOrganization",
+				Message:  fmt.Sprintf("Failed to GetOrganization for (%q, %q)", opt.Username, slug.Make(opt.Name)),
+				GitError: fmt.Errorf("failed to GetOrgMembership(%q, %q): %w", opt.Username, slug.Make(opt.Name), err),
+			}
 		}
 		// membership role must be "admin", if not, return error (possibly to show user)
 		if membership.GetRole() != OrgOwner {
@@ -675,28 +680,6 @@ func (s *GithubSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions)
 	return nil
 }
 
-// GetUserScopes implements the SCM interface
-func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
-	// Users.Get method will always return nil, response struct and error,
-	// we are only interested in response. Its header will contain all scopes for the current user.
-	_, resp, _ := s.client.Users.Get(ctx, "")
-	if resp == nil {
-		s.logger.Errorf("GetUserScopes: got no scopes: no authorized user")
-		tmpScopes := make([]string, 0)
-		return &Authorization{Scopes: tmpScopes}
-	}
-	// header contains a single string with all GitHub scopes for the authenticated user
-	stringScopes := resp.Header.Get("X-OAuth-Scopes")
-	if stringScopes == "" {
-		s.logger.Errorf("GetUserScopes: header was empty")
-		tmpScopes := make([]string, 0)
-		return &Authorization{Scopes: tmpScopes}
-	}
-
-	gitScopes := strings.Split(stringScopes, ", ")
-	return &Authorization{Scopes: gitScopes}
-}
-
 // CreateIssue implements the SCM interface
 func (s *GithubSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
 	if !opt.valid() {
@@ -851,46 +834,6 @@ func (s *GithubSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOpt
 			Method:   "UpdateIssueComment",
 			Message:  fmt.Sprintf("failed to edit comment in repository: %s, for organization: %s", opt.Repository, opt.Organization),
 			GitError: err,
-		}
-	}
-	return nil
-}
-
-// GetRepositoryInvites implements the SCM interface
-func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "GetRepositoryInvites",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
-
-	invites, _, err := s.client.Users.ListInvitations(ctx, &github.ListOptions{})
-	if err != nil {
-		return ErrFailedSCM{
-			GitError: fmt.Errorf("failed to fetch GitHub repository invitations: %w", err),
-			Method:   "GetRepositoryInvites",
-			Message:  "failed to fetch GitHub repository invitations",
-		}
-	}
-
-	for _, invite := range invites {
-		// The list of invitations contain all the invitations for the authenticated user.
-		// We only want to accept invitations from the owner specified in the options.
-		// For our courses, the owner is the organization.
-		// For invitations originating from an organization, the owner login is the organization path.
-		if invite.Repo.Owner.GetLogin() != opt.Owner || invite.Invitee.GetLogin() != opt.Login {
-			// Ignore unrelated invites
-			continue
-		}
-
-		_, err := s.client.Users.AcceptInvitation(ctx, invite.GetID())
-		if err != nil {
-			return ErrFailedSCM{
-				GitError: fmt.Errorf("failed to accept GitHub repository invitation: %w", err),
-				Method:   "GetRepositoryInvites",
-				Message:  fmt.Sprintf("failed to accept invitation for user: %s, to repo: %s", opt.Login, invite.Repo.GetName()),
-			}
 		}
 	}
 	return nil

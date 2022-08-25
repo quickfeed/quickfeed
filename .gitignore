@@ -9,6 +9,7 @@ public/dist/bundle.js.map
 backups
 scratchpad
 proto-include
+bin
 
 # Environment and shell scripts
 cyclone.sh
@@ -18,9 +19,10 @@ quickfeed-env.sh
 .env*
 !.env-template
 
-# Configuration files
-ci/docker/envoy/*.yaml
-ci/docker/envoy/certs
+# Configuration and certificate files
+*.pem
+internal/config/certs/*
+internal/config/envoy/*
 
 # Database and Log files
 *.db

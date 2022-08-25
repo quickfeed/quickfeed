@@ -1,13 +1,17 @@
 agpath
 allstudents
 allteachers
+apitest
 ASSIGNDIR
 assignmentid
 autoapprove
+autocert
 autograde
 Autograder
 backports
+beatlabs
 bitlab
+bufbuild
 bufconn
 bufnet
 buildid
@@ -39,6 +43,7 @@ fullchain
 Getwd
 githubv
 GOBIN
+GOCACHE
 Godkjent
 gofumports
 gofumpt
@@ -50,6 +55,7 @@ gopls
 Gorm
 gosecret
 gosimple
+gotest
 goveralls
 Grafana
 Grafana's
@@ -61,6 +67,7 @@ Hein
 Hein's
 Heins
 helpbot
+hostnames
 hoursmax
 hoursmin
 HTMLURL
@@ -73,13 +80,16 @@ Isadmin
 isgrouplab
 itest
 jinzhu
+Jostein
 jsonpb
+JWTs
 keepalive
 keyout
 killall
 labstack
 Lamport
 letsencrypt
+Lindhom
 linuxbrew
 LOGDB
 logq
@@ -94,6 +104,7 @@ meling
 mkdir
 newkey
 ngrok
+nocheck
 npmtools
 npmwebpack
 NTNU
@@ -110,6 +121,7 @@ pgrep
 pkgs
 Preload
 privkey
+promgrpc
 promhttp
 proto
 protobuf
@@ -118,6 +130,7 @@ protocmp
 protoimpl
 protopatch
 protoreflect
+qfconnect
 qlog
 qtest
 quickfeed
@@ -132,12 +145,15 @@ SGTM
 shogo
 shurcoo
 signup
+skipcq
 skiptests
+Skylar
 slugified
 sqlite
 staticcheck
 Stavnes
 stdcopy
+steinfletcher
 struct
 structs
 Studentid
@@ -145,6 +161,7 @@ subtest
 subtests
 testdata
 testdb
+testorg
 tmpl
 Typeflag
 Unexported

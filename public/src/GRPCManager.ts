@@ -17,7 +17,6 @@ import {
     Users,
 } from "../proto/qf/types_pb"
 import {
-    AuthorizationResponse,
     CourseRequest,
     CourseSubmissions,
     EnrollmentStatusRequest,
@@ -26,7 +25,6 @@ import {
     GroupRequest,
     Organization,
     OrgRequest,
-    Providers,
     RebuildRequest,
     Repositories,
     RepositoryRequest,
@@ -53,7 +51,7 @@ export class GrpcManager {
     private agService: QuickFeedServiceClient
 
     constructor() {
-        this.agService = new QuickFeedServiceClient("https://" + window.location.hostname, null, null)
+        this.agService = new QuickFeedServiceClient("https://" + window.location.host, null, null)
     }
 
 
@@ -68,10 +66,6 @@ export class GrpcManager {
 
     public updateUser(user: User): Promise<IGrpcResponse<Void>> {
         return this.grpcSend<Void>(this.agService.updateUser, user)
-    }
-
-    public isAuthorizedTeacher(): Promise<IGrpcResponse<AuthorizationResponse>> {
-        return this.grpcSend<AuthorizationResponse>(this.agService.isAuthorizedTeacher, new Void())
     }
 
     // /* COURSES */ //
@@ -255,10 +249,11 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateSubmissions, request)
     }
 
-    public rebuildSubmission(assignmentID: number, submissionID: number): Promise<IGrpcResponse<Void>> {
+    public rebuildSubmission(assignmentID: number, submissionID: number, courseID: number): Promise<IGrpcResponse<Void>> {
         const request = new RebuildRequest()
         request.setAssignmentid(assignmentID)
         request.setSubmissionid(submissionID)
+        request.setCourseid(courseID)
         return this.grpcSend<Void>(this.agService.rebuildSubmissions, request)
     }
 
@@ -331,10 +326,6 @@ export class GrpcManager {
         const request = new OrgRequest()
         request.setOrgname(orgName)
         return this.grpcSend<Organization>(this.agService.getOrganization, request)
-    }
-
-    public getProviders(): Promise<IGrpcResponse<Providers>> {
-        return this.grpcSend<Providers>(this.agService.getProviders, new Void())
     }
 
     public isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<IGrpcResponse<Void>> {

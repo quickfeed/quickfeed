@@ -1,71 +1,5 @@
 package qf
 
-import (
-	"context"
-	"reflect"
-	"strings"
-	"time"
-
-	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/zap"
-	grpc "google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-)
-
-// MaxWait is the maximum time a request is allowed to stay open before aborting.
-const MaxWait = 2 * time.Minute
-
-type validator interface {
-	IsValid() bool
-}
-
-type idCleaner interface {
-	RemoveRemoteID()
-}
-
-// Interceptor returns a new unary server interceptor that validates requests
-// that implements the validator interface.
-// Invalid requests are rejected without logging and before it reaches any
-// user-level code and returns an illegal argument to the client.
-// In addition, the interceptor also implements a cancel mechanism.
-func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		methodName := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
-		AgMethodSuccessRateMetric.WithLabelValues(methodName, "total").Inc()
-		responseTimer := prometheus.NewTimer(prometheus.ObserverFunc(
-			AgResponseTimeByMethodsMetric.WithLabelValues(methodName).Set),
-		)
-		defer responseTimer.ObserveDuration().Milliseconds()
-
-		if v, ok := req.(validator); ok {
-			if !v.IsValid() {
-				return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
-			}
-		} else {
-			// just logging, but still handling the call
-			logger.Sugar().Debugf("message type '%s' does not implement validator interface",
-				reflect.TypeOf(req).String())
-		}
-		ctx, cancel := context.WithTimeout(ctx, MaxWait)
-		defer cancel()
-
-		// if response has information on remote ID, it will be removed
-		resp, err := handler(ctx, req)
-		if resp != nil {
-			AgMethodSuccessRateMetric.WithLabelValues(methodName, "success").Inc()
-			if v, ok := resp.(idCleaner); ok {
-				v.RemoveRemoteID()
-			}
-		}
-		if err != nil {
-			AgFailedMethodsMetric.WithLabelValues(methodName).Inc()
-			AgMethodSuccessRateMetric.WithLabelValues(methodName, "error").Inc()
-		}
-		return resp, err
-	}
-}
-
 // IsValid on void message always returns true.
 func (*Void) IsValid() bool {
 	return true
@@ -177,25 +111,14 @@ func (req *SubmissionsForCourseRequest) IsValid() bool {
 
 // IsValid ensures that both course and submission IDs are set
 func (req *RebuildRequest) IsValid() bool {
-	aid, sid, cid := req.GetAssignmentID(), req.GetSubmissionID(), req.GetCourseID()
-	return aid > 0 && (sid > 0 || cid > 0)
+	aid, cid := req.GetAssignmentID(), req.GetCourseID()
+	return aid > 0 && cid > 0
 }
 
 // IsValid checks that either ID or path field is set
 func (org *Organization) IsValid() bool {
 	id, path := org.GetID(), org.GetPath()
 	return id > 0 || path != ""
-}
-
-// IsValidProvider validates provider string coming from front end
-func (l *Providers) IsValidProvider(provider string) bool {
-	isValid := false
-	for _, p := range l.GetProviders() {
-		if p == provider {
-			isValid = true
-		}
-	}
-	return isValid
 }
 
 // IsValid ensures that course ID and submission ID are present.
@@ -231,6 +154,9 @@ func (r *CourseUserRequest) IsValid() bool {
 }
 
 func (m *Enrollments) IsValid() bool {
+	if len(m.Enrollments) == 0 {
+		return false
+	}
 	for _, e := range m.Enrollments {
 		if !e.IsValid() {
 			return false

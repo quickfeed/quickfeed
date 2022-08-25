@@ -61,8 +61,6 @@ type SCM interface {
 	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
 	// RemoveMember removes user from the organization.
 	RemoveMember(context.Context, *OrgMembershipOptions) error
-	// Lists all authorizations for authenticated user.
-	GetUserScopes(context.Context) *Authorization
 
 	// Clone clones the given repository and returns the path to the cloned repository.
 	// The returned path is the provided destination directory joined with the
@@ -90,7 +88,7 @@ type SCM interface {
 	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
 
-	// Accepts repository invite.
+	// Accepts repository invites.
 	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
 }
 
@@ -102,6 +100,17 @@ func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
 		return NewGithubSCMClient(logger, token), nil
 	case "gitlab":
 		return NewGitlabSCMClient(token), nil
+	case "fake":
+		return NewFakeSCMClient(), nil
+	}
+	return nil, errors.New("invalid provider: " + provider)
+}
+
+func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Config, organization string) (SCM, error) {
+	provider := env.ScmProvider()
+	switch provider {
+	case "github":
+		return newGithubAppClient(ctx, logger, config, organization)
 	case "fake":
 		return NewFakeSCMClient(), nil
 	}
@@ -283,10 +292,4 @@ type RequestReviewersOptions struct {
 	Repository   string
 	Number       int
 	Reviewers    []string // Reviewers is a slice of github usernames
-}
-
-// RepositoryInvitationOptions contains information on which organization and user to accept invitations for.
-type RepositoryInvitationOptions struct {
-	Login string // GitHub username.
-	Owner string // Name of the organization.
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/grpc/codes"
@@ -18,7 +19,7 @@ var (
 	// ErrAlreadyExists indicates that one or more QuickFeed repositories
 	// already exists for the directory (or GitHub organization).
 	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
-	// ErrFreePlan indicates that payment plan for given organization does not allow provate
+	// ErrFreePlan indicates that payment plan for given organization does not allow private
 	// repositories and must be upgraded
 	ErrFreePlan = errors.New("organization does not allow creation of private repositories")
 	// ErrContextCanceled indicates that method failed because of scm interaction that took longer than expected
@@ -27,6 +28,58 @@ var (
 	// FreeOrgPlan indicates that organization's payment plan does not allow creation of private repositories
 	FreeOrgPlan = "free"
 )
+
+// InitSCMs creates and saves SCM clients for each course without an active SCM client.
+func (q *QuickFeedService) InitSCMs(ctx context.Context) error {
+	courses, err := q.db.GetCourses()
+	if err != nil {
+		return err
+	}
+	for _, course := range courses {
+		_, err := q.getSCM(ctx, course.OrganizationPath)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// GetSCM returns an SCM client for the course organization.
+func (q *QuickFeedService) getSCM(ctx context.Context, organization string) (scm.SCM, error) {
+	return q.scmMgr.GetOrCreateSCM(ctx, q.logger, organization)
+}
+
+// getSCMForCourse returns an SCM client for the course organization.
+func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64) (scm.SCM, error) {
+	course, err := q.db.GetCourse(courseID, false)
+	if err != nil {
+		return nil, err
+	}
+	return q.getSCM(ctx, course.OrganizationPath)
+}
+
+// getSCMForUser returns an SCM client based on the user's personal access token.
+func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCMInvite, error) {
+	refreshToken, err := user.GetRefreshToken(env.ScmProvider())
+	if err != nil {
+		return nil, err
+	}
+	// Exchange a refresh token for an access token.
+	token, err := q.scmMgr.ExchangeToken(refreshToken)
+	if err != nil {
+		return nil, err
+	}
+	// Save user's refresh token in the database.
+	remoteIdentity := user.GetRemoteIDFor(env.ScmProvider())
+	// TODO(meling) rename UpdateAccessToken() database method to UpdateRefreshToken()
+	// TODO(meling) later: move RefreshToken and ScmRemoteID directly into User type (requires updating the User proto message)
+	// TODO(meling) rename RemoteIdentity.AccessToken to RemoteIdentity.RefreshToken
+	remoteIdentity.AccessToken = token.RefreshToken
+	if err := q.db.UpdateAccessToken(remoteIdentity); err != nil {
+		return nil, err
+	}
+	return scm.NewInviteOnlySCMClient(token.AccessToken), nil
+}
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
 // specified course (represented with organization ID). The SCM team name

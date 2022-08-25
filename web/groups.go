@@ -22,24 +22,6 @@ var (
 	errUserNotInGroup     = status.Errorf(codes.NotFound, "user is not in group")
 )
 
-// getGroup returns the group for the given group ID.
-func (s *QuickFeedService) getGroup(request *qf.GetGroupRequest) (*qf.Group, error) {
-	group, err := s.db.GetGroup(request.GetGroupID())
-	if err != nil {
-		return nil, err
-	}
-	return group, nil
-}
-
-// getGroups returns all groups for the given course ID.
-func (s *QuickFeedService) getGroups(request *qf.CourseRequest) (*qf.Groups, error) {
-	groups, err := s.db.GetGroupsByCourse(request.GetCourseID())
-	if err != nil {
-		return nil, err
-	}
-	return &qf.Groups{Groups: groups}, nil
-}
-
 // getGroupByUserAndCourse returns the group of the given user and course.
 func (s *QuickFeedService) getGroupByUserAndCourse(request *qf.GroupRequest) (*qf.Group, error) {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)

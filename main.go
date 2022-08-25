@@ -2,32 +2,26 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"mime"
-	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/quickfeed/quickfeed/ci"
-	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qlog"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-
-	"github.com/quickfeed/quickfeed/database"
-
-	"google.golang.org/grpc"
-
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/quickfeed/quickfeed/web/interceptor"
+	"golang.org/x/crypto/acme/autocert"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 )
 
 func init() {
-	// Create some standard server metrics.
-	grpcMetrics := grpc_prometheus.NewServerMetrics()
-
 	mustAddExtensionType := func(ext, typ string) {
 		if err := mime.AddExtensionType(ext, typ); err != nil {
 			panic(err)
@@ -43,17 +37,7 @@ func init() {
 	mustAddExtensionType(".jsx", "application/javascript")
 	mustAddExtensionType(".map", "application/json")
 	mustAddExtensionType(".ts", "application/x-typescript")
-
-	reg.MustRegister(
-		grpcMetrics,
-		qf.AgFailedMethodsMetric,
-		qf.AgMethodSuccessRateMetric,
-		qf.AgResponseTimeByMethodsMetric,
-	)
 }
-
-// Create a metrics registry.
-var reg = prometheus.NewRegistry()
 
 func main() {
 	var (
@@ -61,64 +45,102 @@ func main() {
 		dbFile   = flag.String("database.file", "qf.db", "database file")
 		public   = flag.String("http.public", "public", "path to content to serve")
 		httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
-		grpcAddr = flag.String("grpc.addr", ":9090", "gRPC listen address")
+		dev      = flag.Bool("dev", false, "running server locally")
 	)
 	flag.Parse()
 
+	if *dev {
+		*baseURL = "127.0.0.1" + *httpAddr
+	}
+
+	// Load environment variables from $QUICKFEED/.env.
+	// Will not override variables already defined in the environment.
+	if err := env.Load(""); err != nil {
+		log.Fatal(err)
+	}
+
 	logger, err := qlog.Zap()
 	if err != nil {
-		log.Fatalf("can't initialize logger: %v", err)
+		log.Fatalf("Can't initialize logger: %v", err)
 	}
 	defer logger.Sync()
 
 	db, err := database.NewGormDB(*dbFile, logger)
 	if err != nil {
-		log.Fatalf("can't connect to database: %v\n", err)
+		log.Fatalf("Can't connect to database: %v", err)
 	}
 
-	// holds references for activated providers for current user token
-	scms := auth.NewScms()
+	// Holds references for activated providers for current user token
 	bh := web.BaseHookOptions{
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
+	scmConfig, err := scm.NewSCMConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tokenManager, err := auth.NewTokenManager(db, *baseURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	authConfig := auth.NewGitHubConfig(*baseURL, scmConfig)
+	logger.Sugar().Debug("CALLBACK: ", authConfig.RedirectURL)
+	scmManager := scm.NewSCMManager(scmConfig)
+
 	runner, err := ci.NewDockerCI(logger.Sugar())
 	if err != nil {
-		log.Fatalf("failed to set up docker client: %v\n", err)
+		log.Fatalf("Failed to set up docker client: %v", err)
 	}
 	defer runner.Close()
 
-	// Add application token for external applications (to allow invoking gRPC methods)
-	// TODO(meling): this is a temporary solution, and we should find a better way to do this
-	token := os.Getenv("QUICKFEED_AUTH_TOKEN")
-	if len(token) > 16 {
-		auth.Add(token, 1)
-		log.Println("Added application token")
-	}
+	certFile := env.CertFile()
+	certKey := env.KeyFile()
+	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
 
-	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
-	go web.New(qfService, *public, *httpAddr)
+	// Register HTTP endpoints and webhooks
+	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
 
-	lis, err := net.Listen("tcp", *grpcAddr)
-	if err != nil {
-		log.Fatalf("failed to start tcp listener: %v\n", err)
-	}
-	opt := grpc.ChainUnaryInterceptor(auth.UserVerifier(), qf.Interceptor(logger))
-	grpcServer := grpc.NewServer(opt)
-	// Create a HTTP server for prometheus.
-	httpServer := &http.Server{
-		Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
-		Addr:    fmt.Sprintf("0.0.0.0:%d", 9097),
-	}
+	// Create an HTTP server for prometheus.
+	httpServer := interceptor.MetricsServer(9097)
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatal("Unable to start a http server.")
+			log.Fatalf("Failed to start a http server: %v", err)
 		}
 	}()
+	muxServer := &http.Server{
+		Handler:      h2c.NewHandler(router, &http2.Server{}),
+		Addr:         *httpAddr,
+		WriteTimeout: 2 * time.Minute,
+		ReadTimeout:  2 * time.Minute,
+	}
+	if *dev {
+		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
+		if err := muxServer.ListenAndServeTLS(certFile, certKey); err != nil {
+			log.Fatalf("Failed to start grpc server: %v", err)
+			return
+		}
+	} else {
+		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
+	}
+	whitelist, err := env.Whitelist()
+	if err != nil {
+		log.Fatalf("Failed to get whitelist: %v", err)
+	}
+	certManager := autocert.Manager{
+		Prompt: autocert.AcceptTOS,
+		Cache:  autocert.DirCache(env.CertPath()),
+		HostPolicy: autocert.HostWhitelist(
+			whitelist...,
+		),
+	}
+	muxServer.TLSConfig = certManager.TLSConfig()
 
-	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to start grpc server: %v\n", err)
+	// Redirect all HTTP traffic to HTTPS.
+	go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
+	// Start the HTTPS server.
+	if err := muxServer.ListenAndServeTLS("", ""); err != nil {
+		log.Fatalf("Failed to start grpc server: %v", err)
 	}
 }

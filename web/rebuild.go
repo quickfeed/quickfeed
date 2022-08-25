@@ -48,7 +48,11 @@ func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) (*qf.Su
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
-	results, err := runData.RunTests(ctx, s.logger, s.runner)
+	sc, err := s.getSCM(ctx, course.OrganizationPath)
+	if err != nil {
+		return nil, err
+	}
+	results, err := runData.RunTests(ctx, s.logger, sc, s.runner)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +82,7 @@ func (s *QuickFeedService) rebuildSubmissions(request *qf.RebuildRequest) error 
 	for _, submission := range submissions {
 		rebuildReq := &qf.RebuildRequest{
 			AssignmentID: request.AssignmentID,
-			RebuildType:  &qf.RebuildRequest_SubmissionID{SubmissionID: submission.GetID()},
+			SubmissionID: submission.GetID(),
 		}
 		// the counting semaphore limits concurrency to maxContainers
 		go func() {

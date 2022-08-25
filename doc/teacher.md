@@ -296,6 +296,9 @@ find . -name '*_test.go' -exec rm -rf {} \;
 # Copy tests into student assignments folder for running tests
 cp -r "$TESTS"/* "$ASSIGNMENTS"/
 
+# Needed to ensure that dependencies from both $TESTS and $ASSIGNMENTS are blessed
+go mod tidy
+
 printf "\n*** Finished Test Setup in %s seconds ***\n" "$(( SECONDS - start ))"
 start=$SECONDS
 printf "\n*** Running Tests ***\n\n"

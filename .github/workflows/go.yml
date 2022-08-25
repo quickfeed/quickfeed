@@ -9,7 +9,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.18]
+        go-version: [1.19]
         platform: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.platform }}
 

@@ -54,7 +54,7 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 
 	// create a push hook on organization level
 	hookOptions := &scm.CreateHookOptions{
-		URL:          auth.GetEventsURL(s.bh.BaseURL, request.Provider),
+		URL:          auth.GetEventsURL(s.bh.BaseURL),
 		Secret:       s.bh.Secret,
 		Organization: org.Path,
 	}

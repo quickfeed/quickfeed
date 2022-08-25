@@ -261,11 +261,6 @@ func (*GitlabSCM) RemoveMember(_ context.Context, _ *OrgMembershipOptions) error
 	}
 }
 
-// GetUserScopes implements the SCM interface
-func (*GitlabSCM) GetUserScopes(_ context.Context) *Authorization {
-	return nil
-}
-
 // CreateIssue implements the SCM interface
 func (*GitlabSCM) CreateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
 	return nil, ErrNotSupported{
@@ -330,10 +325,10 @@ func (*GitlabSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOpt
 	}
 }
 
-// AcceptRepositoryInvite implements the SCM interface
+// AcceptRepositoryInvite implements the SCMInvite interface
 func (*GitlabSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
 	return ErrNotSupported{
 		SCM:    "gitlab",
-		Method: "AcceptRepositoryInvite",
+		Method: "AcceptRepositoryInvites",
 	}
 }

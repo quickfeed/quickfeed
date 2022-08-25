@@ -8,13 +8,13 @@ import "qf/types.proto";
 // Message types that are used as requests and responses in API calls.
 
 message CourseSubmissions {
-    qf.Course course              = 1;  // preloaded assignments
+    Course course                 = 1;  // preloaded assignments
     repeated EnrollmentLink links = 2;
 }
 
 message ReviewRequest {
-    uint64 courseID  = 1;
-    qf.Review review = 2;
+    uint64 courseID = 1;
+    Review review   = 2;
 }
 
 message CourseRequest {
@@ -51,23 +51,23 @@ message Organizations {
 }
 
 message Reviewers {
-    repeated qf.User reviewers = 1;
+    repeated User reviewers = 1;
 }
 
 // EnrollmentRequest is a request for enrolled users of a given course,
 // whose enrollment status match those provided in the request. To ignore group members
 // that otherwise match the enrollment request, set ignoreGroupMembers to true.
 message EnrollmentRequest {
-    uint64 courseID                            = 1;
-    bool ignoreGroupMembers                    = 2;
-    bool withActivity                          = 3;
-    repeated qf.Enrollment.UserStatus statuses = 4;
+    uint64 courseID                         = 1;
+    bool ignoreGroupMembers                 = 2;
+    bool withActivity                       = 3;
+    repeated Enrollment.UserStatus statuses = 4;
 }
 
 // EnrollmentStatusRequest is a request for a given user, with a specific enrollment status.
 message EnrollmentStatusRequest {
-    uint64 userID                              = 1;
-    repeated qf.Enrollment.UserStatus statuses = 2;
+    uint64 userID                           = 1;
+    repeated Enrollment.UserStatus statuses = 2;
 }
 
 message SubmissionRequest {
@@ -77,11 +77,11 @@ message SubmissionRequest {
 }
 
 message UpdateSubmissionRequest {
-    uint64 submissionID         = 1;
-    uint64 courseID             = 2;
-    uint32 score                = 3;
-    bool released               = 4;
-    qf.Submission.Status status = 5;
+    uint64 submissionID      = 1;
+    uint64 courseID          = 2;
+    uint32 score             = 3;
+    bool released            = 4;
+    Submission.Status status = 5;
 }
 
 message UpdateSubmissionsRequest {
@@ -97,13 +97,9 @@ message SubmissionReviewersRequest {
     uint64 courseID     = 2;
 }
 
-message Providers {
-    repeated string providers = 1;
-}
-
 message URLRequest {
-    uint64 courseID                       = 1;
-    repeated qf.Repository.Type repoTypes = 2;
+    uint64 courseID                    = 1;
+    repeated Repository.Type repoTypes = 2;
 }
 
 // used to check whether student/group submission repo is empty
@@ -115,10 +111,6 @@ message RepositoryRequest {
 
 message Repositories {
     map<string, string> URLs = 1;
-}
-
-message AuthorizationResponse {
-    bool IsAuthorized = 1;
 }
 
 message Status {
@@ -138,11 +130,9 @@ message SubmissionsForCourseRequest {
 }
 
 message RebuildRequest {
-    oneof rebuildType {
-        uint64 submissionID = 1;
-        uint64 courseID     = 2;
-    }
-    uint64 assignmentID = 3;
+    uint64 courseID     = 1;
+    uint64 assignmentID = 2;
+    uint64 submissionID = 3;
 }
 
 message CourseUserRequest {
