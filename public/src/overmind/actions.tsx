@@ -522,16 +522,37 @@ export const setActiveAssignment = ({ state }: Context, assignmentID: number): v
     state.activeAssignment = assignmentID
 }
 
+export const getSubmission = async ({ state, effects }: Context, { courseID, submissionID }: { courseID: number, submissionID: number }): Promise<void> => {
+    state.isLoading = true
+    const response = await effects.grpcMan.getSubmission(courseID, submissionID)
+    if (!response.data || !success(response)) {
+        return
+    }
+    const submissions = state.groupView ? state.courseGroupSubmissions[courseID] : state.courseSubmissions[courseID]
+    if (!submissions) {
+        return
+    }
+    submissions.forEach(link => {
+        const sub = link.submissions?.find(submission => submission.submission?.id === submissionID)
+        if (sub?.submission && response.data) {
+            sub.submission = response.data.toObject()
+        }
+    })
+}
+
 /** Rebuilds the currently active submission */
-export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<void> => {
+export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<boolean> => {
     if (state.currentSubmission && state.selectedAssignment && state.activeCourse) {
         const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.id, state.activeSubmission, state.activeCourse)
         if (success(response)) {
             // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
             // TODO: gRPC streaming should be implemented to send the updated submission to the client.
+            await actions.getSubmission({ courseID: state.activeCourse, submissionID: state.activeSubmission })
             actions.alert({ color: Color.GREEN, text: 'Submission rebuilt successfully' })
+            return true
         }
     }
+    return false
 }
 
 /* rebuildAllSubmissions rebuilds all submissions for a given assignment */

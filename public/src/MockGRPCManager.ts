@@ -456,6 +456,14 @@ export class MockGrpcManager {
         return this.grpcSend<Submissions>(submissions)
     }
 
+    public getSubmission(courseID: number, submissionID: number): Promise<IGrpcResponse<Submission>> {
+        if (!this.enrollments.getEnrollmentsList().find(e => e.getCourseid() === courseID && e.getUserid() === this.currentUser?.getId())) {
+            return this.grpcSend<Submission>(null, new Status().setCode(StatusCode.NOT_FOUND))
+        }
+        const submission = this.submissions.getSubmissionsList().find(s => s.getId() === submissionID)
+        return this.grpcSend<Submission>(submission)
+    }
+
     public getSubmissions(courseID: number, userID: number): Promise<IGrpcResponse<Submissions>> {
         // Get all assignment IDs
         const assignmentIDs = this.assignments.getAssignmentsList().filter(a => a.getCourseid() === courseID && !a.getIsgrouplab()).map(a => a.getId())
