@@ -59,7 +59,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 				// only run non-group assignments
 				wh.runAssignmentTests(assignment, repo, course, payload)
 			} else {
-				wh.logger.Debugf("Ignoring assignment: %s, pushed to user repo: %s", assignment.GetName(), payload.GetRepo().GetName())
+				wh.logger.Debugf("Ignoring push to user repo %s for group assignment: %s", payload.GetRepo().GetName(), assignment.GetName())
 			}
 		}
 
@@ -82,7 +82,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 					wh.handlePullRequestPush(payload, results, assignment, course, repo)
 				}
 			} else {
-				wh.logger.Debugf("Ignoring assignment: %s, pushed to group repo: %s", assignment.GetName(), payload.GetRepo().GetName())
+				wh.logger.Debugf("Ignoring push to group repo %s for user assignment: %s", payload.GetRepo().GetName(), assignment.GetName())
 			}
 		}
 	default:
