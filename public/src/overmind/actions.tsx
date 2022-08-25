@@ -524,8 +524,8 @@ export const setActiveAssignment = ({ state }: Context, assignmentID: number): v
 
 /** Rebuilds the currently active submission */
 export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<void> => {
-    if (state.currentSubmission && state.selectedAssignment) {
-        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.id, state.activeSubmission)
+    if (state.currentSubmission && state.selectedAssignment && state.activeCourse) {
+        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.id, state.activeSubmission, state.activeCourse)
         if (success(response)) {
             // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
             // TODO: gRPC streaming should be implemented to send the updated submission to the client.
