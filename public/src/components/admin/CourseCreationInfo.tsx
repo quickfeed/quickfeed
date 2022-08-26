@@ -11,10 +11,13 @@ const CourseCreationInfo = (): JSX.Element => {
                 This is to keep the student roster for the different runs of the course separate.
             </p>
             <p>
-                <a className="badge-pill badge-success" href="https://github.com/account/organizations/new">
+                <a className="badge-pill badge-success" href="https://github.com/enterprises/university-of-stavanger" target="_blank" rel="noopener noreferrer">
                     Create an organization
                 </a> for your course.
                 The course organization must allow private repositories.
+            </p>
+            <p>
+                Add the <a className="badge-pill badge-info" href="https://github.com/apps/quickfeed-uis" target="_blank" rel="noopener noreferrer">QuickFeed application</a> to your GitHub organization before creating a course.
             </p>
             <p>
                 QuickFeed will create the following repositories for you:
@@ -26,7 +29,7 @@ const CourseCreationInfo = (): JSX.Element => {
             </ul>
             <p>
                 <span>Please refer to the </span>
-                <a className="badge-pill badge-primary" href="https://github.com/quickfeed/quickfeed/blob/master/doc/teacher.md">
+                <a className="badge-pill badge-primary" href="https://github.com/quickfeed/quickfeed/blob/master/doc/teacher.md" target="_blank" rel="noopener noreferrer">
                     documentation
                 </a>
                 <span> for further instructions on how to work with the various repositories.</span>

@@ -2,11 +2,11 @@ package interceptor
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"go.uber.org/zap"
-	"google.golang.org/grpc"
 )
 
 type (
@@ -16,7 +16,7 @@ type (
 	isGroup interface{ GetGroupID() uint64 }
 )
 
-var defaultTokenUpdater = func(_ context.Context, tm *auth.TokenManager, msg userIDs) error {
+var defaultTokenUpdater = func(_ string, tm *auth.TokenManager, msg userIDs) error {
 	for _, userID := range msg.UserIDs() {
 		if err := tm.Add(userID); err != nil {
 			return err
@@ -26,14 +26,14 @@ var defaultTokenUpdater = func(_ context.Context, tm *auth.TokenManager, msg use
 }
 
 // tokenUpdateMethods is a map of methods that require updating the list of users who need a new JWT.
-var tokenUpdateMethods = map[string]func(context.Context, *auth.TokenManager, userIDs) error{
+var tokenUpdateMethods = map[string]func(string, *auth.TokenManager, userIDs) error{
 	"UpdateUser":        defaultTokenUpdater, // User has been promoted to admin or demoted.
 	"UpdateGroup":       defaultTokenUpdater, // Users added to a group or removed from a group.
 	"UpdateEnrollments": defaultTokenUpdater, // User enrolled into a new course or promoted to TA.
 
 	"CreateCourse": // The signed in user gets the teacher role in the new course.
-	func(ctx context.Context, tm *auth.TokenManager, _ userIDs) error {
-		claims, err := tm.GetClaims(ctx)
+	func(cookies string, tm *auth.TokenManager, _ userIDs) error {
+		claims, err := tm.GetClaims(cookies)
 		if err != nil {
 			return err
 		}
@@ -41,34 +41,36 @@ var tokenUpdateMethods = map[string]func(context.Context, *auth.TokenManager, us
 	},
 
 	"DeleteGroup": // Group members removed from the group.
-	func(ctx context.Context, tm *auth.TokenManager, msg userIDs) error {
+	func(cookies string, tm *auth.TokenManager, msg userIDs) error {
 		if grp, ok := msg.(isGroup); ok {
 			group, err := tm.Database().GetGroup(grp.GetGroupID())
 			if err != nil {
 				return err
 			}
-			return defaultTokenUpdater(ctx, tm, group)
+			return defaultTokenUpdater(cookies, tm, group)
 		}
-		return ErrAccessDenied
+		return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s):", "DeleteGroup"))
 	},
 }
 
 // TokenRefresher updates list of users who need a new JWT next time they send a request to the server.
 // This method only logs errors to avoid overwriting the gRPC error messages returned by the server.
-func TokenRefresher(logger *zap.SugaredLogger, tm *auth.TokenManager) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		method := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
-		if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
-			if msg, ok := req.(userIDs); ok {
-				if err := tokenUpdateFn(ctx, tm, msg); err != nil {
-					logger.Error(err)
-					return nil, ErrAccessDenied
+func TokenRefresher(tm *auth.TokenManager) connect.Interceptor {
+	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
+		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
+			procedure := request.Spec().Procedure
+			method := procedure[strings.LastIndex(procedure, "/")+1:]
+			if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
+				if msg, ok := request.Any().(userIDs); ok {
+					cookies := request.Header().Get(auth.Cookie)
+					if err := tokenUpdateFn(cookies, tm, msg); err != nil {
+						return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): %v", method, err))
+					}
+				} else {
+					return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): missing 'userIDs' interface", method))
 				}
-			} else {
-				logger.Errorf("%s's argument is missing 'userIDs' interface", method)
-				return nil, ErrAccessDenied
 			}
-		}
-		return handler(ctx, req)
-	}
+			return next(ctx, request)
+		})
+	})
 }

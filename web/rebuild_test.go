@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
@@ -150,16 +151,16 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	}
 
 	// try to rebuild non-existing submission
-	rebuildRequest := &qf.RebuildRequest{
+	rebuildRequest := connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{
 		AssignmentID: assignment.ID,
-		RebuildType:  &qf.RebuildRequest_SubmissionID{SubmissionID: 123},
-	}
-	if _, err := q.RebuildSubmissions(ctx, rebuildRequest); err == nil {
+		SubmissionID: 123,
+	}}
+	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err == nil {
 		t.Errorf("Expected error: record not found")
 	}
 	// rebuild existing submission
-	rebuildRequest.SetSubmissionID(1)
-	if _, err := q.RebuildSubmissions(ctx, rebuildRequest); err != nil {
+	rebuildRequest.Msg.SubmissionID = 1
+	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err != nil {
 		t.Fatalf("Failed to rebuild submission: %s", err)
 	}
 	submissions, err := db.GetSubmissions(&qf.Submission{AssignmentID: assignment.ID})
@@ -168,16 +169,16 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	}
 
 	// make sure wrong assignment ID returns error
-	var request qf.RebuildRequest
+	request := &connect.Request[qf.RebuildRequest]{Msg: &qf.RebuildRequest{}}
 
-	request.SetCourseID(course.ID)
-	request.AssignmentID = 1337
-	if _, err = q.RebuildSubmissions(ctx, &request); err == nil {
+	request.Msg.SubmissionID = course.ID
+	request.Msg.AssignmentID = 1337
+	if _, err = q.RebuildSubmissions(ctx, request); err == nil {
 		t.Fatal("Expected error: record not found")
 	}
 
-	request.AssignmentID = assignment.ID
-	if _, err = q.RebuildSubmissions(ctx, &request); err != nil {
+	request.Msg.AssignmentID = assignment.ID
+	if _, err = q.RebuildSubmissions(ctx, request); err != nil {
 		t.Fatalf("Failed to rebuild submissions: %s", err)
 	}
 	rebuiltSubmissions, err := db.GetSubmissions(&qf.Submission{AssignmentID: assignment.ID})
