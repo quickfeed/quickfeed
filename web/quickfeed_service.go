@@ -91,7 +91,7 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[q
 		s.logger.Errorf("UpdateUser failed to update user %d: %v", in.Msg.GetID(), err)
 		return nil, status.Error(codes.InvalidArgument, "failed to update user")
 	}
-	return &connect.Response[qf.Void]{}, err
+	return &connect.Response[qf.Void]{}, nil
 }
 
 // CreateCourse creates a new course.
@@ -221,7 +221,7 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 			return nil, status.Error(codes.InvalidArgument, "failed to update enrollments")
 		}
 	}
-	return &connect.Response[qf.Void]{}, err
+	return &connect.Response[qf.Void]{}, nil
 }
 
 // GetCoursesByUser returns all courses for the given user that match the provided enrollment status.
@@ -405,7 +405,7 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Reque
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to approve submission")
 	}
-	return &connect.Response[qf.Void]{}, err
+	return &connect.Response[qf.Void]{}, nil
 }
 
 // RebuildSubmissions re-runs the tests for the given assignment.
@@ -503,7 +503,7 @@ func (s *QuickFeedService) UpdateReview(ctx context.Context, in *connect.Request
 		s.logger.Errorf("UpdateReview failed for review %+v: %v", in, err)
 		return nil, status.Error(codes.InvalidArgument, "failed to update review")
 	}
-	return connect.NewResponse(review), err
+	return connect.NewResponse(review), nil
 }
 
 // UpdateSubmissions approves and/or releases all manual reviews for student submission for the given assignment
@@ -514,7 +514,7 @@ func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Requ
 		s.logger.Errorf("UpdateSubmissions failed for request %+v", in)
 		return nil, status.Error(codes.InvalidArgument, "failed to update submissions")
 	}
-	return &connect.Response[qf.Void]{}, err
+	return &connect.Response[qf.Void]{}, nil
 }
 
 // GetReviewers returns names of all active reviewers for a student submission.
@@ -524,7 +524,7 @@ func (s *QuickFeedService) GetReviewers(ctx context.Context, in *connect.Request
 		s.logger.Errorf("GetReviewers failed: error fetching from database: %v", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to get reviewers")
 	}
-	return connect.NewResponse(&qf.Reviewers{Reviewers: reviewers}), err
+	return connect.NewResponse(&qf.Reviewers{Reviewers: reviewers}), nil
 }
 
 // GetAssignments returns a list of all assignments for the given course.
