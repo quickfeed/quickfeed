@@ -237,7 +237,7 @@ func (s *QuickFeedService) GetCoursesByUser(_ context.Context, in *connect.Reque
 }
 
 // GetEnrollmentsByUser returns all enrollments for the given user and enrollment status with preloaded courses and groups.
-func (s *QuickFeedService) GetEnrollmentsByUser(ctx context.Context, in *connect.Request[qf.EnrollmentStatusRequest]) (*connect.Response[qf.Enrollments], error) {
+func (s *QuickFeedService) GetEnrollmentsByUser(_ context.Context, in *connect.Request[qf.EnrollmentStatusRequest]) (*connect.Response[qf.Enrollments], error) {
 	enrollments, err := s.db.GetEnrollmentsByUser(in.Msg.GetUserID(), in.Msg.GetStatuses()...)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByUser failed: user %d: %v", in.Msg.GetUserID(), err)
@@ -252,7 +252,7 @@ func (s *QuickFeedService) GetEnrollmentsByUser(ctx context.Context, in *connect
 }
 
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
-func (s *QuickFeedService) GetEnrollmentsByCourse(ctx context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
+func (s *QuickFeedService) GetEnrollmentsByCourse(_ context.Context, in *connect.Request[qf.EnrollmentRequest]) (*connect.Response[qf.Enrollments], error) {
 	enrolls, err := s.getEnrollmentsByCourse(in.Msg)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByCourse failed: course %d: %v", in.Msg.GetCourseID(), err)
@@ -272,7 +272,7 @@ func (s *QuickFeedService) GetGroup(_ context.Context, in *connect.Request[qf.Ge
 }
 
 // GetGroupsByCourse returns groups created for the given course.
-func (s *QuickFeedService) GetGroupsByCourse(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Groups], error) {
+func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Groups], error) {
 	groups, err := s.db.GetGroupsByCourse(in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("GetGroups failed: course %d: %v", in.Msg.GetCourseID(), err)
@@ -297,7 +297,7 @@ func (s *QuickFeedService) GetGroupByUserAndCourse(_ context.Context, in *connec
 
 // CreateGroup creates a new group in the database.
 // Access policy: Any User enrolled in course and specified as member of the group or a course teacher.
-func (s *QuickFeedService) CreateGroup(ctx context.Context, in *connect.Request[qf.Group]) (*connect.Response[qf.Group], error) {
+func (s *QuickFeedService) CreateGroup(_ context.Context, in *connect.Request[qf.Group]) (*connect.Response[qf.Group], error) {
 	group, err := s.createGroup(in.Msg)
 	if err != nil {
 		s.logger.Errorf("CreateGroup failed: %v", err)
@@ -383,7 +383,7 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *connect.Reque
 
 // GetSubmissionsByCourse returns all the latest submissions
 // for every individual or group course assignment for all course students/groups.
-func (s *QuickFeedService) GetSubmissionsByCourse(ctx context.Context, in *connect.Request[qf.SubmissionsForCourseRequest]) (*connect.Response[qf.CourseSubmissions], error) {
+func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect.Request[qf.SubmissionsForCourseRequest]) (*connect.Response[qf.CourseSubmissions], error) {
 	s.logger.Debugf("GetSubmissionsByCourse: %v", in)
 
 	courseLinks, err := s.getAllCourseSubmissions(in.Msg)
@@ -411,7 +411,7 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Reque
 // RebuildSubmissions re-runs the tests for the given assignment.
 // A single submission is executed again if the request specifies a submission ID
 // or all submissions if the request specifies a course ID.
-func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
+func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
 	// RebuildType can be either SubmissionID or CourseID, but not both.
 	if in.Msg.GetSubmissionID() > 0 {
 		if !s.isValidSubmission(in.Msg.GetSubmissionID()) {
@@ -487,7 +487,7 @@ func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *connect.Reques
 }
 
 // CreateReview adds a new submission review.
-func (s *QuickFeedService) CreateReview(ctx context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
+func (s *QuickFeedService) CreateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
 	review, err := s.createReview(in.Msg.Review)
 	if err != nil {
 		s.logger.Errorf("CreateReview failed for review %+v: %v", in, err)
@@ -497,7 +497,7 @@ func (s *QuickFeedService) CreateReview(ctx context.Context, in *connect.Request
 }
 
 // UpdateReview updates a submission review.
-func (s *QuickFeedService) UpdateReview(ctx context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
+func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[qf.ReviewRequest]) (*connect.Response[qf.Review], error) {
 	review, err := s.updateReview(in.Msg.Review)
 	if err != nil {
 		s.logger.Errorf("UpdateReview failed for review %+v: %v", in, err)
@@ -518,7 +518,7 @@ func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Requ
 }
 
 // GetReviewers returns names of all active reviewers for a student submission.
-func (s *QuickFeedService) GetReviewers(ctx context.Context, in *connect.Request[qf.SubmissionReviewersRequest]) (*connect.Response[qf.Reviewers], error) {
+func (s *QuickFeedService) GetReviewers(_ context.Context, in *connect.Request[qf.SubmissionReviewersRequest]) (*connect.Response[qf.Reviewers], error) {
 	reviewers, err := s.getReviewers(in.Msg.SubmissionID)
 	if err != nil {
 		s.logger.Errorf("GetReviewers failed: error fetching from database: %v", err)
