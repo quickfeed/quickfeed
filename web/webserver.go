@@ -49,11 +49,3 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 
 	return router
 }
-
-func VerifyAccessControlMethods(methods []string) error {
-	serviceMethods := make(map[string]bool)
-	for _, m := range methods {
-		serviceMethods[m] = true
-	}
-	return interceptor.CheckAccessMethods(serviceMethods)
-}
