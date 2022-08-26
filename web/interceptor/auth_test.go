@@ -79,7 +79,7 @@ func TestUserVerifier(t *testing.T) {
 	for _, user := range userTest {
 		req := connect.NewRequest(&qf.Void{})
 		if user.metadata {
-			ctx = context.WithValue(ctx, auth.Cookie, user.token)
+			ctx = context.WithValue(ctx, auth.Cookie, user.token) // skipcq: GO-W5003
 		}
 
 		gotUser, err := client.GetUser(ctx, req)

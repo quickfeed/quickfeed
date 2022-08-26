@@ -27,8 +27,8 @@ func (s *QuickFeedService) NewQuickFeedHandler(tm *auth.TokenManager) (string, h
 func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oauth2.Config, public string) *http.ServeMux {
 	// Serve static files.
 	router := http.NewServeMux()
-	assets := http.FileServer(http.Dir(public + "/assets"))
-	dist := http.FileServer(http.Dir(public + "/dist"))
+	assets := http.FileServer(http.Dir(public + "/assets")) // skipcq: GO-S1034
+	dist := http.FileServer(http.Dir(public + "/dist"))     // skipcq: GO-S1034
 
 	router.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, public+"/assets/index.html")

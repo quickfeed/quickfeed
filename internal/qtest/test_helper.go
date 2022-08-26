@@ -198,7 +198,7 @@ func WithUserContext(ctx context.Context, user *qf.User) context.Context {
 
 // WithAuthCookie returns context containing an authentication cookie with JWT.
 func WithAuthCookie(ctx context.Context, cookie *http.Cookie) context.Context {
-	return context.WithValue(ctx, auth.Cookie, auth.TokenString(cookie))
+	return context.WithValue(ctx, auth.Cookie, auth.TokenString(cookie)) // skipcq: GO-W5003
 }
 
 // AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
