@@ -148,6 +148,7 @@ signup
 skipcq
 skiptests
 Skylar
+Slowloris
 slugified
 sqlite
 staticcheck

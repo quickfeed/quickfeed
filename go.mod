@@ -26,7 +26,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20220718184931-c8730f7fcb92
 	google.golang.org/grpc v1.48.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
-	google.golang.org/protobuf v1.28.0
+	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/sqlite v1.3.6
 	gorm.io/gorm v1.23.8

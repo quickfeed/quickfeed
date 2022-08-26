@@ -103,8 +103,9 @@ func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService, tm *auth
 	router := http.NewServeMux()
 	router.Handle(qfService.NewQuickFeedHandler(tm))
 	muxServer := &http.Server{
-		Handler: h2c.NewHandler(router, &http2.Server{}),
-		Addr:    "127.0.0.1:8081",
+		Handler:           h2c.NewHandler(router, &http2.Server{}),
+		Addr:              "127.0.0.1:8081",
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 	}
 
 	return func() {
