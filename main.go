@@ -110,10 +110,11 @@ func main() {
 		}
 	}()
 	muxServer := &http.Server{
-		Handler:      h2c.NewHandler(router, &http2.Server{}),
-		Addr:         *httpAddr,
-		WriteTimeout: 2 * time.Minute,
-		ReadTimeout:  2 * time.Minute,
+		Handler:           h2c.NewHandler(router, &http2.Server{}),
+		Addr:              *httpAddr,
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
+		WriteTimeout:      2 * time.Minute,
+		ReadTimeout:       2 * time.Minute,
 	}
 	if *dev {
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/bufbuild/connect-go"
 	promgrpc "github.com/grpc-ecosystem/go-grpc-prometheus"
@@ -27,8 +28,9 @@ func init() {
 // MetricsServer returns a HTTP Server that serves the prometheus metrics.
 func MetricsServer(port int) *http.Server {
 	return &http.Server{
-		Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
-		Addr:    fmt.Sprintf("127.0.0.1:%d", port),
+		Handler:           promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
+		Addr:              fmt.Sprintf("127.0.0.1:%d", port),
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 	}
 }
 
