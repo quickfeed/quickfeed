@@ -18,8 +18,6 @@ const App = (): JSX.Element => {
     useEffect(() => {
         async function setup() {
             await actions.fetchUserData()
-            // TODO: Remove this once finished testing
-            actions.alert({text: "📢 ATTENTION: QuickFeed is is currently being tested for deployment in the near future.\n\nWe will wipe the database before courses are published. You will need to register again once we are done.", color: Color.RED})
         }
         // If the user is not logged in, fetch user data to initialize the app state.
         if (!state.isLoggedIn) {

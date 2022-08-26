@@ -33,13 +33,15 @@ type accessTests []struct {
 	access   bool
 }
 
+// TestAccessControlMethods checks that all QuickFeedService methods have an entry
+// in the access control list.
 func TestAccessControlMethods(t *testing.T) {
 	service := reflect.TypeOf(qfconnect.UnimplementedQuickFeedServiceHandler{})
-	methods := make([]string, 0, service.NumMethod())
+	serviceMethods := make(map[string]bool)
 	for i := 0; i < service.NumMethod(); i++ {
-		methods = append(methods, service.Method(i).Name)
+		serviceMethods[service.Method(i).Name] = true
 	}
-	if err := web.VerifyAccessControlMethods(methods); err != nil {
+	if err := interceptor.CheckAccessMethods(serviceMethods); err != nil {
 		t.Error(err)
 	}
 }
