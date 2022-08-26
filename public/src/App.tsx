@@ -9,7 +9,6 @@ import AdminPage from './pages/AdminPage'
 import Loading from './components/Loading'
 import Dashboard from './components/Dashboard'
 import AboutPage from './pages/AboutPage'
-import { Color } from './Helpers'
 
 const App = (): JSX.Element => {
     const state = useAppState()
