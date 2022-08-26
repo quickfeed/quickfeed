@@ -408,12 +408,12 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Reque
 	return &connect.Response[qf.Void]{}, nil
 }
 
-// RebuildSubmissions re-runs the tests for the given assignment.
+// RebuildSubmissions re-runs the tests for the given assignment and course.
 // A single submission is executed again if the request specifies a submission ID
-// or all submissions if the request specifies a course ID.
+// or all submissions if no submission ID is specified.
 func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
-	// RebuildType can be either SubmissionID or CourseID, but not both.
 	if in.Msg.GetSubmissionID() > 0 {
+		// Submission ID > 0 ==> rebuild single submission for given CourseID and AssignmentID
 		if !s.isValidSubmission(in.Msg.GetSubmissionID()) {
 			s.logger.Errorf("RebuildSubmission failed: submitter has no access to the course")
 			return nil, status.Error(codes.PermissionDenied, "submitter has no course access")
@@ -423,6 +423,7 @@ func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Req
 			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission "+err.Error())
 		}
 	} else {
+		// Submission ID == 0 ==> rebuild all for given CourseID and AssignmentID
 		if err := s.rebuildSubmissions(in.Msg); err != nil {
 			s.logger.Errorf("RebuildSubmissions failed: %v", err)
 			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submissions "+err.Error())
