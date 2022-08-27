@@ -2,22 +2,24 @@ package interceptor_test
 
 import (
 	"context"
-	"net"
+	"errors"
+	"net/http"
 	"testing"
 	"time"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/golang-jwt/jwt"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/test/bufconn"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 )
 
 func TestRefreshTokens(t *testing.T) {
@@ -31,32 +33,29 @@ func TestRefreshTokens(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lis := bufconn.Listen(BufSize)
-	bufDialer := func(context.Context, string) (net.Conn, error) {
-		return lis.Dial()
-	}
-	opt := grpc.ChainUnaryInterceptor(
+	interceptors := connect.WithInterceptors(
 		interceptor.UnaryUserVerifier(logger, tm),
-		interceptor.TokenRefresher(logger, tm),
+		interceptor.TokenRefresher(tm),
 	)
-	s := grpc.NewServer(opt) // skipcq: GO-S0902
-	qf.RegisterQuickFeedServiceServer(s, ags)
 
+	router := http.NewServeMux()
+	router.Handle(qfconnect.NewQuickFeedServiceHandler(ags, interceptors))
+	muxServer := &http.Server{
+		Handler:           h2c.NewHandler(router, &http2.Server{}),
+		Addr:              "127.0.0.1:8081",
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
+	}
 	go func() {
-		if err := s.Serve(lis); err != nil {
-			t.Errorf("Server exited with error: %v", err)
+		if err := muxServer.ListenAndServe(); err != nil {
+			if !errors.Is(err, http.ErrServerClosed) {
+				t.Errorf("Server exited with unexpected error: %v", err)
+			}
 			return
 		}
 	}()
 
 	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		t.Fatalf("Failed to dial bufnet: %v", err)
-	}
-	defer conn.Close()
-
-	client := qf.NewQuickFeedServiceClient(conn)
+	client := qtest.QuickFeedClient("")
 	f := func(t *testing.T, id uint64) context.Context {
 		token, err := tm.NewAuthCookie(id)
 		if err != nil {
@@ -85,19 +84,19 @@ func TestRefreshTokens(t *testing.T) {
 	if tm.UpdateRequired(adminClaims) || tm.UpdateRequired(userClaims) {
 		t.Error("No users should be in the token update list at the start")
 	}
-	if _, err := client.GetUsers(adminCtx, &qf.Void{}); err != nil {
+	if _, err := client.GetUsers(adminCtx, connect.NewRequest(&qf.Void{})); err != nil {
 		t.Fatal(err)
 	}
 	if tm.UpdateRequired(adminClaims) || tm.UpdateRequired(userClaims) {
 		t.Error("No users should be in the token update list")
 	}
-	if _, err := client.UpdateUser(adminCtx, user); err != nil {
+	if _, err := client.UpdateUser(adminCtx, connect.NewRequest(user)); err != nil {
 		t.Fatal(err)
 	}
 	if !tm.UpdateRequired(userClaims) {
 		t.Error("User must be in the token update list after admin has updated the user's information")
 	}
-	if _, err := client.GetUser(userCtx, &qf.Void{}); err != nil {
+	if _, err := client.GetUser(userCtx, connect.NewRequest(&qf.Void{})); err != nil {
 		t.Fatal(err)
 	}
 	if tm.UpdateRequired(userClaims) {
@@ -117,35 +116,35 @@ func TestRefreshTokens(t *testing.T) {
 			user,
 		},
 	}
-	if _, err := client.CreateCourse(adminCtx, course); err != nil {
+	if _, err := client.CreateCourse(adminCtx, connect.NewRequest(course)); err != nil {
 		t.Fatal(err)
 	}
 	if !tm.UpdateRequired(adminClaims) {
 		t.Error("Admin must be in the token update list after creating a new course")
 	}
 	qtest.EnrollStudent(t, db, user, course)
-	if _, err := client.CreateGroup(adminCtx, group); err != nil {
+	if _, err := client.CreateGroup(adminCtx, connect.NewRequest(group)); err != nil {
 		t.Fatal(err)
 	}
 	if tm.UpdateRequired(userClaims) {
 		t.Error("User should not be in the token update list after methods that don't affect the user's information")
 	}
-	if _, err := client.UpdateGroup(adminCtx, group); err != nil {
+	if _, err := client.UpdateGroup(adminCtx, connect.NewRequest(group)); err != nil {
 		t.Fatal(err)
 	}
 	if !tm.UpdateRequired(userClaims) {
 		t.Error("User must be in the token update group after changes to the group")
 	}
-	if _, err := client.GetUser(userCtx, &qf.Void{}); err != nil {
+	if _, err := client.GetUser(userCtx, connect.NewRequest(&qf.Void{})); err != nil {
 		t.Fatal(err)
 	}
 	if tm.UpdateRequired(userClaims) {
 		t.Error("User should be removed from the token update list after the user's token has been updated")
 	}
-	if _, err := client.DeleteGroup(adminCtx, &qf.GroupRequest{
+	if _, err := client.DeleteGroup(adminCtx, connect.NewRequest(&qf.GroupRequest{
 		GroupID:  group.ID,
 		CourseID: course.ID,
-	}); err != nil {
+	})); err != nil {
 		t.Fatal(err)
 	}
 	if !tm.UpdateRequired(userClaims) {
@@ -153,5 +152,8 @@ func TestRefreshTokens(t *testing.T) {
 	}
 	if tm.UpdateRequired(adminClaims) {
 		t.Error("Admin should not be in the token update list")
+	}
+	if err = muxServer.Shutdown(ctx); err != nil {
+		t.Fatal(err)
 	}
 }

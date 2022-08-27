@@ -283,6 +283,10 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
 export const getAssignments = async ({ state, effects }: Context): Promise<boolean> => {
     let success = true
     for (const enrollment of state.enrollments) {
+        if (isPending(enrollment)) {
+            // No need to get assignments for pending enrollments
+            continue
+        }
         const response = await effects.grpcMan.getAssignments(enrollment.courseid)
         if (response.data) {
             // Store assignments in state by course ID
@@ -309,9 +313,12 @@ type RepoKey = keyof typeof Repository.Type
 export const getRepositories = async ({ state, effects }: Context): Promise<boolean> => {
     let success = true
     for (const enrollment of state.enrollments) {
+        if (isPending(enrollment)) {
+            // No need to get repositories for pending enrollments
+            continue
+        }
         const courseID = enrollment.courseid
         state.repositories[courseID] = {}
-
         const response = await effects.grpcMan.getRepositories(courseID, generateRepositoryList(Converter.toEnrollment(enrollment)))
         if (response.data) {
             response.data.getUrlsMap().forEach((entry, key) => {
@@ -517,8 +524,8 @@ export const setActiveAssignment = ({ state }: Context, assignmentID: number): v
 
 /** Rebuilds the currently active submission */
 export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<void> => {
-    if (state.currentSubmission && state.selectedAssignment) {
-        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.id, state.activeSubmission)
+    if (state.currentSubmission && state.selectedAssignment && state.activeCourse) {
+        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.id, state.activeSubmission, state.activeCourse)
         if (success(response)) {
             // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
             // TODO: gRPC streaming should be implemented to send the updated submission to the client.
@@ -685,7 +692,9 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
                 await actions.getGroupSubmissions(courseID)
                 const statuses = isStudent(enrollment) ? [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER] : []
                 success = await actions.getEnrollmentsByCourse({ courseID: courseID, statuses: statuses })
-                await actions.getGroupByUserAndCourse(courseID)
+                if (enrollment.groupid > 0) {
+                    await actions.getGroupByUserAndCourse(courseID)
+                }
             }
             if (isTeacher(enrollment)) {
                 actions.getGroupsByCourse(courseID)

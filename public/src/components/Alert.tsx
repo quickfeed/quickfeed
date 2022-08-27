@@ -13,7 +13,8 @@ const Alert = (): JSX.Element => {
             <div
                 key={index}
                 className={`alert alert-${alert.color}`}
-                role="alert" style={{ marginTop: "20px" }}
+                role="button" 
+                style={{ marginTop: "20px", whiteSpace: "pre-wrap" }}
                 onClick={() => actions.popAlert(index)}>
                 {alert.text}
             </div>

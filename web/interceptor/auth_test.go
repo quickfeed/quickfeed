@@ -2,9 +2,12 @@ package interceptor_test
 
 import (
 	"context"
-	"net"
+	"errors"
+	"net/http"
 	"testing"
+	"time"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
@@ -13,13 +16,8 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/interceptor"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
-	"google.golang.org/grpc/test/bufconn"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -46,64 +44,68 @@ func TestUserVerifier(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lis := bufconn.Listen(BufSize)
-	bufDialer := func(context.Context, string) (net.Conn, error) {
-		return lis.Dial()
+	router := http.NewServeMux()
+	router.Handle(ags.NewQuickFeedHandler(tm))
+	muxServer := &http.Server{
+		Handler:           h2c.NewHandler(router, &http2.Server{}),
+		Addr:              "127.0.0.1:8081",
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 	}
-	opt := grpc.ChainUnaryInterceptor(
-		interceptor.UnaryUserVerifier(qtest.Logger(t), tm),
-	)
-	s := grpc.NewServer(opt) // skipcq: GO-S0902
-	qf.RegisterQuickFeedServiceServer(s, ags)
 
 	go func() {
-		if err := s.Serve(lis); err != nil {
-			t.Errorf("Server exited with error: %v", err)
+		if err := muxServer.ListenAndServe(); err != nil {
+			if !errors.Is(err, http.ErrServerClosed) {
+				t.Errorf("Server exited with unexpected error: %v", err)
+			}
 			return
 		}
 	}()
 
-	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		t.Fatalf("Failed to dial bufnet: %v", err)
-	}
-	defer conn.Close()
-
-	client := qf.NewQuickFeedServiceClient(conn)
+	client := qtest.QuickFeedClient("")
 
 	userTest := []struct {
-		code     codes.Code
+		code     connect.Code
 		metadata bool
 		token    string
 		wantUser *qf.User
 	}{
-		{code: codes.Unauthenticated, metadata: false, token: "", wantUser: nil},
-		{code: codes.Unauthenticated, metadata: true, token: "should fail", wantUser: nil},
-		{code: codes.OK, metadata: true, token: auth.TokenString(adminToken), wantUser: adminUser},
-		{code: codes.OK, metadata: true, token: auth.TokenString(studentToken), wantUser: student},
+		{code: connect.CodeUnauthenticated, metadata: false, token: "", wantUser: nil},
+		{code: connect.CodeUnauthenticated, metadata: true, token: "should fail", wantUser: nil},
+		{code: 0, metadata: true, token: auth.TokenString(adminToken), wantUser: adminUser},
+		{code: 0, metadata: true, token: auth.TokenString(studentToken), wantUser: student},
 	}
 
+	ctx := context.Background()
 	for _, user := range userTest {
+		req := connect.NewRequest(&qf.Void{})
 		if user.metadata {
-			meta := metadata.MD{}
-			meta.Set(auth.Cookie, user.token)
-			ctx = metadata.NewOutgoingContext(ctx, meta)
+			ctx = context.WithValue(ctx, auth.Cookie, user.token) // skipcq: GO-W5003
 		}
 
-		gotUser, err := client.GetUser(ctx, &qf.Void{})
-		if s, ok := status.FromError(err); ok {
-			if s.Code() != user.code {
-				t.Errorf("GetUser().Code(): %v, want: %v", s.Code(), user.code)
+		gotUser, err := client.GetUser(ctx, req)
+		if err != nil {
+			// zero codes won't actually reach this check, but that's okay, since zero is CodeOK
+			if gotCode := connect.CodeOf(err); gotCode != user.code {
+				t.Errorf("GetUser() = %v, want %v", gotCode, user.code)
 			}
 		}
-		if user.wantUser != nil {
+		wantUser := user.wantUser
+		if wantUser != nil {
 			// ignore comparing remote identity
 			user.wantUser.RemoteIdentities = nil
 		}
-		wantUser := user.wantUser
-		if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-			t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
+
+		if gotUser == nil {
+			if wantUser != nil {
+				t.Fatalf("GetUser(): %v, want: %v", gotUser, wantUser)
+			}
+		} else {
+			if diff := cmp.Diff(wantUser, gotUser.Msg, protocmp.Transform()); diff != "" {
+				t.Errorf("GetUser() mismatch (-wantUser +gotUser):\n%s", diff)
+			}
 		}
+	}
+	if err = muxServer.Shutdown(ctx); err != nil {
+		t.Fatal(err)
 	}
 }

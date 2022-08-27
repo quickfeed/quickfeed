@@ -28,7 +28,6 @@ goog.exportSymbol('proto.qf.OrgRequest', null, global);
 goog.exportSymbol('proto.qf.Organization', null, global);
 goog.exportSymbol('proto.qf.Organizations', null, global);
 goog.exportSymbol('proto.qf.RebuildRequest', null, global);
-goog.exportSymbol('proto.qf.RebuildRequest.RebuildtypeCase', null, global);
 goog.exportSymbol('proto.qf.Repositories', null, global);
 goog.exportSymbol('proto.qf.RepositoryRequest', null, global);
 goog.exportSymbol('proto.qf.ReviewRequest', null, global);
@@ -495,7 +494,7 @@ if (goog.DEBUG && !COMPILED) {
  * @constructor
  */
 proto.qf.RebuildRequest = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, proto.qf.RebuildRequest.oneofGroups_);
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
 goog.inherits(proto.qf.RebuildRequest, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -4346,32 +4345,6 @@ proto.qf.SubmissionsForCourseRequest.prototype.setWithbuildinfo = function(value
 
 
 
-/**
- * Oneof group definitions for this message. Each group defines the field
- * numbers belonging to that group. When of these fields' value is set, all
- * other fields in the group are cleared. During deserialization, if multiple
- * fields are encountered for a group, only the last value seen will be kept.
- * @private {!Array<!Array<number>>}
- * @const
- */
-proto.qf.RebuildRequest.oneofGroups_ = [[1,2]];
-
-/**
- * @enum {number}
- */
-proto.qf.RebuildRequest.RebuildtypeCase = {
-  REBUILDTYPE_NOT_SET: 0,
-  SUBMISSIONID: 1,
-  COURSEID: 2
-};
-
-/**
- * @return {proto.qf.RebuildRequest.RebuildtypeCase}
- */
-proto.qf.RebuildRequest.prototype.getRebuildtypeCase = function() {
-  return /** @type {proto.qf.RebuildRequest.RebuildtypeCase} */(jspb.Message.computeOneofCase(this, proto.qf.RebuildRequest.oneofGroups_[0]));
-};
-
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -4403,9 +4376,9 @@ proto.qf.RebuildRequest.prototype.toObject = function(opt_includeInstance) {
  */
 proto.qf.RebuildRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    submissionid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    assignmentid: jspb.Message.getFieldWithDefault(msg, 3, 0)
+    courseid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    assignmentid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    submissionid: jspb.Message.getFieldWithDefault(msg, 3, 0)
   };
 
   if (includeInstance) {
@@ -4444,15 +4417,15 @@ proto.qf.RebuildRequest.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setSubmissionid(value);
+      msg.setCourseid(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setCourseid(value);
+      msg.setAssignmentid(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setAssignmentid(value);
+      msg.setSubmissionid(value);
       break;
     default:
       reader.skipField();
@@ -4483,21 +4456,21 @@ proto.qf.RebuildRequest.prototype.serializeBinary = function() {
  */
 proto.qf.RebuildRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = /** @type {number} */ (jspb.Message.getField(message, 1));
-  if (f != null) {
+  f = message.getCourseid();
+  if (f !== 0) {
     writer.writeUint64(
       1,
       f
     );
   }
-  f = /** @type {number} */ (jspb.Message.getField(message, 2));
-  if (f != null) {
+  f = message.getAssignmentid();
+  if (f !== 0) {
     writer.writeUint64(
       2,
       f
     );
   }
-  f = message.getAssignmentid();
+  f = message.getSubmissionid();
   if (f !== 0) {
     writer.writeUint64(
       3,
@@ -4508,10 +4481,10 @@ proto.qf.RebuildRequest.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional uint64 submissionID = 1;
+ * optional uint64 courseID = 1;
  * @return {number}
  */
-proto.qf.RebuildRequest.prototype.getSubmissionid = function() {
+proto.qf.RebuildRequest.prototype.getCourseid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -4520,34 +4493,16 @@ proto.qf.RebuildRequest.prototype.getSubmissionid = function() {
  * @param {number} value
  * @return {!proto.qf.RebuildRequest} returns this
  */
-proto.qf.RebuildRequest.prototype.setSubmissionid = function(value) {
-  return jspb.Message.setOneofField(this, 1, proto.qf.RebuildRequest.oneofGroups_[0], value);
+proto.qf.RebuildRequest.prototype.setCourseid = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * Clears the field making it undefined.
- * @return {!proto.qf.RebuildRequest} returns this
- */
-proto.qf.RebuildRequest.prototype.clearSubmissionid = function() {
-  return jspb.Message.setOneofField(this, 1, proto.qf.RebuildRequest.oneofGroups_[0], undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {boolean}
- */
-proto.qf.RebuildRequest.prototype.hasSubmissionid = function() {
-  return jspb.Message.getField(this, 1) != null;
-};
-
-
-/**
- * optional uint64 courseID = 2;
+ * optional uint64 assignmentID = 2;
  * @return {number}
  */
-proto.qf.RebuildRequest.prototype.getCourseid = function() {
+proto.qf.RebuildRequest.prototype.getAssignmentid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -4556,34 +4511,16 @@ proto.qf.RebuildRequest.prototype.getCourseid = function() {
  * @param {number} value
  * @return {!proto.qf.RebuildRequest} returns this
  */
-proto.qf.RebuildRequest.prototype.setCourseid = function(value) {
-  return jspb.Message.setOneofField(this, 2, proto.qf.RebuildRequest.oneofGroups_[0], value);
+proto.qf.RebuildRequest.prototype.setAssignmentid = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * Clears the field making it undefined.
- * @return {!proto.qf.RebuildRequest} returns this
- */
-proto.qf.RebuildRequest.prototype.clearCourseid = function() {
-  return jspb.Message.setOneofField(this, 2, proto.qf.RebuildRequest.oneofGroups_[0], undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {boolean}
- */
-proto.qf.RebuildRequest.prototype.hasCourseid = function() {
-  return jspb.Message.getField(this, 2) != null;
-};
-
-
-/**
- * optional uint64 assignmentID = 3;
+ * optional uint64 submissionID = 3;
  * @return {number}
  */
-proto.qf.RebuildRequest.prototype.getAssignmentid = function() {
+proto.qf.RebuildRequest.prototype.getSubmissionid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -4592,7 +4529,7 @@ proto.qf.RebuildRequest.prototype.getAssignmentid = function() {
  * @param {number} value
  * @return {!proto.qf.RebuildRequest} returns this
  */
-proto.qf.RebuildRequest.prototype.setAssignmentid = function(value) {
+proto.qf.RebuildRequest.prototype.setSubmissionid = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 

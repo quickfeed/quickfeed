@@ -2,18 +2,20 @@ package web_test
 
 import (
 	"context"
-	"net"
+	"errors"
+	"net/http"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/interceptor"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -46,7 +48,7 @@ func TestGrpcAuth(t *testing.T) {
 		t.Fatalf("failed to create token manager: %v", err)
 	}
 	// start gRPC server in background
-	serveFn := startGrpcAuthServer(t, qfService, tm)
+	serveFn, shutdown := startGrpcAuthServer(t, qfService, tm)
 	go serveFn()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -57,26 +59,27 @@ func TestGrpcAuth(t *testing.T) {
 	}
 	defer conn.Close()
 
-	client := qf.NewQuickFeedServiceClient(conn)
+	client := qtest.QuickFeedClient("")
 
 	// create request context with the helpbot's secret token
 	reqCtx := metadata.NewOutgoingContext(ctx,
 		metadata.New(map[string]string{auth.Cookie: token}),
 	)
 
-	request := &qf.CourseUserRequest{
+	request := connect.NewRequest(&qf.CourseUserRequest{
 		CourseCode: "DAT320",
 		CourseYear: 2021,
 		UserLogin:  userName,
-	}
+	})
 	userInfo, err := client.GetUserByCourse(reqCtx, request)
 	check(t, err)
-	if userInfo.ID != user.ID {
-		t.Errorf("expected user id %d, got %d", user.ID, userInfo.ID)
+	if userInfo.Msg.ID != user.ID {
+		t.Errorf("expected user id %d, got %d", user.ID, userInfo.Msg.ID)
 	}
-	if userInfo.Login != user.Login {
-		t.Errorf("expected user login %s, got %s", user.Login, userInfo.Login)
+	if userInfo.Msg.Login != user.Login {
+		t.Errorf("expected user login %s, got %s", user.Login, userInfo.Msg.Login)
 	}
+	shutdown(ctx)
 }
 
 func fillDatabase(t *testing.T, db database.Database) {
@@ -94,22 +97,29 @@ func fillDatabase(t *testing.T, db database.Database) {
 	qtest.EnrollStudent(t, db, user, course)
 }
 
-func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService, tm *auth.TokenManager) func() {
+func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService, tm *auth.TokenManager) (func(), func(context.Context)) {
 	t.Helper()
-	lis, err := net.Listen("tcp", grpcAddr)
-	check(t, err)
 
-	opt := grpc.ChainUnaryInterceptor(
-		interceptor.UnaryUserVerifier(qlog.Logger(t), tm),
-	)
-	grpcServer := grpc.NewServer(opt)
-
-	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
-	return func() {
-		if err := grpcServer.Serve(lis); err != nil {
-			t.Fatalf("failed to start grpc server: %v\n", err)
-		}
+	router := http.NewServeMux()
+	router.Handle(qfService.NewQuickFeedHandler(tm))
+	muxServer := &http.Server{
+		Handler:           h2c.NewHandler(router, &http2.Server{}),
+		Addr:              "127.0.0.1:8081",
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 	}
+
+	return func() {
+			if err := muxServer.ListenAndServe(); err != nil {
+				if !errors.Is(err, http.ErrServerClosed) {
+					t.Errorf("Server exited with unexpected error: %v", err)
+				}
+				return
+			}
+		}, func(ctx context.Context) {
+			if err := muxServer.Shutdown(ctx); err != nil {
+				t.Fatal(err)
+			}
+		}
 }
 
 func check(t *testing.T, err error) {

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"crypto/tls"
 	"flag"
 	"fmt"
 	"log"
@@ -11,12 +9,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
@@ -24,7 +20,8 @@ import (
 	"github.com/quickfeed/quickfeed/web/interceptor"
 	"github.com/quickfeed/quickfeed/web/manifest"
 	"golang.org/x/crypto/acme/autocert"
-	"google.golang.org/grpc"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 )
 
 func init() {
@@ -110,44 +107,10 @@ func main() {
 
 	certFile := env.CertFile()
 	certKey := env.KeyFile()
-	var grpcServer *grpc.Server
-	unaryOptions := grpc.ChainUnaryInterceptor(
-		interceptor.Metrics(),
-		interceptor.Validation(logger),
-		interceptor.UnaryUserVerifier(logger.Sugar(), tokenManager),
-		interceptor.AccessControl(logger.Sugar(), tokenManager),
-		interceptor.TokenRefresher(logger.Sugar(), tokenManager),
-	)
-	streamOptions := grpc.ChainStreamInterceptor(interceptor.StreamUserVerifier(logger.Sugar(), tokenManager))
-	if *dev {
-		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
-		// In development, the server itself must maintain a TLS session.
-		grpcServer, err = web.GRPCServerWithCredentials(certFile, certKey, unaryOptions, streamOptions)
-		if err != nil {
-			log.Fatalf("Failed to generate gRPC server credentials: %v", err)
-		}
-	} else {
-		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
-		// In production, the envoy proxy will manage TLS certificates, and
-		// the gRPC server must be started without credentials.
-		grpcServer = web.GRPCServer(unaryOptions, streamOptions)
-	}
 	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
-	if err := qfService.InitSCMs(context.Background()); err != nil {
-		log.Fatalf("Failed to initialize SCM clients: %v", err)
-	}
-
-	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
-	if err = web.VerifyAccessControlMethods(grpcServer); err != nil {
-		log.Fatal(err)
-	}
-
-	multiplexer := web.GrpcMultiplexer{
-		MuxServer: grpcweb.WrapServer(grpcServer),
-	}
 
 	// Register HTTP endpoints and webhooks
-	router := qfService.RegisterRouter(tokenManager, authConfig, multiplexer, *public)
+	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
 
 	// Create an HTTP server for prometheus.
 	httpServer := interceptor.MetricsServer(9097)
@@ -157,16 +120,20 @@ func main() {
 		}
 	}()
 	muxServer := &http.Server{
-		Handler:      router,
-		Addr:         *httpAddr,
-		WriteTimeout: 2 * time.Minute,
-		ReadTimeout:  2 * time.Minute,
+		Handler:           h2c.NewHandler(router, &http2.Server{}),
+		Addr:              *httpAddr,
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
+		WriteTimeout:      2 * time.Minute,
+		ReadTimeout:       2 * time.Minute,
 	}
 	if *dev {
+		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
 		if err := muxServer.ListenAndServeTLS(certFile, certKey); err != nil {
 			log.Fatalf("Failed to start grpc server: %v", err)
 			return
 		}
+	} else {
+		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
 	}
 	whitelist, err := env.Whitelist()
 	if err != nil {
@@ -179,13 +146,21 @@ func main() {
 			whitelist...,
 		),
 	}
-	muxServer.TLSConfig = &tls.Config{
-		GetCertificate: certManager.GetCertificate,
-		MaxVersion:     tls.VersionTLS13,
-		MinVersion:     tls.VersionTLS12,
-	}
+	muxServer.TLSConfig = certManager.TLSConfig()
+
 	// Redirect all HTTP traffic to HTTPS.
-	go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
+	go func() {
+		redirectSrv := &http.Server{
+			Handler:           certManager.HTTPHandler(nil),
+			Addr:              ":http",
+			ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
+		}
+		if err := redirectSrv.ListenAndServe(); err != nil {
+			log.Printf("Failed to start redirect http server: %v", err)
+			return
+		}
+	}()
+
 	// Start the HTTPS server.
 	if err := muxServer.ListenAndServeTLS("", ""); err != nil {
 		log.Fatalf("Failed to start grpc server: %v", err)

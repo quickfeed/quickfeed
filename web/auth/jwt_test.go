@@ -1,7 +1,6 @@
 package auth_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"google.golang.org/grpc/metadata"
 )
 
 func TestNewManager(t *testing.T) {
@@ -101,10 +99,7 @@ func TestUserClaims(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx := metadata.NewIncomingContext(context.Background(),
-		metadata.New(map[string]string{auth.Cookie: auth.TokenString(adminCookie)}),
-	)
-	adminClaims, err := manager.GetClaims(ctx)
+	adminClaims, err := manager.GetClaims(auth.TokenString(adminCookie))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -201,9 +196,7 @@ func TestUpdateCookie(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	meta := metadata.MD{}
-	meta.Set(auth.Cookie, auth.TokenString(newCookie))
-	newClaims, err := tm.GetClaims(metadata.NewIncomingContext(context.Background(), meta))
+	newClaims, err := tm.GetClaims(auth.TokenString(newCookie))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -8,7 +8,7 @@ const (
 	UserKey              = "user"
 	SetCookie            = "Set-Cookie"
 	tokenExpirationTime  = 15 * time.Minute
-	cookieExpirationTime = 12 * time.Hour
+	cookieExpirationTime = 24 * time.Hour * 14 // 2 weeks
 	alg                  = "HS256"
 
 	githubUserAPI = "https://api.github.com/user"

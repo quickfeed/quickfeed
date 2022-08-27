@@ -130,11 +130,9 @@ message SubmissionsForCourseRequest {
 }
 
 message RebuildRequest {
-    oneof rebuildType {
-        uint64 submissionID = 1;
-        uint64 courseID     = 2;
-    }
-    uint64 assignmentID = 3;
+    uint64 courseID     = 1;
+    uint64 assignmentID = 2;
+    uint64 submissionID = 3;
 }
 
 message CourseUserRequest {
