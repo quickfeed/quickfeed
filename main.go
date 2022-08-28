@@ -110,10 +110,11 @@ func main() {
 		}
 	}()
 	muxServer := &http.Server{
-		Handler:      h2c.NewHandler(router, &http2.Server{}),
-		Addr:         *httpAddr,
-		WriteTimeout: 2 * time.Minute,
-		ReadTimeout:  2 * time.Minute,
+		Handler:           h2c.NewHandler(router, &http2.Server{}),
+		Addr:              *httpAddr,
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
+		WriteTimeout:      2 * time.Minute,
+		ReadTimeout:       2 * time.Minute,
 	}
 	if *dev {
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
@@ -138,7 +139,18 @@ func main() {
 	muxServer.TLSConfig = certManager.TLSConfig()
 
 	// Redirect all HTTP traffic to HTTPS.
-	go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
+	go func() {
+		redirectSrv := &http.Server{
+			Handler:           certManager.HTTPHandler(nil),
+			Addr:              ":http",
+			ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
+		}
+		if err := redirectSrv.ListenAndServe(); err != nil {
+			log.Printf("Failed to start redirect http server: %v", err)
+			return
+		}
+	}()
+
 	// Start the HTTPS server.
 	if err := muxServer.ListenAndServeTLS("", ""); err != nil {
 		log.Fatalf("Failed to start grpc server: %v", err)

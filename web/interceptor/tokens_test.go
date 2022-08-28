@@ -41,8 +41,9 @@ func TestRefreshTokens(t *testing.T) {
 	router := http.NewServeMux()
 	router.Handle(qfconnect.NewQuickFeedServiceHandler(ags, interceptors))
 	muxServer := &http.Server{
-		Handler: h2c.NewHandler(router, &http2.Server{}),
-		Addr:    "127.0.0.1:8081",
+		Handler:           h2c.NewHandler(router, &http2.Server{}),
+		Addr:              "127.0.0.1:8081",
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 	}
 	go func() {
 		if err := muxServer.ListenAndServe(); err != nil {

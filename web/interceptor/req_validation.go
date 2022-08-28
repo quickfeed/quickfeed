@@ -2,12 +2,11 @@ package interceptor
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/bufbuild/connect-go"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // MaxWait is the maximum time a request is allowed to stay open before aborting.
@@ -55,7 +54,7 @@ func Validation(logger *zap.SugaredLogger) connect.Interceptor {
 func validate(logger *zap.SugaredLogger, req interface{}) error {
 	if v, ok := req.(validator); ok {
 		if !v.IsValid() {
-			return status.Errorf(codes.InvalidArgument, "invalid payload")
+			return connect.NewError(connect.CodeInvalidArgument, errors.New("invalid payload"))
 		}
 	} else {
 		// just logging, but still handling the call

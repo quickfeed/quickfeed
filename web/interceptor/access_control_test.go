@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/ci"
@@ -33,13 +34,15 @@ type accessTests []struct {
 	access   bool
 }
 
+// TestAccessControlMethods checks that all QuickFeedService methods have an entry
+// in the access control list.
 func TestAccessControlMethods(t *testing.T) {
 	service := reflect.TypeOf(qfconnect.UnimplementedQuickFeedServiceHandler{})
-	methods := make([]string, 0, service.NumMethod())
+	serviceMethods := make(map[string]bool)
 	for i := 0; i < service.NumMethod(); i++ {
-		methods = append(methods, service.Method(i).Name)
+		serviceMethods[service.Method(i).Name] = true
 	}
-	if err := web.VerifyAccessControlMethods(methods); err != nil {
+	if err := interceptor.CheckAccessMethods(serviceMethods); err != nil {
 		t.Error(err)
 	}
 }
@@ -61,8 +64,9 @@ func TestAccessControl(t *testing.T) {
 	router := http.NewServeMux()
 	router.Handle(qfconnect.NewQuickFeedServiceHandler(ags, interceptors))
 	muxServer := &http.Server{
-		Handler: h2c.NewHandler(router, &http2.Server{}),
-		Addr:    "127.0.0.1:8081",
+		Handler:           h2c.NewHandler(router, &http2.Server{}),
+		Addr:              "127.0.0.1:8081",
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 	}
 
 	go func() {

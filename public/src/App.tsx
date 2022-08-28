@@ -9,7 +9,6 @@ import AdminPage from './pages/AdminPage'
 import Loading from './components/Loading'
 import Dashboard from './components/Dashboard'
 import AboutPage from './pages/AboutPage'
-import { Color } from './Helpers'
 
 const App = (): JSX.Element => {
     const state = useAppState()
@@ -18,8 +17,6 @@ const App = (): JSX.Element => {
     useEffect(() => {
         async function setup() {
             await actions.fetchUserData()
-            // TODO: Remove this once finished testing
-            actions.alert({text: "📢 ATTENTION: QuickFeed is is currently being tested for deployment in the near future.\n\nWe will wipe the database before courses are published. You will need to register again once we are done.", color: Color.RED})
         }
         // If the user is not logged in, fetch user data to initialize the app state.
         if (!state.isLoggedIn) {
