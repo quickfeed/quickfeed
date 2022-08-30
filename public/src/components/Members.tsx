@@ -91,7 +91,7 @@ const Members = (): JSX.Element => {
                 </div>
                 <div className="ml-auto">
                     <div className={edit ? "btn btn-danger" : "btn btn-primary"} onClick={() => setEditing(!edit)}>
-                        {edit ? "Cancel" : "Edit"}
+                        {edit ? "Done" : "Edit"}
                     </div>
                 </div>
                 {pending?.length > 0 ?
