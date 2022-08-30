@@ -261,8 +261,10 @@ export const updateEnrollment = async ({ state, effects }: Context, { enrollment
 /** approvePendingEnrollments approves all pending enrollments for the current course */
 export const approvePendingEnrollments = async ({ state, actions, effects }: Context): Promise<void> => {
     if (confirm("Please confirm that you want to approve all students")) {
-        // Clone and set status to student for all pending enrollments
-        const enrollments = Object.assign({}, state.pendingEnrollments)
+        // Clone and set status to student for all pending enrollments.
+        // We need to clone the enrollments to avoid modifying the state directly.
+        // We do not want to update set the enrollment status before the update is successful.
+        const enrollments = state.pendingEnrollments.map(e => Converter.clone(e))
         enrollments.forEach(e => e.status = Enrollment.UserStatus.STUDENT)
 
         // Send updated enrollments to server
