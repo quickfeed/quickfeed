@@ -350,10 +350,6 @@ input {
   transform: translate(-50%, 0);
 }
 
-.banner {
-  margin-left: -350px;
-}
-
 .width-resize {
   min-width: 150px;
 }

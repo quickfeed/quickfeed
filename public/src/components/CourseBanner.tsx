@@ -12,7 +12,7 @@ const CourseBanner = (): JSX.Element => {
     const enrollment = state.enrollmentsByCourseID[getCourseID()]
 
     return (
-        <div className="banner jumbotron">
+        <div className="jumbotron">
             <div className="centerblock container">
                 <h1>
                     {enrollment.course?.name}
