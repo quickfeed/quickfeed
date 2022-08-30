@@ -22,18 +22,18 @@ const (
 	clientSecret = "QUICKFEED_CLIENT_SECRET"
 )
 
-type Manifest struct {
+type manifest struct {
 	http.Server
 	done chan bool
 }
 
-func NewManifest(addr string) *Manifest {
+func newManifest(addr string) *manifest {
 	router := http.NewServeMux()
-	m := &Manifest{
+	m := &manifest{
 		done: make(chan bool),
 	}
-	router.Handle("/manifest/callback", m.Conversion())
-	router.Handle("/manifest", CreateApp())
+	router.Handle("/manifest/callback", m.conversion())
+	router.Handle("/manifest", createApp())
 	m.Server = http.Server{
 		Addr:    addr,
 		Handler: router,
@@ -41,11 +41,11 @@ func NewManifest(addr string) *Manifest {
 	return m
 }
 
-func StartFlow(addr string) error {
+func StartAppCreationFlow(addr string) error {
 	if err := check(); err != nil {
 		return err
 	}
-	m := NewManifest(addr)
+	m := newManifest(addr)
 	go func() {
 		if err := m.ListenAndServe(); err != nil {
 			fmt.Printf("Failed to start web server: %v\n", err)
@@ -61,7 +61,7 @@ func StartFlow(addr string) error {
 	return env.Load("")
 }
 
-func (m *Manifest) Conversion() http.HandlerFunc {
+func (m *manifest) conversion() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
 		defer func() {
@@ -122,7 +122,7 @@ func (m *Manifest) Conversion() http.HandlerFunc {
 	}
 }
 
-func CreateApp() http.HandlerFunc {
+func createApp() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		form(w)

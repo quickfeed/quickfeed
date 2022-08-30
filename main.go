@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"log"
@@ -64,7 +65,7 @@ func main() {
 	}
 
 	if *newApp {
-		if err := manifest.StartFlow(*httpAddr); err != nil {
+		if err := manifest.StartAppCreationFlow(*httpAddr); err != nil {
 			log.Fatal(err)
 		}
 	}
