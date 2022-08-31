@@ -102,6 +102,7 @@ mattn
 maxage
 meling
 mkdir
+multierr
 newkey
 ngrok
 nocheck

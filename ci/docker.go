@@ -18,6 +18,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/quickfeed/quickfeed/internal/multierr"
 	"go.uber.org/zap"
 )
 
@@ -49,10 +50,12 @@ func NewDockerCI(logger *zap.SugaredLogger) (*Docker, error) {
 
 // Close ensures that the docker client is closed.
 func (d *Docker) Close() error {
+	var syncErr error
 	if d.logger != nil {
-		d.logger.Sync()
+		syncErr = d.logger.Sync()
 	}
-	return d.client.Close()
+	closeErr := d.client.Close()
+	return multierr.Join(syncErr, closeErr)
 }
 
 // Run implements the CI interface. This method blocks until the job has been
@@ -237,7 +240,9 @@ func printInfo(logger *zap.SugaredLogger, rd io.Reader) error {
 	scanner := bufio.NewScanner(rd)
 	for scanner.Scan() {
 		out := &dockerJSON{}
-		json.Unmarshal([]byte(scanner.Text()), out)
+		if err := json.Unmarshal([]byte(scanner.Text()), out); err != nil {
+			return err
+		}
 		if out.Error != "" {
 			return errors.New(out.Error)
 		}

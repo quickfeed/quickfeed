@@ -171,8 +171,12 @@ func TestDockerEnvVars(t *testing.T) {
 
 	// dir is the directory to map into /quickfeed in the docker container.
 	dir := t.TempDir()
-	os.Mkdir(filepath.Join(dir, "tests"), 0o700)
-	os.Mkdir(filepath.Join(dir, "assignments"), 0o700)
+	if err := os.Mkdir(filepath.Join(dir, "tests"), 0o700); err != nil {
+		t.Error(err)
+	}
+	if err := os.Mkdir(filepath.Join(dir, "assignments"), 0o700); err != nil {
+		t.Error(err)
+	}
 
 	out, err := docker.Run(context.Background(), &ci.Job{
 		Name:     t.Name() + "-" + qtest.RandomString(t),
@@ -271,8 +275,12 @@ WORKDIR /quickfeed
 
 	// dir is the directory to map into /quickfeed in the docker container.
 	dir := t.TempDir()
-	os.Mkdir(filepath.Join(dir, "tests"), 0o700)
-	os.Mkdir(filepath.Join(dir, "assignments"), 0o700)
+	if err := os.Mkdir(filepath.Join(dir, "tests"), 0o700); err != nil {
+		t.Error(err)
+	}
+	if err := os.Mkdir(filepath.Join(dir, "assignments"), 0o700); err != nil {
+		t.Error(err)
+	}
 
 	xTestGo, err := os.ReadFile("testdata/tests/x_test.go")
 	if err != nil {

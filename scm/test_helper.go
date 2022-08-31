@@ -13,7 +13,7 @@ func TestSCMManager() *Manager {
 		&app.Config{},
 	}
 	sc := NewFakeSCMClient()
-	sc.CreateOrganization(context.Background(), &OrganizationOptions{
+	_, _ = sc.CreateOrganization(context.Background(), &OrganizationOptions{
 		Name: "testorg",
 		Path: "testorg",
 	})
