@@ -3,6 +3,7 @@ package interceptor_test
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"testing"
 	"time"
@@ -52,8 +53,15 @@ func TestUserVerifier(t *testing.T) {
 		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 	}
 
+	serverReady := make(chan error, 1)
 	go func() {
-		if err := muxServer.ListenAndServe(); err != nil {
+		listener, err := net.Listen("tcp", muxServer.Addr)
+		if err != nil {
+			serverReady <- err
+			return
+		}
+		serverReady <- nil
+		if err := muxServer.Serve(listener); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				t.Errorf("Server exited with unexpected error: %v", err)
 			}
@@ -61,6 +69,9 @@ func TestUserVerifier(t *testing.T) {
 		}
 	}()
 
+	if err := <-serverReady; err != nil {
+		t.Fatal(err)
+	}
 	client := qtest.QuickFeedClient("")
 
 	userTest := []struct {
