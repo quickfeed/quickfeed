@@ -8,70 +8,75 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
-// TODO: These tests will not complain if a message is added that **should** implement the interface, but does not.
-// This is because the test will fail only if a message is added to the map that does **not** implement the interface.
-func TestImplementsIdCleaner(t *testing.T) {
-	var tests = map[protoreflect.FullName]struct {
+func TestImplementsValidation(t *testing.T) {
+	const (
+		T = true
+		F = false
+	)
+	var tests = map[protoreflect.FullName]*struct {
 		cleaner   bool
 		validator bool
 		found     bool
 	}{
-		"qf.Void":                        {cleaner: false, validator: true},
-		"qf.User":                        {cleaner: true, validator: true},
-		"qf.Users":                       {cleaner: true, validator: false},
-		"qf.Submission":                  {cleaner: false, validator: false},
-		"qf.Submissions":                 {cleaner: false, validator: false},
-		"qf.Enrollment":                  {cleaner: true, validator: true},
-		"qf.Enrollments":                 {cleaner: true, validator: true},
-		"qf.Assignment":                  {cleaner: false, validator: false},
-		"qf.Course":                      {cleaner: true, validator: true},
-		"qf.Courses":                     {cleaner: true, validator: false},
-		"qf.Group":                       {cleaner: true, validator: true},
-		"qf.Groups":                      {cleaner: true, validator: false},
-		"qf.Reviewers":                   {cleaner: true, validator: false},
-		"qf.SubmissionLink":              {cleaner: false, validator: false},
-		"qf.OrgRequest":                  {cleaner: false, validator: true},
-		"qf.Repository":                  {cleaner: false, validator: false},
-		"qf.UpdateSubmissionsRequest":    {cleaner: false, validator: false},
-		"qf.URLRequest":                  {cleaner: false, validator: true},
-		"qf.RebuildRequest":              {cleaner: false, validator: true},
-		"qf.CourseRequest":               {cleaner: false, validator: true},
-		"qf.PullRequest":                 {cleaner: false, validator: false},
-		"qf.Assignments":                 {cleaner: false, validator: false},
-		"qf.UserRequest":                 {cleaner: false, validator: true},
-		"qf.Status":                      {cleaner: false, validator: false},
-		"qf.GradingBenchmark":            {cleaner: false, validator: true},
-		"qf.Review":                      {cleaner: false, validator: true},
-		"qf.Benchmarks":                  {cleaner: false, validator: false},
-		"qf.Issue":                       {cleaner: false, validator: false},
-		"qf.RemoteIdentity":              {cleaner: false, validator: false},
-		"qf.UpdateSubmissionRequest":     {cleaner: false, validator: true},
-		"qf.UsedSlipDays":                {cleaner: false, validator: false},
-		"qf.Task":                        {cleaner: false, validator: false},
-		"qf.Organizations":               {cleaner: false, validator: false},
-		"qf.GradingCriterion":            {cleaner: false, validator: true},
-		"qf.SubmissionReviewersRequest":  {cleaner: false, validator: true},
-		"qf.Repositories":                {cleaner: false, validator: false},
-		"qf.CourseSubmissions":           {cleaner: true, validator: false},
-		"qf.Organization":                {cleaner: false, validator: true},
-		"qf.GetGroupRequest":             {cleaner: false, validator: true},
-		"qf.EnrollmentStatusRequest":     {cleaner: false, validator: true},
-		"qf.CourseUserRequest":           {cleaner: false, validator: true},
-		"qf.SubmissionRequest":           {cleaner: false, validator: true},
-		"qf.ReviewRequest":               {cleaner: false, validator: true},
-		"qf.RepositoryRequest":           {cleaner: false, validator: true},
-		"qf.GroupRequest":                {cleaner: false, validator: true},
-		"qf.EnrollmentLink":              {cleaner: true, validator: false},
-		"qf.EnrollmentRequest":           {cleaner: false, validator: true},
-		"qf.SubmissionsForCourseRequest": {cleaner: false, validator: true},
-		"score.Score":                    {cleaner: false, validator: false},
-		"score.BuildInfo":                {cleaner: false, validator: false},
+		"qf.Void":                        {cleaner: F, validator: T},
+		"qf.User":                        {cleaner: T, validator: T},
+		"qf.Users":                       {cleaner: T, validator: F},
+		"qf.Submission":                  {cleaner: F, validator: F},
+		"qf.Submissions":                 {cleaner: F, validator: F},
+		"qf.Enrollment":                  {cleaner: T, validator: T},
+		"qf.Enrollments":                 {cleaner: T, validator: T},
+		"qf.Assignment":                  {cleaner: F, validator: F},
+		"qf.Course":                      {cleaner: T, validator: T},
+		"qf.Courses":                     {cleaner: T, validator: F},
+		"qf.Group":                       {cleaner: T, validator: T},
+		"qf.Groups":                      {cleaner: T, validator: F},
+		"qf.Reviewers":                   {cleaner: T, validator: F},
+		"qf.SubmissionLink":              {cleaner: F, validator: F},
+		"qf.OrgRequest":                  {cleaner: F, validator: T},
+		"qf.Repository":                  {cleaner: F, validator: F},
+		"qf.UpdateSubmissionsRequest":    {cleaner: F, validator: F},
+		"qf.URLRequest":                  {cleaner: F, validator: T},
+		"qf.RebuildRequest":              {cleaner: F, validator: T},
+		"qf.CourseRequest":               {cleaner: F, validator: T},
+		"qf.PullRequest":                 {cleaner: F, validator: F},
+		"qf.Assignments":                 {cleaner: F, validator: F},
+		"qf.UserRequest":                 {cleaner: F, validator: T},
+		"qf.Status":                      {cleaner: F, validator: F},
+		"qf.GradingBenchmark":            {cleaner: F, validator: T},
+		"qf.Review":                      {cleaner: F, validator: T},
+		"qf.Benchmarks":                  {cleaner: F, validator: F},
+		"qf.Issue":                       {cleaner: F, validator: F},
+		"qf.RemoteIdentity":              {cleaner: F, validator: F},
+		"qf.UpdateSubmissionRequest":     {cleaner: F, validator: T},
+		"qf.UsedSlipDays":                {cleaner: F, validator: F},
+		"qf.Task":                        {cleaner: F, validator: F},
+		"qf.Organizations":               {cleaner: F, validator: F},
+		"qf.GradingCriterion":            {cleaner: F, validator: T},
+		"qf.SubmissionReviewersRequest":  {cleaner: F, validator: T},
+		"qf.Repositories":                {cleaner: F, validator: F},
+		"qf.CourseSubmissions":           {cleaner: T, validator: F},
+		"qf.Organization":                {cleaner: F, validator: T},
+		"qf.GetGroupRequest":             {cleaner: F, validator: T},
+		"qf.EnrollmentStatusRequest":     {cleaner: F, validator: T},
+		"qf.CourseUserRequest":           {cleaner: F, validator: T},
+		"qf.SubmissionRequest":           {cleaner: F, validator: T},
+		"qf.ReviewRequest":               {cleaner: F, validator: T},
+		"qf.RepositoryRequest":           {cleaner: F, validator: T},
+		"qf.GroupRequest":                {cleaner: F, validator: T},
+		"qf.EnrollmentLink":              {cleaner: T, validator: F},
+		"qf.EnrollmentRequest":           {cleaner: F, validator: T},
+		"qf.SubmissionsForCourseRequest": {cleaner: F, validator: T},
+		"score.Score":                    {cleaner: F, validator: F},
+		"score.BuildInfo":                {cleaner: F, validator: F},
 	}
 
 	protoregistry.GlobalTypes.RangeMessages(func(desc protoreflect.MessageType) bool {
 		name := desc.Descriptor().FullName()
 		qfMessage := strings.HasPrefix(string(name), "qf.")
 		scoreMessage := strings.HasPrefix(string(name), "score.")
+
+		// GlobalTypes includes all registered messages.
+		// We only want to test messages from the qf and score packages.
 		if !(qfMessage || scoreMessage) {
 			return true
 		}
@@ -80,24 +85,20 @@ func TestImplementsIdCleaner(t *testing.T) {
 			t.Errorf("Message %s has not been added to the test struct", name)
 			return true
 		}
+		test.found = true
 		msg := desc.Zero().Interface()
 
-		_, ok = msg.(idCleaner)
-		if test.cleaner && !ok {
+		if _, ok = msg.(idCleaner); test.cleaner && !ok {
 			t.Errorf("Message %s does not implement idCleaner", name)
 		} else if !test.cleaner && ok {
 			t.Errorf("Message %s implements idCleaner, but should not", name)
 		}
 
-		_, ok = msg.(validator)
-		if test.validator && !ok {
+		if _, ok = msg.(validator); test.validator && !ok {
 			t.Errorf("Message %s does not implement validator", name)
 		} else if !test.validator && ok {
 			t.Errorf("Message %s implements validator, but should not", name)
 		}
-
-		test.found = true
-		tests[name] = test
 		return true
 	})
 
@@ -107,15 +108,3 @@ func TestImplementsIdCleaner(t *testing.T) {
 		}
 	}
 }
-
-// func TestImplementsValidator(t *testing.T) {
-// 	protoregistry.GlobalTypes.RangeMessages(func(desc protoreflect.MessageType) bool {
-// 		if _, ok := shouldImplementValidator[desc.Descriptor().FullName()]; !ok {
-// 			return true
-// 		}
-// 		if _, ok := desc.Zero().Interface().(validator); !ok {
-// 			t.Errorf("type %s should implement validator", desc.Descriptor().FullName())
-// 		}
-// 		return true
-// 	})
-// }
