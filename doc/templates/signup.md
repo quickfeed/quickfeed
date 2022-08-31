@@ -48,24 +48,15 @@ Here are two short videos describing these steps: [Part 1](https://youtu.be/3KJm
 
 ## Signing up for the Course on QuickFeed
 
-1. Click the Plus (+) menu and select “Join course”. Available courses will be listed.
+1. Find the course in card list and click `Enroll`.
 
-2. Find the course and click Enroll.
+2. Wait for the teaching staff to confirm your QuickFeed registration.
 
-3. Wait for the teaching staff to confirm your QuickFeed registration.
+3. Once you have been accepted into the course, you will get access to the course's organization [`dat320-2020`](https://github.com/dat320-2020) on GitHub.
+   That is, you will get access to the `assignments` repository and a personal repository named `username-labs`.
 
-4. You will then be invited to the course organization on GitHub and two separate repositories.
-   You will need to navigate to each of these links and accept these invitations:
-
-   - Navigate to the course organization [dat320-2020](https://github.com/dat320-2020) accept the invitation.
-   - Navigate to the [assignments](https://github.com/dat320-2020/assignments) repository and accept the invitation.
-   - Navigate to your private <https://github.com/dat320-2020/username-labs> repository and accept the invitation.
-     Remember to replace `username` in this link with your own GitHub `username`.
-
-   Several invitation emails will also be sent to the email address associated with your GitHub account.
-   However, emails from GitHub can sometimes take a while to arrive.
-
-5. Once you have accepted the invitations, you will get your own repository under `dat320-2020`, which is the course's organization on GitHub.
+   Note you may receive three invitation emails from `quickfeed-uis[bot]`.
+   These emails can be ignored.
 
 ## Group Sign up on QuickFeed
 
