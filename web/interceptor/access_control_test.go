@@ -410,6 +410,12 @@ func TestAccessControl(t *testing.T) {
 	}
 }
 
+func requestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
+	request := connect.NewRequest(message)
+	request.Header().Set(auth.Cookie, cookie)
+	return request
+}
+
 func checkAccess(t *testing.T, err error, wantAccess bool, method string) {
 	t.Helper()
 	if connErr, ok := err.(*connect.Error); ok {
