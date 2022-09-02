@@ -10,14 +10,12 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
-	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -196,11 +194,6 @@ func WithUserContext(ctx context.Context, user *qf.User) context.Context {
 	return metadata.NewIncomingContext(ctx, meta)
 }
 
-// WithAuthCookie returns context containing an authentication cookie with JWT.
-func WithAuthCookie(ctx context.Context, cookie *http.Cookie) context.Context {
-	return context.WithValue(ctx, auth.Cookie, auth.TokenString(cookie)) // skipcq: GO-W5003
-}
-
 // AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
 func AssignmentsWithTasks(courseID uint64) []*qf.Assignment {
 	return []*qf.Assignment{
@@ -295,16 +288,5 @@ func QuickFeedClient(url string) qfconnect.QuickFeedServiceClient {
 	if serverUrl == "" {
 		serverUrl = "http://127.0.0.1:8081"
 	}
-	interceptors := connect.WithInterceptors(requestInterceptor())
-	return qfconnect.NewQuickFeedServiceClient(http.DefaultClient, serverUrl, interceptors)
-}
-
-func requestInterceptor() connect.Interceptor {
-	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
-		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
-			token, _ := ctx.Value(auth.Cookie).(string)
-			request.Header().Set(auth.Cookie, token)
-			return next(ctx, request)
-		})
-	})
+	return qfconnect.NewQuickFeedServiceClient(http.DefaultClient, serverUrl)
 }
