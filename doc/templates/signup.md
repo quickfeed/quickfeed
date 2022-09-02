@@ -40,7 +40,7 @@ Here are two short videos describing these steps: [Part 1](https://youtu.be/3KJm
    A GitHub account is required to sign in to QuickFeed.
    You can skip this step if you already have an account.
 
-2. Click the "Sign in with GitHub" button in [QuickFeed](http://uis.itest.run) to register.
+2. Click the GitHub button in the navigation bar on [QuickFeed](http://uis.itest.run) to register.
    You will then be taken to GitHub's website.
 
 3. Approve that our QuickFeed application may have permission to access to the requested parts of your account.
