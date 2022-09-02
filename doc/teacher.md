@@ -114,20 +114,14 @@ They will also be added to the `allteachers` team.
 
 ## Student Enrollments
 
-Students enroll into your course by logging in into QuickFeed with their GitHub accounts, following `Join course` link and choosing to enroll into your course. You can access the full list of students (both already enrolled into your course or waiting for enrollment approval) on the `Members` tab of your course page, and accept their enrollments.
+Students enroll in your course by logging in on QuickFeed with their GitHub accounts, find the course among the course cards and click the `Enroll` link.
+You can access the full list of students (both already enrolled and those waiting for approval) in the `Members` menu of your course page, and accept their enrollments.
 
-After a student's enrollment has been accepted, the student will receive three invitations to their registered GitHub email (corresponding with the account they have used to log in to QuickFeed). One to join the course organization, and another two to access the course's `assignments` repository and the student's personal repository.
-
-**Note: it can take GitHub some time to issue the invitation.**
-
-Students can also navigate to
-
-- <https://github.com/{organization_name}/assignments> and
-- <https://github.com/{organization_name}/{student_git_username}-labs>
-
-manually and accept the invitations from there. These links are also available from QuickFeed's frontend interface, in the course menu, under the User Repository heading.
-
+After a student's enrollment has been accepted into a course, the student will have access to the course's `assignment` repository and the student's personal repository, e.g., `student-labs`.
 All students in a course will be added to the `allstudents` team in the course's GitHub organization.
+
+Note that the student may receive three invitation emails from `quickfeed-uis[bot]`.
+These emails can be ignored.
 
 ## Student Groups
 
