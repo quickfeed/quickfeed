@@ -418,13 +418,12 @@ func requestWithCookie[T any](message *T, cookie string) *connect.Request[T] {
 
 func checkAccess(t *testing.T, err error, wantAccess bool, method string) {
 	t.Helper()
-	t.Logf("%#v", connect.CodeOf(err))
 	if connErr, ok := err.(*connect.Error); ok {
 		gotCode := connErr.Code()
 		wantCode := connect.CodePermissionDenied
 		gotAccess := gotCode == wantCode
 		if gotAccess == wantAccess {
-			t.Errorf("%23s: (%v == %v) = %t, want %t: %s", method, gotCode, wantCode, gotAccess, !wantAccess, connErr.Error())
+			t.Errorf("%23s: (%v == %v) = %t, want %t", method, gotCode, wantCode, gotAccess, !wantAccess)
 		}
 	} else if err != nil && wantAccess {
 		// got error and want access; expected non-error or not access
