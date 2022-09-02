@@ -16,6 +16,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc/metadata"
 )
 
