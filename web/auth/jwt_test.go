@@ -99,7 +99,7 @@ func TestUserClaims(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	adminClaims, err := manager.GetClaims(auth.TokenString(adminCookie))
+	adminClaims, err := manager.GetClaims(auth.CookieString(adminCookie))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -196,7 +196,7 @@ func TestUpdateCookie(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	newClaims, err := tm.GetClaims(auth.TokenString(newCookie))
+	newClaims, err := tm.GetClaims(auth.CookieString(newCookie))
 	if err != nil {
 		t.Fatal(err)
 	}
