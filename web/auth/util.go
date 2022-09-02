@@ -26,7 +26,7 @@ type externalUser struct {
 	AvatarURL string `json:"avatar_url"`
 }
 
-// TokenString returns a string with JWT with correct format ("auth=JWT").
-func TokenString(cookie *http.Cookie) string {
+// CookieString returns a string with JWT with correct format ("auth=JWT").
+func CookieString(cookie *http.Cookie) string {
 	return CookieName + "=" + cookie.Value
 }
