@@ -71,7 +71,7 @@ func (s *QuickFeedService) GetUsers(_ context.Context, _ *connect.Request[qf.Voi
 // GetUserByCourse returns the user for the given SCM login name if enrolled in the given course.
 func (s *QuickFeedService) GetUserByCourse(_ context.Context, in *connect.Request[qf.CourseUserRequest]) (*connect.Response[qf.User], error) {
 	query := &qf.Course{Code: in.Msg.CourseCode, Year: in.Msg.CourseYear}
-	user, _, err := s.db.GetUserByCourse(query, in.Msg.UserLogin)
+	user, err := s.db.GetUserByCourse(query, in.Msg.UserLogin)
 	if err != nil {
 		s.logger.Errorf("GetUserByCourse failed: %v", err)
 		return nil, status.Error(codes.FailedPrecondition, "failed to get student information")

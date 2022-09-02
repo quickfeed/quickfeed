@@ -189,9 +189,7 @@ func RandomString(t *testing.T) string {
 // WithUserContext is a test helper function to create metadata for the
 // given user mimicking the context coming from the browser.
 func WithUserContext(ctx context.Context, user *qf.User) context.Context {
-	userID := strconv.Itoa(int(user.GetID()))
-	meta := metadata.New(map[string]string{"user": userID})
-	return metadata.NewIncomingContext(ctx, meta)
+	return metadata.NewIncomingContext(ctx, metadata.Pairs(auth.UserKey, strconv.FormatUint(user.GetID(), 10)))
 }
 
 // AssignmentsWithTasks returns a list of test assignments with tasks for the given course.

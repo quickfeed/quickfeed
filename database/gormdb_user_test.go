@@ -25,15 +25,12 @@ func TestGetUserByCourse(t *testing.T) {
 	user := qtest.CreateUser(t, db, 2, &qf.User{Login: username})
 	qtest.EnrollStudent(t, db, user, course)
 
-	u, c, err := db.GetUserByCourse(course, username)
+	u, err := db.GetUserByCourse(course, username)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if u.ID != user.ID {
 		t.Errorf("expected user %d, got %d", user.ID, u.ID)
-	}
-	if c.ID != course.ID {
-		t.Errorf("expected course %d, got %d", course.ID, c.ID)
 	}
 	if u.Login != username {
 		t.Errorf("expected user %s, got %s", username, u.Login)
