@@ -61,7 +61,7 @@ func TestRefreshTokens(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		return auth.CookieString(cookie)
+		return cookie.String()
 	}
 
 	admin := qtest.CreateFakeUser(t, db, 1)

@@ -81,8 +81,8 @@ func TestUserVerifier(t *testing.T) {
 	}{
 		{code: connect.CodeUnauthenticated, cookie: "", wantUser: nil},
 		{code: connect.CodeUnauthenticated, cookie: "should fail", wantUser: nil},
-		{code: 0, cookie: auth.CookieString(adminCookie), wantUser: adminUser},
-		{code: 0, cookie: auth.CookieString(studentCookie), wantUser: student},
+		{code: 0, cookie: adminCookie.String(), wantUser: adminUser},
+		{code: 0, cookie: studentCookie.String(), wantUser: student},
 	}
 
 	ctx := context.Background()

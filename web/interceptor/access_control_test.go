@@ -133,7 +133,7 @@ func TestAccessControl(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		return auth.CookieString(cookie)
+		return cookie.String()
 	}
 	courseAdminCookie := f(t, courseAdmin.ID)
 	groupStudentCookie := f(t, groupStudent.ID)
