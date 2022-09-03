@@ -449,8 +449,8 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
     state.isLoading = true
 
     // None of these should fail independently.
-    const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL, true)
-    const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.GROUP, true)
+    const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL, false)
+    const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.GROUP, false)
     if (!success(result) || !success(groups)) {
         const failed = !success(result) ? result : groups
         actions.alertHandler(failed)
@@ -690,7 +690,17 @@ export const deleteBenchmark = async ({ actions, effects }: Context, { benchmark
     }
 }
 
-export const setActiveSubmissionLink = ({ state }: Context, link: SubmissionLink.AsObject): void => {
+export const refreshSubmission = async ({ effects }: Context, { link }: { link: SubmissionLink.AsObject }): Promise<SubmissionLink.AsObject> => {
+    if (link.submission && link.assignment) {
+        const response = await effects.grpcMan.getSubmission(link.assignment.courseid, link.submission.id)
+        if (success(response) && response.data) {
+            link.submission = response.data.toObject()
+        }
+    }
+    return link
+}
+export const setActiveSubmissionLink = async ({ state, actions }: Context, link: SubmissionLink.AsObject): Promise<void> => {
+    link = await actions.refreshSubmission({ link })
     state.activeSubmissionLink = link ? Converter.clone(link) : null
 }
 
