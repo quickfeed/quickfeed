@@ -10,6 +10,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 )
@@ -72,9 +73,18 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm
 		return nil, fmt.Errorf("test execution failed without output: %w", err)
 	}
 	if err != nil {
-		// we may reach here with a timeout error and a non-empty output
-		logger.Errorf("test execution failed with output: %v\n%v", err, out)
+		// We may reach here with a timeout error and a non-empty output
+		logger.Errorf("Test execution failed with output: %v\n%v", err, out)
 	}
+
+	results, err := score.ExtractResults(out, randomSecret, time.Since(start))
+	if err != nil {
+		// Log the errors from the extraction process
+		logger.Debugf("Session secret: %s", randomSecret)
+		logger.Errorf("Failed to extract (some) results for assignment %s for course %s: %v", r.Assignment.Name, r.Course.Name, err)
+		// don't return here; we still want partial results!
+	}
+	logger.Debug("ci.RunTests", zap.Any("Results", qlog.IndentJson(results)))
 	// return the extracted score and filtered log output
-	return score.ExtractResults(out, randomSecret, time.Since(start))
+	return results, nil
 }

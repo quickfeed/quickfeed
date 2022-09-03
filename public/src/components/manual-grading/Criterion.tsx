@@ -33,6 +33,19 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion.AsObject }): JSX.El
         ? <CriteriaStatus criterion={criteria} />
         : <i className={passed ? "fa fa-check" : "fa fa-exclamation-circle"} />
 
+
+    let comment: JSX.Element
+    if (isTeacher) {
+        // Display edit icon if comment is empty
+        // If comment is not empty, display the comment
+        const content = criteria.comment.length > 0
+            ? criteria.comment
+            : <i style={{ opacity: "0.5" }} className="fa fa-pencil-square-o" aria-hidden="true" />
+        comment = <span className="clickable">{content}</span>
+    } else {
+        comment = <span>{criteria.comment}</span>
+    }
+
     return (
         <>
             <tr className="align-items-center">
@@ -40,7 +53,7 @@ const Criteria = ({ criteria }: { criteria: GradingCriterion.AsObject }): JSX.El
                 <th>
                     {criteriaStatusOrPassFailIcon}
                 </th>
-                <th onClick={() => setEditing(true)}>{criteria.comment}</th>
+                <th onClick={() => setEditing(true)}>{comment}</th>
             </tr>
             <GradeComment grade={criteria} editing={editing} setEditing={setEditing} />
         </>

@@ -104,12 +104,12 @@ func (req *EnrollmentRequest) IsValid() bool {
 	return req.GetCourseID() > 0
 }
 
-// IsValid ensures that course ID is provided
+// IsValid ensures that course ID is provided.
 func (req *SubmissionsForCourseRequest) IsValid() bool {
 	return req.GetCourseID() != 0
 }
 
-// IsValid ensures that both course and submission IDs are set
+// IsValid ensures that both course and assignment IDs are set.
 func (req *RebuildRequest) IsValid() bool {
 	aid, cid := req.GetAssignmentID(), req.GetCourseID()
 	return aid > 0 && cid > 0

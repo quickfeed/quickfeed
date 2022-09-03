@@ -12,9 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -59,13 +57,13 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 				// only run non-group assignments
 				wh.runAssignmentTests(assignment, repo, course, payload)
 			} else {
-				wh.logger.Debugf("Ignoring assignment: %s, pushed to user repo: %s", assignment.GetName(), payload.GetRepo().GetName())
+				wh.logger.Debugf("Ignoring push to user repo %s for group assignment: %s", payload.GetRepo().GetName(), assignment.GetName())
 			}
 		}
 
 	case repo.IsGroupRepo():
 		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
-		jobOwner, _, err := wh.db.GetUserByCourse(course, payload.GetSender().GetLogin())
+		jobOwner, err := wh.db.GetUserByCourse(course, payload.GetSender().GetLogin())
 		if err != nil {
 			wh.logger.Errorf("Failed to find user %s in course %s: %v", payload.GetSender().GetLogin(), course.GetName(), err)
 			return
@@ -82,7 +80,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 					wh.handlePullRequestPush(payload, results, assignment, course, repo)
 				}
 			} else {
-				wh.logger.Debugf("Ignoring assignment: %s, pushed to group repo: %s", assignment.GetName(), payload.GetRepo().GetName())
+				wh.logger.Debugf("Ignoring push to group repo %s for user assignment: %s", payload.GetRepo().GetName(), assignment.GetName())
 			}
 		}
 	default:
@@ -225,11 +223,12 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *qf.Assignment, repo *qf.R
 	}
 	results, err := runData.RunTests(ctx, wh.logger, sc, wh.runner)
 	if err != nil {
-		wh.logger.Errorf("Failed to run tests for assignment %s for course %s: %v", assignment.Name, course.Name, err)
+		wh.logger.Error(err)
+		return nil
 	}
-	wh.logger.Debug("ci.RunTests", zap.Any("Results", qlog.IndentJson(results)))
 	if _, err = runData.RecordResults(wh.logger, wh.db, results); err != nil {
 		wh.logger.Error(err)
+		return nil
 	}
 	return results
 }

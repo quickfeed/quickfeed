@@ -191,14 +191,12 @@ func RandomString(t *testing.T) string {
 // WithUserContext is a test helper function to create metadata for the
 // given user mimicking the context coming from the browser.
 func WithUserContext(ctx context.Context, user *qf.User) context.Context {
-	userID := strconv.Itoa(int(user.GetID()))
-	meta := metadata.New(map[string]string{"user": userID})
-	return metadata.NewIncomingContext(ctx, meta)
+	return metadata.NewIncomingContext(ctx, metadata.Pairs(auth.UserKey, strconv.FormatUint(user.GetID(), 10)))
 }
 
 // WithAuthCookie returns context containing an authentication cookie with JWT.
 func WithAuthCookie(ctx context.Context, cookie *http.Cookie) context.Context {
-	return context.WithValue(ctx, auth.Cookie, auth.TokenString(cookie))
+	return context.WithValue(ctx, auth.Cookie, auth.TokenString(cookie)) // skipcq: GO-W5003
 }
 
 // AssignmentsWithTasks returns a list of test assignments with tasks for the given course.

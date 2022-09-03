@@ -135,6 +135,12 @@
   width: 100%;
 }
 
+#content-full {
+  margin-left: 100px;
+  margin-right: 100px;
+  width: 100%;
+}
+
 body {
   margin: 0px;
 }
@@ -342,10 +348,6 @@ input {
   -webkit-transform: translate(-50%, 0);
   -o-transform: translate(-50%, 0);
   transform: translate(-50%, 0);
-}
-
-.banner {
-  margin-left: -350px;
 }
 
 .width-resize {

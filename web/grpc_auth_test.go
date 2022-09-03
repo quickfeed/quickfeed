@@ -2,7 +2,7 @@ package web_test
 
 import (
 	"context"
-	"log"
+	"errors"
 	"net/http"
 	"os"
 	"testing"
@@ -48,7 +48,7 @@ func TestGrpcAuth(t *testing.T) {
 		t.Fatalf("failed to create token manager: %v", err)
 	}
 	// start gRPC server in background
-	serveFn := startGrpcAuthServer(t, qfService, tm)
+	serveFn, shutdown := startGrpcAuthServer(t, qfService, tm)
 	go serveFn()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -79,6 +79,7 @@ func TestGrpcAuth(t *testing.T) {
 	if userInfo.Msg.Login != user.Login {
 		t.Errorf("expected user login %s, got %s", user.Login, userInfo.Msg.Login)
 	}
+	shutdown(ctx)
 }
 
 func fillDatabase(t *testing.T, db database.Database) {
@@ -96,21 +97,29 @@ func fillDatabase(t *testing.T, db database.Database) {
 	qtest.EnrollStudent(t, db, user, course)
 }
 
-func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService, tm *auth.TokenManager) func() {
+func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService, tm *auth.TokenManager) (func(), func(context.Context)) {
 	t.Helper()
 
 	router := http.NewServeMux()
 	router.Handle(qfService.NewQuickFeedHandler(tm))
 	muxServer := &http.Server{
-		Handler: h2c.NewHandler(router, &http2.Server{}),
-		Addr:    "127.0.0.1:8081",
+		Handler:           h2c.NewHandler(router, &http2.Server{}),
+		Addr:              "127.0.0.1:8081",
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 	}
 
 	return func() {
-		if err := muxServer.ListenAndServe(); err != nil {
-			log.Fatalf("Server exited with error: %v", err)
+			if err := muxServer.ListenAndServe(); err != nil {
+				if !errors.Is(err, http.ErrServerClosed) {
+					t.Errorf("Server exited with unexpected error: %v", err)
+				}
+				return
+			}
+		}, func(ctx context.Context) {
+			if err := muxServer.Shutdown(ctx); err != nil {
+				t.Fatal(err)
+			}
 		}
-	}
 }
 
 func check(t *testing.T, err error) {
