@@ -79,7 +79,8 @@ var accessRolesFor = map[string]roles{
 func AccessControl(tm *auth.TokenManager) connect.Interceptor {
 	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
 		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
-			method := request.Spec().Procedure[strings.LastIndex(request.Spec().Procedure, "/")+1:]
+			procedure := request.Spec().Procedure
+			method := procedure[strings.LastIndex(procedure, "/")+1:]
 			req, ok := request.Any().(requestID)
 			if !ok {
 				return nil, connect.NewError(connect.CodeUnimplemented,
