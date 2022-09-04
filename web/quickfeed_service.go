@@ -44,8 +44,8 @@ func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Mana
 func (s *QuickFeedService) GetUser(ctx context.Context, _ *connect.Request[qf.Void]) (*connect.Response[qf.User], error) {
 	userInfo, err := s.db.GetUserWithEnrollments(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("GetUser failed to get user with enrollments: %v ", err)
-		return nil, ErrInvalidUserInfo
+		s.logger.Errorf("GetUser(%d) failed: %v", userID(ctx), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
 	return connect.NewResponse(userInfo), nil
 }
@@ -56,7 +56,7 @@ func (s *QuickFeedService) GetUsers(_ context.Context, _ *connect.Request[qf.Voi
 	users, err := s.db.GetUsers()
 	if err != nil {
 		s.logger.Errorf("GetUsers failed: %v", err)
-		return nil, status.Error(codes.NotFound, "failed to get users")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get users"))
 	}
 	return connect.NewResponse(&qf.Users{
 		Users: users,
@@ -79,8 +79,8 @@ func (s *QuickFeedService) GetUserByCourse(_ context.Context, in *connect.Reques
 func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[qf.User]) (*connect.Response[qf.Void], error) {
 	usr, err := s.db.GetUser(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("UpdateUser failed: %v", err)
-		return nil, ErrInvalidUserInfo
+		s.logger.Errorf("UpdateUser(userID=%d) failed: %v", userID(ctx), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
 	if _, err = s.updateUser(usr, in.Msg); err != nil {
 		s.logger.Errorf("UpdateUser failed to update user %d: %v", in.Msg.GetID(), err)
@@ -187,8 +187,8 @@ func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *connect.Reque
 func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Request[qf.Enrollments]) (*connect.Response[qf.Void], error) {
 	usr, err := s.db.GetUser(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("UpdateEnrollments failed: %v", err)
-		return nil, ErrInvalidUserInfo
+		s.logger.Errorf("UpdateEnrollments(userID=%d) failed: %v", userID(ctx), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
@@ -539,8 +539,8 @@ func (s *QuickFeedService) UpdateAssignments(_ context.Context, in *connect.Requ
 func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Request[qf.OrgRequest]) (*connect.Response[qf.Organization], error) {
 	usr, err := s.db.GetUser(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("GetOrganization failed: %v", err)
-		return nil, ErrInvalidUserInfo
+		s.logger.Errorf("GetOrganization(userID=%d) failed: %v", userID(ctx), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
 	scmClient, err := s.getSCM(ctx, in.Msg.GetOrgName())
 	if err != nil {

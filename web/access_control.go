@@ -10,11 +10,7 @@ import (
 	"github.com/quickfeed/quickfeed/web/auth"
 )
 
-// ErrInvalidUserInfo is returned to user if user information in context is invalid.
-var (
-	ErrInvalidUserInfo     = status.Error(codes.PermissionDenied, "authorization failed. please try to logout and sign in again")
-	ErrMissingInstallation = status.Error(codes.PermissionDenied, "github application is not installed on the course organization")
-)
+var ErrMissingInstallation = status.Error(codes.PermissionDenied, "github application is not installed on the course organization")
 
 func userID(ctx context.Context) uint64 {
 	return ctx.Value(auth.ContextKeyUserID).(uint64)
