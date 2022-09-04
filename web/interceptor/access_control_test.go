@@ -21,10 +21,6 @@ import (
 	"golang.org/x/net/http2/h2c"
 )
 
-const (
-	BufSize = 1024 * 1024
-)
-
 type accessTests []struct {
 	name     string
 	ctx      context.Context
