@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -169,6 +170,11 @@ func extractToken(cookieString string) (string, error) {
 		}
 	}
 	return "", errors.New("failed to extract authentication cookie from request header")
+}
+
+// Context returns the given context augmented with the claims' user ID.
+func (c Claims) Context(ctx context.Context) context.Context {
+	return context.WithValue(ctx, ContextKeyUserID, c.UserID)
 }
 
 // HasCourseStatus returns true if user has enrollment with given status in the course.

@@ -32,8 +32,7 @@ func UnaryUserVerifier(logger *zap.SugaredLogger, tm *auth.TokenManager) connect
 					return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("failed to update session cookie: %w", err))
 				}
 			}
-			newCtx := context.WithValue(ctx, auth.ContextKeyUserID, claims.UserID)
-			response, err := next(newCtx, request)
+			response, err := next(claims.Context(ctx), request)
 			if err != nil {
 				return nil, err
 			}
