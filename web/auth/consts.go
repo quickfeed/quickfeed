@@ -2,6 +2,13 @@ package auth
 
 import "time"
 
+type contextKey int
+
+const (
+	contextNone contextKey = iota
+	ContextKeyUserID
+)
+
 const (
 	Cookie               = "cookie"
 	CookieName           = "auth"

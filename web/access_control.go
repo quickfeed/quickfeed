@@ -2,15 +2,12 @@ package web
 
 import (
 	"context"
-	"errors"
-	"strconv"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"google.golang.org/grpc/metadata"
 )
 
 // ErrInvalidUserInfo is returned to user if user information in context is invalid.
@@ -19,25 +16,13 @@ var (
 	ErrMissingInstallation = status.Error(codes.PermissionDenied, "github application is not installed on the course organization")
 )
 
+func userID(ctx context.Context) uint64 {
+	return ctx.Value(auth.ContextKeyUserID).(uint64)
+}
+
 func (s *QuickFeedService) getCurrentUser(ctx context.Context) (*qf.User, error) {
-	// process user id from context
-	meta, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New("malformed request")
-	}
-	userValues := meta.Get(auth.UserKey)
-	if len(userValues) == 0 {
-		return nil, errors.New("no user metadata in context")
-	}
-	if len(userValues) != 1 || userValues[0] == "" {
-		return nil, errors.New("invalid user payload in context")
-	}
-	userID, err := strconv.ParseUint(userValues[0], 10, 64)
-	if err != nil {
-		return nil, err
-	}
 	// return the user corresponding to userID, or an error.
-	return s.db.GetUser(userID)
+	return s.db.GetUser(userID(ctx))
 }
 
 // hasCourseAccess returns true if the given user has access to the given course,

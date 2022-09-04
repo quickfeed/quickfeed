@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/bufbuild/connect-go"
 	"go.uber.org/zap"
 
 	"github.com/quickfeed/quickfeed/web/auth"
-	"google.golang.org/grpc/metadata"
 )
 
 // UnaryUserVerifier returns a unary server interceptor verifying that the user is authenticated.
@@ -34,7 +32,7 @@ func UnaryUserVerifier(logger *zap.SugaredLogger, tm *auth.TokenManager) connect
 					return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("failed to update session cookie: %w", err))
 				}
 			}
-			newCtx := metadata.NewIncomingContext(ctx, metadata.Pairs(auth.UserKey, strconv.FormatUint(claims.UserID, 10)))
+			newCtx := context.WithValue(ctx, auth.ContextKeyUserID, claims.UserID)
 			response, err := next(newCtx, request)
 			if err != nil {
 				return nil, err
