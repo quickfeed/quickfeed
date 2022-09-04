@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"reflect"
 	"testing"
 	"time"
 
@@ -21,10 +20,6 @@ import (
 	"golang.org/x/net/http2/h2c"
 )
 
-const (
-	BufSize = 1024 * 1024
-)
-
 type accessTests []struct {
 	name     string
 	cookie   string
@@ -32,19 +27,6 @@ type accessTests []struct {
 	courseID uint64
 	groupID  uint64
 	access   bool
-}
-
-// TestAccessControlMethods checks that all QuickFeedService methods have an entry
-// in the access control list.
-func TestAccessControlMethods(t *testing.T) {
-	service := reflect.TypeOf(qfconnect.UnimplementedQuickFeedServiceHandler{})
-	serviceMethods := make(map[string]bool)
-	for i := 0; i < service.NumMethod(); i++ {
-		serviceMethods[service.Method(i).Name] = true
-	}
-	if err := interceptor.CheckAccessMethods(serviceMethods); err != nil {
-		t.Error(err)
-	}
 }
 
 func TestAccessControl(t *testing.T) {
