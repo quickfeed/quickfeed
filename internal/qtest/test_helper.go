@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/quickfeed/quickfeed/database"
@@ -17,7 +16,6 @@ import (
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"google.golang.org/grpc/metadata"
 )
 
 // TestDB returns a test database and close function.
@@ -187,10 +185,10 @@ func RandomString(t *testing.T) string {
 	return fmt.Sprintf("%x", sha256.Sum256(randomness))[:6]
 }
 
-// WithUserContext is a test helper function to create metadata for the
-// given user mimicking the context coming from the browser.
+// WithUserContext returns the context augmented with the given user's ID.
+// This aims to mimic the claims.Context() method.
 func WithUserContext(ctx context.Context, user *qf.User) context.Context {
-	return metadata.NewIncomingContext(ctx, metadata.Pairs(auth.UserKey, strconv.FormatUint(user.GetID(), 10)))
+	return context.WithValue(ctx, auth.ContextKeyUserID, user.GetID())
 }
 
 // AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
