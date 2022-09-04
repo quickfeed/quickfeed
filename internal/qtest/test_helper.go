@@ -238,7 +238,9 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 	}
 	course.OrganizationID = org.GetID()
 	admin := CreateAdminUser(t, db, course.GetProvider())
-	db.UpdateUser(admin)
+	if err = db.UpdateUser(admin); err != nil {
+		return err
+	}
 	CreateCourse(t, db, admin, course)
 
 	repos, err := sc.GetRepositories(ctx, org)
