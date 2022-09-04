@@ -77,9 +77,9 @@ func (s *QuickFeedService) GetUserByCourse(_ context.Context, in *connect.Reques
 // UpdateUser updates the current users's information and returns the updated user.
 // This function can also promote a user to admin or demote a user.
 func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[qf.User]) (*connect.Response[qf.Void], error) {
-	usr, err := s.getCurrentUser(ctx)
+	usr, err := s.db.GetUser(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("UpdateUser failed: authentication error: %v", err)
+		s.logger.Errorf("UpdateUser failed: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if _, err = s.updateUser(usr, in.Msg); err != nil {
@@ -185,9 +185,9 @@ func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *connect.Reque
 // UpdateEnrollments changes status of all pending enrollments for the specified course to approved.
 // If the request contains a single enrollment, it will be updated to the specified status.
 func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Request[qf.Enrollments]) (*connect.Response[qf.Void], error) {
-	usr, err := s.getCurrentUser(ctx)
+	usr, err := s.db.GetUser(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("UpdateEnrollments failed: scm authentication error: %v", err)
+		s.logger.Errorf("UpdateEnrollments failed: %v", err)
 		return nil, ErrInvalidUserInfo
 	}
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
@@ -537,10 +537,10 @@ func (s *QuickFeedService) UpdateAssignments(_ context.Context, in *connect.Requ
 
 // GetOrganization fetches a github organization by name.
 func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Request[qf.OrgRequest]) (*connect.Response[qf.Organization], error) {
-	usr, err := s.getCurrentUser(ctx)
+	usr, err := s.db.GetUser(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("GetOrganization failed: scm authentication error: %v", err)
-		return nil, err
+		s.logger.Errorf("GetOrganization failed: %v", err)
+		return nil, ErrInvalidUserInfo
 	}
 	scmClient, err := s.getSCM(ctx, in.Msg.GetOrgName())
 	if err != nil {

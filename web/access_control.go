@@ -20,11 +20,6 @@ func userID(ctx context.Context) uint64 {
 	return ctx.Value(auth.ContextKeyUserID).(uint64)
 }
 
-func (s *QuickFeedService) getCurrentUser(ctx context.Context) (*qf.User, error) {
-	// return the user corresponding to userID, or an error.
-	return s.db.GetUser(userID(ctx))
-}
-
 // hasCourseAccess returns true if the given user has access to the given course,
 // as defined by the check function.
 func (s *QuickFeedService) hasCourseAccess(userID, courseID uint64, check func(*qf.Enrollment) bool) bool {
