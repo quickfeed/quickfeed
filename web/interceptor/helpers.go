@@ -1,36 +1,8 @@
 package interceptor
 
 import (
-	"context"
 	"fmt"
-	"net/http"
-	"strconv"
-
-	"github.com/bufbuild/connect-go"
-	"github.com/quickfeed/quickfeed/web/auth"
-	"go.uber.org/zap"
-	"google.golang.org/grpc/metadata"
 )
-
-// getAuthenticatedContext returns a new context with the user ID attached to it.
-// If the context does not contain a valid session cookie, it returns an error.
-func getAuthenticatedContext(ctx context.Context, header http.Header, logger *zap.SugaredLogger, tm *auth.TokenManager) (context.Context, *http.Cookie, error) {
-	cookies := header.Get(auth.Cookie)
-	claims, err := tm.GetClaims(cookies)
-	if err != nil {
-		return nil, nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("UnaryUserVerifier(): failed to extract claims from JWT: %w", err))
-	}
-	newCtx := metadata.NewIncomingContext(ctx, metadata.Pairs(auth.UserKey, strconv.FormatUint(claims.UserID, 10)))
-	if tm.UpdateRequired(claims) {
-		logger.Debug("Updating cookie for user ", claims.UserID)
-		updatedCookie, err := tm.UpdateCookie(claims)
-		if err != nil {
-			return nil, nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("UnaryUserVerifier(): failed to update cookie: %w", err))
-		}
-		return newCtx, updatedCookie, nil
-	}
-	return newCtx, nil, nil
-}
 
 func has(method string) bool {
 	_, ok := accessRolesFor[method]
