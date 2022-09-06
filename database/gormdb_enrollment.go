@@ -88,6 +88,12 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...qf.Enrollment_Us
 		Find(&enrollments); err != nil {
 		return nil, err
 	}
+	for _, enrollment := range enrollments {
+		if enrollment.GetCourse() == nil {
+			continue
+		}
+		enrollment.SetSlipDays(enrollment.GetCourse())
+	}
 	return enrollments, nil
 }
 

@@ -76,6 +76,7 @@ func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*qf.Course, 
 			First(&course, courseID).Error; err != nil {
 			return nil, err
 		}
+		course.SetSlipDays()
 	} else {
 		if err := m.First(&course, courseID).Error; err != nil {
 			return nil, err
