@@ -126,7 +126,6 @@ message SubmissionsForCourseRequest {
     }
     uint64 courseID    = 1;
     Type type          = 2;
-    bool withBuildInfo = 3;
 }
 
 message RebuildRequest {

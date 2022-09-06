@@ -484,7 +484,7 @@ export class MockGrpcManager {
         return this.grpcSend<Submissions>(new Submissions().setSubmissionsList(submissions))
     }
 
-    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IGrpcResponse<CourseSubmissions>> {
+    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
         // TODO: Remove `.clone()` when done migrating to AsObject in state
         const users = this.users.getUsersList()
         const groups = this.groups.getGroupsList()
@@ -528,10 +528,6 @@ export class MockGrpcManager {
                 if (!submission) {
                     subs.push(subLink)
                     return
-                }
-
-                if (withBuildInfo) {
-                    // TODO
                 }
 
                 subLink.setSubmission(submission.clone())

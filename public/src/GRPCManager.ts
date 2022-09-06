@@ -228,11 +228,10 @@ export class GrpcManager {
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
     }
 
-    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IGrpcResponse<CourseSubmissions>> {
+    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
         const request = new SubmissionsForCourseRequest()
         request.setCourseid(courseID)
         request.setType(type)
-        request.setWithbuildinfo(withBuildInfo)
         return this.grpcSend<CourseSubmissions>(this.agService.getSubmissionsByCourse, request)
     }
 

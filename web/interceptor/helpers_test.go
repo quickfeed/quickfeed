@@ -47,6 +47,7 @@ func TestCheckAccessMethods(t *testing.T) {
 		"GetUsers":                true,
 		"GetOrganization":         true,
 		"CreateCourse":            true,
+		"GetSubmission":           true,
 	}
 	if err := interceptor.CheckAccessMethods(serviceMethods); err != nil {
 		t.Error(err)
