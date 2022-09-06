@@ -243,9 +243,6 @@ func (s *QuickFeedService) GetEnrollmentsByUser(_ context.Context, in *connect.R
 		s.logger.Errorf("GetEnrollmentsByUser failed: user %d: %v", in.Msg.GetUserID(), err)
 		return nil, status.Error(codes.NotFound, "no enrollments found for user")
 	}
-	for _, enrollment := range enrollments {
-		enrollment.SetSlipDays(enrollment.Course)
-	}
 	return connect.NewResponse(&qf.Enrollments{
 		Enrollments: enrollments,
 	}), nil

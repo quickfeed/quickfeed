@@ -28,7 +28,6 @@ func (s *QuickFeedService) getGroupByUserAndCourse(request *qf.GroupRequest) (*q
 	if err != nil {
 		return nil, err
 	}
-	enrollment.SetSlipDays(enrollment.Course)
 	grp, err := s.db.GetGroup(enrollment.GroupID)
 	if err != nil && err == gorm.ErrRecordNotFound {
 		err = errUserNotInGroup

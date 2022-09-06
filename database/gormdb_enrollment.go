@@ -55,6 +55,7 @@ func (db *GormDB) GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (
 		First(&enrollment).Error; err != nil {
 		return nil, err
 	}
+	enrollment.SetSlipDays(enrollment.GetCourse())
 	return &enrollment, nil
 }
 
@@ -89,9 +90,6 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...qf.Enrollment_Us
 		return nil, err
 	}
 	for _, enrollment := range enrollments {
-		if enrollment.GetCourse() == nil {
-			continue
-		}
 		enrollment.SetSlipDays(enrollment.GetCourse())
 	}
 	return enrollments, nil
