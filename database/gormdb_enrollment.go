@@ -105,7 +105,7 @@ func (db *GormDB) UpdateSlipDays(usedSlipDays []*qf.UsedSlipDays) error {
 	return nil
 }
 
-// internalUpdateSlipdays updates or creates UsedSlipDays record
+// internalUpdateSlipDays updates or creates UsedSlipDays record
 func (db *GormDB) internalUpdateSlipDays(query *qf.UsedSlipDays) error {
 	return db.conn.Save(query).Error
 }
