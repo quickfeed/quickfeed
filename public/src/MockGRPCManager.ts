@@ -111,8 +111,7 @@ export class MockGrpcManager {
         }
     }
 
-    public async getUser(): Promise<IGrpcResponse<User>> {
-        //await delay(10000)
+    public getUser(): Promise<IGrpcResponse<User>> {
         return this.grpcSend<User>(this.currentUser)
     }
 
