@@ -177,6 +177,16 @@ func (c Claims) Context(ctx context.Context) context.Context {
 	return context.WithValue(ctx, ContextKeyUserID, c.UserID)
 }
 
+func (c *Claims) ClaimsContext(ctx context.Context) context.Context {
+	ctx = c.Context(ctx) // Can be removed if tests are performed "externally" (i.e. with claims cookie in request header).
+	return context.WithValue(ctx, ContextKeyClaims, c)
+}
+
+func ClaimsFromContext(ctx context.Context) (*Claims, bool) {
+	claims, ok := ctx.Value(ContextKeyClaims).(*Claims)
+	return claims, ok
+}
+
 // HasCourseStatus returns true if user has enrollment with given status in the course.
 func (c *Claims) HasCourseStatus(req requestID, status qf.Enrollment_UserStatus) bool {
 	courseID := req.IDFor("course")
