@@ -36,9 +36,6 @@ func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest)
 		enrollments = enrollmentsWithoutGroups
 	}
 
-	for _, enrollment := range enrollments {
-		enrollment.SetSlipDays(enrollment.Course)
-	}
 	return &qf.Enrollments{Enrollments: enrollments}, nil
 }
 
@@ -200,8 +197,6 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionsForCou
 	if err != nil {
 		return nil, err
 	}
-
-	course.SetSlipDays()
 
 	var enrolLinks []*qf.EnrollmentLink
 	switch request.Type {

@@ -32,8 +32,8 @@ var tokenUpdateMethods = map[string]func(string, *auth.TokenManager, userIDs) er
 	"UpdateEnrollments": defaultTokenUpdater, // User enrolled into a new course or promoted to TA.
 
 	"CreateCourse": // The signed in user gets the teacher role in the new course.
-	func(cookies string, tm *auth.TokenManager, _ userIDs) error {
-		claims, err := tm.GetClaims(cookies)
+	func(cookie string, tm *auth.TokenManager, _ userIDs) error {
+		claims, err := tm.GetClaims(cookie)
 		if err != nil {
 			return err
 		}
@@ -62,8 +62,8 @@ func TokenRefresher(tm *auth.TokenManager) connect.Interceptor {
 			method := procedure[strings.LastIndex(procedure, "/")+1:]
 			if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
 				if msg, ok := request.Any().(userIDs); ok {
-					cookies := request.Header().Get(auth.Cookie)
-					if err := tokenUpdateFn(cookies, tm, msg); err != nil {
+					cookie := request.Header().Get(auth.Cookie)
+					if err := tokenUpdateFn(cookie, tm, msg); err != nil {
 						return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): %v", method, err))
 					}
 				} else {

@@ -2,10 +2,16 @@ package auth
 
 import "time"
 
+type contextKey int
+
+const (
+	contextNone contextKey = iota
+	ContextKeyUserID
+)
+
 const (
 	Cookie               = "cookie"
 	CookieName           = "auth"
-	UserKey              = "user"
 	SetCookie            = "Set-Cookie"
 	tokenExpirationTime  = 15 * time.Minute
 	cookieExpirationTime = 24 * time.Hour * 14 // 2 weeks

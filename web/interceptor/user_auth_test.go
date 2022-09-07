@@ -36,11 +36,11 @@ func TestUserVerifier(t *testing.T) {
 	adminUser := qtest.CreateFakeUser(t, db, 1)
 	student := qtest.CreateFakeUser(t, db, 56)
 
-	adminToken, err := tm.NewAuthCookie(adminUser.ID)
+	adminCookie, err := tm.NewAuthCookie(adminUser.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	studentToken, err := tm.NewAuthCookie(student.ID)
+	studentCookie, err := tm.NewAuthCookie(student.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,24 +76,18 @@ func TestUserVerifier(t *testing.T) {
 
 	userTest := []struct {
 		code     connect.Code
-		metadata bool
-		token    string
+		cookie   string
 		wantUser *qf.User
 	}{
-		{code: connect.CodeUnauthenticated, metadata: false, token: "", wantUser: nil},
-		{code: connect.CodeUnauthenticated, metadata: true, token: "should fail", wantUser: nil},
-		{code: 0, metadata: true, token: auth.TokenString(adminToken), wantUser: adminUser},
-		{code: 0, metadata: true, token: auth.TokenString(studentToken), wantUser: student},
+		{code: connect.CodeUnauthenticated, cookie: "", wantUser: nil},
+		{code: connect.CodeUnauthenticated, cookie: "should fail", wantUser: nil},
+		{code: 0, cookie: adminCookie.String(), wantUser: adminUser},
+		{code: 0, cookie: studentCookie.String(), wantUser: student},
 	}
 
 	ctx := context.Background()
 	for _, user := range userTest {
-		req := connect.NewRequest(&qf.Void{})
-		if user.metadata {
-			ctx = context.WithValue(ctx, auth.Cookie, user.token) // skipcq: GO-W5003
-		}
-
-		gotUser, err := client.GetUser(ctx, req)
+		gotUser, err := client.GetUser(ctx, requestWithCookie(&qf.Void{}, user.cookie))
 		if err != nil {
 			// zero codes won't actually reach this check, but that's okay, since zero is CodeOK
 			if gotCode := connect.CodeOf(err); gotCode != user.code {
