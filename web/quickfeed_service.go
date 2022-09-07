@@ -349,7 +349,7 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 }
 
 func (s *QuickFeedService) GetSubmission(ctx context.Context, in *connect.Request[qf.SubmissionReviewersRequest]) (*connect.Response[qf.Submission], error) {
-	submission, err := s.db.GetSubmission(&qf.Submission{ID: in.Msg.GetSubmissionID()})
+	submission, err := s.db.GetLastSubmission(in.Msg.CourseID, &qf.Submission{ID: in.Msg.GetSubmissionID()})
 	if err != nil {
 		s.logger.Errorf("GetSubmission failed: %v", err)
 		return nil, status.Error(codes.NotFound, "failed to get submission")

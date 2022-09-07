@@ -490,3 +490,114 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 		t.Fatal("expected error: record not found")
 	}
 }
+
+func TestGormDBGetLastSubmissions(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	admin := qtest.CreateFakeUser(t, db, 10)
+	c1 := &qf.Course{OrganizationID: 1, Year: 1}
+	c2 := &qf.Course{OrganizationID: 2, Year: 2}
+	qtest.CreateCourse(t, db, admin, c1)
+	qtest.CreateCourse(t, db, admin, c2)
+	// Create some assignments
+	assignment1 := qf.Assignment{
+		Order:    1,
+		CourseID: c1.ID,
+	}
+	if err := db.CreateAssignment(&assignment1); err != nil {
+		t.Fatal(err)
+	}
+	assignment2 := qf.Assignment{
+		Order:    2,
+		CourseID: c1.ID,
+	}
+	if err := db.CreateAssignment(&assignment2); err != nil {
+		t.Fatal(err)
+	}
+	assignment3 := qf.Assignment{
+		Order:    1,
+		CourseID: c2.ID,
+	}
+	if err := db.CreateAssignment(&assignment3); err != nil {
+		t.Fatal(err)
+	}
+
+	// create user and enroll as student
+	user := qtest.CreateFakeUser(t, db, 11)
+	// create a new submission
+	submission := qf.Submission{
+		AssignmentID: assignment1.ID,
+		UserID:       user.ID,
+	}
+	if err := db.CreateSubmission(&submission); err != nil {
+		t.Fatal(err)
+	}
+
+	// create a new submission
+	submission2 := qf.Submission{
+		AssignmentID: assignment2.ID,
+		UserID:       user.ID,
+	}
+	if err := db.CreateSubmission(&submission2); err != nil {
+		t.Fatal(err)
+	}
+
+	// create a new submission
+	submission3 := qf.Submission{
+		AssignmentID: assignment3.ID,
+		UserID:       user.ID,
+	}
+	if err := db.CreateSubmission(&submission3); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name         string
+		courseID     uint64
+		failCourseID uint64
+		want         *qf.Submission
+	}{
+		{
+			name:         "assignment1, course1",
+			courseID:     c1.ID,
+			failCourseID: c2.ID,
+			want:         &submission,
+		},
+		{
+			name:         "assignment2, course1",
+			courseID:     c1.ID,
+			failCourseID: c2.ID,
+			want:         &submission2,
+		},
+		{
+			name:         "assignment3, course2",
+			courseID:     c2.ID,
+			failCourseID: c1.ID,
+			want:         &submission3,
+		},
+	}
+
+	for _, test := range tests {
+		// Test that submission is returned only for the correct course
+		_, err := db.GetLastSubmission(test.failCourseID, &qf.Submission{ID: test.want.ID})
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			t.Errorf("Expected error: %v, got: %v", gorm.ErrRecordNotFound, err)
+		}
+		gotSubmission, err := db.GetLastSubmission(test.courseID, &qf.Submission{ID: test.want.ID})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff(gotSubmission, test.want, protocmp.Transform()); diff != "" {
+			t.Errorf("%s: Expected same submission, but got (-sub +want):\n%s", test.name, diff)
+		}
+	}
+
+	// Test that non existing submission returns an error
+	gotSubmission, err := db.GetLastSubmission(c1.ID, &qf.Submission{ID: 123})
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Errorf("Expected error: %v, got: %v", gorm.ErrRecordNotFound, err)
+	}
+	if gotSubmission != nil {
+		t.Errorf("Expected nil submission, got: %v", gotSubmission)
+	}
+}

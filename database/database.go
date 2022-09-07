@@ -101,6 +101,8 @@ type Database interface {
 	CreateSubmission(*qf.Submission) error
 	// GetSubmission returns a single submission matching the given query.
 	GetSubmission(query *qf.Submission) (*qf.Submission, error)
+	// GetLastSubmission returns the a single submission matching the given course ID and query.
+	GetLastSubmission(courseID uint64, query *qf.Submission) (*qf.Submission, error)
 	// GetLastSubmissions returns a list of submission entries for the given course, matching the given query.
 	GetLastSubmissions(courseID uint64, query *qf.Submission) ([]*qf.Submission, error)
 	// GetSubmissions returns all submissions matching the query.
