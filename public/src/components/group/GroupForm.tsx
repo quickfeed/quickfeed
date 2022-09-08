@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
-import { Enrollment, Group, User } from "../../../proto/qf/types_pb"
+import { Enrollment, Group } from "../../../proto/qf/types_pb"
 import { Converter } from "../../convert"
-import { getCourseID, isApprovedGroup, isHidden, isPending, isStudent, sortByField } from "../../Helpers"
+import { getCourseID, isApprovedGroup, isHidden, isPending, isStudent } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Search from "../Search"
 
@@ -40,7 +40,11 @@ const GroupForm = (): JSX.Element | null => {
 
     const enrollments = Converter.clone(state.courseEnrollments[courseID])
 
-    const sortedEnrollments = sortByField(enrollments, [Enrollment.prototype.getUser], User.prototype.getName) as Enrollment.AsObject[]
+    const sortedAndFilteredEnrollments = enrollments
+        // Filter out enrollments where the user is not a student, or the user is already in a group
+        .filter(enrollment => enrollment.status == Enrollment.UserStatus.STUDENT && enrollment.groupid == 0)
+        // Sort by name
+        .sort((a, b) => (a.user?.name ?? "").localeCompare((b.user?.name ?? "")))
 
     const AvailableUser = ({ enrollment }: { enrollment: Enrollment.AsObject }) => {
         const id = enrollment.userid
@@ -83,7 +87,7 @@ const GroupForm = (): JSX.Element | null => {
                     <Search placeholder={"Search"} setQuery={setQuery} />
 
                     <ul className="list-group list-group-flush">
-                        {sortedEnrollments.map((enrollment, index) => {
+                        {sortedAndFilteredEnrollments.map((enrollment, index) => {
                             return <AvailableUser key={index} enrollment={enrollment} />
                         })}
                     </ul>
