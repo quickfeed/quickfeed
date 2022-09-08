@@ -7,6 +7,7 @@ type contextKey int
 const (
 	contextNone contextKey = iota
 	ContextKeyUserID
+	ContextKeyClaims
 )
 
 const (

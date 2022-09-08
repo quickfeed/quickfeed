@@ -893,8 +893,6 @@ func TestGetGroups(t *testing.T) {
 	admin := users[0]
 
 	// admin will be enrolled as teacher because of course creation below
-	qtest.WithUserContext(context.Background(), admin)
-
 	course := allCourses[1]
 	err := db.CreateCourse(admin.ID, course)
 	if err != nil {

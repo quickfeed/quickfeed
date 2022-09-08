@@ -86,11 +86,10 @@ func AccessControl(tm *auth.TokenManager) connect.Interceptor {
 				return nil, connect.NewError(connect.CodeUnimplemented,
 					fmt.Errorf("%s failed: message type %T does not implement IDFor interface", method, request))
 			}
-			cookie := request.Header().Get(auth.Cookie)
-			claims, err := tm.GetClaims(cookie)
-			if err != nil {
+			claims, ok := auth.ClaimsFromContext(ctx)
+			if !ok {
 				return nil, connect.NewError(connect.CodePermissionDenied,
-					fmt.Errorf("AccessControl(%s): failed to get claims from request context: %w", method, err))
+					fmt.Errorf("AccessControl(%s): failed to get claims from request context", method))
 			}
 			for _, role := range accessRolesFor[method] {
 				switch role {

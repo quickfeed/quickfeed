@@ -16,7 +16,7 @@ type (
 	isGroup interface{ GetGroupID() uint64 }
 )
 
-var defaultTokenUpdater = func(_ string, tm *auth.TokenManager, msg userIDs) error {
+var defaultTokenUpdater = func(_ context.Context, tm *auth.TokenManager, msg userIDs) error {
 	for _, userID := range msg.UserIDs() {
 		if err := tm.Add(userID); err != nil {
 			return err
@@ -26,28 +26,28 @@ var defaultTokenUpdater = func(_ string, tm *auth.TokenManager, msg userIDs) err
 }
 
 // tokenUpdateMethods is a map of methods that require updating the list of users who need a new JWT.
-var tokenUpdateMethods = map[string]func(string, *auth.TokenManager, userIDs) error{
+var tokenUpdateMethods = map[string]func(context.Context, *auth.TokenManager, userIDs) error{
 	"UpdateUser":        defaultTokenUpdater, // User has been promoted to admin or demoted.
 	"UpdateGroup":       defaultTokenUpdater, // Users added to a group or removed from a group.
 	"UpdateEnrollments": defaultTokenUpdater, // User enrolled into a new course or promoted to TA.
 
 	"CreateCourse": // The signed in user gets the teacher role in the new course.
-	func(cookie string, tm *auth.TokenManager, _ userIDs) error {
-		claims, err := tm.GetClaims(cookie)
-		if err != nil {
-			return err
+	func(ctx context.Context, tm *auth.TokenManager, _ userIDs) error {
+		claims, ok := auth.ClaimsFromContext(ctx)
+		if !ok {
+			return fmt.Errorf("CreateCourse: missing claims in context")
 		}
 		return tm.Add(claims.UserID)
 	},
 
 	"DeleteGroup": // Group members removed from the group.
-	func(cookies string, tm *auth.TokenManager, msg userIDs) error {
+	func(ctx context.Context, tm *auth.TokenManager, msg userIDs) error {
 		if grp, ok := msg.(isGroup); ok {
 			group, err := tm.Database().GetGroup(grp.GetGroupID())
 			if err != nil {
 				return err
 			}
-			return defaultTokenUpdater(cookies, tm, group)
+			return defaultTokenUpdater(ctx, tm, group)
 		}
 		return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s):", "DeleteGroup"))
 	},
@@ -62,8 +62,7 @@ func TokenRefresher(tm *auth.TokenManager) connect.Interceptor {
 			method := procedure[strings.LastIndex(procedure, "/")+1:]
 			if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
 				if msg, ok := request.Any().(userIDs); ok {
-					cookie := request.Header().Get(auth.Cookie)
-					if err := tokenUpdateFn(cookie, tm, msg); err != nil {
+					if err := tokenUpdateFn(ctx, tm, msg); err != nil {
 						return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): %v", method, err))
 					}
 				} else {
