@@ -188,7 +188,7 @@ func (s *QuickFeedService) getSubmissions(request *qf.SubmissionRequest) (*qf.Su
 
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
 func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionsForCourseRequest) (*qf.CourseSubmissions, error) {
-	assignments, err := s.db.GetAssignmentsWithSubmissions(request.GetCourseID(), request.Type, request.GetWithBuildInfo())
+	assignments, err := s.db.GetAssignmentsWithSubmissions(request.GetCourseID(), request.Type)
 	if err != nil {
 		return nil, err
 	}

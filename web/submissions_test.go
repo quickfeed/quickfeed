@@ -384,6 +384,9 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	wantSubmission1.BuildInfo = nil
+	wantSubmission2.BuildInfo = nil
+
 	ctx := qtest.WithUserContext(context.Background(), admin)
 	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
 	if err != nil {
@@ -418,9 +421,8 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 
 	// check that all submissions were saved for the correct labs
 	labsForCourse1, err := ags.GetSubmissionsByCourse(ctx, connect.NewRequest(&qf.SubmissionsForCourseRequest{
-		CourseID:      course1.ID,
-		Type:          qf.SubmissionsForCourseRequest_ALL,
-		WithBuildInfo: true,
+		CourseID: course1.ID,
+		Type:     qf.SubmissionsForCourseRequest_ALL,
 	}))
 	if err != nil {
 		t.Fatal(err)
@@ -440,8 +442,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	labsForCourse2, err := ags.GetSubmissionsByCourse(ctx, connect.NewRequest(&qf.SubmissionsForCourseRequest{
-		CourseID:      course2.ID,
-		WithBuildInfo: true,
+		CourseID: course2.ID,
 	}))
 	if err != nil {
 		t.Fatal(err)
@@ -461,23 +462,21 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 
 	// check that buildInformation is not included when not requested
 	labsForCourse3, err := ags.GetSubmissionsByCourse(ctx, connect.NewRequest(&qf.SubmissionsForCourseRequest{
-		CourseID:      course1.ID,
-		WithBuildInfo: false,
+		CourseID: course1.ID,
 	}))
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, labLink := range labsForCourse3.Msg.GetLinks() {
 		for _, submission := range labLink.GetSubmissions() {
-			if submission.Submission.GetBuildInfo().GetBuildLog() != "" {
-				t.Errorf("Expected build log: \"\", got %+v", submission.GetSubmission().GetBuildInfo().GetBuildLog())
+			if submission.Submission.GetBuildInfo() != nil {
+				t.Errorf("Expected build info to be nil, got %+v", submission.GetSubmission().GetBuildInfo())
 			}
 		}
 	}
 
 	labsForCourse4, err := ags.GetSubmissionsByCourse(ctx, connect.NewRequest(&qf.SubmissionsForCourseRequest{
-		CourseID:      course2.ID,
-		WithBuildInfo: true,
+		CourseID: course2.ID,
 	}))
 	if err != nil {
 		t.Fatal(err)
@@ -485,8 +484,8 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	for _, labLink := range labsForCourse4.Msg.GetLinks() {
 		for _, submission := range labLink.GetSubmissions() {
 			if submission.GetSubmission() != nil {
-				if submission.GetSubmission().GetBuildInfo().GetBuildLog() != "runtime error" {
-					t.Errorf("Expected build log: \"runtime error\", got %+v", submission.GetSubmission().GetBuildInfo().GetBuildLog())
+				if submission.GetSubmission().GetBuildInfo() != nil {
+					t.Errorf("Expected build info to be nil, got %+v", submission.GetSubmission().GetBuildInfo())
 				}
 			}
 		}

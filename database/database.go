@@ -101,12 +101,14 @@ type Database interface {
 	CreateSubmission(*qf.Submission) error
 	// GetSubmission returns a single submission matching the given query.
 	GetSubmission(query *qf.Submission) (*qf.Submission, error)
+	// GetLastSubmission returns the a single submission matching the given course ID and query.
+	GetLastSubmission(courseID uint64, query *qf.Submission) (*qf.Submission, error)
 	// GetLastSubmissions returns a list of submission entries for the given course, matching the given query.
 	GetLastSubmissions(courseID uint64, query *qf.Submission) ([]*qf.Submission, error)
 	// GetSubmissions returns all submissions matching the query.
 	GetSubmissions(*qf.Submission) ([]*qf.Submission, error)
 	// GetAssignmentsWithSubmissions returns a list of assignments with the latest submissions for the given course.
-	GetAssignmentsWithSubmissions(courseID uint64, requestType qf.SubmissionsForCourseRequest_Type, withBuildInfo bool) ([]*qf.Assignment, error)
+	GetAssignmentsWithSubmissions(courseID uint64, requestType qf.SubmissionsForCourseRequest_Type) ([]*qf.Assignment, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(*qf.Submission) error
 	// UpdateSubmissions releases and/or approves all submissions with a certain score

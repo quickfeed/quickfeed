@@ -62,6 +62,7 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 		"GetUsers":                true,
 		"GetOrganization":         true,
 		"CreateCourse":            true,
+		"GetSubmission":           true,
 	}
 	if err := checkAccessControlMethods(serviceMethods); err != nil {
 		t.Error(err)

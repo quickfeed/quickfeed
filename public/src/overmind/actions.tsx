@@ -449,8 +449,8 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
     state.isLoading = true
 
     // None of these should fail independently.
-    const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL, true)
-    const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.GROUP, true)
+    const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL)
+    const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.GROUP)
     if (!success(result) || !success(groups)) {
         const failed = !success(result) ? result : groups
         actions.alertHandler(failed)
@@ -524,16 +524,39 @@ export const setActiveAssignment = ({ state }: Context, assignmentID: number): v
     state.activeAssignment = assignmentID
 }
 
+export const getSubmission = async ({ state, effects }: Context, { courseID, submissionID }: { courseID: number, submissionID: number }): Promise<void> => {
+    const response = await effects.grpcMan.getSubmission(courseID, submissionID)
+    if (!response.data || !success(response)) {
+        return
+    }
+    const submissions = state.groupView ? state.courseGroupSubmissions[courseID] : state.courseSubmissions[courseID]
+    if (!submissions) {
+        return
+    }
+    submissions.forEach(link => {
+        const sub = link.submissions?.find(submission => submission.submission?.id === submissionID)
+        if (sub?.submission && response.data) {
+            sub.submission = response.data.toObject()
+            if (state.activeSubmissionLink) {
+                state.activeSubmissionLink.submission = response.data?.toObject()
+            }
+        }
+    })
+}
+
 /** Rebuilds the currently active submission */
-export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<void> => {
+export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<boolean> => {
     if (state.currentSubmission && state.selectedAssignment && state.activeCourse) {
         const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.id, state.activeSubmission, state.activeCourse)
         if (success(response)) {
             // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
             // TODO: gRPC streaming should be implemented to send the updated submission to the client.
+            await actions.getSubmission({ courseID: state.activeCourse, submissionID: state.activeSubmission })
             actions.alert({ color: Color.GREEN, text: 'Submission rebuilt successfully' })
+            return true
         }
     }
+    return false
 }
 
 /* rebuildAllSubmissions rebuilds all submissions for a given assignment */
@@ -667,7 +690,18 @@ export const deleteBenchmark = async ({ actions, effects }: Context, { benchmark
     }
 }
 
-export const setActiveSubmissionLink = ({ state }: Context, link: SubmissionLink.AsObject): void => {
+export const refreshSubmission = async ({ effects }: Context, { link }: { link: SubmissionLink.AsObject }): Promise<SubmissionLink.AsObject> => {
+    if (link.submission && link.assignment) {
+        const response = await effects.grpcMan.getSubmission(link.assignment.courseid, link.submission.id)
+        if (success(response) && response.data) {
+            link.submission = response.data.toObject()
+        }
+    }
+    return link
+}
+
+export const setActiveSubmissionLink = async ({ state, actions }: Context, link: SubmissionLink.AsObject): Promise<void> => {
+    link = await actions.refreshSubmission({ link })
     state.activeSubmissionLink = link ? Converter.clone(link) : null
 }
 

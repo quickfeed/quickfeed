@@ -127,6 +127,22 @@ func (db *GormDB) GetSubmission(query *qf.Submission) (*qf.Submission, error) {
 	return &submission, nil
 }
 
+// GetLastSubmission returns the last submission for the given submission query and course ID.
+// If no assignment matches the found submission's assignment ID and provided course ID, an error is returned.
+func (db *GormDB) GetLastSubmission(courseID uint64, query *qf.Submission) (*qf.Submission, error) {
+	submission, err := db.GetSubmission(query)
+	if err != nil {
+		return nil, err
+	}
+	var assignment qf.Assignment
+	if err := db.conn.Model(&qf.Assignment{}).Where(
+		&qf.Assignment{ID: submission.AssignmentID, CourseID: courseID},
+	).First(&assignment).Error; err != nil {
+		return nil, err
+	}
+	return submission, nil
+}
+
 // GetLastSubmissions returns all submissions for the active assignment for the given course.
 // The query may specify both UserID and GroupID to fetch both user and group submissions.
 func (db *GormDB) GetLastSubmissions(courseID uint64, query *qf.Submission) ([]*qf.Submission, error) {
