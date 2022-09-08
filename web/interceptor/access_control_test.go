@@ -21,13 +21,13 @@ import (
 )
 
 type accessTests []struct {
-	name     string
-	cookie   string
-	userID   uint64
-	courseID uint64
-	groupID  uint64
-	access   bool
-	wantCode connect.Code
+	name       string
+	cookie     string
+	userID     uint64
+	courseID   uint64
+	groupID    uint64
+	wantAccess bool
+	wantCode   connect.Code
 }
 
 func TestAccessControl(t *testing.T) {
@@ -136,11 +136,11 @@ func TestAccessControl(t *testing.T) {
 	for _, tt := range freeAccessTest {
 		t.Run("UnrestrictedAccess/"+tt.name, func(t *testing.T) {
 			_, err := client.GetUser(ctx, requestWithCookie(&qf.Void{}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetUser", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetUser", tt.wantCode)
 			_, err = client.GetCourse(ctx, requestWithCookie(&qf.CourseRequest{CourseID: tt.courseID}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetCourse", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetCourse", tt.wantCode)
 			_, err = client.GetCourses(ctx, requestWithCookie(&qf.Void{}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetCourses", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetCourses", tt.wantCode)
 		})
 	}
 
@@ -158,17 +158,17 @@ func TestAccessControl(t *testing.T) {
 				UserID: tt.userID,
 			}
 			_, err := client.CreateEnrollment(ctx, requestWithCookie(enrol, tt.cookie))
-			checkAccess(t, err, tt.access, "CreateEnrollment", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "CreateEnrollment", tt.wantCode)
 			_, err = client.UpdateCourseVisibility(ctx, requestWithCookie(enrol, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateCourseVisibility", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateCourseVisibility", tt.wantCode)
 			_, err = client.GetCoursesByUser(ctx, requestWithCookie(enrolRequest, tt.cookie))
-			checkAccess(t, err, tt.access, "GetCoursesByUser", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetCoursesByUser", tt.wantCode)
 			_, err = client.UpdateUser(ctx, requestWithCookie(&qf.User{ID: tt.userID}, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateUser", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateUser", tt.wantCode)
 			_, err = client.GetEnrollmentsByUser(ctx, requestWithCookie(enrolRequest, tt.cookie))
-			checkAccess(t, err, tt.access, "GetEnrollmentsByCourse", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetEnrollmentsByCourse", tt.wantCode)
 			_, err = client.UpdateUser(ctx, requestWithCookie(&qf.User{ID: tt.userID}, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateUser", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateUser", tt.wantCode)
 		})
 	}
 
@@ -185,19 +185,19 @@ func TestAccessControl(t *testing.T) {
 				UserID:   tt.userID,
 				CourseID: tt.courseID,
 			}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetSubmissions", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetSubmissions", tt.wantCode)
 			_, err = client.GetAssignments(ctx, requestWithCookie(&qf.CourseRequest{CourseID: tt.courseID}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetAssignments", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetAssignments", tt.wantCode)
 			_, err = client.GetEnrollmentsByCourse(ctx, requestWithCookie(&qf.EnrollmentRequest{CourseID: tt.courseID}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetEnrollmentsByCourse", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetEnrollmentsByCourse", tt.wantCode)
 			_, err = client.GetRepositories(ctx, requestWithCookie(&qf.URLRequest{CourseID: tt.courseID}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetRepositories", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetRepositories", tt.wantCode)
 			_, err = client.GetGroupByUserAndCourse(ctx, requestWithCookie(&qf.GroupRequest{
 				CourseID: tt.courseID,
 				UserID:   tt.userID,
 				GroupID:  0,
 			}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetGroupByUserAndCourse", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetGroupByUserAndCourse", tt.wantCode)
 		})
 	}
 
@@ -209,7 +209,7 @@ func TestAccessControl(t *testing.T) {
 	for _, tt := range groupAccessTests {
 		t.Run("GroupAccess/"+tt.name, func(t *testing.T) {
 			_, err := client.GetGroup(ctx, requestWithCookie(&qf.GetGroupRequest{GroupID: tt.groupID}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetGroup", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetGroup", tt.wantCode)
 		})
 	}
 
@@ -221,44 +221,44 @@ func TestAccessControl(t *testing.T) {
 	for _, tt := range teacherAccessTests {
 		t.Run("TeacherAccess/"+tt.name, func(t *testing.T) {
 			_, err := client.GetGroup(ctx, requestWithCookie(&qf.GetGroupRequest{GroupID: tt.groupID}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetGroup", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetGroup", tt.wantCode)
 			_, err = client.DeleteGroup(ctx, requestWithCookie(&qf.GroupRequest{
 				GroupID:  tt.groupID,
 				CourseID: tt.courseID,
 				UserID:   tt.userID,
 			}, tt.cookie))
-			checkAccess(t, err, tt.access, "DeleteGroup", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "DeleteGroup", tt.wantCode)
 			_, err = client.UpdateGroup(ctx, requestWithCookie(&qf.Group{CourseID: tt.courseID}, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateGroup", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateGroup", tt.wantCode)
 			_, err = client.UpdateCourse(ctx, requestWithCookie(course, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateCourse", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateCourse", tt.wantCode)
 			_, err = client.UpdateEnrollments(ctx, requestWithCookie(&qf.Enrollments{
 				Enrollments: []*qf.Enrollment{{ID: 1, CourseID: tt.courseID}},
 			}, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateEnrollments", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateEnrollments", tt.wantCode)
 			_, err = client.UpdateAssignments(ctx, requestWithCookie(&qf.CourseRequest{CourseID: tt.courseID}, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateAssignments", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateAssignments", tt.wantCode)
 			_, err = client.UpdateSubmission(ctx, requestWithCookie(&qf.UpdateSubmissionRequest{SubmissionID: 1, CourseID: tt.courseID}, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateSubmission", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateSubmission", tt.wantCode)
 			_, err = client.UpdateSubmissions(ctx, requestWithCookie(&qf.UpdateSubmissionsRequest{AssignmentID: 1, CourseID: tt.courseID}, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateSubmissions", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateSubmissions", tt.wantCode)
 			_, err = client.RebuildSubmissions(ctx, requestWithCookie(&qf.RebuildRequest{
 				AssignmentID: 1,
 				CourseID:     tt.courseID,
 			}, tt.cookie))
-			checkAccess(t, err, tt.access, "RebuildSubmissions", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "RebuildSubmissions", tt.wantCode)
 			_, err = client.CreateBenchmark(ctx, requestWithCookie(&qf.GradingBenchmark{CourseID: tt.courseID, AssignmentID: 1}, tt.cookie))
-			checkAccess(t, err, tt.access, "CreateBenchmark", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "CreateBenchmark", tt.wantCode)
 			_, err = client.UpdateBenchmark(ctx, requestWithCookie(&qf.GradingBenchmark{CourseID: tt.courseID, AssignmentID: 1}, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateBenchmark", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateBenchmark", tt.wantCode)
 			_, err = client.DeleteBenchmark(ctx, requestWithCookie(&qf.GradingBenchmark{CourseID: tt.courseID, AssignmentID: 1}, tt.cookie))
-			checkAccess(t, err, tt.access, "DeleteBenchmark", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "DeleteBenchmark", tt.wantCode)
 			_, err = client.CreateCriterion(ctx, requestWithCookie(&qf.GradingCriterion{CourseID: tt.courseID, BenchmarkID: 1}, tt.cookie))
-			checkAccess(t, err, tt.access, "CreateCriterion", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "CreateCriterion", tt.wantCode)
 			_, err = client.UpdateCriterion(ctx, requestWithCookie(&qf.GradingCriterion{CourseID: tt.courseID, BenchmarkID: 1}, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateCriterion", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateCriterion", tt.wantCode)
 			_, err = client.DeleteCriterion(ctx, requestWithCookie(&qf.GradingCriterion{CourseID: tt.courseID, BenchmarkID: 1}, tt.cookie))
-			checkAccess(t, err, tt.access, "DeleteCriterion", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "DeleteCriterion", tt.wantCode)
 			_, err = client.CreateReview(ctx, requestWithCookie(&qf.ReviewRequest{
 				CourseID: tt.courseID,
 				Review: &qf.Review{
@@ -266,7 +266,7 @@ func TestAccessControl(t *testing.T) {
 					ReviewerID:   1,
 				},
 			}, tt.cookie))
-			checkAccess(t, err, tt.access, "CreateReview", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "CreateReview", tt.wantCode)
 			_, err = client.UpdateReview(ctx, requestWithCookie(&qf.ReviewRequest{
 				CourseID: tt.courseID,
 				Review: &qf.Review{
@@ -274,14 +274,14 @@ func TestAccessControl(t *testing.T) {
 					ReviewerID:   1,
 				},
 			}, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateReview", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateReview", tt.wantCode)
 			_, err = client.GetReviewers(ctx, requestWithCookie(&qf.SubmissionReviewersRequest{
 				CourseID:     tt.courseID,
 				SubmissionID: 1,
 			}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetReviewers", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetReviewers", tt.wantCode)
 			_, err = client.IsEmptyRepo(ctx, requestWithCookie(&qf.RepositoryRequest{CourseID: tt.courseID}, tt.cookie))
-			checkAccess(t, err, tt.access, "IsEmptyRepo", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "IsEmptyRepo", tt.wantCode)
 		})
 	}
 
@@ -293,7 +293,7 @@ func TestAccessControl(t *testing.T) {
 			_, err = client.GetSubmissionsByCourse(ctx, requestWithCookie(&qf.SubmissionsForCourseRequest{
 				CourseID: tt.courseID,
 			}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetSubmissionsByCourse", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetSubmissionsByCourse", tt.wantCode)
 		})
 	}
 
@@ -306,30 +306,30 @@ func TestAccessControl(t *testing.T) {
 	for _, tt := range adminAccessTests {
 		t.Run("AdminAccess/"+tt.name, func(t *testing.T) {
 			_, err := client.UpdateUser(ctx, requestWithCookie(&qf.User{ID: tt.userID}, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateUser", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateUser", tt.wantCode)
 			_, err = client.GetEnrollmentsByUser(ctx, requestWithCookie(&qf.EnrollmentStatusRequest{UserID: tt.userID}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetEnrollmentsByUser", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetEnrollmentsByUser", tt.wantCode)
 			_, err = client.GetUsers(ctx, requestWithCookie(&qf.Void{}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetUsers", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetUsers", tt.wantCode)
 			_, err = client.GetOrganization(ctx, requestWithCookie(&qf.OrgRequest{OrgName: "testorg"}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetOrganization", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetOrganization", tt.wantCode)
 			_, err = client.CreateCourse(ctx, requestWithCookie(course, tt.cookie))
-			checkAccess(t, err, tt.access, "CreateCourse", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "CreateCourse", tt.wantCode)
 			_, err = client.GetUserByCourse(ctx, requestWithCookie(&qf.CourseUserRequest{
 				CourseCode: course.Code,
 				CourseYear: course.Year,
 				UserLogin:  "student",
 			}, tt.cookie))
-			checkAccess(t, err, tt.access, "GetUserByCourse", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "GetUserByCourse", tt.wantCode)
 		})
 	}
 
 	createGroupTests := []struct {
-		name     string
-		cookie   string
-		group    *qf.Group
-		access   bool
-		wantCode connect.Code
+		name       string
+		cookie     string
+		group      *qf.Group
+		wantAccess bool
+		wantCode   connect.Code
 	}{
 		{"valid student, not in the request group", studentCookie, &qf.Group{
 			CourseID: course.ID,
@@ -351,16 +351,16 @@ func TestAccessControl(t *testing.T) {
 	for _, tt := range createGroupTests {
 		t.Run("CreateGroupAccess/"+tt.name, func(t *testing.T) {
 			_, err := client.CreateGroup(ctx, requestWithCookie(tt.group, tt.cookie))
-			checkAccess(t, err, tt.access, "CreateGroup", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "CreateGroup", tt.wantCode)
 		})
 	}
 
 	adminStatusChangeTests := []struct {
-		name     string
-		cookie   string
-		user     *qf.User
-		access   bool
-		wantCode connect.Code
+		name       string
+		cookie     string
+		user       *qf.User
+		wantAccess bool
+		wantCode   connect.Code
 	}{
 		{"admin demoting a user", courseAdminCookie, &qf.User{
 			ID:      admin.ID,
@@ -387,7 +387,7 @@ func TestAccessControl(t *testing.T) {
 	for _, tt := range adminStatusChangeTests {
 		t.Run("AdminStatusChange/"+tt.name, func(t *testing.T) {
 			_, err := client.UpdateUser(ctx, requestWithCookie(tt.user, tt.cookie))
-			checkAccess(t, err, tt.access, "UpdateUser", tt.wantCode)
+			checkAccess(t, err, tt.wantAccess, "UpdateUser", tt.wantCode)
 		})
 	}
 
