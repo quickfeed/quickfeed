@@ -178,7 +178,7 @@ func (c Claims) Context(ctx context.Context) context.Context {
 }
 
 func (c *Claims) ClaimsContext(ctx context.Context) context.Context {
-	ctx = c.Context(ctx) // Can be removed if tests are performed "externally" (i.e. with claims cookie in request header).
+	ctx = c.Context(ctx) // Can be removed if tests are rewritten to be performed as gRPC calls with claims cookie in the request header.
 	return context.WithValue(ctx, ContextKeyClaims, c)
 }
 
