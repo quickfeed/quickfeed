@@ -491,6 +491,9 @@ func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 	}
 }
 
+// TestGormDBGetLastSubmission tests that the GetLastSubmission function returns the correct submission
+// GetLastSubmission should return an error if the provided course ID is not related to the submission
+// or if the submission does not exist.
 func TestGormDBGetLastSubmissions(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()

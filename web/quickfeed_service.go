@@ -348,6 +348,8 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 	return &connect.Response[qf.Void]{}, nil
 }
 
+// GetSubmission returns a fully populated submission matching the given submission ID if it exists for the given course ID.
+// Used in the frontend to fetch a full submission for a given submission ID and course ID.
 func (s *QuickFeedService) GetSubmission(_ context.Context, in *connect.Request[qf.SubmissionReviewersRequest]) (*connect.Response[qf.Submission], error) {
 	submission, err := s.db.GetLastSubmission(in.Msg.CourseID, &qf.Submission{ID: in.Msg.GetSubmissionID()})
 	if err != nil {
