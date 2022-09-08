@@ -1,5 +1,6 @@
 const webpack = require("webpack")
 const HtmlWebpackPlugin = require("html-webpack-plugin")
+const Dotenv = require('dotenv-webpack');
 
 module.exports = {
     entry: {
@@ -65,9 +66,7 @@ module.exports = {
         new webpack.ProvidePlugin({
             process: 'process/browser'
         }),
-        new webpack.DefinePlugin({
-            'process.env.ASSET_PATH': JSON.stringify("static"),
-        }),
+        new Dotenv(),
         new HtmlWebpackPlugin({
             // This plugin will generate a HTML file that includes all the webpack bundles.
             // The file will be placed in the dist folder.
