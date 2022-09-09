@@ -117,8 +117,8 @@ func (m *manifest) conversion() http.HandlerFunc {
 			return
 		}
 
-		// Print success message
-		fmt.Fprintf(w, "Successfully created app")
+		// Print success message, and redirect to main page
+		success(w)
 	}
 }
 
@@ -127,6 +127,21 @@ func createApp() http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		form(w)
 	}
+}
+
+func success(w http.ResponseWriter) {
+	const tpl = `
+		<html>
+			Successfully created app.
+		</html>
+
+		<script>
+			setTimeout(function() {
+				window.location.href = "/";
+			}, 5000);
+		</script>
+	`
+	fmt.Fprint(w, tpl)
 }
 
 func form(w http.ResponseWriter) {
