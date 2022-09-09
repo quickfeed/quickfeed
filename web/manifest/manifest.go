@@ -108,7 +108,7 @@ func (m *manifest) conversion() http.HandlerFunc {
 			clientID:     *config.ClientID,
 			clientSecret: *config.ClientSecret,
 		}
-		env.Save("", envToUpdate)
+		env.Save(".env", envToUpdate)
 
 		// Refresh environment variables
 		if err := env.Load(""); err != nil {
