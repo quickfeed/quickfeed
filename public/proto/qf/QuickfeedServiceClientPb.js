@@ -83,6 +83,9 @@ var QuickFeedServiceClient = /** @class */ (function () {
         this.methodDescriptorGetSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmissions', grpcWeb.MethodType.UNARY, qf_requests_pb.SubmissionRequest, qf_types_pb.Submissions, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Submissions.deserializeBinary);
+        this.methodDescriptorGetSubmission = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmission', grpcWeb.MethodType.UNARY, qf_requests_pb.SubmissionReviewersRequest, qf_types_pb.Submission, function (request) {
+            return request.serializeBinary();
+        }, qf_types_pb.Submission.deserializeBinary);
         this.methodDescriptorGetSubmissionsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmissionsByCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.SubmissionsForCourseRequest, qf_requests_pb.CourseSubmissions, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.CourseSubmissions.deserializeBinary);
@@ -324,6 +327,14 @@ var QuickFeedServiceClient = /** @class */ (function () {
         }
         return this.client_.unaryCall(this.hostname_ +
             '/qf.QuickFeedService/GetSubmissions', request, metadata || {}, this.methodDescriptorGetSubmissions);
+    };
+    QuickFeedServiceClient.prototype.getSubmission = function (request, metadata, callback) {
+        if (callback !== undefined) {
+            return this.client_.rpcCall(this.hostname_ +
+                '/qf.QuickFeedService/GetSubmission', request, metadata || {}, this.methodDescriptorGetSubmission, callback);
+        }
+        return this.client_.unaryCall(this.hostname_ +
+            '/qf.QuickFeedService/GetSubmission', request, metadata || {}, this.methodDescriptorGetSubmission);
     };
     QuickFeedServiceClient.prototype.getSubmissionsByCourse = function (request, metadata, callback) {
         if (callback !== undefined) {

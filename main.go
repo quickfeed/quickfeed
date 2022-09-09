@@ -74,7 +74,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Can't initialize logger: %v", err)
 	}
-	defer logger.Sync()
+	defer func() { _ = logger.Sync() }()
 
 	db, err := database.NewGormDB(*dbFile, logger)
 	if err != nil {

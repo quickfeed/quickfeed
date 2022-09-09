@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -159,7 +160,7 @@ func (tm *TokenManager) validateSignature(token *jwt.Token) error {
 	return token.Method.Verify(signingString, token.Signature, []byte(tm.secret))
 }
 
-// extractToken extracts a JWT authentication token from metadata.
+// extractToken returns a JWT authentication token extracted from the request header's cookie.
 func extractToken(cookieString string) (string, error) {
 	cookies := strings.Split(cookieString, ";")
 	for _, cookie := range cookies {
@@ -168,7 +169,22 @@ func extractToken(cookieString string) (string, error) {
 			return strings.TrimSpace(cookieValue), nil
 		}
 	}
-	return "", errors.New("failed to get authentication cookie from metadata")
+	return "", errors.New("failed to extract authentication cookie from request header")
+}
+
+// Context returns the given context augmented with the claims' user ID.
+func (c Claims) Context(ctx context.Context) context.Context {
+	return context.WithValue(ctx, ContextKeyUserID, c.UserID)
+}
+
+func (c *Claims) ClaimsContext(ctx context.Context) context.Context {
+	ctx = c.Context(ctx) // Can be removed if tests are rewritten to be performed as gRPC calls with claims cookie in the request header.
+	return context.WithValue(ctx, ContextKeyClaims, c)
+}
+
+func ClaimsFromContext(ctx context.Context) (*Claims, bool) {
+	claims, ok := ctx.Value(ContextKeyClaims).(*Claims)
+	return claims, ok
 }
 
 // HasCourseStatus returns true if user has enrollment with given status in the course.

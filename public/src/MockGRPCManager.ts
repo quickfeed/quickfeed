@@ -111,8 +111,7 @@ export class MockGrpcManager {
         }
     }
 
-    public async getUser(): Promise<IGrpcResponse<User>> {
-        //await delay(10000)
+    public getUser(): Promise<IGrpcResponse<User>> {
         return this.grpcSend<User>(this.currentUser)
     }
 
@@ -456,6 +455,18 @@ export class MockGrpcManager {
         return this.grpcSend<Submissions>(submissions)
     }
 
+    public getSubmission(courseID: number, submissionID: number): Promise<IGrpcResponse<Submission>> {
+        const enrollment = this.enrollments.getEnrollmentsList().find(enrollment => 
+            enrollment.getCourseid() === courseID && 
+            enrollment.getUserid() === this.currentUser?.getId()
+        )
+        if (!enrollment) {
+            return this.grpcSend<Submission>(null, new Status().setCode(StatusCode.NOT_FOUND))
+        }
+        const submission = this.submissions.getSubmissionsList().find(s => s.getId() === submissionID)
+        return this.grpcSend<Submission>(submission)
+    }
+
     public getSubmissions(courseID: number, userID: number): Promise<IGrpcResponse<Submissions>> {
         // Get all assignment IDs
         const assignmentIDs = this.assignments.getAssignmentsList().filter(a => a.getCourseid() === courseID && !a.getIsgrouplab()).map(a => a.getId())
@@ -476,7 +487,7 @@ export class MockGrpcManager {
         return this.grpcSend<Submissions>(new Submissions().setSubmissionsList(submissions))
     }
 
-    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IGrpcResponse<CourseSubmissions>> {
+    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
         // TODO: Remove `.clone()` when done migrating to AsObject in state
         const users = this.users.getUsersList()
         const groups = this.groups.getGroupsList()
@@ -520,10 +531,6 @@ export class MockGrpcManager {
                 if (!submission) {
                     subs.push(subLink)
                     return
-                }
-
-                if (withBuildInfo) {
-                    // TODO
                 }
 
                 subLink.setSubmission(submission.clone())

@@ -36,9 +36,6 @@ func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest)
 		enrollments = enrollmentsWithoutGroups
 	}
 
-	for _, enrollment := range enrollments {
-		enrollment.SetSlipDays(enrollment.Course)
-	}
 	return &qf.Enrollments{Enrollments: enrollments}, nil
 }
 
@@ -191,7 +188,7 @@ func (s *QuickFeedService) getSubmissions(request *qf.SubmissionRequest) (*qf.Su
 
 // getAllCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
 func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionsForCourseRequest) (*qf.CourseSubmissions, error) {
-	assignments, err := s.db.GetAssignmentsWithSubmissions(request.GetCourseID(), request.Type, request.GetWithBuildInfo())
+	assignments, err := s.db.GetAssignmentsWithSubmissions(request.GetCourseID(), request.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -200,8 +197,6 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionsForCou
 	if err != nil {
 		return nil, err
 	}
-
-	course.SetSlipDays()
 
 	var enrolLinks []*qf.EnrollmentLink
 	switch request.Type {

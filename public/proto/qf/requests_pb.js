@@ -4178,8 +4178,7 @@ proto.qf.SubmissionsForCourseRequest.prototype.toObject = function(opt_includeIn
 proto.qf.SubmissionsForCourseRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     courseid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    type: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    withbuildinfo: jspb.Message.getBooleanFieldWithDefault(msg, 3, false)
+    type: jspb.Message.getFieldWithDefault(msg, 2, 0)
   };
 
   if (includeInstance) {
@@ -4224,10 +4223,6 @@ proto.qf.SubmissionsForCourseRequest.deserializeBinaryFromReader = function(msg,
       var value = /** @type {!proto.qf.SubmissionsForCourseRequest.Type} */ (reader.readEnum());
       msg.setType(value);
       break;
-    case 3:
-      var value = /** @type {boolean} */ (reader.readBool());
-      msg.setWithbuildinfo(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -4268,13 +4263,6 @@ proto.qf.SubmissionsForCourseRequest.serializeBinaryToWriter = function(message,
   if (f !== 0.0) {
     writer.writeEnum(
       2,
-      f
-    );
-  }
-  f = message.getWithbuildinfo();
-  if (f) {
-    writer.writeBool(
-      3,
       f
     );
   }
@@ -4323,24 +4311,6 @@ proto.qf.SubmissionsForCourseRequest.prototype.getType = function() {
  */
 proto.qf.SubmissionsForCourseRequest.prototype.setType = function(value) {
   return jspb.Message.setProto3EnumField(this, 2, value);
-};
-
-
-/**
- * optional bool withBuildInfo = 3;
- * @return {boolean}
- */
-proto.qf.SubmissionsForCourseRequest.prototype.getWithbuildinfo = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
-};
-
-
-/**
- * @param {boolean} value
- * @return {!proto.qf.SubmissionsForCourseRequest} returns this
- */
-proto.qf.SubmissionsForCourseRequest.prototype.setWithbuildinfo = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 3, value);
 };
 
 

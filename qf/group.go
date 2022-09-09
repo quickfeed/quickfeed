@@ -26,13 +26,6 @@ func (g *Group) ContainsAll(group *Group) bool {
 	return reflect.DeepEqual(g.Users, group.Users)
 }
 
-// SetSlipDays sets number of remaining slip days for each enrollment
-func (g *Group) SetSlipDays(c *Course) {
-	for _, e := range g.Enrollments {
-		e.SetSlipDays(c)
-	}
-}
-
 // GetUsersExcept returns a list of all users in a group, except the one with the given userID.
 func (g *Group) GetUsersExcept(userID uint64) []*User {
 	subset := []*User{}

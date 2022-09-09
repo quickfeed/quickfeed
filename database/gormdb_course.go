@@ -76,6 +76,17 @@ func (db *GormDB) GetCourse(courseID uint64, withEnrollments bool) (*qf.Course, 
 			First(&course, courseID).Error; err != nil {
 			return nil, err
 		}
+
+		// Set number of remaining slip days for each course enrollment
+		for _, e := range course.Enrollments {
+			e.SetSlipDays(&course)
+		}
+		for _, g := range course.Groups {
+			// Set number of remaining slip days for each group enrollment
+			for _, e := range g.Enrollments {
+				e.SetSlipDays(&course)
+			}
+		}
 	} else {
 		if err := m.First(&course, courseID).Error; err != nil {
 			return nil, err

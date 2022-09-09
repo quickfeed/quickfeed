@@ -7,10 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"testing"
 
-	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
@@ -18,7 +16,6 @@ import (
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"google.golang.org/grpc/metadata"
 )
 
 // TestDB returns a test database and close function.
@@ -188,17 +185,10 @@ func RandomString(t *testing.T) string {
 	return fmt.Sprintf("%x", sha256.Sum256(randomness))[:6]
 }
 
-// WithUserContext is a test helper function to create metadata for the
-// given user mimicking the context coming from the browser.
+// WithUserContext returns the context augmented with the given user's ID.
+// This aims to mimic the claims.Context() method.
 func WithUserContext(ctx context.Context, user *qf.User) context.Context {
-	userID := strconv.Itoa(int(user.GetID()))
-	meta := metadata.New(map[string]string{"user": userID})
-	return metadata.NewIncomingContext(ctx, meta)
-}
-
-// WithAuthCookie returns context containing an authentication cookie with JWT.
-func WithAuthCookie(ctx context.Context, cookie *http.Cookie) context.Context {
-	return context.WithValue(ctx, auth.Cookie, auth.TokenString(cookie)) // skipcq: GO-W5003
+	return context.WithValue(ctx, auth.ContextKeyUserID, user.GetID())
 }
 
 // AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
@@ -246,7 +236,9 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 	}
 	course.OrganizationID = org.GetID()
 	admin := CreateAdminUser(t, db, course.GetProvider())
-	db.UpdateUser(admin)
+	if err = db.UpdateUser(admin); err != nil {
+		return err
+	}
 	CreateCourse(t, db, admin, course)
 
 	repos, err := sc.GetRepositories(ctx, org)
@@ -295,16 +287,5 @@ func QuickFeedClient(url string) qfconnect.QuickFeedServiceClient {
 	if serverUrl == "" {
 		serverUrl = "http://127.0.0.1:8081"
 	}
-	interceptors := connect.WithInterceptors(requestInterceptor())
-	return qfconnect.NewQuickFeedServiceClient(http.DefaultClient, serverUrl, interceptors)
-}
-
-func requestInterceptor() connect.Interceptor {
-	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
-		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
-			token, _ := ctx.Value(auth.Cookie).(string)
-			request.Header().Set(auth.Cookie, token)
-			return next(ctx, request)
-		})
-	})
+	return qfconnect.NewQuickFeedServiceClient(http.DefaultClient, serverUrl)
 }

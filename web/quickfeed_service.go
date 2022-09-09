@@ -42,15 +42,10 @@ func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Mana
 // GetUser will return current user with active course enrollments
 // to use in separating teacher and admin roles
 func (s *QuickFeedService) GetUser(ctx context.Context, _ *connect.Request[qf.Void]) (*connect.Response[qf.User], error) {
-	usr, err := s.getCurrentUser(ctx)
+	userInfo, err := s.db.GetUserWithEnrollments(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("GetUser failed: authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
-	}
-	userInfo, err := s.db.GetUserWithEnrollments(usr.GetID())
-	if err != nil {
-		s.logger.Errorf("GetUser failed to get user with enrollments: %v ", err)
-		return nil, ErrInvalidUserInfo
+		s.logger.Errorf("GetUser(%d) failed: %v", userID(ctx), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
 	return connect.NewResponse(userInfo), nil
 }
@@ -61,7 +56,7 @@ func (s *QuickFeedService) GetUsers(_ context.Context, _ *connect.Request[qf.Voi
 	users, err := s.db.GetUsers()
 	if err != nil {
 		s.logger.Errorf("GetUsers failed: %v", err)
-		return nil, status.Error(codes.NotFound, "failed to get users")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get users"))
 	}
 	return connect.NewResponse(&qf.Users{
 		Users: users,
@@ -71,7 +66,7 @@ func (s *QuickFeedService) GetUsers(_ context.Context, _ *connect.Request[qf.Voi
 // GetUserByCourse returns the user for the given SCM login name if enrolled in the given course.
 func (s *QuickFeedService) GetUserByCourse(_ context.Context, in *connect.Request[qf.CourseUserRequest]) (*connect.Response[qf.User], error) {
 	query := &qf.Course{Code: in.Msg.CourseCode, Year: in.Msg.CourseYear}
-	user, _, err := s.db.GetUserByCourse(query, in.Msg.UserLogin)
+	user, err := s.db.GetUserByCourse(query, in.Msg.UserLogin)
 	if err != nil {
 		s.logger.Errorf("GetUserByCourse failed: %v", err)
 		return nil, status.Error(codes.FailedPrecondition, "failed to get student information")
@@ -82,10 +77,10 @@ func (s *QuickFeedService) GetUserByCourse(_ context.Context, in *connect.Reques
 // UpdateUser updates the current users's information and returns the updated user.
 // This function can also promote a user to admin or demote a user.
 func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[qf.User]) (*connect.Response[qf.Void], error) {
-	usr, err := s.getCurrentUser(ctx)
+	usr, err := s.db.GetUser(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("UpdateUser failed: authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
+		s.logger.Errorf("UpdateUser(userID=%d) failed: %v", userID(ctx), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
 	if _, err = s.updateUser(usr, in.Msg); err != nil {
 		s.logger.Errorf("UpdateUser failed to update user %d: %v", in.Msg.GetID(), err)
@@ -96,18 +91,13 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[q
 
 // CreateCourse creates a new course.
 func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request[qf.Course]) (*connect.Response[qf.Course], error) {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Errorf("CreateCourse failed: user authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
-	}
 	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationPath)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationPath, err)
 		return nil, ErrMissingInstallation
 	}
 	// make sure that the current user is set as course creator
-	in.Msg.CourseCreatorID = usr.GetID()
+	in.Msg.CourseCreatorID = userID(ctx)
 	course, err := s.createCourse(ctx, scmClient, in.Msg)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: %v", err)
@@ -195,10 +185,10 @@ func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *connect.Reque
 // UpdateEnrollments changes status of all pending enrollments for the specified course to approved.
 // If the request contains a single enrollment, it will be updated to the specified status.
 func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Request[qf.Enrollments]) (*connect.Response[qf.Void], error) {
-	usr, err := s.getCurrentUser(ctx)
+	usr, err := s.db.GetUser(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("UpdateEnrollments failed: scm authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
+		s.logger.Errorf("UpdateEnrollments(userID=%d) failed: %v", userID(ctx), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
@@ -242,9 +232,6 @@ func (s *QuickFeedService) GetEnrollmentsByUser(_ context.Context, in *connect.R
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByUser failed: user %d: %v", in.Msg.GetUserID(), err)
 		return nil, status.Error(codes.NotFound, "no enrollments found for user")
-	}
-	for _, enrollment := range enrollments {
-		enrollment.SetSlipDays(enrollment.Course)
 	}
 	return connect.NewResponse(&qf.Enrollments{
 		Enrollments: enrollments,
@@ -361,13 +348,19 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 	return &connect.Response[qf.Void]{}, nil
 }
 
+// GetSubmission returns a fully populated submission matching the given submission ID if it exists for the given course ID.
+// Used in the frontend to fetch a full submission for a given submission ID and course ID.
+func (s *QuickFeedService) GetSubmission(_ context.Context, in *connect.Request[qf.SubmissionReviewersRequest]) (*connect.Response[qf.Submission], error) {
+	submission, err := s.db.GetLastSubmission(in.Msg.CourseID, &qf.Submission{ID: in.Msg.GetSubmissionID()})
+	if err != nil {
+		s.logger.Errorf("GetSubmission failed: %v", err)
+		return nil, status.Error(codes.NotFound, "failed to get submission")
+	}
+	return connect.NewResponse(submission), nil
+}
+
 // GetSubmissions returns the submissions matching the query encoded in the action request.
 func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *connect.Request[qf.SubmissionRequest]) (*connect.Response[qf.Submissions], error) {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Errorf("GetSubmissions failed: authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
-	}
 	s.logger.Debugf("GetSubmissions: %v", in)
 	submissions, err := s.getSubmissions(in.Msg)
 	if err != nil {
@@ -375,7 +368,7 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *connect.Reque
 		return nil, status.Error(codes.NotFound, "no submissions found")
 	}
 	// If the user is not a teacher, remove score and reviews from submissions that are not released.
-	if !s.isTeacher(usr.ID, in.Msg.CourseID) {
+	if !s.isTeacher(userID(ctx), in.Msg.CourseID) {
 		submissions.Clean()
 	}
 	return connect.NewResponse(submissions), nil
@@ -552,10 +545,10 @@ func (s *QuickFeedService) UpdateAssignments(_ context.Context, in *connect.Requ
 
 // GetOrganization fetches a github organization by name.
 func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Request[qf.OrgRequest]) (*connect.Response[qf.Organization], error) {
-	usr, err := s.getCurrentUser(ctx)
+	usr, err := s.db.GetUser(userID(ctx))
 	if err != nil {
-		s.logger.Errorf("GetOrganization failed: scm authentication error: %v", err)
-		return nil, err
+		s.logger.Errorf("GetOrganization(userID=%d) failed: %v", userID(ctx), err)
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
 	scmClient, err := s.getSCM(ctx, in.Msg.GetOrgName())
 	if err != nil {
@@ -584,26 +577,20 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 
 // GetRepositories returns URL strings for repositories of given type for the given course.
 func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Request[qf.URLRequest]) (*connect.Response[qf.Repositories], error) {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Errorf("GetRepositories failed: authentication error: %v", err)
-		return nil, ErrInvalidUserInfo
-	}
-
 	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("GetRepositories failed: course %d not found: %v", in.Msg.GetCourseID(), err)
 		return nil, status.Error(codes.NotFound, "course not found")
 	}
-
-	enrol, _ := s.db.GetEnrollmentByCourseAndUser(course.GetID(), usr.GetID())
+	usrID := userID(ctx)
+	enrol, _ := s.db.GetEnrollmentByCourseAndUser(course.GetID(), usrID)
 
 	urls := make(map[string]string)
 	for _, repoType := range in.Msg.GetRepoTypes() {
 		var id uint64
 		switch repoType {
 		case qf.Repository_USER:
-			id = usr.GetID()
+			id = usrID
 		case qf.Repository_GROUP:
 			id = enrol.GetGroupID() // will be 0 if not enrolled in a group
 		}

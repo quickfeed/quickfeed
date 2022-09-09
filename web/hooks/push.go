@@ -63,7 +63,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 
 	case repo.IsGroupRepo():
 		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
-		jobOwner, _, err := wh.db.GetUserByCourse(course, payload.GetSender().GetLogin())
+		jobOwner, err := wh.db.GetUserByCourse(course, payload.GetSender().GetLogin())
 		if err != nil {
 			wh.logger.Errorf("Failed to find user %s in course %s: %v", payload.GetSender().GetLogin(), course.GetName(), err)
 			return

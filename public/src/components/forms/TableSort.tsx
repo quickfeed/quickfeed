@@ -29,27 +29,31 @@ const TableSort = () => {
     }
 
     return (
-        <div className="p-3 mb-2 bg-dark text-white d-flex flex-row">
-            <div className="p-2">
-                <span>Sort by:</span>
+        <div className="p-1 mb-2 bg-dark text-white d-flex flex-row">
+            <div className="d-inline-flex flex-row justify-content-center">
+                <div className="p-2">
+                    <span>Sort by:</span>
+                </div>
+                <div className={`${state.sortSubmissionsBy === SubmissionSort.Approved ? "font-weight-bold" : ""} p-2`} role={"button"} onClick={() => handleChange(SubmissionSort.Approved)}>
+                    Approved
+                </div>
+                <div className={`${state.sortSubmissionsBy === SubmissionSort.Score ? "font-weight-bold" : ""} p-2`} role={"button"} onClick={() => handleChange(SubmissionSort.Score)}>
+                    Score
+                </div>
+                <div className="p-2" role={"button"} onClick={() => actions.setAscending(!state.sortAscending)}>
+                    <i className={state.sortAscending ? "icon fa fa-caret-down" : "icon fa fa-caret-down fa-rotate-180"} />
+                </div>
             </div>
-            <div className={`${state.sortSubmissionsBy === SubmissionSort.Approved ? "font-weight-bold" : ""} p-2`} role={"button"} onClick={() => handleChange(SubmissionSort.Approved)}>
-                Approved
-            </div>
-            <div className={`${state.sortSubmissionsBy === SubmissionSort.Score ? "font-weight-bold" : ""} p-2`} role={"button"} onClick={() => handleChange(SubmissionSort.Score)}>
-                Score
-            </div>
-            <div className="p-2" role={"button"} onClick={() => actions.setAscending(!state.sortAscending)}>
-                <i className={state.sortAscending ? "icon fa fa-caret-down" : "icon fa fa-caret-down fa-rotate-180"} />
-            </div>
-            <div className="p-2">
-                Show:
-            </div>
-            <div className="p-2" role={"button"} onClick={() => actions.setSubmissionFilter("teachers")}>
-                {state.submissionFilters.includes("teachers") ? <del>Teachers</del> : "Teachers"}
-            </div>
-            <div className="p-2" role={"button"} onClick={() => actions.setSubmissionFilter("approved")}>
-                {state.submissionFilters.includes("approved") ? <del>Graded</del> : "Graded"}
+            <div className="d-inline-flex flex-row">
+                <div className="p-2">
+                    Show:
+                </div>
+                <div className="p-2" role={"button"} onClick={() => actions.setSubmissionFilter("teachers")}>
+                    {state.submissionFilters.includes("teachers") ? <del>Teachers</del> : "Teachers"}
+                </div>
+                <div className="p-2" role={"button"} onClick={() => actions.setSubmissionFilter("approved")}>
+                    {state.submissionFilters.includes("approved") ? <del>Graded</del> : "Graded"}
+                </div>
             </div>
         </div>
     )
