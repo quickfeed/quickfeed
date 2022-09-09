@@ -147,6 +147,9 @@ func form(w http.ResponseWriter) {
 				"active": false,
 				"url": "",
 			},
+			"callback_urls": [
+				"{{.CallbackURL}}"
+			],
 			"redirect_url": "{{.URL}}/manifest/callback",
 			"public": true,
 			"default_permissions": {
@@ -164,11 +167,13 @@ func form(w http.ResponseWriter) {
 	t := template.Must(template.New("form").Parse(tpl))
 
 	data := struct {
-		URL  string
-		Name string
+		URL         string
+		Name        string
+		CallbackURL string
 	}{
-		URL:  "https://" + env.Domain(),
-		Name: env.AppName(),
+		URL:         "https://" + env.Domain(),
+		Name:        env.AppName(),
+		CallbackURL: "https://" + env.Domain() + "/auth/callback",
 	}
 
 	if err := t.Execute(w, data); err != nil {
