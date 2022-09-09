@@ -16,7 +16,7 @@ func (s *QuickFeedService) NewQuickFeedHandler(tm *auth.TokenManager) (string, h
 	interceptors := connect.WithInterceptors(
 		interceptor.Metrics(),
 		interceptor.Validation(s.logger),
-		interceptor.UnaryUserVerifier(s.logger, tm),
+		interceptor.NewUserInterceptor(s.logger, tm),
 		interceptor.AccessControl(tm),
 		interceptor.TokenRefresher(tm),
 	)

@@ -40,7 +40,7 @@ func TestAccessControl(t *testing.T) {
 		t.Fatal(err)
 	}
 	interceptors := connect.WithInterceptors(
-		interceptor.UnaryUserVerifier(logger, tm),
+		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.AccessControl(tm),
 	)
 

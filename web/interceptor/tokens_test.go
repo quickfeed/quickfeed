@@ -34,7 +34,7 @@ func TestRefreshTokens(t *testing.T) {
 	}
 
 	interceptors := connect.WithInterceptors(
-		interceptor.UnaryUserVerifier(logger, tm),
+		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.TokenRefresher(tm),
 	)
 
