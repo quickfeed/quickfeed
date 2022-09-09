@@ -23,39 +23,39 @@ const (
 )
 
 type manifest struct {
-	http.Server
-	done chan bool
+	server *http.Server
+	done   chan bool
 }
 
-func newManifest(addr string) *manifest {
+func newManifest(server *http.Server) *manifest {
 	router := http.NewServeMux()
 	m := &manifest{
-		done: make(chan bool),
+		server: server,
+		done:   make(chan bool),
 	}
 	router.Handle("/manifest/callback", m.conversion())
 	router.Handle("/manifest", createApp())
-	m.Server = http.Server{
-		Addr:    addr,
-		Handler: router,
-	}
+	m.server.Handler = router
 	return m
 }
 
-func StartAppCreationFlow(addr string) error {
+func StartAppCreationFlow(server *http.Server, dev bool) error {
 	if err := check(); err != nil {
 		return err
 	}
-	m := newManifest(addr)
+	m := newManifest(server)
 	go func() {
-		if err := m.ListenAndServe(); err != nil {
+		var certFile, keyFile string
+		if dev {
+			certFile, keyFile = env.CertFile(), env.KeyFile()
+		}
+		if err := m.server.ListenAndServeTLS(certFile, keyFile); err != nil {
 			fmt.Printf("Failed to start web server: %v\n", err)
 			m.done <- true
 		}
 	}()
-	defer m.Close()
-
+	defer m.server.Close()
 	fmt.Printf("Go to https://%s/manifest to create an app.\n", env.Domain())
-
 	<-m.done
 	// Refresh environment variables
 	return env.Load("")

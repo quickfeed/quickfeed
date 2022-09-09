@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/tls"
 	"flag"
-	"fmt"
 	"log"
 	"mime"
 	"net/http"
@@ -65,7 +64,13 @@ func main() {
 	}
 
 	if *newApp {
-		if err := manifest.StartAppCreationFlow(*httpAddr); err != nil {
+		var server *http.Server
+		if *dev {
+			server = devServer(*httpAddr, nil)
+		} else {
+			server, _ = prodServer(*httpAddr, nil)
+		}
+		if err := manifest.StartAppCreationFlow(server, *dev); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -120,58 +125,37 @@ func main() {
 			log.Fatalf("Failed to start a http server: %v", err)
 		}
 	}()
-	muxServer := &http.Server{
-		Handler:           h2c.NewHandler(router, &http2.Server{}),
-		Addr:              *httpAddr,
-		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
-		WriteTimeout:      2 * time.Minute,
-		ReadTimeout:       2 * time.Minute,
-	}
+	handler := h2c.NewHandler(router, &http2.Server{})
 	if *dev {
+		developmentServer := devServer(*httpAddr, handler)
 		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
-		if err := muxServer.ListenAndServeTLS(certFile, certKey); err != nil {
+		if err := developmentServer.ListenAndServeTLS(certFile, certKey); err != nil {
 			log.Fatalf("Failed to start grpc server: %v", err)
 			return
 		}
 	} else {
 		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
 	}
-	whitelist, err := env.Whitelist()
-	if err != nil {
-		log.Fatalf("Failed to get whitelist: %v", err)
-	}
-	certManager := autocert.Manager{
-		Prompt: autocert.AcceptTOS,
-		Cache:  autocert.DirCache(env.CertPath()),
-		HostPolicy: autocert.HostWhitelist(
-			whitelist...,
-		),
-	}
-	muxServer.TLSConfig = certManager.TLSConfig()
 
+	server, redirectServer := prodServer(*httpAddr, handler)
 	// Redirect all HTTP traffic to HTTPS.
 	go func() {
-		redirectSrv := &http.Server{
-			Handler:           certManager.HTTPHandler(nil),
-			Addr:              ":http",
-			ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
-		}
-		if err := redirectSrv.ListenAndServe(); err != nil {
+		if err := redirectServer.ListenAndServe(); err != nil {
 			log.Printf("Failed to start redirect http server: %v", err)
 			return
 		}
 	}()
 
 	// Start the HTTPS server.
-	if err := muxServer.ListenAndServeTLS("", ""); err != nil {
+	if err := server.ListenAndServeTLS("", ""); err != nil {
 		log.Fatalf("Failed to start grpc server: %v", err)
 	}
 }
 
-func prodServer(addr string) (*http.Server, error) {
+func prodServer(addr string, handler http.Handler) (*http.Server, *http.Server) {
 	whitelist, err := env.Whitelist()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get whitelist: %w", err)
+		log.Fatalf("failed to get whitelist: %v", err)
 	}
 	certManager := autocert.Manager{
 		Prompt: autocert.AcceptTOS,
@@ -180,20 +164,27 @@ func prodServer(addr string) (*http.Server, error) {
 			whitelist...,
 		),
 	}
-	return &http.Server{
-		Addr:         addr,
-		WriteTimeout: 2 * time.Minute,
-		ReadTimeout:  2 * time.Minute,
-		TLSConfig: &tls.Config{
-			GetCertificate: certManager.GetCertificate,
-			MaxVersion:     tls.VersionTLS13,
-			MinVersion:     tls.VersionTLS12,
-		},
-	}, nil
+
+	httpServer := &http.Server{
+		Handler:           handler,
+		Addr:              addr,
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
+		WriteTimeout:      2 * time.Minute,
+		ReadTimeout:       2 * time.Minute,
+		TLSConfig:         certManager.TLSConfig(),
+	}
+
+	redirectServer := &http.Server{
+		Handler:           certManager.HTTPHandler(nil),
+		Addr:              ":http",
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
+	}
+
+	return httpServer, redirectServer
 }
 
 // devServer returns a http.Server with self-signed certificates for development-use only.
-func devServer(addr string) (*http.Server, error) {
+func devServer(addr string, handler http.Handler) *http.Server {
 	certificate, err := tls.LoadX509KeyPair(env.CertFile(), env.KeyFile())
 	if err != nil {
 		// Couldn't load credentials; generate self-signed certificates.
@@ -203,18 +194,19 @@ func devServer(addr string) (*http.Server, error) {
 			CertFile: env.CertFile(),
 			Hosts:    env.Domain(),
 		}); err != nil {
-			return nil, fmt.Errorf("failed to generate self-signed certificates: %w", err)
+			log.Fatalf("failed to generate self-signed certificates: %w", err)
 		}
 		log.Printf("Certificates successfully generated at: %s", env.CertPath())
 	} else {
 		log.Println("Existing credentials successfully loaded.")
 	}
 	return &http.Server{
+		Handler:      handler,
 		Addr:         addr,
 		WriteTimeout: 2 * time.Minute,
 		ReadTimeout:  2 * time.Minute,
 		TLSConfig: &tls.Config{
 			Certificates: []tls.Certificate{certificate},
 		},
-	}, nil
+	}
 }
