@@ -108,10 +108,7 @@ func (m *manifest) conversion() http.HandlerFunc {
 			clientID:     *config.ClientID,
 			clientSecret: *config.ClientSecret,
 		}
-		env.Save(".env", envToUpdate)
-
-		// Refresh environment variables
-		if err := env.Load(""); err != nil {
+		if err := env.Save(".env", envToUpdate); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			return
