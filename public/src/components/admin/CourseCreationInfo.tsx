@@ -11,7 +11,7 @@ const CourseCreationInfo = (): JSX.Element => {
                 This is to keep the student roster for the different runs of the course separate.
             </p>
             <p>
-                <a className="badge-pill badge-success" href={process.env.QUICKFEED_ENTERPRISE_URL ?? "https://github.com/organizations/plan"} target="_blank" rel="noopener noreferrer">
+                <a className="badge-pill badge-success" href={process.env.QUICKFEED_ORGANIZATION_URL} target="_blank" rel="noopener noreferrer">
                     Create an organization
                 </a> for your course.
                 The course organization must allow private repositories.
