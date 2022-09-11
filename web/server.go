@@ -83,7 +83,8 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 		ReadTimeout:       2 * time.Minute,
 		TLSConfig: &tls.Config{
 			Certificates: []tls.Certificate{certificate},
-			MaxVersion:   0, // use the highest version available
+			MinVersion:   tls.VersionTLS13,
+			MaxVersion:   tls.VersionTLS13,
 		},
 	}
 
