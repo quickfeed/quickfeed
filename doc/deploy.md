@@ -45,6 +45,69 @@ QuickFeed depends on these technologies.
 - Git History Diff
 - SQLite
 
+## Updated Deployment Instructions for new GitHub App and Autocert
+
+### Configure .env
+
+If your `.env` file is has no keys and your `quickfeed.pem` does not exist, you need to install QuickFeed's GitHub App.
+
+```shell
+# GitHub App IDs and secrets for localhost deployment
+QUICKFEED_APP_ID=""
+QUICKFEED_APP_KEY=$QUICKFEED/internal/config/github/quickfeed.pem
+QUICKFEED_CLIENT_ID=""
+QUICKFEED_CLIENT_SECRET=""
+
+# Quickfeed server domain or ip
+DOMAIN=localhost
+
+# Comma-separated list of domains to allow
+# certificates for, e.g., "www.example.com,example.com".
+# IP addresses and "localhost" are *not* valid.
+# The whitelist must also include the domain defined above.
+QUICKFEED_WHITELIST=""
+```
+
+### Starting server and installing QuickFeed's GitHub App
+
+To start the server for first-time installation, use the `-new` flag.
+
+```shell
+% make install
+% quickfeed -service.url cyclone.meling.me -new
+2022/09/11 16:45:22 running: go list -m -f {{.Dir}}
+2022/09/11 16:45:22 Loading environment variables from /Users/meling/work/quickfeed/.env
+2022/09/11 16:45:22 Important: The GitHub user that installs the QuickFeed App will become the server's admin user.
+2022/09/11 16:45:22 Go to https://cyclone.meling.me/manifest to install the QuickFeed GitHub App.
+2022/09/11 16:45:43 http: TLS handshake error from 192.168.86.1:52823: write tcp 192.168.86.32:443->192.168.86.1:52823: i/o timeout
+2022/09/11 16:45:43 http: TLS handshake error from 192.168.86.1:52824: tls: client using inappropriate protocol fallback
+2022/09/11 16:46:00 Successfully installed the QuickFeed GitHub App.
+2022/09/11 16:46:00 Loading environment variables from /Users/meling/work/quickfeed/.env
+2022/09/11 16:46:00 Starting QuickFeed in production mode on cyclone.meling.me
+```
+
+After starting the server you should see various configuration files saved for in `internal/config`:
+
+```shell
+% tree internal/config/
+internal/config/
+├── certs
+│   ├── acme_account+key
+│   └── cyclone.meling.me
+└── github
+    └── quickfeed.pem
+```
+
+In addition your `.env` file should be populated with important secrets that should be kept away from prying eyes.
+
+```shell
+# GitHub App IDs and secrets for localhost deployment
+QUICKFEED_APP_ID=<6 digit ID>
+QUICKFEED_APP_KEY=/Users/meling/work/quickfeed/internal/config/github/quickfeed.pem
+QUICKFEED_CLIENT_ID=Iv1.<16 chars of identifying data>
+QUICKFEED_CLIENT_SECRET=<40 chars of secret data>
+```
+
 ## Preparing the Environment
 
 ### Configuring Docker
@@ -330,7 +393,7 @@ Here is an example with all default values:
 quickfeed -service.url uis.itest.run &> quickfeed.log &
 ```
 
-*As a bootstrap mechanism, the first user to sign in, automatically becomes administrator for the system.*
+_As a bootstrap mechanism, the first user to sign in, automatically becomes administrator for the system._
 
 #### Flags
 
