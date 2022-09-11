@@ -42,7 +42,7 @@ func Load(filename string) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer file.Close() // skipcq: GO-S2307
 
 	log.Printf("Loading environment variables from %s", filename)
 

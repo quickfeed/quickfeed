@@ -53,7 +53,6 @@ func update(filename, content string, env map[string]string) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
 
 	// Map of updated environment variables
 	updated := make(map[string]bool)
@@ -81,9 +80,11 @@ func update(filename, content string, env map[string]string) error {
 		if _, ok := updated[key]; ok {
 			continue
 		}
-		fmt.Fprintf(file, "%s=%s\n", key, val)
+		if _, err = fmt.Fprintf(file, "%s=%s\n", key, val); err != nil {
+			return err
+		}
 	}
-	return nil
+	return file.Close()
 }
 
 func exists(filename string) bool {
