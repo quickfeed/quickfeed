@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/web"
 )
 
 // TODO(meling) Should reuse those in env package.
@@ -23,38 +24,36 @@ const (
 )
 
 type manifest struct {
-	server *http.Server
-	done   chan bool
+	handler http.Handler
+	done    chan bool
 }
 
-func newManifest(server *http.Server) *manifest {
-	router := http.NewServeMux()
+func New() *manifest {
 	m := &manifest{
-		server: server,
-		done:   make(chan bool),
+		done: make(chan bool),
 	}
+	router := http.NewServeMux()
 	router.Handle("/manifest/callback", m.conversion())
 	router.Handle("/manifest", createApp())
-	m.server.Handler = router
+	m.handler = router
 	return m
 }
 
-func StartAppCreationFlow(server *http.Server, dev bool) error {
+func (m *manifest) Handler() http.Handler {
+	return m.handler
+}
+
+func (m *manifest) StartAppCreationFlow(server *web.Server) error {
 	if err := check(); err != nil {
 		return err
 	}
-	m := newManifest(server)
 	go func() {
-		var certFile, keyFile string
-		if dev {
-			certFile, keyFile = env.CertFile(), env.KeyFile()
-		}
-		if err := m.server.ListenAndServeTLS(certFile, keyFile); err != nil {
+		if err := server.Serve(); err != nil {
 			fmt.Printf("Failed to start web server: %v\n", err)
 			m.done <- true
 		}
 	}()
-	defer m.server.Close()
+	defer server.Shutdown(context.Background())
 	fmt.Printf("Go to https://%s/manifest to create an app.\n", env.Domain())
 	<-m.done
 	// Refresh environment variables

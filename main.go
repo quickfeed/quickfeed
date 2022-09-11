@@ -1,17 +1,17 @@
 package main
 
 import (
-	"crypto/tls"
+	"context"
 	"flag"
 	"log"
 	"mime"
-	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
@@ -19,7 +19,6 @@ import (
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
 	"github.com/quickfeed/quickfeed/web/manifest"
-	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -47,7 +46,7 @@ func main() {
 		baseURL  = flag.String("service.url", "", "base service DNS name")
 		dbFile   = flag.String("database.file", "qf.db", "database file")
 		public   = flag.String("http.public", "public", "path to content to serve")
-		httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
+		httpAddr = flag.String("http.addr", ":443", "HTTP listen address")
 		dev      = flag.Bool("dev", false, "running server locally")
 		newApp   = flag.Bool("new", false, "create new GitHub app")
 	)
@@ -64,13 +63,18 @@ func main() {
 	}
 
 	if *newApp {
-		var server *http.Server
+		m := manifest.New()
+		var srvFn web.ServerType
 		if *dev {
-			server = devServer(*httpAddr, nil)
+			srvFn = web.NewDevelopmentServer
 		} else {
-			server, _ = prodServer(*httpAddr, nil)
+			srvFn = web.NewProductionServer
 		}
-		if err := manifest.StartAppCreationFlow(server, *dev); err != nil {
+		server, err := srvFn(*httpAddr, m.Handler())
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := m.StartAppCreationFlow(server); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -111,12 +115,10 @@ func main() {
 	}
 	defer runner.Close()
 
-	certFile := env.CertFile()
-	certKey := env.KeyFile()
 	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
-
 	// Register HTTP endpoints and webhooks
 	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
+	handler := h2c.NewHandler(router, &http2.Server{})
 
 	// Create an HTTP server for prometheus.
 	httpServer := interceptor.MetricsServer(9097)
@@ -125,88 +127,33 @@ func main() {
 			log.Fatalf("Failed to start a http server: %v", err)
 		}
 	}()
-	handler := h2c.NewHandler(router, &http2.Server{})
+
+	var srvFn web.ServerType
 	if *dev {
-		developmentServer := devServer(*httpAddr, handler)
-		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
-		if err := developmentServer.ListenAndServeTLS(certFile, certKey); err != nil {
-			log.Fatalf("Failed to start grpc server: %v", err)
-			return
-		}
+		srvFn = web.NewDevelopmentServer
+		log.Printf("Starting QuickFeed in development mode on %s", *httpAddr)
 	} else {
-		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
+		srvFn = web.NewProductionServer
+		log.Printf("Starting QuickFeed in production mode on %s", *baseURL)
+	}
+	srv, err := srvFn(*httpAddr, handler)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	server, redirectServer := prodServer(*httpAddr, handler)
-	// Redirect all HTTP traffic to HTTPS.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	go func() {
-		if err := redirectServer.ListenAndServe(); err != nil {
-			log.Printf("Failed to start redirect http server: %v", err)
-			return
+		<-ctx.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Fatalf("Graceful shutdown failed: %v", err)
 		}
 	}()
 
-	// Start the HTTPS server.
-	if err := server.ListenAndServeTLS("", ""); err != nil {
-		log.Fatalf("Failed to start grpc server: %v", err)
+	if err := srv.Serve(); err != nil {
+		log.Fatalf("Failed to start QuickFeed server: %v", err)
 	}
-}
-
-func prodServer(addr string, handler http.Handler) (*http.Server, *http.Server) {
-	whitelist, err := env.Whitelist()
-	if err != nil {
-		log.Fatalf("failed to get whitelist: %v", err)
-	}
-	certManager := autocert.Manager{
-		Prompt: autocert.AcceptTOS,
-		Cache:  autocert.DirCache(env.CertPath()),
-		HostPolicy: autocert.HostWhitelist(
-			whitelist...,
-		),
-	}
-
-	httpServer := &http.Server{
-		Handler:           handler,
-		Addr:              addr,
-		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
-		WriteTimeout:      2 * time.Minute,
-		ReadTimeout:       2 * time.Minute,
-		TLSConfig:         certManager.TLSConfig(),
-	}
-
-	redirectServer := &http.Server{
-		Handler:           certManager.HTTPHandler(nil),
-		Addr:              ":http",
-		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
-	}
-
-	return httpServer, redirectServer
-}
-
-// devServer returns a http.Server with self-signed certificates for development-use only.
-func devServer(addr string, handler http.Handler) *http.Server {
-	certificate, err := tls.LoadX509KeyPair(env.CertFile(), env.KeyFile())
-	if err != nil {
-		// Couldn't load credentials; generate self-signed certificates.
-		log.Println("Generating self-signed certificates.")
-		if err := cert.GenerateSelfSignedCert(cert.Options{
-			KeyFile:  env.KeyFile(),
-			CertFile: env.CertFile(),
-			Hosts:    env.Domain(),
-		}); err != nil {
-			log.Fatalf("failed to generate self-signed certificates: %w", err)
-		}
-		log.Printf("Certificates successfully generated at: %s", env.CertPath())
-	} else {
-		log.Println("Existing credentials successfully loaded.")
-	}
-	return &http.Server{
-		Handler:      handler,
-		Addr:         addr,
-		WriteTimeout: 2 * time.Minute,
-		ReadTimeout:  2 * time.Minute,
-		TLSConfig: &tls.Config{
-			Certificates: []tls.Certificate{certificate},
-		},
-	}
+	log.Println("QuickFeed shut down gracefully")
 }
