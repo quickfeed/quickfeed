@@ -88,6 +88,8 @@ func SetFakeProvider(t *testing.T) {
 	provider = "fake"
 }
 
-func HasAppEnvs() bool {
-	return appID != "" || appKey != ""
+// HasAppID returns true if the environment specifies an APP_ID.
+func HasAppID() bool {
+	_, err := AppID()
+	return err == nil
 }

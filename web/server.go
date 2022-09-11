@@ -73,7 +73,8 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 	} else {
 		log.Println("Existing credentials successfully loaded.")
 	}
-	// TODO(meling) we should print log message explaining any behaviors to expect from browsers, like not accepting self-signed certs
+	log.Println("When running with self-signed certificates on localhost, browsers will complain that the connection is not private.")
+	log.Println("To run the server from localhost, you will need to manually bypass the browser warning.")
 
 	httpServer := &http.Server{
 		Handler:           handler,

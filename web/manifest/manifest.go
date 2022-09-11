@@ -238,14 +238,14 @@ func form(w http.ResponseWriter) {
 }
 
 func check() error {
-	if env.HasAppEnvs() {
-		fmt.Println("WARNING: Backup any existing app configuration. Continuing will delete all existing app configuration.")
+	if env.HasAppID() {
+		log.Print("WARNING: Continuing will delete existing app configuration. Continue? (Y/n) ")
 		if !answer() {
 			return fmt.Errorf("aborting GitHub app creation")
 		}
 	}
 	if env.Domain() == "localhost" || env.Domain() == "127.0.0.1" {
-		fmt.Printf("WARNING: You are creating an app on %s. Only for development purposes.\n", env.Domain())
+		log.Printf("WARNING: You are creating an app on %s. Only for development purposes. Continue? (Y/n) ", env.Domain())
 		if !answer() {
 			return fmt.Errorf("aborting GitHub app creation")
 		}
@@ -254,7 +254,6 @@ func check() error {
 }
 
 func answer() bool {
-	fmt.Println("Continue? (Y/n) ")
 	var answer string
 	fmt.Scanln(&answer)
 	return answer == "Y" || answer == "y"
