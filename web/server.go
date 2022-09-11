@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -82,6 +83,7 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 		ReadTimeout:       2 * time.Minute,
 		TLSConfig: &tls.Config{
 			Certificates: []tls.Certificate{certificate},
+			MaxVersion:   0, // use the highest version available
 		},
 	}
 
@@ -99,7 +101,9 @@ func (srv *Server) Serve() error {
 		// Redirect all HTTP traffic to HTTPS.
 		go func() {
 			if err := srv.redirectServer.ListenAndServe(); err != nil {
-				log.Printf("Failed to start redirect http server: %v", err)
+				if !errors.Is(err, http.ErrServerClosed) {
+					log.Printf("Redirect server exited with unexpected error: %v", err)
+				}
 				return
 			}
 		}()
@@ -107,9 +111,11 @@ func (srv *Server) Serve() error {
 	// Start the HTTPS server.
 	// For production, the certFile and keyFile are empty and managed by autocert.
 	if err := srv.httpServer.ListenAndServeTLS(srv.certFile, srv.keyFile); err != nil {
-		return fmt.Errorf("failed to start grpc server: %w", err)
+		if !errors.Is(err, http.ErrServerClosed) {
+			return fmt.Errorf("server exited with unexpected error: %w", err)
+		}
 	}
-	// Should not reach here since ListenAndServeTLS is blocking
+	// Exit with nil means graceful shutdown
 	return nil
 }
 
