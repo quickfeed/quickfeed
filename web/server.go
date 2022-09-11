@@ -11,6 +11,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/multierr"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -121,7 +122,12 @@ func (srv *Server) Serve() error {
 	return nil
 }
 
+// Shutdown gracefully shuts down the server.
 func (srv *Server) Shutdown(ctx context.Context) error {
-	_ = srv.redirectServer.Shutdown(ctx)
-	return srv.httpServer.Shutdown(ctx)
+	var redirectShutdownErr error
+	if srv.redirectServer != nil {
+		redirectShutdownErr = srv.redirectServer.Shutdown(ctx)
+	}
+	srvShutdownErr := srv.httpServer.Shutdown(ctx)
+	return multierr.Join(redirectShutdownErr, srvShutdownErr)
 }
