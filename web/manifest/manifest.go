@@ -238,12 +238,6 @@ func form(w http.ResponseWriter) {
 }
 
 func check() error {
-	if env.HasAppID() {
-		log.Print("WARNING: Continuing will delete existing app configuration. Continue? (Y/n) ")
-		if !answer() {
-			return fmt.Errorf("aborting GitHub app creation")
-		}
-	}
 	if env.Domain() == "localhost" || env.Domain() == "127.0.0.1" {
 		log.Printf("WARNING: You are creating an app on %s. Only for development purposes. Continue? (Y/n) ", env.Domain())
 		if !answer() {

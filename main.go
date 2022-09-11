@@ -63,6 +63,9 @@ func main() {
 	}
 
 	if *newApp {
+		if env.HasAppID() {
+			log.Fatalln(".env already contains App information")
+		}
 		m := manifest.New()
 		var srvFn web.ServerType
 		if *dev {
