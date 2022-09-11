@@ -2,8 +2,10 @@ package manifest
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,23 +16,21 @@ import (
 	"github.com/quickfeed/quickfeed/web"
 )
 
-// TODO(meling) Should reuse those in env package.
 const (
-	defaultPath  = "internal/config/github/quickfeed.pem"
 	appID        = "QUICKFEED_APP_ID"
 	appKey       = "QUICKFEED_APP_KEY"
 	clientID     = "QUICKFEED_CLIENT_ID"
 	clientSecret = "QUICKFEED_CLIENT_SECRET"
 )
 
-type manifest struct {
+type Manifest struct {
 	handler http.Handler
-	done    chan bool
+	done    chan error
 }
 
-func New() *manifest {
-	m := &manifest{
-		done: make(chan bool),
+func New() *Manifest {
+	m := &Manifest{
+		done: make(chan error),
 	}
 	router := http.NewServeMux()
 	router.Handle("/manifest/callback", m.conversion())
@@ -39,36 +39,47 @@ func New() *manifest {
 	return m
 }
 
-func (m *manifest) Handler() http.Handler {
+func (m *Manifest) Handler() http.Handler {
 	return m.handler
 }
 
-func (m *manifest) StartAppCreationFlow(server *web.Server) error {
+func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 	if err := check(); err != nil {
 		return err
 	}
 	go func() {
 		if err := server.Serve(); err != nil {
-			fmt.Printf("Failed to start web server: %v\n", err)
-			m.done <- true
+			if !errors.Is(err, http.ErrServerClosed) {
+				m.done <- fmt.Errorf("could not start web server for GitHub App creation flow: %v", err)
+				return
+			}
+			// server was closed prematurely, e.g., ctrl-C
+			m.done <- fmt.Errorf("server was closed prematurely")
 		}
 	}()
-	defer server.Shutdown(context.Background())
-	fmt.Printf("Go to https://%s/manifest to create an app.\n", env.Domain())
-	<-m.done
+	log.Println("Important: The GitHub user that installs the QuickFeed App will become the server's admin user.")
+	log.Printf("Go to https://%s/manifest to install the QuickFeed GitHub App.\n", env.Domain())
+	if err := <-m.done; err != nil {
+		return err
+	}
+	if err := server.Shutdown(context.Background()); err != nil {
+		return err
+	}
 	// Refresh environment variables
 	return env.Load("")
 }
 
-func (m *manifest) conversion() http.HandlerFunc {
+func (m *Manifest) conversion() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var retErr error
 		code := r.URL.Query().Get("code")
 		defer func() {
-			m.done <- true
+			m.done <- retErr
 		}()
 		if code == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintf(w, "No code provided")
+			retErr = errors.New("no code provided")
 			return
 		}
 		ctx := context.Background()
@@ -76,40 +87,45 @@ func (m *manifest) conversion() http.HandlerFunc {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintf(w, "Error: %s", err)
+			retErr = err
 			return
 		}
 		// GitHub returns 201 Created on success
 		if resp.StatusCode != http.StatusCreated {
 			w.WriteHeader(resp.StatusCode)
 			fmt.Fprintf(w, "Error: %s", resp.Status)
+			retErr = fmt.Errorf("unexpected response code: %s", resp.Status)
 			return
 		}
 
-		// Save PEM file to default location
-		if err := os.MkdirAll(filepath.Dir(defaultPath), 0o700); err != nil {
-			fmt.Println("Failed to create directory:", err)
+		// Create directories on path to PEM file, if not exists
+		appKeyFile := env.AppKey()
+		if err := os.MkdirAll(filepath.Dir(appKeyFile), 0o700); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
+			retErr = err
 			return
 		}
 
 		// Write PEM file
-		if err := os.WriteFile(defaultPath, []byte(*config.PEM), 0o644); err != nil {
+		if err := os.WriteFile(appKeyFile, []byte(*config.PEM), 0o600); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
+			retErr = err
 			return
 		}
 
 		// Save the application configuration to the .env file
 		envToUpdate := map[string]string{
 			appID:        strconv.FormatInt(*config.ID, 10),
-			appKey:       env.AppKey(),
+			appKey:       appKeyFile,
 			clientID:     *config.ClientID,
 			clientSecret: *config.ClientSecret,
 		}
 		if err := env.Save(".env", envToUpdate); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
+			retErr = err
 			return
 		}
 
@@ -126,18 +142,47 @@ func createApp() http.HandlerFunc {
 }
 
 func success(w http.ResponseWriter) {
-	const tpl = `
-		<html>
-			Successfully created app.
-		</html>
+	const tpl = `<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+  background: #aaa;
+}
 
-		<script>
-			setTimeout(function() {
-				window.location.href = "/";
-			}, 5000);
-		</script>
+.container {
+  height: 300px;
+}
+
+.center {
+  position: absolute;
+  font-family: verdana;
+  color: #40a;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="center">
+      <h2>QuickFeed GitHub App installed</h2>
+      <h3>Redirecting...</h3>
+    </div>
+  </div>
+</body>
+</html>
+
+<script>
+	setTimeout(function() {
+		window.location.href = "/";
+	}, 5000);
+</script>
 	`
 	fmt.Fprint(w, tpl)
+	log.Println("Successfully installed the QuickFeed GitHub App.")
 }
 
 func form(w http.ResponseWriter) {
