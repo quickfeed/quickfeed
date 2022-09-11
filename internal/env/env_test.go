@@ -191,6 +191,8 @@ func TestWhitelist(t *testing.T) {
 		want    []string
 		err     bool
 	}{
+		{"", nil, true},
+		{",", nil, true},
 		{"localhost", nil, true},
 		{"localhost,example.com", nil, true},
 		{"123.12.1.1", nil, true},
@@ -199,7 +201,8 @@ func TestWhitelist(t *testing.T) {
 		{"a.com, b.com, c.com", []string{"a.com", "b.com", "c.com"}, false},
 		{"a.com,b.com,c.com", []string{"a.com", "b.com", "c.com"}, false},
 		{"example.com, www.example.com", []string{"example.com", "www.example.com"}, false},
-		//{"example.com, www.example.com,", []string{"example.com", "www.example.com"}, false},
+		{"example.com, www.example.com,", []string{"example.com", "www.example.com"}, false},
+		{"example.com, www.example.com,,, , , ", []string{"example.com", "www.example.com"}, false},
 	}
 
 	for _, tc := range test {

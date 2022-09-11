@@ -37,8 +37,18 @@ func Whitelist() ([]string, error) {
 	if regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`).MatchString(domains) {
 		return nil, errors.New("whitelist contains IP addresses")
 	}
-	// Split domains by comma and remove whitespace.
-	return strings.Split(strings.ReplaceAll(domains, " ", ""), ","), nil
+	// Split domains by comma and remove whitespace and empty entries
+	domainList := make([]string, 0)
+	for _, domain := range strings.Split(strings.ReplaceAll(domains, " ", ""), ",") {
+		if domain == "" {
+			continue
+		}
+		domainList = append(domainList, domain)
+	}
+	if len(domainList) == 0 {
+		return nil, errors.New("required whitelist is undefined")
+	}
+	return domainList, nil
 }
 
 // CertFile returns the full path to the certificate file.
