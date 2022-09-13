@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 
@@ -130,7 +131,7 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		}
 
 		// Print success message, and redirect to main page
-		success(w)
+		retErr = success(w, config)
 	}
 }
 
@@ -141,7 +142,7 @@ func createApp() http.HandlerFunc {
 	}
 }
 
-func success(w http.ResponseWriter) {
+func success(w http.ResponseWriter, config *github.AppConfig) error {
 	const tpl = `<!DOCTYPE html>
 <html>
 <head>
@@ -168,21 +169,45 @@ body {
 <body>
   <div class="container">
     <div class="center">
-      <h2>QuickFeed GitHub App installed</h2>
-      <h3>Redirecting...</h3>
+      <h2>{{.Name}} GitHub App created</h2>
     </div>
   </div>
 </body>
 </html>
+`
 
+	log.Printf("Successfully created the %s GitHub App.", *config.Name)
+
+	data := struct {
+		Name string
+	}{
+		Name: *config.Name,
+	}
+	t := template.Must(template.New("success").Parse(tpl))
+	if err := t.Execute(w, data); err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+	if err := env.Save("public/.env", map[string]string{
+		"QUICKFEED_APP_URL": *config.HTMLURL,
+	}); err != nil {
+		return err
+	}
+	log.Printf("App URL saved in public/.env: %s", *config.HTMLURL)
+	log.Println("Running webpack...")
+	c := exec.Command("webpack")
+	c.Dir = "public"
+	err := c.Run()
+	if err != nil {
+		return err
+	}
+	log.Println("Done webpack")
+	fmt.Fprintf(w, `<h3>Redirecting...</h3>
 <script>
 	setTimeout(function() {
 		window.location.href = "/";
 	}, 5000);
-</script>
-	`
-	fmt.Fprint(w, tpl)
-	log.Println("Successfully installed the QuickFeed GitHub App.")
+</script>`)
+	return nil
 }
 
 func form(w http.ResponseWriter) {
@@ -238,7 +263,7 @@ func form(w http.ResponseWriter) {
 }
 
 func check() error {
-	if env.Domain() == "localhost" || env.Domain() == "127.0.0.1" {
+	if env.Domain() == "127.0.0.1" {
 		log.Printf("WARNING: You are creating an app on %s. Only for development purposes. Continue? (Y/n) ", env.Domain())
 		if !answer() {
 			return fmt.Errorf("aborting GitHub app creation")

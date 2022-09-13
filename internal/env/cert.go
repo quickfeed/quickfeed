@@ -10,7 +10,7 @@ import (
 
 const (
 	defaultCertPath = "internal/config/certs"
-	defaultDomain   = "localhost"
+	defaultDomain   = "127.0.0.1"
 	defaultCertFile = "fullchain.pem"
 	defaultKeyFile  = "privkey.pem"
 )

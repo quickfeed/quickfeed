@@ -74,8 +74,9 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 	} else {
 		log.Println("Existing credentials successfully loaded.")
 	}
-	log.Println("When running with self-signed certificates on localhost, browsers will complain that the connection is not private.")
-	log.Println("To run the server from localhost, you will need to manually bypass the browser warning.")
+	// TODO(meling) Add note about macOS for new binary
+	// log.Println("When running with self-signed certificates on 127.0.0.1, browsers will complain that the connection is not private.")
+	// log.Println("To run the server from localhost, you will need to manually bypass the browser warning.")
 
 	httpServer := &http.Server{
 		Handler:           handler,

@@ -52,14 +52,17 @@ func main() {
 	)
 	flag.Parse()
 
-	if *dev {
-		*baseURL = "127.0.0.1" + *httpAddr
-	}
-
 	// Load environment variables from $QUICKFEED/.env.
 	// Will not override variables already defined in the environment.
 	if err := env.Load(""); err != nil {
 		log.Fatal(err)
+	}
+
+	if env.Domain() == "localhost" {
+		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
+	}
+	if *dev {
+		*baseURL = "127.0.0.1" + *httpAddr
 	}
 
 	if *newApp {
