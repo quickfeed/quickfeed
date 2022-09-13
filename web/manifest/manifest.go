@@ -284,7 +284,7 @@ func form(w http.ResponseWriter, domain string) error {
 		Name        string
 		CallbackURL string
 	}{
-		URL:         auth.GetURL(domain),
+		URL:         auth.GetBaseURL(domain),
 		Name:        env.AppName(),
 		CallbackURL: auth.GetCallbackURL(domain),
 	}

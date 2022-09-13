@@ -10,8 +10,8 @@ func GetEventsURL(baseURL string) string {
 	return getURL(baseURL, Hook)
 }
 
-// GetURL returns the base URL.
-func GetURL(baseURL string) string {
+// GetBaseURL returns the base URL.
+func GetBaseURL(baseURL string) string {
 	return getURL(baseURL, "")
 }
 
