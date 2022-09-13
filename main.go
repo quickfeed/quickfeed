@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"mime"
 	"os"
@@ -65,22 +67,17 @@ func main() {
 		*baseURL = "127.0.0.1" + *httpAddr
 	}
 
+	var srvFn web.ServerType
+	if *dev {
+		srvFn = web.NewDevelopmentServer
+		log.Printf("Starting QuickFeed in development mode on %s", *httpAddr)
+	} else {
+		srvFn = web.NewProductionServer
+		log.Printf("Starting QuickFeed in production mode on %s", *baseURL)
+	}
+
 	if *newApp {
-		if env.HasAppID() {
-			log.Fatalln(".env already contains App information")
-		}
-		m := manifest.New()
-		var srvFn web.ServerType
-		if *dev {
-			srvFn = web.NewDevelopmentServer
-		} else {
-			srvFn = web.NewProductionServer
-		}
-		server, err := srvFn(*httpAddr, m.Handler())
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err := m.StartAppCreationFlow(server); err != nil {
+		if err := createNewQuickFeedApp(srvFn, *httpAddr); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -134,14 +131,6 @@ func main() {
 		}
 	}()
 
-	var srvFn web.ServerType
-	if *dev {
-		srvFn = web.NewDevelopmentServer
-		log.Printf("Starting QuickFeed in development mode on %s", *httpAddr)
-	} else {
-		srvFn = web.NewProductionServer
-		log.Printf("Starting QuickFeed in production mode on %s", *baseURL)
-	}
 	srv, err := srvFn(*httpAddr, handler)
 	if err != nil {
 		log.Fatal(err)
@@ -162,4 +151,25 @@ func main() {
 		log.Fatalf("Failed to start QuickFeed server: %v", err)
 	}
 	log.Println("QuickFeed shut down gracefully")
+}
+
+func createNewQuickFeedApp(srvFn web.ServerType, httpAddr string) error {
+	if env.HasAppID() {
+		return errors.New(".env already contains App information")
+	}
+	if env.Domain() == "127.0.0.1" {
+		fmt.Printf("WARNING: You are creating an app on %s. Only for development purposes. Continue? (Y/n) ", env.Domain())
+		var answer string
+		fmt.Scanln(&answer)
+		if !(answer == "Y" || answer == "y") {
+			return fmt.Errorf("aborting %s GitHub App creation", env.AppName())
+		}
+	}
+
+	m := manifest.New(env.Domain())
+	server, err := srvFn(httpAddr, m.Handler())
+	if err != nil {
+		return err
+	}
+	return m.StartAppCreationFlow(server)
 }

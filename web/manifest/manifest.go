@@ -15,6 +15,7 @@ import (
 	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/web"
+	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 const (
@@ -25,17 +26,19 @@ const (
 )
 
 type Manifest struct {
+	domain  string
 	handler http.Handler
 	done    chan error
 }
 
-func New() *Manifest {
+func New(domain string) *Manifest {
 	m := &Manifest{
-		done: make(chan error),
+		domain: domain,
+		done:   make(chan error),
 	}
 	router := http.NewServeMux()
 	router.Handle("/manifest/callback", m.conversion())
-	router.Handle("/manifest", createApp())
+	router.Handle("/manifest", m.createApp())
 	m.handler = router
 	return m
 }
@@ -45,9 +48,6 @@ func (m *Manifest) Handler() http.Handler {
 }
 
 func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
-	if err := check(); err != nil {
-		return err
-	}
 	go func() {
 		if err := server.Serve(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
@@ -131,14 +131,23 @@ func (m *Manifest) conversion() http.HandlerFunc {
 		}
 
 		// Print success message, and redirect to main page
-		retErr = success(w, config)
+		if err := success(w, config); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error: %s", err)
+			retErr = err
+		}
 	}
 }
 
-func createApp() http.HandlerFunc {
+func (m *Manifest) createApp() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		form(w)
+		if err := form(w, m.domain); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error: %s", err)
+			// only signal done on error
+			m.done <- err
+		}
 	}
 }
 
@@ -171,7 +180,7 @@ body {
     <div class="center">
       <h2>{{.Name}} GitHub App created</h2>
 	  <h3>Running webpack in the background</h3>
-	  <h3>Please wait for <b>Done webpack</b> in server logs before creating a course...</h3>
+	  <h3>Please wait for <b>Done webpack</b> in server logs before logging in...</h3>
     </div>
   </div>
 </body>
@@ -180,7 +189,7 @@ body {
 <script>
 	setTimeout(function() {
 		window.location.href = "/";
-	}, 5000);
+	}, 10000);
 </script>
 `
 
@@ -234,7 +243,7 @@ func runNpmCi() bool {
 	return true
 }
 
-func form(w http.ResponseWriter) {
+func form(w http.ResponseWriter, domain string) error {
 	const tpl = `
 	<html>
 		<form id="create" action="https://github.com/settings/apps/new" method="post">
@@ -269,35 +278,19 @@ func form(w http.ResponseWriter) {
 		document.getElementById('create').submit()
 	</script>
 	`
-	t := template.Must(template.New("form").Parse(tpl))
 
 	data := struct {
 		URL         string
 		Name        string
 		CallbackURL string
 	}{
-		URL:         "https://" + env.Domain(),
+		URL:         auth.GetURL(domain),
 		Name:        env.AppName(),
-		CallbackURL: "https://" + env.Domain() + "/auth/callback",
+		CallbackURL: auth.GetCallbackURL(domain),
 	}
-
+	t := template.Must(template.New("form").Parse(tpl))
 	if err := t.Execute(w, data); err != nil {
-		fmt.Printf("Failed to execute template: %v", err)
-	}
-}
-
-func check() error {
-	if env.Domain() == "127.0.0.1" {
-		log.Printf("WARNING: You are creating an app on %s. Only for development purposes. Continue? (Y/n) ", env.Domain())
-		if !answer() {
-			return fmt.Errorf("aborting GitHub app creation")
-		}
+		return fmt.Errorf("failed to execute template: %w", err)
 	}
 	return nil
-}
-
-func answer() bool {
-	var answer string
-	fmt.Scanln(&answer)
-	return answer == "Y" || answer == "y"
 }
