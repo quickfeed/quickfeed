@@ -170,10 +170,18 @@ body {
   <div class="container">
     <div class="center">
       <h2>{{.Name}} GitHub App created</h2>
+	  <h3>Running webpack in the background</h3>
+	  <h3>Please wait for <b>Done webpack</b> in server logs before creating a course...</h3>
     </div>
   </div>
 </body>
 </html>
+
+<script>
+	setTimeout(function() {
+		window.location.href = "/";
+	}, 5000);
+</script>
 `
 
 	log.Printf("Successfully created the %s GitHub App.", *config.Name)
@@ -193,21 +201,37 @@ body {
 		return err
 	}
 	log.Printf("App URL saved in public/.env: %s", *config.HTMLURL)
+	go runWebpack()
+	return nil
+}
+
+func runWebpack() {
 	log.Println("Running webpack...")
 	c := exec.Command("webpack")
 	c.Dir = "public"
-	err := c.Run()
-	if err != nil {
-		return err
+	if err := c.Run(); err != nil {
+		log.Print(c.Output())
+		log.Print(err)
+		log.Print("Failed to run webpack; trying npm ci")
+		if ok := runNpmCi(); !ok {
+			return
+		}
 	}
-	log.Println("Done webpack")
-	fmt.Fprintf(w, `<h3>Redirecting...</h3>
-<script>
-	setTimeout(function() {
-		window.location.href = "/";
-	}, 5000);
-</script>`)
-	return nil
+	log.Print("Done webpack")
+}
+
+func runNpmCi() bool {
+	log.Println("Running npm ci...")
+	c := exec.Command("npm", "ci")
+	c.Dir = "public"
+	if err := c.Run(); err != nil {
+		log.Print(c.Output())
+		log.Print(err)
+		log.Print("Failed to run npm ci; giving up")
+		return false
+	}
+	log.Print("Done npm ci")
+	return true
 }
 
 func form(w http.ResponseWriter) {
