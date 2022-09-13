@@ -41,7 +41,7 @@ func TestAccessControl(t *testing.T) {
 	}
 	interceptors := connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
-		interceptor.AccessControl(tm),
+		interceptor.NewAccessControlInterceptor(tm),
 	)
 
 	router := http.NewServeMux()

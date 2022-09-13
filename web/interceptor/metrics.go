@@ -52,16 +52,33 @@ var (
 	}, []string{"method", "result"})
 )
 
-func Metrics() connect.Interceptor {
-	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
-		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
-			procedure := request.Spec().Procedure
-			methodName := procedure[strings.LastIndex(procedure, "/")+1:]
-			defer metricsTimer(methodName)()
-			resp, err := next(ctx, request)
-			handleMetrics(methodName, resp, err)
-			return resp, err
-		})
+type metricsInterceptor struct {
+}
+
+func NewMetricsInterceptor() *metricsInterceptor {
+	return &metricsInterceptor{}
+}
+
+func (m *metricsInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
+		return next(ctx, conn)
+	})
+}
+
+func (m *metricsInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
+	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
+		return next(ctx, spec)
+	})
+}
+
+func (m *metricsInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
+	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
+		procedure := request.Spec().Procedure
+		methodName := procedure[strings.LastIndex(procedure, "/")+1:]
+		defer metricsTimer(methodName)()
+		resp, err := next(ctx, request)
+		handleMetrics(methodName, resp, err)
+		return resp, err
 	})
 }
 

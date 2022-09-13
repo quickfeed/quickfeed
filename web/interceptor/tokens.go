@@ -53,23 +53,41 @@ var tokenUpdateMethods = map[string]func(context.Context, *auth.TokenManager, us
 	},
 }
 
+type tokenInterceptor struct {
+	tokenManager *auth.TokenManager
+}
+
+func NewTokenInterceptor(tm *auth.TokenManager) *tokenInterceptor {
+	return &tokenInterceptor{tokenManager: tm}
+}
+
+func (t *tokenInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
+		return next(ctx, conn)
+	})
+}
+
+func (t *tokenInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
+	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
+		return next(ctx, spec)
+	})
+}
+
 // TokenRefresher updates list of users who need a new JWT next time they send a request to the server.
 // This method only logs errors to avoid overwriting the gRPC error messages returned by the server.
-func TokenRefresher(tm *auth.TokenManager) connect.Interceptor {
-	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
-		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
-			procedure := request.Spec().Procedure
-			method := procedure[strings.LastIndex(procedure, "/")+1:]
-			if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
-				if msg, ok := request.Any().(userIDs); ok {
-					if err := tokenUpdateFn(ctx, tm, msg); err != nil {
-						return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): %v", method, err))
-					}
-				} else {
-					return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): missing 'userIDs' interface", method))
+func (t *tokenInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
+	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
+		procedure := request.Spec().Procedure
+		method := procedure[strings.LastIndex(procedure, "/")+1:]
+		if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
+			if msg, ok := request.Any().(userIDs); ok {
+				if err := tokenUpdateFn(ctx, t.tokenManager, msg); err != nil {
+					return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): %v", method, err))
 				}
+			} else {
+				return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): missing 'userIDs' interface", method))
 			}
-			return next(ctx, request)
-		})
+		}
+		return next(ctx, request)
 	})
 }
