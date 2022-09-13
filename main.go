@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"mime"
-	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/quickfeed/quickfeed/ci"
@@ -16,7 +20,7 @@ import (
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
-	"golang.org/x/crypto/acme/autocert"
+	"github.com/quickfeed/quickfeed/web/manifest"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -44,19 +48,38 @@ func main() {
 		baseURL  = flag.String("service.url", "", "base service DNS name")
 		dbFile   = flag.String("database.file", "qf.db", "database file")
 		public   = flag.String("http.public", "public", "path to content to serve")
-		httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
+		httpAddr = flag.String("http.addr", ":443", "HTTP listen address")
 		dev      = flag.Bool("dev", false, "running server locally")
+		newApp   = flag.Bool("new", false, "create new GitHub app")
 	)
 	flag.Parse()
-
-	if *dev {
-		*baseURL = "127.0.0.1" + *httpAddr
-	}
 
 	// Load environment variables from $QUICKFEED/.env.
 	// Will not override variables already defined in the environment.
 	if err := env.Load(""); err != nil {
 		log.Fatal(err)
+	}
+
+	if env.Domain() == "localhost" {
+		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
+	}
+	if *dev {
+		*baseURL = "127.0.0.1" + *httpAddr
+	}
+
+	var srvFn web.ServerType
+	if *dev {
+		srvFn = web.NewDevelopmentServer
+		log.Printf("Starting QuickFeed in development mode on %s", *httpAddr)
+	} else {
+		srvFn = web.NewProductionServer
+		log.Printf("Starting QuickFeed in production mode on %s", *baseURL)
+	}
+
+	if *newApp {
+		if err := createNewQuickFeedApp(srvFn, *httpAddr); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	logger, err := qlog.Zap()
@@ -95,12 +118,10 @@ func main() {
 	}
 	defer runner.Close()
 
-	certFile := env.CertFile()
-	certKey := env.KeyFile()
 	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
-
 	// Register HTTP endpoints and webhooks
 	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
+	handler := h2c.NewHandler(router, &http2.Server{})
 
 	// Create an HTTP server for prometheus.
 	httpServer := interceptor.MetricsServer(9097)
@@ -109,50 +130,46 @@ func main() {
 			log.Fatalf("Failed to start a http server: %v", err)
 		}
 	}()
-	muxServer := &http.Server{
-		Handler:           h2c.NewHandler(router, &http2.Server{}),
-		Addr:              *httpAddr,
-		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
-		WriteTimeout:      2 * time.Minute,
-		ReadTimeout:       2 * time.Minute,
-	}
-	if *dev {
-		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
-		if err := muxServer.ListenAndServeTLS(certFile, certKey); err != nil {
-			log.Fatalf("Failed to start grpc server: %v", err)
-			return
-		}
-	} else {
-		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
-	}
-	whitelist, err := env.Whitelist()
-	if err != nil {
-		log.Fatalf("Failed to get whitelist: %v", err)
-	}
-	certManager := autocert.Manager{
-		Prompt: autocert.AcceptTOS,
-		Cache:  autocert.DirCache(env.CertPath()),
-		HostPolicy: autocert.HostWhitelist(
-			whitelist...,
-		),
-	}
-	muxServer.TLSConfig = certManager.TLSConfig()
 
-	// Redirect all HTTP traffic to HTTPS.
+	srv, err := srvFn(*httpAddr, handler)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	go func() {
-		redirectSrv := &http.Server{
-			Handler:           certManager.HTTPHandler(nil),
-			Addr:              ":http",
-			ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
-		}
-		if err := redirectSrv.ListenAndServe(); err != nil {
-			log.Printf("Failed to start redirect http server: %v", err)
-			return
+		<-ctx.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Fatalf("Graceful shutdown failed: %v", err)
 		}
 	}()
 
-	// Start the HTTPS server.
-	if err := muxServer.ListenAndServeTLS("", ""); err != nil {
-		log.Fatalf("Failed to start grpc server: %v", err)
+	if err := srv.Serve(); err != nil {
+		log.Fatalf("Failed to start QuickFeed server: %v", err)
 	}
+	log.Println("QuickFeed shut down gracefully")
+}
+
+func createNewQuickFeedApp(srvFn web.ServerType, httpAddr string) error {
+	if env.HasAppID() {
+		return errors.New(".env already contains App information")
+	}
+	if env.Domain() == "127.0.0.1" {
+		fmt.Printf("WARNING: You are creating an app on %s. Only for development purposes. Continue? (Y/n) ", env.Domain())
+		var answer string
+		fmt.Scanln(&answer)
+		if !(answer == "Y" || answer == "y") {
+			return fmt.Errorf("aborting %s GitHub App creation", env.AppName())
+		}
+	}
+
+	m := manifest.New(env.Domain())
+	server, err := srvFn(httpAddr, m.Handler())
+	if err != nil {
+		return err
+	}
+	return m.StartAppCreationFlow(server)
 }
