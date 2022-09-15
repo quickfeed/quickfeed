@@ -29,27 +29,27 @@ func MetricsHandler() http.Handler {
 
 var (
 	responseTimeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "response_time",
+		Name: "quickfeed_response_time",
 		Help: "The response time for method.",
 	}, []string{"method"})
 
 	accessedMethodsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "method_accessed",
+		Name: "quickfeed_method_accessed",
 		Help: "Total number of times method accessed",
 	}, []string{"method"})
 
 	respondedMethodsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "method_responded",
+		Name: "quickfeed_method_responded",
 		Help: "Total number of times method responded successfully",
 	}, []string{"method"})
 
 	failedMethodsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "method_failed",
+		Name: "quickfeed_method_failed",
 		Help: "Total number of times method failed with an error",
 	}, []string{"method"})
 
 	loginCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "login_attempts",
+		Name: "quickfeed_login_attempts",
 		Help: "Total number of login attempts",
 	}, []string{"user"})
 )
