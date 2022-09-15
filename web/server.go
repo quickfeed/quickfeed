@@ -12,12 +12,17 @@ import (
 	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/multierr"
+	"github.com/quickfeed/quickfeed/web/interceptor"
 	"golang.org/x/crypto/acme/autocert"
 )
+
+// hardcoded metrics server address
+const metricsServerAddr = "127.0.0.1:9097"
 
 type Server struct {
 	httpServer     *http.Server
 	redirectServer *http.Server
+	metricsServer  *http.Server
 	keyFile        string
 	certFile       string
 }
@@ -55,6 +60,7 @@ func NewProductionServer(addr string, handler http.Handler) (*Server, error) {
 	return &Server{
 		httpServer:     httpServer,
 		redirectServer: redirectServer,
+		metricsServer:  metricsServer(),
 	}, nil
 }
 
@@ -89,10 +95,19 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 	}
 
 	return &Server{
-		httpServer: httpServer,
-		keyFile:    env.KeyFile(),
-		certFile:   env.CertFile(),
+		httpServer:    httpServer,
+		metricsServer: metricsServer(),
+		keyFile:       env.KeyFile(),
+		certFile:      env.CertFile(),
 	}, nil
+}
+
+func metricsServer() *http.Server {
+	return &http.Server{
+		Handler:           interceptor.MetricsHandler(),
+		Addr:              metricsServerAddr,
+		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
+	}
 }
 
 // Serve starts the underlying http server and redirect server, if any.
@@ -105,7 +120,16 @@ func (srv *Server) Serve() error {
 				if !errors.Is(err, http.ErrServerClosed) {
 					log.Printf("Redirect server exited with unexpected error: %v", err)
 				}
-				return
+			}
+		}()
+	}
+	if srv.metricsServer != nil {
+		// Start HTTP server for Prometheus metrics collection.
+		go func() {
+			if err := srv.metricsServer.ListenAndServe(); err != nil {
+				if !errors.Is(err, http.ErrServerClosed) {
+					log.Printf("Metrics server exited with unexpected error: %v", err)
+				}
 			}
 		}()
 	}
@@ -122,10 +146,13 @@ func (srv *Server) Serve() error {
 
 // Shutdown gracefully shuts down the server.
 func (srv *Server) Shutdown(ctx context.Context) error {
-	var redirectShutdownErr error
+	var redirectShutdownErr, metricsShutdownErr error
 	if srv.redirectServer != nil {
 		redirectShutdownErr = srv.redirectServer.Shutdown(ctx)
 	}
+	if srv.metricsServer != nil {
+		metricsShutdownErr = srv.metricsServer.Shutdown(ctx)
+	}
 	srvShutdownErr := srv.httpServer.Shutdown(ctx)
-	return multierr.Join(redirectShutdownErr, srvShutdownErr)
+	return multierr.Join(redirectShutdownErr, metricsShutdownErr, srvShutdownErr)
 }

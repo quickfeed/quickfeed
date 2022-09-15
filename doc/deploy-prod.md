@@ -103,10 +103,10 @@ Statistics about connections and requests can be supplied automatically by the E
 To access the statistics data directly with `curl`, run one of the following commands, depending on the desired output format:
 
 ```sh
-% curl 127.0.0.1:9901/stats
-% curl 127.0.0.1:9901/stats?format=json
-% curl 127.0.0.1:9901/stats?format=prometheus
-% curl 127.0.0.1:9901/stats/prometheus
+% curl 127.0.0.1:9097/stats
+% curl 127.0.0.1:9097/stats?format=json
+% curl 127.0.0.1:9097/stats?format=prometheus
+% curl 127.0.0.1:9097/stats/prometheus
 ```
 
 Statistics about specific gRPC methods is provided by the QuickFeed server on `localhost:9097`.
