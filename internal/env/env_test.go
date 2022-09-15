@@ -103,7 +103,7 @@ func TestSaveBackupLogic(t *testing.T) {
 	}
 
 	const baseFilename = "env"
-	existsErr := env.ExistsError(filepath.Base(baseFilename + ".bak"))
+	existsErr := env.ExistsError("dummy") // will be replaced with other error with correct t.TempDir()
 
 	tests := []struct {
 		name    string
@@ -132,6 +132,10 @@ func TestSaveBackupLogic(t *testing.T) {
 				if _, err := os.Create(bakFilename); err != nil {
 					t.Fatal(err)
 				}
+			}
+			if test.wantErr != nil {
+				// use error with correct t.TempDir()
+				test.wantErr = env.ExistsError(bakFilename)
 			}
 			if err := env.Save(filename, nil); !errors.Is(err, test.wantErr) {
 				t.Errorf("Save(%q) = %v, wanted %v", filepath.Base(filename), err, test.wantErr)
