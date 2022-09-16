@@ -10,11 +10,13 @@ Statistics about specific gRPC methods is provided by the QuickFeed via:
 
 Prometheus [documentation](https://prometheus.io/docs/introduction/overview/).
 
-### Installing on macOS with Homebrew
+### Installing on macOS or Linux with Homebrew
 
 ```sh
 % brew install prometheus
-% vim /usr/local/etc/prometheus.yml
+% export ETC=/usr/local/etc                  # macOS
+% export ETC=/home/linuxbrew/.linuxbrew/etc  # Linux
+% vim $ETC/prometheus.yml
 ```
 
 Edit the file as follows:
@@ -33,11 +35,32 @@ scrape_configs:
     - targets: ["localhost:9097"]
 ```
 
+If you want to access the Prometheus query interface externally, you need to edit the arguments passed to the prometheus service.
+
+```sh
+% vim $ETC/prometheus.args
+```
+
+The default is to access the query interface via localhost.
+
+```sh
+--web.listen-address=127.0.0.1:9090
+```
+
+However, here is an example with the `uis.itest.run` server.
+Note that port 9090 is blocked in the campus firewall, so the Prometheus interface cannot be accessed from outside.
+
+```sh
+--web.listen-address=uis.itest.run:9090
+```
+
+After making changes to the configuration or command line arguments, you need to restart the prometheus service:
+
 ```sh
 % brew services restart prometheus
 ```
 
-Navigate to the Prometheus query interface at [`localhost:9090`](http://localhost:9090).
+Then you can navigate to the Prometheus query interface at [`localhost:9090`](http://localhost:9090) or [`uis.itest.run:9090`](http://uis.itest.run:9090).
 Here you can search for both prometheus and quickfeed specific metrics of interest.
 Here is a list of quickfeed-specific keywords:
 
