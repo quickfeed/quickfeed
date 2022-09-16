@@ -65,11 +65,17 @@ Here you can search for both prometheus and quickfeed specific metrics of intere
 Here is a list of quickfeed-specific keywords:
 
 ```yaml
-quickfeed_response_time
+quickfeed_method_response_time
 quickfeed_method_accessed
 quickfeed_method_responded
 quickfeed_method_failed
 quickfeed_login_attempts
+quickfeed_clone_repositories_time
+quickfeed_repository_validation_time
+quickfeed_test_execution_time
+quickfeed_test_execution_attempts
+quickfeed_test_execution_failed
+quickfeed_test_execution_succeeded
 ```
 
 You can also query the current aggregate statistics directly:

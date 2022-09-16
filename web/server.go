@@ -12,7 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/cert"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/multierr"
-	"github.com/quickfeed/quickfeed/web/interceptor"
+	"github.com/quickfeed/quickfeed/metrics"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -104,7 +104,7 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 
 func metricsServer() *http.Server {
 	return &http.Server{
-		Handler:           interceptor.MetricsHandler(),
+		Handler:           metrics.Handler(),
 		Addr:              metricsServerAddr,
 		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 	}

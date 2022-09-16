@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -15,8 +14,9 @@ import (
 )
 
 func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogger, sc scm.SCM, dstDir string) error {
+	defer timer(r.JobOwner, r.Course.Code, cloneTimeGauge)()
+
 	logger.Debugf("Cloning repositories for %s", r)
-	start := time.Now()
 	testsDir, err := sc.Clone(ctx, &scm.CloneOptions{
 		Organization: r.Course.GetOrganizationPath(),
 		Repository:   qf.TestsRepo,
@@ -35,16 +35,13 @@ func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogge
 	if err != nil {
 		return fmt.Errorf("failed to clone %q repository: %w", qf.AssignmentRepo, err)
 	}
-	logger.Debugf("Cloning time:    %v", time.Since(start))
-	start = time.Now()
-	defer func() {
-		logger.Debugf("Validation time: %v", time.Since(start))
-	}()
 	return r.validate(testsDir, assignmentsDir)
 }
 
 // validate performs various checks on the cloned repositories.
 func (r RunData) validate(testsDir, assignmentsDir string) error {
+	defer timer(r.JobOwner, r.Course.Code, validationTimeGauge)()
+
 	// Check that there are tests for the current assignment {{ .AssignmentName }}
 	if ok, err := exists(filepath.Join(testsDir, r.Assignment.GetName())); !ok {
 		return fmt.Errorf("tests directory does not contain %q: %w", r.Assignment.GetName(), err)

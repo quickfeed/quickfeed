@@ -2,34 +2,26 @@ package interceptor
 
 import (
 	"context"
-	"net/http"
 	"strings"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Create a metrics registry.
-var reg = prometheus.NewRegistry()
-
-func init() {
-	reg.MustRegister(
+// RPCMetricsCollectors returns a list of Prometheus metrics collectors for RPC related metrics.
+func RPCMetricsCollectors() []prometheus.Collector {
+	return []prometheus.Collector{
 		loginCounter,
 		failedMethodsCounter,
 		accessedMethodsCounter,
 		respondedMethodsCounter,
 		responseTimeGauge,
-	)
-}
-
-func MetricsHandler() http.Handler {
-	return promhttp.HandlerFor(reg, promhttp.HandlerOpts{})
+	}
 }
 
 var (
 	responseTimeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "quickfeed_response_time",
+		Name: "quickfeed_method_response_time",
 		Help: "The response time for method.",
 	}, []string{"method"})
 
