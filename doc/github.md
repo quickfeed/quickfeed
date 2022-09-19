@@ -58,12 +58,10 @@ The first step is to create a new API key for your QuickFeed application.
 10. Start the QuickFeed server:
 
    ```sh
-   % quickfeed -service.url uis.itest.run &> quickfeed.log &
+   % quickfeed &> quickfeed.log &
    ```
 
    The first GitHub user to login becomes admin for the server.
-
-   Note that the `-service.url` should not be specified with the `https://` prefix.
 
 ## Creating a Course
 
