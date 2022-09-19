@@ -84,6 +84,8 @@ Jostein
 jsonpb
 JWTs
 keepalive
+keychain
+Keychains
 keyout
 killall
 labstack
