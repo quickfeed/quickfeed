@@ -64,17 +64,16 @@ func main() {
 		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
 	}
 	if *dev {
-		*baseURL = "127.0.0.1" + *httpAddr
+		*baseURL = env.Domain() + *httpAddr
 	}
 
 	var srvFn web.ServerType
 	if *dev {
 		srvFn = web.NewDevelopmentServer
-		log.Printf("Starting QuickFeed in development mode on %s", *httpAddr)
 	} else {
 		srvFn = web.NewProductionServer
-		log.Printf("Starting QuickFeed in production mode on %s", *baseURL)
 	}
+	log.Printf("Starting QuickFeed on %s", *baseURL)
 
 	if *newApp {
 		if err := createNewQuickFeedApp(srvFn, *httpAddr); err != nil {
