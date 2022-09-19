@@ -104,7 +104,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	tokenManager, err := auth.NewTokenManager(db, *baseURL)
+	tokenManager, err := auth.NewTokenManager(db)
 	if err != nil {
 		log.Fatal(err)
 	}
