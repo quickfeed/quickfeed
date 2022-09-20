@@ -86,17 +86,6 @@ You can also query the current aggregate statistics directly:
 % curl 127.0.0.1:9097/stats
 ```
 
-### Installing on Linux
-
-TODO: Update configuration and install instructions.
-
-Prometheus runs on port `:9095`, and scrapes metrics from the Envoy proxy and the gRPC server every 5 seconds.
-To start Prometheus with all the required options run:
-
-```sh
-% make prometheus
-```
-
 ## Grafana
 
 Grafana imports the data collected by Prometheus and offers multiple visualization options.
@@ -105,7 +94,7 @@ Grafana runs on `localhost:3000` by default.
 
 For additional [documentation](https://grafana.com/docs/grafana/latest/).
 
-### Installing on macOS with Homebrew
+### Installing on macOS or Linux with Homebrew
 
 ```sh
 % brew install grafana
@@ -114,17 +103,3 @@ For additional [documentation](https://grafana.com/docs/grafana/latest/).
 
 The default user and password is `admin`.
 The password must be changed before using.
-
-### Installing on Linux
-
-TODO: Update configuration and install instructions.
-
-It is currently available at `uis.itest.run/grafana`.
-To be able to login contact a member of the QuickFeed team.
-
-Grafana's configuration file is in `etc/grafana/grafana.ini`.
-After changing the configuration file, Grafana must be restarted:
-
-```sh
-% sudo service grafana-server restart
-```
