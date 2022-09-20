@@ -18,7 +18,7 @@ func AddTrustedCert(certFile string) error {
 	if err != nil {
 		return err
 	}
-	out, err := sh.Output("sudo update-ca-certificates")
+	out, err = sh.Output("sudo update-ca-certificates")
 	if out != "" {
 		log.Print(out)
 	}
