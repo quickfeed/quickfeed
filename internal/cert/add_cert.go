@@ -1,4 +1,4 @@
-//go:build !darwin
+//go:build !(darwin || linux || windows)
 
 package cert
 
@@ -8,7 +8,7 @@ import (
 )
 
 // AddTrustedCert adds given the certificate the user's keychain.
-func AddTrustedCert(certFile string) error {
+func AddTrustedCert(_ string) error {
 	log.Printf("Adding self-signed certificate to keychain on %s currently not supported", os.Getenv("OS"))
 	return nil
 }

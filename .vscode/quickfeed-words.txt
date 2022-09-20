@@ -1,3 +1,4 @@
+addstore
 agpath
 allstudents
 allteachers
@@ -17,6 +18,7 @@ bufnet
 buildid
 Certbot
 certonly
+certutil
 Chacon
 cmds
 cmpopts
