@@ -75,6 +75,8 @@ quickfeed_repository_validation_time
 quickfeed_test_execution_time
 quickfeed_test_execution_attempts
 quickfeed_test_execution_failed
+quickfeed_test_execution_failed_with_output
+quickfeed_test_execution_failed_to_extract_results
 quickfeed_test_execution_succeeded
 ```
 

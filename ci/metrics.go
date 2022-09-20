@@ -40,6 +40,16 @@ var (
 		Help: "Total number of times test execution failed",
 	}, []string{"user", "course"})
 
+	testsFailedWithOutputCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "quickfeed_test_execution_failed_with_output",
+		Help: "Total number of times test execution failed with output",
+	}, []string{"user", "course"})
+
+	testsFailedExtractResultsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "quickfeed_test_execution_failed_to_extract_results",
+		Help: "Total number of times test execution failed to extract results",
+	}, []string{"user", "course"})
+
 	testsSucceededCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "quickfeed_test_execution_succeeded",
 		Help: "Total number of times test execution succeeded",

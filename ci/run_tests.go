@@ -78,12 +78,14 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm
 	}
 	if err != nil {
 		// We may reach here with a timeout error and a non-empty output
+		testsFailedWithOutputCounter.WithLabelValues(r.JobOwner, r.Course.Code).Inc()
 		logger.Errorf("Test execution failed with output: %v\n%v", err, out)
 	}
 
 	results, err := score.ExtractResults(out, randomSecret, time.Since(start))
 	if err != nil {
 		// Log the errors from the extraction process
+		testsFailedExtractResultsCounter.WithLabelValues(r.JobOwner, r.Course.Code).Inc()
 		logger.Debugf("Session secret: %s", randomSecret)
 		logger.Errorf("Failed to extract (some) results for assignment %s for course %s: %v", r.Assignment.Name, r.Course.Name, err)
 		// don't return here; we still want partial results!
