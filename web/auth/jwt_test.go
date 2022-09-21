@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -21,12 +22,7 @@ func TestNewManager(t *testing.T) {
 	if err := db.UpdateUser(user2); err != nil {
 		t.Fatal(err)
 	}
-	// Create manager with missing required parameters.
-	_, err := auth.NewTokenManager(db, "")
-	if err == nil {
-		t.Fatal("Expected error: missing domain variable")
-	}
-	manager, err := auth.NewTokenManager(db, "test")
+	manager, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,12 +57,11 @@ func TestNewManager(t *testing.T) {
 }
 
 func TestNewCookie(t *testing.T) {
-	domain := "test"
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
 	user := qtest.CreateFakeUser(t, db, 1)
-	manager, err := auth.NewTokenManager(db, domain)
+	manager, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,6 +75,7 @@ func TestNewCookie(t *testing.T) {
 	if cookie.Name != auth.CookieName {
 		t.Errorf("Incorrect cookie name. Expected %s, got %s", auth.CookieName, cookie.Name)
 	}
+	domain := env.Domain()
 	if cookie.Domain != domain {
 		t.Errorf("Incorrect cookie domain. Expected %s, got %s", domain, cookie.Domain)
 	}
@@ -91,7 +87,7 @@ func TestUserClaims(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
-	manager, err := auth.NewTokenManager(db, "localhost")
+	manager, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +124,7 @@ func TestUpdateTokenList(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	admin := qtest.CreateFakeUser(t, db, 1)
-	manager, err := auth.NewTokenManager(db, "localhost")
+	manager, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -177,7 +173,7 @@ func TestUpdateCookie(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	user := qtest.CreateFakeUser(t, db, 1)
-	tm, err := auth.NewTokenManager(db, "localhost")
+	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}

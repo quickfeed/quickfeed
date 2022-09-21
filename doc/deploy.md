@@ -73,7 +73,7 @@ To start the server for first-time installation, use the `-new` flag.
 
 ```shell
 % make install
-% quickfeed -service.url example.com -new
+% quickfeed -new
 2022/09/11 16:45:22 running: go list -m -f {{.Dir}}
 2022/09/11 16:45:22 Loading environment variables from /Users/meling/work/quickfeed/.env
 2022/09/11 16:45:22 Important: The GitHub user that installs the QuickFeed App will become the server's admin user.
@@ -413,7 +413,7 @@ Build and run the `quickfeed` server; here we use all default values:
 
 ```bash
 % go install
-% quickfeed -service.url $DOMAIN  &> quickfeed.log &
+% quickfeed &> quickfeed.log &
 ```
 
 #### Troubleshooting
@@ -449,7 +449,7 @@ Before running the QuickFeed server, you need to configure [GitHub](./github.md)
 The command line arguments for the QuickFeed server looks roughly like this:
 
 ```sh
-quickfeed -service.url <DNS name of deployed service> -database.file <path to database> -http.addr <HTTP listener address>
+quickfeed -database.file <path to database> -http.addr <HTTP listener address>
 ```
 
 To view the full usage details:
@@ -461,7 +461,7 @@ quickfeed -help
 Here is an example with all default values:
 
 ```sh
-quickfeed -service.url uis.itest.run &> quickfeed.log &
+quickfeed &> quickfeed.log &
 ```
 
 _As a bootstrap mechanism, the first user to sign in, automatically becomes administrator for the system._
@@ -470,7 +470,6 @@ _As a bootstrap mechanism, the first user to sign in, automatically becomes admi
 
 | **Flag**        | **Description**                        | **Example**     |
 |-----------------|----------------------------------------|-----------------|
-| `service.url`   | Base DNS name for QuickFeed deployment | `uis.itest.run` |
 | `database.file` | Path to QuickFeed database             | `qf.db`         |
 | `grpc.addr`     | Listener address for gRPC service      | `:9090`         |
 | `http.addr`     | Listener address for HTTP service      | `:8081`         |
@@ -483,8 +482,3 @@ However, you may create custom docker images locally on your QuickFeed server ma
 That is, you don't need to upload your custom image to Docker Hub or elsewhere.
 
 To prepare a new custom Docker image for a course, prepare the relevant `Dockerfile` and build it.
-The `quickfeed-go` make target gives an example:
-
-```sh
-make quickfeed-go
-```

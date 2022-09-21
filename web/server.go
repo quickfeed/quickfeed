@@ -74,9 +74,13 @@ func NewDevelopmentServer(addr string, handler http.Handler) (*Server, error) {
 			CertFile: env.CertFile(),
 			Hosts:    env.Domain(),
 		}); err != nil {
-			return nil, fmt.Errorf("failed to generate self-signed certificates: %v", err)
+			return nil, fmt.Errorf("failed to generate self-signed certificates: %w", err)
 		}
 		log.Printf("Certificates successfully generated at: %s", env.CertPath())
+		log.Print("Adding certificate to local keychain (requires sudo access)")
+		if err := cert.AddTrustedCert(env.CertFile()); err != nil {
+			return nil, fmt.Errorf("failed to install self-signed certificate: %w", err)
+		}
 	} else {
 		log.Println("Existing credentials successfully loaded.")
 	}

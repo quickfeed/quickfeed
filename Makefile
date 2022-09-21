@@ -151,9 +151,3 @@ scm:
 purge: scm
 	@scm delete repo -all -namespace=$(testorg)
 	@scm delete team -all -namespace=$(testorg)
-
-run:
-	@quickfeed -service.url $(DOMAIN) -database.file ./tmp.db
-
-runlocal:
-	@quickfeed -dev

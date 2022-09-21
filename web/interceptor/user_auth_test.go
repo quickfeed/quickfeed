@@ -28,7 +28,7 @@ func TestUserVerifier(t *testing.T) {
 	logger := qlog.Logger(t).Desugar()
 	ags := web.NewQuickFeedService(logger, db, scm.TestSCMManager(), web.BaseHookOptions{}, &ci.Local{})
 
-	tm, err := auth.NewTokenManager(db, "test")
+	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
