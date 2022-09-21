@@ -6,7 +6,6 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/internal/multierr"
-	"github.com/quickfeed/quickfeed/qf"
 )
 
 type pool[T any] struct {
@@ -198,8 +197,6 @@ func (s *service[T]) Close() {
 func (s *service[T]) CloseBy(id uint64) error {
 	if stream, ok := s.streams[id]; ok {
 		stream.Close()
-	} else {
-		// not found
 	}
 	return nil
 }
@@ -223,18 +220,4 @@ func (s *service[T]) GetStream(id uint64) (*Stream[T], error) {
 // GetPool returns the pool of channels that are used to send data to the client.
 func (s *service[T]) GetPool() *pool[T] {
 	return s.pool
-}
-
-// StreamServices contain all available stream services.
-// Each service is unique to a specific type.
-type StreamServices struct {
-	Notification *service[qf.Notification]
-	Submission   *service[qf.Submission]
-}
-
-func NewStreamServices() *StreamServices {
-	return &StreamServices{
-		Notification: newService[qf.Notification](),
-		Submission:   newService[qf.Submission](),
-	}
 }
