@@ -9,21 +9,21 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 )
 
-type pool[T any] struct {
+type Pool[T any] struct {
 	mu sync.Mutex
 	// Map of channels that are used to send data to the client.
 	// The key is the user ID.
 	channels map[uint64]chan *T
 }
 
-func NewPool[T any]() *pool[T] {
-	return &pool[T]{
+func NewPool[T any]() *Pool[T] {
+	return &Pool[T]{
 		channels: make(map[uint64]chan *T),
 	}
 }
 
 // Add adds a new channel to the pool.
-func (p *pool[T]) Add(id uint64) chan *T {
+func (p *Pool[T]) Add(id uint64) chan *T {
 	// Delete the channel if it already exists.
 	p.Remove(id)
 	p.mu.Lock()
@@ -34,7 +34,7 @@ func (p *pool[T]) Add(id uint64) chan *T {
 }
 
 // Remove removes a channel from the pool.
-func (p *pool[T]) Remove(id uint64) {
+func (p *Pool[T]) Remove(id uint64) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	if ch, ok := p.channels[id]; ok {
@@ -44,7 +44,7 @@ func (p *pool[T]) Remove(id uint64) {
 }
 
 // Send sends data to all channels in the pool.
-func (p *pool[T]) Send(data *T) {
+func (p *Pool[T]) Send(data *T) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	for _, ch := range p.channels {
@@ -53,7 +53,7 @@ func (p *pool[T]) Send(data *T) {
 }
 
 // SendTo attempts to send data to a specific channel in the pool.
-func (p *pool[T]) SendTo(id uint64, data *T) error {
+func (p *Pool[T]) SendTo(id uint64, data *T) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	ch, ok := p.channels[id]
@@ -65,7 +65,7 @@ func (p *pool[T]) SendTo(id uint64, data *T) error {
 }
 
 // Close closes all channels in the pool.
-func (p *pool[T]) Close() {
+func (p *Pool[T]) Close() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	for _, ch := range p.channels {
@@ -74,7 +74,7 @@ func (p *pool[T]) Close() {
 }
 
 // CloseBy closes a specific channel in the pool.
-func (p *pool[T]) CloseBy(id uint64) error {
+func (p *Pool[T]) CloseBy(id uint64) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	ch, ok := p.channels[id]
@@ -95,7 +95,7 @@ type Stream[T any] struct {
 	// pool is stored to allow the stream to
 	// removed itself from the pool when the
 	// stream is closed
-	pool *pool[T]
+	pool *Pool[T]
 	// The channel that we listen to for any
 	// new data that we need to send to the client.
 	ch chan *T
@@ -106,7 +106,7 @@ type Stream[T any] struct {
 }
 
 // NewStream creates a new stream.
-func NewStream[T any](stream *connect.ServerStream[T], pool *pool[T], id uint64) *Stream[T] {
+func NewStream[T any](stream *connect.ServerStream[T], pool *Pool[T], id uint64) *Stream[T] {
 	//ctx, cancel := context.WithCancel(ctx)
 	newStream := &Stream[T]{
 		stream: stream,
@@ -137,25 +137,25 @@ func (s *Stream[T]) Run() error {
 	return nil
 }
 
-// service[T] is a gRPC streaming server.
-type service[T any] struct {
+// Service[T] is a gRPC streaming server.
+type Service[T any] struct {
 	mu sync.RWMutex
 	// The pool of channels that are used to send data to the client.
-	pool *pool[T]
+	pool *Pool[T]
 	// The map of streams.
 	streams map[uint64]*Stream[T]
 }
 
 // NewServer creates a new server.
-func newService[T any]() *service[T] {
-	return &service[T]{
+func newService[T any]() *Service[T] {
+	return &Service[T]{
 		pool:    NewPool[T](),
 		streams: make(map[uint64]*Stream[T]),
 	}
 }
 
 // SendTo sends data to client(s) with the given ID(s). If no ID is given, data is sent to all clients.
-func (s *service[T]) SendTo(data *T, userIDs ...uint64) error {
+func (s *Service[T]) SendTo(data *T, userIDs ...uint64) error {
 	if len(userIDs) == 0 {
 		// Broadcast to all clients.
 		s.pool.Send(data)
@@ -168,7 +168,7 @@ func (s *service[T]) SendTo(data *T, userIDs ...uint64) error {
 	return multierr.Join(errs...)
 }
 
-func (s *service[T]) Add(userID uint64, st *connect.ServerStream[T]) *Stream[T] {
+func (s *Service[T]) Add(userID uint64, st *connect.ServerStream[T]) *Stream[T] {
 	// Delete the stream if it already exists.
 	s.Remove(userID)
 	// Add the stream to the map.
@@ -179,7 +179,7 @@ func (s *service[T]) Add(userID uint64, st *connect.ServerStream[T]) *Stream[T] 
 	return stream
 }
 
-func (s *service[T]) Remove(id uint64) {
+func (s *Service[T]) Remove(id uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if _, ok := s.streams[id]; ok {
@@ -188,14 +188,14 @@ func (s *service[T]) Remove(id uint64) {
 	}
 }
 
-func (s *service[T]) Close() {
+func (s *Service[T]) Close() {
 	s.pool.Close()
 	for _, stream := range s.streams {
 		stream.Close()
 	}
 }
 
-func (s *service[T]) CloseBy(id uint64) error {
+func (s *Service[T]) CloseBy(id uint64) error {
 	if stream, ok := s.streams[id]; ok {
 		stream.Close()
 	}
@@ -203,7 +203,7 @@ func (s *service[T]) CloseBy(id uint64) error {
 }
 
 // GetStream returns a stream by ID.
-func (s *service[T]) GetStream(id uint64) (*Stream[T], error) {
+func (s *Service[T]) GetStream(id uint64) (*Stream[T], error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	stream, ok := s.streams[id]
@@ -214,14 +214,14 @@ func (s *service[T]) GetStream(id uint64) (*Stream[T], error) {
 }
 
 // GetPool returns the pool of channels that are used to send data to the client.
-func (s *service[T]) GetPool() *pool[T] {
+func (s *Service[T]) GetPool() *Pool[T] {
 	return s.pool
 }
 
 // StreamServices contain all available stream services.
 // Each service is unique to a specific type.
 type StreamServices struct {
-	Submission *service[qf.Submission]
+	Submission *Service[qf.Submission]
 }
 
 func NewStreamServices() *StreamServices {
