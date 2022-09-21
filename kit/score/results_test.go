@@ -74,6 +74,59 @@ Here are some more logs for the student.
 	}
 }
 
+func TestExtractResultWithMultipleZeroScoreLines(t *testing.T) {
+	out := `
+    {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":0,"MaxScore":100,"Weight":1}
+    {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":0,"MaxScore":100,"Weight":1}
+    {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":50,"MaxScore":100,"Weight":1}
+	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"JoGo","Score":0,"MaxScore":100,"Weight":1}
+	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"JoGo","Score":0,"MaxScore":100,"Weight":1}
+	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"JoGo","Score":0,"MaxScore":100,"Weight":1}
+	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"JoGo","Score":50,"MaxScore":100,"Weight":1}
+`
+
+	res, err := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	if err != nil {
+		// err may contain multiple errors
+		t.Fatal(err)
+	}
+	if len(res.Scores) != 2 {
+		t.Fatalf("ExtractResult() expected 2 Score entries, got %d: %+v", len(res.Scores), res.Scores)
+	}
+	for _, score := range res.Scores {
+		if score.Score != 50 {
+			t.Errorf("ExtractResult() expected 50, got %d", score.Score)
+		}
+	}
+}
+
+func TestExtractResultWithMultipleNonZeroScoreLines(t *testing.T) {
+	out := `
+    {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":0,"MaxScore":100,"Weight":1}
+    {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":0,"MaxScore":100,"Weight":1}
+    {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":50,"MaxScore":100,"Weight":1}
+    {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":100,"MaxScore":100,"Weight":1}
+	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"JoGo","Score":0,"MaxScore":100,"Weight":1}
+	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"JoGo","Score":20,"MaxScore":100,"Weight":1}
+	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"JoGo","Score":0,"MaxScore":100,"Weight":1}
+	{"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"JoGo","Score":30,"MaxScore":100,"Weight":1}
+`
+
+	res, err := score.ExtractResults(out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	if err != nil {
+		// err may contain multiple errors
+		t.Fatal(err)
+	}
+	if len(res.Scores) != 2 {
+		t.Fatalf("ExtractResult() expected 2 Score entries, got %d: %+v", len(res.Scores), res.Scores)
+	}
+	for _, score := range res.Scores {
+		if score.Score != -1 {
+			t.Errorf("ExtractResult() expected -1, got %d", score.Score)
+		}
+	}
+}
+
 func TestExtractResultWithPanickedAndMaliciousScoreLines(t *testing.T) {
 	out := `
     {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"GoodTest1","Score":0,"MaxScore":100,"Weight":1}
