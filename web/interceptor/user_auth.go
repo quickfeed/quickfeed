@@ -25,7 +25,25 @@ func NewUserInterceptor(logger *zap.SugaredLogger, tm *auth.TokenManager) *userI
 
 func (u *userInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
-		return next(ctx, conn)
+		cookie := conn.RequestHeader().Get(auth.Cookie)
+		claims, err := u.tm.GetClaims(cookie)
+		if err != nil {
+			return connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("failed to extract JWT claims from session cookie: %w", err))
+		}
+
+		var updatedCookie *http.Cookie
+		if u.tm.UpdateRequired(claims) {
+			u.logger.Debug("Updating cookie for user ", claims.UserID)
+			updatedCookie, err = u.tm.UpdateCookie(claims)
+			if err != nil {
+				return connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("failed to update session cookie: %w", err))
+			}
+		}
+		if updatedCookie != nil {
+			conn.ResponseHeader().Set(auth.SetCookie, updatedCookie.String())
+		}
+
+		return next(claims.ClaimsContext(ctx), conn)
 	})
 }
 
