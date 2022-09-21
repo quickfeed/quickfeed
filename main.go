@@ -19,7 +19,6 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/interceptor"
 	"github.com/quickfeed/quickfeed/web/manifest"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -117,14 +116,6 @@ func main() {
 	// Register HTTP endpoints and webhooks
 	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
 	handler := h2c.NewHandler(router, &http2.Server{})
-
-	// Create an HTTP server for prometheus.
-	httpServer := interceptor.MetricsServer(9097)
-	go func() {
-		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatalf("Failed to start a http server: %v", err)
-		}
-	}()
 
 	srv, err := srvFn(*httpAddr, handler)
 	if err != nil {
