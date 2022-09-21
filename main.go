@@ -69,7 +69,7 @@ func main() {
 	} else {
 		srvFn = web.NewProductionServer
 	}
-	log.Printf("Starting QuickFeed on %s", env.Domain())
+	log.Printf("Starting QuickFeed on %s%s", env.Domain(), *httpAddr)
 
 	if *newApp {
 		if err := createNewQuickFeedApp(srvFn, *httpAddr); err != nil {
@@ -104,7 +104,7 @@ func main() {
 		log.Fatal(err)
 	}
 	authConfig := auth.NewGitHubConfig(env.Domain(), scmConfig)
-	log.Print("Callback:", authConfig.RedirectURL)
+	log.Print("Callback: ", authConfig.RedirectURL)
 	scmManager := scm.NewSCMManager(scmConfig)
 
 	runner, err := ci.NewDockerCI(logger.Sugar())
