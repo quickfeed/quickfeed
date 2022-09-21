@@ -8,7 +8,6 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
@@ -27,7 +26,8 @@ func TestAccessControl(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	logger := qtest.Logger(t)
-	qfService := web.NewQuickFeedService(logger.Desugar(), db, scm.TestSCMManager(), web.BaseHookOptions{}, &ci.Local{})
+	_, mgr := qtest.TestSCMManager(t)
+	qfService := web.NewQuickFeedService(logger.Desugar(), db, mgr, web.BaseHookOptions{}, &ci.Local{})
 
 	tm, err := auth.NewTokenManager(db)
 	if err != nil {

@@ -14,7 +14,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
-	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"golang.org/x/net/http2"
@@ -26,7 +25,8 @@ func TestUserVerifier(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	logger := qlog.Logger(t).Desugar()
-	ags := web.NewQuickFeedService(logger, db, scm.TestSCMManager(), web.BaseHookOptions{}, &ci.Local{})
+	_, scmMgr := qtest.TestSCMManager(t)
+	ags := web.NewQuickFeedService(logger, db, scmMgr, web.BaseHookOptions{}, &ci.Local{})
 
 	tm, err := auth.NewTokenManager(db)
 	if err != nil {
