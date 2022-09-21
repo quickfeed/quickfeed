@@ -30,7 +30,7 @@ func NewFakeSCMClient() *FakeSCM {
 }
 
 func (FakeSCM) Clone(_ context.Context, opt *CloneOptions) (string, error) {
-	cloneDir := filepath.Join(opt.DestDir, repoDir(opt))
+	cloneDir := filepath.Join(opt.DestDir, opt.Repository)
 	// This is a hack to make sure the lab1 directory exists,
 	// required by the web/rebuild_test.go:TestRebuildSubmissions()
 	lab1Dir := filepath.Join(cloneDir, "lab1")

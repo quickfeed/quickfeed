@@ -8,7 +8,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	"github.com/quickfeed/quickfeed/qf"
 )
 
 const authUserName = "quickfeed" // can be anything except an empty string
@@ -24,7 +23,7 @@ func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error
 			return "", err
 		}
 	}
-	cloneDir := filepath.Join(opt.DestDir, repoDir(opt))
+	cloneDir := filepath.Join(opt.DestDir, opt.Repository)
 	s.logger.Debugf("Clone(%s)", s.cloneURL(opt))
 	var branch plumbing.ReferenceName
 	if opt.Branch != "" {
@@ -40,13 +39,6 @@ func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error
 	}
 	s.logger.Debugf("CloneDir = %s", cloneDir)
 	return cloneDir, nil
-}
-
-func repoDir(opt *CloneOptions) string {
-	if qf.RepoType(opt.Repository).IsStudentRepo() {
-		return qf.AssignmentRepo
-	}
-	return qf.TestsRepo
 }
 
 // cloneURL returns the URL to clone the given repository.

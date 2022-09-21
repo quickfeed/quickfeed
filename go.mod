@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
+	github.com/alecthomas/kong v0.6.1
 	github.com/alta/protopatch v0.5.0
 	github.com/beatlabs/github-auth v0.0.0-20220721134423-2b8d98e205d1
 	github.com/bufbuild/connect-go v0.3.0
@@ -89,7 +90,6 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220808204814-fd01256a5276 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.0.3 // indirect
 )
 
