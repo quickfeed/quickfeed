@@ -11,19 +11,19 @@ import (
 	"github.com/quickfeed/quickfeed/web/auth"
 )
 
-type userInterceptor struct {
+type UserInterceptor struct {
 	tm     *auth.TokenManager
 	logger *zap.SugaredLogger
 }
 
-func NewUserInterceptor(logger *zap.SugaredLogger, tm *auth.TokenManager) *userInterceptor {
-	return &userInterceptor{
+func NewUserInterceptor(logger *zap.SugaredLogger, tm *auth.TokenManager) *UserInterceptor {
+	return &UserInterceptor{
 		tm:     tm,
 		logger: logger,
 	}
 }
 
-func (u *userInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+func (u *UserInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
 		cookie := conn.RequestHeader().Get(auth.Cookie)
 		claims, err := u.tm.GetClaims(cookie)
@@ -47,7 +47,7 @@ func (u *userInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc
 	})
 }
 
-func (u *userInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
+func (u *UserInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
 	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
 		return next(ctx, spec)
 	})
@@ -58,7 +58,7 @@ func (u *userInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) 
 // If a valid claim is found, the interceptor injects the user ID as metadata in the incoming context
 // for service methods that come after this interceptor.
 // The interceptor also updates the session cookie if needed.
-func (u *userInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
+func (u *UserInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 		cookie := request.Header().Get(auth.Cookie)
 		claims, err := u.tm.GetClaims(cookie)

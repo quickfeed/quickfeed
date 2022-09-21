@@ -76,28 +76,28 @@ var accessRolesFor = map[string]roles{
 	"CreateCourse":            {admin},
 }
 
-type accessControlInterceptor struct {
+type AccessControlInterceptor struct {
 	tokenManager *auth.TokenManager
 }
 
-func NewAccessControlInterceptor(tm *auth.TokenManager) *accessControlInterceptor {
-	return &accessControlInterceptor{tokenManager: tm}
+func NewAccessControlInterceptor(tm *auth.TokenManager) *AccessControlInterceptor {
+	return &AccessControlInterceptor{tokenManager: tm}
 }
 
-func (a *accessControlInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+func (a *AccessControlInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
 		return next(ctx, conn)
 	})
 }
 
-func (a *accessControlInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
+func (a *AccessControlInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
 	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
 		return next(ctx, spec)
 	})
 }
 
 // AccessControl checks user information stored in the JWT claims against the list of roles required to call the method.
-func (a *accessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
+func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 		procedure := request.Spec().Procedure
 		method := procedure[strings.LastIndex(procedure, "/")+1:]

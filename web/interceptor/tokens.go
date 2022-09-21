@@ -53,21 +53,21 @@ var tokenUpdateMethods = map[string]func(context.Context, *auth.TokenManager, us
 	},
 }
 
-type tokenInterceptor struct {
+type TokenInterceptor struct {
 	tokenManager *auth.TokenManager
 }
 
-func NewTokenInterceptor(tm *auth.TokenManager) *tokenInterceptor {
-	return &tokenInterceptor{tokenManager: tm}
+func NewTokenInterceptor(tm *auth.TokenManager) *TokenInterceptor {
+	return &TokenInterceptor{tokenManager: tm}
 }
 
-func (t *tokenInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+func (t *TokenInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
 		return next(ctx, conn)
 	})
 }
 
-func (t *tokenInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
+func (t *TokenInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
 	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
 		return next(ctx, spec)
 	})
@@ -75,7 +75,7 @@ func (t *tokenInterceptor) WrapStreamingClient(next connect.StreamingClientFunc)
 
 // TokenRefresher updates list of users who need a new JWT next time they send a request to the server.
 // This method only logs errors to avoid overwriting the gRPC error messages returned by the server.
-func (t *tokenInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
+func (t *TokenInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 		procedure := request.Spec().Procedure
 		method := procedure[strings.LastIndex(procedure, "/")+1:]

@@ -22,21 +22,21 @@ type idCleaner interface {
 	RemoveRemoteID()
 }
 
-type validationInterceptor struct {
+type ValidationInterceptor struct {
 	logger *zap.SugaredLogger
 }
 
-func NewValidationInterceptor(logger *zap.SugaredLogger) *validationInterceptor {
-	return &validationInterceptor{logger: logger}
+func NewValidationInterceptor(logger *zap.SugaredLogger) *ValidationInterceptor {
+	return &ValidationInterceptor{logger: logger}
 }
 
-func (v *validationInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+func (v *ValidationInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
 		return next(ctx, conn)
 	})
 }
 
-func (v *validationInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
+func (v *ValidationInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
 	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
 		return next(ctx, spec)
 	})
@@ -51,7 +51,7 @@ func (v *validationInterceptor) WrapStreamingClient(next connect.StreamingClient
 // user-level code and returns an illegal argument to the client.
 // Further, the response values are cleaned of any remote IDs.
 // In addition, the interceptor also implements a cancellation mechanism.
-func (v *validationInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
+func (v *ValidationInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 		if request.Any() != nil {
 			if err := validate(v.logger, request.Any()); err != nil {
