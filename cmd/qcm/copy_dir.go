@@ -66,24 +66,31 @@ func copyDir(srcDir, dest string) error {
 	return nil
 }
 
-func copyFile(srcFile, dstFile string) error {
+func copyFile(srcFile, dstFile string) (err error) {
+	in, err := os.Open(srcFile)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		closeErr := in.Close()
+		if err == nil {
+			err = closeErr
+		}
+	}()
+
 	out, err := os.Create(dstFile)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
-
-	in, err := os.Open(srcFile)
-	defer in.Close()
-	if err != nil {
-		return err
-	}
+	defer func() {
+		closeErr := out.Close()
+		if err == nil {
+			err = closeErr
+		}
+	}()
 
 	_, err = io.Copy(out, in)
-	if err != nil {
-		return err
-	}
-	return nil
+	return
 }
 
 func exists(filePath string) bool {
