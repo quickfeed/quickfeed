@@ -9,9 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/beatlabs/github-auth/app"
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/qlog"
@@ -163,30 +161,6 @@ func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course 
 	}); err != nil {
 		t.Fatal(err)
 	}
-}
-
-// TestSCM is a test helper function to create an SCM map.
-func TestSCMManager(t *testing.T) (scm.SCM, *scm.Manager) {
-	t.Helper()
-	env.SetFakeProvider(t)
-	conf := &scm.Config{
-		ClientID:     "test",
-		ClientSecret: "test",
-		Config:       &app.Config{},
-	}
-	mgr := scm.NewSCMManager(conf)
-	sc, err := mgr.GetOrCreateSCM(context.Background(), Logger(t), "testorg")
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = sc.CreateOrganization(context.Background(), &scm.OrganizationOptions{
-		Name: "testorg",
-		Path: "testorg",
-	})
-	if err != nil {
-		t.Error(err)
-	}
-	return sc, mgr
 }
 
 func RandomString(t *testing.T) string {

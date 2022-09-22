@@ -24,11 +24,13 @@ import (
 func testQuickFeedService(t *testing.T) (database.Database, func(), scm.SCM, *QuickFeedService) {
 	t.Helper()
 	db, cleanup := qtest.TestDB(t)
-	sc, mgr := qtest.TestSCMManager(t)
+	sc, mgr := scm.TestSCMManager(t)
 	logger := qlog.Logger(t).Desugar()
 	return db, cleanup, sc, NewQuickFeedService(logger, db, mgr, BaseHookOptions{}, &ci.Local{})
 }
 
+// StartGrpcAuthServer will set up mux server with interceptors passed in opts. If opts argument is nil,
+// the server will start with full interceptor chain.
 func StartGrpcAuthServer(t *testing.T, qfService *QuickFeedService, tm *auth.TokenManager, opts connect.Option) (func(), func(context.Context)) {
 	t.Helper()
 

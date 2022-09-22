@@ -8,6 +8,7 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
@@ -26,7 +27,7 @@ func TestAccessControl(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	logger := qtest.Logger(t)
-	_, mgr := qtest.TestSCMManager(t)
+	_, mgr := scm.TestSCMManager(t)
 	qfService := web.NewQuickFeedService(logger.Desugar(), db, mgr, web.BaseHookOptions{}, &ci.Local{})
 
 	tm, err := auth.NewTokenManager(db)
@@ -58,7 +59,7 @@ func TestAccessControl(t *testing.T) {
 		Year:             2022,
 		Provider:         "fake",
 		OrganizationID:   1,
-		OrganizationPath: "testorg",
+		OrganizationPath: "test",
 		CourseCreatorID:  courseAdmin.ID,
 	}
 	if err := db.CreateCourse(courseAdmin.ID, course); err != nil {
@@ -290,7 +291,7 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "GetEnrollmentsByUser", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetUsers(ctx, requestWithCookie(&qf.Void{}, tt.cookie))
 			checkAccess(t, "GetUsers", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetOrganization(ctx, requestWithCookie(&qf.OrgRequest{OrgName: "testorg"}, tt.cookie))
+			_, err = client.GetOrganization(ctx, requestWithCookie(&qf.OrgRequest{OrgName: "test"}, tt.cookie))
 			checkAccess(t, "GetOrganization", err, tt.wantCode, tt.wantAccess)
 			_, err = client.CreateCourse(ctx, requestWithCookie(course, tt.cookie))
 			checkAccess(t, "CreateCourse", err, tt.wantCode, tt.wantAccess)

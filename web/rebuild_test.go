@@ -60,7 +60,7 @@ func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
 }
 
 func TestRebuildSubmissions(t *testing.T) {
-	_, mgr := qtest.TestSCMManager(t)
+	_, mgr := scm.TestSCMManager(t)
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	logger := qlog.Logger(t).Desugar()
