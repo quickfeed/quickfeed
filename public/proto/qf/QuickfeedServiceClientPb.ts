@@ -1756,5 +1756,27 @@ export class QuickFeedServiceClient {
     this.methodDescriptorIsEmptyRepo);
   }
 
+  methodDescriptorSubmissionStream = new grpcWeb.MethodDescriptor(
+    '/qf.QuickFeedService/SubmissionStream',
+    grpcWeb.MethodType.SERVER_STREAMING,
+    qf_requests_pb.Void,
+    qf_types_pb.Submission,
+    (request: qf_requests_pb.Void) => {
+      return request.serializeBinary();
+    },
+    qf_types_pb.Submission.deserializeBinary
+  );
+
+  submissionStream(
+    request: qf_requests_pb.Void,
+    metadata?: grpcWeb.Metadata): grpcWeb.ClientReadableStream<qf_types_pb.Submission> {
+    return this.client_.serverStreaming(
+      this.hostname_ +
+        '/qf.QuickFeedService/SubmissionStream',
+      request,
+      metadata || {},
+      this.methodDescriptorSubmissionStream);
+  }
+
 }
 

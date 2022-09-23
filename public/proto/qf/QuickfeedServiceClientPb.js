@@ -134,6 +134,9 @@ var QuickFeedServiceClient = /** @class */ (function () {
         this.methodDescriptorIsEmptyRepo = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/IsEmptyRepo', grpcWeb.MethodType.UNARY, qf_requests_pb.RepositoryRequest, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
+        this.methodDescriptorSubmissionStream = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/SubmissionStream', grpcWeb.MethodType.SERVER_STREAMING, qf_requests_pb.Void, qf_types_pb.Submission, function (request) {
+            return request.serializeBinary();
+        }, qf_types_pb.Submission.deserializeBinary);
         if (!options)
             options = {};
         if (!credentials)
@@ -463,6 +466,10 @@ var QuickFeedServiceClient = /** @class */ (function () {
         }
         return this.client_.unaryCall(this.hostname_ +
             '/qf.QuickFeedService/IsEmptyRepo', request, metadata || {}, this.methodDescriptorIsEmptyRepo);
+    };
+    QuickFeedServiceClient.prototype.submissionStream = function (request, metadata) {
+        return this.client_.serverStreaming(this.hostname_ +
+            '/qf.QuickFeedService/SubmissionStream', request, metadata || {}, this.methodDescriptorSubmissionStream);
     };
     return QuickFeedServiceClient;
 }());
