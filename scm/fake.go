@@ -15,7 +15,7 @@ import (
 type FakeSCM struct {
 	Repositories  map[uint64]*Repository
 	Organizations map[uint64]*qf.Organization
-	Hooks         map[uint64]int
+	Hooks         map[string]*Hook
 	Teams         map[uint64]*Team
 }
 
@@ -24,7 +24,7 @@ func NewFakeSCMClient() *FakeSCM {
 	return &FakeSCM{
 		Repositories:  make(map[uint64]*Repository),
 		Organizations: make(map[uint64]*qf.Organization),
-		Hooks:         make(map[uint64]int),
+		Hooks:         make(map[string]*Hook),
 		Teams:         make(map[uint64]*Team),
 	}
 }
@@ -115,17 +115,22 @@ func (*FakeSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool 
 }
 
 // ListHooks implements the SCM interface.
-func (*FakeSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook, error) {
-	return nil, nil
+func (s *FakeSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook, error) {
+	hooks := make([]*Hook, len(s.Hooks))
+	for _, v := range s.Hooks {
+		hooks = append(hooks, v)
+	}
+	return hooks, nil
 }
 
 // CreateHook implements the SCM interface.
 func (s *FakeSCM) CreateHook(_ context.Context, opt *CreateHookOptions) error {
-	if opt.Repository != nil {
-		if _, ok := s.Repositories[opt.Repository.ID]; !ok {
-			return errors.New("repository not found")
-		}
-		s.Hooks[opt.Repository.ID]++
+	_, ok := s.Hooks[opt.Organization]
+	if ok {
+		return errors.New("hook already exists")
+	}
+	s.Hooks[opt.Organization] = &Hook{
+		Name: opt.Organization,
 	}
 	return nil
 }
