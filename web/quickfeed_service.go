@@ -624,3 +624,9 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
+
+
+func (s *QuickFeedService) SubmissionStream(ctx context.Context, req *connect.Request[qf.Void], st *connect.ServerStream[qf.Submission]) error {
+	stream := s.streams.Submission.Add(userID(ctx), st)
+	return stream.Run()
+}
