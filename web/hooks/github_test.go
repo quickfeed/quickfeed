@@ -10,6 +10,7 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	logq "github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/stream"
 )
 
 const (
@@ -60,7 +61,7 @@ func TestGitHubWebHook(t *testing.T) {
 
 	var db database.Database
 	var runner ci.Runner
-	webhook := NewGitHubWebHook(logger, db, &scm.Manager{}, runner, secret)
+	webhook := NewGitHubWebHook(logger, db, &scm.Manager{}, runner, stream.NewStreamServices(), secret)
 
 	log.Println("starting webhook server")
 	http.HandleFunc("/webhook", webhook.Handle())
