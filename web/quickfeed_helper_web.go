@@ -14,7 +14,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
-	"github.com/quickfeed/quickfeed/web/auth"
+	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -29,18 +29,15 @@ func testQuickFeedService(t *testing.T) (database.Database, func(), scm.SCM, *Qu
 	return db, cleanup, sc, NewQuickFeedService(logger, db, mgr, BaseHookOptions{}, &ci.Local{})
 }
 
-// StartGrpcAuthServer will set up mux server with interceptors passed in opts. If opts argument is nil,
-// the server will start with full interceptor chain.
-func StartGrpcAuthServer(t *testing.T, qfService *QuickFeedService, tm *auth.TokenManager, opts connect.Option) (func(), func(context.Context)) {
+// MockQuickFeedServer is a test helper that returns a serve function and a corresponding shutdown function
+// for a QuickFeed server with the given options, typically interceptors. The serve function should be called as a goroutine.
+func MockQuickFeedServer(t *testing.T, logger *zap.SugaredLogger, db database.Database, opts connect.Option) (func(), func(context.Context)) {
 	t.Helper()
+	_, mgr := scm.MockSCMManager(t)
+	qfService := NewQuickFeedService(logger.Desugar(), db, mgr, BaseHookOptions{}, &ci.Local{})
 
 	router := http.NewServeMux()
-	if opts == nil {
-		router.Handle(qfService.NewQuickFeedHandler(tm))
-	} else {
-		router.Handle(qfconnect.NewQuickFeedServiceHandler(qfService, opts))
-	}
-
+	router.Handle(qfconnect.NewQuickFeedServiceHandler(qfService, opts))
 	muxServer := &http.Server{
 		Handler:           h2c.NewHandler(router, &http2.Server{}),
 		Addr:              "127.0.0.1:8081",
