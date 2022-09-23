@@ -8,21 +8,23 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/stream"
 	"go.uber.org/zap"
 )
 
 // GitHubWebHook holds references and data for handling webhook events.
 type GitHubWebHook struct {
-	logger *zap.SugaredLogger
-	db     database.Database
-	scmMgr *scm.Manager
-	runner ci.Runner
-	secret string
+	logger  *zap.SugaredLogger
+	db      database.Database
+	scmMgr  *scm.Manager
+	runner  ci.Runner
+	streams *stream.StreamServices
+	secret  string
 }
 
 // NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the QuickFeed server.
-func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, runner ci.Runner, secret string) *GitHubWebHook {
-	return &GitHubWebHook{logger: logger, db: db, scmMgr: mgr, runner: runner, secret: secret}
+func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, runner ci.Runner, streams *stream.StreamServices, secret string) *GitHubWebHook {
+	return &GitHubWebHook{logger: logger, db: db, scmMgr: mgr, runner: runner, streams: streams, secret: secret}
 }
 
 // Handle take POST requests from GitHub, representing Push events
