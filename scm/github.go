@@ -319,7 +319,7 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string)
 
 // CreateHook implements the SCM interface.
 func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error {
-	if !opt.valid() {
+	if !opt.valid() || opt.Organization == "" {
 		return ErrMissingFields{
 			Method:  "CreateHook",
 			Message: fmt.Sprintf("%+v", opt),
@@ -335,16 +335,7 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) erro
 		},
 		Events: []string{"push", "pull_request", "pull_request_review"},
 	}
-	var err error
-	// prioritize creating an organization hook
-	if opt.Organization != "" {
-		_, _, err = s.client.Organizations.CreateHook(ctx, opt.Organization, hook)
-		if err != nil {
-			return fmt.Errorf("CreateOrgHook: failed to create GitHub hook for org %s: %w", opt.Organization, err)
-		}
-	} else {
-		_, _, err = s.client.Repositories.CreateHook(ctx, opt.Repository.Owner, opt.Repository.Path, hook)
-	}
+	_, _, err := s.client.Organizations.CreateHook(ctx, opt.Organization, hook)
 	if err != nil {
 		return ErrFailedSCM{
 			GitError: err,

@@ -173,9 +173,8 @@ type CreateRepositoryOptions struct {
 }
 
 // CreateHookOptions contains information on how to create a webhook.
-// If Organization string is provided, will create a new hook on
-// the organization's level. This hook will be triggered on push to any
-// of the organization's repositories.
+// On GitHub, a single webhook is created on the organization level.
+// Repository field is used by GitLab.
 type CreateHookOptions struct {
 	URL          string
 	Secret       string
