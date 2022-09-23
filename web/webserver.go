@@ -44,7 +44,7 @@ func (s *QuickFeedService) RegisterRouter(tm *auth.TokenManager, authConfig *oau
 	router.HandleFunc(auth.Logout, auth.OAuth2Logout())
 
 	// Register hooks.
-	ghHook := hooks.NewGitHubWebHook(s.logger, s.db, s.scmMgr, s.runner, s.bh.Secret)
+	ghHook := hooks.NewGitHubWebHook(s.logger, s.db, s.scmMgr, s.runner, s.streams, s.bh.Secret)
 	router.HandleFunc(auth.Hook, ghHook.Handle())
 
 	return router
