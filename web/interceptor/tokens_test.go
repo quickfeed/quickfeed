@@ -21,7 +21,7 @@ func TestRefreshTokens(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	logger := qlog.Logger(t)
-	_, mgr := scm.TestSCMManager(t)
+	_, mgr := scm.MockSCMManager(t)
 	qfService := web.NewQuickFeedService(logger.Desugar(), db, mgr, web.BaseHookOptions{}, &ci.Local{})
 
 	tm, err := auth.NewTokenManager(db)

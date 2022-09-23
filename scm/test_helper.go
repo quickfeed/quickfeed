@@ -8,9 +8,9 @@ import (
 	"github.com/quickfeed/quickfeed/internal/env"
 )
 
-// TestSCMManager sets the current provider to "fake", creates a "test" organization
+// MockSCMManager sets the current provider to "fake", creates a "test" organization
 // and a fake scm client for this organization.
-func TestSCMManager(t *testing.T) (SCM, *Manager) {
+func MockSCMManager(t *testing.T) (SCM, *Manager) {
 	t.Helper()
 	env.SetFakeProvider(t)
 	conf := &Config{

@@ -15,8 +15,7 @@ import (
 )
 
 const (
-	grpcAddr = "127.0.0.1:8081"
-	token    = "some-secret-string"
+	token = "some-secret-string"
 	// same as quickfeed root user
 	// botUserID = 1
 	userName = "meling"
@@ -46,9 +45,8 @@ func TestGrpcAuth(t *testing.T) {
 
 	client := qtest.QuickFeedClient("")
 
-	ctx := context.Background()
 	// create request context with the helpbot's secret token
-	reqCtx := metadata.NewOutgoingContext(ctx,
+	ctx := metadata.NewOutgoingContext(context.Background(),
 		metadata.New(map[string]string{auth.Cookie: token}),
 	)
 
@@ -57,7 +55,7 @@ func TestGrpcAuth(t *testing.T) {
 		CourseYear: 2021,
 		UserLogin:  userName,
 	})
-	userInfo, err := client.GetUserByCourse(reqCtx, request)
+	userInfo, err := client.GetUserByCourse(ctx, request)
 	check(t, err)
 	if userInfo.Msg.ID != user.ID {
 		t.Errorf("expected user id %d, got %d", user.ID, userInfo.Msg.ID)
