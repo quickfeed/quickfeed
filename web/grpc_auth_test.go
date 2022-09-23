@@ -43,7 +43,7 @@ func TestGrpcAuth(t *testing.T) {
 		t.Errorf("Expected %v, got %v\n", userName, user.Login)
 	}
 
-	tm, err := auth.NewTokenManager(db, "test")
+	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatalf("failed to create token manager: %v", err)
 	}

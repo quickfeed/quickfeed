@@ -50,6 +50,8 @@ func (r RunData) String() string {
 // to run the tests on the student code. The temporary directory is deleted when the container
 // exits at the end of this function.
 func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm.SCM, runner Runner) (*score.Results, error) {
+	testsStartedCounter.WithLabelValues(r.JobOwner, r.Course.Code).Inc()
+
 	dstDir, err := os.MkdirTemp("", quickfeedTestsPath)
 	if err != nil {
 		return nil, err
@@ -66,24 +68,30 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm
 		return nil, fmt.Errorf("failed to parse run script: %w", err)
 	}
 
+	defer timer(r.JobOwner, r.Course.Code, testExecutionTimeGauge)()
 	logger.Debugf("Running tests for %s", r)
 	start := time.Now()
 	out, err := runner.Run(ctx, job)
 	if err != nil && out == "" {
+		testsFailedCounter.WithLabelValues(r.JobOwner, r.Course.Code).Inc()
 		return nil, fmt.Errorf("test execution failed without output: %w", err)
 	}
 	if err != nil {
 		// We may reach here with a timeout error and a non-empty output
+		testsFailedWithOutputCounter.WithLabelValues(r.JobOwner, r.Course.Code).Inc()
 		logger.Errorf("Test execution failed with output: %v\n%v", err, out)
 	}
 
 	results, err := score.ExtractResults(out, randomSecret, time.Since(start))
 	if err != nil {
 		// Log the errors from the extraction process
+		testsFailedExtractResultsCounter.WithLabelValues(r.JobOwner, r.Course.Code).Inc()
 		logger.Debugf("Session secret: %s", randomSecret)
 		logger.Errorf("Failed to extract (some) results for assignment %s for course %s: %v", r.Assignment.Name, r.Course.Name, err)
 		// don't return here; we still want partial results!
 	}
+
+	testsSucceededCounter.WithLabelValues(r.JobOwner, r.Course.Code).Inc()
 	logger.Debug("ci.RunTests", zap.Any("Results", qlog.IndentJson(results)))
 	// return the extracted score and filtered log output
 	return results, nil

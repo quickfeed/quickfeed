@@ -1,3 +1,4 @@
+addstore
 agpath
 allstudents
 allteachers
@@ -17,6 +18,7 @@ bufnet
 buildid
 Certbot
 certonly
+certutil
 Chacon
 cmds
 cmpopts
@@ -84,6 +86,8 @@ Jostein
 jsonpb
 JWTs
 keepalive
+keychain
+Keychains
 keyout
 killall
 labstack

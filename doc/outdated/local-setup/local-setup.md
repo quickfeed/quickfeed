@@ -112,7 +112,7 @@ Make sure to comment these lines in `main.go` (line number might differ, but sho
 109. go envoy.StartEnvoy(logger)
 ```
 
-Also ***don't*** use the `make local` because it will trigger _Same-origin policy_
+Also ***don't*** use the `make local` because it will trigger *Same-origin policy*
 
 ### Envoy
 
@@ -329,7 +329,7 @@ The file must be mounted every time the computer has been restarted.
 Start quickfeed with this command:
 
 ```bash
-quickfeed -http.addr ":8081" -service.url "127.0.0.1"
+quickfeed -http.addr ":8081"
 ```
 
 You can now visit Quickfeed on the ip-address 127.0.0.1.

@@ -19,7 +19,6 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/interceptor"
 	"github.com/quickfeed/quickfeed/web/manifest"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -45,11 +44,10 @@ func init() {
 
 func main() {
 	var (
-		baseURL  = flag.String("service.url", "", "base service DNS name")
 		dbFile   = flag.String("database.file", "qf.db", "database file")
 		public   = flag.String("http.public", "public", "path to content to serve")
 		httpAddr = flag.String("http.addr", ":443", "HTTP listen address")
-		dev      = flag.Bool("dev", false, "running server locally")
+		dev      = flag.Bool("dev", false, "run development server with self-signed certificates")
 		newApp   = flag.Bool("new", false, "create new GitHub app")
 	)
 	flag.Parse()
@@ -63,18 +61,14 @@ func main() {
 	if env.Domain() == "localhost" {
 		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
 	}
-	if *dev {
-		*baseURL = "127.0.0.1" + *httpAddr
-	}
 
 	var srvFn web.ServerType
 	if *dev {
 		srvFn = web.NewDevelopmentServer
-		log.Printf("Starting QuickFeed in development mode on %s", *httpAddr)
 	} else {
 		srvFn = web.NewProductionServer
-		log.Printf("Starting QuickFeed in production mode on %s", *baseURL)
 	}
+	log.Printf("Starting QuickFeed on %s%s", env.Domain(), *httpAddr)
 
 	if *newApp {
 		if err := createNewQuickFeedApp(srvFn, *httpAddr); err != nil {
@@ -95,7 +89,7 @@ func main() {
 
 	// Holds references for activated providers for current user token
 	bh := web.BaseHookOptions{
-		BaseURL: *baseURL,
+		BaseURL: env.Domain(),
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
@@ -104,12 +98,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	tokenManager, err := auth.NewTokenManager(db, *baseURL)
+	tokenManager, err := auth.NewTokenManager(db)
 	if err != nil {
 		log.Fatal(err)
 	}
-	authConfig := auth.NewGitHubConfig(*baseURL, scmConfig)
-	logger.Sugar().Debug("CALLBACK: ", authConfig.RedirectURL)
+	authConfig := auth.NewGitHubConfig(env.Domain(), scmConfig)
+	log.Print("Callback: ", authConfig.RedirectURL)
 	scmManager := scm.NewSCMManager(scmConfig)
 
 	runner, err := ci.NewDockerCI(logger.Sugar())
@@ -122,14 +116,6 @@ func main() {
 	// Register HTTP endpoints and webhooks
 	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
 	handler := h2c.NewHandler(router, &http2.Server{})
-
-	// Create an HTTP server for prometheus.
-	httpServer := interceptor.MetricsServer(9097)
-	go func() {
-		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatalf("Failed to start a http server: %v", err)
-		}
-	}()
 
 	srv, err := srvFn(*httpAddr, handler)
 	if err != nil {

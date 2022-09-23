@@ -28,7 +28,7 @@ func TestRefreshTokens(t *testing.T) {
 	logger := qlog.Logger(t)
 	ags := web.NewQuickFeedService(logger.Desugar(), db, scm.TestSCMManager(), web.BaseHookOptions{}, &ci.Local{})
 
-	tm, err := auth.NewTokenManager(db, "test")
+	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
