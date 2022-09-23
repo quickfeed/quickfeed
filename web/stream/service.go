@@ -14,15 +14,13 @@ import (
 // The services may be used to send data to connected clients.
 // To add a new service, add a new field to this struct.
 type StreamServices struct {
-	Submission   *Service[qf.Submission]
-	Notification *Service[qf.Notification]
+	Submission *Service[qf.Submission]
 }
 
 // NewStreamServices creates a new StreamServices.
 func NewStreamServices() *StreamServices {
 	return &StreamServices{
-		Submission:   newService[qf.Submission](),
-		Notification: newService[qf.Notification](),
+		Submission: newService[qf.Submission](),
 	}
 }
 

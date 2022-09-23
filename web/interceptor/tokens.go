@@ -49,7 +49,7 @@ var tokenUpdateMethods = map[string]func(context.Context, *auth.TokenManager, us
 			}
 			return defaultTokenUpdater(ctx, tm, group)
 		}
-		return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s):", "DeleteGroup"))
+		return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): request does not contain a group", "DeleteGroup"))
 	},
 }
 
@@ -61,13 +61,13 @@ func NewTokenInterceptor(tm *auth.TokenManager) *TokenInterceptor {
 	return &TokenInterceptor{tokenManager: tm}
 }
 
-func (t *TokenInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+func (*TokenInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
 		return next(ctx, conn)
 	})
 }
 
-func (t *TokenInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
+func (*TokenInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
 	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
 		return next(ctx, spec)
 	})

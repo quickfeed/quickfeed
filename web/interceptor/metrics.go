@@ -59,19 +59,24 @@ func NewMetricsInterceptor() *MetricsInterceptor {
 	return &MetricsInterceptor{}
 }
 
-func (m *MetricsInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+func (*MetricsInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
-		return next(ctx, conn)
+		procedure := conn.Spec().Procedure
+		methodName := procedure[strings.LastIndex(procedure, "/")+1:]
+		defer metricsTimer(methodName)()
+		err := next(ctx, conn)
+		handleMetrics(methodName, nil, err)
+		return err
 	})
 }
 
-func (m *MetricsInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
+func (*MetricsInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
 	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
 		return next(ctx, spec)
 	})
 }
 
-func (m *MetricsInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
+func (*MetricsInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 		procedure := request.Spec().Procedure
 		methodName := procedure[strings.LastIndex(procedure, "/")+1:]

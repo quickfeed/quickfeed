@@ -47,7 +47,7 @@ func (u *UserInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc
 	})
 }
 
-func (u *UserInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
+func (*UserInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
 	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
 		return next(ctx, spec)
 	})
