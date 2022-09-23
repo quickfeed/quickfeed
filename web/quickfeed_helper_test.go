@@ -14,7 +14,7 @@ import (
 func testQuickFeedService(t *testing.T) (database.Database, func(), scm.SCM, *web.QuickFeedService) {
 	t.Helper()
 	db, cleanup := qtest.TestDB(t)
-	sc, mgr := qtest.FakeProviderMap(t)
+	sc, mgr := scm.TestSCMManager(t)
 	logger := qlog.Logger(t).Desugar()
 	return db, cleanup, sc, web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 }

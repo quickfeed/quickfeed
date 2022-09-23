@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/qlog"
@@ -162,18 +161,6 @@ func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course 
 	}); err != nil {
 		t.Fatal(err)
 	}
-}
-
-// FakeProviderMap is a test helper function to create an SCM map.
-func FakeProviderMap(t *testing.T) (scm.SCM, *scm.Manager) {
-	t.Helper()
-	env.SetFakeProvider(t)
-	mgr := scm.NewSCMManager(&scm.Config{})
-	scm, err := mgr.GetOrCreateSCM(context.Background(), Logger(t), "test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	return scm, mgr
 }
 
 func RandomString(t *testing.T) string {

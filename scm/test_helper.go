@@ -2,11 +2,17 @@ package scm
 
 import (
 	"context"
+	"testing"
 
 	"github.com/beatlabs/github-auth/app"
+	"github.com/quickfeed/quickfeed/internal/env"
 )
 
-func TestSCMManager() *Manager {
+// TestSCMManager sets the current provider to "fake", creates a "test" organization
+// and a fake scm client for this organization.
+func TestSCMManager(t *testing.T) (SCM, *Manager) {
+	t.Helper()
+	env.SetFakeProvider(t)
 	conf := &Config{
 		"test",
 		"test",
@@ -14,12 +20,12 @@ func TestSCMManager() *Manager {
 	}
 	sc := NewFakeSCMClient()
 	_, _ = sc.CreateOrganization(context.Background(), &OrganizationOptions{
-		Name: "testorg",
-		Path: "testorg",
+		Name: "test",
+		Path: "test",
 	})
-	return &Manager{
+	return sc, &Manager{
 		scms: map[string]SCM{
-			"testorg": sc,
+			"test": sc,
 		},
 		Config: conf,
 	}

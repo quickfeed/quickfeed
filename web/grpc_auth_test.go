@@ -2,11 +2,8 @@ package web_test
 
 import (
 	"context"
-	"errors"
-	"net/http"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/database"
@@ -14,10 +11,6 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -48,19 +41,12 @@ func TestGrpcAuth(t *testing.T) {
 		t.Fatalf("failed to create token manager: %v", err)
 	}
 	// start gRPC server in background
-	serveFn, shutdown := startGrpcAuthServer(t, qfService, tm)
+	serveFn, shutdown := web.StartGrpcAuthServer(t, qfService, tm, nil)
 	go serveFn()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	conn, err := grpc.DialContext(ctx, grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
-	if err != nil {
-		t.Fatalf("failed to connect to grpc server: %v", err)
-	}
-	defer conn.Close()
 
 	client := qtest.QuickFeedClient("")
 
+	ctx := context.Background()
 	// create request context with the helpbot's secret token
 	reqCtx := metadata.NewOutgoingContext(ctx,
 		metadata.New(map[string]string{auth.Cookie: token}),
@@ -95,31 +81,6 @@ func fillDatabase(t *testing.T, db database.Database) {
 
 	user = qtest.CreateUser(t, db, 11, &qf.User{Login: userName})
 	qtest.EnrollStudent(t, db, user, course)
-}
-
-func startGrpcAuthServer(t *testing.T, qfService *web.QuickFeedService, tm *auth.TokenManager) (func(), func(context.Context)) {
-	t.Helper()
-
-	router := http.NewServeMux()
-	router.Handle(qfService.NewQuickFeedHandler(tm))
-	muxServer := &http.Server{
-		Handler:           h2c.NewHandler(router, &http2.Server{}),
-		Addr:              "127.0.0.1:8081",
-		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
-	}
-
-	return func() {
-			if err := muxServer.ListenAndServe(); err != nil {
-				if !errors.Is(err, http.ErrServerClosed) {
-					t.Errorf("Server exited with unexpected error: %v", err)
-				}
-				return
-			}
-		}, func(ctx context.Context) {
-			if err := muxServer.Shutdown(ctx); err != nil {
-				t.Fatal(err)
-			}
-		}
 }
 
 func check(t *testing.T, err error) {
