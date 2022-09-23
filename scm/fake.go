@@ -55,7 +55,10 @@ func (s *FakeSCM) CreateOrganization(_ context.Context, opt *OrganizationOptions
 }
 
 // UpdateOrganization implements the SCM interface.
-func (*FakeSCM) UpdateOrganization(_ context.Context, _ *OrganizationOptions) error {
+func (s *FakeSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOptions) error {
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Name}); err != nil {
+		return errors.New("organization not found")
+	}
 	return nil
 }
 
@@ -120,13 +123,15 @@ func (s *FakeSCM) DeleteRepository(_ context.Context, opt *RepositoryOptions) er
 	if _, ok := s.Repositories[opt.Owner]; !ok {
 		return errors.New("organization does not have any repositories")
 	}
-	delete(s.Repositories, opt.Path)
+	delete(s.Repositories[opt.Owner], opt.Path)
 	return nil
 }
 
 // UpdateRepoAccess implements the SCM interface.
 func (s *FakeSCM) UpdateRepoAccess(_ context.Context, repository *Repository, _, _ string) error {
-	//_, ok := s.Repositories[]
+	if _, ok := s.Repositories[repository.Owner][repository.Path]; !ok {
+		return errors.New("repository not found")
+	}
 	return nil
 }
 
