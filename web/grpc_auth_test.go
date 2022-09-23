@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/database"
@@ -12,8 +11,6 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -47,16 +44,9 @@ func TestGrpcAuth(t *testing.T) {
 	serveFn, shutdown := web.StartGrpcAuthServer(t, qfService, tm, nil)
 	go serveFn()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	conn, err := grpc.DialContext(ctx, grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
-	if err != nil {
-		t.Fatalf("failed to connect to grpc server: %v", err)
-	}
-	defer conn.Close()
-
 	client := qtest.QuickFeedClient("")
 
+	ctx := context.Background()
 	// create request context with the helpbot's secret token
 	reqCtx := metadata.NewOutgoingContext(ctx,
 		metadata.New(map[string]string{auth.Cookie: token}),
