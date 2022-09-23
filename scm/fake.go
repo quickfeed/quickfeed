@@ -13,7 +13,7 @@ import (
 // FakeSCM implements the SCM interface.
 // TODO(meling) many of the methods below are not implemented.
 type FakeSCM struct {
-	Repositories  map[uint64]*Repository
+	Repositories  map[string]map[string]*Repository
 	Organizations map[uint64]*qf.Organization
 	Hooks         map[string]*Hook
 	Teams         map[uint64]*Team
@@ -22,7 +22,7 @@ type FakeSCM struct {
 // NewFakeSCMClient returns a new Fake client implementing the SCM interface.
 func NewFakeSCMClient() *FakeSCM {
 	return &FakeSCM{
-		Repositories:  make(map[uint64]*Repository),
+		Repositories:  make(map[string]map[string]*Repository),
 		Organizations: make(map[uint64]*qf.Organization),
 		Hooks:         make(map[string]*Hook),
 		Teams:         make(map[uint64]*Team),
@@ -50,6 +50,7 @@ func (s *FakeSCM) CreateOrganization(_ context.Context, opt *OrganizationOptions
 		Avatar: "https://avatars3.githubusercontent.com/u/1000" + strconv.Itoa(id) + "?v=3",
 	}
 	s.Organizations[org.ID] = org
+	s.Repositories[opt.Path] = make(map[string]*Repository)
 	return org, nil
 }
 
@@ -60,6 +61,13 @@ func (*FakeSCM) UpdateOrganization(_ context.Context, _ *OrganizationOptions) er
 
 // GetOrganization implements the SCM interface.
 func (s *FakeSCM) GetOrganization(_ context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
+	if opt.ID == 0 {
+		for _, org := range s.Organizations {
+			if org.Path == opt.Name {
+				return org, nil
+			}
+		}
+	}
 	org, ok := s.Organizations[opt.ID]
 	if !ok {
 		return nil, errors.New("organization not found")
@@ -68,44 +76,57 @@ func (s *FakeSCM) GetOrganization(_ context.Context, opt *GetOrgOptions) (*qf.Or
 }
 
 // CreateRepository implements the SCM interface.
-func (s *FakeSCM) CreateRepository(_ context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
+func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Path}); err != nil {
+		return nil, err
+	}
+	if repo, ok := s.Repositories[opt.Organization.Path][opt.Path]; ok {
+		return repo, nil
+	}
 	repo := &Repository{
 		ID:      uint64(len(s.Repositories) + 1),
 		Path:    opt.Path,
 		HTMLURL: "https://example.com/" + opt.Organization.Path + "/" + opt.Path,
 		OrgID:   opt.Organization.ID,
 	}
-	s.Repositories[repo.ID] = repo
+	s.Repositories[opt.Organization.Path][opt.Path] = repo
 	return repo, nil
 }
 
 // GetRepository implements the SCM interface.
-func (*FakeSCM) GetRepository(_ context.Context, _ *RepositoryOptions) (*Repository, error) {
-	return nil, nil
+func (s *FakeSCM) GetRepository(_ context.Context, opt *RepositoryOptions) (*Repository, error) {
+	repo, ok := s.Repositories[opt.Owner][opt.Path]
+	if !ok {
+		return nil, errors.New("repository not found")
+	}
+	return repo, nil
 }
 
 // GetRepositories implements the SCM interface.
 func (s *FakeSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*Repository, error) {
-	var repos []*Repository
-	for _, repo := range s.Repositories {
-		if repo.OrgID == org.ID {
-			repos = append(repos, repo)
-		}
+	courseRepos, ok := s.Repositories[org.Path]
+	if !ok {
+		return nil, errors.New("organization does not have any repositories")
+	}
+	repos := make([]*Repository, 0)
+	for _, v := range courseRepos {
+		repos = append(repos, v)
 	}
 	return repos, nil
 }
 
 // DeleteRepository implements the SCM interface.
 func (s *FakeSCM) DeleteRepository(_ context.Context, opt *RepositoryOptions) error {
-	if _, ok := s.Repositories[opt.ID]; !ok {
-		return errors.New("repository not found")
+	if _, ok := s.Repositories[opt.Owner]; !ok {
+		return errors.New("organization does not have any repositories")
 	}
-	delete(s.Repositories, opt.ID)
+	delete(s.Repositories, opt.Path)
 	return nil
 }
 
 // UpdateRepoAccess implements the SCM interface.
-func (*FakeSCM) UpdateRepoAccess(_ context.Context, _ *Repository, _, _ string) error {
+func (s *FakeSCM) UpdateRepoAccess(_ context.Context, repository *Repository, _, _ string) error {
+	//_, ok := s.Repositories[]
 	return nil
 }
 
@@ -151,7 +172,6 @@ func (s *FakeSCM) DeleteTeam(_ context.Context, opt *TeamOptions) error {
 	if _, ok := s.Teams[opt.TeamID]; !ok {
 		return errors.New("repository not found")
 	}
-	delete(s.Repositories, opt.TeamID)
 	return nil
 }
 
