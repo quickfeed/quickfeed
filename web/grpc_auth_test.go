@@ -41,14 +41,13 @@ func TestGrpcAuth(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	serveFn, shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
+	shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
 		interceptor.Metrics(),
 		interceptor.Validation(logger),
 		interceptor.UnaryUserVerifier(logger, tm),
 		interceptor.AccessControl(tm),
 		interceptor.TokenRefresher(tm),
 	))
-	go serveFn()
 
 	client := qtest.QuickFeedClient("")
 

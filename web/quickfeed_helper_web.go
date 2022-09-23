@@ -29,9 +29,9 @@ func testQuickFeedService(t *testing.T) (database.Database, func(), scm.SCM, *Qu
 	return db, cleanup, sc, NewQuickFeedService(logger, db, mgr, BaseHookOptions{}, &ci.Local{})
 }
 
-// MockQuickFeedServer is a test helper that returns a serve function and a corresponding shutdown function
-// for a QuickFeed server with the given options, typically interceptors. The serve function should be called as a goroutine.
-func MockQuickFeedServer(t *testing.T, logger *zap.SugaredLogger, db database.Database, opts connect.Option) (func(), func(context.Context)) {
+// MockQuickFeedServer is a test helper that starts a QuickFeed server in a goroutine, with the given options, typically interceptors.
+// The returned function must be called to shut down the server and the end of a test.
+func MockQuickFeedServer(t *testing.T, logger *zap.SugaredLogger, db database.Database, opts connect.Option) func(context.Context) {
 	t.Helper()
 	_, mgr := scm.MockSCMManager(t)
 	qfService := NewQuickFeedService(logger.Desugar(), db, mgr, BaseHookOptions{}, &ci.Local{})
@@ -44,16 +44,17 @@ func MockQuickFeedServer(t *testing.T, logger *zap.SugaredLogger, db database.Da
 		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
 	}
 
-	return func() {
-			if err := muxServer.ListenAndServe(); err != nil {
-				if !errors.Is(err, http.ErrServerClosed) {
-					t.Errorf("Server exited with unexpected error: %v", err)
-				}
-				return
+	go func() {
+		if err := muxServer.ListenAndServe(); err != nil {
+			if !errors.Is(err, http.ErrServerClosed) {
+				t.Errorf("Server exited with unexpected error: %v", err)
 			}
-		}, func(ctx context.Context) {
-			if err := muxServer.Shutdown(ctx); err != nil {
-				t.Fatal(err)
-			}
+			return
 		}
+	}()
+	return func(ctx context.Context) {
+		if err := muxServer.Shutdown(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
 }

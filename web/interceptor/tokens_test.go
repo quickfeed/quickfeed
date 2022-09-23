@@ -23,11 +23,10 @@ func TestRefreshTokens(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	serveFn, shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
+	shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
 		interceptor.UnaryUserVerifier(logger, tm),
 		interceptor.TokenRefresher(tm),
 	))
-	go serveFn()
 
 	client := qtest.QuickFeedClient("")
 
