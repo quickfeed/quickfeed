@@ -11,11 +11,10 @@ import (
 
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/scm"
 )
 
 func TestNewGroup(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -39,17 +38,9 @@ func TestNewGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
-	_, err := fakeProvider.CreateOrganization(ctx,
-		&scm.OrganizationOptions{Path: "test", Name: "test"},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	createGroupRequest := connect.NewRequest(&qf.Group{Name: "Heins-Group", CourseID: course.ID, Users: []*qf.User{{ID: user.ID}}})
 	// current user (in context) must be in group being created
-	ctx = qtest.WithUserContext(context.Background(), user)
+	ctx := qtest.WithUserContext(context.Background(), user)
 	wantGroup, err := ags.CreateGroup(ctx, createGroupRequest)
 	if err != nil {
 		t.Fatal(err)
@@ -64,7 +55,7 @@ func TestNewGroup(t *testing.T) {
 }
 
 func TestCreateGroupWithMissingFields(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -87,22 +78,14 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
-	_, err := fakeProvider.CreateOrganization(ctx,
-		&scm.OrganizationOptions{Path: "path", Name: "name"},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	users := []*qf.User{{ID: user.ID}}
 	group_wo_course_id := connect.NewRequest(&qf.Group{Name: "Hein's Group", Users: users})
 	group_wo_name := connect.NewRequest(&qf.Group{CourseID: course.ID, Users: users})
 	group_wo_users := connect.NewRequest(&qf.Group{Name: "Hein's Group", CourseID: course.ID})
 
 	// current user (in context) must be in group being created
-	ctx = qtest.WithUserContext(context.Background(), user)
-	_, err = ags.CreateGroup(ctx, group_wo_course_id)
+	ctx := qtest.WithUserContext(context.Background(), user)
+	_, err := ags.CreateGroup(ctx, group_wo_course_id)
 	if err == nil {
 		t.Fatal("expected CreateGroup to fail without a course ID")
 	}
@@ -117,7 +100,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 }
 
 func TestNewGroupTeacherCreator(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -150,13 +133,6 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 		CourseID: course.ID,
 		Status:   qf.Enrollment_STUDENT,
 	}); err != nil {
-		t.Fatal(err)
-	}
-
-	_, err := fakeProvider.CreateOrganization(context.Background(),
-		&scm.OrganizationOptions{Path: "path", Name: "name"},
-	)
-	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -193,7 +169,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 }
 
 func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -230,19 +206,13 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	}
 
 	ctx := qtest.WithUserContext(context.Background(), user)
-	_, err := fakeProvider.CreateOrganization(ctx,
-		&scm.OrganizationOptions{Path: "path", Name: "name"},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	group_req := connect.NewRequest(&qf.Group{
 		Name:     "HeinsGroup",
 		CourseID: course.ID,
 		Users:    []*qf.User{{ID: user.ID}, {ID: teacher.ID}},
 	})
-	_, err = ags.CreateGroup(ctx, group_req)
+	_, err := ags.CreateGroup(ctx, group_req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -251,15 +221,8 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 }
 
 func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
-
-	_, err := fakeProvider.CreateOrganization(context.Background(),
-		&scm.OrganizationOptions{Path: "test", Name: "test"},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := qf.Course{Provider: "fake", OrganizationID: 1, OrganizationPath: "test"}
@@ -425,7 +388,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 }
 
 func TestDeleteGroup(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	testCourse := qf.Course{
@@ -441,9 +404,6 @@ func TestDeleteGroup(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"}); err != nil {
-		t.Fatal(err)
-	}
 	if _, err := ags.CreateCourse(ctx, connect.NewRequest(&testCourse)); err != nil {
 		t.Fatal(err)
 	}
@@ -585,7 +545,7 @@ func TestGetGroup(t *testing.T) {
 }
 
 func TestPatchGroupStatus(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	course := qf.Course{
@@ -621,12 +581,6 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	ctx := qtest.WithUserContext(context.Background(), teacher)
-	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{
-		Name: course.Code,
-		Path: course.Code,
-	}); err != nil {
-		t.Fatal(err)
-	}
 
 	user1 := qtest.CreateFakeUser(t, db, 3)
 	user2 := qtest.CreateFakeUser(t, db, 4)
@@ -765,21 +719,13 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 }
 
 func TestDeleteApprovedGroup(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := allCourses[0]
 	err := db.CreateCourse(admin.ID, course)
 	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := qtest.WithUserContext(context.Background(), admin)
-	if _, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{
-		Name: course.Code,
-		Path: course.Code,
-	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -826,7 +772,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 		Users:    []*qf.User{user1, user2},
 	}
 	// current user1 (in context) must be in group being created
-	ctx = qtest.WithUserContext(context.Background(), user1)
+	ctx := qtest.WithUserContext(context.Background(), user1)
 	createdGroup, err := ags.CreateGroup(ctx, connect.NewRequest(group))
 	if err != nil {
 		t.Fatal(err)
