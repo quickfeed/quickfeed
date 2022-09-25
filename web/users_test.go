@@ -3,18 +3,21 @@ package web_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestGetUsers(t *testing.T) {
-	db, shutdown, client := MockQuickFeedClient(t)
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	shutdown, client := MockQuickFeedClient(t, db, nil)
 
 	unexpectedUsers, err := client.GetUsers(context.Background(), &connect.Request[qf.Void]{Msg: &qf.Void{}})
 	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.Msg.GetUsers()) > 0 {
@@ -56,7 +59,9 @@ var allUsers = []struct {
 }
 
 func TestGetEnrollmentsByCourse(t *testing.T) {
-	db, shutdown, client := MockQuickFeedClient(t)
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	shutdown, client := MockQuickFeedClient(t, db, nil)
 
 	var users []*qf.User
 	for _, u := range allUsers {
@@ -135,7 +140,9 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 }
 
 func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
-	db, shutdown, client := MockQuickFeedClient(t)
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	shutdown, client := MockQuickFeedClient(t, db, nil)
 
 	var users []*qf.User
 	for _, u := range allUsers {
@@ -218,18 +225,29 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	if os.Getenv("TODO") == "" {
-		t.Skip("See TODO description")
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	logger := qtest.Logger(t)
+
+	tm, err := auth.NewTokenManager(db)
+	if err != nil {
+		t.Fatal(err)
 	}
-	// TODO(meling) This test fails when invoked as a client without interceptors.
-	// It seems that the context does not reach the client method.
-	db, shutdown, client := MockQuickFeedClient(t)
+
+	shutdown, client := MockQuickFeedClient(t, db, connect.WithInterceptors(
+		interceptor.UnaryUserVerifier(logger, tm),
+	))
 	firstAdminUser := qtest.CreateFakeUser(t, db, 1)
 	nonAdminUser := qtest.CreateFakeUser(t, db, 11)
 
+	firstAdminCookie, err := tm.NewAuthCookie(firstAdminUser.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// we want to update nonAdminUser to become admin
 	nonAdminUser.IsAdmin = true
-	err := db.UpdateUser(nonAdminUser)
+	err = db.UpdateUser(nonAdminUser)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -252,7 +270,8 @@ func TestUpdateUser(t *testing.T) {
 		AvatarURL: "www.hello.com",
 	})
 
-	ctx := qtest.WithUserContext(context.Background(), firstAdminUser)
+	ctx := context.Background()
+	nameChangeRequest.Header().Set(auth.Cookie, firstAdminCookie.String())
 	_, err = client.UpdateUser(ctx, nameChangeRequest)
 	if err != nil {
 		t.Error(err)
@@ -278,7 +297,10 @@ func TestUpdateUser(t *testing.T) {
 
 func TestUpdateUserFailures(t *testing.T) {
 	t.Skip("TODO: Needs to be rewritten as a client-server test to verify (with interceptors) that the server is actually enforcing the rules")
-	db, shutdown, client := MockQuickFeedClient(t)
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	shutdown, client := MockQuickFeedClient(t, db, nil)
+
 	wantAdminUser := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateFakeUser(t, db, 11)
 
