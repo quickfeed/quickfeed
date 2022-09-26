@@ -9,14 +9,17 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestGetUsers(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	shutdown, client := MockQuickFeedClient(t, db, nil)
 
-	unexpectedUsers, err := ags.GetUsers(context.Background(), &connect.Request[qf.Void]{Msg: &qf.Void{}})
+	unexpectedUsers, err := client.GetUsers(context.Background(), &connect.Request[qf.Void]{Msg: &qf.Void{}})
 	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.Msg.GetUsers()) > 0 {
 		t.Fatalf("found unexpected users %+v", unexpectedUsers)
 	}
@@ -25,7 +28,7 @@ func TestGetUsers(t *testing.T) {
 	user2 := qtest.CreateFakeUser(t, db, 2)
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	foundUsers, err := ags.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
+	foundUsers, err := client.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,8 +37,9 @@ func TestGetUsers(t *testing.T) {
 	wantUsers = append(wantUsers, admin, user2)
 	gotUsers := foundUsers.Msg.GetUsers()
 	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.GetUsers() mismatch (-wantUsers +gotUsers):\n%s", diff)
+		t.Errorf("GetUsers() mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
+	shutdown(ctx)
 }
 
 var allUsers = []struct {
@@ -55,8 +59,9 @@ var allUsers = []struct {
 }
 
 func TestGetEnrollmentsByCourse(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	shutdown, client := MockQuickFeedClient(t, db, nil)
 
 	var users []*qf.User
 	for _, u := range allUsers {
@@ -120,7 +125,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	request := &connect.Request[qf.EnrollmentRequest]{
 		Msg: &qf.EnrollmentRequest{CourseID: allCourses[0].ID},
 	}
-	gotEnrollments, err := ags.GetEnrollmentsByCourse(ctx, request)
+	gotEnrollments, err := client.GetEnrollmentsByCourse(ctx, request)
 	if err != nil {
 		t.Error(err)
 	}
@@ -129,13 +134,15 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		gotUsers = append(gotUsers, e.User)
 	}
 	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.GetEnrollmentsByCourse() mismatch (-wantUsers +gotUsers):\n%s", diff)
+		t.Errorf("GetEnrollmentsByCourse() mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
+	shutdown(ctx)
 }
 
 func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	shutdown, client := MockQuickFeedClient(t, db, nil)
 
 	var users []*qf.User
 	for _, u := range allUsers {
@@ -201,7 +208,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	request := connect.NewRequest(
 		&qf.EnrollmentRequest{CourseID: course.ID, IgnoreGroupMembers: true},
 	)
-	enrollments, err := ags.GetEnrollmentsByCourse(ctx, request)
+	enrollments, err := client.GetEnrollmentsByCourse(ctx, request)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -212,21 +219,35 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 		u.Course = nil
 	}
 	if diff := cmp.Diff(wantEnrollments, gotEnrollments, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.GetEnrollmentsByCourse() mismatch (-wantEnrollments +gotEnrollments):\n%s", diff)
+		t.Errorf("GetEnrollmentsByCourse() mismatch (-wantEnrollments +gotEnrollments):\n%s", diff)
 	}
+	shutdown(ctx)
 }
 
 func TestUpdateUser(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	logger := qtest.Logger(t)
+
+	tm, err := auth.NewTokenManager(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	shutdown, client := MockQuickFeedClient(t, db, connect.WithInterceptors(
+		interceptor.UnaryUserVerifier(logger, tm),
+	))
 	firstAdminUser := qtest.CreateFakeUser(t, db, 1)
 	nonAdminUser := qtest.CreateFakeUser(t, db, 11)
 
-	ctx := qtest.WithUserContext(context.Background(), firstAdminUser)
+	firstAdminCookie, err := tm.NewAuthCookie(firstAdminUser.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// we want to update nonAdminUser to become admin
 	nonAdminUser.IsAdmin = true
-	err := db.UpdateUser(nonAdminUser)
+	err = db.UpdateUser(nonAdminUser)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -249,7 +270,9 @@ func TestUpdateUser(t *testing.T) {
 		AvatarURL: "www.hello.com",
 	})
 
-	_, err = ags.UpdateUser(ctx, nameChangeRequest)
+	ctx := context.Background()
+	nameChangeRequest.Header().Set(auth.Cookie, firstAdminCookie.String())
+	_, err = client.UpdateUser(ctx, nameChangeRequest)
 	if err != nil {
 		t.Error(err)
 	}
@@ -267,14 +290,17 @@ func TestUpdateUser(t *testing.T) {
 		RemoteIdentities: nonAdminUser.RemoteIdentities,
 	}
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
+		t.Errorf("UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
+	shutdown(ctx)
 }
 
 func TestUpdateUserFailures(t *testing.T) {
 	t.Skip("TODO: Needs to be rewritten as a client-server test to verify (with interceptors) that the server is actually enforcing the rules")
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	shutdown, client := MockQuickFeedClient(t, db, nil)
+
 	wantAdminUser := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateFakeUser(t, db, 11)
 
@@ -294,7 +320,7 @@ func TestUpdateUserFailures(t *testing.T) {
 		AvatarURL: "www.hello.com",
 	})
 	// current user u (non-admin) is in the ctx and tries to change adminUser
-	us, err := ags.UpdateUser(ctx, nameChangeRequest)
+	us, err := client.UpdateUser(ctx, nameChangeRequest)
 	if err == nil {
 		fmt.Println(us)
 		t.Fatal(err)
@@ -305,7 +331,7 @@ func TestUpdateUserFailures(t *testing.T) {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(wantAdminUser, gotAdminUserWithoutChanges, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.UpdateUser() mismatch (-wantAdminUser +gotAdminUserWithoutChanges):\n%s", diff)
+		t.Errorf("UpdateUser() mismatch (-wantAdminUser +gotAdminUserWithoutChanges):\n%s", diff)
 	}
 
 	nameChangeRequest = connect.NewRequest(&qf.User{
@@ -316,7 +342,7 @@ func TestUpdateUserFailures(t *testing.T) {
 		Email:     "test@test.com",
 		AvatarURL: "www.hello.com",
 	})
-	_, err = ags.UpdateUser(ctx, nameChangeRequest)
+	_, err = client.UpdateUser(ctx, nameChangeRequest)
 	if err != nil {
 		t.Error(err)
 	}
@@ -334,6 +360,7 @@ func TestUpdateUserFailures(t *testing.T) {
 		RemoteIdentities: u.RemoteIdentities,
 	}
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
+		t.Errorf("UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
+	shutdown(ctx)
 }
