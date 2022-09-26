@@ -422,7 +422,7 @@ func TestGetCourse(t *testing.T) {
 }
 
 func TestPromoteDemoteRejectTeacher(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	teacher := qtest.CreateFakeUser(t, db, 10)
@@ -501,10 +501,6 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	// teacher promotes students to teachers, must succeed
 	ctx := qtest.WithUserContext(context.Background(), teacher)
-	_, err = fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	request.Enrollments = []*qf.Enrollment{student1Enrollment, student2Enrollment, taEnrollment}
 	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
