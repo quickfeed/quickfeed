@@ -101,7 +101,7 @@ func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
 	case "gitlab":
 		return NewGitlabSCMClient(token), nil
 	case "fake":
-		return NewFakeSCMClient(), nil
+		return NewMockSCMClient(), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }
@@ -112,7 +112,7 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 	case "github":
 		return newGithubAppClient(ctx, logger, config, organization)
 	case "fake":
-		return NewFakeSCMClient(), nil
+		return NewMockSCMClient(), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }

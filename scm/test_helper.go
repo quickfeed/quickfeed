@@ -18,11 +18,14 @@ func MockSCMManager(t *testing.T) (SCM, *Manager) {
 		"test",
 		&app.Config{},
 	}
-	sc := NewFakeSCMClient()
-	_, _ = sc.CreateOrganization(context.Background(), &OrganizationOptions{
+	sc := NewMockSCMClient()
+	_, err := sc.CreateOrganization(context.Background(), &OrganizationOptions{
 		Name: "test",
 		Path: "test",
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	return sc, &Manager{
 		scms: map[string]SCM{
 			"test": sc,

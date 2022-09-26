@@ -10,18 +10,18 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 )
 
-// FakeSCM implements the SCM interface.
+// MockSCM implements the SCM interface.
 // TODO(meling) many of the methods below are not implemented.
-type FakeSCM struct {
+type MockSCM struct {
 	Repositories  map[string]map[string]*Repository
 	Organizations map[uint64]*qf.Organization
 	Hooks         map[string]*Hook
 	Teams         map[uint64]*Team
 }
 
-// NewFakeSCMClient returns a new Fake client implementing the SCM interface.
-func NewFakeSCMClient() *FakeSCM {
-	return &FakeSCM{
+// NewMockSCMClient returns a new mock client implementing the SCM interface.
+func NewMockSCMClient() *MockSCM {
+	return &MockSCM{
 		Repositories:  make(map[string]map[string]*Repository),
 		Organizations: make(map[uint64]*qf.Organization),
 		Hooks:         make(map[string]*Hook),
@@ -29,7 +29,7 @@ func NewFakeSCMClient() *FakeSCM {
 	}
 }
 
-func (FakeSCM) Clone(_ context.Context, opt *CloneOptions) (string, error) {
+func (MockSCM) Clone(_ context.Context, opt *CloneOptions) (string, error) {
 	cloneDir := filepath.Join(opt.DestDir, repoDir(opt))
 	// This is a hack to make sure the lab1 directory exists,
 	// required by the web/rebuild_test.go:TestRebuildSubmissions()
@@ -42,7 +42,7 @@ func (FakeSCM) Clone(_ context.Context, opt *CloneOptions) (string, error) {
 }
 
 // CreateOrganization implements the SCM interface.
-func (s *FakeSCM) CreateOrganization(_ context.Context, opt *OrganizationOptions) (*qf.Organization, error) {
+func (s *MockSCM) CreateOrganization(_ context.Context, opt *OrganizationOptions) (*qf.Organization, error) {
 	id := len(s.Organizations) + 1
 	org := &qf.Organization{
 		ID:     uint64(id),
@@ -55,7 +55,7 @@ func (s *FakeSCM) CreateOrganization(_ context.Context, opt *OrganizationOptions
 }
 
 // UpdateOrganization implements the SCM interface.
-func (s *FakeSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOptions) error {
+func (s *MockSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOptions) error {
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Name}); err != nil {
 		return errors.New("organization not found")
 	}
@@ -63,7 +63,7 @@ func (s *FakeSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOptio
 }
 
 // GetOrganization implements the SCM interface.
-func (s *FakeSCM) GetOrganization(_ context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
+func (s *MockSCM) GetOrganization(_ context.Context, opt *GetOrgOptions) (*qf.Organization, error) {
 	if opt.ID == 0 {
 		for _, org := range s.Organizations {
 			if org.Path == opt.Name {
@@ -79,8 +79,8 @@ func (s *FakeSCM) GetOrganization(_ context.Context, opt *GetOrgOptions) (*qf.Or
 }
 
 // CreateRepository implements the SCM interface.
-func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Path}); err != nil {
+func (s *MockSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization.Path}); err != nil {
 		return nil, err
 	}
 	if repo, ok := s.Repositories[opt.Organization.Path][opt.Path]; ok {
@@ -97,7 +97,7 @@ func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 }
 
 // GetRepository implements the SCM interface.
-func (s *FakeSCM) GetRepository(_ context.Context, opt *RepositoryOptions) (*Repository, error) {
+func (s *MockSCM) GetRepository(_ context.Context, opt *RepositoryOptions) (*Repository, error) {
 	repo, ok := s.Repositories[opt.Owner][opt.Path]
 	if !ok {
 		return nil, errors.New("repository not found")
@@ -106,7 +106,7 @@ func (s *FakeSCM) GetRepository(_ context.Context, opt *RepositoryOptions) (*Rep
 }
 
 // GetRepositories implements the SCM interface.
-func (s *FakeSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*Repository, error) {
+func (s *MockSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*Repository, error) {
 	courseRepos, ok := s.Repositories[org.Path]
 	if !ok {
 		return nil, errors.New("organization does not have any repositories")
@@ -119,7 +119,7 @@ func (s *FakeSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*R
 }
 
 // DeleteRepository implements the SCM interface.
-func (s *FakeSCM) DeleteRepository(_ context.Context, opt *RepositoryOptions) error {
+func (s *MockSCM) DeleteRepository(_ context.Context, opt *RepositoryOptions) error {
 	if _, ok := s.Repositories[opt.Owner]; !ok {
 		return errors.New("organization does not have any repositories")
 	}
@@ -128,7 +128,7 @@ func (s *FakeSCM) DeleteRepository(_ context.Context, opt *RepositoryOptions) er
 }
 
 // UpdateRepoAccess implements the SCM interface.
-func (s *FakeSCM) UpdateRepoAccess(_ context.Context, repository *Repository, _, _ string) error {
+func (s *MockSCM) UpdateRepoAccess(_ context.Context, repository *Repository, _, _ string) error {
 	if _, ok := s.Repositories[repository.Owner][repository.Path]; !ok {
 		return errors.New("repository not found")
 	}
@@ -136,12 +136,12 @@ func (s *FakeSCM) UpdateRepoAccess(_ context.Context, repository *Repository, _,
 }
 
 // RepositoryIsEmpty implements the SCM interface
-func (*FakeSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool {
+func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool {
 	return false
 }
 
 // ListHooks implements the SCM interface.
-func (s *FakeSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook, error) {
+func (s *MockSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook, error) {
 	hooks := make([]*Hook, len(s.Hooks))
 	for _, v := range s.Hooks {
 		hooks = append(hooks, v)
@@ -150,7 +150,7 @@ func (s *FakeSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook
 }
 
 // CreateHook implements the SCM interface.
-func (s *FakeSCM) CreateHook(_ context.Context, opt *CreateHookOptions) error {
+func (s *MockSCM) CreateHook(_ context.Context, opt *CreateHookOptions) error {
 	_, ok := s.Hooks[opt.Organization]
 	if ok {
 		return errors.New("hook already exists")
@@ -162,7 +162,7 @@ func (s *FakeSCM) CreateHook(_ context.Context, opt *CreateHookOptions) error {
 }
 
 // CreateTeam implements the SCM interface.
-func (s *FakeSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, error) {
+func (s *MockSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, error) {
 	newTeam := &Team{
 		ID:           uint64(len(s.Teams) + 1),
 		Name:         opt.TeamName,
@@ -173,7 +173,7 @@ func (s *FakeSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, err
 }
 
 // DeleteTeam implements the SCM interface.
-func (s *FakeSCM) DeleteTeam(_ context.Context, opt *TeamOptions) error {
+func (s *MockSCM) DeleteTeam(_ context.Context, opt *TeamOptions) error {
 	if _, ok := s.Teams[opt.TeamID]; !ok {
 		return errors.New("repository not found")
 	}
@@ -181,7 +181,7 @@ func (s *FakeSCM) DeleteTeam(_ context.Context, opt *TeamOptions) error {
 }
 
 // GetTeam implements the SCM interface
-func (s *FakeSCM) GetTeam(_ context.Context, opt *TeamOptions) (*Team, error) {
+func (s *MockSCM) GetTeam(_ context.Context, opt *TeamOptions) (*Team, error) {
 	team, ok := s.Teams[opt.TeamID]
 	if !ok {
 		return nil, errors.New("team not found")
@@ -190,7 +190,7 @@ func (s *FakeSCM) GetTeam(_ context.Context, opt *TeamOptions) (*Team, error) {
 }
 
 // GetTeams implements the SCM interface
-func (s *FakeSCM) GetTeams(_ context.Context, org *qf.Organization) ([]*Team, error) {
+func (s *MockSCM) GetTeams(_ context.Context, org *qf.Organization) ([]*Team, error) {
 	var teams []*Team
 	for _, team := range s.Teams {
 		if team.Organization == org.Path {
@@ -201,118 +201,118 @@ func (s *FakeSCM) GetTeams(_ context.Context, org *qf.Organization) ([]*Team, er
 }
 
 // AddTeamMember implements the scm interface
-func (*FakeSCM) AddTeamMember(_ context.Context, _ *TeamMembershipOptions) error {
+func (*MockSCM) AddTeamMember(_ context.Context, _ *TeamMembershipOptions) error {
 	return nil
 }
 
 // RemoveTeamMember implements the scm interface
-func (*FakeSCM) RemoveTeamMember(_ context.Context, _ *TeamMembershipOptions) error {
+func (*MockSCM) RemoveTeamMember(_ context.Context, _ *TeamMembershipOptions) error {
 	return nil
 }
 
 // UpdateTeamMembers implements the SCM interface.
-func (*FakeSCM) UpdateTeamMembers(_ context.Context, _ *UpdateTeamOptions) error {
+func (*MockSCM) UpdateTeamMembers(_ context.Context, _ *UpdateTeamOptions) error {
 	return nil
 }
 
 // CreateCloneURL implements the SCM interface.
-func (*FakeSCM) CreateCloneURL(_ *URLPathOptions) string {
+func (*MockSCM) CreateCloneURL(_ *URLPathOptions) string {
 	return ""
 }
 
 // AddTeamRepo implements the SCM interface.
-func (*FakeSCM) AddTeamRepo(_ context.Context, _ *AddTeamRepoOptions) error {
+func (*MockSCM) AddTeamRepo(_ context.Context, _ *AddTeamRepoOptions) error {
 	return nil
 }
 
 // GetUserName implements the SCM interface.
-func (*FakeSCM) GetUserName(_ context.Context) (string, error) {
+func (*MockSCM) GetUserName(_ context.Context) (string, error) {
 	return "", nil
 }
 
 // GetUserNameByID implements the SCM interface.
-func (*FakeSCM) GetUserNameByID(_ context.Context, _ uint64) (string, error) {
+func (*MockSCM) GetUserNameByID(_ context.Context, _ uint64) (string, error) {
 	return "", nil
 }
 
 // UpdateOrgMembership implements the SCM interface
-func (*FakeSCM) UpdateOrgMembership(_ context.Context, _ *OrgMembershipOptions) error {
+func (*MockSCM) UpdateOrgMembership(_ context.Context, _ *OrgMembershipOptions) error {
 	return nil
 }
 
 // RemoveMember implements the SCM interface
-func (*FakeSCM) RemoveMember(_ context.Context, _ *OrgMembershipOptions) error {
+func (*MockSCM) RemoveMember(_ context.Context, _ *OrgMembershipOptions) error {
 	return nil
 }
 
 // CreateIssue implements the SCM interface
-func (*FakeSCM) CreateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
+func (*MockSCM) CreateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
 	return nil, ErrNotSupported{
-		SCM:    "FakeSCM",
+		SCM:    "MockSCM",
 		Method: "CreateIssue",
 	}
 }
 
 // UpdateIssue implements the SCM interface
-func (*FakeSCM) UpdateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
+func (*MockSCM) UpdateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
 	return nil, ErrNotSupported{
-		SCM:    "FakeSCM",
+		SCM:    "MockSCM",
 		Method: "UpdateIssue",
 	}
 }
 
 // GetIssue implements the SCM interface
-func (*FakeSCM) GetIssue(_ context.Context, _ *RepositoryOptions, _ int) (*Issue, error) {
+func (*MockSCM) GetIssue(_ context.Context, _ *RepositoryOptions, _ int) (*Issue, error) {
 	return nil, ErrNotSupported{
-		SCM:    "FakeSCM",
+		SCM:    "MockSCM",
 		Method: "GetIssue",
 	}
 }
 
 // GetIssues implements the SCM interface
-func (*FakeSCM) GetIssues(_ context.Context, _ *RepositoryOptions) ([]*Issue, error) {
+func (*MockSCM) GetIssues(_ context.Context, _ *RepositoryOptions) ([]*Issue, error) {
 	return nil, ErrNotSupported{
-		SCM:    "FakeSCM",
+		SCM:    "MockSCM",
 		Method: "GetIssues",
 	}
 }
 
-func (*FakeSCM) DeleteIssue(_ context.Context, _ *RepositoryOptions, _ int) error {
+func (*MockSCM) DeleteIssue(_ context.Context, _ *RepositoryOptions, _ int) error {
 	return nil
 }
 
-func (*FakeSCM) DeleteIssues(_ context.Context, _ *RepositoryOptions) error {
+func (*MockSCM) DeleteIssues(_ context.Context, _ *RepositoryOptions) error {
 	return nil
 }
 
 // CreateIssueComment implements the SCM interface
-func (*FakeSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error) {
+func (*MockSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error) {
 	return 0, ErrNotSupported{
-		SCM:    "FakeSCM",
+		SCM:    "MockSCM",
 		Method: "CreateIssueComment",
 	}
 }
 
 // UpdateIssueComment implements the SCM interface
-func (*FakeSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOptions) error {
+func (*MockSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOptions) error {
 	return ErrNotSupported{
-		SCM:    "FakeSCM",
+		SCM:    "MockSCM",
 		Method: "UpdateIssueComment",
 	}
 }
 
 // RequestReviewers implements the SCM interface
-func (*FakeSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error {
+func (*MockSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error {
 	return ErrNotSupported{
-		SCM:    "FakeSCM",
+		SCM:    "MockSCM",
 		Method: "RequestReviewers",
 	}
 }
 
 // AcceptRepositoryInvite implements the SCMInvite interface
-func (*FakeSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
+func (*MockSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
 	return ErrNotSupported{
-		SCM:    "fake",
+		SCM:    "MockSCM",
 		Method: "AcceptRepositoryInvites",
 	}
 }
