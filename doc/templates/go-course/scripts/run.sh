@@ -1,7 +1,7 @@
 #image/qf101
 
 start=$SECONDS
-printf "*** Initializing Tests for $CURRENT ***\n"
+printf "*** Initializing Tests for %s ***\n" "$CURRENT"
 
 # Move to folder with assignment handout code for the current assignment to test.
 cd "$ASSIGNMENTS/$CURRENT"
@@ -17,7 +17,7 @@ go mod tidy
 # Initialize test scores
 SCORE_INIT=1 go test -v ./... 2>&1 | grep TestName
 
-printf "*** Preparing Test Execution for $CURRENT ***\n"
+printf "*** Preparing Test Execution for %s ***\n" "$CURRENT"
 
 # Move to folder with submitted code for the current assignment to test.
 cd "$SUBMITTED/$CURRENT"
