@@ -8,7 +8,7 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 )
 
-func TestCreateSCMManager(t *testing.T) {
+func TestSCMManager(t *testing.T) {
 	scmConfig, err := scm.NewSCMConfig()
 	if err != nil {
 		t.Skip("Requires a valid SCM app")

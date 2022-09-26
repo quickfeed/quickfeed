@@ -86,7 +86,7 @@ func TestRunTests(t *testing.T) {
 	ctx, cancel := runData.Assignment.WithTimeout(2 * time.Minute)
 	defer cancel()
 
-	scm, _ := scm.TestSCMManager(t)
+	scm, _ := scm.MockSCMManager(t)
 	results, err := runData.RunTests(ctx, qtest.Logger(t), scm, runner)
 	if err != nil {
 		t.Fatal(err)
@@ -108,7 +108,7 @@ func TestRunTestsTimeout(t *testing.T) {
 	// Note that this timeout value is susceptible to variation
 	ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	defer cancel()
-	scm, _ := scm.TestSCMManager(t)
+	scm, _ := scm.MockSCMManager(t)
 	results, err := runData.RunTests(ctx, qtest.Logger(t), scm, runner)
 	if err != nil {
 		t.Fatal(err)

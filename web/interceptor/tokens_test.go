@@ -7,11 +7,8 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/golang-jwt/jwt"
-	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
-	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
@@ -20,21 +17,17 @@ import (
 func TestRefreshTokens(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	logger := qlog.Logger(t)
-	_, mgr := scm.TestSCMManager(t)
-	qfService := web.NewQuickFeedService(logger.Desugar(), db, mgr, web.BaseHookOptions{}, &ci.Local{})
+	logger := qtest.Logger(t)
 
 	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	interceptors := connect.WithInterceptors(
+	shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
 		interceptor.UnaryUserVerifier(logger, tm),
 		interceptor.TokenRefresher(tm),
-	)
-	serveFn, shutdown := web.StartGrpcAuthServer(t, qfService, tm, interceptors)
-	go serveFn()
+	))
+
 	client := qtest.QuickFeedClient("")
 
 	ctx := context.Background()

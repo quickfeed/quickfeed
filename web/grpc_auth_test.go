@@ -11,12 +11,12 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/quickfeed/quickfeed/web/interceptor"
 	"google.golang.org/grpc/metadata"
 )
 
 const (
-	grpcAddr = "127.0.0.1:8081"
-	token    = "some-secret-string"
+	token = "some-secret-string"
 	// same as quickfeed root user
 	// botUserID = 1
 	userName = "meling"
@@ -28,8 +28,9 @@ func TestGrpcAuth(t *testing.T) {
 	if os.Getenv("HELPBOT_TEST") == "" {
 		t.Skip("Needs update for helpbot compatibility")
 	}
-	db, cleanup, _, qfService := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	logger := qtest.Logger(t)
 
 	fillDatabase(t, db)
 	if user.Login != userName {
@@ -38,17 +39,20 @@ func TestGrpcAuth(t *testing.T) {
 
 	tm, err := auth.NewTokenManager(db)
 	if err != nil {
-		t.Fatalf("failed to create token manager: %v", err)
+		t.Fatal(err)
 	}
-	// start gRPC server in background
-	serveFn, shutdown := web.StartGrpcAuthServer(t, qfService, tm, nil)
-	go serveFn()
+	shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
+		interceptor.Metrics(),
+		interceptor.Validation(logger),
+		interceptor.UnaryUserVerifier(logger, tm),
+		interceptor.AccessControl(tm),
+		interceptor.TokenRefresher(tm),
+	))
 
 	client := qtest.QuickFeedClient("")
 
-	ctx := context.Background()
 	// create request context with the helpbot's secret token
-	reqCtx := metadata.NewOutgoingContext(ctx,
+	ctx := metadata.NewOutgoingContext(context.Background(),
 		metadata.New(map[string]string{auth.Cookie: token}),
 	)
 
@@ -57,7 +61,7 @@ func TestGrpcAuth(t *testing.T) {
 		CourseYear: 2021,
 		UserLogin:  userName,
 	})
-	userInfo, err := client.GetUserByCourse(reqCtx, request)
+	userInfo, err := client.GetUserByCourse(ctx, request)
 	check(t, err)
 	if userInfo.Msg.ID != user.ID {
 		t.Errorf("expected user id %d, got %d", user.ID, userInfo.Msg.ID)
