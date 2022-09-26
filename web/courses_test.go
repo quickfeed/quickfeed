@@ -89,16 +89,15 @@ func TestNewCourse(t *testing.T) {
 	db, cleanup, mockSCM, qfService := testQuickFeedService(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 10)
+	admin := qtest.CreateAdminUser(t, db, "fake")
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	for _, wantCourse := range allCourses {
-		// each course needs a separate directory
+		// each course needs a separate organization.
 		_, err := mockSCM.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"})
 		if err != nil {
 			t.Fatal(err)
 		}
-		t.Log("COURSE ORG: ", wantCourse.OrganizationPath) // tmp
 		gotCourse, err := qfService.CreateCourse(ctx, connect.NewRequest(wantCourse))
 		if err != nil {
 			t.Fatal(err)
