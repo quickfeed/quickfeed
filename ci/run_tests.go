@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -74,7 +75,8 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm
 	if _, err = CloneRepositories(ctx, sc, in); err != nil {
 		return nil, err
 	}
-	if err := ScanStudentRepo(r.Repo.Name(), in.CourseCode, in.JobOwner); err != nil {
+	logger.Debugf("Scanning repository for %s", r.Repo.Name())
+	if err := ScanStudentRepo(filepath.Join(dstDir, r.Repo.Name()), in.CourseCode, in.JobOwner); err != nil {
 		return nil, err
 	}
 
