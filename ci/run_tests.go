@@ -58,7 +58,23 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm
 	}
 	defer os.RemoveAll(dstDir)
 
-	if err = r.cloneRepositories(ctx, logger, sc, dstDir); err != nil {
+	logger.Debugf("Cloning repositories for %s", r)
+	in := &CloneInfo{
+		CourseCode:        r.Course.GetCode(),
+		JobOwner:          r.JobOwner,
+		OrganizationPath:  r.Course.GetOrganizationPath(),
+		CurrentAssignment: r.Assignment.GetName(),
+		DestDir:           dstDir,
+		CloneRepos: []RepoInfo{
+			{Repo: r.Repo.Name(), Branch: r.BranchName},
+			{Repo: qf.TestsRepo},
+			{Repo: qf.AssignmentRepo},
+		},
+	}
+	if _, err = CloneRepositories(ctx, sc, in); err != nil {
+		return nil, err
+	}
+	if err := ScanStudentRepo(r.Repo.Name(), in.CourseCode, in.JobOwner); err != nil {
 		return nil, err
 	}
 
