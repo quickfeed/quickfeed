@@ -14,18 +14,18 @@ import (
 // MockSCM implements the SCM interface.
 // TODO(meling) many of the methods below are not implemented.
 type MockSCM struct {
-	Repositories  map[string]map[string]*Repository
+	Repositories  map[uint64]map[string]*Repository // [Organization ID][Repository Path]*Repository
 	Organizations map[uint64]*qf.Organization
-	Hooks         map[string]*Hook
+	Hooks         map[uint64]*Hook
 	Teams         map[uint64]*Team
 }
 
 // NewMockSCMClient returns a new mock client implementing the SCM interface.
 func NewMockSCMClient() *MockSCM {
 	return &MockSCM{
-		Repositories:  make(map[string]map[string]*Repository),
+		Repositories:  make(map[uint64]map[string]*Repository),
 		Organizations: make(map[uint64]*qf.Organization),
-		Hooks:         make(map[string]*Hook),
+		Hooks:         make(map[uint64]*Hook),
 		Teams:         make(map[uint64]*Team),
 	}
 }
@@ -51,7 +51,7 @@ func (s *MockSCM) CreateOrganization(_ context.Context, opt *OrganizationOptions
 		Avatar: "https://avatars3.githubusercontent.com/u/1000" + strconv.Itoa(id) + "?v=3",
 	}
 	s.Organizations[org.ID] = org
-	s.Repositories[opt.Path] = make(map[string]*Repository)
+	s.Repositories[org.ID] = make(map[string]*Repository)
 	return org, nil
 }
 
@@ -90,29 +90,37 @@ func (s *MockSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %+v", opt)
 	}
-	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization.Path}); err != nil {
+	org, err := s.GetOrganization(ctx, &GetOrgOptions{
+		ID:   opt.Organization.ID,
+		Name: opt.Organization.Path,
+	})
+	if err != nil {
 		return nil, err
 	}
-	if repo, ok := s.Repositories[opt.Organization.Path][opt.Path]; ok {
+	if repo, ok := s.Repositories[org.ID][opt.Path]; ok {
 		return repo, nil
 	}
 	repo := &Repository{
 		ID:      uint64(len(s.Repositories) + 1),
 		Path:    opt.Path,
-		Owner:   opt.Organization.Path,
+		Owner:   org.Path,
 		HTMLURL: "https://example.com/" + opt.Organization.Path + "/" + opt.Path,
 		OrgID:   opt.Organization.ID,
 	}
-	s.Repositories[opt.Organization.Path][opt.Path] = repo
+	s.Repositories[org.ID][opt.Path] = repo
 	return repo, nil
 }
 
 // GetRepository implements the SCM interface.
-func (s *MockSCM) GetRepository(_ context.Context, opt *RepositoryOptions) (*Repository, error) {
+func (s *MockSCM) GetRepository(ctx context.Context, opt *RepositoryOptions) (*Repository, error) {
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %+v", opt)
 	}
-	repo, ok := s.Repositories[opt.Owner][opt.Path]
+	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: opt.ID})
+	if err != nil {
+		return nil, err
+	}
+	repo, ok := s.Repositories[org.ID][opt.Path]
 	if !ok {
 		return nil, errors.New("repository not found")
 	}
@@ -121,7 +129,7 @@ func (s *MockSCM) GetRepository(_ context.Context, opt *RepositoryOptions) (*Rep
 
 // GetRepositories implements the SCM interface.
 func (s *MockSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*Repository, error) {
-	courseRepos, ok := s.Repositories[org.Path]
+	courseRepos, ok := s.Repositories[org.ID]
 	if !ok {
 		return nil, errors.New("organization does not have any repositories")
 	}
@@ -133,23 +141,32 @@ func (s *MockSCM) GetRepositories(_ context.Context, org *qf.Organization) ([]*R
 }
 
 // DeleteRepository implements the SCM interface.
-func (s *MockSCM) DeleteRepository(_ context.Context, opt *RepositoryOptions) error {
+func (s *MockSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions) error {
 	if !opt.valid() {
 		return fmt.Errorf("invalid argument: %+v", opt)
 	}
-	if _, ok := s.Repositories[opt.Owner]; !ok {
-		return errors.New("organization does not have any repositories")
+	var org *qf.Organization
+	if opt.Owner == "" {
+		opt.Owner = s.Organizations[1].Path
 	}
-	delete(s.Repositories[opt.Owner], opt.Path)
+	org, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner})
+	if err != nil {
+		return err
+	}
+	delete(s.Repositories[org.ID], opt.Path)
 	return nil
 }
 
 // UpdateRepoAccess implements the SCM interface.
-func (s *MockSCM) UpdateRepoAccess(_ context.Context, repo *Repository, _, _ string) error {
+func (s *MockSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, _, _ string) error {
 	if !repo.valid() {
 		return fmt.Errorf("invalid argument: %+v", repo)
 	}
-	if _, ok := s.Repositories[repo.Owner][repo.Path]; !ok {
+	org, err := s.GetOrganization(ctx, &GetOrgOptions{ID: repo.OrgID, Name: repo.Owner})
+	if err != nil {
+		return err
+	}
+	if _, ok := s.Repositories[org.ID][repo.Path]; !ok {
 		return errors.New("repository not found")
 	}
 	return nil
@@ -161,7 +178,7 @@ func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool 
 }
 
 // ListHooks implements the SCM interface.
-func (s *MockSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook, error) {
+func (s *MockSCM) ListHooks(ctx context.Context, repo *Repository, orgName string) ([]*Hook, error) {
 	hooks := make([]*Hook, len(s.Hooks))
 	for _, v := range s.Hooks {
 		hooks = append(hooks, v)
@@ -170,13 +187,21 @@ func (s *MockSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook
 }
 
 // CreateHook implements the SCM interface.
-func (s *MockSCM) CreateHook(_ context.Context, opt *CreateHookOptions) error {
-	_, ok := s.Hooks[opt.Organization]
-	if ok {
-		return errors.New("hook already exists")
+func (s *MockSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
 	}
-	s.Hooks[opt.Organization] = &Hook{
-		Name: opt.Organization,
+	hook := &Hook{
+		Name: "test",
+	}
+	if opt.Organization != "" {
+		org, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization})
+		if err != nil {
+			return err
+		}
+		s.Hooks[org.ID] = hook
+	} else {
+		s.Hooks[opt.Repository.ID] = hook
 	}
 	return nil
 }
