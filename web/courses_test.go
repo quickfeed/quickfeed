@@ -36,7 +36,7 @@ var allCourses = []*qf.Course{
 		Tag:              "Fall",
 		Provider:         "fake",
 		OrganizationID:   2,
-		OrganizationPath: "test",
+		OrganizationPath: "test-1",
 	},
 	{
 		Name:             "New Systems",
@@ -46,7 +46,7 @@ var allCourses = []*qf.Course{
 		Tag:              "Fall",
 		Provider:         "fake",
 		OrganizationID:   3,
-		OrganizationPath: "test",
+		OrganizationPath: "test-2",
 	},
 	{
 		Name:             "Hyped Systems",
@@ -56,7 +56,7 @@ var allCourses = []*qf.Course{
 		Tag:              "Fall",
 		Provider:         "fake",
 		OrganizationID:   4,
-		OrganizationPath: "test",
+		OrganizationPath: "test-3",
 	},
 }
 
@@ -86,18 +86,13 @@ func TestGetCourses(t *testing.T) {
 }
 
 func TestNewCourse(t *testing.T) {
-	db, cleanup, mockSCM, qfService := testQuickFeedService(t)
+	db, cleanup, _, qfService := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateAdminUser(t, db, "fake")
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
 	for _, wantCourse := range allCourses {
-		// each course needs a separate organization.
-		_, err := mockSCM.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"})
-		if err != nil {
-			t.Fatal(err)
-		}
 		gotCourse, err := qfService.CreateCourse(ctx, connect.NewRequest(wantCourse))
 		if err != nil {
 			t.Fatal(err)
@@ -153,16 +148,11 @@ func TestEnrollmentProcess(t *testing.T) {
 	// TODO(meling): This test no longer passes since the enrollment process includes accepting invitations on behalf of the user.
 	// A fix would probably be to implement a fake SCMInvite that behaves appropriately.
 	// We should add manual SCM_TEST for the actual AcceptRepositoryInvites using qf101.
-	db, cleanup, mockSCM, qfService := testQuickFeedService(t)
+	db, cleanup, _, qfService := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	ctx := qtest.WithUserContext(context.Background(), admin)
-
-	_, err := mockSCM.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	course, err := qfService.CreateCourse(ctx, connect.NewRequest(allCourses[0]))
 	if err != nil {

@@ -26,24 +26,6 @@ func (GitlabSCM) Clone(context.Context, *CloneOptions) (string, error) {
 	return "", nil
 }
 
-// CreateOrganization implements the SCM interface.
-func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*qf.Organization, error) {
-	group, _, err := s.client.Groups.CreateGroup(&gitlab.CreateGroupOptions{
-		Name:       &opt.Name,
-		Path:       &opt.Path,
-		Visibility: getVisibilityLevel(false),
-	}, gitlab.WithContext(ctx))
-	if err != nil {
-		return nil, err
-	}
-
-	return &qf.Organization{
-		ID:     uint64(group.ID),
-		Path:   group.Path,
-		Avatar: group.AvatarURL,
-	}, nil
-}
-
 // UpdateOrganization implements the SCM interface.
 func (*GitlabSCM) UpdateOrganization(_ context.Context, _ *OrganizationOptions) error {
 	return ErrNotSupported{
@@ -236,13 +218,6 @@ func (*GitlabSCM) GetUserNameByID(_ context.Context, _ uint64) (string, error) {
 // CreateCloneURL implements the SCM interface.
 func (*GitlabSCM) CreateCloneURL(_ *URLPathOptions) string {
 	return ""
-}
-
-func getVisibilityLevel(private bool) *gitlab.VisibilityValue {
-	if private {
-		return gitlab.Visibility(gitlab.PrivateVisibility)
-	}
-	return gitlab.Visibility(gitlab.PublicVisibility)
 }
 
 // UpdateOrgMembership implements the SCM interface

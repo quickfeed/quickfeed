@@ -1,7 +1,6 @@
 package scm
 
 import (
-	"context"
 	"testing"
 
 	"github.com/beatlabs/github-auth/app"
@@ -19,13 +18,6 @@ func MockSCMManager(t *testing.T) (SCM, *Manager) {
 		&app.Config{},
 	}
 	sc := NewMockSCMClient()
-	_, err := sc.CreateOrganization(context.Background(), &OrganizationOptions{
-		Name: "test",
-		Path: "test",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
 	return sc, &Manager{
 		scms: map[string]SCM{
 			"test": sc,
