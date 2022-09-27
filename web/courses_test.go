@@ -26,7 +26,7 @@ var allCourses = []*qf.Course{
 		Tag:              "Spring",
 		Provider:         "fake",
 		OrganizationID:   1,
-		OrganizationPath: "test",
+		OrganizationName: "test",
 	},
 	{
 		Name:             "Operating Systems",
@@ -36,7 +36,7 @@ var allCourses = []*qf.Course{
 		Tag:              "Fall",
 		Provider:         "fake",
 		OrganizationID:   2,
-		OrganizationPath: "test-1",
+		OrganizationName: "test-1",
 	},
 	{
 		Name:             "New Systems",
@@ -46,7 +46,7 @@ var allCourses = []*qf.Course{
 		Tag:              "Fall",
 		Provider:         "fake",
 		OrganizationID:   3,
-		OrganizationPath: "test-2",
+		OrganizationName: "test-2",
 	},
 	{
 		Name:             "Hyped Systems",
@@ -56,7 +56,7 @@ var allCourses = []*qf.Course{
 		Tag:              "Fall",
 		Provider:         "fake",
 		OrganizationID:   4,
-		OrganizationPath: "test-3",
+		OrganizationName: "test-3",
 	},
 }
 

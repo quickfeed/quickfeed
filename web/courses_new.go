@@ -44,7 +44,7 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 	// set default repository access level for all students to "none"
 	// will not affect organization owners (teachers)
 	orgOptions := &scm.OrganizationOptions{
-		Path:              org.GetPath(),
+		Path:              org.GetName(),
 		DefaultPermission: scm.OrgNone,
 		RepoPermissions:   false,
 	}
@@ -56,12 +56,12 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 	hookOptions := &scm.CreateHookOptions{
 		URL:          auth.GetEventsURL(s.bh.BaseURL),
 		Secret:       s.bh.Secret,
-		Organization: org.Path,
+		Organization: org.Name,
 	}
 
 	err = sc.CreateHook(ctx, hookOptions)
 	if err != nil {
-		s.logger.Debugf("createCourse: failed to create organization hook for %s: %s", org.GetPath(), err)
+		s.logger.Debugf("createCourse: failed to create organization hook for %s: %s", org.GetName(), err)
 	}
 
 	// create course repos and webhooks for each repo
@@ -95,7 +95,7 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 	}
 	// create teacher team with course creator
 	opt := &scm.NewTeamOptions{
-		Organization: org.Path,
+		Organization: org.Name,
 		TeamName:     scm.TeachersTeam,
 		Users:        []string{courseCreator.GetLogin()},
 	}
@@ -104,7 +104,7 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 		return nil, err
 	}
 	// create student team without any members
-	studOpt := &scm.NewTeamOptions{Organization: org.Path, TeamName: scm.StudentsTeam}
+	studOpt := &scm.NewTeamOptions{Organization: org.Name, TeamName: scm.StudentsTeam}
 	if _, err = sc.CreateTeam(ctx, studOpt); err != nil {
 		s.logger.Debugf("createCourse: failed to create students team: %s", err)
 		return nil, err
@@ -126,7 +126,7 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 		return nil, err
 	}
 
-	request.OrganizationPath = org.GetPath()
+	request.OrganizationName = org.GetName()
 	if err := s.db.CreateCourse(request.GetCourseCreatorID(), request); err != nil {
 		s.logger.Debugf("createCourse: failed to create database record for course %s: %s", request.Name, err)
 		return nil, err

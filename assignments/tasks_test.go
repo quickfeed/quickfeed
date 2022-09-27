@@ -22,7 +22,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 
 	course := &qf.Course{
 		Name:             "QuickFeed Test Course",
-		OrganizationPath: qfTestOrg,
+		OrganizationName: qfTestOrg,
 		Provider:         "github",
 	}
 	if err := qtest.PopulateDatabaseWithInitialData(t, db, s, course); err != nil {
@@ -38,7 +38,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	repos, err := s.GetRepositories(ctx, &qf.Organization{Path: course.OrganizationPath})
+	repos, err := s.GetRepositories(ctx, &qf.Organization{Name: course.OrganizationName})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	// Delete all issues on student repositories
 	repoFn(repos, func(repo *scm.Repository) {
 		if err := s.DeleteIssues(ctx, &scm.RepositoryOptions{
-			Owner: course.OrganizationPath,
+			Owner: course.OrganizationName,
 			Path:  repo.Path,
 		}); err != nil {
 			t.Fatal(err)
@@ -64,7 +64,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	// Check if the issues were created
 	repoFn(repos, func(repo *scm.Repository) {
 		scmIssues, err := s.GetIssues(ctx, &scm.RepositoryOptions{
-			Owner: course.OrganizationPath,
+			Owner: course.OrganizationName,
 			Path:  repo.Path,
 		})
 		if err != nil {
@@ -92,7 +92,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 	// Check if the issues were created
 	repoFn(repos, func(repo *scm.Repository) {
 		scmIssues, err := s.GetIssues(ctx, &scm.RepositoryOptions{
-			Owner: course.OrganizationPath,
+			Owner: course.OrganizationName,
 			Path:  repo.Path,
 		})
 		if err != nil {

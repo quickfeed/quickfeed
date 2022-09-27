@@ -36,7 +36,7 @@ func (q *QuickFeedService) InitSCMs(ctx context.Context) error {
 		return err
 	}
 	for _, course := range courses {
-		_, err := q.getSCM(ctx, course.OrganizationPath)
+		_, err := q.getSCM(ctx, course.GetOrganizationName())
 		if err != nil {
 			return err
 		}
@@ -55,7 +55,7 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 	if err != nil {
 		return nil, err
 	}
-	return q.getSCM(ctx, course.OrganizationPath)
+	return q.getSCM(ctx, course.OrganizationName)
 }
 
 // getSCMForUser returns an SCM client based on the user's personal access token.
@@ -87,14 +87,14 @@ func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCMInvite, error) {
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
 func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group *qf.Group) (*qf.Repository, *scm.Team, error) {
-	if course.GetOrganizationPath() == "" {
+	if course.GetOrganizationName() == "" {
 		org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.GetOrganizationID()})
 		if err != nil {
 			return nil, nil, fmt.Errorf("createRepoAndTeam: organization not found: %w", err)
 		}
-		course.OrganizationPath = org.GetPath()
+		course.OrganizationName = org.GetName()
 	}
-	org := &qf.Organization{ID: course.GetOrganizationID(), Path: course.GetOrganizationPath()}
+	org := &qf.Organization{ID: course.GetOrganizationID(), Name: course.GetOrganizationName()}
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 		Organization: org,
 		Path:         group.GetName(),
@@ -105,7 +105,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group
 	}
 
 	team, err := sc.CreateTeam(ctx, &scm.NewTeamOptions{
-		Organization: org.Path,
+		Organization: org.Name,
 		TeamName:     group.GetName(),
 		Users:        group.UserNames(),
 	})
@@ -211,12 +211,12 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *qf.Course, log
 	switch state {
 	case qf.Enrollment_STUDENT:
 		// give access to the course's info and assignments repositories
-		if err := grantAccessToCourseRepos(ctx, sc, org.GetPath(), login); err != nil {
+		if err := grantAccessToCourseRepos(ctx, sc, org.GetName(), login); err != nil {
 			return nil, err
 		}
 
 		// add student to the organization's "students" team
-		if err = addUserToStudentsTeam(ctx, sc, org.GetPath(), login); err != nil {
+		if err = addUserToStudentsTeam(ctx, sc, org.GetName(), login); err != nil {
 			return nil, err
 		}
 
@@ -225,7 +225,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *qf.Course, log
 	case qf.Enrollment_TEACHER:
 		// if teacher, promote to owner, remove from students team, add to teachers team
 		orgUpdate := &scm.OrgMembershipOptions{
-			Organization: org.Path,
+			Organization: org.Name,
 			Username:     login,
 			Role:         scm.OrgOwner,
 		}
@@ -233,7 +233,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *qf.Course, log
 		if err = sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {
 			return nil, fmt.Errorf("UpdateReposAndTeams: failed to update org membership for %s: %w", login, err)
 		}
-		err = promoteUserToTeachersTeam(ctx, sc, org.GetPath(), login)
+		err = promoteUserToTeachersTeam(ctx, sc, org.GetName(), login)
 	}
 	return nil, err
 }
@@ -268,7 +268,7 @@ func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *q
 	}
 
 	opt := &scm.OrgMembershipOptions{
-		Organization: org.Path,
+		Organization: org.Name,
 		Username:     login,
 	}
 	if err := sc.RemoveMember(ctx, opt); err != nil {

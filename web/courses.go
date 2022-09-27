@@ -131,7 +131,7 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enroll
 		return fmt.Errorf("failed to create %s repository for %q: %w", course.Code, user.Login, err)
 	}
 
-	if err := s.acceptRepositoryInvites(ctx, sc, user, course.GetOrganizationPath()); err != nil {
+	if err := s.acceptRepositoryInvites(ctx, sc, user, course.GetOrganizationName()); err != nil {
 		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.Code, user.Login, err)
 	}
 
@@ -161,7 +161,7 @@ func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, enroll
 func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
-	err := revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
+	err := revokeTeacherStatus(ctx, sc, course.GetOrganizationName(), user.GetLogin())
 	if err != nil {
 		s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.Code, user.Login, err)
 	}
@@ -353,7 +353,7 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 	if err != nil {
 		return err
 	}
-	request.OrganizationPath = org.GetPath()
+	request.OrganizationName = org.GetName()
 	return s.db.UpdateCourse(request)
 }
 

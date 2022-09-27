@@ -80,7 +80,7 @@ func TestRefreshTokens(t *testing.T) {
 	course := &qf.Course{
 		ID:               1,
 		OrganizationID:   1,
-		OrganizationPath: "test",
+		OrganizationName: "test",
 		Provider:         "fake",
 	}
 	group := &qf.Group{

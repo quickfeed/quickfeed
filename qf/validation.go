@@ -117,7 +117,7 @@ func (req *RebuildRequest) IsValid() bool {
 
 // IsValid checks that either ID or path field is set
 func (org *Organization) IsValid() bool {
-	id, path := org.GetID(), org.GetPath()
+	id, path := org.GetID(), org.GetName()
 	return id > 0 || path != ""
 }
 

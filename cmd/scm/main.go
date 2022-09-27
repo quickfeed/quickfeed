@@ -292,7 +292,7 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 				return err
 			}
 
-			repos, err := (*client).GetRepositories(ctx, &qf.Organization{Path: c.String("namespace")})
+			repos, err := (*client).GetRepositories(ctx, &qf.Organization{Name: c.String("namespace")})
 			if err != nil {
 				return err
 			}
@@ -362,7 +362,7 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 			return cli.NewExitError("name and namespace must be provided", 3)
 		}
 		if c.Bool("all") {
-			repos, err := (*client).GetRepositories(ctx, &qf.Organization{Path: c.String("namespace")})
+			repos, err := (*client).GetRepositories(ctx, &qf.Organization{Name: c.String("namespace")})
 			if err != nil {
 				return err
 			}
@@ -466,7 +466,7 @@ func deleteTeams(client *scm.SCM) cli.ActionFunc {
 				return err
 			}
 
-			teams, err := (*client).GetTeams(ctx, &qf.Organization{Path: c.String("namespace")})
+			teams, err := (*client).GetTeams(ctx, &qf.Organization{Name: c.String("namespace")})
 			if err != nil {
 				return err
 			}

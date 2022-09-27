@@ -43,7 +43,7 @@ func (s *GitlabSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 
 	return &qf.Organization{
 		ID:     uint64(group.ID),
-		Path:   group.Path,
+		Name:   group.Path,
 		Avatar: group.AvatarURL,
 	}, nil
 }
@@ -81,8 +81,8 @@ func (*GitlabSCM) GetRepository(_ context.Context, _ *RepositoryOptions) (*Repos
 // GetRepositories implements the SCM interface.
 func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *qf.Organization) ([]*Repository, error) {
 	var gid interface{}
-	if directory.Path != "" {
-		gid = directory.Path
+	if directory.Name != "" {
+		gid = directory.Name
 	} else {
 		gid = strconv.FormatUint(directory.ID, 10)
 	}

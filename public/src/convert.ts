@@ -74,7 +74,7 @@ export class Converter {
         course.setTag(obj.tag)
         course.setProvider(obj.provider)
         course.setOrganizationid(obj.organizationid)
-        course.setOrganizationpath(obj.organizationpath)
+        course.setOrganizationname(obj.organizationname)
         course.setSlipdays(obj.slipdays)
         course.setDockerfile(obj.dockerfile)
         course.setEnrolled(obj.enrolled)

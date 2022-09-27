@@ -13,19 +13,19 @@ import (
 var testOrgs = []*qf.Organization{
 	{
 		ID:   1,
-		Path: "test",
+		Name: "test",
 	},
 	{
 		ID:   2,
-		Path: "test-2",
+		Name: "test-2",
 	},
 	{
 		ID:   3,
-		Path: "test-3",
+		Name: "test-3",
 	},
 	{
 		ID:   4,
-		Path: "test-4",
+		Name: "test-4",
 	},
 }
 
@@ -80,7 +80,7 @@ func (s *MockSCM) GetOrganization(_ context.Context, opt *GetOrgOptions) (*qf.Or
 	}
 	if opt.ID < 1 {
 		for _, org := range s.Organizations {
-			if org.Path == opt.Name {
+			if org.Name == opt.Name {
 				return org, nil
 			}
 		}
@@ -99,7 +99,7 @@ func (s *MockSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 	}
 	org, err := s.GetOrganization(ctx, &GetOrgOptions{
 		ID:   opt.Organization.ID,
-		Name: opt.Organization.Path,
+		Name: opt.Organization.Name,
 	})
 	if err != nil {
 		return nil, err
@@ -107,8 +107,8 @@ func (s *MockSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 	repo := &Repository{
 		ID:      uint64(len(s.Repositories) + 1),
 		Path:    opt.Path,
-		Owner:   org.Path,
-		HTMLURL: "https://example.com/" + opt.Organization.Path + "/" + opt.Path,
+		Owner:   org.Name,
+		HTMLURL: "https://example.com/" + opt.Organization.Name + "/" + opt.Path,
 		OrgID:   opt.Organization.ID,
 	}
 	s.Repositories[repo.ID] = repo
@@ -238,7 +238,7 @@ func (s *MockSCM) GetTeam(_ context.Context, opt *TeamOptions) (*Team, error) {
 func (s *MockSCM) GetTeams(_ context.Context, org *qf.Organization) ([]*Team, error) {
 	var teams []*Team
 	for _, team := range s.Teams {
-		if team.Organization == org.Path {
+		if team.Organization == org.Name {
 			teams = append(teams, team)
 		}
 	}

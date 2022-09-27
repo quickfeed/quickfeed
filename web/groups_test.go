@@ -22,7 +22,7 @@ func TestNewGroup(t *testing.T) {
 	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2
 	course.OrganizationID = 1
-	course.OrganizationPath = "test"
+	course.OrganizationName = "test"
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -225,7 +225,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := qf.Course{Provider: "fake", OrganizationID: 1, OrganizationPath: "test"}
+	course := qf.Course{Provider: "fake", OrganizationID: 1, OrganizationName: "test"}
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -398,7 +398,7 @@ func TestDeleteGroup(t *testing.T) {
 		Tag:              "Spring",
 		Provider:         "fake",
 		OrganizationID:   1,
-		OrganizationPath: "test",
+		OrganizationName: "test",
 		ID:               1,
 	}
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -555,7 +555,7 @@ func TestPatchGroupStatus(t *testing.T) {
 		Tag:              "Spring",
 		Provider:         "fake",
 		OrganizationID:   1,
-		OrganizationPath: "test",
+		OrganizationName: "test",
 		ID:               1,
 	}
 

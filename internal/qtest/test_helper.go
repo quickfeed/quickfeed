@@ -217,7 +217,7 @@ func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.
 	t.Helper()
 
 	ctx := context.Background()
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.OrganizationPath})
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.OrganizationName})
 	if err != nil {
 		return err
 	}
