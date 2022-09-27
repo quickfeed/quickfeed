@@ -118,7 +118,6 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 // OrganizationOptions contains information on how an organization should be
 // created.
 type OrganizationOptions struct {
-	Path              string
 	Name              string
 	DefaultPermission string
 	// prohibit students from creating new repos

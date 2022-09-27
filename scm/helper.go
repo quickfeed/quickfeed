@@ -56,7 +56,7 @@ var (
 // Validators //
 
 func (opt OrganizationOptions) valid() bool {
-	return opt.Path != "" && opt.DefaultPermission != ""
+	return opt.Name != "" && opt.DefaultPermission != ""
 }
 
 func (opt GetOrgOptions) valid() bool {

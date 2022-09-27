@@ -44,12 +44,12 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 	// set default repository access level for all students to "none"
 	// will not affect organization owners (teachers)
 	orgOptions := &scm.OrganizationOptions{
-		Path:              org.GetName(),
+		Name:              org.GetName(),
 		DefaultPermission: scm.OrgNone,
 		RepoPermissions:   false,
 	}
 	if err = sc.UpdateOrganization(ctx, orgOptions); err != nil {
-		s.logger.Debugf("createCourse: failed to update permissions for GitHub organization %s: %s", orgOptions.Path, err)
+		s.logger.Debugf("createCourse: failed to update permissions for GitHub organization %s: %s", orgOptions.Name, err)
 	}
 
 	// create a push hook on organization level

@@ -50,7 +50,7 @@ func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOpt
 		}
 	}
 
-	_, _, err := s.client.Organizations.Edit(ctx, opt.Path, &github.Organization{
+	_, _, err := s.client.Organizations.Edit(ctx, opt.Name, &github.Organization{
 		DefaultRepoPermission: &opt.DefaultPermission,
 		MembersCanCreateRepos: &opt.RepoPermissions,
 	})
