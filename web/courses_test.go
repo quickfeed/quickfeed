@@ -411,7 +411,7 @@ func TestGetCourse(t *testing.T) {
 }
 
 func TestPromoteDemoteRejectTeacher(t *testing.T) {
-	db, cleanup, _, qfService := testQuickFeedService(t)
+	db, cleanup, mockSCM, qfService := testQuickFeedService(t)
 	defer cleanup()
 
 	teacher := qtest.CreateFakeUser(t, db, 10)
@@ -490,6 +490,19 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	// teacher promotes students to teachers, must succeed
 	ctx := qtest.WithUserContext(context.Background(), teacher)
+	// Need course teams to update enrollments.
+	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
+		Organization: "test",
+		TeamName:     "allstudents",
+	}); err != nil {
+		t.Error(err)
+	}
+	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
+		Organization: "test",
+		TeamName:     "allteachers",
+	}); err != nil {
+		t.Error(err)
+	}
 
 	request.Enrollments = []*qf.Enrollment{student1Enrollment, student2Enrollment, taEnrollment}
 	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {

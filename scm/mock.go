@@ -116,7 +116,7 @@ func (s *MockSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 }
 
 // GetRepository implements the SCM interface.
-func (s *MockSCM) GetRepository(ctx context.Context, opt *RepositoryOptions) (*Repository, error) {
+func (s *MockSCM) GetRepository(_ context.Context, opt *RepositoryOptions) (*Repository, error) {
 	if !opt.valid() {
 		return nil, fmt.Errorf("invalid argument: %+v", opt)
 	}
@@ -176,8 +176,8 @@ func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool 
 }
 
 // ListHooks implements the SCM interface.
-func (s *MockSCM) ListHooks(ctx context.Context, repo *Repository, orgName string) ([]*Hook, error) {
-	hooks := make([]*Hook, len(s.Hooks))
+func (s *MockSCM) ListHooks(_ context.Context, repo *Repository, orgName string) ([]*Hook, error) {
+	var hooks []*Hook
 	for _, v := range s.Hooks {
 		hooks = append(hooks, v)
 	}
@@ -185,22 +185,15 @@ func (s *MockSCM) ListHooks(ctx context.Context, repo *Repository, orgName strin
 }
 
 // CreateHook implements the SCM interface.
-func (s *MockSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error {
+func (s *MockSCM) CreateHook(_ context.Context, opt *CreateHookOptions) error {
 	if !opt.valid() {
 		return fmt.Errorf("invalid argument: %+v", opt)
 	}
 	hook := &Hook{
-		Name: "test",
+		ID:   uint64(len(s.Hooks) + 1),
+		Name: opt.Organization,
 	}
-	if opt.Organization != "" {
-		org, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization})
-		if err != nil {
-			return err
-		}
-		s.Hooks[org.ID] = hook
-	} else {
-		s.Hooks[opt.Repository.ID] = hook
-	}
+	s.Hooks[hook.ID] = hook
 	return nil
 }
 
@@ -217,19 +210,28 @@ func (s *MockSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, err
 
 // DeleteTeam implements the SCM interface.
 func (s *MockSCM) DeleteTeam(_ context.Context, opt *TeamOptions) error {
-	if _, ok := s.Teams[opt.TeamID]; !ok {
-		return errors.New("repository not found")
-	}
+	delete(s.Teams, opt.TeamID)
 	return nil
 }
 
 // GetTeam implements the SCM interface
 func (s *MockSCM) GetTeam(_ context.Context, opt *TeamOptions) (*Team, error) {
-	team, ok := s.Teams[opt.TeamID]
-	if !ok {
-		return nil, errors.New("team not found")
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %+v", opt)
 	}
-	return team, nil
+	if opt.TeamID > 0 {
+		team, ok := s.Teams[opt.TeamID]
+		if !ok {
+			return nil, errors.New("team not found")
+		}
+		return team, nil
+	}
+	for _, team := range s.Teams {
+		if team.Name == opt.TeamName && team.Organization == opt.Organization {
+			return team, nil
+		}
+	}
+	return nil, errors.New("team not found")
 }
 
 // GetTeams implements the SCM interface
@@ -244,17 +246,26 @@ func (s *MockSCM) GetTeams(_ context.Context, org *qf.Organization) ([]*Team, er
 }
 
 // AddTeamMember implements the scm interface
-func (*MockSCM) AddTeamMember(_ context.Context, _ *TeamMembershipOptions) error {
+func (s *MockSCM) AddTeamMember(_ context.Context, opt *TeamMembershipOptions) error {
+	if !s.teamExists(opt.TeamID, opt.TeamName, opt.Organization) {
+		return errors.New("team not found add")
+	}
 	return nil
 }
 
 // RemoveTeamMember implements the scm interface
-func (*MockSCM) RemoveTeamMember(_ context.Context, _ *TeamMembershipOptions) error {
+func (s *MockSCM) RemoveTeamMember(_ context.Context, opt *TeamMembershipOptions) error {
+	if !s.teamExists(opt.TeamID, opt.TeamName, opt.Organization) {
+		return errors.New("team not found")
+	}
 	return nil
 }
 
 // UpdateTeamMembers implements the SCM interface.
-func (*MockSCM) UpdateTeamMembers(_ context.Context, _ *UpdateTeamOptions) error {
+func (s *MockSCM) UpdateTeamMembers(_ context.Context, opt *UpdateTeamOptions) error {
+	if !s.teamExists(opt.TeamID, "", "") {
+		return errors.New("team not found")
+	}
 	return nil
 }
 
@@ -264,7 +275,14 @@ func (*MockSCM) CreateCloneURL(_ *URLPathOptions) string {
 }
 
 // AddTeamRepo implements the SCM interface.
-func (*MockSCM) AddTeamRepo(_ context.Context, _ *AddTeamRepoOptions) error {
+func (s *MockSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
+	repo := &Repository{
+		ID:    uint64(len(s.Repositories) + 1),
+		Path:  opt.Repo,
+		Owner: opt.Owner,
+		OrgID: opt.OrganizationID,
+	}
+	s.Repositories[repo.ID] = repo
 	return nil
 }
 
@@ -279,12 +297,18 @@ func (*MockSCM) GetUserNameByID(_ context.Context, _ uint64) (string, error) {
 }
 
 // UpdateOrgMembership implements the SCM interface
-func (*MockSCM) UpdateOrgMembership(_ context.Context, _ *OrgMembershipOptions) error {
+func (s *MockSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
+		return errors.New("organization not found")
+	}
 	return nil
 }
 
 // RemoveMember implements the SCM interface
-func (*MockSCM) RemoveMember(_ context.Context, _ *OrgMembershipOptions) error {
+func (s *MockSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) error {
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
+		return errors.New("organization not found")
+	}
 	return nil
 }
 
@@ -354,6 +378,7 @@ func (*MockSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptio
 
 // AcceptRepositoryInvite implements the SCMInvite interface
 func (*MockSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
+	// TODO(vera): needs TeamMemebers: map[teamID]Login
 	return ErrNotSupported{
 		SCM:    "MockSCM",
 		Method: "AcceptRepositoryInvites",
@@ -365,4 +390,20 @@ func (s *MockSCM) initOrganizations() {
 	for _, org := range testOrgs {
 		s.Organizations[org.ID] = org
 	}
+}
+
+// teamExists checks teams by ID, or by team and organization name.
+func (s *MockSCM) teamExists(id uint64, team, org string) bool {
+	if id > 0 {
+		if _, ok := s.Teams[id]; ok {
+			return true
+		}
+	} else {
+		for _, t := range s.Teams {
+			if t.Name == team && t.Organization == org {
+				return true
+			}
+		}
+	}
+	return false
 }
