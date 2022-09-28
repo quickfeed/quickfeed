@@ -105,7 +105,7 @@ func (s *MockSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 		return nil, err
 	}
 	repo := &Repository{
-		ID:      uint64(len(s.Repositories) + 1),
+		ID:      GenerateID(s.Repositories),
 		Path:    opt.Path,
 		Owner:   org.Name,
 		HTMLURL: "https://example.com/" + opt.Organization.Name + "/" + opt.Path,
@@ -191,7 +191,7 @@ func (s *MockSCM) CreateHook(_ context.Context, opt *CreateHookOptions) error {
 		return fmt.Errorf("invalid argument: %+v", opt)
 	}
 	hook := &Hook{
-		ID:   uint64(len(s.Hooks) + 1),
+		ID:   GenerateID(s.Hooks),
 		Name: opt.Organization,
 	}
 	s.Hooks[hook.ID] = hook
@@ -201,7 +201,7 @@ func (s *MockSCM) CreateHook(_ context.Context, opt *CreateHookOptions) error {
 // CreateTeam implements the SCM interface.
 func (s *MockSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, error) {
 	newTeam := &Team{
-		ID:           uint64(len(s.Teams) + 1),
+		ID:           GenerateID(s.Teams),
 		Name:         opt.TeamName,
 		Organization: opt.Organization,
 	}
@@ -278,7 +278,7 @@ func (*MockSCM) CreateCloneURL(_ *URLPathOptions) string {
 // AddTeamRepo implements the SCM interface.
 func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error {
 	repo := &Repository{
-		ID:    uint64(len(s.Repositories) + 1),
+		ID:    GenerateID(s.Repositories),
 		Path:  opt.Repo,
 		Owner: opt.Owner,
 		OrgID: opt.OrganizationID,
@@ -406,4 +406,15 @@ func (s *MockSCM) teamExists(id uint64, team, org string) bool {
 		}
 	}
 	return false
+}
+
+// GenerateID generates a new, unused map key to use as ID in tests.
+func GenerateID[T any](data map[uint64]T) uint64 {
+	id := uint64(1)
+	_, ok := data[id]
+	for ok {
+		id++
+		_, ok = data[id]
+	}
+	return id
 }
