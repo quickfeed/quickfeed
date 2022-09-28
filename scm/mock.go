@@ -159,15 +159,16 @@ func (s *MockSCM) DeleteRepository(_ context.Context, opt *RepositoryOptions) er
 }
 
 // UpdateRepoAccess implements the SCM interface.
-func (s *MockSCM) UpdateRepoAccess(_ context.Context, repo *Repository, _, _ string) error {
+func (s *MockSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, _, _ string) error {
 	if !repo.valid() {
 		return fmt.Errorf("invalid argument: %+v", repo)
 	}
-	_, ok := s.Repositories[repo.ID]
-	if !ok {
-		return errors.New("repository not found")
-	}
-	return nil
+	_, err := s.GetRepository(ctx, &RepositoryOptions{
+		ID:    repo.ID,
+		Path:  repo.Path,
+		Owner: repo.Owner,
+	})
+	return err
 }
 
 // RepositoryIsEmpty implements the SCM interface
