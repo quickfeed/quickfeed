@@ -126,7 +126,10 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 10)
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
-	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"})
+	directory, err := fakeProvider.GetOrganization(ctx, &scm.GetOrgOptions{ID: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
 	for path, private := range web.RepoPaths {
 		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: directory, Private: private}
 		_, err := fakeProvider.CreateRepository(ctx, repoOptions)
@@ -419,7 +422,7 @@ func TestGetCourse(t *testing.T) {
 }
 
 func TestPromoteDemoteRejectTeacher(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	teacher := qtest.CreateFakeUser(t, db, 10)
@@ -496,19 +499,8 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	request := &qf.Enrollments{}
 
-	// student1 attempts to promote student2 to teacher, must fail
-	request.Enrollments = []*qf.Enrollment{student2Enrollment}
-	ctx := qtest.WithUserContext(context.Background(), student1)
-	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
-		t.Errorf("expected error: 'only teachers can update enrollment status'")
-	}
-
 	// teacher promotes students to teachers, must succeed
-	ctx = qtest.WithUserContext(context.Background(), teacher)
-	_, err = fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "path", Name: "name"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	ctx := qtest.WithUserContext(context.Background(), teacher)
 
 	request.Enrollments = []*qf.Enrollment{student1Enrollment, student2Enrollment, taEnrollment}
 	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {

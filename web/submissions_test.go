@@ -9,12 +9,11 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/scm"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestApproveSubmission(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -57,10 +56,6 @@ func TestApproveSubmission(t *testing.T) {
 	}
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	_, err = fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	if _, err = ags.UpdateSubmission(ctx, connect.NewRequest(&qf.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.ID,
@@ -102,7 +97,7 @@ func TestApproveSubmission(t *testing.T) {
 }
 
 func TestGetSubmissionsByCourse(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -113,9 +108,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	student3 := qtest.CreateFakeUser(t, db, 4)
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	if _, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"}); err != nil {
-		t.Fatal(err)
-	}
+
 	qtest.EnrollStudent(t, db, student1, course)
 	qtest.EnrollStudent(t, db, student2, course)
 	qtest.EnrollStudent(t, db, student3, course)
@@ -284,7 +277,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 }
 
 func TestGetCourseLabSubmissions(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -388,10 +381,6 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	wantSubmission2.BuildInfo = nil
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	// check that all assignments were saved for the correct courses
 	wantAssignments1 := []*qf.Assignment{lab1c1, lab2c1}
@@ -500,7 +489,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 }
 
 func TestCreateApproveList(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -611,10 +600,6 @@ func TestCreateApproveList(t *testing.T) {
 	}
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	testCases := []struct {
 		student          *qf.User
@@ -696,7 +681,7 @@ func TestCreateApproveList(t *testing.T) {
 }
 
 func TestReleaseApproveAll(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, ags := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
@@ -713,10 +698,6 @@ func TestReleaseApproveAll(t *testing.T) {
 	qtest.EnrollStudent(t, db, student3, course)
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
-	_, err := fakeProvider.CreateOrganization(context.Background(), &scm.OrganizationOptions{Path: "path", Name: "name"})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	assignments := []*qf.Assignment{
 		{

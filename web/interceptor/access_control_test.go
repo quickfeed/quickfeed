@@ -2,22 +2,14 @@ package interceptor_test
 
 import (
 	"context"
-	"errors"
-	"net/http"
 	"testing"
-	"time"
 
 	"github.com/bufbuild/connect-go"
-	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qf/qfconnect"
-	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 )
 
 type accessTest struct {
@@ -33,33 +25,15 @@ func TestAccessControl(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	logger := qtest.Logger(t)
-	ags := web.NewQuickFeedService(logger.Desugar(), db, scm.TestSCMManager(), web.BaseHookOptions{}, &ci.Local{})
 
 	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
-	interceptors := connect.WithInterceptors(
+	shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.NewAccessControlInterceptor(tm),
-	)
-
-	router := http.NewServeMux()
-	router.Handle(qfconnect.NewQuickFeedServiceHandler(ags, interceptors))
-	muxServer := &http.Server{
-		Handler:           h2c.NewHandler(router, &http2.Server{}),
-		Addr:              "127.0.0.1:8081",
-		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
-	}
-
-	go func() {
-		if err := muxServer.ListenAndServe(); err != nil {
-			if !errors.Is(err, http.ErrServerClosed) {
-				t.Errorf("Server exited with unexpected error: %v", err)
-			}
-			return
-		}
-	}()
+	))
 
 	client := qtest.QuickFeedClient("")
 
@@ -78,7 +52,7 @@ func TestAccessControl(t *testing.T) {
 		Year:             2022,
 		Provider:         "fake",
 		OrganizationID:   1,
-		OrganizationPath: "testorg",
+		OrganizationPath: "test",
 		CourseCreatorID:  courseAdmin.ID,
 	}
 	if err := db.CreateCourse(courseAdmin.ID, course); err != nil {
@@ -310,7 +284,7 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "GetEnrollmentsByUser", err, tt.wantCode, tt.wantAccess)
 			_, err = client.GetUsers(ctx, requestWithCookie(&qf.Void{}, tt.cookie))
 			checkAccess(t, "GetUsers", err, tt.wantCode, tt.wantAccess)
-			_, err = client.GetOrganization(ctx, requestWithCookie(&qf.OrgRequest{OrgName: "testorg"}, tt.cookie))
+			_, err = client.GetOrganization(ctx, requestWithCookie(&qf.OrgRequest{OrgName: "test"}, tt.cookie))
 			checkAccess(t, "GetOrganization", err, tt.wantCode, tt.wantAccess)
 			_, err = client.CreateCourse(ctx, requestWithCookie(course, tt.cookie))
 			checkAccess(t, "CreateCourse", err, tt.wantCode, tt.wantAccess)
@@ -387,10 +361,7 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "UpdateUser", err, tt.wantCode, tt.wantAccess)
 		})
 	}
-
-	if err = muxServer.Shutdown(ctx); err != nil {
-		t.Fatal(err)
-	}
+	shutdown(ctx)
 }
 
 func requestWithCookie[T any](message *T, cookie string) *connect.Request[T] {

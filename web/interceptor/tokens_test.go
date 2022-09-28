@@ -2,60 +2,35 @@ package interceptor_test
 
 import (
 	"context"
-	"errors"
-	"net/http"
 	"testing"
 	"time"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/golang-jwt/jwt"
-	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qf/qfconnect"
-	"github.com/quickfeed/quickfeed/qlog"
-	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 )
 
 func TestRefreshTokens(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	logger := qlog.Logger(t)
-	ags := web.NewQuickFeedService(logger.Desugar(), db, scm.TestSCMManager(), web.BaseHookOptions{}, &ci.Local{})
+	logger := qtest.Logger(t)
 
 	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	interceptors := connect.WithInterceptors(
+	shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.NewTokenInterceptor(tm),
-	)
+	))
 
-	router := http.NewServeMux()
-	router.Handle(qfconnect.NewQuickFeedServiceHandler(ags, interceptors))
-	muxServer := &http.Server{
-		Handler:           h2c.NewHandler(router, &http2.Server{}),
-		Addr:              "127.0.0.1:8081",
-		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
-	}
-	go func() {
-		if err := muxServer.ListenAndServe(); err != nil {
-			if !errors.Is(err, http.ErrServerClosed) {
-				t.Errorf("Server exited with unexpected error: %v", err)
-			}
-			return
-		}
-	}()
+	client := qtest.QuickFeedClient("")
 
 	ctx := context.Background()
-	client := qtest.QuickFeedClient("")
 	f := func(t *testing.T, id uint64) string {
 		cookie, err := tm.NewAuthCookie(id)
 		if err != nil {
@@ -105,7 +80,7 @@ func TestRefreshTokens(t *testing.T) {
 	course := &qf.Course{
 		ID:               1,
 		OrganizationID:   1,
-		OrganizationPath: "testorg",
+		OrganizationPath: "test",
 		Provider:         "fake",
 	}
 	group := &qf.Group{
@@ -153,7 +128,5 @@ func TestRefreshTokens(t *testing.T) {
 	if tm.UpdateRequired(adminClaims) {
 		t.Error("Admin should not be in the token update list")
 	}
-	if err = muxServer.Shutdown(ctx); err != nil {
-		t.Fatal(err)
-	}
+	shutdown(ctx)
 }
