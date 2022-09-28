@@ -27,7 +27,7 @@ func TestGetUsers(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user2 := qtest.CreateFakeUser(t, db, 2)
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 	foundUsers, err := client.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
 	if err != nil {
 		t.Fatal(err)
@@ -78,7 +78,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	// users to enroll in course DAT520 Distributed Systems
 	// (excluding admin because admin is enrolled on creation)
@@ -151,7 +151,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	}
 	admin := users[0]
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	course := qtest.MockCourses[1]
 	err := db.CreateCourse(admin.ID, course)
@@ -309,7 +309,7 @@ func TestUpdateUserFailures(t *testing.T) {
 		t.Fatalf("expected user %v to be non-admin", u)
 	}
 	// context with user u (non-admin user); can only change its own name etc
-	ctx := qtest.WithUserContext(context.Background(), u)
+	ctx := auth.WithUserContext(context.Background(), u)
 	// trying to demote current adminUser by setting IsAdmin to false
 	nameChangeRequest := connect.NewRequest(&qf.User{
 		ID:        wantAdminUser.ID,

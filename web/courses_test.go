@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -47,7 +48,7 @@ func TestNewCourse(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateAdminUser(t, db, "fake")
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	for _, wantCourse := range qtest.MockCourses {
 		gotCourse, err := qfService.CreateCourse(ctx, connect.NewRequest(wantCourse))
@@ -75,7 +76,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	organization, err := mockSCM.GetOrganization(ctx, &scm.GetOrgOptions{ID: 1})
 	if err != nil {
@@ -109,7 +110,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	course, err := qfService.CreateCourse(ctx, connect.NewRequest(qtest.MockCourses[0]))
 	if err != nil {
@@ -446,7 +447,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	request := &qf.Enrollments{}
 
 	// teacher promotes students to teachers, must succeed
-	ctx := qtest.WithUserContext(context.Background(), teacher)
+	ctx := auth.WithUserContext(context.Background(), teacher)
 	// Need course teams to update enrollments.
 	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
 		Organization: "qfTestOrg",
@@ -469,7 +470,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	// TA attempts to demote self, must succeed
 	taEnrollment.Status = qf.Enrollment_STUDENT
 	request.Enrollments = []*qf.Enrollment{taEnrollment}
-	ctx = qtest.WithUserContext(context.Background(), ta)
+	ctx = auth.WithUserContext(context.Background(), ta)
 	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
 		t.Fatal(err)
 	}
@@ -477,7 +478,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	// student2 attempts to demote course creator, must fail
 	teacherEnrollment.Status = qf.Enrollment_STUDENT
 	request.Enrollments = []*qf.Enrollment{teacherEnrollment}
-	ctx = qtest.WithUserContext(context.Background(), student2)
+	ctx = auth.WithUserContext(context.Background(), student2)
 	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
 		t.Error("expected error: 'only course creator can change status of other teachers'", err)
 	}
@@ -491,7 +492,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	// teacher demotes student1, must succeed
 	student1Enrollment.Status = qf.Enrollment_STUDENT
 	request.Enrollments = []*qf.Enrollment{student1Enrollment}
-	ctx = qtest.WithUserContext(context.Background(), teacher)
+	ctx = auth.WithUserContext(context.Background(), teacher)
 	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
 		t.Fatal(err)
 	}
@@ -538,7 +539,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	// ta attempts to demote course creator, must fail
 	teacherEnrollment.Status = qf.Enrollment_STUDENT
-	ctx = qtest.WithUserContext(context.Background(), ta)
+	ctx = auth.WithUserContext(context.Background(), ta)
 	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
 		t.Error("expected error 'ta cannot be demoted course creator'")
 	}

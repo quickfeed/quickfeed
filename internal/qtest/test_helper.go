@@ -1,7 +1,6 @@
 package qtest
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
@@ -13,7 +12,6 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/qlog"
-	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 // TestDB returns a test database and close function.
@@ -169,12 +167,6 @@ func RandomString(t *testing.T) string {
 		t.Fatal(err)
 	}
 	return fmt.Sprintf("%x", sha256.Sum256(randomness))[:6]
-}
-
-// WithUserContext returns the context augmented with the given user's ID.
-// This aims to mimic the claims.Context() method.
-func WithUserContext(ctx context.Context, user *qf.User) context.Context {
-	return context.WithValue(ctx, auth.ContextKeyUserID, user.GetID())
 }
 
 // AssignmentsWithTasks returns a list of test assignments with tasks for the given course.

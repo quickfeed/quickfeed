@@ -9,6 +9,7 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -55,7 +56,7 @@ func TestApproveSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	if _, err = ags.UpdateSubmission(ctx, connect.NewRequest(&qf.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.ID,
@@ -107,7 +108,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	student2 := qtest.CreateFakeUser(t, db, 3)
 	student3 := qtest.CreateFakeUser(t, db, 4)
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	qtest.EnrollStudent(t, db, student1, course)
 	qtest.EnrollStudent(t, db, student2, course)
@@ -380,7 +381,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	wantSubmission1.BuildInfo = nil
 	wantSubmission2.BuildInfo = nil
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	// check that all assignments were saved for the correct courses
 	wantAssignments1 := []*qf.Assignment{lab1c1, lab2c1}
@@ -599,7 +600,7 @@ func TestCreateApproveList(t *testing.T) {
 		}
 	}
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	testCases := []struct {
 		student          *qf.User
@@ -697,7 +698,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	qtest.EnrollStudent(t, db, student2, course)
 	qtest.EnrollStudent(t, db, student3, course)
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	assignments := []*qf.Assignment{
 		{
@@ -879,7 +880,7 @@ func TestReleaseApproveAll(t *testing.T) {
 	}
 
 	// We want to make sure that submissions received by the student do not leak data
-	studentCtx := qtest.WithUserContext(context.Background(), student1)
+	studentCtx := auth.WithUserContext(context.Background(), student1)
 	gotStudentSubmissions, err := ags.GetSubmissions(studentCtx, connect.NewRequest(&qf.SubmissionRequest{
 		CourseID: course.ID,
 		UserID:   student1.ID,

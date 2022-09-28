@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -22,7 +23,7 @@ func TestGetRepositories(t *testing.T) {
 	}
 	qtest.CreateCourse(t, db, user, course)
 
-	ctx := qtest.WithUserContext(context.Background(), user)
+	ctx := auth.WithUserContext(context.Background(), user)
 
 	// check that no repositories are returned when no repo types are specified
 	repos, err := ags.GetRepositories(ctx, connect.NewRequest(&qf.URLRequest{
