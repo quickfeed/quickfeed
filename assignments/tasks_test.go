@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -25,7 +26,7 @@ func TestSynchronizeTasksWithIssues(t *testing.T) {
 		OrganizationName: qfTestOrg,
 		Provider:         "github",
 	}
-	if err := qtest.PopulateDatabaseWithInitialData(t, db, s, course); err != nil {
+	if err := PopulateDatabaseWithInitialData(t, db, s, course); err != nil {
 		t.Fatal(err)
 	}
 
@@ -118,4 +119,62 @@ func repoFn(repos []*scm.Repository, fn func(repo *scm.Repository)) {
 		}
 		fn(repo)
 	}
+}
+
+// PopulateDatabaseWithInitialData creates initial data-records based on organization
+// This function was created with the intent of being used for testing task and pull request related functionality.
+func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.SCM, course *qf.Course) error {
+	t.Helper()
+
+	ctx := context.Background()
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.OrganizationName})
+	if err != nil {
+		return err
+	}
+	course.OrganizationID = org.GetID()
+	admin := qtest.CreateAdminUser(t, db, course.GetProvider())
+	if err = db.UpdateUser(admin); err != nil {
+		return err
+	}
+	qtest.CreateCourse(t, db, admin, course)
+
+	repos, err := sc.GetRepositories(ctx, org)
+	if err != nil {
+		return err
+	}
+
+	// Create repositories
+	nxtRemoteID := uint64(2)
+	for _, repo := range repos {
+		dbRepo := &qf.Repository{
+			RepositoryID:   repo.ID,
+			OrganizationID: org.GetID(),
+			HTMLURL:        repo.HTMLURL,
+			RepoType:       qf.RepoType(repo.Path),
+		}
+		if dbRepo.IsUserRepo() {
+			user := &qf.User{}
+			qtest.CreateUser(t, db, nxtRemoteID, user)
+			nxtRemoteID++
+			qtest.EnrollStudent(t, db, user, course)
+			group := &qf.Group{
+				Name:     dbRepo.UserName(),
+				CourseID: course.GetID(),
+				Users:    []*qf.User{user},
+			}
+			if err := db.CreateGroup(group); err != nil {
+				return err
+			}
+			// For testing purposes, assume all student repositories are group repositories
+			// since tasks and pull requests are only supported for groups anyway.
+			dbRepo.RepoType = qf.Repository_GROUP
+			dbRepo.GroupID = group.GetID()
+		}
+
+		t.Logf("create repo: %v", dbRepo)
+		if err = db.CreateRepository(dbRepo); err != nil {
+			return err
+		}
+	}
+	return nil
 }
