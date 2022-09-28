@@ -723,7 +723,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := allCourses[0]
+	course := qtest.MockCourses[0]
 	err := db.CreateCourse(admin.ID, course)
 	if err != nil {
 		t.Fatal(err)
@@ -839,7 +839,7 @@ func TestGetGroups(t *testing.T) {
 	admin := users[0]
 
 	// admin will be enrolled as teacher because of course creation below
-	course := allCourses[1]
+	course := qtest.MockCourses[1]
 	err := db.CreateCourse(admin.ID, course)
 	if err != nil {
 		t.Fatal(err)

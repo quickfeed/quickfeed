@@ -17,49 +17,6 @@ import (
 	"github.com/quickfeed/quickfeed/web"
 )
 
-var allCourses = []*qf.Course{
-	{
-		Name:             "Distributed Systems",
-		CourseCreatorID:  1,
-		Code:             "DAT520",
-		Year:             2018,
-		Tag:              "Spring",
-		Provider:         "fake",
-		OrganizationID:   1,
-		OrganizationName: "qfTestOrg",
-	},
-	{
-		Name:             "Operating Systems",
-		CourseCreatorID:  1,
-		Code:             "DAT320",
-		Year:             2017,
-		Tag:              "Fall",
-		Provider:         "fake",
-		OrganizationID:   2,
-		OrganizationName: "DAT320",
-	},
-	{
-		Name:             "New Systems",
-		CourseCreatorID:  1,
-		Code:             "DATx20",
-		Year:             2019,
-		Tag:              "Fall",
-		Provider:         "fake",
-		OrganizationID:   3,
-		OrganizationName: "DATx20-2019",
-	},
-	{
-		Name:             "Hyped Systems",
-		CourseCreatorID:  1,
-		Code:             "DATx20",
-		Year:             2020,
-		Tag:              "Fall",
-		Provider:         "fake",
-		OrganizationID:   4,
-		OrganizationName: "DATx20-2020",
-	},
-}
-
 func TestGetCourses(t *testing.T) {
 	db, cleanup, _, qfService := testQuickFeedService(t)
 	defer cleanup()
@@ -67,7 +24,7 @@ func TestGetCourses(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 10)
 
 	var wantCourses []*qf.Course
-	for _, course := range allCourses {
+	for _, course := range qtest.MockCourses {
 		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
@@ -92,7 +49,7 @@ func TestNewCourse(t *testing.T) {
 	admin := qtest.CreateAdminUser(t, db, "fake")
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
-	for _, wantCourse := range allCourses {
+	for _, wantCourse := range qtest.MockCourses {
 		gotCourse, err := qfService.CreateCourse(ctx, connect.NewRequest(wantCourse))
 		if err != nil {
 			t.Fatal(err)
@@ -132,7 +89,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 		}
 	}
 
-	course, err := qfService.CreateCourse(ctx, connect.NewRequest(allCourses[0]))
+	course, err := qfService.CreateCourse(ctx, connect.NewRequest(qtest.MockCourses[0]))
 	if course != nil {
 		t.Fatal("expected CreateCourse to fail with AlreadyExists")
 	}
@@ -154,7 +111,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
-	course, err := qfService.CreateCourse(ctx, connect.NewRequest(allCourses[0]))
+	course, err := qfService.CreateCourse(ctx, connect.NewRequest(qtest.MockCourses[0]))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -262,7 +219,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	user := qtest.CreateFakeUser(t, db, 2)
 
 	var testCourses []*qf.Course
-	for _, course := range allCourses {
+	for _, course := range qtest.MockCourses {
 		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
@@ -328,7 +285,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var testCourses []*qf.Course
-	for _, course := range allCourses {
+	for _, course := range qtest.MockCourses {
 		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
@@ -392,7 +349,7 @@ func TestGetCourse(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	wantCourse := allCourses[0]
+	wantCourse := qtest.MockCourses[0]
 	err := db.CreateCourse(admin.ID, wantCourse)
 	if err != nil {
 		t.Fatal(err)
@@ -419,7 +376,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	student2 := qtest.CreateFakeUser(t, db, 12)
 	ta := qtest.CreateFakeUser(t, db, 13)
 
-	course := allCourses[0]
+	course := qtest.MockCourses[0]
 	err := db.CreateCourse(teacher.ID, course)
 	if err != nil {
 		t.Fatal(err)

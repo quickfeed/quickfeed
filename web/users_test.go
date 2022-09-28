@@ -71,7 +71,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		users = append(users, user)
 	}
 	admin := users[0]
-	for _, course := range allCourses {
+	for _, course := range qtest.MockCourses {
 		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
@@ -90,13 +90,13 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 		if err := db.CreateEnrollment(&qf.Enrollment{
 			UserID:   user.ID,
-			CourseID: allCourses[0].ID,
+			CourseID: qtest.MockCourses[0].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
 		if err := db.UpdateEnrollment(&qf.Enrollment{
 			UserID:   user.ID,
-			CourseID: allCourses[0].ID,
+			CourseID: qtest.MockCourses[0].ID,
 			Status:   qf.Enrollment_STUDENT,
 		}); err != nil {
 			t.Fatal(err)
@@ -109,13 +109,13 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	for _, user := range osUsers {
 		if err := db.CreateEnrollment(&qf.Enrollment{
 			UserID:   user.ID,
-			CourseID: allCourses[1].ID,
+			CourseID: qtest.MockCourses[1].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
 		if err := db.UpdateEnrollment(&qf.Enrollment{
 			UserID:   user.ID,
-			CourseID: allCourses[1].ID,
+			CourseID: qtest.MockCourses[1].ID,
 			Status:   qf.Enrollment_STUDENT,
 		}); err != nil {
 			t.Fatal(err)
@@ -123,7 +123,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 
 	request := &connect.Request[qf.EnrollmentRequest]{
-		Msg: &qf.EnrollmentRequest{CourseID: allCourses[0].ID},
+		Msg: &qf.EnrollmentRequest{CourseID: qtest.MockCourses[0].ID},
 	}
 	gotEnrollments, err := client.GetEnrollmentsByCourse(ctx, request)
 	if err != nil {
@@ -153,7 +153,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 
 	ctx := qtest.WithUserContext(context.Background(), admin)
 
-	course := allCourses[1]
+	course := qtest.MockCourses[1]
 	err := db.CreateCourse(admin.ID, course)
 	if err != nil {
 		t.Fatal(err)

@@ -18,7 +18,7 @@ func TestApproveSubmission(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 
-	course := allCourses[0]
+	course := qtest.MockCourses[0]
 	err := db.CreateCourse(admin.ID, course)
 	if err != nil {
 		t.Fatal(err)
@@ -101,7 +101,7 @@ func TestGetSubmissionsByCourse(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := allCourses[2]
+	course := qtest.MockCourses[2]
 	qtest.CreateCourse(t, db, admin, course)
 	student1 := qtest.CreateFakeUser(t, db, 2)
 	student2 := qtest.CreateFakeUser(t, db, 3)
@@ -282,8 +282,8 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 
-	course1 := allCourses[2]
-	course2 := allCourses[3]
+	course1 := qtest.MockCourses[2]
+	course2 := qtest.MockCourses[3]
 	if err := db.CreateCourse(admin.ID, course1); err != nil {
 		t.Fatal(err)
 	}
@@ -494,7 +494,7 @@ func TestCreateApproveList(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 
-	course := allCourses[2]
+	course := qtest.MockCourses[2]
 	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Fatal(err)
 	}
@@ -686,7 +686,7 @@ func TestReleaseApproveAll(t *testing.T) {
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 
-	course := allCourses[2]
+	course := qtest.MockCourses[2]
 	if err := db.CreateCourse(admin.ID, course); err != nil {
 		t.Fatal(err)
 	}
