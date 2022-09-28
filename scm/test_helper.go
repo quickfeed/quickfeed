@@ -13,14 +13,14 @@ func MockSCMManager(t *testing.T) (SCM, *Manager) {
 	t.Helper()
 	env.SetFakeProvider(t)
 	conf := &Config{
-		"test",
-		"test",
+		"qfClientID",
+		"qfClientSecret",
 		&app.Config{},
 	}
 	sc := NewMockSCMClient()
 	return sc, &Manager{
 		scms: map[string]SCM{
-			"test": sc,
+			"qfTestOrg": sc,
 		},
 		Config: conf,
 	}

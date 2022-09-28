@@ -30,8 +30,7 @@ type SCM interface {
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
 	// List the webhooks associated with the provided repository or organization.
 	ListHooks(context.Context, *Repository, string) ([]*Hook, error)
-	// Creates a new webhook for organization if the name of organization
-	// is provided. Otherwise creates a hook for the given repo.
+	// Create a new webhook at the organization level.
 	CreateHook(context.Context, *CreateHookOptions) error
 	// Create team.
 	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)

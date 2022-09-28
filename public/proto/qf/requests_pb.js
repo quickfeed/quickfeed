@@ -1681,7 +1681,7 @@ proto.qf.Organization.prototype.toObject = function(opt_includeInstance) {
 proto.qf.Organization.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    path: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    name: jspb.Message.getFieldWithDefault(msg, 2, ""),
     avatar: jspb.Message.getFieldWithDefault(msg, 3, ""),
     paymentplan: jspb.Message.getFieldWithDefault(msg, 4, "")
   };
@@ -1726,7 +1726,7 @@ proto.qf.Organization.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
-      msg.setPath(value);
+      msg.setName(value);
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
@@ -1772,7 +1772,7 @@ proto.qf.Organization.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getPath();
+  f = message.getName();
   if (f.length > 0) {
     writer.writeString(
       2,
@@ -1815,10 +1815,10 @@ proto.qf.Organization.prototype.setId = function(value) {
 
 
 /**
- * optional string path = 2;
+ * optional string name = 2;
  * @return {string}
  */
-proto.qf.Organization.prototype.getPath = function() {
+proto.qf.Organization.prototype.getName = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
@@ -1827,7 +1827,7 @@ proto.qf.Organization.prototype.getPath = function() {
  * @param {string} value
  * @return {!proto.qf.Organization} returns this
  */
-proto.qf.Organization.prototype.setPath = function(value) {
+proto.qf.Organization.prototype.setName = function(value) {
   return jspb.Message.setProto3StringField(this, 2, value);
 };
 

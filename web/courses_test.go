@@ -26,7 +26,7 @@ var allCourses = []*qf.Course{
 		Tag:              "Spring",
 		Provider:         "fake",
 		OrganizationID:   1,
-		OrganizationName: "test",
+		OrganizationName: "qfTestOrg",
 	},
 	{
 		Name:             "Operating Systems",
@@ -36,7 +36,7 @@ var allCourses = []*qf.Course{
 		Tag:              "Fall",
 		Provider:         "fake",
 		OrganizationID:   2,
-		OrganizationName: "test-1",
+		OrganizationName: "DAT320",
 	},
 	{
 		Name:             "New Systems",
@@ -46,7 +46,7 @@ var allCourses = []*qf.Course{
 		Tag:              "Fall",
 		Provider:         "fake",
 		OrganizationID:   3,
-		OrganizationName: "test-2",
+		OrganizationName: "DATx20-2019",
 	},
 	{
 		Name:             "Hyped Systems",
@@ -56,7 +56,7 @@ var allCourses = []*qf.Course{
 		Tag:              "Fall",
 		Provider:         "fake",
 		OrganizationID:   4,
-		OrganizationName: "test-3",
+		OrganizationName: "DATx20-2020",
 	},
 }
 
@@ -492,13 +492,13 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	ctx := qtest.WithUserContext(context.Background(), teacher)
 	// Need course teams to update enrollments.
 	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
-		Organization: "test",
+		Organization: "qfTestOrg",
 		TeamName:     "allstudents",
 	}); err != nil {
 		t.Error(err)
 	}
 	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
-		Organization: "test",
+		Organization: "qfTestOrg",
 		TeamName:     "allteachers",
 	}); err != nil {
 		t.Error(err)

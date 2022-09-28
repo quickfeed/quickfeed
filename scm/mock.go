@@ -13,19 +13,19 @@ import (
 var testOrgs = []*qf.Organization{
 	{
 		ID:   1,
-		Name: "test",
+		Name: "qfTestOrg",
 	},
 	{
 		ID:   2,
-		Name: "test-2",
+		Name: "DAT320",
 	},
 	{
 		ID:   3,
-		Name: "test-3",
+		Name: "DATx20-2019",
 	},
 	{
 		ID:   4,
-		Name: "test-4",
+		Name: "DATx20-2020",
 	},
 }
 
@@ -176,7 +176,7 @@ func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool 
 }
 
 // ListHooks implements the SCM interface.
-func (s *MockSCM) ListHooks(_ context.Context, repo *Repository, orgName string) ([]*Hook, error) {
+func (s *MockSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook, error) {
 	var hooks []*Hook
 	for _, v := range s.Hooks {
 		hooks = append(hooks, v)
@@ -275,7 +275,7 @@ func (*MockSCM) CreateCloneURL(_ *URLPathOptions) string {
 }
 
 // AddTeamRepo implements the SCM interface.
-func (s *MockSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
+func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error {
 	repo := &Repository{
 		ID:    uint64(len(s.Repositories) + 1),
 		Path:  opt.Repo,
@@ -353,7 +353,7 @@ func (*MockSCM) DeleteIssues(_ context.Context, _ *RepositoryOptions) error {
 }
 
 // CreateIssueComment implements the SCM interface
-func (*MockSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error) {
+func (*MockSCM) CreateIssueComment(_ context.Context, _ *IssueCommentOptions) (int64, error) {
 	return 0, ErrNotSupported{
 		SCM:    "MockSCM",
 		Method: "CreateIssueComment",
@@ -361,7 +361,7 @@ func (*MockSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptions
 }
 
 // UpdateIssueComment implements the SCM interface
-func (*MockSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOptions) error {
+func (*MockSCM) UpdateIssueComment(_ context.Context, _ *IssueCommentOptions) error {
 	return ErrNotSupported{
 		SCM:    "MockSCM",
 		Method: "UpdateIssueComment",
@@ -369,7 +369,7 @@ func (*MockSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOptions
 }
 
 // RequestReviewers implements the SCM interface
-func (*MockSCM) RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error {
+func (*MockSCM) RequestReviewers(_ context.Context, _ *RequestReviewersOptions) error {
 	return ErrNotSupported{
 		SCM:    "MockSCM",
 		Method: "RequestReviewers",
