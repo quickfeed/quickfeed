@@ -378,7 +378,6 @@ func (*MockSCM) RequestReviewers(_ context.Context, _ *RequestReviewersOptions) 
 
 // AcceptRepositoryInvite implements the SCMInvite interface
 func (*MockSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
-	// TODO(vera): needs TeamMemebers: map[teamID]Login
 	return ErrNotSupported{
 		SCM:    "MockSCM",
 		Method: "AcceptRepositoryInvites",
