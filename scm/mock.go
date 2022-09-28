@@ -8,27 +8,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 )
-
-var testOrgs = []*qf.Organization{
-	{
-		ID:   1,
-		Name: "qfTestOrg",
-	},
-	{
-		ID:   2,
-		Name: "DAT320",
-	},
-	{
-		ID:   3,
-		Name: "DATx20-2019",
-	},
-	{
-		ID:   4,
-		Name: "DATx20-2020",
-	},
-}
 
 // MockSCM implements the SCM interface.
 // TODO(meling) many of the methods below are not implemented.
@@ -48,8 +30,11 @@ func NewMockSCMClient() *MockSCM {
 		Teams:         make(map[uint64]*Team),
 	}
 	// initialize four test course organizations
-	for _, org := range testOrgs {
-		s.Organizations[org.ID] = org
+	for _, course := range qtest.MockCourses {
+		s.Organizations[course.OrganizationID] = &qf.Organization{
+			ID:   course.OrganizationID,
+			Name: course.OrganizationName,
+		}
 	}
 	return s
 }
