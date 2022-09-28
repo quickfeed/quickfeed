@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -107,11 +108,15 @@ func (s *MockSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 	if err != nil {
 		return nil, err
 	}
+	url, err := url.JoinPath("https://example.com", opt.Organization.Name, opt.Path)
+	if err != nil {
+		return nil, err
+	}
 	repo := &Repository{
 		ID:      GenerateID(s.Repositories),
 		Path:    opt.Path,
 		Owner:   org.Name,
-		HTMLURL: "https://example.com/" + opt.Organization.Name + "/" + opt.Path,
+		HTMLURL: url,
 		OrgID:   opt.Organization.ID,
 	}
 	s.Repositories[repo.ID] = repo
