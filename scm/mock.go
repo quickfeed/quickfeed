@@ -46,7 +46,10 @@ func NewMockSCMClient() *MockSCM {
 		Hooks:         make(map[uint64]*Hook),
 		Teams:         make(map[uint64]*Team),
 	}
-	s.initOrganizations()
+	// initialize four test course organizations
+	for _, org := range testOrgs {
+		s.Organizations[org.ID] = org
+	}
 	return s
 }
 
@@ -382,13 +385,6 @@ func (*MockSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitati
 	return ErrNotSupported{
 		SCM:    "MockSCM",
 		Method: "AcceptRepositoryInvites",
-	}
-}
-
-// initOrganizations sets up four test organizations to support up to four courses.
-func (s *MockSCM) initOrganizations() {
-	for _, org := range testOrgs {
-		s.Organizations[org.ID] = org
 	}
 }
 
