@@ -26,24 +26,6 @@ func (GitlabSCM) Clone(context.Context, *CloneOptions) (string, error) {
 	return "", nil
 }
 
-// CreateOrganization implements the SCM interface.
-func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*qf.Organization, error) {
-	group, _, err := s.client.Groups.CreateGroup(&gitlab.CreateGroupOptions{
-		Name:       &opt.Name,
-		Path:       &opt.Path,
-		Visibility: getVisibilityLevel(false),
-	}, gitlab.WithContext(ctx))
-	if err != nil {
-		return nil, err
-	}
-
-	return &qf.Organization{
-		ID:     uint64(group.ID),
-		Path:   group.Path,
-		Avatar: group.AvatarURL,
-	}, nil
-}
-
 // UpdateOrganization implements the SCM interface.
 func (*GitlabSCM) UpdateOrganization(_ context.Context, _ *OrganizationOptions) error {
 	return ErrNotSupported{
@@ -61,7 +43,7 @@ func (s *GitlabSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 
 	return &qf.Organization{
 		ID:     uint64(group.ID),
-		Path:   group.Path,
+		Name:   group.Path,
 		Avatar: group.AvatarURL,
 	}, nil
 }
@@ -99,8 +81,8 @@ func (*GitlabSCM) GetRepository(_ context.Context, _ *RepositoryOptions) (*Repos
 // GetRepositories implements the SCM interface.
 func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *qf.Organization) ([]*Repository, error) {
 	var gid interface{}
-	if directory.Path != "" {
-		gid = directory.Path
+	if directory.Name != "" {
+		gid = directory.Name
 	} else {
 		gid = strconv.FormatUint(directory.ID, 10)
 	}
@@ -151,12 +133,11 @@ func (*GitlabSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook
 }
 
 // CreateHook implements the SCM interface.
-func (s *GitlabSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err error) {
-	_, _, err = s.client.Projects.AddProjectHook(strconv.FormatUint(opt.Repository.ID, 10), &gitlab.AddProjectHookOptions{
-		URL:   &opt.URL,
-		Token: &opt.Secret,
-	}, gitlab.WithContext(ctx))
-	return
+func (*GitlabSCM) CreateHook(_ context.Context, _ *CreateHookOptions) (err error) {
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "CreateHook",
+	}
 }
 
 // CreateTeam implements the SCM interface.
@@ -236,13 +217,6 @@ func (*GitlabSCM) GetUserNameByID(_ context.Context, _ uint64) (string, error) {
 // CreateCloneURL implements the SCM interface.
 func (*GitlabSCM) CreateCloneURL(_ *URLPathOptions) string {
 	return ""
-}
-
-func getVisibilityLevel(private bool) *gitlab.VisibilityValue {
-	if private {
-		return gitlab.Visibility(gitlab.PrivateVisibility)
-	}
-	return gitlab.Visibility(gitlab.PublicVisibility)
 }
 
 // UpdateOrgMembership implements the SCM interface

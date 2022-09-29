@@ -28,7 +28,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, mgr *s
 	ctx, cancel := context.WithTimeout(context.Background(), MaxWait)
 	defer cancel()
 
-	scm, err := mgr.GetOrCreateSCM(ctx, logger, course.OrganizationPath)
+	scm, err := mgr.GetOrCreateSCM(ctx, logger, course.OrganizationName)
 	if err != nil {
 		logger.Errorf("Failed to create SCM Client: %v", err)
 		return
@@ -91,7 +91,7 @@ func fetchAssignments(ctx context.Context, sc scm.SCM, course *qf.Course) ([]*qf
 	}
 	defer os.RemoveAll(dstDir)
 	cloneDir, err := sc.Clone(ctx, &scm.CloneOptions{
-		Organization: course.GetOrganizationPath(),
+		Organization: course.GetOrganizationName(),
 		Repository:   qf.TestsRepo,
 		DestDir:      dstDir,
 	})

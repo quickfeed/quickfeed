@@ -302,9 +302,9 @@ export class Organization extends Message<Organization> {
   ID = protoInt64.zero;
 
   /**
-   * @generated from field: string path = 2;
+   * @generated from field: string name = 2;
    */
-  path = "";
+  name = "";
 
   /**
    * @generated from field: string avatar = 3;
@@ -325,7 +325,7 @@ export class Organization extends Message<Organization> {
   static readonly typeName = "qf.Organization";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "path", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "avatar", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "paymentPlan", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
@@ -871,43 +871,6 @@ export class Repositories extends Message<Repositories> {
 }
 
 /**
- * @generated from message qf.AuthorizationResponse
- */
-export class AuthorizationResponse extends Message<AuthorizationResponse> {
-  /**
-   * @generated from field: bool IsAuthorized = 1;
-   */
-  IsAuthorized = false;
-
-  constructor(data?: PartialMessage<AuthorizationResponse>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "qf.AuthorizationResponse";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "IsAuthorized", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AuthorizationResponse {
-    return new AuthorizationResponse().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AuthorizationResponse {
-    return new AuthorizationResponse().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AuthorizationResponse {
-    return new AuthorizationResponse().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: AuthorizationResponse | PlainMessage<AuthorizationResponse> | undefined, b: AuthorizationResponse | PlainMessage<AuthorizationResponse> | undefined): boolean {
-    return proto3.util.equals(AuthorizationResponse, a, b);
-  }
-}
-
-/**
  * @generated from message qf.Status
  */
 export class Status extends Message<Status> {
@@ -964,11 +927,6 @@ export class SubmissionsForCourseRequest extends Message<SubmissionsForCourseReq
    */
   type = SubmissionsForCourseRequest_Type.ALL;
 
-  /**
-   * @generated from field: bool withBuildInfo = 3;
-   */
-  withBuildInfo = false;
-
   constructor(data?: PartialMessage<SubmissionsForCourseRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -979,7 +937,6 @@ export class SubmissionsForCourseRequest extends Message<SubmissionsForCourseReq
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 2, name: "type", kind: "enum", T: proto3.getEnumType(SubmissionsForCourseRequest_Type) },
-    { no: 3, name: "withBuildInfo", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SubmissionsForCourseRequest {
@@ -1030,26 +987,19 @@ proto3.util.setEnumType(SubmissionsForCourseRequest_Type, "qf.SubmissionsForCour
  */
 export class RebuildRequest extends Message<RebuildRequest> {
   /**
-   * @generated from oneof qf.RebuildRequest.rebuildType
+   * @generated from field: uint64 courseID = 1;
    */
-  rebuildType: {
-    /**
-     * @generated from field: uint64 submissionID = 1;
-     */
-    value: bigint;
-    case: "submissionID";
-  } | {
-    /**
-     * @generated from field: uint64 courseID = 2;
-     */
-    value: bigint;
-    case: "courseID";
-  } | { case: undefined; value?: undefined } = { case: undefined };
+  courseID = protoInt64.zero;
 
   /**
-   * @generated from field: uint64 assignmentID = 3;
+   * @generated from field: uint64 assignmentID = 2;
    */
   assignmentID = protoInt64.zero;
+
+  /**
+   * @generated from field: uint64 submissionID = 3;
+   */
+  submissionID = protoInt64.zero;
 
   constructor(data?: PartialMessage<RebuildRequest>) {
     super();
@@ -1059,9 +1009,9 @@ export class RebuildRequest extends Message<RebuildRequest> {
   static readonly runtime = proto3;
   static readonly typeName = "qf.RebuildRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "submissionID", kind: "scalar", T: 4 /* ScalarType.UINT64 */, oneof: "rebuildType" },
-    { no: 2, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */, oneof: "rebuildType" },
-    { no: 3, name: "assignmentID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 1, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 2, name: "assignmentID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 3, name: "submissionID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RebuildRequest {

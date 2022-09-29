@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -17,57 +18,14 @@ import (
 	"github.com/quickfeed/quickfeed/web"
 )
 
-var allCourses = []*qf.Course{
-	{
-		Name:             "Distributed Systems",
-		CourseCreatorID:  1,
-		Code:             "DAT520",
-		Year:             2018,
-		Tag:              "Spring",
-		Provider:         "fake",
-		OrganizationID:   1,
-		OrganizationPath: "test",
-	},
-	{
-		Name:             "Operating Systems",
-		CourseCreatorID:  1,
-		Code:             "DAT320",
-		Year:             2017,
-		Tag:              "Fall",
-		Provider:         "fake",
-		OrganizationID:   2,
-		OrganizationPath: "test",
-	},
-	{
-		Name:             "New Systems",
-		CourseCreatorID:  1,
-		Code:             "DATx20",
-		Year:             2019,
-		Tag:              "Fall",
-		Provider:         "fake",
-		OrganizationID:   3,
-		OrganizationPath: "test",
-	},
-	{
-		Name:             "Hyped Systems",
-		CourseCreatorID:  1,
-		Code:             "DATx20",
-		Year:             2020,
-		Tag:              "Fall",
-		Provider:         "fake",
-		OrganizationID:   4,
-		OrganizationPath: "test",
-	},
-}
-
 func TestGetCourses(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup, _, qfService := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
 
 	var wantCourses []*qf.Course
-	for _, course := range allCourses {
+	for _, course := range qtest.MockCourses {
 		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
@@ -75,7 +33,7 @@ func TestGetCourses(t *testing.T) {
 		wantCourses = append(wantCourses, course)
 	}
 
-	foundCourses, err := ags.GetCourses(context.Background(), connect.NewRequest(&qf.Void{}))
+	foundCourses, err := qfService.GetCourses(context.Background(), connect.NewRequest(&qf.Void{}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,20 +44,14 @@ func TestGetCourses(t *testing.T) {
 }
 
 func TestNewCourse(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, qfService := testQuickFeedService(t)
 	defer cleanup()
 
-	admin := qtest.CreateFakeUser(t, db, 10)
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	admin := qtest.CreateAdminUser(t, db, "fake")
+	ctx := auth.WithUserContext(context.Background(), admin)
 
-	for _, wantCourse := range allCourses {
-		// each course needs a separate directory
-		_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"})
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Log("COURSE ORG: ", wantCourse.OrganizationPath)
-		gotCourse, err := ags.CreateCourse(ctx, connect.NewRequest(wantCourse))
+	for _, wantCourse := range qtest.MockCourses {
+		gotCourse, err := qfService.CreateCourse(ctx, connect.NewRequest(wantCourse))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -120,25 +72,25 @@ func TestNewCourse(t *testing.T) {
 }
 
 func TestNewCourseExistingRepos(t *testing.T) {
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, mockSCM, qfService := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 10)
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
-	directory, err := fakeProvider.GetOrganization(ctx, &scm.GetOrgOptions{ID: 1})
+	organization, err := mockSCM.GetOrganization(ctx, &scm.GetOrgOptions{ID: 1})
 	if err != nil {
 		t.Fatal(err)
 	}
 	for path, private := range web.RepoPaths {
-		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: directory, Private: private}
-		_, err := fakeProvider.CreateRepository(ctx, repoOptions)
+		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: organization, Private: private}
+		_, err := mockSCM.CreateRepository(ctx, repoOptions)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	course, err := ags.CreateCourse(ctx, connect.NewRequest(allCourses[0]))
+	course, err := qfService.CreateCourse(ctx, connect.NewRequest(qtest.MockCourses[0]))
 	if course != nil {
 		t.Fatal("expected CreateCourse to fail with AlreadyExists")
 	}
@@ -154,25 +106,20 @@ func TestEnrollmentProcess(t *testing.T) {
 	// TODO(meling): This test no longer passes since the enrollment process includes accepting invitations on behalf of the user.
 	// A fix would probably be to implement a fake SCMInvite that behaves appropriately.
 	// We should add manual SCM_TEST for the actual AcceptRepositoryInvites using qf101.
-	db, cleanup, fakeProvider, ags := testQuickFeedService(t)
+	db, cleanup, _, qfService := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
-	_, err := fakeProvider.CreateOrganization(ctx, &scm.OrganizationOptions{Path: "test", Name: "test"})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	course, err := ags.CreateCourse(ctx, connect.NewRequest(allCourses[0]))
+	course, err := qfService.CreateCourse(ctx, connect.NewRequest(qtest.MockCourses[0]))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	stud1 := qtest.CreateFakeUser(t, db, 2)
 	enrollStud1 := &qf.Enrollment{CourseID: course.Msg.ID, UserID: stud1.ID}
-	if _, err = ags.CreateEnrollment(ctx, connect.NewRequest(enrollStud1)); err != nil {
+	if _, err = qfService.CreateEnrollment(ctx, connect.NewRequest(enrollStud1)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -198,7 +145,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 
 	enrollStud1.Status = qf.Enrollment_STUDENT
-	if _, err = ags.UpdateEnrollments(ctx, connect.NewRequest(&qf.Enrollments{
+	if _, err = qfService.UpdateEnrollments(ctx, connect.NewRequest(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{enrollStud1},
 	})); err != nil {
 		t.Fatal(err)
@@ -218,11 +165,11 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	stud2 := qtest.CreateFakeUser(t, db, 3)
 	enrollStud2 := &qf.Enrollment{CourseID: course.Msg.ID, UserID: stud2.ID}
-	if _, err = ags.CreateEnrollment(ctx, connect.NewRequest(enrollStud2)); err != nil {
+	if _, err = qfService.CreateEnrollment(ctx, connect.NewRequest(enrollStud2)); err != nil {
 		t.Fatal(err)
 	}
 	enrollStud2.Status = qf.Enrollment_STUDENT
-	if _, err = ags.UpdateEnrollments(ctx, connect.NewRequest(&qf.Enrollments{
+	if _, err = qfService.UpdateEnrollments(ctx, connect.NewRequest(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{
 			enrollStud2,
 		},
@@ -246,7 +193,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	// promote stud2 to teaching assistant
 
 	enrollStud2.Status = qf.Enrollment_TEACHER
-	if _, err = ags.UpdateEnrollments(ctx, connect.NewRequest(&qf.Enrollments{
+	if _, err = qfService.UpdateEnrollments(ctx, connect.NewRequest(&qf.Enrollments{
 		Enrollments: []*qf.Enrollment{
 			enrollStud2,
 		},
@@ -266,14 +213,14 @@ func TestEnrollmentProcess(t *testing.T) {
 }
 
 func TestListCoursesWithEnrollment(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup, _, qfService := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user := qtest.CreateFakeUser(t, db, 2)
 
 	var testCourses []*qf.Course
-	for _, course := range allCourses {
+	for _, course := range qtest.MockCourses {
 		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
@@ -312,7 +259,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	}
 
 	courses_request := &qf.EnrollmentStatusRequest{UserID: user.ID}
-	courses, err := ags.GetCoursesByUser(context.Background(), connect.NewRequest(courses_request))
+	courses, err := qfService.GetCoursesByUser(context.Background(), connect.NewRequest(courses_request))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -334,12 +281,12 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 }
 
 func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup, _, qfService := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	var testCourses []*qf.Course
-	for _, course := range allCourses {
+	for _, course := range qtest.MockCourses {
 		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
@@ -384,7 +331,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	stats := make([]qf.Enrollment_UserStatus, 0)
 	stats = append(stats, qf.Enrollment_STUDENT)
 	course_req := &qf.EnrollmentStatusRequest{UserID: user.ID, Statuses: stats}
-	courses, err := ags.GetCoursesByUser(context.Background(), connect.NewRequest(course_req))
+	courses, err := qfService.GetCoursesByUser(context.Background(), connect.NewRequest(course_req))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -399,17 +346,17 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 }
 
 func TestGetCourse(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup, _, qfService := testQuickFeedService(t)
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	wantCourse := allCourses[0]
+	wantCourse := qtest.MockCourses[0]
 	err := db.CreateCourse(admin.ID, wantCourse)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	gotCourse, err := ags.GetCourse(context.Background(), connect.NewRequest(&qf.CourseRequest{
+	gotCourse, err := qfService.GetCourse(context.Background(), connect.NewRequest(&qf.CourseRequest{
 		CourseID: wantCourse.ID,
 	}))
 	if err != nil {
@@ -422,7 +369,7 @@ func TestGetCourse(t *testing.T) {
 }
 
 func TestPromoteDemoteRejectTeacher(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup, mockSCM, qfService := testQuickFeedService(t)
 	defer cleanup()
 
 	teacher := qtest.CreateFakeUser(t, db, 10)
@@ -430,7 +377,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	student2 := qtest.CreateFakeUser(t, db, 12)
 	ta := qtest.CreateFakeUser(t, db, 13)
 
-	course := allCourses[0]
+	course := qtest.MockCourses[0]
 	err := db.CreateCourse(teacher.ID, course)
 	if err != nil {
 		t.Fatal(err)
@@ -500,40 +447,53 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	request := &qf.Enrollments{}
 
 	// teacher promotes students to teachers, must succeed
-	ctx := qtest.WithUserContext(context.Background(), teacher)
+	ctx := auth.WithUserContext(context.Background(), teacher)
+	// Need course teams to update enrollments.
+	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
+		Organization: "qfTestOrg",
+		TeamName:     "allstudents",
+	}); err != nil {
+		t.Error(err)
+	}
+	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
+		Organization: "qfTestOrg",
+		TeamName:     "allteachers",
+	}); err != nil {
+		t.Error(err)
+	}
 
 	request.Enrollments = []*qf.Enrollment{student1Enrollment, student2Enrollment, taEnrollment}
-	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
+	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
 		t.Fatal(err)
 	}
 
 	// TA attempts to demote self, must succeed
 	taEnrollment.Status = qf.Enrollment_STUDENT
 	request.Enrollments = []*qf.Enrollment{taEnrollment}
-	ctx = qtest.WithUserContext(context.Background(), ta)
-	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
+	ctx = auth.WithUserContext(context.Background(), ta)
+	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
 		t.Fatal(err)
 	}
 
 	// student2 attempts to demote course creator, must fail
 	teacherEnrollment.Status = qf.Enrollment_STUDENT
 	request.Enrollments = []*qf.Enrollment{teacherEnrollment}
-	ctx = qtest.WithUserContext(context.Background(), student2)
-	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
+	ctx = auth.WithUserContext(context.Background(), student2)
+	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
 		t.Error("expected error: 'only course creator can change status of other teachers'", err)
 	}
 
 	// student2 attempts to reject course creator, must fail
 	teacherEnrollment.Status = qf.Enrollment_NONE
-	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
+	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
 		t.Error("expected error: 'only course creator can change status of other teachers'")
 	}
 
 	// teacher demotes student1, must succeed
 	student1Enrollment.Status = qf.Enrollment_STUDENT
 	request.Enrollments = []*qf.Enrollment{student1Enrollment}
-	ctx = qtest.WithUserContext(context.Background(), teacher)
-	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
+	ctx = auth.WithUserContext(context.Background(), teacher)
+	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -549,11 +509,11 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	// teacher rejects student2, must succeed
 	student2Enrollment.Status = qf.Enrollment_STUDENT
 	request.Enrollments = []*qf.Enrollment{student2Enrollment}
-	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
+	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
 		t.Fatal(err)
 	}
 	student2Enrollment.Status = qf.Enrollment_NONE
-	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
+	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -567,20 +527,20 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	// course creator attempts to demote himself, must fail as well
 	teacherEnrollment.Status = qf.Enrollment_STUDENT
 	request.Enrollments = []*qf.Enrollment{teacherEnrollment}
-	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
+	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
 		t.Error("expected error 'course creator cannot be demoted'")
 	}
 
 	// same when rejecting
 	teacherEnrollment.Status = qf.Enrollment_NONE
-	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
+	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
 		t.Error("expected error 'course creator cannot be demoted'")
 	}
 
 	// ta attempts to demote course creator, must fail
 	teacherEnrollment.Status = qf.Enrollment_STUDENT
-	ctx = qtest.WithUserContext(context.Background(), ta)
-	if _, err := ags.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
+	ctx = auth.WithUserContext(context.Background(), ta)
+	if _, err := qfService.UpdateEnrollments(ctx, connect.NewRequest(request)); err == nil {
 		t.Error("expected error 'ta cannot be demoted course creator'")
 	}
 }

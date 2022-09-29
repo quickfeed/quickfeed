@@ -373,9 +373,9 @@ export class Course extends Message<Course> {
   /**
    * The organization's SCM name, e.g. uis-dat520-2020.
    *
-   * @generated from field: string organizationPath = 9;
+   * @generated from field: string organizationName = 9;
    */
-  organizationPath = "";
+  organizationName = "";
 
   /**
    * @generated from field: uint32 slipDays = 10;
@@ -423,7 +423,7 @@ export class Course extends Message<Course> {
     { no: 6, name: "tag", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 7, name: "provider", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 8, name: "organizationID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 9, name: "organizationPath", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 9, name: "organizationName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 10, name: "slipDays", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
     { no: 11, name: "dockerfile", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 12, name: "enrolled", kind: "enum", T: proto3.getEnumType(Enrollment_UserStatus) },
@@ -638,52 +638,47 @@ export class Enrollment extends Message<Enrollment> {
   groupID = protoInt64.zero;
 
   /**
-   * @generated from field: bool hasTeacherScopes = 5;
-   */
-  hasTeacherScopes = false;
-
-  /**
-   * @generated from field: qf.User user = 6;
+   * @generated from field: qf.User user = 5;
    */
   user?: User;
 
   /**
-   * @generated from field: qf.Course course = 7;
+   * @generated from field: qf.Course course = 6;
    */
   course?: Course;
 
   /**
-   * @generated from field: qf.Group group = 8;
+   * @generated from field: qf.Group group = 7;
    */
   group?: Group;
 
   /**
-   * @generated from field: qf.Enrollment.UserStatus status = 9;
+   * @generated from field: qf.Enrollment.UserStatus status = 8;
    */
   status = Enrollment_UserStatus.NONE;
 
   /**
-   * @generated from field: qf.Enrollment.DisplayState state = 10;
+   * @generated from field: qf.Enrollment.DisplayState state = 9;
    */
   state = Enrollment_DisplayState.UNSET;
 
   /**
-   * @generated from field: uint32 slipDaysRemaining = 11;
+   * @generated from field: uint32 slipDaysRemaining = 10;
    */
   slipDaysRemaining = 0;
 
   /**
-   * @generated from field: string lastActivityDate = 12;
+   * @generated from field: string lastActivityDate = 11;
    */
   lastActivityDate = "";
 
   /**
-   * @generated from field: uint64 totalApproved = 13;
+   * @generated from field: uint64 totalApproved = 12;
    */
   totalApproved = protoInt64.zero;
 
   /**
-   * @generated from field: repeated qf.UsedSlipDays usedSlipDays = 14;
+   * @generated from field: repeated qf.UsedSlipDays usedSlipDays = 13;
    */
   usedSlipDays: UsedSlipDays[] = [];
 
@@ -699,16 +694,15 @@ export class Enrollment extends Message<Enrollment> {
     { no: 2, name: "courseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 3, name: "userID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 4, name: "groupID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 5, name: "hasTeacherScopes", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 6, name: "user", kind: "message", T: User },
-    { no: 7, name: "course", kind: "message", T: Course },
-    { no: 8, name: "group", kind: "message", T: Group },
-    { no: 9, name: "status", kind: "enum", T: proto3.getEnumType(Enrollment_UserStatus) },
-    { no: 10, name: "state", kind: "enum", T: proto3.getEnumType(Enrollment_DisplayState) },
-    { no: 11, name: "slipDaysRemaining", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 12, name: "lastActivityDate", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 13, name: "totalApproved", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 14, name: "usedSlipDays", kind: "message", T: UsedSlipDays, repeated: true },
+    { no: 5, name: "user", kind: "message", T: User },
+    { no: 6, name: "course", kind: "message", T: Course },
+    { no: 7, name: "group", kind: "message", T: Group },
+    { no: 8, name: "status", kind: "enum", T: proto3.getEnumType(Enrollment_UserStatus) },
+    { no: 9, name: "state", kind: "enum", T: proto3.getEnumType(Enrollment_DisplayState) },
+    { no: 10, name: "slipDaysRemaining", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
+    { no: 11, name: "lastActivityDate", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 12, name: "totalApproved", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 13, name: "usedSlipDays", kind: "message", T: UsedSlipDays, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Enrollment {
@@ -1515,29 +1509,36 @@ export class GradingBenchmark extends Message<GradingBenchmark> {
   /**
    * foreign key
    *
-   * @generated from field: uint64 AssignmentID = 2;
+   * @generated from field: uint64 CourseID = 2;
+   */
+  CourseID = protoInt64.zero;
+
+  /**
+   * foreign key
+   *
+   * @generated from field: uint64 AssignmentID = 3;
    */
   AssignmentID = protoInt64.zero;
 
   /**
    * foreign key
    *
-   * @generated from field: uint64 ReviewID = 3;
+   * @generated from field: uint64 ReviewID = 4;
    */
   ReviewID = protoInt64.zero;
 
   /**
-   * @generated from field: string heading = 4;
+   * @generated from field: string heading = 5;
    */
   heading = "";
 
   /**
-   * @generated from field: string comment = 5;
+   * @generated from field: string comment = 6;
    */
   comment = "";
 
   /**
-   * @generated from field: repeated qf.GradingCriterion criteria = 6;
+   * @generated from field: repeated qf.GradingCriterion criteria = 7;
    */
   criteria: GradingCriterion[] = [];
 
@@ -1550,11 +1551,12 @@ export class GradingBenchmark extends Message<GradingBenchmark> {
   static readonly typeName = "qf.GradingBenchmark";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "AssignmentID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 3, name: "ReviewID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 4, name: "heading", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "comment", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: "criteria", kind: "message", T: GradingCriterion, repeated: true },
+    { no: 2, name: "CourseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 3, name: "AssignmentID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 4, name: "ReviewID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 5, name: "heading", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "comment", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 7, name: "criteria", kind: "message", T: GradingCriterion, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GradingBenchmark {
@@ -1628,22 +1630,29 @@ export class GradingCriterion extends Message<GradingCriterion> {
   BenchmarkID = protoInt64.zero;
 
   /**
-   * @generated from field: uint64 points = 3;
+   * foreign key
+   *
+   * @generated from field: uint64 CourseID = 3;
+   */
+  CourseID = protoInt64.zero;
+
+  /**
+   * @generated from field: uint64 points = 4;
    */
   points = protoInt64.zero;
 
   /**
-   * @generated from field: string description = 4;
+   * @generated from field: string description = 5;
    */
   description = "";
 
   /**
-   * @generated from field: qf.GradingCriterion.Grade grade = 5;
+   * @generated from field: qf.GradingCriterion.Grade grade = 6;
    */
   grade = GradingCriterion_Grade.NONE;
 
   /**
-   * @generated from field: string comment = 6;
+   * @generated from field: string comment = 7;
    */
   comment = "";
 
@@ -1657,10 +1666,11 @@ export class GradingCriterion extends Message<GradingCriterion> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "ID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
     { no: 2, name: "BenchmarkID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 3, name: "points", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 4, name: "description", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "grade", kind: "enum", T: proto3.getEnumType(GradingCriterion_Grade) },
-    { no: 6, name: "comment", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "CourseID", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 4, name: "points", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 5, name: "description", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "grade", kind: "enum", T: proto3.getEnumType(GradingCriterion_Grade) },
+    { no: 7, name: "comment", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GradingCriterion {

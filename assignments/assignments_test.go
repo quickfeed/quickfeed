@@ -21,7 +21,7 @@ func TestFetchAssignments(t *testing.T) {
 	course := &qf.Course{
 		Name:             "QuickFeed Test Course",
 		Code:             "qf101",
-		OrganizationPath: qfTestOrg,
+		OrganizationName: qfTestOrg,
 	}
 
 	assignments, dockerfile, err := fetchAssignments(context.Background(), s, course)

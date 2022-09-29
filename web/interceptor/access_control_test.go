@@ -52,7 +52,7 @@ func TestAccessControl(t *testing.T) {
 		Year:             2022,
 		Provider:         "fake",
 		OrganizationID:   1,
-		OrganizationPath: "test",
+		OrganizationName: "test",
 		CourseCreatorID:  courseAdmin.ID,
 	}
 	if err := db.CreateCourse(courseAdmin.ID, course); err != nil {
