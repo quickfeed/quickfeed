@@ -193,6 +193,9 @@ func (s *MockSCM) CreateHook(_ context.Context, opt *CreateHookOptions) error {
 
 // CreateTeam implements the SCM interface.
 func (s *MockSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %+v", opt)
+	}
 	newTeam := &Team{
 		ID:           generateID(s.Teams),
 		Name:         opt.TeamName,
@@ -204,6 +207,9 @@ func (s *MockSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, err
 
 // DeleteTeam implements the SCM interface.
 func (s *MockSCM) DeleteTeam(_ context.Context, opt *TeamOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
 	delete(s.Teams, opt.TeamID)
 	return nil
 }
@@ -242,7 +248,7 @@ func (s *MockSCM) GetTeams(_ context.Context, org *qf.Organization) ([]*Team, er
 // AddTeamMember implements the scm interface
 func (s *MockSCM) AddTeamMember(_ context.Context, opt *TeamMembershipOptions) error {
 	if !s.teamExists(opt.TeamID, opt.TeamName, opt.Organization) {
-		return errors.New("team not found add")
+		return errors.New("team not found")
 	}
 	return nil
 }
