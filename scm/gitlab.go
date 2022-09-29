@@ -133,7 +133,7 @@ func (*GitlabSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook
 }
 
 // CreateHook implements the SCM interface.
-func (s *GitlabSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err error) {
+func (s *GitlabSCM) CreateHook(_ context.Context, _ *CreateHookOptions) (err error) {
 	return ErrNotSupported{
 		SCM:    "gitlab",
 		Method: "CreateHook",
