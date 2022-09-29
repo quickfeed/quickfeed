@@ -23,19 +23,18 @@ func NewPool[T any]() *Pool[T] {
 
 // Add adds a new channel to the pool.
 func (p *Pool[T]) Add(id uint64) chan *T {
-	// Delete the channel if it already exists.
-	p.Remove(id)
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	// Delete the channel if it already exists.
+	p.internalRemove(id)
 	// Create a new channel.
 	p.channels[id] = make(chan *T)
 	return p.channels[id]
 }
 
-// Remove removes a channel from the pool.
-func (p *Pool[T]) Remove(id uint64) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+// internalRemove removes a channel from the pool.
+// This method assumes the caller has acquired the lock.
+func (p *Pool[T]) internalRemove(id uint64) {
 	if ch, ok := p.channels[id]; ok {
 		close(ch)
 	}
@@ -70,17 +69,13 @@ func (p *Pool[T]) Close() {
 	for _, ch := range p.channels {
 		close(ch)
 	}
+	// Remove all channels.
+	p.channels = make(map[uint64]chan *T)
 }
 
-// CloseBy closes a specific channel in the pool.
-func (p *Pool[T]) CloseBy(id uint64) error {
+// Remove removes a channel from the pool.
+func (p *Pool[T]) Remove(id uint64) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	ch, ok := p.channels[id]
-	if !ok {
-		return errors.New("channel not found")
-	}
-	close(ch)
-	delete(p.channels, id)
-	return nil
+	p.internalRemove(id)
 }
