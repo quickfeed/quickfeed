@@ -90,16 +90,16 @@ func TestCreateHook(t *testing.T) {
 
 	ctx := context.Background()
 	opt := &scm.CreateHookOptions{
-		URL:        serverURL,
-		Secret:     secret,
-		Repository: &scm.Repository{Owner: qfTestOrg, Path: "tests"},
+		URL:          serverURL,
+		Secret:       secret,
+		Organization: qfTestOrg,
 	}
 	err := s.CreateHook(ctx, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	hooks, err := s.ListHooks(ctx, opt.Repository, "")
+	hooks, err := s.ListHooks(ctx, &scm.Repository{}, qfTestOrg)
 	if err != nil {
 		t.Fatal(err)
 	}

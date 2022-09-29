@@ -175,7 +175,6 @@ type CreateHookOptions struct {
 	URL          string
 	Secret       string
 	Organization string
-	Repository   *Repository
 }
 
 // TeamOptions contains information about the team and the organization it belongs to.

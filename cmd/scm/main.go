@@ -413,11 +413,6 @@ func createHook(client *scm.SCM) cli.ActionFunc {
 			URL:          c.String("url"),
 			Secret:       c.String("secret"),
 			Organization: c.String("org"),
-			Repository: &scm.Repository{
-				ID:    c.Uint64("id"),
-				Path:  c.String("repo"),
-				Owner: c.String("owner"),
-			},
 		})
 	}
 }

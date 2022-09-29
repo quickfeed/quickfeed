@@ -134,11 +134,10 @@ func (*GitlabSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook
 
 // CreateHook implements the SCM interface.
 func (s *GitlabSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err error) {
-	_, _, err = s.client.Projects.AddProjectHook(strconv.FormatUint(opt.Repository.ID, 10), &gitlab.AddProjectHookOptions{
-		URL:   &opt.URL,
-		Token: &opt.Secret,
-	}, gitlab.WithContext(ctx))
-	return
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "CreateHook",
+	}
 }
 
 // CreateTeam implements the SCM interface.

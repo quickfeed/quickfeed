@@ -84,9 +84,7 @@ func (opt CreateRepositoryOptions) valid() bool {
 }
 
 func (opt CreateHookOptions) valid() bool {
-	return opt.URL != "" &&
-		(opt.Organization != "" || (opt.Repository != nil &&
-			opt.Repository.valid()))
+	return opt.URL != "" && opt.Organization != ""
 }
 
 func (opt TeamOptions) valid() bool {
