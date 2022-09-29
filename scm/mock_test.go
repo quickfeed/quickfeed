@@ -252,3 +252,81 @@ func TestMockTeams(t *testing.T) {
 		t.Errorf("Expected same teams, got (-sub +want):\n%s", diff)
 	}
 }
+
+func TestMockTeamMembers(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	course := qtest.MockCourses[0]
+	user := "test_user"
+	team, err := s.CreateTeam(ctx, &scm.NewTeamOptions{
+		Organization: course.OrganizationName,
+		TeamName:     "test_team",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	invalidTeamOptions := []*scm.TeamMembershipOptions{
+		{},
+		{
+			Organization:   course.OrganizationName,
+			OrganizationID: course.OrganizationID,
+			Username:       user,
+		},
+		{
+			TeamID:   team.ID,
+			TeamName: team.Name,
+			Username: user,
+		},
+		{
+			Organization:   course.OrganizationName,
+			OrganizationID: course.OrganizationID,
+			TeamID:         team.ID,
+			TeamName:       team.Name,
+		},
+	}
+	for _, opt := range invalidTeamOptions {
+		if err := s.AddTeamMember(ctx, opt); err == nil {
+			t.Error("Expected error: invalid argument")
+		}
+		if err := s.RemoveTeamMember(ctx, opt); err == nil {
+			t.Error("Expected error: invalid argument")
+		}
+		if err := s.UpdateTeamMembers(ctx, &scm.UpdateTeamOptions{
+			TeamID: opt.TeamID,
+		}); err == nil {
+			t.Error("Expected error: invalid argument")
+		}
+		if err := s.UpdateTeamMembers(ctx, &scm.UpdateTeamOptions{
+			OrganizationID: course.OrganizationID,
+		}); err == nil {
+			t.Error("Expected error: invalid argument")
+		}
+	}
+
+	validTeamOptions := []*scm.TeamMembershipOptions{
+		{
+			TeamID:         team.ID,
+			OrganizationID: course.OrganizationID,
+			Username:       user,
+		},
+		{
+			TeamName:     team.Name,
+			Organization: team.Organization,
+			Username:     user,
+		},
+	}
+	for _, opt := range validTeamOptions {
+		if err := s.AddTeamMember(ctx, opt); err != nil {
+			t.Error(err)
+		}
+		if err := s.RemoveTeamMember(ctx, opt); err != nil {
+			t.Error(err)
+		}
+		if err := s.UpdateTeamMembers(ctx, &scm.UpdateTeamOptions{
+			TeamID:         team.ID,
+			OrganizationID: course.OrganizationID,
+		}); err != nil {
+			t.Error(err)
+		}
+	}
+}

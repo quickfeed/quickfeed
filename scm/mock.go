@@ -247,6 +247,9 @@ func (s *MockSCM) GetTeams(_ context.Context, org *qf.Organization) ([]*Team, er
 
 // AddTeamMember implements the scm interface
 func (s *MockSCM) AddTeamMember(_ context.Context, opt *TeamMembershipOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
 	if !s.teamExists(opt.TeamID, opt.TeamName, opt.Organization) {
 		return errors.New("team not found")
 	}
@@ -255,6 +258,9 @@ func (s *MockSCM) AddTeamMember(_ context.Context, opt *TeamMembershipOptions) e
 
 // RemoveTeamMember implements the scm interface
 func (s *MockSCM) RemoveTeamMember(_ context.Context, opt *TeamMembershipOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
 	if !s.teamExists(opt.TeamID, opt.TeamName, opt.Organization) {
 		return errors.New("team not found")
 	}
@@ -263,6 +269,9 @@ func (s *MockSCM) RemoveTeamMember(_ context.Context, opt *TeamMembershipOptions
 
 // UpdateTeamMembers implements the SCM interface.
 func (s *MockSCM) UpdateTeamMembers(_ context.Context, opt *UpdateTeamOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
 	if !s.teamExists(opt.TeamID, "", "") {
 		return errors.New("team not found")
 	}
@@ -276,6 +285,9 @@ func (*MockSCM) CreateCloneURL(_ *URLPathOptions) string {
 
 // AddTeamRepo implements the SCM interface.
 func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
 	repo := &Repository{
 		ID:    generateID(s.Repositories),
 		Path:  opt.Repo,
