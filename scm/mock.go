@@ -292,6 +292,9 @@ func (*MockSCM) GetUserNameByID(_ context.Context, _ uint64) (string, error) {
 
 // UpdateOrgMembership implements the SCM interface
 func (s *MockSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
 		return errors.New("organization not found")
 	}
@@ -300,6 +303,9 @@ func (s *MockSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOpt
 
 // RemoveMember implements the SCM interface
 func (s *MockSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
 		return errors.New("organization not found")
 	}
