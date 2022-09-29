@@ -9,6 +9,7 @@ import (
 )
 
 func TestMockOrganizations(t *testing.T) {
+	testUser := "test_user"
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	// All organizations must be retrievable by ID and by name.
@@ -25,6 +26,18 @@ func TestMockOrganizations(t *testing.T) {
 		}); err != nil {
 			t.Error(err)
 		}
+		if err := s.UpdateOrgMembership(ctx, &scm.OrgMembershipOptions{
+			Organization: course.OrganizationName,
+			Username:     testUser,
+		}); err != nil {
+			t.Error(err)
+		}
+		if err := s.RemoveMember(ctx, &scm.OrgMembershipOptions{
+			Organization: course.OrganizationName,
+			Username:     testUser,
+		}); err != nil {
+			t.Error(err)
+		}
 	}
 	if err := s.UpdateOrganization(ctx, &scm.OrganizationOptions{
 		Name: qtest.MockCourses[0].OrganizationName}); err == nil {
@@ -34,11 +47,12 @@ func TestMockOrganizations(t *testing.T) {
 	invalidOrgs := []struct {
 		name       string
 		id         uint64
+		username   string
 		permission string
 		err        string
 	}{
-		{id: 0, name: "", permission: "", err: "invalid argument"},
-		{id: 123, name: "test_missing_org", permission: "read", err: "organization not found"},
+		{id: 0, name: "", username: "", permission: "", err: "invalid argument"},
+		{id: 123, name: "test_missing_org", username: testUser, permission: "read", err: "organization not found"},
 	}
 
 	for _, org := range invalidOrgs {
@@ -49,6 +63,16 @@ func TestMockOrganizations(t *testing.T) {
 			Name:              org.name,
 			DefaultPermission: org.permission,
 		}); err == nil {
+			t.Errorf("expected error: %s", org.err)
+		}
+		opt := &scm.OrgMembershipOptions{
+			Organization: org.name,
+			Username:     org.username,
+		}
+		if err := s.UpdateOrgMembership(ctx, opt); err == nil {
+			t.Errorf("expected error: %s", org.err)
+		}
+		if err := s.RemoveMember(ctx, opt); err == nil {
 			t.Errorf("expected error: %s", org.err)
 		}
 	}
