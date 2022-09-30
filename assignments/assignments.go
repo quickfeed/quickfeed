@@ -36,6 +36,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm
 		logger.Errorf("Failed to clone '%s' repository: %v", qf.TestsRepo, err)
 		return
 	}
+	logger.Debugf("Successfully cloned tests repository to: %s", clonedTestsRepo)
 
 	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
 	assignments, dockerfile, err := readTestsRepositoryContent(clonedTestsRepo, course.ID)
