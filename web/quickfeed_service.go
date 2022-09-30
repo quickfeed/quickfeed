@@ -533,13 +533,18 @@ func (s *QuickFeedService) GetAssignments(_ context.Context, in *connect.Request
 
 // UpdateAssignments updates the course's assignments record in the database
 // by fetching assignment information from the course's test repository.
-func (s *QuickFeedService) UpdateAssignments(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error) {
+func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error) {
 	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, status.Error(codes.NotFound, "course not found")
 	}
-	assignments.UpdateFromTestsRepo(s.logger, s.db, s.scmMgr, course)
+	scm, err := s.scmMgr.GetOrCreateSCM(ctx, s.logger, course.GetOrganizationPath())
+	if err != nil {
+		s.logger.Errorf("Failed to get or create SCM Client: %v", err)
+		return nil, status.Error(codes.Internal, "failed to access course repository")
+	}
+	assignments.UpdateFromTestsRepo(s.logger, s.db, scm, course)
 	return &connect.Response[qf.Void]{}, nil
 }
 
