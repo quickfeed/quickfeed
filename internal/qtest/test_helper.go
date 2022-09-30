@@ -1,7 +1,6 @@
 package qtest
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
@@ -10,12 +9,9 @@ import (
 	"testing"
 
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/qlog"
-	"github.com/quickfeed/quickfeed/scm"
-	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 // TestDB returns a test database and close function.
@@ -164,18 +160,6 @@ func EnrollTeacher(t *testing.T, db database.Database, student *qf.User, course 
 	}
 }
 
-// FakeProviderMap is a test helper function to create an SCM map.
-func FakeProviderMap(t *testing.T) (scm.SCM, *scm.Manager) {
-	t.Helper()
-	env.SetFakeProvider(t)
-	mgr := scm.NewSCMManager(&scm.Config{})
-	scm, err := mgr.GetOrCreateSCM(context.Background(), Logger(t), "test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	return scm, mgr
-}
-
 func RandomString(t *testing.T) string {
 	t.Helper()
 	randomness := make([]byte, 10)
@@ -183,12 +167,6 @@ func RandomString(t *testing.T) string {
 		t.Fatal(err)
 	}
 	return fmt.Sprintf("%x", sha256.Sum256(randomness))[:6]
-}
-
-// WithUserContext returns the context augmented with the given user's ID.
-// This aims to mimic the claims.Context() method.
-func WithUserContext(ctx context.Context, user *qf.User) context.Context {
-	return context.WithValue(ctx, auth.ContextKeyUserID, user.GetID())
 }
 
 // AssignmentsWithTasks returns a list of test assignments with tasks for the given course.
@@ -222,64 +200,6 @@ func AssignmentsWithTasks(courseID uint64) []*qf.Assignment {
 			},
 		},
 	}
-}
-
-// PopulateDatabaseWithInitialData creates initial data-records based on organization
-// This function was created with the intent of being used for testing task and pull request related functionality.
-func PopulateDatabaseWithInitialData(t *testing.T, db database.Database, sc scm.SCM, course *qf.Course) error {
-	t.Helper()
-
-	ctx := context.Background()
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: course.OrganizationPath})
-	if err != nil {
-		return err
-	}
-	course.OrganizationID = org.GetID()
-	admin := CreateAdminUser(t, db, course.GetProvider())
-	if err = db.UpdateUser(admin); err != nil {
-		return err
-	}
-	CreateCourse(t, db, admin, course)
-
-	repos, err := sc.GetRepositories(ctx, org)
-	if err != nil {
-		return err
-	}
-
-	// Create repositories
-	nxtRemoteID := uint64(2)
-	for _, repo := range repos {
-		dbRepo := &qf.Repository{
-			RepositoryID:   repo.ID,
-			OrganizationID: org.GetID(),
-			HTMLURL:        repo.HTMLURL,
-			RepoType:       qf.RepoType(repo.Path),
-		}
-		if dbRepo.IsUserRepo() {
-			user := &qf.User{}
-			CreateUser(t, db, nxtRemoteID, user)
-			nxtRemoteID++
-			EnrollStudent(t, db, user, course)
-			group := &qf.Group{
-				Name:     dbRepo.UserName(),
-				CourseID: course.GetID(),
-				Users:    []*qf.User{user},
-			}
-			if err := db.CreateGroup(group); err != nil {
-				return err
-			}
-			// For testing purposes, assume all student repositories are group repositories
-			// since tasks and pull requests are only supported for groups anyway.
-			dbRepo.RepoType = qf.Repository_GROUP
-			dbRepo.GroupID = group.GetID()
-		}
-
-		t.Logf("create repo: %v", dbRepo)
-		if err = db.CreateRepository(dbRepo); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func QuickFeedClient(url string) qfconnect.QuickFeedServiceClient {

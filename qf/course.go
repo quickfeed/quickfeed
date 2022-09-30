@@ -7,7 +7,7 @@ import (
 )
 
 func (course *Course) CloneDir() string {
-	return filepath.Join(env.RepositoryPath(), course.GetOrganizationPath())
+	return filepath.Join(env.RepositoryPath(), course.GetOrganizationName())
 }
 
 func (course *Course) TeacherEnrollments() []*Enrollment {

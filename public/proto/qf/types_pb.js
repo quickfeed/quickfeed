@@ -1993,7 +1993,7 @@ proto.qf.Course.toObject = function(includeInstance, msg) {
     tag: jspb.Message.getFieldWithDefault(msg, 6, ""),
     provider: jspb.Message.getFieldWithDefault(msg, 7, ""),
     organizationid: jspb.Message.getFieldWithDefault(msg, 8, 0),
-    organizationpath: jspb.Message.getFieldWithDefault(msg, 9, ""),
+    organizationname: jspb.Message.getFieldWithDefault(msg, 9, ""),
     slipdays: jspb.Message.getFieldWithDefault(msg, 10, 0),
     dockerfile: jspb.Message.getFieldWithDefault(msg, 11, ""),
     enrolled: jspb.Message.getFieldWithDefault(msg, 12, 0),
@@ -2073,7 +2073,7 @@ proto.qf.Course.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 9:
       var value = /** @type {string} */ (reader.readString());
-      msg.setOrganizationpath(value);
+      msg.setOrganizationname(value);
       break;
     case 10:
       var value = /** @type {number} */ (reader.readUint32());
@@ -2187,7 +2187,7 @@ proto.qf.Course.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getOrganizationpath();
+  f = message.getOrganizationname();
   if (f.length > 0) {
     writer.writeString(
       9,
@@ -2387,10 +2387,10 @@ proto.qf.Course.prototype.setOrganizationid = function(value) {
 
 
 /**
- * optional string organizationPath = 9;
+ * optional string organizationName = 9;
  * @return {string}
  */
-proto.qf.Course.prototype.getOrganizationpath = function() {
+proto.qf.Course.prototype.getOrganizationname = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
 };
 
@@ -2399,7 +2399,7 @@ proto.qf.Course.prototype.getOrganizationpath = function() {
  * @param {string} value
  * @return {!proto.qf.Course} returns this
  */
-proto.qf.Course.prototype.setOrganizationpath = function(value) {
+proto.qf.Course.prototype.setOrganizationname = function(value) {
   return jspb.Message.setProto3StringField(this, 9, value);
 };
 

@@ -35,7 +35,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	wh.logger.Debugf("For course(%d)=%v", course.GetID(), course.GetName())
 
 	ctx := context.Background()
-	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetOrganizationPath())
+	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetOrganizationName())
 	if err != nil {
 		wh.logger.Errorf("Failed to get or create SCM Client: %v", err)
 		return
@@ -58,7 +58,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		}
 		// the push event is for the 'assignments' repo; we need to update the local working copy
 		clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
-			Organization: course.GetOrganizationPath(),
+			Organization: course.GetOrganizationName(),
 			Repository:   qf.AssignmentRepo,
 			DestDir:      course.CloneDir(),
 		})
@@ -128,7 +128,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	taskSum := results.TaskSum(taskName)
 
 	ctx := context.Background()
-	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.OrganizationPath)
+	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.OrganizationName)
 	if err != nil {
 		wh.logger.Errorf("Failed to create SCM Client: %v", err)
 		return
@@ -147,7 +147,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 
 	// Create a test results feedback comment on the pull request
 	opt := &scm.IssueCommentOptions{
-		Organization: course.GetOrganizationPath(),
+		Organization: course.GetOrganizationName(),
 		Repository:   repo.Name(),
 		Body:         results.MarkdownComment(taskName, scoreLimit),
 		Number:       int(pullRequest.GetNumber()),

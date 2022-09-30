@@ -109,7 +109,7 @@ func (r RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 	defer timer(r.JobOwner, r.Course.GetCode(), cloneTimeGauge)()
 
 	clonedStudentRepo, err := sc.Clone(ctx, &scm.CloneOptions{
-		Organization: r.Course.GetOrganizationPath(),
+		Organization: r.Course.GetOrganizationName(),
 		Repository:   r.Repo.Name(),
 		DestDir:      dstDir,
 		Branch:       r.BranchName,

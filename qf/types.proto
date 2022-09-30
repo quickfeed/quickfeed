@@ -76,7 +76,7 @@ message Course {
     string tag                     = 6;
     string provider                = 7;
     uint64 organizationID          = 8;
-    string organizationPath        = 9;  // The organization's SCM name, e.g. uis-dat520-2020.
+    string organizationName        = 9;  // The organization's SCM name, e.g. uis-dat520-2020.
     uint32 slipDays                = 10;
     string dockerfile              = 11;
     Enrollment.UserStatus enrolled = 12 [(go.field) = { tags: 'gorm:"-"' }];

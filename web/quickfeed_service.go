@@ -91,9 +91,9 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[q
 
 // CreateCourse creates a new course.
 func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request[qf.Course]) (*connect.Response[qf.Course], error) {
-	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationPath)
+	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationName)
 	if err != nil {
-		s.logger.Errorf("CreateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationPath, err)
+		s.logger.Errorf("CreateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationName, err)
 		return nil, ErrMissingInstallation
 	}
 	// make sure that the current user is set as course creator
@@ -119,9 +119,9 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 
 // UpdateCourse changes the course information details.
 func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request[qf.Course]) (*connect.Response[qf.Void], error) {
-	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationPath)
+	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationName)
 	if err != nil {
-		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationPath, err)
+		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationName, err)
 		return nil, ErrMissingInstallation
 	}
 	if err = s.updateCourse(ctx, scmClient, in.Msg); err != nil {
@@ -539,7 +539,7 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 		s.logger.Errorf("UpdateAssignments failed: course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, status.Error(codes.NotFound, "course not found")
 	}
-	scm, err := s.scmMgr.GetOrCreateSCM(ctx, s.logger, course.GetOrganizationPath())
+	scm, err := s.scmMgr.GetOrCreateSCM(ctx, s.logger, course.GetOrganizationName())
 	if err != nil {
 		s.logger.Errorf("Failed to get or create SCM Client: %v", err)
 		return nil, status.Error(codes.Internal, "failed to access course repository")

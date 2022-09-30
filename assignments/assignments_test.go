@@ -21,11 +21,11 @@ func TestFetchAssignments(t *testing.T) {
 	course := &qf.Course{
 		Name:             "QuickFeed Test Course",
 		Code:             "qf101",
-		OrganizationPath: qfTestOrg,
+		OrganizationName: qfTestOrg,
 	}
 
 	clonedTestsRepo, err := s.Clone(context.Background(), &scm.CloneOptions{
-		Organization: course.GetOrganizationPath(),
+		Organization: course.GetOrganizationName(),
 		Repository:   qf.TestsRepo,
 		DestDir:      course.CloneDir(),
 	})

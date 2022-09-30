@@ -21,7 +21,7 @@ func TestCloneAndCopyRunTests(t *testing.T) {
 	course := &qf.Course{
 		Code:             "QF101",
 		Provider:         "github",
-		OrganizationPath: qfTestOrg,
+		OrganizationName: qfTestOrg,
 	}
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	runData := &RunData{
@@ -40,7 +40,7 @@ func TestCloneAndCopyRunTests(t *testing.T) {
 	os.Setenv("QUICKFEED_REPOSITORY_PATH", "$HOME/tmp/courses")
 	ctx := context.Background()
 	clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
-		Organization: course.GetOrganizationPath(),
+		Organization: course.GetOrganizationName(),
 		Repository:   qf.AssignmentRepo,
 		DestDir:      course.CloneDir(),
 	})
@@ -50,7 +50,7 @@ func TestCloneAndCopyRunTests(t *testing.T) {
 	t.Log(clonedAssignmentsRepo)
 
 	clonedTestsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
-		Organization: course.GetOrganizationPath(),
+		Organization: course.GetOrganizationName(),
 		Repository:   qf.TestsRepo,
 		DestDir:      course.CloneDir(),
 	})
