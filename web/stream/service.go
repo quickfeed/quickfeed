@@ -85,7 +85,9 @@ func (s *Service[T]) AddStream(userID uint64, st Stream[T]) Stream[T] {
 // This closes the stream and removes it from the map.
 func (s *Service[T]) internalRemove(id uint64) {
 	if stream, ok := s.streams[id]; ok {
+		if !stream.Closed() {
 		stream.Close()
+		}
 		delete(s.streams, id)
 	}
 }
@@ -102,7 +104,9 @@ func (s *Service[T]) CloseBy(id uint64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if stream, ok := s.streams[id]; ok {
+		if !stream.Closed() {
 		stream.Close()
+		}
 	}
 	return nil
 }
