@@ -122,10 +122,7 @@ func TestMockRepositories(t *testing.T) {
 		if err := s.UpdateRepoAccess(ctx, repo, "", ""); err != nil {
 			t.Error(err)
 		}
-	}
-
-	for _, repo := range repos {
-		r, err := s.GetRepository(ctx, &scm.RepositoryOptions{
+		gotRepo, err := s.GetRepository(ctx, &scm.RepositoryOptions{
 			ID:    repo.ID,
 			Path:  repo.Path,
 			Owner: repo.Owner,
@@ -133,7 +130,7 @@ func TestMockRepositories(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if diff := cmp.Diff(repo, r, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
+		if diff := cmp.Diff(repo, gotRepo, cmpopts.IgnoreFields(scm.Repository{}, "HTMLURL")); diff != "" {
 			t.Errorf("Expected same repository, got (-sub +want):\n%s", diff)
 		}
 	}
@@ -153,7 +150,7 @@ func TestMockRepositories(t *testing.T) {
 	if err := s.DeleteRepository(ctx, &scm.RepositoryOptions{ID: 3}); err != nil {
 		t.Error(err)
 	}
-	courseRepos, err = s.GetRepositories(ctx, &qf.Organization{ID: course.OrganizationID})
+	courseRepos, err = s.GetRepositories(ctx, &qf.Organization{ID: course2.OrganizationID})
 	if err != nil {
 		t.Error(err)
 	}
