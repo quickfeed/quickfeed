@@ -183,6 +183,7 @@ verdana
 webpack's
 wojtekmaj
 WORKDIR
+Worktree
 xanzy
 xargs
 xini

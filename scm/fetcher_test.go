@@ -2,10 +2,14 @@ package scm_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/quickfeed/quickfeed/kit/sh"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 )
@@ -60,6 +64,88 @@ func TestClone(t *testing.T) {
 		if !found {
 			t.Errorf("%s not found in 'tests': %v", dir, err)
 		}
+	}
+}
+
+func appendToFile(filename, text string) error {
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if _, err = f.WriteString(text); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Test that we can clone a repository, update it (commit and push) and clone it again twice.
+// The two last clones are in a different directory.
+// The third clone is actually a fast-forward pull.
+func TestCloneTwice(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	s := scm.GetTestSCM(t)
+
+	ctx := context.Background()
+	dstDir := t.TempDir()
+
+	testsDir, err := s.Clone(ctx, &scm.CloneOptions{
+		Organization: qfTestOrg,
+		Repository:   qf.TestsRepo,
+		DestDir:      dstDir,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if found, err := exists(testsDir); !found {
+		t.Fatalf("%s not found: %v", testsDir, err)
+	}
+	twiceMsg := fmt.Sprintf("Update tests repo %s\n", time.Now().Format(time.Kitchen))
+	if err := appendToFile(filepath.Join(testsDir, "README.md"), twiceMsg); err != nil {
+		t.Fatal(err)
+	}
+	commitMsg := fmt.Sprintf("Clone twice commit %s", time.Now().Format(time.Kitchen))
+	if err := sh.RunA("git", "-C", testsDir, "commit", "-a", "-m", commitMsg); err != nil {
+		t.Fatal(err)
+	}
+	if err := sh.RunA("git", "-C", testsDir, "push"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Clone to a new directory to ensure that we get a new clone with the change we just made.
+	dstDir = t.TempDir()
+
+	testsDir, err = s.Clone(ctx, &scm.CloneOptions{
+		Organization: qfTestOrg,
+		Repository:   qf.TestsRepo,
+		DestDir:      dstDir,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(filepath.Join(testsDir, "README.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), twiceMsg[:len(twiceMsg)-2]) {
+		t.Fatalf("README.md does not contain %q", twiceMsg)
+	}
+
+	// Clone to the same directory to test that we get a fast-forward pull.
+	testsDir, err = s.Clone(ctx, &scm.CloneOptions{
+		Organization: qfTestOrg,
+		Repository:   qf.TestsRepo,
+		DestDir:      dstDir,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err = os.ReadFile(filepath.Join(testsDir, "README.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), twiceMsg[:len(twiceMsg)-2]) {
+		t.Fatalf("README.md does not contain %q", twiceMsg)
 	}
 }
 

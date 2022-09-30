@@ -13,8 +13,8 @@ import (
 const authUserName = "quickfeed" // can be anything except an empty string
 
 // Clone clones the given repository and returns the path to the cloned repository.
-// The returned path is the provided destination directory joined with the
-// repository type, e.g., "assignments" or "tests".
+// If the repository already exists, it is updated using git pull.
+// The returned path is the provided destination directory joined with the repository.
 func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
 	if s.config != nil {
 		// GitHubSCM is being used as a GitHub App, and since the go-git library requires
@@ -23,14 +23,37 @@ func (s *GithubSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error
 			return "", err
 		}
 	}
+
+	authInfo := &http.BasicAuth{Username: authUserName, Password: s.token}
+
 	cloneDir := filepath.Join(opt.DestDir, opt.Repository)
+	r, err := git.PlainOpen(cloneDir)
+	if err == nil {
+		// Repository already exists, pull the latest changes
+		s.logger.Debugf("Pulling(%s)", s.cloneURL(opt))
+		w, err := r.Worktree()
+		if err != nil {
+			return "", err
+		}
+		err = w.Pull(&git.PullOptions{
+			Auth:       authInfo,
+			RemoteName: "origin",
+		})
+		if err != nil && err != git.NoErrAlreadyUpToDate {
+			return "", err
+		}
+		return cloneDir, nil
+	} else if err != git.ErrRepositoryNotExists {
+		return "", err
+	}
+
 	s.logger.Debugf("Clone(%s)", s.cloneURL(opt))
 	var branch plumbing.ReferenceName
 	if opt.Branch != "" {
 		branch = plumbing.NewBranchReferenceName(opt.Branch)
 	}
-	_, err := git.PlainCloneContext(ctx, cloneDir, false, &git.CloneOptions{
-		Auth:          &http.BasicAuth{Username: authUserName, Password: s.token},
+	_, err = git.PlainCloneContext(ctx, cloneDir, false, &git.CloneOptions{
+		Auth:          authInfo,
 		URL:           s.cloneURL(opt),
 		ReferenceName: branch,
 	})
