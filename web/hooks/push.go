@@ -35,7 +35,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	wh.logger.Debugf("For course(%d)=%v", course.GetID(), course.GetName())
 
 	ctx := context.Background()
-	scm, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetOrganizationPath())
+	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetOrganizationPath())
 	if err != nil {
 		wh.logger.Errorf("Failed to get or create SCM Client: %v", err)
 		return
@@ -49,7 +49,24 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		}
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		assignments.UpdateFromTestsRepo(wh.logger, wh.db, scm, course)
+		assignments.UpdateFromTestsRepo(wh.logger, wh.db, sc, course)
+
+	case repo.IsAssignmentsRepo():
+		if !isDefaultBranch(payload) {
+			wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
+			return
+		}
+		// the push event is for the 'assignments' repo; we need to update the local working copy
+		clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
+			Organization: course.GetOrganizationPath(),
+			Repository:   qf.AssignmentRepo,
+			DestDir:      course.CloneDir(),
+		})
+		if err != nil {
+			wh.logger.Errorf("Failed to clone '%s' repository: %v", qf.AssignmentRepo, err)
+			return
+		}
+		wh.logger.Debugf("Successfully Cloned: %s", clonedAssignmentsRepo)
 
 	case repo.IsUserRepo():
 		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
