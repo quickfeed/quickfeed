@@ -3,6 +3,7 @@ package ci
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -59,24 +60,13 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm
 	}
 	defer os.RemoveAll(dstDir)
 
-	logger.Debugf("Cloning repositories for %s", r)
-	in := &CloneInfo{
-		CourseCode:        r.Course.GetCode(),
-		JobOwner:          r.JobOwner,
-		OrganizationPath:  r.Course.GetOrganizationPath(),
-		CurrentAssignment: r.Assignment.GetName(),
-		DestDir:           dstDir,
-		CloneRepos: []RepoInfo{
-			{Repo: r.Repo.Name(), Branch: r.BranchName},
-			{Repo: qf.TestsRepo},
-			{Repo: qf.AssignmentRepo},
-		},
-	}
-	if _, err = CloneRepositories(ctx, sc, in); err != nil {
+	logger.Debugf("Cloning repository for %s", r)
+	if err = r.clone(ctx, sc, dstDir); err != nil {
 		return nil, err
 	}
-	logger.Debugf("Scanning repository for %s", r.Repo.Name())
-	if err := ScanStudentRepo(filepath.Join(dstDir, r.Repo.Name()), in.CourseCode, in.JobOwner); err != nil {
+	logger.Debugf("Successfully cloned student repository to: %s", dstDir)
+
+	if err := ScanStudentRepo(filepath.Join(dstDir, r.Repo.Name()), r.Course.GetCode(), r.JobOwner); err != nil {
 		return nil, err
 	}
 
@@ -113,4 +103,87 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm
 	logger.Debug("ci.RunTests", zap.Any("Results", qlog.IndentJson(results)))
 	// return the extracted score and filtered log output
 	return results, nil
+}
+
+func (r RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
+	defer timer(r.JobOwner, r.Course.GetCode(), cloneTimeGauge)()
+
+	clonedStudentRepo, err := sc.Clone(ctx, &scm.CloneOptions{
+		Organization: r.Course.GetOrganizationPath(),
+		Repository:   r.Repo.Name(),
+		DestDir:      dstDir,
+		Branch:       r.BranchName,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to clone %q repository: %w", r.Repo.Name(), err)
+	}
+
+	// Check that all repositories contains the current assignment
+	currentAssignment := r.Assignment.GetName()
+	testsDir := filepath.Join(r.Course.CloneDir(), qf.TestsRepo)
+	assignmentDir := filepath.Join(r.Course.CloneDir(), qf.AssignmentRepo)
+	for _, repoDir := range []string{clonedStudentRepo, testsDir, assignmentDir} {
+		if hasAssignment(repoDir, currentAssignment) != nil {
+			return err
+		}
+	}
+
+	// Copy the tests and assignment repos to the destination directory
+	err = copyDir(testsDir, filepath.Join(dstDir, qf.TestsRepo))
+	if err != nil {
+		return err
+	}
+	return copyDir(assignmentDir, filepath.Join(dstDir, qf.AssignmentRepo))
+}
+
+// Copy directory from src to dst.
+func copyDir(src, dst string) error {
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		sourcePath := filepath.Join(src, entry.Name())
+		destPath := filepath.Join(dst, entry.Name())
+
+		if entry.IsDir() {
+			if err := os.MkdirAll(destPath, 0o700); err != nil {
+				return err
+			}
+			if err := copyDir(sourcePath, destPath); err != nil {
+				return err
+			}
+		} else if err := copyFile(sourcePath, destPath); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Copy file from src to dst.
+func copyFile(srcFile, dstFile string) (err error) {
+	in, err := os.Open(srcFile)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		closeErr := in.Close()
+		if err == nil {
+			err = closeErr
+		}
+	}()
+
+	out, err := os.Create(dstFile)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		closeErr := out.Close()
+		if err == nil {
+			err = closeErr
+		}
+	}()
+
+	_, err = io.Copy(out, in)
+	return
 }
