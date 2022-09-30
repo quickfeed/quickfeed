@@ -28,13 +28,13 @@ func NewStreamServices() *StreamServices {
 type Service[T any] struct {
 	mu sync.RWMutex
 	// The map of streams.
-	streams map[uint64]Stream[T]
+	streams map[uint64]StreamInterface[T]
 }
 
 // NewService creates a new service.
 func NewService[T any]() *Service[T] {
 	return &Service[T]{
-		streams: make(map[uint64]Stream[T]),
+		streams: make(map[uint64]StreamInterface[T]),
 	}
 }
 
@@ -72,7 +72,7 @@ func (s *Service[T]) Add(ctx context.Context, userID uint64, st *connect.ServerS
 	return stream
 }
 
-func (s *Service[T]) AddStream(userID uint64, st Stream[T]) Stream[T] {
+func (s *Service[T]) AddStream(userID uint64, st StreamInterface[T]) StreamInterface[T] {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.internalRemove(userID)
@@ -86,7 +86,7 @@ func (s *Service[T]) AddStream(userID uint64, st Stream[T]) Stream[T] {
 func (s *Service[T]) internalRemove(id uint64) {
 	if stream, ok := s.streams[id]; ok {
 		if !stream.Closed() {
-		stream.Close()
+			stream.Close()
 		}
 		delete(s.streams, id)
 	}
@@ -105,7 +105,7 @@ func (s *Service[T]) CloseBy(id uint64) error {
 	defer s.mu.Unlock()
 	if stream, ok := s.streams[id]; ok {
 		if !stream.Closed() {
-		stream.Close()
+			stream.Close()
 		}
 	}
 	return nil
