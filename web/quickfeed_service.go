@@ -94,9 +94,9 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[q
 
 // CreateCourse creates a new course.
 func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request[qf.Course]) (*connect.Response[qf.Course], error) {
-	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationPath)
+	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationName)
 	if err != nil {
-		s.logger.Errorf("CreateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationPath, err)
+		s.logger.Errorf("CreateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationName, err)
 		return nil, ErrMissingInstallation
 	}
 	// make sure that the current user is set as course creator
@@ -122,9 +122,9 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 
 // UpdateCourse changes the course information details.
 func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request[qf.Course]) (*connect.Response[qf.Void], error) {
-	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationPath)
+	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationName)
 	if err != nil {
-		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationPath, err)
+		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationName, err)
 		return nil, ErrMissingInstallation
 	}
 	if err = s.updateCourse(ctx, scmClient, in.Msg); err != nil {

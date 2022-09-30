@@ -1,5 +1,6 @@
 import * as jspb from 'google-protobuf'
 
+import * as patch_go_pb from '../../patch/go_pb';
 
 
 export class Score extends jspb.Message {

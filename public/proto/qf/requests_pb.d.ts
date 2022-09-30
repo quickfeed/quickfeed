@@ -155,8 +155,8 @@ export class Organization extends jspb.Message {
   getId(): number;
   setId(value: number): Organization;
 
-  getPath(): string;
-  setPath(value: string): Organization;
+  getName(): string;
+  setName(value: string): Organization;
 
   getAvatar(): string;
   setAvatar(value: string): Organization;
@@ -175,7 +175,7 @@ export class Organization extends jspb.Message {
 export namespace Organization {
   export type AsObject = {
     id: number,
-    path: string,
+    name: string,
     avatar: string,
     paymentplan: string,
   }

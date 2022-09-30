@@ -18,7 +18,7 @@ func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogge
 
 	logger.Debugf("Cloning repositories for %s", r)
 	testsDir, err := sc.Clone(ctx, &scm.CloneOptions{
-		Organization: r.Course.GetOrganizationPath(),
+		Organization: r.Course.GetOrganizationName(),
 		Repository:   qf.TestsRepo,
 		DestDir:      dstDir,
 	})
@@ -27,7 +27,7 @@ func (r RunData) cloneRepositories(ctx context.Context, logger *zap.SugaredLogge
 	}
 
 	assignmentsDir, err := sc.Clone(ctx, &scm.CloneOptions{
-		Organization: r.Course.GetOrganizationPath(),
+		Organization: r.Course.GetOrganizationName(),
 		Repository:   r.Repo.Name(),
 		DestDir:      dstDir,
 		Branch:       r.BranchName,

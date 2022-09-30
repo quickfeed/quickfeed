@@ -1,6 +1,7 @@
 import * as jspb from 'google-protobuf'
 
 import * as kit_score_score_pb from '../kit/score/score_pb';
+import * as patch_go_pb from '../patch/go_pb';
 
 
 export class User extends jspb.Message {
@@ -211,8 +212,8 @@ export class Course extends jspb.Message {
   getOrganizationid(): number;
   setOrganizationid(value: number): Course;
 
-  getOrganizationpath(): string;
-  setOrganizationpath(value: string): Course;
+  getOrganizationname(): string;
+  setOrganizationname(value: string): Course;
 
   getSlipdays(): number;
   setSlipdays(value: number): Course;
@@ -256,7 +257,7 @@ export namespace Course {
     tag: string,
     provider: string,
     organizationid: number,
-    organizationpath: string,
+    organizationname: string,
     slipdays: number,
     dockerfile: string,
     enrolled: Enrollment.UserStatus,

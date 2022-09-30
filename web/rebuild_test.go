@@ -15,6 +15,7 @@ import (
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
+	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
@@ -73,7 +74,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	var course qf.Course
 	course.Provider = "fake"
 	course.OrganizationID = 1
-	course.OrganizationPath = scm.GetTestOrganization(t)
+	course.OrganizationName = scm.GetTestOrganization(t)
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -118,7 +119,7 @@ func TestRebuildSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := qtest.WithUserContext(context.Background(), teacher)
+	ctx := auth.WithUserContext(context.Background(), teacher)
 	assignment := &qf.Assignment{
 		CourseID: course.ID,
 		Name:     "lab1",

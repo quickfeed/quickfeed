@@ -12,8 +12,6 @@ import (
 // SCM is a common interface for different source code management solutions,
 // i.e., GitHub and GitLab.
 type SCM interface {
-	// Creates a new organization.
-	CreateOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Updates an organization
 	UpdateOrganization(context.Context, *OrganizationOptions) error
 	// Gets an organization.
@@ -32,8 +30,7 @@ type SCM interface {
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
 	// List the webhooks associated with the provided repository or organization.
 	ListHooks(context.Context, *Repository, string) ([]*Hook, error)
-	// Creates a new webhook for organization if the name of organization
-	// is provided. Otherwise creates a hook for the given repo.
+	// Create a new webhook at the organization level.
 	CreateHook(context.Context, *CreateHookOptions) error
 	// Create team.
 	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)
@@ -101,7 +98,7 @@ func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
 	case "gitlab":
 		return NewGitlabSCMClient(token), nil
 	case "fake":
-		return NewFakeSCMClient(), nil
+		return NewMockSCMClient(), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }
@@ -112,7 +109,7 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 	case "github":
 		return newGithubAppClient(ctx, logger, config, organization)
 	case "fake":
-		return NewFakeSCMClient(), nil
+		return NewMockSCMClient(), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }
@@ -120,7 +117,6 @@ func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Con
 // OrganizationOptions contains information on how an organization should be
 // created.
 type OrganizationOptions struct {
-	Path              string
 	Name              string
 	DefaultPermission string
 	// prohibit students from creating new repos
@@ -173,14 +169,12 @@ type CreateRepositoryOptions struct {
 }
 
 // CreateHookOptions contains information on how to create a webhook.
-// If Organization string is provided, will create a new hook on
-// the organization's level. This hook will be triggered on push to any
-// of the organization's repositories.
+// On GitHub, a single webhook is created on the organization level.
+// Repository field is used by GitLab.
 type CreateHookOptions struct {
 	URL          string
 	Secret       string
 	Organization string
-	Repository   *Repository
 }
 
 // TeamOptions contains information about the team and the organization it belongs to.

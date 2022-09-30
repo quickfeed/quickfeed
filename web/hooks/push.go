@@ -104,7 +104,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	taskSum := results.TaskSum(taskName)
 
 	ctx := context.Background()
-	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.OrganizationPath)
+	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.OrganizationName)
 	if err != nil {
 		wh.logger.Errorf("Failed to create SCM Client: %v", err)
 		return
@@ -123,7 +123,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 
 	// Create a test results feedback comment on the pull request
 	opt := &scm.IssueCommentOptions{
-		Organization: course.GetOrganizationPath(),
+		Organization: course.GetOrganizationName(),
 		Repository:   repo.Name(),
 		Body:         results.MarkdownComment(taskName, scoreLimit),
 		Number:       int(pullRequest.GetNumber()),
@@ -216,7 +216,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *qf.Assignment, repo *qf.R
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
-	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.OrganizationPath)
+	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.OrganizationName)
 	if err != nil {
 		wh.logger.Errorf("Failed to create scm client: %v", err)
 		return nil
