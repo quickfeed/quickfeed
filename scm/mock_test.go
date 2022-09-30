@@ -12,8 +12,9 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 )
 
+var user = "test_user"
+
 func TestMockOrganizations(t *testing.T) {
-	testUser := "test_user"
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	for _, course := range qtest.MockCourses {
@@ -31,13 +32,13 @@ func TestMockOrganizations(t *testing.T) {
 		}
 		if err := s.UpdateOrgMembership(ctx, &scm.OrgMembershipOptions{
 			Organization: course.OrganizationName,
-			Username:     testUser,
+			Username:     user,
 		}); err != nil {
 			t.Error(err)
 		}
 		if err := s.RemoveMember(ctx, &scm.OrgMembershipOptions{
 			Organization: course.OrganizationName,
-			Username:     testUser,
+			Username:     user,
 		}); err != nil {
 			t.Error(err)
 		}
@@ -55,7 +56,7 @@ func TestMockOrganizations(t *testing.T) {
 		err        string
 	}{
 		{id: 0, name: "", username: "", permission: "", err: "invalid argument"},
-		{id: 123, name: "test_missing_org", username: testUser, permission: "read", err: "organization not found"},
+		{id: 123, name: "test_missing_org", username: user, permission: "read", err: "organization not found"},
 	}
 
 	for _, org := range invalidOrgs {
@@ -84,25 +85,26 @@ func TestMockOrganizations(t *testing.T) {
 func TestMockRepositories(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
+	course, course2 := qtest.MockCourses[0], qtest.MockCourses[2]
 	repos := []*scm.Repository{
 		{
-			OrgID: qtest.MockCourses[0].OrganizationID,
-			Owner: qtest.MockCourses[0].OrganizationName,
+			OrgID: course.OrganizationID,
+			Owner: course.OrganizationName,
 			Path:  "info",
 		},
 		{
-			OrgID: qtest.MockCourses[0].OrganizationID,
-			Owner: qtest.MockCourses[0].OrganizationName,
+			OrgID: course.OrganizationID,
+			Owner: course.OrganizationName,
 			Path:  "tests",
 		},
 		{
-			OrgID: qtest.MockCourses[2].OrganizationID,
-			Owner: qtest.MockCourses[2].OrganizationName,
+			OrgID: course2.OrganizationID,
+			Owner: course2.OrganizationName,
 			Path:  "assignments",
 		},
 		{
-			OrgID: qtest.MockCourses[2].OrganizationID,
-			Owner: qtest.MockCourses[2].OrganizationName,
+			OrgID: course2.OrganizationID,
+			Owner: course2.OrganizationName,
 			Path:  "tests"},
 	}
 
@@ -137,7 +139,7 @@ func TestMockRepositories(t *testing.T) {
 	}
 
 	wantRepos := []*scm.Repository{repos[0], repos[1]}
-	courseRepos, err := s.GetRepositories(ctx, &qf.Organization{ID: qtest.MockCourses[0].OrganizationID})
+	courseRepos, err := s.GetRepositories(ctx, &qf.Organization{ID: course.OrganizationID})
 	if err != nil {
 		t.Error(err)
 	}
@@ -151,7 +153,7 @@ func TestMockRepositories(t *testing.T) {
 	if err := s.DeleteRepository(ctx, &scm.RepositoryOptions{ID: 3}); err != nil {
 		t.Error(err)
 	}
-	courseRepos, err = s.GetRepositories(ctx, &qf.Organization{ID: qtest.MockCourses[2].OrganizationID})
+	courseRepos, err = s.GetRepositories(ctx, &qf.Organization{ID: course.OrganizationID})
 	if err != nil {
 		t.Error(err)
 	}
@@ -181,7 +183,6 @@ func TestMockHooks(t *testing.T) {
 	if len(hooks) != len(qtest.MockCourses) {
 		t.Errorf("expected %d hooks, got %d", len(qtest.MockCourses), len(hooks))
 	}
-
 }
 
 func TestMockTeams(t *testing.T) {
@@ -203,37 +204,38 @@ func TestMockTeams(t *testing.T) {
 		},
 	}
 	for _, team := range teams {
-		newTeam, err := s.CreateTeam(ctx, &scm.NewTeamOptions{
+		wantTeam, err := s.CreateTeam(ctx, &scm.NewTeamOptions{
 			Organization: team.Organization,
 			TeamName:     team.Name,
 		})
 		if err != nil {
 			t.Error(err)
 		}
-		team.ID = newTeam.ID
-	}
-
-	opts := []*scm.TeamOptions{
-		{
-			TeamID:         2,
-			OrganizationID: course.OrganizationID,
-		},
-		{
-			TeamName:     teams[1].Name,
-			Organization: teams[1].Organization,
-		},
-	}
-	for _, opt := range opts {
-		team, err := s.GetTeam(ctx, opt)
-		if err != nil {
-			t.Error(err)
+		team.ID = wantTeam.ID
+		opts := []*scm.TeamOptions{
+			{
+				TeamID:         team.ID,
+				OrganizationID: course.OrganizationID,
+			},
+			{
+				TeamName:     team.Name,
+				Organization: team.Organization,
+			},
 		}
-		if diff := cmp.Diff(team, teams[1]); diff != "" {
-			t.Errorf("Expected same team, got (-sub +want):\n%s", diff)
+		for _, opt := range opts {
+			gotTeam, err := s.GetTeam(ctx, opt)
+			if err != nil {
+				t.Error(err)
+			}
+			if diff := cmp.Diff(wantTeam, gotTeam); diff != "" {
+				t.Errorf("Expected same team, got (-sub +want):\n%s", diff)
+			}
 		}
 	}
-
-	if err := s.DeleteTeam(ctx, opts[0]); err != nil {
+	if err := s.DeleteTeam(ctx, &scm.TeamOptions{
+		TeamID:         2,
+		OrganizationID: course.OrganizationID,
+	}); err != nil {
 		t.Error(err)
 	}
 	wantTeams := []*scm.Team{teams[0], teams[2]}
@@ -486,7 +488,7 @@ func TestTeamRepo(t *testing.T) {
 			opt: &scm.AddTeamRepoOptions{
 				OrganizationID: course.OrganizationID,
 				TeamID:         15,
-				Repo:           "not found",
+				Repo:           "not_found",
 				Owner:          course.OrganizationName,
 				Permission:     "push",
 			},
