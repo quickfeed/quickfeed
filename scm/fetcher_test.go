@@ -67,16 +67,19 @@ func TestClone(t *testing.T) {
 	}
 }
 
-func appendToFile(filename, text string) error {
+func appendToFile(filename, text string) (err error) {
 	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-	if _, err = f.WriteString(text); err != nil {
-		return err
-	}
-	return nil
+	defer func() {
+		closeErr := f.Close()
+		if err == nil {
+			err = closeErr
+		}
+	}()
+	_, err = f.WriteString(text)
+	return
 }
 
 // Test that we can clone a repository, update it (commit and push) and clone it again twice.
