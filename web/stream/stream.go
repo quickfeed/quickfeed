@@ -3,7 +3,6 @@ package stream
 import (
 	"context"
 	"fmt"
-	"sync/atomic"
 
 	"github.com/bufbuild/connect-go"
 )
@@ -65,53 +64,20 @@ func (s *stream[T]) GetID() uint64 {
 // Run will block until the stream is closed.
 func (s *stream[T]) Run() error {
 	for {
-	select {
-	case <-s.ctx.Done():
-		return s.ctx.Err()
-	case data, ok := <-s.ch:
-		if !ok {
-			return fmt.Errorf("stream closed")
+		select {
+		case <-s.ctx.Done():
+			return s.ctx.Err()
+		case data, ok := <-s.ch:
+			if !ok {
+				return fmt.Errorf("stream closed")
+			}
+			if err := s.stream.Send(data); err != nil {
+				return err
+			}
 		}
-		if err := s.stream.Send(data); err != nil {
-			return err
-		}
-	}
 	}
 }
 
 func (s *stream[T]) Send(data *T) {
 	s.ch <- data
-}
-
-type mockStream[T any] struct {
-	*stream[T]
-	counter *uint32
-}
-
-func NewTestStream[T any](ctx context.Context, id uint64, counter *uint32) *mockStream[T] {
-	return &mockStream[T]{
-		stream:  &stream[T]{ctx: ctx, ch: make(chan *T), id: id},
-		counter: counter,
-	}
-}
-
-func (m *mockStream[T]) Run() error {
-	for {
-		select {
-		case data, ok := <-m.ch:
-			if !ok {
-				fmt.Println("stream closed")
-				return nil
-			}
-			atomic.AddUint32(m.counter, 1)
-			fmt.Println(m.GetID(), data, &m.ch)
-		case <-m.ctx.Done():
-			fmt.Println("context closed")
-			return m.ctx.Err()
-		}
-	}
-}
-
-func (m *mockStream[T]) GetChannel() chan *T {
-	return m.ch
 }
