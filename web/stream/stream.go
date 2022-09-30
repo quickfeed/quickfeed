@@ -55,6 +55,7 @@ func (s *stream[T]) GetID() uint64 {
 // Run runs the stream.
 // Run will block until the stream is closed.
 func (s *stream[T]) Run() error {
+	for {
 	select {
 	case <-s.ctx.Done():
 		return s.ctx.Err()
@@ -66,7 +67,7 @@ func (s *stream[T]) Run() error {
 			return err
 		}
 	}
-	return nil
+	}
 }
 
 func (s *stream[T]) Send(data *T) {
