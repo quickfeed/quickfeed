@@ -8,14 +8,15 @@ import (
 	"github.com/bufbuild/connect-go"
 )
 
-type Stream[T any] interface {
+type StreamInterface[T any] interface {
 	Close()
+	Closed() bool
 	GetID() uint64
 	Run() error
 	Send(data *T)
 }
 
-// Stream wraps a connect.ServerStream.
+// stream wraps a connect.ServerStream.
 type stream[T any] struct {
 	// stream is the underlying connect stream
 	// that does the actual transfer of data
@@ -30,6 +31,9 @@ type stream[T any] struct {
 	// the user ID of the user that is connected,
 	// retrieved from claims.
 	id uint64
+	// closed is a flag that indicates whether
+	// the stream has been closed.
+	closed bool
 }
 
 // NewStream creates a new stream.
@@ -44,7 +48,12 @@ func NewStream[T any](ctx context.Context, st *connect.ServerStream[T], id uint6
 
 // Close closes the stream.
 func (s *stream[T]) Close() {
+	s.closed = true
 	close(s.ch)
+}
+
+func (s *stream[T]) Closed() bool {
+	return s.closed
 }
 
 // GetID returns the user ID of the stream.
