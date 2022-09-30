@@ -253,7 +253,7 @@ func TestMockTeams(t *testing.T) {
 	}
 }
 
-func TestMockTeamMembers(t *testing.T) {
+func TestMockAddRemoveTeamMembers(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
@@ -265,68 +265,185 @@ func TestMockTeamMembers(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	invalidTeamOptions := []*scm.TeamMembershipOptions{
-		{},
+	teamMemberTests := []struct {
+		name    string
+		opt     *scm.TeamMembershipOptions
+		wantErr bool
+	}{
 		{
-			Organization:   course.OrganizationName,
-			OrganizationID: course.OrganizationID,
-			Username:       user,
+			name: "valid team, with team and organization ID",
+			opt: &scm.TeamMembershipOptions{
+				TeamID:         team.ID,
+				OrganizationID: course.OrganizationID,
+				Username:       user,
+			},
+			wantErr: false,
 		},
 		{
-			TeamID:   team.ID,
-			TeamName: team.Name,
-			Username: user,
+			name: "valid team, with team and organization name",
+			opt: &scm.TeamMembershipOptions{
+				TeamName:     team.Name,
+				Organization: team.Organization,
+				Username:     user,
+			},
+			wantErr: false,
 		},
 		{
-			Organization:   course.OrganizationName,
-			OrganizationID: course.OrganizationID,
-			TeamID:         team.ID,
-			TeamName:       team.Name,
+			name: "valid team, missing team info",
+			opt: &scm.TeamMembershipOptions{
+				Organization:   course.OrganizationName,
+				OrganizationID: course.OrganizationID,
+				Username:       user,
+			},
+			wantErr: true,
 		},
-	}
-	for _, opt := range invalidTeamOptions {
-		if err := s.AddTeamMember(ctx, opt); err == nil {
-			t.Error("Expected error: invalid argument")
-		}
-		if err := s.RemoveTeamMember(ctx, opt); err == nil {
-			t.Error("Expected error: invalid argument")
-		}
-		if err := s.UpdateTeamMembers(ctx, &scm.UpdateTeamOptions{
-			TeamID: opt.TeamID,
-		}); err == nil {
-			t.Error("Expected error: invalid argument")
-		}
-		if err := s.UpdateTeamMembers(ctx, &scm.UpdateTeamOptions{
-			OrganizationID: course.OrganizationID,
-		}); err == nil {
-			t.Error("Expected error: invalid argument")
-		}
+		{
+			name: "valid team, missing organization info",
+			opt: &scm.TeamMembershipOptions{
+				TeamID:   team.ID,
+				TeamName: team.Name,
+				Username: user,
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid team, missing username",
+			opt: &scm.TeamMembershipOptions{
+				TeamID:         team.ID,
+				TeamName:       team.Name,
+				Organization:   course.OrganizationName,
+				OrganizationID: course.OrganizationID,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid team",
+			opt: &scm.TeamMembershipOptions{
+				TeamID:         123,
+				TeamName:       "not-a-team",
+				Organization:   course.OrganizationName,
+				OrganizationID: course.OrganizationID,
+				Username:       user,
+			},
+			wantErr: true,
+		},
 	}
 
-	validTeamOptions := []*scm.TeamMembershipOptions{
+	for _, tt := range teamMemberTests {
+		if err := s.AddTeamMember(ctx, tt.opt); (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
+		}
+		if err := s.RemoveTeamMember(ctx, tt.opt); (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
+		}
+	}
+}
+
+func TestTeamRepo(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	course := qtest.MockCourses[0]
+	team, err := s.CreateTeam(ctx, &scm.NewTeamOptions{
+		Organization: course.OrganizationName,
+		TeamName:     "test_team",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	teamRepoTests := []struct {
+		name    string
+		opt     *scm.AddTeamRepoOptions
+		wantErr bool
+	}{
 		{
-			TeamID:         team.ID,
-			OrganizationID: course.OrganizationID,
-			Username:       user,
+			name: "correct team",
+			opt: &scm.AddTeamRepoOptions{
+				OrganizationID: course.OrganizationID,
+				TeamID:         team.ID,
+				Repo:           team.Name,
+				Owner:          course.OrganizationName,
+				Permission:     "push",
+			},
+			wantErr: false,
 		},
 		{
-			TeamName:     team.Name,
-			Organization: team.Organization,
-			Username:     user,
+			name: "correct team, incorrect organization",
+			opt: &scm.AddTeamRepoOptions{
+				OrganizationID: 123,
+				TeamID:         team.ID,
+				Repo:           team.Name,
+				Owner:          "not_found",
+				Permission:     "push",
+			},
+			wantErr: false,
+		},
+		{
+			name: "missing organization ID",
+			opt: &scm.AddTeamRepoOptions{
+				TeamID:     team.ID,
+				Repo:       team.Name,
+				Owner:      course.OrganizationName,
+				Permission: "push",
+			},
+			wantErr: true,
+		},
+		{
+			name: "missing team ID",
+			opt: &scm.AddTeamRepoOptions{
+				OrganizationID: course.OrganizationID,
+				Repo:           team.Name,
+				Owner:          course.OrganizationName,
+				Permission:     "push",
+			},
+			wantErr: true,
+		},
+		{
+			name: "missing repository name",
+			opt: &scm.AddTeamRepoOptions{
+				OrganizationID: course.OrganizationID,
+				TeamID:         team.ID,
+				Owner:          course.OrganizationName,
+				Permission:     "push",
+			},
+			wantErr: true,
+		},
+		{
+			name: "missing repository owner",
+			opt: &scm.AddTeamRepoOptions{
+				OrganizationID: course.OrganizationID,
+				TeamID:         team.ID,
+				Repo:           team.Name,
+				Permission:     "push",
+			},
+			wantErr: true,
+		},
+		{
+			name: "missing permissions",
+			opt: &scm.AddTeamRepoOptions{
+				OrganizationID: course.OrganizationID,
+				TeamID:         team.ID,
+				Repo:           team.Name,
+				Owner:          course.OrganizationName,
+			},
+			wantErr: true,
+		},
+		{
+			name: "team does no exist",
+			opt: &scm.AddTeamRepoOptions{
+				OrganizationID: course.OrganizationID,
+				TeamID:         15,
+				Repo:           "not found",
+				Owner:          course.OrganizationName,
+				Permission:     "push",
+			},
+			wantErr: true,
 		},
 	}
-	for _, opt := range validTeamOptions {
-		if err := s.AddTeamMember(ctx, opt); err != nil {
-			t.Error(err)
-		}
-		if err := s.RemoveTeamMember(ctx, opt); err != nil {
-			t.Error(err)
-		}
-		if err := s.UpdateTeamMembers(ctx, &scm.UpdateTeamOptions{
-			TeamID:         team.ID,
-			OrganizationID: course.OrganizationID,
-		}); err != nil {
-			t.Error(err)
+
+	for _, tt := range teamRepoTests {
+		if err := s.AddTeamRepo(ctx, tt.opt); (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
 		}
 	}
 }

@@ -288,6 +288,9 @@ func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error 
 	if !opt.valid() {
 		return fmt.Errorf("invalid argument: %+v", opt)
 	}
+	if !s.teamExists(opt.TeamID, opt.Repo, opt.Owner) {
+		return errors.New("team not found")
+	}
 	repo := &Repository{
 		ID:    generateID(s.Repositories),
 		Path:  opt.Repo,
