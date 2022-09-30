@@ -16,7 +16,6 @@ func TestMockOrganizations(t *testing.T) {
 	testUser := "test_user"
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
-	// All organizations must be retrievable by ID and by name.
 	for _, course := range qtest.MockCourses {
 		if _, err := s.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID}); err != nil {
 			t.Error(err)
@@ -253,7 +252,7 @@ func TestMockTeams(t *testing.T) {
 	}
 }
 
-func TestMockAddRemoveTeamMembers(t *testing.T) {
+func TestAddRemoveMockTeamMembers(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
@@ -334,6 +333,60 @@ func TestMockAddRemoveTeamMembers(t *testing.T) {
 			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
 		}
 		if err := s.RemoveTeamMember(ctx, tt.opt); (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
+		}
+	}
+}
+
+func TestUpdateMockTeamMembers(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	course := qtest.MockCourses[0]
+	team, err := s.CreateTeam(ctx, &scm.NewTeamOptions{
+		Organization: course.OrganizationName,
+		TeamName:     "test_team",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	teamMemberTests := []struct {
+		name    string
+		opt     *scm.UpdateTeamOptions
+		wantErr bool
+	}{
+		{
+			name: "valid team and opts",
+			opt: &scm.UpdateTeamOptions{
+				OrganizationID: course.OrganizationID,
+				TeamID:         team.ID,
+			},
+			wantErr: false,
+		},
+		{
+			name: "missing team ID",
+			opt: &scm.UpdateTeamOptions{
+				OrganizationID: course.OrganizationID,
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid team, missing org ID",
+			opt: &scm.UpdateTeamOptions{
+				TeamID: team.ID,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid team",
+			opt: &scm.UpdateTeamOptions{
+				TeamID:         123,
+				OrganizationID: course.OrganizationID,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range teamMemberTests {
+		if err := s.UpdateTeamMembers(ctx, tt.opt); (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
 		}
 	}
