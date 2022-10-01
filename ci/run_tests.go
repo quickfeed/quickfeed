@@ -40,17 +40,20 @@ func (r RunData) String() string {
 	return fmt.Sprintf("%s-%s-%s-%s", strings.ToLower(r.Course.GetCode()), r.Assignment.GetName(), r.JobOwner, commitID)
 }
 
-// RunTests runs the assignment specified in the provided RunData structure.
-// This function can be called concurrently on different RunData objects;
-// the function is idempotent. That is, it only clones repositories from GitHub,
-// runs the tests and returns the score results. The os.MkdirTemp() function ensures that
-// any concurrent calls to this function will always use distinct temp directories.
+// RunTests runs the tests for the assignment specified in the provided RunData structure,
+// and returns the score results or an error.
+// The method is idempotent and can be called concurrently on multiple RunData objects.
+// The method clones the student or group repository from GitHub as specified in RunData,
+// and copies the course's tests and assignment repositories from the host machine's file system.
+// runs the tests and returns the score results.
 //
-// Note that this function creates a temporary directory on the host machine running
-// the quickfeed server. This directory holds the cloned repositories (student and tests repos)
-// and will be mounted as '/quickfeed' inside the container, allowing the docker container
-// to run the tests on the student code. The temporary directory is deleted when the container
-// exits at the end of this function.
+// The os.MkdirTemp() function ensures that any concurrent calls to this method will always
+// use distinct temp directories. Specifically, the method creates a temporary directory on
+// the host machine running the quickfeed server that holds the cloned/copied repositories
+// and will be mounted as '/quickfeed' inside the container. This allows the docker container
+// to run the tests on the student code and manipulate the folders as needed for a particular
+// lab assignment's test requirements. The temporary directory is deleted when the container
+// exits at the end of this method.
 func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm.SCM, runner Runner) (*score.Results, error) {
 	testsStartedCounter.WithLabelValues(r.JobOwner, r.Course.Code).Inc()
 
