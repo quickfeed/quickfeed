@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -132,35 +133,36 @@ func (r RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 	}
 
 	// Copy the tests and assignment repos to the destination directory
-	err = copyDir(testsDir, filepath.Join(dstDir, qf.TestsRepo))
+	err = copyDir(testsDir, dstDir)
 	if err != nil {
 		return err
 	}
-	return copyDir(assignmentDir, filepath.Join(dstDir, qf.AssignmentRepo))
+	return copyDir(assignmentDir, dstDir)
 }
 
-// Copy directory from src to dst.
+// Copy directory from src directory to dst, ignoring .git directories.
 func copyDir(src, dst string) error {
-	entries, err := os.ReadDir(src)
-	if err != nil {
-		return err
-	}
-	for _, entry := range entries {
-		sourcePath := filepath.Join(src, entry.Name())
-		destPath := filepath.Join(dst, entry.Name())
-
-		if entry.IsDir() {
-			if err := os.MkdirAll(destPath, 0o700); err != nil {
-				return err
-			}
-			if err := copyDir(sourcePath, destPath); err != nil {
-				return err
-			}
-		} else if err := copyFile(sourcePath, destPath); err != nil {
+	dst = filepath.Join(dst, filepath.Base(src))
+	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
 			return err
 		}
-	}
-	return nil
+		if d.IsDir() {
+			return nil
+		}
+		if strings.Contains(path, ".git") {
+			return nil
+		}
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		dstPath := filepath.Join(dst, rel)
+		if err := os.MkdirAll(filepath.Dir(dstPath), 0o700); err != nil {
+			return err
+		}
+		return copyFile(path, dstPath)
+	})
 }
 
 // Copy file from src to dst.
