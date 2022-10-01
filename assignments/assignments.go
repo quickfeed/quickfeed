@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -21,8 +22,22 @@ import (
 // and docker image before aborting.
 const MaxWait = 5 * time.Minute
 
+var updateMutex = sync.Mutex{}
+
 // UpdateFromTestsRepo updates the database record for the course assignments.
+//
+// This will be called in response to a push event to the 'tests' repo, which
+// should happen infrequently. It may also be called manually by a teacher from
+// the frontend.
+//
+// Note that calling this function concurrently is safe, but it may block the
+// caller for an extended period, since it may involve cloning the tests repository,
+// scanning the repository for assignments, building the Docker image, updating the
+// database and synchronizing tasks to issues on the students' group repositories.
 func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm.SCM, course *qf.Course) {
+	updateMutex.Lock()
+	defer updateMutex.Unlock()
+
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), qf.TestsRepo)
 	ctx, cancel := context.WithTimeout(context.Background(), MaxWait)
 	defer cancel()
