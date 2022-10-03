@@ -20,7 +20,7 @@ import (
 //	SUBMITTED   - to access the student's or group's submitted code (cloned from the student/group repository)
 //	CURRENT     - name of the current assignment folder
 //	QUICKFEED_SESSION_SECRET - typically used by the test code; not the script itself
-func (r RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
+func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
 	image, commands, err := parseRunScript(r.Assignment.GetRunScriptContent())
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse run script for assignment %s in %s: %w", r.Assignment.GetName(), r.Repo.GetTestURL(), err)
