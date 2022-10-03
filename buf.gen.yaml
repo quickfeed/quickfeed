@@ -2,20 +2,18 @@
 # For details, see https://docs.buf.build/configuration/v1/buf-gen-yaml
 version: v1
 plugins:
-  - name: es
-    path: public/node_modules/.bin/protoc-gen-es
-    out: public/gen
-    opt: target=ts
-  - name: connect-web
-    path: public/node_modules/.bin/protoc-gen-connect-web
-    out: public/gen
-    opt: target=ts
   - name: go-patch
     out: ./
     opt: plugin=go,paths=source_relative
   - name: connect-go
     out: ./
     opt: paths=source_relative
+  - remote: buf.build/bufbuild/plugins/es:v0.1.1-1
+    out: public/gen
+    opt: target=js+dts
+  - remote: buf.build/bufbuild/plugins/connect-web:v0.2.1-1
+    out: public/gen
+    opt: target=js+dts
   - remote: buf.build/grpc/plugins/web:v1.4.1-1
     out: public/proto
     opt: import_style=typescript,mode=grpcweb
