@@ -1,65 +1,25 @@
 package ci
 
 import (
-	"context"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/quickfeed/quickfeed/scm"
 )
-
-type RepoInfo struct {
-	Repo   string
-	Branch string
-}
-
-type CloneInfo struct {
-	CourseCode        string
-	JobOwner          string
-	OrganizationPath  string
-	CurrentAssignment string
-	DestDir           string
-	CloneRepos        []RepoInfo
-}
-
-// CloneRepositories clones the repositories for the given course organization.
-func CloneRepositories(ctx context.Context, sc scm.SCM, info *CloneInfo) ([]string, error) {
-	defer timer(info.JobOwner, info.CourseCode, cloneTimeGauge)()
-
-	cloneDirs := make([]string, 0, len(info.CloneRepos))
-	for _, repo := range info.CloneRepos {
-		dir, err := sc.Clone(ctx, &scm.CloneOptions{
-			Organization: info.OrganizationPath,
-			Repository:   repo.Repo,
-			DestDir:      info.DestDir,
-			Branch:       repo.Branch,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to clone %q repository: %w", repo.Repo, err)
-		}
-		if hasAssignment(dir, info.CurrentAssignment) != nil {
-			return nil, err
-		}
-		cloneDirs = append(cloneDirs, dir)
-	}
-	return cloneDirs, nil
-}
 
 // hasAssignment return nil if the assignment exists in the given clone dir.
 func hasAssignment(cloneDir, currentAssignment string) error {
 	// Check that there is code for the current assignment in clone dir
 	if ok, err := exists(filepath.Join(cloneDir, currentAssignment)); !ok {
-		return fmt.Errorf("%s directory does not contain %q: %w", cloneDir, currentAssignment, err)
+		return fmt.Errorf("directory %q does not contain %q: %w", cloneDir, currentAssignment, err)
 	}
 	return nil
 }
 
-// ScanStudentRepo returns an error if the student's repository contains the session secret environment variable.
+// scanStudentRepo returns an error if the student's repository contains the session secret environment variable.
 // Note: This scan may be costly for large repositories.
-func ScanStudentRepo(submittedDir, course, jobOwner string) error {
+func scanStudentRepo(submittedDir, course, jobOwner string) error {
 	defer timer(jobOwner, course, validationTimeGauge)()
 
 	// Walk the student's submitted code directory

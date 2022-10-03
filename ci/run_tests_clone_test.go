@@ -11,6 +11,10 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 )
 
+func init() {
+	os.Setenv("QUICKFEED_REPOSITORY_PATH", "$HOME/tmp/courses")
+}
+
 func TestCloneAndCopyRunTests(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	qfUserName := scm.GetTestUser(t)
@@ -37,7 +41,6 @@ func TestCloneAndCopyRunTests(t *testing.T) {
 		CommitID: rand.String()[:7],
 	}
 
-	os.Setenv("QUICKFEED_REPOSITORY_PATH", "$HOME/tmp/courses")
 	ctx := context.Background()
 	clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
 		Organization: course.GetOrganizationName(),

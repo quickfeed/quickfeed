@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"os"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -61,6 +62,9 @@ func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
 }
 
 func TestRebuildSubmissions(t *testing.T) {
+	qfTestOrg := scm.GetTestOrganization(t)
+	qfUserName := scm.GetTestUser(t)
+
 	_, mgr := scm.MockSCMManager(t)
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -74,7 +78,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	var course qf.Course
 	course.Provider = "fake"
 	course.OrganizationID = 1
-	course.OrganizationName = scm.GetTestOrganization(t)
+	course.OrganizationName = qfTestOrg
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -100,11 +104,13 @@ func TestRebuildSubmissions(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
+	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	repo1 := qf.Repository{
 		OrganizationID: 1,
 		RepositoryID:   1,
 		UserID:         student1.ID,
 		RepoType:       qf.Repository_USER,
+		HTMLURL:        repo.StudentRepoURL(qfUserName),
 	}
 	if err := db.CreateRepository(&repo1); err != nil {
 		t.Fatal(err)
@@ -159,6 +165,8 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err == nil {
 		t.Errorf("Expected error: record not found")
 	}
+
+	os.Setenv("QUICKFEED_REPOSITORY_PATH", "$HOME/tmp/courses")
 	// rebuild existing submission
 	rebuildRequest.Msg.SubmissionID = 1
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err != nil {

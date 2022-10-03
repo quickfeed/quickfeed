@@ -26,6 +26,7 @@ type RunData struct {
 	Course     *qf.Course
 	Assignment *qf.Assignment
 	Repo       *qf.Repository
+	EnvVarsFn  func(secret, homeDir string) []string
 	BranchName string
 	CommitID   string
 	JobOwner   string
@@ -55,7 +56,7 @@ func (r RunData) String() string {
 // to run the tests on the student code and manipulate the folders as needed for a particular
 // lab assignment's test requirements. The temporary directory is deleted when the container
 // exits at the end of this method.
-func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm.SCM, runner Runner) (*score.Results, error) {
+func (r *RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm.SCM, runner Runner) (*score.Results, error) {
 	testsStartedCounter.WithLabelValues(r.JobOwner, r.Course.Code).Inc()
 
 	dstDir, err := os.MkdirTemp("", quickfeedTestsPath)
@@ -70,14 +71,14 @@ func (r RunData) RunTests(ctx context.Context, logger *zap.SugaredLogger, sc scm
 	}
 	logger.Debugf("Successfully cloned student repository to: %s", dstDir)
 
-	if err := ScanStudentRepo(filepath.Join(dstDir, r.Repo.Name()), r.Course.GetCode(), r.JobOwner); err != nil {
+	if err := scanStudentRepo(filepath.Join(dstDir, r.Repo.Name()), r.Course.GetCode(), r.JobOwner); err != nil {
 		return nil, err
 	}
 
 	randomSecret := rand.String()
 	job, err := r.parseTestRunnerScript(randomSecret, dstDir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse run script: %w", err)
+		return nil, fmt.Errorf("failed to parse run script for assignment %s in %s: %w", r.Assignment.GetName(), r.Repo.GetTestURL(), err)
 	}
 
 	defer timer(r.JobOwner, r.Course.Code, testExecutionTimeGauge)()
@@ -127,7 +128,7 @@ func (r RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 	testsDir := filepath.Join(r.Course.CloneDir(), qf.TestsRepo)
 	assignmentDir := filepath.Join(r.Course.CloneDir(), qf.AssignmentRepo)
 	for _, repoDir := range []string{clonedStudentRepo, testsDir, assignmentDir} {
-		if hasAssignment(repoDir, currentAssignment) != nil {
+		if err := hasAssignment(repoDir, currentAssignment); err != nil {
 			return err
 		}
 	}

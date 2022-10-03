@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
+	"go.uber.org/zap"
 )
 
 var cli struct {
@@ -19,8 +22,8 @@ var cli struct {
 		User   string `help:"GitHub user name for student in course." xor:"repo" required:""`
 		Group  string `help:"GitHub group name for course." xor:"repo" required:""`
 		Token  string `help:"GitHub personal access token." env:"GITHUB_ACCESS_TOKEN"`
-		Dir    string `help:"Destination directory for cloned repositories." default:"."`
-		Merge  bool   `help:"Merge tests repository into user/group directory." default:"false"`
+		Dir    string `help:"Destination directory for cloned repositories." env:"QUICKFEED_REPOSITORY_PATH"`
+		Docker bool   `help:"Run tests using Docker." default:"false"`
 		Lab    string `help:"Assignment to test."`
 	} `cmd:"" help:"Clone repositories for local test execution."`
 }
@@ -37,18 +40,17 @@ func main() {
 
 	switch ctx.Command() {
 	case "clone":
-		client := getSCMClient()
-		studRepo := studentRepo()
-		destDir := filepath.Join(cli.Clone.Dir, cli.Clone.Course)
+		logger, client := getSCMClient()
+		// Default repository path is $HOME/courses
+		destDir := filepath.Join(env.RepositoryPath(), cli.Clone.Course)
+		fmt.Printf("Repository path: %s\n", destDir)
 		if !exists(destDir) {
-			// Only clone and merge if destination directory does not exist
-			clone(client, studRepo, destDir)
-			if cli.Clone.Merge {
-				merge(destDir, studRepo)
-			}
+			// Only clone if destination directory does not exist
+			clone(logger, client, destDir)
 		}
 		if cli.Clone.Lab != "" {
-			runTests(destDir, studRepo)
+			// Only run tests if lab is specified
+			runTests(logger, client, destDir)
 		}
 
 	default:
@@ -56,69 +58,109 @@ func main() {
 	}
 }
 
-func runTests(destDir string, studRepo string) {
+func runTests(logger *zap.SugaredLogger, client scm.SCM, destDir string) {
 	fmt.Printf("Running tests for %s\n", cli.Clone.Lab)
-	scriptContent, err := os.ReadFile(filepath.Join(destDir, qf.AssignmentRepo, "scripts", "run.sh"))
+	dockerfileContent := readFile(destDir, "Dockerfile")
+	runScriptContent := readFile(destDir, "run.sh")
+
+	runData := &ci.RunData{
+		Course: &qf.Course{
+			Code:             cli.Clone.Course[:len(cli.Clone.Course)-5], // assume course has four digit year (-YYYY)
+			OrganizationName: cli.Clone.Course,
+			Dockerfile:       dockerfileContent,
+		},
+		Assignment: &qf.Assignment{
+			Name:             cli.Clone.Lab,
+			RunScriptContent: runScriptContent,
+			ContainerTimeout: 1, // minutes
+		},
+		Repo: &qf.Repository{
+			HTMLURL: studentRepoURL(),
+		},
+		JobOwner: studentRepo(),
+		CommitID: "dummy",
+	}
+	if !cli.Clone.Docker {
+		runData.EnvVarsFn = func(secret, home string) []string {
+			return ci.EnvVars(secret, home, runData.Repo.Name(), runData.Assignment.GetName())
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+	results, err := runData.RunTests(ctx, logger, client, runner(logger))
 	check(err)
 
-	// destDir = home folder for the test execution
-	home := filepath.Join(os.Getenv("PWD"), destDir)
-	envVars := ci.EnvVars("secret", home, studRepo, cli.Clone.Lab)
-	for _, envVar := range envVars {
-		fmt.Println(envVar)
+	fmt.Println("***********************")
+	fmt.Println(results.BuildInfo.BuildLog)
+	fmt.Println("***********************")
+	// TODO print with tab writer
+	for _, score := range results.Scores {
+		fmt.Printf("%s: %d/%d (%d)\n", score.TestName, score.Score, score.MaxScore, score.Weight)
 	}
-	job, err := ci.ParseRunScript(string(scriptContent), envVars)
-	check(err)
-	runner := ci.Local{}
-	out, err := runner.Run(context.Background(), job)
-	check(err)
-	fmt.Println(out)
+	fmt.Printf("Score sum: %d\n", results.Sum())
 }
 
-func getSCMClient() scm.SCM {
-	logger, err := qlog.Zap()
+func runner(logger *zap.SugaredLogger) ci.Runner {
+	if cli.Clone.Docker {
+		runner, err := ci.NewDockerCI(logger)
+		check(err)
+		return runner
+	}
+	return &ci.Local{}
+}
+
+func getSCMClient() (*zap.SugaredLogger, scm.SCM) {
+	logger := qlog.Prod()
+	client, err := scm.NewSCMClient(logger, cli.Clone.Token)
 	check(err)
-	client, err := scm.NewSCMClient(logger.Sugar(), cli.Clone.Token)
-	check(err)
-	return client
+	return logger, client
 }
 
 func studentRepo() string {
 	studRepo := cli.Clone.Group
 	if studRepo == "" {
-		studRepo = qf.StudentRepoName(cli.Clone.User)
+		studRepo = cli.Clone.User
 	}
 	return studRepo
 }
 
-func clone(client scm.SCM, studRepo, dstDir string) {
-	in := &ci.CloneInfo{
-		CourseCode:        cli.Clone.Course,
-		JobOwner:          studRepo,
-		OrganizationPath:  cli.Clone.Course,
-		CurrentAssignment: cli.Clone.Lab,
-		DestDir:           dstDir,
-		CloneRepos: []ci.RepoInfo{
-			{Repo: studRepo},
-			{Repo: qf.TestsRepo},
-			{Repo: qf.AssignmentRepo},
-		},
-	}
-	if _, err := ci.CloneRepositories(context.Background(), client, in); err != nil {
-		check(err)
-	}
-	if err := ci.ScanStudentRepo(filepath.Join(dstDir, studRepo), in.CourseCode, in.JobOwner); err != nil {
-		check(err)
-	}
+func studentRepoURL() string {
+	repo := qf.RepoURL{ProviderURL: "github.com", Organization: cli.Clone.Course}
+	return repo.StudentRepoURL(studentRepo())
 }
 
-func merge(destDir string, studRepo string) {
-	fmt.Printf("Merging: %s -> %s\n", qf.TestsRepo, qf.AssignmentRepo)
-	err := copyDir(filepath.Join(destDir, qf.TestsRepo), filepath.Join(destDir, qf.AssignmentRepo))
+func clone(logger *zap.SugaredLogger, client scm.SCM, dstDir string) {
+	fmt.Printf("Cloning tests and assignments into %s", dstDir)
+	ctx := context.Background()
+	clonedAssignmentsRepo, err := client.Clone(ctx, &scm.CloneOptions{
+		Organization: cli.Clone.Course,
+		Repository:   qf.AssignmentRepo,
+		DestDir:      dstDir,
+	})
 	check(err)
-	fmt.Printf("Merging: %s -> %s\n", qf.TestsRepo, studRepo)
-	err = copyDir(filepath.Join(destDir, qf.TestsRepo), filepath.Join(destDir, studRepo))
+	fmt.Printf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
+
+	clonedTestsRepo, err := client.Clone(ctx, &scm.CloneOptions{
+		Organization: cli.Clone.Course,
+		Repository:   qf.TestsRepo,
+		DestDir:      dstDir,
+	})
 	check(err)
+	fmt.Printf("Successfully cloned tests repository to: %s", clonedTestsRepo)
+}
+
+func readFile(destDir, filename string) string {
+	path := filepath.Join(destDir, qf.TestsRepo, "scripts", filename)
+	b, err := os.ReadFile(path)
+	check(err)
+	return string(b)
+}
+
+func exists(filePath string) bool {
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
 
 func check(err error) {
