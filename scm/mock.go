@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"os"
 	"path/filepath"
 
 	"github.com/quickfeed/quickfeed/internal/qtest"
@@ -39,16 +38,14 @@ func NewMockSCMClient() *MockSCM {
 	return s
 }
 
-func (MockSCM) Clone(_ context.Context, opt *CloneOptions) (string, error) {
-	cloneDir := filepath.Join(opt.DestDir, repoDir(opt))
-	// This is a hack to make sure the lab1 directory exists,
-	// required by the web/rebuild_test.go:TestRebuildSubmissions()
-	lab1Dir := filepath.Join(cloneDir, "lab1")
-	err := os.MkdirAll(lab1Dir, 0o700)
-	if err != nil {
+func (s MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{
+		Name: opt.Organization,
+	}); err != nil {
 		return "", err
 	}
-	return cloneDir, err
+	cloneDir := filepath.Join("testdata", repoDir(opt))
+	return cloneDir, nil
 }
 
 // UpdateOrganization implements the SCM interface.
