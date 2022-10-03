@@ -44,7 +44,8 @@ func TestMockOrganizations(t *testing.T) {
 		}
 	}
 	if err := s.UpdateOrganization(ctx, &scm.OrganizationOptions{
-		Name: qtest.MockCourses[0].OrganizationName}); err == nil {
+		Name: qtest.MockCourses[0].OrganizationName,
+	}); err == nil {
 		t.Error("expected error 'invalid argument'")
 	}
 
@@ -105,7 +106,8 @@ func TestMockRepositories(t *testing.T) {
 		{
 			OrgID: course2.OrganizationID,
 			Owner: course2.OrganizationName,
-			Path:  "tests"},
+			Path:  "tests",
+		},
 	}
 
 	for _, repo := range repos {
