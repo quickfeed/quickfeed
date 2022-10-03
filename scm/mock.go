@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"path/filepath"
 
 	"github.com/quickfeed/quickfeed/internal/qtest"
@@ -45,6 +46,13 @@ func (s MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
 		return "", err
 	}
 	cloneDir := filepath.Join("testdata", repoDir(opt))
+	// This is a hack to make sure the lab1 directory exists,
+	// required by the web/rebuild_test.go:TestRebuildSubmissions()
+	lab1Dir := filepath.Join(cloneDir, "lab1")
+	err := os.MkdirAll(lab1Dir, 0o700)
+	if err != nil {
+		return "", err
+	}
 	return cloneDir, nil
 }
 
