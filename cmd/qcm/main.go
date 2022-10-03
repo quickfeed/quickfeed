@@ -46,7 +46,7 @@ func main() {
 		fmt.Printf("Repository path: %s\n", destDir)
 		if !exists(destDir) {
 			// Only clone if destination directory does not exist
-			clone(logger, client, destDir)
+			clone(client, destDir)
 		}
 		if cli.Clone.Lab != "" {
 			// Only run tests if lab is specified
@@ -129,7 +129,7 @@ func studentRepoURL() string {
 	return repo.StudentRepoURL(studentRepo())
 }
 
-func clone(logger *zap.SugaredLogger, client scm.SCM, dstDir string) {
+func clone(client scm.SCM, dstDir string) {
 	fmt.Printf("Cloning tests and assignments into %s", dstDir)
 	ctx := context.Background()
 	clonedAssignmentsRepo, err := client.Clone(ctx, &scm.CloneOptions{
