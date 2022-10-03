@@ -12,7 +12,7 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 )
 
-var user = "test_user"
+const user = "test_user"
 
 func TestMockOrganizations(t *testing.T) {
 	s := scm.NewMockSCMClient()
@@ -257,7 +257,6 @@ func TestAddRemoveMockTeamMembers(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
-	user := "test_user"
 	team, err := s.CreateTeam(ctx, &scm.NewTeamOptions{
 		Organization: course.OrganizationName,
 		TeamName:     "test_team",
