@@ -15,21 +15,21 @@ type Data struct {
 	Msg string
 }
 
+var messages = []Data{
+	{Msg: "Hello"},
+	{Msg: "World"},
+	{Msg: "Foo"},
+	{Msg: "Bar"},
+	{Msg: "Gandalf"},
+	{Msg: "Frodo"},
+	{Msg: "Bilbo"},
+	{Msg: "Radagast"},
+	{Msg: "Sauron"},
+	{Msg: "Gollum"},
+}
+
 func TestStream(t *testing.T) {
 	service := stream.NewService[Data]()
-
-	messages := []Data{
-		{Msg: "Hello"},
-		{Msg: "World"},
-		{Msg: "Foo"},
-		{Msg: "Bar"},
-		{Msg: "Gandalf"},
-		{Msg: "Frodo"},
-		{Msg: "Bilbo"},
-		{Msg: "Radagast"},
-		{Msg: "Sauron"},
-		{Msg: "Gollum"},
-	}
 
 	counter := uint32(0)
 
@@ -74,5 +74,32 @@ func TestStream(t *testing.T) {
 			t.Errorf("expected %v, got %v: %s", messages, s.Messages, diff)
 		}
 	}
+
+}
+
+// TestStreamClose tries to send messages to a stream that is closing.
+// This test should be run with the -race flag
+func TestStreamClose(t *testing.T) {
+	service := stream.NewService[Data]()
+
+	counter := uint32(0)
+
+	ctx, _ := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
+	st := service.AddStream(uint64(1), NewMockStream[Data](ctx, uint64(1), &counter))
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		for i := 0; i < 100; i++ {
+			st.Send(&messages[i%len(messages)])
+		}
+		wg.Done()
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		st.Run()
+	}()
+	st.Close()
+	wg.Wait()
 
 }
