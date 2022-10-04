@@ -3,10 +3,12 @@ package stream_test
 import (
 	"context"
 	"fmt"
+	"sync"
 	"sync/atomic"
 )
 
 type mockStream[T any] struct {
+	mu         sync.Mutex
 	ctx        context.Context
 	ch         chan *T
 	id         uint64
@@ -53,12 +55,20 @@ func (m *mockStream[T]) GetChannel() chan *T {
 }
 
 func (m *mockStream[T]) Send(data *T) {
-	m.ch <- data
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if !m.closed {
+		m.ch <- data
+	}
 }
 
 func (m *mockStream[T]) Close() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if !m.closed {
+		close(m.ch)
+	}
 	m.closed = true
-	close(m.ch)
 }
 
 func (m *mockStream[T]) GetID() uint64 {
