@@ -86,7 +86,7 @@ func (opt UpdateTeamOptions) valid() bool {
 }
 
 func (opt CreateRepositoryOptions) valid() bool {
-	return opt.Organization != nil && opt.Path != ""
+	return opt.Organization != "" && opt.Path != ""
 }
 
 func (opt CreateHookOptions) valid() bool {

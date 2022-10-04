@@ -120,7 +120,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	}
 
 	// check that repo does not already exist for this user or group
-	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization.Name, slug.Make(opt.Path))
+	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization, slug.Make(opt.Path))
 	if repo != nil {
 		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Path, repo)
 		return toRepository(repo), nil
@@ -130,7 +130,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 
 	// repo does not exist, create it
 	s.logger.Debugf("CreateRepository: creating %s", opt.Path)
-	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization.Name, &github.Repository{
+	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization, &github.Repository{
 		Name:    &opt.Path,
 		Private: &opt.Private,
 	})

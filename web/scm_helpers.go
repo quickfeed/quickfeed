@@ -95,7 +95,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group
 	}
 	org := &qf.Organization{ID: course.GetOrganizationID(), Name: course.GetOrganizationName()}
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-		Organization: org,
+		Organization: org.Name,
 		Path:         group.GetName(),
 		Private:      true,
 	})
@@ -149,7 +149,7 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *qf.Organization, pa
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-		Organization: org,
+		Organization: org.Name,
 		Path:         path,
 		Private:      true,
 	})
