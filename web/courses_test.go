@@ -370,10 +370,10 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	db, cleanup, mockSCM, qfService := testQuickFeedService(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 10)
-	student1 := qtest.CreateFakeUser(t, db, 11)
-	student2 := qtest.CreateFakeUser(t, db, 12)
-	ta := qtest.CreateFakeUser(t, db, 13)
+	teacher := qtest.CreateAdminUser(t, db, "fake")
+	student1 := qtest.CreateNamedUser(t, db, 11, "student1")
+	student2 := qtest.CreateNamedUser(t, db, 12, "student2")
+	ta := qtest.CreateNamedUser(t, db, 13, "TA")
 
 	course := qtest.MockCourses[0]
 	err := db.CreateCourse(teacher.ID, course)
