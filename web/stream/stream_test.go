@@ -92,7 +92,7 @@ func TestStreamClose(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
-		for i := 0; i < 100; i++ {
+		for i := 0; i < 1_000_000; i++ {
 			st.Send(&messages[i%len(messages)])
 		}
 		wg.Done()
