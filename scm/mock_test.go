@@ -112,7 +112,7 @@ func TestMockRepositories(t *testing.T) {
 
 	for _, repo := range repos {
 		r, err := s.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-			Organization: &qf.Organization{ID: repo.OrgID, Name: repo.Owner},
+			Organization: repo.Owner,
 			Path:         repo.Path,
 			Owner:        repo.Owner,
 			Permission:   "read",

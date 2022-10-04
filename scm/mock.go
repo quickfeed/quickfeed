@@ -87,13 +87,12 @@ func (s *MockSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 		return nil, fmt.Errorf("invalid argument: %+v", opt)
 	}
 	org, err := s.GetOrganization(ctx, &GetOrgOptions{
-		ID:   opt.Organization.ID,
-		Name: opt.Organization.Name,
+		Name: opt.Organization,
 	})
 	if err != nil {
 		return nil, err
 	}
-	url, err := url.JoinPath("https://example.com", opt.Organization.Name, opt.Path)
+	url, err := url.JoinPath("https://example.com", opt.Organization, opt.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +101,7 @@ func (s *MockSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 		Path:    opt.Path,
 		Owner:   org.Name,
 		HTMLURL: url,
-		OrgID:   opt.Organization.ID,
+		OrgID:   org.ID,
 	}
 	s.Repositories[repo.ID] = repo
 	return repo, nil
