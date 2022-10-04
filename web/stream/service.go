@@ -41,6 +41,7 @@ func NewService[T any]() *Service[T] {
 
 // SendTo sends data to connected clients with the given IDs.
 // If no ID is given, data is sent to all connected clients.
+// Unconnected clients are ignored and will not receive the data.
 func (s *Service[T]) SendTo(data *T, userIDs ...uint64) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
