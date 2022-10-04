@@ -159,7 +159,7 @@ type Hook struct {
 
 // CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
-	Organization *qf.Organization
+	Organization string
 	Path         string
 	Private      bool
 	Owner        string // The owner of an organization's repo is always the organization itself.
