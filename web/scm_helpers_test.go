@@ -26,7 +26,7 @@ func TestInitSCMs(t *testing.T) {
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{
 		Name:             "Test course",
-		OrganizationPath: scm.GetTestOrganization(t),
+		OrganizationName: scm.GetTestOrganization(t),
 		Provider:         "fake",
 	}
 	if err := db.CreateCourse(admin.ID, course); err != nil {
@@ -35,7 +35,7 @@ func TestInitSCMs(t *testing.T) {
 	if err := q.InitSCMs(ctx); err != nil {
 		t.Error(err)
 	}
-	if _, ok := mgr.GetSCM(course.OrganizationPath); !ok {
-		t.Errorf("Missing scm client for organization %s", course.OrganizationPath)
+	if _, ok := mgr.GetSCM(course.OrganizationName); !ok {
+		t.Errorf("Missing scm client for organization %s", course.OrganizationName)
 	}
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/qf"
 )
@@ -32,22 +33,13 @@ type TokenManager struct {
 	tokensToUpdate []uint64 // User IDs for user who need a token update.
 	db             database.Database
 	secret         string
-	domain         string
 }
 
 // NewTokenManager starts a new token manager. Will create a list with all tokens that need update.
-func NewTokenManager(db database.Database, domain string) (*TokenManager, error) {
-	if domain == "" {
-		return nil, errors.New("failed to create a new token manager: missing domain")
-	}
-	hostname, _, ok := strings.Cut(domain, ":")
-	if ok {
-		domain = hostname
-	}
+func NewTokenManager(db database.Database) (*TokenManager, error) {
 	manager := &TokenManager{
 		db:     db,
 		secret: rand.String(),
-		domain: domain,
 	}
 	if err := manager.updateTokenList(); err != nil {
 		return nil, err
@@ -68,7 +60,7 @@ func (tm *TokenManager) NewAuthCookie(userID uint64) (*http.Cookie, error) {
 	return &http.Cookie{
 		Name:     CookieName,
 		Value:    signedToken,
-		Domain:   tm.domain,
+		Domain:   env.Domain(),
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,

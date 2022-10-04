@@ -41,14 +41,6 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 	}
 }
 
-// CreateOrganization implements the SCM interface.
-func (*GithubSCM) CreateOrganization(ctx context.Context, opt *OrganizationOptions) (*qf.Organization, error) {
-	return nil, ErrNotSupported{
-		SCM:    "github",
-		Method: "CreateOrganization",
-	}
-}
-
 // UpdateOrganization implements the SCM interface.
 func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOptions) error {
 	if !opt.valid() {
@@ -58,7 +50,7 @@ func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *OrganizationOpt
 		}
 	}
 
-	_, _, err := s.client.Organizations.Edit(ctx, opt.Path, &github.Organization{
+	_, _, err := s.client.Organizations.Edit(ctx, opt.Name, &github.Organization{
 		DefaultRepoPermission: &opt.DefaultPermission,
 		MembersCanCreateRepos: &opt.RepoPermissions,
 	})
@@ -112,7 +104,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*q
 
 	return &qf.Organization{
 		ID:          uint64(gitOrg.GetID()),
-		Path:        gitOrg.GetLogin(),
+		Name:        gitOrg.GetLogin(),
 		Avatar:      gitOrg.GetAvatarURL(),
 		PaymentPlan: gitOrg.GetPlan().GetName(),
 	}, nil
@@ -128,7 +120,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	}
 
 	// check that repo does not already exist for this user or group
-	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization.Path, slug.Make(opt.Path))
+	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization.Name, slug.Make(opt.Path))
 	if repo != nil {
 		s.logger.Debugf("CreateRepository: found existing repository (skipping creation): %s: %v", opt.Path, repo)
 		return toRepository(repo), nil
@@ -138,7 +130,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 
 	// repo does not exist, create it
 	s.logger.Debugf("CreateRepository: creating %s", opt.Path)
-	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization.Path, &github.Repository{
+	repo, _, err = s.client.Repositories.Create(ctx, opt.Organization.Name, &github.Repository{
 		Name:    &opt.Path,
 		Private: &opt.Private,
 	})
@@ -187,8 +179,8 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 		}
 	}
 	var path string
-	if org.Path != "" {
-		path = org.Path
+	if org.Name != "" {
+		path = org.Name
 	} else {
 		opt := &GetOrgOptions{
 			ID: org.ID,
@@ -197,7 +189,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *qf.Organization) (
 		if err != nil {
 			return nil, err
 		}
-		path = org.Path
+		path = org.Name
 	}
 
 	repos, _, err := s.client.Repositories.ListByOrg(ctx, path, nil)
@@ -319,7 +311,7 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string)
 
 // CreateHook implements the SCM interface.
 func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error {
-	if !opt.valid() {
+	if !opt.valid() || opt.Organization == "" {
 		return ErrMissingFields{
 			Method:  "CreateHook",
 			Message: fmt.Sprintf("%+v", opt),
@@ -335,16 +327,7 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) erro
 		},
 		Events: []string{"push", "pull_request", "pull_request_review"},
 	}
-	var err error
-	// prioritize creating an organization hook
-	if opt.Organization != "" {
-		_, _, err = s.client.Organizations.CreateHook(ctx, opt.Organization, hook)
-		if err != nil {
-			return fmt.Errorf("CreateOrgHook: failed to create GitHub hook for org %s: %w", opt.Organization, err)
-		}
-	} else {
-		_, _, err = s.client.Repositories.CreateHook(ctx, opt.Repository.Owner, opt.Repository.Path, hook)
-	}
+	_, _, err := s.client.Organizations.CreateHook(ctx, opt.Organization, hook)
 	if err != nil {
 		return ErrFailedSCM{
 			GitError: err,
@@ -469,7 +452,7 @@ func (s *GithubSCM) GetTeams(ctx context.Context, org *qf.Organization) ([]*Team
 			Message: fmt.Sprintf("%+v", org),
 		}
 	}
-	gitTeams, _, err := s.client.Teams.ListTeams(ctx, org.Path, &github.ListOptions{})
+	gitTeams, _, err := s.client.Teams.ListTeams(ctx, org.Name, &github.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("GetTeams: failed to list GitHub teams: %w", err)
 	}

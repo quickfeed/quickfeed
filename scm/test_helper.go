@@ -1,25 +1,26 @@
 package scm
 
 import (
-	"context"
+	"testing"
 
 	"github.com/beatlabs/github-auth/app"
+	"github.com/quickfeed/quickfeed/internal/env"
 )
 
-func TestSCMManager() *Manager {
+// MockSCMManager sets the current provider to "fake", creates a "test" organization
+// and a fake scm client for this organization.
+func MockSCMManager(t *testing.T) (SCM, *Manager) {
+	t.Helper()
+	env.SetFakeProvider(t)
 	conf := &Config{
-		"test",
-		"test",
+		"qfClientID",
+		"qfClientSecret",
 		&app.Config{},
 	}
-	sc := NewFakeSCMClient()
-	_, _ = sc.CreateOrganization(context.Background(), &OrganizationOptions{
-		Name: "testorg",
-		Path: "testorg",
-	})
-	return &Manager{
+	sc := NewMockSCMClient()
+	return sc, &Manager{
 		scms: map[string]SCM{
-			"testorg": sc,
+			"qfTestOrg": sc,
 		},
 		Config: conf,
 	}

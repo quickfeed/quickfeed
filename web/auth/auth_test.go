@@ -15,7 +15,6 @@ import (
 
 const (
 	testSecret     = "top-secret"
-	testDomain     = "/test"
 	user           = "/user"
 	authGithub     = "/auth/github"
 	callbackGithub = "/auth/callback/github"
@@ -76,7 +75,7 @@ func TestOAuth2Callback(t *testing.T) {
 	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	tm, err := auth.NewTokenManager(db, testDomain)
+	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,7 +118,7 @@ func TestOAuth2CallbackUserExchange(t *testing.T) {
 	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	tm, err := auth.NewTokenManager(db, testDomain)
+	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +186,7 @@ func TestOAuth2CallbackTokenExchange(t *testing.T) {
 	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	tm, err := auth.NewTokenManager(db, testDomain)
+	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -234,7 +233,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	tm, err := auth.NewTokenManager(db, testDomain)
+	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}

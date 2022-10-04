@@ -1,84 +1,16 @@
-package web
+package web_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web/auth"
 	"google.golang.org/protobuf/testing/protocmp"
-	"gorm.io/gorm"
 )
-
-func TestGetRepo(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
-	defer cleanup()
-
-	user := qtest.CreateFakeUser(t, db, 1)
-	course := &qf.Course{
-		OrganizationID: 1,
-		Code:           "DAT101",
-	}
-	qtest.CreateCourse(t, db, user, course)
-	group := &qf.Group{
-		Name:     "1001 Hacking Crew",
-		CourseID: course.ID,
-		Users:    []*qf.User{user},
-	}
-	if err := db.CreateGroup(group); err != nil {
-		t.Fatal(err)
-	}
-
-	wantUserRepo := &qf.Repository{
-		OrganizationID: 1,
-		RepositoryID:   1,
-		UserID:         user.ID,
-		RepoType:       qf.Repository_USER,
-		HTMLURL:        "http://assignment.com/",
-	}
-	if err := db.CreateRepository(wantUserRepo); err != nil {
-		t.Fatal(err)
-	}
-
-	wantGroupRepo := &qf.Repository{
-		OrganizationID: 1,
-		RepositoryID:   2,
-		GroupID:        group.ID,
-		RepoType:       qf.Repository_GROUP,
-		HTMLURL:        "http://assignment.com/",
-	}
-	if err := db.CreateRepository(wantGroupRepo); err != nil {
-		t.Fatal(err)
-	}
-
-	gotUserRepo, err := ags.getRepo(course, user.ID, qf.Repository_USER)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if diff := cmp.Diff(wantUserRepo, gotUserRepo, protocmp.Transform()); diff != "" {
-		t.Errorf("getRepo() mismatch (-wantUserRepo, +gotUserRepo):\n%s", diff)
-	}
-
-	gotGroupRepo, err := ags.getRepo(course, group.ID, qf.Repository_GROUP)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if diff := cmp.Diff(wantGroupRepo, gotGroupRepo, protocmp.Transform()); diff != "" {
-		t.Errorf("getRepo() mismatch (-wantGroupRepo, +gotGroupRepo):\n%s", diff)
-	}
-
-	_, err = ags.getRepo(course, group.ID+1, qf.Repository_GROUP)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		t.Fatal(err)
-	}
-	_, err = ags.getRepo(course, user.ID+1, qf.Repository_USER)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		t.Fatal(err)
-	}
-}
 
 func TestGetRepositories(t *testing.T) {
 	db, cleanup, _, ags := testQuickFeedService(t)
@@ -91,7 +23,7 @@ func TestGetRepositories(t *testing.T) {
 	}
 	qtest.CreateCourse(t, db, user, course)
 
-	ctx := qtest.WithUserContext(context.Background(), user)
+	ctx := auth.WithUserContext(context.Background(), user)
 
 	// check that no repositories are returned when no repo types are specified
 	repos, err := ags.GetRepositories(ctx, connect.NewRequest(&qf.URLRequest{

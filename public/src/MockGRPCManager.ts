@@ -709,7 +709,7 @@ export class MockGrpcManager {
     // /* ORGANIZATIONS */ //
 
     public async getOrganization(orgName: string): Promise<IGrpcResponse<Organization>> {
-        const org = this.organizations.getOrganizationsList().find(o => o.getPath() === orgName)
+        const org = this.organizations.getOrganizationsList().find(o => o.getName() === orgName)
         await delay(2000)
         if (!org) {
             return this.grpcSend<Organization>(null, new Status().setCode(2).setError('Organization not found'))
@@ -1008,7 +1008,7 @@ export class MockGrpcManager {
         const localOrgs: Organization[] = []
         const localOrg = new Organization()
         localOrg.setId(23650610)
-        localOrg.setPath("test")
+        localOrg.setName("test")
         localOrg.setAvatar("https://avatars2.githubusercontent.com/u/23650610?v=3")
         localOrgs.push(localOrg)
         this.organizations.setOrganizationsList(localOrgs)

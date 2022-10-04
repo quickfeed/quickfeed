@@ -49,7 +49,7 @@ var tokenUpdateMethods = map[string]func(context.Context, *auth.TokenManager, us
 			}
 			return defaultTokenUpdater(ctx, tm, group)
 		}
-		return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): request does not contain a group", "DeleteGroup"))
+		return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("cannot update token for %s: request does not contain a group", "DeleteGroup"))
 	},
 }
 
@@ -82,10 +82,10 @@ func (t *TokenInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 		if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
 			if msg, ok := request.Any().(userIDs); ok {
 				if err := tokenUpdateFn(ctx, t.tokenManager, msg); err != nil {
-					return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): %v", method, err))
+					return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("cannot update token for %s: %w", method, err))
 				}
 			} else {
-				return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): missing 'userIDs' interface", method))
+				return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("cannot update token for %s: message type %T does not implement 'userIDs' interface", method, request))
 			}
 		}
 		return next(ctx, request)

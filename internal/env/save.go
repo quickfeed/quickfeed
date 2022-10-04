@@ -3,7 +3,6 @@ package env
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -28,9 +27,7 @@ func Save(filename string, env map[string]string) error {
 			return err
 		}
 	case filenameExists && bakFilenameExists:
-		// Only report the base part of the backup file's name.
-		// This may change in the future.
-		return ExistsError(filepath.Base(bakFilename))
+		return ExistsError(bakFilename)
 	}
 
 	// Update the file with new environment variables.

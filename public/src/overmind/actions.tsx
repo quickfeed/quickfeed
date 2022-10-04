@@ -365,7 +365,7 @@ export const createCourse = async ({ state, actions, effects }: Context, value: 
     const course = Object.assign({}, value.course)
     /* Fill in required fields */
     course.organizationid = value.org.getId()
-    course.organizationpath = value.org.getPath()
+    course.organizationname = value.org.getName()
     course.provider = "github"
     course.coursecreatorid = state.self.id
     /* Send the course to the server */

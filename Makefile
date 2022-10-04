@@ -12,7 +12,6 @@ grpcweb-ver			:= $(shell cd public; npm ls --package-lock-only grpc-web | awk -F
 protoc-grpcweb		:= protoc-gen-grpc-web
 protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
-testorg				:= ag-test-course
 envoy-config-gen	:= ./cmd/envoy/envoy_config_gen.go
 toolsdir			:= bin
 tool-pkgs			:= $(shell go list -f '{{join .Imports " "}}' tools.go)
@@ -146,17 +145,3 @@ selenium:
 scm:
 	@echo "Compiling the scm tool"
 	@cd cmd/scm; go install
-
-# will remove all repositories and teams from provided organization 'testorg'
-purge: scm
-	@scm delete repo -all -namespace=$(testorg)
-	@scm delete team -all -namespace=$(testorg)
-
-run:
-	@quickfeed -service.url $(DOMAIN) -database.file ./tmp.db
-
-runlocal:
-	@quickfeed -dev
-
-prometheus:
-	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --storage.tsdb.retention.size=1024MB --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &

@@ -2,54 +2,48 @@ package interceptor
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 	"strings"
-	"time"
 
 	"github.com/bufbuild/connect-go"
-	promgrpc "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Create a metrics registry.
-var reg = prometheus.NewRegistry()
-
-func init() {
-	reg.MustRegister(
-		promgrpc.NewServerMetrics(),
-		FailedMethodsMetric,
-		MethodSuccessRateMetric,
-		ResponseTimeByMethodsMetric,
-	)
-}
-
-// MetricsServer returns a HTTP Server that serves the prometheus metrics.
-func MetricsServer(port int) *http.Server {
-	return &http.Server{
-		Handler:           promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
-		Addr:              fmt.Sprintf("127.0.0.1:%d", port),
-		ReadHeaderTimeout: 3 * time.Second, // to prevent Slowloris (CWE-400)
+// RPCMetricsCollectors returns a list of Prometheus metrics collectors for RPC related metrics.
+func RPCMetricsCollectors() []prometheus.Collector {
+	return []prometheus.Collector{
+		loginCounter,
+		failedMethodsCounter,
+		accessedMethodsCounter,
+		respondedMethodsCounter,
+		responseTimeGauge,
 	}
 }
 
 var (
-	// ResponseTimeByMethodsMetric records response time by method name.
-	ResponseTimeByMethodsMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "response_time",
+	responseTimeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "quickfeed_method_response_time",
+		Help: "The response time for method.",
 	}, []string{"method"})
 
-	// FailedMethodsMetric counts the number of times every method resulted in error.
-	FailedMethodsMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "methods_failed",
+	accessedMethodsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "quickfeed_method_accessed",
+		Help: "Total number of times method accessed",
 	}, []string{"method"})
 
-	// MethodSuccessRateMetric counts the number of calls for every method, allows
-	// grouping by method name and by result ("total", "success", "error")
-	MethodSuccessRateMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "success_rate",
-	}, []string{"method", "result"})
+	respondedMethodsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "quickfeed_method_responded",
+		Help: "Total number of times method responded successfully",
+	}, []string{"method"})
+
+	failedMethodsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "quickfeed_method_failed",
+		Help: "Total number of times method failed with an error",
+	}, []string{"method"})
+
+	loginCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "quickfeed_login_attempts",
+		Help: "Total number of login attempts",
+	}, []string{"user"})
 )
 
 type MetricsInterceptor struct {
@@ -64,8 +58,11 @@ func (*MetricsInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFun
 		procedure := conn.Spec().Procedure
 		methodName := procedure[strings.LastIndex(procedure, "/")+1:]
 		defer metricsTimer(methodName)()
+		accessedMethodsCounter.WithLabelValues(methodName).Inc()
 		err := next(ctx, conn)
-		handleMetrics(methodName, nil, err)
+		if err != nil {
+			failedMethodsCounter.WithLabelValues(methodName).Inc()
+		}
 		return err
 	})
 }
@@ -82,27 +79,24 @@ func (*MetricsInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 		methodName := procedure[strings.LastIndex(procedure, "/")+1:]
 		defer metricsTimer(methodName)()
 		resp, err := next(ctx, request)
-		handleMetrics(methodName, resp, err)
+		accessedMethodsCounter.WithLabelValues(methodName).Inc()
+		if resp != nil {
+			respondedMethodsCounter.WithLabelValues(methodName).Inc()
+		}
+		if err != nil {
+			failedMethodsCounter.WithLabelValues(methodName).Inc()
+			if methodName == "GetUser" {
+				// Can't get the user ID from err; so just counting
+				loginCounter.WithLabelValues("").Inc()
+			}
+		}
 		return resp, err
 	})
 }
 
 func metricsTimer(methodName string) func() {
 	responseTimer := prometheus.NewTimer(prometheus.ObserverFunc(
-		ResponseTimeByMethodsMetric.WithLabelValues(methodName).Set),
+		responseTimeGauge.WithLabelValues(methodName).Set),
 	)
-	return func() {
-		responseTimer.ObserveDuration()
-	}
-}
-
-func handleMetrics(methodName string, resp interface{}, err error) {
-	MethodSuccessRateMetric.WithLabelValues(methodName, "total").Inc()
-	if resp != nil {
-		MethodSuccessRateMetric.WithLabelValues(methodName, "success").Inc()
-	}
-	if err != nil {
-		FailedMethodsMetric.WithLabelValues(methodName).Inc()
-		MethodSuccessRateMetric.WithLabelValues(methodName, "error").Inc()
-	}
+	return func() { responseTimer.ObserveDuration() }
 }

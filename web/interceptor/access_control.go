@@ -104,12 +104,12 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 		req, ok := request.Any().(requestID)
 		if !ok {
 			return nil, connect.NewError(connect.CodeUnimplemented,
-				fmt.Errorf("%s failed: message type %T does not implement IDFor interface", method, request))
+				fmt.Errorf("access denied for %s: message type %T does not implement 'requestID' interface", method, request))
 		}
 		claims, ok := auth.ClaimsFromContext(ctx)
 		if !ok {
 			return nil, connect.NewError(connect.CodePermissionDenied,
-				fmt.Errorf("AccessControl(%s): failed to get claims from request context", method))
+				fmt.Errorf("access denied for %s: failed to get claims from request context", method))
 		}
 		for _, role := range accessRolesFor[method] {
 			switch role {
@@ -121,7 +121,7 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 					if method == "UpdateUser" {
 						if req.(*qf.User).GetIsAdmin() && !claims.Admin {
 							return nil, connect.NewError(connect.CodePermissionDenied,
-								fmt.Errorf("AccessControl(%s): user %d attempted to change admin status from %v to %v",
+								fmt.Errorf("access denied for %s: user %d attempted to change admin status from %v to %v",
 									method, claims.UserID, claims.Admin, req.(*qf.User).GetIsAdmin()))
 						}
 					}
@@ -133,7 +133,7 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 				if method == "GetSubmissions" && req.IDFor("group") == 0 {
 					if !claims.SameUser(req) {
 						return nil, connect.NewError(connect.CodePermissionDenied,
-							fmt.Errorf("AccessControl(%s): ID mismatch in claims (%d) and request (%d)",
+							fmt.Errorf("access denied for %s: ID mismatch in claims (%d) and request (%d)",
 								method, claims.UserID, req.IDFor("user")))
 					}
 				}
@@ -148,7 +148,7 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 					notTeacher := !claims.HasCourseStatus(req, qf.Enrollment_TEACHER)
 					if notMember && notTeacher {
 						return nil, connect.NewError(connect.CodePermissionDenied,
-							fmt.Errorf("AccessControl(%s): user %d tried to create group while not teacher or group member", method, claims.UserID))
+							fmt.Errorf("access denied for %s: user %d tried to create group while not teacher or group member", method, claims.UserID))
 					}
 					// Otherwise, create the group.
 					return next(ctx, request)
@@ -163,7 +163,7 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 				if method == "GetUserByCourse" {
 					if err := claims.IsCourseTeacher(a.tokenManager.Database(), request.Any().(*qf.CourseUserRequest)); err != nil {
 						return nil, connect.NewError(connect.CodePermissionDenied,
-							fmt.Errorf("AccessControl(%s): %w", method, err))
+							fmt.Errorf("access denied for %s: %w", method, err))
 					}
 					return next(ctx, request)
 				}
@@ -177,6 +177,6 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 			}
 		}
 		return nil, connect.NewError(connect.CodePermissionDenied,
-			fmt.Errorf("AccessDenied(%s): required roles %v not satisfied by claims: %s", method, accessRolesFor[method], claims))
+			fmt.Errorf("access denied for %s: required roles %v not satisfied by claims: %s", method, accessRolesFor[method], claims))
 	})
 }
