@@ -80,8 +80,9 @@ func TestStream(t *testing.T) {
 }
 
 // TestStreamClose tries to send messages to a stream that is closing.
-// This test should be run with the -race flag
-func TestStreamClose(t *testing.T) {
+// This test should be run with the -race flag, e.g.,:
+// % go test -v -race -run TestStreamClose -test.count 10
+func TestStreamClose(_ *testing.T) {
 	service := stream.NewService[Data]()
 
 	counter := uint32(0)
