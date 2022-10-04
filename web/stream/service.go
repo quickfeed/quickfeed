@@ -98,11 +98,10 @@ func (s *Service[T]) Close() {
 }
 
 // CloseBy closes a single stream by ID.
-func (s *Service[T]) CloseBy(id uint64) error {
+func (s *Service[T]) CloseBy(id uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if stream, ok := s.streams[id]; ok {
 		stream.Close()
 	}
-	return nil
 }

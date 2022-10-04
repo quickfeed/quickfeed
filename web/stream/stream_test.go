@@ -101,7 +101,7 @@ func TestStreamClose(_ *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		st.Run()
+		_ = st.Run()
 	}()
 	st.Close()
 	wg.Wait()
