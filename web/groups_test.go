@@ -226,7 +226,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := qf.Course{Provider: "fake", OrganizationID: 1, OrganizationName: "test"}
+	course := qf.Course{Provider: "fake", OrganizationID: 1, OrganizationName: "qfTestOrg"}
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -317,7 +317,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	ctx = auth.WithUserContext(context.Background(), teacher)
 	gotUpdatedGroup, err := ags.UpdateGroup(ctx, updateGroupRequest)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	// check that the group have changed group membership
@@ -556,7 +556,7 @@ func TestPatchGroupStatus(t *testing.T) {
 		Tag:              "Spring",
 		Provider:         "fake",
 		OrganizationID:   1,
-		OrganizationName: "test",
+		OrganizationName: "qfTestOrg",
 		ID:               1,
 	}
 
@@ -632,7 +632,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	wantGroup.Status = qf.Group_APPROVED
 	gotGroup, err := ags.UpdateGroup(ctx, connect.NewRequest(wantGroup))
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if diff := cmp.Diff(wantGroup, gotGroup.Msg, protocmp.Transform()); diff != "" {

@@ -83,7 +83,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 		t.Fatal(err)
 	}
 	for path, private := range web.RepoPaths {
-		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: organization, Private: private}
+		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: organization.Name, Private: private}
 		_, err := mockSCM.CreateRepository(ctx, repoOptions)
 		if err != nil {
 			t.Fatal(err)

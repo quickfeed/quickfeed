@@ -68,7 +68,7 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 	for path, private := range RepoPaths {
 		repoOptions := &scm.CreateRepositoryOptions{
 			Path:         path,
-			Organization: org,
+			Organization: org.Name,
 			Private:      private,
 		}
 		repo, err := sc.CreateRepository(ctx, repoOptions)
