@@ -38,7 +38,7 @@ func TestStream(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	for i := 1; i < 10; i++ {
-		st := service.AddStream(uint64(1), NewMockStream[Data](ctx, uint64(1), &counter))
+		st := service.AddStream(uint64(1), newMockStream[Data](ctx, uint64(1), &counter))
 		streams = append(streams, st.(*mockStream[Data]))
 		wg.Add(1)
 		go func() {
@@ -88,7 +88,7 @@ func TestStreamClose(t *testing.T) {
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
 	defer cancel()
-	st := service.AddStream(uint64(1), NewMockStream[Data](ctx, uint64(1), &counter))
+	st := service.AddStream(uint64(1), newMockStream[Data](ctx, uint64(1), &counter))
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {

@@ -67,7 +67,7 @@ func (s *Service[T]) Add(ctx context.Context, userID uint64, st *connect.ServerS
 	// Delete the stream if it already exists.
 	s.internalRemove(userID)
 	// Add the stream to the map.
-	stream := NewStream(ctx, st, userID)
+	stream := newStream(ctx, st, userID)
 	s.streams[stream.GetID()] = stream
 	return stream
 }

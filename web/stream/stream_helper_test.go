@@ -18,7 +18,7 @@ type mockStream[T any] struct {
 	MessageMap map[string]int
 }
 
-func NewMockStream[T any](ctx context.Context, id uint64, counter *uint32) *mockStream[T] {
+func newMockStream[T any](ctx context.Context, id uint64, counter *uint32) *mockStream[T] {
 	return &mockStream[T]{
 		ctx:        ctx,
 		ch:         make(chan *T),
