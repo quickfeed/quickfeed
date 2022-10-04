@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"go.uber.org/zap"
 
@@ -67,7 +68,7 @@ func (s *QuickFeedService) GetUserByCourse(_ context.Context, in *connect.Reques
 	user, err := s.db.GetUserByCourse(query, in.Msg.UserLogin)
 	if err != nil {
 		s.logger.Errorf("GetUserByCourse failed: %v", err)
-		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("failed to get student information"))
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get student information"))
 	}
 	return connect.NewResponse(user), nil
 }
@@ -389,7 +390,7 @@ func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect
 func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
 	if !s.isValidSubmission(in.Msg.SubmissionID) {
 		s.logger.Errorf("UpdateSubmission failed: submission author has no access to the course")
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("submission author has no course access"))
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("submission author has no course access"))
 	}
 	err := s.updateSubmission(in.Msg.GetCourseID(), in.Msg.GetSubmissionID(), in.Msg.GetStatus(), in.Msg.GetReleased(), in.Msg.GetScore())
 	if err != nil {
@@ -411,13 +412,13 @@ func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Req
 		}
 		if _, err := s.rebuildSubmission(in.Msg); err != nil {
 			s.logger.Errorf("RebuildSubmission failed: %v", err)
-			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to rebuild submission "+err.Error()))
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("failed to rebuild submission: %w", err))
 		}
 	} else {
 		// Submission ID == 0 ==> rebuild all for given CourseID and AssignmentID
 		if err := s.rebuildSubmissions(in.Msg); err != nil {
 			s.logger.Errorf("RebuildSubmissions failed: %v", err)
-			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to rebuild submissions "+err.Error()))
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("failed to rebuild submissions: %w", err))
 		}
 	}
 	return &connect.Response[qf.Void]{}, nil
