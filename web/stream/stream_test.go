@@ -33,7 +33,8 @@ func TestStream(t *testing.T) {
 
 	counter := uint32(0)
 
-	ctx, _ := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
+	defer cancel()
 	streams := make([]*mockStream[Data], 0)
 
 	wg := sync.WaitGroup{}
@@ -74,7 +75,6 @@ func TestStream(t *testing.T) {
 			t.Errorf("expected %v, got %v: %s", messages, s.Messages, diff)
 		}
 	}
-
 }
 
 // TestStreamClose tries to send messages to a stream that is closing.
@@ -84,7 +84,8 @@ func TestStreamClose(t *testing.T) {
 
 	counter := uint32(0)
 
-	ctx, _ := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
+	defer cancel()
 	st := service.AddStream(uint64(1), NewMockStream[Data](ctx, uint64(1), &counter))
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -101,5 +102,4 @@ func TestStreamClose(t *testing.T) {
 	}()
 	st.Close()
 	wg.Wait()
-
 }
