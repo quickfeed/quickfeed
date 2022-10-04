@@ -2,7 +2,6 @@ package stream_test
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -45,13 +44,16 @@ func TestStream(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			err := st.Run()
-			fmt.Println(err)
+			t.Log(err)
 		}()
-		//for _, data := range messages {
-		for j := 0; j < len(messages); j++ {
-			//service.SendTo(&data, 1)
-			service.SendTo(&messages[j], 1)
+		for _, data := range messages {
+			data := data
+			service.SendTo(&data, 1)
 		}
+		// Alternative way of sending data. TODO: Pick one.
+		// for j := 0; j < len(messages); j++ {
+		// 	service.SendTo(&messages[j], 1)
+		// }
 	}
 
 	service.CloseBy(1)
