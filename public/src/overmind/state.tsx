@@ -181,6 +181,8 @@ export type State = {
     activeGroup: Group.AsObject | null,
 
     hasGroup: (courseID: number) => boolean,
+
+    isLive: boolean,
 }
 
 
@@ -370,4 +372,6 @@ export const state: State = {
         return userGroup[courseID] !== undefined
     }),
     showFavorites: false,
+
+    isLive: false,
 }

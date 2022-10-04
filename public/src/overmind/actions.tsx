@@ -866,3 +866,7 @@ export const updateGroupName = ({ state }: Context, name: string): void => {
     }
     state.activeGroup.name = name
 }
+
+export const setIsLive = ({ state }: Context, isLive: boolean) => {
+    state.isLive = isLive
+}
