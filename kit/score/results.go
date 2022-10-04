@@ -5,6 +5,8 @@ import (
 	"math"
 	"strings"
 	"time"
+
+	"golang.org/x/tools/benchmark/parse"
 )
 
 const (
@@ -34,10 +36,11 @@ func (r *Results) toScoreSlice() []*Score {
 
 // Results contains the score objects, build info, and errors.
 type Results struct {
-	BuildInfo *BuildInfo // build info for tests
-	Scores    []*Score   // list of scores for different tests
-	testNames []string   // defines the order
-	scoreMap  map[string]*Score
+	BuildInfo  *BuildInfo // build info for tests
+	Scores     []*Score   // list of scores for different tests
+	testNames  []string   // defines the order
+	scoreMap   map[string]*Score
+	benchmarks []*parse.Benchmark
 }
 
 // parseErrors encountered during test execution.
@@ -59,20 +62,27 @@ func (pe parseErrors) Error() string {
 // ExtractResults returns the results from a test execution extracted from the given out string.
 func ExtractResults(out, secret string, execTime time.Duration) (*Results, error) {
 	var filteredLog []string
+	var benchmarks []*parse.Benchmark
 	errs := make(parseErrors, 0)
 	results := NewResults()
 	for _, line := range strings.Split(out, "\n") {
-		// check if line has expected JSON score string
-		if HasPrefix(line) {
+		switch {
+		case HasPrefix(line): // check if line has expected JSON score string
 			sc, err := Parse(line, secret)
 			if err != nil {
 				errs = append(errs, fmt.Errorf("failed on line '%s': %v", line, err))
 				continue
 			}
 			results.addScore(sc)
-		} else if line != "" { // include only non-empty lines
-			// the filtered log without JSON score strings
+		case line != "": // keep only non-empty lines without JSON score strings
 			filteredLog = append(filteredLog, line)
+			// try to extract benchmark lines
+			bench, err := parse.ParseLine(line)
+			if err != nil {
+				// ignore errors since most lines are not benchmark lines
+				continue
+			}
+			benchmarks = append(benchmarks, bench)
 		}
 	}
 	res := &Results{
@@ -81,7 +91,8 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 			BuildLog:  strings.Join(filteredLog, "\n"),
 			ExecTime:  execTime.Milliseconds(),
 		},
-		Scores: results.toScoreSlice(),
+		Scores:     results.toScoreSlice(),
+		benchmarks: benchmarks,
 	}
 	if len(errs) > 0 {
 		return res, errs
