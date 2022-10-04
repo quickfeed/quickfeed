@@ -2,14 +2,10 @@ package web
 
 import (
 	"context"
-	"errors"
 
-	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
-
-var ErrMissingInstallation = connect.NewError(connect.CodePermissionDenied, errors.New("github application is not installed on the course organization"))
 
 func userID(ctx context.Context) uint64 {
 	return ctx.Value(auth.ContextKeyUserID).(uint64)

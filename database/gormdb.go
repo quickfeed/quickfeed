@@ -3,7 +3,6 @@ package database
 import (
 	"errors"
 
-	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
@@ -19,7 +18,7 @@ var (
 	ErrEmptyGroup = errors.New("cannot create group without users")
 	// ErrDuplicateGroup is returned when trying to create a group with the same
 	// name as a previously registered group.
-	ErrDuplicateGroup = connect.NewError(connect.CodeInvalidArgument, errors.New("group with this name already registered"))
+	ErrDuplicateGroup = errors.New("group with this name already registered")
 	// ErrUpdateGroup is returned when updating a group's enrollment fails.
 	ErrUpdateGroup = errors.New("failed to update group enrollment")
 	// ErrCourseExists is returned when trying to create an association in
