@@ -80,6 +80,7 @@ func (s *stream[T]) Run() error {
 	}
 }
 
+// Send sends data to this stream's connected client.
 func (s *stream[T]) Send(data *T) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -11,7 +11,8 @@ import (
 // StreamServices contain all available stream services.
 // Each service is unique to a specific type.
 // The services may be used to send data to connected clients.
-// To add a new service, add a new field to this struct.
+// To add a new service, add a new field to this struct and
+// initialize the service in the NewStreamServices function.
 type StreamServices struct {
 	Submission *Service[qf.Submission]
 }
@@ -23,7 +24,7 @@ func NewStreamServices() *StreamServices {
 	}
 }
 
-// Service[T] is a type specific stream service..
+// Service[T] is a type specific stream service.
 // It also contains a map of streams that are currently connected.
 type Service[T any] struct {
 	mu sync.RWMutex
@@ -38,7 +39,8 @@ func NewService[T any]() *Service[T] {
 	}
 }
 
-// SendTo sends data to client(s) with the given ID(s). If no ID is given, data is sent to all clients.
+// SendTo sends data to connected clients with the given IDs.
+// If no ID is given, data is sent to all connected clients.
 func (s *Service[T]) SendTo(data *T, userIDs ...uint64) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -81,8 +83,9 @@ func (s *Service[T]) AddStream(userID uint64, st StreamInterface[T]) StreamInter
 	return st
 }
 
-// Remove removes a stream from the service.
+// internalRemove removes a stream from the service.
 // This closes the stream and removes it from the map.
+// This function must only be called when holding the mutex.
 func (s *Service[T]) internalRemove(id uint64) {
 	if stream, ok := s.streams[id]; ok {
 		stream.Close()
