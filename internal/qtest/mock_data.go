@@ -2,9 +2,7 @@ package qtest
 
 import "github.com/quickfeed/quickfeed/qf"
 
-var (
-	MockOrg = "qfTestOrg"
-)
+const MockOrg = "qfTestOrg"
 
 var MockCourses = []*qf.Course{
 	{
