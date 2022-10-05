@@ -96,6 +96,8 @@ func (s *Service[T]) internalRemove(id uint64) {
 
 // Close closes all streams in the service.
 func (s *Service[T]) Close() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	for _, stream := range s.streams {
 		stream.Close()
 	}
