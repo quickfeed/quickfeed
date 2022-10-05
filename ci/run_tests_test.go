@@ -45,7 +45,7 @@ func testRunData(t *testing.T) *ci.RunData {
 	runScriptContent := loadRunScript(t)
 	dockerfileContent := loadDockerfile(t)
 
-	qfTestOrg := scm.GetTestOrganization(t)
+	qfTestOrg := qtest.MockOrg
 	// Only used to fetch the user's GitHub login (user name)
 	s := scm.GetTestSCM(t)
 	userName, err := s.GetUserName(context.Background())
