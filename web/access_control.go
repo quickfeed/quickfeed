@@ -23,45 +23,28 @@ func (s *QuickFeedService) hasCourseAccess(userID, courseID uint64, check func(*
 	return check(enrollment)
 }
 
-// isValidSubmission returns true if submitting student has active course enrollment or
-// if submitting group belongs to the given course.
-func (s *QuickFeedService) isValidSubmissionRequest(submission *qf.SubmissionRequest) bool {
-	if !submission.IsValid() {
-		return false
-	}
-	// ensure that group belongs to course
-	if submission.GetGroupID() > 0 {
-		group, err := s.db.GetGroup(submission.GetGroupID())
-		if err != nil || group.GetCourseID() != submission.GetCourseID() {
-			return false
-		}
-		return true
-	}
-	// ensure that student has active enrollment
-	return s.hasCourseAccess(submission.GetUserID(), submission.GetCourseID(), func(e *qf.Enrollment) bool {
-		return e.Status >= qf.Enrollment_STUDENT
-	})
-}
+// // IsValidSubmission returns true if submitting student has active course enrollment or
+// // if submitting group belongs to the given course.
+// func IsValidSubmission(db database.Database, courseID, submissionID uint64) bool {
+// 	sbm, err := db.GetSubmission(&qf.Submission{ID: submissionID})
+// 	if err != nil {
+// 		return false
+// 	}
 
-// isValidSubmission returns true if submission belongs to active lab of the given course
-// and submitted by valid student or group.
-func (s *QuickFeedService) isValidSubmission(submissionID uint64) bool {
-	submission, err := s.db.GetSubmission(&qf.Submission{ID: submissionID})
-	if err != nil {
-		return false
-	}
-	assignment, err := s.db.GetAssignment(&qf.Assignment{ID: submission.GetAssignmentID()})
-	if err != nil {
-		return false
-	}
+// 	if sbm.GroupID > 0 {
+// 		grp, err := db.GetGroup(sbm.GroupID)
+// 		if err != nil || grp.GetCourseID() != courseID {
+// 			return false
+// 		}
+// 		return true
+// 	}
 
-	request := &qf.SubmissionRequest{
-		CourseID: assignment.GetCourseID(),
-		UserID:   submission.GetUserID(),
-		GroupID:  submission.GetGroupID(),
-	}
-	return s.isValidSubmissionRequest(request)
-}
+// 	enrol, err := db.GetEnrollmentByCourseAndUser(courseID, sbm.UserID)
+// 	if err != nil || enrol.IsNone() || enrol.IsPending() {
+// 		return false
+// 	}
+// 	return true
+// }
 
 // isTeacher returns true if the given user is teacher for the given course.
 func (s *QuickFeedService) isTeacher(userID, courseID uint64) bool {

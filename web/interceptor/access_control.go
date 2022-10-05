@@ -151,6 +151,13 @@ func AccessControl(tm *auth.TokenManager) connect.Interceptor {
 					if claims.HasCourseStatus(req, qf.Enrollment_TEACHER) {
 						return next(ctx, request)
 					}
+					if method == "RebuildSubmissions" || method == "UpdateSubmission" {
+						if !isValidSubmission(tm.Database(), req.IDFor("course"), req.IDFor("submission")) {
+							return nil, connect.NewError(connect.CodePermissionDenied,
+								fmt.Errorf("AccessControl(%s): %v", method, "invalid submission"))
+						}
+						return next(ctx, request)
+					}
 				case admin:
 					if claims.Admin {
 						return next(ctx, request)
