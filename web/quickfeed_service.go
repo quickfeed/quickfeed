@@ -100,8 +100,6 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 	course, err := s.createCourse(ctx, scmClient, in.Msg)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: %v", err)
-		// errors informing about requested organization state will have code 9: FailedPrecondition
-		// error message will be displayed to the user
 		if ctxErr := ctxErr(ctx); ctxErr != nil {
 			s.logger.Error(ctxErr)
 			return nil, ctxErr
