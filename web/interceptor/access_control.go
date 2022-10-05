@@ -96,7 +96,7 @@ func (*AccessControlInterceptor) WrapStreamingClient(next connect.StreamingClien
 	})
 }
 
-// AccessControl checks user information stored in the JWT claims against the list of roles required to call the method.
+// WrapUnary checks user information stored in the JWT claims against the list of roles required to call the method.
 func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 		procedure := request.Spec().Procedure

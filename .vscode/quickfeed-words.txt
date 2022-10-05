@@ -50,6 +50,7 @@ Godkjent
 gofumports
 gofumpt
 golangci
+Gollum
 googleapis
 gopath
 gopb
@@ -139,9 +140,11 @@ qfconnect
 qlog
 qtest
 quickfeed
+Radagast
 Repos
 repotoken
 run
+Sauron
 scms
 scorelimit
 scriptfile

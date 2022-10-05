@@ -46,8 +46,7 @@ var (
 	}, []string{"user"})
 )
 
-type MetricsInterceptor struct {
-}
+type MetricsInterceptor struct{}
 
 func NewMetricsInterceptor() *MetricsInterceptor {
 	return &MetricsInterceptor{}

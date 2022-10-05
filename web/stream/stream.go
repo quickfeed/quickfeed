@@ -3,20 +3,21 @@ package stream
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/bufbuild/connect-go"
 )
 
 type StreamInterface[T any] interface {
 	Close()
-	Closed() bool
-	GetID() uint64
 	Run() error
 	Send(data *T)
+	GetID() uint64
 }
 
 // stream wraps a connect.ServerStream.
 type stream[T any] struct {
+	mu sync.Mutex
 	// stream is the underlying connect stream
 	// that does the actual transfer of data
 	// between the server and a client
@@ -35,7 +36,7 @@ type stream[T any] struct {
 	closed bool
 }
 
-// NewStream creates a new stream.
+// newStream creates a new stream.
 func NewStream[T any](ctx context.Context, st *connect.ServerStream[T], id uint64) *stream[T] {
 	return &stream[T]{
 		stream: st,
@@ -47,22 +48,18 @@ func NewStream[T any](ctx context.Context, st *connect.ServerStream[T], id uint6
 
 // Close closes the stream.
 func (s *stream[T]) Close() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if !s.closed {
+		close(s.ch)
+	}
 	s.closed = true
-	close(s.ch)
-}
-
-func (s *stream[T]) Closed() bool {
-	return s.closed
-}
-
-// GetID returns the user ID of the stream.
-func (s *stream[T]) GetID() uint64 {
-	return s.id
 }
 
 // Run runs the stream.
 // Run will block until the stream is closed.
 func (s *stream[T]) Run() error {
+	defer s.Close()
 	for {
 		select {
 		case <-s.ctx.Done():
@@ -78,6 +75,15 @@ func (s *stream[T]) Run() error {
 	}
 }
 
+// Send sends data to this stream's connected client.
 func (s *stream[T]) Send(data *T) {
-	s.ch <- data
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if !s.closed {
+		s.ch <- data
+	}
+}
+
+func (s *stream[T]) GetID() uint64 {
+	return s.id
 }

@@ -2,7 +2,6 @@ package stream_test
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -15,42 +14,47 @@ type Data struct {
 	Msg string
 }
 
+var messages = []Data{
+	{Msg: "Hello"},
+	{Msg: "World"},
+	{Msg: "Foo"},
+	{Msg: "Bar"},
+	{Msg: "Gandalf"},
+	{Msg: "Frodo"},
+	{Msg: "Bilbo"},
+	{Msg: "Radagast"},
+	{Msg: "Sauron"},
+	{Msg: "Gollum"},
+}
+
 func TestStream(t *testing.T) {
 	service := stream.NewService[Data]()
 
-	messages := []Data{
-		{Msg: "Hello"},
-		{Msg: "World"},
-		{Msg: "Foo"},
-		{Msg: "Bar"},
-		{Msg: "Gandalf"},
-		{Msg: "Frodo"},
-		{Msg: "Bilbo"},
-		{Msg: "Radagast"},
-		{Msg: "Sauron"},
-		{Msg: "Gollum"},
-	}
-
 	counter := uint32(0)
 
-	ctx, _ := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
+	defer cancel()
 	streams := make([]*mockStream[Data], 0)
 
 	wg := sync.WaitGroup{}
 	for i := 1; i < 10; i++ {
-		st := service.AddStream(uint64(1), NewMockStream[Data](ctx, uint64(1), &counter))
-		streams = append(streams, st.(*mockStream[Data]))
+		stream := newMockStream[Data](ctx, uint64(1), &counter)
+		service.Add(stream)
+		streams = append(streams, stream)
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err := st.Run()
-			fmt.Println(err)
+			err := stream.Run()
+			t.Log(err)
 		}()
-		//for _, data := range messages {
-		for j := 0; j < len(messages); j++ {
-			//service.SendTo(&data, 1)
-			service.SendTo(&messages[j], 1)
+		for _, data := range messages {
+			data := data
+			service.SendTo(&data, 1)
 		}
+		// Alternative way of sending data. TODO: Pick one.
+		// for j := 0; j < len(messages); j++ {
+		// 	service.SendTo(&messages[j], 1)
+		// }
 	}
 
 	service.CloseBy(1)
@@ -74,5 +78,33 @@ func TestStream(t *testing.T) {
 			t.Errorf("expected %v, got %v: %s", messages, s.Messages, diff)
 		}
 	}
+}
 
+// TestStreamClose tries to send messages to a stream that is closing.
+// This test should be run with the -race flag, e.g.,:
+// % go test -v -race -run TestStreamClose -test.count 10
+func TestStreamClose(_ *testing.T) {
+	service := stream.NewService[Data]()
+
+	counter := uint32(0)
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
+	defer cancel()
+	stream := newMockStream[Data](ctx, uint64(1), &counter)
+	service.Add(stream)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		for i := 0; i < 1_000_000; i++ {
+			stream.Send(&messages[i%len(messages)])
+		}
+		wg.Done()
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		_ = stream.Run()
+	}()
+	stream.Close()
+	wg.Wait()
 }
