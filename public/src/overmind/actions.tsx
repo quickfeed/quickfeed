@@ -20,6 +20,24 @@ export const onInitializeOvermind = async ({ actions }: Context): Promise<void> 
         actions.alert({ text: alert, color: Color.RED })
         localStorage.removeItem("alert")
     }
+
+    // Event handlers for stream responses
+    window.addEventListener("stream-start", () => {
+        actions.setIsLive(true)
+    })
+
+    window.addEventListener("stream-ended", () => {
+        actions.setIsLive(false)
+    })
+
+    window.addEventListener("stream-receive", (e: CustomEvent<types.Submission>) => {
+        if (!e.detail) {
+            return
+        }
+        const submission = Converter.toGrpcSubmission(e.detail)
+        actions.receiveSubmission(submission)
+    })
+}
 }
 
 export const resetState = ({ state }: Context) => {

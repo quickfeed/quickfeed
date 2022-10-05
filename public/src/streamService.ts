@@ -14,9 +14,9 @@ export class StreamService {
     public async submissionStream() {
         const stream = this.service.submissionStream({})   
         try {
-            window.dispatchEvent(new CustomEvent("submission"))
+            window.dispatchEvent(new CustomEvent("stream-start"))
             for await (const msg of stream) {
-                window.dispatchEvent(new CustomEvent<Submission>("substream", {detail: msg}))
+                window.dispatchEvent(new CustomEvent<Submission>("stream-receive", {detail: msg}))
             }
         } catch (error) {
             if (error instanceof ConnectError) {
@@ -31,6 +31,7 @@ export class StreamService {
                 // typically this should occur if the server closes the stream
                 console.log("Error: ", error)
             }
+            window.dispatchEvent(new CustomEvent("stream-ended"))
         }
     }
 }
