@@ -64,24 +64,24 @@ func (s *Service[T]) SendTo(data *T, userIDs ...uint64) {
 
 // Add adds a new stream to the service.
 // It returns the stream which must be run by the caller.
-func (s *Service[T]) Add(ctx context.Context, userID uint64, st *connect.ServerStream[T]) *stream[T] {
+func (s *Service[T]) Add(ctx context.Context, userID uint64, stream *connect.ServerStream[T]) *stream[T] {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	// Delete the stream if it already exists.
 	s.internalRemove(userID)
 	// Add the stream to the map.
-	stream := newStream(ctx, st, userID)
-	s.streams[userID] = stream
-	return stream
+	newStream := newStream(ctx, stream, userID)
+	s.streams[userID] = newStream
+	return newStream
 }
 
-func (s *Service[T]) AddStream(userID uint64, st StreamInterface[T]) StreamInterface[T] {
+func (s *Service[T]) AddStream(userID uint64, stream StreamInterface[T]) StreamInterface[T] {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.internalRemove(userID)
 	// Add the stream to the map.
-	s.streams[userID] = st
-	return st
+	s.streams[userID] = stream
+	return stream
 }
 
 // internalRemove removes a stream from the service.
