@@ -38,6 +38,24 @@ export const onInitializeOvermind = async ({ actions }: Context): Promise<void> 
         actions.receiveSubmission(submission)
     })
 }
+
+export const receiveSubmission = ({ state }: Context, submission: Submission): void => {
+    let courseID = 0
+    let assignmentOrder = 0
+    Object.entries(state.assignments).forEach(
+        ([, assignments]) => {
+            const assignment = assignments.find(assignment => assignment.id === submission.getAssignmentid())
+            if (assignment && assignment.courseid !== 0) {
+                assignmentOrder = assignment.order
+                courseID = assignment.courseid
+                return
+            }
+        }
+    )
+    if (courseID === 0) {
+        return
+    }
+    state.submissions[courseID][assignmentOrder - 1] = submission.toObject()
 }
 
 export const resetState = ({ state }: Context) => {
