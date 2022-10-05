@@ -92,7 +92,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	if course != nil {
 		t.Fatal("expected CreateCourse to fail with AlreadyExists")
 	}
-	if err != nil && connect.CodeOf(err) != connect.CodeFailedPrecondition {
+	if err != nil && connect.CodeOf(err) != connect.CodeAlreadyExists {
 		t.Fatalf("expected CreateCourse to fail with AlreadyExists, but got: %v", err)
 	}
 }

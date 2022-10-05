@@ -93,7 +93,7 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationName)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationName, err)
-		return nil, err
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	// make sure that the current user is set as course creator
 	in.Msg.CourseCreatorID = userID(ctx)
@@ -105,7 +105,10 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 		if contextCanceled(ctx) {
 			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
 		}
-		if err == ErrAlreadyExists || err == ErrFreePlan {
+		if err == ErrAlreadyExists {
+			return nil, connect.NewError(connect.CodeAlreadyExists, err)
+		}
+		if err == ErrFreePlan {
 			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
@@ -121,7 +124,7 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationName)
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationName, err)
-		return nil, err
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	if err = s.updateCourse(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("UpdateCourse failed: %v", err)
@@ -192,7 +195,7 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: could not create scm client: %v", err)
-		return nil, err
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	for _, enrollment := range in.Msg.GetEnrollments() {
 		if s.isCourseCreator(enrollment.CourseID, enrollment.UserID) {
@@ -302,7 +305,7 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: could not create scm client for group %s and course %d: %v", in.Msg.GetName(), in.Msg.GetCourseID(), err)
-		return nil, err
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	err = s.updateGroup(ctx, scmClient, in.Msg)
 	if err != nil {
@@ -332,7 +335,7 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: could not create scm client for group %d and course %d: %v", in.Msg.GetGroupID(), in.Msg.GetCourseID(), err)
-		return nil, err
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	if err = s.deleteGroup(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("DeleteGroup failed: %v", err)
@@ -552,7 +555,7 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 	scmClient, err := s.getSCM(ctx, in.Msg.GetOrgName())
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: could not create scm client for organization %s: %v", in.Msg.GetOrgName(), err)
-		return nil, err
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	org, err := s.getOrganization(ctx, scmClient, in.Msg.GetOrgName(), usr.GetLogin())
 	if err != nil {
@@ -605,7 +608,7 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: could not create scm client for course %d: %v", in.Msg.GetCourseID(), err)
-		return nil, err
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 
 	if err := s.isEmptyRepo(ctx, scmClient, in.Msg); err != nil {
