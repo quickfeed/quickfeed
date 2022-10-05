@@ -44,7 +44,8 @@ func (s MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
 	}); err != nil {
 		return "", err
 	}
-	cloneDir := filepath.Join(opt.DestDir, opt.Repository)
+	cloneDir := filepath.Join("testdata", opt.Repository)
+	fmt.Println("cloneDir:", cloneDir)
 	return cloneDir, nil
 }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"os"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -72,10 +71,13 @@ func TestRebuildSubmissions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var course qf.Course
-	course.Provider = "fake"
-	course.OrganizationID = 1
-	course.OrganizationName = qtest.MockOrg
+	course := qf.Course{
+		Name:             "QuickFeed Test Course",
+		Code:             "qf101",
+		Provider:         "fake",
+		OrganizationID:   1,
+		OrganizationName: qtest.MockOrg,
+	}
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -127,8 +129,7 @@ func TestRebuildSubmissions(t *testing.T) {
 		CourseID: course.ID,
 		Name:     "lab1",
 		RunScriptContent: `#image/quickfeed:go
-printf "AssignmentName: {{ .AssignmentName }}\n"
-printf "RandomSecret: {{ .RandomSecret }}\n"
+printf "AssignmentName: lab1\n"
 `,
 		Deadline:         "2022-11-11T13:00:00",
 		AutoApprove:      true,
@@ -163,7 +164,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 		t.Errorf("Expected error: record not found")
 	}
 
-	os.Setenv("QUICKFEED_REPOSITORY_PATH", "$HOME/tmp/courses")
+	// os.Setenv("QUICKFEED_REPOSITORY_PATH", "testdata/courses")
 	// rebuild existing submission
 	rebuildRequest.Msg.SubmissionID = 1
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err != nil {
