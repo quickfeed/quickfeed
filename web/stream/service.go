@@ -25,7 +25,7 @@ func NewStreamServices() *StreamServices {
 // Service[T] is a type specific stream service.
 // It also contains a map of streams that are currently connected.
 type Service[T any] struct {
-	mu sync.RWMutex
+	mu sync.Mutex
 	// The map of streams.
 	streams map[uint64]StreamInterface[T]
 }
