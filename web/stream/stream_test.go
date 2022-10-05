@@ -38,12 +38,13 @@ func TestStream(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	for i := 1; i < 10; i++ {
-		st := service.AddStream(uint64(1), newMockStream[Data](ctx, uint64(1), &counter))
-		streams = append(streams, st.(*mockStream[Data]))
+		stream := newMockStream[Data](ctx, uint64(1), &counter)
+		service.Add(stream)
+		streams = append(streams, stream)
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err := st.Run()
+			err := stream.Run()
 			t.Log(err)
 		}()
 		for _, data := range messages {
@@ -89,20 +90,21 @@ func TestStreamClose(_ *testing.T) {
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
 	defer cancel()
-	st := service.AddStream(uint64(1), newMockStream[Data](ctx, uint64(1), &counter))
+	stream := newMockStream[Data](ctx, uint64(1), &counter)
+	service.Add(stream)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		for i := 0; i < 1_000_000; i++ {
-			st.Send(&messages[i%len(messages)])
+			stream.Send(&messages[i%len(messages)])
 		}
 		wg.Done()
 	}()
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		_ = st.Run()
+		_ = stream.Run()
 	}()
-	st.Close()
+	stream.Close()
 	wg.Wait()
 }
