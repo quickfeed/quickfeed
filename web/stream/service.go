@@ -43,8 +43,8 @@ func NewService[T any]() *Service[T] {
 // If no ID is given, data is sent to all connected clients.
 // Unconnected clients are ignored and will not receive the data.
 func (s *Service[T]) SendTo(data *T, userIDs ...uint64) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if len(userIDs) == 0 {
 		// Broadcast to all clients.
 		for _, stream := range s.streams {
