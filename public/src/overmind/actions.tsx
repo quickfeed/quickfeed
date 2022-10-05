@@ -8,7 +8,7 @@ import { IGrpcResponse } from "../GRPCManager"
 import { StatusCode } from "grpc-web"
 import { Context } from "."
 import { Converter } from "../convert"
-
+import * as types from "../../gen/qf/types_pb"
 
 /** Use this to verify that a gRPC request completed without an error code */
 export const success = (response: IGrpcResponse<unknown>): boolean => response.status.getCode() === 0
