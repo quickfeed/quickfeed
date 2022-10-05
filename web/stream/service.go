@@ -71,7 +71,7 @@ func (s *Service[T]) Add(ctx context.Context, userID uint64, st *connect.ServerS
 	s.internalRemove(userID)
 	// Add the stream to the map.
 	stream := newStream(ctx, st, userID)
-	s.streams[stream.GetID()] = stream
+	s.streams[userID] = stream
 	return stream
 }
 
@@ -80,7 +80,7 @@ func (s *Service[T]) AddStream(userID uint64, st StreamInterface[T]) StreamInter
 	defer s.mu.Unlock()
 	s.internalRemove(userID)
 	// Add the stream to the map.
-	s.streams[st.GetID()] = st
+	s.streams[userID] = st
 	return st
 }
 

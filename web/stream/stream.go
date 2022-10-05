@@ -10,7 +10,6 @@ import (
 
 type StreamInterface[T any] interface {
 	Close()
-	GetID() uint64
 	Run() error
 	Send(data *T)
 }
@@ -54,11 +53,6 @@ func (s *stream[T]) Close() {
 		close(s.ch)
 	}
 	s.closed = true
-}
-
-// GetID returns the user ID of the stream.
-func (s *stream[T]) GetID() uint64 {
-	return s.id
 }
 
 // Run runs the stream.
