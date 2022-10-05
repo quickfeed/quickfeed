@@ -15,6 +15,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/stream"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -122,6 +123,7 @@ func TestRunTestsTimeout(t *testing.T) {
 func TestRecordResults(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	streamService := stream.NewStreamServices()
 
 	course := &qf.Course{
 		Name:           "Test",
@@ -180,7 +182,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	}
 
 	// Check that submission is recorded correctly
-	submission, err := runData.RecordResults(qtest.Logger(t), db, results)
+	submission, err := runData.RecordResults(qtest.Logger(t), db, streamService, results)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -197,7 +199,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	// When updating submission after deadline: build info and slip days must be updated
 	newBuildDate := "2022-11-12T13:00:00"
 	results.BuildInfo.BuildDate = newBuildDate
-	updatedSubmission, err := runData.RecordResults(qtest.Logger(t), db, results)
+	updatedSubmission, err := runData.RecordResults(qtest.Logger(t), db, streamService, results)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -216,7 +218,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	runData.Rebuild = true
 	results.BuildInfo.BuildDate = "2022-11-13T13:00:00"
 	slipDaysBeforeUpdate := enrollment.RemainingSlipDays(course)
-	submission, err = runData.RecordResults(qtest.Logger(t), db, results)
+	submission, err = runData.RecordResults(qtest.Logger(t), db, streamService, results)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -235,6 +237,7 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 func TestRecordResultsForManualReview(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	streamService := stream.NewStreamServices()
 
 	course := &qf.Course{
 		Name:           "Test",
@@ -276,7 +279,7 @@ func TestRecordResultsForManualReview(t *testing.T) {
 		JobOwner: "test",
 	}
 
-	submission, err := runData.RecordResults(qtest.Logger(t), db, nil)
+	submission, err := runData.RecordResults(qtest.Logger(t), db, streamService, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

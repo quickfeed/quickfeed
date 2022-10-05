@@ -56,7 +56,7 @@ func (s *QuickFeedService) rebuildSubmission(request *qf.RebuildRequest) (*qf.Su
 	if err != nil {
 		return nil, err
 	}
-	submission, err = runData.RecordResults(s.logger, s.db, results)
+	submission, err = runData.RecordResults(s.logger, s.db, s.streams, results)
 	if err != nil {
 		return nil, fmt.Errorf("failed to record results for assignment %s for course %s: %w", assignment.Name, course.Name, err)
 	}

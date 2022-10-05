@@ -7,13 +7,14 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web/stream"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 // RecordResults for the course and assignment given by the run data structure.
 // If the results argument is nil, then the submission is considered to be a manual review.
-func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, results *score.Results) (*qf.Submission, error) {
+func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, s *stream.StreamServices, results *score.Results) (*qf.Submission, error) {
 	logger.Debugf("Fetching (if any) previous submission for %s", r)
 	previous, err := r.previousSubmission(db)
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -36,6 +37,17 @@ func (r RunData) RecordResults(logger *zap.SugaredLogger, db database.Database, 
 			return nil, fmt.Errorf("failed to update slip days for %s: %w", r, err)
 		}
 		logger.Debugf("Updated slip days for %s", r)
+	}
+
+	switch {
+	case r.Repo.IsUserRepo():
+		s.Submission.SendTo(newSubmission, r.Repo.GetUserID())
+	case r.Repo.IsGroupRepo():
+		if group, err := db.GetGroup(r.Repo.GetGroupID()); err != nil {
+			// log error but continue
+		} else {
+			s.Submission.SendTo(newSubmission, group.UserIDs()...)
+		}
 	}
 	return newSubmission, nil
 }

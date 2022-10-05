@@ -209,7 +209,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *qf.Assignment, repo *qf.R
 	}
 	if assignment.GradedManually() {
 		wh.logger.Debugf("Assignment %s for course %s is manually reviewed", assignment.Name, course.Name)
-		if _, err := runData.RecordResults(wh.logger, wh.db, nil); err != nil {
+		if _, err := runData.RecordResults(wh.logger, wh.db, wh.streams, nil); err != nil {
 			wh.logger.Error(err)
 		}
 		return nil
@@ -226,7 +226,7 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *qf.Assignment, repo *qf.R
 		wh.logger.Error(err)
 		return nil
 	}
-	if _, err = runData.RecordResults(wh.logger, wh.db, results); err != nil {
+	if _, err = runData.RecordResults(wh.logger, wh.db, wh.streams, results); err != nil {
 		wh.logger.Error(err)
 		return nil
 	}
