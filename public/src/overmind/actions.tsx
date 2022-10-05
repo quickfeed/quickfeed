@@ -729,7 +729,7 @@ export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment.A
 
 /* fetchUserData is called when the user enters the app. It fetches all data that is needed for the user to be able to use the app. */
 /* If the user is not logged in, i.e does not have a valid token, the process is aborted. */
-export const fetchUserData = async ({ state, actions }: Context): Promise<boolean> => {
+export const fetchUserData = async ({ state, actions, effects }: Context): Promise<boolean> => {
     let success = await actions.getSelf()
     // If getSelf returns false, the user is not logged in. Abort.
     if (!success) { state.isLoading = false; return false }
@@ -763,6 +763,8 @@ export const fetchUserData = async ({ state, actions }: Context): Promise<boolea
         // End loading screen.
         state.isLoading = false
     }
+
+    effects.streamService.submissionStream()
     // The value of success is unreliable. The intention is to return true if the user is logged in and all data was fetched.
     // However, if one of the above calls fail, it could still be the case that success returns true.
     return success
