@@ -60,12 +60,10 @@ func (s *Service[T]) SendTo(data *T, userIDs ...uint64) {
 	}
 }
 
-// Add adds a new stream to the service.
-// It returns the stream which must be run by the caller.
-func (s *Service[T]) Add(stream StreamInterface[T]) {
+// Add adds a new stream for the given user to the service.
+func (s *Service[T]) Add(stream StreamInterface[T], userID uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	userID := stream.GetID()
 	// Delete the stream if it already exists.
 	s.internalRemove(userID)
 	// Add the stream to the map.
@@ -75,10 +73,10 @@ func (s *Service[T]) Add(stream StreamInterface[T]) {
 // internalRemove removes a stream from the service.
 // This closes the stream and removes it from the map.
 // This function must only be called when holding the mutex.
-func (s *Service[T]) internalRemove(id uint64) {
-	if stream, ok := s.streams[id]; ok {
+func (s *Service[T]) internalRemove(userID uint64) {
+	if stream, ok := s.streams[userID]; ok {
 		stream.Close()
-		delete(s.streams, id)
+		delete(s.streams, userID)
 	}
 }
 
@@ -91,11 +89,11 @@ func (s *Service[T]) Close() {
 	}
 }
 
-// CloseBy closes a single stream by ID.
-func (s *Service[T]) CloseBy(id uint64) {
+// CloseBy closes the given user's stream.
+func (s *Service[T]) CloseBy(userID uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if stream, ok := s.streams[id]; ok {
+	if stream, ok := s.streams[userID]; ok {
 		stream.Close()
 	}
 }

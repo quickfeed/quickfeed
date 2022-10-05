@@ -38,8 +38,8 @@ func TestStream(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	for i := 1; i < 10; i++ {
-		stream := newMockStream[Data](ctx, uint64(1), &counter)
-		service.Add(stream)
+		stream := newMockStream[Data](ctx, &counter)
+		service.Add(stream, 1)
 		streams = append(streams, stream)
 		wg.Add(1)
 		go func() {
@@ -51,10 +51,6 @@ func TestStream(t *testing.T) {
 			data := data
 			service.SendTo(&data, 1)
 		}
-		// Alternative way of sending data. TODO: Pick one.
-		// for j := 0; j < len(messages); j++ {
-		// 	service.SendTo(&messages[j], 1)
-		// }
 	}
 
 	service.CloseBy(1)
@@ -90,8 +86,8 @@ func TestStreamClose(_ *testing.T) {
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1000*time.Second))
 	defer cancel()
-	stream := newMockStream[Data](ctx, uint64(1), &counter)
-	service.Add(stream)
+	stream := newMockStream[Data](ctx, &counter)
+	service.Add(stream, 1)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {

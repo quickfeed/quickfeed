@@ -11,18 +11,16 @@ type mockStream[T any] struct {
 	mu         sync.Mutex
 	ctx        context.Context
 	ch         chan *T
-	id         uint64
 	closed     bool
 	counter    *uint32
 	Messages   []T
 	MessageMap map[string]int
 }
 
-func newMockStream[T any](ctx context.Context, id uint64, counter *uint32) *mockStream[T] {
+func newMockStream[T any](ctx context.Context, counter *uint32) *mockStream[T] {
 	return &mockStream[T]{
 		ctx:        ctx,
 		ch:         make(chan *T),
-		id:         id,
 		closed:     false,
 		counter:    counter,
 		Messages:   make([]T, 0),
@@ -64,8 +62,4 @@ func (m *mockStream[T]) Close() {
 		close(m.ch)
 	}
 	m.closed = true
-}
-
-func (m *mockStream[T]) GetID() uint64 {
-	return m.id
 }

@@ -9,10 +9,9 @@ import (
 )
 
 type StreamInterface[T any] interface {
-	Close()
-	Run() error
 	Send(data *T)
-	GetID() uint64
+	Run() error
+	Close()
 }
 
 // Stream wraps a connect.ServerStream.
@@ -27,22 +26,17 @@ type Stream[T any] struct {
 	// The channel that we listen to for any
 	// new data that we need to send to the client.
 	ch chan *T
-	// The client ID. This should be the same as
-	// the user ID of the user that is connected,
-	// retrieved from claims.
-	id uint64
 	// closed is a flag that indicates whether
 	// the stream has been closed.
 	closed bool
 }
 
 // newStream creates a new stream.
-func NewStream[T any](ctx context.Context, st *connect.ServerStream[T], id uint64) *Stream[T] {
+func NewStream[T any](ctx context.Context, st *connect.ServerStream[T]) *Stream[T] {
 	return &Stream[T]{
 		stream: st,
 		ctx:    ctx,
 		ch:     make(chan *T),
-		id:     id,
 	}
 }
 
@@ -82,8 +76,4 @@ func (s *Stream[T]) Send(data *T) {
 	if !s.closed {
 		s.ch <- data
 	}
-}
-
-func (s *Stream[T]) GetID() uint64 {
-	return s.id
 }
