@@ -541,14 +541,14 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 		s.logger.Errorf("UpdateAssignments failed: course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
-	sc, err := s.scmMgr.GetOrCreateSCM(ctx, s.logger, course.GetOrganizationName())
+	scmClient, err := s.getSCM(ctx, course.GetOrganizationName())
 	if err != nil {
-		s.logger.Errorf("Failed to get or create SCM Client: %v", err)
-		return nil, status.Error(codes.Internal, "failed to access course repository")
+		s.logger.Errorf("UpdateAssignments failed: could not create scm client for organization %s: %v", course.GetOrganizationName(), err)
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
-	assignments.UpdateFromTestsRepo(s.logger, s.db, sc, course)
+	assignments.UpdateFromTestsRepo(s.logger, s.db, scmClient, course)
 
-	clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
+	clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
 		Organization: course.GetOrganizationName(),
 		Repository:   qf.AssignmentRepo,
 		DestDir:      course.CloneDir(),
