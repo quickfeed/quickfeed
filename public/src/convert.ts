@@ -1,5 +1,6 @@
 import { Assignment, Course, Enrollment, GradingBenchmark, GradingCriterion, Group, Review, Submission, User } from "../proto/qf/types_pb"
 import { BuildInfo, Score } from "../proto/kit/score/score_pb"
+import { Submission as connectsubmission } from "../gen/qf/types_pb"
 
 
 // Class with converter functions for the different proto types
@@ -222,6 +223,45 @@ export class Converter {
         group.setEnrollmentsList(enrollments)
 
         return group
+    }
+
+    // TODO(jostein): This method is a stopgap measure while the frontend depends
+    // on both grpc-web and connect-web. This method, in fact, this whole file
+    // will be removed when the frontend has been converted to use only connect-web.
+    public static toGrpcSubmission = (sub: connectsubmission): Submission => {
+        const submission = new Submission()
+        submission.setId(Number(sub.ID))
+        submission.setAssignmentid(Number(sub.AssignmentID))
+        submission.setApproveddate(sub.approvedDate)
+        submission.setCommithash(sub.commitHash)
+        submission.setGroupid(Number(sub.groupID))
+        submission.setUserid(Number(sub.userID))
+        submission.setReleased(sub.released)
+        submission.setStatus(sub.status.valueOf())
+        submission.setBuildinfo(
+            new BuildInfo()
+                .setId(sub.BuildInfo ? Number(sub.BuildInfo.ID) : 0)
+                .setSubmissionid(Number(sub.ID))
+                .setBuildlog(sub.BuildInfo ? sub.BuildInfo.BuildLog : "")
+                .setBuilddate(sub.BuildInfo ? sub.BuildInfo.BuildDate : "")
+                .setExectime(sub.BuildInfo ? Number(sub.BuildInfo.ExecTime) : 0)
+        )
+        submission.setScore(sub.score)
+        submission.setScoresList(sub.Scores.map(score => 
+            new Score()
+                .setId(Number(score.ID))
+                .setMaxscore(Number(score.MaxScore))
+                .setSecret(score.Secret)
+                .setSubmissionid(Number(sub.ID))
+                .setTaskname(score.TaskName)
+                .setTestdetails(score.TestDetails)
+                .setWeight(Number(score.Weight))
+                .setScore(Number(score.Score))
+                .setTestname(score.TestName)
+
+        ))
+        // Ignore reviews for now
+        return submission
     }
 
 }
