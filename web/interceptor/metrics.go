@@ -46,8 +46,7 @@ var (
 	}, []string{"user"})
 )
 
-type MetricsInterceptor struct {
-}
+type MetricsInterceptor struct{}
 
 func NewMetricsInterceptor() *MetricsInterceptor {
 	return &MetricsInterceptor{}
@@ -69,7 +68,7 @@ func (*MetricsInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFun
 
 func (*MetricsInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
 	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
-		return next(ctx, spec)
+		return nil // not supported
 	})
 }
 
