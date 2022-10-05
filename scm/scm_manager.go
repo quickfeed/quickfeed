@@ -77,7 +77,7 @@ func (s *Manager) GetOrCreateSCM(ctx context.Context, logger *zap.SugaredLogger,
 
 	client, err := newSCMAppClient(ctx, logger, s.Config, organization)
 	if err != nil {
-		return nil, err
+		return nil, ErrMissingInstallation
 	}
 	s.mu.Lock()
 	s.scms[organization] = client

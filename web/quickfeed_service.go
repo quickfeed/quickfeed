@@ -3,10 +3,9 @@ package web
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/assignments"
@@ -69,7 +68,7 @@ func (s *QuickFeedService) GetUserByCourse(_ context.Context, in *connect.Reques
 	user, err := s.db.GetUserByCourse(query, in.Msg.UserLogin)
 	if err != nil {
 		s.logger.Errorf("GetUserByCourse failed: %v", err)
-		return nil, status.Error(codes.FailedPrecondition, "failed to get student information")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get student information"))
 	}
 	return connect.NewResponse(user), nil
 }
@@ -84,7 +83,7 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *connect.Request[q
 	}
 	if _, err = s.updateUser(usr, in.Msg); err != nil {
 		s.logger.Errorf("UpdateUser failed to update user %d: %v", in.Msg.GetID(), err)
-		return nil, status.Error(codes.InvalidArgument, "failed to update user")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update user"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
@@ -94,7 +93,7 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationName)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationName, err)
-		return nil, ErrMissingInstallation
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	// make sure that the current user is set as course creator
 	in.Msg.CourseCreatorID = userID(ctx)
@@ -104,15 +103,18 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 		// errors informing about requested organization state will have code 9: FailedPrecondition
 		// error message will be displayed to the user
 		if contextCanceled(ctx) {
-			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
 		}
-		if err == ErrAlreadyExists || err == ErrFreePlan {
-			return nil, status.Error(codes.FailedPrecondition, err.Error())
+		if err == ErrAlreadyExists {
+			return nil, connect.NewError(connect.CodeAlreadyExists, err)
+		}
+		if err == ErrFreePlan {
+			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
-		return nil, status.Error(codes.InvalidArgument, "failed to create course")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create course"))
 	}
 	return connect.NewResponse(course), nil
 }
@@ -122,17 +124,17 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 	scmClient, err := s.getSCM(ctx, in.Msg.OrganizationName)
 	if err != nil {
 		s.logger.Errorf("UpdateCourse failed: could not create scm client for organization %s: %v", in.Msg.OrganizationName, err)
-		return nil, ErrMissingInstallation
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	if err = s.updateCourse(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("UpdateCourse failed: %v", err)
 		if contextCanceled(ctx) {
-			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
-		return nil, status.Error(codes.InvalidArgument, "failed to update course")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update course"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
@@ -142,7 +144,7 @@ func (s *QuickFeedService) GetCourse(_ context.Context, in *connect.Request[qf.C
 	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("GetCourse failed: %v", err)
-		return nil, status.Error(codes.NotFound, "course not found")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
 	return connect.NewResponse(course), nil
 }
@@ -152,7 +154,7 @@ func (s *QuickFeedService) GetCourses(_ context.Context, _ *connect.Request[qf.V
 	courses, err := s.db.GetCourses()
 	if err != nil {
 		s.logger.Errorf("GetCourses failed: %v", err)
-		return nil, status.Error(codes.NotFound, "no courses found")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("no courses found"))
 	}
 	return connect.NewResponse(&qf.Courses{
 		Courses: courses,
@@ -163,7 +165,7 @@ func (s *QuickFeedService) GetCourses(_ context.Context, _ *connect.Request[qf.V
 func (s *QuickFeedService) UpdateCourseVisibility(_ context.Context, in *connect.Request[qf.Enrollment]) (*connect.Response[qf.Void], error) {
 	if err := s.db.UpdateEnrollment(in.Msg); err != nil {
 		s.logger.Errorf("ChangeCourseVisibility failed: %v", err)
-		return nil, status.Error(codes.InvalidArgument, "failed to update course visibility")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update course visibility"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
@@ -177,7 +179,7 @@ func (s *QuickFeedService) CreateEnrollment(_ context.Context, in *connect.Reque
 	}
 	if err := s.db.CreateEnrollment(enrollment); err != nil {
 		s.logger.Errorf("CreateEnrollment failed: %v", err)
-		return nil, status.Error(codes.InvalidArgument, "failed to create enrollment")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create enrollment"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
@@ -193,22 +195,22 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: could not create scm client: %v", err)
-		return nil, ErrMissingInstallation
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	for _, enrollment := range in.Msg.GetEnrollments() {
 		if s.isCourseCreator(enrollment.CourseID, enrollment.UserID) {
 			s.logger.Errorf("UpdateEnrollments failed: user %s attempted to demote course creator", usr.GetName())
-			return nil, status.Error(codes.PermissionDenied, "course creator cannot be demoted")
+			return nil, connect.NewError(connect.CodePermissionDenied, errors.New("course creator cannot be demoted"))
 		}
 		if err = s.updateEnrollment(ctx, scmClient, usr.GetLogin(), enrollment); err != nil {
 			s.logger.Errorf("UpdateEnrollments failed: %v", err)
 			if contextCanceled(ctx) {
-				return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+				return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
 			}
 			if ok, parsedErr := parseSCMError(err); ok {
 				return nil, parsedErr
 			}
-			return nil, status.Error(codes.InvalidArgument, "failed to update enrollments")
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update enrollments"))
 		}
 	}
 	return &connect.Response[qf.Void]{}, nil
@@ -219,7 +221,7 @@ func (s *QuickFeedService) GetCoursesByUser(_ context.Context, in *connect.Reque
 	courses, err := s.db.GetCoursesByUser(in.Msg.GetUserID(), in.Msg.GetStatuses()...)
 	if err != nil {
 		s.logger.Errorf("GetCoursesByUser failed: user %d: %v", in.Msg.GetUserID(), err)
-		return nil, status.Error(codes.NotFound, "no courses with enrollment found")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("no courses with enrollment found"))
 	}
 	return connect.NewResponse(&qf.Courses{
 		Courses: courses,
@@ -231,7 +233,7 @@ func (s *QuickFeedService) GetEnrollmentsByUser(_ context.Context, in *connect.R
 	enrollments, err := s.db.GetEnrollmentsByUser(in.Msg.GetUserID(), in.Msg.GetStatuses()...)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByUser failed: user %d: %v", in.Msg.GetUserID(), err)
-		return nil, status.Error(codes.NotFound, "no enrollments found for user")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("no enrollments found for user"))
 	}
 	return connect.NewResponse(&qf.Enrollments{
 		Enrollments: enrollments,
@@ -243,7 +245,7 @@ func (s *QuickFeedService) GetEnrollmentsByCourse(_ context.Context, in *connect
 	enrolls, err := s.getEnrollmentsByCourse(in.Msg)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByCourse failed: course %d: %v", in.Msg.GetCourseID(), err)
-		return nil, status.Error(codes.InvalidArgument, "failed to get enrollments for given course")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to get enrollments for given course"))
 	}
 	return connect.NewResponse(enrolls), nil
 }
@@ -253,7 +255,7 @@ func (s *QuickFeedService) GetGroup(_ context.Context, in *connect.Request[qf.Ge
 	group, err := s.db.GetGroup(in.Msg.GetGroupID())
 	if err != nil {
 		s.logger.Errorf("GetGroup failed: group %d: %v", in.Msg.GetGroupID(), err)
-		return nil, status.Error(codes.NotFound, "failed to get group")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get group"))
 	}
 	return connect.NewResponse(group), nil
 }
@@ -263,7 +265,7 @@ func (s *QuickFeedService) GetGroupsByCourse(_ context.Context, in *connect.Requ
 	groups, err := s.db.GetGroupsByCourse(in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("GetGroups failed: course %d: %v", in.Msg.GetCourseID(), err)
-		return nil, status.Error(codes.NotFound, "failed to get groups")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get groups"))
 	}
 	return connect.NewResponse(&qf.Groups{
 		Groups: groups,
@@ -277,7 +279,7 @@ func (s *QuickFeedService) GetGroupByUserAndCourse(_ context.Context, in *connec
 		if err != errUserNotInGroup {
 			s.logger.Errorf("GetGroupByUserAndCourse failed: %v", err)
 		}
-		return nil, status.Error(codes.NotFound, "failed to get group for given user and course")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get group for given user and course"))
 	}
 	return connect.NewResponse(group), nil
 }
@@ -288,12 +290,12 @@ func (s *QuickFeedService) CreateGroup(_ context.Context, in *connect.Request[qf
 	group, err := s.createGroup(in.Msg)
 	if err != nil {
 		s.logger.Errorf("CreateGroup failed: %v", err)
-		if _, ok := status.FromError(err); ok {
+		if connect.CodeOf(err) != connect.CodeUnknown {
 			// err was already a status error; return it to client.
 			return nil, err
 		}
 		// err was not a status error; return a generic error to client.
-		return nil, status.Error(codes.InvalidArgument, "failed to create group")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create group"))
 	}
 	return connect.NewResponse(group), nil
 }
@@ -303,27 +305,27 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: could not create scm client for group %s and course %d: %v", in.Msg.GetName(), in.Msg.GetCourseID(), err)
-		return nil, ErrMissingInstallation
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	err = s.updateGroup(ctx, scmClient, in.Msg)
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: %v", err)
 		if contextCanceled(ctx) {
-			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
-		if _, ok := status.FromError(err); ok {
+		if connect.CodeOf(err) != connect.CodeUnknown {
 			// err was already a status error; return it to client.
 			return nil, err
 		}
 		// err was not a status error; return a generic error to client.
-		return nil, status.Error(codes.InvalidArgument, "failed to update group")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update group"))
 	}
 	group, err := s.db.GetGroup(in.Msg.ID)
 	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to get group")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to get group"))
 	}
 	return connect.NewResponse(group), nil
 }
@@ -333,17 +335,17 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: could not create scm client for group %d and course %d: %v", in.Msg.GetGroupID(), in.Msg.GetCourseID(), err)
-		return nil, ErrMissingInstallation
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	if err = s.deleteGroup(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("DeleteGroup failed: %v", err)
 		if contextCanceled(ctx) {
-			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
 		}
 		if ok, parsedErr := parseSCMError(errors.Unwrap(err)); ok {
 			return nil, parsedErr
 		}
-		return nil, status.Error(codes.InvalidArgument, "failed to delete group")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete group"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
@@ -354,7 +356,7 @@ func (s *QuickFeedService) GetSubmission(_ context.Context, in *connect.Request[
 	submission, err := s.db.GetLastSubmission(in.Msg.CourseID, &qf.Submission{ID: in.Msg.GetSubmissionID()})
 	if err != nil {
 		s.logger.Errorf("GetSubmission failed: %v", err)
-		return nil, status.Error(codes.NotFound, "failed to get submission")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to get submission"))
 	}
 	return connect.NewResponse(submission), nil
 }
@@ -365,7 +367,7 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *connect.Reque
 	submissions, err := s.getSubmissions(in.Msg)
 	if err != nil {
 		s.logger.Errorf("GetSubmissions failed: %v", err)
-		return nil, status.Error(codes.NotFound, "no submissions found")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("no submissions found"))
 	}
 	// If the user is not a teacher, remove score and reviews from submissions that are not released.
 	if !s.isTeacher(userID(ctx), in.Msg.CourseID) {
@@ -382,7 +384,7 @@ func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect
 	courseLinks, err := s.getAllCourseSubmissions(in.Msg)
 	if err != nil {
 		s.logger.Errorf("GetSubmissionsByCourse failed: %v", err)
-		return nil, status.Error(codes.NotFound, "no submissions found")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("no submissions found"))
 	}
 	return connect.NewResponse(courseLinks), nil
 }
@@ -391,12 +393,12 @@ func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect
 func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
 	if !s.isValidSubmission(in.Msg.SubmissionID) {
 		s.logger.Errorf("UpdateSubmission failed: submission author has no access to the course")
-		return nil, status.Error(codes.PermissionDenied, "submission author has no course access")
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("submission author has no course access"))
 	}
 	err := s.updateSubmission(in.Msg.GetCourseID(), in.Msg.GetSubmissionID(), in.Msg.GetStatus(), in.Msg.GetReleased(), in.Msg.GetScore())
 	if err != nil {
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
-		return nil, status.Error(codes.InvalidArgument, "failed to approve submission")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to approve submission"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
@@ -409,17 +411,17 @@ func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Req
 		// Submission ID > 0 ==> rebuild single submission for given CourseID and AssignmentID
 		if !s.isValidSubmission(in.Msg.GetSubmissionID()) {
 			s.logger.Errorf("RebuildSubmission failed: submitter has no access to the course")
-			return nil, status.Error(codes.PermissionDenied, "submitter has no course access")
+			return nil, connect.NewError(connect.CodePermissionDenied, errors.New("submitter has no course access"))
 		}
 		if _, err := s.rebuildSubmission(in.Msg); err != nil {
 			s.logger.Errorf("RebuildSubmission failed: %v", err)
-			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submission "+err.Error())
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("failed to rebuild submission: %w", err))
 		}
 	} else {
 		// Submission ID == 0 ==> rebuild all for given CourseID and AssignmentID
 		if err := s.rebuildSubmissions(in.Msg); err != nil {
 			s.logger.Errorf("RebuildSubmissions failed: %v", err)
-			return nil, status.Error(codes.InvalidArgument, "failed to rebuild submissions "+err.Error())
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("failed to rebuild submissions: %w", err))
 		}
 	}
 	return &connect.Response[qf.Void]{}, nil
@@ -430,7 +432,7 @@ func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *connect.Reques
 	bm, err := s.createBenchmark(in.Msg)
 	if err != nil {
 		s.logger.Errorf("CreateBenchmark failed for %+v: %v", in, err)
-		return nil, status.Error(codes.InvalidArgument, "failed to add benchmark")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to add benchmark"))
 	}
 	return connect.NewResponse(bm), nil
 }
@@ -439,7 +441,7 @@ func (s *QuickFeedService) CreateBenchmark(_ context.Context, in *connect.Reques
 func (s *QuickFeedService) UpdateBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
 	if err := s.db.UpdateBenchmark(in.Msg); err != nil {
 		s.logger.Errorf("UpdateBenchmark failed for %+v: %v", in, err)
-		return nil, status.Error(codes.InvalidArgument, "failed to update benchmark")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update benchmark"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
@@ -448,7 +450,7 @@ func (s *QuickFeedService) UpdateBenchmark(_ context.Context, in *connect.Reques
 func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *connect.Request[qf.GradingBenchmark]) (*connect.Response[qf.Void], error) {
 	if err := s.db.DeleteBenchmark(in.Msg); err != nil {
 		s.logger.Errorf("DeleteBenchmark failed for %+v: %v", in, err)
-		return nil, status.Error(codes.InvalidArgument, "failed to delete benchmark")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete benchmark"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
@@ -457,7 +459,7 @@ func (s *QuickFeedService) DeleteBenchmark(_ context.Context, in *connect.Reques
 func (s *QuickFeedService) CreateCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.GradingCriterion], error) {
 	if err := s.db.CreateCriterion(in.Msg); err != nil {
 		s.logger.Errorf("CreateCriterion failed for %+v: %v", in, err)
-		return nil, status.Error(codes.InvalidArgument, "failed to add criterion")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to add criterion"))
 	}
 	return connect.NewResponse(in.Msg), nil
 }
@@ -466,7 +468,7 @@ func (s *QuickFeedService) CreateCriterion(_ context.Context, in *connect.Reques
 func (s *QuickFeedService) UpdateCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
 	if err := s.db.UpdateCriterion(in.Msg); err != nil {
 		s.logger.Errorf("UpdateCriterion failed for %+v: %v", in, err)
-		return nil, status.Error(codes.InvalidArgument, "failed to update criterion")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update criterion"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
@@ -475,7 +477,7 @@ func (s *QuickFeedService) UpdateCriterion(_ context.Context, in *connect.Reques
 func (s *QuickFeedService) DeleteCriterion(_ context.Context, in *connect.Request[qf.GradingCriterion]) (*connect.Response[qf.Void], error) {
 	if err := s.db.DeleteCriterion(in.Msg); err != nil {
 		s.logger.Errorf("DeleteCriterion failed for %+v: %v", in, err)
-		return nil, status.Error(codes.InvalidArgument, "failed to delete criterion")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to delete criterion"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
@@ -485,7 +487,7 @@ func (s *QuickFeedService) CreateReview(_ context.Context, in *connect.Request[q
 	review, err := s.createReview(in.Msg.Review)
 	if err != nil {
 		s.logger.Errorf("CreateReview failed for review %+v: %v", in, err)
-		return nil, status.Error(codes.InvalidArgument, "failed to create review")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to create review"))
 	}
 	return connect.NewResponse(review), nil
 }
@@ -495,7 +497,7 @@ func (s *QuickFeedService) UpdateReview(_ context.Context, in *connect.Request[q
 	review, err := s.updateReview(in.Msg.Review)
 	if err != nil {
 		s.logger.Errorf("UpdateReview failed for review %+v: %v", in, err)
-		return nil, status.Error(codes.InvalidArgument, "failed to update review")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update review"))
 	}
 	return connect.NewResponse(review), nil
 }
@@ -506,7 +508,7 @@ func (s *QuickFeedService) UpdateSubmissions(_ context.Context, in *connect.Requ
 	err := s.updateSubmissions(in.Msg)
 	if err != nil {
 		s.logger.Errorf("UpdateSubmissions failed for request %+v", in)
-		return nil, status.Error(codes.InvalidArgument, "failed to update submissions")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update submissions"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }
@@ -516,7 +518,7 @@ func (s *QuickFeedService) GetReviewers(_ context.Context, in *connect.Request[q
 	reviewers, err := s.getReviewers(in.Msg.SubmissionID)
 	if err != nil {
 		s.logger.Errorf("GetReviewers failed: error fetching from database: %v", err)
-		return nil, status.Error(codes.InvalidArgument, "failed to get reviewers")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to get reviewers"))
 	}
 	return connect.NewResponse(&qf.Reviewers{Reviewers: reviewers}), nil
 }
@@ -526,7 +528,7 @@ func (s *QuickFeedService) GetAssignments(_ context.Context, in *connect.Request
 	assignments, err := s.getAssignments(in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("GetAssignments failed: %v", err)
-		return nil, status.Error(codes.NotFound, "no assignments found for course")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("no assignments found for course"))
 	}
 	return connect.NewResponse(assignments), nil
 }
@@ -537,7 +539,7 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: course %d: %v", in.Msg.GetCourseID(), err)
-		return nil, status.Error(codes.NotFound, "course not found")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
 	sc, err := s.scmMgr.GetOrCreateSCM(ctx, s.logger, course.GetOrganizationName())
 	if err != nil {
@@ -570,24 +572,24 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 	scmClient, err := s.getSCM(ctx, in.Msg.GetOrgName())
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: could not create scm client for organization %s: %v", in.Msg.GetOrgName(), err)
-		return nil, ErrMissingInstallation
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 	org, err := s.getOrganization(ctx, scmClient, in.Msg.GetOrgName(), usr.GetLogin())
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %v", err)
 		if contextCanceled(ctx) {
-			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
 		}
 		if err == scm.ErrNotMember {
-			return nil, status.Error(codes.NotFound, "organization membership not confirmed, please enable third-party access")
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("organization membership not confirmed, please enable third-party access"))
 		}
 		if err == ErrFreePlan || err == ErrAlreadyExists || err == scm.ErrNotOwner {
-			return nil, status.Error(codes.FailedPrecondition, err.Error())
+			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
-		return nil, status.Error(codes.NotFound, "organization not found. Please make sure that 3rd-party access is enabled for your organization")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("organization not found. Please make sure that 3rd-party access is enabled for your organization"))
 	}
 	return connect.NewResponse(org), nil
 }
@@ -597,7 +599,7 @@ func (s *QuickFeedService) GetRepositories(ctx context.Context, in *connect.Requ
 	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("GetRepositories failed: course %d not found: %v", in.Msg.GetCourseID(), err)
-		return nil, status.Error(codes.NotFound, "course not found")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
 	usrID := userID(ctx)
 	enrol, _ := s.db.GetEnrollmentByCourseAndUser(course.GetID(), usrID)
@@ -623,18 +625,18 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 	scmClient, err := s.getSCMForCourse(ctx, in.Msg.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: could not create scm client for course %d: %v", in.Msg.GetCourseID(), err)
-		return nil, ErrMissingInstallation
+		return nil, connect.NewError(connect.CodeNotFound, err)
 	}
 
 	if err := s.isEmptyRepo(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: %v", err)
 		if contextCanceled(ctx) {
-			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
 		}
-		return nil, status.Error(codes.FailedPrecondition, "group repository does not exist or not empty")
+		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("group repository does not exist or not empty"))
 	}
 	return &connect.Response[qf.Void]{}, nil
 }

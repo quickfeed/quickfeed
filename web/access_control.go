@@ -3,14 +3,9 @@ package web
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 )
-
-var ErrMissingInstallation = status.Error(codes.PermissionDenied, "github application is not installed on the course organization")
 
 func userID(ctx context.Context) uint64 {
 	return ctx.Value(auth.ContextKeyUserID).(uint64)

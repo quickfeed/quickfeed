@@ -87,13 +87,12 @@ func (s *MockSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 		return nil, fmt.Errorf("invalid argument: %+v", opt)
 	}
 	org, err := s.GetOrganization(ctx, &GetOrgOptions{
-		ID:   opt.Organization.ID,
-		Name: opt.Organization.Name,
+		Name: opt.Organization,
 	})
 	if err != nil {
 		return nil, err
 	}
-	url, err := url.JoinPath("https://example.com", opt.Organization.Name, opt.Path)
+	url, err := url.JoinPath("https://example.com", opt.Organization, opt.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +101,7 @@ func (s *MockSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 		Path:    opt.Path,
 		Owner:   org.Name,
 		HTMLURL: url,
-		OrgID:   opt.Organization.ID,
+		OrgID:   org.ID,
 	}
 	s.Repositories[repo.ID] = repo
 	return repo, nil
@@ -193,6 +192,9 @@ func (s *MockSCM) CreateHook(_ context.Context, opt *CreateHookOptions) error {
 
 // CreateTeam implements the SCM interface.
 func (s *MockSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %+v", opt)
+	}
 	newTeam := &Team{
 		ID:           generateID(s.Teams),
 		Name:         opt.TeamName,
@@ -204,6 +206,9 @@ func (s *MockSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, err
 
 // DeleteTeam implements the SCM interface.
 func (s *MockSCM) DeleteTeam(_ context.Context, opt *TeamOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
 	delete(s.Teams, opt.TeamID)
 	return nil
 }
@@ -241,14 +246,20 @@ func (s *MockSCM) GetTeams(_ context.Context, org *qf.Organization) ([]*Team, er
 
 // AddTeamMember implements the scm interface
 func (s *MockSCM) AddTeamMember(_ context.Context, opt *TeamMembershipOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
 	if !s.teamExists(opt.TeamID, opt.TeamName, opt.Organization) {
-		return errors.New("team not found add")
+		return errors.New("team not found")
 	}
 	return nil
 }
 
 // RemoveTeamMember implements the scm interface
 func (s *MockSCM) RemoveTeamMember(_ context.Context, opt *TeamMembershipOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
 	if !s.teamExists(opt.TeamID, opt.TeamName, opt.Organization) {
 		return errors.New("team not found")
 	}
@@ -257,6 +268,9 @@ func (s *MockSCM) RemoveTeamMember(_ context.Context, opt *TeamMembershipOptions
 
 // UpdateTeamMembers implements the SCM interface.
 func (s *MockSCM) UpdateTeamMembers(_ context.Context, opt *UpdateTeamOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
 	if !s.teamExists(opt.TeamID, "", "") {
 		return errors.New("team not found")
 	}
@@ -270,6 +284,12 @@ func (*MockSCM) CreateCloneURL(_ *URLPathOptions) string {
 
 // AddTeamRepo implements the SCM interface.
 func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
+	if !s.teamExists(opt.TeamID, opt.Repo, opt.Owner) {
+		return errors.New("team not found")
+	}
 	repo := &Repository{
 		ID:    generateID(s.Repositories),
 		Path:  opt.Repo,
@@ -292,6 +312,9 @@ func (*MockSCM) GetUserNameByID(_ context.Context, _ uint64) (string, error) {
 
 // UpdateOrgMembership implements the SCM interface
 func (s *MockSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
 		return errors.New("organization not found")
 	}
@@ -300,6 +323,9 @@ func (s *MockSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOpt
 
 // RemoveMember implements the SCM interface
 func (s *MockSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %+v", opt)
+	}
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
 		return errors.New("organization not found")
 	}
