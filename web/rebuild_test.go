@@ -74,7 +74,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	var course qf.Course
 	course.Provider = "fake"
 	course.OrganizationID = 1
-	course.OrganizationName = scm.GetTestOrganization(t)
+	course.OrganizationName = qtest.MockOrg
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}

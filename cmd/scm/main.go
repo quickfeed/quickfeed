@@ -180,18 +180,6 @@ func main() {
 					Name:  "hook",
 					Usage: "Create webhook.",
 					Flags: []cli.Flag{
-						cli.Uint64Flag{
-							Name:  "id",
-							Usage: "Repository id. [required by GitLab]",
-						},
-						cli.StringFlag{
-							Name:  "owner",
-							Usage: "Repository owner [required by GitHub]",
-						},
-						cli.StringFlag{
-							Name:  "repo",
-							Usage: "Repository name. [required by GitHub]",
-						},
 						cli.StringFlag{
 							Name:  "org",
 							Usage: "Github organization [for organization level hooks]",

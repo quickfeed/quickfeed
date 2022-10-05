@@ -10,8 +10,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/quickfeed/quickfeed/scm"
@@ -83,7 +81,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 		t.Fatal(err)
 	}
 	for path, private := range web.RepoPaths {
-		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: organization, Private: private}
+		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: organization.Name, Private: private}
 		_, err := mockSCM.CreateRepository(ctx, repoOptions)
 		if err != nil {
 			t.Fatal(err)
@@ -94,7 +92,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	if course != nil {
 		t.Fatal("expected CreateCourse to fail with AlreadyExists")
 	}
-	if err != nil && status.Code(err) != codes.FailedPrecondition {
+	if err != nil && connect.CodeOf(err) != connect.CodeAlreadyExists {
 		t.Fatalf("expected CreateCourse to fail with AlreadyExists, but got: %v", err)
 	}
 }
@@ -372,10 +370,10 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	db, cleanup, mockSCM, qfService := testQuickFeedService(t)
 	defer cleanup()
 
-	teacher := qtest.CreateFakeUser(t, db, 10)
-	student1 := qtest.CreateFakeUser(t, db, 11)
-	student2 := qtest.CreateFakeUser(t, db, 12)
-	ta := qtest.CreateFakeUser(t, db, 13)
+	teacher := qtest.CreateAdminUser(t, db, "fake")
+	student1 := qtest.CreateNamedUser(t, db, 11, "student1")
+	student2 := qtest.CreateNamedUser(t, db, 12, "student2")
+	ta := qtest.CreateNamedUser(t, db, 13, "TA")
 
 	course := qtest.MockCourses[0]
 	err := db.CreateCourse(teacher.ID, course)
@@ -450,13 +448,13 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	ctx := auth.WithUserContext(context.Background(), teacher)
 	// Need course teams to update enrollments.
 	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
-		Organization: "qfTestOrg",
+		Organization: qtest.MockOrg,
 		TeamName:     "allstudents",
 	}); err != nil {
 		t.Error(err)
 	}
 	if _, err := mockSCM.CreateTeam(ctx, &scm.NewTeamOptions{
-		Organization: "qfTestOrg",
+		Organization: qtest.MockOrg,
 		TeamName:     "allteachers",
 	}); err != nil {
 		t.Error(err)

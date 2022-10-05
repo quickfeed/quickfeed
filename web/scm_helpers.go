@@ -5,11 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var (
@@ -24,7 +23,7 @@ var (
 	ErrFreePlan = errors.New("organization does not allow creation of private repositories")
 	// ErrContextCanceled indicates that method failed because of scm interaction that took longer than expected
 	// and not because of some application error
-	ErrContextCanceled = "context canceled because the github interaction took too long. Please try again later"
+	ErrContextCanceled = errors.New("context canceled because the github interaction took too long. Please try again later")
 	// FreeOrgPlan indicates that organization's payment plan does not allow creation of private repositories
 	FreeOrgPlan = "free"
 )
@@ -96,7 +95,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *qf.Course, group
 	}
 	org := &qf.Organization{ID: course.GetOrganizationID(), Name: course.GetOrganizationName()}
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-		Organization: org,
+		Organization: org.Name,
 		Path:         group.GetName(),
 		Private:      true,
 	})
@@ -150,7 +149,7 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *qf.Organization, pa
 	// create repo, or return existing repo if it already exists
 	// if repo is found, it is safe to reuse it
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-		Organization: org,
+		Organization: org.Name,
 		Path:         path,
 		Private:      true,
 	})
@@ -328,7 +327,7 @@ func contextCanceled(ctx context.Context) bool {
 func parseSCMError(err error) (bool, error) {
 	errStruct, ok := err.(scm.ErrFailedSCM)
 	if ok {
-		return ok, status.Errorf(codes.NotFound, errStruct.Message)
+		return ok, connect.NewError(connect.CodeNotFound, errors.New(errStruct.Message))
 	}
 	return ok, nil
 }

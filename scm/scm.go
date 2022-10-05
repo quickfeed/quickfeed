@@ -10,7 +10,7 @@ import (
 )
 
 // SCM is a common interface for different source code management solutions,
-// i.e., GitHub and GitLab.
+// i.e., GitHub.
 type SCM interface {
 	// Updates an organization
 	UpdateOrganization(context.Context, *OrganizationOptions) error
@@ -95,8 +95,6 @@ func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
 	switch provider {
 	case "github":
 		return NewGithubSCMClient(logger, token), nil
-	case "gitlab":
-		return NewGitlabSCMClient(token), nil
 	case "fake":
 		return NewMockSCMClient(), nil
 	}
@@ -161,7 +159,7 @@ type Hook struct {
 
 // CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
-	Organization *qf.Organization
+	Organization string
 	Path         string
 	Private      bool
 	Owner        string // The owner of an organization's repo is always the organization itself.
@@ -170,7 +168,6 @@ type CreateRepositoryOptions struct {
 
 // CreateHookOptions contains information on how to create a webhook.
 // On GitHub, a single webhook is created on the organization level.
-// Repository field is used by GitLab.
 type CreateHookOptions struct {
 	URL          string
 	Secret       string
