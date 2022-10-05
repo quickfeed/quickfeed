@@ -39,8 +39,13 @@ func NewMockSCMClient() *MockSCM {
 	return s
 }
 
-func (MockSCM) Clone(_ context.Context, opt *CloneOptions) (string, error) {
-	cloneDir := filepath.Join(opt.DestDir, repoDir(opt))
+func (s MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{
+		Name: opt.Organization,
+	}); err != nil {
+		return "", err
+	}
+	cloneDir := filepath.Join("testdata", repoDir(opt))
 	// This is a hack to make sure the lab1 directory exists,
 	// required by the web/rebuild_test.go:TestRebuildSubmissions()
 	lab1Dir := filepath.Join(cloneDir, "lab1")
@@ -48,7 +53,7 @@ func (MockSCM) Clone(_ context.Context, opt *CloneOptions) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return cloneDir, err
+	return cloneDir, nil
 }
 
 // UpdateOrganization implements the SCM interface.

@@ -226,7 +226,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	defer cleanup()
 
 	admin := qtest.CreateFakeUser(t, db, 1)
-	course := qf.Course{Provider: "fake", OrganizationID: 1, OrganizationName: "qfTestOrg"}
+	course := qf.Course{Provider: "fake", OrganizationID: 1, OrganizationName: qtest.MockOrg}
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -556,7 +556,7 @@ func TestPatchGroupStatus(t *testing.T) {
 		Tag:              "Spring",
 		Provider:         "fake",
 		OrganizationID:   1,
-		OrganizationName: "qfTestOrg",
+		OrganizationName: qtest.MockOrg,
 		ID:               1,
 	}
 

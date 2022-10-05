@@ -5,6 +5,7 @@ import (
 
 	"github.com/beatlabs/github-auth/app"
 	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 )
 
 // MockSCMManager sets the current provider to "fake", creates a "test" organization
@@ -20,7 +21,7 @@ func MockSCMManager(t *testing.T) (SCM, *Manager) {
 	sc := NewMockSCMClient()
 	return sc, &Manager{
 		scms: map[string]SCM{
-			"qfTestOrg": sc,
+			qtest.MockOrg: sc,
 		},
 		Config: conf,
 	}
