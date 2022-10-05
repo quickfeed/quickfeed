@@ -1,6 +1,8 @@
 package scm
 
-import "errors"
+import (
+	"errors"
+)
 
 const (
 	// Organization roles //
@@ -51,6 +53,8 @@ var (
 	ErrNotMember = errors.New("user is not a member of the organization")
 	// ErrNotOwner indicates that user has no admin rights in the requested organization.
 	ErrNotOwner = errors.New("user is not an owner of the organization")
+	// ErrMissingInstallation indicates that GitHub application is not installed on organization.
+	ErrMissingInstallation = errors.New("github application is not installed on the course organization")
 )
 
 // Validators //
