@@ -17,6 +17,8 @@ const NavBar = (): JSX.Element => {
                 <div className="navbar-brand clickable" style={{ marginLeft: "30px", fontSize: "30px" }}>
                     <Link to="/" style={{ color: "#d4d4d4", fontWeight: "bold" }}>QuickFeed</Link>
                     {hamburger}
+                    { /* TODO(jostein): Rework this stream connection indicator */ }
+                    {state.isLive ? <span className="ml-3 live">LIVE</span> : <span onClick={() => {}}>Restart</span>}
                 </div>
             }
             {!state.isLoggedIn &&
