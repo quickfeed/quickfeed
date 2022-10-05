@@ -62,9 +62,6 @@ func TestSimulatedRebuildWorkPoolWithErrCount(t *testing.T) {
 }
 
 func TestRebuildSubmissions(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	qfUserName := scm.GetTestUser(t)
-
 	_, mgr := scm.MockSCMManager(t)
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
@@ -78,7 +75,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	var course qf.Course
 	course.Provider = "fake"
 	course.OrganizationID = 1
-	course.OrganizationName = qfTestOrg
+	course.OrganizationName = qtest.MockOrg
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -104,13 +101,13 @@ func TestRebuildSubmissions(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
+	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.OrganizationName}
 	repo1 := qf.Repository{
 		OrganizationID: 1,
 		RepositoryID:   1,
 		UserID:         student1.ID,
 		RepoType:       qf.Repository_USER,
-		HTMLURL:        repo.StudentRepoURL(qfUserName),
+		HTMLURL:        repo.StudentRepoURL("user"),
 	}
 	if err := db.CreateRepository(&repo1); err != nil {
 		t.Fatal(err)

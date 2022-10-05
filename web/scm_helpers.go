@@ -310,16 +310,19 @@ func isEmpty(ctx context.Context, sc scm.SCM, repos []*qf.Repository) error {
 	return nil
 }
 
-// contextCanceled returns true if the context has been canceled.
-// It is a recurring cause of unexplainable method failures when
-// creating a course, approving, changing status of, or deleting
-// a course enrollment or group
-func contextCanceled(ctx context.Context) bool {
-	// debugging context related errors
-	if ctx.Err() != nil {
-		fmt.Println("Context error: ", ctx.Err().Error())
+// ctxErr returns a context error. There could be two reasons
+// for a context error: exceeded deadline or canceled context.
+// Canceled context is a recurring cause of unexplainable
+// method failures when creating a course, approving, changing
+// status of, or deleting a course enrollment or group.
+func ctxErr(ctx context.Context) error {
+	switch ctx.Err() {
+	case context.Canceled:
+		return connect.NewError(connect.CodeCanceled, ctx.Err())
+	case context.DeadlineExceeded:
+		return connect.NewError(connect.CodeDeadlineExceeded, ctx.Err())
 	}
-	return ctx.Err() == context.Canceled
+	return nil
 }
 
 // Returns true and formatted error if error type is SCM error

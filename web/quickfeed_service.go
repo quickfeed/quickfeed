@@ -100,10 +100,9 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 	course, err := s.createCourse(ctx, scmClient, in.Msg)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: %v", err)
-		// errors informing about requested organization state will have code 9: FailedPrecondition
-		// error message will be displayed to the user
-		if contextCanceled(ctx) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+		if ctxErr := ctxErr(ctx); ctxErr != nil {
+			s.logger.Error(ctxErr)
+			return nil, ctxErr
 		}
 		if err == ErrAlreadyExists {
 			return nil, connect.NewError(connect.CodeAlreadyExists, err)
@@ -128,8 +127,9 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 	}
 	if err = s.updateCourse(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("UpdateCourse failed: %v", err)
-		if contextCanceled(ctx) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+		if ctxErr := ctxErr(ctx); ctxErr != nil {
+			s.logger.Error(ctxErr)
+			return nil, ctxErr
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
@@ -204,8 +204,9 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 		}
 		if err = s.updateEnrollment(ctx, scmClient, usr.GetLogin(), enrollment); err != nil {
 			s.logger.Errorf("UpdateEnrollments failed: %v", err)
-			if contextCanceled(ctx) {
-				return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+			if ctxErr := ctxErr(ctx); ctxErr != nil {
+				s.logger.Error(ctxErr)
+				return nil, ctxErr
 			}
 			if ok, parsedErr := parseSCMError(err); ok {
 				return nil, parsedErr
@@ -310,8 +311,9 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 	err = s.updateGroup(ctx, scmClient, in.Msg)
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: %v", err)
-		if contextCanceled(ctx) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+		if ctxErr := ctxErr(ctx); ctxErr != nil {
+			s.logger.Error(ctxErr)
+			return nil, ctxErr
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
@@ -339,8 +341,9 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 	}
 	if err = s.deleteGroup(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("DeleteGroup failed: %v", err)
-		if contextCanceled(ctx) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+		if ctxErr := ctxErr(ctx); ctxErr != nil {
+			s.logger.Error(ctxErr)
+			return nil, ctxErr
 		}
 		if ok, parsedErr := parseSCMError(errors.Unwrap(err)); ok {
 			return nil, parsedErr
@@ -577,8 +580,9 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 	org, err := s.getOrganization(ctx, scmClient, in.Msg.GetOrgName(), usr.GetLogin())
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %v", err)
-		if contextCanceled(ctx) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+		if ctxErr := ctxErr(ctx); ctxErr != nil {
+			s.logger.Error(ctxErr)
+			return nil, ctxErr
 		}
 		if err == scm.ErrNotMember {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("organization membership not confirmed, please enable third-party access"))
@@ -630,8 +634,9 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 
 	if err := s.isEmptyRepo(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: %v", err)
-		if contextCanceled(ctx) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+		if ctxErr := ctxErr(ctx); ctxErr != nil {
+			s.logger.Error(ctxErr)
+			return nil, ctxErr
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
