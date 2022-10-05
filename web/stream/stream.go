@@ -15,8 +15,8 @@ type StreamInterface[T any] interface {
 	GetID() uint64
 }
 
-// stream wraps a connect.ServerStream.
-type stream[T any] struct {
+// Stream wraps a connect.ServerStream.
+type Stream[T any] struct {
 	mu sync.Mutex
 	// stream is the underlying connect stream
 	// that does the actual transfer of data
@@ -37,8 +37,8 @@ type stream[T any] struct {
 }
 
 // newStream creates a new stream.
-func NewStream[T any](ctx context.Context, st *connect.ServerStream[T], id uint64) *stream[T] {
-	return &stream[T]{
+func NewStream[T any](ctx context.Context, st *connect.ServerStream[T], id uint64) *Stream[T] {
+	return &Stream[T]{
 		stream: st,
 		ctx:    ctx,
 		ch:     make(chan *T),
@@ -47,7 +47,7 @@ func NewStream[T any](ctx context.Context, st *connect.ServerStream[T], id uint6
 }
 
 // Close closes the stream.
-func (s *stream[T]) Close() {
+func (s *Stream[T]) Close() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if !s.closed {
@@ -58,7 +58,7 @@ func (s *stream[T]) Close() {
 
 // Run runs the stream.
 // Run will block until the stream is closed.
-func (s *stream[T]) Run() error {
+func (s *Stream[T]) Run() error {
 	defer s.Close()
 	for {
 		select {
@@ -76,7 +76,7 @@ func (s *stream[T]) Run() error {
 }
 
 // Send sends data to this stream's connected client.
-func (s *stream[T]) Send(data *T) {
+func (s *Stream[T]) Send(data *T) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if !s.closed {
@@ -84,6 +84,6 @@ func (s *stream[T]) Send(data *T) {
 	}
 }
 
-func (s *stream[T]) GetID() uint64 {
+func (s *Stream[T]) GetID() uint64 {
 	return s.id
 }
