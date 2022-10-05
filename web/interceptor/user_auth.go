@@ -64,10 +64,9 @@ func (u *UserInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	})
 }
 
-// processHeader extracts any claims within the given http.Header.
-// the claims are checked to determine if the client should receive
-// an updated cookie. Returns an error if either the claims extraction
-// is unsuccessful, or updating the cookie is unsuccessful.
+// processHeader returns claims extracted from the given http.Header's cookie
+// and an updated cookie if needed. An error is returned if the cookie is invalid
+// or could not be updated.
 func (u *UserInterceptor) processHeader(header http.Header) (*auth.Claims, *http.Cookie, error) {
 	cookie := header.Get(auth.Cookie)
 	claims, err := u.tm.GetClaims(cookie)
