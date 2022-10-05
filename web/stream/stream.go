@@ -37,7 +37,7 @@ type stream[T any] struct {
 }
 
 // newStream creates a new stream.
-func newStream[T any](ctx context.Context, st *connect.ServerStream[T], id uint64) *stream[T] {
+func NewStream[T any](ctx context.Context, st *connect.ServerStream[T], id uint64) *stream[T] {
 	return &stream[T]{
 		stream: st,
 		ctx:    ctx,
