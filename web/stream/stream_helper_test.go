@@ -46,10 +46,6 @@ func (m *mockStream[T]) Run() error {
 	}
 }
 
-func (m *mockStream[T]) Closed() bool {
-	return m.closed
-}
-
 func (m *mockStream[T]) GetChannel() chan *T {
 	return m.ch
 }
