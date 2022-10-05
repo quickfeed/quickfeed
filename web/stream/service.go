@@ -1,10 +1,8 @@
 package stream
 
 import (
-	"context"
 	"sync"
 
-	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/qf"
 )
 
@@ -64,24 +62,14 @@ func (s *Service[T]) SendTo(data *T, userIDs ...uint64) {
 
 // Add adds a new stream to the service.
 // It returns the stream which must be run by the caller.
-func (s *Service[T]) Add(ctx context.Context, userID uint64, stream *connect.ServerStream[T]) *stream[T] {
+func (s *Service[T]) Add(stream StreamInterface[T]) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	userID := stream.GetID()
 	// Delete the stream if it already exists.
 	s.internalRemove(userID)
 	// Add the stream to the map.
-	newStream := newStream(ctx, stream, userID)
-	s.streams[userID] = newStream
-	return newStream
-}
-
-func (s *Service[T]) AddStream(userID uint64, stream StreamInterface[T]) StreamInterface[T] {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.internalRemove(userID)
-	// Add the stream to the map.
 	s.streams[userID] = stream
-	return stream
 }
 
 // internalRemove removes a stream from the service.
