@@ -10,8 +10,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/quickfeed/quickfeed/scm"
@@ -94,7 +92,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	if course != nil {
 		t.Fatal("expected CreateCourse to fail with AlreadyExists")
 	}
-	if err != nil && status.Code(err) != codes.FailedPrecondition {
+	if err != nil && connect.CodeOf(err) != connect.CodeAlreadyExists {
 		t.Fatalf("expected CreateCourse to fail with AlreadyExists, but got: %v", err)
 	}
 }
