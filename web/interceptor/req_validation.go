@@ -38,7 +38,7 @@ func (*ValidationInterceptor) WrapStreamingHandler(next connect.StreamingHandler
 
 func (*ValidationInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
 	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
-		return nil // not supported
+		return next(ctx, spec)
 	})
 }
 

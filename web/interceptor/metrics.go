@@ -68,7 +68,7 @@ func (*MetricsInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFun
 
 func (*MetricsInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
 	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
-		return nil // not supported
+		return next(ctx, spec)
 	})
 }
 
