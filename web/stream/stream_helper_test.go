@@ -39,7 +39,6 @@ func (m *mockStream[T]) Run() error {
 			}
 			atomic.AddUint32(m.counter, 1)
 			m.Messages = append(m.Messages, *data)
-			fmt.Println(m.id, data, &m.ch)
 		case <-m.ctx.Done():
 			return m.ctx.Err()
 		}
