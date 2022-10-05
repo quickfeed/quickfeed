@@ -42,10 +42,7 @@ func (*ValidationInterceptor) WrapStreamingClient(next connect.StreamingClientFu
 	})
 }
 
-// TokenRefresher updates list of users who need a new JWT next time they send a request to the server.
-// This method only logs errors to avoid overwriting the gRPC error messages returned by the server.
-
-// Validation returns a new unary server interceptor that validates requests
+// WrapUnary returns a new unary server interceptor that validates requests
 // that implements the validator interface.
 // Invalid requests are rejected without logging and before it reaches any
 // user-level code and returns an illegal argument to the client.
