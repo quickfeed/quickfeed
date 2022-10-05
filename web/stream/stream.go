@@ -12,6 +12,7 @@ type StreamInterface[T any] interface {
 	Close()
 	Run() error
 	Send(data *T)
+	GetID() uint64
 }
 
 // stream wraps a connect.ServerStream.
@@ -81,4 +82,8 @@ func (s *stream[T]) Send(data *T) {
 	if !s.closed {
 		s.ch <- data
 	}
+}
+
+func (s *stream[T]) GetID() uint64 {
+	return s.id
 }
