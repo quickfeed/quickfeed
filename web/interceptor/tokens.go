@@ -73,7 +73,7 @@ func (*TokenInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) c
 	})
 }
 
-// TokenRefresher updates list of users who need a new JWT next time they send a request to the server.
+// WrapUnary updates list of users who need a new JWT next time they send a request to the server.
 // This method only logs errors to avoid overwriting the gRPC error messages returned by the server.
 func (t *TokenInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
