@@ -48,7 +48,9 @@ func match(filename, pattern string) bool {
 	return false
 }
 
-// readTestsRepositoryContent reads dir and returns a list of assignments and the course's Dockerfile.
+// readTestsRepositoryContent reads dir and returns a list of assignments and
+// the course's Dockerfile content if there exists a 'tests/scripts/Dockerfile'.
+// Assignments are extracted from 'assignment.yml' files, one for each assignment.
 func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, string, error) {
 	files, err := walkTestsRepository(dir)
 	if err != nil {
@@ -82,6 +84,14 @@ func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, 
 			var benchmarks []*qf.GradingBenchmark
 			if err := json.Unmarshal(contents, &benchmarks); err != nil {
 				return nil, "", fmt.Errorf("failed to unmarshal %q: %s", criteriaFile, err)
+			}
+			// Benchmarks and criteria must have courseID
+			// for access control checks.
+			for _, bm := range benchmarks {
+				bm.CourseID = courseID
+				for _, c := range bm.Criteria {
+					c.CourseID = courseID
+				}
 			}
 			assignmentsMap[assignmentName].GradingBenchmarks = benchmarks
 

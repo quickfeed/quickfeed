@@ -10,7 +10,7 @@ import (
 // Note grace period applies to all enrollments (courses).
 const gracePeriod time.Duration = time.Duration(2 * time.Hour)
 
-// UpdateSlipDays updates the number of slipdays for the given assignment/submission.
+// UpdateSlipDays updates the number of slip days for the given assignment/submission.
 func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, submission *Submission) error {
 	if m.GetCourseID() != assignment.GetCourseID() {
 		return fmt.Errorf("invariant violation (enrollment.CourseID != assignment.CourseID) (%d != %d)", m.CourseID, assignment.CourseID)
@@ -24,9 +24,9 @@ func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, sub
 	}
 	// if score is less than limit and it's not yet approved, update slip days if deadline has passed
 	if submission.Score < assignment.ScoreLimit && submission.Status != Submission_APPROVED && sinceDeadline > 0 {
-		// deadline exceeded; calculate used slipdays for this assignment
+		// deadline exceeded; calculate used slip days for this assignment
 		slpDays, slpHours := uint32(sinceDeadline/days), sinceDeadline%days
-		// slpHours is hours after deadline, excluding subsequent full-day slipdays after deadline
+		// slpHours is hours after deadline, excluding subsequent full-day slip days after deadline
 		if slpHours > gracePeriod {
 			slpDays++
 		}
@@ -35,7 +35,7 @@ func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, sub
 	return nil
 }
 
-// internalUpdateSlipDays updates the number of slipdays for the given assignment.
+// internalUpdateSlipDays updates the number of slip days for the given assignment.
 func (m *Enrollment) internalUpdateSlipDays(assignmentID uint64, slipDays uint32) {
 	for _, val := range m.GetUsedSlipDays() {
 		if val.AssignmentID == assignmentID {
@@ -51,7 +51,7 @@ func (m *Enrollment) internalUpdateSlipDays(assignmentID uint64, slipDays uint32
 	})
 }
 
-// totalSlipDays returns the total number of slipdays used for this enrollment.
+// totalSlipDays returns the total number of slip days used for this enrollment.
 func (m *Enrollment) totalSlipDays() uint32 {
 	var total uint32
 	for _, val := range m.GetUsedSlipDays() {
@@ -72,10 +72,11 @@ func (m *Enrollment) RemainingSlipDays(c *Course) int32 {
 
 // SetSlipDays updates SlipDaysRemaining field of an enrollment.
 func (m *Enrollment) SetSlipDays(c *Course) {
-	if m.RemainingSlipDays(c) < 0 {
+	remaining := m.RemainingSlipDays(c)
+	if remaining < 0 {
 		m.SlipDaysRemaining = 0
 	} else {
-		m.SlipDaysRemaining = uint32(m.RemainingSlipDays(c))
+		m.SlipDaysRemaining = uint32(remaining)
 	}
 }
 
@@ -117,4 +118,13 @@ func (m *Enrollments) HasCourseID() bool {
 		}
 	}
 	return true
+}
+
+// UserIDs returns the user IDs in these enrollments.
+func (m *Enrollments) UserIDs() []uint64 {
+	userIDs := make([]uint64, 0)
+	for _, enrollment := range m.GetEnrollments() {
+		userIDs = append(userIDs, enrollment.GetUserID())
+	}
+	return userIDs
 }

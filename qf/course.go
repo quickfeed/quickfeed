@@ -1,27 +1,13 @@
 package qf
 
-// cache of access tokens for courses; they are cached here when fetching from database
-var accessTokens = make(map[uint64]string)
+import (
+	"path/filepath"
 
-// SetAccessToken for the given course.
-func SetAccessToken(courseID uint64, accessToken string) {
-	accessTokens[courseID] = accessToken
-}
+	"github.com/quickfeed/quickfeed/internal/env"
+)
 
-// GetAccessToken returns the access token for the course.
-func (course *Course) GetAccessToken() string {
-	return accessTokens[course.GetID()]
-}
-
-// SetSlipDays sets number of remaining slip days for each course enrollment
-func (course *Course) SetSlipDays() {
-	for _, e := range course.Enrollments {
-		e.SetSlipDays(course)
-	}
-
-	for _, g := range course.Groups {
-		g.SetSlipDays(course)
-	}
+func (course *Course) CloneDir() string {
+	return filepath.Join(env.RepositoryPath(), course.GetOrganizationName())
 }
 
 func (course *Course) TeacherEnrollments() []*Enrollment {
@@ -32,4 +18,10 @@ func (course *Course) TeacherEnrollments() []*Enrollment {
 		}
 	}
 	return enrolledTeachers
+}
+
+// Dummy implementation of the interceptor.userIDs interface.
+// Marks this message type to be evaluated for token refresh.
+func (*Course) UserIDs() []uint64 {
+	return []uint64{}
 }

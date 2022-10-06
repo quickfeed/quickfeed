@@ -59,7 +59,10 @@ func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestRevie
 	// review is from a course teacher, do we mark the pull request as approved for QuickFeed.
 	if reviewer.IsTeacher() {
 		pullRequest.SetApproved()
-		wh.db.UpdatePullRequest(pullRequest)
+		if err := wh.db.UpdatePullRequest(pullRequest); err != nil {
+			wh.logger.Errorf("Failed to update pull request in database: %v", err)
+			return
+		}
 		wh.logger.Debugf("Pull request successfully approved for repository: %s", payload.GetRepo().GetFullName())
 	}
 }

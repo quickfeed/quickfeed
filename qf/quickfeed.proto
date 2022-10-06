@@ -9,70 +9,69 @@ import "qf/requests.proto";
 service QuickFeedService {
     // users //
 
-    rpc GetUser(qf.Void) returns (qf.User) {}
-    rpc GetUsers(qf.Void) returns (qf.Users) {}
-    rpc GetUserByCourse(qf.CourseUserRequest) returns (qf.User) {}
-    rpc UpdateUser(qf.User) returns (qf.Void) {}
-    rpc IsAuthorizedTeacher(qf.Void) returns (qf.AuthorizationResponse) {}
+    rpc GetUser(Void) returns (User) {}
+    rpc GetUsers(Void) returns (Users) {}
+    rpc GetUserByCourse(CourseUserRequest) returns (User) {}
+    rpc UpdateUser(User) returns (Void) {}
 
     // groups //
 
-    rpc GetGroup(qf.GetGroupRequest) returns (qf.Group) {}
-    rpc GetGroupByUserAndCourse(qf.GroupRequest) returns (qf.Group) {}
-    rpc GetGroupsByCourse(qf.CourseRequest) returns (qf.Groups) {}
-    rpc CreateGroup(qf.Group) returns (qf.Group) {}
-    rpc UpdateGroup(qf.Group) returns (qf.Group) {}
-    rpc DeleteGroup(qf.GroupRequest) returns (qf.Void) {}
+    rpc GetGroup(GetGroupRequest) returns (Group) {}
+    rpc GetGroupByUserAndCourse(GroupRequest) returns (Group) {}
+    rpc GetGroupsByCourse(CourseRequest) returns (Groups) {}
+    rpc CreateGroup(Group) returns (Group) {}
+    rpc UpdateGroup(Group) returns (Group) {}
+    rpc DeleteGroup(GroupRequest) returns (Void) {}
 
     // courses //
 
-    rpc GetCourse(qf.CourseRequest) returns (qf.Course) {}
-    rpc GetCourses(qf.Void) returns (qf.Courses) {}
-    rpc GetCoursesByUser(qf.EnrollmentStatusRequest) returns (qf.Courses) {}
-    rpc CreateCourse(qf.Course) returns (qf.Course) {}
-    rpc UpdateCourse(qf.Course) returns (qf.Void) {}
-    rpc UpdateCourseVisibility(qf.Enrollment) returns (qf.Void) {}
+    rpc GetCourse(CourseRequest) returns (Course) {}
+    rpc GetCourses(Void) returns (Courses) {}
+    rpc GetCoursesByUser(EnrollmentStatusRequest) returns (Courses) {}
+    rpc CreateCourse(Course) returns (Course) {}
+    rpc UpdateCourse(Course) returns (Void) {}
+    rpc UpdateCourseVisibility(Enrollment) returns (Void) {}
 
     // assignments //
 
-    rpc GetAssignments(qf.CourseRequest) returns (qf.Assignments) {}
-    rpc UpdateAssignments(qf.CourseRequest) returns (qf.Void) {}
+    rpc GetAssignments(CourseRequest) returns (Assignments) {}
+    rpc UpdateAssignments(CourseRequest) returns (Void) {}
 
     // enrollments //
 
-    rpc GetEnrollmentsByUser(qf.EnrollmentStatusRequest) returns (qf.Enrollments) {}
-    rpc GetEnrollmentsByCourse(qf.EnrollmentRequest) returns (qf.Enrollments) {}
-    rpc CreateEnrollment(qf.Enrollment) returns (qf.Void) {}
-    rpc UpdateEnrollments(qf.Enrollments) returns (qf.Void) {}
+    rpc GetEnrollmentsByUser(EnrollmentStatusRequest) returns (Enrollments) {}
+    rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
+    rpc CreateEnrollment(Enrollment) returns (Void) {}
+    rpc UpdateEnrollments(Enrollments) returns (Void) {}
 
     // submissions //
 
     // Get latest submissions for all course assignments for a user or a group.
-    rpc GetSubmissions(qf.SubmissionRequest) returns (qf.Submissions) {}
+    rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
+    rpc GetSubmission(SubmissionReviewersRequest) returns (Submission) {}
     // Get lab submissions for every course user or every course group
-    rpc GetSubmissionsByCourse(qf.SubmissionsForCourseRequest) returns (qf.CourseSubmissions) {}
-    rpc UpdateSubmission(qf.UpdateSubmissionRequest) returns (qf.Void) {}
-    rpc UpdateSubmissions(qf.UpdateSubmissionsRequest) returns (qf.Void) {}
-    rpc RebuildSubmissions(qf.RebuildRequest) returns (qf.Void) {}
+    rpc GetSubmissionsByCourse(SubmissionsForCourseRequest) returns (CourseSubmissions) {}
+    rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
+    rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
+    rpc RebuildSubmissions(RebuildRequest) returns (Void) {}
 
     // manual grading //
 
-    rpc CreateBenchmark(qf.GradingBenchmark) returns (qf.GradingBenchmark) {}
-    rpc UpdateBenchmark(qf.GradingBenchmark) returns (qf.Void) {}
-    rpc DeleteBenchmark(qf.GradingBenchmark) returns (qf.Void) {}
+    rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
+    rpc UpdateBenchmark(GradingBenchmark) returns (Void) {}
+    rpc DeleteBenchmark(GradingBenchmark) returns (Void) {}
 
-    rpc CreateCriterion(qf.GradingCriterion) returns (qf.GradingCriterion) {}
-    rpc UpdateCriterion(qf.GradingCriterion) returns (qf.Void) {}
-    rpc DeleteCriterion(qf.GradingCriterion) returns (qf.Void) {}
+    rpc CreateCriterion(GradingCriterion) returns (GradingCriterion) {}
+    rpc UpdateCriterion(GradingCriterion) returns (Void) {}
+    rpc DeleteCriterion(GradingCriterion) returns (Void) {}
 
-    rpc CreateReview(qf.ReviewRequest) returns (qf.Review) {}
-    rpc UpdateReview(qf.ReviewRequest) returns (qf.Review) {}
-    rpc GetReviewers(qf.SubmissionReviewersRequest) returns (qf.Reviewers) {}
+    rpc CreateReview(ReviewRequest) returns (Review) {}
+    rpc UpdateReview(ReviewRequest) returns (Review) {}
+    rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers) {}
 
     // misc //
 
-    rpc GetProviders(qf.Void) returns (qf.Providers) {}
-    rpc GetOrganization(qf.OrgRequest) returns (qf.Organization) {}
-    rpc GetRepositories(qf.URLRequest) returns (qf.Repositories) {}
-    rpc IsEmptyRepo(qf.RepositoryRequest) returns (qf.Void) {}
+    rpc GetOrganization(OrgRequest) returns (Organization) {}
+    rpc GetRepositories(URLRequest) returns (Repositories) {}
+    rpc IsEmptyRepo(RepositoryRequest) returns (Void) {}
 }

@@ -164,10 +164,11 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(wantStruct); err != nil {
 		t.Fatal(err)
 	}
-	assignments, err := db.GetAssignmentsWithSubmissions(course.ID, qf.SubmissionsForCourseRequest_ALL, true)
+	assignments, err := db.GetAssignmentsWithSubmissions(course.ID, qf.SubmissionsForCourseRequest_ALL)
 	if err != nil {
 		t.Fatal(err)
 	}
+	wantStruct.BuildInfo = nil
 	wantAssignment := (proto.Clone(assignment)).(*qf.Assignment)
 	wantAssignment.Submissions = append(wantAssignment.Submissions, wantStruct)
 	if diff := cmp.Diff(wantAssignment, assignments[0], protocmp.Transform()); diff != "" {
@@ -196,7 +197,7 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	if err := db.CreateSubmission(wantReview); err != nil {
 		t.Fatal(err)
 	}
-	assignments, err = db.GetAssignmentsWithSubmissions(course.ID, qf.SubmissionsForCourseRequest_ALL, true)
+	assignments, err = db.GetAssignmentsWithSubmissions(course.ID, qf.SubmissionsForCourseRequest_ALL)
 	if err != nil {
 		t.Fatal(err)
 	}

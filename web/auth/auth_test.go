@@ -2,425 +2,286 @@ package auth_test
 
 import (
 	"net/http"
-	"net/http/httptest"
-	"reflect"
 	"testing"
 
-	"github.com/gorilla/sessions"
-	"github.com/labstack/echo-contrib/session"
-	"github.com/labstack/echo/v4"
-	"github.com/markbates/goth"
-	"github.com/markbates/goth/gothic"
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
+	"github.com/steinfletcher/apitest"
+	"gotest.tools/assert"
 )
 
 const (
-	loginRedirect  = "/login"
-	logoutRedirect = "/logout"
-
-	authURL   = "/auth?provider=fake&redirect=" + loginRedirect
-	logoutURL = "/logout?provider=fake&redirect=" + logoutRedirect
-
-	fakeSessionKey  = "fake"
-	fakeSessionName = fakeSessionKey + gothic.SessionName
+	testSecret     = "top-secret"
+	user           = "/user"
+	authGithub     = "/auth/github"
+	callbackGithub = "/auth/callback/github"
+	loginToken     = "/login/oauth/access_token"
 )
 
-func init() {
-	goth.UseProviders(&auth.FakeProvider{
-		Callback: "/auth/fake/callback",
-	})
-}
-
-func TestOAuth2Logout(t *testing.T) {
-	r := httptest.NewRequest(http.MethodGet, logoutURL, nil)
-	w := httptest.NewRecorder()
-
-	store := newStore()
-	gothic.Store = store
-
-	e := echo.New()
-	c := e.NewContext(r, w)
-
-	fakeSession := auth.FakeSession{}
-	s, _ := store.Get(r, fakeSessionName)
-	s.Values[fakeSessionKey] = fakeSession.Marshal()
-	if err := s.Save(r, w); err != nil {
-		t.Error(err)
-	}
-
-	if err := store.login(c); err != nil {
-		t.Error(err)
-	}
-
-	ns := len(store.store[r].Values)
-	// Want gothic session and user session.
-	if ns != 2 {
-		t.Errorf("have %d sessions want %d", ns, 2)
-	}
-
-	authHandler := auth.OAuth2Logout(qlog.Logger(t))
-	withSession := session.Middleware(store)(authHandler)
-
-	if err := withSession(c); err != nil {
-		t.Error(err)
-	}
-
-	ns = len(store.store[r].Values)
-	// Sessions should be cleared.
-	if ns != 0 {
-		t.Errorf("have %d sessions want %d", ns, 0)
-	}
+func TestOAuth2Login(t *testing.T) {
+	logger := qlog.Logger(t)
+	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	// Incorrect request method.
+	apitest.New().HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
+		Post(auth.Auth).
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		End()
+	// No existing auth cookie.
+	apitest.New().HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
+		Get(auth.Auth).
+		Expect(t).
+		Status(http.StatusTemporaryRedirect).
+		End()
+	// Outdated auth cookie with expected name should not break API.
+	apitest.New().HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
+		Get(auth.Auth).
+		Cookie(auth.CookieName, "empty").
+		Expect(t).
+		Status(http.StatusTemporaryRedirect).
+		End()
 }
 
 func TestOAuth2LoginRedirect(t *testing.T) {
-	r := httptest.NewRequest(http.MethodGet, authURL, nil)
-	w := httptest.NewRecorder()
+	logger := qlog.Logger(t)
+	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 
-	store := newStore()
-	gothic.Store = store
+	apitest.New().HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
+		Get(authGithub).
+		Expect(t).
+		Status(http.StatusTemporaryRedirect).
+		Assert(func(res *http.Response, _ *http.Request) error {
+			fullURL, err := res.Location()
+			if err != nil {
+				return err
+			}
+			redirectURL := fullURL.Path
+			assert.Equal(t, redirectURL, "/login/oauth/authorize")
+			return nil
+		}).
+		End()
+}
 
-	e := echo.New()
-	c := e.NewContext(r, w)
-
+func TestOAuth2Callback(t *testing.T) {
+	userJSON := `{"id": 1, "email": "mail", "name": "No name Last name", "login": "test"}`
+	logger := qtest.Logger(t)
+	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-
-	authHandler := auth.OAuth2Login(qlog.Logger(t), db)
-	withSession := session.Middleware(store)(authHandler)
-	if err := withSession(c); err != nil {
-		t.Error(err)
+	tm, err := auth.NewTokenManager(db)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	assertCode(t, w.Code, http.StatusTemporaryRedirect)
+	mockTokenExchange := apitest.NewMock().
+		Post(loginToken).
+		RespondWith().
+		Body(`{"access_token": "test_token"}`).
+		Status(http.StatusOK).
+		End()
+	mockUserExchange := apitest.NewMock().
+		Get(user).
+		RespondWith().
+		Body(userJSON).
+		Status(http.StatusOK).
+		End()
+
+	apitest.New().Mocks(mockTokenExchange, mockUserExchange).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
+		Get(callbackGithub).
+		Query("state", testSecret).
+		Query("code", "test code").
+		Expect(t).
+		Status(http.StatusFound).
+		HeaderPresent(auth.SetCookie).
+		End()
+
+	user, err := db.GetUser(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if user.Login != "test" {
+		t.Fatalf("incorrect user login: expected 'test', got %s", user.Name)
+	}
+}
+
+func TestOAuth2CallbackUserExchange(t *testing.T) {
+	logger := qtest.Logger(t)
+	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	tm, err := auth.NewTokenManager(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mockTokenExchange := apitest.NewMock().
+		Post(loginToken).
+		RespondWith().
+		Body(`{"access_token": "test_token"}`).
+		Status(http.StatusOK).
+		End()
+	mockEmptyUserInfo := apitest.NewMock().
+		Get(user).
+		RespondWith().
+		Body(`userID: "none"`).
+		Status(http.StatusOK).
+		End()
+	mockEmptyResponseBody := apitest.NewMock().
+		Get(user).
+		RespondWith().
+		Status(http.StatusOK).
+		End()
+	mockBadRequestStatus := apitest.NewMock().
+		Get(user).
+		RespondWith().
+		Body(`userID: "none"`).
+		Status(http.StatusBadRequest).
+		End()
+
+	apitest.New().Mocks(mockTokenExchange, mockEmptyUserInfo).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
+		Get(callbackGithub).
+		Query("state", testSecret).
+		Query("code", "test code").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		HeaderNotPresent(auth.SetCookie).
+		End()
+	apitest.New().Mocks(mockTokenExchange, mockEmptyResponseBody).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
+		Get(callbackGithub).
+		Query("state", testSecret).
+		Query("code", "test code").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		HeaderNotPresent(auth.SetCookie).
+		End()
+	apitest.New().Mocks(mockTokenExchange, mockBadRequestStatus).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
+		Get(callbackGithub).
+		Query("state", testSecret).
+		Query("code", "test code").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		HeaderNotPresent(auth.SetCookie).
+		End()
+
+	checkNoUsersInDB(db, t)
+}
+
+func TestOAuth2CallbackTokenExchange(t *testing.T) {
+	logger := qtest.Logger(t)
+	authConfig := auth.NewGitHubConfig("", &scm.Config{})
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	tm, err := auth.NewTokenManager(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mockEmptyAccessToken := apitest.NewMock().
+		Post(loginToken).
+		RespondWith().
+		Body(`{"access_token": ""}`).
+		Status(http.StatusOK).
+		End()
+	mockEmptyResponseBody := apitest.NewMock().
+		Post(loginToken).
+		RespondWith().
+		Status(http.StatusOK).
+		End()
+	// Token value is an empty string.
+	apitest.New().Mocks(mockEmptyAccessToken).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
+		Get(callbackGithub).
+		Query("state", testSecret).
+		Query("code", "test code").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		HeaderNotPresent(auth.SetCookie).
+		End()
+	// No values in the request body.
+	apitest.New().Mocks(mockEmptyResponseBody).
+		HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
+		Get(callbackGithub).
+		Query("state", testSecret).
+		Query("code", "test code").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		HeaderNotPresent(auth.SetCookie).
+		End()
+
+	checkNoUsersInDB(db, t)
 }
 
 func TestOAuth2CallbackBadRequest(t *testing.T) {
-	r := httptest.NewRequest(http.MethodGet, authURL, nil)
-	w := httptest.NewRecorder()
-
-	store := newStore()
-	gothic.Store = store
-
-	e := echo.New()
-	c := e.NewContext(r, w)
-
+	logger := qtest.Logger(t)
+	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-
-	authHandler := auth.OAuth2Callback(qlog.Logger(t), db, auth.NewScms())
-	withSession := session.Middleware(store)(authHandler)
-	err := withSession(c)
-	httpErr, ok := err.(*echo.HTTPError)
-	if !ok {
-		t.Errorf("unexpected error type: %v", reflect.TypeOf(err))
-	}
-
-	assertCode(t, httpErr.Code, http.StatusBadRequest)
-}
-
-func TestPreAuthNoSession(t *testing.T) {
-	testPreAuthLoggedIn(t, false, false, "github")
-}
-
-func TestPreAuthLoggedInNoDBUser(t *testing.T) {
-	testPreAuthLoggedIn(t, true, false, "github")
-}
-
-func TestPreAuthLogged(t *testing.T) {
-	testPreAuthLoggedIn(t, true, true, "github")
-}
-
-func TestPreAuthLoggedInNewIdentity(t *testing.T) {
-	testPreAuthLoggedIn(t, true, true, "gitlab")
-}
-
-func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvider string) {
-	const (
-		provider = "github"
-		remoteID = 0
-		secret   = "secret"
-	)
-	shouldPass := !haveSession || existingUser
-
-	r := httptest.NewRequest(http.MethodGet, authURL, nil)
-	w := httptest.NewRecorder()
-
-	store := newStore()
-	gothic.Store = store
-
-	e := echo.New()
-	rou := e.Router()
-	rou.Add("GET", "/:provider", func(echo.Context) error { return nil })
-	c := e.NewContext(r, w)
-
-	if haveSession {
-		if err := store.login(c); err != nil {
-			t.Error(err)
-		}
-	}
-
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	if existingUser {
-		if err := db.CreateUserFromRemoteIdentity(&qf.User{}, &qf.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: secret,
-		}); err != nil {
-			t.Fatal(err)
-		}
-		c.SetParamNames("provider")
-		c.SetParamValues(newProvider)
-	}
-
-	authHandler := auth.PreAuth(qlog.Logger(t), db)(func(c echo.Context) error { return nil })
-	withSession := session.Middleware(store)(authHandler)
-
-	if err := withSession(c); err != nil {
-		t.Error(err)
-	}
-
-	wantLocation := loginRedirect
-	switch {
-	case shouldPass:
-		wantLocation = ""
-	}
-	location := w.Header().Get("Location")
-	if location != wantLocation {
-		t.Errorf("have Location '%v' want '%v'", location, wantLocation)
-	}
-
-	wantCode := http.StatusFound
-	if shouldPass {
-		wantCode = http.StatusOK
-	}
-
-	assertCode(t, w.Code, wantCode)
-}
-
-func TestOAuth2LoginAuthenticated(t *testing.T) {
-	const userID = "1"
-
-	r := httptest.NewRequest(http.MethodGet, authURL, nil)
-	w := httptest.NewRecorder()
-
-	qv := r.URL.Query()
-	qv.Set(auth.State, r.URL.Query().Get(auth.Redirect))
-	r.URL.RawQuery = qv.Encode()
-
-	store := newStore()
-	gothic.Store = store
-
-	fakeSession := auth.FakeSession{ID: userID}
-	s, _ := store.Get(r, fakeSessionName)
-	s.Values[fakeSessionKey] = fakeSession.Marshal()
-	if err := s.Save(r, w); err != nil {
-		t.Error(err)
-	}
-
-	_, err := gothic.GetAuthURL(w, r)
+	tm, err := auth.NewTokenManager(db)
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Wrong request method.
+	apitest.New().HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
+		Post(callbackGithub).
+		Query("state", testSecret).
+		Query("code", "test code").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		End()
+	// Incorrect secret code.
+	apitest.New().HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
+		Get(callbackGithub).
+		Query("state", "not a secret").
+		Query("code", "test code").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		End()
+	// Empty exchange code.
+	apitest.New().HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
+		Get(callbackGithub).
+		Query("state", testSecret).
+		Query("code", "").
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		End()
+	// Request with empty body content.
+	apitest.New().HandlerFunc(auth.OAuth2Callback(logger, db, tm, authConfig, testSecret)).
+		Get(callbackGithub).
+		Expect(t).
+		Status(http.StatusUnauthorized).
+		End()
 
-	e := echo.New()
-	c := e.NewContext(r, w)
-
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	authHandler := auth.OAuth2Login(qlog.Logger(t), db)
-	withSession := session.Middleware(store)(authHandler)
-
-	if err := withSession(c); err != nil {
-		t.Error(err)
-	}
-
-	assertCode(t, w.Code, http.StatusTemporaryRedirect)
+	checkNoUsersInDB(db, t)
 }
 
-func TestOAuth2CallbackNoSession(t *testing.T) {
-	testOAuth2Callback(t, false, false)
+func TestOAuth2Logout(t *testing.T) {
+	apitest.New().HandlerFunc(auth.OAuth2Logout()).
+		Get(auth.Logout).
+		// Make sure an outdated auth cookie with a correct name does not break API.
+		Cookie(auth.CookieName, "empty").
+		Expect(t).
+		Status(http.StatusFound).
+		Cookies(
+			apitest.NewCookie(auth.CookieName).
+				Value("").
+				MaxAge(-1),
+		).
+		End()
 }
 
-func TestOAuth2CallbackExistingUser(t *testing.T) {
-	testOAuth2Callback(t, true, false)
-}
-
-func TestOAuth2CallbackLoggedIn(t *testing.T) {
-	testOAuth2Callback(t, true, true)
-}
-
-func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
-	const (
-		provider = "github"
-		userID   = "1"
-		remoteID = 0
-		secret   = "secret"
-	)
-	r := httptest.NewRequest(http.MethodGet, authURL, nil)
-	w := httptest.NewRecorder()
-
-	qv := r.URL.Query()
-	qv.Set(auth.State, "0"+r.URL.Query().Get(auth.Redirect))
-	r.URL.RawQuery = qv.Encode()
-
-	store := newStore()
-	gothic.Store = store
-
-	fakeSession := auth.FakeSession{ID: userID}
-	s, _ := store.Get(r, fakeSessionName)
-	s.Values[fakeSessionKey] = fakeSession.Marshal()
-	if err := s.Save(r, w); err != nil {
-		t.Error(err)
-	}
-
-	_, err := gothic.GetAuthURL(w, r)
+func checkNoUsersInDB(db database.Database, t *testing.T) {
+	users, err := db.GetUsers()
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	e := echo.New()
-	c := e.NewContext(r, w)
-
-	if haveSession {
-		if err := store.login(c); err != nil {
-			t.Error(err)
-		}
+	if len(users) > 0 {
+		t.Fatalf("Expected empty database, got %d users", len(users))
 	}
-
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	if existingUser {
-		if err := db.CreateUserFromRemoteIdentity(&qf.User{}, &qf.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: secret,
-		}); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	authHandler := auth.OAuth2Callback(qlog.Logger(t), db, auth.NewScms())
-	withSession := session.Middleware(store)(authHandler)
-
-	if err := withSession(c); err != nil {
-		t.Error(err)
-	}
-
-	location := w.Header().Get("Location")
-	if location != loginRedirect {
-		t.Errorf("have Location '%v' want '%v'", location, loginRedirect)
-	}
-
-	assertCode(t, w.Code, http.StatusFound)
-}
-
-func TestAccessControl(t *testing.T) {
-	const (
-		provider = "github"
-		remoteID = 0
-		secret   = "secret"
-		token    = "test"
-	)
-
-	r := httptest.NewRequest(http.MethodGet, authURL, nil)
-	w := httptest.NewRecorder()
-
-	store := newStore()
-
-	e := echo.New()
-	c := e.NewContext(r, w)
-
-	db, cleanup := qtest.TestDB(t)
-	defer cleanup()
-
-	// Create a new user.
-	if err := db.CreateUserFromRemoteIdentity(&qf.User{}, &qf.RemoteIdentity{
-		Provider:    provider,
-		RemoteID:    remoteID,
-		AccessToken: secret,
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	m := auth.AccessControl(qlog.Logger(t), db, auth.NewScms())
-	protected := session.Middleware(store)(m(func(c echo.Context) error {
-		return c.NoContent(http.StatusOK)
-	}))
-
-	// User is not logged in.
-	if err := protected(c); err != nil {
-		t.Error(err)
-	}
-
-	if err := store.login(c); err != nil {
-		t.Error(err)
-	}
-
-	// Add cookie to mimic logged in request
-	c.Request().AddCookie(&http.Cookie{Name: auth.SessionKey, Value: token})
-
-	// User is logged in.
-	if err := protected(c); err != nil {
-		t.Error(err)
-	}
-}
-
-func assertCode(t *testing.T, haveCode, wantCode int) {
-	t.Helper()
-	if haveCode != wantCode {
-		t.Errorf("have status code %d want %d", haveCode, wantCode)
-	}
-}
-
-type testStore struct {
-	store map[*http.Request]*sessions.Session
-}
-
-func newStore() *testStore {
-	return &testStore{
-		make(map[*http.Request]*sessions.Session),
-	}
-}
-
-func (ts testStore) login(c echo.Context) error {
-	s, err := ts.Get(c.Request(), auth.SessionKey)
-	if err != nil {
-		return err
-	}
-	s.Values[auth.UserKey] = &auth.UserSession{
-		ID:        1,
-		Providers: map[string]struct{}{"github": {}},
-	}
-	return s.Save(c.Request(), c.Response())
-}
-
-func (ts testStore) Get(r *http.Request, name string) (*sessions.Session, error) {
-	s := ts.store[r]
-	if s == nil {
-		s, err := ts.New(r, name)
-		return s, err
-	}
-	return s, nil
-}
-
-func (ts testStore) New(r *http.Request, name string) (*sessions.Session, error) {
-	s := sessions.NewSession(ts, name)
-	s.Options = &sessions.Options{
-		Path:   "/",
-		MaxAge: 86400 * 30,
-	}
-	ts.store[r] = s
-	return s, nil
-}
-
-func (ts testStore) Save(r *http.Request, w http.ResponseWriter, s *sessions.Session) error {
-	ts.store[r] = s
-	return nil
 }

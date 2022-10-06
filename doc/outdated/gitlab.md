@@ -9,7 +9,7 @@ TODO(meling) These instructions are outdated, and would require updating the `sc
         1. Name your application I.e Autograde-development
     5. Redirect URL is very important, and should be individual for each unique instance of Autograde.
 
-        <https://{base-url}/auth/gitlab/callback>
+        <https://{base-url}/auth/callback/gitlab>
     6. Once you click create, you will be able to retrieve your
         1. Application-ID (called client-ID in Autograde)
         2. Secret (called client-secret in Autograde)

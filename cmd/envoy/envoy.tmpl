@@ -66,20 +66,16 @@ static_resources:
               domains:
                 - "{{ .Domain }}"
               routes:
-              - match: { prefix: "/qf.QuickFeedService/"}
-                route:
-                  cluster: grpc_service
               - match: { prefix: "/"}
                 route:
                   cluster: web_service
-              - match: {prefix: "/auth/github/callback"}
+              - match: {prefix: "/auth/callback/github"}
                 route: { cluster: web_service }
               cors:
                 allow_origin_string_match:
                   - prefix: "*"
                 allow_headers: access-control-allow-origin
           http_filters:
-          - name: envoy.filters.http.grpc_web
           - name: envoy.filters.http.cors
           - name: envoy.filters.http.router
           http_protocol_options: { accept_http_10: true}
@@ -92,24 +88,11 @@ static_resources:
             # Replace certificate with your certificates
             tls_certificates:
               certificate_chain:
-                filename: /etc/letsencrypt/live/{{ .Domain }}/{{ .CertConfig.CertFile }}
+                filename: {{ .CertConfig.CertFile }}
               private_key:
-                filename: /etc/letsencrypt/live/{{ .Domain }}/{{ .CertConfig.KeyFile }}
+                filename: {{ .CertConfig.KeyFile }}
 {{- end }}
   clusters:
-  - name: grpc_service
-    connect_timeout: 1500s
-    type: logical_dns
-    http2_protocol_options: {}
-    upstream_connection_options: { tcp_keepalive: { keepalive_time: 300 }}
-    lb_policy: round_robin
-    load_assignment:
-      cluster_name: cluster_0
-      endpoints:
-        - lb_endpoints:
-          - endpoint:
-              address:
-                socket_address: { address: {{ .ServerHost }}, port_value: {{ .GRPCPort }} }
   - name: web_service
     connect_timeout: 15s
     type: strict_dns

@@ -28,7 +28,7 @@ export class QuickFeedServiceClient {
                options?: null | { [index: string]: any; }) {
     if (!options) options = {};
     if (!credentials) credentials = {};
-    options['format'] = 'text';
+    options['format'] = 'binary';
 
     this.client_ = new grpcWeb.GrpcWebClientBase(options);
     this.hostname_ = hostname;
@@ -206,49 +206,6 @@ export class QuickFeedServiceClient {
     request,
     metadata || {},
     this.methodDescriptorUpdateUser);
-  }
-
-  methodDescriptorIsAuthorizedTeacher = new grpcWeb.MethodDescriptor(
-    '/qf.QuickFeedService/IsAuthorizedTeacher',
-    grpcWeb.MethodType.UNARY,
-    qf_requests_pb.Void,
-    qf_requests_pb.AuthorizationResponse,
-    (request: qf_requests_pb.Void) => {
-      return request.serializeBinary();
-    },
-    qf_requests_pb.AuthorizationResponse.deserializeBinary
-  );
-
-  isAuthorizedTeacher(
-    request: qf_requests_pb.Void,
-    metadata: grpcWeb.Metadata | null): Promise<qf_requests_pb.AuthorizationResponse>;
-
-  isAuthorizedTeacher(
-    request: qf_requests_pb.Void,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: qf_requests_pb.AuthorizationResponse) => void): grpcWeb.ClientReadableStream<qf_requests_pb.AuthorizationResponse>;
-
-  isAuthorizedTeacher(
-    request: qf_requests_pb.Void,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: qf_requests_pb.AuthorizationResponse) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/qf.QuickFeedService/IsAuthorizedTeacher',
-        request,
-        metadata || {},
-        this.methodDescriptorIsAuthorizedTeacher,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/qf.QuickFeedService/IsAuthorizedTeacher',
-    request,
-    metadata || {},
-    this.methodDescriptorIsAuthorizedTeacher);
   }
 
   methodDescriptorGetGroup = new grpcWeb.MethodDescriptor(
@@ -1068,6 +1025,49 @@ export class QuickFeedServiceClient {
     this.methodDescriptorGetSubmissions);
   }
 
+  methodDescriptorGetSubmission = new grpcWeb.MethodDescriptor(
+    '/qf.QuickFeedService/GetSubmission',
+    grpcWeb.MethodType.UNARY,
+    qf_requests_pb.SubmissionReviewersRequest,
+    qf_types_pb.Submission,
+    (request: qf_requests_pb.SubmissionReviewersRequest) => {
+      return request.serializeBinary();
+    },
+    qf_types_pb.Submission.deserializeBinary
+  );
+
+  getSubmission(
+    request: qf_requests_pb.SubmissionReviewersRequest,
+    metadata: grpcWeb.Metadata | null): Promise<qf_types_pb.Submission>;
+
+  getSubmission(
+    request: qf_requests_pb.SubmissionReviewersRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: qf_types_pb.Submission) => void): grpcWeb.ClientReadableStream<qf_types_pb.Submission>;
+
+  getSubmission(
+    request: qf_requests_pb.SubmissionReviewersRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: qf_types_pb.Submission) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/qf.QuickFeedService/GetSubmission',
+        request,
+        metadata || {},
+        this.methodDescriptorGetSubmission,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/qf.QuickFeedService/GetSubmission',
+    request,
+    metadata || {},
+    this.methodDescriptorGetSubmission);
+  }
+
   methodDescriptorGetSubmissionsByCourse = new grpcWeb.MethodDescriptor(
     '/qf.QuickFeedService/GetSubmissionsByCourse',
     grpcWeb.MethodType.UNARY,
@@ -1625,49 +1625,6 @@ export class QuickFeedServiceClient {
     request,
     metadata || {},
     this.methodDescriptorGetReviewers);
-  }
-
-  methodDescriptorGetProviders = new grpcWeb.MethodDescriptor(
-    '/qf.QuickFeedService/GetProviders',
-    grpcWeb.MethodType.UNARY,
-    qf_requests_pb.Void,
-    qf_requests_pb.Providers,
-    (request: qf_requests_pb.Void) => {
-      return request.serializeBinary();
-    },
-    qf_requests_pb.Providers.deserializeBinary
-  );
-
-  getProviders(
-    request: qf_requests_pb.Void,
-    metadata: grpcWeb.Metadata | null): Promise<qf_requests_pb.Providers>;
-
-  getProviders(
-    request: qf_requests_pb.Void,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: qf_requests_pb.Providers) => void): grpcWeb.ClientReadableStream<qf_requests_pb.Providers>;
-
-  getProviders(
-    request: qf_requests_pb.Void,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: qf_requests_pb.Providers) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/qf.QuickFeedService/GetProviders',
-        request,
-        metadata || {},
-        this.methodDescriptorGetProviders,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/qf.QuickFeedService/GetProviders',
-    request,
-    metadata || {},
-    this.methodDescriptorGetProviders);
   }
 
   methodDescriptorGetOrganization = new grpcWeb.MethodDescriptor(

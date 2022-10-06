@@ -26,9 +26,6 @@ var QuickFeedServiceClient = /** @class */ (function () {
         this.methodDescriptorUpdateUser = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/UpdateUser', grpcWeb.MethodType.UNARY, qf_types_pb.User, qf_requests_pb.Void, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Void.deserializeBinary);
-        this.methodDescriptorIsAuthorizedTeacher = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/IsAuthorizedTeacher', grpcWeb.MethodType.UNARY, qf_requests_pb.Void, qf_requests_pb.AuthorizationResponse, function (request) {
-            return request.serializeBinary();
-        }, qf_requests_pb.AuthorizationResponse.deserializeBinary);
         this.methodDescriptorGetGroup = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetGroup', grpcWeb.MethodType.UNARY, qf_requests_pb.GetGroupRequest, qf_types_pb.Group, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Group.deserializeBinary);
@@ -86,6 +83,9 @@ var QuickFeedServiceClient = /** @class */ (function () {
         this.methodDescriptorGetSubmissions = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmissions', grpcWeb.MethodType.UNARY, qf_requests_pb.SubmissionRequest, qf_types_pb.Submissions, function (request) {
             return request.serializeBinary();
         }, qf_types_pb.Submissions.deserializeBinary);
+        this.methodDescriptorGetSubmission = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmission', grpcWeb.MethodType.UNARY, qf_requests_pb.SubmissionReviewersRequest, qf_types_pb.Submission, function (request) {
+            return request.serializeBinary();
+        }, qf_types_pb.Submission.deserializeBinary);
         this.methodDescriptorGetSubmissionsByCourse = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetSubmissionsByCourse', grpcWeb.MethodType.UNARY, qf_requests_pb.SubmissionsForCourseRequest, qf_requests_pb.CourseSubmissions, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.CourseSubmissions.deserializeBinary);
@@ -125,9 +125,6 @@ var QuickFeedServiceClient = /** @class */ (function () {
         this.methodDescriptorGetReviewers = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetReviewers', grpcWeb.MethodType.UNARY, qf_requests_pb.SubmissionReviewersRequest, qf_requests_pb.Reviewers, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Reviewers.deserializeBinary);
-        this.methodDescriptorGetProviders = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetProviders', grpcWeb.MethodType.UNARY, qf_requests_pb.Void, qf_requests_pb.Providers, function (request) {
-            return request.serializeBinary();
-        }, qf_requests_pb.Providers.deserializeBinary);
         this.methodDescriptorGetOrganization = new grpcWeb.MethodDescriptor('/qf.QuickFeedService/GetOrganization', grpcWeb.MethodType.UNARY, qf_requests_pb.OrgRequest, qf_requests_pb.Organization, function (request) {
             return request.serializeBinary();
         }, qf_requests_pb.Organization.deserializeBinary);
@@ -141,7 +138,7 @@ var QuickFeedServiceClient = /** @class */ (function () {
             options = {};
         if (!credentials)
             credentials = {};
-        options['format'] = 'text';
+        options['format'] = 'binary';
         this.client_ = new grpcWeb.GrpcWebClientBase(options);
         this.hostname_ = hostname;
         this.credentials_ = credentials;
@@ -178,14 +175,6 @@ var QuickFeedServiceClient = /** @class */ (function () {
         }
         return this.client_.unaryCall(this.hostname_ +
             '/qf.QuickFeedService/UpdateUser', request, metadata || {}, this.methodDescriptorUpdateUser);
-    };
-    QuickFeedServiceClient.prototype.isAuthorizedTeacher = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/IsAuthorizedTeacher', request, metadata || {}, this.methodDescriptorIsAuthorizedTeacher, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/IsAuthorizedTeacher', request, metadata || {}, this.methodDescriptorIsAuthorizedTeacher);
     };
     QuickFeedServiceClient.prototype.getGroup = function (request, metadata, callback) {
         if (callback !== undefined) {
@@ -339,6 +328,14 @@ var QuickFeedServiceClient = /** @class */ (function () {
         return this.client_.unaryCall(this.hostname_ +
             '/qf.QuickFeedService/GetSubmissions', request, metadata || {}, this.methodDescriptorGetSubmissions);
     };
+    QuickFeedServiceClient.prototype.getSubmission = function (request, metadata, callback) {
+        if (callback !== undefined) {
+            return this.client_.rpcCall(this.hostname_ +
+                '/qf.QuickFeedService/GetSubmission', request, metadata || {}, this.methodDescriptorGetSubmission, callback);
+        }
+        return this.client_.unaryCall(this.hostname_ +
+            '/qf.QuickFeedService/GetSubmission', request, metadata || {}, this.methodDescriptorGetSubmission);
+    };
     QuickFeedServiceClient.prototype.getSubmissionsByCourse = function (request, metadata, callback) {
         if (callback !== undefined) {
             return this.client_.rpcCall(this.hostname_ +
@@ -442,14 +439,6 @@ var QuickFeedServiceClient = /** @class */ (function () {
         }
         return this.client_.unaryCall(this.hostname_ +
             '/qf.QuickFeedService/GetReviewers', request, metadata || {}, this.methodDescriptorGetReviewers);
-    };
-    QuickFeedServiceClient.prototype.getProviders = function (request, metadata, callback) {
-        if (callback !== undefined) {
-            return this.client_.rpcCall(this.hostname_ +
-                '/qf.QuickFeedService/GetProviders', request, metadata || {}, this.methodDescriptorGetProviders, callback);
-        }
-        return this.client_.unaryCall(this.hostname_ +
-            '/qf.QuickFeedService/GetProviders', request, metadata || {}, this.methodDescriptorGetProviders);
     };
     QuickFeedServiceClient.prototype.getOrganization = function (request, metadata, callback) {
         if (callback !== undefined) {

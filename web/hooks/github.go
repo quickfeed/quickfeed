@@ -7,6 +7,7 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qlog"
+	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 )
 
@@ -14,45 +15,48 @@ import (
 type GitHubWebHook struct {
 	logger *zap.SugaredLogger
 	db     database.Database
+	scmMgr *scm.Manager
 	runner ci.Runner
 	secret string
 }
 
 // NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the QuickFeed server.
-func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runner, secret string) *GitHubWebHook {
-	return &GitHubWebHook{logger: logger, db: db, runner: runner, secret: secret}
+func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, runner ci.Runner, secret string) *GitHubWebHook {
+	return &GitHubWebHook{logger: logger, db: db, scmMgr: mgr, runner: runner, secret: secret}
 }
 
 // Handle take POST requests from GitHub, representing Push events
 // associated with course repositories, which then triggers various
 // actions on the QuickFeed backend.
-func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
-	payload, err := github.ValidatePayload(r, []byte(wh.secret))
-	if err != nil {
-		wh.logger.Errorf("Error in request body: %v", err)
-		return
-	}
-	defer r.Body.Close()
-
-	event, err := github.ParseWebHook(github.WebHookType(r), payload)
-	if err != nil {
-		wh.logger.Errorf("Could not parse github webhook: %v", err)
-		return
-	}
-	wh.logger.Debug(qlog.IndentJson(event))
-	switch e := event.(type) {
-	case *github.PushEvent:
-		wh.handlePush(e)
-	case *github.PullRequestEvent:
-		switch e.GetAction() {
-		case "opened":
-			wh.handlePullRequestOpened(e)
-		case "closed":
-			wh.handlePullRequestClosed(e)
+func (wh GitHubWebHook) Handle() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		payload, err := github.ValidatePayload(r, []byte(wh.secret))
+		if err != nil {
+			wh.logger.Errorf("Error in request body: %v", err)
+			return
 		}
-	case *github.PullRequestReviewEvent:
-		wh.handlePullRequestReview(e)
-	default:
-		wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
+		defer r.Body.Close()
+
+		event, err := github.ParseWebHook(github.WebHookType(r), payload)
+		if err != nil {
+			wh.logger.Errorf("Could not parse github webhook: %v", err)
+			return
+		}
+		wh.logger.Debug(qlog.IndentJson(event))
+		switch e := event.(type) {
+		case *github.PushEvent:
+			wh.handlePush(e)
+		case *github.PullRequestEvent:
+			switch e.GetAction() {
+			case "opened":
+				wh.handlePullRequestOpened(e)
+			case "closed":
+				wh.handlePullRequestClosed(e)
+			}
+		case *github.PullRequestReviewEvent:
+			wh.handlePullRequestReview(e)
+		default:
+			wh.logger.Debugf("Ignored event type %s", github.WebHookType(r))
+		}
 	}
 }

@@ -155,8 +155,8 @@ export class Organization extends jspb.Message {
   getId(): number;
   setId(value: number): Organization;
 
-  getPath(): string;
-  setPath(value: string): Organization;
+  getName(): string;
+  setName(value: string): Organization;
 
   getAvatar(): string;
   setAvatar(value: string): Organization;
@@ -175,7 +175,7 @@ export class Organization extends jspb.Message {
 export namespace Organization {
   export type AsObject = {
     id: number,
-    path: string,
+    name: string,
     avatar: string,
     paymentplan: string,
   }
@@ -393,26 +393,6 @@ export namespace SubmissionReviewersRequest {
   }
 }
 
-export class Providers extends jspb.Message {
-  getProvidersList(): Array<string>;
-  setProvidersList(value: Array<string>): Providers;
-  clearProvidersList(): Providers;
-  addProviders(value: string, index?: number): Providers;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Providers.AsObject;
-  static toObject(includeInstance: boolean, msg: Providers): Providers.AsObject;
-  static serializeBinaryToWriter(message: Providers, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Providers;
-  static deserializeBinaryFromReader(message: Providers, reader: jspb.BinaryReader): Providers;
-}
-
-export namespace Providers {
-  export type AsObject = {
-    providersList: Array<string>,
-  }
-}
-
 export class URLRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): URLRequest;
@@ -481,24 +461,6 @@ export namespace Repositories {
   }
 }
 
-export class AuthorizationResponse extends jspb.Message {
-  getIsauthorized(): boolean;
-  setIsauthorized(value: boolean): AuthorizationResponse;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): AuthorizationResponse.AsObject;
-  static toObject(includeInstance: boolean, msg: AuthorizationResponse): AuthorizationResponse.AsObject;
-  static serializeBinaryToWriter(message: AuthorizationResponse, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): AuthorizationResponse;
-  static deserializeBinaryFromReader(message: AuthorizationResponse, reader: jspb.BinaryReader): AuthorizationResponse;
-}
-
-export namespace AuthorizationResponse {
-  export type AsObject = {
-    isauthorized: boolean,
-  }
-}
-
 export class Status extends jspb.Message {
   getCode(): number;
   setCode(value: number): Status;
@@ -528,9 +490,6 @@ export class SubmissionsForCourseRequest extends jspb.Message {
   getType(): SubmissionsForCourseRequest.Type;
   setType(value: SubmissionsForCourseRequest.Type): SubmissionsForCourseRequest;
 
-  getWithbuildinfo(): boolean;
-  setWithbuildinfo(value: boolean): SubmissionsForCourseRequest;
-
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): SubmissionsForCourseRequest.AsObject;
   static toObject(includeInstance: boolean, msg: SubmissionsForCourseRequest): SubmissionsForCourseRequest.AsObject;
@@ -543,7 +502,6 @@ export namespace SubmissionsForCourseRequest {
   export type AsObject = {
     courseid: number,
     type: SubmissionsForCourseRequest.Type,
-    withbuildinfo: boolean,
   }
 
   export enum Type { 
@@ -554,16 +512,14 @@ export namespace SubmissionsForCourseRequest {
 }
 
 export class RebuildRequest extends jspb.Message {
-  getSubmissionid(): number;
-  setSubmissionid(value: number): RebuildRequest;
-
   getCourseid(): number;
   setCourseid(value: number): RebuildRequest;
 
   getAssignmentid(): number;
   setAssignmentid(value: number): RebuildRequest;
 
-  getRebuildtypeCase(): RebuildRequest.RebuildtypeCase;
+  getSubmissionid(): number;
+  setSubmissionid(value: number): RebuildRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): RebuildRequest.AsObject;
@@ -575,15 +531,9 @@ export class RebuildRequest extends jspb.Message {
 
 export namespace RebuildRequest {
   export type AsObject = {
-    submissionid: number,
     courseid: number,
     assignmentid: number,
-  }
-
-  export enum RebuildtypeCase { 
-    REBUILDTYPE_NOT_SET = 0,
-    SUBMISSIONID = 1,
-    COURSEID = 2,
+    submissionid: number,
   }
 }
 

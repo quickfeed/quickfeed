@@ -3,17 +3,15 @@ package scm
 import (
 	"context"
 	"errors"
-	"os"
 
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
 )
 
 // SCM is a common interface for different source code management solutions,
-// i.e., GitHub and GitLab.
+// i.e., GitHub.
 type SCM interface {
-	// Creates a new organization.
-	CreateOrganization(context.Context, *OrganizationOptions) (*qf.Organization, error)
 	// Updates an organization
 	UpdateOrganization(context.Context, *OrganizationOptions) error
 	// Gets an organization.
@@ -32,8 +30,7 @@ type SCM interface {
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
 	// List the webhooks associated with the provided repository or organization.
 	ListHooks(context.Context, *Repository, string) ([]*Hook, error)
-	// Creates a new webhook for organization if the name of organization
-	// is provided. Otherwise creates a hook for the given repo.
+	// Create a new webhook at the organization level.
 	CreateHook(context.Context, *CreateHookOptions) error
 	// Create team.
 	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)
@@ -61,8 +58,6 @@ type SCM interface {
 	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
 	// RemoveMember removes user from the organization.
 	RemoveMember(context.Context, *OrgMembershipOptions) error
-	// Lists all authorizations for authenticated user.
-	GetUserScopes(context.Context) *Authorization
 
 	// Clone clones the given repository and returns the path to the cloned repository.
 	// The returned path is the provided destination directory joined with the
@@ -90,32 +85,29 @@ type SCM interface {
 	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
 
-	// Accepts repository invite.
+	// Accepts repository invites.
 	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
-}
-
-const defaultProvider = "github"
-
-var provider string
-
-// Provider returns the current SCM provider supported by this backend.
-func Provider() string {
-	return provider
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
 func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
-	provider = os.Getenv("SCM_PROVIDER")
-	if provider == "" {
-		provider = defaultProvider
-	}
+	provider := env.ScmProvider()
 	switch provider {
 	case "github":
 		return NewGithubSCMClient(logger, token), nil
-	case "gitlab":
-		return NewGitlabSCMClient(token), nil
 	case "fake":
-		return NewFakeSCMClient(), nil
+		return NewMockSCMClient(), nil
+	}
+	return nil, errors.New("invalid provider: " + provider)
+}
+
+func newSCMAppClient(ctx context.Context, logger *zap.SugaredLogger, config *Config, organization string) (SCM, error) {
+	provider := env.ScmProvider()
+	switch provider {
+	case "github":
+		return newGithubAppClient(ctx, logger, config, organization)
+	case "fake":
+		return NewMockSCMClient(), nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }
@@ -123,7 +115,6 @@ func NewSCMClient(logger *zap.SugaredLogger, token string) (SCM, error) {
 // OrganizationOptions contains information on how an organization should be
 // created.
 type OrganizationOptions struct {
-	Path              string
 	Name              string
 	DefaultPermission string
 	// prohibit students from creating new repos
@@ -168,7 +159,7 @@ type Hook struct {
 
 // CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
-	Organization *qf.Organization
+	Organization string
 	Path         string
 	Private      bool
 	Owner        string // The owner of an organization's repo is always the organization itself.
@@ -176,14 +167,11 @@ type CreateRepositoryOptions struct {
 }
 
 // CreateHookOptions contains information on how to create a webhook.
-// If Organization string is provided, will create a new hook on
-// the organization's level. This hook will be triggered on push to any
-// of the organization's repositories.
+// On GitHub, a single webhook is created on the organization level.
 type CreateHookOptions struct {
 	URL          string
 	Secret       string
 	Organization string
-	Repository   *Repository
 }
 
 // TeamOptions contains information about the team and the organization it belongs to.
@@ -295,10 +283,4 @@ type RequestReviewersOptions struct {
 	Repository   string
 	Number       int
 	Reviewers    []string // Reviewers is a slice of github usernames
-}
-
-// RepositoryInvitationOptions contains information on which organization and user to accept invitations for.
-type RepositoryInvitationOptions struct {
-	Login string // GitHub username.
-	Owner string // Name of the organization.
 }

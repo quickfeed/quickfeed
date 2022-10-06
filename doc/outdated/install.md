@@ -78,7 +78,7 @@ First you must install any Let's Encrypt client, for example [Certbot](https://c
 To run Certbot with NGINX and QuickFeed:
 
 ```sh
-sudo certbot-auto --nginx -d https://uis.itest.run/auth/github/callback
+sudo certbot-auto --nginx -d https://uis.itest.run/auth/callback/github
 ```
 
 Replace the URL for your deployment, according to the callback URL you specified for [GitHub's OAuth2 application](./github.md).
@@ -155,7 +155,7 @@ Before running the QuickFeed server, you need to configure [GitHub](./github.md)
 The command line arguments for the QuickFeed server looks roughly like this:
 
 ```sh
-quickfeed -service.url <DNS name of deployed service> -database.file <path to database> -http.addr <HTTP listener address>
+quickfeed -database.file <path to database> -http.addr <HTTP listener address>
 ```
 
 To view the full usage details:
@@ -167,7 +167,7 @@ quickfeed -help
 Here is an example with all default values:
 
 ```sh
-quickfeed -service.url uis.itest.run &> quickfeed.log &
+quickfeed &> quickfeed.log &
 ```
 
 *As a bootstrap mechanism, the first user to sign in, automatically becomes administrator for the system.*
@@ -176,7 +176,6 @@ quickfeed -service.url uis.itest.run &> quickfeed.log &
 
 | **Flag**        | **Description**                        | **Example**     |
 |-----------------|----------------------------------------|-----------------|
-| `service.url`   | Base DNS name for QuickFeed deployment | `uis.itest.run` |
 | `database.file` | Path to QuickFeed database             | `qf.db`         |
 | `grpc.addr`     | Listener address for gRPC service      | `:9090`         |
 | `http.addr`     | Listener address for HTTP service      | `:3005`         |

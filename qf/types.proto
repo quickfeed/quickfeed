@@ -28,9 +28,10 @@ message User {
     string email     = 5;
     string avatarURL = 6;
     string login     = 7;
+    bool updateToken = 8;
 
-    repeated RemoteIdentity remoteIdentities = 8;
-    repeated Enrollment enrollments          = 9;
+    repeated RemoteIdentity remoteIdentities = 9;
+    repeated Enrollment enrollments          = 10;
 }
 
 message Users {
@@ -75,7 +76,7 @@ message Course {
     string tag                     = 6;
     string provider                = 7;
     uint64 organizationID          = 8;
-    string organizationPath        = 9;  // The organization's SCM name, e.g. uis-dat520-2020.
+    string organizationName        = 9;  // The organization's SCM name, e.g. uis-dat520-2020.
     uint32 slipDays                = 10;
     string dockerfile              = 11;
     Enrollment.UserStatus enrolled = 12 [(go.field) = { tags: 'gorm:"-"' }];
@@ -125,16 +126,15 @@ message Enrollment {
     uint64 courseID                    = 2 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_enrollment"' }];
     uint64 userID                      = 3 [(go.field) = { tags: 'gorm:"uniqueIndex:idx_unique_enrollment"' }];
     uint64 groupID                     = 4;
-    bool hasTeacherScopes              = 5;
-    User user                          = 6;
-    Course course                      = 7;
-    Group group                        = 8;
-    UserStatus status                  = 9;
-    DisplayState state                 = 10;
-    uint32 slipDaysRemaining           = 11 [(go.field) = { tags: 'gorm:"-"' }];
-    string lastActivityDate            = 12;
-    uint64 totalApproved               = 13;
-    repeated UsedSlipDays usedSlipDays = 14;
+    User user                          = 5;
+    Course course                      = 6;
+    Group group                        = 7;
+    UserStatus status                  = 8;
+    DisplayState state                 = 9;
+    uint32 slipDaysRemaining           = 10 [(go.field) = { tags: 'gorm:"-"' }];
+    string lastActivityDate            = 11;
+    uint64 totalApproved               = 12;
+    repeated UsedSlipDays usedSlipDays = 13;
 }
 
 message UsedSlipDays {
@@ -245,11 +245,12 @@ message Submissions {
 
 message GradingBenchmark {
     uint64 ID                          = 1;
-    uint64 AssignmentID                = 2;  // foreign key
-    uint64 ReviewID                    = 3;  // foreign key
-    string heading                     = 4;
-    string comment                     = 5;
-    repeated GradingCriterion criteria = 6 [(go.field) = { tags: 'gorm:"foreignKey:BenchmarkID"' }];
+    uint64 CourseID                    = 2;  // foreign key
+    uint64 AssignmentID                = 3;  // foreign key
+    uint64 ReviewID                    = 4;  // foreign key
+    string heading                     = 5;
+    string comment                     = 6;
+    repeated GradingCriterion criteria = 7 [(go.field) = { tags: 'gorm:"foreignKey:BenchmarkID"' }];
 }
 
 message Benchmarks {
@@ -264,10 +265,11 @@ message GradingCriterion {
     }
     uint64 ID          = 1;
     uint64 BenchmarkID = 2;  // foreign key
-    uint64 points      = 3;
-    string description = 4;
-    Grade grade        = 5;
-    string comment     = 6;
+    uint64 CourseID    = 3;  // foreign key
+    uint64 points      = 4;
+    string description = 5;
+    Grade grade        = 6;
+    string comment     = 7;
 }
 
 message Review {

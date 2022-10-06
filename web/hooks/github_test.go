@@ -41,16 +41,16 @@ func TestGitHubWebHook(t *testing.T) {
 
 	ctx := context.Background()
 	opt := &scm.CreateHookOptions{
-		URL:        serverURL + "/webhook",
-		Secret:     secret,
-		Repository: &scm.Repository{Owner: qfTestOrg, Path: "tests"},
+		URL:          serverURL + "/webhook",
+		Secret:       secret,
+		Organization: qfTestOrg,
 	}
 	err := s.CreateHook(ctx, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	hooks, err := s.ListHooks(ctx, opt.Repository, "")
+	hooks, err := s.ListHooks(ctx, &scm.Repository{}, qfTestOrg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,9 +60,9 @@ func TestGitHubWebHook(t *testing.T) {
 
 	var db database.Database
 	var runner ci.Runner
-	webhook := NewGitHubWebHook(logger, db, runner, secret)
+	webhook := NewGitHubWebHook(logger, db, &scm.Manager{}, runner, secret)
 
 	log.Println("starting webhook server")
-	http.HandleFunc("/webhook", webhook.Handle)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	http.HandleFunc("/webhook", webhook.Handle())
+	t.Fatal(http.ListenAndServe(":8080", nil))
 }

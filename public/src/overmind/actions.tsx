@@ -261,8 +261,10 @@ export const updateEnrollment = async ({ state, effects }: Context, { enrollment
 /** approvePendingEnrollments approves all pending enrollments for the current course */
 export const approvePendingEnrollments = async ({ state, actions, effects }: Context): Promise<void> => {
     if (confirm("Please confirm that you want to approve all students")) {
-        // Clone and set status to student for all pending enrollments
-        const enrollments = Object.assign({}, state.pendingEnrollments)
+        // Clone and set status to student for all pending enrollments.
+        // We need to clone the enrollments to avoid modifying the state directly.
+        // We do not want to update set the enrollment status before the update is successful.
+        const enrollments = state.pendingEnrollments.map(e => Converter.clone(e))
         enrollments.forEach(e => e.status = Enrollment.UserStatus.STUDENT)
 
         // Send updated enrollments to server
@@ -283,6 +285,10 @@ export const approvePendingEnrollments = async ({ state, actions, effects }: Con
 export const getAssignments = async ({ state, effects }: Context): Promise<boolean> => {
     let success = true
     for (const enrollment of state.enrollments) {
+        if (isPending(enrollment)) {
+            // No need to get assignments for pending enrollments
+            continue
+        }
         const response = await effects.grpcMan.getAssignments(enrollment.courseid)
         if (response.data) {
             // Store assignments in state by course ID
@@ -309,9 +315,12 @@ type RepoKey = keyof typeof Repository.Type
 export const getRepositories = async ({ state, effects }: Context): Promise<boolean> => {
     let success = true
     for (const enrollment of state.enrollments) {
+        if (isPending(enrollment)) {
+            // No need to get repositories for pending enrollments
+            continue
+        }
         const courseID = enrollment.courseid
         state.repositories[courseID] = {}
-
         const response = await effects.grpcMan.getRepositories(courseID, generateRepositoryList(Converter.toEnrollment(enrollment)))
         if (response.data) {
             response.data.getUrlsMap().forEach((entry, key) => {
@@ -356,7 +365,7 @@ export const createCourse = async ({ state, actions, effects }: Context, value: 
     const course = Object.assign({}, value.course)
     /* Fill in required fields */
     course.organizationid = value.org.getId()
-    course.organizationpath = value.org.getPath()
+    course.organizationname = value.org.getName()
     course.provider = "github"
     course.coursecreatorid = state.self.id
     /* Send the course to the server */
@@ -440,8 +449,8 @@ export const getAllCourseSubmissions = async ({ state, actions, effects }: Conte
     state.isLoading = true
 
     // None of these should fail independently.
-    const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL, true)
-    const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.GROUP, true)
+    const result = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.ALL)
+    const groups = await effects.grpcMan.getSubmissionsByCourse(courseID, SubmissionsForCourseRequest.Type.GROUP)
     if (!success(result) || !success(groups)) {
         const failed = !success(result) ? result : groups
         actions.alertHandler(failed)
@@ -515,16 +524,39 @@ export const setActiveAssignment = ({ state }: Context, assignmentID: number): v
     state.activeAssignment = assignmentID
 }
 
+export const getSubmission = async ({ state, effects }: Context, { courseID, submissionID }: { courseID: number, submissionID: number }): Promise<void> => {
+    const response = await effects.grpcMan.getSubmission(courseID, submissionID)
+    if (!response.data || !success(response)) {
+        return
+    }
+    const submissions = state.groupView ? state.courseGroupSubmissions[courseID] : state.courseSubmissions[courseID]
+    if (!submissions) {
+        return
+    }
+    submissions.forEach(link => {
+        const sub = link.submissions?.find(submission => submission.submission?.id === submissionID)
+        if (sub?.submission && response.data) {
+            sub.submission = response.data.toObject()
+            if (state.activeSubmissionLink) {
+                state.activeSubmissionLink.submission = response.data?.toObject()
+            }
+        }
+    })
+}
+
 /** Rebuilds the currently active submission */
-export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<void> => {
-    if (state.currentSubmission && state.selectedAssignment) {
-        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.id, state.activeSubmission)
+export const rebuildSubmission = async ({ state, actions, effects }: Context): Promise<boolean> => {
+    if (state.currentSubmission && state.selectedAssignment && state.activeCourse) {
+        const response = await effects.grpcMan.rebuildSubmission(state.selectedAssignment.id, state.activeSubmission, state.activeCourse)
         if (success(response)) {
             // TODO: Alerting is temporary due to the fact that the server no longer returns the updated submission.
             // TODO: gRPC streaming should be implemented to send the updated submission to the client.
+            await actions.getSubmission({ courseID: state.activeCourse, submissionID: state.activeSubmission })
             actions.alert({ color: Color.GREEN, text: 'Submission rebuilt successfully' })
+            return true
         }
     }
+    return false
 }
 
 /* rebuildAllSubmissions rebuilds all submissions for a given assignment */
@@ -658,7 +690,18 @@ export const deleteBenchmark = async ({ actions, effects }: Context, { benchmark
     }
 }
 
-export const setActiveSubmissionLink = ({ state }: Context, link: SubmissionLink.AsObject): void => {
+export const refreshSubmission = async ({ effects }: Context, { link }: { link: SubmissionLink.AsObject }): Promise<SubmissionLink.AsObject> => {
+    if (link.submission && link.assignment) {
+        const response = await effects.grpcMan.getSubmission(link.assignment.courseid, link.submission.id)
+        if (success(response) && response.data) {
+            link.submission = response.data.toObject()
+        }
+    }
+    return link
+}
+
+export const setActiveSubmissionLink = async ({ state, actions }: Context, link: SubmissionLink.AsObject): Promise<void> => {
+    link = await actions.refreshSubmission({ link })
     state.activeSubmissionLink = link ? Converter.clone(link) : null
 }
 
@@ -668,7 +711,7 @@ export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment.A
 
 /* fetchUserData is called when the user enters the app. It fetches all data that is needed for the user to be able to use the app. */
 /* If the user is not logged in, i.e does not have a valid token, the process is aborted. */
-export const fetchUserData = async ({ state, actions, effects }: Context): Promise<boolean> => {
+export const fetchUserData = async ({ state, actions }: Context): Promise<boolean> => {
     let success = await actions.getSelf()
     // If getSelf returns false, the user is not logged in. Abort.
     if (!success) { state.isLoading = false; return false }
@@ -685,7 +728,9 @@ export const fetchUserData = async ({ state, actions, effects }: Context): Promi
                 await actions.getGroupSubmissions(courseID)
                 const statuses = isStudent(enrollment) ? [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER] : []
                 success = await actions.getEnrollmentsByCourse({ courseID: courseID, statuses: statuses })
-                await actions.getGroupByUserAndCourse(courseID)
+                if (enrollment.groupid > 0) {
+                    await actions.getGroupByUserAndCourse(courseID)
+                }
             }
             if (isTeacher(enrollment)) {
                 actions.getGroupsByCourse(courseID)
@@ -697,14 +742,6 @@ export const fetchUserData = async ({ state, actions, effects }: Context): Promi
         success = await actions.getRepositories()
         success = await actions.getCourses()
 
-        if (state.enrollments.some(enrollment => isTeacher(enrollment))) {
-            // Require teacher scopes if the user is a teacher.
-            const response = await effects.grpcMan.isAuthorizedTeacher()
-            if (!response.data?.getIsauthorized()) {
-                window.location.href = "https://" + window.location.hostname + "/auth/github-teacher"
-            }
-
-        }
         // End loading screen.
         state.isLoading = false
     }
@@ -741,14 +778,6 @@ export const setSelectedUser = ({ state }: Context, user: User.AsObject | null):
     state.activeUser = user
 }
 
-/** Returns whether or not the current user is an authorized teacher with teacher scopes */
-export const isAuthorizedTeacher = async ({ effects }: Context): Promise<boolean> => {
-    const response = await effects.grpcMan.isAuthorizedTeacher()
-    if (response.data) {
-        return response.data.getIsauthorized()
-    }
-    return false
-}
 
 export const alertHandler = ({ state }: Context, response: IGrpcResponse<unknown>): void => {
     if (response.status.getCode() === StatusCode.UNAUTHENTICATED) {

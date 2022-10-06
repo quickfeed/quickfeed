@@ -22,7 +22,7 @@ const AdminPage = (): JSX.Element => {
 
     // If the user is not an admin, redirect to the home page.
     if (!state.self.isadmin) {
-        return <Redirect to={"/"} />
+        return <Redirect to="/" />
     }
 
     const root = "/admin"
@@ -35,14 +35,15 @@ const AdminPage = (): JSX.Element => {
                 <Card {...createCourse} />
                 <Card {...editCourse} />
             </div>
+            
             <Switch>
-                <Route path={"/admin/manage"}>
+                <Route path="/admin/manage">
                     <Users />
                 </Route>
-                <Route path={"/admin/create"}>
+                <Route path="/admin/create">
                     <CourseForm />
                 </Route>
-                <Route path={"/admin/edit"}>
+                <Route path="/admin/edit">
                     <EditCourse />
                 </Route>
             </Switch>

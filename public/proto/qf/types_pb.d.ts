@@ -1,6 +1,7 @@
 import * as jspb from 'google-protobuf'
 
 import * as kit_score_score_pb from '../kit/score/score_pb';
+import * as patch_go_pb from '../patch/go_pb';
 
 
 export class User extends jspb.Message {
@@ -24,6 +25,9 @@ export class User extends jspb.Message {
 
   getLogin(): string;
   setLogin(value: string): User;
+
+  getUpdatetoken(): boolean;
+  setUpdatetoken(value: boolean): User;
 
   getRemoteidentitiesList(): Array<RemoteIdentity>;
   setRemoteidentitiesList(value: Array<RemoteIdentity>): User;
@@ -52,6 +56,7 @@ export namespace User {
     email: string,
     avatarurl: string,
     login: string,
+    updatetoken: boolean,
     remoteidentitiesList: Array<RemoteIdentity.AsObject>,
     enrollmentsList: Array<Enrollment.AsObject>,
   }
@@ -207,8 +212,8 @@ export class Course extends jspb.Message {
   getOrganizationid(): number;
   setOrganizationid(value: number): Course;
 
-  getOrganizationpath(): string;
-  setOrganizationpath(value: string): Course;
+  getOrganizationname(): string;
+  setOrganizationname(value: string): Course;
 
   getSlipdays(): number;
   setSlipdays(value: number): Course;
@@ -252,7 +257,7 @@ export namespace Course {
     tag: string,
     provider: string,
     organizationid: number,
-    organizationpath: string,
+    organizationname: string,
     slipdays: number,
     dockerfile: string,
     enrolled: Enrollment.UserStatus,
@@ -352,9 +357,6 @@ export class Enrollment extends jspb.Message {
   getGroupid(): number;
   setGroupid(value: number): Enrollment;
 
-  getHasteacherscopes(): boolean;
-  setHasteacherscopes(value: boolean): Enrollment;
-
   getUser(): User | undefined;
   setUser(value?: User): Enrollment;
   hasUser(): boolean;
@@ -404,7 +406,6 @@ export namespace Enrollment {
     courseid: number,
     userid: number,
     groupid: number,
-    hasteacherscopes: boolean,
     user?: User.AsObject,
     course?: Course.AsObject,
     group?: Group.AsObject,
@@ -807,6 +808,9 @@ export class GradingBenchmark extends jspb.Message {
   getId(): number;
   setId(value: number): GradingBenchmark;
 
+  getCourseid(): number;
+  setCourseid(value: number): GradingBenchmark;
+
   getAssignmentid(): number;
   setAssignmentid(value: number): GradingBenchmark;
 
@@ -835,6 +839,7 @@ export class GradingBenchmark extends jspb.Message {
 export namespace GradingBenchmark {
   export type AsObject = {
     id: number,
+    courseid: number,
     assignmentid: number,
     reviewid: number,
     heading: string,
@@ -870,6 +875,9 @@ export class GradingCriterion extends jspb.Message {
   getBenchmarkid(): number;
   setBenchmarkid(value: number): GradingCriterion;
 
+  getCourseid(): number;
+  setCourseid(value: number): GradingCriterion;
+
   getPoints(): number;
   setPoints(value: number): GradingCriterion;
 
@@ -894,6 +902,7 @@ export namespace GradingCriterion {
   export type AsObject = {
     id: number,
     benchmarkid: number,
+    courseid: number,
     points: number,
     description: string,
     grade: GradingCriterion.Grade,
