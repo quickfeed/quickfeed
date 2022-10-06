@@ -48,7 +48,8 @@ func (s MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
 		return "", err
 	}
 	// Simulate cloning by copying the testdata repository to the destination path.
-	if err := fileop.CopyDir(filepath.Join(env.Root(), "scm", "testdata", opt.Repository), opt.DestDir); err != nil {
+	testdataSrc := filepath.Join(env.Root(), "testdata", "courses", opt.Organization, opt.Repository)
+	if err := fileop.CopyDir(testdataSrc, opt.DestDir); err != nil {
 		return "", err
 	}
 	cloneDir := filepath.Join(opt.DestDir, opt.Repository)

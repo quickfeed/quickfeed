@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"os"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"testing"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
@@ -164,7 +167,7 @@ printf "AssignmentName: lab1\n"
 		t.Errorf("Expected error: record not found")
 	}
 
-	// os.Setenv("QUICKFEED_REPOSITORY_PATH", "testdata/courses")
+	os.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
 	// rebuild existing submission
 	rebuildRequest.Msg.SubmissionID = 1
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err != nil {
