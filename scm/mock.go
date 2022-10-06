@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"path/filepath"
 
+	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 )
@@ -38,14 +40,18 @@ func NewMockSCMClient() *MockSCM {
 	return s
 }
 
+// Clone copies the repository in testdata to the given destination path.
 func (s MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{
 		Name: opt.Organization,
 	}); err != nil {
 		return "", err
 	}
-	cloneDir := filepath.Join("testdata", opt.Repository)
-	fmt.Println("cloneDir:", cloneDir)
+	// Simulate cloning by copying the testdata repository to the destination path.
+	if err := fileop.CopyDir(filepath.Join(env.Root(), "scm", "testdata", opt.Repository), opt.DestDir); err != nil {
+		return "", err
+	}
+	cloneDir := filepath.Join(opt.DestDir, opt.Repository)
 	return cloneDir, nil
 }
 

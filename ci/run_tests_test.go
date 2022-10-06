@@ -45,7 +45,7 @@ func testRunData(t *testing.T) *ci.RunData {
 	runScriptContent := loadRunScript(t)
 	dockerfileContent := loadDockerfile(t)
 
-	qfTestOrg := qtest.MockOrg
+	qfTestOrg := scm.GetTestOrganization(t)
 	// Only used to fetch the user's GitHub login (user name)
 	s := scm.GetTestSCM(t)
 	userName, err := s.GetUserName(context.Background())
@@ -86,8 +86,8 @@ func TestRunTests(t *testing.T) {
 	ctx, cancel := runData.Assignment.WithTimeout(2 * time.Minute)
 	defer cancel()
 
-	scm, _ := scm.MockSCMManager(t)
-	results, err := runData.RunTests(ctx, qtest.Logger(t), scm, runner)
+	scmClient := scm.GetTestSCM(t)
+	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,9 +98,6 @@ func TestRunTests(t *testing.T) {
 }
 
 func TestRunTestsTimeout(t *testing.T) {
-	if os.Getenv("TIMEOUT_TEST") == "" {
-		t.Skip("Skipping timeout test because it fails; don't have time debug.")
-	}
 	runData := testRunData(t)
 
 	runner, closeFn := dockerClient(t)
@@ -108,8 +105,8 @@ func TestRunTestsTimeout(t *testing.T) {
 	// Note that this timeout value is susceptible to variation
 	ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	defer cancel()
-	scm, _ := scm.MockSCMManager(t)
-	results, err := runData.RunTests(ctx, qtest.Logger(t), scm, runner)
+	scmClient := scm.GetTestSCM(t)
+	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
 	if err != nil {
 		t.Fatal(err)
 	}

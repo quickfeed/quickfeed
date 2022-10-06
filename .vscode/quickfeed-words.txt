@@ -41,6 +41,7 @@ Errorf
 espeland
 excelize
 extendee
+fileop
 Frøyland
 fullchain
 Getwd

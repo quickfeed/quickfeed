@@ -65,8 +65,8 @@ func TestCloneAndCopyRunTests(t *testing.T) {
 	if err := runData.clone(ctx, sc, dstDir); err != nil {
 		t.Error(err)
 	}
-	runner := Local{}
-	out, err := runner.Run(ctx, &Job{
+	localRunner := Local{}
+	out, err := localRunner.Run(ctx, &Job{
 		Commands: []string{`ls ` + dstDir},
 	})
 	if err != nil {
