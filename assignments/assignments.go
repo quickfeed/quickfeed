@@ -3,8 +3,8 @@ package assignments
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -22,20 +22,41 @@ import (
 // and docker image before aborting.
 const MaxWait = 5 * time.Minute
 
+var updateMutex = sync.Mutex{}
+
 // UpdateFromTestsRepo updates the database record for the course assignments.
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, mgr *scm.Manager, course *qf.Course) {
+//
+// This will be called in response to a push event to the 'tests' repo, which
+// should happen infrequently. It may also be called manually by a teacher from
+// the frontend.
+//
+// Note that calling this function concurrently is safe, but it may block the
+// caller for an extended period, since it may involve cloning the tests repository,
+// scanning the repository for assignments, building the Docker image, updating the
+// database and synchronizing tasks to issues on the students' group repositories.
+func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm.SCM, course *qf.Course) {
+	updateMutex.Lock()
+	defer updateMutex.Unlock()
+
 	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), qf.TestsRepo)
 	ctx, cancel := context.WithTimeout(context.Background(), MaxWait)
 	defer cancel()
 
-	scm, err := mgr.GetOrCreateSCM(ctx, logger, course.OrganizationName)
+	clonedTestsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
+		Organization: course.GetOrganizationName(),
+		Repository:   qf.TestsRepo,
+		DestDir:      course.CloneDir(),
+	})
 	if err != nil {
-		logger.Errorf("Failed to create SCM Client: %v", err)
+		logger.Errorf("Failed to clone '%s' repository: %v", qf.TestsRepo, err)
 		return
 	}
-	assignments, dockerfile, err := fetchAssignments(ctx, scm, course)
+	logger.Debugf("Successfully cloned tests repository to: %s", clonedTestsRepo)
+
+	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
+	assignments, dockerfile, err := readTestsRepositoryContent(clonedTestsRepo, course.ID)
 	if err != nil {
-		logger.Errorf("Failed to fetch assignments from '%s' repository: %v", qf.TestsRepo, err)
+		logger.Errorf("Failed to parse assignments from '%s' repository: %v", qf.TestsRepo, err)
 		return
 	}
 	for _, assignment := range assignments {
@@ -57,7 +78,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, mgr *s
 		}
 	}
 
-	// Does not store tasks associated with assignments; tasks are handled separately by handleTasks below
+	// Does not store tasks associated with assignments; tasks are handled separately by synchronizeTasksWithIssues below
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)
@@ -67,39 +88,10 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, mgr *s
 	}
 	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), qf.TestsRepo)
 
-	if err = synchronizeTasksWithIssues(ctx, db, scm, course, assignments); err != nil {
+	if err = synchronizeTasksWithIssues(ctx, db, sc, course, assignments); err != nil {
 		logger.Errorf("Failed to create tasks on '%s' repository: %v", qf.TestsRepo, err)
 		return
 	}
-}
-
-// fetchAssignments returns a list of assignments for the given course, by
-// cloning the 'tests' repo for the given course and extracting the assignments
-// from the 'assignment.yml' files, one for each assignment. If there is a Dockerfile
-// in 'tests/script' its content will also be returned.
-//
-// Note: This will typically be called in response to a push event to the 'tests' repo,
-// which should happen infrequently. It may also be called manually by a teacher/admin
-// from the frontend. However, even if multiple invocations happen concurrently,
-// the function is idempotent. That is, it only reads data from GitHub, processes
-// the yml files and returns the assignments. The os.MkdirTemp() function ensures that
-// any concurrent calls to this function will always use distinct temp directories.
-func fetchAssignments(ctx context.Context, sc scm.SCM, course *qf.Course) ([]*qf.Assignment, string, error) {
-	dstDir, err := os.MkdirTemp("", qf.TestsRepo)
-	if err != nil {
-		return nil, "", err
-	}
-	defer os.RemoveAll(dstDir)
-	cloneDir, err := sc.Clone(ctx, &scm.CloneOptions{
-		Organization: course.GetOrganizationName(),
-		Repository:   qf.TestsRepo,
-		DestDir:      dstDir,
-	})
-	if err != nil {
-		return nil, "", err
-	}
-	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
-	return readTestsRepositoryContent(cloneDir, course.ID)
 }
 
 // buildDockerImage builds the Docker image for the given course.

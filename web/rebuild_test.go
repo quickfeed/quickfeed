@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"os"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"testing"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/ci"
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
@@ -71,10 +74,13 @@ func TestRebuildSubmissions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var course qf.Course
-	course.Provider = "fake"
-	course.OrganizationID = 1
-	course.OrganizationName = qtest.MockOrg
+	course := qf.Course{
+		Name:             "QuickFeed Test Course",
+		Code:             "qf101",
+		Provider:         "fake",
+		OrganizationID:   1,
+		OrganizationName: qtest.MockOrg,
+	}
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -100,11 +106,13 @@ func TestRebuildSubmissions(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
+	repo := qf.RepoURL{ProviderURL: "github.com", Organization: course.OrganizationName}
 	repo1 := qf.Repository{
 		OrganizationID: 1,
 		RepositoryID:   1,
 		UserID:         student1.ID,
 		RepoType:       qf.Repository_USER,
+		HTMLURL:        repo.StudentRepoURL("user"),
 	}
 	if err := db.CreateRepository(&repo1); err != nil {
 		t.Fatal(err)
@@ -124,8 +132,7 @@ func TestRebuildSubmissions(t *testing.T) {
 		CourseID: course.ID,
 		Name:     "lab1",
 		RunScriptContent: `#image/quickfeed:go
-printf "AssignmentName: {{ .AssignmentName }}\n"
-printf "RandomSecret: {{ .RandomSecret }}\n"
+printf "AssignmentName: lab1\n"
 `,
 		Deadline:         "2022-11-11T13:00:00",
 		AutoApprove:      true,
@@ -159,6 +166,8 @@ printf "RandomSecret: {{ .RandomSecret }}\n"
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err == nil {
 		t.Errorf("Expected error: record not found")
 	}
+
+	os.Setenv("QUICKFEED_REPOSITORY_PATH", filepath.Join(env.Root(), "testdata", "courses"))
 	// rebuild existing submission
 	rebuildRequest.Msg.SubmissionID = 1
 	if _, err := q.RebuildSubmissions(ctx, &rebuildRequest); err != nil {

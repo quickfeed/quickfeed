@@ -2,7 +2,7 @@ package qtest
 
 import "github.com/quickfeed/quickfeed/qf"
 
-const MockOrg = "qfTestOrg"
+const MockOrg = "qf102-2022"
 
 var MockCourses = []*qf.Course{
 	{

@@ -14,6 +14,7 @@ import (
 )
 
 func TestMockClone(t *testing.T) {
+	dstDir := t.TempDir()
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	cloneTests := []struct {
@@ -27,8 +28,19 @@ func TestMockClone(t *testing.T) {
 			opt: &scm.CloneOptions{
 				Organization: qtest.MockOrg,
 				Repository:   qf.StudentRepoName("user"),
+				DestDir:      dstDir,
 			},
-			wantPath: filepath.Join("testdata", "assignments"),
+			wantPath: filepath.Join(dstDir, "user-labs"),
+			wantErr:  false,
+		},
+		{
+			name: "assignments repository",
+			opt: &scm.CloneOptions{
+				Organization: qtest.MockOrg,
+				Repository:   qf.AssignmentRepo,
+				DestDir:      dstDir,
+			},
+			wantPath: filepath.Join(dstDir, "assignments"),
 			wantErr:  false,
 		},
 		{
@@ -36,14 +48,16 @@ func TestMockClone(t *testing.T) {
 			opt: &scm.CloneOptions{
 				Organization: qtest.MockOrg,
 				Repository:   qf.TestsRepo,
+				DestDir:      dstDir,
 			},
-			wantPath: filepath.Join("testdata", "tests"),
+			wantPath: filepath.Join(dstDir, "tests"),
 			wantErr:  false,
 		},
 		{
 			name: "missing organization info",
 			opt: &scm.CloneOptions{
 				Repository: qf.StudentRepoName("user"),
+				DestDir:    dstDir,
 			},
 			wantPath: "",
 			wantErr:  true,

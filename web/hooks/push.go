@@ -34,6 +34,13 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	}
 	wh.logger.Debugf("For course(%d)=%v", course.GetID(), course.GetName())
 
+	ctx := context.Background()
+	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetOrganizationName())
+	if err != nil {
+		wh.logger.Errorf("Failed to get or create SCM Client: %v", err)
+		return
+	}
+
 	switch {
 	case repo.IsTestsRepo():
 		if !isDefaultBranch(payload) {
@@ -42,7 +49,24 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		}
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		assignments.UpdateFromTestsRepo(wh.logger, wh.db, wh.scmMgr, course)
+		assignments.UpdateFromTestsRepo(wh.logger, wh.db, sc, course)
+
+	case repo.IsAssignmentsRepo():
+		if !isDefaultBranch(payload) {
+			wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
+			return
+		}
+		// the push event is for the 'assignments' repo; we need to update the local working copy
+		clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
+			Organization: course.GetOrganizationName(),
+			Repository:   qf.AssignmentRepo,
+			DestDir:      course.CloneDir(),
+		})
+		if err != nil {
+			wh.logger.Errorf("Failed to clone '%s' repository: %v", qf.AssignmentRepo, err)
+			return
+		}
+		wh.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
 
 	case repo.IsUserRepo():
 		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
@@ -55,7 +79,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		for _, assignment := range assignments {
 			if !assignment.IsGroupLab {
 				// only run non-group assignments
-				wh.runAssignmentTests(assignment, repo, course, payload)
+				wh.runAssignmentTests(sc, assignment, repo, course, payload)
 			} else {
 				wh.logger.Debugf("Ignoring push to user repo %s for group assignment: %s", payload.GetRepo().GetName(), assignment.GetName())
 			}
@@ -73,7 +97,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		for _, assignment := range assignments {
 			if assignment.IsGroupLab {
 				// only run group assignments
-				results := wh.runAssignmentTests(assignment, repo, course, payload)
+				results := wh.runAssignmentTests(sc, assignment, repo, course, payload)
 				if !isDefaultBranch(payload) && !assignment.GradedManually() {
 					// Attempt to find the pull request for the branch, if it exists,
 					// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
@@ -198,7 +222,7 @@ func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *qf
 }
 
 // runAssignmentTests runs the tests for the given assignment pushed to repo.
-func (wh GitHubWebHook) runAssignmentTests(assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) *score.Results {
+func (wh GitHubWebHook) runAssignmentTests(sc scm.SCM, assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) *score.Results {
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
@@ -216,11 +240,6 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *qf.Assignment, repo *qf.R
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
-	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.OrganizationName)
-	if err != nil {
-		wh.logger.Errorf("Failed to create scm client: %v", err)
-		return nil
-	}
 	results, err := runData.RunTests(ctx, wh.logger, sc, wh.runner)
 	if err != nil {
 		wh.logger.Error(err)
