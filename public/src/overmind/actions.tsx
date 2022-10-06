@@ -13,7 +13,7 @@ import * as types from "../../gen/qf/types_pb"
 /** Use this to verify that a gRPC request completed without an error code */
 export const success = (response: IGrpcResponse<unknown>): boolean => response.status.getCode() === 0
 
-export const onInitializeOvermind = async ({ actions }: Context): Promise<void> => {
+export const onInitializeOvermind = async ({ actions, effects }: Context): Promise<void> => {
     // Currently this only alerts the user if they are not logged in after a page refresh
     const alert = localStorage.getItem("alert")
     if (alert) {
@@ -22,40 +22,30 @@ export const onInitializeOvermind = async ({ actions }: Context): Promise<void> 
     }
 
     // Event handlers for stream responses
-    window.addEventListener("stream-start", () => {
-        actions.setIsLive(true)
-    })
-
-    window.addEventListener("stream-ended", () => {
-        actions.setIsLive(false)
-    })
-
-    window.addEventListener("stream-receive", (e: CustomEvent<types.Submission>) => {
-        if (!e.detail) {
-            return
-        }
-        const submission = Converter.toGrpcSubmission(e.detail)
-        actions.receiveSubmission(submission)
+    effects.streamService.submissionStream({
+        onMessage: actions.receiveSubmission,
+        onError: (error) => console.error(error),
     })
 }
 
-export const receiveSubmission = ({ state }: Context, submission: Submission): void => {
+export const receiveSubmission = ({ state }: Context, submission: types.Submission): void => {
     let courseID = 0
     let assignmentOrder = 0
     Object.entries(state.assignments).forEach(
         ([, assignments]) => {
-            const assignment = assignments.find(assignment => assignment.id === submission.getAssignmentid())
+            const assignment = assignments.find(assignment => assignment.id === Number(submission.AssignmentID))
             if (assignment && assignment.courseid !== 0) {
                 assignmentOrder = assignment.order
                 courseID = assignment.courseid
                 return
             }
         }
-    )
+        )
     if (courseID === 0) {
         return
     }
-    state.submissions[courseID][assignmentOrder - 1] = submission.toObject()
+    const convertedSubmission = Converter.toGrpcSubmission(submission)
+    state.submissions[courseID][assignmentOrder - 1] = convertedSubmission.toObject()
 }
 
 export const resetState = ({ state }: Context) => {
@@ -747,7 +737,7 @@ export const setActiveEnrollment = ({ state }: Context, enrollment: Enrollment.A
 
 /* fetchUserData is called when the user enters the app. It fetches all data that is needed for the user to be able to use the app. */
 /* If the user is not logged in, i.e does not have a valid token, the process is aborted. */
-export const fetchUserData = async ({ state, actions, effects }: Context): Promise<boolean> => {
+export const fetchUserData = async ({ state, actions }: Context): Promise<boolean> => {
     let success = await actions.getSelf()
     // If getSelf returns false, the user is not logged in. Abort.
     if (!success) { state.isLoading = false; return false }
@@ -777,12 +767,10 @@ export const fetchUserData = async ({ state, actions, effects }: Context): Promi
         }
         success = await actions.getRepositories()
         success = await actions.getCourses()
-
+        
         // End loading screen.
         state.isLoading = false
     }
-
-    effects.streamService.submissionStream()
     // The value of success is unreliable. The intention is to return true if the user is logged in and all data was fetched.
     // However, if one of the above calls fail, it could still be the case that success returns true.
     return success
