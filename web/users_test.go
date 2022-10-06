@@ -235,7 +235,7 @@ func TestUpdateUser(t *testing.T) {
 	}
 
 	shutdown, client := MockQuickFeedClient(t, db, connect.WithInterceptors(
-		interceptor.UnaryUserVerifier(logger, tm),
+		interceptor.NewUserInterceptor(logger, tm),
 	))
 	firstAdminUser := qtest.CreateFakeUser(t, db, 1)
 	nonAdminUser := qtest.CreateFakeUser(t, db, 11)

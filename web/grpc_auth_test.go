@@ -42,11 +42,11 @@ func TestGrpcAuth(t *testing.T) {
 		t.Fatal(err)
 	}
 	shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
-		interceptor.Metrics(),
-		interceptor.Validation(logger),
-		interceptor.UnaryUserVerifier(logger, tm),
-		interceptor.AccessControl(tm),
-		interceptor.TokenRefresher(tm),
+		interceptor.NewMetricsInterceptor(),
+		interceptor.NewValidationInterceptor(logger),
+		interceptor.NewUserInterceptor(logger, tm),
+		interceptor.NewAccessControlInterceptor(tm),
+		interceptor.NewTokenInterceptor(tm),
 	))
 
 	client := qtest.QuickFeedClient("")

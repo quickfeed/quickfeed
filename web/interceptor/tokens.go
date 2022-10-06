@@ -49,27 +49,45 @@ var tokenUpdateMethods = map[string]func(context.Context, *auth.TokenManager, us
 			}
 			return defaultTokenUpdater(ctx, tm, group)
 		}
-		return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s):", "DeleteGroup"))
+		return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("cannot update token for %s: request does not contain a group", "DeleteGroup"))
 	},
 }
 
-// TokenRefresher updates list of users who need a new JWT next time they send a request to the server.
+type TokenInterceptor struct {
+	tokenManager *auth.TokenManager
+}
+
+func NewTokenInterceptor(tm *auth.TokenManager) *TokenInterceptor {
+	return &TokenInterceptor{tokenManager: tm}
+}
+
+func (*TokenInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
+		return next(ctx, conn)
+	})
+}
+
+func (*TokenInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
+	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
+		return next(ctx, spec)
+	})
+}
+
+// WrapUnary updates list of users who need a new JWT next time they send a request to the server.
 // This method only logs errors to avoid overwriting the gRPC error messages returned by the server.
-func TokenRefresher(tm *auth.TokenManager) connect.Interceptor {
-	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
-		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
-			procedure := request.Spec().Procedure
-			method := procedure[strings.LastIndex(procedure, "/")+1:]
-			if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
-				if msg, ok := request.Any().(userIDs); ok {
-					if err := tokenUpdateFn(ctx, tm, msg); err != nil {
-						return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): %v", method, err))
-					}
-				} else {
-					return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("TokenRefresher(%s): missing 'userIDs' interface", method))
+func (t *TokenInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
+	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
+		procedure := request.Spec().Procedure
+		method := procedure[strings.LastIndex(procedure, "/")+1:]
+		if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
+			if msg, ok := request.Any().(userIDs); ok {
+				if err := tokenUpdateFn(ctx, t.tokenManager, msg); err != nil {
+					return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("cannot update token for %s: %w", method, err))
 				}
+			} else {
+				return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("cannot update token for %s: message type %T does not implement 'userIDs' interface", method, request))
 			}
-			return next(ctx, request)
-		})
+		}
+		return next(ctx, request)
 	})
 }
