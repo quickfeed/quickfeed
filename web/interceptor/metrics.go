@@ -46,26 +46,50 @@ var (
 	}, []string{"user"})
 )
 
-func Metrics() connect.Interceptor {
-	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
-		return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
-			procedure := request.Spec().Procedure
-			methodName := procedure[strings.LastIndex(procedure, "/")+1:]
-			defer metricsTimer(methodName)()
-			resp, err := next(ctx, request)
-			accessedMethodsCounter.WithLabelValues(methodName).Inc()
-			if resp != nil {
-				respondedMethodsCounter.WithLabelValues(methodName).Inc()
+type MetricsInterceptor struct{}
+
+func NewMetricsInterceptor() *MetricsInterceptor {
+	return &MetricsInterceptor{}
+}
+
+func (*MetricsInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
+		procedure := conn.Spec().Procedure
+		methodName := procedure[strings.LastIndex(procedure, "/")+1:]
+		defer metricsTimer(methodName)()
+		accessedMethodsCounter.WithLabelValues(methodName).Inc()
+		err := next(ctx, conn)
+		if err != nil {
+			failedMethodsCounter.WithLabelValues(methodName).Inc()
+		}
+		return err
+	})
+}
+
+func (*MetricsInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
+	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
+		return next(ctx, spec)
+	})
+}
+
+func (*MetricsInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
+	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
+		procedure := request.Spec().Procedure
+		methodName := procedure[strings.LastIndex(procedure, "/")+1:]
+		defer metricsTimer(methodName)()
+		resp, err := next(ctx, request)
+		accessedMethodsCounter.WithLabelValues(methodName).Inc()
+		if resp != nil {
+			respondedMethodsCounter.WithLabelValues(methodName).Inc()
+		}
+		if err != nil {
+			failedMethodsCounter.WithLabelValues(methodName).Inc()
+			if methodName == "GetUser" {
+				// Can't get the user ID from err; so just counting
+				loginCounter.WithLabelValues("").Inc()
 			}
-			if err != nil {
-				failedMethodsCounter.WithLabelValues(methodName).Inc()
-				if methodName == "GetUser" {
-					// Can't get the user ID from err; so just counting
-					loginCounter.WithLabelValues("").Inc()
-				}
-			}
-			return resp, err
-		})
+		}
+		return resp, err
 	})
 }
 

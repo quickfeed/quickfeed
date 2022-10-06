@@ -14,6 +14,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/stream"
 )
 
 // QuickFeedService holds references to the database and
@@ -25,16 +26,18 @@ type QuickFeedService struct {
 	bh     BaseHookOptions
 	runner ci.Runner
 	qfconnect.UnimplementedQuickFeedServiceHandler
+	streams *stream.StreamServices
 }
 
 // NewQuickFeedService returns a QuickFeedService object.
 func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
 	return &QuickFeedService{
-		logger: logger.Sugar(),
-		db:     db,
-		scmMgr: mgr,
-		bh:     bh,
-		runner: runner,
+		logger:  logger.Sugar(),
+		db:      db,
+		scmMgr:  mgr,
+		bh:      bh,
+		runner:  runner,
+		streams: stream.NewStreamServices(),
 	}
 }
 

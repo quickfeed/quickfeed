@@ -24,7 +24,7 @@ func TestUserVerifier(t *testing.T) {
 		t.Fatal(err)
 	}
 	shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
-		interceptor.UnaryUserVerifier(logger, tm),
+		interceptor.NewUserInterceptor(logger, tm),
 	))
 
 	client := qtest.QuickFeedClient("")
