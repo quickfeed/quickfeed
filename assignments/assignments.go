@@ -78,7 +78,7 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, sc scm
 		}
 	}
 
-	// Does not store tasks associated with assignments; tasks are handled separately by handleTasks below
+	// Does not store tasks associated with assignments; tasks are handled separately by synchronizeTasksWithIssues below
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
 			logger.Debugf("Failed to update database for: %v", assignment)
