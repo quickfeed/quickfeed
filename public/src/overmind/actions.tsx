@@ -45,7 +45,7 @@ export const receiveSubmission = ({ state }: Context, submission: types.Submissi
         return
     }
     const convertedSubmission = Converter.toGrpcSubmission(submission)
-    state.submissions[courseID][assignmentOrder - 1] = convertedSubmission.toObject()
+    Object.assign(state.submissions[courseID][assignmentOrder - 1], convertedSubmission.toObject())
 }
 
 export const resetState = ({ state }: Context) => {
