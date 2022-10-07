@@ -5,8 +5,8 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 )
 
-// isValidSubmission returns true if submitting student has active course enrollment or
-// if submitting group belongs to the given course.
+// isValidSubmission returns true if the student or group submitting the original push event
+// has an active course enrollment in the given course.
 func isValidSubmission(db database.Database, req requestID) bool {
 	courseID := req.IDFor("course")
 	submissionID := req.IDFor("submission")
