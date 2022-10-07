@@ -3,7 +3,6 @@ package web
 import (
 	"fmt"
 
-	"github.com/quickfeed/quickfeed/assignments"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
