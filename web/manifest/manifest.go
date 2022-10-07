@@ -60,6 +60,10 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 			m.done <- fmt.Errorf("server was closed prematurely")
 		}
 	}()
+	if strings.Contains(m.domain, "127.0.0.1") {
+		log.Print("You will not be able to receive webhook events from GitHub because you are running Quickfeed on localhost.")
+		log.Print("To enable events, run Quickfeed on a public domain. Read more at: https://github.com/quickfeed/quickfeed/blob/master/doc/deploy.md")
+	}
 	log.Println("Important: The GitHub user that installs the QuickFeed App will become the server's admin user.")
 	log.Printf("Go to https://%s/manifest to install the QuickFeed GitHub App.\n", env.Domain())
 	if err := <-m.done; err != nil {
