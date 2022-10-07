@@ -2,6 +2,7 @@ package interceptor
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -168,11 +169,10 @@ func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.Una
 					return next(ctx, request)
 				}
 				if method == "RebuildSubmissions" || method == "UpdateSubmission" {
-					if !isValidSubmission(a.tokenManager.Database(), req.IDFor("course"), req.IDFor("submission")) {
+					if !isValidSubmission(a.tokenManager.Database(), req) {
 						return nil, connect.NewError(connect.CodePermissionDenied,
-							fmt.Errorf("AccessControl(%s): %v", method, "invalid submission"))
+							fmt.Errorf("access denied for %s: %v", method, errors.New("invalid submission")))
 					}
-					return next(ctx, request)
 				}
 				if claims.HasCourseStatus(req, qf.Enrollment_TEACHER) {
 					return next(ctx, request)

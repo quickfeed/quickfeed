@@ -5,9 +5,11 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 )
 
-// IsValidSubmission returns true if submitting student has active course enrollment or
+// isValidSubmission returns true if submitting student has active course enrollment or
 // if submitting group belongs to the given course.
-func isValidSubmission(db database.Database, courseID, submissionID uint64) bool {
+func isValidSubmission(db database.Database, req requestID) bool {
+	courseID := req.IDFor("course")
+	submissionID := req.IDFor("submission")
 	sbm, err := db.GetSubmission(&qf.Submission{ID: submissionID})
 	if err != nil {
 		return false
