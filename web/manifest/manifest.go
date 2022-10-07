@@ -19,10 +19,11 @@ import (
 )
 
 const (
-	appID        = "QUICKFEED_APP_ID"
-	appKey       = "QUICKFEED_APP_KEY"
-	clientID     = "QUICKFEED_CLIENT_ID"
-	clientSecret = "QUICKFEED_CLIENT_SECRET"
+	appID         = "QUICKFEED_APP_ID"
+	appKey        = "QUICKFEED_APP_KEY"
+	clientID      = "QUICKFEED_CLIENT_ID"
+	clientSecret  = "QUICKFEED_CLIENT_SECRET"
+	webhookSecret = "QUICKFEED_WEBHOOK_SECRET"
 )
 
 type Manifest struct {
@@ -118,10 +119,11 @@ func (m *Manifest) conversion() http.HandlerFunc {
 
 		// Save the application configuration to the .env file
 		envToUpdate := map[string]string{
-			appID:        strconv.FormatInt(*config.ID, 10),
-			appKey:       appKeyFile,
-			clientID:     *config.ClientID,
-			clientSecret: *config.ClientSecret,
+			appID:         strconv.FormatInt(*config.ID, 10),
+			appKey:        appKeyFile,
+			clientID:      *config.ClientID,
+			clientSecret:  *config.ClientSecret,
+			webhookSecret: *config.WebhookSecret,
 		}
 		if err := env.Save(".env", envToUpdate); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -258,8 +260,8 @@ func form(w http.ResponseWriter, domain string) error {
 			"name": "{{.Name}}",
 			"url": "{{.URL}}",
 			"hook_attributes": {
-				"active": false,
-				"url": "",
+				"active": true,
+				"url": "{{.webhookURL}}",
 			},
 			"callback_urls": [
 				"{{.CallbackURL}}"
@@ -273,7 +275,6 @@ func form(w http.ResponseWriter, domain string) error {
 				"members": "write",
 				"organization_administration": "write",
 				"pull_requests": "write",
-				"organization_hooks": "write",
 			},
 		})
 		document.getElementById('create').submit()
@@ -284,10 +285,12 @@ func form(w http.ResponseWriter, domain string) error {
 		URL         string
 		Name        string
 		CallbackURL string
+		WebhookURL  string
 	}{
 		URL:         auth.GetBaseURL(domain),
 		Name:        env.AppName(),
 		CallbackURL: auth.GetCallbackURL(domain),
+		WebhookURL:  auth.GetEventsURL(domain),
 	}
 	t := template.Must(template.New("form").Parse(tpl))
 	if err := t.Execute(w, data); err != nil {
