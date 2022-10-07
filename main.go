@@ -90,7 +90,7 @@ func main() {
 	// Holds references for activated providers for current user token
 	bh := web.BaseHookOptions{
 		BaseURL: env.Domain(),
-		Secret:  os.Getenv("WEBHOOK_SECRET"),
+		Secret:  os.Getenv("QUICKFEED_WEBHOOK_SECRET"),
 	}
 
 	scmConfig, err := scm.NewSCMConfig()
