@@ -48,7 +48,9 @@ func match(filename, pattern string) bool {
 	return false
 }
 
-// readTestsRepositoryContent reads dir and returns a list of assignments and the course's Dockerfile.
+// readTestsRepositoryContent reads dir and returns a list of assignments and
+// the course's Dockerfile content if there exists a 'tests/scripts/Dockerfile'.
+// Assignments are extracted from 'assignment.yml' files, one for each assignment.
 func readTestsRepositoryContent(dir string, courseID uint64) ([]*qf.Assignment, string, error) {
 	files, err := walkTestsRepository(dir)
 	if err != nil {

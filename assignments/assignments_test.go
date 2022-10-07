@@ -24,7 +24,16 @@ func TestFetchAssignments(t *testing.T) {
 		OrganizationName: qfTestOrg,
 	}
 
-	assignments, dockerfile, err := fetchAssignments(context.Background(), s, course)
+	clonedTestsRepo, err := s.Clone(context.Background(), &scm.CloneOptions{
+		Organization: course.GetOrganizationName(),
+		Repository:   qf.TestsRepo,
+		DestDir:      course.CloneDir(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// walk the cloned tests repository and extract the assignments and the course's Dockerfile
+	assignments, dockerfile, err := readTestsRepositoryContent(clonedTestsRepo, course.ID)
 	if err != nil {
 		t.Fatal(err)
 	}

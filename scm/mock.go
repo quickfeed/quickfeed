@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"os"
 	"path/filepath"
 
+	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 )
@@ -39,20 +40,19 @@ func NewMockSCMClient() *MockSCM {
 	return s
 }
 
+// Clone copies the repository in testdata to the given destination path.
 func (s MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{
 		Name: opt.Organization,
 	}); err != nil {
 		return "", err
 	}
-	cloneDir := filepath.Join("testdata", repoDir(opt))
-	// This is a hack to make sure the lab1 directory exists,
-	// required by the web/rebuild_test.go:TestRebuildSubmissions()
-	lab1Dir := filepath.Join(cloneDir, "lab1")
-	err := os.MkdirAll(lab1Dir, 0o700)
-	if err != nil {
+	// Simulate cloning by copying the testdata repository to the destination path.
+	testdataSrc := filepath.Join(env.Root(), "testdata", "courses", opt.Organization, opt.Repository)
+	if err := fileop.CopyDir(testdataSrc, opt.DestDir); err != nil {
 		return "", err
 	}
+	cloneDir := filepath.Join(opt.DestDir, opt.Repository)
 	return cloneDir, nil
 }
 

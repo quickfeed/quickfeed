@@ -1,5 +1,6 @@
 addstore
 agpath
+alecthomas
 allstudents
 allteachers
 apitest
@@ -40,6 +41,7 @@ Errorf
 espeland
 excelize
 extendee
+fileop
 Frøyland
 fullchain
 Getwd
@@ -185,6 +187,7 @@ verdana
 webpack's
 wojtekmaj
 WORKDIR
+Worktree
 xanzy
 xargs
 xini

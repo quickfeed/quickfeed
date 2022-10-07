@@ -533,13 +533,30 @@ func (s *QuickFeedService) GetAssignments(_ context.Context, in *connect.Request
 
 // UpdateAssignments updates the course's assignments record in the database
 // by fetching assignment information from the course's test repository.
-func (s *QuickFeedService) UpdateAssignments(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error) {
+func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error) {
 	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
-	assignments.UpdateFromTestsRepo(s.logger, s.db, s.scmMgr, course)
+	scmClient, err := s.getSCM(ctx, course.GetOrganizationName())
+	if err != nil {
+		s.logger.Errorf("UpdateAssignments failed: could not create scm client for organization %s: %v", course.GetOrganizationName(), err)
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	assignments.UpdateFromTestsRepo(s.logger, s.db, scmClient, course)
+
+	clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
+		Organization: course.GetOrganizationName(),
+		Repository:   qf.AssignmentRepo,
+		DestDir:      course.CloneDir(),
+	})
+	if err != nil {
+		s.logger.Errorf("Failed to clone '%s' repository: %v", qf.AssignmentRepo, err)
+		return nil, err
+	}
+	s.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
+
 	return &connect.Response[qf.Void]{}, nil
 }
 
