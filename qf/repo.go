@@ -8,7 +8,7 @@ import (
 // Default repository names.
 const (
 	InfoRepo          = "info"
-	AssignmentRepo    = "assignments"
+	AssignmentsRepo   = "assignments"
 	TestsRepo         = "tests"
 	StudentRepoSuffix = "-labs"
 )
@@ -28,7 +28,7 @@ func (r RepoURL) InfoRepoURL() string {
 }
 
 func (r RepoURL) AssignmentsRepoURL() string {
-	return fmt.Sprintf("https://%s/%s/%s", r.ProviderURL, r.Organization, AssignmentRepo)
+	return fmt.Sprintf("https://%s/%s/%s", r.ProviderURL, r.Organization, AssignmentsRepo)
 }
 
 func (r RepoURL) StudentRepoURL(userName string) string {
@@ -110,7 +110,7 @@ func RepoType(path string) (repoType Repository_Type) {
 	switch path {
 	case InfoRepo:
 		repoType = Repository_INFO
-	case AssignmentRepo:
+	case AssignmentsRepo:
 		repoType = Repository_ASSIGNMENTS
 	case TestsRepo:
 		repoType = Repository_TESTS

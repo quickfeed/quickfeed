@@ -42,7 +42,7 @@ func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *Repository
 		}
 	}
 
-	for _, repo := range []string{qf.InfoRepo, qf.AssignmentRepo, qf.StudentRepoName(opt.Login)} {
+	for _, repo := range []string{qf.InfoRepo, qf.AssignmentsRepo, qf.StudentRepoName(opt.Login)} {
 		// Important: Get repository invitations using the GitHub App client.
 		repoInvites, _, err := s.client.Repositories.ListInvitations(ctx, opt.Owner, repo, &github.ListOptions{})
 		if err != nil {

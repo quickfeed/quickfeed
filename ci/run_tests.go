@@ -132,7 +132,7 @@ func (r RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 	// Check that all repositories contains the current assignment
 	currentAssignment := r.Assignment.GetName()
 	testsDir := filepath.Join(r.Course.CloneDir(), qf.TestsRepo)
-	assignmentDir := filepath.Join(r.Course.CloneDir(), qf.AssignmentRepo)
+	assignmentDir := filepath.Join(r.Course.CloneDir(), qf.AssignmentsRepo)
 	for _, repoDir := range []string{clonedStudentRepo, testsDir, assignmentDir} {
 		if err := hasAssignment(repoDir, currentAssignment); err != nil {
 			return err

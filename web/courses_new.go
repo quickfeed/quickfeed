@@ -18,9 +18,9 @@ const (
 // RepoPaths maps from QuickFeed repository path names to a boolean indicating
 // whether or not the repository should be create as public or private.
 var RepoPaths = map[string]bool{
-	qf.InfoRepo:       public,
-	qf.AssignmentRepo: private,
-	qf.TestsRepo:      private,
+	qf.InfoRepo:        public,
+	qf.AssignmentsRepo: private,
+	qf.TestsRepo:       private,
 }
 
 // createCourse creates a new course for the directory specified in the request

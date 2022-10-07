@@ -64,7 +64,7 @@ echo $QUICKFEED_SESSION_SECRET
 	wantVars := []string{
 		"HOME=" + QuickFeedPath,
 		"TESTS=" + filepath.Join(QuickFeedPath, qf.TestsRepo),
-		"ASSIGNMENTS=" + filepath.Join(QuickFeedPath, qf.AssignmentRepo),
+		"ASSIGNMENTS=" + filepath.Join(QuickFeedPath, qf.AssignmentsRepo),
 		"SUBMITTED=" + filepath.Join(QuickFeedPath, qf.StudentRepoName(githubUserName)),
 		"CURRENT=" + runData.Assignment.GetName(),
 		"QUICKFEED_SESSION_SECRET=" + randomSecret,
