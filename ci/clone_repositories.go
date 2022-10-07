@@ -1,12 +1,48 @@
 package ci
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/scm"
 )
+
+func cloneMissingRepositories(ctx context.Context, scmClient scm.SCM, course *qf.Course) error {
+	testsExists, _ := exists(filepath.Join(course.CloneDir(), qf.TestsRepo))
+	assignmentExists, _ := exists(filepath.Join(course.CloneDir(), qf.AssignmentRepo))
+	if testsExists && assignmentExists {
+		return nil
+	}
+
+	if !testsExists {
+		// Clone the tests repository
+		_, err := scmClient.Clone(ctx, &scm.CloneOptions{
+			Organization: course.GetOrganizationName(),
+			Repository:   qf.TestsRepo,
+			DestDir:      course.CloneDir(),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to clone %q repository: %w", qf.TestsRepo, err)
+		}
+	}
+	if !assignmentExists {
+		// Clone the assignments repository
+		_, err := scmClient.Clone(ctx, &scm.CloneOptions{
+			Organization: course.GetOrganizationName(),
+			Repository:   qf.AssignmentRepo,
+			DestDir:      course.CloneDir(),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to clone %q repository: %w", qf.AssignmentRepo, err)
+		}
+	}
+	return nil
+}
 
 // hasAssignment return nil if the assignment exists in the given clone dir.
 func hasAssignment(cloneDir, currentAssignment string) error {
