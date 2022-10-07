@@ -282,11 +282,6 @@ func (s *MockSCM) UpdateTeamMembers(_ context.Context, opt *UpdateTeamOptions) e
 	return nil
 }
 
-// CreateCloneURL implements the SCM interface.
-func (*MockSCM) CreateCloneURL(_ *URLPathOptions) string {
-	return ""
-}
-
 // AddTeamRepo implements the SCM interface.
 func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error {
 	if !opt.valid() {

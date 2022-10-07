@@ -572,15 +572,6 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOption
 	return nil
 }
 
-// CreateCloneURL implements the SCM interface.
-func (s *GithubSCM) CreateCloneURL(opt *URLPathOptions) string {
-	token := s.token
-	if len(opt.UserToken) > 0 {
-		token = opt.UserToken
-	}
-	return "https://" + token + "@github.com/" + opt.Organization + "/" + opt.Repository + ".git"
-}
-
 // AddTeamRepo implements the SCM interface.
 func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
 	if !opt.valid() {
