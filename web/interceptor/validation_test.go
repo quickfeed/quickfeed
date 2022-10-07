@@ -68,6 +68,8 @@ func TestImplementsValidation(t *testing.T) {
 		"qf.SubmissionsForCourseRequest": {cleaner: F, validator: T},
 		"score.Score":                    {cleaner: F, validator: F},
 		"score.BuildInfo":                {cleaner: F, validator: F},
+		"qf.Grades":                      {cleaner: F, validator: F},
+		"qf.Grade":                       {cleaner: F, validator: F},
 	}
 
 	protoregistry.GlobalTypes.RangeMessages(func(desc protoreflect.MessageType) bool {
