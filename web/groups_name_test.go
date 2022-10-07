@@ -4,8 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
+	"github.com/quickfeed/quickfeed/web/auth"
 )
 
 func TestBadGroupNames(t *testing.T) {
@@ -33,8 +35,8 @@ func TestBadGroupNames(t *testing.T) {
 		Users:    []*qf.User{user1, user2},
 	}
 	// current user1 (in context) must be in group being created
-	ctx := qtest.WithUserContext(context.Background(), user1)
-	gotGroup, err := ags.CreateGroup(ctx, group)
+	ctx := auth.WithUserContext(context.Background(), user1)
+	gotGroup, err := ags.CreateGroup(ctx, connect.NewRequest(group))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +64,7 @@ func TestBadGroupNames(t *testing.T) {
 		{"Æ", errGroupNameInvalid},
 		{"Ø", errGroupNameInvalid},
 		{"Å", errGroupNameInvalid},
-		{gotGroup.GetName(), errGroupNameDuplicate},
+		{gotGroup.Msg.GetName(), errGroupNameDuplicate},
 	}
 	for _, test := range groupNames {
 		if err := ags.checkGroupName(course.ID, test.name); err != test.wantError {

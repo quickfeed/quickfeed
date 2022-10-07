@@ -6,15 +6,17 @@ const SubmissionScore = ({ score }: { score: Score.AsObject }) => {
     const className = score.score === score.maxscore ? "passed" : "failed"
     return (
         <tr>
-            <th className={className + " pl-4"}>
-                {score.testname}
-            </th>
-            <th>
+            <td className={className}>
+                <div className="pl-1">
+                    {score.testname}
+                </div>
+            </td>
+            <td>
                 {score.score}/{score.maxscore}
-            </th>
-            <th>
+            </td>
+            <td>
                 {score.weight}
-            </th>
+            </td>
         </tr>
     )
 }

@@ -49,7 +49,6 @@ export class Converter {
         enrollment.setCourseid(obj.courseid)
         enrollment.setUserid(obj.userid)
         enrollment.setGroupid(obj.groupid)
-        enrollment.setHasteacherscopes(obj.hasteacherscopes)
         enrollment.setState(obj.state)
 
         // TODO: handle slipdays
@@ -76,7 +75,7 @@ export class Converter {
         course.setTag(obj.tag)
         course.setProvider(obj.provider)
         course.setOrganizationid(obj.organizationid)
-        course.setOrganizationpath(obj.organizationpath)
+        course.setOrganizationname(obj.organizationname)
         course.setSlipdays(obj.slipdays)
         course.setDockerfile(obj.dockerfile)
         course.setEnrolled(obj.enrolled)

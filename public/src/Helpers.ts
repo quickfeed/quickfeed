@@ -285,12 +285,12 @@ export const userLink = (user: User.AsObject): string => {
 }
 
 export const userRepoLink = (course: Course.AsObject, user: User.AsObject): string => {
-    return `https://github.com/${course.organizationpath}/${user.login}-labs`
+    return `https://github.com/${course.organizationname}/${user.login}-labs`
 }
 
 export const groupRepoLink = (course: Course.AsObject, group: Group.AsObject): string => {
-    course.organizationpath
-    return `https://github.com/${course.organizationpath}/${slugify(group.name)}`
+    course.organizationname
+    return `https://github.com/${course.organizationname}/${slugify(group.name)}`
 }
 
 export const getSubmissionCellColor = (submission: Submission.AsObject): string => {

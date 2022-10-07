@@ -64,8 +64,6 @@ cd assignments
 go test -v -run TestFetchAssignments
 cd ci
 go test -v -run TestRunTests
-TEST_TMPL=1 go test -v -run TestParseScript
-TEST_IMAGE=1 go test -v -run TestParseScript
 cd scm
 go test -v -run TestGetOrganization
 go test -v -run TestListHooks

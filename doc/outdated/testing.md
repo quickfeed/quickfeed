@@ -34,7 +34,7 @@ Then generate a new SSl/TLS certificate with Certbot to protect the new endpoint
 gRPC client must be started with your endpoint URL (use `make remote` Makefile task to ensure recompiling with the right configuration).
 
 Example command to start the test server on test.itest.run:
-`quickfeed -service.url test.itest.run -database.file ./test.db -http.addr :3006 -http.public ./public &`
+`quickfeed -database.file ./test.db -http.addr :3006 -http.public ./public &`
 
 # QuickFeed production server
 

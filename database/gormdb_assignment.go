@@ -173,10 +173,7 @@ func (db *GormDB) GetAssignmentsWithSubmissions(request *qf.SubmissionsForCourse
 		Preload("Submissions.Reviews.GradingBenchmarks").
 		Preload("Submissions.Reviews.GradingBenchmarks.Criteria").
 		Preload("Submissions.Scores")
-	if request.GetWithBuildInfo() {
-		m.Preload("Submissions.BuildInfo")
-	}
-	// the 'order' field must be in 'quotes', otherwise it will be interpreted as SQL.
+	// the 'order' field of qf.Assignment must be in 'quotes', otherwise it will be interpreted as SQL.
 	var assignments []*qf.Assignment
 	if err := m.Where(&qf.Assignment{CourseID: request.GetCourseID()}).
 		Order("'order'").

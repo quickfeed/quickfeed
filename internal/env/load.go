@@ -26,19 +26,25 @@ func init() {
 	}
 }
 
+// Root returns the root directory as defined by $QUICKFEED.
+func Root() string {
+	return quickfeedRoot
+}
+
 // Load loads environment variables from the given file, or from $QUICKFEED/.env.
 // The variable's values are expanded with existing variables from the environment.
 // It will not override a variable that already exists in the environment.
 func Load(filename string) error {
 	if filename == "" {
 		filename = filepath.Join(quickfeedRoot, dotEnvPath)
-		log.Printf("Loading environment variables from %s", filename)
 	}
 	file, err := os.Open(filename)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer file.Close() // skipcq: GO-S2307
+
+	log.Printf("Loading environment variables from %s", filename)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -55,7 +61,7 @@ func Load(filename string) error {
 			// Ignore .env entries already set in the environment.
 			continue
 		}
-		val = os.ExpandEnv(strings.TrimSpace(val))
+		val = os.ExpandEnv(strings.Trim(strings.TrimSpace(val), `"`))
 		os.Setenv(k, val)
 	}
 

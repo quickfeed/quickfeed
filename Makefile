@@ -6,30 +6,34 @@
 
 OS					:= $(shell echo $(shell uname -s) | tr A-Z a-z)
 ARCH				:= $(shell uname -m)
-tmpdir				:= tmp
 proto-swift-path	:= ../quickfeed-swiftui/Quickfeed/Proto
 grpcweb-latest		:= $(shell git ls-remote --tags https://github.com/grpc/grpc-web.git | tail -1 | awk -F"/" '{ print $$3 }')
 grpcweb-ver			:= $(shell cd public; npm ls --package-lock-only grpc-web | awk -F@ '/grpc-web/ { print $$2 }')
 protoc-grpcweb		:= protoc-gen-grpc-web
 protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
-grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ver)/$(protoc-grpcweb-long)
-grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
-testorg				:= ag-test-course
 envoy-config-gen	:= ./cmd/envoy/envoy_config_gen.go
+toolsdir			:= bin
+tool-pkgs			:= $(shell go list -f '{{join .Imports " "}}' tools.go)
+tool-cmds			:= $(foreach tool,$(notdir ${tool-pkgs}),${toolsdir}/${tool}) $(foreach cmd,${tool-cmds},$(eval $(notdir ${cmd})Cmd := ${cmd}))
 
-# necessary when target is not tied to a file
-.PHONY: devtools download go-tools grpcweb install ui proto envoy-build envoy-run scm version-check
+# necessary when target is not tied to a specific file
+.PHONY: devtools download tools grpcweb install ui proto envoy-build envoy-run scm version-check
 
-devtools: grpcweb go-tools
+devtools: grpcweb tools
 
 download:
 	@echo "Download go.mod dependencies"
 	@go mod download
 
-go-tools:
-	@echo "Installing tools from tools.go"
-	@go install `go list -f "{{range .Imports}}{{.}} {{end}}" tools.go`
+go.mod: tools.go
+	go mod tidy
+	touch go.mod
+
+${tool-cmds}: go.mod
+	go build -o $@ $(filter %/$(@F),${tool-pkgs})
+
+tools: ${tool-cmds}
 
 version-check:
 	@go run cmd/vercheck/main.go
@@ -38,12 +42,11 @@ ifneq ($(grpcweb-ver), $(grpcweb-latest))
 endif
 
 grpcweb:
-	@echo "Fetch and install grpcweb protoc plugin (may require sudo access on some systems)"
-	@mkdir -p $(tmpdir)
-	@cd $(tmpdir); curl -LOs $(grpcweb-url)
-	@sudo mv $(tmpdir)/$(protoc-grpcweb-long) $(grpcweb-path)
-	@chmod +x $(grpcweb-path)
-	@rm -rf $(tmpdir)
+	@echo "Fetch and install grpcweb protoc plugin"
+	@mkdir -p $(toolsdir)
+	@cd $(toolsdir); gh release download --repo grpc/grpc-web $(grpcweb-ver) --pattern \*$(OS)\*
+	@cd $(toolsdir); shasum -c *.sha256 && rm *.sha256
+	@cd $(toolsdir); mv $(protoc-grpcweb-long) $(protoc-grpcweb) && chmod +x $(protoc-grpcweb)
 
 install:
 	@echo go install
@@ -59,13 +62,11 @@ define proto_target
 proto_$(1):
 	$$(info Compiling proto definitions for Go and TypeScript for $(1))
 	@protoc --fatal_warnings -I . \
-	-I ./proto-include \
 	-I `go list -m -f {{.Dir}} github.com/alta/protopatch` \
 	-I `go list -m -f {{.Dir}} google.golang.org/protobuf` \
 	--go-patch_out=plugin=go,paths=source_relative:. \
 	--go-patch_out=plugin=go-grpc,paths=source_relative:. \
-	--js_out=import_style=commonjs:$(1)/proto \
-	--grpc-web_out=import_style=typescript,mode=grpcwebtext:$(1)/proto \
+	--grpc-web_out=import_style=typescript,mode=grpcweb:$(1)/proto \
 	qf/quickfeed.proto qf/types.proto qf/requests.proto kit/score/score.proto
 
 	$$(info Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529))
@@ -107,7 +108,7 @@ ifeq (, $(shell which brew))
 	$(error "No brew command in $(PATH)")
 endif
 	@echo "Installing homebrew packages needed for development and deployment"
-	@brew install go protobuf webpack npm node docker certbot envoy
+	@brew install gh go protobuf node docker certbot envoy clang-format golangci-lint bufbuild/buf/buf grpcurl
 
 envoy-config:
 ifeq ($(DOMAIN),)
@@ -140,20 +141,9 @@ webpack-dev-server:
 selenium:
 	@cd public && npm run test:selenium
 
+qcm:
+	@cd cmd/qcm; go install
+
 scm:
 	@echo "Compiling the scm tool"
 	@cd cmd/scm; go install
-
-# will remove all repositories and teams from provided organization 'testorg'
-purge: scm
-	@scm delete repo -all -namespace=$(testorg)
-	@scm delete team -all -namespace=$(testorg)
-
-run:
-	@quickfeed -service.url $(DOMAIN) -database.file ./tmp.db
-
-runlocal:
-	@quickfeed -service.url 127.0.0.1
-
-prometheus:
-	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --storage.tsdb.retention.size=1024MB --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &

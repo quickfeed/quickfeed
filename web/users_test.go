@@ -2,152 +2,44 @@ package web_test
 
 import (
 	"context"
-	"log"
-	"net"
-	"net/http"
-	"net/http/httptest"
+	"fmt"
 	"testing"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/google/go-cmp/cmp"
-	"github.com/gorilla/sessions"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/quickfeed/quickfeed/web/interceptor"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
-	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
-func TestGetSelf(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
-	defer cleanup()
-
-	const (
-		bufSize = 1024 * 1024
-	)
-
-	adminUser := qtest.CreateFakeUser(t, db, 1)
-	student := qtest.CreateFakeUser(t, db, 56)
-
-	store := sessions.NewCookieStore([]byte("secret"))
-	store.Options.HttpOnly = true
-	store.Options.Secure = true
-
-	lis := bufconn.Listen(bufSize)
-	bufDialer := func(context.Context, string) (net.Conn, error) {
-		return lis.Dial()
-	}
-
-	opt := grpc.ChainUnaryInterceptor(
-		interceptor.UnaryUserVerifier(),
-	)
-	s := grpc.NewServer(opt)
-	qf.RegisterQuickFeedServiceServer(s, ags)
-
-	go func() {
-		if err := s.Serve(lis); err != nil {
-			log.Fatalf("Server exited with error: %v", err)
-		}
-	}()
-
-	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		t.Fatalf("Failed to dial bufnet: %v", err)
-	}
-	defer conn.Close()
-
-	client := qf.NewQuickFeedServiceClient(conn)
-
-	userTest := []struct {
-		id       uint64
-		code     codes.Code
-		metadata bool
-		token    string
-		wantUser *qf.User
-	}{
-		{id: 1, code: codes.Unauthenticated, metadata: false, token: "", wantUser: nil},
-		{id: 6, code: codes.PermissionDenied, metadata: true, token: "", wantUser: nil},
-		{id: 1, code: codes.Unauthenticated, metadata: true, token: "should fail", wantUser: nil},
-		{id: 1, code: codes.OK, metadata: true, token: "", wantUser: adminUser},
-		{id: 2, code: codes.OK, metadata: true, token: "", wantUser: student},
-	}
-
-	for _, user := range userTest {
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		w := httptest.NewRecorder()
-		sess := sessions.NewSession(store, auth.SessionKey)
-
-		sess.Values[auth.UserKey] = &auth.UserSession{
-			ID:        user.id,
-			Providers: map[string]struct{}{"github": {}},
-		}
-		if err := sess.Save(r, w); err != nil {
-			t.Errorf("sess.Save(): %v", err)
-		}
-
-		token := w.Result().Header.Get(auth.OutgoingCookie)
-		auth.Add(token, user.id)
-
-		if user.metadata {
-			meta := metadata.MD{}
-			if len(user.token) > 0 {
-				token = user.token
-			}
-			meta.Set(auth.Cookie, token)
-			ctx = metadata.NewOutgoingContext(ctx, meta)
-		}
-		gotUser, err := client.GetUser(ctx, &qf.Void{})
-		if s, ok := status.FromError(err); ok {
-			if s.Code() != user.code {
-				t.Errorf("GetUser().Code(): %v, want: %v", s.Code(), user.code)
-			}
-		}
-		if user.wantUser != nil {
-			// ignore comparing remote identity
-			user.wantUser.RemoteIdentities = nil
-		}
-		wantUser := user.wantUser
-		if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-			t.Errorf("GetSelf() mismatch (-wantUser +gotUser):\n%s", diff)
-		}
-	}
-}
-
 func TestGetUsers(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	shutdown, client := MockQuickFeedClient(t, db, nil)
 
-	unexpectedUsers, err := ags.GetUsers(context.Background(), &qf.Void{})
-	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
+	unexpectedUsers, err := client.GetUsers(context.Background(), &connect.Request[qf.Void]{Msg: &qf.Void{}})
+	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.Msg.GetUsers()) > 0 {
 		t.Fatalf("found unexpected users %+v", unexpectedUsers)
 	}
 
 	admin := qtest.CreateFakeUser(t, db, 1)
 	user2 := qtest.CreateFakeUser(t, db, 2)
-	ctx := qtest.WithUserContext(context.Background(), user2)
-	_, err = ags.GetUsers(ctx, &qf.Void{})
-	if err == nil {
-		t.Fatal("expected 'rpc error: code = PermissionDenied desc = only admin can access other users'")
-	}
-	// now switch to use admin as the user; this should pass
-	ctx = qtest.WithUserContext(context.Background(), admin)
-	foundUsers, err := ags.GetUsers(ctx, &qf.Void{})
+
+	ctx := auth.WithUserContext(context.Background(), admin)
+	foundUsers, err := client.GetUsers(ctx, &connect.Request[qf.Void]{Msg: &qf.Void{}})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	wantUsers := make([]*qf.User, 0)
 	wantUsers = append(wantUsers, admin, user2)
-	gotUsers := foundUsers.GetUsers()
+	gotUsers := foundUsers.Msg.GetUsers()
 	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.GetUsers() mismatch (-wantUsers +gotUsers):\n%s", diff)
+		t.Errorf("GetUsers() mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
+	shutdown(ctx)
 }
 
 var allUsers = []struct {
@@ -167,8 +59,9 @@ var allUsers = []struct {
 }
 
 func TestGetEnrollmentsByCourse(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	shutdown, client := MockQuickFeedClient(t, db, nil)
 
 	var users []*qf.User
 	for _, u := range allUsers {
@@ -178,14 +71,14 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		users = append(users, user)
 	}
 	admin := users[0]
-	for _, course := range allCourses {
+	for _, course := range qtest.MockCourses {
 		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
 	// users to enroll in course DAT520 Distributed Systems
 	// (excluding admin because admin is enrolled on creation)
@@ -197,13 +90,13 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 		if err := db.CreateEnrollment(&qf.Enrollment{
 			UserID:   user.ID,
-			CourseID: allCourses[0].ID,
+			CourseID: qtest.MockCourses[0].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
 		if err := db.UpdateEnrollment(&qf.Enrollment{
 			UserID:   user.ID,
-			CourseID: allCourses[0].ID,
+			CourseID: qtest.MockCourses[0].ID,
 			Status:   qf.Enrollment_STUDENT,
 		}); err != nil {
 			t.Fatal(err)
@@ -216,35 +109,40 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	for _, user := range osUsers {
 		if err := db.CreateEnrollment(&qf.Enrollment{
 			UserID:   user.ID,
-			CourseID: allCourses[1].ID,
+			CourseID: qtest.MockCourses[1].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
 		if err := db.UpdateEnrollment(&qf.Enrollment{
 			UserID:   user.ID,
-			CourseID: allCourses[1].ID,
+			CourseID: qtest.MockCourses[1].ID,
 			Status:   qf.Enrollment_STUDENT,
 		}); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	gotEnrollments, err := ags.GetEnrollmentsByCourse(ctx, &qf.EnrollmentRequest{CourseID: allCourses[0].ID})
+	request := &connect.Request[qf.EnrollmentRequest]{
+		Msg: &qf.EnrollmentRequest{CourseID: qtest.MockCourses[0].ID},
+	}
+	gotEnrollments, err := client.GetEnrollmentsByCourse(ctx, request)
 	if err != nil {
 		t.Error(err)
 	}
 	var gotUsers []*qf.User
-	for _, e := range gotEnrollments.Enrollments {
+	for _, e := range gotEnrollments.Msg.Enrollments {
 		gotUsers = append(gotUsers, e.User)
 	}
 	if diff := cmp.Diff(wantUsers, gotUsers, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.GetEnrollmentsByCourse() mismatch (-wantUsers +gotUsers):\n%s", diff)
+		t.Errorf("GetEnrollmentsByCourse() mismatch (-wantUsers +gotUsers):\n%s", diff)
 	}
+	shutdown(ctx)
 }
 
 func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	shutdown, client := MockQuickFeedClient(t, db, nil)
 
 	var users []*qf.User
 	for _, u := range allUsers {
@@ -253,9 +151,9 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	}
 	admin := users[0]
 
-	ctx := qtest.WithUserContext(context.Background(), admin)
+	ctx := auth.WithUserContext(context.Background(), admin)
 
-	course := allCourses[1]
+	course := qtest.MockCourses[1]
 	err := db.CreateCourse(admin.ID, course)
 	if err != nil {
 		t.Fatal(err)
@@ -307,32 +205,49 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 		}
 	}
 
-	enrollments, err := ags.GetEnrollmentsByCourse(ctx, &qf.EnrollmentRequest{CourseID: course.ID, IgnoreGroupMembers: true})
+	request := connect.NewRequest(
+		&qf.EnrollmentRequest{CourseID: course.ID, IgnoreGroupMembers: true},
+	)
+	enrollments, err := client.GetEnrollmentsByCourse(ctx, request)
 	if err != nil {
 		t.Fatal(err)
 	}
-	gotEnrollments := enrollments.GetEnrollments()
+	gotEnrollments := enrollments.Msg.GetEnrollments()
 	// set user references to nil as db methods populating the first list will not have them
 	for _, u := range gotEnrollments {
 		u.User = nil
 		u.Course = nil
 	}
 	if diff := cmp.Diff(wantEnrollments, gotEnrollments, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.GetEnrollmentsByCourse() mismatch (-wantEnrollments +gotEnrollments):\n%s", diff)
+		t.Errorf("GetEnrollmentsByCourse() mismatch (-wantEnrollments +gotEnrollments):\n%s", diff)
 	}
+	shutdown(ctx)
 }
 
 func TestUpdateUser(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	logger := qtest.Logger(t)
+
+	tm, err := auth.NewTokenManager(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	shutdown, client := MockQuickFeedClient(t, db, connect.WithInterceptors(
+		interceptor.NewUserInterceptor(logger, tm),
+	))
 	firstAdminUser := qtest.CreateFakeUser(t, db, 1)
 	nonAdminUser := qtest.CreateFakeUser(t, db, 11)
 
-	ctx := qtest.WithUserContext(context.Background(), firstAdminUser)
+	firstAdminCookie, err := tm.NewAuthCookie(firstAdminUser.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// we want to update nonAdminUser to become admin
 	nonAdminUser.IsAdmin = true
-	err := db.UpdateUser(nonAdminUser)
+	err = db.UpdateUser(nonAdminUser)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -346,16 +261,18 @@ func TestUpdateUser(t *testing.T) {
 		t.Error("expected nonAdminUser to have become admin")
 	}
 
-	nameChangeRequest := &qf.User{
+	nameChangeRequest := connect.NewRequest(&qf.User{
 		ID:        nonAdminUser.ID,
 		IsAdmin:   nonAdminUser.IsAdmin,
 		Name:      "Scrooge McDuck",
 		StudentID: "99",
 		Email:     "test@test.com",
 		AvatarURL: "www.hello.com",
-	}
+	})
 
-	_, err = ags.UpdateUser(ctx, nameChangeRequest)
+	ctx := context.Background()
+	nameChangeRequest.Header().Set(auth.Cookie, firstAdminCookie.String())
+	_, err = client.UpdateUser(ctx, nameChangeRequest)
 	if err != nil {
 		t.Error(err)
 	}
@@ -373,13 +290,17 @@ func TestUpdateUser(t *testing.T) {
 		RemoteIdentities: nonAdminUser.RemoteIdentities,
 	}
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
+		t.Errorf("UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
+	shutdown(ctx)
 }
 
 func TestUpdateUserFailures(t *testing.T) {
-	db, cleanup, _, ags := testQuickFeedService(t)
+	t.Skip("TODO: Needs to be rewritten as a client-server test to verify (with interceptors) that the server is actually enforcing the rules")
+	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
+	shutdown, client := MockQuickFeedClient(t, db, nil)
+
 	wantAdminUser := qtest.CreateFakeUser(t, db, 1)
 	qtest.CreateFakeUser(t, db, 11)
 
@@ -388,20 +309,20 @@ func TestUpdateUserFailures(t *testing.T) {
 		t.Fatalf("expected user %v to be non-admin", u)
 	}
 	// context with user u (non-admin user); can only change its own name etc
-	ctx := qtest.WithUserContext(context.Background(), u)
-
+	ctx := auth.WithUserContext(context.Background(), u)
 	// trying to demote current adminUser by setting IsAdmin to false
-	nameChangeRequest := &qf.User{
+	nameChangeRequest := connect.NewRequest(&qf.User{
 		ID:        wantAdminUser.ID,
 		IsAdmin:   false,
 		Name:      "Scrooge McDuck",
 		StudentID: "99",
 		Email:     "test@test.com",
 		AvatarURL: "www.hello.com",
-	}
+	})
 	// current user u (non-admin) is in the ctx and tries to change adminUser
-	_, err := ags.UpdateUser(ctx, nameChangeRequest)
+	us, err := client.UpdateUser(ctx, nameChangeRequest)
 	if err == nil {
+		fmt.Println(us)
 		t.Fatal(err)
 	}
 
@@ -410,18 +331,18 @@ func TestUpdateUserFailures(t *testing.T) {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(wantAdminUser, gotAdminUserWithoutChanges, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.UpdateUser() mismatch (-wantAdminUser +gotAdminUserWithoutChanges):\n%s", diff)
+		t.Errorf("UpdateUser() mismatch (-wantAdminUser +gotAdminUserWithoutChanges):\n%s", diff)
 	}
 
-	nameChangeRequest = &qf.User{
+	nameChangeRequest = connect.NewRequest(&qf.User{
 		ID:        u.ID,
 		IsAdmin:   true,
 		Name:      "Scrooge McDuck",
 		StudentID: "99",
 		Email:     "test@test.com",
 		AvatarURL: "www.hello.com",
-	}
-	_, err = ags.UpdateUser(ctx, nameChangeRequest)
+	})
+	_, err = client.UpdateUser(ctx, nameChangeRequest)
 	if err != nil {
 		t.Error(err)
 	}
@@ -439,6 +360,7 @@ func TestUpdateUserFailures(t *testing.T) {
 		RemoteIdentities: u.RemoteIdentities,
 	}
 	if diff := cmp.Diff(wantUser, gotUser, protocmp.Transform()); diff != "" {
-		t.Errorf("ags.UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
+		t.Errorf("UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
 	}
+	shutdown(ctx)
 }

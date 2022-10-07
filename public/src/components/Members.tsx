@@ -66,7 +66,7 @@ const Members = (): JSX.Element => {
         } else {
             data.push(edit ? (
                 <div>
-                    <i className="badge badge-primary clickable"
+                    <i className={`badge badge-${isTeacher(enrollment) ? "warning" : "primary"} clickable`}
                         onClick={() => actions.updateEnrollment({ enrollment: enrollment, status: isTeacher(enrollment) ? Enrollment.UserStatus.STUDENT : Enrollment.UserStatus.TEACHER })}>
                         {isTeacher(enrollment) ? "Demote" : "Promote"}
                     </i>
@@ -90,8 +90,8 @@ const Members = (): JSX.Element => {
                     <Search />
                 </div>
                 <div className="ml-auto">
-                    <div className={edit ? "btn btn-sm btn-danger" : "btn btn-sm btn-primary"} onClick={() => setEditing(!edit)}>
-                        {edit ? "Cancel" : "Edit"}
+                    <div className={edit ? "btn btn-danger" : "btn btn-primary"} onClick={() => setEditing(!edit)}>
+                        {edit ? "Done" : "Edit"}
                     </div>
                 </div>
                 {pending?.length > 0 ?

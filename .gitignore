@@ -9,6 +9,7 @@ public/dist/bundle.js.map
 backups
 scratchpad
 proto-include
+bin
 
 # Environment and shell scripts
 cyclone.sh
@@ -31,3 +32,5 @@ internal/config/envoy/*
 public/public/index.html
 public/public/styles.css
 public/assets/index.html
+TODO
+x

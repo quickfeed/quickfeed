@@ -19,7 +19,7 @@ type Database interface {
 	GetUser(uint64) (*qf.User, error)
 	// GetUserByCourse returns the owner of the given login
 	// with preloaded course matching the given query.
-	GetUserByCourse(*qf.Course, string) (*qf.User, *qf.Course, error)
+	GetUserByCourse(*qf.Course, string) (*qf.User, error)
 	// GetUserWithEnrollments returns the user by ID with preloaded user enrollments.
 	GetUserWithEnrollments(uint64) (*qf.User, error)
 	// GetUsers returns the users for the given set of user IDs.
@@ -101,6 +101,8 @@ type Database interface {
 	CreateSubmission(*qf.Submission) error
 	// GetSubmission returns a single submission matching the given query.
 	GetSubmission(query *qf.Submission) (*qf.Submission, error)
+	// GetLastSubmission returns the a single submission matching the given course ID and query.
+	GetLastSubmission(courseID uint64, query *qf.Submission) (*qf.Submission, error)
 	// GetLastSubmissions returns a list of submission entries for the given course, matching the given query.
 	GetLastSubmissions(courseID uint64, query *qf.Submission) ([]*qf.Submission, error)
 	// GetSubmissions returns all submissions matching the query.

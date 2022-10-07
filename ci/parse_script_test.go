@@ -12,10 +12,9 @@ import (
 )
 
 // Testdata copied from run_tests_test.go (since they are in different packages)
-func testRunData(qfTestOrg, userName, accessToken, runScriptContent string) *RunData {
+func testRunData(qfTestOrg, userName, runScriptContent string) *RunData {
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
-	qf.SetAccessToken(courseID, accessToken)
 	runData := &RunData{
 		Course: &qf.Course{
 			ID:   courseID,
@@ -44,6 +43,7 @@ func TestParseTestRunnerScript(t *testing.T) {
 		runScriptContent = `#image/quickfeed:go
 echo $TESTS
 echo $ASSIGNMENTS
+echo $SUBMITTED
 echo $CURRENT
 echo $QUICKFEED_SESSION_SECRET
 `
@@ -52,8 +52,8 @@ echo $QUICKFEED_SESSION_SECRET
 	)
 	randomSecret := rand.String()
 
-	runData := testRunData(qfTestOrg, githubUserName, "access_token", runScriptContent)
-	job, err := runData.parseTestRunnerScript(randomSecret)
+	runData := testRunData(qfTestOrg, githubUserName, runScriptContent)
+	job, err := runData.parseTestRunnerScript(randomSecret, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,8 +62,10 @@ echo $QUICKFEED_SESSION_SECRET
 	}
 	gotVars := job.Env
 	wantVars := []string{
+		"HOME=" + QuickFeedPath,
 		"TESTS=" + filepath.Join(QuickFeedPath, qf.TestsRepo),
 		"ASSIGNMENTS=" + filepath.Join(QuickFeedPath, qf.AssignmentRepo),
+		"SUBMITTED=" + filepath.Join(QuickFeedPath, qf.StudentRepoName(githubUserName)),
 		"CURRENT=" + runData.Assignment.GetName(),
 		"QUICKFEED_SESSION_SECRET=" + randomSecret,
 	}
@@ -100,9 +102,9 @@ func TestParseBadTestRunnerScript(t *testing.T) {
 	randomSecret := rand.String()
 
 	const runScriptContent = `#image/quickfeed:go`
-	runData := testRunData(qfTestOrg, githubUserName, "access_token", runScriptContent)
-	_, err := runData.parseTestRunnerScript(randomSecret)
-	const wantMsg = "no run script for assignment lab1 in https://github.com/qf101/tests"
+	runData := testRunData(qfTestOrg, githubUserName, runScriptContent)
+	_, err := runData.parseTestRunnerScript(randomSecret, "")
+	const wantMsg = "failed to parse run script for assignment lab1 in https://github.com/qf101/tests: empty run script"
 	if err.Error() != wantMsg {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg)
 	}
@@ -112,9 +114,9 @@ start=$SECONDS
 printf "*** Preparing for Test Execution ***\n"
 
 `
-	runData = testRunData(qfTestOrg, githubUserName, "access_token", runScriptContent2)
-	_, err = runData.parseTestRunnerScript(randomSecret)
-	const wantMsg2 = "no docker image specified in run script for assignment lab1 in https://github.com/qf101/tests"
+	runData = testRunData(qfTestOrg, githubUserName, runScriptContent2)
+	_, err = runData.parseTestRunnerScript(randomSecret, "")
+	const wantMsg2 = "failed to parse run script for assignment lab1 in https://github.com/qf101/tests: no docker image specified in run script"
 	if err.Error() != wantMsg2 {
 		t.Errorf("err = '%s', want '%s'", err, wantMsg2)
 	}

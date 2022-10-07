@@ -19,7 +19,6 @@ import {
     SubmissionLink,
 } from "../proto/qf/types_pb"
 import {
-    AuthorizationResponse,
     CourseSubmissions,
     Organization,
     Repositories,
@@ -113,8 +112,7 @@ export class MockGrpcManager {
         }
     }
 
-    public async getUser(): Promise<IGrpcResponse<User>> {
-        //await delay(10000)
+    public getUser(): Promise<IGrpcResponse<User>> {
         return this.grpcSend<User>(this.currentUser)
     }
 
@@ -134,10 +132,6 @@ export class MockGrpcManager {
             Object.assign(this.users.getUsersList()[usr], user)
         }
         return this.grpcSend<Void>(new Void())
-    }
-
-    public isAuthorizedTeacher(): Promise<IGrpcResponse<AuthorizationResponse>> {
-        return this.grpcSend<AuthorizationResponse>(new AuthorizationResponse().setIsauthorized(true))
     }
 
     // /* COURSES */ //
@@ -462,6 +456,18 @@ export class MockGrpcManager {
         return this.grpcSend<Submissions>(submissions)
     }
 
+    public getSubmission(courseID: number, submissionID: number): Promise<IGrpcResponse<Submission>> {
+        const enrollment = this.enrollments.getEnrollmentsList().find(enrollment => 
+            enrollment.getCourseid() === courseID && 
+            enrollment.getUserid() === this.currentUser?.getId()
+        )
+        if (!enrollment) {
+            return this.grpcSend<Submission>(null, new Status().setCode(StatusCode.NOT_FOUND))
+        }
+        const submission = this.submissions.getSubmissionsList().find(s => s.getId() === submissionID)
+        return this.grpcSend<Submission>(submission)
+    }
+
     public getSubmissions(courseID: number, userID: number): Promise<IGrpcResponse<Submissions>> {
         // Get all assignment IDs
         const assignmentIDs = this.assignments.getAssignmentsList().filter(a => a.getCourseid() === courseID && !a.getIsgrouplab()).map(a => a.getId())
@@ -482,7 +488,7 @@ export class MockGrpcManager {
         return this.grpcSend<Submissions>(new Submissions().setSubmissionsList(submissions))
     }
 
-    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type, withBuildInfo: boolean): Promise<IGrpcResponse<CourseSubmissions>> {
+    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
         // TODO: Remove `.clone()` when done migrating to AsObject in state
         const users = this.users.getUsersList()
         const groups = this.groups.getGroupsList()
@@ -526,10 +532,6 @@ export class MockGrpcManager {
                 if (!submission) {
                     subs.push(subLink)
                     return
-                }
-
-                if (withBuildInfo) {
-                    // TODO
                 }
 
                 subLink.setSubmission(submission.clone())
@@ -708,7 +710,7 @@ export class MockGrpcManager {
     // /* ORGANIZATIONS */ //
 
     public async getOrganization(orgName: string): Promise<IGrpcResponse<Organization>> {
-        const org = this.organizations.getOrganizationsList().find(o => o.getPath() === orgName)
+        const org = this.organizations.getOrganizationsList().find(o => o.getName() === orgName)
         await delay(2000)
         if (!org) {
             return this.grpcSend<Organization>(null, new Status().setCode(2).setError('Organization not found'))
@@ -1007,7 +1009,7 @@ export class MockGrpcManager {
         const localOrgs: Organization[] = []
         const localOrg = new Organization()
         localOrg.setId(23650610)
-        localOrg.setPath("test")
+        localOrg.setName("test")
         localOrg.setAvatar("https://avatars2.githubusercontent.com/u/23650610?v=3")
         localOrgs.push(localOrg)
         this.organizations.setOrganizationsList(localOrgs)

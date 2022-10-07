@@ -2,7 +2,6 @@ package assignments
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -74,11 +73,7 @@ autoapprove: false
 )
 
 func TestParse(t *testing.T) {
-	testsDir, err := ioutil.TempDir("", qf.TestsRepo)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(testsDir)
+	testsDir := t.TempDir()
 
 	job := &ci.Job{
 		Commands: []string{
@@ -89,31 +84,31 @@ func TestParse(t *testing.T) {
 		},
 	}
 	runner := ci.Local{}
-	_, err = runner.Run(context.Background(), job)
+	_, err := runner.Run(context.Background(), job)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(y1), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(y1), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "lab2", "assignment.yaml"), []byte(y2), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab2", "assignment.yaml"), []byte(y2), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "scripts", "run.sh"), []byte(script), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "scripts", "run.sh"), []byte(script), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "lab1", "run.sh"), []byte(script1), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab1", "run.sh"), []byte(script1), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "scripts", "Dockerfile"), []byte(df), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "scripts", "Dockerfile"), []byte(df), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "lab2", "criteria.json"), []byte(criteria), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab2", "criteria.json"), []byte(criteria), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,11 +181,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestParseUnknownFields(t *testing.T) {
-	testsDir, err := ioutil.TempDir("", qf.TestsRepo)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(testsDir)
+	testsDir := t.TempDir()
 
 	job := &ci.Job{
 		Commands: []string{
@@ -199,11 +190,11 @@ func TestParseUnknownFields(t *testing.T) {
 		},
 	}
 	runner := ci.Local{}
-	_, err = runner.Run(context.Background(), job)
+	_, err := runner.Run(context.Background(), job)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(yUnknownFields), 0o644)
+	err = os.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(yUnknownFields), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}

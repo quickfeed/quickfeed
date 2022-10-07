@@ -1,17 +1,18 @@
 package auth
 
 import (
+	"github.com/quickfeed/quickfeed/scm"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 )
 
-// newGitHubConfig creates a new OAuth config for GitHub.
-func NewGitHubConfig(baseURL, clientID, clientSecret string) *oauth2.Config {
+// NewGitHubConfig creates a new OAuth config for GitHub.
+func NewGitHubConfig(baseURL string, c *scm.Config) *oauth2.Config {
 	return &oauth2.Config{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
+		ClientID:     c.ClientID,
+		ClientSecret: c.ClientSecret,
 		Endpoint:     github.Endpoint,
-		RedirectURL:  GetCallbackURL(baseURL, "github"),
+		RedirectURL:  GetCallbackURL(baseURL),
 		Scopes:       []string{"repo:invite"},
 	}
 }

@@ -6,39 +6,20 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
 const maxGroupNameLength = 20
 
 var (
-	errGroupNameDuplicate = status.Errorf(codes.AlreadyExists, "group name already in use")
-	errGroupNameTooLong   = status.Errorf(codes.InvalidArgument, "group name is too long")
-	errGroupNameInvalid   = status.Errorf(codes.InvalidArgument, "group name contains invalid characters")
-	errUserNotInGroup     = status.Errorf(codes.NotFound, "user is not in group")
+	errGroupNameDuplicate = connect.NewError(connect.CodeAlreadyExists, errors.New("group name already in use"))
+	errGroupNameTooLong   = connect.NewError(connect.CodeInvalidArgument, errors.New("group name is too long"))
+	errGroupNameInvalid   = connect.NewError(connect.CodeInvalidArgument, errors.New("group name contains invalid characters"))
+	errUserNotInGroup     = connect.NewError(connect.CodeNotFound, errors.New("user is not in group"))
 )
-
-// getGroup returns the group for the given group ID.
-func (s *QuickFeedService) getGroup(request *qf.GetGroupRequest) (*qf.Group, error) {
-	group, err := s.db.GetGroup(request.GetGroupID())
-	if err != nil {
-		return nil, err
-	}
-	return group, nil
-}
-
-// getGroups returns all groups for the given course ID.
-func (s *QuickFeedService) getGroups(request *qf.CourseRequest) (*qf.Groups, error) {
-	groups, err := s.db.GetGroupsByCourse(request.GetCourseID())
-	if err != nil {
-		return nil, err
-	}
-	return &qf.Groups{Groups: groups}, nil
-}
 
 // getGroupByUserAndCourse returns the group of the given user and course.
 func (s *QuickFeedService) getGroupByUserAndCourse(request *qf.GroupRequest) (*qf.Group, error) {
@@ -46,7 +27,6 @@ func (s *QuickFeedService) getGroupByUserAndCourse(request *qf.GroupRequest) (*q
 	if err != nil {
 		return nil, err
 	}
-	enrollment.SetSlipDays(enrollment.Course)
 	grp, err := s.db.GetGroup(enrollment.GroupID)
 	if err != nil && err == gorm.ErrRecordNotFound {
 		err = errUserNotInGroup
@@ -186,24 +166,24 @@ func (s *QuickFeedService) updateGroup(ctx context.Context, sc scm.SCM, request 
 // that the group's users are not already enrolled in another group.
 func (s *QuickFeedService) getGroupUsers(request *qf.Group) ([]*qf.User, error) {
 	if len(request.Users) == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "no users in group")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("no users in group"))
 	}
 	var userIds []uint64
 	for _, user := range request.Users {
 		enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, user.ID)
 		switch {
 		case err == gorm.ErrRecordNotFound:
-			return nil, status.Errorf(codes.NotFound, "user not enrolled in this course")
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("user not enrolled in this course"))
 		case err != nil:
 			return nil, err
 		case enrollment.GroupID > 0 && request.ID == 0:
 			// new group check (request group ID should be 0)
-			return nil, status.Errorf(codes.InvalidArgument, "user already enrolled in another group")
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("user already enrolled in another group"))
 		case enrollment.GroupID > 0 && enrollment.GroupID != request.ID:
 			// update group check (request group ID should be non-0)
-			return nil, status.Errorf(codes.InvalidArgument, "user already enrolled in another group")
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("user already enrolled in another group"))
 		case enrollment.Status < qf.Enrollment_STUDENT:
-			return nil, status.Errorf(codes.InvalidArgument, "user not yet accepted for this course")
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("user not yet accepted for this course"))
 		}
 		userIds = append(userIds, user.ID)
 	}

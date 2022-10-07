@@ -70,10 +70,11 @@ func (m *Enrollment) RemainingSlipDays(c *Course) int32 {
 
 // SetSlipDays updates SlipDaysRemaining field of an enrollment.
 func (m *Enrollment) SetSlipDays(c *Course) {
-	if m.RemainingSlipDays(c) < 0 {
+	remaining := m.RemainingSlipDays(c)
+	if remaining < 0 {
 		m.SlipDaysRemaining = 0
 	} else {
-		m.SlipDaysRemaining = uint32(m.RemainingSlipDays(c))
+		m.SlipDaysRemaining = uint32(remaining)
 	}
 }
 
@@ -115,4 +116,13 @@ func (m *Enrollments) HasCourseID() bool {
 		}
 	}
 	return true
+}
+
+// UserIDs returns the user IDs in these enrollments.
+func (m *Enrollments) UserIDs() []uint64 {
+	userIDs := make([]uint64, 0)
+	for _, enrollment := range m.GetEnrollments() {
+		userIDs = append(userIDs, enrollment.GetUserID())
+	}
+	return userIDs
 }

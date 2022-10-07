@@ -13,37 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// getCourses returns all courses.
-func (s *QuickFeedService) getCourses() (*qf.Courses, error) {
-	courses, err := s.db.GetCourses()
-	if err != nil {
-		return nil, err
-	}
-	return &qf.Courses{Courses: courses}, nil
-}
-
-// getCoursesByUser returns all courses that match the provided enrollment status.
-func (s *QuickFeedService) getCoursesByUser(request *qf.EnrollmentStatusRequest) (*qf.Courses, error) {
-	courses, err := s.db.GetCoursesByUser(request.GetUserID(), request.Statuses...)
-	if err != nil {
-		return nil, err
-	}
-	return &qf.Courses{Courses: courses}, nil
-}
-
-// getEnrollmentsByUser returns all enrollments for the given user with preloaded
-// courses and groups
-func (s *QuickFeedService) getEnrollmentsByUser(request *qf.EnrollmentStatusRequest) (*qf.Enrollments, error) {
-	enrollments, err := s.db.GetEnrollmentsByUser(request.UserID, request.Statuses...)
-	if err != nil {
-		return nil, err
-	}
-	for _, enrollment := range enrollments {
-		enrollment.SetSlipDays(enrollment.Course)
-	}
-	return &qf.Enrollments{Enrollments: enrollments}, nil
-}
-
 // getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
 func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest) (*qf.Enrollments, error) {
 	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.Statuses...)
@@ -68,20 +37,7 @@ func (s *QuickFeedService) getEnrollmentsByCourse(request *qf.EnrollmentRequest)
 		enrollments = enrollmentsWithoutGroups
 	}
 
-	for _, enrollment := range enrollments {
-		enrollment.SetSlipDays(enrollment.Course)
-	}
 	return &qf.Enrollments{Enrollments: enrollments}, nil
-}
-
-// createEnrollment creates a pending enrollment for the given user and course.
-func (s *QuickFeedService) createEnrollment(request *qf.Enrollment) error {
-	enrollment := qf.Enrollment{
-		UserID:   request.GetUserID(),
-		CourseID: request.GetCourseID(),
-		Status:   qf.Enrollment_PENDING,
-	}
-	return s.db.CreateEnrollment(&enrollment)
 }
 
 // updateEnrollment changes the status of the given course enrollment.
@@ -175,7 +131,8 @@ func (s *QuickFeedService) enrollStudent(ctx context.Context, sc scm.SCM, enroll
 	if err := s.db.CreateRepository(&userRepo); err != nil {
 		return fmt.Errorf("failed to create %s repository for %q: %w", course.Code, user.Login, err)
 	}
-	if err := s.acceptRepositoryInvites(ctx, user, course); err != nil {
+
+	if err := s.acceptRepositoryInvites(ctx, sc, user, course.GetOrganizationName()); err != nil {
 		s.logger.Errorf("Failed to accept %s repository invites for %q: %v", course.Code, user.Login, err)
 	}
 
@@ -205,7 +162,7 @@ func (s *QuickFeedService) enrollTeacher(ctx context.Context, sc scm.SCM, enroll
 func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, enrolled *qf.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
-	err := revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
+	err := revokeTeacherStatus(ctx, sc, course.GetOrganizationName(), user.GetLogin())
 	if err != nil {
 		s.logger.Errorf("Failed to revoke %s teacher status for %q: %v", course.Code, user.Login, err)
 	}
@@ -214,11 +171,6 @@ func (s *QuickFeedService) revokeTeacherStatus(ctx context.Context, sc scm.SCM, 
 		CourseID: course.ID,
 		Status:   qf.Enrollment_STUDENT,
 	})
-}
-
-// getCourse returns a course object for the given course id.
-func (s *QuickFeedService) getCourse(courseID uint64) (*qf.Course, error) {
-	return s.db.GetCourse(courseID, false)
 }
 
 // getSubmissions returns all the latests submissions for a user of the given course.
@@ -246,8 +198,6 @@ func (s *QuickFeedService) getAllCourseSubmissions(request *qf.SubmissionsForCou
 	if err != nil {
 		return nil, err
 	}
-
-	course.SetSlipDays()
 
 	var enrolLinks []*qf.EnrollmentLink
 	switch request.Type {
@@ -404,12 +354,8 @@ func (s *QuickFeedService) updateCourse(ctx context.Context, sc scm.SCM, request
 	if err != nil {
 		return err
 	}
-	request.OrganizationPath = org.GetPath()
+	request.OrganizationName = org.GetName()
 	return s.db.UpdateCourse(request)
-}
-
-func (s *QuickFeedService) changeCourseVisibility(enrollment *qf.Enrollment) error {
-	return s.db.UpdateEnrollment(enrollment)
 }
 
 // returns all enrollments for the course ID with last activity date and number of approved assignments
@@ -482,20 +428,20 @@ func (s *QuickFeedService) setLastApprovedAssignment(submission *qf.Submission, 
 }
 
 // acceptRepositoryInvites tries to accept repository invitations for the given course on behalf of the given user.
-func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, user *qf.User, course *qf.Course) error {
+func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp scm.SCM, user *qf.User, organizationName string) error {
 	user, err := s.db.GetUser(user.ID)
 	if err != nil {
 		return fmt.Errorf("failed to get user %d: %w", user.ID, err)
 	}
-	userSCM, err := s.getSCM(user, "github")
+	userSCM, err := s.getSCMForUser(user)
 	if err != nil {
 		return fmt.Errorf("failed to get SCM for user %d: %w", user.ID, err)
 	}
-	opts := &scm.RepositoryInvitationOptions{
-		Login: user.Login,
-		Owner: course.GetOrganizationPath(),
-	}
-	if err := userSCM.AcceptRepositoryInvites(ctx, opts); err != nil {
+	if err := scmApp.AcceptRepositoryInvites(ctx, &scm.RepositoryInvitationOptions{
+		Login:   user.GetLogin(),
+		Owner:   organizationName,
+		UserSCM: userSCM,
+	}); err != nil {
 		return fmt.Errorf("failed to get repository invites for %s: %w", user.Login, err)
 	}
 	return nil

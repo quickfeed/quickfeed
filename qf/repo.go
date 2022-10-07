@@ -54,9 +54,14 @@ func (t Repository_Type) IsGroupRepo() bool {
 	return t == Repository_GROUP
 }
 
-// IsTestsRepo returns true if the repository is a 'tests' type.
+// IsTestsRepo returns true if the repository is a 'tests' repository.
 func (t *Repository) IsTestsRepo() bool {
 	return t.RepoType == Repository_TESTS
+}
+
+// IsAssignmentsRepo returns true if the repository is an 'assignments' repository.
+func (t *Repository) IsAssignmentsRepo() bool {
+	return t.RepoType == Repository_ASSIGNMENTS
 }
 
 // IsStudentRepo returns true if the repository is a user repo type.

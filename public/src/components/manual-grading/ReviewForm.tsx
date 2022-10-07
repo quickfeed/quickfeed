@@ -13,7 +13,7 @@ const ReviewForm = (): JSX.Element => {
     const courseID = getCourseID()
 
     if (!state.activeSubmissionLink) {
-        return <div>None</div>
+        return <div>No submission selected</div>
     }
 
     const assignment = state.activeSubmissionLink.assignment

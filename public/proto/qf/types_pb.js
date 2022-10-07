@@ -560,7 +560,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<number>}
  * @const
  */
-proto.qf.User.repeatedFields_ = [8,9];
+proto.qf.User.repeatedFields_ = [9,10];
 
 
 
@@ -600,6 +600,7 @@ proto.qf.User.toObject = function(includeInstance, msg) {
     email: jspb.Message.getFieldWithDefault(msg, 5, ""),
     avatarurl: jspb.Message.getFieldWithDefault(msg, 6, ""),
     login: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    updatetoken: jspb.Message.getBooleanFieldWithDefault(msg, 8, false),
     remoteidentitiesList: jspb.Message.toObjectList(msg.getRemoteidentitiesList(),
     proto.qf.RemoteIdentity.toObject, includeInstance),
     enrollmentsList: jspb.Message.toObjectList(msg.getEnrollmentsList(),
@@ -669,11 +670,15 @@ proto.qf.User.deserializeBinaryFromReader = function(msg, reader) {
       msg.setLogin(value);
       break;
     case 8:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setUpdatetoken(value);
+      break;
+    case 9:
       var value = new proto.qf.RemoteIdentity;
       reader.readMessage(value,proto.qf.RemoteIdentity.deserializeBinaryFromReader);
       msg.addRemoteidentities(value);
       break;
-    case 9:
+    case 10:
       var value = new proto.qf.Enrollment;
       reader.readMessage(value,proto.qf.Enrollment.deserializeBinaryFromReader);
       msg.addEnrollments(value);
@@ -756,10 +761,17 @@ proto.qf.User.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getUpdatetoken();
+  if (f) {
+    writer.writeBool(
+      8,
+      f
+    );
+  }
   f = message.getRemoteidentitiesList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      8,
+      9,
       f,
       proto.qf.RemoteIdentity.serializeBinaryToWriter
     );
@@ -767,7 +779,7 @@ proto.qf.User.serializeBinaryToWriter = function(message, writer) {
   f = message.getEnrollmentsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      9,
+      10,
       f,
       proto.qf.Enrollment.serializeBinaryToWriter
     );
@@ -902,12 +914,30 @@ proto.qf.User.prototype.setLogin = function(value) {
 
 
 /**
- * repeated RemoteIdentity remoteIdentities = 8;
+ * optional bool updateToken = 8;
+ * @return {boolean}
+ */
+proto.qf.User.prototype.getUpdatetoken = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 8, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.qf.User} returns this
+ */
+proto.qf.User.prototype.setUpdatetoken = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 8, value);
+};
+
+
+/**
+ * repeated RemoteIdentity remoteIdentities = 9;
  * @return {!Array<!proto.qf.RemoteIdentity>}
  */
 proto.qf.User.prototype.getRemoteidentitiesList = function() {
   return /** @type{!Array<!proto.qf.RemoteIdentity>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.qf.RemoteIdentity, 8));
+    jspb.Message.getRepeatedWrapperField(this, proto.qf.RemoteIdentity, 9));
 };
 
 
@@ -916,7 +946,7 @@ proto.qf.User.prototype.getRemoteidentitiesList = function() {
  * @return {!proto.qf.User} returns this
 */
 proto.qf.User.prototype.setRemoteidentitiesList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 8, value);
+  return jspb.Message.setRepeatedWrapperField(this, 9, value);
 };
 
 
@@ -926,7 +956,7 @@ proto.qf.User.prototype.setRemoteidentitiesList = function(value) {
  * @return {!proto.qf.RemoteIdentity}
  */
 proto.qf.User.prototype.addRemoteidentities = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 8, opt_value, proto.qf.RemoteIdentity, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 9, opt_value, proto.qf.RemoteIdentity, opt_index);
 };
 
 
@@ -940,12 +970,12 @@ proto.qf.User.prototype.clearRemoteidentitiesList = function() {
 
 
 /**
- * repeated Enrollment enrollments = 9;
+ * repeated Enrollment enrollments = 10;
  * @return {!Array<!proto.qf.Enrollment>}
  */
 proto.qf.User.prototype.getEnrollmentsList = function() {
   return /** @type{!Array<!proto.qf.Enrollment>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.qf.Enrollment, 9));
+    jspb.Message.getRepeatedWrapperField(this, proto.qf.Enrollment, 10));
 };
 
 
@@ -954,7 +984,7 @@ proto.qf.User.prototype.getEnrollmentsList = function() {
  * @return {!proto.qf.User} returns this
 */
 proto.qf.User.prototype.setEnrollmentsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 9, value);
+  return jspb.Message.setRepeatedWrapperField(this, 10, value);
 };
 
 
@@ -964,7 +994,7 @@ proto.qf.User.prototype.setEnrollmentsList = function(value) {
  * @return {!proto.qf.Enrollment}
  */
 proto.qf.User.prototype.addEnrollments = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 9, opt_value, proto.qf.Enrollment, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 10, opt_value, proto.qf.Enrollment, opt_index);
 };
 
 
@@ -1965,7 +1995,7 @@ proto.qf.Course.toObject = function(includeInstance, msg) {
     tag: jspb.Message.getFieldWithDefault(msg, 6, ""),
     provider: jspb.Message.getFieldWithDefault(msg, 7, ""),
     organizationid: jspb.Message.getFieldWithDefault(msg, 8, 0),
-    organizationpath: jspb.Message.getFieldWithDefault(msg, 9, ""),
+    organizationname: jspb.Message.getFieldWithDefault(msg, 9, ""),
     slipdays: jspb.Message.getFieldWithDefault(msg, 10, 0),
     dockerfile: jspb.Message.getFieldWithDefault(msg, 11, ""),
     enrolled: jspb.Message.getFieldWithDefault(msg, 12, 0),
@@ -2045,7 +2075,7 @@ proto.qf.Course.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 9:
       var value = /** @type {string} */ (reader.readString());
-      msg.setOrganizationpath(value);
+      msg.setOrganizationname(value);
       break;
     case 10:
       var value = /** @type {number} */ (reader.readUint32());
@@ -2159,7 +2189,7 @@ proto.qf.Course.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getOrganizationpath();
+  f = message.getOrganizationname();
   if (f.length > 0) {
     writer.writeString(
       9,
@@ -2359,10 +2389,10 @@ proto.qf.Course.prototype.setOrganizationid = function(value) {
 
 
 /**
- * optional string organizationPath = 9;
+ * optional string organizationName = 9;
  * @return {string}
  */
-proto.qf.Course.prototype.getOrganizationpath = function() {
+proto.qf.Course.prototype.getOrganizationname = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
 };
 
@@ -2371,7 +2401,7 @@ proto.qf.Course.prototype.getOrganizationpath = function() {
  * @param {string} value
  * @return {!proto.qf.Course} returns this
  */
-proto.qf.Course.prototype.setOrganizationpath = function(value) {
+proto.qf.Course.prototype.setOrganizationname = function(value) {
   return jspb.Message.setProto3StringField(this, 9, value);
 };
 
@@ -3092,7 +3122,7 @@ proto.qf.Repository.prototype.clearIssuesList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.qf.Enrollment.repeatedFields_ = [14];
+proto.qf.Enrollment.repeatedFields_ = [13];
 
 
 
@@ -3129,15 +3159,14 @@ proto.qf.Enrollment.toObject = function(includeInstance, msg) {
     courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     userid: jspb.Message.getFieldWithDefault(msg, 3, 0),
     groupid: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    hasteacherscopes: jspb.Message.getBooleanFieldWithDefault(msg, 5, false),
     user: (f = msg.getUser()) && proto.qf.User.toObject(includeInstance, f),
     course: (f = msg.getCourse()) && proto.qf.Course.toObject(includeInstance, f),
     group: (f = msg.getGroup()) && proto.qf.Group.toObject(includeInstance, f),
-    status: jspb.Message.getFieldWithDefault(msg, 9, 0),
-    state: jspb.Message.getFieldWithDefault(msg, 10, 0),
-    slipdaysremaining: jspb.Message.getFieldWithDefault(msg, 11, 0),
+    status: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    state: jspb.Message.getFieldWithDefault(msg, 9, 0),
+    slipdaysremaining: jspb.Message.getFieldWithDefault(msg, 10, 0),
     lastactivitydate: (f = msg.getLastactivitydate()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
-    totalapproved: jspb.Message.getFieldWithDefault(msg, 13, 0),
+    totalapproved: jspb.Message.getFieldWithDefault(msg, 12, 0),
     usedslipdaysList: jspb.Message.toObjectList(msg.getUsedslipdaysList(),
     proto.qf.UsedSlipDays.toObject, includeInstance)
   };
@@ -3193,46 +3222,42 @@ proto.qf.Enrollment.deserializeBinaryFromReader = function(msg, reader) {
       msg.setGroupid(value);
       break;
     case 5:
-      var value = /** @type {boolean} */ (reader.readBool());
-      msg.setHasteacherscopes(value);
-      break;
-    case 6:
       var value = new proto.qf.User;
       reader.readMessage(value,proto.qf.User.deserializeBinaryFromReader);
       msg.setUser(value);
       break;
-    case 7:
+    case 6:
       var value = new proto.qf.Course;
       reader.readMessage(value,proto.qf.Course.deserializeBinaryFromReader);
       msg.setCourse(value);
       break;
-    case 8:
+    case 7:
       var value = new proto.qf.Group;
       reader.readMessage(value,proto.qf.Group.deserializeBinaryFromReader);
       msg.setGroup(value);
       break;
-    case 9:
+    case 8:
       var value = /** @type {!proto.qf.Enrollment.UserStatus} */ (reader.readEnum());
       msg.setStatus(value);
       break;
-    case 10:
+    case 9:
       var value = /** @type {!proto.qf.Enrollment.DisplayState} */ (reader.readEnum());
       msg.setState(value);
       break;
-    case 11:
+    case 10:
       var value = /** @type {number} */ (reader.readUint32());
       msg.setSlipdaysremaining(value);
       break;
-    case 12:
+    case 11:
       var value = new google_protobuf_timestamp_pb.Timestamp;
       reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
       msg.setLastactivitydate(value);
       break;
-    case 13:
+    case 12:
       var value = /** @type {number} */ (reader.readUint64());
       msg.setTotalapproved(value);
       break;
-    case 14:
+    case 13:
       var value = new proto.qf.UsedSlipDays;
       reader.readMessage(value,proto.qf.UsedSlipDays.deserializeBinaryFromReader);
       msg.addUsedslipdays(value);
@@ -3294,17 +3319,10 @@ proto.qf.Enrollment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getHasteacherscopes();
-  if (f) {
-    writer.writeBool(
-      5,
-      f
-    );
-  }
   f = message.getUser();
   if (f != null) {
     writer.writeMessage(
-      6,
+      5,
       f,
       proto.qf.User.serializeBinaryToWriter
     );
@@ -3312,7 +3330,7 @@ proto.qf.Enrollment.serializeBinaryToWriter = function(message, writer) {
   f = message.getCourse();
   if (f != null) {
     writer.writeMessage(
-      7,
+      6,
       f,
       proto.qf.Course.serializeBinaryToWriter
     );
@@ -3320,7 +3338,7 @@ proto.qf.Enrollment.serializeBinaryToWriter = function(message, writer) {
   f = message.getGroup();
   if (f != null) {
     writer.writeMessage(
-      8,
+      7,
       f,
       proto.qf.Group.serializeBinaryToWriter
     );
@@ -3328,28 +3346,28 @@ proto.qf.Enrollment.serializeBinaryToWriter = function(message, writer) {
   f = message.getStatus();
   if (f !== 0.0) {
     writer.writeEnum(
-      9,
+      8,
       f
     );
   }
   f = message.getState();
   if (f !== 0.0) {
     writer.writeEnum(
-      10,
+      9,
       f
     );
   }
   f = message.getSlipdaysremaining();
   if (f !== 0) {
     writer.writeUint32(
-      11,
+      10,
       f
     );
   }
   f = message.getLastactivitydate();
   if (f != null) {
     writer.writeMessage(
-      12,
+      11,
       f,
       google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
@@ -3357,14 +3375,14 @@ proto.qf.Enrollment.serializeBinaryToWriter = function(message, writer) {
   f = message.getTotalapproved();
   if (f !== 0) {
     writer.writeUint64(
-      13,
+      12,
       f
     );
   }
   f = message.getUsedslipdaysList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      14,
+      13,
       f,
       proto.qf.UsedSlipDays.serializeBinaryToWriter
     );
@@ -3465,30 +3483,12 @@ proto.qf.Enrollment.prototype.setGroupid = function(value) {
 
 
 /**
- * optional bool hasTeacherScopes = 5;
- * @return {boolean}
- */
-proto.qf.Enrollment.prototype.getHasteacherscopes = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 5, false));
-};
-
-
-/**
- * @param {boolean} value
- * @return {!proto.qf.Enrollment} returns this
- */
-proto.qf.Enrollment.prototype.setHasteacherscopes = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 5, value);
-};
-
-
-/**
- * optional User user = 6;
+ * optional User user = 5;
  * @return {?proto.qf.User}
  */
 proto.qf.Enrollment.prototype.getUser = function() {
   return /** @type{?proto.qf.User} */ (
-    jspb.Message.getWrapperField(this, proto.qf.User, 6));
+    jspb.Message.getWrapperField(this, proto.qf.User, 5));
 };
 
 
@@ -3497,7 +3497,7 @@ proto.qf.Enrollment.prototype.getUser = function() {
  * @return {!proto.qf.Enrollment} returns this
 */
 proto.qf.Enrollment.prototype.setUser = function(value) {
-  return jspb.Message.setWrapperField(this, 6, value);
+  return jspb.Message.setWrapperField(this, 5, value);
 };
 
 
@@ -3515,17 +3515,17 @@ proto.qf.Enrollment.prototype.clearUser = function() {
  * @return {boolean}
  */
 proto.qf.Enrollment.prototype.hasUser = function() {
-  return jspb.Message.getField(this, 6) != null;
+  return jspb.Message.getField(this, 5) != null;
 };
 
 
 /**
- * optional Course course = 7;
+ * optional Course course = 6;
  * @return {?proto.qf.Course}
  */
 proto.qf.Enrollment.prototype.getCourse = function() {
   return /** @type{?proto.qf.Course} */ (
-    jspb.Message.getWrapperField(this, proto.qf.Course, 7));
+    jspb.Message.getWrapperField(this, proto.qf.Course, 6));
 };
 
 
@@ -3534,7 +3534,7 @@ proto.qf.Enrollment.prototype.getCourse = function() {
  * @return {!proto.qf.Enrollment} returns this
 */
 proto.qf.Enrollment.prototype.setCourse = function(value) {
-  return jspb.Message.setWrapperField(this, 7, value);
+  return jspb.Message.setWrapperField(this, 6, value);
 };
 
 
@@ -3552,17 +3552,17 @@ proto.qf.Enrollment.prototype.clearCourse = function() {
  * @return {boolean}
  */
 proto.qf.Enrollment.prototype.hasCourse = function() {
-  return jspb.Message.getField(this, 7) != null;
+  return jspb.Message.getField(this, 6) != null;
 };
 
 
 /**
- * optional Group group = 8;
+ * optional Group group = 7;
  * @return {?proto.qf.Group}
  */
 proto.qf.Enrollment.prototype.getGroup = function() {
   return /** @type{?proto.qf.Group} */ (
-    jspb.Message.getWrapperField(this, proto.qf.Group, 8));
+    jspb.Message.getWrapperField(this, proto.qf.Group, 7));
 };
 
 
@@ -3571,7 +3571,7 @@ proto.qf.Enrollment.prototype.getGroup = function() {
  * @return {!proto.qf.Enrollment} returns this
 */
 proto.qf.Enrollment.prototype.setGroup = function(value) {
-  return jspb.Message.setWrapperField(this, 8, value);
+  return jspb.Message.setWrapperField(this, 7, value);
 };
 
 
@@ -3589,16 +3589,16 @@ proto.qf.Enrollment.prototype.clearGroup = function() {
  * @return {boolean}
  */
 proto.qf.Enrollment.prototype.hasGroup = function() {
-  return jspb.Message.getField(this, 8) != null;
+  return jspb.Message.getField(this, 7) != null;
 };
 
 
 /**
- * optional UserStatus status = 9;
+ * optional UserStatus status = 8;
  * @return {!proto.qf.Enrollment.UserStatus}
  */
 proto.qf.Enrollment.prototype.getStatus = function() {
-  return /** @type {!proto.qf.Enrollment.UserStatus} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
+  return /** @type {!proto.qf.Enrollment.UserStatus} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
 };
 
 
@@ -3607,16 +3607,16 @@ proto.qf.Enrollment.prototype.getStatus = function() {
  * @return {!proto.qf.Enrollment} returns this
  */
 proto.qf.Enrollment.prototype.setStatus = function(value) {
-  return jspb.Message.setProto3EnumField(this, 9, value);
+  return jspb.Message.setProto3EnumField(this, 8, value);
 };
 
 
 /**
- * optional DisplayState state = 10;
+ * optional DisplayState state = 9;
  * @return {!proto.qf.Enrollment.DisplayState}
  */
 proto.qf.Enrollment.prototype.getState = function() {
-  return /** @type {!proto.qf.Enrollment.DisplayState} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
+  return /** @type {!proto.qf.Enrollment.DisplayState} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
 };
 
 
@@ -3625,16 +3625,16 @@ proto.qf.Enrollment.prototype.getState = function() {
  * @return {!proto.qf.Enrollment} returns this
  */
 proto.qf.Enrollment.prototype.setState = function(value) {
-  return jspb.Message.setProto3EnumField(this, 10, value);
+  return jspb.Message.setProto3EnumField(this, 9, value);
 };
 
 
 /**
- * optional uint32 slipDaysRemaining = 11;
+ * optional uint32 slipDaysRemaining = 10;
  * @return {number}
  */
 proto.qf.Enrollment.prototype.getSlipdaysremaining = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 11, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
 };
 
 
@@ -3643,17 +3643,17 @@ proto.qf.Enrollment.prototype.getSlipdaysremaining = function() {
  * @return {!proto.qf.Enrollment} returns this
  */
 proto.qf.Enrollment.prototype.setSlipdaysremaining = function(value) {
-  return jspb.Message.setProto3IntField(this, 11, value);
+  return jspb.Message.setProto3IntField(this, 10, value);
 };
 
 
 /**
- * optional google.protobuf.Timestamp lastActivityDate = 12;
+ * optional google.protobuf.Timestamp lastActivityDate = 11;
  * @return {?proto.google.protobuf.Timestamp}
  */
 proto.qf.Enrollment.prototype.getLastactivitydate = function() {
   return /** @type{?proto.google.protobuf.Timestamp} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 12));
+    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 11));
 };
 
 
@@ -3662,7 +3662,7 @@ proto.qf.Enrollment.prototype.getLastactivitydate = function() {
  * @return {!proto.qf.Enrollment} returns this
 */
 proto.qf.Enrollment.prototype.setLastactivitydate = function(value) {
-  return jspb.Message.setWrapperField(this, 12, value);
+  return jspb.Message.setWrapperField(this, 11, value);
 };
 
 
@@ -3680,16 +3680,16 @@ proto.qf.Enrollment.prototype.clearLastactivitydate = function() {
  * @return {boolean}
  */
 proto.qf.Enrollment.prototype.hasLastactivitydate = function() {
-  return jspb.Message.getField(this, 12) != null;
+  return jspb.Message.getField(this, 11) != null;
 };
 
 
 /**
- * optional uint64 totalApproved = 13;
+ * optional uint64 totalApproved = 12;
  * @return {number}
  */
 proto.qf.Enrollment.prototype.getTotalapproved = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 13, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 12, 0));
 };
 
 
@@ -3698,17 +3698,17 @@ proto.qf.Enrollment.prototype.getTotalapproved = function() {
  * @return {!proto.qf.Enrollment} returns this
  */
 proto.qf.Enrollment.prototype.setTotalapproved = function(value) {
-  return jspb.Message.setProto3IntField(this, 13, value);
+  return jspb.Message.setProto3IntField(this, 12, value);
 };
 
 
 /**
- * repeated UsedSlipDays usedSlipDays = 14;
+ * repeated UsedSlipDays usedSlipDays = 13;
  * @return {!Array<!proto.qf.UsedSlipDays>}
  */
 proto.qf.Enrollment.prototype.getUsedslipdaysList = function() {
   return /** @type{!Array<!proto.qf.UsedSlipDays>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.qf.UsedSlipDays, 14));
+    jspb.Message.getRepeatedWrapperField(this, proto.qf.UsedSlipDays, 13));
 };
 
 
@@ -3717,7 +3717,7 @@ proto.qf.Enrollment.prototype.getUsedslipdaysList = function() {
  * @return {!proto.qf.Enrollment} returns this
 */
 proto.qf.Enrollment.prototype.setUsedslipdaysList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 14, value);
+  return jspb.Message.setRepeatedWrapperField(this, 13, value);
 };
 
 
@@ -3727,7 +3727,7 @@ proto.qf.Enrollment.prototype.setUsedslipdaysList = function(value) {
  * @return {!proto.qf.UsedSlipDays}
  */
 proto.qf.Enrollment.prototype.addUsedslipdays = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 14, opt_value, proto.qf.UsedSlipDays, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 13, opt_value, proto.qf.UsedSlipDays, opt_index);
 };
 
 
@@ -6568,7 +6568,7 @@ proto.qf.Submissions.prototype.clearSubmissionsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.qf.GradingBenchmark.repeatedFields_ = [6];
+proto.qf.GradingBenchmark.repeatedFields_ = [7];
 
 
 
@@ -6602,10 +6602,11 @@ proto.qf.GradingBenchmark.prototype.toObject = function(opt_includeInstance) {
 proto.qf.GradingBenchmark.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    assignmentid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    reviewid: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    heading: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    comment: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    assignmentid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    reviewid: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    heading: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    comment: jspb.Message.getFieldWithDefault(msg, 6, ""),
     criteriaList: jspb.Message.toObjectList(msg.getCriteriaList(),
     proto.qf.GradingCriterion.toObject, includeInstance)
   };
@@ -6650,21 +6651,25 @@ proto.qf.GradingBenchmark.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setAssignmentid(value);
+      msg.setCourseid(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setReviewid(value);
+      msg.setAssignmentid(value);
       break;
     case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setHeading(value);
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setReviewid(value);
       break;
     case 5:
       var value = /** @type {string} */ (reader.readString());
-      msg.setComment(value);
+      msg.setHeading(value);
       break;
     case 6:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setComment(value);
+      break;
+    case 7:
       var value = new proto.qf.GradingCriterion;
       reader.readMessage(value,proto.qf.GradingCriterion.deserializeBinaryFromReader);
       msg.addCriteria(value);
@@ -6705,38 +6710,45 @@ proto.qf.GradingBenchmark.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getAssignmentid();
+  f = message.getCourseid();
   if (f !== 0) {
     writer.writeUint64(
       2,
       f
     );
   }
-  f = message.getReviewid();
+  f = message.getAssignmentid();
   if (f !== 0) {
     writer.writeUint64(
       3,
       f
     );
   }
-  f = message.getHeading();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getReviewid();
+  if (f !== 0) {
+    writer.writeUint64(
       4,
       f
     );
   }
-  f = message.getComment();
+  f = message.getHeading();
   if (f.length > 0) {
     writer.writeString(
       5,
       f
     );
   }
+  f = message.getComment();
+  if (f.length > 0) {
+    writer.writeString(
+      6,
+      f
+    );
+  }
   f = message.getCriteriaList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      6,
+      7,
       f,
       proto.qf.GradingCriterion.serializeBinaryToWriter
     );
@@ -6763,10 +6775,10 @@ proto.qf.GradingBenchmark.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 AssignmentID = 2;
+ * optional uint64 CourseID = 2;
  * @return {number}
  */
-proto.qf.GradingBenchmark.prototype.getAssignmentid = function() {
+proto.qf.GradingBenchmark.prototype.getCourseid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -6775,16 +6787,16 @@ proto.qf.GradingBenchmark.prototype.getAssignmentid = function() {
  * @param {number} value
  * @return {!proto.qf.GradingBenchmark} returns this
  */
-proto.qf.GradingBenchmark.prototype.setAssignmentid = function(value) {
+proto.qf.GradingBenchmark.prototype.setCourseid = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional uint64 ReviewID = 3;
+ * optional uint64 AssignmentID = 3;
  * @return {number}
  */
-proto.qf.GradingBenchmark.prototype.getReviewid = function() {
+proto.qf.GradingBenchmark.prototype.getAssignmentid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -6793,34 +6805,34 @@ proto.qf.GradingBenchmark.prototype.getReviewid = function() {
  * @param {number} value
  * @return {!proto.qf.GradingBenchmark} returns this
  */
-proto.qf.GradingBenchmark.prototype.setReviewid = function(value) {
+proto.qf.GradingBenchmark.prototype.setAssignmentid = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional string heading = 4;
+ * optional uint64 ReviewID = 4;
+ * @return {number}
+ */
+proto.qf.GradingBenchmark.prototype.getReviewid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.qf.GradingBenchmark} returns this
+ */
+proto.qf.GradingBenchmark.prototype.setReviewid = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional string heading = 5;
  * @return {string}
  */
 proto.qf.GradingBenchmark.prototype.getHeading = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.qf.GradingBenchmark} returns this
- */
-proto.qf.GradingBenchmark.prototype.setHeading = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
-};
-
-
-/**
- * optional string comment = 5;
- * @return {string}
- */
-proto.qf.GradingBenchmark.prototype.getComment = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
@@ -6829,18 +6841,36 @@ proto.qf.GradingBenchmark.prototype.getComment = function() {
  * @param {string} value
  * @return {!proto.qf.GradingBenchmark} returns this
  */
-proto.qf.GradingBenchmark.prototype.setComment = function(value) {
+proto.qf.GradingBenchmark.prototype.setHeading = function(value) {
   return jspb.Message.setProto3StringField(this, 5, value);
 };
 
 
 /**
- * repeated GradingCriterion criteria = 6;
+ * optional string comment = 6;
+ * @return {string}
+ */
+proto.qf.GradingBenchmark.prototype.getComment = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.qf.GradingBenchmark} returns this
+ */
+proto.qf.GradingBenchmark.prototype.setComment = function(value) {
+  return jspb.Message.setProto3StringField(this, 6, value);
+};
+
+
+/**
+ * repeated GradingCriterion criteria = 7;
  * @return {!Array<!proto.qf.GradingCriterion>}
  */
 proto.qf.GradingBenchmark.prototype.getCriteriaList = function() {
   return /** @type{!Array<!proto.qf.GradingCriterion>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.qf.GradingCriterion, 6));
+    jspb.Message.getRepeatedWrapperField(this, proto.qf.GradingCriterion, 7));
 };
 
 
@@ -6849,7 +6879,7 @@ proto.qf.GradingBenchmark.prototype.getCriteriaList = function() {
  * @return {!proto.qf.GradingBenchmark} returns this
 */
 proto.qf.GradingBenchmark.prototype.setCriteriaList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 6, value);
+  return jspb.Message.setRepeatedWrapperField(this, 7, value);
 };
 
 
@@ -6859,7 +6889,7 @@ proto.qf.GradingBenchmark.prototype.setCriteriaList = function(value) {
  * @return {!proto.qf.GradingCriterion}
  */
 proto.qf.GradingBenchmark.prototype.addCriteria = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 6, opt_value, proto.qf.GradingCriterion, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 7, opt_value, proto.qf.GradingCriterion, opt_index);
 };
 
 
@@ -7066,10 +7096,11 @@ proto.qf.GradingCriterion.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     benchmarkid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    points: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    description: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    grade: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    comment: jspb.Message.getFieldWithDefault(msg, 6, "")
+    courseid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    points: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    description: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    grade: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    comment: jspb.Message.getFieldWithDefault(msg, 7, "")
   };
 
   if (includeInstance) {
@@ -7116,17 +7147,21 @@ proto.qf.GradingCriterion.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setPoints(value);
+      msg.setCourseid(value);
       break;
     case 4:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setPoints(value);
+      break;
+    case 5:
       var value = /** @type {string} */ (reader.readString());
       msg.setDescription(value);
       break;
-    case 5:
+    case 6:
       var value = /** @type {!proto.qf.GradingCriterion.Grade} */ (reader.readEnum());
       msg.setGrade(value);
       break;
-    case 6:
+    case 7:
       var value = /** @type {string} */ (reader.readString());
       msg.setComment(value);
       break;
@@ -7173,31 +7208,38 @@ proto.qf.GradingCriterion.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getPoints();
+  f = message.getCourseid();
   if (f !== 0) {
     writer.writeUint64(
       3,
       f
     );
   }
+  f = message.getPoints();
+  if (f !== 0) {
+    writer.writeUint64(
+      4,
+      f
+    );
+  }
   f = message.getDescription();
   if (f.length > 0) {
     writer.writeString(
-      4,
+      5,
       f
     );
   }
   f = message.getGrade();
   if (f !== 0.0) {
     writer.writeEnum(
-      5,
+      6,
       f
     );
   }
   f = message.getComment();
   if (f.length > 0) {
     writer.writeString(
-      6,
+      7,
       f
     );
   }
@@ -7250,10 +7292,10 @@ proto.qf.GradingCriterion.prototype.setBenchmarkid = function(value) {
 
 
 /**
- * optional uint64 points = 3;
+ * optional uint64 CourseID = 3;
  * @return {number}
  */
-proto.qf.GradingCriterion.prototype.getPoints = function() {
+proto.qf.GradingCriterion.prototype.getCourseid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -7262,17 +7304,35 @@ proto.qf.GradingCriterion.prototype.getPoints = function() {
  * @param {number} value
  * @return {!proto.qf.GradingCriterion} returns this
  */
-proto.qf.GradingCriterion.prototype.setPoints = function(value) {
+proto.qf.GradingCriterion.prototype.setCourseid = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional string description = 4;
+ * optional uint64 points = 4;
+ * @return {number}
+ */
+proto.qf.GradingCriterion.prototype.getPoints = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.qf.GradingCriterion} returns this
+ */
+proto.qf.GradingCriterion.prototype.setPoints = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional string description = 5;
  * @return {string}
  */
 proto.qf.GradingCriterion.prototype.getDescription = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
 
@@ -7281,16 +7341,16 @@ proto.qf.GradingCriterion.prototype.getDescription = function() {
  * @return {!proto.qf.GradingCriterion} returns this
  */
 proto.qf.GradingCriterion.prototype.setDescription = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
+  return jspb.Message.setProto3StringField(this, 5, value);
 };
 
 
 /**
- * optional Grade grade = 5;
+ * optional Grade grade = 6;
  * @return {!proto.qf.GradingCriterion.Grade}
  */
 proto.qf.GradingCriterion.prototype.getGrade = function() {
-  return /** @type {!proto.qf.GradingCriterion.Grade} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+  return /** @type {!proto.qf.GradingCriterion.Grade} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
 
@@ -7299,16 +7359,16 @@ proto.qf.GradingCriterion.prototype.getGrade = function() {
  * @return {!proto.qf.GradingCriterion} returns this
  */
 proto.qf.GradingCriterion.prototype.setGrade = function(value) {
-  return jspb.Message.setProto3EnumField(this, 5, value);
+  return jspb.Message.setProto3EnumField(this, 6, value);
 };
 
 
 /**
- * optional string comment = 6;
+ * optional string comment = 7;
  * @return {string}
  */
 proto.qf.GradingCriterion.prototype.getComment = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
 };
 
 
@@ -7317,7 +7377,7 @@ proto.qf.GradingCriterion.prototype.getComment = function() {
  * @return {!proto.qf.GradingCriterion} returns this
  */
 proto.qf.GradingCriterion.prototype.setComment = function(value) {
-  return jspb.Message.setProto3StringField(this, 6, value);
+  return jspb.Message.setProto3StringField(this, 7, value);
 };
 
 

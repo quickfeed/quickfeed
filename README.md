@@ -12,56 +12,27 @@
 - Teachers may also want to copy the [sign up instructions](doc/templates/signup.md) and [lab submission instructions](doc/templates/lab-submission.md), and make the necessary adjustments for your course.
 - [Installation instructions for QuickFeed](doc/deploy.md).
 
+### Install Development Tools
+
+On Unix systems with homebrew you should be able to install development tools using:
+
+```shell
+% make brew
+% make devtools
+# Make sure the bin folder with our tools is in your PATH.
+% export PATH=$PATH:$PWD/bin
+```
+
+For non-brew users, please inspect the `Makefile` to determine instructions for your system.
+
 ## Contributing
 
 The following instructions assume you have installed the [GitHub CLI](https://github.com/cli/cli).
 See here for [installation instructions](https://github.com/cli/cli#installation) for your platform.
 
-On systems with homebrew:
-
-```shell
-% brew install gh
-% gh help
-```
-
 Further, we require that code is formatted according to the rules and extensions that have been configured for VSCode.
 When opening VSCode, please install the recommended extensions for QuickFeed; [see also style guidelines below](#style-guidelines).
 Specifically, you will need to install the `clang-format` tool to edit `.proto` files, and the `golangci-lint` tool to edit `.go` files.
-
-On systems with homebrew:
-
-```shell
-% brew install clang-format
-% brew install golangci-lint
-```
-
-### Install Development Tools
-
-On Unix systems you should be able to install development tools using:
-
-```shell
-% make devtools
-```
-
-However, if your system does not have `make` you may try these steps:
-
-```shell
-# Install go tools that we use
-% go install `go list -f "{{range .Imports}}{{.}} {{end}}" tools.go`
-```
-
-```shell
-# Download the latest release
-%	gh release download --repo grpc/grpc-web --pattern \*`uname -s | tr A-Z a-z`\*
-# Check the downloaded file
-% shasum -c protoc-gen-grpc-web-1.3.1-*.sha256
-protoc-gen-grpc-web-1.3.1-darwin-x86_64: OK
-# Remove the checksum file
-% rm protoc-gen-grpc-web-1.3.1-*.sha256
-# Install in location of your choice, but must be specified in PATH so that it can be found by protoc
-% sudo mv protoc-gen-grpc-web-1.3.1-* /usr/local/bin/protoc-gen-grpc-web
-% chmod +x /usr/local/bin/protoc-gen-grpc-web
-```
 
 ### Create Issue First
 

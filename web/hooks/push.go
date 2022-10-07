@@ -11,9 +11,7 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
@@ -36,6 +34,13 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	}
 	wh.logger.Debugf("For course(%d)=%v", course.GetID(), course.GetName())
 
+	ctx := context.Background()
+	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetOrganizationName())
+	if err != nil {
+		wh.logger.Errorf("Failed to get or create SCM Client: %v", err)
+		return
+	}
+
 	switch {
 	case repo.IsTestsRepo():
 		if !isDefaultBranch(payload) {
@@ -44,7 +49,24 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		}
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		assignments.UpdateFromTestsRepo(wh.logger, wh.db, course)
+		assignments.UpdateFromTestsRepo(wh.logger, wh.db, sc, course)
+
+	case repo.IsAssignmentsRepo():
+		if !isDefaultBranch(payload) {
+			wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
+			return
+		}
+		// the push event is for the 'assignments' repo; we need to update the local working copy
+		clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
+			Organization: course.GetOrganizationName(),
+			Repository:   qf.AssignmentRepo,
+			DestDir:      course.CloneDir(),
+		})
+		if err != nil {
+			wh.logger.Errorf("Failed to clone '%s' repository: %v", qf.AssignmentRepo, err)
+			return
+		}
+		wh.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
 
 	case repo.IsUserRepo():
 		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
@@ -57,15 +79,15 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		for _, assignment := range assignments {
 			if !assignment.IsGroupLab {
 				// only run non-group assignments
-				wh.runAssignmentTests(assignment, repo, course, payload)
+				wh.runAssignmentTests(sc, assignment, repo, course, payload)
 			} else {
-				wh.logger.Debugf("Ignoring assignment: %s, pushed to user repo: %s", assignment.GetName(), payload.GetRepo().GetName())
+				wh.logger.Debugf("Ignoring push to user repo %s for group assignment: %s", payload.GetRepo().GetName(), assignment.GetName())
 			}
 		}
 
 	case repo.IsGroupRepo():
 		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
-		jobOwner, _, err := wh.db.GetUserByCourse(course, payload.GetSender().GetLogin())
+		jobOwner, err := wh.db.GetUserByCourse(course, payload.GetSender().GetLogin())
 		if err != nil {
 			wh.logger.Errorf("Failed to find user %s in course %s: %v", payload.GetSender().GetLogin(), course.GetName(), err)
 			return
@@ -75,14 +97,14 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		for _, assignment := range assignments {
 			if assignment.IsGroupLab {
 				// only run group assignments
-				results := wh.runAssignmentTests(assignment, repo, course, payload)
+				results := wh.runAssignmentTests(sc, assignment, repo, course, payload)
 				if !isDefaultBranch(payload) && !assignment.GradedManually() {
 					// Attempt to find the pull request for the branch, if it exists,
 					// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
 					wh.handlePullRequestPush(payload, results, assignment, course, repo)
 				}
 			} else {
-				wh.logger.Debugf("Ignoring assignment: %s, pushed to group repo: %s", assignment.GetName(), payload.GetRepo().GetName())
+				wh.logger.Debugf("Ignoring push to group repo %s for user assignment: %s", payload.GetRepo().GetName(), assignment.GetName())
 			}
 		}
 	default:
@@ -105,13 +127,13 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	}
 	taskSum := results.TaskSum(taskName)
 
-	// TODO(espeland): Update this for GitHub web app.
-	sc, err := scm.NewSCMClient(wh.logger, course.GetAccessToken())
+	ctx := context.Background()
+	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.OrganizationName)
 	if err != nil {
 		wh.logger.Errorf("Failed to create SCM Client: %v", err)
 		return
 	}
-	ctx := context.Background()
+
 	// We assign reviewers to a pull request when the tests associated with it score above the assignment score limit
 	// We do not assign reviewers if the pull request has already been assigned reviewers
 	scoreLimit := assignment.GetScoreLimit()
@@ -125,7 +147,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 
 	// Create a test results feedback comment on the pull request
 	opt := &scm.IssueCommentOptions{
-		Organization: course.GetOrganizationPath(),
+		Organization: course.GetOrganizationName(),
 		Repository:   repo.Name(),
 		Body:         results.MarkdownComment(taskName, scoreLimit),
 		Number:       int(pullRequest.GetNumber()),
@@ -200,7 +222,7 @@ func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *qf
 }
 
 // runAssignmentTests runs the tests for the given assignment pushed to repo.
-func (wh GitHubWebHook) runAssignmentTests(assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) *score.Results {
+func (wh GitHubWebHook) runAssignmentTests(sc scm.SCM, assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) *score.Results {
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
@@ -218,13 +240,14 @@ func (wh GitHubWebHook) runAssignmentTests(assignment *qf.Assignment, repo *qf.R
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
-	results, err := runData.RunTests(ctx, wh.logger, wh.runner)
+	results, err := runData.RunTests(ctx, wh.logger, sc, wh.runner)
 	if err != nil {
-		wh.logger.Errorf("Failed to run tests for assignment %s for course %s: %v", assignment.Name, course.Name, err)
+		wh.logger.Error(err)
+		return nil
 	}
-	wh.logger.Debug("ci.RunTests", zap.Any("Results", qlog.IndentJson(results)))
 	if _, err = runData.RecordResults(wh.logger, wh.db, results); err != nil {
 		wh.logger.Error(err)
+		return nil
 	}
 	return results
 }

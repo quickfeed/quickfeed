@@ -2,13 +2,10 @@ package database
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -22,7 +19,7 @@ var (
 	ErrEmptyGroup = errors.New("cannot create group without users")
 	// ErrDuplicateGroup is returned when trying to create a group with the same
 	// name as a previously registered group.
-	ErrDuplicateGroup = status.Error(codes.InvalidArgument, "group with this name already registered")
+	ErrDuplicateGroup = errors.New("group with this name already registered")
 	// ErrUpdateGroup is returned when updating a group's enrollment fails.
 	ErrUpdateGroup = errors.New("failed to update group enrollment")
 	// ErrCourseExists is returned when trying to create an association in
@@ -143,50 +140,7 @@ func (db *GormDB) UpdateAccessToken(remote *qf.RemoteIdentity) error {
 		tx.Rollback()
 		return err
 	}
-	if err := tx.Commit().Error; err != nil {
-		return err
-	}
-
-	return db.updateCourseAccessTokensIfCourseCreator(&remoteIdentity)
-}
-
-// Update the access token cache for courses for which the user is course creator.
-// The cache allows easy access to the access token via the Course type.
-func (db *GormDB) updateCourseAccessTokensIfCourseCreator(remoteIdentity *qf.RemoteIdentity) error {
-	userID := remoteIdentity.GetUserID()
-	enrollments, err := db.GetEnrollmentsByUser(userID, qf.Enrollment_TEACHER)
-	if err != nil {
-		return err
-	}
-	for _, enrollment := range enrollments {
-		course := enrollment.GetCourse()
-		if course.GetCourseCreatorID() == userID {
-			qf.SetAccessToken(course.GetID(), remoteIdentity.AccessToken)
-		}
-	}
-	return nil
-}
-
-// updateCourseAccessTokenIfEmpty updates the access token cache for the course, if the course has no cached access token.
-// The cache allows easy access to the access token via the Course type.
-func (db *GormDB) updateCourseAccessTokenIfEmpty(course *qf.Course) error {
-	existingToken := course.GetAccessToken()
-	if existingToken != "" {
-		// already cached
-		return nil
-	}
-	// only need to query db if not in cache; will happen after restart of server
-	courseCreator, err := db.GetUser(course.GetCourseCreatorID())
-	if err != nil {
-		return fmt.Errorf("failed to get course creator '%d' for %s: %w", course.GetCourseCreatorID(), course, err)
-	}
-	accessToken, err := courseCreator.GetAccessToken(course.GetProvider())
-	if err != nil {
-		return fmt.Errorf("failed to get course creator's '%d' access token for %s: %w", course.GetCourseCreatorID(), course.GetProvider(), err)
-	}
-	// update the access token cache
-	qf.SetAccessToken(course.GetID(), accessToken)
-	return nil
+	return tx.Commit().Error
 }
 
 func (db *GormDB) Close() error {

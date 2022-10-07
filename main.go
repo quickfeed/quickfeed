@@ -1,23 +1,27 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"mime"
-	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
-	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/env"
-	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qlog"
+	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
-	"github.com/quickfeed/quickfeed/web/interceptor"
-	"google.golang.org/grpc"
+	"github.com/quickfeed/quickfeed/web/manifest"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 )
 
 func init() {
@@ -40,19 +44,43 @@ func init() {
 
 func main() {
 	var (
-		baseURL  = flag.String("service.url", "", "base service DNS name")
 		dbFile   = flag.String("database.file", "qf.db", "database file")
 		public   = flag.String("http.public", "public", "path to content to serve")
-		httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
-		dev      = flag.Bool("dev", false, "running server locally")
+		httpAddr = flag.String("http.addr", ":443", "HTTP listen address")
+		dev      = flag.Bool("dev", false, "run development server with self-signed certificates")
+		newApp   = flag.Bool("new", false, "create new GitHub app")
 	)
 	flag.Parse()
+
+	// Load environment variables from $QUICKFEED/.env.
+	// Will not override variables already defined in the environment.
+	if err := env.Load(""); err != nil {
+		log.Fatal(err)
+	}
+
+	if env.Domain() == "localhost" {
+		log.Fatal(`Domain "localhost" is unsupported; use "127.0.0.1" instead.`)
+	}
+
+	var srvFn web.ServerType
+	if *dev {
+		srvFn = web.NewDevelopmentServer
+	} else {
+		srvFn = web.NewProductionServer
+	}
+	log.Printf("Starting QuickFeed on %s%s", env.Domain(), *httpAddr)
+
+	if *newApp {
+		if err := createNewQuickFeedApp(srvFn, *httpAddr); err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	logger, err := qlog.Zap()
 	if err != nil {
 		log.Fatalf("Can't initialize logger: %v", err)
 	}
-	defer logger.Sync()
+	defer func() { _ = logger.Sync() }()
 
 	db, err := database.NewGormDB(*dbFile, logger)
 	if err != nil {
@@ -60,22 +88,23 @@ func main() {
 	}
 
 	// Holds references for activated providers for current user token
-	scms := auth.NewScms()
 	bh := web.BaseHookOptions{
-		BaseURL: *baseURL,
+		BaseURL: env.Domain(),
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
-	clientID, err := env.ClientID()
-	if err != nil {
-		log.Fatal(err)
-	}
-	clientSecret, err := env.ClientSecret()
+	scmConfig, err := scm.NewSCMConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	authConfig := auth.NewGitHubConfig(*baseURL, clientID, clientSecret)
+	tokenManager, err := auth.NewTokenManager(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+	authConfig := auth.NewGitHubConfig(env.Domain(), scmConfig)
+	log.Print("Callback: ", authConfig.RedirectURL)
+	scmManager := scm.NewSCMManager(scmConfig)
 
 	runner, err := ci.NewDockerCI(logger.Sugar())
 	if err != nil {
@@ -83,66 +112,50 @@ func main() {
 	}
 	defer runner.Close()
 
-	// Add application token for external applications (to allow invoking gRPC methods)
-	// TODO(meling): this is a temporary solution, and we should find a better way to do this
-	token := os.Getenv("QUICKFEED_AUTH_TOKEN")
-	if len(token) > 16 {
-		auth.Add(token, 1)
-		log.Println("Added application token")
-	}
-
-	certFile := env.CertFile()
-	certKey := env.KeyFile()
-	var grpcServer *grpc.Server
-	unaryOptions := grpc.ChainUnaryInterceptor(
-		interceptor.Metrics(),
-		interceptor.UnaryUserVerifier(),
-		interceptor.Validation(logger),
-	)
-	streamOptions := grpc.ChainStreamInterceptor(interceptor.StreamUserVerifier())
-	if *dev {
-		logger.Sugar().Debugf("Starting server in development mode on %s", *httpAddr)
-		// In development, the server itself must maintain a TLS session.
-		grpcServer, err = web.GRPCServerWithCredentials(certFile, certKey, unaryOptions, streamOptions)
-		if err != nil {
-			log.Fatalf("Failed to generate gRPC server credentials: %v", err)
-		}
-	} else {
-		logger.Sugar().Debugf("Starting server in production mode on %s", *baseURL)
-		// In production, the envoy proxy will manage TLS certificates, and
-		// the gRPC server must be started without credentials.
-		grpcServer = web.GRPCServer(unaryOptions, streamOptions)
-	}
-
-	qfService := web.NewQuickFeedService(logger, db, scms, bh, runner)
-	qf.RegisterQuickFeedServiceServer(grpcServer, qfService)
-	multiplexer := web.GrpcMultiplexer{
-		MuxServer: grpcweb.WrapServer(grpcServer),
-	}
-
+	qfService := web.NewQuickFeedService(logger, db, scmManager, bh, runner)
 	// Register HTTP endpoints and webhooks
-	router := qfService.RegisterRouter(authConfig, multiplexer, *public)
+	router := qfService.RegisterRouter(tokenManager, authConfig, *public)
+	handler := h2c.NewHandler(router, &http2.Server{})
 
-	// Create an HTTP server for prometheus.
-	httpServer := interceptor.MetricsServer(9097)
+	srv, err := srvFn(*httpAddr, handler)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	go func() {
-		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatalf("Failed to start a http server: %v", err)
+		<-ctx.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Fatalf("Graceful shutdown failed: %v", err)
 		}
 	}()
-	muxServer := &http.Server{
-		Handler:      router,
-		Addr:         *httpAddr,
-		WriteTimeout: 2 * time.Minute,
-		ReadTimeout:  2 * time.Minute,
+
+	if err := srv.Serve(); err != nil {
+		log.Fatalf("Failed to start QuickFeed server: %v", err)
 	}
-	if *dev {
-		if err := muxServer.ListenAndServeTLS(certFile, certKey); err != nil {
-			log.Fatalf("Failed to start grpc server: %v", err)
-			return
+	log.Println("QuickFeed shut down gracefully")
+}
+
+func createNewQuickFeedApp(srvFn web.ServerType, httpAddr string) error {
+	if env.HasAppID() {
+		return errors.New(".env already contains App information")
+	}
+	if env.Domain() == "127.0.0.1" {
+		fmt.Printf("WARNING: You are creating an app on %s. Only for development purposes. Continue? (Y/n) ", env.Domain())
+		var answer string
+		fmt.Scanln(&answer)
+		if !(answer == "Y" || answer == "y") {
+			return fmt.Errorf("aborting %s GitHub App creation", env.AppName())
 		}
 	}
-	if err := muxServer.ListenAndServe(); err != nil {
-		log.Fatalf("Failed to start grpc server: %v", err)
+
+	m := manifest.New(env.Domain())
+	server, err := srvFn(httpAddr, m.Handler())
+	if err != nil {
+		return err
 	}
+	return m.StartAppCreationFlow(server)
 }
