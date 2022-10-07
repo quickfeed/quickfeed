@@ -305,11 +305,6 @@ func (*MockSCM) GetUserName(_ context.Context) (string, error) {
 	return "", nil
 }
 
-// GetUserNameByID implements the SCM interface.
-func (*MockSCM) GetUserNameByID(_ context.Context, _ uint64) (string, error) {
-	return "", nil
-}
-
 // UpdateOrgMembership implements the SCM interface
 func (s *MockSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
 	if !opt.valid() {
