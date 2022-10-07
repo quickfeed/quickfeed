@@ -14,8 +14,8 @@ import (
 
 func cloneMissingRepositories(ctx context.Context, scmClient scm.SCM, course *qf.Course) error {
 	testsExists, _ := exists(filepath.Join(course.CloneDir(), qf.TestsRepo))
-	assignmentExists, _ := exists(filepath.Join(course.CloneDir(), qf.AssignmentRepo))
-	if testsExists && assignmentExists {
+	assignmentsExists, _ := exists(filepath.Join(course.CloneDir(), qf.AssignmentRepo))
+	if testsExists && assignmentsExists {
 		return nil
 	}
 
@@ -30,7 +30,7 @@ func cloneMissingRepositories(ctx context.Context, scmClient scm.SCM, course *qf
 			return fmt.Errorf("failed to clone %q repository: %w", qf.TestsRepo, err)
 		}
 	}
-	if !assignmentExists {
+	if !assignmentsExists {
 		// Clone the assignments repository
 		_, err := scmClient.Clone(ctx, &scm.CloneOptions{
 			Organization: course.GetOrganizationName(),
