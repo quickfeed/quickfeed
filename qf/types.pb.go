@@ -380,7 +380,7 @@ func (x GradingCriterion_Grade) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use GradingCriterion_Grade.Descriptor instead.
 func (GradingCriterion_Grade) EnumDescriptor() ([]byte, []int) {
-	return file_qf_types_proto_rawDescGZIP(), []int{20, 0}
+	return file_qf_types_proto_rawDescGZIP(), []int{22, 0}
 }
 
 type User struct {
@@ -1820,18 +1820,18 @@ type Submission struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ID           uint64            `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	AssignmentID uint64            `protobuf:"varint,2,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty"` // foreign key
-	UserID       uint64            `protobuf:"varint,3,opt,name=userID,proto3" json:"userID,omitempty"`
-	GroupID      uint64            `protobuf:"varint,4,opt,name=groupID,proto3" json:"groupID,omitempty"`
-	Score        uint32            `protobuf:"varint,5,opt,name=score,proto3" json:"score,omitempty"`
-	CommitHash   string            `protobuf:"bytes,6,opt,name=commitHash,proto3" json:"commitHash,omitempty"`
-	Released     bool              `protobuf:"varint,7,opt,name=released,proto3" json:"released,omitempty"` // true => feedback is visible to the student or group members
-	Status       Submission_Status `protobuf:"varint,8,opt,name=status,proto3,enum=qf.Submission_Status" json:"status,omitempty"`
-	ApprovedDate string            `protobuf:"bytes,9,opt,name=approvedDate,proto3" json:"approvedDate,omitempty"`
-	Reviews      []*Review         `protobuf:"bytes,10,rep,name=reviews,proto3" json:"reviews,omitempty"`     // reviews produced for this submission
-	BuildInfo    *score.BuildInfo  `protobuf:"bytes,11,opt,name=BuildInfo,proto3" json:"BuildInfo,omitempty"` // build info for tests
-	Scores       []*score.Score    `protobuf:"bytes,12,rep,name=Scores,proto3" json:"Scores,omitempty"`       // list of scores for different tests
+	ID           uint64           `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	AssignmentID uint64           `protobuf:"varint,2,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty"` // foreign key
+	UserID       uint64           `protobuf:"varint,3,opt,name=userID,proto3" json:"userID,omitempty"`
+	GroupID      uint64           `protobuf:"varint,4,opt,name=groupID,proto3" json:"groupID,omitempty"`
+	Score        uint32           `protobuf:"varint,5,opt,name=score,proto3" json:"score,omitempty"`
+	CommitHash   string           `protobuf:"bytes,6,opt,name=commitHash,proto3" json:"commitHash,omitempty"`
+	Released     bool             `protobuf:"varint,7,opt,name=released,proto3" json:"released,omitempty"` // true => feedback is visible to the student or group members
+	Grades       []*Grade         `protobuf:"bytes,8,rep,name=Grades,proto3" json:"Grades,omitempty"`      // Slice of submission statuses for each user related to this submission
+	ApprovedDate string           `protobuf:"bytes,10,opt,name=approvedDate,proto3" json:"approvedDate,omitempty"`
+	Reviews      []*Review        `protobuf:"bytes,11,rep,name=reviews,proto3" json:"reviews,omitempty"`     // reviews produced for this submission
+	BuildInfo    *score.BuildInfo `protobuf:"bytes,12,opt,name=BuildInfo,proto3" json:"BuildInfo,omitempty"` // build info for tests
+	Scores       []*score.Score   `protobuf:"bytes,13,rep,name=Scores,proto3" json:"Scores,omitempty"`       // list of scores for different tests
 }
 
 func (x *Submission) Reset() {
@@ -1915,11 +1915,11 @@ func (x *Submission) GetReleased() bool {
 	return false
 }
 
-func (x *Submission) GetStatus() Submission_Status {
+func (x *Submission) GetGrades() []*Grade {
 	if x != nil {
-		return x.Status
+		return x.Grades
 	}
-	return Submission_NONE
+	return nil
 }
 
 func (x *Submission) GetApprovedDate() string {
@@ -1950,6 +1950,116 @@ func (x *Submission) GetScores() []*score.Score {
 	return nil
 }
 
+type Grade struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	SubmissionID uint64            `protobuf:"varint,1,opt,name=SubmissionID,proto3" json:"SubmissionID,omitempty" gorm:"primaryKey"`
+	UserID       uint64            `protobuf:"varint,2,opt,name=userID,proto3" json:"userID,omitempty" gorm:"primaryKey"`
+	Status       Submission_Status `protobuf:"varint,3,opt,name=Status,proto3,enum=qf.Submission_Status" json:"Status,omitempty"`
+}
+
+func (x *Grade) Reset() {
+	*x = Grade{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_qf_types_proto_msgTypes[17]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Grade) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Grade) ProtoMessage() {}
+
+func (x *Grade) ProtoReflect() protoreflect.Message {
+	mi := &file_qf_types_proto_msgTypes[17]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Grade.ProtoReflect.Descriptor instead.
+func (*Grade) Descriptor() ([]byte, []int) {
+	return file_qf_types_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *Grade) GetSubmissionID() uint64 {
+	if x != nil {
+		return x.SubmissionID
+	}
+	return 0
+}
+
+func (x *Grade) GetUserID() uint64 {
+	if x != nil {
+		return x.UserID
+	}
+	return 0
+}
+
+func (x *Grade) GetStatus() Submission_Status {
+	if x != nil {
+		return x.Status
+	}
+	return Submission_NONE
+}
+
+type Grades struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Grades []*Grade `protobuf:"bytes,1,rep,name=grades,proto3" json:"grades,omitempty"`
+}
+
+func (x *Grades) Reset() {
+	*x = Grades{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_qf_types_proto_msgTypes[18]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Grades) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Grades) ProtoMessage() {}
+
+func (x *Grades) ProtoReflect() protoreflect.Message {
+	mi := &file_qf_types_proto_msgTypes[18]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Grades.ProtoReflect.Descriptor instead.
+func (*Grades) Descriptor() ([]byte, []int) {
+	return file_qf_types_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *Grades) GetGrades() []*Grade {
+	if x != nil {
+		return x.Grades
+	}
+	return nil
+}
+
 type Submissions struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1961,7 +2071,7 @@ type Submissions struct {
 func (x *Submissions) Reset() {
 	*x = Submissions{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_qf_types_proto_msgTypes[17]
+		mi := &file_qf_types_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1974,7 +2084,7 @@ func (x *Submissions) String() string {
 func (*Submissions) ProtoMessage() {}
 
 func (x *Submissions) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_types_proto_msgTypes[17]
+	mi := &file_qf_types_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1987,7 +2097,7 @@ func (x *Submissions) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Submissions.ProtoReflect.Descriptor instead.
 func (*Submissions) Descriptor() ([]byte, []int) {
-	return file_qf_types_proto_rawDescGZIP(), []int{17}
+	return file_qf_types_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *Submissions) GetSubmissions() []*Submission {
@@ -2014,7 +2124,7 @@ type GradingBenchmark struct {
 func (x *GradingBenchmark) Reset() {
 	*x = GradingBenchmark{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_qf_types_proto_msgTypes[18]
+		mi := &file_qf_types_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2027,7 +2137,7 @@ func (x *GradingBenchmark) String() string {
 func (*GradingBenchmark) ProtoMessage() {}
 
 func (x *GradingBenchmark) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_types_proto_msgTypes[18]
+	mi := &file_qf_types_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2040,7 +2150,7 @@ func (x *GradingBenchmark) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GradingBenchmark.ProtoReflect.Descriptor instead.
 func (*GradingBenchmark) Descriptor() ([]byte, []int) {
-	return file_qf_types_proto_rawDescGZIP(), []int{18}
+	return file_qf_types_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GradingBenchmark) GetID() uint64 {
@@ -2103,7 +2213,7 @@ type Benchmarks struct {
 func (x *Benchmarks) Reset() {
 	*x = Benchmarks{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_qf_types_proto_msgTypes[19]
+		mi := &file_qf_types_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2116,7 +2226,7 @@ func (x *Benchmarks) String() string {
 func (*Benchmarks) ProtoMessage() {}
 
 func (x *Benchmarks) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_types_proto_msgTypes[19]
+	mi := &file_qf_types_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2129,7 +2239,7 @@ func (x *Benchmarks) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Benchmarks.ProtoReflect.Descriptor instead.
 func (*Benchmarks) Descriptor() ([]byte, []int) {
-	return file_qf_types_proto_rawDescGZIP(), []int{19}
+	return file_qf_types_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *Benchmarks) GetBenchmarks() []*GradingBenchmark {
@@ -2156,7 +2266,7 @@ type GradingCriterion struct {
 func (x *GradingCriterion) Reset() {
 	*x = GradingCriterion{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_qf_types_proto_msgTypes[20]
+		mi := &file_qf_types_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2169,7 +2279,7 @@ func (x *GradingCriterion) String() string {
 func (*GradingCriterion) ProtoMessage() {}
 
 func (x *GradingCriterion) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_types_proto_msgTypes[20]
+	mi := &file_qf_types_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2182,7 +2292,7 @@ func (x *GradingCriterion) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GradingCriterion.ProtoReflect.Descriptor instead.
 func (*GradingCriterion) Descriptor() ([]byte, []int) {
-	return file_qf_types_proto_rawDescGZIP(), []int{20}
+	return file_qf_types_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *GradingCriterion) GetID() uint64 {
@@ -2252,7 +2362,7 @@ type Review struct {
 func (x *Review) Reset() {
 	*x = Review{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_qf_types_proto_msgTypes[21]
+		mi := &file_qf_types_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2265,7 +2375,7 @@ func (x *Review) String() string {
 func (*Review) ProtoMessage() {}
 
 func (x *Review) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_types_proto_msgTypes[21]
+	mi := &file_qf_types_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2278,7 +2388,7 @@ func (x *Review) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Review.ProtoReflect.Descriptor instead.
 func (*Review) Descriptor() ([]byte, []int) {
-	return file_qf_types_proto_rawDescGZIP(), []int{21}
+	return file_qf_types_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *Review) GetID() uint64 {
@@ -2349,7 +2459,7 @@ type SubmissionLink struct {
 func (x *SubmissionLink) Reset() {
 	*x = SubmissionLink{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_qf_types_proto_msgTypes[22]
+		mi := &file_qf_types_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2362,7 +2472,7 @@ func (x *SubmissionLink) String() string {
 func (*SubmissionLink) ProtoMessage() {}
 
 func (x *SubmissionLink) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_types_proto_msgTypes[22]
+	mi := &file_qf_types_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2375,7 +2485,7 @@ func (x *SubmissionLink) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmissionLink.ProtoReflect.Descriptor instead.
 func (*SubmissionLink) Descriptor() ([]byte, []int) {
-	return file_qf_types_proto_rawDescGZIP(), []int{22}
+	return file_qf_types_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *SubmissionLink) GetAssignment() *Assignment {
@@ -2404,7 +2514,7 @@ type EnrollmentLink struct {
 func (x *EnrollmentLink) Reset() {
 	*x = EnrollmentLink{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_qf_types_proto_msgTypes[23]
+		mi := &file_qf_types_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2417,7 +2527,7 @@ func (x *EnrollmentLink) String() string {
 func (*EnrollmentLink) ProtoMessage() {}
 
 func (x *EnrollmentLink) ProtoReflect() protoreflect.Message {
-	mi := &file_qf_types_proto_msgTypes[23]
+	mi := &file_qf_types_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2430,7 +2540,7 @@ func (x *EnrollmentLink) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnrollmentLink.ProtoReflect.Descriptor instead.
 func (*EnrollmentLink) Descriptor() ([]byte, []int) {
-	return file_qf_types_proto_rawDescGZIP(), []int{23}
+	return file_qf_types_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *EnrollmentLink) GetEnrollment() *Enrollment {
@@ -2852,7 +2962,7 @@ func file_qf_types_proto_rawDescGZIP() []byte {
 }
 
 var file_qf_types_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_qf_types_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
+var file_qf_types_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_qf_types_proto_goTypes = []interface{}{
 	(Group_GroupStatus)(0),       // 0: qf.Group.GroupStatus
 	(Repository_Type)(0),         // 1: qf.Repository.Type
@@ -2878,15 +2988,17 @@ var file_qf_types_proto_goTypes = []interface{}{
 	(*PullRequest)(nil),          // 21: qf.PullRequest
 	(*Assignments)(nil),          // 22: qf.Assignments
 	(*Submission)(nil),           // 23: qf.Submission
-	(*Submissions)(nil),          // 24: qf.Submissions
-	(*GradingBenchmark)(nil),     // 25: qf.GradingBenchmark
-	(*Benchmarks)(nil),           // 26: qf.Benchmarks
-	(*GradingCriterion)(nil),     // 27: qf.GradingCriterion
-	(*Review)(nil),               // 28: qf.Review
-	(*SubmissionLink)(nil),       // 29: qf.SubmissionLink
-	(*EnrollmentLink)(nil),       // 30: qf.EnrollmentLink
-	(*score.BuildInfo)(nil),      // 31: score.BuildInfo
-	(*score.Score)(nil),          // 32: score.Score
+	(*Grade)(nil),                // 24: qf.Grade
+	(*Grades)(nil),               // 25: qf.Grades
+	(*Submissions)(nil),          // 26: qf.Submissions
+	(*GradingBenchmark)(nil),     // 27: qf.GradingBenchmark
+	(*Benchmarks)(nil),           // 28: qf.Benchmarks
+	(*GradingCriterion)(nil),     // 29: qf.GradingCriterion
+	(*Review)(nil),               // 30: qf.Review
+	(*SubmissionLink)(nil),       // 31: qf.SubmissionLink
+	(*EnrollmentLink)(nil),       // 32: qf.EnrollmentLink
+	(*score.BuildInfo)(nil),      // 33: score.BuildInfo
+	(*score.Score)(nil),          // 34: score.Score
 }
 var file_qf_types_proto_depIdxs = []int32{
 	9,  // 0: qf.User.remoteIdentities:type_name -> qf.RemoteIdentity
@@ -2912,28 +3024,30 @@ var file_qf_types_proto_depIdxs = []int32{
 	15, // 20: qf.Enrollments.enrollments:type_name -> qf.Enrollment
 	23, // 21: qf.Assignment.submissions:type_name -> qf.Submission
 	19, // 22: qf.Assignment.tasks:type_name -> qf.Task
-	25, // 23: qf.Assignment.gradingBenchmarks:type_name -> qf.GradingBenchmark
+	27, // 23: qf.Assignment.gradingBenchmarks:type_name -> qf.GradingBenchmark
 	20, // 24: qf.Task.issues:type_name -> qf.Issue
 	4,  // 25: qf.PullRequest.stage:type_name -> qf.PullRequest.Stage
 	18, // 26: qf.Assignments.assignments:type_name -> qf.Assignment
-	5,  // 27: qf.Submission.status:type_name -> qf.Submission.Status
-	28, // 28: qf.Submission.reviews:type_name -> qf.Review
-	31, // 29: qf.Submission.BuildInfo:type_name -> score.BuildInfo
-	32, // 30: qf.Submission.Scores:type_name -> score.Score
-	23, // 31: qf.Submissions.submissions:type_name -> qf.Submission
-	27, // 32: qf.GradingBenchmark.criteria:type_name -> qf.GradingCriterion
-	25, // 33: qf.Benchmarks.benchmarks:type_name -> qf.GradingBenchmark
-	6,  // 34: qf.GradingCriterion.grade:type_name -> qf.GradingCriterion.Grade
-	25, // 35: qf.Review.gradingBenchmarks:type_name -> qf.GradingBenchmark
-	18, // 36: qf.SubmissionLink.assignment:type_name -> qf.Assignment
-	23, // 37: qf.SubmissionLink.submission:type_name -> qf.Submission
-	15, // 38: qf.EnrollmentLink.enrollment:type_name -> qf.Enrollment
-	29, // 39: qf.EnrollmentLink.submissions:type_name -> qf.SubmissionLink
-	40, // [40:40] is the sub-list for method output_type
-	40, // [40:40] is the sub-list for method input_type
-	40, // [40:40] is the sub-list for extension type_name
-	40, // [40:40] is the sub-list for extension extendee
-	0,  // [0:40] is the sub-list for field type_name
+	24, // 27: qf.Submission.Grades:type_name -> qf.Grade
+	30, // 28: qf.Submission.reviews:type_name -> qf.Review
+	33, // 29: qf.Submission.BuildInfo:type_name -> score.BuildInfo
+	34, // 30: qf.Submission.Scores:type_name -> score.Score
+	5,  // 31: qf.Grade.Status:type_name -> qf.Submission.Status
+	24, // 32: qf.Grades.grades:type_name -> qf.Grade
+	23, // 33: qf.Submissions.submissions:type_name -> qf.Submission
+	29, // 34: qf.GradingBenchmark.criteria:type_name -> qf.GradingCriterion
+	27, // 35: qf.Benchmarks.benchmarks:type_name -> qf.GradingBenchmark
+	6,  // 36: qf.GradingCriterion.grade:type_name -> qf.GradingCriterion.Grade
+	27, // 37: qf.Review.gradingBenchmarks:type_name -> qf.GradingBenchmark
+	18, // 38: qf.SubmissionLink.assignment:type_name -> qf.Assignment
+	23, // 39: qf.SubmissionLink.submission:type_name -> qf.Submission
+	15, // 40: qf.EnrollmentLink.enrollment:type_name -> qf.Enrollment
+	31, // 41: qf.EnrollmentLink.submissions:type_name -> qf.SubmissionLink
+	42, // [42:42] is the sub-list for method output_type
+	42, // [42:42] is the sub-list for method input_type
+	42, // [42:42] is the sub-list for extension type_name
+	42, // [42:42] is the sub-list for extension extendee
+	0,  // [0:42] is the sub-list for field type_name
 }
 
 func init() { file_qf_types_proto_init() }
@@ -3147,7 +3261,7 @@ func file_qf_types_proto_init() {
 			}
 		}
 		file_qf_types_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Submissions); i {
+			switch v := v.(*Grade); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3159,7 +3273,7 @@ func file_qf_types_proto_init() {
 			}
 		}
 		file_qf_types_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GradingBenchmark); i {
+			switch v := v.(*Grades); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3171,7 +3285,7 @@ func file_qf_types_proto_init() {
 			}
 		}
 		file_qf_types_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Benchmarks); i {
+			switch v := v.(*Submissions); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3183,7 +3297,7 @@ func file_qf_types_proto_init() {
 			}
 		}
 		file_qf_types_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GradingCriterion); i {
+			switch v := v.(*GradingBenchmark); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3195,7 +3309,7 @@ func file_qf_types_proto_init() {
 			}
 		}
 		file_qf_types_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Review); i {
+			switch v := v.(*Benchmarks); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3207,7 +3321,7 @@ func file_qf_types_proto_init() {
 			}
 		}
 		file_qf_types_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SubmissionLink); i {
+			switch v := v.(*GradingCriterion); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3219,6 +3333,30 @@ func file_qf_types_proto_init() {
 			}
 		}
 		file_qf_types_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Review); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_qf_types_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SubmissionLink); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_qf_types_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EnrollmentLink); i {
 			case 0:
 				return &v.state
@@ -3237,7 +3375,7 @@ func file_qf_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_qf_types_proto_rawDesc,
 			NumEnums:      7,
-			NumMessages:   24,
+			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -593,7 +593,10 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []*qf.Submission{&submission2, &submission3}
-	if diff := cmp.Diff(submissions, want, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(submissions, want, cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.Submission{}, "Grades"),
+	}); diff != "" {
 		t.Errorf("Expected same submissions, but got (-sub +want):\n%s", diff)
 	}
 	data, err := db.GetLastSubmissions(c1.ID, &qf.Submission{GroupID: group.ID})

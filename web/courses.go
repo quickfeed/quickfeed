@@ -283,20 +283,23 @@ func makeSubmissionLinks(assignments []*qf.Assignment, include func(*qf.Submissi
 }
 
 // updateSubmission updates submission status or sets a submission score based on a manual review.
-func (s *QuickFeedService) updateSubmission(courseID, submissionID uint64, status qf.Submission_Status, released bool, score uint32) error {
+func (s *QuickFeedService) updateSubmission(courseID, submissionID uint64, grades *qf.Grades, released bool, score uint32) error {
 	submission, err := s.db.GetSubmission(&qf.Submission{ID: submissionID})
 	if err != nil {
 		return err
 	}
-
 	// if approving previously unapproved submission
-	if status == qf.Submission_APPROVED && submission.Status != qf.Submission_APPROVED {
-		submission.ApprovedDate = time.Now().Format(qf.TimeLayout)
-		if err := s.setLastApprovedAssignment(submission, courseID); err != nil {
-			return err
+	// TODO(jostein): Check this - either a single user or group can be approved at a time
+	for _, grade := range grades.GetGrades() {
+		if grade.GetStatus() == qf.Submission_APPROVED && !submission.IsAllApproved() {
+			// TODO(jostein): ApprovedDate could be moved to Grade to allow for individual approval dates
+			submission.ApprovedDate = time.Now().Format(qf.TimeLayout)
+			if err := s.setLastApprovedAssignment(submission, courseID); err != nil {
+				return err
+			}
 		}
 	}
-	submission.Status = status
+	submission.Grades = grades.GetGrades()
 	submission.Released = released
 	if score > 0 {
 		submission.Score = score
@@ -319,11 +322,8 @@ func (s *QuickFeedService) updateSubmissions(request *qf.UpdateSubmissionsReques
 		Score:        request.ScoreLimit,
 		Released:     request.Release,
 	}
-	if request.Approve {
-		query.Status = qf.Submission_APPROVED
-	}
 
-	return s.db.UpdateSubmissions(request.CourseID, query)
+	return s.db.UpdateSubmissions(request.CourseID, query, request.Approve)
 }
 
 func (s *QuickFeedService) getReviewers(submissionID uint64) ([]*qf.User, error) {
@@ -375,7 +375,7 @@ func (s *QuickFeedService) getEnrollmentsWithActivity(courseID uint64) ([]*qf.En
 		for _, submissionLink := range enrolLink.Submissions {
 			submission := submissionLink.Submission
 			if submission != nil {
-				if submission.Status == qf.Submission_APPROVED {
+				if submission.GetStatusByUser(enrol.UserID) == qf.Submission_APPROVED {
 					totalApproved++
 				}
 				if enrol.LastActivityDate == "" {

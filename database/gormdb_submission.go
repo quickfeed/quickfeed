@@ -59,7 +59,7 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 				sc.SubmissionID = submission.ID
 			}
 		}
-		if err := tx.Save(submission).Error; err != nil {
+		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Save(submission).Error; err != nil {
 			return err // will rollback transaction
 		}
 		return nil // will commit transaction
@@ -169,7 +169,7 @@ func (db *GormDB) GetLastSubmissions(courseID uint64, query *qf.Submission) ([]*
 // GetSubmissions returns all submissions matching the query.
 func (db *GormDB) GetSubmissions(query *qf.Submission) ([]*qf.Submission, error) {
 	var submissions []*qf.Submission
-	if err := db.conn.Find(&submissions, &query).Error; err != nil {
+	if err := db.conn.Preload("Grades").Find(&submissions, &query).Error; err != nil {
 		return nil, err
 	}
 	return submissions, nil
@@ -177,20 +177,44 @@ func (db *GormDB) GetSubmissions(query *qf.Submission) ([]*qf.Submission, error)
 
 // UpdateSubmission updates submission with the given approved status.
 func (db *GormDB) UpdateSubmission(query *qf.Submission) error {
-	return db.conn.Save(query).Error
+	return db.conn.Session(&gorm.Session{FullSaveAssociations: true}).Save(query).Error
 }
 
 // UpdateSubmissions approves and/or releases all submissions that have score
 // equal or above the provided score for the given assignment ID
-func (db *GormDB) UpdateSubmissions(courseID uint64, query *qf.Submission) error {
-	return db.conn.
-		Model(query).
-		Where("assignment_id = ?", query.AssignmentID).
-		Where("score >= ?", query.Score).
-		Updates(&qf.Submission{
-			Status:   query.Status,
-			Released: query.Released,
-		}).Error
+func (db *GormDB) UpdateSubmissions(courseID uint64, query *qf.Submission, approve bool) error {
+	return db.conn.Transaction(func(tx *gorm.DB) error {
+		var submissionIDs []*uint64
+		if err := tx.Model(&qf.Submission{}).
+			Where("assignment_id = ? AND score >= ?", query.AssignmentID, query.Score).
+			Pluck("id", &submissionIDs).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(query).
+			Where("assignment_id = ?", query.AssignmentID).
+			Where("score >= ?", query.Score).
+			Updates(&qf.Submission{
+				Released: query.Released,
+			}).Error; err != nil {
+			return err
+		}
+
+		if approve {
+			// Approve all Grades for the submissions
+			err := tx.Model(&qf.Grade{}).
+				Where("submission_id IN (?)", submissionIDs).
+				Updates(&qf.Grade{
+					Status: qf.Submission_APPROVED,
+				}).Error
+
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
 
 // GetReview fetches a review

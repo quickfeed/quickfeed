@@ -17,6 +17,7 @@ import {
     Assignment,
     EnrollmentLink,
     SubmissionLink,
+    Grade,
 } from "../proto/qf/types_pb"
 import {
     CourseSubmissions,
@@ -569,7 +570,7 @@ export class MockGrpcManager {
                 continue
             }
             if (approve) {
-                submission.setStatus(Submission.Status.APPROVED)
+                submission.getGradesList().forEach(grade => grade.setStatus(Submission.Status.APPROVED))
             }
             if (release) {
                 submission.setReleased(release)
@@ -1042,7 +1043,11 @@ export class MockGrpcManager {
                 .setId(1)
                 .setAssignmentid(1)
                 .setUserid(1)
-                .setStatus(Submission.Status.APPROVED)
+                .setGradesList([
+                    new Grade()
+                        .setUserid(1)
+                        .setStatus(Submission.Status.APPROVED)
+                ])
                 .setBuildinfo(
                     new BuildInfo()
                         .setId(1)
@@ -1157,7 +1162,11 @@ export class MockGrpcManager {
                 .setUserid(3)
                 .setScore(50)
                 .setCommithash("test")
-                .setStatus(0)
+                .setGradesList([
+                    new Grade()
+                        .setUserid(3)
+                        .setStatus(Submission.Status.NONE)
+                ])
                 .setBuildinfo(
                     new BuildInfo()
                         .setId(3)

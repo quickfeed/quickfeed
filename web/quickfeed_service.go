@@ -401,7 +401,7 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Reque
 		s.logger.Errorf("UpdateSubmission failed: submission author has no access to the course")
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("submission author has no course access"))
 	}
-	err := s.updateSubmission(in.Msg.GetCourseID(), in.Msg.GetSubmissionID(), in.Msg.GetStatus(), in.Msg.GetReleased(), in.Msg.GetScore())
+	err := s.updateSubmission(in.Msg.GetCourseID(), in.Msg.GetSubmissionID(), in.Msg.GetGrades(), in.Msg.GetReleased(), in.Msg.GetScore())
 	if err != nil {
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to approve submission"))

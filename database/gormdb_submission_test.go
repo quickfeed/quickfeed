@@ -22,14 +22,15 @@ func TestGormDBGetSubmissionForUser(t *testing.T) {
 	}
 }
 
-func setupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Course, *qf.Assignment) {
+func setupCourseAssignment(t *testing.T, db database.Database, groupLab bool) (*qf.User, *qf.Course, *qf.Assignment) {
 	// create a course and an assignment
 	admin := qtest.CreateFakeUser(t, db, 10)
 	course := &qf.Course{}
 	qtest.CreateCourse(t, db, admin, course)
 	assignment := &qf.Assignment{
-		CourseID: course.ID,
-		Order:    1,
+		CourseID:   course.ID,
+		Order:      1,
+		IsGroupLab: groupLab,
 	}
 	if err := db.CreateAssignment(assignment); err != nil {
 		t.Fatal(err)
@@ -57,7 +58,7 @@ func setupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Co
 func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	user, course, assignment := setupCourseAssignment(t, db)
+	user, course, assignment := setupCourseAssignment(t, db, false)
 
 	if err := db.CreateSubmission(&qf.Submission{
 		AssignmentID: assignment.ID,
@@ -79,11 +80,14 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Score:        80,
-		Status:       qf.Submission_NONE,
+		Grades:       []*qf.Grade{{UserID: user.ID, Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
-	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(submissions[0], want, cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.Submission{}, "Grades"),
+	}); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 
@@ -105,11 +109,15 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
 		Score:        0,
-		Status:       qf.Submission_NONE,
+		Grades:       []*qf.Grade{{UserID: user.ID, Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
-	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
+
+	if diff := cmp.Diff(submissions[0], want, cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.Submission{}, "Grades"),
+	}); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 }
@@ -117,7 +125,7 @@ func TestGormDBUpdateSubmissionZeroScore(t *testing.T) {
 func TestGormDBUpdateSubmission(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	user, course, assignment := setupCourseAssignment(t, db)
+	user, course, assignment := setupCourseAssignment(t, db, false)
 
 	// when we create a new submission for the same course lab and user, it will update the old one,
 	// instead of creating an extra record
@@ -143,15 +151,18 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		ID:           submissions[0].ID,
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
-		Status:       qf.Submission_NONE,
+		Grades:       []*qf.Grade{{UserID: user.ID, Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
-	if diff := cmp.Diff(submissions[0], want, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(submissions[0], want, cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.Submission{}, "Grades"),
+	}); diff != "" {
 		t.Errorf("Expected same submission, but got (-sub +want):\n%s", diff)
 	}
 
-	if submissions[0].GetStatus() != qf.Submission_NONE {
+	if submissions[0].GetStatusByUser(want.UserID) != qf.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
 
@@ -165,10 +176,10 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if submissions[0].GetStatus() != qf.Submission_NONE {
+	if submissions[0].GetStatusByUser(want.UserID) != qf.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
-	submissions[0].Status = qf.Submission_APPROVED
+	submissions[0].SetGrade(user.ID, qf.Submission_APPROVED)
 	err = db.UpdateSubmission(submissions[0])
 	if err != nil {
 		t.Fatal(err)
@@ -177,8 +188,8 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submissions[0].GetStatus() != qf.Submission_APPROVED {
-		t.Errorf("expected submission to be 'approved' but got 'not-approved'")
+	if submissions[0].GetStatusByUser(want.UserID) != qf.Submission_APPROVED {
+		t.Errorf("expected submission to be 'approved' but got 'not-approved': %v", submissions[0])
 	}
 }
 
@@ -203,7 +214,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	}
 
 	// create teacher, course, user (student) and assignment
-	user, course, assignment := setupCourseAssignment(t, db)
+	user, course, assignment := setupCourseAssignment(t, db, false)
 
 	// create a submission for the assignment for non-existing user; should fail
 	if err := db.CreateSubmission(&qf.Submission{
@@ -234,11 +245,15 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 		ID:           gotSubmission.ID,
 		AssignmentID: assignment.ID,
 		UserID:       user.ID,
+		Grades:       []*qf.Grade{{UserID: user.ID, Status: qf.Submission_NONE}},
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
 	}
 
-	if diff := cmp.Diff(wantSubmission, gotSubmission, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(wantSubmission, gotSubmission, cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.Submission{}, "Grades"),
+	}); diff != "" {
 		t.Errorf("GetLastSubmissions() mismatch (-wantSubmission, +gotSubmission):\n%s", diff)
 	}
 }
@@ -269,7 +284,7 @@ func TestGormDBInsertBadSubmissions(t *testing.T) {
 	}
 
 	// create teacher, course, user (student) and assignment
-	user, _, assignment := setupCourseAssignment(t, db)
+	user, _, assignment := setupCourseAssignment(t, db, false)
 
 	// create a submission for the assignment for non-existing user; should fail
 	if err := db.CreateSubmission(&qf.Submission{AssignmentID: assignment.ID, UserID: 3}); !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -354,20 +369,22 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		AssignmentID: assignment1.ID,
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
+		Grades:       []*qf.Grade{{UserID: user.ID, Status: qf.Submission_NONE}},
 	}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
 	}
+
 	submission3 := qf.Submission{
 		UserID:       user.ID,
 		AssignmentID: assignment2.ID,
 		Reviews:      []*qf.Review{},
 		Scores:       []*score.Score{},
+		Grades:       []*qf.Grade{{UserID: user.ID, Status: qf.Submission_NONE}},
 	}
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)
 	}
-
 	// Even if there is three submission, only the latest for each assignment should be returned
 
 	submissions, err := db.GetLastSubmissions(c1.ID, &qf.Submission{UserID: user.ID})
@@ -375,7 +392,10 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []*qf.Submission{&submission2, &submission3}
-	if diff := cmp.Diff(submissions, want, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(submissions, want, cmp.Options{
+		protocmp.Transform(),
+		protocmp.IgnoreFields(&qf.Submission{}, "Grades"),
+	}); diff != "" {
 		t.Errorf("Expected same submissions, but got (-sub +want):\n%s", diff)
 	}
 	data, err := db.GetLastSubmissions(c1.ID, &qf.Submission{UserID: user.ID})
@@ -396,7 +416,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 func TestGormDBCreateUpdateWithBuildInfoAndScores(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	user, course, assignment := setupCourseAssignment(t, db)
+	user, course, assignment := setupCourseAssignment(t, db, false)
 
 	// create a new submission, ensure that build info and scores are saved as well
 	buildInfo := &score.BuildInfo{
@@ -602,5 +622,79 @@ func TestGormDBGetLastSubmissions(t *testing.T) {
 	}
 	if gotSubmission != nil {
 		t.Errorf("Expected nil submission, got: %v", gotSubmission)
+	}
+}
+
+func TestGormDBUpdateGroupSubmissionStatus(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	_, course, assignment := setupCourseAssignment(t, db, true)
+
+	// Create users and groups
+	user1 := qtest.CreateNamedUser(t, db, 2, "user1")
+	user2 := qtest.CreateNamedUser(t, db, 3, "user2")
+
+	qtest.EnrollStudent(t, db, user1, course)
+	qtest.EnrollStudent(t, db, user2, course)
+
+	group := &qf.Group{
+		CourseID: course.ID,
+		Name:     "group",
+		Users:    []*qf.User{user1, user2},
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+	// create a new submission, ensure that build info and scores are saved as well
+	submission := &qf.Submission{
+		AssignmentID: assignment.ID,
+		GroupID:      group.ID,
+	}
+	if err := db.CreateSubmission(submission); err != nil {
+		t.Fatal(err)
+	}
+
+	// Submission should have status "NONE" for all users
+	for _, user := range group.GetUsers() {
+		if submission.GetStatusByUser(user.ID) != qf.Submission_NONE {
+			t.Errorf("Expected status NONE for user %d, got %s", user.ID, submission.GetStatusByUser(user.ID))
+		}
+	}
+
+	// Update status for user1
+	submission.SetGrade(user1.ID, qf.Submission_APPROVED)
+
+	if err := db.UpdateSubmission(submission); err != nil {
+		t.Fatal(err)
+	}
+	gotSubmission, err := db.GetSubmission(&qf.Submission{AssignmentID: assignment.ID, GroupID: group.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotSubmission.GetStatusByUser(user1.ID) != qf.Submission_APPROVED {
+		t.Errorf("Expected status to be '%v', got '%v'", qf.Submission_APPROVED, gotSubmission.GetStatusByUser(user1.ID))
+	}
+
+	if gotSubmission.GetStatusByUser(user2.ID) != qf.Submission_NONE {
+		t.Errorf("Expected status to be '%v', got '%v'", qf.Submission_NONE, gotSubmission.GetStatusByUser(user2.ID))
+	}
+
+	// Update status for user2
+	submission.SetGrade(user2.ID, qf.Submission_REJECTED)
+	if err := db.UpdateSubmission(submission); err != nil {
+		t.Fatal(err)
+	}
+
+	gotSubmission2, err := db.GetSubmission(&qf.Submission{AssignmentID: assignment.ID, GroupID: group.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if gotSubmission2.GetStatusByUser(user2.ID) != qf.Submission_REJECTED {
+		t.Errorf("Expected status to be '%v', got '%v'", qf.Submission_REJECTED, gotSubmission2.GetStatusByUser(user2.ID))
+	}
+
+	if gotSubmission2.GetStatusByUser(user1.ID) != qf.Submission_APPROVED {
+		t.Errorf("Expected status to be '%v', got '%v'", qf.Submission_APPROVED, gotSubmission2.GetStatusByUser(user1.ID))
 	}
 }

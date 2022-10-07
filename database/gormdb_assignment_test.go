@@ -144,7 +144,7 @@ func TestGetAssignmentsWithSubmissions(t *testing.T) {
 	defer cleanup()
 
 	// create teacher, course, user (student) and assignment
-	user, course, assignment := setupCourseAssignment(t, db)
+	user, course, assignment := setupCourseAssignment(t, db, false)
 
 	wantStruct := &qf.Submission{
 		AssignmentID: assignment.ID,

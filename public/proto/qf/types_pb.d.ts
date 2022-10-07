@@ -731,8 +731,10 @@ export class Submission extends jspb.Message {
   getReleased(): boolean;
   setReleased(value: boolean): Submission;
 
-  getStatus(): Submission.Status;
-  setStatus(value: Submission.Status): Submission;
+  getGradesList(): Array<Grade>;
+  setGradesList(value: Array<Grade>): Submission;
+  clearGradesList(): Submission;
+  addGrades(value?: Grade, index?: number): Grade;
 
   getApproveddate(): string;
   setApproveddate(value: string): Submission;
@@ -769,7 +771,7 @@ export namespace Submission {
     score: number,
     commithash: string,
     released: boolean,
-    status: Submission.Status,
+    gradesList: Array<Grade.AsObject>,
     approveddate: string,
     reviewsList: Array<Review.AsObject>,
     buildinfo?: kit_score_score_pb.BuildInfo.AsObject,
@@ -781,6 +783,52 @@ export namespace Submission {
     APPROVED = 1,
     REJECTED = 2,
     REVISION = 3,
+  }
+}
+
+export class Grade extends jspb.Message {
+  getSubmissionid(): number;
+  setSubmissionid(value: number): Grade;
+
+  getUserid(): number;
+  setUserid(value: number): Grade;
+
+  getStatus(): Submission.Status;
+  setStatus(value: Submission.Status): Grade;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Grade.AsObject;
+  static toObject(includeInstance: boolean, msg: Grade): Grade.AsObject;
+  static serializeBinaryToWriter(message: Grade, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Grade;
+  static deserializeBinaryFromReader(message: Grade, reader: jspb.BinaryReader): Grade;
+}
+
+export namespace Grade {
+  export type AsObject = {
+    submissionid: number,
+    userid: number,
+    status: Submission.Status,
+  }
+}
+
+export class Grades extends jspb.Message {
+  getGradesList(): Array<Grade>;
+  setGradesList(value: Array<Grade>): Grades;
+  clearGradesList(): Grades;
+  addGrades(value?: Grade, index?: number): Grade;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Grades.AsObject;
+  static toObject(includeInstance: boolean, msg: Grades): Grades.AsObject;
+  static serializeBinaryToWriter(message: Grades, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Grades;
+  static deserializeBinaryFromReader(message: Grades, reader: jspb.BinaryReader): Grades;
+}
+
+export namespace Grades {
+  export type AsObject = {
+    gradesList: Array<Grade.AsObject>,
   }
 }
 

@@ -1,7 +1,7 @@
 import React from "react"
-import { Review } from "../../../proto/qf/types_pb"
+import { Review, Submission } from "../../../proto/qf/types_pb"
 import { NoSubmission } from "../../consts"
-import { Color, SubmissionStatus } from "../../Helpers"
+import { Color, getStatusByUser, SubmissionStatus } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
 import ManageSubmissionStatus from "../ManageSubmissionStatus"
@@ -19,7 +19,6 @@ const ReviewInfo = ({ review }: { review?: Review.AsObject }): JSX.Element | nul
     const submission = state.activeSubmissionLink?.submission
     const ready = review.ready
     const allCriteriaGraded = state.review.graded === state.review.criteriaTotal
-
     const markReadyButton = (
         <Button onclick={() => { allCriteriaGraded || ready ? actions.review.updateReady(!ready) : null }}
             classname={ready ? "float-right" : allCriteriaGraded ? "" : "disabled"}
@@ -37,6 +36,10 @@ const ReviewInfo = ({ review }: { review?: Review.AsObject }): JSX.Element | nul
             color={submission?.released ? Color.WHITE : Color.YELLOW}
             type={ButtonType.BUTTON} />
     )
+    const status = submission && submission.userid > 0 
+        ? getStatusByUser(submission, submission?.userid) 
+        : Submission.Status.NONE 
+
     return (
         <ul className="list-group">
             <li className="list-group-item active">
@@ -51,7 +54,7 @@ const ReviewInfo = ({ review }: { review?: Review.AsObject }): JSX.Element | nul
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Submission Status: </span>
-                {submission ? SubmissionStatus[submission.status] : { NoSubmission }}
+                {submission ? SubmissionStatus[status] : NoSubmission }
             </li>
             <li className="list-group-item">
                 <span className="w-25 mr-5 float-left">Review Status: </span>

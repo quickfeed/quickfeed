@@ -1,6 +1,7 @@
 import React from "react"
 import { useAppState } from "../overmind"
 import { Submission } from "../../proto/qf/types_pb"
+import { getStatusByUser } from "../Helpers"
 
 export enum Progress {
     NAV,
@@ -26,7 +27,7 @@ const ProgressBar = ({ courseID, assignmentIndex, submission, type }: ProgressBa
 
     const score = sub?.score ?? 0
     const scorelimit = assignment?.scorelimit ?? 0
-    const status = sub?.status ?? Submission.Status.NONE
+    const status = getStatusByUser(sub, state.self.id)
     const secondaryProgress = scorelimit - score
     // Returns a thin line to be used for labs in the NavBar
     if (type === Progress.NAV) {

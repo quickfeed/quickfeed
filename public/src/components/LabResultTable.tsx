@@ -1,7 +1,7 @@
 import React, { useCallback } from "react"
 import { Assignment, Submission } from "../../proto/qf/types_pb"
 import { Converter } from "../convert"
-import { assignmentStatusText, getFormattedTime, getPassedTestsCount, isManuallyGraded } from "../Helpers"
+import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isManuallyGraded } from "../Helpers"
 import { useAppState } from "../overmind"
 import ProgressBar, { Progress } from "./ProgressBar"
 import SubmissionScore from "./SubmissionScore"
@@ -54,7 +54,12 @@ const LabResultTable = ({ submission, assignment }: lab): JSX.Element => {
         const delivered = buildInfo ? getFormattedTime(buildInfo.builddate) : "N/A"
         const executionTime = buildInfo ? `${buildInfo.exectime / 1000} seconds` : ""
 
-        const className = (submission.status === Submission.Status.APPROVED) ? "passed" : "failed"
+        const status = state.isTeacher && state.activeEnrollment 
+            ? getStatusByUser(submission, state.activeEnrollment.userid) 
+            : !state.isTeacher 
+                ? getStatusByUser(submission, state.self.id) 
+                : Submission.Status.NONE
+        const className = (status === Submission.Status.APPROVED) ? "passed" : "failed"
         return (
             <div className="pb-2">
                 <div className="pb-2">
