@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/internal/env"
@@ -260,8 +261,8 @@ func form(w http.ResponseWriter, domain string) error {
 			"name": "{{.Name}}",
 			"url": "{{.URL}}",
 			"hook_attributes": {
-				"active": true,
-				"url": "{{.webhookURL}}",
+				"active": {{.WebhookActive}},
+				"url": "{{.WebhookURL}}",
 			},
 			"callback_urls": [
 				"{{.CallbackURL}}"
@@ -282,15 +283,23 @@ func form(w http.ResponseWriter, domain string) error {
 	`
 
 	data := struct {
-		URL         string
-		Name        string
-		CallbackURL string
-		WebhookURL  string
+		URL           string
+		Name          string
+		CallbackURL   string
+		WebhookURL    string
+		WebhookActive bool
 	}{
-		URL:         auth.GetBaseURL(domain),
-		Name:        env.AppName(),
-		CallbackURL: auth.GetCallbackURL(domain),
-		WebhookURL:  auth.GetEventsURL(domain),
+		URL:           auth.GetBaseURL(domain),
+		Name:          env.AppName(),
+		CallbackURL:   auth.GetCallbackURL(domain),
+		WebhookURL:    auth.GetEventsURL(domain),
+		WebhookActive: true,
+	}
+
+	if strings.Contains(data.WebhookURL, "127.0.0.1") {
+		// Disable webhook for localhost
+		data.WebhookURL = ""
+		data.WebhookActive = false
 	}
 	t := template.Must(template.New("form").Parse(tpl))
 	if err := t.Execute(w, data); err != nil {
