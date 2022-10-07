@@ -272,7 +272,8 @@ func form(w http.ResponseWriter, domain string) error {
 				"issues": "write",
 				"members": "write",
 				"organization_administration": "write",
-				"pull_requests": "write"
+				"pull_requests": "write",
+				"organization_hooks": "write",
 			},
 		})
 		document.getElementById('create').submit()
