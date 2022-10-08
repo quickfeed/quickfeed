@@ -35,7 +35,9 @@ export const oldFormattedTime = (dateString: string): string => {
 
 const dateToString = (date: Date): string => {
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()} ${date.getHours()}:${date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes()}`
+    const minutes = date.getMinutes()
+    const zero = minutes < 10 ? "0" : ""
+    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()} ${date.getHours()}:${zero}${minutes}`
 }
 
 export interface Deadline {
