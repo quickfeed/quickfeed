@@ -48,7 +48,7 @@ describe("UpdateEnrollment in webpage", () => {
         const mockedOvermind = createOvermindMock(config, (state) => {
             state.self = user.toObject()
             state.activeCourse = 1
-            state.courseEnrollments = { [1]: [enrollment] }
+            state.courseEnrollments = { 1: [enrollment] }
         })
         const history = createMemoryHistory()
         history.push("/course/1/members")
@@ -73,7 +73,7 @@ describe("UpdateEnrollment in webpage", () => {
         const mockedOvermind = createOvermindMock(config, (state) => {
             state.self = user.toObject()
             state.activeCourse = 1
-            state.courseEnrollments = { [1]: [enrollment] }
+            state.courseEnrollments = { 1: [enrollment] }
         })
         const history = createMemoryHistory()
         history.push("/course/1/members")

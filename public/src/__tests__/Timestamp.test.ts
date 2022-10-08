@@ -1,8 +1,8 @@
 import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb"
-import { oldFormattedTime as oldFormattedTime, getFormattedTime as getFormattedTime } from "../Helpers"
+import { oldFormattedTime, getFormattedTime } from "../Helpers"
 
 describe('Timestamppb', () => {
-    it('test timestamp formatting', async () => {
+    it('test timestamp formatting', () => {
         const tsLayout = "2006-01-02T15:04:05"
         const str = oldFormattedTime(tsLayout)
 
