@@ -80,7 +80,7 @@ WITHOUT_QUOTES="$QUICKFEED/cert/fullchain.pem"
 	}
 }
 
-func TestSaveBackupLogic(t *testing.T) {
+func TestExistsLogic(t *testing.T) {
 	const (
 		E = true  // exists
 		Ø = false // does not exist
@@ -103,7 +103,8 @@ func TestSaveBackupLogic(t *testing.T) {
 	}
 
 	const baseFilename = "env"
-	existsErr := env.ExistsError("dummy") // will be replaced with other error with correct t.TempDir()
+	existsErr := env.ExistsError("dummy")   // will be replaced with other error with correct t.TempDir()
+	missingErr := env.MissingError("dummy") // will be replaced with other error with correct t.TempDir()
 
 	tests := []struct {
 		name    string
@@ -111,9 +112,9 @@ func TestSaveBackupLogic(t *testing.T) {
 		after   exist
 		wantErr error
 	}{
-		{name: "NoFileExists   ", before: exist{file: Ø, bak: Ø}, after: exist{file: E, bak: Ø}, wantErr: nil},
-		{name: "EnvFileExists  ", before: exist{file: E, bak: Ø}, after: exist{file: E, bak: E}, wantErr: nil},
-		{name: "BakFileExists  ", before: exist{file: Ø, bak: E}, after: exist{file: E, bak: E}, wantErr: nil},
+		{name: "NoFileExists   ", before: exist{file: Ø, bak: Ø}, after: exist{file: Ø, bak: Ø}, wantErr: missingErr},
+		{name: "EnvFileExists  ", before: exist{file: E, bak: Ø}, after: exist{file: E, bak: Ø}, wantErr: nil},
+		{name: "BakFileExists  ", before: exist{file: Ø, bak: E}, after: exist{file: Ø, bak: E}, wantErr: existsErr},
 		{name: "BothFilesExists", before: exist{file: E, bak: E}, after: exist{file: E, bak: E}, wantErr: existsErr},
 	}
 	for _, test := range tests {
@@ -133,12 +134,16 @@ func TestSaveBackupLogic(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			if test.wantErr != nil {
+			if errors.Is(test.wantErr, existsErr) {
 				// use error with correct t.TempDir()
 				test.wantErr = env.ExistsError(bakFilename)
 			}
-			if err := env.Save(filename, nil); !errors.Is(err, test.wantErr) {
-				t.Errorf("Save(%q) = %v, wanted %v", filepath.Base(filename), err, test.wantErr)
+			if errors.Is(test.wantErr, missingErr) {
+				// use error with correct t.TempDir()
+				test.wantErr = env.MissingError(filename)
+			}
+			if err := env.Exists(filename); !errors.Is(err, test.wantErr) {
+				t.Errorf("Exists(%q) = %v, wanted %v", filepath.Base(filename), err, test.wantErr)
 			}
 			if exists(filename) != test.after.file {
 				t.Errorf("%q: %s", filepath.Base(filename), msg(test.after.file))
@@ -161,6 +166,15 @@ func TestSave(t *testing.T) {
 			t.Fatal(err)
 		}
 	}()
+
+	prevContent := `QUICKFEED_TEST_ENV=test
+QUICKFEED_TEST_ENV2=test2
+QUICKFEED_CLIENT_ID=321
+QUICKFEED=/mumbo/jumbo
+`
+	if _, err = fi.WriteString(prevContent); err != nil {
+		t.Fatal(err)
+	}
 
 	want := map[string]string{
 		"QUICKFEED_APP_ID":        "weird al",
@@ -186,6 +200,12 @@ func TestSave(t *testing.T) {
 		if got := os.Getenv(k); got != expVal {
 			t.Errorf("os.Getenv(%q) = %q, wanted %q", k, got, expVal)
 		}
+	}
+	if os.Getenv("QUICKFEED_TEST_ENV") != "test" {
+		t.Errorf("os.Getenv(%q) = %q, wanted %q", "QUICKFEED_TEST_ENV", os.Getenv("QUICKFEED_TEST_ENV"), "test")
+	}
+	if os.Getenv("QUICKFEED_TEST_ENV2") != "test2" {
+		t.Errorf("os.Getenv(%q) = %q, wanted %q", "QUICKFEED_TEST_ENV", os.Getenv("QUICKFEED_TEST_ENV"), "test2")
 	}
 }
 
