@@ -142,8 +142,8 @@ func TestExistsLogic(t *testing.T) {
 				// use error with correct t.TempDir()
 				test.wantErr = env.MissingError(filename)
 			}
-			if err := env.Exists(filename); !errors.Is(err, test.wantErr) {
-				t.Errorf("Exists(%q) = %v, wanted %v", filepath.Base(filename), err, test.wantErr)
+			if err := env.Prepared(filename); !errors.Is(err, test.wantErr) {
+				t.Errorf("Prepared(%q) = %v, wanted %v", filepath.Base(filename), err, test.wantErr)
 			}
 			if exists(filename) != test.after.file {
 				t.Errorf("%q: %s", filepath.Base(filename), msg(test.after.file))

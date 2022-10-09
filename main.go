@@ -146,7 +146,7 @@ func createNewQuickFeedApp(srvFn web.ServerType, httpAddr string) error {
 	}
 	// Check for missing .env file and if .env.bak already exists
 	for _, envFile := range []string{".env", "public/.env"} {
-		if err := env.Exists(envFile); err != nil {
+		if err := env.Prepared(envFile); err != nil {
 			return err
 		}
 	}
