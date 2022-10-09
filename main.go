@@ -144,6 +144,13 @@ func createNewQuickFeedApp(srvFn web.ServerType, httpAddr string) error {
 	if env.HasAppID() {
 		return errors.New(".env already contains App information")
 	}
+	// Check for missing .env file and if .env.bak already exists
+	for _, envFile := range []string{".env", "public/.env"} {
+		if err := env.Exists(envFile); err != nil {
+			return err
+		}
+	}
+
 	if env.Domain() == "127.0.0.1" {
 		fmt.Printf("WARNING: You are creating a GitHub app on %s. Only for development purposes.\n", env.Domain())
 		fmt.Println("In this mode, QuickFeed will not be able to receive webhook events from GitHub.")
