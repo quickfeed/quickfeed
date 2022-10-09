@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v45/github"
+	"github.com/quickfeed/quickfeed/doc"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -60,6 +61,11 @@ func (m *Manifest) StartAppCreationFlow(server *web.Server) error {
 			m.done <- fmt.Errorf("server was closed prematurely")
 		}
 	}()
+	if strings.Contains(m.domain, "127.0.0.1") {
+		log.Println("Warning: You will not be able to receive webhook events from GitHub because you are running QuickFeed on localhost.")
+		log.Println("To enable receiving webhook events, you must run QuickFeed on a public domain.")
+		log.Printf("Read more here: %s\n", doc.DeployURL)
+	}
 	log.Println("Important: The GitHub user that installs the QuickFeed App will become the server's admin user.")
 	log.Printf("Go to https://%s/manifest to install the QuickFeed GitHub App.\n", env.Domain())
 	if err := <-m.done; err != nil {
