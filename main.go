@@ -14,6 +14,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
+	"github.com/quickfeed/quickfeed/doc"
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
@@ -144,7 +145,12 @@ func createNewQuickFeedApp(srvFn web.ServerType, httpAddr string) error {
 		return errors.New(".env already contains App information")
 	}
 	if env.Domain() == "127.0.0.1" {
-		fmt.Printf("WARNING: You are creating an app on %s. Only for development purposes. Continue? (Y/n) ", env.Domain())
+		fmt.Printf("WARNING: You are creating a GitHub app on %s. Only for development purposes.\n", env.Domain())
+		fmt.Println("In this mode, QuickFeed will not be able to receive webhook events from GitHub.")
+		fmt.Println("To enable receiving webhook events, you must run QuickFeed on a public domain.")
+		fmt.Printf("Read more here: %s\n\n", doc.DeployURL)
+
+		fmt.Print("Do you want to continue? (Y/n) ")
 		var answer string
 		fmt.Scanln(&answer)
 		if !(answer == "Y" || answer == "y") {
