@@ -27,7 +27,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	}
 	wh.logger.Debugf("Received push event for repository %v", repo)
 
-	if !isDefaultBranch(payload) && !repo.IsGroupRepo() {
+	if !(isDefaultBranch(payload) || repo.IsGroupRepo()) {
 		wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
 		return
 	}
