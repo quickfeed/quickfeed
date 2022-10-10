@@ -17,10 +17,7 @@ import (
 func TestClone(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	s := scm.GetTestSCM(t)
-	userName, err := s.GetUserName(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
+	userName := scm.GetTestUser(t)
 
 	ctx := context.Background()
 	dstDir := t.TempDir()
@@ -155,10 +152,7 @@ func TestCloneTwice(t *testing.T) {
 func TestCloneBranch(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
 	s := scm.GetTestSCM(t)
-	userName, err := s.GetUserName(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
+	userName := scm.GetTestUser(t)
 
 	ctx := context.Background()
 	dstDir := t.TempDir()

@@ -48,8 +48,6 @@ type SCM interface {
 	RemoveTeamMember(context.Context, *TeamMembershipOptions) error
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions.
 	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
-	// GetUserName returns the currently logged in user's login name.
-	GetUserName(context.Context) (string, error)
 	// Promote or demote organization member based on Role field in OrgMembership.
 	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
 	// RemoveMember removes user from the organization.

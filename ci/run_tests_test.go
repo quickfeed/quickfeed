@@ -47,11 +47,7 @@ func testRunData(t *testing.T) *ci.RunData {
 
 	qfTestOrg := scm.GetTestOrganization(t)
 	// Only used to fetch the user's GitHub login (user name)
-	s := scm.GetTestSCM(t)
-	userName, err := s.GetUserName(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
+	userName := scm.GetTestUser(t)
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)

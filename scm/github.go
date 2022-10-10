@@ -595,15 +595,6 @@ func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) er
 	return nil
 }
 
-// GetUserName implements the SCM interface.
-func (s *GithubSCM) GetUserName(ctx context.Context) (string, error) {
-	user, _, err := s.client.Users.Get(ctx, "")
-	if err != nil {
-		return "", fmt.Errorf("GetUserName: failed to get GitHub user: %w", err)
-	}
-	return user.GetLogin(), nil
-}
-
 // UpdateOrgMembership implements the SCM interface
 func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
 	if !opt.valid() {

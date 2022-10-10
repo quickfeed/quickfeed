@@ -300,11 +300,6 @@ func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error 
 	return nil
 }
 
-// GetUserName implements the SCM interface.
-func (*MockSCM) GetUserName(_ context.Context) (string, error) {
-	return "", nil
-}
-
 // UpdateOrgMembership implements the SCM interface
 func (s *MockSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
 	if !opt.valid() {
