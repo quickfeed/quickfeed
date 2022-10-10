@@ -39,6 +39,10 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	}
 	wh.logger.Debugf("For course(%d)=%v", course.GetID(), course.GetName())
 
+	if repo.IsStudentRepo() {
+		wh.updateLastActivityDate(course, repo, payload.GetSender().GetLogin())
+	}
+
 	ctx := context.Background()
 	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetOrganizationName())
 	if err != nil {
@@ -67,7 +71,6 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 
 	case repo.IsUserRepo():
 		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
-		wh.updateLastActivityDate(repo.UserID, course.ID)
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
 			if !assignment.IsGroupLab {
@@ -80,12 +83,6 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 
 	case repo.IsGroupRepo():
 		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
-		jobOwner, err := wh.db.GetUserByCourse(course, payload.GetSender().GetLogin())
-		if err != nil {
-			wh.logger.Errorf("Failed to find user %s in course %s: %v", payload.GetSender().GetLogin(), course.GetName(), err)
-			return
-		}
-		wh.updateLastActivityDate(jobOwner.ID, course.ID)
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
 			if assignment.IsGroupLab {
@@ -247,15 +244,24 @@ func (wh GitHubWebHook) runAssignmentTests(sc scm.SCM, assignment *qf.Assignment
 
 // updateLastActivityDate sets a current date as a last activity date of the student
 // on each new push to the student repository.
-func (wh GitHubWebHook) updateLastActivityDate(userID, courseID uint64) {
+func (wh GitHubWebHook) updateLastActivityDate(course *qf.Course, repo *qf.Repository, login string) {
 	query := &qf.Enrollment{
-		UserID:           userID,
-		CourseID:         courseID,
+		UserID:           repo.UserID,
+		CourseID:         course.ID,
 		LastActivityDate: time.Now().Format("02 Jan"),
 	}
 
+	if repo.IsGroupRepo() {
+		user, err := wh.db.GetUserByCourse(course, login)
+		if err != nil {
+			wh.logger.Errorf("Failed to find user %s in course %s: %v", login, course.GetName(), err)
+			return
+		}
+		query.UserID = user.ID
+	}
+
 	if err := wh.db.UpdateEnrollment(query); err != nil {
-		wh.logger.Errorf("Failed to update the last activity date for user %d: %v", userID, err)
+		wh.logger.Errorf("Failed to update the last activity date for user %d: %v", query.UserID, err)
 	}
 }
 
