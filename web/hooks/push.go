@@ -27,6 +27,11 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	}
 	wh.logger.Debugf("Received push event for repository %v", repo)
 
+	if !isDefaultBranch(payload) && !repo.IsGroupRepo() {
+		wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
+		return
+	}
+
 	course, err := wh.db.GetCourseByOrganizationID(repo.OrganizationID)
 	if err != nil {
 		wh.logger.Errorf("Failed to get course from database: %v", err)
@@ -43,19 +48,11 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 
 	switch {
 	case repo.IsTestsRepo():
-		if !isDefaultBranch(payload) {
-			wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
-			return
-		}
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
 		assignments.UpdateFromTestsRepo(wh.logger, wh.db, sc, course)
 
 	case repo.IsAssignmentsRepo():
-		if !isDefaultBranch(payload) {
-			wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
-			return
-		}
 		// the push event is for the 'assignments' repo; we need to update the local working copy
 		clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
 			Organization: course.GetOrganizationName(),
@@ -70,10 +67,6 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 
 	case repo.IsUserRepo():
 		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
-		if !isDefaultBranch(payload) {
-			wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
-			return
-		}
 		wh.updateLastActivityDate(repo.UserID, course.ID)
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
