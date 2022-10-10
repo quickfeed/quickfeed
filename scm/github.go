@@ -572,15 +572,6 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOption
 	return nil
 }
 
-// CreateCloneURL implements the SCM interface.
-func (s *GithubSCM) CreateCloneURL(opt *URLPathOptions) string {
-	token := s.token
-	if len(opt.UserToken) > 0 {
-		token = opt.UserToken
-	}
-	return "https://" + token + "@github.com/" + opt.Organization + "/" + opt.Repository + ".git"
-}
-
 // AddTeamRepo implements the SCM interface.
 func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
 	if !opt.valid() {
@@ -602,24 +593,6 @@ func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) er
 		}
 	}
 	return nil
-}
-
-// GetUserName implements the SCM interface.
-func (s *GithubSCM) GetUserName(ctx context.Context) (string, error) {
-	user, _, err := s.client.Users.Get(ctx, "")
-	if err != nil {
-		return "", fmt.Errorf("GetUserName: failed to get GitHub user: %w", err)
-	}
-	return user.GetLogin(), nil
-}
-
-// GetUserNameByID implements the SCM interface.
-func (s *GithubSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string, error) {
-	user, _, err := s.client.Users.GetByID(ctx, int64(remoteID))
-	if err != nil {
-		return "", fmt.Errorf("GetUserNameByID: failed to get GitHub user '%d': %w", remoteID, err)
-	}
-	return user.GetLogin(), nil
 }
 
 // UpdateOrgMembership implements the SCM interface
