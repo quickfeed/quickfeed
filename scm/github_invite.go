@@ -33,6 +33,15 @@ func (inviteSCM *GithubInviteSCM) AcceptInvite(ctx context.Context, inviteID int
 	return nil
 }
 
+func (inviteSCM *GithubInviteSCM) AcceptOrganizationInvite(ctx context.Context, orgName string) error {
+	state := "active"
+	_, _, err := inviteSCM.client.Organizations.EditOrgMembership(ctx, "", orgName, &github.Membership{State: &state})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // AcceptRepositoryInvites implements the SCMInvite interface
 func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) error {
 	if !opt.valid() {
@@ -66,6 +75,13 @@ func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *Repository
 					Message:  fmt.Sprintf("failed to accept invitation for repo: %s", invite.Repo.GetName()),
 				}
 			}
+		}
+	}
+	if err := opt.UserSCM.AcceptOrganizationInvite(ctx, opt.Owner); err != nil {
+		return ErrFailedSCM{
+			GitError: fmt.Errorf("failed to accept GitHub organization invitation: %w", err),
+			Method:   "AcceptOrganizationInvite",
+			Message:  fmt.Sprintf("failed to accept organization invite for org: %s, user: %s", opt.Owner, opt.Login),
 		}
 	}
 	return nil

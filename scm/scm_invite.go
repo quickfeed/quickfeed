@@ -6,6 +6,7 @@ import (
 
 type SCMInvite interface {
 	AcceptInvite(ctx context.Context, inviteID int64) error
+	AcceptOrganizationInvite(ctx context.Context, orgName string) error
 }
 
 // RepositoryInvitationOptions contains information on which organization and user to accept invitations for.
