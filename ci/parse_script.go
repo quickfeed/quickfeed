@@ -58,7 +58,7 @@ func EnvVars(sessionSecret, home, repoName, currentAssignment string) []string {
 	envMap := map[string]string{
 		"HOME":        home,
 		"TESTS":       filepath.Join(home, qf.TestsRepo),
-		"ASSIGNMENTS": filepath.Join(home, qf.AssignmentRepo),
+		"ASSIGNMENTS": filepath.Join(home, qf.AssignmentsRepo),
 		"SUBMITTED":   filepath.Join(home, repoName),
 		"CURRENT":     currentAssignment,
 		secretEnvName: sessionSecret,
