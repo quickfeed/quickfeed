@@ -69,37 +69,23 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		}
 		wh.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
 
-	case repo.IsUserRepo():
-		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
+	case repo.IsStudentRepo():
+		wh.logger.Debugf("Processing push event for repo %s", payload.GetRepo().GetName())
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
-			if !assignment.IsGroupLab {
-				// only run non-group assignments
-				wh.runAssignmentTests(sc, assignment, repo, course, payload)
-			} else {
-				wh.logger.Debugf("Ignoring push to user repo %s for group assignment: %s", payload.GetRepo().GetName(), assignment.GetName())
+			results := wh.runAssignmentTests(sc, assignment, repo, course, payload)
+			// Non-default branch indicates push to a group repo.
+			if !isDefaultBranch(payload) && !assignment.GradedManually() {
+				// Attempt to find the pull request for the branch, if it exists,
+				// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
+				wh.handlePullRequestPush(payload, results, assignment, course, repo)
 			}
 		}
 
-	case repo.IsGroupRepo():
-		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
-		assignments := wh.extractAssignments(payload, course)
-		for _, assignment := range assignments {
-			if assignment.IsGroupLab {
-				// only run group assignments
-				results := wh.runAssignmentTests(sc, assignment, repo, course, payload)
-				if !isDefaultBranch(payload) && !assignment.GradedManually() {
-					// Attempt to find the pull request for the branch, if it exists,
-					// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
-					wh.handlePullRequestPush(payload, results, assignment, course, repo)
-				}
-			} else {
-				wh.logger.Debugf("Ignoring push to group repo %s for user assignment: %s", payload.GetRepo().GetName(), assignment.GetName())
-			}
-		}
 	default:
 		wh.logger.Debug("Nothing to do for this push event")
 	}
+
 }
 
 // handlePullRequestPush attempts to find a pull request associated with a non-default branch push event.
