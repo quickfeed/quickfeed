@@ -37,7 +37,7 @@ func TestMockClone(t *testing.T) {
 			name: "assignments repository",
 			opt: &scm.CloneOptions{
 				Organization: qtest.MockOrg,
-				Repository:   qf.AssignmentRepo,
+				Repository:   qf.AssignmentsRepo,
 				DestDir:      dstDir,
 			},
 			wantPath: filepath.Join(dstDir, "assignments"),

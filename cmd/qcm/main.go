@@ -134,7 +134,7 @@ func clone(client scm.SCM, dstDir string) {
 	ctx := context.Background()
 	clonedAssignmentsRepo, err := client.Clone(ctx, &scm.CloneOptions{
 		Organization: cli.Clone.Course,
-		Repository:   qf.AssignmentRepo,
+		Repository:   qf.AssignmentsRepo,
 		DestDir:      dstDir,
 	})
 	check(err)

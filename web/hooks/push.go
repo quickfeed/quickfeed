@@ -59,11 +59,11 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		// the push event is for the 'assignments' repo; we need to update the local working copy
 		clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
 			Organization: course.GetOrganizationName(),
-			Repository:   qf.AssignmentRepo,
+			Repository:   qf.AssignmentsRepo,
 			DestDir:      course.CloneDir(),
 		})
 		if err != nil {
-			wh.logger.Errorf("Failed to clone '%s' repository: %v", qf.AssignmentRepo, err)
+			wh.logger.Errorf("Failed to clone '%s' repository: %v", qf.AssignmentsRepo, err)
 			return
 		}
 		wh.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)

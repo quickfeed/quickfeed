@@ -13,7 +13,7 @@ import (
 
 var (
 	repoNames = fmt.Sprintf("(%s, %s, %s)",
-		qf.InfoRepo, qf.AssignmentRepo, qf.TestsRepo)
+		qf.InfoRepo, qf.AssignmentsRepo, qf.TestsRepo)
 
 	// ErrAlreadyExists indicates that one or more QuickFeed repositories
 	// already exists for the directory (or GitHub organization).
@@ -238,7 +238,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *qf.Course, log
 }
 
 func grantAccessToCourseRepos(ctx context.Context, sc scm.SCM, org, login string) error {
-	commonRepos := []string{qf.InfoRepo, qf.AssignmentRepo}
+	commonRepos := []string{qf.InfoRepo, qf.AssignmentsRepo}
 
 	for _, repoType := range commonRepos {
 		if err := sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: org, Path: repoType}, login, scm.RepoPull); err != nil {

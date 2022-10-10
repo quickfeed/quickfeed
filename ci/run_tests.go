@@ -122,18 +122,24 @@ func (r RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {
 		return fmt.Errorf("failed to clone %q repository: %w", r.Repo.Name(), err)
 	}
 
+	// Clone the course's tests and assignments repositories if they are missing.
+	// Cloning is only needed when the quickfeed server has not yet received a push event
+	// for a course's tests or assignments repositories or an UpdateAssignment request.
+	if err := cloneMissingRepositories(ctx, sc, r.Course); err != nil {
+		return err
+	}
+
 	// Check that all repositories contains the current assignment
 	currentAssignment := r.Assignment.GetName()
 	testsDir := filepath.Join(r.Course.CloneDir(), qf.TestsRepo)
-	assignmentDir := filepath.Join(r.Course.CloneDir(), qf.AssignmentRepo)
+	assignmentDir := filepath.Join(r.Course.CloneDir(), qf.AssignmentsRepo)
 	for _, repoDir := range []string{clonedStudentRepo, testsDir, assignmentDir} {
 		if err := hasAssignment(repoDir, currentAssignment); err != nil {
 			return err
 		}
 	}
 	// Copy the tests and assignment repos to the destination directory
-	err = fileop.CopyDir(testsDir, dstDir)
-	if err != nil {
+	if err = fileop.CopyDir(testsDir, dstDir); err != nil {
 		return err
 	}
 	return fileop.CopyDir(assignmentDir, dstDir)

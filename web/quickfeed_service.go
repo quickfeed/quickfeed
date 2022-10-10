@@ -548,11 +548,11 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Re
 
 	clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
 		Organization: course.GetOrganizationName(),
-		Repository:   qf.AssignmentRepo,
+		Repository:   qf.AssignmentsRepo,
 		DestDir:      course.CloneDir(),
 	})
 	if err != nil {
-		s.logger.Errorf("Failed to clone '%s' repository: %v", qf.AssignmentRepo, err)
+		s.logger.Errorf("Failed to clone '%s' repository: %v", qf.AssignmentsRepo, err)
 		return nil, err
 	}
 	s.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
