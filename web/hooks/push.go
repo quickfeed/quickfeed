@@ -27,7 +27,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	}
 	wh.logger.Debugf("Received push event for repository %v", repo)
 
-	if !(isDefaultBranch(payload) || repo.IsGroupRepo()) {
+	if !isDefaultBranch(payload) && !repo.IsGroupRepo() {
 		wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
 		return
 	}
@@ -73,19 +73,12 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		wh.logger.Debugf("Processing push event for repo %s", payload.GetRepo().GetName())
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
-			results := wh.runAssignmentTests(sc, assignment, repo, course, payload)
-			// Non-default branch indicates push to a group repo.
-			if !isDefaultBranch(payload) && !assignment.GradedManually() {
-				// Attempt to find the pull request for the branch, if it exists,
-				// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
-				wh.handlePullRequestPush(payload, results, assignment, course, repo)
-			}
+			wh.runAssignmentTests(sc, assignment, repo, course, payload)
 		}
 
 	default:
 		wh.logger.Debug("Nothing to do for this push event")
 	}
-
 }
 
 // handlePullRequestPush attempts to find a pull request associated with a non-default branch push event.
@@ -198,7 +191,7 @@ func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *qf
 }
 
 // runAssignmentTests runs the tests for the given assignment pushed to repo.
-func (wh GitHubWebHook) runAssignmentTests(sc scm.SCM, assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) *score.Results {
+func (wh GitHubWebHook) runAssignmentTests(sc scm.SCM, assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) {
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
@@ -212,20 +205,25 @@ func (wh GitHubWebHook) runAssignmentTests(sc scm.SCM, assignment *qf.Assignment
 		if _, err := runData.RecordResults(wh.logger, wh.db, nil); err != nil {
 			wh.logger.Error(err)
 		}
-		return nil
+		return
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
 	results, err := runData.RunTests(ctx, wh.logger, sc, wh.runner)
 	if err != nil {
 		wh.logger.Error(err)
-		return nil
+		return
 	}
 	if _, err = runData.RecordResults(wh.logger, wh.db, results); err != nil {
 		wh.logger.Error(err)
-		return nil
+		return
 	}
-	return results
+	// Non-default branch indicates push to a group repo.
+	if !isDefaultBranch(payload) {
+		// Attempt to find the pull request for the branch, if it exists,
+		// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
+		wh.handlePullRequestPush(payload, results, assignment, course, repo)
+	}
 }
 
 // updateLastActivityDate sets a current date as a last activity date of the student
