@@ -277,6 +277,11 @@ func form(w http.ResponseWriter, domain string) error {
 				"organization_administration": "write",
 				"pull_requests": "write",
 			},
+			"default_events": [
+				"push",
+				"pull_request",
+				"pull_request_review"
+			]
 		})
 		document.getElementById('create').submit()
 	</script>
