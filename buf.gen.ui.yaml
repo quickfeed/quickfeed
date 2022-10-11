@@ -9,11 +9,10 @@ plugins:
     out: public/gen
     opt: target=ts
   - remote: buf.build/protocolbuffers/plugins/js:v3.20.1-1
-    out: ./public/proto
+    out: public/proto
     opt: import_style=commonjs,binary
   - remote: buf.build/grpc/plugins/web:v1.4.1-1
     out: public/proto
-    opt: 
+    opt:
       - import_style=typescript,
       - mode=grpcweb
-
