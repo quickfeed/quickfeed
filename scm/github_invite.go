@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/go-github/v45/github"
+	"github.com/quickfeed/quickfeed/qf"
 	"golang.org/x/oauth2"
 )
 
@@ -27,24 +28,29 @@ func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *Repository
 	}
 
 	userSCM := newGithubInviteClient(opt.Token)
-	repoInvites, _, err := userSCM.Users.ListInvitations(ctx, &github.ListOptions{})
-	if err != nil {
-		return ErrFailedSCM{
-			GitError: fmt.Errorf("failed to fetch GitHub repository invitations: %w", err),
-			Method:   "AcceptRepositoryInvites",
-			Message:  "failed to fetch GitHub repository invitations",
-		}
-	}
-	for _, invite := range repoInvites {
-		repo := invite.GetRepo()
-		if repo == nil || repo.GetOwner() == nil || repo.GetOwner().Login != &opt.Owner {
-			continue
-		}
-		if _, err := userSCM.Users.AcceptInvitation(ctx, invite.GetID()); err != nil {
+	for _, repo := range []string{qf.InfoRepo, qf.AssignmentsRepo, qf.StudentRepoName(opt.Login)} {
+		// Important: Get repository invitations using the GitHub App client.
+		repoInvites, _, err := s.client.Repositories.ListInvitations(ctx, opt.Owner, repo, &github.ListOptions{})
+		if err != nil {
 			return ErrFailedSCM{
-				GitError: fmt.Errorf("failed to accept GitHub repository invitation: %w", err),
+				GitError: fmt.Errorf("failed to fetch GitHub repository invitations: %w", err),
 				Method:   "AcceptRepositoryInvites",
-				Message:  fmt.Sprintf("failed to accept invitation for repo: %s", invite.Repo.GetName()),
+				Message:  "failed to fetch GitHub repository invitations",
+			}
+		}
+
+		for _, invite := range repoInvites {
+			if invite.Invitee.GetLogin() != opt.Login {
+				// Ignore unrelated invites
+				continue
+			}
+			// Important: Accept repository invitations using the user-specific GitHub client.
+			if _, err := userSCM.Users.AcceptInvitation(ctx, invite.GetID()); err != nil {
+				return ErrFailedSCM{
+					GitError: fmt.Errorf("failed to accept GitHub repository invitation: %w", err),
+					Method:   "AcceptRepositoryInvites",
+					Message:  fmt.Sprintf("failed to accept invitation for repo: %s", invite.Repo.GetName()),
+				}
 			}
 		}
 	}
