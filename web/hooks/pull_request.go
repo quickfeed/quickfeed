@@ -32,7 +32,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	taskSum := results.TaskSum(taskName)
 
 	ctx := context.Background()
-	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.OrganizationName)
+	scmClient, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.OrganizationName)
 	if err != nil {
 		wh.logger.Errorf("Failed to create SCM Client: %v", err)
 		return
@@ -43,7 +43,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	scoreLimit := assignment.GetScoreLimit()
 	if taskSum >= scoreLimit && !pullRequest.HasReviewers() {
 		wh.logger.Debugf("Assigning reviewers to pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
-		if err := assignments.AssignReviewers(ctx, sc, wh.db, course, repo, pullRequest); err != nil {
+		if err := assignments.AssignReviewers(ctx, scmClient, wh.db, course, repo, pullRequest); err != nil {
 			wh.logger.Errorf("Failed to assign reviewers to pull request: %v", err)
 			return
 		}
@@ -58,7 +58,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 	}
 	wh.logger.Debugf("Creating feedback comment on pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
 	if !pullRequest.HasFeedbackComment() {
-		commentID, err := sc.CreateIssueComment(ctx, opt)
+		commentID, err := scmClient.CreateIssueComment(ctx, opt)
 		if err != nil {
 			wh.logger.Errorf("Failed to create feedback comment for pull request #%d, in repository", pullRequest.GetNumber(), repo.Name())
 			return
@@ -70,7 +70,7 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 		}
 	} else {
 		opt.CommentID = int64(pullRequest.GetScmCommentID())
-		if err := sc.UpdateIssueComment(ctx, opt); err != nil {
+		if err := scmClient.UpdateIssueComment(ctx, opt); err != nil {
 			wh.logger.Errorf("Failed to update feedback comment for pull request #%d, in repository", pullRequest.GetNumber(), repo.Name())
 			return
 		}
