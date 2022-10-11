@@ -133,7 +133,7 @@ func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Ass
 	if !isDefaultBranch(payload) {
 		// Attempt to find the pull request for the branch, if it exists,
 		// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
-		wh.handlePullRequestPush(ctx, scmClient, payload, results, assignment, course, repo)
+		wh.handlePullRequestPush(ctx, scmClient, payload, results, runData)
 	}
 }
 

@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/assignments"
+	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -20,7 +21,7 @@ import (
 // If successful, it then finds the relevant task, and uses it to retrieve the relevant task score.
 // If a passing score is reached, it assigns reviewers to the pull request.
 // It also uses the test results and task to generate a feedback comment for the pull request.
-func (wh GitHubWebHook) handlePullRequestPush(ctx context.Context, scmClient scm.SCM, payload *github.PushEvent, results *score.Results, assignment *qf.Assignment, course *qf.Course, repo *qf.Repository) {
+func (wh GitHubWebHook) handlePullRequestPush(ctx context.Context, scmClient scm.SCM, payload *github.PushEvent, results *score.Results, rd *ci.RunData) {
 	wh.logger.Debugf("Attempting to find pull request for ref: %s, in repository: %s",
 		payload.GetRef(), payload.GetRepo().GetFullName())
 
@@ -31,12 +32,14 @@ func (wh GitHubWebHook) handlePullRequestPush(ctx context.Context, scmClient scm
 	}
 	taskSum := results.TaskSum(taskName)
 
+	repoName := rd.Repo.Name()
+	prNumber := pullRequest.GetNumber()
 	// We assign reviewers to a pull request when the tests associated with it score above the assignment score limit
 	// We do not assign reviewers if the pull request has already been assigned reviewers
-	scoreLimit := assignment.GetScoreLimit()
+	scoreLimit := rd.Assignment.GetScoreLimit()
 	if taskSum >= scoreLimit && !pullRequest.HasReviewers() {
-		wh.logger.Debugf("Assigning reviewers to pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
-		if err := assignments.AssignReviewers(ctx, scmClient, wh.db, course, repo, pullRequest); err != nil {
+		wh.logger.Debugf("Assigning reviewers to pull request #%d, in repository: %s", prNumber, repoName)
+		if err := assignments.AssignReviewers(ctx, scmClient, wh.db, rd.Course, rd.Repo, pullRequest); err != nil {
 			wh.logger.Errorf("Failed to assign reviewers to pull request: %v", err)
 			return
 		}
@@ -44,16 +47,16 @@ func (wh GitHubWebHook) handlePullRequestPush(ctx context.Context, scmClient scm
 
 	// Create a test results feedback comment on the pull request
 	opt := &scm.IssueCommentOptions{
-		Organization: course.GetOrganizationName(),
-		Repository:   repo.Name(),
+		Organization: rd.Course.GetOrganizationName(),
+		Repository:   repoName,
 		Body:         results.MarkdownComment(taskName, scoreLimit),
-		Number:       int(pullRequest.GetNumber()),
+		Number:       int(prNumber),
 	}
-	wh.logger.Debugf("Creating feedback comment on pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
+	wh.logger.Debugf("Creating feedback comment on pull request #%d, in repository: %s", prNumber, repoName)
 	if !pullRequest.HasFeedbackComment() {
 		commentID, err := scmClient.CreateIssueComment(ctx, opt)
 		if err != nil {
-			wh.logger.Errorf("Failed to create feedback comment for pull request #%d, in repository", pullRequest.GetNumber(), repo.Name())
+			wh.logger.Errorf("Failed to create feedback comment for pull request #%d, in repository", prNumber, repoName)
 			return
 		}
 		pullRequest.ScmCommentID = uint64(commentID)
@@ -64,11 +67,11 @@ func (wh GitHubWebHook) handlePullRequestPush(ctx context.Context, scmClient scm
 	} else {
 		opt.CommentID = int64(pullRequest.GetScmCommentID())
 		if err := scmClient.UpdateIssueComment(ctx, opt); err != nil {
-			wh.logger.Errorf("Failed to update feedback comment for pull request #%d, in repository", pullRequest.GetNumber(), repo.Name())
+			wh.logger.Errorf("Failed to update feedback comment for pull request #%d, in repository", prNumber, repoName)
 			return
 		}
 	}
-	wh.logger.Debugf("Successfully handled push to pull request #%d, in repository: %s", pullRequest.GetNumber(), repo.Name())
+	wh.logger.Debugf("Successfully handled push to pull request #%d, in repository: %s", prNumber, repoName)
 }
 
 // handlePullRequestPushPayload retrieves the pull request and task name associated with it from an event payload.
