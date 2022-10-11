@@ -25,12 +25,17 @@ func (wh GitHubWebHook) handlePullRequestPush(ctx context.Context, scmClient scm
 	wh.logger.Debugf("Attempting to find pull request for ref: %s, in repository: %s",
 		payload.GetRef(), payload.GetRepo().GetFullName())
 
-	pullRequest, taskName, err := wh.handlePullRequestPushPayload(payload)
+	pullRequest, err := wh.getPullRequest(payload)
 	if err != nil {
 		wh.logger.Errorf("Failed to retrieve pull request data from push payload: %v", err)
 		return
 	}
-	taskSum := results.TaskSum(taskName)
+	task, err := wh.getTask(pullRequest.GetTaskID())
+	if err != nil {
+		wh.logger.Errorf("Failed to get task from the database: %v", err)
+		return
+	}
+	taskSum := results.TaskSum(task.GetName())
 
 	repoName := rd.Repo.Name()
 	prNumber := pullRequest.GetNumber()
@@ -49,7 +54,7 @@ func (wh GitHubWebHook) handlePullRequestPush(ctx context.Context, scmClient scm
 	opt := &scm.IssueCommentOptions{
 		Organization: rd.Course.GetOrganizationName(),
 		Repository:   repoName,
-		Body:         results.MarkdownComment(taskName, scoreLimit),
+		Body:         results.MarkdownComment(task.GetName(), scoreLimit),
 		Number:       int(prNumber),
 	}
 	wh.logger.Debugf("Creating feedback comment on pull request #%d, in repository: %s", prNumber, repoName)
@@ -74,8 +79,8 @@ func (wh GitHubWebHook) handlePullRequestPush(ctx context.Context, scmClient scm
 	wh.logger.Debugf("Successfully handled push to pull request #%d, in repository: %s", prNumber, repoName)
 }
 
-// handlePullRequestPushPayload retrieves the pull request and task name associated with it from an event payload.
-func (wh GitHubWebHook) handlePullRequestPushPayload(payload *github.PushEvent) (*qf.PullRequest, string, error) {
+// getPullRequest retrieves the pull request from the database based on the push event payload.
+func (wh GitHubWebHook) getPullRequest(payload *github.PushEvent) (*qf.PullRequest, error) {
 	pullRequest, err := wh.db.GetPullRequest(&qf.PullRequest{
 		SourceBranch:    branchName(payload.GetRef()),
 		ScmRepositoryID: uint64(payload.GetRepo().GetID()),
@@ -84,17 +89,11 @@ func (wh GitHubWebHook) handlePullRequestPushPayload(payload *github.PushEvent) 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// This can happen if someone pushes to a branch group assignment, without having a PR created for it
 			// If this happens, QF should not do anything
-			return nil, "", fmt.Errorf("no pull request found for ref: %s", payload.GetRef())
+			return nil, fmt.Errorf("no pull request found for ref: %s", payload.GetRef())
 		}
-		return nil, "", fmt.Errorf("failed to get pull request from database: %v", err)
+		return nil, fmt.Errorf("failed to get pull request from database: %v", err)
 	}
-	associatedTask, err := wh.getTask(pullRequest.GetTaskID())
-	if err != nil {
-		// A pull request should always have a task association
-		// If not, something must have gone wrong elsewhere
-		return nil, "", fmt.Errorf("failed to get task from the database: %w", err)
-	}
-	return pullRequest, associatedTask.GetName(), nil
+	return pullRequest, nil
 }
 
 func (wh GitHubWebHook) handlePullRequestReview(payload *github.PullRequestReviewEvent) {
