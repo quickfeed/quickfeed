@@ -5,41 +5,16 @@ import (
 	"fmt"
 
 	"github.com/google/go-github/v45/github"
-	"github.com/quickfeed/quickfeed/qf"
 	"golang.org/x/oauth2"
 )
 
-// GithubSCM implements the SCM interface.
-type GithubInviteSCM struct {
-	client *github.Client
-}
-
 // newGithubSCMClient returns a new Github client implementing the SCMInvite interface.
-func newGithubInviteClient(token string) *GithubInviteSCM {
+func newGithubInviteClient(token string) *github.Client {
 	src := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
 	httpClient := oauth2.NewClient(context.Background(), src)
-	return &GithubInviteSCM{
-		client: github.NewClient(httpClient),
-	}
-}
-
-func (inviteSCM *GithubInviteSCM) AcceptInvite(ctx context.Context, inviteID int64) error {
-	_, err := inviteSCM.client.Users.AcceptInvitation(ctx, inviteID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (inviteSCM *GithubInviteSCM) AcceptOrganizationInvite(ctx context.Context, orgName string) error {
-	state := "active"
-	_, _, err := inviteSCM.client.Organizations.EditOrgMembership(ctx, "", orgName, &github.Membership{State: &state})
-	if err != nil {
-		return err
-	}
-	return nil
+	return github.NewClient(httpClient)
 }
 
 // AcceptRepositoryInvites implements the SCMInvite interface
