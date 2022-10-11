@@ -26,33 +26,31 @@ func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *Repository
 		}
 	}
 
-	for _, repo := range []string{qf.InfoRepo, qf.AssignmentsRepo, qf.StudentRepoName(opt.Login)} {
-		// Important: Get repository invitations using the GitHub App client.
-		repoInvites, _, err := s.client.Repositories.ListInvitations(ctx, opt.Owner, repo, &github.ListOptions{})
-		if err != nil {
-			return ErrFailedSCM{
-				GitError: fmt.Errorf("failed to fetch GitHub repository invitations: %w", err),
-				Method:   "AcceptRepositoryInvites",
-				Message:  "failed to fetch GitHub repository invitations",
-			}
+	userSCM := newGithubInviteClient(opt.Token)
+	repoInvites, _, err := userSCM.Users.ListInvitations(ctx, &github.ListOptions{})
+	if err != nil {
+		return ErrFailedSCM{
+			GitError: fmt.Errorf("failed to fetch GitHub repository invitations: %w", err),
+			Method:   "AcceptRepositoryInvites",
+			Message:  "failed to fetch GitHub repository invitations",
 		}
-
-		for _, invite := range repoInvites {
-			if invite.Invitee.GetLogin() != opt.Login {
-				// Ignore unrelated invites
-				continue
-			}
-			// Important: Accept repository invitations using the user-specific GitHub client.
-			if err := opt.UserSCM.AcceptInvite(ctx, invite.GetID()); err != nil {
-				return ErrFailedSCM{
-					GitError: fmt.Errorf("failed to accept GitHub repository invitation: %w", err),
-					Method:   "AcceptRepositoryInvites",
-					Message:  fmt.Sprintf("failed to accept invitation for repo: %s", invite.Repo.GetName()),
-				}
+	}
+	for _, invite := range repoInvites {
+		repo := invite.GetRepo()
+		if repo == nil || repo.GetOwner() == nil || repo.GetOwner().Login != &opt.Owner {
+			continue
+		}
+		if _, err := userSCM.Users.AcceptInvitation(ctx, invite.GetID()); err != nil {
+			return ErrFailedSCM{
+				GitError: fmt.Errorf("failed to accept GitHub repository invitation: %w", err),
+				Method:   "AcceptRepositoryInvites",
+				Message:  fmt.Sprintf("failed to accept invitation for repo: %s", invite.Repo.GetName()),
 			}
 		}
 	}
-	if err := opt.UserSCM.AcceptOrganizationInvite(ctx, opt.Owner); err != nil {
+
+	state := "active"
+	if _, _, err := userSCM.Organizations.EditOrgMembership(ctx, "", opt.Owner, &github.Membership{State: &state}); err != nil {
 		return ErrFailedSCM{
 			GitError: fmt.Errorf("failed to accept GitHub organization invitation: %w", err),
 			Method:   "AcceptOrganizationInvite",
