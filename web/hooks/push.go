@@ -27,12 +27,21 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	}
 	wh.logger.Debugf("Received push event for repository %v", repo)
 
+	if !isDefaultBranch(payload) && !repo.IsGroupRepo() {
+		wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
+		return
+	}
+
 	course, err := wh.db.GetCourseByOrganizationID(repo.OrganizationID)
 	if err != nil {
 		wh.logger.Errorf("Failed to get course from database: %v", err)
 		return
 	}
 	wh.logger.Debugf("For course(%d)=%v", course.GetID(), course.GetName())
+
+	if repo.IsStudentRepo() {
+		wh.updateLastActivityDate(course, repo, payload.GetSender().GetLogin())
+	}
 
 	ctx := context.Background()
 	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetOrganizationName())
@@ -43,19 +52,11 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 
 	switch {
 	case repo.IsTestsRepo():
-		if !isDefaultBranch(payload) {
-			wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
-			return
-		}
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
 		assignments.UpdateFromTestsRepo(wh.logger, wh.db, sc, course)
 
 	case repo.IsAssignmentsRepo():
-		if !isDefaultBranch(payload) {
-			wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
-			return
-		}
 		// the push event is for the 'assignments' repo; we need to update the local working copy
 		clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
 			Organization: course.GetOrganizationName(),
@@ -68,45 +69,13 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		}
 		wh.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
 
-	case repo.IsUserRepo():
-		wh.logger.Debugf("Processing push event for user repo %s", payload.GetRepo().GetName())
-		if !isDefaultBranch(payload) {
-			wh.logger.Debugf("Ignoring push event for non-default branch: %s", payload.GetRef())
-			return
-		}
-		wh.updateLastActivityDate(repo.UserID, course.ID)
+	case repo.IsStudentRepo():
+		wh.logger.Debugf("Processing push event for repo %s", payload.GetRepo().GetName())
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
-			if !assignment.IsGroupLab {
-				// only run non-group assignments
-				wh.runAssignmentTests(sc, assignment, repo, course, payload)
-			} else {
-				wh.logger.Debugf("Ignoring push to user repo %s for group assignment: %s", payload.GetRepo().GetName(), assignment.GetName())
-			}
+			wh.runAssignmentTests(sc, assignment, repo, course, payload)
 		}
 
-	case repo.IsGroupRepo():
-		wh.logger.Debugf("Processing push event for group repo %s", payload.GetRepo().GetName())
-		jobOwner, err := wh.db.GetUserByCourse(course, payload.GetSender().GetLogin())
-		if err != nil {
-			wh.logger.Errorf("Failed to find user %s in course %s: %v", payload.GetSender().GetLogin(), course.GetName(), err)
-			return
-		}
-		wh.updateLastActivityDate(jobOwner.ID, course.ID)
-		assignments := wh.extractAssignments(payload, course)
-		for _, assignment := range assignments {
-			if assignment.IsGroupLab {
-				// only run group assignments
-				results := wh.runAssignmentTests(sc, assignment, repo, course, payload)
-				if !isDefaultBranch(payload) && !assignment.GradedManually() {
-					// Attempt to find the pull request for the branch, if it exists,
-					// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
-					wh.handlePullRequestPush(payload, results, assignment, course, repo)
-				}
-			} else {
-				wh.logger.Debugf("Ignoring push to group repo %s for user assignment: %s", payload.GetRepo().GetName(), assignment.GetName())
-			}
-		}
 	default:
 		wh.logger.Debug("Nothing to do for this push event")
 	}
@@ -222,7 +191,7 @@ func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *qf
 }
 
 // runAssignmentTests runs the tests for the given assignment pushed to repo.
-func (wh GitHubWebHook) runAssignmentTests(sc scm.SCM, assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) *score.Results {
+func (wh GitHubWebHook) runAssignmentTests(sc scm.SCM, assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) {
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
@@ -236,33 +205,47 @@ func (wh GitHubWebHook) runAssignmentTests(sc scm.SCM, assignment *qf.Assignment
 		if _, err := runData.RecordResults(wh.logger, wh.db, nil); err != nil {
 			wh.logger.Error(err)
 		}
-		return nil
+		return
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
 	results, err := runData.RunTests(ctx, wh.logger, sc, wh.runner)
 	if err != nil {
 		wh.logger.Error(err)
-		return nil
+		return
 	}
 	if _, err = runData.RecordResults(wh.logger, wh.db, results); err != nil {
 		wh.logger.Error(err)
-		return nil
+		return
 	}
-	return results
+	// Non-default branch indicates push to a group repo.
+	if !isDefaultBranch(payload) {
+		// Attempt to find the pull request for the branch, if it exists,
+		// and then assign reviewers to it, if the branch task score is higher than the assignment score limit
+		wh.handlePullRequestPush(payload, results, assignment, course, repo)
+	}
 }
 
 // updateLastActivityDate sets a current date as a last activity date of the student
 // on each new push to the student repository.
-func (wh GitHubWebHook) updateLastActivityDate(userID, courseID uint64) {
+func (wh GitHubWebHook) updateLastActivityDate(course *qf.Course, repo *qf.Repository, login string) {
 	query := &qf.Enrollment{
-		UserID:           userID,
-		CourseID:         courseID,
+		UserID:           repo.UserID,
+		CourseID:         course.ID,
 		LastActivityDate: time.Now().Format("02 Jan"),
 	}
 
+	if repo.IsGroupRepo() {
+		user, err := wh.db.GetUserByCourse(course, login)
+		if err != nil {
+			wh.logger.Errorf("Failed to find user %s in course %s: %v", login, course.GetName(), err)
+			return
+		}
+		query.UserID = user.ID
+	}
+
 	if err := wh.db.UpdateEnrollment(query); err != nil {
-		wh.logger.Errorf("Failed to update the last activity date for user %d: %v", userID, err)
+		wh.logger.Errorf("Failed to update the last activity date for user %d: %v", query.UserID, err)
 	}
 }
 
