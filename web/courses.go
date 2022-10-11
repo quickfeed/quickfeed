@@ -432,14 +432,14 @@ func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp s
 	if err != nil {
 		return fmt.Errorf("failed to get user %d: %w", user.ID, err)
 	}
-	userSCM, err := s.getSCMForUser(user)
+	userToken, err := s.getCredsForUserSCM(user)
 	if err != nil {
 		return fmt.Errorf("failed to get SCM for user %d: %w", user.ID, err)
 	}
 	if err := scmApp.AcceptRepositoryInvites(ctx, &scm.RepositoryInvitationOptions{
-		Login:   user.GetLogin(),
-		Owner:   organizationName,
-		UserSCM: userSCM,
+		Login: user.GetLogin(),
+		Owner: organizationName,
+		Token: userToken,
 	}); err != nil {
 		return fmt.Errorf("failed to get repository invites for %s: %w", user.Login, err)
 	}
