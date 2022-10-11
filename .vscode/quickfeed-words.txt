@@ -1,5 +1,6 @@
 addstore
 agpath
+alecthomas
 allstudents
 allteachers
 apitest
@@ -40,6 +41,7 @@ Errorf
 espeland
 excelize
 extendee
+fileop
 Frøyland
 fullchain
 Getwd
@@ -50,6 +52,7 @@ Godkjent
 gofumports
 gofumpt
 golangci
+Gollum
 googleapis
 gopath
 gopb
@@ -139,9 +142,11 @@ qfconnect
 qlog
 qtest
 quickfeed
+Radagast
 Repos
 repotoken
 run
+Sauron
 scms
 scorelimit
 scriptfile
@@ -182,6 +187,7 @@ verdana
 webpack's
 wojtekmaj
 WORKDIR
+Worktree
 xanzy
 xargs
 xini

@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"os"
 	"path/filepath"
 
+	"github.com/quickfeed/quickfeed/internal/env"
+	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
 )
@@ -39,20 +40,19 @@ func NewMockSCMClient() *MockSCM {
 	return s
 }
 
+// Clone copies the repository in testdata to the given destination path.
 func (s MockSCM) Clone(ctx context.Context, opt *CloneOptions) (string, error) {
 	if _, err := s.GetOrganization(ctx, &GetOrgOptions{
 		Name: opt.Organization,
 	}); err != nil {
 		return "", err
 	}
-	cloneDir := filepath.Join("testdata", repoDir(opt))
-	// This is a hack to make sure the lab1 directory exists,
-	// required by the web/rebuild_test.go:TestRebuildSubmissions()
-	lab1Dir := filepath.Join(cloneDir, "lab1")
-	err := os.MkdirAll(lab1Dir, 0o700)
-	if err != nil {
+	// Simulate cloning by copying the testdata repository to the destination path.
+	testdataSrc := filepath.Join(env.Root(), "testdata", "courses", opt.Organization, opt.Repository)
+	if err := fileop.CopyDir(testdataSrc, opt.DestDir); err != nil {
 		return "", err
 	}
+	cloneDir := filepath.Join(opt.DestDir, opt.Repository)
 	return cloneDir, nil
 }
 
@@ -282,11 +282,6 @@ func (s *MockSCM) UpdateTeamMembers(_ context.Context, opt *UpdateTeamOptions) e
 	return nil
 }
 
-// CreateCloneURL implements the SCM interface.
-func (*MockSCM) CreateCloneURL(_ *URLPathOptions) string {
-	return ""
-}
-
 // AddTeamRepo implements the SCM interface.
 func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error {
 	if !opt.valid() {
@@ -303,16 +298,6 @@ func (s *MockSCM) AddTeamRepo(_ context.Context, opt *AddTeamRepoOptions) error 
 	}
 	s.Repositories[repo.ID] = repo
 	return nil
-}
-
-// GetUserName implements the SCM interface.
-func (*MockSCM) GetUserName(_ context.Context) (string, error) {
-	return "", nil
-}
-
-// GetUserNameByID implements the SCM interface.
-func (*MockSCM) GetUserNameByID(_ context.Context, _ uint64) (string, error) {
-	return "", nil
 }
 
 // UpdateOrgMembership implements the SCM interface

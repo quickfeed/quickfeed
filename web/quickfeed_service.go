@@ -14,6 +14,7 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
 	"github.com/quickfeed/quickfeed/scm"
+	"github.com/quickfeed/quickfeed/web/stream"
 )
 
 // QuickFeedService holds references to the database and
@@ -25,16 +26,18 @@ type QuickFeedService struct {
 	bh     BaseHookOptions
 	runner ci.Runner
 	qfconnect.UnimplementedQuickFeedServiceHandler
+	streams *stream.StreamServices
 }
 
 // NewQuickFeedService returns a QuickFeedService object.
 func NewQuickFeedService(logger *zap.Logger, db database.Database, mgr *scm.Manager, bh BaseHookOptions, runner ci.Runner) *QuickFeedService {
 	return &QuickFeedService{
-		logger: logger.Sugar(),
-		db:     db,
-		scmMgr: mgr,
-		bh:     bh,
-		runner: runner,
+		logger:  logger.Sugar(),
+		db:      db,
+		scmMgr:  mgr,
+		bh:      bh,
+		runner:  runner,
+		streams: stream.NewStreamServices(),
 	}
 }
 
@@ -100,10 +103,9 @@ func (s *QuickFeedService) CreateCourse(ctx context.Context, in *connect.Request
 	course, err := s.createCourse(ctx, scmClient, in.Msg)
 	if err != nil {
 		s.logger.Errorf("CreateCourse failed: %v", err)
-		// errors informing about requested organization state will have code 9: FailedPrecondition
-		// error message will be displayed to the user
-		if contextCanceled(ctx) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+		if ctxErr := ctxErr(ctx); ctxErr != nil {
+			s.logger.Error(ctxErr)
+			return nil, ctxErr
 		}
 		if err == ErrAlreadyExists {
 			return nil, connect.NewError(connect.CodeAlreadyExists, err)
@@ -128,8 +130,9 @@ func (s *QuickFeedService) UpdateCourse(ctx context.Context, in *connect.Request
 	}
 	if err = s.updateCourse(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("UpdateCourse failed: %v", err)
-		if contextCanceled(ctx) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+		if ctxErr := ctxErr(ctx); ctxErr != nil {
+			s.logger.Error(ctxErr)
+			return nil, ctxErr
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
@@ -204,8 +207,9 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *connect.Re
 		}
 		if err = s.updateEnrollment(ctx, scmClient, usr.GetLogin(), enrollment); err != nil {
 			s.logger.Errorf("UpdateEnrollments failed: %v", err)
-			if contextCanceled(ctx) {
-				return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+			if ctxErr := ctxErr(ctx); ctxErr != nil {
+				s.logger.Error(ctxErr)
+				return nil, ctxErr
 			}
 			if ok, parsedErr := parseSCMError(err); ok {
 				return nil, parsedErr
@@ -310,8 +314,9 @@ func (s *QuickFeedService) UpdateGroup(ctx context.Context, in *connect.Request[
 	err = s.updateGroup(ctx, scmClient, in.Msg)
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: %v", err)
-		if contextCanceled(ctx) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+		if ctxErr := ctxErr(ctx); ctxErr != nil {
+			s.logger.Error(ctxErr)
+			return nil, ctxErr
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr
@@ -339,8 +344,9 @@ func (s *QuickFeedService) DeleteGroup(ctx context.Context, in *connect.Request[
 	}
 	if err = s.deleteGroup(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("DeleteGroup failed: %v", err)
-		if contextCanceled(ctx) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+		if ctxErr := ctxErr(ctx); ctxErr != nil {
+			s.logger.Error(ctxErr)
+			return nil, ctxErr
 		}
 		if ok, parsedErr := parseSCMError(errors.Unwrap(err)); ok {
 			return nil, parsedErr
@@ -391,10 +397,6 @@ func (s *QuickFeedService) GetSubmissionsByCourse(_ context.Context, in *connect
 
 // UpdateSubmission is called to approve the given submission or to undo approval.
 func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Request[qf.UpdateSubmissionRequest]) (*connect.Response[qf.Void], error) {
-	if !s.isValidSubmission(in.Msg.SubmissionID) {
-		s.logger.Errorf("UpdateSubmission failed: submission author has no access to the course")
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("submission author has no course access"))
-	}
 	err := s.updateSubmission(in.Msg.GetCourseID(), in.Msg.GetSubmissionID(), in.Msg.GetStatus(), in.Msg.GetReleased(), in.Msg.GetScore())
 	if err != nil {
 		s.logger.Errorf("UpdateSubmission failed: %v", err)
@@ -409,10 +411,6 @@ func (s *QuickFeedService) UpdateSubmission(_ context.Context, in *connect.Reque
 func (s *QuickFeedService) RebuildSubmissions(_ context.Context, in *connect.Request[qf.RebuildRequest]) (*connect.Response[qf.Void], error) {
 	if in.Msg.GetSubmissionID() > 0 {
 		// Submission ID > 0 ==> rebuild single submission for given CourseID and AssignmentID
-		if !s.isValidSubmission(in.Msg.GetSubmissionID()) {
-			s.logger.Errorf("RebuildSubmission failed: submitter has no access to the course")
-			return nil, connect.NewError(connect.CodePermissionDenied, errors.New("submitter has no course access"))
-		}
 		if _, err := s.rebuildSubmission(in.Msg); err != nil {
 			s.logger.Errorf("RebuildSubmission failed: %v", err)
 			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("failed to rebuild submission: %w", err))
@@ -535,13 +533,30 @@ func (s *QuickFeedService) GetAssignments(_ context.Context, in *connect.Request
 
 // UpdateAssignments updates the course's assignments record in the database
 // by fetching assignment information from the course's test repository.
-func (s *QuickFeedService) UpdateAssignments(_ context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error) {
+func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *connect.Request[qf.CourseRequest]) (*connect.Response[qf.Void], error) {
 	course, err := s.db.GetCourse(in.Msg.GetCourseID(), false)
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: course %d: %v", in.Msg.GetCourseID(), err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
-	assignments.UpdateFromTestsRepo(s.logger, s.db, s.scmMgr, course)
+	scmClient, err := s.getSCM(ctx, course.GetOrganizationName())
+	if err != nil {
+		s.logger.Errorf("UpdateAssignments failed: could not create scm client for organization %s: %v", course.GetOrganizationName(), err)
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	assignments.UpdateFromTestsRepo(s.logger, s.db, scmClient, course)
+
+	clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
+		Organization: course.GetOrganizationName(),
+		Repository:   qf.AssignmentsRepo,
+		DestDir:      course.CloneDir(),
+	})
+	if err != nil {
+		s.logger.Errorf("Failed to clone '%s' repository: %v", qf.AssignmentsRepo, err)
+		return nil, err
+	}
+	s.logger.Debugf("Successfully cloned assignments repository to: %s", clonedAssignmentsRepo)
+
 	return &connect.Response[qf.Void]{}, nil
 }
 
@@ -560,8 +575,9 @@ func (s *QuickFeedService) GetOrganization(ctx context.Context, in *connect.Requ
 	org, err := s.getOrganization(ctx, scmClient, in.Msg.GetOrgName(), usr.GetLogin())
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %v", err)
-		if contextCanceled(ctx) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+		if ctxErr := ctxErr(ctx); ctxErr != nil {
+			s.logger.Error(ctxErr)
+			return nil, ctxErr
 		}
 		if err == scm.ErrNotMember {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("organization membership not confirmed, please enable third-party access"))
@@ -613,8 +629,9 @@ func (s *QuickFeedService) IsEmptyRepo(ctx context.Context, in *connect.Request[
 
 	if err := s.isEmptyRepo(ctx, scmClient, in.Msg); err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: %v", err)
-		if contextCanceled(ctx) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrContextCanceled)
+		if ctxErr := ctxErr(ctx); ctxErr != nil {
+			s.logger.Error(ctxErr)
+			return nil, ctxErr
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
 			return nil, parsedErr

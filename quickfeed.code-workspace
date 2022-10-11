@@ -27,6 +27,12 @@
 		"cSpell.enableFiletypes": [
 			"plaintext"
 		],
+		"files.exclude": {
+			"**/.git": true,
+			"**/.DS_Store": true,
+			"**/node_modules": true,
+			"x": true,
+		},
 		"files.insertFinalNewline": true,
 		"files.trimFinalNewlines": true,
 		"files.trimTrailingWhitespace": true,
@@ -61,6 +67,7 @@
 				"-public",
 				"-doc",
 				"-dev",
+				"-x",
 			],
 			// Add parameter placeholders when completing a function.
 			"usePlaceholders": true,

@@ -31,8 +31,8 @@ func TestAccessControl(t *testing.T) {
 		t.Fatal(err)
 	}
 	shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
-		interceptor.UnaryUserVerifier(logger, tm),
-		interceptor.AccessControl(tm),
+		interceptor.NewUserInterceptor(logger, tm),
+		interceptor.NewAccessControlInterceptor(tm),
 	))
 
 	client := qtest.QuickFeedClient("")

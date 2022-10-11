@@ -140,18 +140,6 @@ func main() {
 					Action: getRepositories(&client),
 				},
 				{
-					Name:  "user",
-					Usage: "Get user information.",
-					Flags: []cli.Flag{
-						cli.Uint64Flag{
-							Name:  "id",
-							Usage: "Remote user id (0 is the logged in user)",
-							Value: 0,
-						},
-					},
-					Action: getUser(&client),
-				},
-				{
 					Name:  "hooks",
 					Usage: "Get repository hooks",
 					Flags: []cli.Flag{
@@ -366,28 +354,6 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 			return err
 		}
 		fmt.Println("Found repository ", repo.HTMLURL)
-		return nil
-	}
-}
-
-func getUser(client *scm.SCM) cli.ActionFunc {
-	ctx := context.Background()
-
-	return func(c *cli.Context) error {
-		var (
-			userName string
-			err      error
-		)
-		remoteID := c.Uint64("id")
-		if remoteID > 0 {
-			userName, err = (*client).GetUserNameByID(ctx, remoteID)
-		} else {
-			userName, err = (*client).GetUserName(ctx)
-		}
-		if err != nil {
-			return err
-		}
-		fmt.Println(userName)
 		return nil
 	}
 }

@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	defaultProvider = "github"
-	defaultAppName  = "QuickFeed"
-	defaultKeyPath  = "internal/config/github/quickfeed.pem"
+	defaultProvider       = "github"
+	defaultAppName        = "QuickFeed"
+	defaultKeyPath        = "internal/config/github/quickfeed.pem"
+	defaultRepositoryPath = "$HOME/courses"
 )
 
 var (
@@ -32,6 +33,14 @@ func init() {
 // ScmProvider returns the current SCM provider supported by this backend.
 func ScmProvider() string {
 	return provider
+}
+
+func RepositoryPath() string {
+	repositoryPath := os.Getenv("QUICKFEED_REPOSITORY_PATH")
+	if repositoryPath == "" {
+		repositoryPath = defaultRepositoryPath
+	}
+	return os.ExpandEnv(repositoryPath)
 }
 
 // ClientID returns the client ID for the current SCM provider.

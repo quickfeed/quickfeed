@@ -8,7 +8,7 @@ import (
 // Default repository names.
 const (
 	InfoRepo          = "info"
-	AssignmentRepo    = "assignments"
+	AssignmentsRepo   = "assignments"
 	TestsRepo         = "tests"
 	StudentRepoSuffix = "-labs"
 )
@@ -28,7 +28,7 @@ func (r RepoURL) InfoRepoURL() string {
 }
 
 func (r RepoURL) AssignmentsRepoURL() string {
-	return fmt.Sprintf("https://%s/%s/%s", r.ProviderURL, r.Organization, AssignmentRepo)
+	return fmt.Sprintf("https://%s/%s/%s", r.ProviderURL, r.Organization, AssignmentsRepo)
 }
 
 func (r RepoURL) StudentRepoURL(userName string) string {
@@ -54,12 +54,17 @@ func (t Repository_Type) IsGroupRepo() bool {
 	return t == Repository_GROUP
 }
 
-// IsTestsRepo returns true if the repository is a 'tests' type.
+// IsTestsRepo returns true if the repository is a 'tests' repository.
 func (t *Repository) IsTestsRepo() bool {
 	return t.RepoType == Repository_TESTS
 }
 
-// IsStudentRepo returns true if the repository is a user repo type.
+// IsAssignmentsRepo returns true if the repository is an 'assignments' repository.
+func (t *Repository) IsAssignmentsRepo() bool {
+	return t.RepoType == Repository_ASSIGNMENTS
+}
+
+// IsStudentRepo returns true if the repository is a user or group repo type.
 func (t *Repository) IsStudentRepo() bool {
 	return t.RepoType == Repository_USER || t.RepoType == Repository_GROUP
 }
@@ -105,7 +110,7 @@ func RepoType(path string) (repoType Repository_Type) {
 	switch path {
 	case InfoRepo:
 		repoType = Repository_INFO
-	case AssignmentRepo:
+	case AssignmentsRepo:
 		repoType = Repository_ASSIGNMENTS
 	case TestsRepo:
 		repoType = Repository_TESTS

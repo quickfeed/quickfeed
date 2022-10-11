@@ -1,6 +1,7 @@
 package ci
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -14,35 +15,52 @@ import (
 //
 // The script may use the following environment variables:
 //
-//	TESTS - to access the tests (cloned from the tests repository)
-//	ASSIGNMENTS - to access the assignments (cloned from the assignments repository)
-//	CURRENT - name of the current assignment folder
+//	TESTS       - to access the tests (cloned from the course's tests repository)
+//	ASSIGNMENTS - to access the assignments (cloned from the course's assignments repository)
+//	SUBMITTED   - to access the student's or group's submitted code (cloned from the student/group repository)
+//	CURRENT     - name of the current assignment folder
 //	QUICKFEED_SESSION_SECRET - typically used by the test code; not the script itself
-func (r RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
-	s := strings.Split(r.Assignment.GetRunScriptContent(), "\n")
-	if len(s) < 2 {
-		return nil, fmt.Errorf("no run script for assignment %s in %s", r.Assignment.GetName(), r.Repo.GetTestURL())
+func (r *RunData) parseTestRunnerScript(secret, destDir string) (*Job, error) {
+	image, commands, err := parseRunScript(r.Assignment.GetRunScriptContent())
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse run script for assignment %s in %s: %w", r.Assignment.GetName(), r.Repo.GetTestURL(), err)
 	}
-	parts := strings.Split(s[0], "#image/")
-	if len(parts) < 2 {
-		return nil, fmt.Errorf("no docker image specified in run script for assignment %s in %s", r.Assignment.GetName(), r.Repo.GetTestURL())
+	if r.EnvVarsFn == nil {
+		// For docker runs, the home path is set to QuickFeedPath = /quickfeed
+		r.EnvVarsFn = func(secret, _ string) []string {
+			// QuickFeedPath is the home path (inside the container) bound to the temporary tests directory
+			return EnvVars(secret, QuickFeedPath, r.Repo.Name(), r.Assignment.GetName())
+		}
 	}
 	return &Job{
 		Name:       r.String(),
-		Image:      strings.ToLower(parts[1]),
+		Image:      image,
 		Dockerfile: r.Course.Dockerfile,
 		BindDir:    destDir,
-		Env:        r.envVars(secret),
-		Commands:   s[1:],
+		Env:        r.EnvVarsFn(secret, destDir),
+		Commands:   commands,
 	}, nil
 }
 
-func (r RunData) envVars(sessionSecret string) []string {
+func parseRunScript(scriptContent string) (image string, commands []string, err error) {
+	s := strings.Split(scriptContent, "\n")
+	if len(s) < 2 {
+		return "", nil, errors.New("empty run script")
+	}
+	parts := strings.Split(s[0], "#image/")
+	if len(parts) < 2 {
+		return "", nil, errors.New("no docker image specified in run script")
+	}
+	return strings.ToLower(parts[1]), s[1:], nil
+}
+
+func EnvVars(sessionSecret, home, repoName, currentAssignment string) []string {
 	envMap := map[string]string{
-		"HOME":        QuickFeedPath,
-		"TESTS":       filepath.Join(QuickFeedPath, qf.TestsRepo),
-		"ASSIGNMENTS": filepath.Join(QuickFeedPath, qf.AssignmentRepo),
-		"CURRENT":     r.Assignment.GetName(),
+		"HOME":        home,
+		"TESTS":       filepath.Join(home, qf.TestsRepo),
+		"ASSIGNMENTS": filepath.Join(home, qf.AssignmentsRepo),
+		"SUBMITTED":   filepath.Join(home, repoName),
+		"CURRENT":     currentAssignment,
 		secretEnvName: sessionSecret,
 	}
 	envVars := make([]string, 0, len(envMap))

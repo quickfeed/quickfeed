@@ -121,7 +121,7 @@ func TestDockerBindDir(t *testing.T) {
 
 	const (
 		script  = `ls /quickfeed`
-		wantOut = "Dockerfile\nrun.sh\ntests\n" // content of testdata (or /quickfeed inside the container)
+		wantOut = "Dockerfile\nassignments\nrun.sh\ntests\n" // content of testdata (or /quickfeed inside the container)
 		image   = "golang:latest"
 	)
 	docker, closeFn := dockerClient(t)
@@ -155,15 +155,17 @@ func TestDockerEnvVars(t *testing.T) {
 	envVars := []string{
 		"TESTS=/quickfeed/tests",
 		"ASSIGNMENTS=/quickfeed/assignments",
+		"SUBMITTED=/quickfeed/submitted",
 	}
 	// check that the default environment variables are accessible from the container
 	cmds := []string{
 		`echo $TESTS`,
 		`echo $ASSIGNMENTS`,
+		`echo $SUBMITTED`,
 	}
 
 	const (
-		wantOut = "/quickfeed/tests\n/quickfeed/assignments\n"
+		wantOut = "/quickfeed/tests\n/quickfeed/assignments\n/quickfeed/submitted\n"
 		image   = "golang:latest"
 	)
 	docker, closeFn := dockerClient(t)

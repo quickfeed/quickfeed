@@ -6,30 +6,42 @@ import (
 	"strings"
 )
 
+// Prepared returns nil if the given env file exists and the corresponding backup file does not.
+// Otherwise, it returns an error.
+//
+// If the env file does not exist, a MissingError returned.
+// QuickFeed requires the env file to load (some) existing environment variables,
+// even when creating a new GitHub app, and overwriting some environment variables.
+// If the backup file exists, an ExistsError is returned.
+// This is to avoid that QuickFeed overwrites an existing backup file.
+func Prepared(filename string) error {
+	bakFilename := filename + ".bak"
+	if exists(bakFilename) {
+		return ExistsError(bakFilename)
+	}
+	if !exists(filename) {
+		return MissingError(filename)
+	}
+	return nil
+}
+
 // Save writes the given environment variables to the given file,
 // replacing or leaving behind existing variables.
 //
-// If the file exists, it will be moved to a backup file.
-// If the a backup file also exists, an error is returned.
+// If the file exists, it will be updated, but leaving a backup file.
+// If a backup already exists it will be removed first.
 func Save(filename string, env map[string]string) error {
-	bakFilename := filename + ".bak"
-	var (
-		filenameExists    = exists(filename)
-		bakFilenameExists = exists(bakFilename)
-	)
-
-	// We must load the file before renaming it below.
+	// Load the existing file's content before renaming it.
 	content := load(filename)
-
-	switch {
-	case filenameExists && !bakFilenameExists:
-		if err := os.Rename(filename, bakFilename); err != nil {
+	bakFilename := filename + ".bak"
+	if exists(bakFilename) {
+		if err := os.Remove(bakFilename); err != nil {
 			return err
 		}
-	case filenameExists && bakFilenameExists:
-		return ExistsError(bakFilename)
 	}
-
+	if err := os.Rename(filename, bakFilename); err != nil {
+		return err
+	}
 	// Update the file with new environment variables.
 	return update(filename, content, env)
 }
@@ -99,4 +111,16 @@ func ExistsError(filename string) error {
 
 func (e backupExistsError) Error() string {
 	return fmt.Sprintf("%s already exists; check its content before removing and try again", e.filename)
+}
+
+type missingEnvError struct {
+	filename string
+}
+
+func MissingError(filename string) error {
+	return missingEnvError{filename: filename}
+}
+
+func (e missingEnvError) Error() string {
+	return fmt.Sprintf("missing required %q file", e.filename)
 }

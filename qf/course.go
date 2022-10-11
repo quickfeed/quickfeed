@@ -1,5 +1,15 @@
 package qf
 
+import (
+	"path/filepath"
+
+	"github.com/quickfeed/quickfeed/internal/env"
+)
+
+func (course *Course) CloneDir() string {
+	return filepath.Join(env.RepositoryPath(), course.GetOrganizationName())
+}
+
 func (course *Course) TeacherEnrollments() []*Enrollment {
 	enrolledTeachers := []*Enrollment{}
 	for _, enrollment := range course.Enrollments {
