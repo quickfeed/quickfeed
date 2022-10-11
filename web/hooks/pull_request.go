@@ -20,7 +20,7 @@ import (
 // If successful, it then finds the relevant task, and uses it to retrieve the relevant task score.
 // If a passing score is reached, it assigns reviewers to the pull request.
 // It also uses the test results and task to generate a feedback comment for the pull request.
-func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results *score.Results, assignment *qf.Assignment, course *qf.Course, repo *qf.Repository) {
+func (wh GitHubWebHook) handlePullRequestPush(ctx context.Context, scmClient scm.SCM, payload *github.PushEvent, results *score.Results, assignment *qf.Assignment, course *qf.Course, repo *qf.Repository) {
 	wh.logger.Debugf("Attempting to find pull request for ref: %s, in repository: %s",
 		payload.GetRef(), payload.GetRepo().GetFullName())
 
@@ -30,13 +30,6 @@ func (wh GitHubWebHook) handlePullRequestPush(payload *github.PushEvent, results
 		return
 	}
 	taskSum := results.TaskSum(taskName)
-
-	ctx := context.Background()
-	scmClient, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.OrganizationName)
-	if err != nil {
-		wh.logger.Errorf("Failed to create SCM Client: %v", err)
-		return
-	}
 
 	// We assign reviewers to a pull request when the tests associated with it score above the assignment score limit
 	// We do not assign reviewers if the pull request has already been assigned reviewers
