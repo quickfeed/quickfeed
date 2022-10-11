@@ -13,11 +13,12 @@ import (
 
 const (
 	pbgo   = "qf/quickfeed.pb.go"
-	grpcpb = "qf/quickfeed_grpc.pb.go"
+	grpcpb = "qf/qfconnect/quickfeed.connect.go"
 )
 
 func main() {
-	protoc := regexp.MustCompile(`^\/\/.*(protoc)\s+v(.*)$`)
+	protoc := regexp.MustCompile(`^\/\/.*(protoc)\s+(.*)$`)
+	// protoc := regexp.MustCompile(`^\/\/.*(protoc)\s+v(.*)$`)
 	genGo := regexp.MustCompile(`^\/\/.*(protoc-gen-go)\s+v(.*)$`)
 	genGoGrpc := regexp.MustCompile(`^\/\/.*(protoc-gen-go-grpc)\s+v(.*)$`)
 
