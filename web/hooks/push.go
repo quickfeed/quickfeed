@@ -40,7 +40,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	}
 
 	ctx := context.Background()
-	sc, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetOrganizationName())
+	scmClient, err := wh.scmMgr.GetOrCreateSCM(ctx, wh.logger, course.GetOrganizationName())
 	if err != nil {
 		wh.logger.Errorf("Failed to get or create SCM Client: %v", err)
 		return
@@ -50,11 +50,11 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	case repo.IsTestsRepo():
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		assignments.UpdateFromTestsRepo(wh.logger, wh.db, sc, course)
+		assignments.UpdateFromTestsRepo(wh.logger, wh.db, scmClient, course)
 
 	case repo.IsAssignmentsRepo():
 		// the push event is for the 'assignments' repo; we need to update the local working copy
-		clonedAssignmentsRepo, err := sc.Clone(ctx, &scm.CloneOptions{
+		clonedAssignmentsRepo, err := scmClient.Clone(ctx, &scm.CloneOptions{
 			Organization: course.GetOrganizationName(),
 			Repository:   qf.AssignmentsRepo,
 			DestDir:      course.CloneDir(),
@@ -69,7 +69,7 @@ func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 		wh.logger.Debugf("Processing push event for repo %s", payload.GetRepo().GetName())
 		assignments := wh.extractAssignments(payload, course)
 		for _, assignment := range assignments {
-			wh.runAssignmentTests(sc, assignment, repo, course, payload)
+			wh.runAssignmentTests(scmClient, assignment, repo, course, payload)
 		}
 
 	default:
@@ -102,7 +102,7 @@ func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *qf
 }
 
 // runAssignmentTests runs the tests for the given assignment pushed to repo.
-func (wh GitHubWebHook) runAssignmentTests(sc scm.SCM, assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) {
+func (wh GitHubWebHook) runAssignmentTests(scmClient scm.SCM, assignment *qf.Assignment, repo *qf.Repository, course *qf.Course, payload *github.PushEvent) {
 	runData := &ci.RunData{
 		Course:     course,
 		Assignment: assignment,
@@ -120,7 +120,7 @@ func (wh GitHubWebHook) runAssignmentTests(sc scm.SCM, assignment *qf.Assignment
 	}
 	ctx, cancel := assignment.WithTimeout(ci.DefaultContainerTimeout)
 	defer cancel()
-	results, err := runData.RunTests(ctx, wh.logger, sc, wh.runner)
+	results, err := runData.RunTests(ctx, wh.logger, scmClient, wh.runner)
 	if err != nil {
 		wh.logger.Error(err)
 		return
