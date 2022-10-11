@@ -92,11 +92,14 @@ ui-update: version-check
 	@cd public; npm i; webpack
 
 proto:
-	buf generate
+	buf generate --template buf.gen.ui.yaml --exclude-path patch
+	buf generate --template buf.gen.yaml
 
 	@echo "Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529))"
 	@$(sedi) '/patch_go_pb/d' \
+	public/proto/kit/score/score_pb.js \
 	public/proto/kit/score/score_pb.d.ts \
+	public/proto/qf/types_pb.js \
 	public/proto/qf/types_pb.d.ts
 
 	@echo "Compiling proto files for frontend"
