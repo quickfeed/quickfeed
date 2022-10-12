@@ -19,7 +19,7 @@ func newGithubInviteClient(token string) *github.Client {
 }
 
 // AcceptRepositoryInvites accepts course invites.
-func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) error {
+func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *InvitationOptions) error {
 	if !opt.valid() {
 		return fmt.Errorf("invalid options: %+v", opt)
 	}

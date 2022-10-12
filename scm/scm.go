@@ -80,7 +80,7 @@ type SCM interface {
 	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
 
 	// AcceptRepositoryInvites accepts course invites.
-	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
+	AcceptRepositoryInvites(context.Context, *InvitationOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.

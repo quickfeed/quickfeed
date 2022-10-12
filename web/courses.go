@@ -437,7 +437,7 @@ func (s *QuickFeedService) acceptRepositoryInvites(ctx context.Context, scmApp s
 	if err != nil {
 		return fmt.Errorf("failed to get access token for user %d: %w", user.ID, err)
 	}
-	if err := scmApp.AcceptRepositoryInvites(ctx, &scm.RepositoryInvitationOptions{
+	if err := scmApp.AcceptRepositoryInvites(ctx, &scm.InvitationOptions{
 		Login: user.GetLogin(),
 		Owner: organizationName,
 		Token: userToken,
