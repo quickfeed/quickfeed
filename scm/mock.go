@@ -173,28 +173,6 @@ func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool 
 	return false
 }
 
-// ListHooks implements the SCM interface.
-func (s *MockSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook, error) {
-	var hooks []*Hook
-	for _, v := range s.Hooks {
-		hooks = append(hooks, v)
-	}
-	return hooks, nil
-}
-
-// CreateHook implements the SCM interface.
-func (s *MockSCM) CreateHook(_ context.Context, opt *CreateHookOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	hook := &Hook{
-		ID:   generateID(s.Hooks),
-		Name: opt.Organization,
-	}
-	s.Hooks[hook.ID] = hook
-	return nil
-}
-
 // CreateTeam implements the SCM interface.
 func (s *MockSCM) CreateTeam(_ context.Context, opt *NewTeamOptions) (*Team, error) {
 	if !opt.valid() {

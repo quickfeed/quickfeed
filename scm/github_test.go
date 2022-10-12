@@ -47,68 +47,6 @@ func TestGetOrganization(t *testing.T) {
 	}
 }
 
-func TestListHooks(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	s := scm.GetTestSCM(t)
-
-	ctx := context.Background()
-	hooks, err := s.ListHooks(ctx, nil, qfTestOrg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// We don't actually test anything here since we don't know how which hooks might be registered
-	for _, hook := range hooks {
-		t.Logf("hook: %v", hook)
-	}
-
-	hooks, err = s.ListHooks(ctx, &scm.Repository{Owner: qfTestOrg, Path: "tests"}, "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	// We don't actually test anything here since we don't know how which hooks might be registered
-	for _, hook := range hooks {
-		t.Logf("hook: %v", hook)
-	}
-
-	hooks, err = s.ListHooks(ctx, &scm.Repository{Path: "tests"}, "")
-	if err == nil {
-		t.Fatal("expected error 'ListHooks: called with missing or incompatible arguments: ...'")
-	}
-	// We don't actually test anything here since we don't know how which hooks might be registered
-	t.Logf("%v %v", hooks, err)
-}
-
-func TestCreateHook(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	serverURL := scm.GetWebHookServer(t)
-	// Only enable this test to add a new webhook to your test course organization
-	if serverURL == "" {
-		t.Skip("Disabled pending support for deleting webhooks")
-	}
-
-	s := scm.GetTestSCM(t)
-
-	ctx := context.Background()
-	opt := &scm.CreateHookOptions{
-		URL:          serverURL,
-		Secret:       secret,
-		Organization: qfTestOrg,
-	}
-	err := s.CreateHook(ctx, opt)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	hooks, err := s.ListHooks(ctx, &scm.Repository{}, qfTestOrg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// We don't actually test anything here since we don't know how which hooks might be registered
-	for _, hook := range hooks {
-		t.Logf("hook: %v", hook)
-	}
-}
-
 // Test case for Creating new Issue on a git Repository
 func TestCreateIssue(t *testing.T) {
 	qfTestOrg := scm.GetTestOrganization(t)
