@@ -139,14 +139,6 @@ type RepositoryOptions struct {
 	Owner string
 }
 
-// Hook contains information about a webhook for a repository.
-type Hook struct {
-	ID     uint64
-	Name   string
-	URL    string
-	Events []string
-}
-
 // CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
 	Organization string

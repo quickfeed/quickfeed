@@ -18,7 +18,6 @@ import (
 type MockSCM struct {
 	Repositories  map[uint64]*Repository
 	Organizations map[uint64]*qf.Organization
-	Hooks         map[uint64]*Hook
 	Teams         map[uint64]*Team
 }
 
@@ -27,7 +26,6 @@ func NewMockSCMClient() *MockSCM {
 	s := &MockSCM{
 		Repositories:  make(map[uint64]*Repository),
 		Organizations: make(map[uint64]*qf.Organization),
-		Hooks:         make(map[uint64]*Hook),
 		Teams:         make(map[uint64]*Team),
 	}
 	// initialize four test course organizations
