@@ -52,12 +52,6 @@ install:
 	@echo go install
 	@go install
 
-define ui_target
-ui_$(1):
-	$$(info Running npm ci and webpack for $(1))
-	@cd $(1); npm ci; webpack
-endef
-
 define proto_target
 proto_$(1):
 	$$(info Compiling proto definitions for Go and TypeScript for $(1))
@@ -87,12 +81,31 @@ proto_$(1):
 endef
 
 dirs := public
-$(foreach dir,$(dirs),$(eval $(call ui_target,$(dir))))
 $(foreach dir,$(dirs),$(eval $(call proto_target,$(dir))))
 
-ui: version-check ui_public
+ui: version-check
+	@echo "Running npm ci and webpack"
+	@cd public; npm ci; webpack
 
-proto: proto_public
+ui-update: version-check
+	@echo "Running npm install and webpack"
+	@cd public; npm i; webpack
+
+proto:
+	buf generate --template buf.gen.ui.yaml --exclude-path patch
+	buf generate --template buf.gen.yaml
+
+	@echo "Removing unused protopatch imports (see https://github.com/grpc/grpc-web/issues/529))"
+	@$(sedi) '/patch_go_pb/d' \
+	public/proto/kit/score/score_pb.js \
+	public/proto/kit/score/score_pb.d.ts \
+	public/proto/qf/types_pb.js \
+	public/proto/qf/types_pb.d.ts
+
+	@echo "Compiling proto files for frontend"
+	@cd public && npm run tsc -- proto/qf/QuickfeedServiceClientPb.ts
+
+# proto: proto_public
 
 proto-swift:
 	@echo "Compiling QuickFeed's proto definitions for Swift"

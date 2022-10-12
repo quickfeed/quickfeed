@@ -135,6 +135,7 @@ proto
 protobuf
 protoc
 protocmp
+protocolbuffers
 protoimpl
 protopatch
 protoreflect
