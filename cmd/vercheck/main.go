@@ -73,7 +73,9 @@ func toolVersion(tool string) string {
 func scan(file string, re *regexp.Regexp) (string, string) {
 	f, err := os.Open(file)
 	check(err)
-	defer f.Close()
+	defer func() {
+		check(f.Close())
+	}()
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
