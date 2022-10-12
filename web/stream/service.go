@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qf/device"
 )
 
 // StreamServices contain all available stream services.
@@ -14,7 +13,6 @@ import (
 // initialize the service in the NewStreamServices function.
 type StreamServices struct {
 	Submission *Service[qf.Submission, uint64]
-	Device     *Service[device.DeviceResponse, string]
 }
 
 // NewStreamServices creates a new StreamServices.
