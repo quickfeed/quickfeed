@@ -18,7 +18,6 @@ import (
 type MockSCM struct {
 	Repositories  map[uint64]*Repository
 	Organizations map[uint64]*qf.Organization
-	Hooks         map[uint64]*Hook
 	Teams         map[uint64]*Team
 }
 
@@ -27,7 +26,6 @@ func NewMockSCMClient() *MockSCM {
 	s := &MockSCM{
 		Repositories:  make(map[uint64]*Repository),
 		Organizations: make(map[uint64]*qf.Organization),
-		Hooks:         make(map[uint64]*Hook),
 		Teams:         make(map[uint64]*Team),
 	}
 	// initialize four test course organizations
@@ -171,28 +169,6 @@ func (s *MockSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, _, _ s
 // RepositoryIsEmpty implements the SCM interface
 func (*MockSCM) RepositoryIsEmpty(_ context.Context, _ *RepositoryOptions) bool {
 	return false
-}
-
-// ListHooks implements the SCM interface.
-func (s *MockSCM) ListHooks(_ context.Context, _ *Repository, _ string) ([]*Hook, error) {
-	var hooks []*Hook
-	for _, v := range s.Hooks {
-		hooks = append(hooks, v)
-	}
-	return hooks, nil
-}
-
-// CreateHook implements the SCM interface.
-func (s *MockSCM) CreateHook(_ context.Context, opt *CreateHookOptions) error {
-	if !opt.valid() {
-		return fmt.Errorf("invalid argument: %+v", opt)
-	}
-	hook := &Hook{
-		ID:   generateID(s.Hooks),
-		Name: opt.Organization,
-	}
-	s.Hooks[hook.ID] = hook
-	return nil
 }
 
 // CreateTeam implements the SCM interface.

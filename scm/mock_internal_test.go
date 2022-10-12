@@ -37,13 +37,4 @@ func TestIDs(t *testing.T) {
 	if id != 1 {
 		t.Errorf("expected id = 1, got %d", id)
 	}
-
-	hooks := make(map[uint64]*Hook)
-	for i := 1; i <= 10; i++ {
-		hooks[uint64(i)] = &Hook{ID: uint64(i)}
-	}
-	id = generateID(hooks)
-	if id != 11 {
-		t.Errorf("expected id = 11, got %d", id)
-	}
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/web/auth"
 
 	"github.com/quickfeed/quickfeed/scm"
 )
@@ -51,19 +50,6 @@ func (s *QuickFeedService) createCourse(ctx context.Context, sc scm.SCM, request
 	if err = sc.UpdateOrganization(ctx, orgOptions); err != nil {
 		s.logger.Debugf("createCourse: failed to update permissions for GitHub organization %s: %s", orgOptions.Name, err)
 	}
-
-	// create a push hook on organization level
-	hookOptions := &scm.CreateHookOptions{
-		URL:          auth.GetEventsURL(s.bh.BaseURL),
-		Secret:       s.bh.Secret,
-		Organization: org.Name,
-	}
-
-	err = sc.CreateHook(ctx, hookOptions)
-	if err != nil {
-		s.logger.Debugf("createCourse: failed to create organization hook for %s: %s", org.GetName(), err)
-	}
-
 	// create course repos and webhooks for each repo
 	for path, private := range RepoPaths {
 		repoOptions := &scm.CreateRepositoryOptions{
