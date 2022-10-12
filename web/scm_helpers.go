@@ -57,7 +57,7 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 	return q.getSCM(ctx, course.OrganizationName)
 }
 
-// getSCMForUser returns an SCM client based on the user's personal access token.
+// getCredsForUserSCM returns the given user's personal access token.
 func (q *QuickFeedService) getCredsForUserSCM(user *qf.User) (string, error) {
 	refreshToken, err := user.GetRefreshToken(env.ScmProvider())
 	if err != nil {

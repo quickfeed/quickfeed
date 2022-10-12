@@ -18,13 +18,10 @@ func newGithubInviteClient(token string) *github.Client {
 	return github.NewClient(httpClient)
 }
 
-// AcceptRepositoryInvites implements the SCMInvite interface
+// AcceptRepositoryInvites accepts course invites.
 func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *RepositoryInvitationOptions) error {
 	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "AcceptRepositoryInvites",
-			Message: fmt.Sprintf("%+v", opt),
-		}
+		return fmt.Errorf("invalid options: %+v", opt)
 	}
 
 	userSCM := newGithubInviteClient(opt.Token)
@@ -32,11 +29,7 @@ func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *Repository
 		// Important: Get repository invitations using the GitHub App client.
 		repoInvites, _, err := s.client.Repositories.ListInvitations(ctx, opt.Owner, repo, &github.ListOptions{})
 		if err != nil {
-			return ErrFailedSCM{
-				GitError: fmt.Errorf("failed to fetch GitHub repository invitations: %w", err),
-				Method:   "AcceptRepositoryInvites",
-				Message:  "failed to fetch GitHub repository invitations",
-			}
+			return fmt.Errorf("failed to fetch invitations for repository %s: %w", repo, err)
 		}
 
 		for _, invite := range repoInvites {
@@ -46,22 +39,14 @@ func (s *GithubSCM) AcceptRepositoryInvites(ctx context.Context, opt *Repository
 			}
 			// Important: Accept repository invitations using the user-specific GitHub client.
 			if _, err := userSCM.Users.AcceptInvitation(ctx, invite.GetID()); err != nil {
-				return ErrFailedSCM{
-					GitError: fmt.Errorf("failed to accept GitHub repository invitation: %w", err),
-					Method:   "AcceptRepositoryInvites",
-					Message:  fmt.Sprintf("failed to accept invitation for repo: %s", invite.Repo.GetName()),
-				}
+				return fmt.Errorf("failed to accept invitation for repository %s: %w", invite.Repo.GetName(), err)
 			}
 		}
 	}
 
 	state := "active"
 	if _, _, err := userSCM.Organizations.EditOrgMembership(ctx, "", opt.Owner, &github.Membership{State: &state}); err != nil {
-		return ErrFailedSCM{
-			GitError: fmt.Errorf("failed to accept GitHub organization invitation: %w", err),
-			Method:   "AcceptOrganizationInvite",
-			Message:  fmt.Sprintf("failed to accept organization invite for org: %s, user: %s", opt.Owner, opt.Login),
-		}
+		return fmt.Errorf("failed to accept invitation to organization %s: %w", opt.Owner, err)
 	}
 	return nil
 }

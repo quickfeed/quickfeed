@@ -79,7 +79,7 @@ type SCM interface {
 	// RequestReviewers requests reviewers for a pull request.
 	RequestReviewers(ctx context.Context, opt *RequestReviewersOptions) error
 
-	// Accepts repository invites.
+	// AcceptRepositoryInvites accepts course invites.
 	AcceptRepositoryInvites(context.Context, *RepositoryInvitationOptions) error
 }
 
