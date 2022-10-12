@@ -13,6 +13,6 @@ func NewGitHubConfig(baseURL string, c *scm.Config) *oauth2.Config {
 		ClientSecret: c.ClientSecret,
 		Endpoint:     github.Endpoint,
 		RedirectURL:  GetCallbackURL(baseURL),
-		Scopes:       []string{"repo:invite"},
+		Scopes:       []string{"repo:invite", "write:org"},
 	}
 }

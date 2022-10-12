@@ -57,16 +57,16 @@ func (q *QuickFeedService) getSCMForCourse(ctx context.Context, courseID uint64)
 	return q.getSCM(ctx, course.OrganizationName)
 }
 
-// getSCMForUser returns an SCM client based on the user's personal access token.
-func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCMInvite, error) {
+// getCredsForUserSCM returns the given user's personal access token.
+func (q *QuickFeedService) getCredsForUserSCM(user *qf.User) (string, error) {
 	refreshToken, err := user.GetRefreshToken(env.ScmProvider())
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	// Exchange a refresh token for an access token.
 	token, err := q.scmMgr.ExchangeToken(refreshToken)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	// Save user's refresh token in the database.
 	remoteIdentity := user.GetRemoteIDFor(env.ScmProvider())
@@ -75,9 +75,9 @@ func (q *QuickFeedService) getSCMForUser(user *qf.User) (scm.SCMInvite, error) {
 	// TODO(meling) rename RemoteIdentity.AccessToken to RemoteIdentity.RefreshToken
 	remoteIdentity.AccessToken = token.RefreshToken
 	if err := q.db.UpdateAccessToken(remoteIdentity); err != nil {
-		return nil, err
+		return "", err
 	}
-	return scm.NewInviteOnlySCMClient(token.AccessToken), nil
+	return token.AccessToken, nil
 }
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the

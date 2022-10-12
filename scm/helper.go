@@ -127,8 +127,8 @@ func (opt IssueCommentOptions) valid() bool {
 	return opt.Organization != "" && opt.Repository != "" && opt.Body != ""
 }
 
-func (opt RepositoryInvitationOptions) valid() bool {
-	return opt.Login != "" && opt.Owner != ""
+func (opt InvitationOptions) valid() bool {
+	return opt.Login != "" && opt.Owner != "" && opt.Token != ""
 }
 
 // Errors //

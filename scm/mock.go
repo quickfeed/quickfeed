@@ -386,11 +386,11 @@ func (*MockSCM) RequestReviewers(_ context.Context, _ *RequestReviewersOptions) 
 	}
 }
 
-// AcceptRepositoryInvite implements the SCMInvite interface
-func (*MockSCM) AcceptRepositoryInvites(_ context.Context, _ *RepositoryInvitationOptions) error {
+// AcceptInvitations accepts course invites.
+func (*MockSCM) AcceptInvitations(_ context.Context, _ *InvitationOptions) error {
 	return ErrNotSupported{
 		SCM:    "MockSCM",
-		Method: "AcceptRepositoryInvites",
+		Method: "AcceptInvitations",
 	}
 }
 
