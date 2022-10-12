@@ -14,6 +14,100 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
+func TestPullRequestPushPayload(t *testing.T) {
+	course := qtest.MockCourses[0]
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	wh := NewGitHubWebHook(qtest.Logger(t), db, &scm.Manager{}, &ci.Local{}, "secret")
+	admin := qtest.CreateAdminUser(t, db, "fake")
+	qtest.CreateCourse(t, db, admin, course)
+
+	if err := db.CreateAssignment(&qf.Assignment{
+		CourseID: course.ID,
+		Order:    1,
+		Name:     "lab1",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	task := &qf.Task{
+		AssignmentID: 1,
+		Name:         "test_task",
+	}
+
+	taskMap := make(map[uint32]map[string]*qf.Task)
+	tasks := make(map[string]*qf.Task)
+	tasks[task.Name] = task
+	taskMap[1] = tasks
+	if _, _, err := db.SynchronizeAssignmentTasks(course, taskMap); err != nil {
+		t.Fatal(err)
+	}
+
+	pr := &qf.PullRequest{
+		SourceBranch:    "main",
+		ScmRepositoryID: 1,
+		UserID:          admin.ID,
+		TaskID:          1,
+		IssueID:         1,
+		Number:          1,
+	}
+	if err := db.CreatePullRequest(pr); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name     string
+		ref      string
+		repoID   int64
+		wantTask string
+		wantPR   *qf.PullRequest
+		wantErr  bool
+	}{
+		{
+			"existing PR",
+			"refs/heads/main",
+			1,
+			task.Name,
+			pr,
+			false,
+		},
+		{
+			"wrong branch",
+			"refs/heads/test",
+			1,
+			"",
+			nil,
+			true,
+		},
+		{
+			"wrong repo",
+			"refs/heads/main",
+			11,
+			"",
+			nil,
+			true,
+		},
+	}
+	for _, tt := range tests {
+		gotPR, gotTask, err := wh.handlePullRequestPushPayload(&github.PushEvent{
+			Ref: &tt.ref,
+			Repo: &github.PushEventRepository{
+				ID: &tt.repoID,
+			},
+		})
+
+		if (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
+		}
+		if diff := cmp.Diff(gotTask, tt.wantTask); diff != "" {
+			t.Errorf("%s: expected task name '%s', got '%s'", tt.name, tt.wantTask, gotTask)
+		}
+		if diff := cmp.Diff(gotPR, tt.wantPR, protocmp.Transform()); diff != "" {
+			t.Errorf("%s: mismatch (-want PR, +got PR):\n%s", tt.name, diff)
+		}
+	}
+}
+
 func TestExtractAssignments(t *testing.T) {
 	course := qtest.MockCourses[0]
 	db, cleanup := qtest.TestDB(t)
@@ -99,7 +193,6 @@ func TestExtractAssignments(t *testing.T) {
 			t.Errorf("%s: mismatch (-want, +got):\n%s", tt.name, diff)
 		}
 	}
-
 }
 
 func TestLastActivityDate(t *testing.T) {
@@ -111,7 +204,6 @@ func TestLastActivityDate(t *testing.T) {
 	qtest.CreateCourse(t, db, admin, course)
 
 	date := time.Now().Format("02 Jan")
-
 	tests := []struct {
 		name string
 		repo *qf.Repository
