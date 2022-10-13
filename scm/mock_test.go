@@ -13,6 +13,15 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 )
 
+var mockIssue = &scm.Issue{
+	ID:         1,
+	Title:      "Test issue",
+	Body:       "This is a test issue.",
+	Repository: "test-labs",
+	Number:     1,
+	Assignee:   "test_user",
+}
+
 func TestMockClone(t *testing.T) {
 	dstDir := t.TempDir()
 	s := scm.NewMockSCMClient()
@@ -547,12 +556,6 @@ func TestMockCreateIssue(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
-	wantIssue := &scm.Issue{
-		ID:         1,
-		Title:      "Test issue",
-		Body:       "This is a test issue.",
-		Repository: "test-labs",
-	}
 
 	tests := []struct {
 		name      string
@@ -564,20 +567,20 @@ func TestMockCreateIssue(t *testing.T) {
 			"correct options",
 			&scm.IssueOptions{
 				Organization: course.OrganizationName,
-				Repository:   wantIssue.Repository,
-				Title:        wantIssue.Title,
-				Body:         wantIssue.Body,
+				Repository:   mockIssue.Repository,
+				Title:        mockIssue.Title,
+				Body:         mockIssue.Body,
 			},
-			wantIssue,
+			mockIssue,
 			false,
 		},
 		{
 			"incorrect organization",
 			&scm.IssueOptions{
 				Organization: "another-organization",
-				Repository:   wantIssue.Repository,
-				Title:        wantIssue.Title,
-				Body:         wantIssue.Body,
+				Repository:   mockIssue.Repository,
+				Title:        mockIssue.Title,
+				Body:         mockIssue.Body,
 			},
 			nil,
 			true,
@@ -586,8 +589,8 @@ func TestMockCreateIssue(t *testing.T) {
 			"missing repository",
 			&scm.IssueOptions{
 				Organization: course.OrganizationName,
-				Title:        wantIssue.Title,
-				Body:         wantIssue.Body,
+				Title:        mockIssue.Title,
+				Body:         mockIssue.Body,
 			},
 			nil,
 			true,
@@ -596,8 +599,8 @@ func TestMockCreateIssue(t *testing.T) {
 			"missing title",
 			&scm.IssueOptions{
 				Organization: course.OrganizationName,
-				Repository:   wantIssue.Repository,
-				Body:         wantIssue.Body,
+				Repository:   mockIssue.Repository,
+				Body:         mockIssue.Body,
 			},
 			nil,
 			true,
@@ -606,8 +609,8 @@ func TestMockCreateIssue(t *testing.T) {
 			"missing body",
 			&scm.IssueOptions{
 				Organization: course.OrganizationName,
-				Repository:   wantIssue.Repository,
-				Title:        wantIssue.Title,
+				Repository:   mockIssue.Repository,
+				Title:        mockIssue.Title,
 			},
 			nil,
 			true,
@@ -624,5 +627,101 @@ func TestMockCreateIssue(t *testing.T) {
 				t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
 			}
 		})
+	}
+}
+
+func TestMockUpdateIssue(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	course := qtest.MockCourses[0]
+	issue, err := s.CreateIssue(ctx, &scm.IssueOptions{
+		Organization: course.OrganizationName,
+		Repository:   mockIssue.Repository,
+		Title:        mockIssue.Title,
+		Body:         mockIssue.Body,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name      string
+		opt       *scm.IssueOptions
+		wantIssue *scm.Issue
+		wantErr   bool
+	}{
+		{
+			"correct issue, no updates",
+			&scm.IssueOptions{
+				Number:       issue.Number,
+				Organization: course.OrganizationName,
+				Repository:   issue.Repository,
+				Title:        issue.Title,
+				Body:         issue.Body,
+				State:        issue.Status,
+				Assignee:     &issue.Assignee,
+			},
+			issue,
+			false,
+		},
+		{
+			"correct issue, update title and body",
+			&scm.IssueOptions{
+				Number:       issue.Number,
+				Organization: course.OrganizationName,
+				Repository:   issue.Repository,
+				Title:        "New Title",
+				Body:         "New Body",
+				State:        issue.Status,
+				Assignee:     &issue.Assignee,
+			},
+			&scm.Issue{
+				ID:         issue.ID,
+				Number:     issue.Number,
+				Title:      "New Title",
+				Body:       "New Body",
+				Repository: issue.Repository,
+				Status:     issue.Status,
+				Assignee:   issue.Assignee,
+			},
+			false,
+		},
+		{
+			"incorrect organization",
+			&scm.IssueOptions{
+				Number:       issue.Number,
+				Organization: "some-org",
+				Repository:   issue.Repository,
+				Title:        issue.Title,
+				Body:         issue.Body,
+				State:        issue.Status,
+				Assignee:     &issue.Assignee,
+			},
+			nil,
+			true,
+		},
+		{
+			"invalid opts",
+			&scm.IssueOptions{
+				Number:       issue.Number,
+				Organization: course.OrganizationName,
+				Title:        issue.Title,
+				Body:         issue.Body,
+				State:        issue.Status,
+				Assignee:     &issue.Assignee,
+			},
+			nil,
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		gotIssue, err := s.UpdateIssue(ctx, tt.opt)
+		if (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
+		}
+		if diff := cmp.Diff(tt.wantIssue, gotIssue); diff != "" {
+			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+		}
 	}
 }
