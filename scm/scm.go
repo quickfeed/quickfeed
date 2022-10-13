@@ -28,10 +28,6 @@ type SCM interface {
 	UpdateRepoAccess(context.Context, *Repository, string, string) error
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
-	// List the webhooks associated with the provided repository or organization.
-	ListHooks(context.Context, *Repository, string) ([]*Hook, error)
-	// Create a new webhook at the organization level.
-	CreateHook(context.Context, *CreateHookOptions) error
 	// Create team.
 	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)
 	// Delete team.
@@ -143,14 +139,6 @@ type RepositoryOptions struct {
 	Owner string
 }
 
-// Hook contains information about a webhook for a repository.
-type Hook struct {
-	ID     uint64
-	Name   string
-	URL    string
-	Events []string
-}
-
 // CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
 	Organization string
@@ -158,14 +146,6 @@ type CreateRepositoryOptions struct {
 	Private      bool
 	Owner        string // The owner of an organization's repo is always the organization itself.
 	Permission   string // Default permission level for the given repo. Can be "read", "write", "admin", "none".
-}
-
-// CreateHookOptions contains information on how to create a webhook.
-// On GitHub, a single webhook is created on the organization level.
-type CreateHookOptions struct {
-	URL          string
-	Secret       string
-	Organization string
 }
 
 // TeamOptions contains information about the team and the organization it belongs to.

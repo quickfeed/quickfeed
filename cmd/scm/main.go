@@ -139,50 +139,12 @@ func main() {
 					},
 					Action: getRepositories(&client),
 				},
-				{
-					Name:  "hooks",
-					Usage: "Get repository hooks",
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "repo",
-							Usage: "Repository ID",
-						},
-						cli.StringFlag{
-							Name:  "owner",
-							Usage: "Repository owner name",
-						},
-						cli.StringFlag{
-							Name:  "org",
-							Usage: "Name of organization",
-						},
-					},
-					Action: getHooks(&client),
-				},
 			},
 		},
 		{
 			Name:  "create",
 			Usage: "Create commands.",
 			Subcommands: cli.Commands{
-				{
-					Name:  "hook",
-					Usage: "Create webhook.",
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "org",
-							Usage: "Github organization [for organization level hooks]",
-						},
-						cli.StringFlag{
-							Name:  "secret",
-							Usage: "Webhook secret",
-						},
-						cli.StringFlag{
-							Name:  "url",
-							Usage: "Webhook endpoint URL [required]",
-						},
-					},
-					Action: createHook(&client),
-				},
 				{
 					Name:  "team",
 					Usage: "Create team.",
@@ -295,35 +257,6 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 	}
 }
 
-func getHooks(client *scm.SCM) cli.ActionFunc {
-	ctx := context.Background()
-	return func(c *cli.Context) error {
-		var hooks []*scm.Hook
-		// if organization name is set, list all hook associated with that organization
-		if c.IsSet("org") {
-			gitHooks, err := (*client).ListHooks(ctx, nil, c.String("org"))
-			if err != nil {
-				return err
-			}
-			hooks = gitHooks
-		}
-
-		// if repo and owner provided, list hooks for that repo
-		if c.IsSet("owner") && c.IsSet("repo") {
-			gitHooks, err := (*client).ListHooks(ctx, &scm.Repository{Owner: c.String("owner"), Path: c.String("repo")}, "")
-			if err != nil {
-				return err
-			}
-			hooks = gitHooks
-		}
-		for _, hook := range hooks {
-			log.Printf("Hook: %s, hook events: %s", hook.URL, hook.Events)
-		}
-
-		return nil
-	}
-}
-
 func getRepositories(client *scm.SCM) cli.ActionFunc {
 	ctx := context.Background()
 
@@ -355,19 +288,6 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 		}
 		fmt.Println("Found repository ", repo.HTMLURL)
 		return nil
-	}
-}
-
-// TODO: Validate input.
-func createHook(client *scm.SCM) cli.ActionFunc {
-	ctx := context.Background()
-
-	return func(c *cli.Context) error {
-		return (*client).CreateHook(ctx, &scm.CreateHookOptions{
-			URL:          c.String("url"),
-			Secret:       c.String("secret"),
-			Organization: c.String("org"),
-		})
 	}
 }
 
