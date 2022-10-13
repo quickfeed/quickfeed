@@ -95,7 +95,7 @@ func (s *Service[K, V]) Close() {
 	}
 }
 
-// CloseBy closes the given user's stream.
+// CloseBy closes a stream for the given ID, if any exists.
 func (s *Service[K, V]) CloseBy(id K) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
