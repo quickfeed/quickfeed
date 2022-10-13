@@ -570,6 +570,7 @@ func TestMockCreateIssue(t *testing.T) {
 				Repository:   mockIssue.Repository,
 				Title:        mockIssue.Title,
 				Body:         mockIssue.Body,
+				Assignee:     &mockIssue.Assignee,
 			},
 			mockIssue,
 			false,
@@ -581,6 +582,7 @@ func TestMockCreateIssue(t *testing.T) {
 				Repository:   mockIssue.Repository,
 				Title:        mockIssue.Title,
 				Body:         mockIssue.Body,
+				Assignee:     &mockIssue.Assignee,
 			},
 			nil,
 			true,
@@ -591,6 +593,7 @@ func TestMockCreateIssue(t *testing.T) {
 				Organization: course.OrganizationName,
 				Title:        mockIssue.Title,
 				Body:         mockIssue.Body,
+				Assignee:     &mockIssue.Assignee,
 			},
 			nil,
 			true,
@@ -601,6 +604,7 @@ func TestMockCreateIssue(t *testing.T) {
 				Organization: course.OrganizationName,
 				Repository:   mockIssue.Repository,
 				Body:         mockIssue.Body,
+				Assignee:     &mockIssue.Assignee,
 			},
 			nil,
 			true,
@@ -611,6 +615,7 @@ func TestMockCreateIssue(t *testing.T) {
 				Organization: course.OrganizationName,
 				Repository:   mockIssue.Repository,
 				Title:        mockIssue.Title,
+				Assignee:     &mockIssue.Assignee,
 			},
 			nil,
 			true,
@@ -639,6 +644,7 @@ func TestMockUpdateIssue(t *testing.T) {
 		Repository:   mockIssue.Repository,
 		Title:        mockIssue.Title,
 		Body:         mockIssue.Body,
+		Assignee:     &mockIssue.Assignee,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -721,6 +727,164 @@ func TestMockUpdateIssue(t *testing.T) {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
 		if diff := cmp.Diff(tt.wantIssue, gotIssue); diff != "" {
+			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+		}
+	}
+}
+
+func TestMockGetIssue(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	course := qtest.MockCourses[0]
+	if _, err := s.CreateIssue(ctx, &scm.IssueOptions{
+		Organization: course.OrganizationName,
+		Repository:   mockIssue.Repository,
+		Title:        mockIssue.Title,
+		Body:         mockIssue.Body,
+		Assignee:     &mockIssue.Assignee,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name      string
+		opt       *scm.RepositoryOptions
+		number    int
+		wantIssue *scm.Issue
+		wantErr   bool
+	}{
+		{
+			"correct issue",
+			&scm.RepositoryOptions{
+				Path:  mockIssue.Repository,
+				Owner: course.OrganizationName,
+			},
+			mockIssue.Number,
+			mockIssue,
+			false,
+		},
+		{
+			"incorrect issue number",
+			&scm.RepositoryOptions{
+				Path:  mockIssue.Repository,
+				Owner: course.OrganizationName,
+			},
+			13,
+			nil,
+			true,
+		},
+		{
+			"incorrect organization name",
+			&scm.RepositoryOptions{
+				Path:  mockIssue.Repository,
+				Owner: "some-org",
+			},
+			mockIssue.Number,
+			nil,
+			true,
+		},
+	}
+	for _, tt := range tests {
+		issue, err := s.GetIssue(ctx, tt.opt, tt.number)
+		if (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
+		}
+		if diff := cmp.Diff(tt.wantIssue, issue); diff != "" {
+			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+		}
+
+	}
+}
+
+func TestMockGetIssues(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	course := qtest.MockCourses[0]
+
+	issues := []*scm.Issue{
+		mockIssue,
+		{
+			ID:         2,
+			Number:     2,
+			Title:      "Task 1",
+			Body:       "Finish Task 1",
+			Repository: mockIssue.Repository,
+			Assignee:   "",
+		},
+		{
+			ID:         3,
+			Number:     3,
+			Title:      "Task 1",
+			Body:       "Finish Task 1",
+			Repository: "user-labs",
+			Assignee:   "",
+		},
+	}
+
+	for _, issue := range issues {
+		if _, err := s.CreateIssue(ctx, &scm.IssueOptions{
+			Organization: course.OrganizationName,
+			Repository:   issue.Repository,
+			Title:        issue.Title,
+			Body:         issue.Body,
+			Assignee:     &issue.Assignee,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	tests := []struct {
+		name       string
+		opt        *scm.RepositoryOptions
+		wantIssues []*scm.Issue
+		wantErr    bool
+	}{
+		{
+			"issues for 'test-labs' repo",
+			&scm.RepositoryOptions{
+				Owner: course.OrganizationName,
+				Path:  mockIssue.Repository,
+			},
+			[]*scm.Issue{issues[0], issues[1]},
+			false,
+		},
+		{
+			"issues for 'user-labs' repo",
+			&scm.RepositoryOptions{
+				Owner: course.OrganizationName,
+				Path:  issues[2].Repository,
+			},
+			[]*scm.Issue{issues[2]},
+			false,
+		},
+		{
+			"incorrect repository",
+			&scm.RepositoryOptions{
+				Owner: course.OrganizationName,
+				Path:  "unknown-labs",
+			},
+			nil,
+			false,
+		},
+		{
+			"incorrect organization",
+			&scm.RepositoryOptions{
+				Owner: "some-org",
+				Path:  mockIssue.Repository,
+			},
+			nil,
+			true,
+		},
+	}
+	for _, tt := range tests {
+		gotIssues, err := s.GetIssues(ctx, tt.opt)
+		sort.Slice(gotIssues, func(i, j int) bool {
+			return gotIssues[i].ID < gotIssues[j].ID
+		})
+		if (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
+		}
+		if diff := cmp.Diff(tt.wantIssues, gotIssues); diff != "" {
 			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
 		}
 	}

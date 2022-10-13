@@ -315,6 +315,7 @@ func (s *MockSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, e
 		Repository: opt.Repository,
 		Body:       opt.Body,
 		Number:     int(id),
+		Assignee:   *opt.Assignee,
 	}
 	s.Issues[issue.ID] = issue
 	return issue, nil
@@ -340,19 +341,36 @@ func (s *MockSCM) UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue, e
 }
 
 // GetIssue implements the SCM interface
-func (*MockSCM) GetIssue(_ context.Context, _ *RepositoryOptions, _ int) (*Issue, error) {
-	return nil, ErrNotSupported{
-		SCM:    "MockSCM",
-		Method: "GetIssue",
+func (s *MockSCM) GetIssue(ctx context.Context, opt *RepositoryOptions, number int) (*Issue, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
+		return nil, errors.New("organization not found")
+	}
+	issue, ok := s.Issues[uint64(number)]
+	if !ok {
+		return nil, errors.New("issue not found")
+	}
+	return issue, nil
 }
 
 // GetIssues implements the SCM interface
-func (*MockSCM) GetIssues(_ context.Context, _ *RepositoryOptions) ([]*Issue, error) {
-	return nil, ErrNotSupported{
-		SCM:    "MockSCM",
-		Method: "GetIssues",
+func (s *MockSCM) GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
+		return nil, errors.New("organization not found")
+	}
+	var issues []*Issue
+
+	for _, i := range s.Issues {
+		if i.Repository == opt.Path {
+			issues = append(issues, i)
+		}
+	}
+	return issues, nil
 }
 
 func (*MockSCM) DeleteIssue(_ context.Context, _ *RepositoryOptions, _ int) error {
