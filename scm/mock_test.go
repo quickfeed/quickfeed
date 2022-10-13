@@ -13,13 +13,31 @@ import (
 	"github.com/quickfeed/quickfeed/scm"
 )
 
-var mockIssue = &scm.Issue{
-	ID:         1,
-	Title:      "Test issue",
-	Body:       "This is a test issue.",
-	Repository: "test-labs",
-	Number:     1,
-	Assignee:   "test_user",
+var mockIssues = []*scm.Issue{
+	{
+		ID:         1,
+		Title:      "Test issue",
+		Body:       "This is a test issue.",
+		Repository: "test-labs",
+		Number:     1,
+		Assignee:   "test_user",
+	},
+	{
+		ID:         2,
+		Number:     2,
+		Title:      "Task 1",
+		Body:       "Finish Task 1",
+		Repository: "test-labs",
+		Assignee:   "",
+	},
+	{
+		ID:         3,
+		Number:     3,
+		Title:      "Task 1",
+		Body:       "Finish Task 1",
+		Repository: "user-labs",
+		Assignee:   "",
+	},
 }
 
 func TestMockClone(t *testing.T) {
@@ -556,6 +574,7 @@ func TestMockCreateIssue(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
+	issue := mockIssues[0]
 
 	tests := []struct {
 		name      string
@@ -567,22 +586,22 @@ func TestMockCreateIssue(t *testing.T) {
 			"correct options",
 			&scm.IssueOptions{
 				Organization: course.OrganizationName,
-				Repository:   mockIssue.Repository,
-				Title:        mockIssue.Title,
-				Body:         mockIssue.Body,
-				Assignee:     &mockIssue.Assignee,
+				Repository:   issue.Repository,
+				Title:        issue.Title,
+				Body:         issue.Body,
+				Assignee:     &issue.Assignee,
 			},
-			mockIssue,
+			issue,
 			false,
 		},
 		{
 			"incorrect organization",
 			&scm.IssueOptions{
 				Organization: "another-organization",
-				Repository:   mockIssue.Repository,
-				Title:        mockIssue.Title,
-				Body:         mockIssue.Body,
-				Assignee:     &mockIssue.Assignee,
+				Repository:   issue.Repository,
+				Title:        issue.Title,
+				Body:         issue.Body,
+				Assignee:     &issue.Assignee,
 			},
 			nil,
 			true,
@@ -591,9 +610,9 @@ func TestMockCreateIssue(t *testing.T) {
 			"missing repository",
 			&scm.IssueOptions{
 				Organization: course.OrganizationName,
-				Title:        mockIssue.Title,
-				Body:         mockIssue.Body,
-				Assignee:     &mockIssue.Assignee,
+				Title:        issue.Title,
+				Body:         issue.Body,
+				Assignee:     &issue.Assignee,
 			},
 			nil,
 			true,
@@ -602,9 +621,9 @@ func TestMockCreateIssue(t *testing.T) {
 			"missing title",
 			&scm.IssueOptions{
 				Organization: course.OrganizationName,
-				Repository:   mockIssue.Repository,
-				Body:         mockIssue.Body,
-				Assignee:     &mockIssue.Assignee,
+				Repository:   issue.Repository,
+				Body:         issue.Body,
+				Assignee:     &issue.Assignee,
 			},
 			nil,
 			true,
@@ -613,9 +632,9 @@ func TestMockCreateIssue(t *testing.T) {
 			"missing body",
 			&scm.IssueOptions{
 				Organization: course.OrganizationName,
-				Repository:   mockIssue.Repository,
-				Title:        mockIssue.Title,
-				Assignee:     &mockIssue.Assignee,
+				Repository:   issue.Repository,
+				Title:        issue.Title,
+				Assignee:     &issue.Assignee,
 			},
 			nil,
 			true,
@@ -639,6 +658,7 @@ func TestMockUpdateIssue(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
+	mockIssue := mockIssues[0]
 	issue, err := s.CreateIssue(ctx, &scm.IssueOptions{
 		Organization: course.OrganizationName,
 		Repository:   mockIssue.Repository,
@@ -736,12 +756,13 @@ func TestMockGetIssue(t *testing.T) {
 	s := scm.NewMockSCMClient()
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
+	issue := mockIssues[0]
 	if _, err := s.CreateIssue(ctx, &scm.IssueOptions{
 		Organization: course.OrganizationName,
-		Repository:   mockIssue.Repository,
-		Title:        mockIssue.Title,
-		Body:         mockIssue.Body,
-		Assignee:     &mockIssue.Assignee,
+		Repository:   issue.Repository,
+		Title:        issue.Title,
+		Body:         issue.Body,
+		Assignee:     &issue.Assignee,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -756,17 +777,17 @@ func TestMockGetIssue(t *testing.T) {
 		{
 			"correct issue",
 			&scm.RepositoryOptions{
-				Path:  mockIssue.Repository,
+				Path:  issue.Repository,
 				Owner: course.OrganizationName,
 			},
-			mockIssue.Number,
-			mockIssue,
+			issue.Number,
+			issue,
 			false,
 		},
 		{
 			"incorrect issue number",
 			&scm.RepositoryOptions{
-				Path:  mockIssue.Repository,
+				Path:  issue.Repository,
 				Owner: course.OrganizationName,
 			},
 			13,
@@ -776,20 +797,20 @@ func TestMockGetIssue(t *testing.T) {
 		{
 			"incorrect organization name",
 			&scm.RepositoryOptions{
-				Path:  mockIssue.Repository,
+				Path:  issue.Repository,
 				Owner: "some-org",
 			},
-			mockIssue.Number,
+			issue.Number,
 			nil,
 			true,
 		},
 	}
 	for _, tt := range tests {
-		issue, err := s.GetIssue(ctx, tt.opt, tt.number)
+		gotIssue, err := s.GetIssue(ctx, tt.opt, tt.number)
 		if (err != nil) != tt.wantErr {
 			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
 		}
-		if diff := cmp.Diff(tt.wantIssue, issue); diff != "" {
+		if diff := cmp.Diff(tt.wantIssue, gotIssue); diff != "" {
 			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
 		}
 
@@ -801,27 +822,7 @@ func TestMockGetIssues(t *testing.T) {
 	ctx := context.Background()
 	course := qtest.MockCourses[0]
 
-	issues := []*scm.Issue{
-		mockIssue,
-		{
-			ID:         2,
-			Number:     2,
-			Title:      "Task 1",
-			Body:       "Finish Task 1",
-			Repository: mockIssue.Repository,
-			Assignee:   "",
-		},
-		{
-			ID:         3,
-			Number:     3,
-			Title:      "Task 1",
-			Body:       "Finish Task 1",
-			Repository: "user-labs",
-			Assignee:   "",
-		},
-	}
-
-	for _, issue := range issues {
+	for _, issue := range mockIssues {
 		if _, err := s.CreateIssue(ctx, &scm.IssueOptions{
 			Organization: course.OrganizationName,
 			Repository:   issue.Repository,
@@ -843,18 +844,18 @@ func TestMockGetIssues(t *testing.T) {
 			"issues for 'test-labs' repo",
 			&scm.RepositoryOptions{
 				Owner: course.OrganizationName,
-				Path:  mockIssue.Repository,
+				Path:  mockIssues[0].Repository,
 			},
-			[]*scm.Issue{issues[0], issues[1]},
+			[]*scm.Issue{mockIssues[0], mockIssues[1]},
 			false,
 		},
 		{
 			"issues for 'user-labs' repo",
 			&scm.RepositoryOptions{
 				Owner: course.OrganizationName,
-				Path:  issues[2].Repository,
+				Path:  mockIssues[2].Repository,
 			},
-			[]*scm.Issue{issues[2]},
+			[]*scm.Issue{mockIssues[2]},
 			false,
 		},
 		{
@@ -870,7 +871,7 @@ func TestMockGetIssues(t *testing.T) {
 			"incorrect organization",
 			&scm.RepositoryOptions{
 				Owner: "some-org",
-				Path:  mockIssue.Repository,
+				Path:  mockIssues[0].Repository,
 			},
 			nil,
 			true,
@@ -888,4 +889,12 @@ func TestMockGetIssues(t *testing.T) {
 			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
 		}
 	}
+}
+
+func TestMockDeleteIssue(t *testing.T) {
+
+}
+
+func TestMockDeleteIssues(t *testing.T) {
+
 }
