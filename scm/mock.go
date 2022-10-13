@@ -20,6 +20,7 @@ type MockSCM struct {
 	Organizations map[uint64]*qf.Organization
 	Hooks         map[uint64]*Hook
 	Teams         map[uint64]*Team
+	Issues        map[uint64]*Issue
 }
 
 // NewMockSCMClient returns a new mock client implementing the SCM interface.
@@ -29,6 +30,7 @@ func NewMockSCMClient() *MockSCM {
 		Organizations: make(map[uint64]*qf.Organization),
 		Hooks:         make(map[uint64]*Hook),
 		Teams:         make(map[uint64]*Team),
+		Issues:        make(map[uint64]*Issue),
 	}
 	// initialize four test course organizations
 	for _, course := range qtest.MockCourses {
