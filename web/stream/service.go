@@ -12,13 +12,13 @@ import (
 // To add a new service, add a new field to this struct and
 // initialize the service in the NewStreamServices function.
 type StreamServices struct {
-	Submission *Service[qf.Submission, uint64]
+	Submission *Service[uint64, qf.Submission]
 }
 
 // NewStreamServices creates a new StreamServices.
 func NewStreamServices() *StreamServices {
 	return &StreamServices{
-		Submission: NewService[qf.Submission, uint64](),
+		Submission: NewService[uint64, qf.Submission](),
 	}
 }
 
@@ -27,25 +27,25 @@ type ID interface {
 	uint64 | string
 }
 
-// Service[T] is a type specific stream service.
+// Service[K ID, V any] is a type specific stream service.
 // It also contains a map of streams that are currently connected.
-type Service[T any, V ID] struct {
+type Service[K ID, V any] struct {
 	mu sync.Mutex
 	// The map of streams.
-	streams map[V]StreamInterface[T]
+	streams map[K]StreamInterface[V]
 }
 
 // NewService creates a new service.
-func NewService[T any, V ID]() *Service[T, V] {
-	return &Service[T, V]{
-		streams: make(map[V]StreamInterface[T]),
+func NewService[K ID, V any]() *Service[K, V] {
+	return &Service[K, V]{
+		streams: make(map[K]StreamInterface[V]),
 	}
 }
 
 // SendTo sends data to connected clients with the given IDs.
 // If no ID is given, data is sent to all connected clients.
 // Unconnected clients are ignored and will not receive the data.
-func (s *Service[T, V]) SendTo(data *T, ids ...V) {
+func (s *Service[K, V]) SendTo(data *V, ids ...K) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if len(ids) == 0 {
@@ -65,8 +65,9 @@ func (s *Service[T, V]) SendTo(data *T, ids ...V) {
 	}
 }
 
-// Add adds a new stream for the given user to the service.
-func (s *Service[T, V]) Add(stream StreamInterface[T], id V) {
+// Add adds a new stream for the given identifier.
+// The identifier may be a user ID or an external application ID.
+func (s *Service[K, V]) Add(stream StreamInterface[V], id K) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	// Delete the stream if it already exists.
@@ -78,7 +79,7 @@ func (s *Service[T, V]) Add(stream StreamInterface[T], id V) {
 // internalRemove removes a stream from the service.
 // This closes the stream and removes it from the map.
 // This function must only be called when holding the mutex.
-func (s *Service[T, V]) internalRemove(id V) {
+func (s *Service[K, V]) internalRemove(id K) {
 	if stream, ok := s.streams[id]; ok {
 		stream.Close()
 		delete(s.streams, id)
@@ -86,7 +87,7 @@ func (s *Service[T, V]) internalRemove(id V) {
 }
 
 // Close closes all streams in the service.
-func (s *Service[T, V]) Close() {
+func (s *Service[K, V]) Close() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, stream := range s.streams {
@@ -95,7 +96,7 @@ func (s *Service[T, V]) Close() {
 }
 
 // CloseBy closes the given user's stream.
-func (s *Service[T, V]) CloseBy(id V) {
+func (s *Service[K, V]) CloseBy(id K) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if stream, ok := s.streams[id]; ok {
