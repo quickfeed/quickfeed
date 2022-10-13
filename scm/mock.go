@@ -301,11 +301,21 @@ func (s *MockSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) e
 }
 
 // CreateIssue implements the SCM interface
-func (*MockSCM) CreateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
-	return nil, ErrNotSupported{
-		SCM:    "MockSCM",
-		Method: "CreateIssue",
+func (s *MockSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
+		return nil, errors.New("organization not found")
+	}
+	issue := &Issue{
+		ID:         generateID(s.Issues),
+		Title:      opt.Title,
+		Repository: opt.Repository,
+		Body:       opt.Body,
+	}
+	s.Issues[issue.ID] = issue
+	return issue, nil
 }
 
 // UpdateIssue implements the SCM interface

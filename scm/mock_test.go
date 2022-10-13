@@ -538,7 +538,91 @@ func TestTeamRepo(t *testing.T) {
 
 	for _, tt := range teamRepoTests {
 		if err := s.AddTeamRepo(ctx, tt.opt); (err != nil) != tt.wantErr {
-			t.Errorf("%s: expected error %v, got = %v, ", tt.name, tt.wantErr, err)
+			t.Errorf("%s: expected error %v, got = %v", tt.name, tt.wantErr, err)
 		}
+	}
+}
+
+func TestMockCreateIssue(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	course := qtest.MockCourses[0]
+	wantIssue := &scm.Issue{
+		ID:         1,
+		Title:      "Test issue",
+		Body:       "This is a test issue.",
+		Repository: "test-labs",
+	}
+
+	tests := []struct {
+		name      string
+		opt       *scm.IssueOptions
+		wantIssue *scm.Issue
+		wantErr   bool
+	}{
+		{
+			"correct options",
+			&scm.IssueOptions{
+				Organization: course.OrganizationName,
+				Repository:   wantIssue.Repository,
+				Title:        wantIssue.Title,
+				Body:         wantIssue.Body,
+			},
+			wantIssue,
+			false,
+		},
+		{
+			"incorrect organization",
+			&scm.IssueOptions{
+				Organization: "another-organization",
+				Repository:   wantIssue.Repository,
+				Title:        wantIssue.Title,
+				Body:         wantIssue.Body,
+			},
+			nil,
+			true,
+		},
+		{
+			"missing repository",
+			&scm.IssueOptions{
+				Organization: course.OrganizationName,
+				Title:        wantIssue.Title,
+				Body:         wantIssue.Body,
+			},
+			nil,
+			true,
+		},
+		{
+			"missing title",
+			&scm.IssueOptions{
+				Organization: course.OrganizationName,
+				Repository:   wantIssue.Repository,
+				Body:         wantIssue.Body,
+			},
+			nil,
+			true,
+		},
+		{
+			"missing body",
+			&scm.IssueOptions{
+				Organization: course.OrganizationName,
+				Repository:   wantIssue.Repository,
+				Title:        wantIssue.Title,
+			},
+			nil,
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			got, err := s.CreateIssue(ctx, tt.opt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
+			}
+			if diff := cmp.Diff(tt.wantIssue, got); diff != "" {
+				t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+			}
+		})
 	}
 }
