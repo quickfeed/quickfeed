@@ -90,8 +90,8 @@ func (s *Service[K, V]) internalRemove(id K) {
 func (s *Service[K, V]) Close() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	for _, stream := range s.streams {
-		stream.Close()
+	for id := range s.streams {
+		s.internalRemove(id)
 	}
 }
 
@@ -99,7 +99,5 @@ func (s *Service[K, V]) Close() {
 func (s *Service[K, V]) CloseBy(id K) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if stream, ok := s.streams[id]; ok {
-		stream.Close()
-	}
+	s.internalRemove(id)
 }
