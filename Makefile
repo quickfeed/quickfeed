@@ -12,13 +12,12 @@ grpcweb-ver			:= $(shell cd public; npm ls --package-lock-only grpc-web | awk -F
 protoc-grpcweb		:= protoc-gen-grpc-web
 protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
-envoy-config-gen	:= ./cmd/envoy/envoy_config_gen.go
 toolsdir			:= bin
 tool-pkgs			:= $(shell go list -f '{{join .Imports " "}}' tools.go)
 tool-cmds			:= $(foreach tool,$(notdir ${tool-pkgs}),${toolsdir}/${tool}) $(foreach cmd,${tool-cmds},$(eval $(notdir ${cmd})Cmd := ${cmd}))
 
 # necessary when target is not tied to a specific file
-.PHONY: devtools download tools grpcweb install ui proto envoy-build envoy-run scm version-check
+.PHONY: devtools download tools grpcweb install ui proto scm version-check
 
 devtools: grpcweb tools
 
@@ -122,15 +121,7 @@ ifeq (, $(shell which brew))
 	$(error "No brew command in $(PATH)")
 endif
 	@echo "Installing homebrew packages needed for development and deployment"
-	@brew install gh go protobuf node docker certbot envoy clang-format golangci-lint bufbuild/buf/buf grpcurl
-
-envoy-config:
-ifeq ($(DOMAIN),)
-	@echo "You must set required environment variables before configuring Envoy (see .env-template)." && false
-else
-	@echo "Generating Envoy configuration for $(DOMAIN)."
-	@go run $(envoy-config-gen) --tls
-endif
+	@brew install gh go protobuf node docker clang-format golangci-lint bufbuild/buf/buf grpcurl
 
 # protoset is a file used as a server reflection to mock-testing of grpc methods via command line
 protoset:
