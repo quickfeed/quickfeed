@@ -110,10 +110,12 @@ func runner(logger *zap.SugaredLogger) ci.Runner {
 }
 
 func getSCMClient() (*zap.SugaredLogger, scm.SCM) {
-	logger := qlog.Prod()
-	client, err := scm.NewSCMClient(logger, cli.Clone.Token)
+	logger, err := qlog.Zap()
 	check(err)
-	return logger, client
+	sugar := logger.Sugar()
+	client, err := scm.NewSCMClient(sugar, cli.Clone.Token)
+	check(err)
+	return sugar, client
 }
 
 func studentRepo() string {
