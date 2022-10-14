@@ -22,7 +22,6 @@ quickfeed-env.sh
 # Configuration and certificate files
 *.pem
 internal/config/certs/*
-internal/config/envoy/*
 
 # Database and Log files
 *.db
