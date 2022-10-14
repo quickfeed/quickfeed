@@ -28,7 +28,7 @@ var messages = []Data{
 }
 
 func TestStream(t *testing.T) {
-	service := stream.NewService[Data]()
+	service := stream.NewService[uint64, Data]()
 
 	counter := uint32(0)
 
@@ -80,7 +80,7 @@ func TestStream(t *testing.T) {
 // This test should be run with the -race flag, e.g.,:
 // % go test -v -race -run TestStreamClose -test.count 10
 func TestStreamClose(_ *testing.T) {
-	service := stream.NewService[Data]()
+	service := stream.NewService[uint64, Data]()
 
 	counter := uint32(0)
 
