@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/internal/fileop"
+	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/rand"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 )

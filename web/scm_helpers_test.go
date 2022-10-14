@@ -7,7 +7,6 @@ import (
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 )
@@ -21,7 +20,7 @@ func TestInitSCMs(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 	ctx := context.Background()
-	logger := qlog.Logger(t).Desugar()
+	logger := qtest.Logger(t).Desugar()
 	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 	admin := qtest.CreateFakeUser(t, db, 1)
 	course := &qf.Course{

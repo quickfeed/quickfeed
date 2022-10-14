@@ -9,7 +9,6 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 )
@@ -19,7 +18,7 @@ func testQuickFeedService(t *testing.T) (database.Database, func(), scm.SCM, *we
 	t.Helper()
 	db, cleanup := qtest.TestDB(t)
 	sc, mgr := scm.MockSCMManager(t)
-	logger := qlog.Logger(t).Desugar()
+	logger := qtest.Logger(t).Desugar()
 	return db, cleanup, sc, web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 }
 

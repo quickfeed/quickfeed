@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/quickfeed/quickfeed/qlog"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 )
 
 func GetTestOrganization(t *testing.T) string {
@@ -48,7 +48,7 @@ func GetWebHookServer(t *testing.T) string {
 func GetTestSCM(t *testing.T) SCM {
 	t.Helper()
 	accessToken := GetAccessToken(t)
-	s, err := NewSCMClient(qlog.Logger(t), accessToken)
+	s, err := NewSCMClient(qtest.Logger(t), accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

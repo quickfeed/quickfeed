@@ -11,7 +11,6 @@ import (
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/qf/qfconnect"
-	"github.com/quickfeed/quickfeed/qlog"
 )
 
 // TestDB returns a test database and close function.
@@ -28,11 +27,7 @@ func TestDB(t *testing.T) (database.Database, func()) {
 		t.Fatal(err)
 	}
 
-	logger, err := qlog.Zap()
-	if err != nil {
-		t.Fatal(err)
-	}
-	db, err := database.NewGormDB(f.Name(), logger)
+	db, err := database.NewGormDB(f.Name(), Logger(t).Desugar())
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)
