@@ -392,7 +392,7 @@ func (s *MockSCM) DeleteIssues(ctx context.Context, opt *RepositoryOptions) erro
 		return errors.New("organization not found")
 	}
 	for _, issue := range s.Issues {
-		if issue.Repository == opt.Owner {
+		if issue.Repository == opt.Path {
 			delete(s.Issues, issue.ID)
 		}
 	}

@@ -892,7 +892,33 @@ func TestMockGetIssues(t *testing.T) {
 }
 
 func TestMockDeleteIssue(t *testing.T) {
+	s := scm.NewMockSCMClient()
+	ctx := context.Background()
+	course := qtest.MockCourses[0]
 
+	for _, issue := range mockIssues {
+		if _, err := s.CreateIssue(ctx, &scm.IssueOptions{
+			Organization: course.OrganizationName,
+			Repository:   issue.Repository,
+			Title:        issue.Title,
+			Body:         issue.Body,
+			Assignee:     &issue.Assignee,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, issue := range mockIssues {
+		opt := &scm.RepositoryOptions{
+			Owner: course.OrganizationName,
+			Path:  issue.Repository,
+		}
+		if err := s.DeleteIssue(ctx, opt, issue.Number); err != nil {
+			t.Error(err)
+		}
+		if _, err := s.GetIssue(ctx, opt, issue.Number); err == nil {
+			t.Error("expected error 'issue not found'")
+		}
+	}
 }
 
 func TestMockDeleteIssues(t *testing.T) {
