@@ -26,7 +26,6 @@ cmpopts
 codecov
 containertimeout
 copytruncate
-coverallsapp
 covermode
 coverprofile
 CSRF
@@ -96,7 +95,6 @@ keyout
 killall
 labstack
 Lamport
-lcov
 letsencrypt
 Lindhom
 linuxbrew
