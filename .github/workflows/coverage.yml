@@ -43,14 +43,14 @@ jobs:
           flag-name: Go-${{ matrix.go-version }}
           parallel: true
 
-      - name: Upload coverage report to codecov.io
-        uses: codecov/codecov-action@v2
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
         with:
           files: ./profile.cov
           flags: unittests
           name: codecov-umbrella
-          fail_ci_if_error: true # optional (default = false)
-          verbose: true # optional (default = false)
+          fail_ci_if_error: true
+          verbose: true
 
   # notifies that all test jobs are finished.
   finish:
