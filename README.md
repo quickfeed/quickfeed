@@ -2,7 +2,6 @@
 
 [![Go Test](https://github.com/quickfeed/quickfeed/workflows/Go%20Test/badge.svg)](https://github.com/quickfeed/quickfeed/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/quickfeed/quickfeed)](https://goreportcard.com/report/github.com/quickfeed/quickfeed)
-[![Coverall Status](https://coveralls.io/repos/github/quickfeed/quickfeed/badge.svg?branch=master)](https://coveralls.io/github/quickfeed/quickfeed?branch=master)
 [![Codecov](https://codecov.io/gh/quickfeed/quickfeed/branch/master/graph/badge.svg)](https://codecov.io/gh/quickfeed/quickfeed)
 [![golangci-lint](https://github.com/quickfeed/quickfeed/workflows/golangci-lint/badge.svg)](https://github.com/quickfeed/quickfeed/actions)
 
