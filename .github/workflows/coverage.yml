@@ -36,13 +36,6 @@ jobs:
       - name: Generate coverage report
         run: DOCKER_TESTS=1 go test -v -coverprofile=profile.cov -covermode=atomic ./...
 
-      - name: Coveralls GitHub Action
-        uses: shogo82148/actions-goveralls@v1
-        with:
-          path-to-profile: profile.cov
-          flag-name: Go-${{ matrix.go-version }}
-          parallel: true
-
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
@@ -51,13 +44,3 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: true
           verbose: true
-
-  # notifies that all test jobs are finished.
-  finish:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Coveralls Finished
-      uses: shogo82148/actions-goveralls@v1
-      with:
-        parallel-finished: true
