@@ -26,18 +26,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Go
-        uses: actions/setup-go@v2
+      - name: Setup Go environment
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
+          check-latest: true
+          cache: true
 
       - name: Generate coverage report
         run: DOCKER_TESTS=1 go test -v -coverprofile=profile.cov -covermode=atomic ./...
 
-      - name: Upload coverage report to Coveralls.io
-        uses: shogo82148/actions-goveralls@v1
+      - name: Coveralls GitHub Action
+        uses: coverallsapp/github-action@master
         with:
-          path-to-profile: profile.cov
+          github-token: ${{ secrets.github_token }}
+          path-to-lcov: profile.cov
           flag-name: Go-${{ matrix.go-version }}
           parallel: true
 
@@ -55,6 +58,8 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: shogo82148/actions-goveralls@v1
-        with:
-          parallel-finished: true
+    - name: Coveralls Finished
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.github_token }}
+        parallel-finished: true
