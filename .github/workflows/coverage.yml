@@ -37,10 +37,9 @@ jobs:
         run: DOCKER_TESTS=1 go test -v -coverprofile=profile.cov -covermode=atomic ./...
 
       - name: Coveralls GitHub Action
-        uses: coverallsapp/github-action@master
+        uses: shogo82148/actions-goveralls@v1
         with:
-          github-token: ${{ secrets.github_token }}
-          path-to-lcov: profile.cov
+          path-to-profile: profile.cov
           flag-name: Go-${{ matrix.go-version }}
           parallel: true
 
@@ -59,7 +58,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Coveralls Finished
-      uses: coverallsapp/github-action@master
+      uses: shogo82148/actions-goveralls@v1
       with:
-        github-token: ${{ secrets.github_token }}
         parallel-finished: true
