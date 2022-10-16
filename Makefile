@@ -12,6 +12,8 @@ grpcweb-ver			:= $(shell cd public; npm ls --package-lock-only grpc-web | awk -F
 protoc-grpcweb		:= protoc-gen-grpc-web
 protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
+protopatch			:= patch/go.proto
+protopatch-original	:= $(shell go list -m -f {{.Dir}} github.com/alta/protopatch)/$(protopatch)
 toolsdir			:= bin
 tool-pkgs			:= $(shell go list -f '{{join .Imports " "}}' tools.go)
 tool-cmds			:= $(foreach tool,$(notdir ${tool-pkgs}),${toolsdir}/${tool}) $(foreach cmd,${tool-cmds},$(eval $(notdir ${cmd})Cmd := ${cmd}))
@@ -59,11 +61,11 @@ ui-update: version-check
 	@echo "Running npm install and webpack"
 	@cd public; npm i; webpack
 
-proto-patch:
-	@echo "Copy protopatch/patch/go.proto to quickfeed/patch"
-	@cp -f `go list -m -f {{.Dir}} github.com/alta/protopatch`/patch/go.proto patch/
+$(protopatch): $(protopatch-original)
+	@echo "Copying $(protopatch-original) to $(protopatch)"
+	@cp -f $(protopatch-original) $(protopatch)
 
-proto: proto-patch
+proto: $(protopatch)
 	buf generate --template buf.gen.ui.yaml --exclude-path patch
 	buf generate --template buf.gen.yaml
 
