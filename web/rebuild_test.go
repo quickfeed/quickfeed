@@ -15,7 +15,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/qf"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -67,7 +66,7 @@ func TestRebuildSubmissions(t *testing.T) {
 	_, mgr := scm.MockSCMManager(t)
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
-	logger := qlog.Logger(t).Desugar()
+	logger := qtest.Logger(t).Desugar()
 	q := web.NewQuickFeedService(logger, db, mgr, web.BaseHookOptions{}, &ci.Local{})
 	teacher := qtest.CreateFakeUser(t, db, 1)
 	err := db.UpdateUser(&qf.User{ID: teacher.ID, IsAdmin: true})
