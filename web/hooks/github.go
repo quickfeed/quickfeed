@@ -6,7 +6,7 @@ import (
 	"github.com/google/go-github/v45/github"
 	"github.com/quickfeed/quickfeed/ci"
 	"github.com/quickfeed/quickfeed/database"
-	"github.com/quickfeed/quickfeed/qlog"
+	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"go.uber.org/zap"
 )

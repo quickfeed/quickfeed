@@ -6,7 +6,6 @@ import (
 
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qtest"
-	"github.com/quickfeed/quickfeed/qlog"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web/auth"
 	"github.com/steinfletcher/apitest"
@@ -22,7 +21,7 @@ const (
 )
 
 func TestOAuth2Login(t *testing.T) {
-	logger := qlog.Logger(t)
+	logger := qtest.Logger(t)
 	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 	// Incorrect request method.
 	apitest.New().HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).
@@ -46,7 +45,7 @@ func TestOAuth2Login(t *testing.T) {
 }
 
 func TestOAuth2LoginRedirect(t *testing.T) {
-	logger := qlog.Logger(t)
+	logger := qtest.Logger(t)
 	authConfig := auth.NewGitHubConfig("", &scm.Config{})
 
 	apitest.New().HandlerFunc(auth.OAuth2Login(logger, authConfig, "")).

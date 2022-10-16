@@ -13,6 +13,7 @@ Autograder
 backports
 beatlabs
 bitlab
+Buf's
 bufbuild
 bufconn
 bufnet
