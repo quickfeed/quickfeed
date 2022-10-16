@@ -953,7 +953,7 @@ func TestMockDeleteIssues(t *testing.T) {
 			false,
 		},
 		{
-			"correct org, incorrect repo",
+			"missing repository, nothing deleted, no error expected",
 			&scm.RepositoryOptions{
 				Owner: course.OrganizationName,
 				Path:  "some-labs",
@@ -962,7 +962,7 @@ func TestMockDeleteIssues(t *testing.T) {
 			false,
 		},
 		{
-			"incorrect org name",
+			"incorrect organization name",
 			&scm.RepositoryOptions{
 				Owner: "organization",
 				Path:  "test-labs",
@@ -971,7 +971,7 @@ func TestMockDeleteIssues(t *testing.T) {
 			true,
 		},
 		{
-			"invalid opts",
+			"invalid opt",
 			&scm.RepositoryOptions{},
 			map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1], 3: mockIssues[2]},
 			true,

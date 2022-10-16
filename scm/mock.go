@@ -315,7 +315,9 @@ func (s *MockSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, e
 		Repository: opt.Repository,
 		Body:       opt.Body,
 		Number:     int(id),
-		Assignee:   *opt.Assignee,
+	}
+	if opt.Assignee != nil {
+		issue.Assignee = *opt.Assignee
 	}
 	s.Issues[issue.ID] = issue
 	return issue, nil

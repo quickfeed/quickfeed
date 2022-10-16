@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/go-github/v45/github"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -61,21 +62,19 @@ func TestCreateIssue(t *testing.T) {
 	}
 }
 
-// NOTE: This test only works if the given repository has no previous issues
 func TestGetIssues(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	qfTestUser := scm.GetTestUser(t)
-	s := scm.GetTestSCM(t)
+	s := scm.NewMockSCMClient()
+	course := qtest.MockCourses[0]
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
-		Owner: qfTestOrg,
-		Path:  qf.StudentRepoName(qfTestUser),
+		Owner: course.OrganizationName,
+		Path:  "test-labs",
 	}
 
 	wantIssueIDs := []int{}
 	for i := 1; i <= 5; i++ {
-		issue, cleanup := createIssue(t, s, qfTestOrg, opt.Path)
+		issue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
 		defer cleanup()
 		wantIssueIDs = append(wantIssueIDs, issue.Number)
 	}
