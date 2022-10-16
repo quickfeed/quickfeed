@@ -897,17 +897,16 @@ func TestMockDeleteIssue(t *testing.T) {
 	course := qtest.MockCourses[0]
 
 	for _, issue := range mockIssues {
-		if _, err := s.CreateIssue(ctx, &scm.IssueOptions{
+		issueOptions := &scm.IssueOptions{
 			Organization: course.OrganizationName,
 			Repository:   issue.Repository,
 			Title:        issue.Title,
 			Body:         issue.Body,
 			Assignee:     &issue.Assignee,
-		}); err != nil {
+		}
+		if _, err := s.CreateIssue(ctx, issueOptions); err != nil {
 			t.Fatal(err)
 		}
-	}
-	for _, issue := range mockIssues {
 		opt := &scm.RepositoryOptions{
 			Owner: course.OrganizationName,
 			Path:  issue.Repository,
@@ -922,5 +921,76 @@ func TestMockDeleteIssue(t *testing.T) {
 }
 
 func TestMockDeleteIssues(t *testing.T) {
+	ctx := context.Background()
+	course := qtest.MockCourses[0]
+	orgs := map[uint64]*qf.Organization{1: {
+		ID:   course.OrganizationID,
+		Name: course.OrganizationName,
+	}}
 
+	tests := []struct {
+		name       string
+		opt        *scm.RepositoryOptions
+		wantIssues map[uint64]*scm.Issue
+		wantErr    bool
+	}{
+		{
+			"delete all issues for 'user-labs' repo (issue 3)",
+			&scm.RepositoryOptions{
+				Path:  "user-labs",
+				Owner: course.OrganizationName,
+			},
+			map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1]},
+			false,
+		},
+		{
+			"delete all issues for 'test-labs' repo (issues 1 and 2)",
+			&scm.RepositoryOptions{
+				Path:  "test-labs",
+				Owner: course.OrganizationName,
+			},
+			map[uint64]*scm.Issue{3: mockIssues[2]},
+			false,
+		},
+		{
+			"correct org, incorrect repo",
+			&scm.RepositoryOptions{
+				Owner: course.OrganizationName,
+				Path:  "some-labs",
+			},
+			map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1], 3: mockIssues[2]},
+			false,
+		},
+		{
+			"incorrect org name",
+			&scm.RepositoryOptions{
+				Owner: "organization",
+				Path:  "test-labs",
+			},
+			map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1], 3: mockIssues[2]},
+			true,
+		},
+		{
+			"invalid opts",
+			&scm.RepositoryOptions{},
+			map[uint64]*scm.Issue{1: mockIssues[0], 2: mockIssues[1], 3: mockIssues[2]},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		issues := make(map[uint64]*scm.Issue)
+		for _, issue := range mockIssues {
+			issues[issue.ID] = issue
+		}
+		s := &scm.MockSCM{
+			Organizations: orgs,
+			Issues:        issues,
+		}
+		if err := s.DeleteIssues(ctx, tt.opt); (err != nil) != tt.wantErr {
+			t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
+		}
+		if diff := cmp.Diff(tt.wantIssues, s.Issues); diff != "" {
+			t.Errorf("%s mismatch (-want +got):\n%s", tt.name, diff)
+		}
+	}
 }
