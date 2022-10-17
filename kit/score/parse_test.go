@@ -135,7 +135,7 @@ func TestScoreIsValid(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			// clone the test.in scores to allow repeatable tests
 			for _, sc := range clone(test.in) {
-				err := sc.IsValid(theSecret)
+				err := sc.isValid(theSecret)
 				if err != nil {
 					if !strings.Contains(err.Error(), test.want.Error()) {
 						t.Errorf("IsValid(%q) = %v, expected = %v", sc, err, test.want)

@@ -114,7 +114,7 @@ func (r *Results) addScore(sc *Score) {
 // Otherwise, nil is returned.
 func (r *Results) Validate(secret string) error {
 	for _, sc := range r.Scores {
-		if err := sc.IsValid(secret); err != nil {
+		if err := sc.isValid(secret); err != nil {
 			return err
 		}
 	}

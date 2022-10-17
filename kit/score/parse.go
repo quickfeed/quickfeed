@@ -24,7 +24,7 @@ func parse(s, secret string) (*Score, error) {
 		var sc Score
 		err := json.Unmarshal([]byte(s), &sc)
 		if err == nil {
-			if err = sc.IsValid(secret); err != nil {
+			if err = sc.isValid(secret); err != nil {
 				return nil, err
 			}
 			return &sc, nil
@@ -38,11 +38,11 @@ func parse(s, secret string) (*Score, error) {
 	return nil, ErrScoreNotFound
 }
 
-// IsValid returns an error if the score object is invalid.
+// isValid returns an error if the score object is invalid.
 // Otherwise, nil is returned.
 // If the given secret matches the score's secret value,
 // the Secret field is redacted with the empty string "".
-func (sc *Score) IsValid(secret string) error {
+func (sc *Score) isValid(secret string) error {
 	tName := sc.GetTestName()
 	if tName == "" {
 		return errMsg("", ErrEmptyTestName.Error())
