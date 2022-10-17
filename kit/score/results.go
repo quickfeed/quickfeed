@@ -64,7 +64,7 @@ func ExtractResults(out, secret string, execTime time.Duration) (*Results, error
 	for _, line := range strings.Split(out, "\n") {
 		// check if line has expected JSON score string
 		if HasPrefix(line) {
-			sc, err := Parse(line, secret)
+			sc, err := parse(line, secret)
 			if err != nil {
 				errs = append(errs, fmt.Errorf("failed on line '%s': %v", line, err))
 				continue

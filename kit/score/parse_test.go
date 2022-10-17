@@ -16,7 +16,7 @@ var nonJSONLog = []string{
 
 func TestParseNonJSONStrings(t *testing.T) {
 	for _, s := range nonJSONLog {
-		sc, err := Parse(s, theSecret)
+		sc, err := parse(s, theSecret)
 		if err == nil {
 			t.Errorf("Expected '%v', got '<nil>'", ErrScoreNotFound.Error())
 		}
@@ -45,7 +45,7 @@ var jsonLog = []struct {
 
 func TestParseJSONStrings(t *testing.T) {
 	for _, s := range jsonLog {
-		sc, err := Parse(s.in, theSecret)
+		sc, err := parse(s.in, theSecret)
 		var expectedScore *Score
 		if s.max > 0 {
 			expectedScore = &Score{
