@@ -1,22 +1,24 @@
 # Quickfeed Deployments
 
-## Table of Contents
-
-- [Technology Stack](#technology-stack)
-- [Preparing the Environment](#preparing-the-environment)
-  - [Configuring Docker](#configuring-docker)
-  - [Setup Environment Variables](#setup-environment-variables)
-- [Bare Metal Deployment](#bare-metal-deployment)
-  - [Configure Fixed IP and Router](#configure-fixed-ip-and-router)
-  - [Install Tools for Deployment](#install-tools-for-deployment)
-  - [Install Tools for Development](#install-tools-for-development)
-  - [Build and Run QuickFeed Server](#build-and-run-quickfeed-server)
-    - [Troubleshooting](#troubleshooting)
-  - [Running the QuickFeed Server Details](#running-the-quickfeed-server-details)
-    - [Flags](#flags)
-
 ## Technology Stack
 
+- [Quickfeed Deployments](#quickfeed-deployments)
+  - [Technology Stack](#technology-stack)
+    - [Recommended VSCode Plugins](#recommended-vscode-plugins)
+  - [Setup](#setup)
+    - [Install Tools for Deployment](#install-tools-for-deployment)
+    - [Install Tools for Development](#install-tools-for-development)
+    - [Preparing the environment (`.env`)](#preparing-the-environment-env)
+    - [First-time installation](#first-time-installation)
+    - [Configuring Docker](#configuring-docker)
+    - [Configuring Fixed IP and Router](#configuring-fixed-ip-and-router)
+    - [Generating certificates for localhost deployment](#generating-certificates-for-localhost-deployment)
+  - [Building QuickFeed server](#building-quickfeed-server)
+    - [Troubleshooting](#troubleshooting)
+  - [Running QuickFeed server](#running-quickfeed-server)
+    - [Flags](#flags)
+    - [Running server in development mode](#running-server-in-development-mode)
+    - [Using GitHub Webhooks when running server on localhost](#using-github-webhooks-when-running-server-on-localhost)
 QuickFeed depends on these technologies.
 
 - [Go](https://golang.org/doc/code.html)
@@ -38,181 +40,7 @@ QuickFeed depends on these technologies.
 - Git History Diff
 - SQLite
 
-## Updated Deployment Instructions for new GitHub App and Autocert
-
-### Configure .env
-
-TODO(meling) add missing QUICKFEED_WEBHOOK_SECRET and
-
-If your `.env` file is has no keys and your `quickfeed.pem` does not exist, you need to install QuickFeed's GitHub App.
-
-```shell
-# GitHub App IDs and secrets for localhost deployment
-QUICKFEED_APP_ID=""
-QUICKFEED_APP_KEY=$QUICKFEED/internal/config/github/quickfeed.pem
-QUICKFEED_CLIENT_ID=""
-QUICKFEED_CLIENT_SECRET=""
-
-# Quickfeed server domain or ip
-DOMAIN="example.com"
-
-# Comma-separated list of domains to allow certificates for.
-# IP addresses and "localhost" are *not* valid.
-# The whitelist must also include the domain defined above.
-QUICKFEED_WHITELIST="example.com"
-```
-
-### Starting server and installing QuickFeed's GitHub App
-
-To start the server for first-time installation, use the `-new` flag.
-
-```shell
-% make install
-% quickfeed -new
-2022/09/11 16:45:22 running: go list -m -f {{.Dir}}
-2022/09/11 16:45:22 Loading environment variables from /Users/meling/work/quickfeed/.env
-2022/09/11 16:45:22 Important: The GitHub user that installs the QuickFeed App will become the server's admin user.
-2022/09/11 16:45:22 Go to https://example.com/manifest to install the QuickFeed GitHub App.
-2022/09/11 16:45:43 http: TLS handshake error from 192.168.86.1:52823: write tcp 192.168.86.32:443->192.168.86.1:52823: i/o timeout
-2022/09/11 16:45:43 http: TLS handshake error from 192.168.86.1:52824: tls: client using inappropriate protocol fallback
-2022/09/11 16:46:00 Successfully installed the QuickFeed GitHub App.
-2022/09/11 16:46:00 Loading environment variables from /Users/meling/work/quickfeed/.env
-2022/09/11 16:46:00 Starting QuickFeed in production mode on example.com
-```
-
-After starting the server you should see various configuration files saved for in `internal/config`:
-
-```shell
-% tree internal/config/
-internal/config/
-├── certs
-│   ├── acme_account+key
-│   └── example.com
-└── github
-    └── quickfeed.pem
-```
-
-In addition your `.env` file should be populated with important secrets that should be kept away from prying eyes.
-
-```shell
-% cat .env
-# GitHub App IDs and secrets for localhost deployment
-QUICKFEED_APP_ID=<6 digit ID>
-QUICKFEED_APP_KEY=/Users/meling/work/quickfeed/internal/config/github/quickfeed.pem
-QUICKFEED_CLIENT_ID=Iv1.<16 chars of identifying data>
-QUICKFEED_CLIENT_SECRET=<40 chars of secret data>
-```
-
-## Localhost: Updated Deployment Instructions for new GitHub App and Autocert
-
-### Configure .env for localhost deployment
-
-If your `.env` file is has no keys and your `quickfeed.pem` does not exist, you need to install QuickFeed's GitHub App.
-For localhost deployment, you need to specify the file names for the self-signed certificates.
-
-```shell
-# GitHub App IDs and secrets for localhost deployment
-QUICKFEED_APP_ID=""
-QUICKFEED_APP_KEY=$QUICKFEED/internal/config/github/quickfeed.pem
-QUICKFEED_CLIENT_ID=""
-QUICKFEED_CLIENT_SECRET=""
-# Certificate chain and private key file
-QUICKFEED_KEY_FILE=$QUICKFEED/internal/config/certs/privkey.pem
-QUICKFEED_CERT_FILE=$QUICKFEED/internal/config/certs/fullchain.pem
-
-# Quickfeed server domain or ip
-DOMAIN="localhost"
-```
-
-### Starting server and installing QuickFeed's GitHub App
-
-To start the server for first-time installation, use the `-new` flag.
-Since this is a development server, you must also supply the `dev` flag.
-
-```shell
-% make install
-% quickfeed -dev -new
-2022/09/11 20:28:08 running: go list -m -f {{.Dir}}
-2022/09/11 20:28:08 Loading environment variables from /Users/meling/work/quickfeed/.env
-2022/09/11 20:28:08 Generating self-signed certificates.
-2022/09/11 20:28:08 Certificates successfully generated at: internal/config/certs
-2022/09/11 20:28:08 When running with self-signed certificates on localhost, browsers will complain that the connection is not private.
-2022/09/11 20:28:08 To run the server from localhost, you will need to manually bypass the browser warning.
-WARNING: You are creating an app on localhost. Only for development purposes. Continue? (Y/n) y
-2022/09/11 20:28:11 Important: The GitHub user that installs the QuickFeed App will become the server's admin user.
-2022/09/11 20:28:11 Go to https://localhost/manifest to install the QuickFeed GitHub App.
-2022/09/11 20:28:51 http: TLS handshake error from [::1]:61014: EOF
-2022/09/11 20:28:51 http: TLS handshake error from [::1]:61015: EOF
-2022/09/11 20:29:09 Successfully installed the QuickFeed GitHub App.
-2022/09/11 20:29:09 Loading environment variables from /Users/meling/work/quickfeed/.env
-2022/09/11 20:29:09 Starting QuickFeed in development mode on :443
-2022/09/11 20:29:09 Existing credentials successfully loaded.
-2022/09/11 20:29:09 When running with self-signed certificates on localhost, browsers will complain that the connection is not private.
-2022/09/11 20:29:09 To run the server from localhost, you will need to manually bypass the browser warning.
-```
-
-After starting the server you should see various configuration files saved for in `internal/config`:
-
-```shell
-% tree internal/config/
-internal/config
-├── certs
-│   ├── fullchain.pem
-│   └── privkey.pem
-└── github
-    └── quickfeed.pem
-```
-
-In addition your `.env` file should be populated with important secrets that should be kept away from prying eyes.
-
-```shell
-% cat .env
-# GitHub App IDs and secrets for localhost deployment
-QUICKFEED_APP_ID=<6 digit ID>
-QUICKFEED_APP_KEY=/Users/meling/work/quickfeed/internal/config/github/quickfeed.pem
-QUICKFEED_CLIENT_ID=Iv1.<16 chars of identifying data>
-QUICKFEED_CLIENT_SECRET=<40 chars of secret data>
-```
-
-## Preparing the Environment
-
-TODO(meling): Borrow instructions/scripts from ag server.
-
-### Configuring Docker
-
-To ensure that Docker containers has access to networking, you may need to set up IPv4 port forwarding on your server machine:
-
-```sh
-sudo sysctl net.ipv4.ip_forward=1
-sudo sysctl -p
-sudo service docker restart
-```
-
-### Setup Environment Variables
-
-```sh
-% cd $QUICKFEED
-% cp .env-template .env
-# Edit .env according to your domain and quickfeed ports
-```
-
-The `$DOMAIN` should be set to your public landing page for QuickFeed, e.g., `www.my-quickfeed.com`.
-
-## Bare Metal Deployment
-
-TODO(meling) move stuff here
-
-### Configure Fixed IP and Router
-
-In your domain name provider, configure your IP and domain name; for instance:
-
-```text
-Type         Host          Value                TTL
-A Record     cyclone       92.221.105.172       5 min
-```
-
-Set up port forwarding on your router.
-External ports 80/443 maps to internal ports 80/443 for TCP.
+## Setup
 
 ### Install Tools for Deployment
 
@@ -234,7 +62,155 @@ To install:
 
 The `devtools` make target will download and install various Protobuf compiler plugins and the grpcweb Protobuf compiler.
 
-### Build and Run QuickFeed Server
+### Preparing the environment (`.env`)
+
+QuickFeed expects the `.env` file to contain following environmental variables.
+
+```shell
+# GitHub App IDs and secrets for localhost deployment
+QUICKFEED_APP_ID=""
+QUICKFEED_APP_KEY=$QUICKFEED/internal/config/github/quickfeed.pem
+QUICKFEED_CLIENT_ID=""
+QUICKFEED_CLIENT_SECRET=""
+QUICKFEED_WEBHOOK_SECRET=""
+
+# Quickfeed server domain or ip
+DOMAIN="example.com"
+
+# Comma-separated list of domains to allow certificates for.
+# IP addresses and "localhost" are *not* valid.
+# The whitelist must also include the domain defined above.
+QUICKFEED_WHITELIST="example.com"
+```
+
+The `$DOMAIN` should be set to your public landing page for QuickFeed, e.g., `www.my-quickfeed.com`.
+
+For localhost deployment, you need to specify the file names for the self-signed certificates.
+
+```shell
+# Certificate chain and private key file
+QUICKFEED_KEY_FILE=$QUICKFEED/internal/config/certs/privkey.pem
+QUICKFEED_CERT_FILE=$QUICKFEED/internal/config/certs/fullchain.pem
+
+```
+
+If your `.env` file has no keys and your `quickfeed.pem` does not exist, you need to install QuickFeed's GitHub App.
+
+### First-time installation
+
+To start the server for first-time installation, use the `-new` flag.
+
+```shell
+% make install
+% quickfeed -new
+2022/09/11 16:45:22 running: go list -m -f {{.Dir}}
+2022/09/11 16:45:22 Loading environment variables from /Users/meling/work/quickfeed/.env
+2022/09/11 16:45:22 Important: The GitHub user that installs the QuickFeed App will become the server's admin user.
+2022/09/11 16:45:22 Go to https://example.com/manifest to install the QuickFeed GitHub App.
+2022/09/11 16:45:43 http: TLS handshake error from 192.168.86.1:52823: write tcp 192.168.86.32:443->192.168.86.1:52823: i/o timeout
+2022/09/11 16:45:43 http: TLS handshake error from 192.168.86.1:52824: tls: client using inappropriate protocol fallback
+2022/09/11 16:46:00 Successfully installed the QuickFeed GitHub App.
+2022/09/11 16:46:00 Loading environment variables from /Users/meling/work/quickfeed/.env
+2022/09/11 16:46:00 Starting QuickFeed in production mode on example.com
+```
+
+After starting the server you should see various configuration files saved to `internal/config`:
+
+```shell
+% tree internal/config/
+internal/config/
+├── certs
+│   ├── acme_account+key
+│   └── example.com
+└── github
+    └── quickfeed.pem
+```
+
+In addition, your `.env` file should be populated with important secrets that should be kept away from prying eyes.
+
+```shell
+% cat .env
+# GitHub App IDs and secrets for localhost deployment
+QUICKFEED_APP_ID=<6 digit ID>
+QUICKFEED_APP_KEY=/Users/meling/work/quickfeed/internal/config/github/quickfeed.pem
+QUICKFEED_CLIENT_ID=Iv1.<16 chars of identifying data>
+QUICKFEED_CLIENT_SECRET=<40 chars of secret data>
+```
+
+### Configuring Docker
+
+To ensure that Docker containers has access to networking, you may need to set up IPv4 port forwarding on your server machine:
+
+```sh
+sudo sysctl net.ipv4.ip_forward=1
+sudo sysctl -p
+sudo service docker restart
+```
+
+### Configuring Fixed IP and Router
+
+In your domain name provider, configure your IP and domain name; for instance:
+
+```text
+Type         Host          Value                TTL
+A Record     cyclone       92.221.105.172       5 min
+```
+
+Set up port forwarding on your router.
+External ports 80/443 maps to internal ports 80/443 for TCP.
+
+### Generating certificates for localhost deployment
+
+To run QuickFeed server on localhost you will need to generate dummy certificate.
+
+The easiest way is to create two files with following contents.
+
+`certificate.conf`:
+
+```bash
+[req]
+default_bits = 4096
+prompt = no
+default_md = sha256
+req_extensions = req_ext
+distinguished_name = dn
+[dn]
+C = US
+ST = NJ
+O = Test, Inc.
+CN = localhost
+[req_ext]
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = localhost
+IP.1 = ::1
+IP.2 = 127.0.0.1
+```
+
+and `certgen.sh`
+
+```bash
+#!/bin/bash
+
+# generate ca.key 
+openssl genrsa -out ca.key 4096
+# generate certificate
+openssl req -new -x509 -key ca.key -sha256 -subj "/C=SE/ST=HL/O=Example, INC." -days 365 -out ca.cert
+# generate the server key
+openssl genrsa -out server.key 4096
+# Generate the csr
+openssl req -new -key server.key -out server.csr -config certificate.conf
+# 
+openssl x509 -req -in server.csr -CA ca.cert -CAkey ca.key -CAcreateserial -out server.crt -days 365 -sha256 -extfile certificate.conf -extensions req_ext
+```
+
+Execute the `certgen.sh` to generate a certificate.
+
+Full documentation for certificate generation with `openssl` can be found [here](https://www.openssl.org/docs/manmaster/man1/req.html).
+
+Paths to the generated files must be added to the `.env` file.
+
+## Building QuickFeed server
 
 After editing files in the `public` folder, run the following command.
 This should also work while the application is running.
@@ -246,11 +222,11 @@ This should also work while the application is running.
 Build and run the `quickfeed` server; here we use all default values:
 
 ```bash
-% go install
+% make install
 % quickfeed &> quickfeed.log &
 ```
 
-#### Troubleshooting
+### Troubleshooting
 
 If `go install` fails with the following (on Ubuntu):
 
@@ -265,16 +241,7 @@ Then run and retry `go install`:
 % go install
 ```
 
-### Running the QuickFeed Server Details
-
-The following provides additional details for running QuickFeed.
-Before running the QuickFeed server, you need to configure [GitHub](./github.md).
-
-The command line arguments for the QuickFeed server looks roughly like this:
-
-```sh
-quickfeed -database.file <path to database> -http.addr <HTTP listener address>
-```
+## Running QuickFeed server
 
 To view the full usage details:
 
@@ -282,15 +249,19 @@ To view the full usage details:
 quickfeed -help
 ```
 
-Here is an example with all default values:
+To run the server very first time. Will configure and install GitHub app and populate `.env`.
 
 ```sh
-quickfeed &> quickfeed.log &
+quickfeed -new
 ```
 
-_As a bootstrap mechanism, the first user to sign in, automatically becomes administrator for the system._
+To run in development mode on localhost:
 
-#### Flags
+```sh
+quickfeed -dev
+```
+
+### Flags
 
 | **Flag**        | **Description**                                      | **Example** |
 | --------------- | ---------------------------------------------------- | ----------- |
@@ -298,3 +269,26 @@ _As a bootstrap mechanism, the first user to sign in, automatically becomes admi
 | `http.addr`     | Listener address for HTTP service                    | `:8081`     |
 | `dev`           | Run development server with self-signed certificates |             |
 | `new`           | Create a new QuickFeed App                           |             |
+
+### Running server in development mode
+
+It is possible to run server in development mode on different ports by setting the `http.addr` flag. By default the server will start on `:443`. If quickfeed binary has no access to the port `:443` in your system, you can allow it by running
+
+```sh
+sudo setcap CAP_NET_BIND_SERVICE=+eip /path/to/binary/quickfeed
+```
+
+Note that you will need to repeat this step each time you recompile the server.
+
+### Using GitHub Webhooks when running server on localhost
+
+GitHub webhooks cannot send events directly to your server if it runs on localhost. However, it is possible to setup a tunneling service that will be listening to the events coming from webhooks and redirecting them to the locally deployed server.
+
+One of the many options is [ngrok](https://ngrok.com/). To use ngrok you have to create a free account and download ngrok. After that it will be possible to receive webhook events on QuickFeed server running on localhost by performing a few steps.
+
+1. Start ngrok: `hgrok http 443` - assuming the server runs on port `:443`.
+2. ngrok will generate a new endpoint URL. Copy the urls an update webhook callback information in your GitHub app to point to this URL. E.g., `https://de08-2a01-799-4df-d900-b5af-5adc-a42a-bcf.eu.ngrok.io/hook/`.
+
+After that any webhook events your GitHub app is subscribed to will send payload to this URL, and ngrok will redirect them to the `/hooks` endpoint of the QuickFeed server running on the given port number.
+
+Note that ngrok generates a new URL every time it is restarted and you will need to update webhook callback details unless you want to subscribe to the paid version of ngrok that supports static callback URLs.
