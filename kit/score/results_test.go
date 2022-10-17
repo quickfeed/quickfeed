@@ -13,6 +13,8 @@ import (
 	"github.com/quickfeed/quickfeed/kit/score"
 )
 
+const theSecret = "my secret code"
+
 func TestExtractResult(t *testing.T) {
 	out := `here is some output in the log.
 
