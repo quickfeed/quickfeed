@@ -23,8 +23,6 @@ require (
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	golang.org/x/net v0.0.0-20220809184613-07c6da5e1ced
 	golang.org/x/oauth2 v0.0.0-20220808172628-8227340efae7
-	google.golang.org/grpc v1.48.0
-	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/sqlite v1.3.6
