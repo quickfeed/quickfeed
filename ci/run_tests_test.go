@@ -47,7 +47,7 @@ func testRunData(t *testing.T) *ci.RunData {
 
 	qfTestOrg := scm.GetTestOrganization(t)
 	// Only used to fetch the user's GitHub login (user name)
-	userName := scm.GetTestUser(t)
+	_, userName := scm.GetTestUserAndSCM(t)
 
 	repo := qf.RepoURL{ProviderURL: "github.com", Organization: qfTestOrg}
 	courseID := uint64(1)
@@ -82,7 +82,7 @@ func TestRunTests(t *testing.T) {
 	ctx, cancel := runData.Assignment.WithTimeout(2 * time.Minute)
 	defer cancel()
 
-	scmClient := scm.GetTestSCM(t)
+	scmClient, _ := scm.GetTestUserAndSCM(t)
 	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
 	if err != nil {
 		t.Fatal(err)
@@ -101,7 +101,7 @@ func TestRunTestsTimeout(t *testing.T) {
 	// Note that this timeout value is susceptible to variation
 	ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	defer cancel()
-	scmClient := scm.GetTestSCM(t)
+	scmClient, _ := scm.GetTestUserAndSCM(t)
 	results, err := runData.RunTests(ctx, qtest.Logger(t), scmClient, runner)
 	if err != nil {
 		t.Fatal(err)
