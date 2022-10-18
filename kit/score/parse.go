@@ -17,14 +17,14 @@ var (
 	ErrSuppressedSecret = errors.New("error suppressed to avoid revealing secret")
 )
 
-// Parse returns a score object for the provided JSON string s
+// parse returns a score object for the provided JSON string s
 // which contains secret.
-func Parse(s, secret string) (*Score, error) {
+func parse(s, secret string) (*Score, error) {
 	if strings.Contains(s, secret) {
 		var sc Score
 		err := json.Unmarshal([]byte(s), &sc)
 		if err == nil {
-			if err = sc.IsValid(secret); err != nil {
+			if err = sc.isValid(secret); err != nil {
 				return nil, err
 			}
 			return &sc, nil
@@ -38,11 +38,11 @@ func Parse(s, secret string) (*Score, error) {
 	return nil, ErrScoreNotFound
 }
 
-// IsValid returns an error if the score object is invalid.
+// isValid returns an error if the score object is invalid.
 // Otherwise, nil is returned.
 // If the given secret matches the score's secret value,
 // the Secret field is redacted with the empty string "".
-func (sc *Score) IsValid(secret string) error {
+func (sc *Score) isValid(secret string) error {
 	tName := sc.GetTestName()
 	if tName == "" {
 		return errMsg("", ErrEmptyTestName.Error())

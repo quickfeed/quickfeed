@@ -29,7 +29,7 @@ func NewRegistry() *registry {
 func (s *registry) Validate() error {
 	callFrame()
 	for _, sc := range s.scores {
-		if err := sc.IsValid(sessionSecret); err != nil {
+		if err := sc.isValid(sessionSecret); err != nil {
 			return err
 		}
 	}
