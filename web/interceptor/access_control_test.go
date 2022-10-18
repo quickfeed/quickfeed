@@ -30,12 +30,12 @@ func TestAccessControl(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
+	shutdown, client := web.MockQuickFeedClient(t, db, connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.NewAccessControlInterceptor(tm),
 	))
-
-	client := qtest.QuickFeedClient("")
+	ctx := context.Background()
+	defer shutdown(ctx)
 
 	courseAdmin := qtest.CreateAdminUser(t, db, "fake")
 	groupStudent := qtest.CreateNamedUser(t, db, 2, "group student")
@@ -84,7 +84,6 @@ func TestAccessControl(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := context.Background()
 	f := func(t *testing.T, id uint64) string {
 		cookie, err := tm.NewAuthCookie(id)
 		if err != nil {
@@ -361,7 +360,6 @@ func TestAccessControl(t *testing.T) {
 			checkAccess(t, "UpdateUser", err, tt.wantCode, tt.wantAccess)
 		})
 	}
-	shutdown(ctx)
 }
 
 func requestWithCookie[T any](message *T, cookie string) *connect.Request[T] {

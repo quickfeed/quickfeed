@@ -23,14 +23,13 @@ func TestRefreshTokens(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shutdown := web.MockQuickFeedServer(t, logger, db, connect.WithInterceptors(
+	shutdown, client := web.MockQuickFeedClient(t, db, connect.WithInterceptors(
 		interceptor.NewUserInterceptor(logger, tm),
 		interceptor.NewTokenInterceptor(tm),
 	))
-
-	client := qtest.QuickFeedClient("")
-
 	ctx := context.Background()
+	defer shutdown(ctx)
+
 	f := func(t *testing.T, id uint64) string {
 		cookie, err := tm.NewAuthCookie(id)
 		if err != nil {
@@ -128,5 +127,4 @@ func TestRefreshTokens(t *testing.T) {
 	if tm.UpdateRequired(adminClaims) {
 		t.Error("Admin should not be in the token update list")
 	}
-	shutdown(ctx)
 }
