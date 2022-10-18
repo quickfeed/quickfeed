@@ -14,11 +14,12 @@ import (
 )
 
 // MockSCM implements the SCM interface.
-// TODO(meling) many of the methods below are not implemented.
 type MockSCM struct {
 	Repositories  map[uint64]*Repository
 	Organizations map[uint64]*qf.Organization
 	Teams         map[uint64]*Team
+	Issues        map[uint64]*Issue
+	IssueComments map[uint64]string
 }
 
 // NewMockSCMClient returns a new mock client implementing the SCM interface.
@@ -27,6 +28,8 @@ func NewMockSCMClient() *MockSCM {
 		Repositories:  make(map[uint64]*Repository),
 		Organizations: make(map[uint64]*qf.Organization),
 		Teams:         make(map[uint64]*Team),
+		Issues:        make(map[uint64]*Issue),
+		IssueComments: make(map[uint64]string),
 	}
 	// initialize four test course organizations
 	for _, course := range qtest.MockCourses {
@@ -299,59 +302,188 @@ func (s *MockSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) e
 }
 
 // CreateIssue implements the SCM interface
-func (*MockSCM) CreateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
-	return nil, ErrNotSupported{
-		SCM:    "MockSCM",
-		Method: "CreateIssue",
+func (s *MockSCM) CreateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
+		return nil, errors.New("organization not found")
+	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Repository,
+		Owner: opt.Organization,
+	}); err != nil {
+		return nil, errors.New("repository not found")
+	}
+	id := generateID(s.Issues)
+	issue := &Issue{
+		ID:         id,
+		Title:      opt.Title,
+		Repository: opt.Repository,
+		Body:       opt.Body,
+		Number:     int(id),
+	}
+	if opt.Assignee != nil {
+		issue.Assignee = *opt.Assignee
+	}
+	s.Issues[issue.ID] = issue
+	return issue, nil
 }
 
 // UpdateIssue implements the SCM interface
-func (*MockSCM) UpdateIssue(_ context.Context, _ *IssueOptions) (*Issue, error) {
-	return nil, ErrNotSupported{
-		SCM:    "MockSCM",
-		Method: "UpdateIssue",
+func (s *MockSCM) UpdateIssue(ctx context.Context, opt *IssueOptions) (*Issue, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
+		return nil, errors.New("organization not found")
+	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Repository,
+		Owner: opt.Organization,
+	}); err != nil {
+		return nil, errors.New("repository not found")
+	}
+	issue, ok := s.Issues[uint64(opt.Number)]
+	if !ok {
+		return nil, errors.New("issue not found")
+	}
+	issue.Title = opt.Title
+	issue.Body = opt.Body
+	issue.Status = opt.State
+	if opt.Assignee != nil {
+		issue.Assignee = *opt.Assignee
+	}
+	return issue, nil
 }
 
 // GetIssue implements the SCM interface
-func (*MockSCM) GetIssue(_ context.Context, _ *RepositoryOptions, _ int) (*Issue, error) {
-	return nil, ErrNotSupported{
-		SCM:    "MockSCM",
-		Method: "GetIssue",
+func (s *MockSCM) GetIssue(ctx context.Context, opt *RepositoryOptions, issueNumber int) (*Issue, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
+		return nil, errors.New("organization not found")
+	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Path,
+		Owner: opt.Owner,
+	}); err != nil {
+		return nil, errors.New("repository not found")
+	}
+	issue, ok := s.Issues[uint64(issueNumber)]
+	if !ok {
+		return nil, errors.New("issue not found")
+	}
+	return issue, nil
 }
 
 // GetIssues implements the SCM interface
-func (*MockSCM) GetIssues(_ context.Context, _ *RepositoryOptions) ([]*Issue, error) {
-	return nil, ErrNotSupported{
-		SCM:    "MockSCM",
-		Method: "GetIssues",
+func (s *MockSCM) GetIssues(ctx context.Context, opt *RepositoryOptions) ([]*Issue, error) {
+	if !opt.valid() {
+		return nil, fmt.Errorf("invalid argument: %v", opt)
 	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
+		return nil, errors.New("organization not found")
+	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Path,
+		Owner: opt.Owner,
+	}); err != nil {
+		return nil, errors.New("repository not found")
+	}
+	var issues []*Issue
+
+	for _, i := range s.Issues {
+		if i.Repository == opt.Path {
+			issues = append(issues, i)
+		}
+	}
+	return issues, nil
 }
 
-func (*MockSCM) DeleteIssue(_ context.Context, _ *RepositoryOptions, _ int) error {
+func (s *MockSCM) DeleteIssue(ctx context.Context, opt *RepositoryOptions, issueNumber int) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %v", opt)
+	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
+		return errors.New("organization not found")
+	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Path,
+		Owner: opt.Owner,
+	}); err != nil {
+		return errors.New("repository not found")
+	}
+	delete(s.Issues, uint64(issueNumber))
 	return nil
 }
 
-func (*MockSCM) DeleteIssues(_ context.Context, _ *RepositoryOptions) error {
+func (s *MockSCM) DeleteIssues(ctx context.Context, opt *RepositoryOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %v", opt)
+	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Owner}); err != nil {
+		return errors.New("organization not found")
+	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Path,
+		Owner: opt.Owner,
+	}); err != nil {
+		return errors.New("repository not found")
+	}
+	for _, issue := range s.Issues {
+		if issue.Repository == opt.Path {
+			delete(s.Issues, issue.ID)
+		}
+	}
 	return nil
 }
 
 // CreateIssueComment implements the SCM interface
-func (*MockSCM) CreateIssueComment(_ context.Context, _ *IssueCommentOptions) (int64, error) {
-	return 0, ErrNotSupported{
-		SCM:    "MockSCM",
-		Method: "CreateIssueComment",
+func (s *MockSCM) CreateIssueComment(ctx context.Context, opt *IssueCommentOptions) (int64, error) {
+	if !opt.valid() {
+		return 0, fmt.Errorf("invalid argument: %v", opt)
 	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
+		return 0, errors.New("organization not found")
+	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Repository,
+		Owner: opt.Organization,
+	}); err != nil {
+		return 0, errors.New("repository not found")
+	}
+	if _, ok := s.Issues[uint64(opt.Number)]; !ok {
+		return 0, errors.New("issue not found")
+	}
+	id := generateID(s.IssueComments)
+	s.IssueComments[id] = opt.Body
+	return int64(id), nil
 }
 
 // UpdateIssueComment implements the SCM interface
-func (*MockSCM) UpdateIssueComment(_ context.Context, _ *IssueCommentOptions) error {
-	return ErrNotSupported{
-		SCM:    "MockSCM",
-		Method: "UpdateIssueComment",
+func (s *MockSCM) UpdateIssueComment(ctx context.Context, opt *IssueCommentOptions) error {
+	if !opt.valid() {
+		return fmt.Errorf("invalid argument: %v", opt)
 	}
+	if _, err := s.GetOrganization(ctx, &GetOrgOptions{Name: opt.Organization}); err != nil {
+		return errors.New("organization not found")
+	}
+	if _, err := s.GetRepository(ctx, &RepositoryOptions{
+		Path:  opt.Repository,
+		Owner: opt.Organization,
+	}); err != nil {
+		return errors.New("repository not found")
+	}
+	if _, ok := s.Issues[uint64(opt.Number)]; !ok {
+		return errors.New("issue not found")
+	}
+	if _, ok := s.IssueComments[uint64(opt.CommentID)]; !ok {
+		return errors.New("issue comment not found")
+	}
+	s.IssueComments[uint64(opt.CommentID)] = opt.Body
+	return nil
 }
 
 // RequestReviewers implements the SCM interface

@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/go-github/v45/github"
+	"github.com/quickfeed/quickfeed/internal/qtest"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
@@ -59,20 +60,26 @@ func TestCreateIssue(t *testing.T) {
 	}
 }
 
-// NOTE: This test only works if the given repository has no previous issues
 func TestGetIssues(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	s, qfTestUser := scm.GetTestSCM(t)
+	s := scm.NewMockSCMClient()
+	s.Repositories = map[uint64]*scm.Repository{
+		1: {
+			ID:    1,
+			OrgID: 1,
+			Owner: qtest.MockOrg,
+			Path:  qf.StudentRepoName("test"),
+		},
+	}
 
 	ctx := context.Background()
 	opt := &scm.RepositoryOptions{
-		Owner: qfTestOrg,
-		Path:  qf.StudentRepoName(qfTestUser),
+		Owner: qtest.MockOrg,
+		Path:  qf.StudentRepoName("test"),
 	}
 
 	wantIssueIDs := []int{}
 	for i := 1; i <= 5; i++ {
-		issue, cleanup := createIssue(t, s, qfTestOrg, opt.Path)
+		issue, cleanup := createIssue(t, s, opt.Owner, opt.Path)
 		defer cleanup()
 		wantIssueIDs = append(wantIssueIDs, issue.Number)
 	}
@@ -232,13 +239,21 @@ func TestCreateIssueComment(t *testing.T) {
 }
 
 func TestUpdateIssueComment(t *testing.T) {
-	qfTestOrg := scm.GetTestOrganization(t)
-	s, qfTestUser := scm.GetTestSCM(t)
+	s := scm.NewMockSCMClient()
+	repo := &scm.Repository{
+		ID:    1,
+		OrgID: 1,
+		Owner: qtest.MockOrg,
+		Path:  qf.StudentRepoName("user"),
+	}
+	s.Repositories = map[uint64]*scm.Repository{
+		1: repo,
+	}
 
 	body := "Issue Comment"
 	opt := &scm.IssueCommentOptions{
-		Organization: qfTestOrg,
-		Repository:   qf.StudentRepoName(qfTestUser),
+		Organization: repo.Owner,
+		Repository:   repo.Path,
 		Body:         body,
 	}
 
