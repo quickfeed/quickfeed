@@ -1,22 +1,22 @@
 # Quickfeed Deployments
 
-- [Technology Stack](#technology-stack)
-- [Recommended VSCode Plugins](#recommended-vscode-plugins)
-- [Setup](#setup)
-  - [Install Tools for Deployment](#install-tools-for-deployment)
-  - [Install Tools for Development](#install-tools-for-development)
-  - [Preparing the Environment for Production](#preparing-the-environment-for-production)
-  - [Preparing the Environment for Testing](#preparing-the-environment-for-testing)
-  - [First-time Installation](#first-time-installation)
-  - [Configuring Docker](#configuring-docker)
-  - [Configuring Fixed IP and Router](#configuring-fixed-ip-and-router)
-  - [Generating Certificates For Localhost Deployment](#generating-certificates-for-localhost-deployment)
-- [Building QuickFeed Server](#building-quickfeed-server)
-- [Running QuickFeed Server](#running-quickfeed-server)
-  - [Flags](#flags)
-  - [Running Server on a Privileged Port](#running-server-on-a-privileged-port)
-  - [Using GitHub Webhooks When Running Server On Localhost](#using-github-webhooks-when-running-server-on-localhost)
-- [Troubleshooting](#troubleshooting)
+- [Quickfeed Deployments](#quickfeed-deployments)
+  - [Technology Stack](#technology-stack)
+  - [Recommended VSCode Plugins](#recommended-vscode-plugins)
+  - [Setup](#setup)
+    - [Install Tools for Deployment](#install-tools-for-deployment)
+    - [Install Tools for Development](#install-tools-for-development)
+    - [Preparing the Environment for Production](#preparing-the-environment-for-production)
+    - [Preparing the Environment for Testing](#preparing-the-environment-for-testing)
+    - [First-time Installation](#first-time-installation)
+    - [Configuring Docker](#configuring-docker)
+    - [Configuring Fixed IP and Router](#configuring-fixed-ip-and-router)
+  - [Building QuickFeed Server](#building-quickfeed-server)
+  - [Running QuickFeed Server](#running-quickfeed-server)
+    - [Flags](#flags)
+    - [Running Server on a Privileged Port](#running-server-on-a-privileged-port)
+    - [Using GitHub Webhooks When Running Server On Localhost](#using-github-webhooks-when-running-server-on-localhost)
+  - [Troubleshooting](#troubleshooting)
 
 ## Technology Stack
 
@@ -169,57 +169,6 @@ A Record     cyclone       92.221.105.172       5 min
 
 Set up port forwarding on your router.
 External ports 80/443 maps to internal ports 80/443 for TCP.
-
-### Generating Certificates For Localhost Deployment
-
-To run QuickFeed server on localhost you will need to generate dummy certificate.
-
-The easiest way is to create two files with following contents.
-
-`certificate.conf`:
-
-```sh
-[req]
-default_bits = 4096
-prompt = no
-default_md = sha256
-req_extensions = req_ext
-distinguished_name = dn
-[dn]
-C = US
-ST = NJ
-O = Test, Inc.
-CN = localhost
-[req_ext]
-subjectAltName = @alt_names
-[alt_names]
-DNS.1 = localhost
-IP.1 = ::1
-IP.2 = 127.0.0.1
-```
-
-and `certgen.sh`
-
-```sh
-#!/bin/bash
-
-# generate ca.key
-openssl genrsa -out ca.key 4096
-# generate certificate
-openssl req -new -x509 -key ca.key -sha256 -subj "/C=SE/ST=HL/O=Example, INC." -days 365 -out ca.cert
-# generate the server key
-openssl genrsa -out server.key 4096
-# Generate the csr
-openssl req -new -key server.key -out server.csr -config certificate.conf
-#
-openssl x509 -req -in server.csr -CA ca.cert -CAkey ca.key -CAcreateserial -out server.crt -days 365 -sha256 -extfile certificate.conf -extensions req_ext
-```
-
-Execute the `certgen.sh` to generate a certificate.
-
-Full documentation for certificate generation with `openssl` can be found [here](https://www.openssl.org/docs/manmaster/man1/req.html).
-
-Paths to the generated files must be added to the `.env` file.
 
 ## Building QuickFeed Server
 
