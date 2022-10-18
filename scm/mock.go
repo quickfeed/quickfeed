@@ -14,7 +14,6 @@ import (
 )
 
 // MockSCM implements the SCM interface.
-// TODO(meling) many of the methods below are not implemented.
 type MockSCM struct {
 	Repositories  map[uint64]*Repository
 	Organizations map[uint64]*qf.Organization

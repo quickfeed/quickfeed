@@ -660,7 +660,6 @@ func TestMockCreateIssue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			got, err := s.CreateIssue(ctx, tt.opt)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("%s: expected error: %v, got = %v", tt.name, tt.wantErr, err)
